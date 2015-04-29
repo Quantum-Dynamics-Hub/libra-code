@@ -33,6 +33,12 @@ public:
   int n_rows,n_cols,n_elts;
   complex<double>* M;
 
+  void set(int,double,double);
+  complex<double> get(int);
+  void set(int,int,double,double);
+  complex<double> get(int,int);
+
+
   // Constructors
   CMATRIX(){ n_rows = n_cols = n_elts = 0; M = NULL;}
   CMATRIX(int n_rows_,int n_cols_){
@@ -76,7 +82,8 @@ public:
   friend ostream &operator<<(ostream &strm,CMATRIX ob);
   friend istream& operator>>(istream& strm,CMATRIX &ob);
 
-
+  // Basic printing
+  void show();
 
   // Some basic functions
   CMATRIX conj();

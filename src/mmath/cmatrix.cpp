@@ -20,6 +20,28 @@ using namespace std;
 
 namespace libmmath{
 
+
+void CMATRIX::set(int indx,double value1, double value2){
+
+    M[indx] = complex<double>(value1,value2);
+}
+
+complex<double> CMATRIX::get(int indx){
+
+    return M[indx];
+}
+
+void CMATRIX::set(int row,int col,double value1,double value2){
+
+   M[row*n_cols+col] = complex<double>(value1,value2);
+}
+
+complex<double> CMATRIX::get(int row,int col){
+
+  return M[row*n_cols+col];
+}
+
+
 CMATRIX::CMATRIX(vector<vector<double> >& re_part,vector<vector<double> >& im_part){
 /*****************************************************************
   Constructor: creates a CMATRIX from 2 2D-arrays - real and imaginary parts
@@ -301,6 +323,20 @@ ostream& operator<<(ostream &strm,CMATRIX ob){
 istream& operator>>(istream& strm,CMATRIX &ob){
 //     Do not defined for general case       !!!      
   return strm;
+}
+
+void CMATRIX::show(){
+
+  std::cout.setf(ios::showpoint);
+  for(int i=0;i<n_rows;i++){
+    for(int j=0;j<n_cols;j++){
+      std::cout.precision(8);
+      std::cout.width(10);
+      std::cout<<left<<M[i*n_cols+j]<<"  ";
+    }
+    std::cout<<std::endl;
+  }
+
 }
 
 
