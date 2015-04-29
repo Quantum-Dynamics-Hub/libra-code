@@ -10,6 +10,8 @@
 
 using namespace std;
 
+namespace libmmath{
+
 //============================================================
 // Forward declared dependencies
 class VECTOR;
@@ -246,7 +248,7 @@ class MATRIX3x3{
 
 };
 
-
+}// namespace libmmath
 //===============================================================================
 
 #endif  // MATRIX3x3

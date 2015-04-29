@@ -9,7 +9,7 @@
 *
 *********************************************************************************/
 
-#include "cmatrix.h"
+#include "CMATRIX.h"
 #include <cstdio>
 #include <cstdlib>
 #include <complex>
@@ -18,15 +18,17 @@
 using namespace std;
 
 
-matrix::matrix(vector<vector<double> >& re_part,vector<vector<double> >& im_part){
+namespace libmmath{
+
+CMATRIX::CMATRIX(vector<vector<double> >& re_part,vector<vector<double> >& im_part){
 /*****************************************************************
-  Constructor: creates a matrix from 2 2D-arrays - real and imaginary parts
+  Constructor: creates a CMATRIX from 2 2D-arrays - real and imaginary parts
 *****************************************************************/
   if(re_part.size()!=im_part.size()){ 
-    cout<<"Error in matrix constructor: y-dimensions(num of rows) of the real and imaginary arrays are not equal\n"; exit(0); 
+    cout<<"Error in CMATRIX constructor: y-dimensions(num of rows) of the real and imaginary arrays are not equal\n"; exit(0); 
   }
   if(re_part[0].size()!=im_part[0].size()){
-    cout<<"Error in matrix constructor: x-dimensions(num of cols) of the real and imaginary arrays are not equal\n"; exit(0);
+    cout<<"Error in CMATRIX constructor: x-dimensions(num of cols) of the real and imaginary arrays are not equal\n"; exit(0);
   }
   n_rows = re_part.size();
   n_cols = re_part[0].size();
@@ -43,7 +45,7 @@ matrix::matrix(vector<vector<double> >& re_part,vector<vector<double> >& im_part
 }
 
 
-matrix::matrix(const matrix& obj){
+CMATRIX::CMATRIX(const CMATRIX& obj){
   n_rows = obj.n_rows;
   n_cols = obj.n_cols;
   n_elts = obj.n_elts;
@@ -54,18 +56,18 @@ matrix::matrix(const matrix& obj){
 //  cout<<"Copy constructor\n";
 }
 
-matrix matrix::operator-(){
-  matrix tmp(n_rows,n_cols);
+CMATRIX CMATRIX::operator-(){
+  CMATRIX tmp(n_rows,n_cols);
   for(int i=0;i<n_elts;i++){ tmp.M[i]=-M[i]; }
   return tmp;
 }
 
-matrix matrix::operator*(const matrix& ob){
+CMATRIX CMATRIX::operator*(const CMATRIX& ob){
 // (n_rows x ob.n_cols) = (n_rows x n_cols) * (ob.n_rows * ob.n_cols)
 // n_cols must be equal to ob.n_rows
   if(n_cols!=ob.n_rows){ 
     std::cout<<"Matrix multiplication error: Dimensions of operands must match\n";
-    std::cout<<"You try to muplitpy matrix "<<n_rows<<" by "<<n_cols<<" and the matrix "
+    std::cout<<"You try to muplitpy CMATRIX "<<n_rows<<" by "<<n_cols<<" and the CMATRIX "
              <<ob.n_rows<<" by "<<ob.n_cols<<"\n";
     std::cout<<"Exiting...\n";
     exit(0);  
@@ -76,7 +78,7 @@ matrix matrix::operator*(const matrix& ob){
     int rn; // row*n
     int rncols; // row*n_cols
    
-    matrix Temp(n_rows,n);
+    CMATRIX Temp(n_rows,n);
 
     rn = 0;
     rncols = 0;
@@ -101,30 +103,30 @@ matrix matrix::operator*(const matrix& ob){
 }
 
 
-void matrix::dot(const matrix& ob1,const matrix& ob2){
+void CMATRIX::dot(const CMATRIX& ob1,const CMATRIX& ob2){
 // Direct product of two matrices - element-wise multiplication
 // Dimensions of ob1 and ob2 must be equal
 
   if(ob1.n_cols!=ob2.n_cols){
-    std::cout<<"Error in direct matrix multiplication: Number of columns of multiplying matrices must be equal\n";
+    std::cout<<"Error in direct CMATRIX multiplication: Number of columns of multiplying matrices must be equal\n";
     std::cout<<"Exiting...\n";
     exit(0);     
   }
 
   if(ob1.n_rows!=ob2.n_rows){
-    std::cout<<"Error in direct matrix multiplication: Number of rows of multiplying matrices must be equal\n";
+    std::cout<<"Error in direct CMATRIX multiplication: Number of rows of multiplying matrices must be equal\n";
     std::cout<<"Exiting...\n";
     exit(0);     
   }
 
   if(n_cols!=ob2.n_cols){
-    std::cout<<"Error in direct matrix multiplication: Number of columns of the multiplying matrix and target matrix must be equal\n";
+    std::cout<<"Error in direct CMATRIX multiplication: Number of columns of the multiplying CMATRIX and target CMATRIX must be equal\n";
     std::cout<<"Exiting...\n";
     exit(0);     
   }
 
   if(n_rows!=ob2.n_rows){
-    std::cout<<"Error in direct matrix multiplication: Number of rows of the multiplying matrix and target matrix must be equal\n";
+    std::cout<<"Error in direct CMATRIX multiplication: Number of rows of the multiplying CMATRIX and target CMATRIX must be equal\n";
     std::cout<<"Exiting...\n";
     exit(0);     
   }
@@ -138,41 +140,41 @@ void matrix::dot(const matrix& ob1,const matrix& ob2){
 }
 
 
-matrix matrix::operator+(const matrix& ob){ 
-  matrix Temp(n_rows,n_cols);
+CMATRIX CMATRIX::operator+(const CMATRIX& ob){ 
+  CMATRIX Temp(n_rows,n_cols);
   for(int i=0;i<n_elts;i++) {Temp.M[i]=M[i]+ob.M[i];}
   return Temp;
 }
 
-matrix matrix::operator-(const matrix& ob){
-  matrix Temp(n_rows,n_cols);
+CMATRIX CMATRIX::operator-(const CMATRIX& ob){
+  CMATRIX Temp(n_rows,n_cols);
   for(int i=0;i<n_elts;i++) {Temp.M[i]=M[i]-ob.M[i];}
   return Temp;
 }
 
-void matrix::operator+=(const matrix& ob){
+void CMATRIX::operator+=(const CMATRIX& ob){
   for(int i=0;i<n_elts;i++) {M[i]+=ob.M[i];}
 }
 
-void matrix::operator-=(const matrix& ob){
+void CMATRIX::operator-=(const CMATRIX& ob){
   for(int i=0;i<n_elts;i++) {M[i]-=ob.M[i];}
 }
 
-void matrix::operator*=(const double& f){
+void CMATRIX::operator*=(const double& f){
   for(int i=0;i<n_elts;i++) {M[i]*=f;}
 }
 
-void matrix::operator*=(const complex<double>& f){
+void CMATRIX::operator*=(const complex<double>& f){
   for(int i=0;i<n_elts;i++) {M[i]*=f;}
 }
 
 
-void matrix::operator*=(const matrix& ob){
+void CMATRIX::operator*=(const CMATRIX& ob){
 // (n_rows x ob.n_cols) = (n_rows x n_cols) * (ob.n_rows * ob.n_cols)
 // n_cols must be equal to ob.n_rows
   if(n_cols!=ob.n_rows){ 
     std::cout<<"Matrix multiplication error: Dimensions of operands must match\n";
-    std::cout<<"You try to muplitpy matrix "<<n_rows<<" by "<<n_cols<<" and the matrix "
+    std::cout<<"You try to muplitpy CMATRIX "<<n_rows<<" by "<<n_cols<<" and the CMATRIX "
              <<ob.n_rows<<" by "<<ob.n_cols<<"\n";
     std::cout<<"Exiting...\n";
     exit(0);  
@@ -185,7 +187,7 @@ void matrix::operator*=(const matrix& ob){
     int rn;     // row*n
     complex<double> *TM;
     TM = new complex<double>[n_rows*n];
-    //matrix Temp(n_rows,n);
+    //CMATRIX Temp(n_rows,n);
 
     rn = 0;
     rncols = 0;
@@ -210,19 +212,19 @@ void matrix::operator*=(const matrix& ob){
 }
 
 
-matrix matrix::operator/(double num){ 
-  matrix m(n_rows,n_cols);
+CMATRIX CMATRIX::operator/(double num){ 
+  CMATRIX m(n_rows,n_cols);
   for(int i=0;i<n_elts;i++){  m.M[i] = M[i]/num;  }
   return m;
 }
 
-matrix matrix::operator/(complex<double> num){
-  matrix m(n_rows,n_cols);
+CMATRIX CMATRIX::operator/(complex<double> num){
+  CMATRIX m(n_rows,n_cols);
   for(int i=0;i<n_elts;i++){  m.M[i] = M[i]/num;  }
   return m;
 }
 
-matrix& matrix::operator=(const matrix& ob){
+CMATRIX& CMATRIX::operator=(const CMATRIX& ob){
 
   //if(this == &ob){ return *this; }
   //else{
@@ -250,41 +252,41 @@ matrix& matrix::operator=(const matrix& ob){
 
 }
 
-matrix matrix::operator=(double num){
+CMATRIX CMATRIX::operator=(double num){
   for(int i=0;i<n_elts;i++){ M[i] = num;  }
   return *this;
 }
 
-matrix matrix::operator=(complex<double> num){
+CMATRIX CMATRIX::operator=(complex<double> num){
   for(int i=0;i<n_elts;i++){ M[i] = num;  }
   return *this;
 }
 
-matrix operator*(const double& f,  const matrix& m1){
-  matrix m(m1.n_rows,m1.n_cols);
+CMATRIX operator*(const double& f,  const CMATRIX& m1){
+  CMATRIX m(m1.n_rows,m1.n_cols);
   for(int i=0;i<m1.n_elts;i++){  m.M[i]=m1.M[i]*f;  }
   return m;
 }
 
-matrix operator*(const matrix &m1, const double  &f){
-  matrix m(m1.n_rows,m1.n_cols);
+CMATRIX operator*(const CMATRIX &m1, const double  &f){
+  CMATRIX m(m1.n_rows,m1.n_cols);
   for(int i=0;i<m1.n_elts;i++){  m.M[i]=m1.M[i]*f;  }
   return m;
 }
 
-matrix operator*(const complex<double>& f,  const matrix& m1){
-  matrix m(m1.n_rows,m1.n_cols);
+CMATRIX operator*(const complex<double>& f,  const CMATRIX& m1){
+  CMATRIX m(m1.n_rows,m1.n_cols);
   for(int i=0;i<m1.n_elts;i++){  m.M[i]=m1.M[i]*f;  }
   return m;
 }
 
-matrix operator*(const matrix &m1, const complex<double>  &f){
-  matrix m(m1.n_rows,m1.n_cols);
+CMATRIX operator*(const CMATRIX &m1, const complex<double>  &f){
+  CMATRIX m(m1.n_rows,m1.n_cols);
   for(int i=0;i<m1.n_elts;i++){  m.M[i]=m1.M[i]*f;  }
   return m;
 }
 
-ostream& operator<<(ostream &strm,matrix ob){
+ostream& operator<<(ostream &strm,CMATRIX ob){
   strm.setf(ios::showpoint);
   for(int i=0;i<ob.n_rows;i++){
     for(int j=0;j<ob.n_cols;j++){
@@ -296,7 +298,7 @@ ostream& operator<<(ostream &strm,matrix ob){
   }
   return strm;
 }
-istream& operator>>(istream& strm,matrix &ob){
+istream& operator>>(istream& strm,CMATRIX &ob){
 //     Do not defined for general case       !!!      
   return strm;
 }
@@ -304,14 +306,14 @@ istream& operator>>(istream& strm,matrix &ob){
 
 
 
-matrix matrix::conj(){
-  matrix m(n_rows,n_cols);
+CMATRIX CMATRIX::conj(){
+  CMATRIX m(n_rows,n_cols);
   for(int i=0;i<m.n_elts;i++){ m.M[i] = std::conj(M[i]); }
   return m;
 }
 
-matrix matrix::T(){
-  matrix m(n_cols,n_rows);
+CMATRIX CMATRIX::T(){
+  CMATRIX m(n_cols,n_rows);
   for(int i=0;i<n_rows;i++){
     for(int j=0;j<n_cols;j++){
       m.M[j*n_rows+i] = M[i*n_cols+j];
@@ -320,8 +322,8 @@ matrix matrix::T(){
   return m;
 }
 
-matrix matrix::H(){
-  matrix m(n_cols,n_rows);
+CMATRIX CMATRIX::H(){
+  CMATRIX m(n_cols,n_rows);
   for(int i=0;i<n_rows;i++){
     for(int j=0;j<n_cols;j++){
       m.M[j*n_rows+i] = std::conj(M[i*n_cols+j]);
@@ -330,29 +332,29 @@ matrix matrix::H(){
   return m;
 }
 
-void matrix::load_identity(){
+void CMATRIX::load_identity(){
   for(int i=0;i<n_elts;i++){ M[i] = complex<double>(0.0,0.0); }
   for(i=0;i<n_rows;i++){ M[i*n_cols+i] = complex<double>(1.0,0.0); }
 }
 
 
-matrix matrix::col(int i){
-// takes given column and makes it n x 1 matrix
-  matrix tmp(n_rows,1);
+CMATRIX CMATRIX::col(int i){
+// takes given column and makes it n x 1 CMATRIX
+  CMATRIX tmp(n_rows,1);
   for(int j=0;j<n_rows;j++){ tmp.M[j] = M[j*n_cols+i]; }
   return tmp;
 }
 
-matrix matrix::row(int i){
-// takes given row and makes it 1 x n matrix
-  matrix tmp(1,n_cols);
+CMATRIX CMATRIX::row(int i){
+// takes given row and makes it 1 x n CMATRIX
+  CMATRIX tmp(1,n_cols);
   for(int j=0;j<n_cols;j++){ tmp.M[j] = M[i*n_cols+j]; }
   return tmp;
 }
 
 
 
-void matrix::max_nondiagonal(int& row,int& col){
+void CMATRIX::max_nondiagonal(int& row,int& col){
   double maxeps = norm(M[1]); row = 0; col = 1;
   double eps;
   for(int r=0;r<n_rows;r++){
@@ -363,33 +365,33 @@ void matrix::max_nondiagonal(int& row,int& col){
   }  
 }
 /*
-void matrix::inverse(matrix& inv,double EPS,int max_num_iter,int is_cycle,int alg){
+void CMATRIX::inverse(CMATRIX& inv,double EPS,int max_num_iter,int is_cycle,int alg){
 // Based on: EVECT * EVAL = M * EVECT =>  M * (EVECT* EVAL^-1 * EVECT^-1)
 // But EVECT^-1 = EVECT^T => M^-1 = (EVECT* EVAL^-1 * EVECT^T)
   if(n_rows==n_cols){
-    matrix eval(n_rows,n_cols);
-    matrix evec(n_rows,n_cols);
-    matrix einv(n_rows,n_cols);
+    CMATRIX eval(n_rows,n_cols);
+    CMATRIX evec(n_rows,n_cols);
+    CMATRIX einv(n_rows,n_cols);
 
     eigen(eval,evec,EPS,max_num_iter,is_cycle,alg);
     for(int i=0;i<n_rows;i++){ einv.M[i*n_cols+i] = 1.0/eval.M[i*n_cols+i]; }
 
     inv = evec*einv*(evec.T());
   }  
-  else{ cout<<"Warning: in matrix::inverse - matrix is not square\n"; }
+  else{ cout<<"Warning: in CMATRIX::inverse - CMATRIX is not square\n"; }
 }
 */
 
 
-void matrix::eigen0(matrix& EVAL, matrix& EVECT,double EPS,int max_num_iter,int is_cycle,int alg) {
-// Description: Jacobi Eigenvalue Solver - only for complex hermitian matrix!
+void CMATRIX::eigen0(CMATRIX& EVAL, CMATRIX& EVECT,double EPS,int max_num_iter,int is_cycle,int alg) {
+// Description: Jacobi Eigenvalue Solver - only for complex hermitian CMATRIX!
 // EVECT * EVAL  =  M * EVECT
 // V = P^T
 // EVAL = V_M V_{M-1} ... V_0 * M * V_0^T * V_1^T ... V_M^T = Q^T * M * Q
 // EVECT = Q = V_0^T * V_1^T ... V_M^T
 // http://coderov.net/vma/140-eigenvalues/862-direct-method-of-rotation.html  <- this is strange, so use
 // http://en.wikipedia.org/wiki/Jacobi_method_for_complex_Hermitian_matrices
-// Note: Wikipedia source contains an error: matrix element for m=q and n=p should be changed from
+// Note: Wikipedia source contains an error: CMATRIX element for m=q and n=p should be changed from
 // exp(-i*teta1)*cos(teta2) to -i*exp(-i*teta1)*cos(teta2) !!!
 // Also in formula for tan(phi2) I assumed that the real part of H_{p,q} is used!
 
@@ -417,8 +419,8 @@ void matrix::eigen0(matrix& EVAL, matrix& EVECT,double EPS,int max_num_iter,int 
   int row, col, i, j, k, num_iter;
   double val,phi,eps;
 
-  matrix V(n,n);
-  matrix temp(n,n);
+  CMATRIX V(n,n);
+  CMATRIX temp(n,n);
 
   for(i=0;i<n_elts;i++){     temp.M[i] = M[i];   }
   EVECT.load_identity();
@@ -530,7 +532,7 @@ void matrix::eigen0(matrix& EVAL, matrix& EVECT,double EPS,int max_num_iter,int 
   }while(eps>EPS && num_iter<max_num_iter);
 
   if(eps>EPS){
-    cout<<"Error: In void matrix::eigen(matrix& EVAL, matrix& EVECT,double EPS,int max_num_iter,int is_cycle,int alg)\n";
+    cout<<"Error: In void CMATRIX::eigen(CMATRIX& EVAL, CMATRIX& EVECT,double EPS,int max_num_iter,int is_cycle,int alg)\n";
     cout<<"Number of iterations num_iter = "<<num_iter<<" exceeded maximal number of iterations max_num_iter = "<<max_num_iter<<endl;
     cout<<"Precision achieved eps = "<<eps<<" is lower then requested accuracy EPS = "<<EPS<<endl;
     cout<<"Convergense failed. Exiting...\n";
@@ -542,7 +544,7 @@ void matrix::eigen0(matrix& EVAL, matrix& EVECT,double EPS,int max_num_iter,int 
   EVAL = temp;
 }
 
-void matrix::QR(matrix& w,matrix& R){
+void CMATRIX::QR(CMATRIX& w,CMATRIX& R){
 /****************************************************************************
  Very helpful resource:
  http://www.math.umn.edu/~olver/aims_/qr.pdf
@@ -588,12 +590,12 @@ void matrix::QR(matrix& w,matrix& R){
   }// for i
 
 
-  // Now for R-matrix
+  // Now for R-CMATRIX
   R = complex<double>(0.0,0.0);
   for(i=0;i<n;i++){
     for(j=i;j<n;j++){      
       for(k=0;k<n;k++){
-        // R[i][j] = w_j * u_i, note w - is actually original matrix M, while u is what is now w.
+        // R[i][j] = w_j * u_i, note w - is actually original CMATRIX M, while u is what is now w.
         // Note: For complex (this) case the actual definition of the R[i][j] coefficients is:
         // R[j][i] = (w_j^*  x  u_i)^* = w_j * u_i^*, where ^* - denotes complex conjugation
         R.M[i*n+j] += (M[k*n+j]) * std::conj(w.M[k*n+i]);
@@ -605,7 +607,7 @@ void matrix::QR(matrix& w,matrix& R){
 }
 
 
-void matrix::QR1(matrix& w,matrix& R){
+void CMATRIX::QR1(CMATRIX& w,CMATRIX& R){
 /****************************************************************************
  Very helpful resource:
  http://www.math.umn.edu/~olver/aims_/qr.pdf
@@ -656,12 +658,12 @@ void matrix::QR1(matrix& w,matrix& R){
   }// for i
 
 
-  // Now for R-matrix
+  // Now for R-CMATRIX
   R = complex<double>(0.0,0.0);
   for(i=0;i<n;i++){
     for(j=i;j<=min(n-1,i+2);j++){      
       for(k=0;k<n;k++){
-        // R[i][j] = w_j * u_i, note w - is actually original matrix M, while u is what is now w.
+        // R[i][j] = w_j * u_i, note w - is actually original CMATRIX M, while u is what is now w.
         // Note: For complex (this) case the actual definition of the R[i][j] coefficients is:
         // R[j][i] = (w_j^*  x  u_i)^* = w_j * u_i^*, where ^* - denotes complex conjugation
         //if(j-i==0 || j-i==1 || j-i==2){
@@ -675,13 +677,13 @@ void matrix::QR1(matrix& w,matrix& R){
 }
 
 
-void qr(double EPS,int n,matrix& eval,vector<double>& Eval){
+void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval){
 // --------- Recursive QR iterations ------------
-// eval - is the input tridiagonal matrix
+// eval - is the input tridiagonal CMATRIX
 // n - is a size of the problem
 
-  matrix Q(n,n);
-  matrix R(n,n);
+  CMATRIX Q(n,n);
+  CMATRIX R(n,n);
   int iter = 0;
   int stop = 0;
 
@@ -727,12 +729,12 @@ void qr(double EPS,int n,matrix& eval,vector<double>& Eval){
          int sz_up = i+1;
          int sz_dn = n-i-1;
 
-         if(sz_up==1 && sz_dn==1){ // Here we just finished 2x2 matrix - done
+         if(sz_up==1 && sz_dn==1){ // Here we just finished 2x2 CMATRIX - done
            Eval[0] = eval.M[0].real();
            Eval[1] = eval.M[3].real();
          }
          else if(sz_up==1 && sz_dn>1){
-           matrix dn(sz_dn,sz_dn); dn = 0.0;
+           CMATRIX dn(sz_dn,sz_dn); dn = 0.0;
            // copy diagonal elements
            for(int j=i+1;j<n;j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))] = eval.M[j*n+j]; }
            // upper off-diagonal elements
@@ -750,7 +752,7 @@ void qr(double EPS,int n,matrix& eval,vector<double>& Eval){
          }
 
          else if(sz_up>1 && sz_dn==1){
-           matrix up(sz_up,sz_up); up = 0.0;
+           CMATRIX up(sz_up,sz_up); up = 0.0;
            // copy diagonal elements
            for(int j=0;j<(n-1);j++){ up.M[j*sz_up + j] = eval.M[j*n+j]; }
            // upper off-diagonal elements
@@ -770,7 +772,7 @@ void qr(double EPS,int n,matrix& eval,vector<double>& Eval){
 
          else{
          // General case - both matrices are at least 2x2
-           matrix dn(sz_dn,sz_dn); dn = 0.0;
+           CMATRIX dn(sz_dn,sz_dn); dn = 0.0;
            // copy diagonal elements
            for(int j=i+1;j<n;j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))] = eval.M[j*n+j]; }
            // upper off-diagonal elements
@@ -778,7 +780,7 @@ void qr(double EPS,int n,matrix& eval,vector<double>& Eval){
            // lower off-diagonal elements
            for(j=i+2;j<n;j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))-1] = eval.M[j*n+j-1]; }
 
-           matrix up(sz_up,sz_up); up = 0.0;
+           CMATRIX up(sz_up,sz_up); up = 0.0;
            // copy diagonal elements
            for(j=0;j<(i+1);j++){ up.M[j*sz_up + j] = eval.M[j*n+j]; }
            // upper off-diagonal elements
@@ -815,18 +817,18 @@ void qr(double EPS,int n,matrix& eval,vector<double>& Eval){
 }
 
 
-void qr(double EPS,int n,matrix& eval,vector<double>& Eval,matrix& Evec){
+void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval,CMATRIX& Evec){
 // Overloading qr function - to keep track of the transformation
-// matrix
+// CMATRIX
 // --------- Recursive QR iterations ------------
-// eval - is the input tridiagonal matrix
+// eval - is the input tridiagonal CMATRIX
 // n - is a size of the problem
   double mu,d,a1,b2;
   int i1,i2;
-  matrix Q(n,n);
-  matrix R(n,n);
-  matrix Q_tmp(n,n);  Q_tmp.load_identity();
-  matrix I(n,n); I.load_identity();
+  CMATRIX Q(n,n);
+  CMATRIX R(n,n);
+  CMATRIX Q_tmp(n,n);  Q_tmp.load_identity();
+  CMATRIX I(n,n); I.load_identity();
   int iter = 0;
   int stop = 0;
 
@@ -895,12 +897,12 @@ void qr(double EPS,int n,matrix& eval,vector<double>& Eval,matrix& Evec){
          int sz_up = i+1;
          int sz_dn = n-i-1;
 
-         if(sz_up==1 && sz_dn==1){ // Here we just finished 2x2 matrix - done
+         if(sz_up==1 && sz_dn==1){ // Here we just finished 2x2 CMATRIX - done
            Eval[0] = eval.M[0].real();
            Eval[1] = eval.M[3].real();
          }
          else if(sz_up==1 && sz_dn>1){
-           matrix dn(sz_dn,sz_dn); dn = 0.0;
+           CMATRIX dn(sz_dn,sz_dn); dn = 0.0;
            // copy diagonal elements
            for(int j=i+1;j<n;j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))] = eval.M[j*n+j]; }
            // upper off-diagonal elements
@@ -909,7 +911,7 @@ void qr(double EPS,int n,matrix& eval,vector<double>& Eval,matrix& Evec){
            for(j=i+2;j<n;j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))-1] = eval.M[j*n+j-1]; }
 
            vector<double> Eval_tmp(sz_dn,0.0);
-           matrix Q_dn(sz_dn,sz_dn);
+           CMATRIX Q_dn(sz_dn,sz_dn);
            qr(EPS,sz_dn,dn,Eval_tmp,Q_dn);
 
            for(j=i+1;j<n;j++){
@@ -925,7 +927,7 @@ void qr(double EPS,int n,matrix& eval,vector<double>& Eval,matrix& Evec){
          }
 
          else if(sz_up>1 && sz_dn==1){
-           matrix up(sz_up,sz_up); up = 0.0;
+           CMATRIX up(sz_up,sz_up); up = 0.0;
            // copy diagonal elements
            for(int j=0;j<(n-1);j++){ up.M[j*sz_up + j] = eval.M[j*n+j]; }
            // upper off-diagonal elements
@@ -934,7 +936,7 @@ void qr(double EPS,int n,matrix& eval,vector<double>& Eval,matrix& Evec){
            for(j=1;j<(n-1);j++){ up.M[j*sz_up + j-1] = eval.M[j*n+j-1]; }
 
            vector<double> Eval_tmp(sz_up,0.0);
-           matrix Q_up(sz_up,sz_up);
+           CMATRIX Q_up(sz_up,sz_up);
            qr(EPS,sz_up,up,Eval_tmp,Q_up);
 
            for(j=0;j<(i+1);j++){
@@ -951,7 +953,7 @@ void qr(double EPS,int n,matrix& eval,vector<double>& Eval,matrix& Evec){
 
          else{
          // General case - both matrices are at least 2x2
-           matrix dn(sz_dn,sz_dn); dn = 0.0;
+           CMATRIX dn(sz_dn,sz_dn); dn = 0.0;
            // copy diagonal elements
            for(int j=i+1;j<n;j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))] = eval.M[j*n+j]; }
            // upper off-diagonal elements
@@ -959,7 +961,7 @@ void qr(double EPS,int n,matrix& eval,vector<double>& Eval,matrix& Evec){
            // lower off-diagonal elements
            for(j=i+2;j<n;j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))-1] = eval.M[j*n+j-1]; }
 
-           matrix up(sz_up,sz_up); up = 0.0;
+           CMATRIX up(sz_up,sz_up); up = 0.0;
            // copy diagonal elements
            for(j=0;j<(i+1);j++){ up.M[j*sz_up + j] = eval.M[j*n+j]; }
            // upper off-diagonal elements
@@ -968,11 +970,11 @@ void qr(double EPS,int n,matrix& eval,vector<double>& Eval,matrix& Evec){
            for(j=1;j<(i+1);j++){ up.M[j*sz_up + j-1] = eval.M[j*n+j-1]; }
 
            vector<double> Eval_tmp_up(sz_up,0.0);
-           matrix Q_up(sz_up,sz_up);
+           CMATRIX Q_up(sz_up,sz_up);
            qr(EPS,sz_up,up,Eval_tmp_up,Q_up);
 
            vector<double> Eval_tmp_dn(sz_dn,0.0);
-           matrix Q_dn(sz_dn,sz_dn);
+           CMATRIX Q_dn(sz_dn,sz_dn);
            qr(EPS,sz_dn,dn,Eval_tmp_dn,Q_dn);
 
 
@@ -1011,7 +1013,7 @@ void qr(double EPS,int n,matrix& eval,vector<double>& Eval,matrix& Evec){
 
 }
 
-void matrix::eigen(double EPS,matrix& EVAL,matrix& EVECT,int opt){
+void CMATRIX::eigen(double EPS,CMATRIX& EVAL,CMATRIX& EVECT,int opt){
 // This is just a convenient interface
 // opt - is option - choose the method
 
@@ -1031,18 +1033,18 @@ void matrix::eigen(double EPS,matrix& EVAL,matrix& EVECT,int opt){
 
 }
 
-void matrix::eigen1(double EPS,vector<double>& Eval){
+void CMATRIX::eigen1(double EPS,vector<double>& Eval){
 //-------------------------------------------------------------
 // We do the job in reductionist way - once one of the elements on 
-// the off-diagonal is smaller than EPS - we split the matrix into
+// the off-diagonal is smaller than EPS - we split the CMATRIX into
 // 2 blocks and then deal with each other independently - deflation
 //-------------------------------------------------------------
 
   int n = n_rows; // = n_cols
 
-  matrix Q(n,n);
-  matrix R(n,n);
-  matrix eval(n,n);
+  CMATRIX Q(n,n);
+  CMATRIX R(n,n);
+  CMATRIX eval(n,n);
 
 
   tridiagonalize(eval);
@@ -1060,7 +1062,7 @@ void matrix::eigen1(double EPS,vector<double>& Eval){
 }
 
 
-void matrix::eigen2(double EPS,vector<double>& Eval,matrix& Evec){
+void CMATRIX::eigen2(double EPS,vector<double>& Eval,CMATRIX& Evec){
 //-------------------------------------------------------------
 // This is practically the same version as eigen1, but we also 
 // keep track of the transformation matrixes - so to compute all
@@ -1073,8 +1075,8 @@ void matrix::eigen2(double EPS,vector<double>& Eval,matrix& Evec){
   int n = n_rows; // = n_cols
 
   Evec.load_identity();
-  matrix Q(n,n);
-  matrix T(n,n);
+  CMATRIX Q(n,n);
+  CMATRIX T(n,n);
 
   // M =  H * T * H,  H^H = H^-1 = H, here H = Evec - to save space
   tridiagonalize(T,Evec);
@@ -1092,7 +1094,7 @@ void matrix::eigen2(double EPS,vector<double>& Eval,matrix& Evec){
 
 }
 
-void matrix::eigen3(double EPS,vector<double>& Eval,matrix& Evec){
+void CMATRIX::eigen3(double EPS,vector<double>& Eval,CMATRIX& Evec){
 //-------------------------------------------------------------
 // This is practically the same version as eigen1, but we also 
 // keep track of the transformation matrixes - so to compute all
@@ -1104,10 +1106,10 @@ void matrix::eigen3(double EPS,vector<double>& Eval,matrix& Evec){
 
   int n = n_rows; // = n_cols
 
-  matrix X(n,1);
+  CMATRIX X(n,1);
   complex<double> gs( (1.0/(sqrt(2.0)*n)), (1.0/(sqrt(2.0)*n)) );
 
-  matrix m(n,n); m = *this;
+  CMATRIX m(n,n); m = *this;
 
   m.eigen1(EPS,Eval); // compute all eigenvalues
 
@@ -1138,10 +1140,10 @@ void matrix::eigen3(double EPS,vector<double>& Eval,matrix& Evec){
 
 
 
-void matrix::tridiagonalize(matrix& T){
+void CMATRIX::tridiagonalize(CMATRIX& T){
 /****************************************************************************
-  Here we will transfrom the matrix to tridiagonal form (T) using the Householder
-  transformations. We assume our matrix is Hermitian or symmetric, otherwise
+  Here we will transfrom the CMATRIX to tridiagonal form (T) using the Householder
+  transformations. We assume our CMATRIX is Hermitian or symmetric, otherwise
   the algorithm may not work
 
   General identity behind Householder:
@@ -1159,8 +1161,8 @@ void matrix::tridiagonalize(matrix& T){
   n = n_rows; // = n_cols
 
 
-  matrix w(n,1); 
-  matrix v(n,1);
+  CMATRIX w(n,1); 
+  CMATRIX v(n,1);
 
   for(i=0;i<n_elts;i++){ T.M[i] = M[i]; }
 
@@ -1184,7 +1186,7 @@ void matrix::tridiagonalize(matrix& T){
     // The following commented lines are only for mathematical and historical reason
     // Finally, projector
     // P = iden - 2.0 * w * (w.H());      
-    // Do the transformation of the matrix
+    // Do the transformation of the CMATRIX
     // This is basic algorithm
     //T = P * T * P; // P = P.H = P^-1   // <-- this is most costly (both memory and time) place!
 
@@ -1198,13 +1200,13 @@ void matrix::tridiagonalize(matrix& T){
 }
 
 
-void matrix::tridiagonalize(matrix& T,matrix& H){
+void CMATRIX::tridiagonalize(CMATRIX& T,CMATRIX& H){
 /****************************************************************************
-  Here we will transfrom the matrix to tridiagonal form (T) using the Householder
-  transformations. We assume our matrix is Hermitian or symmetric, otherwise
+  Here we will transfrom the CMATRIX to tridiagonal form (T) using the Householder
+  transformations. We assume our CMATRIX is Hermitian or symmetric, otherwise
   the algorithm may not work
 
-  The full transformation is kept in matrix H
+  The full transformation is kept in CMATRIX H
 
   General identity behind Householder:
   Y = P * X
@@ -1220,13 +1222,13 @@ void matrix::tridiagonalize(matrix& T,matrix& H){
 
   n = n_rows; // = n_cols
 
-  matrix I(n,n);  I.load_identity();
-  matrix tmp1(n,n);
-  matrix tmp2(n,n);
-  matrix P(n,n);
+  CMATRIX I(n,n);  I.load_identity();
+  CMATRIX tmp1(n,n);
+  CMATRIX tmp2(n,n);
+  CMATRIX P(n,n);
   H.load_identity();
-  matrix w(n,1); 
-  matrix v(n,1);
+  CMATRIX w(n,1); 
+  CMATRIX v(n,1);
 
   for(i=0;i<n_elts;i++){ T.M[i] = M[i]; }
 
@@ -1250,7 +1252,7 @@ void matrix::tridiagonalize(matrix& T,matrix& H){
     // The following commented lines are only for mathematical and historical reason
     // Finally, projector
     // P = iden - 2.0 * w * (w.H());      
-    // Do the transformation of the matrix
+    // Do the transformation of the CMATRIX
     // This is basic algorithm
     //T = P * T * P; // P = P.H = P^-1   // <-- this is most costly (both memory and time) place!
 
@@ -1270,14 +1272,14 @@ void matrix::tridiagonalize(matrix& T,matrix& H){
 
 
 
-matrix exp(matrix& m1,complex<double> scl,double eps){
+CMATRIX exp(CMATRIX& m1,complex<double> scl,double eps){
 /****************************************************************************
   Computes  exp(m1*scl)
   Works only for Hermitian m1: m1.H() = m1
 *****************************************************************************/
-  if(m1.n_rows!=m1.n_cols){ cout<<"Error in exp: Can not exponentiate non-square matrix\n"; exit(0); }
+  if(m1.n_rows!=m1.n_cols){ cout<<"Error in exp: Can not exponentiate non-square CMATRIX\n"; exit(0); }
   int n = m1.n_rows;
-  matrix evec(n,n),eval(n,n);//,inv_evec(n,n);
+  CMATRIX evec(n,n),eval(n,n);//,inv_evec(n,n);
 
   m1.eigen(eps,eval,evec,2);
   for(int i=0;i<n;i++){  eval.M[i*n+i] = exp(eval.M[i*n+i].real()*scl); }
@@ -1286,14 +1288,14 @@ matrix exp(matrix& m1,complex<double> scl,double eps){
 }
  
 
-matrix sin(matrix& m1,complex<double> scl, double eps){
+CMATRIX sin(CMATRIX& m1,complex<double> scl, double eps){
 /****************************************************************************
   Computes sin(m1*scl)
   Works only for Hermitian m1: m1.H() = m1
 *****************************************************************************/
-  if(m1.n_rows!=m1.n_cols){ cout<<"Error in exp: Can not exponentiate non-square matrix\n"; exit(0); }
+  if(m1.n_rows!=m1.n_cols){ cout<<"Error in exp: Can not exponentiate non-square CMATRIX\n"; exit(0); }
   int n = m1.n_rows;
-  matrix evec(n,n),eval(n,n);//,inv_evec(n,n);
+  CMATRIX evec(n,n),eval(n,n);//,inv_evec(n,n);
 
   m1.eigen(eps,eval,evec,2);
   for(int i=0;i<n;i++){  eval.M[i*n+i] = sin(eval.M[i*n+i].real()*scl); }
@@ -1301,14 +1303,14 @@ matrix sin(matrix& m1,complex<double> scl, double eps){
   return (evec*eval*evec.H());
 }
 
-matrix cos(matrix& m1,complex<double> scl, double eps){
+CMATRIX cos(CMATRIX& m1,complex<double> scl, double eps){
 /****************************************************************************
   Computes cos(m1*scl)
   Works only for Hermitian m1: m1.H() = m1
 *****************************************************************************/
-  if(m1.n_rows!=m1.n_cols){ cout<<"Error in exp: Can not exponentiate non-square matrix\n"; exit(0); }
+  if(m1.n_rows!=m1.n_cols){ cout<<"Error in exp: Can not exponentiate non-square CMATRIX\n"; exit(0); }
   int n = m1.n_rows;
-  matrix evec(n,n),eval(n,n);//,inv_evec(n,n);
+  CMATRIX evec(n,n),eval(n,n);//,inv_evec(n,n);
 
   m1.eigen(eps,eval,evec,2);
   for(int i=0;i<n;i++){  eval.M[i*n+i] = cos(eval.M[i*n+i].real()*scl); }
@@ -1316,17 +1318,17 @@ matrix cos(matrix& m1,complex<double> scl, double eps){
   return (evec*eval*evec.H());
 }
 
-matrix pow(matrix& m1,double nn, double eps){
+CMATRIX pow(CMATRIX& m1,double nn, double eps){
 /****************************************************************************
   Computes pow(m1,nn). In particular if nn = 1/2 result is sqrt(m1)
   Works only for Hermitian m1: m1.H() = m1
 *****************************************************************************/
-  if(m1.n_rows!=m1.n_cols){ cout<<"Error in exp: Can not exponentiate non-square matrix\n"; exit(0); }
+  if(m1.n_rows!=m1.n_cols){ cout<<"Error in exp: Can not exponentiate non-square CMATRIX\n"; exit(0); }
   int n = m1.n_rows;
-  matrix evec(n,n),eval(n,n);//,inv_evec(n,n);
+  CMATRIX evec(n,n),eval(n,n);//,inv_evec(n,n);
 
   m1.eigen(eps,eval,evec,2);
-  for(int i=0;i<n;i++){  eval.M[i*n+i] = pow(eval.M[i*n+i].real(),nn); }
+  for(int i=0;i<n;i++){  eval.M[i*n+i] = std::pow(eval.M[i*n+i].real(),nn); }
 //  evec.direct_inverse(eps,inv_evec);
   return (evec*eval*evec.H());
 }
@@ -1334,11 +1336,11 @@ matrix pow(matrix& m1,double nn, double eps){
 
 
 
-void matrix::inverse(double EPS,matrix& INV,int opt){
+void CMATRIX::inverse(double EPS,CMATRIX& INV,int opt){
 
   if(opt==1){ direct_inverse(EPS,INV); }  // this is much faster way - works fine for ~n = 350 and more
   else if(opt==2){                        // actually this is slower version - works only up ~n = 100
-    matrix I(n_rows,n_cols); I.load_identity();
+    CMATRIX I(n_rows,n_cols); I.load_identity();
     solve_linsys(*this, I, INV, EPS, 10000, 1.4); // CX = D, so if D = I => X = C^-1  
   }
 
@@ -1346,7 +1348,7 @@ void matrix::inverse(double EPS,matrix& INV,int opt){
 
 
 
-void matrix::direct_inverse(double EPS,matrix& INV){
+void CMATRIX::direct_inverse(double EPS,CMATRIX& INV){
   int num_of_rows = n_rows;
   int num_of_cols = n_cols;
 
@@ -1441,7 +1443,7 @@ void matrix::direct_inverse(double EPS,matrix& INV){
 }
 
 
-void solve_linsys(matrix& C,matrix& D, matrix& X,double eps,int maxiter,double omega){
+void solve_linsys(CMATRIX& C,CMATRIX& D, CMATRIX& X,double eps,int maxiter,double omega){
 /*********************************************
  Here we solve the system of linear equations
       CX = D  --->     AX = D', where  A = C.T()*C   D' = C.T()*D
@@ -1454,7 +1456,7 @@ void solve_linsys(matrix& C,matrix& D, matrix& X,double eps,int maxiter,double o
  Output: X
 
  Some preliminary transformations are made in order
- to be able to use Gauss-Seidel method for any matrix A
+ to be able to use Gauss-Seidel method for any CMATRIX A
 
  More details:
  80.47 An iterative Algorithm for Matrix Inversion
@@ -1481,7 +1483,7 @@ void solve_linsys(matrix& C,matrix& D, matrix& X,double eps,int maxiter,double o
     if(C.n_rows!=D.n_rows)
         {std::cout<<"Error: The number of rows of matrices C and D in equation CX = D must be equal\n"; exit(35); } // n
     if(C.n_cols!=X.n_rows)
-        {std::cout<<"Error: The number of cols of matrix C and num of rows in matrix D in equation CX = D must be equal\n"; exit(35); } // m
+        {std::cout<<"Error: The number of cols of CMATRIX C and num of rows in CMATRIX D in equation CX = D must be equal\n"; exit(35); } // m
     if(X.n_cols!=D.n_cols)
         {std::cout<<"Error: The number of cols of matrices X and D in equation CX = D must be equal\n"; exit(35); } // p
 
@@ -1494,15 +1496,15 @@ void solve_linsys(matrix& C,matrix& D, matrix& X,double eps,int maxiter,double o
     cout<<"m = "<<m<<endl;
     cout<<"p = "<<p<<endl;
 
-    matrix A(m,m); A = C.H() * C;       
+    CMATRIX A(m,m); A = C.H() * C;       
     eps = eps*eps;
     error = 2.0*eps;
     iter = 0;
 
-    matrix d(n,1);
-    matrix x(m,1);
-    matrix xprev(m,1);
-    matrix b(m,1);
+    CMATRIX d(n,1);
+    CMATRIX x(m,1);
+    CMATRIX xprev(m,1);
+    CMATRIX b(m,1);
 
 
     while((error>eps)&&(iter<maxiter)){
@@ -1566,7 +1568,7 @@ void solve_linsys(matrix& C,matrix& D, matrix& X,double eps,int maxiter,double o
 
 }
 
-void solve_linsys1(matrix& C, matrix& X,double eps,int maxiter,double omega){
+void solve_linsys1(CMATRIX& C, CMATRIX& X,double eps,int maxiter,double omega){
 /*********************************************
  This is gonna be optimized version of the solve_linsys function
  for the case when D = 0
@@ -1585,7 +1587,7 @@ void solve_linsys1(matrix& C, matrix& X,double eps,int maxiter,double omega){
  Output: X
 
  Some preliminary transformations are made in order
- to be able to use Gauss-Seidel method for any matrix A
+ to be able to use Gauss-Seidel method for any CMATRIX A
 
  More details:
  80.47 An iterative Algorithm for Matrix Inversion
@@ -1611,7 +1613,7 @@ void solve_linsys1(matrix& C, matrix& X,double eps,int maxiter,double omega){
     int iter;    // number of iterations
 
     if(C.n_cols!=X.n_rows)
-        {std::cout<<"Error: The number of cols of matrix C and num of rows in matrix D in equation CX = D must be equal\n"; exit(35); } // m
+        {std::cout<<"Error: The number of cols of CMATRIX C and num of rows in CMATRIX D in equation CX = D must be equal\n"; exit(35); } // m
     if(X.n_cols!=1)
         {std::cout<<"Error: The number of cols of matrices X and D in equation CX = D must be equal\n"; exit(35); } // p
 
@@ -1620,12 +1622,12 @@ void solve_linsys1(matrix& C, matrix& X,double eps,int maxiter,double omega){
     m = C.n_cols;
     p = 1;  // this is just 1 in most of the cases
 
-    matrix d(n,1);
-    matrix x(m,1);
-    matrix xprev(m,1);
+    CMATRIX d(n,1);
+    CMATRIX x(m,1);
+    CMATRIX xprev(m,1);
    
    
-    matrix A(m,m); A = C.H() * C;       
+    CMATRIX A(m,m); A = C.H() * C;       
     eps = eps*eps;
     error = 2.0*eps;
     iter = 0;
@@ -1693,7 +1695,7 @@ void solve_linsys1(matrix& C, matrix& X,double eps,int maxiter,double omega){
 }
 
 
-void dft(matrix& in,matrix& out){
+void dft(CMATRIX& in,CMATRIX& out){
 /***************************************
   Discrete Fourier Transform
   e.g. http://en.wikipedia.org/wiki/Fast_Fourier_transform
@@ -1701,14 +1703,14 @@ void dft(matrix& in,matrix& out){
 
   int N = in.n_elts; // <in> and <out> are the vectors with n elements: n x 1
   complex<double> f,mul;
-  double arg;
+  double argg;
 
   for(int k=0;k<N;k++){
 
     out.M[k] = 0.0;
-    arg = 2.0*M_PI*k/((double)N);
+    argg = 2.0*M_PI*k/((double)N);
 
-    f = complex<double>(cos(arg),-sin(arg));
+    f = complex<double>(std::cos(argg),-std::sin(argg));
     mul = 1.0;
 
     for(int n=0;n<N;n++){
@@ -1719,7 +1721,7 @@ void dft(matrix& in,matrix& out){
 
 }
 
-void inv_dft(matrix& in,matrix& out){
+void inv_dft(CMATRIX& in,CMATRIX& out){
 /***************************************
   Inverse Discrete Fourier Transform
   e.g. http://en.wikipedia.org/wiki/Discrete_Fourier_transform
@@ -1727,14 +1729,14 @@ void inv_dft(matrix& in,matrix& out){
 
   int N = in.n_elts; // <in> and <out> are the vectors with n elements: n x 1
   complex<double> f,mul;
-  double arg;
+  double argg;
 
   for(int k=0;k<N;k++){
 
     out.M[k] = 0.0;
-    arg = 2.0*M_PI*k/((double)N);
+    argg = 2.0*M_PI*k/((double)N);
 
-    f = complex<double>(cos(arg),sin(arg));
+    f = complex<double>(std::cos(argg),std::sin(argg));
     mul = 1.0;
 
     for(int n=0;n<N;n++){
@@ -1743,14 +1745,14 @@ void inv_dft(matrix& in,matrix& out){
     }// for j
   }// for i
 
-  arg = 1.0/((double)N);
+  argg = 1.0/((double)N);
   
-  for(k=0;k<N;k++){ out.M[k] *= arg; }
+  for(k=0;k<N;k++){ out.M[k] *= argg; }
 
 }
 
 
-void cft(matrix& in,matrix& out,double xmin,double dx){
+void cft(CMATRIX& in,CMATRIX& out,double xmin,double dx){
 /***************************************
   Continuous Fourier Transform
   f(k) = Integral ( f(r) * exp(-2*pi*i*k*r) * dr ) =
@@ -1764,17 +1766,17 @@ void cft(matrix& in,matrix& out,double xmin,double dx){
 
   int N = in.n_elts; // <in> and <out> are the vectors with n elements: n x 1
   complex<double> f,mul;
-  double arg;
+  double argg;
   double L = dx*N;
 
   for(int k=0;k<N;k++){
 
     double K = (k/L);
     complex<double> pref(0.0,-2.0*M_PI*K*xmin);
-    mul = dx*exp(pref);
+    mul = dx*std::exp(pref);
     out.M[k] = 0.0;
-    arg = 2.0*M_PI*K*dx;
-    f = complex<double>(cos(arg),-sin(arg));
+    argg = 2.0*M_PI*K*dx;
+    f = complex<double>(std::cos(argg),-std::sin(argg));
 
     for(int n=0;n<N;n++){
       out.M[k] += in.M[n]*mul;
@@ -1784,7 +1786,7 @@ void cft(matrix& in,matrix& out,double xmin,double dx){
 
 }
 
-void cft1(matrix& in,matrix& out,double xmin,double kmin,double dx){
+void cft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
 /***************************************
   Continuous Fourier Transform
   f(kmin + k) = Integral ( f(r) * exp(-2*pi*i*(kmin+k)*r) * dr ) =
@@ -1800,17 +1802,17 @@ void cft1(matrix& in,matrix& out,double xmin,double kmin,double dx){
 
   int N = in.n_elts; // <in> and <out> are the vectors with n elements: n x 1
   complex<double> f,mul;
-  double arg;
+  double argg;
   double L = dx*N;
 
   for(int k=0;k<N;k++){
 
     double K = kmin + (k/L);
     complex<double> pref(0.0,-2.0*M_PI*K*xmin);
-    mul = dx*exp(pref);
+    mul = dx*std::exp(pref);
     out.M[k] = 0.0;
-    arg = 2.0*M_PI*K*dx;
-    f = complex<double>(cos(arg),-sin(arg));
+    argg = 2.0*M_PI*K*dx;
+    f = complex<double>(std::cos(argg),-std::sin(argg));
 
     for(int n=0;n<N;n++){
       out.M[k] += in.M[n]*mul;
@@ -1821,7 +1823,7 @@ void cft1(matrix& in,matrix& out,double xmin,double kmin,double dx){
 
 }
 
-void cfft1(matrix& in,matrix& out,double xmin,double kmin,double dx){
+void cfft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
 /***************************************
   Continuous Fast Fourier Transform
 
@@ -1850,14 +1852,14 @@ void cfft1(matrix& in,matrix& out,double xmin,double kmin,double dx){
     complex<double> one(0.0,1.0);
     complex<double> p1, p2,ea;
 
-    ea = exp(-M_PI*one*xmin/dx); // alp(2*dx)
-    p1 = exp(-2.0*M_PI*one*kmin*dx);
-    p2 = exp(-2.0*M_PI*one*dk*dx);
+    ea = std::exp(-M_PI*one*xmin/dx); // alp(2*dx)
+    p1 = std::exp(-2.0*M_PI*one*kmin*dx);
+    p2 = std::exp(-2.0*M_PI*one*dk*dx);
 
-    matrix in_even(1,Nhalf);
-    matrix in_odd(1,Nhalf);
-    matrix out_even(1,Nhalf);
-    matrix out_odd(1,Nhalf);
+    CMATRIX in_even(1,Nhalf);
+    CMATRIX in_odd(1,Nhalf);
+    CMATRIX out_even(1,Nhalf);
+    CMATRIX out_odd(1,Nhalf);
 
     // Divide set on the even and odd part
     for(int m=0;m<Nhalf;m++){
@@ -1887,7 +1889,7 @@ void cfft1(matrix& in,matrix& out,double xmin,double kmin,double dx){
 }
 
 
-void cft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy){
+void cft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy){
 /***************************************
   Continuous 2-D Fourier Transform
   f(kmin + k) = Integral ( f(r) * exp(-2*pi*i*(kmin+k)*r) * dr ) =
@@ -1924,19 +1926,19 @@ void cft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, doub
   for(int kx=0;kx<Nx;kx++){
     Kx = (kxmin + kx * dkx);
     argg = -2.0*M_PI*Kx*xmin;
-    Px = dx*complex<double>(cos(argg),sin(argg));
+    Px = dx*complex<double>(std::cos(argg),std::sin(argg));
 
     argg = -2.0*M_PI*Kx*dx;
-    fx = complex<double>(cos(argg),sin(argg));
+    fx = complex<double>(std::cos(argg),std::sin(argg));
 
     
     for(int ky=0;ky<Ny;ky++){
       Ky = (kymin + ky * dky);
       argg = -2.0*M_PI*Ky*ymin;
-      Py = dy*complex<double>(cos(argg),sin(argg));
+      Py = dy*complex<double>(std::cos(argg),std::sin(argg));
 
       argg = -2.0*M_PI*Ky*dy;
-      fy = complex<double>(cos(argg),sin(argg));
+      fy = complex<double>(std::cos(argg),std::sin(argg));
 
 
       sumx = 0.0; fnx = 1.0;
@@ -1958,7 +1960,7 @@ void cft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, doub
 
 }
 
-void cfft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy){
+void cfft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy){
 /***************************************
   Continuous Fast Fourier Transform for 2D
   
@@ -1992,23 +1994,23 @@ void cfft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, dou
 
     complex<double> p1x,p2x,p1y,p2y,eax,eay;
 
-    eax = exp(-M_PI*one*xmin/dx); // alpx(2*dx,2*dy)
-    p1x = exp(-2.0*M_PI*one*kxmin*dx);
-    p2x = exp(-2.0*M_PI*one/((double)Nx));
+    eax = std::exp(-M_PI*one*xmin/dx); // alpx(2*dx,2*dy)
+    p1x = std::exp(-2.0*M_PI*one*kxmin*dx);
+    p2x = std::exp(-2.0*M_PI*one/((double)Nx));
 
-    eay = exp(-M_PI*one*ymin/dy); // alpy(2*dx,2*dy)
-    p2y = exp(-2.0*M_PI*one/((double)Ny));
+    eay = std::exp(-M_PI*one*ymin/dy); // alpy(2*dx,2*dy)
+    p2y = std::exp(-2.0*M_PI*one/((double)Ny));
 
 
-    matrix in_ee(Nxhalf,Nyhalf);
-    matrix in_oe(Nxhalf,Nyhalf);
-    matrix in_eo(Nxhalf,Nyhalf);
-    matrix in_oo(Nxhalf,Nyhalf);
+    CMATRIX in_ee(Nxhalf,Nyhalf);
+    CMATRIX in_oe(Nxhalf,Nyhalf);
+    CMATRIX in_eo(Nxhalf,Nyhalf);
+    CMATRIX in_oo(Nxhalf,Nyhalf);
 
-    matrix out_ee(Nxhalf,Nyhalf);
-    matrix out_oe(Nxhalf,Nyhalf);
-    matrix out_eo(Nxhalf,Nyhalf);
-    matrix out_oo(Nxhalf,Nyhalf);
+    CMATRIX out_ee(Nxhalf,Nyhalf);
+    CMATRIX out_oe(Nxhalf,Nyhalf);
+    CMATRIX out_eo(Nxhalf,Nyhalf);
+    CMATRIX out_oo(Nxhalf,Nyhalf);
 
     // Divide set on the even and odd parts
     for(int m1=0;m1<Nxhalf;m1++){
@@ -2059,16 +2061,16 @@ void cfft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, dou
 
     complex<double> p1x,p2x,eax;
 
-    eax = exp(-M_PI*one*xmin/dx); // alpx(2*dx,dy)
-    p1x = exp(-2.0*M_PI*one*kxmin*dx);
-    p2x = exp(-2.0*M_PI*one/((double)Nx));
+    eax = std::exp(-M_PI*one*xmin/dx); // alpx(2*dx,dy)
+    p1x = std::exp(-2.0*M_PI*one*kxmin*dx);
+    p2x = std::exp(-2.0*M_PI*one/((double)Nx));
 
 
-    matrix in_e(Nxhalf,Ny);
-    matrix in_o(Nxhalf,Ny);
+    CMATRIX in_e(Nxhalf,Ny);
+    CMATRIX in_o(Nxhalf,Ny);
 
-    matrix out_e(Nxhalf,Ny);
-    matrix out_o(Nxhalf,Ny);
+    CMATRIX out_e(Nxhalf,Ny);
+    CMATRIX out_o(Nxhalf,Ny);
 
     // Divide set on the even and odd parts
     for(int m1=0;m1<Nxhalf;m1++){
@@ -2110,16 +2112,16 @@ void cfft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, dou
 
     complex<double> p1y,p2y,eay;
 
-    eay = exp(-M_PI*one*ymin/dy); // alpy(dx,2*dy)
-    p1y = exp(-2.0*M_PI*one*kymin*dy);
-    p2y = exp(-2.0*M_PI*one/((double)Ny));
+    eay = std::exp(-M_PI*one*ymin/dy); // alpy(dx,2*dy)
+    p1y = std::exp(-2.0*M_PI*one*kymin*dy);
+    p2y = std::exp(-2.0*M_PI*one/((double)Ny));
 
 
-    matrix in_e(Nx,Nyhalf);
-    matrix in_o(Nx,Nyhalf);
+    CMATRIX in_e(Nx,Nyhalf);
+    CMATRIX in_o(Nx,Nyhalf);
 
-    matrix out_e(Nx,Nyhalf);
-    matrix out_o(Nx,Nyhalf);
+    CMATRIX out_e(Nx,Nyhalf);
+    CMATRIX out_o(Nx,Nyhalf);
 
     // Divide set on the even and odd parts
     for(int m1=0;m1<Nx;m1++){
@@ -2166,7 +2168,7 @@ void cfft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, dou
 
 
 
-void cft2(matrix& in,matrix& out,double xmin,double kmin,double dx,double dk){
+void cft2(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk){
 /***************************************
   Continuous Fourier Transform
   f(k) = Integral ( f(r) * exp(-2*pi*i*k*r) * dr ) =
@@ -2183,8 +2185,8 @@ void cft2(matrix& in,matrix& out,double xmin,double kmin,double dx,double dk){
   Note: Number of real and reciprocal space grids is different
 ****************************************/
 
-  int N_r =  in.n_elts; // <in> - is 1 x N_r or N_r x 1 matrix
-  int N_k = out.n_elts; // <out> - is 1 x N_k or N_k x 1 matrix
+  int N_r =  in.n_elts; // <in> - is 1 x N_r or N_r x 1 CMATRIX
+  int N_k = out.n_elts; // <out> - is 1 x N_k or N_k x 1 CMATRIX
 
   complex<double> f,mul;
   double K,argg;
@@ -2193,11 +2195,11 @@ void cft2(matrix& in,matrix& out,double xmin,double kmin,double dx,double dk){
 
     K = kmin + k*dk;
     argg = -2.0*M_PI*K*xmin;
-    mul = complex<double>(dx*cos(argg),dx*sin(argg));
+    mul = complex<double>(dx*std::cos(argg),dx*std::sin(argg));
 
 
     argg = -2.0*M_PI*K*dx;
-    f = complex<double>(cos(argg),sin(argg));
+    f = complex<double>(std::cos(argg),std::sin(argg));
 
     out.M[k] = 0.0;
     for(int n=0;n<N_r;n++){
@@ -2210,7 +2212,7 @@ void cft2(matrix& in,matrix& out,double xmin,double kmin,double dx,double dk){
 }
 
 
-void inv_cft(matrix& in,matrix& out,double xmin,double dx){
+void inv_cft(CMATRIX& in,CMATRIX& out,double xmin,double dx){
 /***************************************
   Inverse Continuous Fourier Transform
   f(n) = Integral ( f(k) * exp(2*pi*i*k*r) * dk ) =
@@ -2239,7 +2241,7 @@ void inv_cft(matrix& in,matrix& out,double xmin,double dx){
     out.M[n] = 0.0;
     arg = 2.0*M_PI*r_n/L;
 
-    f = complex<double>(cos(arg),sin(arg));
+    f = complex<double>(std::cos(arg),std::sin(arg));
     mul = 1.0;
 
     for(int k=0;k<N;k++){
@@ -2254,7 +2256,7 @@ void inv_cft(matrix& in,matrix& out,double xmin,double dx){
 
 }
 
-void inv_cft1(matrix& in,matrix& out,double xmin,double kmin,double dx){
+void inv_cft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
 /***************************************
   Inverse Continuous Fourier Transform
   f(n) = Integral ( f(k) * exp(2*pi*i*k*r) * dk ) =
@@ -2284,10 +2286,10 @@ void inv_cft1(matrix& in,matrix& out,double xmin,double kmin,double dx){
     out.M[n] = 0.0;
     
     argg = 2.0*M_PI*r_n*kmin;
-    complex<double> f1 = complex<double>(cos(argg),sin(argg));
+    complex<double> f1 = complex<double>(std::cos(argg),std::sin(argg));
 
     argg = 2.0*M_PI*r_n/L;
-    f = complex<double>(cos(argg),sin(argg));
+    f = complex<double>(std::cos(argg),std::sin(argg));
     mul = f1;
 
     for(int k=0;k<N;k++){
@@ -2302,7 +2304,7 @@ void inv_cft1(matrix& in,matrix& out,double xmin,double kmin,double dx){
 
 }
 
-void inv_cfft1(matrix& in,matrix& out,double xmin,double kmin,double dx){
+void inv_cfft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
 /***************************************
   Inverse Continuous Fast Fourier Transform
 
@@ -2325,14 +2327,14 @@ void inv_cfft1(matrix& in,matrix& out,double xmin,double kmin,double dx){
     complex<double> one(0.0,1.0);
     complex<double> p1, p2,ea;
 
-    ea = exp(M_PI*one*kmin*dx*((double)N)); // alp(dx)
-    p1 = exp(2.0*M_PI*one*xmin*dk);
-    p2 = exp(2.0*M_PI*one*dk*dx);
+    ea = std::exp(M_PI*one*kmin*dx*((double)N)); // alp(dx)
+    p1 = std::exp(2.0*M_PI*one*xmin*dk);
+    p2 = std::exp(2.0*M_PI*one*dk*dx);
 
-    matrix in_even(1,Nhalf);
-    matrix in_odd(1,Nhalf);
-    matrix out_even(1,Nhalf);
-    matrix out_odd(1,Nhalf);
+    CMATRIX in_even(1,Nhalf);
+    CMATRIX in_odd(1,Nhalf);
+    CMATRIX out_even(1,Nhalf);
+    CMATRIX out_odd(1,Nhalf);
 
     // Divide set on the even and odd part
     for(int m=0;m<Nhalf;m++){
@@ -2364,7 +2366,7 @@ void inv_cfft1(matrix& in,matrix& out,double xmin,double kmin,double dx){
 
 
 
-void inv_cft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy){
+void inv_cft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy){
 /***************************************
   Inverse Continuous 2-D Fourier Transform
   f(r) = Integral ( f(k) * exp(2*pi*i*k*r) * dr ) =
@@ -2401,19 +2403,19 @@ void inv_cft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, 
   for(int nx=0;nx<Nx;nx++){
     Rx = (xmin + nx * dx);
     argg = 2.0*M_PI*Rx*kxmin;
-    Px = dkx*complex<double>(cos(argg),sin(argg));
+    Px = dkx*complex<double>(std::cos(argg),std::sin(argg));
 
     argg = 2.0*M_PI*Rx*dkx;
-    fx = complex<double>(cos(argg),sin(argg));
+    fx = complex<double>(std::cos(argg),std::sin(argg));
 
     
     for(int ny=0;ny<Ny;ny++){
       Ry = (ymin + ny * dy);
       argg = 2.0*M_PI*Ry*kymin;
-      Py = dky*complex<double>(cos(argg),sin(argg));
+      Py = dky*complex<double>(std::cos(argg),std::sin(argg));
 
       argg = 2.0*M_PI*Ry*dky;
-      fy = complex<double>(cos(argg),sin(argg));
+      fy = complex<double>(std::cos(argg),std::sin(argg));
 
 
       sumx = 0.0; fnx = 1.0;
@@ -2436,7 +2438,7 @@ void inv_cft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, 
 }
 
 
-void inv_cfft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy){
+void inv_cfft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy){
 /***************************************
   Inverse Continuous Fast Fourier Transform for 2D
   
@@ -2468,23 +2470,23 @@ void inv_cfft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin,
 
     complex<double> p1x,p2x,p1y,p2y,eax,eay;
 
-    eax = exp(M_PI*one*kxmin*dx*((double)Nx)); // alpx(0.5*dx)
-    p1x = exp(2.0*M_PI*one*xmin/(dx*(double)Nx));
-    p2x = exp(2.0*M_PI*one/((double)Nx));
+    eax = std::exp(M_PI*one*kxmin*dx*((double)Nx)); // alpx(0.5*dx)
+    p1x = std::exp(2.0*M_PI*one*xmin/(dx*(double)Nx));
+    p2x = std::exp(2.0*M_PI*one/((double)Nx));
 
-    eay = exp(M_PI*one*kymin*dy*((double)Ny)); // alpy(0.5*dy)
-    p2y = exp(2.0*M_PI*one/((double)Ny));
+    eay = std::exp(M_PI*one*kymin*dy*((double)Ny)); // alpy(0.5*dy)
+    p2y = std::exp(2.0*M_PI*one/((double)Ny));
 
 
-    matrix in_ee(Nxhalf,Nyhalf);
-    matrix in_oe(Nxhalf,Nyhalf);
-    matrix in_eo(Nxhalf,Nyhalf);
-    matrix in_oo(Nxhalf,Nyhalf);
+    CMATRIX in_ee(Nxhalf,Nyhalf);
+    CMATRIX in_oe(Nxhalf,Nyhalf);
+    CMATRIX in_eo(Nxhalf,Nyhalf);
+    CMATRIX in_oo(Nxhalf,Nyhalf);
 
-    matrix out_ee(Nxhalf,Nyhalf);
-    matrix out_oe(Nxhalf,Nyhalf);
-    matrix out_eo(Nxhalf,Nyhalf);
-    matrix out_oo(Nxhalf,Nyhalf);
+    CMATRIX out_ee(Nxhalf,Nyhalf);
+    CMATRIX out_oe(Nxhalf,Nyhalf);
+    CMATRIX out_eo(Nxhalf,Nyhalf);
+    CMATRIX out_oo(Nxhalf,Nyhalf);
 
     // Divide set on the even and odd parts
     for(int m1=0;m1<Nxhalf;m1++){
@@ -2534,16 +2536,16 @@ void inv_cfft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin,
     Nxhalf = Nx/2;
 
     complex<double> p1x,p2x,eax;
-    eax = exp(M_PI*one*kxmin*dx*((double)Nx)); // alpx(0.5*dx)
-    p1x = exp(2.0*M_PI*one*xmin/(dx*(double)Nx));
-    p2x = exp(2.0*M_PI*one/((double)Nx));
+    eax = std::exp(M_PI*one*kxmin*dx*((double)Nx)); // alpx(0.5*dx)
+    p1x = std::exp(2.0*M_PI*one*xmin/(dx*(double)Nx));
+    p2x = std::exp(2.0*M_PI*one/((double)Nx));
 
 
-    matrix in_e(Nxhalf,Ny);
-    matrix in_o(Nxhalf,Ny);
+    CMATRIX in_e(Nxhalf,Ny);
+    CMATRIX in_o(Nxhalf,Ny);
 
-    matrix out_e(Nxhalf,Ny);
-    matrix out_o(Nxhalf,Ny);
+    CMATRIX out_e(Nxhalf,Ny);
+    CMATRIX out_o(Nxhalf,Ny);
 
     // Divide set on the even and odd parts
     for(int m1=0;m1<Nxhalf;m1++){
@@ -2587,15 +2589,15 @@ void inv_cfft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin,
 
     complex<double> p1y,p2y,eay;
 
-    eay = exp(M_PI*one*kymin*dy*((double)Ny)); // alpy(0.5*dy)
-    p1y = exp(2.0*M_PI*one*ymin/(dy*(double)Ny));     
-    p2y = exp(2.0*M_PI*one/((double)Ny));
+    eay = std::exp(M_PI*one*kymin*dy*((double)Ny)); // alpy(0.5*dy)
+    p1y = std::exp(2.0*M_PI*one*ymin/(dy*(double)Ny));     
+    p2y = std::exp(2.0*M_PI*one/((double)Ny));
 
-    matrix in_e(Nx,Nyhalf);
-    matrix in_o(Nx,Nyhalf);
+    CMATRIX in_e(Nx,Nyhalf);
+    CMATRIX in_o(Nx,Nyhalf);
 
-    matrix out_e(Nx,Nyhalf);
-    matrix out_o(Nx,Nyhalf);
+    CMATRIX out_e(Nx,Nyhalf);
+    CMATRIX out_o(Nx,Nyhalf);
 
     // Divide set on the even and odd parts
     for(int m1=0;m1<Nx;m1++){
@@ -2644,7 +2646,7 @@ void inv_cfft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin,
 
 
 
-void inv_cft2(matrix& in,matrix& out,double xmin,double kmin,double dx,double dk){
+void inv_cft2(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk){
 /***************************************
   Inverse Continuous Fourier Transform
   f(r) = Integral ( f(k) * exp(2*pi*i*k*r) * dk ) =
@@ -2660,8 +2662,8 @@ void inv_cft2(matrix& in,matrix& out,double xmin,double kmin,double dx,double dk
 
 ****************************************/
 
-  int N_k =  in.n_elts; // <in> - is 1 x N_k or N_k x 1 matrix
-  int N_r = out.n_elts; // <out> - is 1 x N_r or N_r x 1 matrix
+  int N_k =  in.n_elts; // <in> - is 1 x N_k or N_k x 1 CMATRIX
+  int N_r = out.n_elts; // <out> - is 1 x N_r or N_r x 1 CMATRIX
 
   complex<double> f,f1,mul;
   double r_n,argg;
@@ -2670,10 +2672,10 @@ void inv_cft2(matrix& in,matrix& out,double xmin,double kmin,double dx,double dk
 
     r_n = xmin + dx*n;
     argg = 2.0*M_PI*r_n*kmin;
-    mul = complex<double>(dk*cos(argg),dk*sin(argg));
+    mul = complex<double>(dk*std::cos(argg),dk*std::sin(argg));
 
     argg = 2.0*M_PI*r_n*dk;
-    f = complex<double>(cos(argg),sin(argg));
+    f = complex<double>(std::cos(argg),std::sin(argg));
 
     out.M[n] = 0.0;
     for(int k=0;k<N_k;k++){
@@ -2688,7 +2690,7 @@ void inv_cft2(matrix& in,matrix& out,double xmin,double kmin,double dx,double dk
 
 
 
-void convolve(matrix& f,matrix& g, matrix& conv,double dx){
+void convolve(CMATRIX& f,CMATRIX& g, CMATRIX& conv,double dx){
 // Convolve two Fourier transforms
 //  conv(k) = integral(  f(k') * g(k-k') ) dk' = sum (n'/L) * f[n'] * g[n-n'] = conv[n]
 //                                               n'
@@ -2715,7 +2717,7 @@ void convolve(matrix& f,matrix& g, matrix& conv,double dx){
 }  
 
 
-void convolve_2D(matrix& f,matrix& g, matrix& conv,double dx,double dy){
+void convolve_2D(CMATRIX& f,CMATRIX& g, CMATRIX& conv,double dx,double dy){
 // Convolve two Fourier transforms. Each in 2D
 //  conv(k) = integral(  f(k') * g(k-k') ) dk' = sum (n'/L) * f[n'] * g[n-n'] = conv[n]
 //                                               n'
@@ -2762,5 +2764,5 @@ void convolve_2D(matrix& f,matrix& g, matrix& conv,double dx,double dy){
 
 }  
 
-
+}// namespace libmmath
 

@@ -7,6 +7,9 @@
 // ========================= Matrices ================================
 // ------------------------- Constructors ----------------------------
 
+namespace libmmath{
+
+
 MATRIX::MATRIX(int m,int n)
 {  MATRIX_PRECISION=8;
    MATRIX_WIDTH=15; 
@@ -1292,4 +1295,7 @@ void MATRIX::bin_load(std::string filename){
 
 
 }
+
+}// libmmath
+
 

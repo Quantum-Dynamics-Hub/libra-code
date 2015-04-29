@@ -10,6 +10,8 @@
 
 using namespace std;
 
+namespace libmmath{
+
 //============================================================
 // Forward declared dependencies
 class VECTOR;
@@ -80,6 +82,8 @@ public:
 
 
 };
+
+}// namespace libmmath
 
 
 #endif // SMATRIX_H

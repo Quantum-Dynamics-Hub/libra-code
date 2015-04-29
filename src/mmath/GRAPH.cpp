@@ -4,6 +4,9 @@
 
 using namespace std;
 
+namespace libmmath{
+
+
 int merge_paths(Path& result, Path p1, Path p2){
 
    int sz1 = p1.size();
@@ -147,6 +150,8 @@ void show_paths(vector<Path>& p){
    cout<<"]";
 
 }
+
+}// namespace libmmath
 
 //====================================================
 

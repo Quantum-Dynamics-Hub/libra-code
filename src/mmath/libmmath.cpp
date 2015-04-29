@@ -6,6 +6,14 @@
 
 using namespace boost::python;
 
+using namespace libmmath;
+using libmmath::VECTOR;
+using libmmath::MATRIX;
+using libmmath::MATRIX3x3;
+using libmmath::QUATERNION;
+using libmmath::DATA;
+
+
 
 void    (VECTOR::*cross1)(VECTOR&,VECTOR&) = &VECTOR::cross;
 //VECTOR  (*cross2)(const double, const VECTOR& ,const VECTOR&) = &cross;
@@ -19,17 +27,21 @@ void   (MATRIX::*set2)(int,int,double) = &MATRIX::set;
 void   (MATRIX::*Inverse1)(MATRIX*)    = &MATRIX::Inverse;
 void   (MATRIX::*Inverse2)(MATRIX&)    = &MATRIX::Inverse;
 
-//void export_Mathematics_objects(){
 
+
+#ifdef CYGWIN
+BOOST_PYTHON_MODULE(cygmmath){
+#else
 BOOST_PYTHON_MODULE(libmmath){
+#endif
 
 //----------- MATHEMATICS.h -------------------------
 
   class_<VECTOR>("VECTOR",init<>())
       .def(init<double,double,double>())
       .def(init<const VECTOR&>())
-//      .def("__copy__", &generic__copy__<VECTOR>)
-//      .def("__deepcopy__", &generic__deepcopy__<VECTOR>)
+      .def("__copy__", &generic__copy__<VECTOR>) 
+      .def("__deepcopy__", &generic__deepcopy__<VECTOR>)
       .def_readwrite("x",&VECTOR::x)
       .def_readwrite("y",&VECTOR::y)
       .def_readwrite("z",&VECTOR::z)
@@ -57,8 +69,8 @@ BOOST_PYTHON_MODULE(libmmath){
   ;
 
   class_<MATRIX>("MATRIX",init<>())      
-//      .def("__copy__", &generic__copy__<MATRIX>)
-//      .def("__deepcopy__", &generic__deepcopy__<MATRIX>)
+      .def("__copy__", &generic__copy__<MATRIX>)
+      .def("__deepcopy__", &generic__deepcopy__<MATRIX>)
 
       .def("get",get1)
       .def("get",get2)
@@ -94,9 +106,9 @@ BOOST_PYTHON_MODULE(libmmath){
 
   class_<MATRIX3x3>("MATRIX3x3",init<>())      
       .def(init<const VECTOR&, const VECTOR&, const VECTOR&>())
-//      .def(init<const MATRIX3x3&>())
-//      .def("__copy__", &generic__copy__<MATRIX3x3>)
-//      .def("__deepcopy__", &generic__deepcopy__<MATRIX3x3>)
+      .def(init<const MATRIX3x3&>())
+      .def("__copy__", &generic__copy__<MATRIX3x3>)
+      .def("__deepcopy__", &generic__deepcopy__<MATRIX3x3>)
 
 
 //      .def("get",get1)
@@ -126,8 +138,8 @@ BOOST_PYTHON_MODULE(libmmath){
 
   class_<QUATERNION>("QUATERNION",init<>())
       .def(init<double,double,double,double>())
-//      .def("__copy__", &generic__copy__<QUATERNION>)
-//      .def("__deepcopy__", &generic__deepcopy__<QUATERNION>)
+      .def("__copy__", &generic__copy__<QUATERNION>)
+      .def("__deepcopy__", &generic__deepcopy__<QUATERNION>)
 
       .def_readwrite("Lt",&QUATERNION::Lt)
       .def_readwrite("Lx",&QUATERNION::Lx)
@@ -143,13 +155,13 @@ BOOST_PYTHON_MODULE(libmmath){
 
   ;
 
-/*
+
   class_<DATA>("DATA",init<>())
       .def(init<boost::python::list>())
       .def("Calculate_Estimators",&DATA::Calculate_Estimators)
       .def("Calculate_MiniMax",&DATA::Calculate_MiniMax)
 
   ;
-*/
+
 
 }

@@ -2,6 +2,9 @@
 
 using namespace boost::python;
 
+
+namespace libmmath{
+
 bool hasattr(boost::python::object obj, std::string attrName) {
      return PyObject_HasAttrString(obj.ptr(), (char*)attrName.c_str());
 } 
@@ -364,3 +367,4 @@ void load(boost::property_tree::ptree& pt,std::string path, MATRIX& vt, int& sta
 void load(boost::property_tree::ptree& pt,std::string path,vector<MATRIX>& vt,int& status){ }
 
 
+}// libmmath

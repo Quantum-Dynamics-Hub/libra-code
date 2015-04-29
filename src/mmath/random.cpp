@@ -11,17 +11,19 @@
 
 #include "random.h"
 
+namespace libmmath{
 
-int fact(int k){
+
+int Random::fact(int k){
   if(k<=1){  return 1; }
   else{ return k*fact(k-1); }
 }
 
-double Gamma(double a){
+double Random::Gamma(double a){
   return fact((int)(a-1.0));
 }
 
-void bin(vector<double>& in,double minx,double maxx,double dx,vector< pair<double,double> >& out){
+void Random::bin(vector<double>& in,double minx,double maxx,double dx,vector< pair<double,double> >& out){
 
   if(out.size()>0){ out.clear(); }
   double x = minx;
@@ -47,32 +49,32 @@ void bin(vector<double>& in,double minx,double maxx,double dx,vector< pair<doubl
 //============================================================
 //              Uniform distribution
 
-double uniform(double a,double b){
+double Random::uniform(double a,double b){
 
   double ksi = rand()/((double)RAND_MAX);
   return (a + (b-a)*ksi);
 }
-double p_uniform(double a,double b){
+double Random::p_uniform(double a,double b){
   return (1.0/(b-a));
 }
 
 //============================================================
 //              Exponential distribution
 
-double exponential(double lambda){
+double Random::exponential(double lambda){
   double ksi = uniform(0.0,1.0);
   ksi = -(1.0/lambda)*log(1.0 - ksi);
   return ksi;
 }
 
-double p_exp(double x,double lambda){
+double Random::p_exp(double x,double lambda){
   return lambda*exp(-lambda*x);
 }
 
 //============================================================
 //               Normal distribution
 
-double normal(){
+double Random::normal(){
 // Algorithm FL, Forsythe, Ahrens-Dieter
 // This algorithm generates Normally-distributed random variable as given by 
 // function p_normal()
@@ -206,14 +208,14 @@ id1:
   return res;
 }
 
-double p_normal(double x){
+double Random::p_normal(double x){
   return sqrt(0.5/M_PI)*exp(-0.5*x*x);
 }
 
 //============================================================
 //               Gamma distribution
 
-double gamma(double a){
+double Random::gamma(double a){
 // This is a GO method by Ahrens-Dieter
   double mu = a - 1;
   double V = sqrt(a);
@@ -253,7 +255,7 @@ id1:
   }//else
 }
 
-double p_gamma(double a,double x){
+double Random::p_gamma(double a,double x){
   int na = floor(a-1.0);
   double dna = (a-1.0) - na;
   double e = exp(-x/na)*x;
@@ -266,13 +268,13 @@ double p_gamma(double a,double x){
 //============================================================
 //                Beta distribution
 
-double beta(double a,double b){
+double Random::beta(double a,double b){
   double x = gamma(a);
   double y = gamma(b);
   return (x/(x+y));
 }
 
-double p_beta(double x,double a,double b){
+double Random::p_beta(double x,double a,double b){
 // f(x) = x^(a-1) * (1 - x)^(b-1)/B(a,b), 0<=x<=1.0, a,b > 0
 // B(a,b) = G(a)*G(b)/G(a+b)  
 
@@ -285,7 +287,7 @@ double p_beta(double x,double a,double b){
 
 // Definition of the poisson processes is given by Gurevich (Books/Math/Teorija sluchainyx prozessov)
 // This is in fact a Poisson process with given time t
-int poiss(double lambda,double t){
+int Random::poiss(double lambda,double t){
   // if t==1 => we obtain random variable with Poisson distribution!
   double Sn = 0.0;
   int n = 0;
@@ -299,7 +301,7 @@ int poiss(double lambda,double t){
 
 // Definition of the poisson processes is given by Gurevich (Books/Math/Teorija sluchainyx prozessov)
 // This is in fact a complete Poisson trajectory of length maxT and time steps dt
-void poiss(double lambda,double maxT,double dt,vector< pair<double,int> >& out){
+void Random::poiss(double lambda,double maxT,double dt,vector< pair<double,int> >& out){
   if(out.size()>0){ out.clear(); }
 
   double Sn = 0.0;  int n = 0;  double t = 0.0;
@@ -318,7 +320,7 @@ void poiss(double lambda,double maxT,double dt,vector< pair<double,int> >& out){
 
 // This is Knuth algorithm, or mupltiplicative method
 // This is basically the same as previous algorithms
-int poiss1(double lambda){
+int Random::poiss1(double lambda){
   double L = exp(-lambda);
   int k = 0; double p = 1.0;  
   do{
@@ -329,7 +331,7 @@ int poiss1(double lambda){
   return k;
 }
 
-int poiss2(double lambda){
+int Random::poiss2(double lambda){
 // Gamma method by Ahrens-Dieter
 // Resulting distribution corresponds to one given by p_poiss 
   int k = 0; 
@@ -369,7 +371,7 @@ id1:
   }
 }
 
-double p_poiss(int k,double lambda){
+double Random::p_poiss(int k,double lambda){
 //  return exp(-lambda)*pow(lambda,k)/fact(k);
   double res = 1.0;
   if(k>0){
@@ -381,3 +383,5 @@ double p_poiss(int k,double lambda){
 }
 
 
+
+}//namespace libmmath

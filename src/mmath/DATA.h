@@ -7,9 +7,11 @@
 #include <math.h>
 #include <stdlib.h>
 #include <vector>
-//#include <boost/python.hpp>
+#include <boost/python.hpp>
 
 using namespace std;
+
+namespace libmmath{
 
 //========================= Class DATA ====================================
 // This class implements data analysis methods and in fact a collection of
@@ -64,7 +66,7 @@ class DATA{
       }
       DATA(vector<double>);
       DATA(int,double*);
-//      DATA(boost::python::list);
+      DATA(boost::python::list);
 
       // Copy constructor
       DATA(const DATA& d);
@@ -101,5 +103,6 @@ class DATA{
 
 };
 
+}// namespace libmmath
 
 #endif // DATA_H

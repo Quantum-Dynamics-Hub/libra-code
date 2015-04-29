@@ -1,12 +1,12 @@
 #ifndef LIBMMATH_H
 #define LIBMMATH_H
 
-//using namespace libra{
+//namespace libmmath{
 // Building options define of comment these lines depending on external libraries availability
 //#include "libmmathConfig.h"
 
-#include "cmatrix.h"                               
-#include "CONSTANTS.h"                             
+#include "CMATRIX.h"
+#include "Units.h"                             
 #include "DATA.h"                                  
 #include "GRAPH.h"                                 
 #include "MATRIX.h"                                
@@ -25,18 +25,4 @@
 //}
 
 #endif // LIBMMATH_H
-
-/*
-mmath_core/
-mmath_core/
-mmath_core/
-mmath_core/
-mmath_core/
-mmath_core/
-mmath_core/
-mmath_core/
-mmath_core/
-mmath_core/
-mmath_core/
-  */
 

@@ -4,6 +4,9 @@
 // Teylor expansions for some formula are from:
 // http://web.mit.edu/kenta/www/three/taylor.html
 
+namespace libmmath{
+
+
 double FAST_POW(double x,int n){
 
     double res,res1;    
@@ -1035,5 +1038,9 @@ void solve_linsys(MATRIX& C,MATRIX& D, MATRIX& X,double eps,int maxiter){
 
 
 }
+
+
+}// namespace libmmath
+
 
 

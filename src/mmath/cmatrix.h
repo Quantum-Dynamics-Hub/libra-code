@@ -10,8 +10,8 @@
 *********************************************************************************/
 
 
-#ifndef cmatrix_h
-#define cmatrix_h
+#ifndef CMATRIX_H
+#define CMATRIX_H
 
 #include <complex>
 #include <vector>
@@ -23,8 +23,9 @@
 
 using namespace std;
 
+namespace libmmath{
 
-class matrix{
+class CMATRIX{
 
   void max_nondiagonal(int& row,int& col);
 
@@ -33,117 +34,119 @@ public:
   complex<double>* M;
 
   // Constructors
-  matrix(){ n_rows = n_cols = n_elts = 0; M = NULL;}
-  matrix(int n_rows_,int n_cols_){
+  CMATRIX(){ n_rows = n_cols = n_elts = 0; M = NULL;}
+  CMATRIX(int n_rows_,int n_cols_){
     n_rows = n_rows_; n_cols = n_cols_; n_elts = n_rows * n_cols;
     M = new complex<double>[n_elts];
     for(int i=0;i<n_elts;i++){  M[i] = std::complex<double>(0.0,0.0); }
   }
-  matrix(vector<vector<double> >& re_part,vector<vector<double> >& im_part);
+  CMATRIX(vector<vector<double> >& re_part,vector<vector<double> >& im_part);
  
   // Copy constructor
-  matrix(const matrix& ob);  
+  CMATRIX(const CMATRIX& ob);  
 
   // Destructor
-  ~matrix(){ delete [] M; n_rows = n_cols = n_elts = 0;}
+  ~CMATRIX(){ delete [] M; n_rows = n_cols = n_elts = 0;}
 
   // Operatiions
   // Important! For memory efficiency it is crucial to use
-  // (const matrix& ob) instead of (matrix ob) in some of the below
-  // operators  - this avoid creation of the copy of the matrix object
-  matrix operator-();                 // Negation;
-  matrix operator*(const matrix& ob);
-  matrix operator+(const matrix& ob);
-  matrix operator-(const matrix& ob);
+  // (const CMATRIX& ob) instead of (CMATRIX ob) in some of the below
+  // operators  - this avoid creation of the copy of the CMATRIX object
+  CMATRIX operator-();                 // Negation;
+  CMATRIX operator*(const CMATRIX& ob);
+  CMATRIX operator+(const CMATRIX& ob);
+  CMATRIX operator-(const CMATRIX& ob);
   void operator*=(const double&);
   void operator*=(const complex<double>&);
-  void operator*=(const matrix& ob);
-  void operator+=(const matrix& ob);
-  void operator-=(const matrix& ob);
+  void operator*=(const CMATRIX& ob);
+  void operator+=(const CMATRIX& ob);
+  void operator-=(const CMATRIX& ob);
 
-  matrix operator/(double num);
-  matrix operator/(complex<double> num);
-  matrix& operator=(const matrix& ob);
-  matrix operator=(double num);
-  matrix operator=(complex<double> num);
+  CMATRIX operator/(double num);
+  CMATRIX operator/(complex<double> num);
+  CMATRIX& operator=(const CMATRIX& ob);
+  CMATRIX operator=(double num);
+  CMATRIX operator=(complex<double> num);
 
 
-  friend matrix operator*(const double& f,  const matrix& m1);  // Multiplication of matrix and double;
-  friend matrix operator*(const matrix& m1, const double  &f);  // Multiplication of matrix and double;
-  friend matrix operator*(const complex<double>& f,  const matrix& m1);  // Multiplication of matrix and double;
-  friend matrix operator*(const matrix& m1, const complex<double>  &f);  // Multiplication of matrix and double;
-  friend ostream &operator<<(ostream &strm,matrix ob);
-  friend istream& operator>>(istream& strm,matrix &ob);
+  friend CMATRIX operator*(const double& f,  const CMATRIX& m1);  // Multiplication of CMATRIX and double;
+  friend CMATRIX operator*(const CMATRIX& m1, const double  &f);  // Multiplication of CMATRIX and double;
+  friend CMATRIX operator*(const complex<double>& f,  const CMATRIX& m1);  // Multiplication of CMATRIX and double;
+  friend CMATRIX operator*(const CMATRIX& m1, const complex<double>  &f);  // Multiplication of CMATRIX and double;
+  friend ostream &operator<<(ostream &strm,CMATRIX ob);
+  friend istream& operator>>(istream& strm,CMATRIX &ob);
 
 
 
   // Some basic functions
-  matrix conj();
-  matrix T();   // transpose
-  matrix H();   // Hermitian conj
+  CMATRIX conj();
+  CMATRIX T();   // transpose
+  CMATRIX H();   // Hermitian conj
   void load_identity(); 
-  void dot(const matrix& ob1,const matrix& ob2);
+  void dot(const CMATRIX& ob1,const CMATRIX& ob2);
 
-  matrix col(int); // takes given column and makes it n x 1 matrix
-  matrix row(int); // takes given row and makes it 1 x n matrix
+  CMATRIX col(int); // takes given column and makes it n x 1 CMATRIX
+  CMATRIX row(int); // takes given row and makes it 1 x n CMATRIX
 
   // More advanced functions
-  void QR(matrix& w,matrix& R);  // QR for general (Hermitian or symmetric) matrices
-  void QR1(matrix& w,matrix& R); // QR for tridiagonal matrices
-  void tridiagonalize(matrix& T);// for Hermitian or symmetric matrix - only resulting tridiagonal matrix
-  void tridiagonalize(matrix& T,matrix& H); // ---//---  also keep track of Householder transformation matrices
+  void QR(CMATRIX& w,CMATRIX& R);  // QR for general (Hermitian or symmetric) matrices
+  void QR1(CMATRIX& w,CMATRIX& R); // QR for tridiagonal matrices
+  void tridiagonalize(CMATRIX& T);// for Hermitian or symmetric CMATRIX - only resulting tridiagonal CMATRIX
+  void tridiagonalize(CMATRIX& T,CMATRIX& H); // ---//---  also keep track of Householder transformation matrices
 
   // Eigenvalues
-  void eigen(double EPS,matrix& EVAL,matrix& EVECT,int opt); // interface
-  void eigen0(matrix& EVAL, matrix& EVECT,double EPS,int max_num_iter,int is_cycle,int alg); // Schur decomposition or Jacobi rotation
+  void eigen(double EPS,CMATRIX& EVAL,CMATRIX& EVECT,int opt); // interface
+  void eigen0(CMATRIX& EVAL, CMATRIX& EVECT,double EPS,int max_num_iter,int is_cycle,int alg); // Schur decomposition or Jacobi rotation
   void eigen1(double EPS,vector<double>& Eval);  // only eigenvalues - fast
-  void eigen2(double EPS,vector<double>& Eval,matrix& EVECT); // also eigenvectors, slower - keep track of transformation matrixes
-  void eigen3(double EPS,vector<double>& Eval,matrix& EVECT); // also eigenvectors - solve for each eigenvector independently
+  void eigen2(double EPS,vector<double>& Eval,CMATRIX& EVECT); // also eigenvectors, slower - keep track of transformation matrixes
+  void eigen3(double EPS,vector<double>& Eval,CMATRIX& EVECT); // also eigenvectors - solve for each eigenvector independently
 
   // Matrix inverse
-  void inverse(double EPS,matrix& INV,int opt); // interface
-  void direct_inverse(double EPS,matrix& INV);
+  void inverse(double EPS,CMATRIX& INV,int opt); // interface
+  void direct_inverse(double EPS,CMATRIX& INV);
 
-  // Functions of matrix
-  friend matrix exp(matrix& m1,complex<double> scl,double eps);
-  friend matrix sin(matrix& m1,complex<double> scl,double eps);
-  friend matrix cos(matrix& m1,complex<double> scl,double eps);
-  friend matrix pow(matrix& m1,double scl,double eps);
+  // Functions of CMATRIX
+  friend CMATRIX exp(CMATRIX& m1,complex<double> scl,double eps);
+  friend CMATRIX sin(CMATRIX& m1,complex<double> scl,double eps);
+  friend CMATRIX cos(CMATRIX& m1,complex<double> scl,double eps);
+  friend CMATRIX pow(CMATRIX& m1,double scl,double eps);
 
 };
 
-void qr(double EPS,int n,matrix& M,vector<double>& Eval); // Compute eigenvalues of M
-void qr(double EPS,int n,matrix& M,vector<double>& Eval,matrix& Evec);  // Computes eigenvalues and eigenvectors of M
+void qr(double EPS,int n,CMATRIX& M,vector<double>& Eval); // Compute eigenvalues of M
+void qr(double EPS,int n,CMATRIX& M,vector<double>& Eval,CMATRIX& Evec);  // Computes eigenvalues and eigenvectors of M
 
-void solve_linsys(matrix& C,matrix& D, matrix& X,double eps,int maxiter,double omega);
-void solve_linsys1(matrix& C,matrix& X,double eps,int maxiter,double omega);
+void solve_linsys(CMATRIX& C,CMATRIX& D, CMATRIX& X,double eps,int maxiter,double omega);
+void solve_linsys1(CMATRIX& C,CMATRIX& X,double eps,int maxiter,double omega);
 
 
 //---------- Fourier transforms ----------------
-void dft(matrix& in,matrix& out);
-void inv_dft(matrix& in,matrix& out);
+void dft(CMATRIX& in,CMATRIX& out);
+void inv_dft(CMATRIX& in,CMATRIX& out);
 
-void cft(matrix& in,matrix& out,double xmin,double dx);
-void inv_cft(matrix& in,matrix& out,double xmin,double dx);
+void cft(CMATRIX& in,CMATRIX& out,double xmin,double dx);
+void inv_cft(CMATRIX& in,CMATRIX& out,double xmin,double dx);
 
-void cft1(matrix& in,matrix& out,double xmin,double kmin,double dx);
-void inv_cft1(matrix& in,matrix& out,double xmin,double kmin,double dx);
+void cft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx);
+void inv_cft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx);
 
-void cft2(matrix& in,matrix& out,double xmin,double kmin,double dx,double dk);
-void inv_cft2(matrix& in,matrix& out,double xmin,double kmin,double dx,double dk);
+void cft2(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk);
+void inv_cft2(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk);
 
-void cft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy);
-void inv_cft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy);
+void cft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy);
+void inv_cft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy);
 
-void convolve(matrix& f,matrix& g, matrix& conv,double dx);
-void convolve_2D(matrix& f,matrix& g, matrix& conv,double dx,double dy);
+void convolve(CMATRIX& f,CMATRIX& g, CMATRIX& conv,double dx);
+void convolve_2D(CMATRIX& f,CMATRIX& g, CMATRIX& conv,double dx,double dy);
 
 //-------- Fast Fourier Transforms -------------
-void cfft1(matrix& in,matrix& out,double xmin,double kmin,double dx);
-void inv_cfft1(matrix& in,matrix& out,double xmin,double kmin,double dx);
+void cfft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx);
+void inv_cfft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx);
 
-void cfft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy);
-void inv_cfft1_2D(matrix& in, matrix& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy);
+void cfft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy);
+void inv_cfft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy);
 
 
-#endif // cmatrix_h
+}// namespace libmmath
+
+#endif // CMATRIX_H

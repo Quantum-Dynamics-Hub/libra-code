@@ -65,7 +65,7 @@ ENDIF()
 # GNU compiler definitions
 #
 IF(CMAKE_COMPILER_IS_GNUCXX)
-  ADD_DEFINITIONS("-Wall")
+  ADD_DEFINITIONS("-Wall -DCYGWIN")
 ELSE()
   MESSAGE(FATAL_ERROR "CMakeLists.txt has not been tested/written for your compiler.")
 ENDIF()

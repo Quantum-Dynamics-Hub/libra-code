@@ -10,6 +10,8 @@
 
 using namespace std;
 
+namespace libmmath{
+
 //============================================================
 // Forward declared dependencies
 class VECTOR;
@@ -252,6 +254,8 @@ class VECTOR
 
 
 };
+
+}// libmmath
 
 #endif // VECTOR_H
 

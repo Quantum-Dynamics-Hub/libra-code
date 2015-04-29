@@ -1,6 +1,9 @@
 #include "QUATERNION.h"
 #include "VECTOR.h"
 
+namespace libmmath{
+
+
 VECTOR QUATERNION::vect(){VECTOR v; v.x = Lx; v.y = Ly; v.z = Lz; return v;}
 
 double dot_prod(QUATERNION& q1, QUATERNION& q2){
@@ -19,5 +22,5 @@ QUATERNION operator*(double f,QUATERNION& q){
   return tmp;
 }
 
-
+}// namespace libmmath
 

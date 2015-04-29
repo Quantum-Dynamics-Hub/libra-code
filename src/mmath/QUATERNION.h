@@ -10,6 +10,9 @@
   
 using namespace std; 
 
+
+namespace libmmath{
+
 //============================================================
 // Forward declared dependencies
 class VECTOR;
@@ -228,6 +231,9 @@ class QUATERNION{
 
 
 };
+
+
+}// namespace libmmath
 
 #endif  // QUATERNION_H
 

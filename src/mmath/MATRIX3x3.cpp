@@ -1,6 +1,8 @@
 #include "MATRIX3x3.h"
 #include "VECTOR.h"
 
+namespace libmmath{
+
 // In this file we define only those members of the MATRIX3x3 
 // class which depend on other classes, such as VECTOR, etc.
 // Other members are included in class definition so they are inlined
@@ -165,4 +167,4 @@ void MATRIX3x3::tensor_product(VECTOR v1,VECTOR v2){
   zx = v1.z*v2.x;   zy = v1.z*v2.y;  zz = v1.z*v2.z;
 }
 
-
+}// libmmath

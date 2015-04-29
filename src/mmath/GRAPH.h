@@ -9,6 +9,8 @@
 
 using namespace std;
 
+namespace libmmath{
+
 typedef vector<int> Path;
 
 
@@ -964,5 +966,6 @@ template <class VERTEX_DATA,class EDGE_DATA> int GRAPH<VERTEX_DATA,EDGE_DATA>::F
     return 0;
 }
 
+}// namespace libmmath
 
 #endif

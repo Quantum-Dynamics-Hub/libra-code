@@ -10,6 +10,8 @@
 
 using namespace std;
 
+namespace libmmath{
+
 //============================================================
 // Forward declared dependencies
 class VECTOR;
@@ -156,6 +158,7 @@ public:
   void bin_load(std::string filename);
 };
 
+}// libmmath
 
 #endif // MATRIX.h
 

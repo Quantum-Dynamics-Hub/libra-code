@@ -4,6 +4,7 @@
 #include "MATRIX3x3.h"
 #include "MATRIX.h"
 
+namespace libmmath{
 
 // Here we define friend functions for all classes
 
@@ -107,4 +108,5 @@ QUATERNION operator*(const MATRIX& m,const QUATERNION& q){
 }
 
 
+}// namespace libmmath
 

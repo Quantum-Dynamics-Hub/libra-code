@@ -23,6 +23,10 @@
 
 using namespace boost::python;
 
+
+
+namespace libmmath{
+
 bool hasattr(boost::python::object obj, std::string attrName);
 
 void set_value(int& defined, int& value,         boost::python::object obj, std::string attrName);
@@ -71,5 +75,6 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<MATRIX3x3>& vt
 void load(boost::property_tree::ptree& pt,std::string path,MATRIX& vt,int& status);
 void load(boost::property_tree::ptree& pt,std::string path,vector<MATRIX>& vt,int& status);
 
+}// libmmath
 
 #endif // UTILITY_H

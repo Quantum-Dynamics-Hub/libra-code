@@ -8,11 +8,14 @@
 #include <stdlib.h>
 #include <vector>
 
-//#include "../mmath.h"
+
+
 #include "MATRIX.h"
 #include "MATRIX3x3.h"
 #include "QUATERNION.h"
 
+
+namespace libmmath{
 
 
 #define POW(x,y) ((x>=0)?pow(x,y):-pow(-x,y))
@@ -60,6 +63,7 @@ void MATRIX_TO_QUATERNION(MATRIX3x3&,QUATERNION&);
 void QUATERNION_TO_MATRIX(QUATERNION&,MATRIX3x3&);
 void solve_linsys(MATRIX&,MATRIX&, MATRIX&,double,int);
 
+}// namespace libmmath
 
 #endif // SPECIALFUNCTIONS_H
 

@@ -21,27 +21,50 @@
 
 using namespace std;
 
+namespace libmmath{
 
-// Uniform distribution
-double uniform(double a,double b);
+class Random{
 
-// Exponential distribution
-double exponential(double lambda);
+  int fact(int k);
+  double Gamma(double a);
+  void bin(vector<double>& in,double minx,double maxx,double dx,vector< pair<double,double> >& out);
 
-// Normal (Gaussian) distribution
-double normal();
+  public:
 
-// Gamma distribution
-double gamma(double a);
+  Random(){ ;; }
+  ~Random(){ ;; }
 
-// Beta distribution
-double beta(double a,double b);
 
-// Poisson distribution
-int poiss(double lambda,double t);
-void poiss(double lambda,double maxT,double dt,vector< pair<double,int> >& out);
-int poiss1(double lambda);
-int poiss2(double lambda);
+  // Uniform distribution
+  double uniform(double a,double b);   // the random number of the disctribution below
+  double p_uniform(double a,double b); // how the distribution should look like
 
+  // Exponential distribution
+  double exponential(double lambda);
+  double p_exp(double x,double lambda);
+
+  // Normal (Gaussian) distribution
+  double normal();
+  double p_normal(double x);
+
+  // Gamma distribution
+  double gamma(double a);
+  double p_gamma(double a,double x);
+
+  // Beta distribution
+  double beta(double a,double b);
+  double p_beta(double x,double a,double b);
+
+  // Poisson distribution
+  int poiss(double lambda,double t);
+  void poiss(double lambda,double maxT,double dt,vector< pair<double,int> >& out);
+  int poiss1(double lambda);
+  int poiss2(double lambda);
+  double p_poiss(int k,double lambda); // how the distribution should look like
+
+}; // class Random
+
+
+}// namespace libmmath
 
 #endif // RANDOM_H

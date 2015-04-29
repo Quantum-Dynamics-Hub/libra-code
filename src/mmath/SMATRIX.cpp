@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 
+namespace libmmath{
+
+
 SMATRIX::SMATRIX(const SMATRIX& obj){
 
 //  cout<<" In SMATRIX cc-tor\n";
@@ -131,3 +134,6 @@ MATRIX MATRIX::operator=(double num){
 }
 
 */
+
+}// namespace libmmath
+

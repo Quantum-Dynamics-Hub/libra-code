@@ -2,6 +2,8 @@
 
 //=========================== DATA class ================================
 
+namespace libmmath{
+
 DATA::DATA(vector<double> d){
 
 //  Data = d;
@@ -54,7 +56,7 @@ DATA::DATA(int sz,double* d){
 
 
 }
-/*
+
 DATA::DATA(boost::python::list obj){
 
    int sz = len(obj);
@@ -86,7 +88,7 @@ DATA::DATA(boost::python::list obj){
 
 
 }
-*/
+
 
 DATA::~DATA(){
  // Do nothing
@@ -418,3 +420,4 @@ int DATA::Lin_Regression(int flag,double& a,double& b, double& erra, double& err
 }
 */
 
+}// namespace libmmath
