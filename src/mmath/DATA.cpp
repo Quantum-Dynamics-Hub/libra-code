@@ -91,7 +91,9 @@ DATA::DATA(boost::python::list obj){
 
 
 DATA::~DATA(){
- // Do nothing
+
+   if(Data.size()>0) {  Data.clear(); }
+
 }
 
 DATA::DATA(const DATA& d){

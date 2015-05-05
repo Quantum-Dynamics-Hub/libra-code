@@ -15,10 +15,11 @@ using libmmath::QUATERNION;
 using libmmath::DATA;
 
 
+void export_Mathematics_objects(){
+
 
 void    (VECTOR::*cross1)(VECTOR&,VECTOR&) = &VECTOR::cross;
 //VECTOR  (*cross2)(const double, const VECTOR& ,const VECTOR&) = &cross;
-
 
 
 double (MATRIX::*get1)(int)            = &MATRIX::get;
@@ -37,13 +38,9 @@ void (CMATRIX::*tridiagonalize1)(CMATRIX& T)              = &CMATRIX::tridiagona
 void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagonalize;
 
 
+int (DATA::*ScaleData1)(double)                = &DATA::ScaleData;
+int (DATA::*ScaleData2)(double,double)         = &DATA::ScaleData;
 
-
-#ifdef CYGWIN
-BOOST_PYTHON_MODULE(cygmmath){
-#else
-BOOST_PYTHON_MODULE(libmmath){
-#endif
 
 //----------- MATHEMATICS.h -------------------------
 
@@ -232,10 +229,49 @@ BOOST_PYTHON_MODULE(libmmath){
 
   class_<DATA>("DATA",init<>())
       .def(init<boost::python::list>())
-      .def("Calculate_Estimators",&DATA::Calculate_Estimators)
-      .def("Calculate_MiniMax",&DATA::Calculate_MiniMax)
+      .def("__copy__", &generic__copy__<DATA>)
+      .def("__deepcopy__", &generic__deepcopy__<DATA>)
+
+//      .def("Calculate_Estimators",&DATA::Calculate_Estimators)
+//      .def("Calculate_MiniMax",&DATA::Calculate_MiniMax)
+
+      .def("LinearTransformData", &DATA::LinearTransformData)
+      .def("ScaleData", ScaleData1)
+      .def("ScaleData", ScaleData2)
+      .def("ShiftData", &DATA::ShiftData)
+      .def("NormalizeData",  &DATA::NormalizeData)
+
+
+      .def_readwrite("ave",&DATA::ave)
+      .def_readwrite("var",&DATA::var)
+      .def_readwrite("sd",&DATA::sd)
+      .def_readwrite("se",&DATA::se)
+      .def_readwrite("mse",&DATA::mse)
+      .def_readwrite("mae",&DATA::mae)
+      .def_readwrite("rmse",&DATA::rmse)
+
+      .def_readwrite("min",&DATA::min)
+      .def_readwrite("min_indx",&DATA::min_indx)
+      .def_readwrite("max",&DATA::max)
+      .def_readwrite("max_indx",&DATA::max_indx)
+
+      .def_readwrite("scale_factor",&DATA::scale_factor)
+      .def_readwrite("shift_amount",&DATA::shift_amount)
+
 
   ;
+
+  class_<Timer>("Timer",init<>())
+      .def("__copy__", &generic__copy__<Timer>)
+      .def("__deepcopy__", &generic__deepcopy__<Timer>)
+
+      .def("start", &Timer::start)
+      .def("stop", &Timer::stop)
+      .def("show", &Timer::show)
+
+  ;
+
+
 
   // Now introduce normal functions:
   def("FAST_POW", FAST_POW);
@@ -260,5 +296,18 @@ BOOST_PYTHON_MODULE(libmmath){
   def("Km", Km);
   def("Ellint",Ellint);
 
+
+}// export_Mathematics_objects()
+
+
+
+
+#ifdef CYGWIN
+BOOST_PYTHON_MODULE(cygmmath){
+#else
+BOOST_PYTHON_MODULE(libmmath){
+#endif
+
+  export_Mathematics_objects();
 
 }

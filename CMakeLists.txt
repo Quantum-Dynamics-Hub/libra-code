@@ -39,7 +39,7 @@ IF(Boost_FOUND)
   SET(Boost_USE_STATIC_LIBS OFF)
   SET(Boost_USE_MULTITHREADED OFF)
   SET(Boost_USE_STATIC_RUNTIME OFF)
-  FIND_PACKAGE(Boost 1.50.0 COMPONENTS python) # it seems that it is important to find sub-packages too!!!
+  FIND_PACKAGE(Boost 1.50.0 COMPONENTS python regex) # it seems that it is important to find sub-packages too!!!
 ELSEIF(NOT Boost_FOUND)
   MESSAGE(FATAL_ERROR "Unable to find correct Boost version. Did you set BOOST_ROOT?")
 ENDIF()
@@ -65,10 +65,12 @@ ENDIF()
 # GNU compiler definitions
 #
 IF(CMAKE_COMPILER_IS_GNUCXX)
+#  ADD_DEFINITIONS("-Wall")
   ADD_DEFINITIONS("-Wall -DCYGWIN")
 ELSE()
   MESSAGE(FATAL_ERROR "CMakeLists.txt has not been tested/written for your compiler.")
 ENDIF()
+
 
 
 #

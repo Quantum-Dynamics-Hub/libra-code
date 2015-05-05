@@ -6,23 +6,16 @@ file(GLOB MMATH_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${MMATH_HEADERS})
 
 
 #
-#  External libraries: Boost and Python
+#  Build both static and dynamic libraries
 #
-SET( ext_libs 
-     ${Boost_LIBRARIES}
-     ${PYTHON_LIBRARIES}/libpython2.6.dll
-   )
-
-
-#
-#  Build the library
-#
-ADD_LIBRARY(mmath SHARED ${MMATH_SRC})
+ADD_LIBRARY(mmath      SHARED ${MMATH_SRC})
+ADD_LIBRARY(mmath_stat STATIC ${MMATH_SRC})
 
 
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(mmath ${ext_libs})
+TARGET_LINK_LIBRARIES(mmath      ${ext_libs})
+TARGET_LINK_LIBRARIES(mmath_stat ${ext_libs})
 
                                                  
