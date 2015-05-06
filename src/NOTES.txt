@@ -1,0 +1,70 @@
+
+>>>>>>>>>>>>>> This is actual structure: <<<<<<<<<<<<<<<<<<<<<
+
+
+ mmath  - basic utilities and all math
+
+ ann    - artificial neural network (in further developments indent)
+
+ rigidbody -  rigid body class and its methods (manipulations, properties, dynamics)
+    
+
+
+
+
+>>>>>>>>>>>>>> This is projected structure: <<<<<<<<<<<<<<<<<<<<<
+
+
+
+ mmath  - basic utilities and all math
+
+   --> ann    - artificial neural network (in further developments indent)
+
+
+
+ phys   - physics objects: nuclear, electronic, etc. - operates on (abstract degrees of freedom)
+
+ 
+   --> operators  : basic operations on arbitrary degrees of freedom
+
+
+   --> types/classes:
+ 
+           -->  nuclear
+           -->  electronic (static)   - MO-LCAO
+           -->  electronic (dynamics) - TD wavefunction
+           -->  wavepacket
+           -->  ensemble
+           -->  bath classes
+           -->  etc..
+
+
+   --> interactions (Hamiltonian)
+
+           -->  classical MM
+
+           -->  quantum
+
+           -->  model 
+
+   --> dynamics
+           
+           -->  nuclear dynamics : can be fragmented
+
+           -->  electronic dynamics : can be fragmented
+
+           -->  auxiliary dynamics (thermostat, barostat, etc.)           
+
+
+ chem   - chemical object: atom, bond, molecule, etc. - operates on special atomistic representation
+
+    
+   --> atom
+
+   --> bond
+
+   --> functional groups and coarse-grained 
+
+
+
+ 

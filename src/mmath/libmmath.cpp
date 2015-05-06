@@ -1,9 +1,6 @@
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "libmmath.h"
-//#include "Mathematics_objects.h"
-#include "PyCopy.h"
-#include "Utility.h"
 
 using namespace boost::python;
 

@@ -1,10 +1,6 @@
 #ifndef LIBMMATH_H
 #define LIBMMATH_H
 
-//namespace libmmath{
-// Building options define of comment these lines depending on external libraries availability
-//#include "libmmathConfig.h"
-
 #include "Units.h"
 
 #include "CMATRIX.h"
@@ -32,12 +28,6 @@ typedef std::vector<std::complex<double> > complexList;
 void export_Mathematics_objects();
 
 
-//#ifdef USE_EIGEN
-//#include "mmath_eigen/eigen.h"
-//#endif
-//#include "cmatrix.h"
-
-//}
 
 #endif // LIBMMATH_H
 
