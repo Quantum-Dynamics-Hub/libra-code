@@ -158,6 +158,9 @@ public:
   void bin_load(std::string filename);
 };
 
+
+  typedef std::vector<MATRIX> MATRIXList;
+
 }// libmmath
 
 #endif // MATRIX.h

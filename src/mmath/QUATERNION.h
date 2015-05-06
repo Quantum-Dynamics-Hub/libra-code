@@ -195,6 +195,12 @@ class QUATERNION{
   friend double dot_prod(QUATERNION&, QUATERNION&);          // Normal dot product of 2 quaternions as 4D vectors
   friend double dot_prod(const QUATERNION&, const QUATERNION&);
 
+  friend bool operator == (const QUATERNION& q1, const QUATERNION& q2){
+    // Are matrices equal
+    return  ( (q1.Lt == q2.Lt) && (q1.Lx == q2.Lx) && (q1.Ly == q2.Ly) && (q1.Lz == q2.Lz)   );  
+  }
+
+
   friend ostream& operator<<(ostream &strm,QUATERNION ob){
     int QUATERNION_PRECISION = 8;
     int QUATERNION_WIDTH = 15;
@@ -231,6 +237,8 @@ class QUATERNION{
 
 
 };
+
+  typedef std::vector<QUATERNION> QUATERNIONList;
 
 
 }// namespace libmmath

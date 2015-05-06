@@ -22,6 +22,16 @@
 #include "PyCopy.h"
 #include "Utility.h"
 
+
+typedef std::vector<int> intList;
+typedef std::vector<float> floatList;
+typedef std::vector<double> doubleList;
+typedef std::vector<std::complex<double> > complexList;
+
+
+void export_Mathematics_objects();
+
+
 //#ifdef USE_EIGEN
 //#include "mmath_eigen/eigen.h"
 //#endif

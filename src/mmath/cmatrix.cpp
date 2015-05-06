@@ -308,6 +308,15 @@ CMATRIX operator*(const CMATRIX &m1, const complex<double>  &f){
   return m;
 }
 
+
+
+int operator ==(const CMATRIX& m1,const CMATRIX& m2){
+        int res=1;
+        for(int i=0;i<m1.n_elts;i++) {if(m1.M[i]!=m2.M[i]) {res=0;} else;}
+        return res;
+}
+
+
 ostream& operator<<(ostream &strm,CMATRIX ob){
   strm.setf(ios::showpoint);
   for(int i=0;i<ob.n_rows;i++){
@@ -2799,6 +2808,7 @@ void convolve_2D(CMATRIX& f,CMATRIX& g, CMATRIX& conv,double dx,double dy){
   }// kx
 
 }  
+
 
 }// namespace libmmath
 

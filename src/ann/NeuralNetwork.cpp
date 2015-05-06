@@ -292,9 +292,12 @@ void NeuralNetwork::CreateANN(boost::python::list ann){
 
 int NeuralNetwork::ShowANN(){
 
- int NL= Nlayers-1;
- for(int L=1;L<=NL;L++){
+// int NL= Nlayers-1;
+// for(int L=1;L<=NL;L++){
+ for(int L=1;L<W.size();L++){
      std::cout<<"W["<<L<<"] = "<<endl<<W[L];
+ }
+ for(L=1;L<B.size();L++){
      std::cout<<"B["<<L<<"] = "<<endl<<B[L];
  }
 

@@ -1,4 +1,5 @@
 #include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "libmmath.h"
 //#include "Mathematics_objects.h"
 #include "PyCopy.h"
@@ -16,6 +17,27 @@ using libmmath::DATA;
 
 
 void export_Mathematics_objects(){
+
+
+  class_< intList >("intList")
+      .def(vector_indexing_suite< intList >())
+  ;
+
+  class_< floatList >("floatList")
+      .def(vector_indexing_suite< floatList >())
+  ;
+
+  class_< doubleList >("doubleList")
+      .def(vector_indexing_suite< doubleList >())
+  ;
+
+  class_< complexList >("complexList")
+      .def(vector_indexing_suite< complexList >())
+  ;
+
+
+
+  
 
 
 void    (VECTOR::*cross1)(VECTOR&,VECTOR&) = &VECTOR::cross;
@@ -75,6 +97,12 @@ int (DATA::*ScaleData2)(double,double)         = &DATA::ScaleData;
       
   ;
 
+  class_< VECTORList >("VECTORList")
+      .def(vector_indexing_suite< VECTORList >())
+  ;
+
+
+
   class_<MATRIX>("MATRIX",init<>())      
       .def(init<int,int>())
       .def(init<const MATRIX&>())
@@ -111,6 +139,11 @@ int (DATA::*ScaleData2)(double,double)         = &DATA::ScaleData;
 
   ;
 
+  class_< MATRIXList >("MATRIXList")
+      .def(vector_indexing_suite< MATRIXList >())
+  ;
+
+
   class_<MATRIX3x3>("MATRIX3x3",init<>())      
       .def(init<const VECTOR&, const VECTOR&, const VECTOR&>())
       .def(init<const MATRIX3x3&>())
@@ -141,6 +174,11 @@ int (DATA::*ScaleData2)(double,double)         = &DATA::ScaleData;
       .def(double()*self)
 
   ;
+
+  class_< MATRIX3x3List >("MATRIX3x3List")
+      .def(vector_indexing_suite< MATRIX3x3List >())
+  ;
+
 
   class_<CMATRIX>("CMATRIX",init<>())      
       .def(init<int,int>())
@@ -205,6 +243,11 @@ int (DATA::*ScaleData2)(double,double)         = &DATA::ScaleData;
 */
   ;
 
+  class_< CMATRIXList >("CMATRIXList")
+      .def(vector_indexing_suite< CMATRIXList >())
+  ;
+
+
 
 
   class_<QUATERNION>("QUATERNION",init<>())
@@ -226,6 +269,11 @@ int (DATA::*ScaleData2)(double,double)         = &DATA::ScaleData;
 
   ;
 
+  class_< QUATERNIONList >("QUATERNIONList")
+      .def(vector_indexing_suite< QUATERNIONList >())
+  ;
+
+
 
   class_<DATA>("DATA",init<>())
       .def(init<boost::python::list>())
@@ -241,6 +289,7 @@ int (DATA::*ScaleData2)(double,double)         = &DATA::ScaleData;
       .def("ShiftData", &DATA::ShiftData)
       .def("NormalizeData",  &DATA::NormalizeData)
 
+      .def_readwrite("Data",&DATA::Data)
 
       .def_readwrite("ave",&DATA::ave)
       .def_readwrite("var",&DATA::var)
@@ -260,6 +309,11 @@ int (DATA::*ScaleData2)(double,double)         = &DATA::ScaleData;
 
 
   ;
+
+  class_< DATAList >("DATAList")
+      .def(vector_indexing_suite< DATAList >())
+  ;
+
 
   class_<Timer>("Timer",init<>())
       .def("__copy__", &generic__copy__<Timer>)
@@ -307,6 +361,10 @@ BOOST_PYTHON_MODULE(cygmmath){
 #else
 BOOST_PYTHON_MODULE(libmmath){
 #endif
+
+  // Register converters:
+  // See here: https://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters/
+  //to_python_converter<std::vector<DATA>, VecToList<DATA> >();
 
   export_Mathematics_objects();
 

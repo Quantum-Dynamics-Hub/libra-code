@@ -629,8 +629,7 @@ void NeuralNetwork::ANNTrain(){
           for(j=0;j<sz_d;j++){ Tangent.M[j] = 0.0;}
           }
 
-
- 	  //------------------------------------
+          //------------------------------------
           // Propagate forward
           vector<MATRIX> Y;  
           Y.push_back(X);//0-th item; == is input	

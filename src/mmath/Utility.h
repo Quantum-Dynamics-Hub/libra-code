@@ -27,6 +27,29 @@ using namespace boost::python;
 
 namespace libmmath{
 
+
+
+// From: http://stackoverflow.com/questions/5314319/how-to-export-stdvector
+// and also from here: https://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters/
+// Converter 
+template<class T>
+struct VecToList
+{
+    static PyObject* convert(const std::vector<T>& vec)
+    {
+        boost::python::list* l = new boost::python::list();
+        for(size_t i = 0; i < vec.size(); i++)
+            (*l).append(vec[i]);
+
+        return boost::python::incref(l->ptr());
+    }
+
+
+};
+
+
+
+
 bool hasattr(boost::python::object obj, std::string attrName);
 
 void set_value(int& defined, int& value,         boost::python::object obj, std::string attrName);

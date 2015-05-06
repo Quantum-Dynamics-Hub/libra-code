@@ -75,6 +75,8 @@ public:
   CMATRIX operator=(complex<double> num);
 
 
+  friend int operator == (const CMATRIX& m1, const CMATRIX& m2);  // Are matrices equal;
+
   friend CMATRIX operator*(const double& f,  const CMATRIX& m1);  // Multiplication of CMATRIX and double;
   friend CMATRIX operator*(const CMATRIX& m1, const double  &f);  // Multiplication of CMATRIX and double;
   friend CMATRIX operator*(const complex<double>& f,  const CMATRIX& m1);  // Multiplication of CMATRIX and double;
@@ -153,6 +155,9 @@ void inv_cfft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx);
 void cfft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy);
 void inv_cfft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy);
 
+
+
+  typedef std::vector<CMATRIX> CMATRIXList;
 
 }// namespace libmmath
 

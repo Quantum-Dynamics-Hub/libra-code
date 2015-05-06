@@ -129,4 +129,11 @@ print "v3 =", v3, v3.x, v3.y, v3.z
 
 
 
+print "\nTest 8: Vector indexing"
+vlst = VECTORList()
+vlst = [v1, v2, v3]
+print vlst
+print vlst[0], vlst[0].x, vlst[0].y, vlst[0].z
+print vlst[1]
+print vlst[2]
 

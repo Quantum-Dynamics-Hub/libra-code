@@ -779,12 +779,12 @@ MATRIX& MATRIX::operator=(double num){
 }
 
 
-int operator ==(MATRIX& m1,MATRIX& m2){
+int operator ==(const MATRIX& m1,const MATRIX& m2){
         int res=1;
         for(int i=0;i<m1.num_of_elems;i++) {if(m1.M[i]!=m2.M[i]) {res=0;} else;}
         return res;
 }
-int operator !=(MATRIX& m1,MATRIX& m2){
+int operator !=(const MATRIX& m1,const MATRIX& m2){
         int res=0;
         for(int i=0;i<m1.num_of_elems;i++) {if(m1.M[i]!=m2.M[i]) {res=1;} else;}
         return res;

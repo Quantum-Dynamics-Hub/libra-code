@@ -248,6 +248,8 @@ class MATRIX3x3{
 
 };
 
+  typedef std::vector<MATRIX3x3> MATRIX3x3List;
+
 }// namespace libmmath
 //===============================================================================
 

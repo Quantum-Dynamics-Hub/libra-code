@@ -255,6 +255,8 @@ class VECTOR
 
 };
 
+  typedef std::vector<VECTOR> VECTORList;
+
 }// libmmath
 
 #endif // VECTOR_H

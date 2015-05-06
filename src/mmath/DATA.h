@@ -103,6 +103,8 @@ class DATA{
 
 };
 
+  typedef std::vector<DATA> DATAList;
+
 }// namespace libmmath
 
 #endif // DATA_H

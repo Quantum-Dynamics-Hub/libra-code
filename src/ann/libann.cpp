@@ -46,7 +46,7 @@ set_docstring += tmp;   tmp = " Example:\n";
 set_docstring += tmp;   tmp = " class aux():\n";
 set_docstring += tmp;   tmp = "     pass\n";
 set_docstring += tmp;   tmp = " ann = aux() \n";
-set_docstring += tmp;   tmp = " ANN = lcccsObjects.NeuralNetwork()\n";
+set_docstring += tmp;   tmp = " ANN = NeuralNetwork()\n";
 set_docstring += tmp;   tmp = " ann.Title = ['Input','First hidden layer','Second hidden layer','Output']\n";
 set_docstring += tmp;   tmp = " ann.NPE   = [3,5,5,4]\n";
 set_docstring += tmp;   tmp = " ANN.set(ann)\n";
@@ -165,6 +165,11 @@ ExportANN_docstring += tmp;
         .def("Propagate",Propagate4)
         .def("ANNTrain",&NeuralNetwork::ANNTrain)
         .def("LearningHistory",&NeuralNetwork::LearningHistory)
+
+
+        .def_readwrite("Inputs",&NeuralNetwork::Inputs)
+        .def_readwrite("Outputs",&NeuralNetwork::Outputs)
+        .def_readwrite("B",&NeuralNetwork::B)
          
     ;
 
@@ -179,6 +184,9 @@ BOOST_PYTHON_MODULE(cygann){
 BOOST_PYTHON_MODULE(libann){
 #endif
 
+  //to_python_converter<std::vector<libmmath::DATA>, VecToList<libmmath::DATA> >();
+
+  export_Mathematics_objects();  // also register mmath python functions!
   export_NeuralNetwork_objects();
 
 }

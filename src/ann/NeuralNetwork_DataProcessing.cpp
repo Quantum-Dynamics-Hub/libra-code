@@ -97,21 +97,20 @@ int NeuralNetwork::ScaleTrainingData(int X_scale,int Y_scale){
  interval [-0.95,0.95]
 -----------------------------------------*/
 
-        sz_x = Inputs.size();
-        sz_y = Outputs.size();
+  int i,j;
+  double scale = 0.95;
 
-	int i,j;
-        double scale = 0.95;
+  sz_x = Inputs.size();
+  sz_y = Outputs.size();
 
-        if(X_scale){
-            for(i=0;i<sz_x;i++){  Inputs[i].ScaleData(-scale,scale);   }
-        }
-        if(Y_scale){
-            for(i=0;i<sz_y;i++){  Outputs[i].ScaleData(-scale,scale);  }
-        }
+  if(X_scale){
+    for(i=0;i<sz_x;i++){  Inputs[i].ScaleData(-scale,scale);   }
+  }
+  if(Y_scale){
+    for(i=0;i<sz_y;i++){  Outputs[i].ScaleData(-scale,scale);  }
+  }
 
   this->ScaleDerivatives();
-
   scale_method = "scale_default";
  
   return 0;  
