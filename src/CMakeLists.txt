@@ -16,4 +16,12 @@ ADD_SUBDIRECTORY("ann")
 MESSAGE("Going into subdirectory rigidbody...")
 ADD_SUBDIRECTORY("rigidbody")
 
+MESSAGE("Going into subdirectory cell...")
+ADD_SUBDIRECTORY("cell")
+
+MESSAGE("Going into subdirectory pot...")
+ADD_SUBDIRECTORY("pot")
+
+
+
 
