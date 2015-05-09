@@ -1,4 +1,4 @@
-#include "Potentials.h"
+#include "Potentials_stretch_bend.h"
 
 namespace libpot{
 

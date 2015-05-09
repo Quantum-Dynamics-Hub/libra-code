@@ -1,4 +1,4 @@
-#include "Potentials.h"
+#include "Switching_functions.h"
 
 namespace libpot{
 
@@ -44,6 +44,43 @@ void DOUBLE_SWITCH(double x,double a,double eps,double& SW,double& dSW){
   else{ SW = 0.0;  dSW = 0.0;   }
 
 }
+
+
+
+// Here go just wrapper functions for export into Python
+boost::python::list SWITCH(VECTOR r1,VECTOR r2, double R_on,double R_off){
+
+  boost::python::list res;
+  double SW = 0.0;
+  VECTOR dSW;
+
+  SWITCH(r1,r2,R_on,R_off,SW,dSW);
+
+  res.append(SW);
+  res.append(dSW);
+ 
+  return res;
+
+}
+
+
+boost::python::list DOUBLE_SWITCH(double x,double a,double eps){
+
+  boost::python::list res;
+  double SW = 0.0;
+  double dSW = 0.0;
+
+  DOUBLE_SWITCH(x, a, eps,SW,dSW);
+
+  res.append(SW);
+  res.append(dSW);
+ 
+  return res;
+
+}
+
+
+
 
 }// namespace libpot
 

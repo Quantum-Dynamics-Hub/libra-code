@@ -1,4 +1,4 @@
-#include "Potentials.h"
+#include "Potentials_bonds.h"
 
 namespace libpot{
 
@@ -66,5 +66,60 @@ double Bond_Morse(VECTOR& ri,VECTOR& rj,            /*Inputs*/
   energy=energy*energy;
   return (energy-1.0)*D;
 }
+
+
+
+
+
+boost::python::list Bond_Harmonic(VECTOR ri,VECTOR rj, double K, double r0){
+
+  boost::python::list res;
+  double en = 0.0;
+  VECTOR fi, fj;
+
+  en = Bond_Harmonic(ri,rj,fi,fj,K,r0);
+
+  res.append(en);
+  res.append(fi);
+  res.append(fj);
+ 
+  return res;
+
+}
+
+boost::python::list Bond_Quartic(VECTOR ri,VECTOR rj, double K, double r0){
+
+  boost::python::list res;
+  double en = 0.0;
+  VECTOR fi, fj;
+
+  en = Bond_Quartic(ri,rj,fi,fj,K,r0);
+
+  res.append(en);
+  res.append(fi);
+  res.append(fj);
+ 
+  return res;
+
+}
+
+boost::python::list Bond_Morse(VECTOR ri,VECTOR rj, double D, double r0,double alp){
+
+  boost::python::list res;
+  double en = 0.0;
+  VECTOR fi, fj;
+
+  en = Bond_Morse(ri,rj,fi,fj,D,r0,alp);
+
+  res.append(en);
+  res.append(fi);
+  res.append(fj);
+ 
+  return res;
+
+}
+
+
+
 
 }// namespace libpot

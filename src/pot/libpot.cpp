@@ -3,15 +3,15 @@
 
 #include "libpot.h"
 
-using namespace libpot;
 using namespace boost::python;
+using namespace libpot;
+
 
 
 void export_Pot_objects(){
 
-
+/*
 double (*Vdw_LJ_1)(VECTOR&, VECTOR&, VECTOR&, VECTOR&, double, double) =  &Vdw_LJ;
-
 double (*Vdw_LJ_2)(VECTOR* r,VECTOR* g,VECTOR* m,VECTOR* f,MATRIX3x3& at_stress, 
                   MATRIX3x3& fr_stress, MATRIX3x3& ml_stress,
                   int sz,double* epsilon, double* sigma,
@@ -21,23 +21,40 @@ double (*Vdw_LJ_2)(VECTOR* r,VECTOR* g,VECTOR* m,VECTOR* f,MATRIX3x3& at_stress,
                   int& time, vector< vector<triple> >& images, vector<triple>& central_translation,
                   double* dr2, double dT, int& is_update
                  ) = &Vdw_LJ;
+*/
+
+boost::python::list (*expt_SWITCH)(VECTOR, VECTOR, double, double) = &SWITCH;
+boost::python::list (*expt_DOUBLE_SWITCH)(double,double,double) = &DOUBLE_SWITCH;
+
+boost::python::list (*expt_Bond_Harmonic)(VECTOR,VECTOR,double,double) = &Bond_Harmonic; 
+boost::python::list (*expt_Bond_Quartic)(VECTOR,VECTOR,double,double) = &Bond_Quartic; 
+boost::python::list (*expt_Bond_Morse)(VECTOR,VECTOR,double,double,double) = &Bond_Morse; 
+
+boost::python::list (*expt_Angle_Harmonic)(VECTOR,VECTOR,VECTOR,double,double) = &Angle_Harmonic;
+boost::python::list (*expt_Angle_Fourier)(VECTOR,VECTOR,VECTOR,double,double,double,double,int) = &Angle_Fourier;
+boost::python::list (*expt_Angle_Fourier_General)(VECTOR,VECTOR,VECTOR,double,double,double,double) = &Angle_Fourier_General;
+boost::python::list (*expt_Angle_Fourier_Special)(VECTOR,VECTOR,VECTOR,double,int) = &Angle_Fourier_Special;
+boost::python::list (*expt_Angle_Harmonic_Cos)(VECTOR,VECTOR,VECTOR,double,double,int) = &Angle_Harmonic_Cos;
+boost::python::list (*expt_Angle_Harmonic_Cos_General)(VECTOR,VECTOR,VECTOR,double,double) = &Angle_Harmonic_Cos_General;
+boost::python::list (*expt_Angle_Cubic)(VECTOR,VECTOR,VECTOR,double,double) = &Angle_Cubic;
 
 
+  def("SWITCH", expt_SWITCH);
+  def("DOUBLE_SWITCH", expt_DOUBLE_SWITCH);
 
-  def("SWITCH", SWITCH);
-  def("DOUBLE_SWITCH", DOUBLE_SWITCH);
-  def("Bond_Harmonic", Bond_Harmonic);
-  def("Bond_Quartic", Bond_Quartic);
-  def("Bond_Morse", Bond_Morse);
+  def("Bond_Harmonic", expt_Bond_Harmonic);
+  def("Bond_Quartic", expt_Bond_Quartic);
+  def("Bond_Morse", expt_Bond_Morse);
 
-  def("Angle_Harmonic", Angle_Harmonic);
-  def("Angle_Fourier", Angle_Fourier);
-  def("Angle_Fourier_General", Angle_Fourier_General);
-  def("Angle_Fourier_Special", Angle_Fourier_Special);
-  def("Angle_Harmonic_Cos", Angle_Harmonic_Cos);
-  def("Angle_Harmonic_Cos_General", Angle_Harmonic_Cos_General);
-  def("Angle_Cubic", Angle_Cubic);
+  def("Angle_Harmonic", expt_Angle_Harmonic);
+  def("Angle_Fourier", expt_Angle_Fourier);
+  def("Angle_Fourier_General", expt_Angle_Fourier_General);
+  def("Angle_Fourier_Special", expt_Angle_Fourier_Special);
+  def("Angle_Harmonic_Cos", expt_Angle_Harmonic_Cos);
+  def("Angle_Harmonic_Cos_General", expt_Angle_Harmonic_Cos_General);
+  def("Angle_Cubic", expt_Angle_Cubic);
 
+/*
   def("Stretch_Bend_Harmonic", Stretch_Bend_Harmonic);
   def("Dihedral_General", Dihedral_General);
   def("Dihedral_Fourier", Dihedral_Fourier);
@@ -62,7 +79,7 @@ double (*Vdw_LJ_2)(VECTOR* r,VECTOR* g,VECTOR* m,VECTOR* f,MATRIX3x3& at_stress,
 //  def("Vdw_LJ2_excl", Vdw_LJ2_excl);
 //  def("LJ_Coulomb", LJ_Coulomb);
 //  def("", );
-
+*/
 
 } // export_Pot_objects()
 
@@ -78,6 +95,8 @@ BOOST_PYTHON_MODULE(libpot){
   // See here: https://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters/
   //to_python_converter<std::vector<DATA>, VecToList<DATA> >();
 
+  export_Mathematics_objects();
+  export_Cell_objects();
   export_Pot_objects();
 
 }

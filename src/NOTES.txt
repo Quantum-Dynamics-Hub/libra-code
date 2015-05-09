@@ -1,4 +1,12 @@
 
+Principles:
+
+For each .cpp file - make a corresponding .h file - this will help to reduce compilation time, so
+
+when small change is introduced we would not need to recompile the entire package
+
+
+
 >>>>>>>>>>>>>> This is actual structure: <<<<<<<<<<<<<<<<<<<<<
 
 

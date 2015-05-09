@@ -1,4 +1,4 @@
-#include "Potentials.h"
+#include "Potentials_angles.h"
 
 namespace libpot{
 
@@ -269,6 +269,133 @@ double Angle_Cubic(VECTOR& r1,VECTOR& r2,VECTOR& r3, /* Inputs */
 
   return energy;
 }
+
+
+//================================= Exported functions ==================
+boost::python::list Angle_Harmonic(VECTOR r1,VECTOR r2,VECTOR r3, /* Inputs */
+                                   double k_theta,double theta_0  /* Parameters*/
+                                  ){
+  boost::python::list res;
+  double en = 0.0;
+  VECTOR f1, f2, f3;
+
+  en = Angle_Harmonic(r1,r2,r3,f1,f2,f3,k_theta,theta_0);
+
+  res.append(en);
+  res.append(f1);
+  res.append(f2);
+  res.append(f3);
+ 
+  return res;
+}
+
+
+boost::python::list Angle_Fourier(VECTOR r1,VECTOR r2,VECTOR r3, /* Inputs */
+                                  double k_ijk,double C0,double C1,double C2, int coordination
+                                 ){
+  boost::python::list res;
+  double en = 0.0;
+  VECTOR f1, f2, f3;
+
+  en = Angle_Fourier(r1,r2,r3,f1,f2,f3,k_ijk,C0,C1,C2,coordination);
+
+  res.append(en);
+  res.append(f1);
+  res.append(f2);
+  res.append(f3);
+ 
+  return res;
+}
+
+
+boost::python::list Angle_Fourier_General(VECTOR r1,VECTOR r2,VECTOR r3, /* Inputs */
+                                  double k_ijk,double C0,double C1,double C2
+                                 ){
+  boost::python::list res;
+  double en = 0.0;
+  VECTOR f1, f2, f3;
+
+  en = Angle_Fourier_General(r1,r2,r3,f1,f2,f3,k_ijk,C0,C1,C2);
+
+  res.append(en);
+  res.append(f1);
+  res.append(f2);
+  res.append(f3);
+ 
+  return res;
+}
+
+boost::python::list Angle_Fourier_Special(VECTOR r1,VECTOR r2,VECTOR r3, /* Inputs */
+                                  double k_ijk,int coordination
+                                 ){
+  boost::python::list res;
+  double en = 0.0;
+  VECTOR f1, f2, f3;
+
+  en = Angle_Fourier_Special(r1,r2,r3,f1,f2,f3,k_ijk,coordination);
+
+  res.append(en);
+  res.append(f1);
+  res.append(f2);
+  res.append(f3);
+ 
+  return res;
+}
+
+
+boost::python::list Angle_Harmonic_Cos(VECTOR r1,VECTOR r2,VECTOR r3, /* Inputs */
+                                   double k_theta,double cos_theta_0,int coordination  /* Parameters*/
+                                  ){
+  boost::python::list res;
+  double en = 0.0;
+  VECTOR f1, f2, f3;
+
+  en = Angle_Harmonic_Cos(r1,r2,r3,f1,f2,f3,k_theta,cos_theta_0,coordination);
+
+  res.append(en);
+  res.append(f1);
+  res.append(f2);
+  res.append(f3);
+ 
+  return res;
+}
+
+boost::python::list Angle_Harmonic_Cos_General(VECTOR r1,VECTOR r2,VECTOR r3, /* Inputs */
+                                   double k_theta,double cos_theta_0  /* Parameters*/
+                                  ){
+  boost::python::list res;
+  double en = 0.0;
+  VECTOR f1, f2, f3;
+
+  en = Angle_Harmonic_Cos_General(r1,r2,r3,f1,f2,f3,k_theta,cos_theta_0);
+
+  res.append(en);
+  res.append(f1);
+  res.append(f2);
+  res.append(f3);
+ 
+  return res;
+}
+
+boost::python::list Angle_Cubic(VECTOR r1,VECTOR r2,VECTOR r3, /* Inputs */
+                                double k_theta,double theta_0  /* Parameters*/
+                               ){
+  boost::python::list res;
+  double en = 0.0;
+  VECTOR f1, f2, f3;
+
+  en = Angle_Cubic(r1,r2,r3,f1,f2,f3,k_theta,theta_0);
+
+  res.append(en);
+  res.append(f1);
+  res.append(f2);
+  res.append(f3);
+ 
+  return res;
+}
+
+
+
 
 } // namespace libpot
 

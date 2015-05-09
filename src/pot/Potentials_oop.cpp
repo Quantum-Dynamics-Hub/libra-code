@@ -1,4 +1,4 @@
-#include "Potentials.h"
+#include "Potentials_oop.h"
 
 namespace libpot{
 

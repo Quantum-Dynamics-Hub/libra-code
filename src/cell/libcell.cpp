@@ -51,6 +51,7 @@ BOOST_PYTHON_MODULE(libcell){
   // See here: https://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters/
   //to_python_converter<std::vector<DATA>, VecToList<DATA> >();
 
+  export_Mathematics_objects();
   export_Cell_objects();
 
 }
