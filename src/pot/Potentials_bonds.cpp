@@ -53,11 +53,14 @@ double Bond_Morse(VECTOR& ri,VECTOR& rj,            /*Inputs*/
 //*                                                                         *
 //*                u = D*{[exp(-alpha*(r_ij-r0))-1]^2 - 1};                 *
 //*                                                                         *
+//*                u = D*{x^2 - 2.0*x},where x = exp(-alpha*(r_ij-r0))      *
+//*                                                                         *
 //***************************************************************************
 
   double energy,d;
   VECTOR rij = ri-rj;
   d = rij.length();
+/*
   energy = (exp(-alp*(d-r0))-1);
 
   fi = -energy*D*(-2.0*alp)*(rij/d);
@@ -65,6 +68,13 @@ double Bond_Morse(VECTOR& ri,VECTOR& rj,            /*Inputs*/
 
   energy=energy*energy;
   return (energy-1.0)*D;
+*/
+  double x = std::exp(-alp*(d-r0));
+
+  fi = 2.0*D*(x - 1.0)*(alp/d)*rij;
+  fj =-fi;
+  
+  return D*(x - 2.0)*x;
 }
 
 
