@@ -15,4 +15,7 @@
 #include "Potentials_mb_elec.h"
 
 
+void export_Pot_objects();
+
+
 #endif// LIBPOT_H

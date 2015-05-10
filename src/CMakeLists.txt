@@ -23,5 +23,10 @@ MESSAGE("Going into subdirectory pot...")
 ADD_SUBDIRECTORY("pot")
 
 
+MESSAGE("Going into subdirectory operators...")
+ADD_SUBDIRECTORY("operators")
+
+
+
 
 
