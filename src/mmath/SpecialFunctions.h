@@ -63,6 +63,8 @@ void MATRIX_TO_QUATERNION(MATRIX3x3&,QUATERNION&);
 void QUATERNION_TO_MATRIX(QUATERNION&,MATRIX3x3&);
 void solve_linsys(MATRIX&,MATRIX&, MATRIX&,double,int);
 
+int merge_sort(vector< pair<int,double> >&, vector< pair<int,double> >&);
+
 }// namespace libmmath
 
 #endif // SPECIALFUNCTIONS_H
