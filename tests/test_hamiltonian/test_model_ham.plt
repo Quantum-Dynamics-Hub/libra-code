@@ -111,4 +111,53 @@ plot "ecwr_ham2.txt" using 1:2  w l  ls 11  lw 5  t "H(0,0)",\
 
 
 
+set xlabel "x" offset 0.0, 0.5
+set ylabel "Marcus Ham" offset 1.5, 0.0
+set output "marcus_ham.png"
+plot "marcus_ham.txt" using 1:2  w l  ls 11  lw 5  t "H(0,0)",\
+     "marcus_ham.txt" using 1:3  w l  ls 21  lw 5  t "H(1,1)",\
+     "marcus_ham.txt" using 1:4  w l  ls 31  lw 5  t "H(0,1)"
+
+set output "marcus_ham1.png"
+plot "marcus_ham1.txt" using 1:2  w l  ls 11  lw 5  t "H(0,0)",\
+     "marcus_ham1.txt" using 1:3  w l  ls 21  lw 5  t "H(1,1)",\
+     "marcus_ham1.txt" using 1:4  w l  ls 31  lw 5  t "H(0,1)"
+
+set output "marcus_ham2.png"
+plot "marcus_ham2.txt" using 1:2  w l  ls 11  lw 5  t "H(0,0)",\
+     "marcus_ham2.txt" using 1:3  w l  ls 21  lw 5  t "H(1,1)",\
+     "marcus_ham2.txt" using 1:4  w l  ls 31  lw 5  t "H(0,1)"
+
+
+
+
+set xlabel "x" offset 0.0, 0.5
+set ylabel "SEXCH Ham" offset 1.5, 0.0
+set output "sexch_ham.png"
+plot "sexch_ham.txt" using 1:2  w l  ls 11  lw 5  t "H(0,0)",\
+     "sexch_ham.txt" using 1:3  w l  ls 21  lw 5  t "H(1,1)",\
+     "sexch_ham.txt" using 1:4  w l  ls 31  lw 5  t "H(2,2)",\
+     "sexch_ham.txt" using 1:5  w l  ls 12  lw 5  t "H(0,1)",\
+     "sexch_ham.txt" using 1:6  w l  ls 22  lw 5  t "H(0,2)",\
+     "sexch_ham.txt" using 1:7  w l  ls 32  lw 5  t "H(1,2)"
+
+set output "sexch_ham1.png"
+plot "sexch_ham1.txt" using 1:2  w l  ls 11  lw 5  t "H(0,0)",\
+     "sexch_ham1.txt" using 1:3  w l  ls 21  lw 5  t "H(1,1)",\
+     "sexch_ham1.txt" using 1:4  w l  ls 31  lw 5  t "H(2,2)",\
+     "sexch_ham1.txt" using 1:5  w l  ls 12  lw 5  t "H(0,1)",\
+     "sexch_ham1.txt" using 1:6  w l  ls 22  lw 5  t "H(0,2)",\
+     "sexch_ham1.txt" using 1:7  w l  ls 32  lw 5  t "H(1,2)"
+
+
+set output "sexch_ham2.png"
+plot "sexch_ham2.txt" using 1:2  w l  ls 11  lw 5  t "H(0,0)",\
+     "sexch_ham2.txt" using 1:3  w l  ls 21  lw 5  t "H(1,1)",\
+     "sexch_ham2.txt" using 1:4  w l  ls 31  lw 5  t "H(2,2)",\
+     "sexch_ham2.txt" using 1:5  w l  ls 12  lw 5  t "H(0,1)",\
+     "sexch_ham2.txt" using 1:6  w l  ls 22  lw 5  t "H(0,2)",\
+     "sexch_ham2.txt" using 1:7  w l  ls 32  lw 5  t "H(1,2)"
+
+
+
 

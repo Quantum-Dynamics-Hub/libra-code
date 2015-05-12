@@ -13,6 +13,11 @@
 #define HAMILTONIAN_MODEL_H
 
 #include "Hamiltonian.h"
+#include "Model_SAC.h"
+#include "Model_DAC.h"
+#include "Model_ECWR.h"
+#include "Model_Marcus.h"
+#include "Model_SEXCH.h"
 using namespace libmmath;
 
 
@@ -21,10 +26,15 @@ namespace libhamiltonian{
 
 class Hamiltonian_Model : public Hamiltonian{
 
-  int ham_indx;              // model index: 0 - SAC, 1 - DAC, 2 - ECWR, 3 - Marcus, 4 - superexchange
+  int ham_indx;              // model index: 0 - SAC, 1 - DAC, 2 - ECWR, 3 - Marcus, 4 - superexchange (SEXCH)
+
+  int rep;                   // representation = 0 - for diabatic, 1 - for adiabatic
 
   int n_elec;                // number of electronic degrees of freedom (energy levels)
   int n_nucl;                // number of nuclear degrees of freedom - expected
+
+  // Parameters
+  vector<double> params;
 
   // Diabatic representation
   MATRIX* ham_dia;           // Hamiltonian in diabatic representation
@@ -33,41 +43,33 @@ class Hamiltonian_Model : public Hamiltonian{
 
   // Adiabatic representation
   MATRIX* ham_adi;           // Hamiltonian in adiabatic representation
-
+  vector<MATRIX*> d1ham_adi; // first order derivative couplings: <i|d/dR|j> - is computed from the transformation coefficients
  
-
-/*
-  // Status
-
-  // Input parameters
-  int rep;             // representation = 0 - for diabatic, 1 - for adiabatic
-
-  double x;            // position
-  double v;            // velocity
-
-  // Model parameters
-  double A,B,C,D,E;
-  double A1,B1,C1,D1, A2,B2,C2,D2, A3,B3,C3,D3;
-
-  // Computed results
-  // Diabatic 
-  double H00,H11,H22,H01,H02,H12,   dH00,dH11,dH22,dH01,dH02,dH12,  d2H00,d2H11,d2H22,d2H01,d2H02,d2H12;
-         
-
-  // Adiabatic
-  double E0,E1,dE0,dE1,d01,d10,dd01,dd10,D01,D10;
-
-*/
-
   
 public:
 
   // Constructor: only allocates memory and sets up related variables
   Hamiltonian_Model(int ham_indx_);
 
- 
-  void compute_diabatic(vector<double>&, vector<double>&);
-//  Hamiltonian_Model(int rep_, int pot_indx_, Nuclear* mol);
+  // Destructor
+  ~Hamiltonian_Model();
+
+  // Set properties
+  void set_rep(int rep_);
+
+  void set_params(vector<double>& params_);
+  void set_params(boost::python::list params_);
+
+  // Perform actual computations - this will construct the internals of the object of this type
+  void compute_diabatic(vector<double>& q_, vector<double>& p_);
+  void compute_diabatic(boost::python::list q_, boost::python::list p_);
+
+  void compute_adiabatic(vector<double>& q_, vector<double>& p_);
+  void compute_adiabatic(boost::python::list q_, boost::python::list p_);
+
+
+  // Now call different properties - the call signature is the same, but the result depends in the setters before
+  std::complex<double> H(int i,int j);
 
 /*
   void set_model(int pot_indx_);

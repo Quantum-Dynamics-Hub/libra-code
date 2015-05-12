@@ -5,9 +5,9 @@ namespace libhamiltonian{
 void DAC_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params){ 
 // DAC hamiltonian in diabatic representation
 
-  if(H->num_of_elems!=4){ std::cout<<"Error in SAC_Ham: H matrix must be allocated\n"; exit(0);}
-  if(dH->num_of_elems!=4){ std::cout<<"Error in SAC_Ham: dH matrix must be allocated\n"; exit(0);}
-  if(d2H->num_of_elems!=4){ std::cout<<"Error in SAC_Ham: d2H matrix must be allocated\n"; exit(0);}
+  if(H->num_of_elems!=4){ std::cout<<"Error in DAC_Ham: H matrix must be allocated\n"; exit(0);}
+  if(dH->num_of_elems!=4){ std::cout<<"Error in DAC_Ham: dH matrix must be allocated\n"; exit(0);}
+  if(d2H->num_of_elems!=4){ std::cout<<"Error in DAC_Ham: d2H matrix must be allocated\n"; exit(0);}
 
   // Default parameters
   double A = 0.100;  double B = 0.028;
