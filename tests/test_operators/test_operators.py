@@ -7,12 +7,12 @@ cwd = os.getcwd()
 print "Current working directory", cwd
 sys.path.insert(1,cwd+"/../../_build/src/mmath")
 #sys.path.insert(1,cwd+"/../../_build/src/cell")
-sys.path.insert(1,cwd+"/../../_build/src/operators")
+#sys.path.insert(1,cwd+"/../../_build/src/operators")
 
 
 print "\nTest 1: Importing the library and its content"
 from cygmmath import *
-from cygoperators import *
+#from cygoperators import *
 
 
 print "\nTest 2: Rotate"

@@ -1,3 +1,17 @@
+MESSAGE("Going into subdirectory linalg...")
+ADD_SUBDIRECTORY("linalg")
+
+MESSAGE("Going into subdirectory specialfunctions...")
+ADD_SUBDIRECTORY("specialfunctions")
+
+MESSAGE("Going into subdirectory graph...")
+ADD_SUBDIRECTORY("graph")
+
+MESSAGE("Going into subdirectory operators...")
+ADD_SUBDIRECTORY("operators")
+
+
+
 #
 #  Source files and headers in this directory
 #
@@ -15,7 +29,7 @@ ADD_LIBRARY(mmath_stat STATIC ${MMATH_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(mmath      ${ext_libs})
-TARGET_LINK_LIBRARIES(mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(mmath      operators_stat graph_stat specialfunctions_stat linalg_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(mmath_stat operators_stat graph_stat specialfunctions_stat linalg_stat ${ext_libs})
 
                                                  

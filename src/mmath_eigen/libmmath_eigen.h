@@ -8,4 +8,4 @@
 void export_mmath_eigen_objects();
 
 
-#endif// LIBHAMILTONIAN_H
+#endif// LIBMMATH_EIGEN_H
