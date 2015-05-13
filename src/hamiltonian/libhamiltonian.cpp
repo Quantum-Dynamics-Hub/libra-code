@@ -23,30 +23,31 @@ void export_Hamiltonian_objects(){
   def("SEXCH_Ham", expt_SEXCH_Ham1);
 
 
-  void (Hamiltonian_Model::*set_params1)(vector<double>&) = &Hamiltonian_Model::set_params;
-  void (Hamiltonian_Model::*set_params2)(boost::python::list) = &Hamiltonian_Model::set_params;
-
-  void (Hamiltonian_Model::*compute_diabatic1)(vector<double>&,vector<double>&) = &Hamiltonian_Model::compute_diabatic;
-  void (Hamiltonian_Model::*compute_diabatic2)(boost::python::list,boost::python::list) = &Hamiltonian_Model::compute_diabatic;
-
-  void (Hamiltonian_Model::*compute_adiabatic1)(vector<double>&,vector<double>&) = &Hamiltonian_Model::compute_adiabatic;
-  void (Hamiltonian_Model::*compute_adiabatic2)(boost::python::list,boost::python::list) = &Hamiltonian_Model::compute_adiabatic;
+  void (Hamiltonian_Model::*set_params)(boost::python::list) = &Hamiltonian_Model::set_params;
+  void (Hamiltonian_Model::*set_q)(boost::python::list) = &Hamiltonian_Model::set_q;
+  void (Hamiltonian_Model::*set_v)(boost::python::list) = &Hamiltonian_Model::set_v;
 
 
 
   class_<Hamiltonian_Model>("Hamiltonian_Model",init<int>())
       .def("__copy__", &generic__copy__<Hamiltonian_Model>)
       .def("__deepcopy__", &generic__deepcopy__<Hamiltonian_Model>)
-      //.def_readwrite("rb_torque_e",&RigidBody::rb_torque_e)
 
-      .def("set_params", set_params2)
+      .def("set_params", set_params)
       .def("set_rep", &Hamiltonian_Model::set_rep)
+      .def("set_q", set_q)
+      .def("set_v", set_v)
 
-      .def("compute_diabatic", compute_diabatic2 )
-      .def("compute_adiabatic",compute_adiabatic2)
+      .def("compute",          &Hamiltonian_Model::compute)
+      .def("compute_diabatic", &Hamiltonian_Model::compute_diabatic)
+      .def("compute_adiabatic",&Hamiltonian_Model::compute_adiabatic)
 
       .def("H", &Hamiltonian_Model::H)
-
+      .def("dHdq", &Hamiltonian_Model::dHdq)
+      .def("Hvib", &Hamiltonian_Model::Hvib)
+      .def("D", &Hamiltonian_Model::D)
+      .def("nac", &Hamiltonian_Model::nac)
+ 
   ;
 
 

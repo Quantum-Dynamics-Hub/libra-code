@@ -26,15 +26,16 @@ namespace libhamiltonian{
 
 class Hamiltonian_Model : public Hamiltonian{
 
+  // General specification of the model
   int ham_indx;              // model index: 0 - SAC, 1 - DAC, 2 - ECWR, 3 - Marcus, 4 - superexchange (SEXCH)
-
   int rep;                   // representation = 0 - for diabatic, 1 - for adiabatic
-
   int n_elec;                // number of electronic degrees of freedom (energy levels)
   int n_nucl;                // number of nuclear degrees of freedom - expected
 
-  // Parameters
+  // Model-specific parameters
   vector<double> params;
+  vector<double> q;          // nuclear coordinates - here, they act as parameters
+  vector<double> v;          // nuclear velocities: v = dq/dt  - here, they act as parameters
 
   // Diabatic representation
   MATRIX* ham_dia;           // Hamiltonian in diabatic representation
@@ -44,6 +45,12 @@ class Hamiltonian_Model : public Hamiltonian{
   // Adiabatic representation
   MATRIX* ham_adi;           // Hamiltonian in adiabatic representation
   vector<MATRIX*> d1ham_adi; // first order derivative couplings: <i|d/dR|j> - is computed from the transformation coefficients
+
+  // Control variable - to keep track of the computational state of the
+  // object of this calss - needed to avoid unnecessary computations
+  // if 0 - computations are outdated; 1 - computations are up to date
+  int status_dia;  
+  int status_adi;
  
   
 public:
@@ -57,48 +64,26 @@ public:
   // Set properties
   void set_rep(int rep_);
 
+  // Set parameters
   void set_params(vector<double>& params_);
   void set_params(boost::python::list params_);
+  void set_q(vector<double>& q_);
+  void set_q(boost::python::list q_);
+  void set_v(vector<double>& v_);
+  void set_v(boost::python::list v_);
 
   // Perform actual computations - this will construct the internals of the object of this type
-  void compute_diabatic(vector<double>& q_, vector<double>& p_);
-  void compute_diabatic(boost::python::list q_, boost::python::list p_);
-
-  void compute_adiabatic(vector<double>& q_, vector<double>& p_);
-  void compute_adiabatic(boost::python::list q_, boost::python::list p_);
+  void compute();
+  void compute_diabatic();
+  void compute_adiabatic();
 
 
   // Now call different properties - the call signature is the same, but the result depends in the setters before
-  std::complex<double> H(int i,int j);
-
-/*
-  void set_model(int pot_indx_);
-  void set_param(std::string var,double val);
-
-//  void update_nuclear(Nuclear* mol);
-//  void set_position(double x_);
-//  void set_velocity(double v_);
-
-
-
-  // Computation: first call one of these functions - to compute Hamiltonian for given representation
-  void compute(Nuclear* mol);
-  void compute_diabatic(Nuclear* mol);
-  void compute_adiabatic(Nuclear* mol);
-
-
-  // Return results: this does not do computations - only return precomputed results
-  std::complex<double> H(Nuclear* mol,int i,int j);
-  std::complex<double> H(Nuclear* mol,int i,int j, int rep_);
-  std::complex<double> dHdRx(Nuclear* mol,int i,int j,int k);
-  std::complex<double> dHdRy(Nuclear* mol,int i,int j,int k);
-  std::complex<double> dHdRz(Nuclear* mol,int i,int j,int k);
-
-  std::complex<double> Dx(Nuclear* mol,int, int, int); // derivative coupling w.r.t. Cartesian coordinate x
-  std::complex<double> Dy(Nuclear* mol,int, int, int); // derivative coupling w.r.t. Cartesian coordinate y
-  std::complex<double> Dz(Nuclear* mol,int, int, int); // derivative coupling w.r.t. Cartesian coordinate z
-  
-*/
+  std::complex<double> H(int i,int j);          // Hamiltonian
+  std::complex<double> dHdq(int i,int j,int n); // Hamiltonian first-order derivative  
+  std::complex<double> D(int i,int j,int n);    // derivative coupling                 <i|d/dR_n|j>
+  std::complex<double> nac(int i,int j);        // non-adiabatic coupling              <i|d/dt|j>
+  std::complex<double> Hvib(int i,int j);       // vibronic Hamiltonian (for TD-SE)    H - i*hbar*nac
 
 
 };

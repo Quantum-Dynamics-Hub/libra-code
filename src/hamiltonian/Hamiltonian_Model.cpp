@@ -53,6 +53,8 @@ Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
 
 
   rep = 0; // default representation is diabatic  
+  status_dia = 0;
+  status_adi = 0;
 
 }
 
@@ -71,7 +73,6 @@ Hamiltonian_Model::~Hamiltonian_Model(){
   d1ham_dia.clear();
   d2ham_dia.clear();
   d1ham_adi.clear();
-
 
 
 }
@@ -101,115 +102,125 @@ void Hamiltonian_Model::set_params(vector<double>& params_){
     params[i] = params_[i];
   }
 
+  // Since the parameters have changed - we need to recompute everything
+  status_dia = 0;
+  status_adi = 0;
+
 }
 
 void Hamiltonian_Model::set_params(boost::python::list params_){
 
-  int num_params = 0;
-
-  if(ham_indx==0 || ham_indx==2){ // SAC, ECWR
-    num_params = 4;
-  }
-  else if(ham_indx==1 || ham_indx==3){  // DAC, Marcus
-    num_params = 5;
-  }
-  else if(ham_indx==4){  // SEXCH
-    num_params = 12;
-  }
-
-  params = vector<double>(num_params, 0.0);
+  int sz = boost::python::len(params_);
+  vector<double> tmp_params(sz, 0.0);
 
   // Now copy input params:
-  for(int i=0;i<boost::python::len(params_) && i<num_params; i++){
-    params[i] = boost::python::extract<double>(params_[i]);
+  for(int i=0;i<sz; i++){
+    tmp_params[i] = boost::python::extract<double>(params_[i]);
   }
+
+  set_params(tmp_params);
 
 }
 
-
-void Hamiltonian_Model::compute_diabatic(vector<double>& q,vector<double>& v){
-
-  double e;
-
-  //=============== 1D models ========================
-  double x = q[0];
-
-  if(ham_indx==0){  SAC_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);     }    // SAC potetnial
-  else if(ham_indx==1){ DAC_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params); }    // DAC potential
-  else if(ham_indx==2){ ECWR_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);   } // ECWR potential
-  else if(ham_indx==3){ Marcus_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params); } // Marcus potential
-  else if(ham_indx==4){ SEXCH_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);  } // SEXCH potential
-
+void Hamiltonian_Model::set_q(vector<double>& q_){
+  q = q_;
+  status_dia = 0;
+  status_adi = 0;
 }
 
-void Hamiltonian_Model::compute_diabatic(boost::python::list q_, boost::python::list v_){
-
-  int i;
-  int sz = boost::python::len(q_);
-
-  vector<double> q(sz,0.0);
-  for(i=0;i<sz; i++){
-    q[i] = boost::python::extract<double>(q_[i]);
-  }
+void Hamiltonian_Model::set_q(boost::python::list q_){
  
-  sz = boost::python::len(v_);
-  vector<double> v(sz,0.0);
-  for(i=0;i<sz; i++){
-    v[i] = boost::python::extract<double>(v_[i]);
+  int sz = boost::python::len(q_);
+  vector<double> tmp_q(sz,0.0);
+
+  for(int i=0;i<sz; i++){
+    tmp_q[i] = boost::python::extract<double>(q_[i]);
   }
 
-  compute_diabatic(q,v);
+  set_q(tmp_q);
+}
 
-//  cout<<"in compute_diabatic: \n";
-//  cout<<"ham_dia = \n";
-//  cout<<*ham_dia<<endl;
+void Hamiltonian_Model::set_v(vector<double>& v_){
+  v = v_;
+  status_adi = 0;  // only affects adiabatic computations
+}
+
+void Hamiltonian_Model::set_v(boost::python::list v_){
+
+  int sz = boost::python::len(v_);
+  vector<double> tmp_v(sz,0.0);
+
+  for(int i=0;i<sz; i++){
+    tmp_v[i] = boost::python::extract<double>(v_[i]);
+  }
+
+  set_v(tmp_v);
 
 }
 
 
-void Hamiltonian_Model::compute_adiabatic(vector<double>& q,vector<double>& v){
+void Hamiltonian_Model::compute(){
+
+  if(rep==0){  compute_diabatic();  }
+  else if(rep==1){  compute_adiabatic(); }
+
+}
+
+
+void Hamiltonian_Model::compute_diabatic(){
+
+  if(status_dia == 0){ // only compute this is the result is not up to date
+  
+    double e;
+
+    //=============== 1D models ========================
+    double x = q[0];
+
+    if(ham_indx==0){  SAC_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);     }    // SAC potetnial
+    else if(ham_indx==1){ DAC_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params); }    // DAC potential
+    else if(ham_indx==2){ ECWR_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);   } // ECWR potential
+    else if(ham_indx==3){ Marcus_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params); } // Marcus potential
+    else if(ham_indx==4){ SEXCH_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);  } // SEXCH potential
+
+
+    // Set status flag 
+    status_dia = 1;
+
+  }//   status_dia == 0
+
+}
+
+
+void Hamiltonian_Model::compute_adiabatic(){
 // This function computes adiabatic PESs and derivative couplings
 
-  compute_diabatic(q,v);
+  compute_diabatic();
 
-  MATRIX* S; S = new MATRIX(n_elec, n_elec);  S->Init_Unit_Matrix(1.0);
-  MATRIX* C; C = new MATRIX(n_elec, n_elec);  *C = 0.0;
+  if(status_adi == 0){
 
-  // Transformation to adiabatic basis
-  solve_eigen(n_elec, ham_dia, S, ham_adi, C);  // H_dia * C = S * C * H_adi
+    MATRIX* S; S = new MATRIX(n_elec, n_elec);  S->Init_Unit_Matrix(1.0);
+    MATRIX* C; C = new MATRIX(n_elec, n_elec);  *C = 0.0;
 
-
-  // Now compute the derivative couplings (off-diagonal, multiplied by energy difference) and adiabatic gradients (diagonal)
-  for(int n=0;n<n_nucl;n++){
-
-    *d1ham_adi[n] = (*C).T() * (*d1ham_dia[n]) * (*C);
-
-  }// for n
+    // Transformation to adiabatic basis
+    solve_eigen(n_elec, ham_dia, S, ham_adi, C);  // H_dia * C = S * C * H_adi
 
 
-  delete S;
-  delete C;
+    // Now compute the derivative couplings (off-diagonal, multiplied by energy difference) and adiabatic gradients (diagonal)
+    for(int n=0;n<n_nucl;n++){
+
+      *d1ham_adi[n] = (*C).T() * (*d1ham_dia[n]) * (*C);
+
+    }// for n
+
+
+    delete S;
+    delete C;
+
+    // Set status flag
+    status_adi = 1;
+
+  }// status_adi == 0
   
-}
-
-void Hamiltonian_Model::compute_adiabatic(boost::python::list q_, boost::python::list v_){
-
-  int i;
-  int sz = boost::python::len(q_);
-
-  vector<double> q(sz,0.0);
-  for(i=0;i<sz; i++){
-    q[i] = boost::python::extract<double>(q_[i]);
-  }
- 
-  sz = boost::python::len(v_);
-  vector<double> v(sz,0.0);
-  for(i=0;i<sz; i++){
-    v[i] = boost::python::extract<double>(v_[i]);
-  }
-
-  compute_adiabatic(q,v);
-
 }
 
 
@@ -227,250 +238,64 @@ std::complex<double> Hamiltonian_Model::H(int i,int j){
   return res;
 }
 
-/*
-
-
-void Hamiltonian_Tully::compute_adiabatic(Nuclear* mol){
-
-    // First, do diabatic calculations, if they are not done yet
-    compute_diabatic(mol);
-
-    // Common operation - transformation from diabatic to adiabatic representation
-    double sum,dsum,dif,ddif,dif2,ddif2,mix2,dmix2,sroot,dsroot,d2dif,dE;
-
-    sum   = (H00 + H11);         dsum  = (dH00 + dH11);
-    dif   = (H00 - H11);         ddif  = (dH00 - dH11);
-                                 d2dif = (d2H00 - d2H11);
-
-    dif2  = dif*dif;             ddif2 = 2.0*dif*ddif;
-    mix2  = 4.0*H01*H01;         dmix2 = 8.0*H01*dH01;
-    sroot = sqrt(dif2 + mix2);   dsroot      = 0.5*(ddif2 + dmix2)/sroot;
-
-    E0 = 0.5*(sum - sroot); dE0 = 0.5*(dsum - dsroot);
-    E1 = 0.5*(sum + sroot); dE1 = 0.5*(dsum + dsroot);
-    dE = E0 - E1;
-
-
-    // This is more correct (singularity-free) version
-    d01 = ( ddif*H01 - dH01*dif )/(dif2 + mix2);
-    d10 = -d01;
-
-    // Symmetry: om2_01 = -om2_10
-    double om2;
-    om2 = (H01*(d2dif - 8.0*d01*dH01) - (d2H01 + 2.0*d01*ddif)*dif )/(dif2 + mix2);
-
-    dd01 = om2;
-    dd10 = -om2;
-
-    D01 = (dif/dE)*om2 + 2.0*H01*d01*d01;
-    D10 = D01;
-
-  
-}// compute_adiabatic
-
-
-
-void Hamiltonian_Tully::compute(Nuclear* mol){
-
-  if(get_status()==0){  
-    if(rep==0){    compute_diabatic(mol); } //   set_status(status_diabatic); }
-    else if(rep==1){ compute_adiabatic(mol); } // set_status(status_adiabatic); }
-    
-    set_status(1); 
-  }
-
-}
-
-
-
-std::complex<double> Hamiltonian_Tully::H(Nuclear* mol,int i, int j){
-// This function only returns computed values, one must call compute() first!!!
-
-  if(get_status()==0){  compute_adiabatic(mol); set_status(1); }
+std::complex<double> Hamiltonian_Model::dHdq(int i,int j,int n){
 
   std::complex<double> res(0.0,0.0);
 
   if(rep==0){    // Diabatic Hamiltonian - real, symmetric => Hermitian
-
-    if(i==0 && j==0){ res = std::complex<double>(H00,0.0); }
-    if(i==0 && j==1){ res = std::complex<double>(H01,0.0); }
-    if(i==0 && j==2){ res = std::complex<double>(H02,0.0); }
-    if(i==1 && j==0){ res = std::complex<double>(H01,0.0); }
-    if(i==1 && j==1){ res = std::complex<double>(H11,0.0); }
-    if(i==1 && j==2){ res = std::complex<double>(H12,0.0); }
-    if(i==2 && j==0){ res = std::complex<double>(H02,0.0); }
-    if(i==2 && j==1){ res = std::complex<double>(H12,0.0); }
-    if(i==2 && j==2){ res = std::complex<double>(H22,0.0); }
-
-  }// diabatic
-
-  else if(rep==1){ // Adiabatic Hamiltonian - complex, imaginary part is antisymmetric => Hermitian
-
-    // Diagonal terms - energies
-    // off-diagonal terms -   (-i*hbar*NAC_ij * p/m), so this is already a vibronic Hamiltonian 
-    v = mol->P[0].x/mol->mass[0];
-
-    if(i==0 && j==0){ res = std::complex<double>(E0, 0.0); }
-    if(i==0 && j==1){ res = std::complex<double>(0.0,-v*d01); }
-    if(i==1 && j==0){ res = std::complex<double>(0.0, v*d01); }
-    if(i==1 && j==1){ res = std::complex<double>(E1,0.0); }
-
-    if(i>=2 || j>=2){  cout<<"Adiabatic representation available only for 2D models\n"; exit(0); }
-
-  }// adiabatic
-
-  return res;
-
-}
-
-std::complex<double> Hamiltonian_Tully::H(Nuclear* mol,int i, int j, int rep_){
-// This function only returns computed values, one must call compute() first!!!
-
-  if(get_status()==0){  compute_adiabatic(mol); set_status(1); }
-
-  std::complex<double> res(0.0,0.0);
-
-  if(rep_==0){    // Diabatic Hamiltonian - real, symmetric => Hermitian
-
-    if(i==0 && j==0){ res = std::complex<double>(H00,0.0); }
-    if(i==0 && j==1){ res = std::complex<double>(H01,0.0); }
-    if(i==0 && j==2){ res = std::complex<double>(H02,0.0); }
-    if(i==1 && j==0){ res = std::complex<double>(H01,0.0); }
-    if(i==1 && j==1){ res = std::complex<double>(H11,0.0); }
-    if(i==1 && j==2){ res = std::complex<double>(H12,0.0); }
-    if(i==2 && j==0){ res = std::complex<double>(H02,0.0); }
-    if(i==2 && j==1){ res = std::complex<double>(H12,0.0); }
-    if(i==2 && j==2){ res = std::complex<double>(H22,0.0); }
-
-  }// diabatic
-
-  else if(rep_==1){ // Adiabatic Hamiltonian - complex, imaginary part is antisymmetric => Hermitian
-
-    // Diagonal terms - energies
-    // off-diagonal terms -   (-i*hbar*NAC_ij * p/m), so this is already a vibronic Hamiltonian 
-    v = mol->P[0].x/mol->mass[0];
-
-    if(i==0 && j==0){ res = std::complex<double>(E0, 0.0); }
-    if(i==0 && j==1){ res = std::complex<double>(0.0,-v*d01); }
-    if(i==1 && j==0){ res = std::complex<double>(0.0, v*d01); }
-    if(i==1 && j==1){ res = std::complex<double>(E1,0.0); }
-
-    if(i>=2 || j>=2){  cout<<"Adiabatic representation available only for 2D models\n"; exit(0); }
-
-
-  }// adiabatic
-
-  return res;
-
-}
-
-
-std::complex<double> Hamiltonian_Tully::Dx(Nuclear* mol,int i, int j, int k){
-// This function only returns computed values, one must call compute() first!!!
-// In principle, nothing prevents the derivative coupling to be complex (for each component)
-
-  if(get_status()==0){  compute_adiabatic(mol); set_status(1); }
-  std::complex<double> res(0.0,0.0);
-
-  if(rep==0){    // Diabatic Hamiltonian - real, symmetric => Hermitian
-
-    // In diabatic basis derivative couplings are zero, by definition
-
-  }// diabatic
-
-  else if(rep==1){ // Adiabatic Hamiltonian - complex, imaginary part is antisymmetric => Hermitian
-
-    if(i==0 && j==0){ res = std::complex<double>( 0.0, 0.0); }
-    if(i==0 && j==1){ res = std::complex<double>( d01, 0.0); }
-    if(i==1 && j==0){ res = std::complex<double>(-d01, 0.0); }
-    if(i==1 && j==1){ res = std::complex<double>( 0.0, 0.0); }
-
-    if(i>=2 || j>=2){  cout<<"Adiabatic representation available only for 2D models\n"; exit(0); }
-
-
-  }// adiabatic
-
-  return res;
-
-}
-
-std::complex<double> Hamiltonian_Tully::Dy(Nuclear* mol,int i, int j, int k){
-// This function only returns computed values, one must call compute() first!!!
-
-  std::complex<double> res(0.0,0.0);
-
-  return res;
-}
-
-std::complex<double> Hamiltonian_Tully::Dz(Nuclear* mol,int i, int j, int k){
-// This function only returns computed values, one must call compute() first!!!
-
-  std::complex<double> res(0.0,0.0);
-
-  return res;
-}
-
-
-
-
-std::complex<double> Hamiltonian_Tully::dHdRx(Nuclear* mol,int i, int j,int k){
-// This function only returns computed values, one must call compute() first!!!
-
-  if(get_status()==0){  compute_adiabatic(mol); set_status(1); }
-  std::complex<double> res(0.0,0.0);
-
-  if(k==0){
-
-    if(rep==0){    // Diabatic Hamiltonian - real, symmetric => Hermitian
-    
-      if(i==0 && j==0){ res = std::complex<double>(dH00,0.0); }
-      if(i==0 && j==1){ res = std::complex<double>(dH01,0.0); }
-      if(i==0 && j==2){ res = std::complex<double>(dH02,0.0); }
-      if(i==1 && j==0){ res = std::complex<double>(dH01,0.0); }
-      if(i==1 && j==1){ res = std::complex<double>(dH11,0.0); }
-      if(i==1 && j==2){ res = std::complex<double>(dH12,0.0); }
-      if(i==2 && j==0){ res = std::complex<double>(dH02,0.0); }
-      if(i==2 && j==1){ res = std::complex<double>(dH12,0.0); }
-      if(i==2 && j==2){ res = std::complex<double>(dH22,0.0); }
-    
-    }// diabatic
-    
-    else if(rep==1){ // Adiabatic Hamiltonian - complex, imaginary part is antisymmetric => Hermitian
-      v = mol->P[0].x/mol->mass[0];
-    
-      if(i==0 && j==0){ res = std::complex<double>(dE0, 0.0); }
-      if(i==0 && j==1){ res = std::complex<double>(0.0,-v*dd01); }
-      if(i==1 && j==0){ res = std::complex<double>(0.0, v*dd01); }
-      if(i==1 && j==1){ res = std::complex<double>(dE1,0.0); }
-
-      if(i>=2 || j>=2){  cout<<"Adiabatic representation available only for 2D models\n"; exit(0); }
-
-    
-    }// adiabatic
-
+    res = std::complex<double>( d1ham_dia[n]->get(i,j), 0.0 );
+  }
+  else if(rep==1){    // Adiabatic Hamiltonian - real, symmetric => Hermitian
+    res = std::complex<double>( d1ham_adi[n]->get(i,j), 0.0 );
   }
 
   return res;
-
 }
 
-std::complex<double> Hamiltonian_Tully::dHdRy(Nuclear* mol,int i, int j,int k){
-// This function only returns computed values, one must call compute() first!!!
+
+std::complex<double> Hamiltonian_Model::D(int i,int j,int n){
 
   std::complex<double> res(0.0,0.0);
+
+  if(rep==0){    // Diabatic Hamiltonian - real, symmetric => Hermitian
+    res = std::complex<double>(0.0,0.0);
+  }
+  else if(rep==1){    // Adiabatic Hamiltonian - real, symmetric => Hermitian
+    if(i!=j){  
+
+      double dE = (ham_adi->get(j,j) - ham_adi->get(i,i) );
+      if(fabs(dE)<1e-10){ dE = 1e-10 * (dE>0.0 ? 1.0 : -1.0); }
+
+      res = std::complex<double>( d1ham_adi[n]->get(i,j)/dE, 0.0 );
+
+    }
+  }
+
   return res;
 }
 
-std::complex<double> Hamiltonian_Tully::dHdRz(Nuclear* mol,int i, int j,int k){
-// This function only returns computed values, one must call compute() first!!!
+std::complex<double> Hamiltonian_Model::nac(int i,int j){
 
   std::complex<double> res(0.0,0.0);
+
+  for(int n=0;n<n_nucl;n++){
+    res += D(i,j,n) * v[n]; 
+  }
   return res;
 }
 
+std::complex<double> Hamiltonian_Model::Hvib(int i,int j){
+ 
+  const double hbar = 1.0;  // in atomic units
 
+  std::complex<double> ham_ = H(i,j);
+  std::complex<double> nac_ = nac(i,j);
 
-*/
+  std::complex<double> res(ham_.real(), ham_.imag() - hbar* nac_.real() );
+
+  return res;
+}
+
 
 }// namespace libhamiltonian
 

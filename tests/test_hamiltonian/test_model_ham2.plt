@@ -33,9 +33,57 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 
 
 set xlabel "x" offset 0.0, 0.5
-set ylabel "DAC adia" offset 1.5, 0.0
+set ylabel "DAC " offset 1.5, 0.0 
+
+# DAC, adiabatic Hamiltonian
 set output "dac_adia.png"
 plot "dac_adia.txt" using 1:2  w l  ls 11  lw 5  t "H(0,0)",\
      "dac_adia.txt" using 1:3  w l  ls 21  lw 5  t "H(1,1)",\
      "dac_adia.txt" using 1:4  w l  ls 31  lw 5  t "H(0,1)"
+
+# DAC, derivatives of the adiabatic Hamiltonian
+set output "dac_adia1.png"
+plot "dac_adia1.txt" using 1:2  w l  ls 11  lw 5  t "dH(0,0,0)",\
+     "dac_adia1.txt" using 1:3  w l  ls 21  lw 5  t "dH(1,1,0)",\
+     "dac_adia1.txt" using 1:4  w l  ls 31  lw 5  t "dH(0,1,0)"
+
+# DAC, derivatives couplings
+set output "dac_adia2.png"
+plot "dac_adia2.txt" using 1:2  w l  ls 11  lw 5  t "D(0,0,0)",\
+     "dac_adia2.txt" using 1:3  w l  ls 21  lw 5  t "D(1,1,0)",\
+     "dac_adia2.txt" using 1:4  w l  ls 31  lw 5  t "D(0,1,0)"
+
+# DAC, vibronic Hamiltonian
+set output "dac_adia3.png"
+plot "dac_adia3.txt" using 1:2  w l  ls 11  lw 5  t "Re(Hvib(0,0))",\
+     "dac_adia3.txt" using 1:3  w l  ls 21  lw 5  t "Re(Hvib(1,1))",\
+     "dac_adia3.txt" using 1:($4/50.0)  w l  ls 31  lw 5  t "Im(Hvib(0,1))/50.0"
+
+
+
+# DAC, diabatic Hamiltonian
+set output "dac_dia.png"
+plot "dac_dia.txt" using 1:2  w l  ls 11  lw 5  t "H(0,0)",\
+     "dac_dia.txt" using 1:3  w l  ls 21  lw 5  t "H(1,1)",\
+     "dac_dia.txt" using 1:4  w l  ls 31  lw 5  t "H(0,1)"
+
+# DAC, derivatives of the diabatic Hamiltonian
+set output "dac_dia1.png"
+plot "dac_dia1.txt" using 1:2  w l  ls 11  lw 5  t "dH(0,0,0)",\
+     "dac_dia1.txt" using 1:3  w l  ls 21  lw 5  t "dH(1,1,0)",\
+     "dac_dia1.txt" using 1:4  w l  ls 31  lw 5  t "dH(0,1,0)"
+
+# DAC, derivatives couplings - for diabatic Hamiltonian they are zero
+set output "dac_dia2.png"
+plot "dac_dia2.txt" using 1:2  w l  ls 11  lw 5  t "D(0,0,0)",\
+     "dac_dia2.txt" using 1:3  w l  ls 21  lw 5  t "D(1,1,0)",\
+     "dac_dia2.txt" using 1:4  w l  ls 31  lw 5  t "D(0,1,0)"
+
+# DAC, vibronic Hamiltonian - just the same as H
+set output "dac_dia3.png"
+plot "dac_dia3.txt" using 1:2  w l  ls 11  lw 5  t "Re(Hvib(0,0))",\
+     "dac_dia3.txt" using 1:3  w l  ls 21  lw 5  t "Re(Hvib(1,1))",\
+     "dac_dia3.txt" using 1:4  w l  ls 31  lw 5  t "Re(Hvib(0,1))"
+
+
 

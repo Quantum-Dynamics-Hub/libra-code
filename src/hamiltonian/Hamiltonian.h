@@ -48,14 +48,12 @@ class Hamiltonian{
 //  To solve this problem we use virtual functions for computation of H and dHdR 
 //  specific implementation is controlled by the derived classes
 
-//  int status;   //   1 - if Hamiltonian is up to date for position and velocity (velocity enters couplings)
-
 public:
 
   // Constructors
   Hamiltonian(); //{ ;; }
 
-  // Use dfault copy constructor
+  // Use default copy constructor
   //Hamiltonian(const Hamiltonian&);
 
   // Destructor
@@ -78,7 +76,6 @@ public:
   // This function performs actual computations
   virtual void compute(){ ;; }
 
-//  virtual void set_param(std::string var, double val){  ;; }
 
   // Calculation methods
   virtual std::complex<double> H(int, int);          // Hamiltonian
@@ -86,17 +83,6 @@ public:
   virtual std::complex<double> dHdRy(int, int, int); // derivative of Hamiltonian w.r.t. Cartesian coordinate y
   virtual std::complex<double> dHdRz(int, int, int); // derivative of Hamiltonian w.r.t. Cartesian coordinate z
 
-
-// Nonadiabatic couplings are not the part of the Hamiltonian functor - they should be related to representation !
-/*
-  virtual std::complex<double> D1x(int, int, int); // first-order derivative coupling w.r.t. Cartesian coordinate x
-  virtual std::complex<double> D1y(int, int, int); // first-order derivative coupling w.r.t. Cartesian coordinate y
-  virtual std::complex<double> D1z(int, int, int); // first-order derivative coupling w.r.t. Cartesian coordinate z
-
-  virtual std::complex<double> D2x(int, int, int); // second-order derivative coupling w.r.t. Cartesian coordinate x
-  virtual std::complex<double> D2y(int, int, int); // second-order derivative coupling w.r.t. Cartesian coordinate y
-  virtual std::complex<double> D2z(int, int, int); // second-order derivative coupling w.r.t. Cartesian coordinate z
-*/
 
 };
 
