@@ -18,15 +18,15 @@ INCLUDE_DIRECTORIES(${EIGEN_INCLUDE})
 #
 #  Create both static and dynamic libraries
 #
-ADD_LIBRARY(mmath_eigen SHARED ${EIG_SRC})
-ADD_LIBRARY(mmath_eigen_stat STATIC ${EIG_SRC})
+ADD_LIBRARY(meigen SHARED ${EIG_SRC})
+ADD_LIBRARY(meigen_stat STATIC ${EIG_SRC})
 
 
 
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(mmath_eigen      mmath_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(mmath_eigen_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(meigen      linalg_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(meigen_stat linalg_stat mmath_stat ${ext_libs})
 
 

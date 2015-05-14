@@ -1,10 +1,10 @@
 #include "NeuralNetwork.h"
-#include <ctime> 
-#include <cstdlib>
+//#include <ctime> 
+//#include <cstdlib>
 
-using namespace std;
+//using namespace std;
 using namespace boost;
-using namespace libmmath;
+//using namespace libmmath;
 /*
 using libmmath::VECTOR;
 using libmmath::MATRIX;
@@ -14,6 +14,8 @@ using libmmath::QUATERNION;
 using libmmath::DATA;
 */
 
+
+namespace libmmath{
 namespace libann{
 
 
@@ -481,5 +483,6 @@ int NeuralNetwork::SetTrainingData(object obj,int der_flag){
 }
 
 
-}//namespace libann
+}// namespace libann
+}// namespace libmmath
 

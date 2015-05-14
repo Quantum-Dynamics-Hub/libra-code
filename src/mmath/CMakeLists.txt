@@ -16,6 +16,12 @@ ADD_SUBDIRECTORY("random")
 MESSAGE("Going into subdirectory data...")
 ADD_SUBDIRECTORY("data")
 
+MESSAGE("Going into subdirectory ann...")
+ADD_SUBDIRECTORY("ann")
+
+MESSAGE("Going into subdirectory meigen...")
+ADD_SUBDIRECTORY("meigen")
+
 
 #
 #  Source files and headers in this directory
@@ -34,7 +40,7 @@ ADD_LIBRARY(mmath_stat STATIC ${MMATH_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(mmath      data_stat random_stat operators_stat graph_stat specialfunctions_stat linalg_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(mmath_stat data_stat random_stat operators_stat graph_stat specialfunctions_stat linalg_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(mmath      meigen_stat ann_stat data_stat random_stat operators_stat graph_stat specialfunctions_stat linalg_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(mmath_stat meigen_stat ann_stat data_stat random_stat operators_stat graph_stat specialfunctions_stat linalg_stat ${ext_libs})
 
                                                  

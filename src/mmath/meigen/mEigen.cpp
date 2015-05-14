@@ -2,14 +2,18 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include <Eigen/Core>
-using namespace Eigen;
-
 
 #include "mEigen.h"
+
+using namespace Eigen;
 using namespace std;
 
 
 namespace libmmath{
+
+using namespace liblinalg;
+
+namespace libmeigen{
 
 /****************************************************************************
   This file contains following functions:
@@ -129,4 +133,5 @@ void solve_eigen(int Norb, MATRIX* H, MATRIX* E, MATRIX* C){
 }// void solve_eigen(int Norb, MATRIX* H, MATRIX* E, MATRIX* C)
 
 
-}//namespace libmmath
+}// namespace libmeigen
+}// namespace libmmath

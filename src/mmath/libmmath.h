@@ -7,6 +7,8 @@
 #include "operators/liboperators.h"
 #include "random/librandom.h"
 #include "data/libdata.h"
+#include "ann/libann.h"
+#include "meigen/libmeigen.h"
 
 #include "Timer.h"
 

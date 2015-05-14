@@ -1,11 +1,11 @@
-#include "NeuralNetwork.h"
 #include <ctime> 
 #include <cstdlib>
 #include <boost/regex.hpp>
+#include "NeuralNetwork.h"
 
 using namespace std;
 using namespace boost;
-using namespace libmmath;
+//using namespace libmmath;
 
 /*
 using libmmath::VECTOR;
@@ -16,7 +16,9 @@ using libmmath::QUATERNION;
 using libmmath::DATA;
 */
 
+namespace libmmath{
 namespace libann{
+
 
 
 ANNData& ANNData::operator=(const ANNData& pattern){
@@ -678,6 +680,7 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<NeuralNetwork>
 
 
 
-} //namespace libann
+}// namespace libann
+}// namespace libmmath
 
 

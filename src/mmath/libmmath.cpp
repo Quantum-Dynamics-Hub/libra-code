@@ -19,6 +19,8 @@ using namespace libgraph;
 using namespace liboperators;
 using namespace librandom;
 using namespace libdata;
+using namespace libann;
+using namespace libmeigen;
 
 void export_Mathematics_objects(){
 
@@ -56,6 +58,8 @@ BOOST_PYTHON_MODULE(libmmath){
   export_Operators_objects();
   export_Random_objects();
   export_Data_objects();
+  export_NeuralNetwork_objects();
+  export_mEigen_objects();
   export_Mathematics_objects();
 
 }

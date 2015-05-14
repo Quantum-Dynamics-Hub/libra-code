@@ -4,19 +4,21 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <boost/python.hpp>
+
+#include "../linalg/liblinalg.h"
+#include "../data/libdata.h"
+#include "../specialfunctions/libspecialfunctions.h"
+
+
+using namespace boost::python;
+using namespace libmmath::liblinalg;
+using namespace libmmath::libdata;
+using namespace libmmath::libspecialfunctions;
 using namespace std;
 
-#include "../mmath/libmmath.h"
-using namespace libmmath;
 
-//using libmmath::VECTOR;
-//using libmmath::MATRIX;
-//using libmmath::CMATRIX;
-//using libmmath::MATRIX3x3;
-//using libmmath::QUATERNION;
-//using libmmath::DATA;
-
-
+namespace libmmath{
 namespace libann{
 
 //----------------------------------------------
@@ -161,5 +163,6 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<NeuralNetwork>
 
 
 }// namespace libann
+}// namespace libmmath
 
 #endif

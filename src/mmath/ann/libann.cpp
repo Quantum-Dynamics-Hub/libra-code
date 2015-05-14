@@ -1,8 +1,11 @@
 //#include <string>
 #include <boost/python.hpp>
 #include "libann.h"
+
 using namespace boost::python;
-using namespace libann;
+
+namespace libmmath{
+namespace libann{
 
 
 void export_NeuralNetwork_objects(){
@@ -186,10 +189,15 @@ BOOST_PYTHON_MODULE(libann){
 
   //to_python_converter<std::vector<libmmath::DATA>, VecToList<libmmath::DATA> >();
 
-  export_Mathematics_objects();  // also register mmath python functions!
+//  export_Mathematics_objects();  // also register mmath python functions!
   export_NeuralNetwork_objects();
 
 }
+
+
+}// namespace libann
+}// namespace libmmath
+
 
 
 

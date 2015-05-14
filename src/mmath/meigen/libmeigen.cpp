@@ -1,14 +1,16 @@
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-#include "libmmath_eigen.h"
+#include "libmeigen.h"
 
 using namespace boost::python;
-using namespace libmmath;
 
 
+namespace libmmath{
+namespace libmeigen{
 
-void export_mmath_eigen_objects(){
+
+void export_mEigen_objects(){
 
 
 //boost::python::list (*expt_rotate1)(double,double,double) = &expt_rotate;
@@ -23,9 +25,9 @@ void export_mmath_eigen_objects(){
 
 
 #ifdef CYGWIN
-BOOST_PYTHON_MODULE(cygmmath_eigen){
+BOOST_PYTHON_MODULE(cygmeigen){
 #else
-BOOST_PYTHON_MODULE(libmmath_eigen){
+BOOST_PYTHON_MODULE(libmeigen){
 #endif
 
   // Register converters:
@@ -33,8 +35,14 @@ BOOST_PYTHON_MODULE(libmmath_eigen){
   //to_python_converter<std::vector<DATA>, VecToList<DATA> >();
 
 //  export_Mathematics_objects();
-  export_mmath_eigen_objects();
+  export_mEigen_objects();
 
 }
+
+
+}//namespace libmeigen
+}//namespace libmmath
+
+
 
 
