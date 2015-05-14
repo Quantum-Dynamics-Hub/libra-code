@@ -3,6 +3,7 @@
 //=========================== DATA class ================================
 
 namespace libmmath{
+namespace libdata{
 
 DATA::DATA(vector<double> d){
 
@@ -300,9 +301,11 @@ int DATA::Calculate_MiniMax(double& Min_Val,int& Min_Indx,double& Max_Val,int& M
 }
 
 int DATA::Calculate_Distribution(vector<double>& Interval,vector<double>& Density,vector<double>& Cumulative){
+// Cumulative(x) - is the probability to find the point in the interval (Intrval[0], x)
 
   int sz = Data.size();
-  int szi= Interval.size()-1; // Number of sub-intervals
+  int szi= Interval.size(); // Number of sub-intervals
+  double nrm = (1.0/double(sz));
 
   // Clear results
   if(Density.size()>0){ Density.clear();}
@@ -315,20 +318,68 @@ int DATA::Calculate_Distribution(vector<double>& Interval,vector<double>& Densit
   }
 
   // Count
-  for(i=0;i<sz;i++){
+  for(int j=0;j<szi;j++){
 
-     for(int j=0;j<szi;j++){
-         if( (Interval[j]<=Data[i])&&(Data[i]<Interval[j+1]) ){
-              Density[j]++;
-              for(int k=j;k>0;k--){
-              Cumulative[k]++;
-              }// for k
-         }// if
-     }// for j
-  }// for i
+    for(i=0;i<sz;i++){
+      if(Data[i]<=Interval[j]){
+        Cumulative[j] += nrm;
+      }
+    }// for i
+
+  }// for j
+
+  // Probability density
+  Density[0] = 0.0;
+  for(int j=1;j<szi;j++){
+
+    Density[j] = (Cumulative[j] - Cumulative[j-1])/(Interval[j] - Interval[j-1]);
+
+  }  
+
+
+//  for(int i=0;i<szi;i++){
+//     Density[i] *= nrm;
+//     Cumulative[i] *= nrm;
+//  }
+
 
   return 0;
 }
+
+boost::python::list DATA::Calculate_Distribution(boost::python::list Interval){
+
+  int i;
+
+  // Convert input list to vector
+  int sz = boost::python::len(Interval);
+  vector<double> interval(sz,0.0);
+  for(i=0;i<sz;i++){ 
+    interval[i] = boost::python::extract<double>(Interval[i]);
+  }
+
+  // Perform computations
+  vector<double> density, cumulant;
+  Calculate_Distribution(interval, density, cumulant);
+
+  // Convert output vectors to lists
+  boost::python::list Density;
+  boost::python::list Cumulant;
+  sz = density.size();
+
+  for(i=0;i<sz;i++){
+    Density.append(density[i]);
+    Cumulant.append(cumulant[i]);
+  }
+
+  boost::python::list res;
+  res.append(Density);
+  res.append(Cumulant);
+
+  return res;
+
+}
+
+
 int DATA::LinearTransformData(double sc_fact,double sh){
 
   int sz = Data.size();
@@ -423,5 +474,5 @@ int DATA::Lin_Regression(int flag,double& a,double& b, double& erra, double& err
 */
 
 
-
+}// namespace libdata
 }// namespace libmmath

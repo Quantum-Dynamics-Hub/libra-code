@@ -5,9 +5,9 @@
 #include "specialfunctions/libspecialfunctions.h"
 #include "graph/libgraph.h"
 #include "operators/liboperators.h"
+#include "random/librandom.h"
+#include "data/libdata.h"
 
-#include "DATA.h"
-#include "random.h"
 #include "Timer.h"
 
 

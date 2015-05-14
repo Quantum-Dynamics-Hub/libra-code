@@ -17,52 +17,10 @@ using namespace libspecialfunctions;
 using namespace liblinalg;
 using namespace libgraph;
 using namespace liboperators;
+using namespace librandom;
+using namespace libdata;
 
 void export_Mathematics_objects(){
-
-
-int (DATA::*ScaleData1)(double)                = &DATA::ScaleData;
-int (DATA::*ScaleData2)(double,double)         = &DATA::ScaleData;
-
-
-  class_<DATA>("DATA",init<>())
-      .def(init<boost::python::list>())
-      .def("__copy__", &generic__copy__<DATA>)
-      .def("__deepcopy__", &generic__deepcopy__<DATA>)
-
-//      .def("Calculate_Estimators",&DATA::Calculate_Estimators)
-//      .def("Calculate_MiniMax",&DATA::Calculate_MiniMax)
-
-      .def("LinearTransformData", &DATA::LinearTransformData)
-      .def("ScaleData", ScaleData1)
-      .def("ScaleData", ScaleData2)
-      .def("ShiftData", &DATA::ShiftData)
-      .def("NormalizeData",  &DATA::NormalizeData)
-
-      .def_readwrite("Data",&DATA::Data)
-
-      .def_readwrite("ave",&DATA::ave)
-      .def_readwrite("var",&DATA::var)
-      .def_readwrite("sd",&DATA::sd)
-      .def_readwrite("se",&DATA::se)
-      .def_readwrite("mse",&DATA::mse)
-      .def_readwrite("mae",&DATA::mae)
-      .def_readwrite("rmse",&DATA::rmse)
-
-      .def_readwrite("min",&DATA::min)
-      .def_readwrite("min_indx",&DATA::min_indx)
-      .def_readwrite("max",&DATA::max)
-      .def_readwrite("max_indx",&DATA::max_indx)
-
-      .def_readwrite("scale_factor",&DATA::scale_factor)
-      .def_readwrite("shift_amount",&DATA::shift_amount)
-
-
-  ;
-
-  class_< DATAList >("DATAList")
-      .def(vector_indexing_suite< DATAList >())
-  ;
 
 
   class_<Timer>("Timer",init<>())
@@ -96,6 +54,8 @@ BOOST_PYTHON_MODULE(libmmath){
   export_SpecialFunctions_objects();
   export_GRAPH_objects();
   export_Operators_objects();
+  export_Random_objects();
+  export_Data_objects();
   export_Mathematics_objects();
 
 }

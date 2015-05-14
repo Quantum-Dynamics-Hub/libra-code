@@ -18,10 +18,14 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
-
+#include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+using namespace boost::python;
 using namespace std;
 
+
 namespace libmmath{
+namespace librandom{
 
 class Random{
 
@@ -31,7 +35,7 @@ class Random{
 
   public:
 
-  Random(){ ;; }
+  Random(){   srand(time(0)); }
   ~Random(){ ;; }
 
 
@@ -41,7 +45,7 @@ class Random{
 
   // Exponential distribution
   double exponential(double lambda);
-  double p_exp(double x,double lambda);
+  double p_exponential(double x,double lambda);
 
   // Normal (Gaussian) distribution
   double normal();
@@ -65,6 +69,7 @@ class Random{
 }; // class Random
 
 
+}// namespace librandom
 }// namespace libmmath
 
 #endif // RANDOM_H

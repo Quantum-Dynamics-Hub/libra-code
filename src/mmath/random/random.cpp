@@ -12,6 +12,7 @@
 #include "random.h"
 
 namespace libmmath{
+namespace librandom{
 
 
 int Random::fact(int k){
@@ -67,7 +68,7 @@ double Random::exponential(double lambda){
   return ksi;
 }
 
-double Random::p_exp(double x,double lambda){
+double Random::p_exponential(double x,double lambda){
   return lambda*exp(-lambda*x);
 }
 
@@ -260,7 +261,7 @@ double Random::p_gamma(double a,double x){
   double dna = (a-1.0) - na;
   double e = exp(-x/na)*x;
   double res = 1.0;
-  for(int i=1;i<=na;i++){ res *= e/i; }
+  for(int i=1;i<=na;i++){ res *= (e/floor(i)); }
   res *= exp(-dna)*pow(x,dna)/Gamma(dna);
   return res;
 }
@@ -383,5 +384,5 @@ double Random::p_poiss(int k,double lambda){
 }
 
 
-
-}//namespace libmmath
+}// namespace librandom
+}// namespace libmmath
