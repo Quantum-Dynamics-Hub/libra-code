@@ -13,9 +13,17 @@ ADD_SUBDIRECTORY("nuclear")
 MESSAGE("Going into subdirectory rigidbody...")
 ADD_SUBDIRECTORY("rigidbody")
 
-
 MESSAGE("Going into subdirectory electronic...")
 ADD_SUBDIRECTORY("electronic")
+
+MESSAGE("Going into subdirectory thermostat...")
+ADD_SUBDIRECTORY("thermostat")
+
+MESSAGE("Going into subdirectory barostat...")
+ADD_SUBDIRECTORY("barostat")
+
+MESSAGE("Going into subdirectory wfcgrid...")
+ADD_SUBDIRECTORY("wfcgrid")
 
 
 #
@@ -35,8 +43,8 @@ ADD_LIBRARY(dyn_stat STATIC ${DYN_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(dyn      electronic_stat rigidbody_stat nuclear_stat mmath_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(dyn_stat electronic_stat rigidbody_stat nuclear_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(dyn      wfcgrid_stat barostat_stat thermostat_stat electronic_stat rigidbody_stat nuclear_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(dyn_stat wfcgrid_stat barostat_stat thermostat_stat electronic_stat rigidbody_stat nuclear_stat mmath_stat ${ext_libs})
 
 
 

@@ -9,6 +9,9 @@ namespace libdyn{
 using namespace libnuclear;
 using namespace libelectronic;
 using namespace librigidbody;
+using namespace libthermostat;
+using namespace libbarostat;
+using namespace libwfcgrid;
 
 void export_Dyn_objects(){
 
@@ -31,6 +34,9 @@ BOOST_PYTHON_MODULE(libdyn){
   export_Nuclear_objects();
   export_RigidBody_objects();
   export_Electronic_objects();
+  export_Thermostat_objects();
+  export_Barostat_objects();
+  export_Wfcgrid_objects();
   export_Dyn_objects();
 
 }

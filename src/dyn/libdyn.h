@@ -4,6 +4,9 @@
 #include "nuclear/libnuclear.h"
 #include "rigidbody/librigidbody.h"
 #include "electronic/libelectronic.h"
+#include "thermostat/libthermostat.h"
+#include "barostat/libbarostat.h"
+#include "wfcgrid/libwfcgrid.h"
 
 
 namespace libdyn{
