@@ -9,10 +9,36 @@ Hamiltonian::~Hamiltonian(){ /*cout<<"Calling base function. Level is too abstra
 
 
 std::complex<double> Hamiltonian::H(int i, int j){
-  std::cout<<"Calling base function. Level is too abstract\n";
+  std::cout<<"Calling the base function H. Level is too abstract\n";
   exit(0);
   return std::complex<double>(0.0,0.0); 
 }
+
+std::complex<double> Hamiltonian::dHdq(int i, int j, int n){
+  std::cout<<"Calling the base function dHdq. Level is too abstract\n";
+  exit(0);
+  return std::complex<double>(0.0,0.0); 
+}
+
+std::complex<double> Hamiltonian::D(int i, int j, int n){
+  std::cout<<"Calling the base function D. Level is too abstract\n";
+  exit(0);
+  return std::complex<double>(0.0,0.0); 
+}
+
+std::complex<double> Hamiltonian::nac(int i, int j){
+  std::cout<<"Calling the base function nac. Level is too abstract\n";
+  exit(0);
+  return std::complex<double>(0.0,0.0); 
+}
+
+std::complex<double> Hamiltonian::Hvib(int i, int j){
+  std::cout<<"Calling the base function Hvib. Level is too abstract\n";
+  exit(0);
+  return std::complex<double>(0.0,0.0); 
+}
+
+
 
 std::complex<double> Hamiltonian::dHdRx(int i, int j, int k){
   std::cout<<"Calling base function dHdRx. Level is too abstract\n"; 

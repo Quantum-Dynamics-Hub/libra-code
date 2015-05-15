@@ -1,5 +1,6 @@
 #include "RigidBody.h"
 
+namespace libdyn{
 namespace librigidbody{
 
 // ======================= Internal methods ============================
@@ -146,4 +147,5 @@ void RigidBody::calc_rb_centers(int sz, VECTOR* r){
 
 
 }// namespace librigidbody
+}// namespace libdyn
 

@@ -1,5 +1,6 @@
 #include "RigidBody.h"
 
+namespace libdyn{
 namespace librigidbody{
 
 void RigidBody::initialize_terec(int series_expansion){
@@ -226,5 +227,6 @@ void RigidBody::propagate_qterec(double t){
 }
 
 
-}//namespace librigidbody
+}// namespace librigidbody
+}// namespace libdyn
 

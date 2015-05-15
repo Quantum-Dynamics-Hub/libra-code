@@ -1,5 +1,6 @@
 #include "RigidBody.h"
 
+namespace libdyn{
 namespace librigidbody{
 
 void RigidBody::Rotate_I_x(double phi){
@@ -98,5 +99,6 @@ void RigidBody::Rotate(double phi,VECTOR& dir){
 }
 
 
-}//namespace librigidbody
+}// namespace librigidbody
+}// namespace libdyn
 

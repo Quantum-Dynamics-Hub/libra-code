@@ -1,5 +1,6 @@
 #include "RigidBody.h"
 
+namespace libdyn{
 namespace librigidbody{
 
 void RigidBody::propagate_kln(double t){
@@ -67,4 +68,6 @@ void RigidBody::propagate_kln(double t){
 
 }
 
-}//namespace librigidbody
+}// namespace librigidbody
+}// namespace libdyn
+

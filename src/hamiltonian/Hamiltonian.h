@@ -14,11 +14,13 @@
 
 #include <complex>
 #include "../mmath/libmmath.h"
-using namespace libmmath;
+
 
 
 namespace libhamiltonian{
 
+
+using namespace libmmath;
 
 class Hamiltonian{
 //
@@ -78,7 +80,12 @@ public:
 
 
   // Calculation methods
-  virtual std::complex<double> H(int, int);          // Hamiltonian
+  virtual std::complex<double> H(int, int);             // Hamiltonian
+  virtual std::complex<double> dHdq(int i,int j,int n); // Hamiltonian first-order derivative  
+  virtual std::complex<double> D(int i,int j,int n);    // derivative coupling                 <i|d/dR_n|j>
+  virtual std::complex<double> nac(int i,int j);        // non-adiabatic coupling              <i|d/dt|j>
+  virtual std::complex<double> Hvib(int i,int j);       // vibronic Hamiltonian (for TD-SE)    H - i*hbar*nac
+
   virtual std::complex<double> dHdRx(int, int, int); // derivative of Hamiltonian w.r.t. Cartesian coordinate x
   virtual std::complex<double> dHdRy(int, int, int); // derivative of Hamiltonian w.r.t. Cartesian coordinate y
   virtual std::complex<double> dHdRz(int, int, int); // derivative of Hamiltonian w.r.t. Cartesian coordinate z

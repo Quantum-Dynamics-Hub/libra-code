@@ -1,6 +1,7 @@
 #include "RigidBody.h"
 //#include <boost/math/special_functions.hpp>
 
+namespace libdyn{
 namespace librigidbody{
 
 void RigidBody::initialize_exact_rb(){
@@ -397,4 +398,7 @@ void RigidBody::propagate_exact_rb(double dt){
 
 }
 
-}//namespace librigidbody
+
+}// namespace librigidbody
+}// namespace libdyn
+

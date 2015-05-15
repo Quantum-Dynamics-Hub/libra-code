@@ -1,5 +1,6 @@
 #include "RigidBody.h"
 
+namespace libdyn{
 namespace librigidbody{
 
 void RigidBody::propagate_omelyan(double t){
@@ -62,5 +63,6 @@ void RigidBody::propagate_omelyan(double t){
 
 }
 
-}//namespace librigidbody
+}// namespace librigidbody
+}// namespace libdyn
 

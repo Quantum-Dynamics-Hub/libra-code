@@ -9,14 +9,16 @@
 *
 *********************************************************************************/
 
-#include "Hamiltonian_Model.h"
+
 #include <complex>
 #include <cmath>
-#include "../mmath_eigen/libmmath_eigen.h"
-using namespace libmmath;
+#include "Hamiltonian_Model.h"
+
 
 namespace libhamiltonian{
 
+using namespace libmmath;
+using namespace libmmath::libmeigen;
 using std::complex;
 using std::sin;
 using std::cos;
@@ -30,7 +32,7 @@ Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
   ham_indx = ham_indx_;
 
   // 2-level models
-  if(ham_indx==0 || ham_indx==1 || ham_indx==2 || ham_indx==3){  // SAC, DAC, ECWR, Marcus
+  if(ham_indx==0 || ham_indx==1 || ham_indx==2 || ham_indx==3 || ham_indx==5){  // SAC, DAC, ECWR, Marcus, Rabi2
     n_elec = 2;
     n_nucl = 1;
   }
@@ -87,6 +89,9 @@ void Hamiltonian_Model::set_params(vector<double>& params_){
 
   if(ham_indx==0 || ham_indx==2){ // SAC, ECWR
     num_params = 4;
+  }
+  else if(ham_indx==5){ // Rabi2
+    num_params = 3;
   }
   else if(ham_indx==1 || ham_indx==3){  // DAC, Marcus
     num_params = 5;
@@ -181,6 +186,7 @@ void Hamiltonian_Model::compute_diabatic(){
     else if(ham_indx==2){ ECWR_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);   } // ECWR potential
     else if(ham_indx==3){ Marcus_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params); } // Marcus potential
     else if(ham_indx==4){ SEXCH_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);  } // SEXCH potential
+    else if(ham_indx==5){ Rabi2_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);  } // Rabi2 potential
 
 
     // Set status flag 

@@ -18,16 +18,19 @@
 #include "Model_ECWR.h"
 #include "Model_Marcus.h"
 #include "Model_SEXCH.h"
-using namespace libmmath;
+#include "Model_Rabi2.h"
+//#include "../mmath/libmmath.h"
+
 
 
 namespace libhamiltonian{
 
+using namespace libmmath;
 
 class Hamiltonian_Model : public Hamiltonian{
 
   // General specification of the model
-  int ham_indx;              // model index: 0 - SAC, 1 - DAC, 2 - ECWR, 3 - Marcus, 4 - superexchange (SEXCH)
+  int ham_indx;              // model index: 0 - SAC, 1 - DAC, 2 - ECWR, 3 - Marcus, 4 - superexchange (SEXCH), 5 - Rabi2
   int rep;                   // representation = 0 - for diabatic, 1 - for adiabatic
   int n_elec;                // number of electronic degrees of freedom (energy levels)
   int n_nucl;                // number of nuclear degrees of freedom - expected

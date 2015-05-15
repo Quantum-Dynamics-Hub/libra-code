@@ -4,7 +4,16 @@
 
 #include "Electronic.h"
 
+namespace libdyn{
+namespace libelectronic{
+
+
 void export_Electronic_objects();
+
+
+}// namespace libdyn
+}// namespace libelectronic
+
 
 
 #endif// LIB_ELECTRONIC_H

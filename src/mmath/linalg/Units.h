@@ -3,7 +3,7 @@
 
 
 namespace libmmath{
-namespace liblinalg{
+//namespace liblinalg{
 
 //================= Mathematical and numeric constants ====================
 //    radian   conversion factor from radians to degrees
@@ -58,8 +58,8 @@ namespace liblinalg{
 
 
 // Time units
-#define fs 41.34145          // 1 fs in atomic units of time
-#define fs_to_tau 0.020454828280872953835407068780373 
+#define FS 41.34145          // 1 fs in atomic units of time
+#define FS_TO_TAU 0.020454828280872953835407068780373 
 #define ps_to_tau 20.45482828087295383540706878037      //   = 10*sqrt(4.184)
 #define tau_to_ps 48.88821290839616117449108217105E-3    
 #define tau_to_fs 48.88821290839616117449108217105      //   = 100/sqrt(4.184)
@@ -99,7 +99,7 @@ namespace liblinalg{
 #define Debye 0.393430307   // 1 Debye in atomic units [ e * Bohr]
 
 
-}// namespace liblinalg
+//}// namespace liblinalg
 }// namespace libmmath
 
 

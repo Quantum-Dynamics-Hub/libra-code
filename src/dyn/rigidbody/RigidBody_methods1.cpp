@@ -1,5 +1,6 @@
 #include "RigidBody.h"
 
+namespace libdyn{
 namespace librigidbody{
 
 int RigidBody::init(int sz,double* m,VECTOR* r){
@@ -196,5 +197,6 @@ int RigidBody::set_quaternion_momentum(const QUATERNION& qm){
 }
 
 
-}//namespace librigidbody
+}// namespace librigidbody
+}// namespace libdyn
 

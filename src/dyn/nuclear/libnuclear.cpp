@@ -4,8 +4,11 @@
 #include "libnuclear.h"
 
 using namespace boost::python;
-using namespace libdyn::libnuclear;
+//using namespace libdyn::libnuclear;
 
+
+namespace libdyn{
+namespace libnuclear{
 
 
 void export_Nuclear_objects(){
@@ -42,5 +45,9 @@ BOOST_PYTHON_MODULE(libnuclear){
   export_Nuclear_objects();
 
 }
+
+
+}// namespace libdyn
+}// namespace libnuclear
 
 

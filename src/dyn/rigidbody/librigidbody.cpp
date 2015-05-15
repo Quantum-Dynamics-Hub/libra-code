@@ -3,7 +3,11 @@
 
 #include "librigidbody.h"
 
-using namespace librigidbody;
+//using namespace librigidbody;
+
+namespace libdyn{
+namespace librigidbody{
+
 
 
 void export_RigidBody_objects(){
@@ -169,10 +173,15 @@ BOOST_PYTHON_MODULE(librigidbody){
 #endif
 
 
-  export_Mathematics_objects();  // also register mmath python functions!
+//  export_Mathematics_objects();  // also register mmath python functions!
   export_RigidBody_objects();
 
 }
+
+}// namespace librigidbody
+}// namespace libdyn
+
+
 
 
 

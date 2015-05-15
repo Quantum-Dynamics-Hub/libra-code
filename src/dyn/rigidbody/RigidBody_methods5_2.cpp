@@ -1,5 +1,6 @@
 #include "RigidBody.h"
 
+namespace libdyn{
 namespace librigidbody{
 
 void RigidBody::propagate_dlml(double t,double& Ps){
@@ -63,5 +64,6 @@ void RigidBody::propagate_dlml(double t,double& Ps){
 
 }
 
-}//namespace librigidbody
+}// namespace librigidbody
+}// namespace libdyn
 

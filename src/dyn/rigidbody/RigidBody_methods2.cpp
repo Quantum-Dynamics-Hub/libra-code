@@ -1,5 +1,6 @@
 #include "RigidBody.h"
 
+namespace libdyn{
 namespace librigidbody{
 
 
@@ -117,5 +118,6 @@ int RigidBody::apply_force(MATRIX3x3& x){
 }
 
 
-}//namespace librigidbody
+}// namespace librigidbody
+}// namespace libdyn
 

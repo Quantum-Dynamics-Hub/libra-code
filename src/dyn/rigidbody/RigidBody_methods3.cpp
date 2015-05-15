@@ -1,5 +1,6 @@
 #include "RigidBody.h"
 
+namespace libdyn{
 namespace librigidbody{
 
 int RigidBody::get_Nf_t(){
@@ -50,5 +51,6 @@ double RigidBody::ekin_tr(){
 }
 
 
-}//namespace librigidbody
+}// namespace librigidbody
+}// namespace libdyn
 

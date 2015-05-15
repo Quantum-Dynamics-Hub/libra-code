@@ -1,10 +1,11 @@
 #ifndef RigidBody_H
 #define RigidBody_H
 
-#include "../mmath/libmmath.h"
+#include "../../mmath/libmmath.h"
 
 using namespace libmmath;
 
+namespace libdyn{
 namespace librigidbody{
 
 class RigidBody{
@@ -246,6 +247,8 @@ public:
 void save(boost::property_tree::ptree& pt,std::string path,vector<RigidBody>& vt);
 void load(boost::property_tree::ptree& pt,std::string path,vector<RigidBody>& vt,int& status);
 
-}//namespace librigidbody
+
+}// namespace librigidbody
+}// namespace libdyn
 
 #endif // RigidBody_H

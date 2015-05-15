@@ -1,6 +1,7 @@
 #include "RigidBody.h"
 
 // ======================= Internal methods ============================
+namespace libdyn{
 namespace librigidbody{
 
 void RigidBody::init_permutations(){
@@ -481,4 +482,6 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<RigidBody>& vt
 
 
 
-}//namespace librigidbody
+}// namespace librigidbody
+}// namespace libdyn
+

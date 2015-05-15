@@ -1,5 +1,6 @@
 #include "RigidBody.h"
 
+namespace libdyn{
 namespace librigidbody{
 
 void RigidBody::rotate_no_squish(int k,double dt){
@@ -36,3 +37,5 @@ void RigidBody::propagate_no_squish(double t){
 }
 
 }// namespace librigidbody
+}// namespace libdyn
+
