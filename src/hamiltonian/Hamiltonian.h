@@ -75,8 +75,10 @@ public:
   // Updates coordinates, velocities, etc. - all nuclear information
 //  virtual void update_nuclear(Nuclear* mol);
 
+  virtual void set_q(vector<double>&){ ;; }
+
   // This function performs actual computations
-  virtual void compute(){ ;; }
+  virtual void compute(){ ;; }  
 
 
   // Calculation methods

@@ -12,13 +12,16 @@ namespace libdyn{
 namespace libwfcgrid{
 
 // 1D and 2D grid wavefunction
-// Note: 1D is a special case of 2D
 class Wfcgrid{
 
+  void init_numbers(double minx_, double maxx_, double dx_, int nstates_);
   void init_numbers(double minx_, double maxx_, double dx_, double miny_, double maxy_, double dy_, int nstates_);
-  void allocate();
-  void init_grid();
+  void allocate_1D();
+  void allocate_2D();
+  void init_grid_1D();
+  void init_grid_2D();
 
+  void print_complex_matrix_1D(CMATRIX& CM, std::string filename);
 
 public:
 
@@ -50,25 +53,53 @@ public:
   vector< vector<CMATRIX> > H;  // PES - nstates x nstates x Nx x Ny - full Hamiltonian 
   vector< vector<CMATRIX> > Dx; // for each i,j pair - a separate x projection for all r-points of the grid - nstates x nstates x Nx x Ny
   vector< vector<CMATRIX> > Dy; // for each i,j pair - a separate y projection for all r-points of the grid - nstates x nstates x Nx x Ny  
-  vector<CMATRIX> expH;         // nstates x Nx x Ny
+  vector< vector<CMATRIX> > expH; // nstates x nstates x Nx x Ny
   vector<CMATRIX> expK;         // nstates x Nx x Ny
 
 
 
   // Constructor : 1D and 2D
-  Wfcgrid(double minx_, double maxx_, double dx_, double miny_, double maxy_, double dy_, int nstates_);
+  Wfcgrid(double minx_, double maxx_, double dx_, int nstates_); // 1D
+  Wfcgrid(double minx_, double maxx_, double dx_, double miny_, double maxy_, double dy_, int nstates_); // 2D
 
   // Populate wfc
-  void init_wfc(double x0, double y0, double px0, double py0, double dx, double dy, int init_state);
+  void init_wfc_1D(double x0, double px0, double dx, int init_state); // 1D
+  void init_wfc_2D(double x0, double y0, double px0, double py0, double dx, double dy, int init_state); // 2D
 
-  void print_map(std::string prefix, int snap, int state);
+  // Print 1D and 2D wavefunctions to file
+  void print_wfc_1D(std::string prefix, int snap, int state);
+  void print_wfc_2D(std::string prefix, int snap, int state);
+  void print_reci_wfc_1D(std::string prefix, int snap, int state);
+  void print_ham_1D(std::string prefix, int i, int j);
+  void print_expH_1D(std::string prefix, int i, int j);
+  void print_expK_1D(std::string prefix, int i);
 
-  void update_potential(Hamiltonian_Model& ham);
-  void update_propagator(double dt,double m0);
-  void update_propagator_K(double dt,double m0);
+ 
+  // Print state-resolved populations 
+  double print_populations_1D(string filename,int snap);
+
+  // Flux
+  void flux_1D(double xf,vector<double>& res, double m0);
 
 
-  void propagate_exact_2D(double dt, int Nmts);
+  //--------------- in Wfcgrid_Dynamics1 ------------------
+
+  void update_potential_1D(Hamiltonian& ham);
+  void update_potential_2D(Hamiltonian& ham);
+
+  void update_propagator_1D(double dt,double m0);
+  void update_propagator_2D(double dt,double m0);
+
+  void update_propagator_K_1D(double dt,double m0);
+  void update_propagator_K_2D(double dt,double m0);
+
+
+  void propagate_exact_1D(int Nmts);
+  void propagate_exact_2D(int Nmts);
+
+  void absorb_1D(double dL,vector<double>& Pops_l,vector<double>& Pops_r);
+  boost::python::list absorb_1D(double dL);
+
 
 }; //  class Wfcgrid
 
