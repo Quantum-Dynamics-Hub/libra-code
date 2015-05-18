@@ -19,8 +19,8 @@ ADD_SUBDIRECTORY("dyn")
 
 
 
-#MESSAGE("Going into subdirectory rigidbody...")
-#ADD_SUBDIRECTORY("rigidbody")
+MESSAGE("Going into subdirectory qchem...")
+ADD_SUBDIRECTORY("qchem")
 
 #MESSAGE("Going into subdirectory cell...")
 #ADD_SUBDIRECTORY("cell")

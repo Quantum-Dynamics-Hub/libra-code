@@ -15,6 +15,12 @@ using namespace libwfcgrid;
 
 void export_Dyn_objects(){
 
+  export_Nuclear_objects();
+  export_RigidBody_objects();
+  export_Electronic_objects();
+  export_Thermostat_objects();
+  export_Barostat_objects();
+  export_Wfcgrid_objects();
 
 }// export_Dyn_objects()
 
@@ -30,17 +36,11 @@ BOOST_PYTHON_MODULE(libdyn){
   // Register converters:
   // See here: https://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters/
   //to_python_converter<std::vector<DATA>, VecToList<DATA> >();
-//  export_Mathematics_objects();
-  export_Nuclear_objects();
-  export_RigidBody_objects();
-  export_Electronic_objects();
-  export_Thermostat_objects();
-  export_Barostat_objects();
-  export_Wfcgrid_objects();
+
   export_Dyn_objects();
 
 }
 
 
-}// libmmath
+}// libdyn
 
