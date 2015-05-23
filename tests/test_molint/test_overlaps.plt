@@ -101,4 +101,30 @@ plot "3D_pseudopot02.txt" using 1:2  w l  ls 11  lw 5  t "<s||s>",\
      "3D_pseudopot02.txt" using 1:6  w l  ls 21  lw 5  t "<px||py>"
 
 
+set output "1D_sto_overlaps_norm.png"
+plot "1D_sto_overlaps_norm.txt" using 1:2  w l  ls 11  lw 5  t "<s|s>",\
+     "1D_sto_overlaps_norm.txt" using 1:3  w l  ls 12  lw 5  t "<s|p>",\
+     "1D_sto_overlaps_norm.txt" using 1:4  w l  ls 13  lw 5  t "<s|d>",\
+     "1D_sto_overlaps_norm.txt" using 1:5  w l  ls 14  lw 5  t "<s|f>",\
+     "1D_sto_overlaps_norm.txt" using 1:6  w l  ls 21  lw 5  t "<p|p>",\
+     "1D_sto_overlaps_norm.txt" using 1:7  w l  ls 22  lw 5  t "<p|d>",\
+     "1D_sto_overlaps_norm.txt" using 1:8  w l  ls 22  lw 5  t "<p|f>",\
+     "1D_sto_overlaps_norm.txt" using 1:9  w l  ls 31  lw 5  t "<d|d>",\
+     "1D_sto_overlaps_norm.txt" using 1:10 w l  ls 32  lw 5  t "<d|f>",\
+     "1D_sto_overlaps_norm.txt" using 1:11 w l  ls 41  lw 5  t "<f|f>"
+
+set output "1D_sto_overlaps_norm1.png"
+plot "1D_sto_overlaps_norm1.txt" using 1:2  w l  ls 11  lw 5  t "<s|s>",\
+     "1D_sto_overlaps_norm1.txt" using 1:3  w l  ls 12  lw 5  t "<s|p>",\
+     "1D_sto_overlaps_norm1.txt" using 1:4  w l  ls 13  lw 5  t "<s|d>",\
+     "1D_sto_overlaps_norm1.txt" using 1:5  w l  ls 14  lw 5  t "<s|f>",\
+     "1D_sto_overlaps_norm1.txt" using 1:6  w l  ls 21  lw 5  t "<p|p>",\
+     "1D_sto_overlaps_norm1.txt" using 1:7  w l  ls 22  lw 5  t "<p|d>",\
+     "1D_sto_overlaps_norm1.txt" using 1:8  w l  ls 22  lw 5  t "<p|f>",\
+     "1D_sto_overlaps_norm1.txt" using 1:9  w l  ls 31  lw 5  t "<d|d>",\
+     "1D_sto_overlaps_norm1.txt" using 1:10 w l  ls 32  lw 5  t "<d|f>",\
+     "1D_sto_overlaps_norm1.txt" using 1:11 w l  ls 41  lw 5  t "<f|f>"
+
+
+
 

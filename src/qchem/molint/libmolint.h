@@ -5,6 +5,12 @@
 #include "Overlaps.h"
 #include "Moments.h"
 #include "Pseudopotential.h"
+#include "Aux_Functions.h"
+
+#include "A_coefficients.h"
+
+#include "Integral_Kinetic.h"
+
 
 namespace libqchem{
 namespace libmolint{

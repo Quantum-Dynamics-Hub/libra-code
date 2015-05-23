@@ -22,6 +22,7 @@ namespace libspecialfunctions{
 
 void export_SpecialFunctions_objects(){
 
+  boost::python::list (*expt_binomial_expansion)(int, int, double, double, int) = &binomial_expansion;
 
   // Now introduce normal functions:
   def("FAST_POW", FAST_POW);
@@ -30,10 +31,15 @@ void export_SpecialFunctions_objects(){
   def("sin_", sin_);   // sin(x)/x
   def("ERF",ERF);      // error function
   def("ERFC",ERFC);    // complementary error function
+  def("gamma_lower", gamma_lower);  // lower gamma function divided by the power
+  def("Fn", Fn);
+  def("gaussian_int", gaussian_int);  
+  def("gaussian_norm", gaussian_norm);
 
   def("FACTORIAL",FACTORIAL); // n!
   def("DRACTORIAL",DFACTORIAL);  // n!!
   def("BINOM",BINOM);  // C_n^i
+  def("binomial_expansion", expt_binomial_expansion);
 
   def("LEGENDRE",LEGENDRE);
   def("CHEBYSHEV",CHEBYSHEV);

@@ -14,13 +14,13 @@ namespace libmolint{
 void export_molint_objects(){
 
 
-  // Basic functions
-  double (*expt_gaussian_int)(int, double) = &gaussian_int;
-  double (*expt_gaussian_norm)(int,double) = &gaussian_norm;
-
   // Basic overlaps
   // 1D Gaussians
-  double (*expt_gaussian_overlap_1D)(int,double, double, int, double, double) = &gaussian_overlap;
+  double (*expt_gaussian_overlap_ref)(int,double,double, int,double,double) = &gaussian_overlap_ref;
+  double (*expt_gaussian_overlap_1D_v1)(int,double,double, int,double,double) = &gaussian_overlap;
+  double (*expt_gaussian_overlap_1D_v2)(int,double,double, int,double,double, int) = &gaussian_overlap;
+  boost::python::list (*expt_gaussian_overlap_1D_v3)(int,double,double, int,double,double, int, int) = &gaussian_overlap;
+
 
   // 3D Gaussians
   double (*expt_gaussian_overlap_3D_v1)(int,int,int,double,VECTOR&,
@@ -41,39 +41,34 @@ void export_molint_objects(){
                                        int,int,int,double,VECTOR&,
                                        int,int,int,double,VECTOR&         ) = &gaussian_moment;
 
-/*
-// Don't know why I can't export the function below, but it is not really needed anyways, so
-// just comment for now
-  double (*expt_gaussian_moment_3D_v2)(int nx, int ny,  int nz,  double alp, VECTOR& R,
-                       int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
-                       int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
-                       int is_normalize, 
-                       VECTOR& dIdA, VECTOR& dIdB
-                      ) = &gaussian_moment;
-*/
-
 
   // Pseudopotentials - essentially a combination of moments and overlaps
-
   double (*expt_pseudopot02_v1)(double,double,double,VECTOR&,
                                 int,int,int,double,VECTOR&,
                                 int,int,int,double,VECTOR&                 ) = &pseudopot02;
 
-/*
-  double (*expt_pseudopot02_v2)(double C0, double C2, double alp, VECTOR& R,
-                   int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
-                   int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
-                   int is_normalize, 
-                   VECTOR& dIdA, VECTOR& dIdB
-                  ) = &pseudopot02;
-*/
+
+  // Kinetic energy integrals
+  // 1D Gaussians
+  double (*expt_kinetic_integral_1D)(int,double, double, int, double, double) = &kinetic_integral;
+
+  // 3D Gaussians
+  double (*expt_kinetic_integral_3D_v1)(int,int,int,double,VECTOR&,
+                                        int,int,int,double,VECTOR&          ) = &kinetic_integral;
+
+  double (*expt_kinetic_integral_3D_v2)(int,int,int,double,VECTOR&,
+                                        int,int,int,double,VECTOR&,
+                                        int, VECTOR&, VECTOR&               ) = &kinetic_integral;
+
 
 
   // ============ Now export functions =============
 
-  def("gaussian_int", expt_gaussian_int);
-  def("gaussian_norm", expt_gaussian_norm);
-  def("gaussian_overlap", expt_gaussian_overlap_1D);
+  def("gaussian_overlap_ref", expt_gaussian_overlap_ref);
+  def("gaussian_overlap", expt_gaussian_overlap_1D_v1);
+  def("gaussian_overlap", expt_gaussian_overlap_1D_v2);
+  def("gaussian_overlap", expt_gaussian_overlap_1D_v3);
+
   def("gaussian_overlap", expt_gaussian_overlap_3D_v1);
   def("gaussian_overlap", expt_gaussian_overlap_3D_v2);
   def("gaussian_moment", expt_gaussian_moment_1D);
@@ -81,6 +76,18 @@ void export_molint_objects(){
 //  def("gaussian_moment", expt_gaussian_moment_3D_v2);
   def("pseudopot02", expt_pseudopot02_v1);
 //  def("pseudopot02", expt_pseudopot02_v2);
+  def("kinetic_integral", expt_kinetic_integral_1D);
+  def("kinetic_integral", expt_kinetic_integral_3D_v1);
+  def("kinetic_integral", expt_kinetic_integral_3D_v2);
+
+
+
+  def("A_coefficient_general", A_coefficient_general); 
+  def("generate_coefficients", generate_coefficients);
+
+  def("sto_norm", sto_norm);
+  def("sto_overlap", sto_overlap);
+  def("sto_overlap_fast", sto_overlap_fast);
 
 
 

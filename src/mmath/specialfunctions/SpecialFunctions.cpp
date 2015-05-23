@@ -154,36 +154,116 @@ S. Winitzki, Uniform approximations for transcendental functions, in Proc. ICCSA
 
    return res;
 
+}// ERFC
+
+
+double gamma_lower(double s,double x){
+// This computes lower incomplete gamma function divided by power:
+// gamma_tilda(s,x) = gamma(s,x)/ x^s, 
+// gamma(s,x) is defined in the link below:
+// http://en.wikipedia.org/wiki/Incomplete_gamma_function
+// We use series expansion, as in the link
+
+  double res = 0.0;
+  double t1,term;
+  
+  int iter = 0;
+  double xk = 1.0;
+  t1 = 1.0;
+  double expt = exp(-x);
+  term = 1.0;
+
+  double threshold = 0.0;
+//  threshold = 0.00001; // for debug!!!
+
+  while((expt*fabs(term)>threshold) && (iter<1000)){
+    t1 *= (s+iter);
+    term = (1.0/t1)*xk;
+    res += term;
+
+    xk*=x;
+    iter++;
+  }
+  res = res*expt; 
+    
+  return res;
 }
+
+double Fn(int n,double t){
+/* This computes the incomplete gamma function given by an integral
+            1
+  F_n(t) =  | u^2n * exp(-t*u^2) du 
+            0
+ 
+  which is equal to: gamma(n+1/2,t)/ (2* t^{n+1/2}) = 0.5*gamma_lower(n+1/2,t)
+  where gamma(s,x) - is lower incomplete gamma-function:
+  http://en.wikipedia.org/wiki/Incomplete_gamma_function
+*/
+
+  double res = 0.5*gamma_lower((n+0.5),t);
+
+  return res; 
+
+}
+
+
+double gaussian_int(int n, double alp){
+/****************************************************************************
+ This function computes the elementary integral:  m = 2*n
+   +inf
+  int   {   x^2m * exp(-alp*x^2) dx }   = ( (2m-1)! /( a^(m/2) * 2^(m/2) ) ) * sqrt(pi/a)
+   -inf
+
+  http://en.wikipedia.org/wiki/Gaussian_integral
+****************************************************************************/
+
+  double res = 0.0;
+
+  if(n%2==0){  // even    
+    if(n==0){  res = sqrt(M_PI/alp); }
+    else{ 
+      res = (FACTORIAL(n-1)/pow(2.0*alp, n/2))*sqrt(M_PI/alp);
+    }
+  }
+  else{        // odd
+    res = 0.0;
+  }
+
+  return res;
+}
+
+double gaussian_norm(int n,double alp){
+
+  return (1.0/sqrt(gaussian_int(2.0*n,2.0*alp)));
+}
+
+
+
 
 double FACTORIAL(int n) {
 
-        if(n<0){
-                cout<<"Factorial of negative number is not defined!"<<endl;
-        }
-        else{
+  double res = 1.0;
+  if(n<0){ cout<<"Factorial of negative number is not defined!\n"; }
+  else{
+    if(n==1||n==0){ res = 1.0; }
+    else if(n>1){  res = double(n*FACTORIAL(n-1));  }
+  }
 
-                if(n==1||n==0){
-                        return 1.0;
-                }
-                else if(n>1){
-                        return double(n*FACTORIAL(n-1));
-                }
-        }
+  return res;
 }
 
-int DFACTORIAL(int n) {
+double DFACTORIAL(int n) {
 
-// This is n!! = n * (n-2)!!
-  int res; 
+// This is n!! = n * (n-2)!!, that is 1*3*5*...
+  double res; 
 
-  if(n<=1){ res = 1;}
-  else if(n==3){ res = 3; }
-  else if(n==5){ res = 15; }
-  else if(n==7){ res = 105; }
-  else if(n==9){ res = 945; }
-  else if(n==11){ res = 10395; }
-  else if(n==13){ res = 135135; }
+  if(n<=1){ res = 1.0;}
+  else if(n==3){ res = 3.0; }
+  else if(n==5){ res = 15.0; }
+  else if(n==7){ res = 105.0; }
+  else if(n==9){ res = 945.0; }
+  else if(n==11){ res = 10395.0; }
+  else if(n==13){ res = 135135.0; }
 
   else{  res = n*DFACTORIAL(n-2); }
 
@@ -249,6 +329,345 @@ double BINOM(int i,int n) {
 
   return res;
 }
+
+
+void zero_array(double* X,int n){
+  for(int i=0;i<n;i++){ X[i] = 0.0; }
+}
+
+boost::python::list binomial_expansion(int n1,int n2,double x1,double x2,int is_derivs){
+
+  int n = n1+n2+1;
+  double* f; f = new double[n];
+  double* dfdx1; dfdx1 = new double[n];
+  double* dfdx2; dfdx2 = new double[n];
+
+  binomial_expansion(n1,n2,x1,x2,f,dfdx1,dfdx2,is_derivs);
+
+  boost::python::list lf; 
+  boost::python::list ldfdx1; 
+  boost::python::list ldfdx2; 
+
+  for(int i=0;i<n;i++){
+    lf.append(f[i]);
+
+    if(is_derivs){
+      ldfdx1.append(dfdx1[i]);
+      ldfdx2.append(dfdx2[i]);
+    }
+  }
+
+  boost::python::list res;   
+  res.append(lf);
+  if(is_derivs){
+    res.append(ldfdx1);
+    res.append(ldfdx2);
+  }
+
+  delete [] f;
+  delete [] dfdx1;
+  delete [] dfdx2;
+
+  return res;
+
+}
+
+void binomial_expansion(int n1,int n2,double x1,double x2,double* f,double* dfdx1, double* dfdx2, int is_derivs){
+/********************************************************************************
+ This function calculates coefficients f_i in the series expansion
+
+   (x+x1)^n1 * (x+x2)^n2 = summ x^i * f_i (x1,x2,n1,n2)
+                             i
+   f_i coefficients of the expansion
+
+   dfdx1 - derivatives of f w.r.t. x1:  df / dx1
+   dfdx2 - derivatives of f w.r.t. x2:  df / dx2
+
+   is_derivs - defines if we want to compute derivatives 
+*********************************************************************************/
+  // Maximal expansion power
+  int n = n1 + n2; 
+
+  // Zero arrays
+  zero_array(f,n+1);
+  zero_array(dfdx1,n+1);
+  zero_array(dfdx2,n+1);
+
+  // Low-order expansions are set explicitly
+  if(n<=4){
+
+    //>>>>>>>>>>>>>>>>>>>>>>>> n == 0  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    if(n1==0 && n2==0){  
+      f[0] = 1; 
+
+      if(is_derivs){
+      dfdx1[0] = 0.0;
+      dfdx2[0] = 0.0;
+      }
+    }/// n1==0 && n2==0
+
+    //>>>>>>>>>>>>>>>>>>>>>>>> n == 1  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    else if(n1==1 && n2==0){ 
+      f[0] = x1;       f[1] = 1.0;    
+
+      if(is_derivs){
+      dfdx1[0] = 1.0;  dfdx1[1] = 0.0;
+      dfdx2[0] = 0.0;  dfdx2[1] = 0.0;
+      }    
+    }/// n1==1 && n2==0
+
+    else if(n1==0 && n2==1){ 
+      f[0] = x2;       f[1] = 1.0;    
+
+      if(is_derivs){
+      dfdx1[0] = 0.0;  dfdx1[1] = 0.0;
+      dfdx2[0] = 1.0;  dfdx2[1] = 0.0; 
+      }
+    }/// n1==0 && n2==1
+
+    //>>>>>>>>>>>>>>>>>>>>>>>> n == 2  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    else if(n1==1 && n2==1){ 
+      f[0] = x1*x2;    f[1] = x1+x2;     f[2] = 1.0;    
+
+      if(is_derivs){
+      dfdx1[0] = x2;   dfdx1[1] = 1.0;   dfdx1[2] = 0.0;
+      dfdx2[0] = x1;   dfdx2[1] = 1.0;   dfdx2[2] = 0.0; 
+      }
+    }/// n1==1 && n2==1
+
+    else if(n1==2 && n2==0){
+      // Optimized version: 2 mults
+      f[0] = x1*x1;       f[1] = 2.0*x1;     f[2] = 1.0;    
+
+      if(is_derivs){
+      dfdx1[0] = f[1];    dfdx1[1] = 2.0;    dfdx1[2] = 0.0;
+      dfdx2[0] = 0.0;     dfdx2[1] = 0.0;    dfdx2[2] = 0.0;
+      }         
+/**  Fully expanded version - retain for clarity:  3  mults
+      f[0] = x1*x1;    dfdx1[0] = 2.0*x1;  dfdx2[0] = 0.0;
+      f[1] = 2.0*x1;   dfdx1[1] = 2.0;     dfdx2[1] = 0.0;
+      f[2] = 1.0;      dfdx1[2] = 0.0;     dfdx2[2] = 0.0;
+**/
+    }/// n1==2 && n2==0
+
+    else if(n1==0 && n2==2){
+      // Optimized version: 2 mults
+      f[0] = x2*x2;       f[1] = 2.0*x2;     f[2] = 1.0;    
+
+      if(is_derivs){
+      dfdx1[0] = 0.0;     dfdx1[1] = 0.0;    dfdx1[2] = 0.0;
+      dfdx2[0] = f[1];    dfdx2[1] = 2.0;    dfdx2[2] = 0.0;
+      }      
+/**  Fully expanded version - retain for clarity:  3  mults
+      f[0] = x2*x2;    dfdx1[0] = 0.0;  dfdx2[0] = 2.0*x2;
+      f[1] = 2.0*x2;   dfdx1[1] = 0.0;  dfdx2[1] = 2.0;
+      f[2] = 1.0;      dfdx1[2] = 0.0;  dfdx2[2] = 0.0;
+**/
+    }/// n1==0 && n2==2
+
+    //>>>>>>>>>>>>>>>>>>>>>>>> n == 3  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    else if(n1==3 && n2==0){ 
+      // Optimized version: 5 mults
+      double x11 = x1*x1;
+      f[0] = x11*x1;       f[1] = 3.0*x11;     f[2] = 3.0*x1;   f[3] = 1.0;    
+
+      if(is_derivs){
+      dfdx1[0] = f[1];     dfdx1[1] = 6.0*x1;  dfdx1[2] = 3.0;  dfdx1[3] = 0.0;
+      dfdx2[0] = 0.0;      dfdx2[1] = 0.0;     dfdx2[2] = 0.0;  dfdx2[3] = 0.0;
+      }
+/**  Fully expanded version - retain for clarity:  8  mults
+      f[0] = x1*x1*x1;  dfdx1[0] = 3.0*x1*x1;  dfdx2[0] = 0.0;
+      f[1] = 3.0*x1*x1; dfdx1[1] = 6.0*x1;     dfdx2[1] = 0.0;
+      f[2] = 3.0*x1;    dfdx1[2] = 3.0;        dfdx2[2] = 0.0;
+      f[3] = 1.0;       dfdx1[3] = 0.0;        dfdx2[3] = 0.0;
+**/
+    }/// n1==3 && n2==0
+
+    else if(n1==0 && n2==3){ 
+      // Optimized version: 5 mults
+      double x22 = x2*x2;
+      f[0] = x22*x2;       f[1] = 3.0*x22;      f[2] = 3.0*x2;    f[3] = 1.0;    
+
+      if(is_derivs){
+      dfdx1[0] = 0.0;      dfdx1[1] = 0.0;      dfdx1[2] = 0.0;   dfdx1[3] = 0.0;
+      dfdx2[0] = f[1];     dfdx2[1] = 6.0*x2;   dfdx2[2] = 3.0;   dfdx2[3] = 0.0;
+      }
+/**  Fully expanded version - retain for clarity:  8  mults
+      f[0] = x2*x2*x2;  dfdx1[0] = 0.0;        dfdx2[0] = 3.0*x2*x2;
+      f[1] = 3.0*x2*x2; dfdx1[1] = 0.0;        dfdx2[1] = 6.0*x2;
+      f[2] = 3.0*x2;    dfdx1[2] = 0.0;        dfdx2[2] = 3.0;
+      f[3] = 1.0;       dfdx1[3] = 0.0;        dfdx2[3] = 0.0;
+**/
+    }/// n1==0 && n2==3
+
+    else if(n1==2 && n2==1){ 
+      // Optimized version: 7 mults
+      double x12 = 2.0*x1*x2;
+      double x11 = x1*x1;
+      f[0] = x11*x2;  f[1] = x12 + x11;         f[2] = 2.0*x1+x2;  f[3] = 1.0; 
+
+      if(is_derivs){ 
+      dfdx1[0] = x12; dfdx1[1] = 2.0*(x2 + x1); dfdx1[2] = 2.0;    dfdx1[3] = 0.0; 
+      dfdx2[0] = x11; dfdx2[1] = 2.0*x1;        dfdx2[2] = 1.0;    dfdx2[3] = 0.0; 
+      }
+/**  Fully expanded version - retain for clarity:  12  mults
+      f[0] = x1*x1*x2;        dfdx1[0] = 2.0*x1*x2;     dfdx2[0] = x1*x1;
+      f[1] = 2.0*x1*x2+x1*x1; dfdx1[1] = 2.0*x2+2.0*x1; dfdx2[1] = 2.0*x1;   
+      f[2] = 2.0*x1+x2;       dfdx1[2] = 2.0;           dfdx2[2] = 1.0;      
+      f[3] = 1.0;             dfdx1[3] = 0.0;           dfdx2[3] = 0.0;      
+**/
+    }/// n1==2 && n1==1
+
+    else if(n1==1 && n2==2){ 
+      // Optimized version: 7 mults
+      double x12 = 2.0*x1*x2;
+      double x22 = x2*x2;
+      f[0] = x22*x1;   f[1] = x12 + x22;         f[2] = 2.0*x2 + x1;  f[3] = 1.0;     
+
+      if(is_derivs){ 
+      dfdx1[0] = x22;  dfdx1[1] = 2.0*x2;        dfdx1[2] = 1.0;      dfdx1[3] = 0.0; 
+      dfdx2[0] = x12;  dfdx2[1] = 2.0*(x1 + x2); dfdx2[2] = 2.0;      dfdx2[3] = 0.0; 
+      }
+
+/**  Fully expanded version - retain for clarity:  12  mults
+      f[0] = x2*x2*x1;        dfdx1[0] = x2*x2;      dfdx2[0] = 2.0*x2*x1;
+      f[1] = 2.0*x2*x1+x2*x2; dfdx1[1] = 2.0*x2;     dfdx2[1] = 2.0*x1+2.0*x2;   
+      f[2] = 2.0*x2+x1;       dfdx1[2] = 1.0;        dfdx2[2] = 2.0;      
+      f[3] = 1.0;             dfdx1[3] = 0.0;        dfdx2[3] = 0.0;      
+**/
+    }/// n1==1 && n1==2
+
+    //>>>>>>>>>>>>>>>>>>>>>>>> n == 4  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    else if(n1==4 && n2==0){ 
+      // Optimized version: 8 mults
+      double x11 = x1*x1;
+      double x111 = 4.0*x11*x1;
+      f[0] = x11*x11;  f[1] = x111;         f[2] = 6.0*x11;     f[3] = 4.0*x1;  f[4] = 1.0;     
+
+      if(is_derivs){ 
+      dfdx1[0] = x111; dfdx1[1] = 12.0*x11; dfdx1[2] = 12.0*x1; dfdx1[3] = 4.0; dfdx1[4] = 0.0; 
+      dfdx2[0] = 0.0;  dfdx2[1] = 0.0;      dfdx2[2] = 0.0;     dfdx2[3] = 0.0; dfdx2[4] = 0.0; 
+      }
+/**  Fully expanded version - retain for clarity:  15 mults
+      f[0] = x1*x1*x1*x1;   dfdx1[0] = 4.0*x1*x1*x1;   dfdx2[0] = 0.0;
+      f[1] = 4.0*x1*x1*x1;  dfdx1[1] = 12.0*x1*x1;     dfdx2[1] = 0.0;
+      f[2] = 6.0*x1*x1;     dfdx1[2] = 12.0*x1;        dfdx2[2] = 0.0;
+      f[3] = 4.0*x1;        dfdx1[3] = 4.0;            dfdx2[3] = 0.0;
+      f[4] = 1.0;           dfdx1[4] = 0.0;            dfdx2[4] = 0.0;
+**/
+    }/// n1==4 && n2==0
+
+    else if(n1==0 && n2==4){ 
+      // Optimized version: 8 mults
+      double x22 = x2*x2;
+      double x222 = 4.0*x22*x2;
+      f[0] = x22*x22;  f[1] = x222;         f[2] = 6.0*x22;     f[3] = 4.0*x2;  f[4] = 1.0;     
+
+      if(is_derivs){ 
+      dfdx2[0] = x222; dfdx2[1] = 12.0*x22; dfdx2[2] = 12.0*x2; dfdx2[3] = 4.0; dfdx2[4] = 0.0; 
+      dfdx1[0] = 0.0;  dfdx1[1] = 0.0;      dfdx1[2] = 0.0;     dfdx1[3] = 0.0; dfdx1[4] = 0.0; 
+      }
+/**  Fully expanded version - retain for clarity:  15 mults
+      f[0] = x2*x2*x2*x2;   dfdx2[0] = 4.0*x2*x2*x2;   dfdx1[0] = 0.0;
+      f[1] = 4.0*x2*x2*x2;  dfdx2[1] = 12.0*x2*x2;     dfdx1[1] = 0.0;
+      f[2] = 6.0*x2*x2;     dfdx2[2] = 12.0*x2;        dfdx1[2] = 0.0;
+      f[3] = 4.0*x2;        dfdx2[3] = 4.0;            dfdx1[3] = 0.0;
+      f[4] = 1.0;           dfdx2[4] = 0.0;            dfdx1[4] = 0.0;
+**/
+    }/// n1==0 && n2==4
+
+    else if(n1==3 && n2==1){ 
+      // Optimized version: 15 mults
+      double x11 = x1*x1;
+      double x22 = x2*x2;
+      double x12 = x1*x2;
+      f[0] = x11*x12;           f[1] = x11*x1 + 3.0*x11*x2;   f[2] = 3.0*(x12 + x11);     f[3] = 3.0*x1+x2; f[4] = 1.0;     
+
+      if(is_derivs){ 
+      dfdx2[0] = x11*x1;        dfdx2[1] = 3.0*x11;            dfdx2[2] = 3.0*x1;          dfdx2[3] = 1.0;   dfdx2[4] = 0.0; 
+      dfdx1[0] = f[1]-dfdx2[0]; dfdx1[1] = dfdx2[1] + 6.0*x12; dfdx1[2] = 3.0*x2 + 6.0*x1; dfdx1[3] = 3.0;   dfdx1[4] = 0.0; 
+      }
+/**  Fully expanded version - retain for clarity:  27 mults
+      f[0] = x1*x1*x1*x2;             dfdx1[0] = 3.0*x1*x1*x2;            dfdx2[0] = x1*x1*x1;
+      f[1] = x1*x1*x1+3.0*x1*x1*x2;   dfdx1[1] = 3.0*x1*x1+6.0*x1*x2;     dfdx2[1] = 3.0*x1*x1;
+      f[2] = 3.0*x1*x2+3.0*x1*x1;     dfdx1[2] = 3.0*x2+6.0*x1;           dfdx2[2] = 3.0*x1;
+      f[3] = 3.0*x1+x2;               dfdx1[3] = 3.0;                     dfdx2[3] = 1.0;
+      f[4] = 1.0;                     dfdx1[4] = 0.0;                     dfdx2[4] = 0.0;
+**/
+    }/// n1==3 && n2==1
+
+    else if(n1==1 && n2==3){ 
+      // Optimized version: 15 mults
+      double x11 = x1*x1;
+      double x22 = x2*x2;
+      double x12 = x1*x2;
+      f[0] = x22*x12;           f[1] = 3.0*x22*x1 + x22*x2;   f[2] = 3.0*(x12 + x22);     f[3] = 3.0*x2+x1; f[4] = 1.0;     
+
+      if(is_derivs){ 
+      dfdx1[0] = x22*x2;        dfdx1[1] = 3.0*x22;            dfdx1[2] = 3.0*x2;          dfdx1[3] = 1.0;   dfdx1[4] = 0.0; 
+      dfdx2[0] = f[1]-dfdx1[0]; dfdx2[1] = dfdx1[1] + 6.0*x12; dfdx2[2] = 3.0*x1 + 6.0*x2; dfdx2[3] = 3.0;   dfdx2[4] = 0.0; 
+      }
+/**  Fully expanded version - retain for clarity: 27 mults
+      f[0] = x2*x2*x2*x1;             dfdx2[0] = 3.0*x2*x2*x1;            dfdx1[0] = x2*x2*x2;
+      f[1] = x2*x2*x2+3.0*x2*x2*x1;   dfdx2[1] = 3.0*x2*x2+6.0*x2*x1;     dfdx1[1] = 3.0*x2*x2;
+      f[2] = 3.0*x2*x1+3.0*x2*x2;     dfdx2[2] = 3.0*x1+6.0*x2;           dfdx1[2] = 3.0*x2;
+      f[3] = 3.0*x2+x1;               dfdx2[3] = 3.0;                     dfdx1[3] = 1.0;
+      f[4] = 1.0;                     dfdx2[4] = 0.0;                     dfdx1[4] = 0.0;
+**/
+    }/// n1==1 && n2==3
+
+    else if(n1==2 && n2==2){ 
+      // Optimized version: 18 mults
+      double x11 = x1*x1;
+      double x22 = x2*x2;
+      double x12 = x1*x2;
+      f[0] = x11*x22;           f[1] = 2.0*x1*x22 + 2.0*x11*x2;   f[2] = x11 + x22 + 4.0*x12; f[3] = 2.0*(x1 + x2); f[4] = 1.0;     
+
+      if(is_derivs){ 
+      dfdx1[0] = 2.0*x1*x22;    dfdx1[1] = 2.0*x22 + 4.0*x12; dfdx1[2] = 2.0*x1 + 4.0*x2; dfdx1[3] = 2.0;       dfdx1[4] = 0.0; 
+      dfdx2[0] = f[1]-dfdx1[0]; dfdx2[1] = 4.0*x12 + 2.0*x11; dfdx2[2] = 2.0*x2 + 4.0*x1; dfdx2[3] = 2.0;       dfdx2[4] = 0.0; 
+      }
+/** Fully expanded verion - retain for clarity: 33 mults
+      f[0] = x1*x1*x2*x2;                 dfdx1[0] = 2.0*x1*x2*x2;            dfdx2[0] = 2.0*x1*x1*x2;
+      f[1] = 2.0*x1*x2*x2+2.0*x2*x1*x1;   dfdx1[1] = 2.0*x2*x2+4.0*x2*x1;     dfdx2[1] = 4.0*x1*x2+2.0*x1*x1;
+      f[2] = x1*x1+x2*x2+4.0*x1*x2;       dfdx1[2] = 2.0*x1+4.0*x2;           dfdx2[2] = 2.0*x2+4.0*x1;
+      f[3] = 2.0*x1+2.0*x2;               dfdx1[3] = 2.0;                     dfdx2[3] = 2.0;
+      f[4] = 1.0;                         dfdx1[4] = 0.0;                     dfdx2[4] = 0.0;
+**/
+    }/// n1==2 && n2==2
+
+
+  }else{ // general expansion
+
+    for(int i=0;i<=n1;i++){
+      for(int j=0;j<=n2;j++){
+        double b = BINOM(i,n1)*BINOM(j,n2);
+        double p1 = FAST_POW(x1,n1-i);
+        double p2 = FAST_POW(x2,n2-j);
+        //
+        f[i+j] += b*p1*p2;
+
+        if(is_derivs){ 
+
+          double pw1,pw2;
+          if(n1-i==0){ pw1 = 0.0; } else{ pw1 = (n1-i)*FAST_POW(x1,n1-i-1); }
+          if(n2-j==0){ pw2 = 0.0; } else{ pw2 = (n2-j)*FAST_POW(x2,n2-j-1); }
+
+          dfdx1[i+j] += b*pw1*p2;
+          dfdx2[i+j] += b*p1*pw2;
+
+        }// is_derivs
+      }// for j
+    }// for i
+  }// general expansion
+
+}// binomial_expansion
+
+
+
+
+
+
 
 void LEGENDRE(int n,double x,double a,double b,double& p,double& q){
 
