@@ -20,16 +20,16 @@ for i in range(0,50):
     x = 0.1 * i
 
     #gaussian_overlap(nxa, alp_a, Xa, nxb, alp_b, Xb )
-    ss = gaussian_overlap(0, 1.3, 0.0, 0, 1.3, x )  # s(H)-s(H)
-    sp = gaussian_overlap(0, 1.3, 0.0, 1, 1.3, x )  # s(H)-p(H)
-    sd = gaussian_overlap(0, 1.3, 0.0, 2, 1.3, x )  # s(H)-d(H)
-    sf = gaussian_overlap(0, 1.3, 0.0, 3, 1.3, x )  # s(H)-f(H)
-    pp = gaussian_overlap(1, 1.3, 0.0, 1, 1.3, x )  # p(H)-p(H)
-    pd = gaussian_overlap(1, 1.3, 0.0, 2, 1.3, x )  # p(H)-d(H)
-    pf = gaussian_overlap(1, 1.3, 0.0, 3, 1.3, x )  # p(H)-f(H)
-    dd = gaussian_overlap(2, 1.3, 0.0, 2, 1.3, x )  # d(H)-d(H)
-    df = gaussian_overlap(2, 1.3, 0.0, 3, 1.3, x )  # d(H)-f(H)
-    ff = gaussian_overlap(3, 1.3, 0.0, 3, 1.3, x )  # f(H)-f(H)
+    ss = gaussian_overlap(0, 1.3, 0.0, 0, 1.3, x, 0 )  # s(H)-s(H)
+    sp = gaussian_overlap(0, 1.3, 0.0, 1, 1.3, x, 0 )  # s(H)-p(H)
+    sd = gaussian_overlap(0, 1.3, 0.0, 2, 1.3, x, 0 )  # s(H)-d(H)
+    sf = gaussian_overlap(0, 1.3, 0.0, 3, 1.3, x, 0 )  # s(H)-f(H)
+    pp = gaussian_overlap(1, 1.3, 0.0, 1, 1.3, x, 0 )  # p(H)-p(H)
+    pd = gaussian_overlap(1, 1.3, 0.0, 2, 1.3, x, 0 )  # p(H)-d(H)
+    pf = gaussian_overlap(1, 1.3, 0.0, 3, 1.3, x, 0 )  # p(H)-f(H)
+    dd = gaussian_overlap(2, 1.3, 0.0, 2, 1.3, x, 0 )  # d(H)-d(H)
+    df = gaussian_overlap(2, 1.3, 0.0, 3, 1.3, x, 0 )  # d(H)-f(H)
+    ff = gaussian_overlap(3, 1.3, 0.0, 3, 1.3, x, 0 )  # f(H)-f(H)
 
     f.write("%8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f \n" % (x, ss, sp, sd, sf, pp, pd, pf, dd, df, ff) )
 
@@ -42,25 +42,25 @@ s_norm = gaussian_norm(0, 1.3)
 p_norm = gaussian_norm(1, 1.3)
 d_norm = gaussian_norm(2, 1.3)
 f_norm = gaussian_norm(3, 1.3)
-print "s_norm = ", s_norm, "|<s|s>|^2 = ", gaussian_overlap(0, 1.3, 0.0,   0, 1.3, 0.0 )*(s_norm**2)
-print "p_norm = ", p_norm, "|<p|p>|^2 = ", gaussian_overlap(1, 1.3, 0.0,   1, 1.3, 0.0 )*(p_norm**2)
-print "d_norm = ", d_norm, "|<d|d>|^2 = ", gaussian_overlap(2, 1.3, 0.0,   2, 1.3, 0.0 )*(d_norm**2)
-print "f_norm = ", f_norm, "|<f|f>|^2 = ", gaussian_overlap(3, 1.3, 0.0,   3, 1.3, 0.0 )*(f_norm**2)
+print "s_norm = ", s_norm, "|<s|s>|^2 = ", gaussian_overlap(0, 1.3, 0.0,   0, 1.3, 0.0, 0 )*(s_norm**2)
+print "p_norm = ", p_norm, "|<p|p>|^2 = ", gaussian_overlap(1, 1.3, 0.0,   1, 1.3, 0.0, 0 )*(p_norm**2)
+print "d_norm = ", d_norm, "|<d|d>|^2 = ", gaussian_overlap(2, 1.3, 0.0,   2, 1.3, 0.0, 0 )*(d_norm**2)
+print "f_norm = ", f_norm, "|<f|f>|^2 = ", gaussian_overlap(3, 1.3, 0.0,   3, 1.3, 0.0, 0 )*(f_norm**2)
 
 f = open("1D_overlaps_norm.txt","w")
 for i in range(0,50):
     x = 0.1 * i
 
-    ss = gaussian_overlap(0, 1.3, 0.0, 0, 1.3, x )  # s(H)-s(H)
-    sp = gaussian_overlap(0, 1.3, 0.0, 1, 1.3, x )  # s(H)-p(H)
-    sd = gaussian_overlap(0, 1.3, 0.0, 2, 1.3, x )  # s(H)-d(H)
-    sf = gaussian_overlap(0, 1.3, 0.0, 3, 1.3, x )  # s(H)-f(H)
-    pp = gaussian_overlap(1, 1.3, 0.0, 1, 1.3, x )  # p(H)-p(H)
-    pd = gaussian_overlap(1, 1.3, 0.0, 2, 1.3, x )  # p(H)-d(H)
-    pf = gaussian_overlap(1, 1.3, 0.0, 3, 1.3, x )  # p(H)-f(H)
-    dd = gaussian_overlap(2, 1.3, 0.0, 2, 1.3, x )  # d(H)-d(H)
-    df = gaussian_overlap(2, 1.3, 0.0, 3, 1.3, x )  # d(H)-f(H)
-    ff = gaussian_overlap(3, 1.3, 0.0, 3, 1.3, x )  # f(H)-f(H)
+    ss = gaussian_overlap(0, 1.3, 0.0, 0, 1.3, x, 0 )  # s(H)-s(H)
+    sp = gaussian_overlap(0, 1.3, 0.0, 1, 1.3, x, 0 )  # s(H)-p(H)
+    sd = gaussian_overlap(0, 1.3, 0.0, 2, 1.3, x, 0 )  # s(H)-d(H)
+    sf = gaussian_overlap(0, 1.3, 0.0, 3, 1.3, x, 0 )  # s(H)-f(H)
+    pp = gaussian_overlap(1, 1.3, 0.0, 1, 1.3, x, 0 )  # p(H)-p(H)
+    pd = gaussian_overlap(1, 1.3, 0.0, 2, 1.3, x, 0 )  # p(H)-d(H)
+    pf = gaussian_overlap(1, 1.3, 0.0, 3, 1.3, x, 0 )  # p(H)-f(H)
+    dd = gaussian_overlap(2, 1.3, 0.0, 2, 1.3, x, 0 )  # d(H)-d(H)
+    df = gaussian_overlap(2, 1.3, 0.0, 3, 1.3, x, 0 )  # d(H)-f(H)
+    ff = gaussian_overlap(3, 1.3, 0.0, 3, 1.3, x, 0 )  # f(H)-f(H)
 
     # Normalization:
     ss = s_norm * s_norm * ss
@@ -113,10 +113,10 @@ s_norm = gaussian_norm(0, 1.3)
 p_norm = gaussian_norm(1, 1.3)
 d_norm = gaussian_norm(2, 1.3)
 f_norm = gaussian_norm(3, 1.3)
-print "s_norm = ", s_norm, "|<s|s>|^2 = ", gaussian_overlap(0, 1.3, 0.0,   0, 1.3, 0.0 )*(s_norm**2)
-print "p_norm = ", p_norm, "|<p|p>|^2 = ", gaussian_overlap(1, 1.3, 0.0,   1, 1.3, 0.0 )*(p_norm**2)
-print "d_norm = ", d_norm, "|<d|d>|^2 = ", gaussian_overlap(2, 1.3, 0.0,   2, 1.3, 0.0 )*(d_norm**2)
-print "f_norm = ", f_norm, "|<f|f>|^2 = ", gaussian_overlap(3, 1.3, 0.0,   3, 1.3, 0.0 )*(f_norm**2)
+print "s_norm = ", s_norm, "|<s|s>|^2 = ", gaussian_overlap(0, 1.3, 0.0,   0, 1.3, 0.0, 0 )*(s_norm**2)
+print "p_norm = ", p_norm, "|<p|p>|^2 = ", gaussian_overlap(1, 1.3, 0.0,   1, 1.3, 0.0, 0 )*(p_norm**2)
+print "d_norm = ", d_norm, "|<d|d>|^2 = ", gaussian_overlap(2, 1.3, 0.0,   2, 1.3, 0.0, 0 )*(d_norm**2)
+print "f_norm = ", f_norm, "|<f|f>|^2 = ", gaussian_overlap(3, 1.3, 0.0,   3, 1.3, 0.0, 0 )*(f_norm**2)
 
 f = open("1D_moments_norm.txt","w")
 for i in range(0,50):
@@ -137,22 +137,6 @@ for i in range(0,50):
     sp3 = gaussian_moment(1, 0.0, 0.5*x,0, 1.3, 0.0, 1, 1.3, x )  # <s(A)| (x-(x(A)+x(B))/2) | p(B)>
     sp4 = gaussian_moment(2, 0.0, 0.0,  0, 1.3, 0.0, 1, 1.3, x )  # <s(A)| (x-X(A))^2 | p(B)>
 
-
-    # Normalization:
-    ss1 = s_norm * s_norm * ss1
-    ss2 = s_norm * s_norm * ss2
-    ss3 = s_norm * s_norm * ss3
-    ss4 = s_norm * s_norm * ss4
-
-    pp1 = p_norm * p_norm * pp1
-    pp2 = p_norm * p_norm * pp2
-    pp3 = p_norm * p_norm * pp3
-    pp4 = p_norm * p_norm * pp4
-
-    sp1 = s_norm * p_norm * sp1
-    sp2 = s_norm * p_norm * sp2
-    sp3 = s_norm * p_norm * sp3
-    sp4 = s_norm * p_norm * sp4
 
 
     f.write("%8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f \n" % (x, ss1, ss2, ss3, ss4, pp1, pp2, pp3, pp4, sp1, sp2, sp3, sp4) )
