@@ -14,6 +14,8 @@ namespace libmolint{
 // 1D Gaussians
 double gaussian_overlap_ref(int nxa,double alp_a, double Xa, int nxb,double alp_b, double Xb );
 
+
+
 double gaussian_overlap(int nxa,double alp_a, double Xa, int nxb,double alp_b, double Xb,
                         int is_normalize, int is_derivs, double& dI_dxa,double& dI_dxb,
                         vector<double*>& aux,int n_aux );

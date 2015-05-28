@@ -28,30 +28,24 @@ void export_molint_objects(){
   // 3D Gaussians
   double (*expt_gaussian_overlap_3D_v1)(int,int,int,double,VECTOR&,
                                         int,int,int,double,VECTOR&  ) = &gaussian_overlap;
-
   double (*expt_gaussian_overlap_3D_v2)(int,int,int,double,VECTOR&,
                                         int,int,int,double,VECTOR&, int ) = &gaussian_overlap;
-
   boost::python::list (*expt_gaussian_overlap_3D_v3)(int,int,int,double,VECTOR&,
                                         int,int,int,double,VECTOR&, int, int ) = &gaussian_overlap;
 
 
-
-
-  // Moments - Essentially the generalized overlaps
-  // 1D version
+  // Moments 
+  // 1D Moments
   double (*expt_gaussian_moment_ref)(int,double,double, int,double, double, int,double, double ) = &gaussian_moment;
   double (*expt_gaussian_moment_1D_v1)(int,double,double, int,double,double, int,double,double ) = &gaussian_moment;
   double (*expt_gaussian_moment_1D_v2)(int,double,double, int,double,double, int,double,double, int ) = &gaussian_moment;
   boost::python::list (*expt_gaussian_moment_1D_v3)(int,double,double, int,double,double, int,double,double, int, int ) = &gaussian_moment;
  
 
-
-  // 3D version
+  // 3D Moments
   double (*expt_gaussian_moment_3D_v1)(int,int,int,double, const VECTOR&,
                                        int,int,int,double, const VECTOR&,
                                        int,int,int,double, const VECTOR&          ) = &gaussian_moment;
-
   double (*expt_gaussian_moment_3D_v2)(int,int,int,double, const VECTOR&,
                                        int,int,int,double, const VECTOR&,
                                        int,int,int,double, const VECTOR&, int     ) = &gaussian_moment;
@@ -61,32 +55,32 @@ void export_molint_objects(){
 
 
 
-  // Pseudopotentials - essentially a combination of moments and overlaps
+  // Pseudopotentials
+  // 3D pseudopotentials
   double (*expt_pseudopot02_v1)(double,double,double,const VECTOR&,
                                 int,int,int,double,const VECTOR&,
                                 int,int,int,double,const VECTOR&                 ) = &pseudopot02;
-
   boost::python::list (*expt_pseudopot02_v2)(double, double, double, const VECTOR&,
                                 int,int,int,double, const VECTOR&,
                                 int,int,int,double, const VECTOR&,  int, int      ) = &pseudopot02;
 
 
+  // Kinetic energy integrals (KEI)
+  // 1D KEI
+  double (*expt_kinetic_integral_1D_v1)(int,double, double, int, double, double)      = &kinetic_integral;
+  double (*expt_kinetic_integral_1D_v2)(int,double, double, int, double, double, int) = &kinetic_integral;
+  boost::python::list (*expt_kinetic_integral_1D_v3)(int,double, double, int, double, double, int, int) = &kinetic_integral;
 
-/*
-
-  // Kinetic energy integrals
-  // 1D Gaussians
-  double (*expt_kinetic_integral_1D)(int,double, double, int, double, double) = &kinetic_integral;
 
   // 3D Gaussians
   double (*expt_kinetic_integral_3D_v1)(int,int,int,double,VECTOR&,
                                         int,int,int,double,VECTOR&          ) = &kinetic_integral;
-
   double (*expt_kinetic_integral_3D_v2)(int,int,int,double,VECTOR&,
-                                        int,int,int,double,VECTOR&,
-                                        int, VECTOR&, VECTOR&               ) = &kinetic_integral;
+                                        int,int,int,double,VECTOR&, int     ) = &kinetic_integral;
+  boost::python::list (*expt_kinetic_integral_3D_v3)(int,int,int,double,VECTOR&,
+                                        int,int,int,double,VECTOR&, int, int) = &kinetic_integral;
 
-*/
+
 
   // ============ Now export functions =============
   // ==== Overlaps ====
@@ -123,11 +117,14 @@ void export_molint_objects(){
   def("pseudopot02", expt_pseudopot02_v2);
 
 
-/*
-  def("kinetic_integral", expt_kinetic_integral_1D);
+  // ==== Kinetic energy integrals ====
+  def("kinetic_integral", expt_kinetic_integral_1D_v1);
+  def("kinetic_integral", expt_kinetic_integral_1D_v2);
+  def("kinetic_integral", expt_kinetic_integral_1D_v3);
+
   def("kinetic_integral", expt_kinetic_integral_3D_v1);
   def("kinetic_integral", expt_kinetic_integral_3D_v2);
-*/
+  def("kinetic_integral", expt_kinetic_integral_3D_v3);
 
 
 

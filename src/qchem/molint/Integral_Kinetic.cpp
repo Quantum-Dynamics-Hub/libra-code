@@ -5,7 +5,12 @@ namespace libqchem{
 namespace libmolint{
 
 
-double kinetic_integral(int nxa,double alp_a, double Xa, int nxb,double alp_b, double Xb ){
+///==================== 1D kinetic energy integrals ==============
+
+double kinetic_integral(int nxa,double alp_a, double Xa, int nxb,double alp_b, double Xb,
+                        int is_normalize,
+                        int is_derivs, double& dI_dXa,double& dI_dXb,
+                        vector<double*>& aux,int n_aux ){
 
 /****************************************************************************
  This function computes the 1D kinetic energy:
@@ -15,63 +20,107 @@ double kinetic_integral(int nxa,double alp_a, double Xa, int nxb,double alp_b, d
 *****************************************************************************/
 
   // Operator = (-1/2 * d^2/dx^2)
-  double Ix,w; 
+  double Ix,w,dIx_dXa,dIx_dXb; 
+  dI_dXa = 0.0;
+  dI_dXb = 0.0;
 
   w = (2.0*nxb + 1.0)*alp_b; 
-  Ix = w * gaussian_overlap(nxa, alp_a, Xa, nxb, alp_b, Xb);
+  Ix = w * gaussian_overlap(nxa, alp_a, Xa, nxb, alp_b, Xb, is_normalize, is_derivs, dIx_dXa, dIx_dXb, aux, n_aux);
+  dI_dXa = w * dIx_dXa;
+  dI_dXb = w * dIx_dXb;
 
-  w = 2.0*alp_b*alp_b;
-  Ix -= w * gaussian_overlap(nxa, alp_a, Xa, nxb+2, alp_b, Xb);
+
+  w = -2.0*alp_b*alp_b;
+  Ix += w * gaussian_overlap(nxa, alp_a, Xa, nxb+2, alp_b, Xb, is_normalize, is_derivs, dIx_dXa, dIx_dXb, aux, n_aux);
+  dI_dXa += w * dIx_dXa;
+  dI_dXb += w * dIx_dXb;
+
 
   if(nxb>=2){ 
-    w = 0.5*nxb*(nxb-1.0);
-    Ix -= w * gaussian_overlap(nxa, alp_a, Xa, nxb-2, alp_b, Xb);
+    w = -0.5*nxb*(nxb-1.0);
+    Ix += w * gaussian_overlap(nxa, alp_a, Xa, nxb-2, alp_b, Xb, is_normalize, is_derivs, dIx_dXa, dIx_dXb, aux, n_aux);
+    dI_dXa += w * dIx_dXa;
+    dI_dXb += w * dIx_dXb;
+
   }
 
   return Ix;
 
+}
+
+
+double kinetic_integral(int nxa,double alp_a, double Xa, int nxb,double alp_b, double Xb,
+                        int is_normalize,
+                        int is_derivs, double& dI_dXa,double& dI_dXb
+                       ){
+
+  // Allocate working memory
+  int i;
+  int n_aux = 20; //nxa+nxb+1;
+  vector<double*> auxd(5);
+  for(i=0;i<5;i++){ auxd[i] = new double[n_aux]; }
+
+  // Do computations
+  double res = kinetic_integral(nxa,alp_a,Xa, nxb,alp_b,Xb, is_normalize, is_derivs, dI_dXa, dI_dXb, auxd, n_aux);
+
+  // Clean working memory
+  for(i=0;i<5;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+ 
+  return res;
+
 }// kinetic_integral
 
 
-double kinetic_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
-                        int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb
-                       ){
+boost::python::list kinetic_integral(int nxa,double alp_a, double Xa, int nxb,double alp_b, double Xb,
+                                     int is_normalize, int is_derivs ){
+  double dI_dXa, dI_dXb;
+  double I = kinetic_integral(nxa,alp_a,Xa, nxb,alp_b,Xb, is_normalize, is_derivs, dI_dXa, dI_dXb);
 
-  // This works even if Gaussians are not normalized
-  VECTOR dIdA, dIdB;
-  double res = kinetic_integral(nxa,nya,nza,alp_a,Ra,nxb,nyb,nzb,alp_b,Rb,1,dIdA,dIdB);
+  boost::python::list res;
 
-  return res;
-}
-
-double kinetic_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
-                        int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
-                        int is_normalize, 
-                        VECTOR& dIdA, VECTOR& dIdB
-                       ){
-  // Allocate working memory
-  int i;
-  int n_aux = 40;
-  vector<double*> auxd(20);
-  for(i=0;i<20;i++){ auxd[i] = new double[n_aux]; }
-
-  // Do computations
-  double res = kinetic_integral(nxa,nya,nza,alp_a,Ra, nxb,nyb,nzb,alp_b,Rb, is_normalize, dIdA, dIdB, auxd, n_aux);
-
-  // Clean working memory
-  for(i=0;i<20;i++){ delete [] auxd[i]; }  
-  auxd.clear();
+  res.append(I);
  
+  if(is_derivs){
+    res.append(dI_dXa);
+    res.append(dI_dXb);
+  }
 
   return res;
-
+ 
 }
+
+
+
+double kinetic_integral(int nxa,double alp_a, double Xa, int nxb,double alp_b, double Xb,
+                        int is_normalize
+                       ){
+  double dI_dxa, dI_dxb;
+  double res = kinetic_integral(nxa,alp_a,Xa, nxb,alp_b,Xb, is_normalize, 0, dI_dxa, dI_dxb);
+  return res;
+
+}// kinetic_integral
+
+double kinetic_integral(int nxa,double alp_a, double Xa, int nxb,double alp_b, double Xb){
+
+  double res = kinetic_integral(nxa,alp_a,Xa, nxb,alp_b,Xb, 1);
+  return res;
+
+}// kinetic_integral
+
+
+
+
+
+
+///========================== 3D kinetic energy integrals ========================
 
 
 
 double kinetic_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
                         int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
                         int is_normalize, 
+                        int is_derivs,
                         VECTOR& dIdA, VECTOR& dIdB,
                         vector<double*>& auxd,int n_aux
                        ){
@@ -86,34 +135,100 @@ double kinetic_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
 
 *****************************************************************************/
 
-  double Ix = gaussian_overlap(nxa, alp_a, Ra.x, nxb, alp_b, Rb.x);
-  double Iy = gaussian_overlap(nya, alp_a, Ra.y, nyb, alp_b, Rb.y);
-  double Iz = gaussian_overlap(nza, alp_a, Ra.z, nzb, alp_b, Rb.z);
 
-  double Kx = kinetic_integral(nxa, alp_a, Ra.x, nxb, alp_b, Rb.x);
-  double Ky = kinetic_integral(nya, alp_a, Ra.y, nyb, alp_b, Rb.y);
-  double Kz = kinetic_integral(nza, alp_a, Ra.z, nzb, alp_b, Rb.z);
+  double dIx_dXa, dIx_dXb, dIy_dYa, dIy_dYb, dIz_dZa, dIz_dZb;
+
+  double Ix = gaussian_overlap(nxa, alp_a, Ra.x, nxb, alp_b, Rb.x, is_normalize, is_derivs, dIx_dXa, dIx_dXb, auxd, n_aux);
+  double Iy = gaussian_overlap(nya, alp_a, Ra.y, nyb, alp_b, Rb.y, is_normalize, is_derivs, dIy_dYa, dIy_dYb, auxd, n_aux);
+  double Iz = gaussian_overlap(nza, alp_a, Ra.z, nzb, alp_b, Rb.z, is_normalize, is_derivs, dIz_dZa, dIz_dZb, auxd, n_aux);
+
+  double dKx_dXa, dKx_dXb, dKy_dYa, dKy_dYb, dKz_dZa, dKz_dZb;
+
+  double Kx = kinetic_integral(nxa, alp_a, Ra.x, nxb, alp_b, Rb.x, is_normalize, is_derivs, dKx_dXa, dKx_dXb, auxd, n_aux);
+  double Ky = kinetic_integral(nya, alp_a, Ra.y, nyb, alp_b, Rb.y, is_normalize, is_derivs, dKy_dYa, dKy_dYb, auxd, n_aux);
+  double Kz = kinetic_integral(nza, alp_a, Ra.z, nzb, alp_b, Rb.z, is_normalize, is_derivs, dKz_dZa, dKz_dZb, auxd, n_aux);
 
 
-  if(is_normalize){
-    Ix *= (gaussian_norm(nxa,alp_a) * gaussian_norm(nxb,alp_b));
-    Iy *= (gaussian_norm(nya,alp_a) * gaussian_norm(nyb,alp_b));
-    Iz *= (gaussian_norm(nza,alp_a) * gaussian_norm(nzb,alp_b));
-
-    Kx *= (gaussian_norm(nxa,alp_a) * gaussian_norm(nxb,alp_b));
-    Ky *= (gaussian_norm(nya,alp_a) * gaussian_norm(nyb,alp_b));
-    Kz *= (gaussian_norm(nza,alp_a) * gaussian_norm(nzb,alp_b));
-  }
-
-  double K = (Kx * Iy * Iz + Ix * Ky * Iz + Ix * Iy * Kz);
-  if(fabs(K)<1e-15){ K = 0.0; }
+  double I = (Kx * Iy * Iz + Ix * Ky * Iz + Ix * Iy * Kz);
 
   dIdA = 0.0;
   dIdB = 0.0;
 
-  return K;
+  if(is_derivs){
+    dIdA.x = (dKx_dXa * Iy * Iz + dIx_dXa * Ky * Iz + dIx_dXa * Iy * Kz);
+    dIdA.y = (Kx * dIy_dYa * Iz + Ix * dKy_dYa * Iz + Ix * dIy_dYa * Kz);
+    dIdA.z = (Kx * Iy * dIz_dZa + Ix * Ky * dIz_dZa + Ix * Iy * dKz_dZa);
+    dIdB = -dIdA;
+  }
+
+  return I;
 
 }// kinetic_integral
+
+
+double kinetic_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+                        int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+                        int is_normalize, int is_derivs,
+                        VECTOR& dIdA, VECTOR& dIdB
+                       ){
+  // Allocate working memory
+  int i;
+  int n_aux = 20;
+  vector<double*> auxd(5);
+  for(i=0;i<5;i++){ auxd[i] = new double[n_aux]; }
+
+  // Do computations
+  double res = kinetic_integral(nxa,nya,nza,alp_a,Ra, nxb,nyb,nzb,alp_b,Rb, is_normalize, is_derivs, dIdA, dIdB, auxd, n_aux);
+
+  // Clean working memory
+  for(i=0;i<5;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+ 
+
+  return res;
+
+}
+
+boost::python::list kinetic_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+                                     int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+                                     int is_normalize, int is_derivs
+                                    ){
+  VECTOR dIdA, dIdB;
+  double I = kinetic_integral(nxa,nya,nza,alp_a,Ra, nxb,nyb,nzb,alp_b,Rb, is_normalize, is_derivs, dIdA, dIdB);
+
+  boost::python::list res;
+
+  res.append(I);
+ 
+  if(is_derivs){
+    res.append(dIdA);
+    res.append(dIdB);
+  }
+
+  return res;
+ 
+}
+
+
+double kinetic_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+                        int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+                        int is_normalize
+                       ){
+
+  VECTOR dIdA, dIdB;
+  double res = kinetic_integral(nxa,nya,nza,alp_a,Ra,nxb,nyb,nzb,alp_b,Rb, is_normalize, 0,dIdA,dIdB);
+  return res;
+}
+
+double kinetic_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+                        int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb
+                       ){
+  double res = kinetic_integral(nxa,nya,nza,alp_a,Ra,nxb,nyb,nzb,alp_b,Rb, 1);
+  return res;
+}
+
+
+
 
 
 }// namespace libmolint
