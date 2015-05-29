@@ -1,6 +1,5 @@
 #include "Overlaps.h"
 #include "Integral_Nuclear_Attraction.h"
-#include "Aux_Functions.h"
 
 namespace libqchem{
 namespace libmolint{
@@ -288,6 +287,7 @@ double nuclear_attraction_integral(int nxa,int nya, int nza, double alp_a, VECTO
   for(i=0;i<5;i++){ delete [] auxv[i]; }  
   auxv.clear();
 
+  return res;
 
 }// nuclear_attraction_integral - without external memory
 

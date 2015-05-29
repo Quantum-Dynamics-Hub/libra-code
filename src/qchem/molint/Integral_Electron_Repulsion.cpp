@@ -1,80 +1,184 @@
 #include "Overlaps.h"
 #include "Integral_Electron_Repulsion.h"
-#include "Aux_Functions.h"
 
 
 namespace libqchem{
 namespace libmolint{
 
 
-/*
-double ELECTRON_REPULSION_INTEGRAL(PrimitiveG& GA,PrimitiveG& GB,PrimitiveG& GC,PrimitiveG& GD,VECTOR& DA,VECTOR& DB,VECTOR& DC,VECTOR& DD,
-       vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv){
-// This is equivalent to chemists' notation: (ab|cd) 
-//                 or
-//                    to physicists notation: <ac|bd>
+//void Aux_Function5
 
-//    cout<<"In ERI calculations:\n";
+void eri_aux1
+( int l1,int l2,double a,double b,double gamma,
+  double* H,double* dHda, double* dHdb,
+  double* f, double* dfda, double* dfdb, int n_aux
+){
 
-//   cout<<"A="<<*GA.G_center<<" B="<<*GB.G_center<<" C= "<<*GC.G_center<<" D= "<<*GD.G_center<<endl;
+  int maxL = (l1+l2); // this is correct
+  int L,i,r,l;
+
+  binomial_expansion(l1,l2,a,b,f,dfda,dfdb, 1); // 1 - is_derivs
+
+  zero_array(H,n_aux);
+  zero_array(dHda,n_aux);
+  zero_array(dHdb,n_aux);
+
+  
+  for(i=0;i<=maxL;i++){
+    for(r=0;r<=(i/2);r++){   //!!! Integer division
+      L = i - 2*r;    
+      if(L>=0){
+  
+        double prefact = ( (FACTORIAL(i)/(1.0*FACTORIAL(r)*FACTORIAL(L))) ) * FAST_POW((0.25/gamma),(i-r));
+        H[L] += prefact*f[i];  
+        dHda[L] += prefact*dfda[i];
+        dHdb[L] += prefact*dfdb[i];         
+ 
+      }// L>0
+    }// for r
+  }// for i
+
+}
+
+
+
+//void Aux_Function6
+void eri_aux2
+( int l1,int l2,int l3,int l4,double PA,double PB,double QC,double QD,double p,double gamma1,double gamma2,
+  double* G, double* dGdA, double* dGdB, double* dGdC, double* dGdD, double* dGdp, 
+  double* HL,double* dHLda, double* dHLdb,
+  double* HM,double* dHMda, double* dHMdb,
+  double* f, double* dfda, double* dfdb,
+  int n_aux
+){
+
+// This is C(G) function used in multiple summs for ERI calculations
+// dGdA = dG / dPA
+// dGdB = dG / dPB
+// dGdC = dG / dQC 
+// dGdD = dG / dQD
+// dGdp = dG / dp
+
+
+  zero_array(G,n_aux);
+  zero_array(dGdA,n_aux);
+  zero_array(dGdB,n_aux);
+  zero_array(dGdC,n_aux);
+  zero_array(dGdD,n_aux);
+  zero_array(dGdp,n_aux);
+
+
+// This is C function used in multiple summs for ERI calculations
+  int maxL = l1 + l2;
+  int maxM = l3 + l4;
+
+  eri_aux1(l1,l2,PA,PB,gamma1,HL,dHLda,dHLdb,f,dfda,dfdb,n_aux); // HL of size l1+l2
+  eri_aux1(l3,l4,QC,QD,gamma2,HM,dHMda,dHMdb,f,dfda,dfdb,n_aux); // HM of size l3+l4
+
+
+  double d = 0.25*((1.0/gamma1) + (1.0/gamma2));
+
+  int L,M,u;
+  for(L=0;L<=maxL;L++){
+    for(M=0;M<=maxM;M++){
+      int maxU = ((L+M)/2);  //INTEGER_DIVISION!!! "largest integer less of equal (L+M)/2"
+      for(u=0;u<=maxU;u++){
+        int I = L + M - u;
+        if(I>=0){
+          double prefac = FAST_POW(-1.0,(M+u)) * FACTORIAL(L+M)/ (1.0*FACTORIAL(u) * FACTORIAL(L+M-2*u) * FAST_POW(d,(L+M-u)));
+          double fp = FAST_POW(p,(L+M-2*u));
+
+         
+          G[I] += prefac * HL[L] * HM[M] * fp;
+          dGdA[I] += prefac * dHLda[L] * HM[M] * fp;
+          dGdB[I] += prefac * dHLdb[L] * HM[M] * fp;
+          dGdC[I] += prefac * HL[L] * dHMda[M] * fp;
+          dGdD[I] += prefac * HL[L] * dHMdb[M] * fp;
+
+          if((L+M-2*u)>0){ // to avoid singularity when p = 0
+            dGdp[I] += (L+M-2*u) * prefac * HL[L] * HM[M] * FAST_POW(p,(L+M-2*u-1));
+          }
+
+        }
+      }// for u
+    }// for M
+  }// for L
+
+}// eri_aux2
+
+
+
+
+
+double electron_repulsion_integral
+(
+   int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+   int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+   int nxc,int nyc, int nzc, double alp_c, VECTOR& Rc,
+   int nxd,int nyd, int nzd, double alp_d, VECTOR& Rd,
+   int is_normalize, 
+   int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,VECTOR& DD,
+    vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+){
+
+/// This is equivalent to chemists' notation: (ab|cd) 
+///                 or
+///                    to physicists notation: <ac|bd>
 
 
     VECTOR R_AB,R_CD,P,Q,PA,PB,QC,QD,PQ;
-    R_AB = *GA.G_center - *GB.G_center;
-    R_CD = *GC.G_center - *GD.G_center;
+    R_AB = Ra - Rb;
+    R_CD = Rc - Rd;
 
-    int maxI = GA.x_exp + GB.x_exp + GC.x_exp + GD.x_exp;
-    int maxJ = GA.y_exp + GB.y_exp + GC.y_exp + GD.y_exp;
-    int maxK = GA.z_exp + GB.z_exp + GC.z_exp + GD.z_exp;
+    int maxI = nxa + nxb + nxc + nxd;
+    int maxJ = nya + nyb + nyc + nyd;
+    int maxK = nza + nzb + nzc + nzd;
 
     double gamma1,gamma2;
-    gamma1 = GA.G_alpha + GB.G_alpha;
-    gamma2 = GC.G_alpha + GD.G_alpha;
-//    cout<<"gamma1 = "<<gamma1<<" gamma2 = "<<gamma2<<endl;
+    gamma1 = alp_a + alp_b;
+    gamma2 = alp_c + alp_d;
 
-    P = (GA.G_alpha*(*GA.G_center) + GB.G_alpha*(*GB.G_center))/gamma1;
-    Q = (GC.G_alpha*(*GC.G_center) + GD.G_alpha*(*GD.G_center))/gamma2;
 
-    PA = P - (*GA.G_center);
-    PB = P - (*GB.G_center);
-    QC = Q - (*GC.G_center);
-    QD = Q - (*GD.G_center);
+    P = (alp_a*Ra + alp_b*Rb)/gamma1;
+    Q = (alp_c*Rc + alp_d*Rd)/gamma2;
+
+    PA = P - Ra;
+    PB = P - Rb;
+    QC = Q - Rc;
+    QD = Q - Rd;
 
     PQ = Q - P;
 
 
     // Jacobian
-    double dPA_dA  = (GA.G_alpha/gamma1 - 1.0);
-    double dPA_dB  = (GB.G_alpha/gamma1);
+    double dPA_dA  = (alp_a/gamma1 - 1.0);
+    double dPA_dB  = (alp_b/gamma1);
     double dPA_dC  = 0.0;
     double dPA_dD  = 0.0;
 
-    double dPB_dA  = (GA.G_alpha/gamma1);
-    double dPB_dB  = (GB.G_alpha/gamma1 - 1.0);
+    double dPB_dA  = (alp_a/gamma1);
+    double dPB_dB  = (alp_b/gamma1 - 1.0);
     double dPB_dC  = 0.0;
     double dPB_dD  = 0.0;
 
     double dQC_dA  = 0.0;
     double dQC_dB  = 0.0;
-    double dQC_dC  = (GC.G_alpha/gamma2 - 1.0);
-    double dQC_dD  = (GD.G_alpha/gamma2);
+    double dQC_dC  = (alp_c/gamma2 - 1.0);
+    double dQC_dD  = (alp_d/gamma2);
 
     double dQD_dA  = 0.0;
     double dQD_dB  = 0.0;
-    double dQD_dC  = (GC.G_alpha/gamma2);
-    double dQD_dD  = (GD.G_alpha/gamma2 - 1.0);
+    double dQD_dC  = (alp_c/gamma2);
+    double dQD_dD  = (alp_d/gamma2 - 1.0);
 
-    double dPQ_dA  = -(GA.G_alpha/gamma1);
-    double dPQ_dB  = -(GB.G_alpha/gamma1);
-    double dPQ_dC  = (GC.G_alpha/gamma2);
-    double dPQ_dD  = (GD.G_alpha/gamma2);
-
-
+    double dPQ_dA  = -(alp_a/gamma1);
+    double dPQ_dB  = -(alp_b/gamma1);
+    double dPQ_dC  = (alp_c/gamma2);
+    double dPQ_dD  = (alp_d/gamma2);
 
 
 
-
-// Aliases
+    // Aliases
     double *GI, *GJ, *GK;
     double *dGI_dPA, *dGJ_dPA, *dGK_dPA; // derivatives w.r.t. PA
     double *dGI_dPB, *dGJ_dPB, *dGK_dPB; // derivatives w.r.t. PB
@@ -101,17 +205,9 @@ double ELECTRON_REPULSION_INTEGRAL(PrimitiveG& GA,PrimitiveG& GB,PrimitiveG& GC,
 //    }
 
 
-
-
-    Aux_Function6(GA.x_exp,GB.x_exp,GC.x_exp,GD.x_exp, PA.x,PB.x,QC.x,QD.x,PQ.x, gamma1,gamma2,  GI, dGI_dPA, dGI_dPB, dGI_dQC, dGI_dQD, dGI_dPQ, aux[18],aux[19],aux[20], aux[21],aux[22],aux[23], aux[24],aux[25],aux[26], n_aux);
-    Aux_Function6(GA.y_exp,GB.y_exp,GC.y_exp,GD.y_exp, PA.y,PB.y,QC.y,QD.y,PQ.y, gamma1,gamma2,  GJ, dGJ_dPA, dGJ_dPB, dGJ_dQC, dGJ_dQD, dGJ_dPQ, aux[18],aux[19],aux[20], aux[21],aux[22],aux[23], aux[24],aux[25],aux[26], n_aux);
-    Aux_Function6(GA.z_exp,GB.z_exp,GC.z_exp,GD.z_exp, PA.z,PB.z,QC.z,QD.z,PQ.z, gamma1,gamma2,  GK, dGK_dPA, dGK_dPB, dGK_dQC, dGK_dQD, dGK_dPQ, aux[18],aux[19],aux[20], aux[21],aux[22],aux[23], aux[24],aux[25],aux[26], n_aux);
-
-
-
-
-
-//    cout<<"maxI = "<<maxI<<" maxJ = "<<maxJ<<" maxK = "<<maxK<<endl;
+    eri_aux2(nxa, nxb, nxc, nxd, PA.x,PB.x,QC.x,QD.x,PQ.x, gamma1,gamma2,  GI, dGI_dPA, dGI_dPB, dGI_dQC, dGI_dQD, dGI_dPQ, aux[18],aux[19],aux[20], aux[21],aux[22],aux[23], aux[24],aux[25],aux[26], n_aux);
+    eri_aux2(nya, nyb, nyc, nyd, PA.y,PB.y,QC.y,QD.y,PQ.y, gamma1,gamma2,  GJ, dGJ_dPA, dGJ_dPB, dGJ_dQC, dGJ_dQD, dGJ_dPQ, aux[18],aux[19],aux[20], aux[21],aux[22],aux[23], aux[24],aux[25],aux[26], n_aux);
+    eri_aux2(nza, nzb, nzc, nzd, PA.z,PB.z,QC.z,QD.z,PQ.z, gamma1,gamma2,  GK, dGK_dPA, dGK_dPB, dGK_dQC, dGK_dQD, dGK_dPQ, aux[18],aux[19],aux[20], aux[21],aux[22],aux[23], aux[24],aux[25],aux[26], n_aux);
 
 
 
@@ -127,10 +223,8 @@ double ELECTRON_REPULSION_INTEGRAL(PrimitiveG& GA,PrimitiveG& GB,PrimitiveG& GC,
     dCdD_nu = auxv[3];
 
 
-
     int max_exp = maxI + maxJ + maxK;
     for(int nu=0;nu<=max_exp; nu++){ C_nu[nu] = 0.0; dCdA_nu[nu] = 0.0; dCdB_nu[nu] = 0.0; dCdC_nu[nu] = 0.0; dCdD_nu[nu] = 0.0; }
-
 
 
     for(int I=0;I<=maxI; I++){
@@ -140,26 +234,28 @@ double ELECTRON_REPULSION_INTEGRAL(PrimitiveG& GA,PrimitiveG& GB,PrimitiveG& GC,
  
           C_nu[I+J+K] += tmp;
 
-          // Derivatives with respect to A coordinates
-          dCdA_nu[I+J+K].x += ( dGI_dPA[I]*dPA_dA + dGI_dPB[I]*dPB_dA + dGI_dQC[I]*dQC_dA + dGI_dQD[I]*dQD_dA + dGI_dPQ[I]*dPQ_dA)*GJ[J]*GK[K];
-          dCdA_nu[I+J+K].y += GI[I]*( dGJ_dPA[J]*dPA_dA + dGJ_dPB[J]*dPB_dA + dGJ_dQC[J]*dQC_dA + dGJ_dQD[J]*dQD_dA + dGJ_dPQ[J]*dPQ_dA)*GK[K];
-          dCdA_nu[I+J+K].z += GI[I]*GJ[J]*( dGK_dPA[K]*dPA_dA + dGK_dPB[K]*dPB_dA + dGK_dQC[K]*dQC_dA + dGK_dQD[K]*dQD_dA + dGK_dPQ[K]*dPQ_dA);
+          if(is_derivs){
+            // Derivatives with respect to A coordinates
+            dCdA_nu[I+J+K].x += ( dGI_dPA[I]*dPA_dA + dGI_dPB[I]*dPB_dA + dGI_dQC[I]*dQC_dA + dGI_dQD[I]*dQD_dA + dGI_dPQ[I]*dPQ_dA)*GJ[J]*GK[K];
+            dCdA_nu[I+J+K].y += GI[I]*( dGJ_dPA[J]*dPA_dA + dGJ_dPB[J]*dPB_dA + dGJ_dQC[J]*dQC_dA + dGJ_dQD[J]*dQD_dA + dGJ_dPQ[J]*dPQ_dA)*GK[K];
+            dCdA_nu[I+J+K].z += GI[I]*GJ[J]*( dGK_dPA[K]*dPA_dA + dGK_dPB[K]*dPB_dA + dGK_dQC[K]*dQC_dA + dGK_dQD[K]*dQD_dA + dGK_dPQ[K]*dPQ_dA);
 
-          // Derivatives with respect to B coordinates
-          dCdB_nu[I+J+K].x += ( dGI_dPA[I]*dPA_dB + dGI_dPB[I]*dPB_dB + dGI_dQC[I]*dQC_dB + dGI_dQD[I]*dQD_dB + dGI_dPQ[I]*dPQ_dB)*GJ[J]*GK[K];
-          dCdB_nu[I+J+K].y += GI[I]*( dGJ_dPA[J]*dPA_dB + dGJ_dPB[J]*dPB_dB + dGJ_dQC[J]*dQC_dB + dGJ_dQD[J]*dQD_dB + dGJ_dPQ[J]*dPQ_dB)*GK[K];
-          dCdB_nu[I+J+K].z += GI[I]*GJ[J]*( dGK_dPA[K]*dPA_dB + dGK_dPB[K]*dPB_dB + dGK_dQC[K]*dQC_dB + dGK_dQD[K]*dQD_dB + dGK_dPQ[K]*dPQ_dB);
+            // Derivatives with respect to B coordinates
+            dCdB_nu[I+J+K].x += ( dGI_dPA[I]*dPA_dB + dGI_dPB[I]*dPB_dB + dGI_dQC[I]*dQC_dB + dGI_dQD[I]*dQD_dB + dGI_dPQ[I]*dPQ_dB)*GJ[J]*GK[K];
+            dCdB_nu[I+J+K].y += GI[I]*( dGJ_dPA[J]*dPA_dB + dGJ_dPB[J]*dPB_dB + dGJ_dQC[J]*dQC_dB + dGJ_dQD[J]*dQD_dB + dGJ_dPQ[J]*dPQ_dB)*GK[K];
+            dCdB_nu[I+J+K].z += GI[I]*GJ[J]*( dGK_dPA[K]*dPA_dB + dGK_dPB[K]*dPB_dB + dGK_dQC[K]*dQC_dB + dGK_dQD[K]*dQD_dB + dGK_dPQ[K]*dPQ_dB);
 
-          // Derivatives with respect to C coordinates
-          dCdC_nu[I+J+K].x += ( dGI_dPA[I]*dPA_dC + dGI_dPB[I]*dPB_dC + dGI_dQC[I]*dQC_dC + dGI_dQD[I]*dQD_dC + dGI_dPQ[I]*dPQ_dC)*GJ[J]*GK[K];
-          dCdC_nu[I+J+K].y += GI[I]*( dGJ_dPA[J]*dPA_dC + dGJ_dPB[J]*dPB_dC + dGJ_dQC[J]*dQC_dC + dGJ_dQD[J]*dQD_dC + dGJ_dPQ[J]*dPQ_dC)*GK[K];
-          dCdC_nu[I+J+K].z += GI[I]*GJ[J]*( dGK_dPA[K]*dPA_dC + dGK_dPB[K]*dPB_dC + dGK_dQC[K]*dQC_dC + dGK_dQD[K]*dQD_dC + dGK_dPQ[K]*dPQ_dC);
+            // Derivatives with respect to C coordinates
+            dCdC_nu[I+J+K].x += ( dGI_dPA[I]*dPA_dC + dGI_dPB[I]*dPB_dC + dGI_dQC[I]*dQC_dC + dGI_dQD[I]*dQD_dC + dGI_dPQ[I]*dPQ_dC)*GJ[J]*GK[K];
+            dCdC_nu[I+J+K].y += GI[I]*( dGJ_dPA[J]*dPA_dC + dGJ_dPB[J]*dPB_dC + dGJ_dQC[J]*dQC_dC + dGJ_dQD[J]*dQD_dC + dGJ_dPQ[J]*dPQ_dC)*GK[K];
+            dCdC_nu[I+J+K].z += GI[I]*GJ[J]*( dGK_dPA[K]*dPA_dC + dGK_dPB[K]*dPB_dC + dGK_dQC[K]*dQC_dC + dGK_dQD[K]*dQD_dC + dGK_dPQ[K]*dPQ_dC);
 
-          // Derivatives with respect to D coordinates
-          dCdD_nu[I+J+K].x += ( dGI_dPA[I]*dPA_dD + dGI_dPB[I]*dPB_dD + dGI_dQC[I]*dQC_dD + dGI_dQD[I]*dQD_dD + dGI_dPQ[I]*dPQ_dD)*GJ[J]*GK[K];
-          dCdD_nu[I+J+K].y += GI[I]*( dGJ_dPA[J]*dPA_dD + dGJ_dPB[J]*dPB_dD + dGJ_dQC[J]*dQC_dD + dGJ_dQD[J]*dQD_dD + dGJ_dPQ[J]*dPQ_dD)*GK[K];
-          dCdD_nu[I+J+K].z += GI[I]*GJ[J]*( dGK_dPA[K]*dPA_dD + dGK_dPB[K]*dPB_dD + dGK_dQC[K]*dQC_dD + dGK_dQD[K]*dQD_dD + dGK_dPQ[K]*dPQ_dD);
+            // Derivatives with respect to D coordinates
+            dCdD_nu[I+J+K].x += ( dGI_dPA[I]*dPA_dD + dGI_dPB[I]*dPB_dD + dGI_dQC[I]*dQC_dD + dGI_dQD[I]*dQD_dD + dGI_dPQ[I]*dPQ_dD)*GJ[J]*GK[K];
+            dCdD_nu[I+J+K].y += GI[I]*( dGJ_dPA[J]*dPA_dD + dGJ_dPB[J]*dPB_dD + dGJ_dQC[J]*dQC_dD + dGJ_dQD[J]*dQD_dD + dGJ_dPQ[J]*dPQ_dD)*GK[K];
+            dCdD_nu[I+J+K].z += GI[I]*GJ[J]*( dGK_dPA[K]*dPA_dD + dGK_dPB[K]*dPB_dD + dGK_dQC[K]*dQC_dD + dGK_dQD[K]*dQD_dD + dGK_dPQ[K]*dPQ_dD);
 
+          }// if is_derivs
 
         }// for K
       }// for J
@@ -171,9 +267,8 @@ double ELECTRON_REPULSION_INTEGRAL(PrimitiveG& GA,PrimitiveG& GB,PrimitiveG& GC,
     double* F_nu;  F_nu = aux[28];
     double d4 = ((1.0/gamma1) + (1.0/gamma2));
     for(int nu=0;nu<=(maxI+maxJ+maxK+1); nu++){
-        F_nu[nu] = Fn(nu,PQ.length2()/d4) // Aux_Function2(nu,PQ.length2()/d4);
+        F_nu[nu] = Fn(nu,PQ.length2()/d4); // Aux_Function2(nu,PQ.length2()/d4);
     }// for nu
-
 
 
 
@@ -189,45 +284,135 @@ double ELECTRON_REPULSION_INTEGRAL(PrimitiveG& GA,PrimitiveG& GB,PrimitiveG& GC,
 
       ERI += C_nu[nu] * F_nu[nu];
 
-//      cout<<"nu="<<nu<<" C[nu]= "<<C_nu[nu]<<" F[nu]= "<<F_nu[nu]<<endl;
-
-      dERI_dA += ( dCdA_nu[nu]*F_nu[nu] + C_nu[nu]*(-(2.0/d4)*F_nu[nu+1]*PQ*dPQ_dA) );
-      dERI_dB += ( dCdB_nu[nu]*F_nu[nu] + C_nu[nu]*(-(2.0/d4)*F_nu[nu+1]*PQ*dPQ_dB) );
-      dERI_dC += ( dCdC_nu[nu]*F_nu[nu] + C_nu[nu]*(-(2.0/d4)*F_nu[nu+1]*PQ*dPQ_dC) );
-      dERI_dD += ( dCdD_nu[nu]*F_nu[nu] + C_nu[nu]*(-(2.0/d4)*F_nu[nu+1]*PQ*dPQ_dD) );
+      if(is_derivs){
+        dERI_dA += ( dCdA_nu[nu]*F_nu[nu] + C_nu[nu]*(-(2.0/d4)*F_nu[nu+1]*PQ*dPQ_dA) );
+        dERI_dB += ( dCdB_nu[nu]*F_nu[nu] + C_nu[nu]*(-(2.0/d4)*F_nu[nu+1]*PQ*dPQ_dB) );
+        dERI_dC += ( dCdC_nu[nu]*F_nu[nu] + C_nu[nu]*(-(2.0/d4)*F_nu[nu+1]*PQ*dPQ_dC) );
+        dERI_dD += ( dCdD_nu[nu]*F_nu[nu] + C_nu[nu]*(-(2.0/d4)*F_nu[nu+1]*PQ*dPQ_dD) );
+      }
 
     }// for nu
 
 
 
     double pref0 = (2.0*M_PI*M_PI/(gamma1*gamma2))*sqrt(M_PI/(gamma1+gamma2));
-    double pref_AB = exp(-GA.G_alpha*GB.G_alpha*R_AB.length2()/gamma1);
-    double pref_CD = exp(-GC.G_alpha*GD.G_alpha*R_CD.length2()/gamma2);
+    double pref_AB = exp(-alp_a*alp_b*R_AB.length2()/gamma1);
+    double pref_CD = exp(-alp_c*alp_d*R_CD.length2()/gamma2);
 
 
     ERI = pref0 * pref_AB * pref_CD * ERI;
 
-    DA = pref0 * pref_AB * pref_CD * ( dERI_dA + ERI*(-2.0*GA.G_alpha*GB.G_alpha/gamma1)*R_AB );   
-    DB = pref0 * pref_AB * pref_CD * ( dERI_dB + ERI*( 2.0*GA.G_alpha*GB.G_alpha/gamma1)*R_AB );
-    DC = pref0 * pref_AB * pref_CD * ( dERI_dC + ERI*(-2.0*GC.G_alpha*GD.G_alpha/gamma2)*R_CD );
-    DD = pref0 * pref_AB * pref_CD * ( dERI_dD + ERI*( 2.0*GC.G_alpha*GD.G_alpha/gamma2)*R_CD );
-
-//    cout<<"ERI = "<<ERI<<endl;
-//    cout<<"pref0= "<<pref0<<endl;
-//    cout<<"pref_AB= "<<pref_AB<<endl;
-//    cout<<"pref_CD= "<<pref_CD<<endl;
-//    cout<<"dERI_dA= "<<dERI_dA<<endl;
-//    cout<<"dERI_dB= "<<dERI_dB<<endl;
-//    cout<<"dERI_dC= "<<dERI_dC<<endl;
-//    cout<<"dERI_dD= "<<dERI_dD<<endl;
-
+    DA = 0.0; DB = 0.0; DC = 0.0; DD = 0.0;
+    if(is_derivs){
+      DA = pref0 * pref_AB * pref_CD * ( dERI_dA + ERI*(-2.0*alp_a*alp_b/gamma1)*R_AB );   
+      DB = pref0 * pref_AB * pref_CD * ( dERI_dB + ERI*( 2.0*alp_a*alp_b/gamma1)*R_AB );
+      DC = pref0 * pref_AB * pref_CD * ( dERI_dC + ERI*(-2.0*alp_c*alp_d/gamma2)*R_CD );
+      DD = pref0 * pref_AB * pref_CD * ( dERI_dD + ERI*( 2.0*alp_c*alp_d/gamma2)*R_CD );
+    }
+    
 
     return ERI;
 
-}// eri
+}// eri - the very general version
 
 
-*/
+double electron_repulsion_integral
+(
+   int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+   int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+   int nxc,int nyc, int nzc, double alp_c, VECTOR& Rc,
+   int nxd,int nyd, int nzd, double alp_d, VECTOR& Rd,
+   int is_normalize, 
+   int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,VECTOR& DD
+){
+
+  // Allocate working memory
+  int i;
+  int n_aux = 40;
+  int n_auxv = 40;
+  vector<double*> auxd(30);
+  for(i=0;i<30;i++){ auxd[i] = new double[n_aux]; }
+  vector<VECTOR*> auxv(5);
+  for(i=0;i<5;i++){ auxv[i] = new VECTOR[n_auxv]; }
+
+  // Do computations
+  double res = electron_repulsion_integral(nxa,nya,nza,alp_a,Ra, nxb,nyb,nzb,alp_b,Rb,
+                                           nxc,nyc,nzc,alp_c,Rc, nxd,nyd,nzd,alp_d,Rd,
+                                           is_normalize, is_derivs, DA, DB, DC, DD,
+                                           auxd, n_aux, auxv, n_auxv);
+  // Clean working memory
+  for(i=0;i<30;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+  for(i=0;i<5;i++){ delete [] auxv[i]; }  
+  auxv.clear();
+
+  return res;
+
+}// eri - without externam memory allocation
+
+
+
+boost::python::list electron_repulsion_integral
+(
+   int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+   int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+   int nxc,int nyc, int nzc, double alp_c, VECTOR& Rc,
+   int nxd,int nyd, int nzd, double alp_d, VECTOR& Rd,
+   int is_normalize, int is_derivs
+){
+
+  VECTOR DA,DB,DC,DD;
+
+  double I = electron_repulsion_integral(nxa,nya,nza,alp_a,Ra, nxb,nyb,nzb,alp_b,Rb,
+                                         nxc,nyc,nzc,alp_c,Rc, nxd,nyd,nzd,alp_d,Rd,
+                                         is_normalize, is_derivs, DA, DB, DC, DD     );
+  boost::python::list res;
+  res.append(I);
+ 
+  if(is_derivs){
+    res.append(DA);    res.append(DB);    res.append(DC);    res.append(DD);
+  }
+
+  return res;
+ 
+}// eri - python-exported version
+
+
+double electron_repulsion_integral
+(
+   int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+   int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+   int nxc,int nyc, int nzc, double alp_c, VECTOR& Rc,
+   int nxd,int nyd, int nzd, double alp_d, VECTOR& Rd,
+   int is_normalize
+){
+
+  VECTOR DA, DB, DC, DD;
+
+  // Do computations
+  double res = electron_repulsion_integral(nxa,nya,nza,alp_a,Ra, nxb,nyb,nzb,alp_b,Rb,
+                                           nxc,nyc,nzc,alp_c,Rc, nxd,nyd,nzd,alp_d,Rd,
+                                           is_normalize, 0, DA, DB, DC, DD
+                                          );
+  return res;
+
+}// eri - no derivatives
+
+double electron_repulsion_integral
+(
+   int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+   int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+   int nxc,int nyc, int nzc, double alp_c, VECTOR& Rc,
+   int nxd,int nyd, int nzd, double alp_d, VECTOR& Rd
+){
+
+  double res = electron_repulsion_integral(nxa,nya,nza,alp_a,Ra, nxb,nyb,nzb,alp_b,Rb,
+                                           nxc,nyc,nzc,alp_c,Rc, nxd,nyd,nzd,alp_d,Rd,  1   );
+  return res;
+
+}// eri - no derivatives, normalization
+
+
 
 }// namespace libqchem
 }// namespace libmolint

@@ -1,4 +1,4 @@
-#define BOOST_PYTHON_MAX_ARITY 20
+#define BOOST_PYTHON_MAX_ARITY 30
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -71,8 +71,7 @@ void export_molint_objects(){
   double (*expt_kinetic_integral_1D_v2)(int,double, double, int, double, double, int) = &kinetic_integral;
   boost::python::list (*expt_kinetic_integral_1D_v3)(int,double, double, int, double, double, int, int) = &kinetic_integral;
 
-
-  // 3D Gaussians
+  // 3D KEI
   double (*expt_kinetic_integral_3D_v1)(int,int,int,double,VECTOR&,
                                         int,int,int,double,VECTOR&          ) = &kinetic_integral;
   double (*expt_kinetic_integral_3D_v2)(int,int,int,double,VECTOR&,
@@ -83,11 +82,34 @@ void export_molint_objects(){
 
   // Nuclear attraction integrals (3D)
   double (*expt_nuclear_attraction_integral_v1)(int,int, int, double, VECTOR&,
-                        int,int,int,double,VECTOR&,VECTOR&                  ) = nuclear_attraction_integral;
+                        int,int,int,double,VECTOR&,VECTOR&                  ) = &nuclear_attraction_integral;
   double (*expt_nuclear_attraction_integral_v2)(int,int, int, double, VECTOR&,
-                        int,int,int,double,VECTOR&,VECTOR&, int             ) = nuclear_attraction_integral;
+                        int,int,int,double,VECTOR&,VECTOR&, int             ) = &nuclear_attraction_integral;
   boost::python::list (*expt_nuclear_attraction_integral_v3)(int,int, int, double, VECTOR&,
-                        int,int,int,double,VECTOR&,VECTOR&, int, int        ) = nuclear_attraction_integral;
+                        int,int,int,double,VECTOR&,VECTOR&, int, int        ) = &nuclear_attraction_integral;
+
+
+
+  // Electron repulsion integrals
+  double (*expt_electron_repulsion_integral_v1)
+  (
+   int,int,int,double,VECTOR&,   int,int,int,double,VECTOR&,
+   int,int,int,double,VECTOR&,   int,int,int,double,VECTOR&
+  ) = &electron_repulsion_integral;
+
+  double (*expt_electron_repulsion_integral_v2)
+  (
+   int,int,int,double,VECTOR&,   int,int,int,double,VECTOR&,
+   int,int,int,double,VECTOR&,   int,int,int,double,VECTOR&, int
+  ) = &electron_repulsion_integral;
+
+  boost::python::list (*expt_electron_repulsion_integral_v3)
+  (
+   int,int,int,double,VECTOR&,   int,int,int,double,VECTOR&,
+   int,int,int,double,VECTOR&,   int,int,int,double,VECTOR&, int, int
+  ) = &electron_repulsion_integral;
+
+
 
 
 
@@ -142,6 +164,12 @@ void export_molint_objects(){
   def("nuclear_attraction_integral", expt_nuclear_attraction_integral_v1);
   def("nuclear_attraction_integral", expt_nuclear_attraction_integral_v2);
   def("nuclear_attraction_integral", expt_nuclear_attraction_integral_v3);
+
+
+  // ==== Electron repulsion integral ====
+  def("electron_repulsion_integral", expt_electron_repulsion_integral_v1);
+  def("electron_repulsion_integral", expt_electron_repulsion_integral_v2);
+  def("electron_repulsion_integral", expt_electron_repulsion_integral_v3);
 
 
 
