@@ -6,7 +6,7 @@ namespace libmolint{
 
 
 //===========================================================================================
-
+/*
 double Aux_Integral2(int n1,int n2,double x1,double x2,double alp,double& dI_dx1,double& dI_dx2,vector<double*>& aux,int n_aux){
 // This version will not call outside function - all is here
 // dI_dx1, dI_dx2 - are the derivatives of the integral w.r.t. variables x1 and x2, respectively.
@@ -176,7 +176,7 @@ void Aux_Function4(int n1,int n2,double PA,double PB,double PC,double gamma,
     }// for i
   }// for n1+n2 > 4
 }
-
+*/
 
 void Aux_Function5(int l1,int l2,double a,double b,double gamma,
                    double* H,double* dHda, double* dHdb,

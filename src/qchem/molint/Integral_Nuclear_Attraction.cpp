@@ -6,17 +6,113 @@ namespace libqchem{
 namespace libmolint{
 
 
+// Auxiliary functions
+
+void Aux_Function4(int n1,int n2,double PA,double PB,double PC,double gamma,
+                   double* G,double* dGdA, double* dGdB, double* dGdC,double* f, double* dfda, double* dfdb, int n_aux){
+// This is G function used in multiple summs for NAI calculations
+// dGdA = dG / dPA
+// dGdB = dG / dPB
+// dGdC = dG / dPC - derivatives
+
+
+   // dfda = df / dPA;  dfda = df / dPB
+  binomial_expansion(n1,n2,PA,PB,f,dfda,dfdb,1);  // 1 = is_derivs
+
+  int n = n1+n2;
+  double p = PC; // But keep in mind: that Taketa uses p = CP = -PC, so define PC outside this function accordingly
+
+  zero_array(G,n_aux);
+  zero_array(dGdA,n_aux);
+  zero_array(dGdB,n_aux);
+  zero_array(dGdC,n_aux);
+
+  
+  if(n<=4){ // Explicit formula
+    if(n==0){ 
+      G[0] = 1.0; dGdA[0] = 0.0; dGdB[0] = 0.0; dGdC[0] = 0.0;
+    }
+    else if(n==1){
+      G[0] = f[0];     dGdA[0] = dfda[0];  dGdB[0] = dfdb[0]; dGdC[0] = 0.0;
+      G[1] = -p;       dGdA[1] = 0.0;      dGdB[1] = 0.0;     dGdC[1] = -1.0;
+    }
+    else if(n==2){
+      double scl = (0.5/gamma);      
+      G[0] = f[0] + scl*f[2];     dGdA[0] = dfda[0] + scl*dfda[2];    dGdB[0] = dfdb[0] + scl*dfdb[2];      dGdC[0] = 0.0;
+      G[1] = -f[1]*p - scl*f[2];  dGdA[1] = -dfda[1]*p - scl*dfda[2]; dGdB[1] = -dfdb[1]*p - scl*dfdb[2];   dGdC[1] = -f[1];
+      G[2] = p*p;                 dGdA[2] = 0.0;                      dGdB[2] = 0.0;                        dGdC[2] = 2.0*p;
+    }
+    else if(n==3){
+      double scl = (0.5/gamma);
+      double scl1 = 3.0*p*scl;
+      double p2 = p*p;
+
+      G[0] = f[0] + scl*f[2];           dGdA[0] = dfda[0] + scl*dfda[2];    dGdB[0] = dfdb[0] + scl*dfdb[2];     dGdC[0] = 0.0;
+      G[1] = -f[1]*p - scl*f[2] - scl1; dGdA[1] = -dfda[1]*p - scl*dfda[2]; dGdB[1] = -dfdb[1]*p - scl*dfdb[2];  dGdC[1] = -f[1] - 3.0*scl;
+      G[2] = f[2]*p2 + scl1;            dGdA[2] = dfda[2]*p2;               dGdB[2] = dfdb[2]*p2;                dGdC[2] = 2.0*p*f[2] + 3.0*scl;
+      G[3] = -p2*p;                     dGdA[3] = 0.0;                      dGdB[3] = 0.0;                       dGdC[3] = -3.0*p2;
+    }
+    else if(n==4){
+      double scl = (0.5/gamma);
+      double scl1 = 3.0*p*scl;
+      double scl2 = 3.0*scl*scl;
+      double p2 = p*p;
+      double p3 = p2*p;
+
+      G[0] = f[0] + scl*f[2] + scl2;                    dGdA[0] = dfda[0] + scl*dfda[2];                   dGdB[0] = dfdb[0] + scl*dfdb[2];                   dGdC[0] = 0.0;
+      G[1] = -f[1]*p - scl*f[2] - scl1*f[3] - 2.0*scl2; dGdA[1] = -dfda[1]*p - scl*dfda[2] - scl1*dfda[3]; dGdB[1] = -dfdb[1]*p - scl*dfdb[2] - scl1*dfdb[3]; dGdC[1] = -f[1] - f[3]*3.0*scl;
+      G[2] = f[2]*p2 + scl1*f[3] + scl2 + 6.0*scl*p2;   dGdA[2] = dfda[2]*p2 + scl1*dfda[3];               dGdB[2] = dfdb[2]*p2 + scl1*dfdb[3];               dGdC[2] = 2.0*p*f[2] + 3.0*scl*f[3] + 12.0*scl*p;
+      G[3] = -f[3]*p3 - 6.0*scl*p2;                     dGdA[3] = -dfda[3]*p3;                             dGdB[3] = -dfdb[3]*p3;                             dGdC[3] = -3.0*f[3]*p2 - 12.0*scl*p;
+      G[4] = p2*p2;                                     dGdA[4] = 0.0;                                     dGdB[4] = 0.0;                                     dGdC[4] = 4.0*p3;
+    }
+  
+  }
+  else{
+    for(int i=0;i<=n;i++){
+  
+      for(int r=0;r<=(i/2);r++){ // use integer division! so the upper limit is [i/2]
+
+        for(int u=0;u<=((i-2*r)/2);u++){ // use integer division! so the upper limit is [(i-2r)/2]
+
+          int I = (i-2*r-u);
+          double den; den = FACTORIAL(r)*FACTORIAL(u)*FACTORIAL(i-2*r-2*u);
+          double pref =  pow(-1.0,(i+u))*(FACTORIAL(i)/den)*FAST_POW((0.25/gamma),(r+u));
+          double pw; 
+
+          pw = FAST_POW(p,(i-2*r-2*u));
+          G[I] += pref*pw*f[i];
+
+          dGdA[I] += pref*pw*dfda[i];
+          dGdB[I] += pref*pw*dfdb[i];
+
+
+          if((i-2*r-2*u)==0){ pw = 0.0; } else{ pw = (i-2*r-2*u)*FAST_POW(p,(i-2*r-2*u-1)); }
+          dGdC[I] += pref*pw*f[i];
+            
+        }// for u
+      }// for r
+    }// for i
+  }// for n1+n2 > 4
+}
+
+
+
+
 double nuclear_attraction_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
                                    int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
-                                   VECTOR& Rc,int c_indx,VECTOR& DA,VECTOR& DB, VECTOR& DC,
-                                   vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv,
-                                   int is_normalize, int is_derivs
+                                   VECTOR& Rc,int is_normalize, 
+                                   int is_derivs, VECTOR& DA,VECTOR& DB, VECTOR& DC,
+                                   vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv                                   
                                   ){
+/***********************************************************************************
+
+  < G(nxa,nya,nza,alp_a, Ra) |  1/|r-Rc|  | G(nxb,nyb,nnb,alp_b, Rb) >
 
 // This is an accelerated version of NAI - using pre-allocated memory - do not create and destroy arrays during run-time
 // Ra, Rb - locations of primitive Gaussians
 // Rc - coordinates of the nucleus with which the distribution G(a)*G(b) interacts
 // DA,DB,DC - derivatives, w.r.t the positions of centers A, B and C 
+***********************************************************************************/
 
   VECTOR R_AB,P,PA,PB,PC;
   double gamma = alp_a + alp_b;
@@ -164,7 +260,82 @@ double nuclear_attraction_integral(int nxa,int nya, int nza, double alp_a, VECTO
   
   return NAI * N;
 
-}// nuclear_attraction_integral
+}// nuclear_attraction_integral - most general version
+
+
+double nuclear_attraction_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+                                   int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+                                   VECTOR& Rc,int is_normalize, 
+                                   int is_derivs, VECTOR& DA, VECTOR& DB, VECTOR& DC
+                                  ){
+
+  // Allocate working memory
+  int i;
+  int n_aux = 20;
+  int n_auxv = 10;
+  vector<double*> auxd(20);
+  for(i=0;i<20;i++){ auxd[i] = new double[n_aux]; }
+  vector<VECTOR*> auxv(5);
+  for(i=0;i<5;i++){ auxv[i] = new VECTOR[n_auxv]; }
+
+  // Do computations
+  double res = nuclear_attraction_integral(nxa,nya,nza,alp_a,Ra, nxb,nyb,nzb,alp_b,Rb,
+                                           Rc, is_normalize, is_derivs, DA, DB, DC, auxd, n_aux, auxv, n_auxv);
+
+  // Clean working memory
+  for(i=0;i<20;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+  for(i=0;i<5;i++){ delete [] auxv[i]; }  
+  auxv.clear();
+
+
+}// nuclear_attraction_integral - without external memory
+
+
+boost::python::list nuclear_attraction_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+                                     int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+                                     VECTOR& Rc, int is_normalize, int is_derivs
+                                    ){
+  VECTOR dIdA, dIdB, dIdC;
+
+  double I = nuclear_attraction_integral(nxa,nya,nza,alp_a,Ra, nxb,nyb,nzb,alp_b,Rb,
+                                           Rc, is_normalize, is_derivs, dIdA, dIdB, dIdC );
+
+  boost::python::list res;
+
+  res.append(I);
+ 
+  if(is_derivs){
+    res.append(dIdA);
+    res.append(dIdB);
+    res.append(dIdC);
+  }
+
+  return res;
+ 
+}
+
+double nuclear_attraction_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+                        int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+                        VECTOR& Rc, int is_normalize
+                       ){
+
+  VECTOR dIdA, dIdB, dIdC;
+  double res = nuclear_attraction_integral(nxa,nya,nza,alp_a,Ra, nxb,nyb,nzb,alp_b,Rb,
+                                           Rc, is_normalize, 0, dIdA, dIdB, dIdC );
+  return res;
+}
+
+double nuclear_attraction_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+                        int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb, VECTOR& Rc
+                       ){
+  double res = nuclear_attraction_integral(nxa,nya,nza,alp_a,Ra,nxb,nyb,nzb,alp_b,Rb, Rc, 1);
+  return res;
+}
+
+
+
 
 }// namespace libmolint
 }// namespace libqchem
+

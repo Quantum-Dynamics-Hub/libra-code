@@ -10,6 +10,7 @@
 #include "A_coefficients.h"
 
 #include "Integral_Kinetic.h"
+#include "Integral_Nuclear_Attraction.h"
 
 
 namespace libqchem{

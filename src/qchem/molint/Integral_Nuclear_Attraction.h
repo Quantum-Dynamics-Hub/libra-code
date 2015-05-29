@@ -11,10 +11,30 @@ namespace libmolint{
 
 double nuclear_attraction_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
                                    int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
-                                   VECTOR& Rc,int c_indx,VECTOR& DA,VECTOR& DB, VECTOR& DC,
-                                   vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv,
-                                   int is_normalize, int is_derivs
+                                   VECTOR& Rc,int is_normalize, 
+                                   int is_derivs, VECTOR& DA,VECTOR& DB, VECTOR& DC,
+                                   vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv                                   
                                   );
+
+double nuclear_attraction_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+                                   int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+                                   VECTOR& Rc,int is_normalize, 
+                                   int is_derivs, VECTOR& DA, VECTOR& DB, VECTOR& DC
+                                  );
+
+boost::python::list nuclear_attraction_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+                                     int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+                                     VECTOR& Rc, int is_normalize, int is_derivs
+                                    );
+
+double nuclear_attraction_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+                        int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+                        VECTOR& Rc, int is_normalize
+                       );
+
+double nuclear_attraction_integral(int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+                        int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb, VECTOR& Rc
+                       );
 
 
 }// namespace libmolint

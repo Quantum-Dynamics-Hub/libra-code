@@ -81,6 +81,17 @@ void export_molint_objects(){
                                         int,int,int,double,VECTOR&, int, int) = &kinetic_integral;
 
 
+  // Nuclear attraction integrals (3D)
+  double (*expt_nuclear_attraction_integral_v1)(int,int, int, double, VECTOR&,
+                        int,int,int,double,VECTOR&,VECTOR&                  ) = nuclear_attraction_integral;
+  double (*expt_nuclear_attraction_integral_v2)(int,int, int, double, VECTOR&,
+                        int,int,int,double,VECTOR&,VECTOR&, int             ) = nuclear_attraction_integral;
+  boost::python::list (*expt_nuclear_attraction_integral_v3)(int,int, int, double, VECTOR&,
+                        int,int,int,double,VECTOR&,VECTOR&, int, int        ) = nuclear_attraction_integral;
+
+
+
+
 
   // ============ Now export functions =============
   // ==== Overlaps ====
@@ -125,6 +136,12 @@ void export_molint_objects(){
   def("kinetic_integral", expt_kinetic_integral_3D_v1);
   def("kinetic_integral", expt_kinetic_integral_3D_v2);
   def("kinetic_integral", expt_kinetic_integral_3D_v3);
+
+
+  // ==== Nuclear attraction integral ====
+  def("nuclear_attraction_integral", expt_nuclear_attraction_integral_v1);
+  def("nuclear_attraction_integral", expt_nuclear_attraction_integral_v2);
+  def("nuclear_attraction_integral", expt_nuclear_attraction_integral_v3);
 
 
 
