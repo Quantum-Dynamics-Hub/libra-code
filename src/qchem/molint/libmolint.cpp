@@ -64,6 +64,41 @@ void export_molint_objects(){
                                 int,int,int,double, const VECTOR&,
                                 int,int,int,double, const VECTOR&,  int, int      ) = &pseudopot02;
 
+  // Multipole moments
+  // 1D - Transition dipole moments
+  double (*expt_transition_dipole_moment_1D_v1)
+  ( int nxa,double alp_a, double Xa, 
+    int nxb,double alp_b, double Xb
+  ) = &transition_dipole_moment;
+  double (*expt_transition_dipole_moment_1D_v2)
+  ( int nxa,double alp_a, double Xa, 
+    int nxb,double alp_b, double Xb,
+    int is_normalize
+  ) = &transition_dipole_moment;
+  boost::python::list (*expt_transition_dipole_moment_1D_v3)
+  ( int nxa,double alp_a, double Xa, 
+    int nxb,double alp_b, double Xb,
+    int is_normalize, int is_derivs
+  ) = &transition_dipole_moment;
+
+  // 3D - Transition dipole moments
+  VECTOR (*expt_transition_dipole_moment_3D_v1)
+  ( int nxa,int nya, int nza, double alp_a, const VECTOR& Ra,
+    int nxb,int nyb, int nzb, double alp_b, const VECTOR& Rb
+  ) = &transition_dipole_moment;
+  VECTOR (*expt_transition_dipole_moment_3D_v2)
+  ( int nxa,int nya, int nza, double alp_a, const VECTOR& Ra,
+    int nxb,int nyb, int nzb, double alp_b, const VECTOR& Rb,
+    int is_normalize
+  ) = &transition_dipole_moment;
+  boost::python::list (*expt_transition_dipole_moment_3D_v3)
+  ( int nxa,int nya, int nza, double alp_a, const VECTOR& Ra,
+    int nxb,int nyb, int nzb, double alp_b, const VECTOR& Rb,
+    int is_normalize,int is_derivs
+  ) = &transition_dipole_moment;
+
+
+
 
   // Kinetic energy integrals (KEI)
   // 1D KEI
@@ -111,6 +146,42 @@ void export_molint_objects(){
 
 
 
+  // Derivative couplings
+  double (*expt_derivative_coupling_integral_1D_v1)
+  ( int nxa,double alp_a, double Xa, int nxb,double alp_b, double Xb
+  ) = &derivative_coupling_integral;
+
+  double (*expt_derivative_coupling_integral_1D_v2)
+  ( int nxa,double alp_a, double Xa, int nxb,double alp_b, double Xb,
+    int is_normalize
+  ) = &derivative_coupling_integral;
+
+  boost::python::list (*expt_derivative_coupling_integral_1D_v3)
+  ( int nxa,double alp_a, double Xa, int nxb,double alp_b, double Xb,
+    int is_normalize, int is_derivs 
+  ) = &derivative_coupling_integral;
+
+
+  VECTOR (*expt_derivative_coupling_integral_3D_v1)
+  ( int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+    int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb
+  ) = &derivative_coupling_integral;
+
+  VECTOR (*expt_derivative_coupling_integral_3D_v2)
+  ( int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+    int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+    int is_normalize
+  ) = &derivative_coupling_integral;
+
+  boost::python::list (*expt_derivative_coupling_integral_3D_v3)
+  ( int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+    int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+    int is_normalize, int is_derivs
+  ) = &derivative_coupling_integral;
+
+
+
+
 
 
 
@@ -150,6 +221,18 @@ void export_molint_objects(){
   def("pseudopot02", expt_pseudopot02_v2);
 
 
+  // ==== Multipole moments ====
+  def("transition_dipole_moment", expt_transition_dipole_moment_1D_v1);
+  def("transition_dipole_moment", expt_transition_dipole_moment_1D_v2);
+  def("transition_dipole_moment", expt_transition_dipole_moment_1D_v3);
+
+  def("transition_dipole_moment", expt_transition_dipole_moment_3D_v1);
+  def("transition_dipole_moment", expt_transition_dipole_moment_3D_v2);
+  def("transition_dipole_moment", expt_transition_dipole_moment_3D_v3);
+
+
+
+
   // ==== Kinetic energy integrals ====
   def("kinetic_integral", expt_kinetic_integral_1D_v1);
   def("kinetic_integral", expt_kinetic_integral_1D_v2);
@@ -170,6 +253,18 @@ void export_molint_objects(){
   def("electron_repulsion_integral", expt_electron_repulsion_integral_v1);
   def("electron_repulsion_integral", expt_electron_repulsion_integral_v2);
   def("electron_repulsion_integral", expt_electron_repulsion_integral_v3);
+
+
+  // ==== Derivative couplings =====
+  def("derivative_coupling_integral", expt_derivative_coupling_integral_1D_v1);
+  def("derivative_coupling_integral", expt_derivative_coupling_integral_1D_v2);
+  def("derivative_coupling_integral", expt_derivative_coupling_integral_1D_v3);
+
+  def("derivative_coupling_integral", expt_derivative_coupling_integral_3D_v1);
+  def("derivative_coupling_integral", expt_derivative_coupling_integral_3D_v2);
+  def("derivative_coupling_integral", expt_derivative_coupling_integral_3D_v3);
+
+
 
 
 
