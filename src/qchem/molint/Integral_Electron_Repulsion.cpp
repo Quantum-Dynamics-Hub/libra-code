@@ -294,8 +294,22 @@ double electron_repulsion_integral
     }// for nu
 
 
+    double N = 1.0;
+    if(is_normalize){
 
-    double pref0 = (2.0*M_PI*M_PI/(gamma1*gamma2))*sqrt(M_PI/(gamma1+gamma2));
+      N = (gaussian_normalization_factor(nxa,alp_a) * gaussian_normalization_factor(nxb,alp_b));
+      N *= (gaussian_normalization_factor(nya,alp_a) * gaussian_normalization_factor(nyb,alp_b));
+      N *= (gaussian_normalization_factor(nza,alp_a) * gaussian_normalization_factor(nzb,alp_b));
+
+      N *= (gaussian_normalization_factor(nxa,alp_c) * gaussian_normalization_factor(nxb,alp_d));
+      N *= (gaussian_normalization_factor(nya,alp_c) * gaussian_normalization_factor(nyb,alp_d));
+      N *= (gaussian_normalization_factor(nza,alp_c) * gaussian_normalization_factor(nzb,alp_d));
+
+    }
+    
+
+
+    double pref0 = N*(2.0*M_PI*M_PI/(gamma1*gamma2))*sqrt(M_PI/(gamma1+gamma2));
     double pref_AB = exp(-alp_a*alp_b*R_AB.length2()/gamma1);
     double pref_CD = exp(-alp_c*alp_d*R_CD.length2()/gamma2);
 

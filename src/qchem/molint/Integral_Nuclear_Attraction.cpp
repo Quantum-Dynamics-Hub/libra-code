@@ -247,9 +247,9 @@ double nuclear_attraction_integral(int nxa,int nya, int nza, double alp_a, VECTO
 
   double N = 1.0;
   if(is_normalize){
-    N = (gaussian_norm(nxa,alp_a) * gaussian_norm(nxb,alp_b));
-    N *= (gaussian_norm(nya,alp_a) * gaussian_norm(nyb,alp_b));
-    N *= (gaussian_norm(nza,alp_a) * gaussian_norm(nzb,alp_b));
+    N = (gaussian_normalization_factor(nxa,alp_a) * gaussian_normalization_factor(nxb,alp_b));
+    N *= (gaussian_normalization_factor(nya,alp_a) * gaussian_normalization_factor(nyb,alp_b));
+    N *= (gaussian_normalization_factor(nza,alp_a) * gaussian_normalization_factor(nzb,alp_b));
   }
 
 

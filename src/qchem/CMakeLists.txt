@@ -10,6 +10,10 @@
 MESSAGE("Going into subdirectory molint...")
 ADD_SUBDIRECTORY("molint")
 
+MESSAGE("Going into subdirectory qobjects...")
+ADD_SUBDIRECTORY("qobjects")
+
+
 
 #
 #  Source files and headers in this directory

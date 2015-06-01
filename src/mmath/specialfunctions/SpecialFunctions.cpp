@@ -209,9 +209,9 @@ double Fn(int n,double t){
 
 double gaussian_int(int n, double alp){
 /****************************************************************************
- This function computes the elementary integral:  m = 2*n
+ This function computes the elementary integral
    +inf
-  int   {   x^2m * exp(-alp*x^2) dx }   = ( (2m-1)! /( a^(m/2) * 2^(m/2) ) ) * sqrt(pi/a)
+  int   {   x^2n * exp(-alp*x^2) dx }   = ( (2n-1)! /( a^(n/2) * 2^(n/2) ) ) * sqrt(pi/a)
    -inf
 
   http://en.wikipedia.org/wiki/Gaussian_integral
@@ -232,10 +232,27 @@ double gaussian_int(int n, double alp){
   return res;
 }
 
-double gaussian_norm(int n,double alp){
+double gaussian_norm2(int n,double alp){
+  // This is scalar product: <G(n,alp)|G(n,alp)>  
+
+  return (gaussian_int(2.0*n,2.0*alp));
+}
+
+double gaussian_norm1(int n,double alp){
+  // This is scalar product: <G(n,alp)|G(n,alp)>  
+
+  return sqrt(gaussian_int(2.0*n,2.0*alp));
+}
+
+double gaussian_normalization_factor(int n,double alp){
+  // This is scalar product: <G(n,alp)|G(n,alp)>  
 
   return (1.0/sqrt(gaussian_int(2.0*n,2.0*alp)));
 }
+
+
+
+
 
 
 

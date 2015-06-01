@@ -46,7 +46,9 @@ double Fn(int n,double t);
 
 // Integrals of Gaussian functions
 double gaussian_int(int n, double alp);
-double gaussian_norm(int n,double alp);
+double gaussian_norm2(int n,double alp);
+double gaussian_norm1(int n,double alp);
+double gaussian_normalization_factor(int n,double alp);
 
   
 double FACTORIAL(int);

@@ -34,7 +34,10 @@ void export_SpecialFunctions_objects(){
   def("gamma_lower", gamma_lower);  // lower gamma function divided by the power
   def("Fn", Fn);
   def("gaussian_int", gaussian_int);  
-  def("gaussian_norm", gaussian_norm);
+  def("gaussian_norm2", gaussian_norm2);
+  def("gaussian_norm1", gaussian_norm1);
+  def("gaussian_normalization_factor", gaussian_normalization_factor);
+
 
   def("FACTORIAL",FACTORIAL); // n!
   def("DRACTORIAL",DFACTORIAL);  // n!!

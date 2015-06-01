@@ -167,7 +167,7 @@ double gaussian_moment(int nxa,double alp_a, double Xa, int nx, double alp, doub
   // In case we need to normalize initial Gaussians
   if(is_normalize){
 
-    double nrm = gaussian_norm(nxa,alp_a) * gaussian_norm(nxb,alp_b);
+    double nrm = gaussian_normalization_factor(nxa,alp_a) * gaussian_normalization_factor(nxb,alp_b);
     res *= nrm;
     dI_dXa *= nrm; 
     dI_dXb *= nrm; 
