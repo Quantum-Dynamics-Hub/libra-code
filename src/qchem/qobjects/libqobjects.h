@@ -2,6 +2,7 @@
 #define LIB_QOBJECTS_H
 
 #include "PrimitiveG.h"
+#include "AO.h"
 
 namespace libqchem{
 namespace libmolint{

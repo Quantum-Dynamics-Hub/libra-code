@@ -61,6 +61,13 @@ public:
 
   // Transformations
   void shift_position(const VECTOR&);
+
+
+  friend int operator == (const PrimitiveG& g1, const PrimitiveG& g2){
+    return ((g1.x_exp==g2.x_exp) && (g1.y_exp==g2.y_exp) && (g1.z_exp==g2.z_exp)
+          &&(fabs(g1.alpha-g2.alpha)<1e-10) && ((g1.R-g2.R).length2()<1e-10));
+  }
+
      
 };
 
@@ -78,13 +85,12 @@ double gaussian_overlap
 boost::python::list gaussian_overlap
 ( PrimitiveG& GA, PrimitiveG& GB,int is_normalize, int is_derivs
 );
-
 double gaussian_overlap( PrimitiveG& GA, PrimitiveG& GB,int is_normalize);
-
 double gaussian_overlap( PrimitiveG& GA, PrimitiveG& GB);
 
 
 
+typedef std::vector<PrimitiveG> PrimitiveGList;
 
 
 }// namespace libqobjects

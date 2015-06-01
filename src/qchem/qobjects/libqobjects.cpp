@@ -27,11 +27,28 @@ void export_qobjects_objects(){
   ( PrimitiveG& GA, PrimitiveG& GB,int is_normalize, int is_derivs  ) = &gaussian_overlap;
 
 
+  double (*expt_gaussian_overlap_AO_v1)
+  (AO& AOa, AO& AOb) = &gaussian_overlap;
+
+  double (*expt_gaussian_overlap_AO_v2)
+  (AO& AOa, AO& AOb,int is_normalize) = &gaussian_overlap;
+
+  boost::python::list (*expt_gaussian_overlap_AO_v3)
+  (AO& AOa, AO& AOb,int is_normalize, int is_derivs) = &gaussian_overlap;
+
+
+
+
 
   // ============ Now export functions =============
   def("gaussian_overlap", expt_gaussian_overlap_G_v1);
   def("gaussian_overlap", expt_gaussian_overlap_G_v2);
   def("gaussian_overlap", expt_gaussian_overlap_G_v3);
+
+  def("gaussian_overlap", expt_gaussian_overlap_AO_v1);
+  def("gaussian_overlap", expt_gaussian_overlap_AO_v2);
+  def("gaussian_overlap", expt_gaussian_overlap_AO_v3);
+
 
 
 
@@ -63,14 +80,51 @@ void export_qobjects_objects(){
 
       .def("compute",&PrimitiveG::compute)
       .def("norm2",&PrimitiveG::norm2)
-      .def("norm2",&PrimitiveG::norm1)
+      .def("norm1",&PrimitiveG::norm1)
       .def("normalization_factor",&PrimitiveG::normalization_factor)
       .def("show_info",&PrimitiveG::show_info)
 
       .def("shift_position",&PrimitiveG::shift_position)
 
+  ;
+
+  class_< PrimitiveGList >("PrimitiveGList")
+      .def(vector_indexing_suite< PrimitiveGList >())
+  ;
+
+
+
+  class_<AO>("AO",init<>())
+      .def(init<const AO&>())
+      .def("__copy__", &generic__copy__<AO>) 
+      .def("__deepcopy__", &generic__deepcopy__<AO>)
+      .def_readwrite("element",&AO::element)
+      .def_readwrite("ao_shell",&AO::ao_shell)
+      .def_readwrite("ao_shell_type",&AO::ao_shell_type)
+      .def_readwrite("ao_name",&AO::ao_name)
+      .def_readwrite("x_exp",&AO::x_exp)
+      .def_readwrite("y_exp",&AO::y_exp)
+      .def_readwrite("z_exp",&AO::z_exp)
+      .def_readwrite("expansion_size",&AO::expansion_size)
+
+      .def_readwrite("primitives",&AO::primitives)
+      .def_readwrite("coefficients",&AO::coefficients)
+
+      .def("compute",&AO::compute)
+      .def("norm2",&AO::norm2)
+      .def("norm1",&AO::norm1)
+      .def("normalization_factor",&AO::normalization_factor)
+      .def("normalize",&AO::normalize)
+      .def("show_info",&AO::show_info)
+
+      .def("shift_position",&AO::shift_position)
 
   ;
+
+  class_< AOList >("AOList")
+      .def(vector_indexing_suite< AOList >())
+  ;
+
 
 
 }

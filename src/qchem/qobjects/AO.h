@@ -56,7 +56,53 @@ public:
   // Transformations
   void shift_position(const VECTOR&);
 
+
+
+  friend int operator == (const AO& g1, const AO& g2){
+    int res = ((g1.x_exp==g2.x_exp) && (g1.y_exp==g2.y_exp) && (g1.z_exp==g2.z_exp)
+              && (g1.expansion_size==g2.expansion_size) && (g1.ao_name==g2.ao_name)
+              && (g1.ao_shell == g2.ao_shell) && (g1.ao_shell_type == g2.ao_shell_type) 
+              && (g1.element == g2.element) 
+              );
+    if(res){ 
+      for(int i=0;i<g1.expansion_size;i++){  res *= (g1.coefficients[i]==g2.coefficients[i]); }
+    }
+    if(res){ 
+      for(int i=0;i<g1.expansion_size;i++){  res *= (g1.primitives[i]==g2.primitives[i]); }
+    }
+    return res;
+  }
+
+
 };
+
+
+// Versions with references
+double gaussian_overlap
+( AO& AOa, AO& AOb,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+);
+double gaussian_overlap( AO& AOa, AO& AOb,int is_normalize, int is_derivs, VECTOR& dIdA, VECTOR& dIdB );
+boost::python::list gaussian_overlap( AO& AOa, AO& AOb,int is_normalize, int is_derivs);
+double gaussian_overlap(AO& AOa, AO& AOb,int is_normalize);
+double gaussian_overlap(AO& AOa, AO& AOb);
+
+
+// Versions with pointers - only for C++
+double gaussian_overlap
+( AO* AOa, AO* AOb,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+);
+double gaussian_overlap( AO* AOa, AO* AOb,int is_normalize, int is_derivs, VECTOR& dIdA, VECTOR& dIdB );
+double gaussian_overlap(AO* AOa, AO* AOb,int is_normalize);
+double gaussian_overlap(AO* AOa, AO* AOb);
+
+
+
+
+typedef std::vector<AO> AOList;
+
+
 
 }// namespace libqobjects
 }// namespace libqchem

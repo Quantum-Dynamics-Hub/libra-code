@@ -178,6 +178,154 @@ void AO::shift_position(const VECTOR& dR){
 
 
 
+///=======================================================================================================
+///===================== Overload basic functions from libmolint to AO objects  ==========================
+
+// Reference verions
+
+double gaussian_overlap
+( AO& AOa, AO& AOb,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+){
+
+  dIdA = 0.0;
+  dIdB = 0.0;
+  
+  VECTOR dida, didb;
+  double w;
+  double res = 0.0;
+  for(int i=0;i<AOa.expansion_size;i++){
+    for(int j=0;j<AOb.expansion_size;j++){
+
+      w = AOa.coefficients[i] * AOb.coefficients[j];
+      res += w * gaussian_overlap(AOa.primitives[i],AOb.primitives[j],is_normalize, is_derivs, dida, didb, auxd, n_aux); 
+      dIdA += w * dida;
+      dIdB += w * didb;
+
+    }// j
+  }// i
+
+  return res;
+}
+
+double gaussian_overlap
+( AO& AOa, AO& AOb,int is_normalize, int is_derivs, VECTOR& dIdA, VECTOR& dIdB ){
+
+  // Allocate working memory
+  int i;
+  int n_aux = 20;
+  vector<double*> auxd(5);
+  for(i=0;i<5;i++){ auxd[i] = new double[n_aux]; }
+
+  // Do computations
+  double res = gaussian_overlap(AOa, AOb, is_normalize, is_derivs, dIdA, dIdB, auxd, n_aux);
+
+  // Clean working memory
+  for(i=0;i<5;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+ 
+  return res;
+}
+
+boost::python::list gaussian_overlap
+( AO& AOa, AO& AOb,int is_normalize, int is_derivs){
+
+  VECTOR dIdA, dIdB;
+  double I = gaussian_overlap(AOa, AOb, is_normalize, is_derivs, dIdA, dIdB);
+
+  boost::python::list res;
+
+  res.append(I);
+ 
+  if(is_derivs){
+    res.append(dIdA);
+    res.append(dIdB);
+  }
+
+  return res;
+ 
+}
+
+
+double gaussian_overlap(AO& AOa, AO& AOb,int is_normalize){
+
+  VECTOR dIdA, dIdB;
+  double res = gaussian_overlap(AOa, AOb, is_normalize, 0, dIdA, dIdB);
+  return res;
+}
+
+double gaussian_overlap(AO& AOa, AO& AOb){
+
+  double res = gaussian_overlap(AOa, AOb, 1);
+  return res;
+
+}
+
+
+
+// Pointer versions
+
+double gaussian_overlap
+( AO* AOa, AO* AOb,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+){
+
+  dIdA = 0.0;
+  dIdB = 0.0;
+  
+  VECTOR dida, didb;
+  double w;
+  double res = 0.0;
+  for(int i=0;i<AOa->expansion_size;i++){
+    for(int j=0;j<AOb->expansion_size;j++){
+
+      w = AOa->coefficients[i] * AOb->coefficients[j];
+      res += w * gaussian_overlap(AOa->primitives[i],AOb->primitives[j],is_normalize, is_derivs, dida, didb, auxd, n_aux); 
+      dIdA += w * dida;
+      dIdB += w * didb;
+
+    }// j
+  }// i
+  return res;
+}
+
+double gaussian_overlap
+( AO* AOa, AO* AOb,int is_normalize, int is_derivs, VECTOR& dIdA, VECTOR& dIdB ){
+
+  // Allocate working memory
+  int i;
+  int n_aux = 20;
+  vector<double*> auxd(5);
+  for(i=0;i<5;i++){ auxd[i] = new double[n_aux]; }
+
+  // Do computations
+  double res = gaussian_overlap(AOa, AOb, is_normalize, is_derivs, dIdA, dIdB, auxd, n_aux);
+
+  // Clean working memory
+  for(i=0;i<5;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+ 
+  return res;
+}
+
+
+double gaussian_overlap(AO* AOa, AO* AOb,int is_normalize){
+
+  VECTOR dIdA, dIdB;
+  double res = gaussian_overlap(AOa, AOb, is_normalize, 0, dIdA, dIdB);
+  return res;
+}
+
+double gaussian_overlap(AO* AOa, AO* AOb){
+
+  double res = gaussian_overlap(AOa, AOb, 1);
+  return res;
+
+}
+
+
+
+
 }// namespace libqobjects
 }// namespace libqchem
 
