@@ -40,7 +40,7 @@ void AO::clear(){
 }
 
 void AO::add_primitive(double c,PrimitiveG g){   
-  coefficients.push_back(c);  is_coefficients = 1;
+  coefficients.push_back(c * g.normalization_factor());  is_coefficients = 1;
   primitives.push_back(g);    is_primitives   = 1;
   expansion_size++;
 }
@@ -154,7 +154,8 @@ double AO::norm2(){
   double res = 0.0;
   for(int i=0;i<expansion_size;i++){
     for(int j=0;j<expansion_size;j++){
-      res += coefficients[i] * coefficients[j] * gaussian_overlap(primitives[i],primitives[j],1); // assume contraction of normalized Gaussians
+      // coefficients already contain normalization factors for primitive Gaussians, so set the last parameter to 0
+      res += coefficients[i] * coefficients[j] * gaussian_overlap(primitives[i],primitives[j],0); 
     }
   }
   return res;
@@ -198,12 +199,19 @@ double gaussian_overlap
     for(int j=0;j<AOb.expansion_size;j++){
 
       w = AOa.coefficients[i] * AOb.coefficients[j];
-      res += w * gaussian_overlap(AOa.primitives[i],AOb.primitives[j],is_normalize, is_derivs, dida, didb, auxd, n_aux); 
+      res += w * gaussian_overlap(AOa.primitives[i],AOb.primitives[j],0, is_derivs, dida, didb, auxd, n_aux); 
       dIdA += w * dida;
       dIdB += w * didb;
 
     }// j
   }// i
+
+  if(is_normalize){
+    double nrm = AOa.normalization_factor() * AOb.normalization_factor();
+    res *= nrm;
+    dIdA *= nrm;
+    dIdB *= nrm;
+  }//
 
   return res;
 }
@@ -280,12 +288,21 @@ double gaussian_overlap
     for(int j=0;j<AOb->expansion_size;j++){
 
       w = AOa->coefficients[i] * AOb->coefficients[j];
-      res += w * gaussian_overlap(AOa->primitives[i],AOb->primitives[j],is_normalize, is_derivs, dida, didb, auxd, n_aux); 
+      res += w * gaussian_overlap(AOa->primitives[i],AOb->primitives[j],0, is_derivs, dida, didb, auxd, n_aux); 
       dIdA += w * dida;
       dIdB += w * didb;
 
     }// j
   }// i
+
+  if(is_normalize){
+    double nrm = AOa->normalization_factor() * AOb->normalization_factor();
+    res *= nrm;
+    dIdA *= nrm;
+    dIdB *= nrm;
+  }//
+
+
   return res;
 }
 

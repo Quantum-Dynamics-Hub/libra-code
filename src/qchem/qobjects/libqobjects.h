@@ -5,7 +5,7 @@
 #include "AO.h"
 
 namespace libqchem{
-namespace libmolint{
+namespace libqobjects{
 
 
 void export_qobjects_objects();

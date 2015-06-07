@@ -7,10 +7,12 @@ using namespace boost::python;
 namespace libqchem{
 
 using namespace libmolint;
+using namespace libqobjects;
 
 void export_Qchem_objects(){
 
   export_molint_objects();
+  export_qobjects_objects();
 
 }// export_Qchem_objects()
 

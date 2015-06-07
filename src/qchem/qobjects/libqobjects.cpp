@@ -110,12 +110,15 @@ void export_qobjects_objects(){
       .def_readwrite("primitives",&AO::primitives)
       .def_readwrite("coefficients",&AO::coefficients)
 
+      .def("clear",&AO::clear)
+      .def("add_primitive",&AO::add_primitive)
+      .def("show_info",&AO::show_info)
+
       .def("compute",&AO::compute)
       .def("norm2",&AO::norm2)
       .def("norm1",&AO::norm1)
       .def("normalization_factor",&AO::normalization_factor)
       .def("normalize",&AO::normalize)
-      .def("show_info",&AO::show_info)
 
       .def("shift_position",&AO::shift_position)
 
