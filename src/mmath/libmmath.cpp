@@ -21,6 +21,7 @@ using namespace librandom;
 using namespace libdata;
 using namespace libann;
 using namespace libmeigen;
+using namespace libsymmetry;
 
 void export_Mathematics_objects(){
 
@@ -61,6 +62,7 @@ BOOST_PYTHON_MODULE(libmmath){
   export_NeuralNetwork_objects();
   export_mEigen_objects();
   export_Mathematics_objects();
+  export_symmetry_objects();
 
 }
 

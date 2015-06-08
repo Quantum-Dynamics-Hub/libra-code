@@ -9,6 +9,7 @@
 #include "data/libdata.h"
 #include "ann/libann.h"
 #include "meigen/libmeigen.h"
+#include "symmetry/libsymmetry.h"
 
 #include "Timer.h"
 

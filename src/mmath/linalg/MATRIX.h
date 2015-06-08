@@ -31,10 +31,11 @@ public:
   int num_of_elems;
   double *M;
     
-  void set(int,double);
-  double get(int);
-  void set(int,int,double);
-  double get(int,int);
+  inline void set(int indx,double value){    M[indx] = value; }
+  inline double get(int indx){    return M[indx];  }
+  inline void set(int row,int col,double value){   M[row*num_of_cols+col] = value;  }
+  inline double get(int row,int col){  return M[row*num_of_cols+col]; }
+
           
   double NonOrtMeasure;
   // Constructors;
@@ -76,8 +77,6 @@ public:
   int show_num_of_cols() { return num_of_cols;}
   int show_num_of_elems(){ return num_of_elems;}
 
-  double   Element(int row,int col)          {int n=row*num_of_cols+col; return *(M+n);}
-  void Set_Element(int row,int col,double x) {int n=row*num_of_cols+col; *(M+n)=x;     }
   void Add_To_Element(int row,int col,double x) {int n=row*num_of_cols+col; *(M+n)+=x;}
   void FindMaxNondiagonalElement(int& rw,int& cl,double& value);
 
@@ -132,8 +131,8 @@ public:
 
 
   // Input & output functions;
-  void Show_Matrix();
-  void Show_Matrix(char *Output_File);
+  void show_matrix();
+  void show_matrix(char *Output_File);
   friend ostream &operator<<(ostream &strm,MATRIX ob);
   friend istream& operator>>(istream& strm,MATRIX &ob);
   void Delete_Matrix();
@@ -160,7 +159,11 @@ public:
 };
 
 
-  typedef std::vector<MATRIX> MATRIXList;
+void pop_submatrix(MATRIX*,MATRIX*,vector<int>&);
+void push_submatrix(MATRIX*,MATRIX*,vector<int>&);
+
+typedef std::vector<MATRIX> MATRIXList;
+
 
 }// namespace liblinalg
 }// namespace libmmath

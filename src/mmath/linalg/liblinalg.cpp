@@ -49,8 +49,20 @@ double (MATRIX::*get1)(int)            = &MATRIX::get;
 double (MATRIX::*get2)(int,int)        = &MATRIX::get;
 void   (MATRIX::*set1)(int,double)     = &MATRIX::set;
 void   (MATRIX::*set2)(int,int,double) = &MATRIX::set; 
-void   (MATRIX::*Inverse1)(MATRIX*)    = &MATRIX::Inverse;
-void   (MATRIX::*Inverse2)(MATRIX&)    = &MATRIX::Inverse;
+void   (MATRIX::*expt_Inverse_v1)(MATRIX*)    = &MATRIX::Inverse;
+void   (MATRIX::*expt_Inverse_v2)(MATRIX&)    = &MATRIX::Inverse;
+double (MATRIX::*expt_dot_product_v1)(MATRIX*)    = &MATRIX::dot_product;
+double (MATRIX::*expt_dot_product_v2)(MATRIX&)    = &MATRIX::dot_product;
+void   (MATRIX::*expt_show_matrix_v1)() = &MATRIX::show_matrix;
+void   (MATRIX::*expt_show_matrix_v2)(char*) = &MATRIX::show_matrix;
+void   (MATRIX::*expt_exp_v1)(MATRIX&) = &MATRIX::exp;
+void   (MATRIX::*expt_exp_v2)(const MATRIX&) = &MATRIX::exp;
+void (MATRIX::*expt_JACOBY_EIGEN_v1)(MATRIX&, MATRIX&) = &MATRIX::JACOBY_EIGEN;
+void (MATRIX::*expt_JACOBY_EIGEN_v2)(MATRIX&, MATRIX&,double) = &MATRIX::JACOBY_EIGEN;
+
+
+
+
 
 complex<double> (CMATRIX::*get3)(int)            = &CMATRIX::get;
 complex<double> (CMATRIX::*get4)(int,int)        = &CMATRIX::get;
@@ -125,16 +137,52 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
       .def("InitSquareMatrix",&MATRIX::InitSquareMatrix)
       .def("Init_Unit_Matrix",&MATRIX::Init_Unit_Matrix)
       .def("Load_Matrix_From_File",&MATRIX::Load_Matrix_From_File)
+
+      .def("Rotation",&MATRIX::Rotation)
+      .def("Rx",&MATRIX::Rx)
+      .def("Ry",&MATRIX::Ry)
+      .def("Rz",&MATRIX::Rz)
+
       .def("show_num_of_rows",&MATRIX::show_num_of_rows)
       .def("show_num_of_cols",&MATRIX::show_num_of_cols)
       .def("show_num_of_elems",&MATRIX::show_num_of_elems)
+
+      .def("Add_To_Element",&MATRIX::Add_To_Element)
+      .def("FindMaxNondiagonalElement",&MATRIX::FindMaxNondiagonalElement)
+
       .def("RightRotation",&MATRIX::RightRotation)
       .def("LeftRotation",&MATRIX::LeftRotation)
       .def("Ortogonalization",&MATRIX::Ortogonalization)
-      .def("Inverse",Inverse1)  
-      .def("Inverse",Inverse2)    
+      .def("Transpose",&MATRIX::Transpose)
+      .def("T",&MATRIX::T)
+      .def("Inverse",expt_Inverse_v2)    
+      .def("tensor_product",&MATRIX::tensor_product)
+      .def("dot_product",expt_dot_product_v2)
+
+      .def("show_matrix", expt_show_matrix_v1)
+      .def("show_matrix", expt_show_matrix_v2)
+
+      .def("get_vectors", &MATRIX::get_vectors)
+      .def("skew",&MATRIX::skew)
+      .def("skew1",&MATRIX::skew1)
+      .def("exp", expt_exp_v1)
+      .def("exp", expt_exp_v2)
+      .def("JACOBY_EIGEN", expt_JACOBY_EIGEN_v1)
+      .def("JACOBY_EIGEN", expt_JACOBY_EIGEN_v2)
+
+      .def_readwrite("MATRIX_PRECISION",&MATRIX::MATRIX_PRECISION)
+      .def_readwrite("MATRIX_WIDTH",&MATRIX::MATRIX_WIDTH)
+
+      .def("Determinant",&MATRIX::Determinant)
+      .def("tr",&MATRIX::tr)
+      .def("max_elt",&MATRIX::max_elt)
+
+      .def("bin_dump",&MATRIX::bin_dump)
+      .def("bin_load",&MATRIX::bin_load)
 
   ;
+
+
 
   class_< MATRIXList >("MATRIXList")
       .def(vector_indexing_suite< MATRIXList >())

@@ -22,6 +22,10 @@ ADD_SUBDIRECTORY("ann")
 MESSAGE("Going into subdirectory meigen...")
 ADD_SUBDIRECTORY("meigen")
 
+MESSAGE("Going into subdirectory symmetry...")
+ADD_SUBDIRECTORY("symmetry")
+
+
 
 #
 #  Source files and headers in this directory
@@ -40,7 +44,7 @@ ADD_LIBRARY(mmath_stat STATIC ${MMATH_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(mmath      meigen_stat ann_stat data_stat random_stat operators_stat graph_stat specialfunctions_stat linalg_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(mmath_stat meigen_stat ann_stat data_stat random_stat operators_stat graph_stat specialfunctions_stat linalg_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(mmath      symmetry_stat meigen_stat ann_stat data_stat random_stat operators_stat graph_stat specialfunctions_stat linalg_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(mmath_stat symmetry_stat meigen_stat ann_stat data_stat random_stat operators_stat graph_stat specialfunctions_stat linalg_stat ${ext_libs})
 
                                                  

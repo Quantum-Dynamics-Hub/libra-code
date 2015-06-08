@@ -329,10 +329,10 @@ void MATRIX::Ortogonalization(double Eps)
            //-------------------------------------------
            Vk.Init_Unit_Matrix(1.0);
 
-           Vk.Set_Element(i,i,cosine);
-           Vk.Set_Element(j,j,cosine);
-           Vk.Set_Element(i,j,-sine);
-           Vk.Set_Element(j,i, sine);
+           Vk.set(i,i,cosine);
+           Vk.set(j,j,cosine);
+           Vk.set(i,j,-sine);
+           Vk.set(j,i, sine);
 
            V=V*Vk;
            //-----------------------------------------
@@ -372,7 +372,7 @@ void MATRIX::Ortogonalization(double Eps)
    int k=0;
    for(int row=0;row<num_of_rows;row++)
    {   for(int col=0;col<num_of_rows;col++)
-       {   Orthogonalization_Matrix[k]=V.Element(row,col);
+       {   Orthogonalization_Matrix[k]=V.get(row,col);
            k++;
        }
    }
@@ -420,8 +420,8 @@ void MATRIX::RL_Decomposition(MATRIX *L,MATRIX *R)
    k=0;
    for(int row=0;row<num_of_rows;row++)
    {   for(int col=0;col<num_of_cols;col++)
-       {   L->Set_Element(row,col,L_time[k]);
-           R->Set_Element(row,col,R_time[k]);
+       {   L->set(row,col,L_time[k]);
+           R->set(row,col,R_time[k]);
            k++;
        }
    }
@@ -556,7 +556,7 @@ void MATRIX::Inverse(MATRIX *INV)
    k=0;
    for(int row=0;row<num_of_rows;row++)
    {   for(int col=0;col<num_of_cols;col++)
-       {   INV->Set_Element(row,col,L_time[k]);
+       {   INV->set(row,col,L_time[k]);
            //R->Set_Element(row,col,R_time[k]);
            k++;
        }
@@ -651,7 +651,7 @@ void MATRIX::Inverse(MATRIX& INV)
    k=0;
    for(int row=0;row<num_of_rows;row++)
    {   for(int col=0;col<num_of_cols;col++)
-       {   INV.Set_Element(row,col,L_time[k]);
+       {   INV.set(row,col,L_time[k]);
            //R->Set_Element(row,col,R_time[k]);
            k++;
        }
@@ -662,26 +662,6 @@ void MATRIX::Inverse(MATRIX& INV)
 double& MATRIX::operator[](const int indx){
 
     return M[indx];
-}
-
-void MATRIX::set(int indx,double value){
-
-    M[indx] = value;
-}
-
-double MATRIX::get(int indx){
-
-    return M[indx];
-}
-
-void MATRIX::set(int row,int col,double value){
-
-   M[row*num_of_cols+col] = value;
-}
-
-double MATRIX::get(int row,int col){
-
-  return M[row*num_of_cols+col];
 }
 
 
@@ -817,7 +797,7 @@ MATRIX operator*(const MATRIX &m1, const double  &f){
 
 // ------------------------------- Input & output functions ------------------------------
 
-void MATRIX::Show_Matrix()
+void MATRIX::show_matrix()
 {  int k=0;
    cout<<endl;
    for(int row=0;row<num_of_rows;row++)
@@ -831,7 +811,7 @@ void MATRIX::Show_Matrix()
    }
 }
 
-void MATRIX::Show_Matrix(char * Output_File)
+void MATRIX::show_matrix(char * Output_File)
 {  ofstream ob;
    ob.open(Output_File);
    if(ob.is_open())
@@ -851,31 +831,34 @@ void MATRIX::Show_Matrix(char * Output_File)
    else;
 }
 ostream& operator<<(ostream &strm,MATRIX ob){
-                 strm.setf(ios::showpoint);
-             for(int i=0;i<ob.num_of_rows;i++){
-                                 for(int j=0;j<ob.num_of_cols;j++)
-                                 {   strm.precision(ob.MATRIX_PRECISION);
-                     strm.width(ob.MATRIX_WIDTH);
-                     strm<<left;//right;
-                     strm<<ob.M[i*ob.num_of_cols+j]<<"  ";
-                                 }
-                                 strm<<endl;
-                         }
-                         return strm;
+  strm.setf(ios::showpoint);
+  for(int i=0;i<ob.num_of_rows;i++){
+    for(int j=0;j<ob.num_of_cols;j++){
+
+      strm.precision(ob.MATRIX_PRECISION);
+      strm.width(ob.MATRIX_WIDTH);
+      strm<<left;//right;
+      strm<<ob.M[i*ob.num_of_cols+j]<<"  ";
+
+    }// for j
+    strm<<endl;
+  }// for i
+  return strm;
+
 }
+
 istream& operator>>(istream& strm,MATRIX &ob){
-    //     Do not defined for general case       !!!      
-   /*
-               double val;
-           string str;
-           strm>>ob.x;//=val;
-           strm>>ob.y;//=val;
-           strm>>ob.z;//=val;
-   */   return strm;
-     }
-void MATRIX::Delete_Matrix()
-{  delete [] M;
+//     Do not defined for general case       !!!      
+/*
+       double val;
+       string str;
+       strm>>ob.x;//=val;
+       strm>>ob.y;//=val;
+       strm>>ob.z;//=val;
+ */   return strm;
 }
+
+void MATRIX::Delete_Matrix(){  delete [] M;  }
 
 void MATRIX::get_vectors(VECTOR& u1,VECTOR& u2,VECTOR& u3){
 
@@ -1296,6 +1279,52 @@ void MATRIX::bin_load(std::string filename){
 
 
 }
+
+
+
+void pop_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset){
+// Extract the submatrix x from the matrix X according to indices given in <subset>
+// Assume that memory for x is already allocated and its dimensions are consistent with the map dimensions:
+// subset_size == x->num_of_cols = x->num_of_rows = subset.size()
+// X->num_of_cols = X->num_of_rows >= subset_size
+
+  int N = X->num_of_cols;
+  int n = x->num_of_cols;
+
+  int i,j,a,b;
+
+  for(i=0;i<n;i++){
+    a = subset[i];
+    for(j=0;j<n;j++){      
+      b = subset[j];
+      x->M[i*n+j] = X->M[a*N+b];
+    }// j
+  }// i
+
+}// void pop_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset)
+
+void push_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset){
+// Pushes the smaller submatrix x back to the bigger matrix X, according to indices given in <subset>
+// Assume that memory for x is already allocated and its dimensions are consistent with the map dimensions:
+// subset_size == x->num_of_cols = x->num_of_rows = subset.size()
+// X->num_of_cols = X->num_of_rows >= subset_size
+
+  int N = X->num_of_cols;
+  int n = x->num_of_cols;
+
+  int i,j,a,b;
+
+  for(i=0;i<n;i++){
+    a = subset[i];
+    for(j=0;j<n;j++){      
+      b = subset[j];
+      X->M[a*N+b] = x->M[i*n+j];
+    }// j
+  }// i
+
+}// void push_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset)
+
+
 
 }// namespace liblinalg
 }// namespace libmmath
