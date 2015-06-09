@@ -1,12 +1,24 @@
 #ifndef ATOM_H
 #define ATOM_H
 
-//#include "RigidBody.h"
-//#include "Universe.h"
+#include "../../dyn/rigidbody/librigidbody.h"
+#include "../universe/libuniverse.h"
+using namespace libdyn::librigidbody;
+
+#include "../../mmath/libmmath.h"
+using namespace libmmath;
+
+
+namespace libchemobjects{
+
+using namespace libuniverse;
+
+namespace libmol{
+
 
 class Atom{
   
-//  Universe* universe;
+  Universe* universe;
 
   //--------- Auxiliary internal functions -------------
   void init_variables();// Initializes variables
@@ -73,6 +85,11 @@ public:
 
 void save(boost::property_tree::ptree& pt,std::string path,vector<Atom>& vt);
 void load(boost::property_tree::ptree& pt,std::string path,vector<Atom>& vt,Universe& u,int& status);
+
+
+}// namespace libmol
+}// namespace libchemobjects
+
 
 
 #endif // ATOM_H

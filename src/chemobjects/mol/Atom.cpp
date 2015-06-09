@@ -1,4 +1,8 @@
-#include "../Atom.h"
+#include "Atom.h"
+
+namespace libchemobjects{
+namespace libmol{
+
 
 void Atom::init_variables(){
   is_Atom_id      = 0;
@@ -115,15 +119,15 @@ Atom::Atom(Universe& u, boost::python::dict at){
     else if(key=="Atom_formal_charge") { Atom_formal_charge = extract<double>(at.values()[i]); is_Atom_formal_charge = 1; }
     else if(key=="Atom_ff_type") { Atom_ff_type = extract<std::string>(at.values()[i]); is_Atom_ff_type = 1; }
 
-    else if(key=="Atom_cm_x") {
+    else if(key=="Atom_x") {
       Atom_RB.rb_cm.x = extract<double>(at.values()[i]); is_Atom_RB = 1; Atom_RB.is_rb_cm = 1;
       Atom_RB_old.rb_cm.x = Atom_RB.rb_cm.x; is_Atom_RB_old = 1; Atom_RB.is_rb_cm = 1;
     }
-    else if(key=="Atom_cm_y") {
+    else if(key=="Atom_y") {
       Atom_RB.rb_cm.y = extract<double>(at.values()[i]); is_Atom_RB = 1; Atom_RB.is_rb_cm = 1;
       Atom_RB_old.rb_cm.y = Atom_RB.rb_cm.y; is_Atom_RB_old = 1; Atom_RB.is_rb_cm = 1;
     }
-    else if(key=="Atom_cm_z") { 
+    else if(key=="Atom_z") { 
       Atom_RB.rb_cm.z = extract<double>(at.values()[i]); is_Atom_RB = 1; Atom_RB.is_rb_cm = 1;
       Atom_RB_old.rb_cm.z = Atom_RB.rb_cm.z; is_Atom_RB_old = 1; Atom_RB.is_rb_cm = 1;
     }
@@ -229,6 +233,9 @@ void Atom::save(boost::property_tree::ptree& pt,std::string path){
 
   if(is_Atom_RB){  Atom_RB.save(pt,path+".Atom_RB");    }
   if(is_Atom_RB_old){  Atom_RB_old.save(pt,path+".Atom_RB_old");    }
+  //if(is_Atom_RB){  ::save(pt,path+".Atom_RB",Atom_RB);    }
+  //if(is_Atom_RB_old){  ::save(pt,path+".Atom_RB_old",Atom_RB_old);    }
+
   if(is_Atom_displ2) { ::save(pt,path+".Atom_displ2",Atom_displ2); }
 
   if(is_Atom_element){  ::save(pt,path+".Atom_element",Atom_element);    }
@@ -269,6 +276,9 @@ void Atom::load(boost::property_tree::ptree& pt,std::string path,int& status){
 
   Atom_RB.load(pt,path+".Atom_RB",is_Atom_RB); if(is_Atom_RB==1) { status=1;}
   Atom_RB_old.load(pt,path+".Atom_RB_old",is_Atom_RB_old); if(is_Atom_RB_old==1) { status=1;}
+//  ::load(pt,path+".Atom_RB",Atom_RB, is_Atom_RB); if(is_Atom_RB==1) { status=1;}
+//  ::load(pt,path+".Atom_RB_old",Atom_RB_old,is_Atom_RB_old); if(is_Atom_RB_old==1) { status=1;}
+
   ::load(pt,path+".Atom_displ2",Atom_displ2,is_Atom_displ2); if(is_Atom_displ2==1) { status=1;}
 
   ::load(pt,path+".Atom_element",Atom_element,is_Atom_element); if(is_Atom_element==1) { status=1;}
@@ -293,4 +303,9 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<Atom>& vt,Univ
     }
   }catch(std::exception& e){ }
 }
+
+
+}// namespace libmol
+}// namespace libchemobjects
+
 

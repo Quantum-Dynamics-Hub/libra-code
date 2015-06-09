@@ -1,17 +1,16 @@
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-#include "libatom.h"
+#include "libmol.h"
 
 using namespace boost::python;
-//using namespace libdyn::libelectronic;
 
 
+namespace libchemobjects{
 namespace libmol{
-namespace libatom{
 
 
-void export_Atom_objects(){
+void export_Mol_objects(){
 
   class_<Atom>("Atom",init<Universe&>())
       .def(init<Universe&, boost::python::dict>())
@@ -65,9 +64,9 @@ void export_Atom_objects(){
 
 
 #ifdef CYGWIN
-BOOST_PYTHON_MODULE(cygatom){
+BOOST_PYTHON_MODULE(cygmol){
 #else
-BOOST_PYTHON_MODULE(libatom){
+BOOST_PYTHON_MODULE(libmol){
 #endif
 
   // Register converters:
@@ -75,13 +74,13 @@ BOOST_PYTHON_MODULE(libatom){
   //to_python_converter<std::vector<DATA>, VecToList<DATA> >();
 
 //  export_Mathematics_objects();
-  export_Atom_objects();
+  export_Mol_objects();
 
 }
 
 
-}// namespace libatom
 }// namespace libmol
+}// namespace libchemobjects
 
 
 
