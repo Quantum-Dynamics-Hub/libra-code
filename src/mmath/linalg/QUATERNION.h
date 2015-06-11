@@ -7,8 +7,11 @@
 #include <math.h>
 #include <stdlib.h>
 #include <vector> 
-  
 using namespace std; 
+
+#include "../../io/libio.h"
+using namespace libio;
+
 
 
 namespace libmmath{
@@ -239,7 +242,16 @@ class QUATERNION{
 
 };
 
-  typedef std::vector<QUATERNION> QUATERNIONList;
+
+typedef std::vector<QUATERNION> QUATERNIONList;
+
+//-------- IO functions --------
+void set_value(int& defined, QUATERNION& value,  boost::python::object obj, std::string attrName);
+void save(boost::property_tree::ptree& pt,std::string path,QUATERNION& vt);
+void save(boost::property_tree::ptree& pt,std::string path,vector<QUATERNION>& vt);
+void load(boost::property_tree::ptree& pt,std::string path,QUATERNION& vt,int& status);
+void load(boost::property_tree::ptree& pt,std::string path,vector<QUATERNION>& vt,int& status);
+
 
 
 }// namespace liblinalg

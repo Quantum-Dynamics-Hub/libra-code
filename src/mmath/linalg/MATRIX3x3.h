@@ -7,8 +7,11 @@
 #include <math.h>
 #include <stdlib.h>
 #include <vector>
-
 using namespace std;
+
+#include "../../io/libio.h"
+using namespace libio;
+
 
 namespace libmmath{
 namespace liblinalg{
@@ -249,7 +252,16 @@ class MATRIX3x3{
 
 };
 
-  typedef std::vector<MATRIX3x3> MATRIX3x3List;
+typedef std::vector<MATRIX3x3> MATRIX3x3List;
+
+//-------- IO functions --------
+void set_value(int& defined, MATRIX3x3& value, boost::python::object obj, std::string attrName);
+void save(boost::property_tree::ptree& pt,std::string path,MATRIX3x3& vt);
+void save(boost::property_tree::ptree& pt,std::string path,vector<MATRIX3x3>& vt);
+void load(boost::property_tree::ptree& pt,std::string path,MATRIX3x3& vt,int& status);
+void load(boost::property_tree::ptree& pt,std::string path,vector<MATRIX3x3>& vt,int& status);
+
+
 
 }// namespace liblinalg
 }// namespace libmmath

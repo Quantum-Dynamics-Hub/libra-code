@@ -79,6 +79,7 @@ public:
   void show_info();
 
   void save(boost::property_tree::ptree& pt,std::string path);
+  void save(std::string path);
   void load(boost::property_tree::ptree& pt,std::string path,int& status);
 
 };

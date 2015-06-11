@@ -6,6 +6,7 @@
 
 // ========================= Matrices ================================
 // ------------------------- Constructors ----------------------------
+using namespace libio;
 
 namespace libmmath{
 namespace liblinalg{
@@ -1323,6 +1324,43 @@ void push_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset){
   }// i
 
 }// void push_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset)
+
+
+
+
+void set_value(int& is_defined, MATRIX& value,boost::python::object obj, std::string attrName){
+
+  int has_attr=0;
+  has_attr = (int)hasattr(obj,attrName);
+  if(has_attr){
+      value = extract<MATRIX>(obj.attr(attrName.c_str()));
+      is_defined = 1;
+  }
+}
+
+
+// ----------- Save --------------
+void save(boost::property_tree::ptree& pt,std::string path,MATRIX& vt){
+  for(int i=0;i<vt.num_of_elems;i++){
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string rt; ss<<i; ss>>rt;
+    pt.put(path+"."+rt,vt.M[i]);
+  }
+}
+
+void save(boost::property_tree::ptree& pt,std::string path,vector<MATRIX>& vt){
+  int sz = vt.size();
+  for(int i=0;i<sz;i++){
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string rt; ss<<i; ss>>rt;
+    save(pt,path+"."+rt,vt[i]);
+  }
+}
+
+// ----------- Load --------------
+void load(boost::property_tree::ptree& pt,std::string path, MATRIX& vt, int& status){ std::cout<<"Sorry: load function for MATRIX object is not defined yet\n"; exit(0); }
+void load(boost::property_tree::ptree& pt,std::string path,vector<MATRIX>& vt,int& status){ std::cout<<"Sorry: load function for vector<MATRIX> object is not defined yet\n"; exit(0); }
+
 
 
 

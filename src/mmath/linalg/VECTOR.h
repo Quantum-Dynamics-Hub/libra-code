@@ -7,9 +7,11 @@
 #include <math.h>
 #include <stdlib.h>
 #include <vector>
-
-
 using namespace std;
+
+#include "../../io/libio.h"
+using namespace libio;
+
 
 namespace libmmath{
 namespace liblinalg{
@@ -257,9 +259,18 @@ class VECTOR
 
 };
 
-  typedef std::vector<VECTOR> VECTORList;
+typedef std::vector<VECTOR> VECTORList;
 
-  void export_VECTOR_objects();
+
+//-------- IO functions --------
+void set_value(int& is_defined, VECTOR& value, boost::python::object obj, std::string attrName);
+void save(boost::property_tree::ptree& pt,std::string path,VECTOR& vt);
+void save(boost::property_tree::ptree& pt,std::string path,vector<VECTOR>& vt);
+void load(boost::property_tree::ptree& pt,std::string path,VECTOR& vt,int& status);
+void load(boost::property_tree::ptree& pt,std::string path,vector<VECTOR>& vt,int& status);
+
+
+void export_VECTOR_objects();
 
 }// namespace liblinalg
 }// libmmath

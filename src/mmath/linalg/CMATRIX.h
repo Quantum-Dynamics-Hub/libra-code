@@ -158,7 +158,7 @@ void inv_cfft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmi
 
 
 
-  typedef std::vector<CMATRIX> CMATRIXList;
+typedef std::vector<CMATRIX> CMATRIXList;
 
 }//namespace liblinalg
 }// namespace libmmath

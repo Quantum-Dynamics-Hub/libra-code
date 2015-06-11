@@ -7,6 +7,10 @@ SET( ext_libs ${Boost_LIBRARIES} ${PYTHON_LIBRARIES}/libpython2.6.dll )
 #
 #  Building sub-directories
 #
+MESSAGE("Going into subdirectory io...")
+ADD_SUBDIRECTORY("io")
+
+
 MESSAGE("Going into subdirectory mmath...")
 ADD_SUBDIRECTORY("mmath")
 

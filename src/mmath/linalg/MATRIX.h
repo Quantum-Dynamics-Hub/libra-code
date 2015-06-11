@@ -7,8 +7,11 @@
 #include <math.h>
 #include <stdlib.h>
 #include <vector>
-
 using namespace std;
+
+#include "../../io/libio.h"
+using namespace libio;
+
 
 namespace libmmath{
 namespace liblinalg{
@@ -163,6 +166,14 @@ void pop_submatrix(MATRIX*,MATRIX*,vector<int>&);
 void push_submatrix(MATRIX*,MATRIX*,vector<int>&);
 
 typedef std::vector<MATRIX> MATRIXList;
+
+//-------- IO functions --------
+void set_value(int& defined, MATRIX& value, boost::python::object obj, std::string attrName);
+void save(boost::property_tree::ptree& pt,std::string path,MATRIX& vt);
+void save(boost::property_tree::ptree& pt,std::string path,vector<MATRIX>& vt);
+void load(boost::property_tree::ptree& pt,std::string path,MATRIX& vt,int& status);
+void load(boost::property_tree::ptree& pt,std::string path,vector<MATRIX>& vt,int& status);
+
 
 
 }// namespace liblinalg

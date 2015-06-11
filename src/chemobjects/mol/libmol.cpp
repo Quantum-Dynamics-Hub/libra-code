@@ -12,6 +12,11 @@ namespace libmol{
 
 void export_Mol_objects(){
 
+
+  void (Atom::*expt_save_v1)(boost::property_tree::ptree& pt,std::string path) = &Atom::save;
+  void (Atom::*expt_save_v2)(std::string path) = &Atom::save;
+
+
   class_<Atom>("Atom",init<Universe&>())
       .def(init<Universe&, boost::python::dict>())
       .def("__copy__", &generic__copy__<Atom>)
@@ -52,10 +57,17 @@ void export_Mol_objects(){
 
       .def("set",&Atom::set)
       .def("show_info",&Atom::show_info)
+      .def("save",expt_save_v2)
+      .def("load",&Atom::load)
   ;
+
   class_<std::vector<Atom> >("AtomList")
       .def(vector_indexing_suite<std::vector<Atom> >())
   ;
+
+//  def("save",save);
+//  def("load",load);
+
 
 
 }// export_Atom_objects

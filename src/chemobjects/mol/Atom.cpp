@@ -251,6 +251,20 @@ void Atom::save(boost::property_tree::ptree& pt,std::string path){
 
 }
 
+void Atom::save(std::string filename){
+
+  using boost::property_tree::ptree;
+  ptree pt;
+
+  save(pt,"Atom");
+
+  boost::property_tree::xml_writer_settings<char> settings(' ', 4);
+  write_xml(filename, pt, std::locale(), settings);
+
+
+}
+
+
 void save(boost::property_tree::ptree& pt,std::string path,vector<Atom>& vt){
   int sz = vt.size();
   for(int i=0;i<sz;i++){

@@ -15,7 +15,7 @@ ADD_LIBRARY(linalg_stat STATIC ${LINALG_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(linalg      ${ext_libs})
-TARGET_LINK_LIBRARIES(linalg_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(linalg      io_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(linalg_stat io_stat ${ext_libs})
 
                                                  

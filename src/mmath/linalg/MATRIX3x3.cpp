@@ -1,6 +1,9 @@
 #include "MATRIX3x3.h"
 #include "VECTOR.h"
 
+//#include "../../io/libio.h"
+using namespace libio;
+
 namespace libmmath{
 namespace liblinalg{
 
@@ -167,6 +170,65 @@ void MATRIX3x3::tensor_product(VECTOR v1,VECTOR v2){
   yx = v1.y*v2.x;   yy = v1.y*v2.y;  yz = v1.y*v2.z;
   zx = v1.z*v2.x;   zy = v1.z*v2.y;  zz = v1.z*v2.z;
 }
+
+
+
+void set_value(int& is_defined, MATRIX3x3& value,boost::python::object obj, std::string attrName){
+
+  int has_attr=0;
+  has_attr = (int)hasattr(obj,attrName);
+  if(has_attr){
+      value = extract<MATRIX3x3>(obj.attr(attrName.c_str()));
+      is_defined = 1;
+  }
+}
+
+
+// ----------- Save --------------
+void save(boost::property_tree::ptree& pt,std::string path,MATRIX3x3& vt){
+  pt.put(path+".xx",vt.xx);  pt.put(path+".xy",vt.xy);  pt.put(path+".xz",vt.xz);
+  pt.put(path+".yx",vt.yx);  pt.put(path+".yy",vt.yy);  pt.put(path+".yz",vt.yz);
+  pt.put(path+".zx",vt.zx);  pt.put(path+".zy",vt.zy);  pt.put(path+".zz",vt.zz);
+}
+
+void save(boost::property_tree::ptree& pt,std::string path,vector<MATRIX3x3>& vt){
+  int sz = vt.size();
+  for(int i=0;i<sz;i++){
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string rt; ss<<i; ss>>rt;
+    save(pt,path+"."+rt,vt[i]);
+  }
+}
+
+// ----------- Load --------------
+void load(boost::property_tree::ptree& pt,std::string path, MATRIX3x3& vt, int& status){
+  status = 0;
+  int st;
+  libio::load(pt,path+".xx",vt.xx, st); if(st==1) {status=1;}
+  libio::load(pt,path+".xy",vt.xy, st); if(st==1) {status=1;}
+  libio::load(pt,path+".xz",vt.xz, st); if(st==1) {status=1;}
+
+  libio::load(pt,path+".yx",vt.yx, st); if(st==1) {status=1;}
+  libio::load(pt,path+".yy",vt.yy, st); if(st==1) {status=1;}
+  libio::load(pt,path+".yz",vt.yz, st); if(st==1) {status=1;}
+
+  libio::load(pt,path+".zx",vt.zx, st); if(st==1) {status=1;}
+  libio::load(pt,path+".zy",vt.zy, st); if(st==1) {status=1;}
+  libio::load(pt,path+".zz",vt.zz, st); if(st==1) {status=1;}
+
+}
+void load(boost::property_tree::ptree& pt,std::string path,vector<MATRIX3x3>& vt,int& status){
+  MATRIX3x3 x; int st;
+  status = 0;
+  try{
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(path)){
+      load(pt,path+"."+v.first,x,st);
+      if(st==1){ vt.push_back(x); status = 1; }
+    }
+  }catch(std::exception& e){ }
+
+}
+
 
 }// namespace liblinalg
 }// libmmath
