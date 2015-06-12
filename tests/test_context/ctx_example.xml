@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<control_params>
+    <runtype>nscf</runtype>
+    <hamiltonian>eht</hamiltonian>
+    <spin_method>unrestricted</spin_method>
+    <DF>0</DF>
+    <guess_type>sad</guess_type>
+    <nac_min_orbs>
+        <0>1</0>
+        <1>2</1>
+        <2>3</2>
+    </nac_min_orbs>
+    <x>
+        <param1>1</param1>
+        <param2>Chalk</param2>
+        <param3>
+            <0>0</0>
+            <1>1</1>
+            <2>2</2>
+        </param3>
+    </x>
+</control_params>

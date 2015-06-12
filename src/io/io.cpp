@@ -220,6 +220,13 @@ void load_xml(std::string filename, boost::property_tree::ptree& pt){
 
 }
 
+/*
+std::string load_xml(std::string filename, boost::property_tree::ptree& pt){
+
+  read_xml(filename, pt);
+
+}
+*/
 
 
 

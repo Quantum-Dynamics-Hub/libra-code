@@ -171,15 +171,17 @@ void ctx_Control_Parameters::load(boost::property_tree::ptree& pt,std::string pa
 
 void export_ctx_Control_Parameters_objects(){
 
+/*
   void (Context::*expt_add_v1)(std::string varname, int varval) = &Context::add;
   void (Context::*expt_add_v2)(std::string varname, vector<int> varval) = &Context::add;
   void (Context::*expt_add_v3)(std::string varname, std::string varval) = &Context::add;
   void (Context::*expt_add_v4)(std::string varname, vector<std::string> varval) = &Context::add;
   void (Context::*expt_add_v5)(std::string varname, double varval) = &Context::add;
   void (Context::*expt_add_v6)(std::string varname, vector<double> varval) = &Context::add;
+*/
 
-
-  class_<ctx_Control_Parameters>("ctx_Control_Parameters",init<>())
+  class_<ctx_Control_Parameters, bases<Context> >("ctx_Control_Parameters",init<>())
+//  class_<ctx_Control_Parameters>("ctx_Control_Parameters",init<int>())
 //      .def(init<const ctx_Control_Parameters&>())
 //      .def("__copy__", &generic__copy__<ctx_Control_Parameters>)
 //      .def("__deepcopy__", &generic__deepcopy__<ctx_Control_Parameters>)
@@ -188,6 +190,7 @@ void export_ctx_Control_Parameters_objects(){
 //      .def_readwrite("runtype",&ctx_Control_Parameters::runtype)
 //      .def_readwrite("hamiltonian",&ctx_Control_Parameters::hamiltonian)
 
+/*
       .def("add",expt_add_v1)
       .def("add",expt_add_v2)
       .def("add",expt_add_v3)
@@ -198,6 +201,7 @@ void export_ctx_Control_Parameters_objects(){
 
       .def("save_xml",&ctx_Control_Parameters::save_xml)
       .def("load_xml",&ctx_Control_Parameters::load_xml)
+*/
   ;
 
 
