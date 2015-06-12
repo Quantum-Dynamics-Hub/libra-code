@@ -11,6 +11,10 @@ MESSAGE("Going into subdirectory io...")
 ADD_SUBDIRECTORY("io")
 
 
+MESSAGE("Going into subdirectory context...")
+ADD_SUBDIRECTORY("context")
+
+
 MESSAGE("Going into subdirectory mmath...")
 ADD_SUBDIRECTORY("mmath")
 

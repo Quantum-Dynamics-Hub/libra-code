@@ -1,0 +1,22 @@
+ This library privides a general approach to hold parameters of 
+ various kind - the base class
+
+ The derived classes will hold purpose-specific interpretations
+
+ If you need to use some new semantics for parameters - just add a new derived
+ class here and then use it in your applications.
+
+ Initially, one might think of keeping the classes in corresponding folders
+ e.g. implementing EHT parameters in the EHT Hamiltonian section, 
+ but this approach will scatter the classes, so it may be not so convenient to use.
+
+ In contrast, we will place all the input/parameter structures here, to form a real 
+ library/collection, even though the classes may be not related to each other directly
+ or even repeat/overlap. One will, however, be able to pick what is needed from the present 
+ collection.
+
+ Also note that these classes are not always the internal representation used for computations.
+ Those efficiency-oriented classes storing internal parameters will be provided in the libraries
+ with corresponding functionality.
+
+
