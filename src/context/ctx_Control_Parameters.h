@@ -9,11 +9,9 @@ namespace libcontext{
 class ctx_Control_Parameters : public Context{
 
 public:
-  //---------- Members --------
-
-  //----------------- All simulation parameters and flags (set to default values) -------------------
+  // Here I only describe the semantics of the variables 
+  /**  
   // <calculations>
-//  std::string runtype;           // Possible: scan, dos, md, opt, nac, test1
   std::string hamiltonian;       // Possible: eht, indo, cndo2, etc.
   std::string spin_method;       // Possible:  restricted, unrestricted
   int DF;                        // Debug flag: if set to 1 - will print a lot of information. Be carefull!!!
@@ -25,18 +23,18 @@ public:
   // </guess>
 
   // <scf_options>
-  std::string scf_algo;          ///< algorithm for SCF iterations
-  int use_disk;                  ///< write temporary variables to disk instead of RAM - this can help reducing memory costs
-  int use_rosh;                  ///< use restricted open-shell
-  int do_annihilate;             ///< do spin annihilation at the last iteration
-  int pop_opt;                   ///< option for how to populate energy levels: 0 - integer, 1 - Fermi
-  int use_diis;                  ///< flag to turn on/off diis
-  int diis_max;                  ///< dimension of DIIS matrix, if used
-  int diis_start_iter;           ///< iteration after which diis will start
-  int use_level_shift;           ///< flag to turn on/off level shifting
-  double shift_magnitude;        ///< magnitude of the energy level shifts, if used
-  int use_damping;               ///< flag to turn on/off damping        
-  int damping_start;             ///< number of (standard) iterations before damping is in effect
+  std::string scf_algo;          // algorithm for SCF iterations
+  int use_disk;                  // write temporary variables to disk instead of RAM - this can help reducing memory costs
+  int use_rosh;                  // use restricted open-shell
+  int do_annihilate;             // do spin annihilation at the last iteration
+  int pop_opt;                   // option for how to populate energy levels: 0 - integer, 1 - Fermi
+  int use_diis;                  // flag to turn on/off diis
+  int diis_max;                  // dimension of DIIS matrix, if used
+  int diis_start_iter;           // iteration after which diis will start
+  int use_level_shift;           // flag to turn on/off level shifting
+  double shift_magnitude;        // magnitude of the energy level shifts, if used
+  int use_damping;               // flag to turn on/off damping        
+  int damping_start;             // number of (standard) iterations before damping is in effect
   double damping_const;          // parameter for damping, if used
   double etol;                   // energy convergence criterium, [Ha] 
   double den_tol;                // density convergence criterium [?]
@@ -52,32 +50,26 @@ public:
                                  //              may be different, depending on which method is used
                                  // "eht+n+K" :  same as eht+n, but also use K_ij as parameters - so far this is most general
 
-
   int eht_formula;               // formula for EHT Hamiltonian:
                                  // 0 - unweighted 
                                  // 1 - weighted
                                  // 2 - Calzaferi correction
                                  // 3 - my method (testing!)
 
-  int eht_sce_formula;           ///< how to treat self-consistent electrostatics for EHT,
-                                 ///< 0 - no self-consistent electrostatics
-                                 ///< 1 - total-charge dependent IP
-                                 ///< 2 - orbital-reolved corrections
-                                 ///< 3 - my addition of perametric exchange 
+  int eht_sce_formula;           // how to treat self-consistent electrostatics for EHT,
+                                 // 0 - no self-consistent electrostatics
+                                 // 1 - total-charge dependent IP
+                                 // 2 - orbital-reolved corrections
+                                 // 3 - my addition of perametric exchange 
 
-  int eht_fock_opt;              ///< how to treat EHT Hamiltonian (H_eht)
-                                 ///< 0 - as a Fock matrix (F_eht = H_eht) - no correction to self-consistency is needed, but the actual energy functional is different
-                                 ///< 1 (default) - as a model Hamiltonian (F_eht = 2*H_eht - H_eht0) - correction for self-consistency is needed
+  int eht_fock_opt;              // how to treat EHT Hamiltonian (H_eht)
+                                 // 0 - as a Fock matrix (F_eht = H_eht) - no correction to self-consistency is needed, but the actual energy functional is different
+                                 // 1 (default) - as a model Hamiltonian (F_eht = 2*H_eht - H_eht0) - correction for self-consistency is needed
 
-  int eht_electrostatics;        ///< how to describe additional electrostatic interactions
-                                 ///< 0 - no additional field effect
-                                 ///< 1 - include pairwise Coulombic effects via Mulliken charges
+  int eht_electrostatics;        // how to describe additional electrostatic interactions
+                                 // 0 - no additional field effect
+                                 // 1 - include pairwise Coulombic effects via Mulliken charges
   // </hamiltonian_options>
-
-  // <properties>
-  int compute_vertical_ip;       
-  int compute_vertical_ea; 
-  // </properties>
 
   // <md_options>
   double md_dt;                  // integration time step for MD [input in fs, internally in a.u.]
@@ -100,11 +92,10 @@ public:
   // </dos_options>
 
   // <charge_density_options>
-  int nx_grid, ny_grid, nz_grid;      // Number of voxels along each direction
+  int nx_grid, ny_grid, nz_grid; // Number of voxels along each direction
   std::string charge_density_prefix;  // Prefix for the files in which CUBE orbitals will be written  
-  vector<int> orbs;
+  vector<int> orbs;              // indices of the orbitals for which we want to compute .cube files
   // </charge_density_options>
-
 
   // <nac_options>
   std::string nac_md_trajectory_filename;  // Name of the file that contains coordinates of the MD trajectory (in xyz format)
@@ -155,17 +146,18 @@ public:
   vector< std::string>  frag_name;  // names of the fragments
   vector< double >      frag_charge;// charges of the fragments, sum must be equal to charge - see <coordinates> sections
   // </fragments>
-  
 
+  // <properties>
+  int compute_vertical_ip;       
+  int compute_vertical_ea; 
+  // </properties>
+
+  
+  **/
 
 //--------- Methods ----------
    ctx_Control_Parameters();
   ~ctx_Control_Parameters(){ ;; }
-//  Control_Parameters(const Control_Parameters& x){ *this = x; }
-
-
-//  void save(boost::property_tree::ptree& pt,std::string path);
-//  void load(boost::property_tree::ptree& pt,std::string path,int& status);
 
 };
 
