@@ -37,27 +37,55 @@ class Context{
   // Add new variables to data-structure
   void add(std::string varname, int varval);
   void add(std::string varname, vector<int> varval);
+
   void add(std::string varname, std::string varval);
   void add(std::string varname, vector<std::string> varval);
+
   void add(std::string varname, double varval);
   void add(std::string varname, vector<double> varval);
+
+  void add(std::string varname, VECTOR varval);
+  void add(std::string varname, vector<VECTOR> varval);
+
+  void add(std::string varname, QUATERNION varval);
+  void add(std::string varname, vector<QUATERNION> varval);
+
+  void add(std::string varname, MATRIX3x3 varval);
+  void add(std::string varname, vector<MATRIX3x3> varval);
+
+  void add(std::string varname, MATRIX varval);
+  void add(std::string varname, vector<MATRIX> varval);
+
   void add(Context ctxt);
+
+
+
 
   // Get value for given variable name, if exist in datastructure. Or return default value
   int get(std::string varname,int default_val);
   vector<int> get(std::string varname,vector<int> default_val);
+
   std::string Context::get(std::string varname,std::string default_val);
   vector<std::string> Context::get(std::string varname,vector<std::string> default_val);
+
   double get(std::string varname,double default_val);
   vector<double> get(std::string varname,vector<double> default_val);
 
+  VECTOR get(std::string varname,VECTOR default_val);
+  vector<VECTOR> get(std::string varname,vector<VECTOR> default_val);
 
-/*
-  void add(std::string varname, VECTOR& varval){   libio::save(ctx_pt, path+varname, varval);  }
-  void add(std::string varname, QUATERNION& varval){   libio::save(ctx_pt, path+varname, varval);  }
-  void add(std::string varname, MATRIX3x3& varval){   libio::save(ctx_pt, path+varname, varval);  }
-  void add(std::string varname, MATRIX& varval){   libio::save(ctx_pt, path+varname, varval);  }
-*/
+  QUATERNION get(std::string varname,QUATERNION default_val);
+  vector<QUATERNION> get(std::string varname,vector<QUATERNION> default_val);
+
+  MATRIX3x3 get(std::string varname,MATRIX3x3 default_val);
+  vector<MATRIX3x3> get(std::string varname,vector<MATRIX3x3> default_val);
+
+  MATRIX get(std::string varname,MATRIX default_val);
+  vector<MATRIX> get(std::string varname,vector<MATRIX> default_val);
+
+  Context get(std::string varname, Context default_val);
+
+
   
 
   void save_xml(std::string filename){ libio::save_xml(filename, ctx_pt); }

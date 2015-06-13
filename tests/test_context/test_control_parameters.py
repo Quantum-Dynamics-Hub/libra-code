@@ -46,17 +46,27 @@ print "path=", ctx.get_path()
 
 print "add integer-valued variable"
 param1 = 1.0
-ctx.add(".param1", param1)
+ctx.add("param1", param1)
+print ctx.get("param1", -1) 
+print ctx.get("param1a", -1) 
 
 print "add string-valued variable"
 param2 = "Chalk"
-ctx.add(".param2", param2)
+ctx.add("param2", param2)
+print ctx.get("param2", "Milk") 
+print ctx.get("param2a", "Milk") 
 
 print "add integer-list-valued variable"
 param3 = intList()
 for i in xrange(3):
     param3.append(i)
-ctx.add(".param3", param3)
+ctx.add("param3", param3)
+
+d = intList()
+d.append(-1)
+print ctx.get("param3", d)[0],ctx.get("param3", d)[1],ctx.get("param3", d)[2]
+print ctx.get("param3a", d)[0]
+
 
 print "printing the resulting structure in ctx_3.xml"
 ctx.save_xml("ctx_3.xml")
@@ -64,25 +74,21 @@ ctx.save_xml("ctx_3.xml")
 
 print "\nTest 6: We can also add one context into another one"
 ctx1 = Context("ctx_3.xml")
+ctx1.set_path("old_path")
 
 p1 = 2.0
-ctx.add(".param1", p1)
+ctx.add("param1", p1)
 ctx.save_xml("ctx_4a.xml")
 
-ctx1.add(ctx) 
-ctx1.save_xml("ctx_4b.xml")
+ctx.add(ctx1) 
+ctx.save_xml("ctx_4b.xml")
 
 
 
-#d = intList()
-#d.append(-1)
-
-#print ctrl.get(".x.params3",d)[0]  #,ctrl.get(".x.params3",d)[1],ctrl.get(".x.params3",d)[2]
-#print ctrl.get(".runtype","xz")
-
-
-#ctrl.add(".runtype", "nscf")
-#print ctrl.get(".runtype","xz")
+print "\nTest 7: We can extract one context from the other"
+ctx2 = ctx.get("old_path", ctx)
+print "path=", ctx2.get_path()
+ctx2.save_xml("ctx_5.xml") 
 
 
-#ctrl.save_xml("ctrl2.xml")
+
