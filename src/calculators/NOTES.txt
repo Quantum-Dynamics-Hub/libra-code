@@ -1,0 +1,5 @@
+
+  Here we will place miscellaneous functions for simple or direct calculations
+
+  Note: iterative and complicated functions where some methodology is required will be placed into "solvers" directory
+
