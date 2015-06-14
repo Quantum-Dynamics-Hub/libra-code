@@ -12,6 +12,7 @@
 #include "Integral_Nuclear_Attraction.h"
 #include "Integral_Electron_Repulsion.h"
 #include "Integral_Derivative_Couplings.h"
+#include "Integral_Approx1.h"
 
 
 namespace libqchem{

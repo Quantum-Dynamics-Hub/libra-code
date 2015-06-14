@@ -180,6 +180,14 @@ void export_molint_objects(){
   ) = &derivative_coupling_integral;
 
 
+  // Approximate and misc integrals
+  double (*expt_Coulomb_Integral_v1)
+  (  double R, int n_i, double Jii, double ksi_i, std::string type_i, double q_i,
+               int n_j, double Jjj, double ksi_j, std::string type_j, double q_j,
+               double epsilon, int mode
+  ) = &Coulomb_Integral;
+
+
 
 
 
@@ -265,7 +273,8 @@ void export_molint_objects(){
   def("derivative_coupling_integral", expt_derivative_coupling_integral_3D_v3);
 
 
-
+  // ==== Approximate integrals ====
+  def("Coulomb_Integral", expt_Coulomb_Integral_v1);
 
 
 }
