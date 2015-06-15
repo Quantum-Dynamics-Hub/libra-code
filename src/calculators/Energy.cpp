@@ -2,9 +2,11 @@
 
 namespace libcalculators{
  
-double energy_elec(int Norb,MATRIX* Pao,MATRIX* Hao,MATRIX* Fao){
+double energy_elec(MATRIX* Pao,MATRIX* Hao,MATRIX* Fao){
 // Compute electronic energy (true for HF-derived methods: HF, CNDO, CNDO/2, INDO)
 // this general formula is also true for EHT (F = Hcore, so the energy is simply a weighted sum of the eigenvalues)
+
+  int Norb = Pao->num_of_cols;
   
   int i,ii,j;
   double Eelec = 0.0;
@@ -23,9 +25,13 @@ double energy_elec(int Norb,MATRIX* Pao,MATRIX* Hao,MATRIX* Fao){
 
 }// double energy_elec(...)
 
+double energy_elec(MATRIX Pao,MATRIX Hao,MATRIX Fao){
 
-double energy_elec(int Norb, 
-                   MATRIX* P_alp, MATRIX* P_bet, 
+  return energy_elec(&Pao,&Hao,&Fao);
+}
+
+
+double energy_elec(MATRIX* P_alp, MATRIX* P_bet, 
                    MATRIX* Hao_alp, MATRIX* Hao_bet,
                    MATRIX* Fao_alp, MATRIX* Fao_bet,
                    MATRIX* dFao_alp_dP_alp, MATRIX* dFao_alp_dP_bet,
@@ -37,6 +43,8 @@ double energy_elec(int Norb,
 // temp - is just a temporary array - preallocate it before calling this function
 //        this will give some acceleration if the energy function is called very often
 // Scaling - O(N^3)
+
+  int Norb = P_alp->num_of_cols;
   
   int i,ii,j;
   double Eelec_alp = 0.0;
@@ -76,6 +84,18 @@ double energy_elec(int Norb,
   return Eelec_tot;
 
 }// double energy_elec(...)
+
+double energy_elec(MATRIX P_alp, MATRIX P_bet, 
+                   MATRIX Hao_alp, MATRIX Hao_bet,
+                   MATRIX Fao_alp, MATRIX Fao_bet,
+                   MATRIX dFao_alp_dP_alp, MATRIX dFao_alp_dP_bet,
+                   MATRIX dFao_bet_dP_alp, MATRIX dFao_bet_dP_bet,
+                   MATRIX temp
+                  ){
+
+  return energy_elec(&P_alp,&P_bet,&Hao_alp,&Hao_bet,&Fao_alp,&Fao_bet,
+                     &dFao_alp_dP_alp, &dFao_alp_dP_bet, &dFao_bet_dP_alp, &dFao_bet_dP_bet, &temp);
+}
 
 
 }// namespace libcalculators

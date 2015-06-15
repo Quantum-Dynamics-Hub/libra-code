@@ -1,4 +1,5 @@
 #include "Excitations.h"
+#include "Bands.h"
 
 namespace libcalculators{
 
@@ -24,6 +25,18 @@ void excite(int I, int J, vector< pair<int,double> >& occ_ini, vector< pair<int,
   occ_fin[I].second = occ_fin[J].second;
   occ_fin[J].second = pop;
    
+}
+
+boost::python::list excite(int I, int J, boost::python::list occ_ini){
+  vector< pair<int,double> > occ_i;
+  vector< pair<int,double> > occ_f;
+
+  convert_1(occ_ini, occ_i);
+
+  excite(I,J,occ_i, occ_f);
+
+  return convert_2(occ_f);
+
 }
 
 

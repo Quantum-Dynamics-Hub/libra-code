@@ -47,6 +47,19 @@ double fermi_integral(std::vector<double>& bnds, double ef, double degen, double
 
 }// double fermi_integral
 
+double fermi_integral(boost::python::list bnds,double ef,double degen, double kT){
+
+  int sz = boost::python::len(bnds);
+  vector<double> int_bnds(sz,0.0);
+  for(int i=0;i<sz;i++){ 
+    int_bnds[i] = boost::python::extract<double>(bnds[i]);
+  }
+
+  return fermi_integral(int_bnds, ef, degen, kT);
+
+}
+
+
 
 double fermi_energy(std::vector<double>& bnds,double Nel,double degen, double kT, double etol){
 // Computes Fermi energy by solving equation
@@ -92,6 +105,18 @@ double fermi_energy(std::vector<double>& bnds,double Nel,double degen, double kT
   return 0.5*(ef_l+ef_r);
 
 }// double fermi_energy
+
+double fermi_energy(boost::python::list bnds,double Nel,double degen, double kT, double etol){
+
+  int sz = boost::python::len(bnds);
+  vector<double> int_bnds(sz,0.0);
+  for(int i=0;i<sz;i++){ 
+    int_bnds[i] = boost::python::extract<double>(bnds[i]);
+  }
+
+  return fermi_energy(int_bnds, Nel, degen, kT, etol);
+
+}
 
 
 }// namespace libcalculators
