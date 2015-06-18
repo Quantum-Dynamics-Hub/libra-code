@@ -3,7 +3,8 @@
 
 #include "Fermi.h"
 #include "Bands.h"
-#include "Energy.h"
+#include "Energy_Electronic.h"
+#include "Energy_Nuclear.h"
 #include "Annihilate.h"
 #include "Density_Matrix.h"
 #include "Excitations.h"

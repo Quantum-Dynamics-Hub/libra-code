@@ -42,7 +42,7 @@ void export_calculators_objects(){
   boost::python::list (*expt_excite_v1)(int I, int J, boost::python::list occ_ini) = &excite;
 
 
-  //----------------- Energy.cpp ---------------------------
+  //----------------- Energy_Electronic.cpp ---------------------
   double (*expt_energy_elec_v1)(MATRIX Pao,MATRIX Hao,MATRIX Fao) = &energy_elec;
   double (*expt_energy_elec_v2)(MATRIX P_alp, MATRIX P_bet, 
                                 MATRIX Hao_alp, MATRIX Hao_bet,
@@ -51,6 +51,9 @@ void export_calculators_objects(){
                                 MATRIX dFao_bet_dP_alp, MATRIX dFao_bet_dP_bet,
                                 MATRIX temp
                                ) = &energy_elec;
+
+  //----------------- Energy_Nuclear.cpp ---------------------
+  double (*expt_energy_nucl_v1)(vector<VECTOR>& R, vector<double>& Zeff) = &energy_nucl;
 
 
 
@@ -71,6 +74,8 @@ void export_calculators_objects(){
 
   def("energy_elec",expt_energy_elec_v1);
   def("energy_elec",expt_energy_elec_v2);
+
+  def("energy_nucl",expt_energy_nucl_v1);
 
 
 

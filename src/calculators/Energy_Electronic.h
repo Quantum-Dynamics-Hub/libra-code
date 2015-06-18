@@ -1,5 +1,5 @@
-#ifndef ENERGY_H
-#define ENERGY_H
+#ifndef ENERGY_ELECTRONIC_H
+#define ENERGY_ELECTRONIC_H
 
 #include "../mmath/libmmath.h"
 using namespace libmmath;
@@ -29,4 +29,4 @@ double energy_elec(MATRIX P_alp, MATRIX P_bet,
 
 }// namespace libcalculators
 
-#endif // ENERGY_H
+#endif // ENERGY_ELECTRONIC_H
