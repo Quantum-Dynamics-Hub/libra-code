@@ -4,7 +4,7 @@ namespace libdyn{
 namespace libnuclear{
 
 
-Nuclear::Nuclear(){ nnucl = 0; }
+Nuclear::Nuclear(){   nnucl = 0; }
 
 Nuclear::Nuclear(int _nnucl){  
     nnucl = _nnucl;
@@ -12,8 +12,16 @@ Nuclear::Nuclear(int _nnucl){
     q = vector<double>(nnucl,0.0);
     p = vector<double>(nnucl,0.0);
     f = vector<double>(nnucl,0.0);
-    ctyp = vector<int>(nnucl,0);
-    
+    ctyp = vector<int>(nnucl,0);  
+}
+
+Nuclear::Nuclear(const Nuclear& ob){
+  nnucl = ob.nnucl;
+  mass = ob.mass;
+  q = ob.q; 
+  p = ob.p;
+  f = ob.f;
+  ctyp = ob.ctyp;
 }
 
 
@@ -42,8 +50,6 @@ void Nuclear::scale_q(double scl){  for(int i=0;i<nnucl;i++){  q[i] *= scl;   } 
 void Nuclear::scale_q(double scl,vector<int>& active){  
   int sz = active.size(); for(int i=0;i<sz;i++){ int I = active[i]; q[I] *= scl;   } 
 }
-
-
 
 
 

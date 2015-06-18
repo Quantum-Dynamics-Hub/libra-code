@@ -81,7 +81,14 @@ void compute_hopping_probabilities_fssh(Nuclear* mol, Electronic* el, Hamiltonia
 
   }// for i
 
-}// compute probabilities
+}// compute probabilities_fssh
+
+void compute_hopping_probabilities_fssh(Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
+                                        double dt, int use_boltz_factor,double T){
+
+  compute_hopping_probabilities_fssh(&mol, &el, &ham, &g, dt, use_boltz_factor, T);
+
+}
 
 
 
@@ -159,9 +166,16 @@ void compute_hopping_probabilities_gfsh(Nuclear* mol, Electronic* el, Hamiltonia
 
 
 
-
-
 }// compute probabilities gfsh
+
+
+void compute_hopping_probabilities_gfsh(Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
+                                        double dt, int use_boltz_factor,double T){
+
+  compute_hopping_probabilities_gfsh(&mol, &el, &ham, &g, dt, use_boltz_factor, T);
+
+}
+
 
 
 
@@ -188,6 +202,13 @@ void compute_hopping_probabilities_mssh(Nuclear* mol, Electronic* el, Hamiltonia
 
 
 }// compute probabilities mssh
+
+void compute_hopping_probabilities_mssh(Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
+                                        double dt, int use_boltz_factor,double T){
+
+  compute_hopping_probabilities_mssh(&mol, &el, &ham, &g, dt, use_boltz_factor, T);
+
+}
 
 
 
@@ -234,6 +255,15 @@ void hop(int& initstate, Nuclear* mol, Hamiltonian* ham, double ksi, MATRIX* g, 
   initstate = finstate;
 
 }// hop
+
+int hop(int initstate, Nuclear& mol, Hamiltonian& ham, double ksi, MATRIX& g, int do_rescaling, int rep){
+
+  int res = initstate; 
+  hop(res, &mol, &ham, ksi, &g, do_rescaling, rep);
+
+  return res;
+
+}
 
 
 

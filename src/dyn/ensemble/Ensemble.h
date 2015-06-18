@@ -69,8 +69,8 @@ class Ensemble{
   void sh_pop1(vector<double>&,double,double);
 
 
-//  void print_map(std::string prefix, double Xmin, double Xmax, double dx, double Ymin, double Ymax, double dy, int snap); // for 2D projections on XY plane
-//  void integral_flux(vector< vector<double> >& Int_flx, double Xmin, double Xmax, double dx, double Ymin, double Ymax, double dy);
+  void print_map(std::string prefix, double Xmin, double Xmax, double dx, double Ymin, double Ymax, double dy, int snap); // for 2D projections on XY plane
+  void integral_flux(vector< vector<double> >& Int_flx, double Xmin, double Xmax, double dx, double Ymin, double Ymax, double dy);
 
   void compute_averages();
 

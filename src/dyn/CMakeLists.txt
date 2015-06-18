@@ -25,6 +25,8 @@ ADD_SUBDIRECTORY("barostat")
 MESSAGE("Going into subdirectory wfcgrid...")
 ADD_SUBDIRECTORY("wfcgrid")
 
+MESSAGE("Going into subdirectory ensemble...")
+ADD_SUBDIRECTORY("ensemble")
 
 #
 #  Source files and headers in this directory
@@ -43,8 +45,8 @@ ADD_LIBRARY(dyn_stat STATIC ${DYN_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(dyn      wfcgrid_stat barostat_stat thermostat_stat electronic_stat rigidbody_stat nuclear_stat mmath_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(dyn_stat wfcgrid_stat barostat_stat thermostat_stat electronic_stat rigidbody_stat nuclear_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(dyn      ensemble_stat wfcgrid_stat barostat_stat thermostat_stat electronic_stat rigidbody_stat nuclear_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(dyn_stat ensemble_stat wfcgrid_stat barostat_stat thermostat_stat electronic_stat rigidbody_stat nuclear_stat mmath_stat ${ext_libs})
 
 
 

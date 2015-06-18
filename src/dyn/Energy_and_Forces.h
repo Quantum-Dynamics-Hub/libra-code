@@ -21,8 +21,14 @@ using namespace libensemble;
 
 
 double compute_kinetic_energy(Nuclear* mol);
+double compute_kinetic_energy(Nuclear& mol);
+
 double compute_potential_energy(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt);
+double compute_potential_energy(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt);
+
 void compute_forces(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt);
+void compute_forces(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt);
+
 void compute_energies(Ensemble* ens, double& Epot, double& Ekin, double& Etot,int opt);
 
 

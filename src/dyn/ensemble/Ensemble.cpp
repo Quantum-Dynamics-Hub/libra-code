@@ -119,7 +119,7 @@ void Ensemble::sh_pop(vector<double>& pops,double xmin, double xmax){
       }// if
     }// for j - all trajectories
 */
-    pops[i] /= (double)size;   // normalize
+    pops[i] /= (double)ntraj;   // normalize
 
   }// for i - all electronic states
   

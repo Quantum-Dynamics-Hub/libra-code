@@ -33,6 +33,7 @@ class Nuclear{
   //------------- Constructors ----------------------
   Nuclear();
   Nuclear(int _nnucl);
+  Nuclear(const Nuclear& );
 
   void propagate_p(int i,double dt);
   void propagate_p(double dt);

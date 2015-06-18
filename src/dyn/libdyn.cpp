@@ -23,6 +23,38 @@ void export_Dyn_objects(){
   export_Barostat_objects();
   export_Wfcgrid_objects();
 
+  double (*expt_compute_kinetic_energy_v1)(Nuclear& mol) = &compute_kinetic_energy;
+  double (*expt_compute_potential_energy_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt) = &compute_potential_energy;
+  void (*expt_compute_forces_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt) = &compute_forces;
+
+  void (*expt_compute_hopping_probabilities_fssh_v1)
+  (Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
+   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_fssh;
+
+  void (*expt_compute_hopping_probabilities_gfsh_v1)
+  (Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
+   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_gfsh;
+
+  void (*expt_compute_hopping_probabilities_mssh_v1)
+  (Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
+   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_mssh;
+
+
+  int (*expt_hop_v1)
+  (int initstate, Nuclear& mol, Hamiltonian& ham, double ksi, MATRIX& g, int do_rescaling, int rep) = &hop;
+
+
+
+  def("compute_kinetic_energy",expt_compute_kinetic_energy_v1);
+  def("compute_potential_energy",expt_compute_potential_energy_v1);
+  def("compute_forces",expt_compute_forces_v1);
+
+  def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v1);
+  def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v1);
+  def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v1);
+
+  def("hop", expt_hop_v1);
+
 }// export_Dyn_objects()
 
 

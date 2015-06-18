@@ -7,12 +7,14 @@ double compute_kinetic_energy(Nuclear* mol){
 
   double Ekin = 0.0;
 
-  for(int i=0;i<mol->nnucl;i++){  Ekin += mol->p[i]*mol->p[i]/mol->mass[i]; }
+  for(int i=0;i<mol->nnucl;i++){  Ekin += mol->p[i]*mol->p[i]/mol->mass[i];   }
   Ekin *= 0.5;
 
   return Ekin;
 
 }
+
+double compute_kinetic_energy(Nuclear& mol){  return compute_kinetic_energy(&mol);  }
 
 
 double compute_potential_energy(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt){
@@ -51,6 +53,12 @@ double compute_potential_energy(Nuclear* mol, Electronic* el, Hamiltonian* ham, 
   }
 
   return Epot; 
+
+}
+
+double compute_potential_energy(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt){
+
+  return compute_potential_energy(&mol, &el, &ham, opt);
 
 }
 
@@ -102,6 +110,12 @@ void compute_forces(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt){
       mol->f[k] = -ham->dHdq(i,i,k).real(); 
     }// for k
   }// opt == 1
+
+}
+
+void compute_forces(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt){
+
+  compute_forces(&mol, &el, &ham, opt);
 
 }
 
