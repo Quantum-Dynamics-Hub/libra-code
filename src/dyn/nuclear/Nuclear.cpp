@@ -4,9 +4,13 @@ namespace libdyn{
 namespace libnuclear{
 
 
-Nuclear::Nuclear(){   nnucl = 0; }
+Nuclear::Nuclear(){  
+// cout<<"Nuclear ctor\n";
+ nnucl = 0; 
+}
 
 Nuclear::Nuclear(int _nnucl){  
+//    cout<<"Nuclear ctor\n";
     nnucl = _nnucl;
     mass = vector<double>(nnucl,2000.0); 
     q = vector<double>(nnucl,0.0);
@@ -16,12 +20,22 @@ Nuclear::Nuclear(int _nnucl){
 }
 
 Nuclear::Nuclear(const Nuclear& ob){
+//  cout<<"Nuclear cctor\n";
   nnucl = ob.nnucl;
   mass = ob.mass;
   q = ob.q; 
   p = ob.p;
   f = ob.f;
   ctyp = ob.ctyp;
+}
+
+Nuclear::~Nuclear(){
+//  cout<<"Nuclear destructor\n";
+  if(mass.size()>0){  mass.clear(); }
+  if(q.size()>0){  q.clear(); }
+  if(p.size()>0){  p.clear(); }
+  if(f.size()>0){  f.clear(); }
+  if(ctyp.size()>0){  ctyp.clear(); }
 }
 
 

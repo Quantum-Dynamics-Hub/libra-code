@@ -76,11 +76,9 @@ Hamiltonian_Model::~Hamiltonian_Model(){
   }
   for(i=0;i<n_nucl*n_nucl;i++){  delete d2ham_dia[i]; }
 
-  d1ham_dia.clear();
-  d2ham_dia.clear();
-  d1ham_adi.clear();
-
-
+  if(d1ham_dia.size()>0) { d1ham_dia.clear(); }
+  if(d2ham_dia.size()>0) { d2ham_dia.clear(); }
+  if(d1ham_adi.size()>0) { d1ham_adi.clear(); }
 
 
 }

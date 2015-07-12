@@ -33,7 +33,8 @@ class Nuclear{
   //------------- Constructors ----------------------
   Nuclear();
   Nuclear(int _nnucl);
-  Nuclear(const Nuclear& );
+  Nuclear(const Nuclear&);
+ ~Nuclear();
 
   void propagate_p(int i,double dt);
   void propagate_p(double dt);
@@ -52,7 +53,7 @@ class Nuclear{
   void scale_q(double scl,vector<int>& active);
 
   friend bool operator == (const Nuclear& n1, const Nuclear& n2){
-    return n1.nnucl == n2.nnucl;
+    return &n1 == &n2;
   }
   friend bool operator != (const Nuclear& n1, const Nuclear& n2){
     return !(n1 == n2);  // only compare addresses

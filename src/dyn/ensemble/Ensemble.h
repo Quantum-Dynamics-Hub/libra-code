@@ -57,6 +57,7 @@ class Ensemble{
 
   void ham_set_ham(int i, std::string opt, int mopt);
   void ham_set_ham(std::string opt, int mopt);
+  void ham_set_ham(int i, Hamiltonian& _ham);
 
   void ham_set_rep(int i, int _rep);
   void ham_set_rep(int _rep);
@@ -92,7 +93,7 @@ class Ensemble{
 
   Ensemble(){ ntraj = 0; nnucl = 0; nelec = 0; }
   Ensemble(int,int,int);
-// ~Ensemble();
+ ~Ensemble();
 
 
   void se_pop(vector<double>&,double,double);

@@ -5,10 +5,11 @@ namespace libdyn{
 namespace libensemble{
 
 
-/*
+
 Ensemble::~Ensemble(){
 
-
+//cout<<"Calling ensemble destructor\n";
+/*
   if(el.size()>0){  
     for(int i=0;i<el.size();i++){  el[i].~Electronic(); }
   } el.clear();
@@ -23,9 +24,9 @@ Ensemble::~Ensemble(){
     }
   } ham.clear();
 
-
-}
 */
+}
+
 
 
 void Ensemble::_init(int _ntraj, int _nelec, int _nnucl){
@@ -38,7 +39,7 @@ void Ensemble::_init(int _ntraj, int _nelec, int _nnucl){
   nelec = _nelec;
   nnucl = _nnucl;
 
-//  cout<<"Starting init Ensemble\n";
+//  cout<<"Ensemble ctor(in init function)\n";
 
   // Allocate electronic part
   el.resize(ntraj);
@@ -57,7 +58,7 @@ void Ensemble::_init(int _ntraj, int _nelec, int _nnucl){
   // Allocate Hamiltonian handlers
 //  ham = vector<Hamiltonian*>(ntraj);
   ham.resize(ntraj);
-  for(i=0;i<ntraj;i++){ ham[i] = NULL; }  //new Hamiltonian(); } // just a generic one
+//  for(i=0;i<ntraj;i++){ ham[i] = NULL; }  //new Hamiltonian(); } // just a generic one
 
   // Activate all trajectories
   is_active = vector<int>(ntraj,1);
@@ -76,16 +77,27 @@ void Ensemble::_init(int _ntraj, int _nelec, int _nnucl){
 }
 
 
+void Ensemble::ham_set_ham(int i, Hamiltonian& _ham){
+
+  ham[i] = &_ham;
+
+}
+
+
 void Ensemble::ham_set_ham(int i, std::string opt, int mopt){
 
   if(opt=="model"){
     //Hamiltonian_Model* hm;  
     //hm = new Hamiltonian_Model(mopt);
 //    Hamiltonian_Model h(mopt);
-    ham[i] = new Hamiltonian_Model(mopt); //hm;
+//    if(ham[i]==NULL){
+      ham[i] = new Hamiltonian_Model(mopt); //hm;
+//    }else{ cout<<"Hamiltonian is already allocated\n"; }
+   
   }// model
 
 }
+
 void Ensemble::ham_set_ham(std::string opt, int mopt){
 
   for(int i=0;i<ntraj;i++){ 

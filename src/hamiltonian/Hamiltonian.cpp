@@ -3,9 +3,13 @@
 
 namespace libhamiltonian{
 
-Hamiltonian::Hamiltonian(){ /*cout<<"Base Ham. constructor\n";*/ }
+Hamiltonian::Hamiltonian(){ 
+//cout<<"Base Ham. constructor\n";
+}
 
-Hamiltonian::~Hamiltonian(){ /*cout<<"Base Ham. destructor\n";*/ }
+Hamiltonian::~Hamiltonian(){ 
+//cout<<"Base Ham. destructor\n"; 
+}
 
 
 std::complex<double> Hamiltonian::H(int i, int j){

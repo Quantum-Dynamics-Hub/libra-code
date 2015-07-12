@@ -37,8 +37,12 @@ class Electronic{
   Electronic();
   Electronic(int);
   Electronic(int,int);
+  Electronic(const Electronic&); // cctor
 
   ~Electronic();
+
+  Electronic& operator=(const Electronic& ob);
+
 
   std::complex<double> c(int i);      // return amplitude in the complex format: c_i = q_i + i*p_i
   std::complex<double> rho(int i, int j); // return the density matrix element: rho_ij = c^*_i * c_j
@@ -51,9 +55,11 @@ class Electronic{
 
 
   friend bool operator == (const Electronic& e1, const Electronic& e2){
+/*
     bool res = ( (e1.istate == e2.istate) && (e1.nstates == e2.nstates)  );
     for(int i=0;i<e1.nstates;i++){  res = res && (e1.q[i] == e2.q[i]) && (e1.p[i] == e2.p[i]); }
     return res;
+*/  return &e1 == &e2;
   }
   friend bool operator != (const Electronic& e1, const Electronic& e2){
     return !(e1==e2);  // only compare addresses

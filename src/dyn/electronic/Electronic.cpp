@@ -6,6 +6,19 @@ namespace libelectronic{
 
 using namespace libmmath;
 
+
+Electronic& Electronic::operator=(const Electronic& ob){  
+
+  *rnd_obj = *ob.rnd_obj;
+  nstates = ob.nstates;
+  istate = ob.istate;
+  q = ob.q;
+  p = ob.p;
+
+  return *this; // return reference to allow chaining: A = B = C =...
+}
+
+
 void Electronic::rnd_phase(double& x, double& y, double nrm){ 
 // x^2 + y^2 = nrm^2
 
@@ -15,6 +28,7 @@ void Electronic::rnd_phase(double& x, double& y, double nrm){
 }
 
 void Electronic::init(int n_,int st){
+//  cout<<"Electronic ctor (in init function)\n";
   // This function allocates memory for time-dependent wfc with n_ stationary states
   // Then it initializes the overall multiconfigurational wfc
   // to be a 1-configurational, with the weight 1 set to basis state with index st
@@ -46,10 +60,29 @@ Electronic::Electronic(int n_){  init(n_,0); }
 Electronic::Electronic(){  init(1,0); }
 
 
+Electronic::Electronic(const Electronic& ob){ // cctor
+//  cout<<"Electronic cctor\n";
+
+  rnd_obj = new Random();
+  *rnd_obj = *ob.rnd_obj;
+
+  nstates = ob.nstates;
+  istate = ob.istate;
+  q = ob.q;
+  p = ob.p;
+
+}
+
+
 //
 // Destructor
 //
-Electronic::~Electronic(){  delete rnd_obj; q.clear(); p.clear(); }
+Electronic::~Electronic(){  
+//  cout<<"Electronic destructor\n";
+  if(rnd_obj!=NULL){ delete rnd_obj; rnd_obj = NULL; }
+  if(q.size()>0){ q.clear(); }
+  if(p.size()>0){ p.clear(); }
+}
 
 
 

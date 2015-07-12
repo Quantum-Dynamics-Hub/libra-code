@@ -21,6 +21,7 @@ void export_Ensemble_objects(){
 
   void (Ensemble::*expt_ham_set_ham_v1)(int i, std::string opt, int mopt) = &Ensemble::ham_set_ham;
   void (Ensemble::*expt_ham_set_ham_v2)(std::string opt, int mopt) = &Ensemble::ham_set_ham;
+  void (Ensemble::*expt_ham_set_ham_v3)(int i, Hamiltonian& _ham) = &Ensemble::ham_set_ham;
 
   void (Ensemble::*expt_ham_set_rep_v1)(int i, int _rep) = &Ensemble::ham_set_rep;
   void (Ensemble::*expt_ham_set_rep_v2)(int _rep) = &Ensemble::ham_set_rep;
@@ -64,6 +65,7 @@ void export_Ensemble_objects(){
 //      .def("set_el", &Ensemble::set_el)
       .def("ham_set_ham", expt_ham_set_ham_v1)
       .def("ham_set_ham", expt_ham_set_ham_v2)
+      .def("ham_set_ham", expt_ham_set_ham_v3)
 
       .def("ham_set_rep", expt_ham_set_rep_v1)
       .def("ham_set_rep", expt_ham_set_rep_v2)
