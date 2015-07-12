@@ -44,6 +44,11 @@ void export_Hamiltonian_objects(){
   ;
 */
 
+  class_< HamiltonianList >("HamiltonianList")
+      .def(vector_indexing_suite< HamiltonianList >())
+  ;
+
+
   class_<Hamiltonian_Model, bases<Hamiltonian> >("Hamiltonian_Model",init<int>())
       .def("__copy__", &generic__copy__<Hamiltonian_Model>)
       .def("__deepcopy__", &generic__deepcopy__<Hamiltonian_Model>)
@@ -64,6 +69,11 @@ void export_Hamiltonian_objects(){
       .def("nac", &Hamiltonian_Model::nac)
  
   ;
+
+//  class_< Hamiltonian_ModelList >("Hamiltonian_ModelList")
+//      .def(vector_indexing_suite< Hamiltonian_ModelList >())
+//  ;
+
 
 
 

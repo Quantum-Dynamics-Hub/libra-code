@@ -75,7 +75,19 @@ public:
   // Updates coordinates, velocities, etc. - all nuclear information
 //  virtual void update_nuclear(Nuclear* mol);
 
-  virtual void set_q(vector<double>&){ ;; }
+//  virtual void set_q(vector<double>&){ ;; }
+
+
+  virtual void set_rep(int rep_){ ;; }
+
+  // Set parameters
+  virtual void set_params(vector<double>& params_){ ;; }
+  virtual void set_params(boost::python::list params_){ ;; }
+  virtual void set_q(vector<double>& q_){ ;; }
+  virtual void set_q(boost::python::list q_){ ;; }
+  virtual void set_v(vector<double>& v_){ ;; }
+  virtual void set_v(boost::python::list v_){ ;; }
+
 
   // This function performs actual computations
   virtual void compute(){ ;; }  
@@ -93,7 +105,18 @@ public:
   virtual std::complex<double> dHdRz(int, int, int); // derivative of Hamiltonian w.r.t. Cartesian coordinate z
 
 
+  friend bool operator == (const Hamiltonian& h1, const Hamiltonian& h2){
+    return &h1 == &h2;
+  }
+  friend bool operator != (const Hamiltonian& h1, const Hamiltonian& h2){
+    return !(h1 == h2);  // only compare addresses
+  }
+
+
+
 };
+
+typedef std::vector<Hamiltonian> HamiltonianList;
 
 
 }// namespace libhamiltonian

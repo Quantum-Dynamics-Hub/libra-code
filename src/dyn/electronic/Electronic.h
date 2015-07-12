@@ -49,7 +49,21 @@ class Electronic{
   void propagate_electronic(double dt,Hamiltonian* ham);
   void propagate_electronic(double dt,Hamiltonian& ham);
 
+
+  friend bool operator == (const Electronic& e1, const Electronic& e2){
+    bool res = ( (e1.istate == e2.istate) && (e1.nstates == e2.nstates)  );
+    for(int i=0;i<e1.nstates;i++){  res = res && (e1.q[i] == e2.q[i]) && (e1.p[i] == e2.p[i]); }
+    return res;
+  }
+  friend bool operator != (const Electronic& e1, const Electronic& e2){
+    return !(e1==e2);  // only compare addresses
+  }
+
+
 };
+
+
+typedef std::vector< Electronic > ElectronicList;
 
 
 // In Electronic_Dynamics1.cpp

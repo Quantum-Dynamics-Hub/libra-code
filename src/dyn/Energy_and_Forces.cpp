@@ -16,6 +16,18 @@ double compute_kinetic_energy(Nuclear* mol){
 
 double compute_kinetic_energy(Nuclear& mol){  return compute_kinetic_energy(&mol);  }
 
+double compute_kinetic_energy(Ensemble& ens){
+
+  double res = 0.0;
+  for(int traj=0;traj<ens.ntraj;traj++){
+    res += compute_kinetic_energy(&ens.mol[traj]);
+  }
+  res /= (double)ens.ntraj;
+  
+  return res;
+}
+
+
 
 double compute_potential_energy(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt){
 // opt == 0   -  Ehrenfest/MF
@@ -61,6 +73,18 @@ double compute_potential_energy(Nuclear& mol, Electronic& el, Hamiltonian& ham, 
   return compute_potential_energy(&mol, &el, &ham, opt);
 
 }
+
+double compute_potential_energy(Ensemble& ens, int opt){
+
+  double res = 0.0;
+  for(int traj=0;traj<ens.ntraj;traj++){
+    res += compute_potential_energy(&ens.mol[traj], &ens.el[traj], ens.ham[traj], opt);
+  }
+  res /= (double)ens.ntraj;
+  
+  return res;
+}
+
 
 
 void compute_forces(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt){
@@ -119,6 +143,14 @@ void compute_forces(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt){
 
 }
 
+void compute_forces(Ensemble& ens, int opt){
+
+  for(int traj=0;traj<ens.ntraj;traj++){
+    compute_forces(&ens.mol[traj], &ens.el[traj], ens.ham[traj], opt);
+  }
+  
+}
+
 
 
 void compute_energies(Ensemble* ens, double& Epot, double& Ekin, double& Etot,int opt){
@@ -130,7 +162,7 @@ void compute_energies(Ensemble* ens, double& Epot, double& Ekin, double& Etot,in
   for(int traj=0;traj<ens->ntraj;traj++){
 
     double ek = compute_kinetic_energy(ens->mol[traj]);
-    double ep = compute_potential_energy(ens->mol[traj], ens->el[traj], ens->ham[traj], opt);
+    double ep = compute_potential_energy(&ens->mol[traj], &ens->el[traj], ens->ham[traj], opt);
 
     Epot += ep;
     Ekin += ek;

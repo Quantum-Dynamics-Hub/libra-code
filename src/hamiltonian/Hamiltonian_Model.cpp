@@ -28,6 +28,8 @@ using std::sqrt;
 
 Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
 
+//cout<<"Derived Ham_mod. constructor\n";
+
   int i;
   ham_indx = ham_indx_;
 
@@ -62,6 +64,8 @@ Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
 
 Hamiltonian_Model::~Hamiltonian_Model(){
   int i;
+
+//  cout<<"Derived Ham_mod. destructor\n";
  
   delete ham_dia;
   delete ham_adi;
@@ -75,6 +79,8 @@ Hamiltonian_Model::~Hamiltonian_Model(){
   d1ham_dia.clear();
   d2ham_dia.clear();
   d1ham_adi.clear();
+
+
 
 
 }

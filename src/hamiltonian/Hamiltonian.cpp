@@ -3,9 +3,9 @@
 
 namespace libhamiltonian{
 
-Hamiltonian::Hamiltonian(){ /*status = 0; cout<<"Calling base function. Level is too abstract\n"; exit(0);*/}
+Hamiltonian::Hamiltonian(){ /*cout<<"Base Ham. constructor\n";*/ }
 
-Hamiltonian::~Hamiltonian(){ /*cout<<"Calling base function. Level is too abstract\n"; exit(0);*/ }
+Hamiltonian::~Hamiltonian(){ /*cout<<"Base Ham. destructor\n";*/ }
 
 
 std::complex<double> Hamiltonian::H(int i, int j){

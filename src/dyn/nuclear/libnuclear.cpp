@@ -63,8 +63,12 @@ void export_Nuclear_objects(){
       .def("scale_q",expt_scale_q_v3) 
 
 
-
   ;
+
+  class_< NuclearList >("NuclearList")
+      .def(vector_indexing_suite< NuclearList >())
+  ;
+
 
 
 

@@ -51,9 +51,19 @@ class Nuclear{
   void scale_q(double scl);
   void scale_q(double scl,vector<int>& active);
 
+  friend bool operator == (const Nuclear& n1, const Nuclear& n2){
+    return n1.nnucl == n2.nnucl;
+  }
+  friend bool operator != (const Nuclear& n1, const Nuclear& n2){
+    return !(n1 == n2);  // only compare addresses
+  }
+
+
 
   
 };
+
+typedef std::vector< Nuclear > NuclearList;
 
 
 

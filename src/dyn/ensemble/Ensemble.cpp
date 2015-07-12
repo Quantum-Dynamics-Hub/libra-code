@@ -5,7 +5,30 @@ namespace libdyn{
 namespace libensemble{
 
 
-void Ensemble::init(int _ntraj, int _nelec, int _nnucl){
+/*
+Ensemble::~Ensemble(){
+
+
+  if(el.size()>0){  
+    for(int i=0;i<el.size();i++){  el[i].~Electronic(); }
+  } el.clear();
+
+  if(mol.size()>0){  
+    for(int i=0;i<el.size();i++){  mol[i].~Nuclear(); }
+  } mol.clear();
+
+  if(ham.size()>0){  
+    for(int i=0;i<ham.size();i++){  
+      if(ham[i]!=NULL) {delete ham[i]; }
+    }
+  } ham.clear();
+
+
+}
+*/
+
+
+void Ensemble::_init(int _ntraj, int _nelec, int _nnucl){
 // Allocate memory for an ensemble of ntraj trajectories, with all electronic components 
 // represented in a basis of nstates electronic state and with nuclear component having the
 // dimensionality of nnucl
@@ -15,34 +38,143 @@ void Ensemble::init(int _ntraj, int _nelec, int _nnucl){
   nelec = _nelec;
   nnucl = _nnucl;
 
+//  cout<<"Starting init Ensemble\n";
+
   // Allocate electronic part
-  el = vector<Electronic*>(ntraj);
-  for(i=0;i<ntraj;i++){ el[i] = new Electronic(nelec,0); }  // all electronic states are the ground states
+  el.resize(ntraj);
+  for(i=0;i<ntraj;i++){   el[i] = Electronic(nelec, 0);   }  
+
+//  cout<<"Electronic is set\n";
 
   // Allocate nuclear part
-  mol = vector<Nuclear*>(ntraj);
-  for(i=0;i<ntraj;i++){ mol[i] = new Nuclear(nnucl); }
+  mol.resize(ntraj);
+  for(i=0;i<ntraj;i++){ mol[i] = Nuclear(nnucl); }
+
+//  cout<<"Nuclear is set\n";
+
+//exit(0);
 
   // Allocate Hamiltonian handlers
-  ham = vector<Hamiltonian*>(ntraj);
-  for(i=0;i<ntraj;i++){ ham[i] = new Hamiltonian(); } // just a generic one
+//  ham = vector<Hamiltonian*>(ntraj);
+  ham.resize(ntraj);
+  for(i=0;i<ntraj;i++){ ham[i] = NULL; }  //new Hamiltonian(); } // just a generic one
 
   // Activate all trajectories
   is_active = vector<int>(ntraj,1);
 
 
+/*
   // Allocate memory for statistical data  
   ave_q = vector<double>(nnucl, 0.0);
   ave_p = vector<double>(nnucl, 0.0);
   sigma_q = vector<double>(nnucl, 0.0);
   sigma_p = vector<double>(nnucl, 0.0);
 
+  cout<<"The rest is set\n";
+*/
 
 }
 
+
+void Ensemble::ham_set_ham(int i, std::string opt, int mopt){
+
+  if(opt=="model"){
+    //Hamiltonian_Model* hm;  
+    //hm = new Hamiltonian_Model(mopt);
+//    Hamiltonian_Model h(mopt);
+    ham[i] = new Hamiltonian_Model(mopt); //hm;
+  }// model
+
+}
+void Ensemble::ham_set_ham(std::string opt, int mopt){
+
+  for(int i=0;i<ntraj;i++){ 
+    ham_set_ham(i,opt,mopt);
+  }
+
+}
+
+
+void Ensemble::ham_set_rep(int i, int _rep){
+
+  ham[i]->set_rep(_rep);
+
+}
+void Ensemble::ham_set_rep(int _rep){
+
+  for(int i=0;i<ntraj;i++){ 
+    ham[i]->set_rep(_rep);
+  }
+}
+
+
+void Ensemble::ham_set_v(int i, vector<double>& v){
+
+  ham[i]->set_v(v);
+
+}
+void Ensemble::ham_set_v(int i, boost::python::list v){
+
+  ham[i]->set_v(v);
+
+}
+void Ensemble::ham_set_v(){
+
+  vector<double> v(nnucl,0.0);
+ 
+  for(int i=0;i<ntraj;i++){ 
+    // Velocities for all DOFs for given trajectory
+    for(int n=0;n<nnucl;n++){
+      v[n] = mol[i].p[n]/mol[i].mass[n];
+    }
+
+    ham[i]->set_v(v);
+  }// for i
+
+}
+
+
+void Ensemble::el_propagate_electronic(int i,double dt){
+               
+
+  el[i].propagate_electronic(dt, ham[i]);
+
+}
+void Ensemble::el_propagate_electronic(double dt){
+
+  for(int i=0;i<ntraj;i++){     el[i].propagate_electronic(dt, ham[i]);  }
+
+}
+
+void Ensemble::mol_propagate_q(int i,double dt){
+
+  mol[i].propagate_q(dt);
+
+}
+void Ensemble::mol_propagate_q(double dt){
+
+  for(int i=0;i<ntraj;i++){    mol[i].propagate_q(dt);   }
+
+}
+
+void Ensemble::mol_propagate_p(int i,double dt){
+
+  mol[i].propagate_p(dt);
+
+}
+void Ensemble::mol_propagate_p(double dt){
+
+  for(int i=0;i<ntraj;i++){    mol[i].propagate_p(dt);   }
+
+}
+
+
+
+
+
 Ensemble::Ensemble(int _ntraj, int _nstates, int _nnucl){
 // Constructor
-   init(_ntraj,_nstates,_nnucl);
+   _init(_ntraj,_nstates,_nnucl);
 }
 
 
@@ -61,22 +193,19 @@ void Ensemble::se_pop(vector<double>& pops,double xmin, double xmax){
   // and for all nuclear degrees of freedom
   
   for(i=0;i<nelec;i++){ 
-    int ntr = 0;
+
     pops[i] = 0.0;
-
-/*
     for(j=0;j<ntraj;j++){
-      if(mol[j]->q[j]>xmin && mol[j]->q[j] < xmax){ // only those trajectories that are in given range
+      if(mol[j].q[j]>xmin && mol[j].q[j] < xmax){ // only those trajectories that are in given range
 
-        double q = el[j]->q[i];
-        double p = el[j]->p[i];
+        double q = el[j].q[i];
+        double p = el[j].p[i];
         pops[i] += (q*q + p*p);
-        ntr += 1;
 
       }// if
     }// for j - all trajectories
-*/
-    if(ntr>0){    pops[i] /= (double)ntr; }  // normalize
+
+    pops[i] /= (double)ntraj;   // normalize
 
   }// for i - all electronic states
   
@@ -91,6 +220,20 @@ void Ensemble::se_pop(vector<double>& pops){
   se_pop(pops,-1000000.0,1000000.0);
 
 }
+
+boost::python::list Ensemble::se_pop(){
+
+  vector<double> pops;
+  se_pop(pops);
+
+  boost::python::list res;
+  for(int i=0;i<pops.size();i++){
+    res.append(pops[i]);
+  }
+
+  return res;
+}
+
 
 
 void Ensemble::sh_pop(vector<double>& pops,double xmin, double xmax){
@@ -107,18 +250,16 @@ void Ensemble::sh_pop(vector<double>& pops,double xmin, double xmax){
   // of i-th electronic basis state that is enclosed by a box [xmin, xmax] in all dimensions (x,y,z)
   // and for all nuclear degrees of freedom
   
-  for(i=0;i<el[0]->nstates;i++){  // all electronic states
+  for(i=0;i<nelec;i++){  // all electronic states
     pops[i] = 0.0;
 
-/*
-    for(j=0;j<size;j++){
-      if(mol[j]->R[0].x>xmin && mol[j]->R[0].x<xmax && el[j]->istate == i){ // only those trajectories that are in given range
+    for(j=0;j<ntraj;j++){
 
+      if(mol[j].q[j]>xmin && mol[j].q[j] < xmax && el[j].istate == i){ // only those trajectories that are in given range
         pops[i] += 1.0;
-
       }// if
+
     }// for j - all trajectories
-*/
     pops[i] /= (double)ntraj;   // normalize
 
   }// for i - all electronic states
@@ -134,6 +275,20 @@ void Ensemble::sh_pop(vector<double>& pops){
   sh_pop(pops,-1000000.0,1000000.0);
 
 }
+
+boost::python::list Ensemble::sh_pop(){
+
+  vector<double> pops;
+  sh_pop(pops);
+
+  boost::python::list res;
+  for(int i=0;i<pops.size();i++){
+    res.append(pops[i]);
+  }
+
+  return res;
+}
+
 
 
 void Ensemble::sh_pop1(vector<double>& pops,double xmin, double xmax){

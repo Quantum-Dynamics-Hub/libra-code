@@ -91,6 +91,8 @@ public:
 
 };
 
+typedef std::vector<Hamiltonian_Model> Hamiltonian_ModelList;
+
 
 
 }// namespace libmodel

@@ -37,6 +37,12 @@ void export_Electronic_objects(){
   ;
 
 
+  class_< ElectronicList >("ElectronicList")
+      .def(vector_indexing_suite< ElectronicList >())
+  ;
+
+
+
 
 }
 

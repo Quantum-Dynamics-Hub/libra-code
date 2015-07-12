@@ -90,6 +90,13 @@ void compute_hopping_probabilities_fssh(Nuclear& mol, Electronic& el, Hamiltonia
 
 }
 
+void compute_hopping_probabilities_fssh(Ensemble& ens, int i, MATRIX& g, double dt, int use_boltz_factor,double T){
+
+  compute_hopping_probabilities_fssh(&ens.mol[i], &ens.el[i], ens.ham[i], &g, dt, use_boltz_factor, T);
+
+}
+
+
 
 
 
@@ -176,6 +183,13 @@ void compute_hopping_probabilities_gfsh(Nuclear& mol, Electronic& el, Hamiltonia
 
 }
 
+void compute_hopping_probabilities_gfsh(Ensemble& ens, int i, MATRIX& g, double dt, int use_boltz_factor,double T){
+
+  compute_hopping_probabilities_gfsh(&ens.mol[i], &ens.el[i], ens.ham[i], &g, dt, use_boltz_factor, T);
+
+}
+
+
 
 
 
@@ -210,6 +224,11 @@ void compute_hopping_probabilities_mssh(Nuclear& mol, Electronic& el, Hamiltonia
 
 }
 
+void compute_hopping_probabilities_mssh(Ensemble& ens, int i, MATRIX& g, double dt, int use_boltz_factor,double T){
+
+  compute_hopping_probabilities_mssh(&ens.mol[i], &ens.el[i], ens.ham[i], &g, dt, use_boltz_factor, T);
+
+}
 
 
 
@@ -260,6 +279,15 @@ int hop(int initstate, Nuclear& mol, Hamiltonian& ham, double ksi, MATRIX& g, in
 
   int res = initstate; 
   hop(res, &mol, &ham, ksi, &g, do_rescaling, rep);
+
+  return res;
+
+}
+
+int hop(int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_rescaling, int rep){
+
+  int res = initstate; 
+  hop(res, &ens.mol[i], ens.ham[i], ksi, &g, do_rescaling, rep);
 
   return res;
 
@@ -320,6 +348,14 @@ void rescale_velocities_adiabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,in
 
 } // rescale velocities adiabatic
 
+int rescale_velocities_adiabatic(Nuclear& mol, Hamiltonian& ham, int old_st){
+
+  int new_st = old_st;
+  rescale_velocities_adiabatic(&mol, &ham, new_st, old_st);
+  return new_st;
+
+}
+
 
 void rescale_velocities_diabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,int& old_st){
 
@@ -354,6 +390,15 @@ void rescale_velocities_diabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,int
   }
 
 } // rescale velocities diabatic
+
+int rescale_velocities_diabatic(Nuclear& mol, Hamiltonian& ham, int old_st){
+
+  int new_st = old_st;
+  rescale_velocities_adiabatic(&mol, &ham, new_st, old_st);
+  return new_st;
+
+}
+
 
 
 

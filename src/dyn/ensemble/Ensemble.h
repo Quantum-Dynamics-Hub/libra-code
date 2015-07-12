@@ -41,30 +41,68 @@ class Ensemble{
   int nelec;                // number of electronic DOFs
 
   vector<int> is_active;    // flag stating if the i-th trajectory is active, if not - it is assumed to be adsorbed
-  vector<Nuclear*>    mol;  // nuclear subsystems
-  vector<Electronic*>  el;  // electronic subsystems
-  vector<Hamiltonian*> ham; // Hamiltonian "handlers" - unique for each copy
+  vector<Nuclear>    mol;   // nuclear subsystems
+  vector<Electronic>  el;   // electronic subsystems
+  vector<Hamiltonian*> ham;  // Hamiltonian "handlers" - unique for each copy
+
+  // For Python access:
+//  Nuclear get_mol(int i){ return *mol[i]; }
+//  Electronic get_el(int i){ return *el[i]; }
+//  Hamiltonian& get_ham(int i){ return *ham[i]; }
+
+//  void set_mol(int i, Nuclear& _mol){ return mol[i] = &_mol; }
+//  void set_el(int i, Electronic& _el){ return el[i] = &_el; }
+//  void set_ham(int i, Hamiltonian& _ham){ ham[i] = &_ham; }
+//  void set_ham(int i, Hamiltonian_Model& _ham){ ham[i] = &_ham; }
+
+  void ham_set_ham(int i, std::string opt, int mopt);
+  void ham_set_ham(std::string opt, int mopt);
+
+  void ham_set_rep(int i, int _rep);
+  void ham_set_rep(int _rep);
+
+  void ham_set_v(int i, vector<double>& v);
+  void ham_set_v(int i, boost::python::list v);
+  void ham_set_v();
+
+
+  void el_propagate_electronic(int i,double dt);
+  void el_propagate_electronic(double dt);
+
+  void mol_propagate_p(int i,double dt);
+  void mol_propagate_p(double dt);
+
+  void mol_propagate_q(int i,double dt);
+  void mol_propagate_q(double dt);
+
   
 
   // Properties, countable, statistics
   // So far it is specific for 2D systems (and 1D too)
-
+/*
   vector<double> ave_q;    // averages of coordinates q
   vector<double> ave_p;    // averages of momenta p
   vector<double> sigma_q;  // spread in q
   vector<double> sigma_p;  // spread in p
+*/
 
 
   //----------- Methods -----------
-  void init(int, int, int);
+  void _init(int, int, int);
 
-  Ensemble(){ ntraj = 0; }
+  Ensemble(){ ntraj = 0; nnucl = 0; nelec = 0; }
   Ensemble(int,int,int);
+// ~Ensemble();
 
-  void se_pop(vector<double>&);
+
   void se_pop(vector<double>&,double,double);
-  void sh_pop(vector<double>&);
+  void se_pop(vector<double>&);
+  boost::python::list se_pop();
+
   void sh_pop(vector<double>&,double,double);
+  void sh_pop(vector<double>&);
+  boost::python::list sh_pop();
+
   void sh_pop1(vector<double>&);
   void sh_pop1(vector<double>&,double,double);
 

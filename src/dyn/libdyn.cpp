@@ -12,6 +12,7 @@ using namespace librigidbody;
 using namespace libthermostat;
 using namespace libbarostat;
 using namespace libwfcgrid;
+using namespace libensemble;
 
 
 void export_Dyn_objects(){
@@ -22,38 +23,78 @@ void export_Dyn_objects(){
   export_Thermostat_objects();
   export_Barostat_objects();
   export_Wfcgrid_objects();
+  export_Ensemble_objects();
 
   double (*expt_compute_kinetic_energy_v1)(Nuclear& mol) = &compute_kinetic_energy;
+  double (*expt_compute_kinetic_energy_v2)(Ensemble& ens) = &compute_kinetic_energy;
   double (*expt_compute_potential_energy_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt) = &compute_potential_energy;
+  double (*expt_compute_potential_energy_v2)(Ensemble& ens, int opt) = &compute_potential_energy;
+
   void (*expt_compute_forces_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt) = &compute_forces;
+  void (*expt_compute_forces_v2)(Ensemble& ens, int opt) = &compute_forces;
+
 
   void (*expt_compute_hopping_probabilities_fssh_v1)
   (Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
    double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_fssh;
+  void (*expt_compute_hopping_probabilities_fssh_v2)
+  (Ensemble& ens, int i, MATRIX& g,
+   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_fssh;
+
 
   void (*expt_compute_hopping_probabilities_gfsh_v1)
   (Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
    double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_gfsh;
+  void (*expt_compute_hopping_probabilities_gfsh_v2)
+  (Ensemble& ens, int i, MATRIX& g,
+   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_gfsh;
+
 
   void (*expt_compute_hopping_probabilities_mssh_v1)
   (Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
    double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_mssh;
+  void (*expt_compute_hopping_probabilities_mssh_v2)
+  (Ensemble& ens, int i, MATRIX& g,
+   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_mssh;
+
 
 
   int (*expt_hop_v1)
   (int initstate, Nuclear& mol, Hamiltonian& ham, double ksi, MATRIX& g, int do_rescaling, int rep) = &hop;
+  int (*expt_hop_v2)
+  (int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_rescaling, int rep) = &hop;
+
+
+  int (*expt_rescale_velocities_adiabatic_v1)
+  (Nuclear& mol, Hamiltonian& ham, int old_st) = &rescale_velocities_adiabatic;
+
+  int (*expt_rescale_velocities_diabatic_v1)
+  (Nuclear& mol, Hamiltonian& ham, int old_st) = &rescale_velocities_diabatic;
+
 
 
 
   def("compute_kinetic_energy",expt_compute_kinetic_energy_v1);
+  def("compute_kinetic_energy",expt_compute_kinetic_energy_v2);
   def("compute_potential_energy",expt_compute_potential_energy_v1);
+  def("compute_potential_energy",expt_compute_potential_energy_v2);
   def("compute_forces",expt_compute_forces_v1);
+  def("compute_forces",expt_compute_forces_v2);
 
   def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v1);
+  def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v2);
   def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v1);
+  def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v2);
   def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v1);
+  def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v2);
 
   def("hop", expt_hop_v1);
+  def("hop", expt_hop_v2);
+
+  def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v1);
+  def("rescale_velocities_diabatic", expt_rescale_velocities_diabatic_v1);
+
+
 
 }// export_Dyn_objects()
 

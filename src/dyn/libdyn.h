@@ -9,6 +9,7 @@
 #include "thermostat/libthermostat.h"
 #include "barostat/libbarostat.h"
 #include "wfcgrid/libwfcgrid.h"
+#include "ensemble/libensemble.h"
 
 // General dynamics
 #include "Energy_and_Forces.h"
