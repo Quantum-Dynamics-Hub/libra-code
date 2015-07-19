@@ -33,11 +33,16 @@ void export_Ensemble_objects(){
   void (Ensemble::*expt_mol_propagate_p_v1)(int i, double dt) = &Ensemble::mol_propagate_p;
   void (Ensemble::*expt_mol_propagate_p_v2)(double dt) = &Ensemble::mol_propagate_p;
 
-  void (Ensemble::*expt_se_pop_v1)(vector<double>& v) = &Ensemble::se_pop;
-  boost::python::list (Ensemble::*expt_se_pop_v2)() = &Ensemble::se_pop;
+  void (Ensemble::*expt_se_pop_v1)(vector<double>& v,double xmax,double xmin) = &Ensemble::se_pop;
+  void (Ensemble::*expt_se_pop_v2)(vector<double>& v) = &Ensemble::se_pop;
+  boost::python::list (Ensemble::*expt_se_pop_v3)(double xmax,double xmin) = &Ensemble::se_pop;
+  boost::python::list (Ensemble::*expt_se_pop_v4)() = &Ensemble::se_pop;
 
-  void (Ensemble::*expt_sh_pop_v1)(vector<double>& v) = &Ensemble::sh_pop;
-  boost::python::list (Ensemble::*expt_sh_pop_v2)() = &Ensemble::sh_pop;
+
+  void (Ensemble::*expt_sh_pop_v1)(vector<double>& v,double xmax,double xmin) = &Ensemble::sh_pop;
+  void (Ensemble::*expt_sh_pop_v2)(vector<double>& v) = &Ensemble::sh_pop;
+  boost::python::list (Ensemble::*expt_sh_pop_v3)(double xmax,double xmin) = &Ensemble::sh_pop;
+  boost::python::list (Ensemble::*expt_sh_pop_v4)() = &Ensemble::sh_pop;
 
 
 
@@ -85,8 +90,13 @@ void export_Ensemble_objects(){
 
       .def("se_pop", expt_se_pop_v1)
       .def("se_pop", expt_se_pop_v2)
+      .def("se_pop", expt_se_pop_v3)
+      .def("se_pop", expt_se_pop_v4)
       .def("sh_pop", expt_sh_pop_v1)
       .def("sh_pop", expt_sh_pop_v2)
+      .def("sh_pop", expt_sh_pop_v3)
+      .def("sh_pop", expt_sh_pop_v4)
+
 
  
   ;

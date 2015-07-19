@@ -98,10 +98,12 @@ class Ensemble{
 
   void se_pop(vector<double>&,double,double);
   void se_pop(vector<double>&);
+  boost::python::list se_pop(double,double);
   boost::python::list se_pop();
 
   void sh_pop(vector<double>&,double,double);
   void sh_pop(vector<double>&);
+  boost::python::list sh_pop(double,double);
   boost::python::list sh_pop();
 
   void sh_pop1(vector<double>&);

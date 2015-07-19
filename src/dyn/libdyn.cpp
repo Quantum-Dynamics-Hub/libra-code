@@ -58,15 +58,19 @@ void export_Dyn_objects(){
    double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_mssh;
 
 
+  void (*expt_compute_hopping_probabilities_esh_v1)
+  (Ensemble& ens, MATRIX* g, double dt, int use_boltz_factor,double T) = compute_hopping_probabilities_esh;
+
+
 
   int (*expt_hop_v1)
-  (int initstate, Nuclear& mol, Hamiltonian& ham, double ksi, MATRIX& g, int do_rescaling, int rep) = &hop;
+  (int initstate, Nuclear& mol, Hamiltonian& ham, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse) = &hop;
   int (*expt_hop_v2)
-  (int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_rescaling, int rep) = &hop;
+  (int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse) = &hop;
 
 
   int (*expt_rescale_velocities_adiabatic_v1)
-  (Nuclear& mol, Hamiltonian& ham, int old_st) = &rescale_velocities_adiabatic;
+  (Nuclear& mol, Hamiltonian& ham, int old_st, int do_reverse) = &rescale_velocities_adiabatic;
 
   int (*expt_rescale_velocities_diabatic_v1)
   (Nuclear& mol, Hamiltonian& ham, int old_st) = &rescale_velocities_diabatic;
@@ -87,6 +91,7 @@ void export_Dyn_objects(){
   def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v2);
   def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v1);
   def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v2);
+  def("compute_hopping_probabilities_esh", expt_compute_hopping_probabilities_esh_v1);
 
   def("hop", expt_hop_v1);
   def("hop", expt_hop_v2);

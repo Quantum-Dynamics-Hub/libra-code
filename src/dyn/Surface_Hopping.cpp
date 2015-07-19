@@ -232,7 +232,7 @@ void compute_hopping_probabilities_mssh(Ensemble& ens, int i, MATRIX& g, double 
 
 
 
-void hop(int& initstate, Nuclear* mol, Hamiltonian* ham, double ksi, MATRIX* g, int do_rescaling, int rep){
+void hop(int& initstate, Nuclear* mol, Hamiltonian* ham, double ksi, MATRIX* g, int do_rescaling, int rep, int do_reverse){
 // Do actual hop from state initstate
 // initstate - state from which we try to hop out - it will also be updated after the hop has happened
 // mol - nuclear DOF
@@ -264,7 +264,7 @@ void hop(int& initstate, Nuclear* mol, Hamiltonian* ham, double ksi, MATRIX* g, 
         rescale_velocities_diabatic(mol,ham,finstate,initstate); 
       }
       else if(rep==1){
-        rescale_velocities_adiabatic(mol,ham,finstate,initstate); 
+        rescale_velocities_adiabatic(mol,ham,finstate,initstate,do_reverse); 
       }
 
     }// else
@@ -275,19 +275,19 @@ void hop(int& initstate, Nuclear* mol, Hamiltonian* ham, double ksi, MATRIX* g, 
 
 }// hop
 
-int hop(int initstate, Nuclear& mol, Hamiltonian& ham, double ksi, MATRIX& g, int do_rescaling, int rep){
+int hop(int initstate, Nuclear& mol, Hamiltonian& ham, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse){
 
   int res = initstate; 
-  hop(res, &mol, &ham, ksi, &g, do_rescaling, rep);
+  hop(res, &mol, &ham, ksi, &g, do_rescaling, rep, do_reverse);
 
   return res;
 
 }
 
-int hop(int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_rescaling, int rep){
+int hop(int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse){
 
   int res = initstate; 
-  hop(res, &ens.mol[i], ens.ham[i], ksi, &g, do_rescaling, rep);
+  hop(res, &ens.mol[i], ens.ham[i], ksi, &g, do_rescaling, rep, do_reverse);
 
   return res;
 
@@ -295,7 +295,7 @@ int hop(int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_resca
 
 
 
-void rescale_velocities_adiabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,int& old_st){
+void rescale_velocities_adiabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,int& old_st, int do_reverse){
   // Calculate auxiliary variables to determine the case
   // Here i - old state, j - new state
   int st;
@@ -322,7 +322,10 @@ void rescale_velocities_adiabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,in
     double gamma_ij = 0.0;
 
     if(det<0.0){
-      gamma_ij = 0.0;//b_ij/a_ij;
+
+      if(do_reverse){     gamma_ij = b_ij / a_ij;}
+      else{ gamma_ij = 0.0;  }
+
       final_st = old_st; // # hop does not occur - frustrated hop
 
     }
@@ -348,10 +351,10 @@ void rescale_velocities_adiabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,in
 
 } // rescale velocities adiabatic
 
-int rescale_velocities_adiabatic(Nuclear& mol, Hamiltonian& ham, int old_st){
+int rescale_velocities_adiabatic(Nuclear& mol, Hamiltonian& ham, int old_st, int do_reverse){
 
   int new_st = old_st;
-  rescale_velocities_adiabatic(&mol, &ham, new_st, old_st);
+  rescale_velocities_adiabatic(&mol, &ham, new_st, old_st, do_reverse);
   return new_st;
 
 }
@@ -394,7 +397,7 @@ void rescale_velocities_diabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,int
 int rescale_velocities_diabatic(Nuclear& mol, Hamiltonian& ham, int old_st){
 
   int new_st = old_st;
-  rescale_velocities_adiabatic(&mol, &ham, new_st, old_st);
+  rescale_velocities_diabatic(&mol, &ham, new_st, old_st);
   return new_st;
 
 }

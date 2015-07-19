@@ -77,10 +77,11 @@ for i in xrange(2500):
 
  
     do_rescaling = 1 
+    do_reverse = 1
     rep = 1 # adiabatic
     ksi = rnd.uniform(0.0, 1.0)
     print i, ksi
-    el.istate = hop(el.istate, mol, ham, ksi, g, do_rescaling, rep)  # this operation will also rescale velocities, if necessary
+    el.istate = hop(el.istate, mol, ham, ksi, g, do_rescaling, rep, do_reverse)  # this operation will also rescale velocities, if necessary
 
 
     f.write("i= %3i q[0]= %8.5f p[0]= %8.5f  ekin= %8.5f  epot= %8.5f  etot= %8.5f  |c0|^2= %8.5f  |c1|^2= %8.5f  Re|c01|= %8.5f istate= %8.5f\n" % (i, mol.q[0], mol.p[0], ekin, epot, ekin+epot, el.rho(0,0).real, el.rho(1,1).real, el.rho(0,1).real, el.istate))

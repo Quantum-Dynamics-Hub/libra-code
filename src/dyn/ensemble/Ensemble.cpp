@@ -192,7 +192,7 @@ Ensemble::Ensemble(int _ntraj, int _nstates, int _nnucl){
 
 void Ensemble::se_pop(vector<double>& pops,double xmin, double xmax){
 
-  int i,j;
+  int i,traj,n;
 
   // In case array is of wrong size
   if(pops.size()!=nelec){
@@ -203,24 +203,35 @@ void Ensemble::se_pop(vector<double>& pops,double xmin, double xmax){
   // pops[i] - will contain the fraction of the wavefunction (as given by the average weight)
   // of i-th electronic basis state that is enclosed by a box [xmin, xmax] in all dimensions (x,y,z)
   // and for all nuclear degrees of freedom
-  
-  for(i=0;i<nelec;i++){ 
 
+  for(i=0;i<nelec;i++){  // all electronic states
     pops[i] = 0.0;
-    for(j=0;j<ntraj;j++){
-      if(mol[j].q[j]>xmin && mol[j].q[j] < xmax){ // only those trajectories that are in given range
 
-        double q = el[j].q[i];
-        double p = el[j].p[i];
-        pops[i] += (q*q + p*p);
+    for(traj=0;traj<ntraj;traj++){
 
-      }// if
+      if(el[traj].istate == i){
+        
+        int res = 1;
+        for(n=0;n<nnucl;n++){
+          if(mol[traj].q[n]<xmin || mol[traj].q[n] > xmax ){  res = 0;  }
+        }// for n
+
+        if(res==1){ 
+          double q = el[traj].q[i];
+          double p = el[traj].p[i];
+          pops[i] += (q*q + p*p);       
+        }
+
+
+      }// if right state
     }// for j - all trajectories
 
     pops[i] /= (double)ntraj;   // normalize
 
   }// for i - all electronic states
-  
+
+
+   
 
 }
 
@@ -246,11 +257,25 @@ boost::python::list Ensemble::se_pop(){
   return res;
 }
 
+boost::python::list Ensemble::se_pop(double xmin, double xmax){
+
+  vector<double> pops;
+  se_pop(pops, xmin, xmax);
+
+  boost::python::list res;
+  for(int i=0;i<pops.size();i++){
+    res.append(pops[i]);
+  }
+
+  return res;
+}
+
+
 
 
 void Ensemble::sh_pop(vector<double>& pops,double xmin, double xmax){
 
-  int i,j;
+  int i,traj,n;
 
   // In case array is of wrong size
   if(pops.size()!=nelec){
@@ -265,13 +290,21 @@ void Ensemble::sh_pop(vector<double>& pops,double xmin, double xmax){
   for(i=0;i<nelec;i++){  // all electronic states
     pops[i] = 0.0;
 
-    for(j=0;j<ntraj;j++){
+    for(traj=0;traj<ntraj;traj++){
 
-      if(mol[j].q[j]>xmin && mol[j].q[j] < xmax && el[j].istate == i){ // only those trajectories that are in given range
-        pops[i] += 1.0;
-      }// if
+      if(el[traj].istate == i){
+        
+        int res = 1;
+        for(n=0;n<nnucl;n++){
+          if(mol[traj].q[n]<xmin || mol[traj].q[n] > xmax ){  res = 0;  }
+        }// for n
 
+        if(res==1){    pops[i] += 1.0;        }
+
+
+      }// if right state
     }// for j - all trajectories
+
     pops[i] /= (double)ntraj;   // normalize
 
   }// for i - all electronic states
@@ -292,6 +325,19 @@ boost::python::list Ensemble::sh_pop(){
 
   vector<double> pops;
   sh_pop(pops);
+
+  boost::python::list res;
+  for(int i=0;i<pops.size();i++){
+    res.append(pops[i]);
+  }
+
+  return res;
+}
+
+boost::python::list Ensemble::sh_pop(double xmin, double xmax){
+
+  vector<double> pops;
+  sh_pop(pops, xmin, xmax);
 
   boost::python::list res;
   for(int i=0;i<pops.size();i++){

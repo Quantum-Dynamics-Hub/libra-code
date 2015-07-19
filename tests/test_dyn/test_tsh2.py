@@ -67,6 +67,7 @@ use_boltz_factor = 0
 T = 300.0
 rnd = Random()
 do_rescaling = 1 
+do_reverse = 1
 rep = 1 # adiabatic
 
 
@@ -107,7 +108,7 @@ for t in xrange(2500):
         #compute_hopping_probabilities_gfsh(ens, i, g, dt, use_boltz_factor, T) 
 
         ksi = rnd.uniform(0.0, 1.0)
-        ens.el[i].istate = hop(ens.el[i].istate, ens, i , ksi, g, do_rescaling, rep)  # this operation will also rescale velocities, if necessary
+        ens.el[i].istate = hop(ens.el[i].istate, ens, i , ksi, g, do_rescaling, rep, do_reverse)  # this operation will also rescale velocities, if necessary
 
 
     se_pops = ens.se_pop()

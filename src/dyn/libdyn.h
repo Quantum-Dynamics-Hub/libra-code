@@ -14,6 +14,7 @@
 // General dynamics
 #include "Energy_and_Forces.h"
 #include "Surface_Hopping.h"
+#include "Surface_Hopping_method1.h"
 #include "Dynamics_Nuclear.h"
 
 
