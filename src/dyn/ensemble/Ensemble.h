@@ -62,9 +62,28 @@ class Ensemble{
   void ham_set_rep(int i, int _rep);
   void ham_set_rep(int _rep);
 
+  void ham_set_params(int i, vector<double>& params_);
+  void ham_set_params(int i, boost::python::list params_);
+  void ham_set_params(vector<double>& params_);
+  void ham_set_params(boost::python::list params_);
+
   void ham_set_v(int i, vector<double>& v);
   void ham_set_v(int i, boost::python::list v);
   void ham_set_v();
+
+  void ham_set_q(int i, vector<double>& v);
+  void ham_set_q(int i, boost::python::list v);
+
+  void ham_compute(int i);
+  void ham_compute_diabatic(int i);
+  void ham_compute_adiabatic(int i);
+
+  std::complex<double> ham_H(int traj, int i,int j);     
+  std::complex<double> ham_dHdq(int traj, int i,int j,int n);
+  std::complex<double> ham_D(int traj, int i,int j,int n);    
+  std::complex<double> ham_nac(int traj,int i,int j);        
+  std::complex<double> ham_Hvib(int traj, int i,int j);       
+
 
 
   void el_propagate_electronic(int i,double dt);

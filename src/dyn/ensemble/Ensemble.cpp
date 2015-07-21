@@ -8,23 +8,6 @@ namespace libensemble{
 
 Ensemble::~Ensemble(){
 
-//cout<<"Calling ensemble destructor\n";
-/*
-  if(el.size()>0){  
-    for(int i=0;i<el.size();i++){  el[i].~Electronic(); }
-  } el.clear();
-
-  if(mol.size()>0){  
-    for(int i=0;i<el.size();i++){  mol[i].~Nuclear(); }
-  } mol.clear();
-
-  if(ham.size()>0){  
-    for(int i=0;i<ham.size();i++){  
-      if(ham[i]!=NULL) {delete ham[i]; }
-    }
-  } ham.clear();
-
-*/
 }
 
 
@@ -39,26 +22,16 @@ void Ensemble::_init(int _ntraj, int _nelec, int _nnucl){
   nelec = _nelec;
   nnucl = _nnucl;
 
-//  cout<<"Ensemble ctor(in init function)\n";
-
   // Allocate electronic part
   el.resize(ntraj);
   for(i=0;i<ntraj;i++){   el[i] = Electronic(nelec, 0);   }  
-
-//  cout<<"Electronic is set\n";
 
   // Allocate nuclear part
   mol.resize(ntraj);
   for(i=0;i<ntraj;i++){ mol[i] = Nuclear(nnucl); }
 
-//  cout<<"Nuclear is set\n";
-
-//exit(0);
-
   // Allocate Hamiltonian handlers
-//  ham = vector<Hamiltonian*>(ntraj);
   ham.resize(ntraj);
-//  for(i=0;i<ntraj;i++){ ham[i] = NULL; }  //new Hamiltonian(); } // just a generic one
 
   // Activate all trajectories
   is_active = vector<int>(ntraj,1);
@@ -70,85 +43,64 @@ void Ensemble::_init(int _ntraj, int _nelec, int _nnucl){
   ave_p = vector<double>(nnucl, 0.0);
   sigma_q = vector<double>(nnucl, 0.0);
   sigma_p = vector<double>(nnucl, 0.0);
-
-  cout<<"The rest is set\n";
 */
 
 }
 
 
-void Ensemble::ham_set_ham(int i, Hamiltonian& _ham){
-
-  ham[i] = &_ham;
-
-}
-
-
+void Ensemble::ham_set_ham(int i, Hamiltonian& _ham){  ham[i] = &_ham;}
 void Ensemble::ham_set_ham(int i, std::string opt, int mopt){
-
   if(opt=="model"){
-    //Hamiltonian_Model* hm;  
-    //hm = new Hamiltonian_Model(mopt);
-//    Hamiltonian_Model h(mopt);
-//    if(ham[i]==NULL){
-      ham[i] = new Hamiltonian_Model(mopt); //hm;
-//    }else{ cout<<"Hamiltonian is already allocated\n"; }
-   
+    ham[i] = new Hamiltonian_Model(mopt);    
   }// model
-
 }
-
-void Ensemble::ham_set_ham(std::string opt, int mopt){
-
-  for(int i=0;i<ntraj;i++){ 
-    ham_set_ham(i,opt,mopt);
-  }
-
-}
+void Ensemble::ham_set_ham(std::string opt, int mopt){  for(int i=0;i<ntraj;i++){  ham_set_ham(i,opt,mopt); } }
 
 
-void Ensemble::ham_set_rep(int i, int _rep){
-
-  ham[i]->set_rep(_rep);
-
-}
-void Ensemble::ham_set_rep(int _rep){
-
-  for(int i=0;i<ntraj;i++){ 
-    ham[i]->set_rep(_rep);
-  }
-}
+void Ensemble::ham_set_rep(int i, int _rep){  ham[i]->set_rep(_rep);}
+void Ensemble::ham_set_rep(int _rep){  for(int i=0;i<ntraj;i++){  ham[i]->set_rep(_rep); } }
 
 
-void Ensemble::ham_set_v(int i, vector<double>& v){
+void Ensemble::ham_set_params(int i, vector<double>& params_){  ham[i]->set_params(params_); }
+void Ensemble::ham_set_params(int i, boost::python::list params_){  ham[i]->set_params(params_); }
+void Ensemble::ham_set_params(vector<double>& params_){  for(int i=0;i<ntraj;i++){ ham[i]->set_params(params_); } }
+void Ensemble::ham_set_params(boost::python::list params_){  for(int i=0;i<ntraj;i++){ ham[i]->set_params(params_);  } }
 
-  ham[i]->set_v(v);
 
-}
-void Ensemble::ham_set_v(int i, boost::python::list v){
+void Ensemble::ham_set_q(int i, vector<double>& q){  ham[i]->set_q(q); }
+void Ensemble::ham_set_q(int i, boost::python::list q){  ham[i]->set_q(q); }
 
-  ham[i]->set_v(v);
 
-}
+void Ensemble::ham_set_v(int i, vector<double>& v){  ham[i]->set_v(v); }
+void Ensemble::ham_set_v(int i, boost::python::list v){  ham[i]->set_v(v); }
 void Ensemble::ham_set_v(){
 
-  vector<double> v(nnucl,0.0);
- 
+  vector<double> v(nnucl,0.0); 
   for(int i=0;i<ntraj;i++){ 
     // Velocities for all DOFs for given trajectory
-    for(int n=0;n<nnucl;n++){
-      v[n] = mol[i].p[n]/mol[i].mass[n];
-    }
-
+    for(int n=0;n<nnucl;n++){ v[n] = mol[i].p[n]/mol[i].mass[n];  }
     ham[i]->set_v(v);
   }// for i
 
 }
 
+void Ensemble::ham_compute(int i){ ham[i]->compute(); }
+void Ensemble::ham_compute_diabatic(int i){ ham[i]->compute_diabatic(); }
+void Ensemble::ham_compute_adiabatic(int i){ ham[i]->compute_adiabatic(); }
+
+
+std::complex<double> Ensemble::ham_H(int traj, int i,int j){ return ham[traj]->H(i,j); }
+std::complex<double> Ensemble::ham_dHdq(int traj, int i,int j,int n){ return ham[traj]->dHdq(i,j,n); }
+std::complex<double> Ensemble::ham_D(int traj, int i,int j,int n){ return ham[traj]->D(i,j,n); }
+std::complex<double> Ensemble::ham_nac(int traj,int i,int j){ return ham[traj]->nac(i,j); }
+std::complex<double> Ensemble::ham_Hvib(int traj, int i,int j){ return ham[traj]->Hvib(i,j); }
+
+
+
+
 
 void Ensemble::el_propagate_electronic(int i,double dt){
-               
-
+             
   el[i].propagate_electronic(dt, ham[i]);
 
 }

@@ -19,12 +19,34 @@ void export_Ensemble_objects(){
   void (Ensemble::*expt_ham_set_v_v2)(int i, boost::python::list v) = &Ensemble::ham_set_v;
   void (Ensemble::*expt_ham_set_v_v3)() = &Ensemble::ham_set_v;
 
+  void (Ensemble::*expt_ham_set_q_v1)(int i, vector<double>& q) = &Ensemble::ham_set_q;
+  void (Ensemble::*expt_ham_set_q_v2)(int i, boost::python::list q) = &Ensemble::ham_set_q;
+
   void (Ensemble::*expt_ham_set_ham_v1)(int i, std::string opt, int mopt) = &Ensemble::ham_set_ham;
   void (Ensemble::*expt_ham_set_ham_v2)(std::string opt, int mopt) = &Ensemble::ham_set_ham;
   void (Ensemble::*expt_ham_set_ham_v3)(int i, Hamiltonian& _ham) = &Ensemble::ham_set_ham;
 
   void (Ensemble::*expt_ham_set_rep_v1)(int i, int _rep) = &Ensemble::ham_set_rep;
   void (Ensemble::*expt_ham_set_rep_v2)(int _rep) = &Ensemble::ham_set_rep;
+
+  void (Ensemble::*expt_ham_set_params_v1)(int i, vector<double>& v) = &Ensemble::ham_set_params;
+  void (Ensemble::*expt_ham_set_params_v2)(int i, boost::python::list v) = &Ensemble::ham_set_params;
+  void (Ensemble::*expt_ham_set_params_v3)(vector<double>& v) = &Ensemble::ham_set_params;
+  void (Ensemble::*expt_ham_set_params_v4)(boost::python::list v) = &Ensemble::ham_set_params;
+
+
+  void (Ensemble::*expt_ham_compute_v1)(int i) = &Ensemble::ham_compute;
+  void (Ensemble::*expt_ham_compute_diabatic_v1)(int i) = &Ensemble::ham_compute_diabatic;
+  void (Ensemble::*expt_ham_compute_adiabatic_v1)(int i) = &Ensemble::ham_compute_adiabatic;
+
+  std::complex<double> (Ensemble::*expt_ham_H_v1)(int traj, int i,int j) = &Ensemble::ham_H;
+  std::complex<double> (Ensemble::*expt_ham_dHdq_v1)(int traj, int i,int j,int n) = &Ensemble::ham_dHdq;
+  std::complex<double> (Ensemble::*expt_ham_D_v1)(int traj, int i,int j,int n) = &Ensemble::ham_D;
+  std::complex<double> (Ensemble::*expt_ham_nac_v1)(int traj,int i,int j) = &Ensemble::ham_nac; 
+  std::complex<double> (Ensemble::*expt_ham_Hvib_v1)(int traj, int i,int j) = &Ensemble::ham_Hvib;
+
+
+
 
   void (Ensemble::*expt_el_propagate_electronic_v1)(int i, double dt) = &Ensemble::el_propagate_electronic;
   void (Ensemble::*expt_el_propagate_electronic_v2)(double dt) = &Ensemble::el_propagate_electronic;
@@ -75,9 +97,28 @@ void export_Ensemble_objects(){
       .def("ham_set_rep", expt_ham_set_rep_v1)
       .def("ham_set_rep", expt_ham_set_rep_v2)
 
+      .def("ham_set_params", expt_ham_set_params_v1)
+      .def("ham_set_params", expt_ham_set_params_v2)
+      .def("ham_set_params", expt_ham_set_params_v3)
+      .def("ham_set_params", expt_ham_set_params_v4)
+
+      .def("ham_set_q", expt_ham_set_q_v1)
+      .def("ham_set_q", expt_ham_set_q_v2)
+
       .def("ham_set_v", expt_ham_set_v_v1)
       .def("ham_set_v", expt_ham_set_v_v2)
       .def("ham_set_v", expt_ham_set_v_v3)
+
+      .def("ham_compute", expt_ham_compute_v1)
+      .def("ham_compute_diabatic", expt_ham_compute_diabatic_v1)
+      .def("ham_compute_adiabatic", expt_ham_compute_adiabatic_v1)
+
+      .def("ham_H", expt_ham_H_v1)
+      .def("ham_dHdq", expt_ham_dHdq_v1)
+      .def("ham_D", expt_ham_D_v1)
+      .def("ham_nac", expt_ham_nac_v1)
+      .def("ham_Hvib", expt_ham_Hvib_v1)
+
 
       .def("el_propagate_electronic", expt_el_propagate_electronic_v1)
       .def("el_propagate_electronic", expt_el_propagate_electronic_v2)

@@ -91,6 +91,8 @@ public:
 
   // This function performs actual computations
   virtual void compute(){ ;; }  
+  virtual void compute_diabatic(){ ;; }  
+  virtual void compute_adiabatic(){ ;; }  
 
 
   // Calculation methods
