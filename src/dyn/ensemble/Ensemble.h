@@ -10,6 +10,8 @@
 using namespace libmmath;
 using namespace libmmath::librandom;
 using namespace libhamiltonian;
+using namespace libhamiltonian::libhamiltonian_generic;
+using namespace libhamiltonian::libhamiltonian_model;
 
 
 namespace libdyn{

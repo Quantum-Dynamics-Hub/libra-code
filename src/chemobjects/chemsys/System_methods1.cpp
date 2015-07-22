@@ -63,7 +63,7 @@ void System::Assign_Rings(){
 
   // Find the smallest rings 
   // !!! This option is commented by default - uncomment it when you need the information about rings !!!!
-//  g.FIND_SSSR(rings);
+  g.FIND_SSSR(rings);
 
   // Now assign
   int indx,i,j,nrings,sz;

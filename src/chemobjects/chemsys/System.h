@@ -196,7 +196,7 @@ public:
 
   //----------- Defined in System_methods4.cpp ------------------
   // Chemistry related functions:
-  void determine_functional_groups();
+  void determine_functional_groups(int assign_ring);
 
 /*
   //----------- Defined in System_methods5.cpp ------------------

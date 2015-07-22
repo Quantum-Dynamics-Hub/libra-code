@@ -80,7 +80,7 @@ void System::set(vector<Atom*>& at,std::string grp_name){
   }
 }
 
-void System::determine_functional_groups(){
+void System::determine_functional_groups(int assign_rings){
 /***************************************************************
  This function uses the information on atom connectivity 
  stored in AtomGraph variable (of type GRAPH<Atom*,Group*>)
@@ -170,7 +170,7 @@ void System::determine_functional_groups(){
 ***************************************************************/
   cout<<"In System::determine_functional_groups()\n";
 
-  Assign_Rings();
+  if(assign_rings==1){    Assign_Rings();   }
 
   // Set the Atom_functional_group property for all atoms
   // as undefined
