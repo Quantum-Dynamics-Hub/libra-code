@@ -1,6 +1,7 @@
 #include "Model_SEXCH.h"
 
 namespace libhamiltonian{
+namespace libhamiltonian_model{
 
 void SEXCH_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params){ 
 // Superexchange Hamiltonian in diabatic representation
@@ -65,6 +66,7 @@ boost::python::list SEXCH_Ham(double x, boost::python::list params_){
 
 }
 
+}// namespace libhamiltonian_model
 }// namespace libhamiltonian
 
 

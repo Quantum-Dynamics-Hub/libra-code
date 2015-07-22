@@ -13,11 +13,11 @@
 #define HAMILTONIAN_H
 
 #include <complex>
-#include "../mmath/libmmath.h"
-
+#include "../../mmath/libmmath.h"
 
 
 namespace libhamiltonian{
+namespace libhamiltonian_generic{
 
 
 using namespace libmmath;
@@ -49,11 +49,41 @@ class Hamiltonian{
 
 //  To solve this problem we use virtual functions for computation of H and dHdR 
 //  specific implementation is controlled by the derived classes
+//###########################################################################################
+//  Still - these data members are used in derived classes, so we include them here
+//  in efficient classes, they will simply not be used
+
+protected:
+
+  int rep;                   // representation = 0 - for diabatic, 1 - for adiabatic
+  int nelec;                 // number of electronic degrees of freedom (energy levels)
+  int nnucl;                 // number of nuclear degrees of freedom - expected
+
+  // Model-specific parameters
+  vector<double> params;
+  vector<double> q;          // nuclear coordinates - here, they act as parameters
+  vector<double> v;          // nuclear velocities: v = dq/dt  - here, they act as parameters
+
+  // Diabatic representation
+  MATRIX* ham_dia;           // Hamiltonian in diabatic representation
+  vector<MATRIX*> d1ham_dia; // derivatives of the ham_dia w.r.t. all atomic DOFs: q0, q1, .. qN 
+  vector<MATRIX*> d2ham_dia; // derivatives of the ham_dia w.r.t. all atomic DOFs: q00, q01, ..., q0N, q10, q11, ... qNN
+
+  // Adiabatic representation
+  MATRIX* ham_adi;           // Hamiltonian in adiabatic representation
+  vector<MATRIX*> d1ham_adi; // first order derivative couplings: <i|d/dR|j> - is computed from the transformation coefficients
+
+  // Control variable - to keep track of the computational state of the
+  // object of this calss - needed to avoid unnecessary computations
+  // if 0 - computations are outdated; 1 - computations are up to date
+  int status_dia;  
+  int status_adi;
+
 
 public:
 
   // Constructors
-  Hamiltonian(); //{ ;; }
+  Hamiltonian(); 
 
   // Use default copy constructor
   //Hamiltonian(const Hamiltonian&);
@@ -78,19 +108,19 @@ public:
 //  virtual void set_q(vector<double>&){ ;; }
 
 
-  virtual void set_rep(int rep_){ ;; }
+  virtual void set_rep(int rep_);
 
   // Set parameters
   virtual void set_params(vector<double>& params_){ ;; }
-  virtual void set_params(boost::python::list params_){ ;; }
-  virtual void set_q(vector<double>& q_){ ;; }
-  virtual void set_q(boost::python::list q_){ ;; }
-  virtual void set_v(vector<double>& v_){ ;; }
-  virtual void set_v(boost::python::list v_){ ;; }
+  virtual void set_params(boost::python::list params_);
+  virtual void set_q(vector<double>& q_);
+  virtual void set_q(boost::python::list q_);
+  virtual void set_v(vector<double>& v_);
+  virtual void set_v(boost::python::list v_);
 
 
   // This function performs actual computations
-  virtual void compute(){ ;; }  
+  virtual void compute();
   virtual void compute_diabatic(){ ;; }  
   virtual void compute_adiabatic(){ ;; }  
 
@@ -101,10 +131,6 @@ public:
   virtual std::complex<double> D(int i,int j,int n);    // derivative coupling                 <i|d/dR_n|j>
   virtual std::complex<double> nac(int i,int j);        // non-adiabatic coupling              <i|d/dt|j>
   virtual std::complex<double> Hvib(int i,int j);       // vibronic Hamiltonian (for TD-SE)    H - i*hbar*nac
-
-  virtual std::complex<double> dHdRx(int, int, int); // derivative of Hamiltonian w.r.t. Cartesian coordinate x
-  virtual std::complex<double> dHdRy(int, int, int); // derivative of Hamiltonian w.r.t. Cartesian coordinate y
-  virtual std::complex<double> dHdRz(int, int, int); // derivative of Hamiltonian w.r.t. Cartesian coordinate z
 
 
   friend bool operator == (const Hamiltonian& h1, const Hamiltonian& h2){
@@ -121,6 +147,7 @@ public:
 typedef std::vector<Hamiltonian> HamiltonianList;
 
 
+}// namespace libhamiltonian_generic
 }// namespace libhamiltonian
 
 #endif // HAMILTONIAN_H

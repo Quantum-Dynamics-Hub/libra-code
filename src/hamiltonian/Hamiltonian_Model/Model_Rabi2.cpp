@@ -1,6 +1,7 @@
 #include "Model_Rabi2.h"
 
 namespace libhamiltonian{
+namespace libhamiltonian_model{
 
 void Rabi2_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params){ 
 // Rabi2 hamiltonian in diabatic representation
@@ -63,5 +64,6 @@ boost::python::list Rabi2_Ham(double x, boost::python::list params_){
 
 }
 
+}// namespace libhamiltonian_model
 }// namespace libhamiltonian
 

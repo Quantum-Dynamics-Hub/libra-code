@@ -1,9 +1,8 @@
 #ifndef LIB_HAMILTONIAN_H
 #define LIB_HAMILTONIAN_H
 
-
-//#include "Hamiltonian.h"
-#include "Hamiltonian_Model.h"
+#include "Hamiltonian_Generic/libhamiltonian_generic.h"
+#include "Hamiltonian_Model/libhamiltonian_model.h"
 
 namespace libhamiltonian{
 

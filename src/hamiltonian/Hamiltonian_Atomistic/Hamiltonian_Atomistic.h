@@ -9,31 +9,24 @@
 *
 *********************************************************************************/
 
-#ifndef HAMILTONIAN_MODEL_H
-#define HAMILTONIAN_MODEL_H
+#ifndef HAMILTONIAN_ATOMISTIC_H
+#define HAMILTONIAN_ATOMISTIC_H
 
-#include "Hamiltonian.h"
-#include "Model_SAC.h"
-#include "Model_DAC.h"
-#include "Model_ECWR.h"
-#include "Model_Marcus.h"
-#include "Model_SEXCH.h"
-#include "Model_Rabi2.h"
-//#include "../mmath/libmmath.h"
-
+#include "../Hamiltonian.h"
+//#include "Hamiltonian_MM/Hamiltonian_MM.h"
 
 
 namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
 
 using namespace libmmath;
 
-class Hamiltonian_Model : public Hamiltonian{
+class Hamiltonian_Atomistic : public Hamiltonian{
 
   // General specification of the model
-  int ham_indx;              // model index: 0 - SAC, 1 - DAC, 2 - ECWR, 3 - Marcus, 4 - superexchange (SEXCH), 5 - Rabi2
   int rep;                   // representation = 0 - for diabatic, 1 - for adiabatic
-  int n_elec;                // number of electronic degrees of freedom (energy levels)
-  int n_nucl;                // number of nuclear degrees of freedom - expected
+  int nelec;                 // number of electronic degrees of freedom (energy levels)
+  int nnucl;                 // number of nuclear degrees of freedom - expected
 
   // Model-specific parameters
   vector<double> params;
@@ -59,10 +52,10 @@ class Hamiltonian_Model : public Hamiltonian{
 public:
 
   // Constructor: only allocates memory and sets up related variables
-  Hamiltonian_Model(int ham_indx_);
+  Hamiltonian_Atomistic(int, int);
 
   // Destructor
-  ~Hamiltonian_Model();
+  ~Hamiltonian_Atomistic();
 
   // Set properties
   void set_rep(int rep_);
@@ -91,10 +84,10 @@ public:
 
 };
 
-typedef std::vector<Hamiltonian_Model> Hamiltonian_ModelList;
+typedef std::vector<Hamiltonian_Atomistic> Hamiltonian_AtomisticList;
 
 
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
 
-}// namespace libmodel
-
-#endif // HAMILTONIAN_MODEL_H
+#endif // HAMILTONIAN_ATOMISTIC_H

@@ -1,6 +1,8 @@
 #include "Model_SAC.h"
 
 namespace libhamiltonian{
+namespace libhamiltonian_model{
+
 
 void SAC_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params){ 
 // SAC hamiltonian in diabatic representation
@@ -72,5 +74,6 @@ boost::python::list SAC_Ham(double x, boost::python::list params_){
 
 }
 
+}// namespace libhamiltonian_model
 }// namespace libhamiltonian
 

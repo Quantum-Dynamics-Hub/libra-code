@@ -1,6 +1,8 @@
 #include "Model_Marcus.h"
 
 namespace libhamiltonian{
+namespace libhamiltonian_model{
+
 
 void Marcus_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params){ 
 // Marcus spin-boson Hmiltonian in diabatic representation
@@ -68,5 +70,6 @@ boost::python::list Marcus_Ham(double x, boost::python::list params_){
 
 }
 
+}// namespace libhamiltonian_model
 }// namespace libhamiltonian
 
