@@ -20,8 +20,8 @@ MESSAGE("Going into subdirectory Hamiltonian_Model...")
 ADD_SUBDIRECTORY("Hamiltonian_Model")
 
 
-#MESSAGE("Going into subdirectory Hamiltonian_Atomistic...")
-#ADD_SUBDIRECTORY("Hamiltonian_Atomistic")
+MESSAGE("Going into subdirectory Hamiltonian_Atomistic...")
+ADD_SUBDIRECTORY("Hamiltonian_Atomistic")
 
 
 

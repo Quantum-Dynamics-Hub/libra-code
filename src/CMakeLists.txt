@@ -31,8 +31,16 @@ MESSAGE("Going into subdirectory qchem...")
 ADD_SUBDIRECTORY("qchem")
 
 
+MESSAGE("Going into subdirectory cell...")
+ADD_SUBDIRECTORY("cell")
+
+MESSAGE("Going into subdirectory pot...")
+ADD_SUBDIRECTORY("pot")
+
+
 MESSAGE("Going into subdirectory hamiltonian...")
 ADD_SUBDIRECTORY("hamiltonian")
+
 
 MESSAGE("Going into subdirectory dyn...")
 ADD_SUBDIRECTORY("dyn")
@@ -40,11 +48,6 @@ ADD_SUBDIRECTORY("dyn")
 
 
 
-#MESSAGE("Going into subdirectory cell...")
-#ADD_SUBDIRECTORY("cell")
-
-#MESSAGE("Going into subdirectory pot...")
-#ADD_SUBDIRECTORY("pot")
 
 
 
