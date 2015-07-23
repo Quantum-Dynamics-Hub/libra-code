@@ -7,12 +7,20 @@ using namespace libcell;
 #include "../../../pot/libpot.h"
 using namespace libpot;
 
+#include "../../../chemobjects/libchemobjects.h"
+using namespace libchemobjects;
+using namespace libchemobjects::libchemsys;
+
+#include "ForceField/libforcefield.h"
+
+
 
 
 namespace libhamiltonian{
 namespace libhamiltonian_atomistic{
 namespace libhamiltonian_mm{
 
+using namespace libforcefield;
 
 /*
 struct triple{
@@ -235,6 +243,59 @@ public:
   double calculate(int,int&);
   
 };
+
+
+
+class listHamiltonian_MM{
+
+
+public:
+
+    listHamiltonian_MM(){ ;; }
+
+
+    vector<Hamiltonian_MM> interactions;
+    vector<int>     active_interactions;
+
+    std::string stress_opt;int is_stress_opt;
+    MATRIX3x3 stress_at;   int is_stress_at;
+    MATRIX3x3 stress_fr;   int is_stress_fr;
+    MATRIX3x3 stress_ml;   int is_stress_ml;
+    MATRIX3x3 hessian;     int is_hessian;
+
+    // RESPA auxiliary variables
+    vector<VECTOR> respa_f_fast,respa_f_medium;
+    vector<VECTOR> respa_t_fast,respa_t_medium;
+    MATRIX3x3 respa_s_fast,respa_s_medium;
+    double respa_E_fast,respa_E_medium;
+
+
+  //----------- Defined in Hamiltonian_MM_methods2.cpp ------------------
+  // Interaction related functions:
+  int is_new_interaction(Hamiltonian_MM&);
+  void show_interactions_statistics();
+
+  void set_atom_types(System& syst,vector<int>& lst,ForceField& ff);
+  void set_fragment_types(System& syst, vector<int>& lst,ForceField& ff);
+
+  bool is_active(Atom&,Atom&);
+  bool is_active(Atom&,Atom&,Atom&);
+  bool is_active(Atom&,Atom&,Atom&,Atom&);
+
+  void set_atom_interactions_for_atoms(System& syst,string int_type,vector<Atom>& top_elt,vector<int>& lst1,vector<int>& lst2,ForceField& ff,int verb);
+  void set_group_interactions_for_atoms(System& syst,string int_type,vector<Group>& top_elt,vector<int>& lst1,vector<int>& lst2,ForceField& ff);
+
+  void set_interactions_for_atoms(System& syst, boost::python::list,boost::python::list,ForceField&,int verb, int assign_rings);
+  void set_interactions_for_fragments(System& syst, boost::python::list,boost::python::list,ForceField&);
+
+
+  void apply_pbc_to_interactions(System&, int,int,int,int);
+  void set_respa_types(std::string inter_type,std::string respa_type);
+
+
+};
+
+
 
 
 }// namespace libhamiltonian_mm

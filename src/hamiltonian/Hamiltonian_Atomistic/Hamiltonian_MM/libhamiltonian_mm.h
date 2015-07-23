@@ -2,7 +2,7 @@
 #define LIB_HAMILTONIAN_MM_H
 
 #include "Hamiltonian_MM.h"
-#include "ForceField/libforcefield.h"
+
 
 namespace libhamiltonian{
 namespace libhamiltonian_atomistic{

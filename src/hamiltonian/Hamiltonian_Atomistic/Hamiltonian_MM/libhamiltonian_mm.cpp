@@ -33,8 +33,17 @@ void export_Hamiltonian_MM_objects(){
       .def("set_interaction_type_and_functional", &Hamiltonian_MM::set_interaction_type_and_functional)
       .def("activate", &Hamiltonian_MM::activate)
 
-
   ;
+
+  class_<listHamiltonian_MM>("listHamiltonian_MM",init<>())
+      .def("__copy__", &generic__copy__<listHamiltonian_MM>)
+      .def("__deepcopy__", &generic__deepcopy__<listHamiltonian_MM>)
+
+//      .def("set_interactions_for_atoms",&System::set_interactions_for_atoms)
+//      .def("set_respa_types",&System::set_respa_types)
+//      .def("show_interactions_statistics",&System::show_interactions_statistics)
+  ;
+
 
 
 

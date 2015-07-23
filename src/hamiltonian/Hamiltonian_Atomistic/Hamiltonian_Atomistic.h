@@ -13,7 +13,7 @@
 #define HAMILTONIAN_ATOMISTIC_H
 
 #include "../Hamiltonian_Generic/Hamiltonian.h"
-//#include "Hamiltonian_MM/Hamiltonian_MM.h"
+#include "Hamiltonian_MM/Hamiltonian_MM.h"
 
 
 namespace libhamiltonian{
@@ -21,11 +21,18 @@ namespace libhamiltonian_atomistic{
 
 using namespace libmmath;
 using namespace libhamiltonian_generic;
+using namespace libhamiltonian_mm;
+
 
 class Hamiltonian_Atomistic : public Hamiltonian{
+
  
   
 public:
+
+  // Data members:
+  listHamiltonian_MM*  mm_ham;   // mm part
+
 
   // Constructor: only allocates memory and sets up related variables
   Hamiltonian_Atomistic(int, int);
