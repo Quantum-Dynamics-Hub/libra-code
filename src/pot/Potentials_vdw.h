@@ -4,6 +4,7 @@
 #include "../mmath/libmmath.h"
 #include "Switching_functions.h"
 using namespace libmmath;
+using namespace libmmath::liblinalg;
 
 namespace libpot{
 

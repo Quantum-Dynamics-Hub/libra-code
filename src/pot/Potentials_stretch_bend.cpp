@@ -1,5 +1,9 @@
 #include "Potentials_stretch_bend.h"
 
+using namespace libmmath;
+using namespace libmmath::liblinalg;
+
+
 namespace libpot{
 
 double Stretch_Bend_Harmonic(VECTOR& r1,VECTOR& r2,VECTOR& r3,         /* Inputs */

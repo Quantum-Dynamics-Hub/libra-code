@@ -1,5 +1,9 @@
 #include "Potentials_frag.h"
 
+using namespace libmmath;
+using namespace libmmath::liblinalg;
+
+
 namespace libpot{
 
 double Gay_Berne(VECTOR& ri,VECTOR& rj,VECTOR& ui,VECTOR& uj,          /*Inputs*/

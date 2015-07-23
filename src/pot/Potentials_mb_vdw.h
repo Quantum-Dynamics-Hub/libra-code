@@ -8,6 +8,7 @@
 #include "Potentials_elec.h"
 
 using namespace libmmath;
+using namespace libmmath::liblinalg;
 using namespace libcell;
 using libcell::triple;
 using libcell::quartet;

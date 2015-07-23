@@ -1,15 +1,44 @@
-#ifndef INTERACTION_H
-#define INTERACTION_H
+#ifndef HAMILTONIAN_MM_H
+#define HAMILTONIAN_MM_H
 
-#include "Potentials.h"
-#include "Aux_types.h"
+#include "../../../cell/libcell.h"
+using namespace libcell;
 
-class Interaction{
+#include "../../../pot/libpot.h"
+using namespace libpot;
+
+
+
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_mm{
+
+
+/*
+struct triple{
+  int is_central;
+  int n1,n2,n3;
+};
+
+struct quartet{
+  int is_central;
+  int j;        // index of the atom with which another one is interacting
+  int n1,n2,n3; // translation vector of atom j
+};
+
+struct excl_scale{
+  int at_indx1, at_indx2;
+  double scale;
+};
+*/
+
+
+class Hamiltonian_MM{
 
 
   //--------- Auxiliary internal functions -------------
   void init_variables();// Initializes variables
-  void copy_content(const Interaction&); // Copies the content which is defined
+  void copy_content(const Hamiltonian_MM&); // Copies the content which is defined
 
 //----------------- Types of interaction supported ---------------
   struct bond_interaction{
@@ -135,13 +164,13 @@ public:
   MATRIX3x3 stress_ml;    int is_stress_ml;  // molecular stress tensor
 
   //----------- Basic class operations ---------------------------
-  // Defined in Interaction.cpp
-  Interaction();                   // constructor
-  Interaction(const Interaction&); // copy-constructor
- ~Interaction();                   // destructor
+  // Defined in Hamiltonian_MM.cpp
+  Hamiltonian_MM();                   // constructor
+  Hamiltonian_MM(const Hamiltonian_MM&); // copy-constructor
+ ~Hamiltonian_MM();                   // destructor
 
-  Interaction& operator=(const Interaction&); // assignment operator
-  friend int operator == (const Interaction& i1, const Interaction& i2);
+  Hamiltonian_MM& operator=(const Hamiltonian_MM&); // assignment operator
+  friend int operator == (const Hamiltonian_MM& i1, const Hamiltonian_MM& i2);
 
   void show_info();
 
@@ -149,7 +178,8 @@ public:
   int get_type()  { return int_type; }
   int get_status(){ return is_active; }
 
-  //------- Interface : Defined in Interaction_methods.cpp -------------
+
+  //------- Interface : Defined in Hamiltonian_MM_methods1.cpp -------------
   //General manipulations
   void activate()  { is_active = 1; }
   void deactivate(){ is_active = 0; }
@@ -206,4 +236,11 @@ public:
   
 };
 
-#endif // INTERACTION_H
+
+}// namespace libhamiltonian_mm
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
+
+
+
+#endif // HAMILTONIAN_MM_H

@@ -1,5 +1,9 @@
 #include "Potentials_vdw.h"
 
+using namespace libmmath;
+using namespace libmmath::liblinalg;
+
+
 namespace libpot{
 
 

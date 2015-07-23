@@ -1,5 +1,9 @@
 #include "Potentials_bonds.h"
 
+using namespace libmmath;
+using namespace libmmath::liblinalg;
+
+
 namespace libpot{
 
 

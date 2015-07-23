@@ -1,14 +1,27 @@
-#include "Interaction.h"
+#include "Hamiltonian_MM.h"
+
+
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_mm{
+
+//========================================================
+// Basic functionality of the class Hamiltonian_MM
+//========================================================
+
+
 /*
-void Interaction::set(object at){
+void Hamiltonian_MM::set(object at){
 
  set_value(is_type,   type,   at,"type");
  set_value(is_potential_type,  potential_type, at,"potential_type");
 }
 */
-void Interaction::show_info(){
 
-  std::cout<<"Interaction properties:"<<std::endl;
+
+void Hamiltonian_MM::show_info(){
+
+  std::cout<<"Hamiltonian_MM properties:"<<std::endl;
   std::cout<<"is_active = "<<is_active<<std::endl; 
   if(is_int_type){std::cout<<"int_type = "<<int_type<<std::endl;   }
   if(is_functional){std::cout<<"functional = "<<functional<<std::endl;   }
@@ -53,7 +66,7 @@ void Interaction::show_info(){
 }
 
 
-void Interaction::init_variables(){
+void Hamiltonian_MM::init_variables(){
   is_active = 1;
   is_int_type = 0;         
   is_functional = 0; 
@@ -79,7 +92,7 @@ void Interaction::init_variables(){
 
 }
 
-void Interaction::copy_content(const Interaction& in){
+void Hamiltonian_MM::copy_content(const Hamiltonian_MM& in){
   if(in.is_int_type) { int_type = in.int_type; is_int_type = 1; }
   if(in.is_functional) { functional = in.functional; is_functional = 1; }
   if(in.is_respa_type) { respa_type = in.respa_type; is_respa_type = 1; }
@@ -106,7 +119,7 @@ void Interaction::copy_content(const Interaction& in){
 
 }
 
-Interaction::Interaction(){
+Hamiltonian_MM::Hamiltonian_MM(){
   /****************
      Constructor
   ******************/
@@ -114,7 +127,7 @@ Interaction::Interaction(){
   init_variables();
 }
 
-Interaction::Interaction(const Interaction& in){
+Hamiltonian_MM::Hamiltonian_MM(const Hamiltonian_MM& in){
   /********************
     Copy constructor
   *********************/
@@ -124,7 +137,7 @@ Interaction::Interaction(const Interaction& in){
   copy_content(in);
 }
 
-Interaction& Interaction::operator=(const Interaction& in){
+Hamiltonian_MM& Hamiltonian_MM::operator=(const Hamiltonian_MM& in){
   /********************
     Assignment operator
   *********************/
@@ -135,7 +148,7 @@ Interaction& Interaction::operator=(const Interaction& in){
   return *this;
 }
 
-Interaction::~Interaction(){
+Hamiltonian_MM::~Hamiltonian_MM(){
 //  if(Box!=NULL){ delete Box; Box = NULL; }
   if(data_bond!=NULL) { delete data_bond; data_bond = NULL; }
   if(data_angle!=NULL){ delete data_angle;data_angle = NULL;}
@@ -148,7 +161,7 @@ Interaction::~Interaction(){
 
 }
 
-int operator == (const Interaction& i1, const Interaction& i2){
+int operator == (const Hamiltonian_MM& i1, const Hamiltonian_MM& i2){
   int res = 1;
   if(i1.int_type!=i2.int_type){ res = 0; }
   if(i1.functional!=i2.functional){ res = 0; }
@@ -340,4 +353,9 @@ int operator == (const Interaction& i1, const Interaction& i2){
   return res;
 }
 
+
+
+}// namespace libhamiltonian_mm
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
 

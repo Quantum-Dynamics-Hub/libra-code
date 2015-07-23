@@ -14,9 +14,9 @@ namespace libhamiltonian_atomistic{
 void export_hamiltonian_atomistic_objects(){
 
 
-  void (Hamiltonian_Atomistic::*set_params)(boost::python::list) = &Hamiltonian_Atomistic::set_params;
-  void (Hamiltonian_Atomistic::*set_q)(boost::python::list) = &Hamiltonian_Atomistic::set_q;
-  void (Hamiltonian_Atomistic::*set_v)(boost::python::list) = &Hamiltonian_Atomistic::set_v;
+//  void (Hamiltonian_Atomistic::*set_params)(boost::python::list) = &Hamiltonian_Atomistic::set_params;
+//  void (Hamiltonian_Atomistic::*set_q)(boost::python::list) = &Hamiltonian_Atomistic::set_q;
+//  void (Hamiltonian_Atomistic::*set_v)(boost::python::list) = &Hamiltonian_Atomistic::set_v;
 
 
 
@@ -24,20 +24,24 @@ void export_hamiltonian_atomistic_objects(){
       .def("__copy__", &generic__copy__<Hamiltonian_Atomistic>)
       .def("__deepcopy__", &generic__deepcopy__<Hamiltonian_Atomistic>)
 
+/*
       .def("set_params", set_params)
       .def("set_rep", &Hamiltonian_Atomistic::set_rep)
       .def("set_q", set_q)
       .def("set_v", set_v)
 
       .def("compute",          &Hamiltonian_Atomistic::compute)
+*/
       .def("compute_diabatic", &Hamiltonian_Atomistic::compute_diabatic)
       .def("compute_adiabatic",&Hamiltonian_Atomistic::compute_adiabatic)
 
+/*
       .def("H", &Hamiltonian_Atomistic::H)
       .def("dHdq", &Hamiltonian_Atomistic::dHdq)
       .def("Hvib", &Hamiltonian_Atomistic::Hvib)
       .def("D", &Hamiltonian_Atomistic::D)
       .def("nac", &Hamiltonian_Atomistic::nac)
+*/
  
   ;
 

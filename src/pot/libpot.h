@@ -1,6 +1,7 @@
 #ifndef LIBPOT_H
 #define LIBPOT_H
 
+
 #include "Switching_functions.h"
 #include "Potentials_bonds.h"
 #include "Potentials_angles.h"
@@ -15,7 +16,10 @@
 #include "Potentials_mb_elec.h"
 
 
+namespace libpot{
+
 void export_Pot_objects();
 
+}// namespace libpot
 
 #endif// LIBPOT_H

@@ -1,5 +1,9 @@
 #include "Potentials_elec.h"
 
+using namespace libmmath;
+using namespace libmmath::liblinalg;
+
+
 namespace libpot{
 
 double Elec_Coulomb(VECTOR& ri,VECTOR& rj,     /*Inputs*/             

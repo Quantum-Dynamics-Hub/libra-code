@@ -4,8 +4,11 @@
 #include "libpot.h"
 
 using namespace boost::python;
-using namespace libpot;
+using namespace libcell;
+//using namespace libpot;
+using namespace libmmath;
 
+namespace libpot{
 
 
 void export_Pot_objects(){
@@ -100,5 +103,7 @@ BOOST_PYTHON_MODULE(libpot){
   export_Pot_objects();
 
 }
+
+}// namespace libpot
 
 

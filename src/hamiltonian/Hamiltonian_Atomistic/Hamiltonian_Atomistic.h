@@ -12,7 +12,7 @@
 #ifndef HAMILTONIAN_ATOMISTIC_H
 #define HAMILTONIAN_ATOMISTIC_H
 
-#include "../Hamiltonian.h"
+#include "../Hamiltonian_Generic/Hamiltonian.h"
 //#include "Hamiltonian_MM/Hamiltonian_MM.h"
 
 
@@ -20,33 +20,9 @@ namespace libhamiltonian{
 namespace libhamiltonian_atomistic{
 
 using namespace libmmath;
+using namespace libhamiltonian_generic;
 
 class Hamiltonian_Atomistic : public Hamiltonian{
-
-  // General specification of the model
-  int rep;                   // representation = 0 - for diabatic, 1 - for adiabatic
-  int nelec;                 // number of electronic degrees of freedom (energy levels)
-  int nnucl;                 // number of nuclear degrees of freedom - expected
-
-  // Model-specific parameters
-  vector<double> params;
-  vector<double> q;          // nuclear coordinates - here, they act as parameters
-  vector<double> v;          // nuclear velocities: v = dq/dt  - here, they act as parameters
-
-  // Diabatic representation
-  MATRIX* ham_dia;           // Hamiltonian in diabatic representation
-  vector<MATRIX*> d1ham_dia; // derivatives of the ham_dia w.r.t. all atomic DOFs: q0, q1, .. qN 
-  vector<MATRIX*> d2ham_dia; // derivatives of the ham_dia w.r.t. all atomic DOFs: q00, q01, ..., q0N, q10, q11, ... qNN
-
-  // Adiabatic representation
-  MATRIX* ham_adi;           // Hamiltonian in adiabatic representation
-  vector<MATRIX*> d1ham_adi; // first order derivative couplings: <i|d/dR|j> - is computed from the transformation coefficients
-
-  // Control variable - to keep track of the computational state of the
-  // object of this calss - needed to avoid unnecessary computations
-  // if 0 - computations are outdated; 1 - computations are up to date
-  int status_dia;  
-  int status_adi;
  
   
 public:
@@ -56,7 +32,7 @@ public:
 
   // Destructor
   ~Hamiltonian_Atomistic();
-
+/*
   // Set properties
   void set_rep(int rep_);
 
@@ -70,16 +46,11 @@ public:
 
   // Perform actual computations - this will construct the internals of the object of this type
   void compute();
+*/
   void compute_diabatic();
   void compute_adiabatic();
 
 
-  // Now call different properties - the call signature is the same, but the result depends in the setters before
-  std::complex<double> H(int i,int j);          // Hamiltonian
-  std::complex<double> dHdq(int i,int j,int n); // Hamiltonian first-order derivative  
-  std::complex<double> D(int i,int j,int n);    // derivative coupling                 <i|d/dR_n|j>
-  std::complex<double> nac(int i,int j);        // non-adiabatic coupling              <i|d/dt|j>
-  std::complex<double> Hvib(int i,int j);       // vibronic Hamiltonian (for TD-SE)    H - i*hbar*nac
 
 
 };

@@ -3,6 +3,7 @@
 
 #include "../mmath/libmmath.h"
 using namespace libmmath;
+using namespace libmmath::liblinalg;
 
 
 namespace libpot{

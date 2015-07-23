@@ -1,17 +1,26 @@
-#include "Interaction.h"
-#include "Cell.h"
+#include "Hamiltonian_MM.h"
+//using namespace libcell;
 
-void Interaction::set_pbc(MATRIX3x3* box,int kx_,int ky_,int kz_){
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_mm{
+
+//========================================================
+// Computational functionality of the class Hamiltonian_MM
+//========================================================
+
+
+void Hamiltonian_MM::set_pbc(MATRIX3x3* box,int kx_,int ky_,int kz_){
   Box = box;
   Box_old = *Box;
   kx = kx_; ky = ky_; kz = kz_;
 }
 
-int Interaction::is_origin(){
+int Hamiltonian_MM::is_origin(){
   return ((kx==0) && (ky==0) && (kz==0));
 }
 
-void Interaction::set_interaction_type_and_functional(std::string t,std::string f){
+void Hamiltonian_MM::set_interaction_type_and_functional(std::string t,std::string f){
 
   if(t=="bond"){ int_type = 0; is_int_type = 1;
     if(f=="Harmonic")    { functional = 0; is_functional = 1; }
@@ -72,14 +81,14 @@ void Interaction::set_interaction_type_and_functional(std::string t,std::string 
 
 }
 
-void Interaction::set_2a_interaction(std::string t,std::string f,
-                                     int id1,int id2,
-                                     VECTOR& r1,VECTOR& r2,
-                                     VECTOR& g1,VECTOR& g2,
-                                     VECTOR& m1,VECTOR& m2,
-                                     VECTOR& f1,VECTOR& f2, 
-                                     double& dr1_2, double& dr2_2,  double& dT_2,
-                                     map<std::string,double> params){
+void Hamiltonian_MM::set_2a_interaction(std::string t,std::string f,
+                                       int id1,int id2,
+                                       VECTOR& r1,VECTOR& r2,
+                                       VECTOR& g1,VECTOR& g2,
+                                       VECTOR& m1,VECTOR& m2,
+                                       VECTOR& f1,VECTOR& f2, 
+                                       double& dr1_2, double& dr2_2,  double& dT_2,
+                                       map<std::string,double> params){
 
   set_interaction_type_and_functional(t,f);
 
@@ -155,13 +164,13 @@ void Interaction::set_2a_interaction(std::string t,std::string f,
 
 }
  
-void Interaction::set_3a_interaction(std::string t,std::string f,
-                                     int id1,int id2,int id3,
-                                     VECTOR& r1,VECTOR& r2,VECTOR& r3,
-                                     VECTOR& g1,VECTOR& g2,VECTOR& g3,
-                                     VECTOR& m1,VECTOR& m2,VECTOR& m3,
-                                     VECTOR& f1,VECTOR& f2,VECTOR& f3,
-                                      map<std::string,double> params){
+void Hamiltonian_MM::set_3a_interaction(std::string t,std::string f,
+                                       int id1,int id2,int id3,
+                                       VECTOR& r1,VECTOR& r2,VECTOR& r3,
+                                       VECTOR& g1,VECTOR& g2,VECTOR& g3,
+                                       VECTOR& m1,VECTOR& m2,VECTOR& m3,
+                                       VECTOR& f1,VECTOR& f2,VECTOR& f3,
+                                       map<std::string,double> params){
   set_interaction_type_and_functional(t,f);
 
   if(int_type==1){ // angle
@@ -186,13 +195,13 @@ void Interaction::set_3a_interaction(std::string t,std::string f,
 
 }
 
-void Interaction::set_4a_interaction(std::string t,std::string f,
-                                     int id1,int id2,int id3,int id4,
-                                     VECTOR& r1,VECTOR& r2,VECTOR& r3,VECTOR& r4,
-                                     VECTOR& g1,VECTOR& g2,VECTOR& g3,VECTOR& g4,
-                                     VECTOR& m1,VECTOR& m2,VECTOR& m3,VECTOR& m4,
-                                     VECTOR& f1,VECTOR& f2,VECTOR& f3,VECTOR& f4,
-                                     map<std::string,double> params){
+void Hamiltonian_MM::set_4a_interaction(std::string t,std::string f,
+                                        int id1,int id2,int id3,int id4,
+                                        VECTOR& r1,VECTOR& r2,VECTOR& r3,VECTOR& r4,
+                                        VECTOR& g1,VECTOR& g2,VECTOR& g3,VECTOR& g4,
+                                        VECTOR& m1,VECTOR& m2,VECTOR& m3,VECTOR& m4,
+                                        VECTOR& f1,VECTOR& f2,VECTOR& f3,VECTOR& f4,
+                                        map<std::string,double> params){
 
   set_interaction_type_and_functional(t,f);
 
@@ -242,11 +251,11 @@ void Interaction::set_4a_interaction(std::string t,std::string f,
 
 }
 
-void Interaction::set_mb_interaction(std::string t,std::string p,int sz, int* id, VECTOR** r, VECTOR** g, VECTOR** m, VECTOR** f,double** q,
-                                     double** epsilon, double** sigma,
-                                     int nexcl, int* excl1, int* excl2, double* scale,double** displr_2, double* displT_2,
-                                     vector< vector<excl_scale> >& excl_scales,
-                                     map<std::string,double> params){
+void Hamiltonian_MM::set_mb_interaction(std::string t,std::string p,int sz, int* id, VECTOR** r, VECTOR** g, VECTOR** m, VECTOR** f,double** q,
+                                        double** epsilon, double** sigma,
+                                        int nexcl, int* excl1, int* excl2, double* scale,double** displr_2, double* displT_2,
+                                        vector< vector<excl_scale> >& excl_scales,
+                                        map<std::string,double> params){
 
   set_interaction_type_and_functional(t,p);
 
@@ -283,11 +292,11 @@ void Interaction::set_mb_interaction(std::string t,std::string p,int sz, int* id
 
 }
 
-void Interaction::set_2f_interaction(std::string t,std::string f,
-                                     int id1,int id2,
-                                     VECTOR& r1,VECTOR& r2,VECTOR& u1,VECTOR& u2,
-                                     VECTOR& f1,VECTOR& f2,VECTOR& t1,VECTOR& t2,
-                                     map<std::string,double> params){
+void Hamiltonian_MM::set_2f_interaction(std::string t,std::string f,
+                                        int id1,int id2,
+                                        VECTOR& r1,VECTOR& r2,VECTOR& u1,VECTOR& u2,
+                                        VECTOR& f1,VECTOR& f2,VECTOR& t1,VECTOR& t2,
+                                        map<std::string,double> params){
 
   set_interaction_type_and_functional(t,f);
 
@@ -313,11 +322,11 @@ void Interaction::set_2f_interaction(std::string t,std::string f,
 
 }
 
-double Interaction::calculate(int& update_displ2){
+double Hamiltonian_MM::calculate(int& update_displ2){
   return calculate(int_type,update_displ2);
 }
 
-double Interaction::calculate(int call_type,int& update_displ2){
+double Hamiltonian_MM::calculate(int call_type,int& update_displ2){
   energy = 0.0;
   stress_at = 0.0;
   stress_fr = 0.0;
@@ -1140,4 +1149,11 @@ double Interaction::calculate(int call_type,int& update_displ2){
   }// if call_type==int_type
   return energy;
 }
+
+
+}// namespace libhamiltonian_mm
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
+
+
 

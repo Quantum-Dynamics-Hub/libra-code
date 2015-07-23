@@ -1,5 +1,9 @@
 #include "Switching_functions.h"
 
+using namespace libmmath;
+using namespace libmmath::liblinalg;
+
+
 namespace libpot{
 
 void SWITCH(VECTOR& r1,VECTOR& r2,     /*Input*/

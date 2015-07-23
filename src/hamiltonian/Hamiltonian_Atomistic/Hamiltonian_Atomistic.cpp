@@ -72,7 +72,7 @@ Hamiltonian_Atomistic::~Hamiltonian_Atomistic(){
 
 
 }
-
+/*
 void Hamiltonian_Atomistic::set_rep(int rep_){
   rep = rep_;
 }
@@ -151,7 +151,7 @@ void Hamiltonian_Atomistic::compute(){
 
 }
 
-
+*/
 void Hamiltonian_Atomistic::compute_diabatic(){
 
   if(status_dia == 0){ // only compute this is the result is not up to date
@@ -168,6 +168,7 @@ void Hamiltonian_Atomistic::compute_diabatic(){
   }//   status_dia == 0
 
 }
+
 
 
 void Hamiltonian_Atomistic::compute_adiabatic(){
@@ -206,79 +207,6 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
 
   }// status_adi == 0
   
-}
-
-
-std::complex<double> Hamiltonian_Atomistic::H(int i,int j){
-
-  std::complex<double> res(0.0,0.0);
-
-  if(rep==0){    // Diabatic Hamiltonian - real, symmetric => Hermitian
-    res = std::complex<double>( ham_dia->get(i,j), 0.0 );
-  }
-  else if(rep==1){    // Adiabatic Hamiltonian - real, symmetric => Hermitian
-    res = std::complex<double>( ham_adi->get(i,j), 0.0 );
-  }
-
-  return res;
-}
-
-std::complex<double> Hamiltonian_Atomistic::dHdq(int i,int j,int n){
-
-  std::complex<double> res(0.0,0.0);
-
-  if(rep==0){    // Diabatic Hamiltonian - real, symmetric => Hermitian
-    res = std::complex<double>( d1ham_dia[n]->get(i,j), 0.0 );
-  }
-  else if(rep==1){    // Adiabatic Hamiltonian - real, symmetric => Hermitian
-    res = std::complex<double>( d1ham_adi[n]->get(i,j), 0.0 );
-  }
-
-  return res;
-}
-
-
-std::complex<double> Hamiltonian_Atomistic::D(int i,int j,int n){
-
-  std::complex<double> res(0.0,0.0);
-
-  if(rep==0){    // Diabatic Hamiltonian - real, symmetric => Hermitian
-    res = std::complex<double>(0.0,0.0);
-  }
-  else if(rep==1){    // Adiabatic Hamiltonian - real, symmetric => Hermitian
-    if(i!=j){  
-
-      double dE = (ham_adi->get(j,j) - ham_adi->get(i,i) );
-      if(fabs(dE)<1e-10){ dE = 1e-10 * (dE>0.0 ? 1.0 : -1.0); }
-
-      res = std::complex<double>( d1ham_adi[n]->get(i,j)/dE, 0.0 );
-
-    }
-  }
-
-  return res;
-}
-
-std::complex<double> Hamiltonian_Atomistic::nac(int i,int j){
-
-  std::complex<double> res(0.0,0.0);
-
-  for(int n=0;n<nnucl;n++){
-    res += D(i,j,n) * v[n]; 
-  }
-  return res;
-}
-
-std::complex<double> Hamiltonian_Atomistic::Hvib(int i,int j){
- 
-  const double hbar = 1.0;  // in atomic units
-
-  std::complex<double> ham_ = H(i,j);
-  std::complex<double> nac_ = nac(i,j);
-
-  std::complex<double> res(ham_.real(), ham_.imag() - hbar* nac_.real() );
-
-  return res;
 }
 
 

@@ -3,9 +3,10 @@
 
 #include "libcell.h"
 
-using namespace libcell;
+//using namespace libcell;
 using namespace boost::python;
 
+namespace libcell{
 
 void export_Cell_objects(){
 
@@ -55,4 +56,6 @@ BOOST_PYTHON_MODULE(libcell){
   export_Cell_objects();
 
 }
+
+}// namespace libcell
 
