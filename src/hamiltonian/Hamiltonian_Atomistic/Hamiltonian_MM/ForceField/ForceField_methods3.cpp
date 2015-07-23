@@ -1,4 +1,11 @@
-#include "../ForceField.h"
+#include "ForceField.h"
+
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_mm{
+namespace libforcefield{
+
+
 
 void ForceField::angle_theta_0_rule(std::string ff_type1,std::string ff_type2,std::string ff_type3,
                                     double bond_order12,double bond_order23,int coordination,
@@ -149,3 +156,10 @@ int ForceField::get_angle_parameters(string ff_type1, string ff_type2,string ff_
   return status;
 
 }
+
+
+}// namespace libforcefield
+}// namespace libhamiltonian_mm
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
+

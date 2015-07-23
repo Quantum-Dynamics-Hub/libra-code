@@ -1,9 +1,20 @@
 #ifndef FORCE_FIELDS_H
 #define FORCE_FIELDS_H
 
-#include <string>
-#include <vector>
-#include "Utility.h"
+
+#include "../../../../mmath/libmmath.h"
+using namespace libmmath;
+
+#include "../../../../io/libio.h"
+using namespace libio;
+
+
+
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_mm{
+namespace libforcefield{
+
 
 
 class Atom_Record;
@@ -128,8 +139,8 @@ public:
    int show_info();
    void merge(const Atom_Record&);
    Atom_Record& operator=(const Atom_Record&);
-  void save(boost::property_tree::ptree& pt,std::string path);
-  void load(boost::property_tree::ptree& pt,std::string path,int& status);
+   void save(boost::property_tree::ptree& pt,std::string path);
+   void load(boost::property_tree::ptree& pt,std::string path,int& status);
 
 
 };
@@ -215,8 +226,8 @@ public:
    void merge(const Bond_Record&); // similar to = operator but does keeps old properties 
                                    // if they are defined
    Bond_Record& operator=(const Bond_Record&);
-  void save(boost::property_tree::ptree& pt,std::string path);
-  void load(boost::property_tree::ptree& pt,std::string path,int& status);
+   void save(boost::property_tree::ptree& pt,std::string path);
+   void load(boost::property_tree::ptree& pt,std::string path,int& status);
 
 
 
@@ -275,8 +286,8 @@ public:
    int show_info();
    void merge(const Angle_Record&);
    Angle_Record& operator=(const Angle_Record&);
-  void save(boost::property_tree::ptree& pt,std::string path);
-  void load(boost::property_tree::ptree& pt,std::string path,int& status);
+   void save(boost::property_tree::ptree& pt,std::string path);
+   void load(boost::property_tree::ptree& pt,std::string path,int& status);
 
 
 };
@@ -340,8 +351,8 @@ public:
    int show_info();
    void merge(const Dihedral_Record&);
    Dihedral_Record& operator=(const Dihedral_Record&);
-  void save(boost::property_tree::ptree& pt,std::string path);
-  void load(boost::property_tree::ptree& pt,std::string path,int& status);
+   void save(boost::property_tree::ptree& pt,std::string path);
+   void load(boost::property_tree::ptree& pt,std::string path,int& status);
 
 
 };
@@ -593,6 +604,12 @@ public:
    int get_cg_parameters(map<string,double>& prms);
 
 };
+
+
+}// namespace libforcefield
+}// namespace libhamiltonian_mm
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
 
 
 

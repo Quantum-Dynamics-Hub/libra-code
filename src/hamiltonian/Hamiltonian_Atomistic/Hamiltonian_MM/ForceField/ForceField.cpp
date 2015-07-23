@@ -1,4 +1,18 @@
-#include "../ForceField.h"
+#include "ForceField.h"
+
+//#include "../../../../mmath/libmmath.h"
+using namespace libmmath;
+
+//#include "../../../../io/libio.h"
+using namespace libio;
+
+
+
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_mm{
+namespace libforcefield{
+
 
 
 //--------------- Atom Record class members ---------------------------
@@ -1452,12 +1466,15 @@ void ForceField::save(boost::property_tree::ptree& pt,std::string path){
   if(is_elec_scale13){  ::save(pt,path+".elec_scale13",elec_scale13);    }
   if(is_elec_scale14){  ::save(pt,path+".elec_scale14",elec_scale14);    }
 
-  if(Atom_Records.size()>0){  ::save(pt,path+".Atom_Records",Atom_Records);    }
-  if(Bond_Records.size()>0){  ::save(pt,path+".Bond_Records",Bond_Records);    }
-  if(Angle_Records.size()>0){  ::save(pt,path+".Angle_Records",Angle_Records);    }
-  if(Dihedral_Records.size()>0){  ::save(pt,path+".Dihedral_Records",Dihedral_Records);    }
-  if(Improper_Records.size()>0){  ::save(pt,path+".Improper_Records",Improper_Records);    }
-  if(Fragment_Records.size()>0){  ::save(pt,path+".Fragment_Records",Fragment_Records);    }
+  namespace here = libhamiltonian::libhamiltonian_atomistic::libhamiltonian_mm::libforcefield;
+
+
+  if(Atom_Records.size()>0){  here::save(pt,path+".Atom_Records",Atom_Records);    }
+  if(Bond_Records.size()>0){  here::save(pt,path+".Bond_Records",Bond_Records);    }
+  if(Angle_Records.size()>0){  here::save(pt,path+".Angle_Records",Angle_Records);    }
+  if(Dihedral_Records.size()>0){  here::save(pt,path+".Dihedral_Records",Dihedral_Records);    }
+  if(Improper_Records.size()>0){  here::save(pt,path+".Improper_Records",Improper_Records);    }
+  if(Fragment_Records.size()>0){  here::save(pt,path+".Fragment_Records",Fragment_Records);    }
 
 }
 
@@ -1499,12 +1516,14 @@ void ForceField::load(boost::property_tree::ptree& pt,std::string path,int& stat
   ::load(pt,path+".elec_scale13",elec_scale13,is_elec_scale13); if(is_elec_scale13==1) { status=1;}
   ::load(pt,path+".elec_scale14",elec_scale14,is_elec_scale14); if(is_elec_scale14==1) { status=1;}
 
-  ::load(pt,path+".Atom_Records",Atom_Records,st); if(st==1) { status=1;}
-  ::load(pt,path+".Bond_Records",Bond_Records,st); if(st==1) { status=1;}
-  ::load(pt,path+".Angle_Records",Angle_Records,st); if(st==1) { status=1;}
-  ::load(pt,path+".Dihedral_Records",Dihedral_Records,st); if(st==1) { status=1;}
-  ::load(pt,path+".Improper_Records",Improper_Records,st); if(st==1) { status=1;}
-  ::load(pt,path+".Fragment_Records",Fragment_Records,st); if(st==1) { status=1;}
+  namespace here = libhamiltonian::libhamiltonian_atomistic::libhamiltonian_mm::libforcefield;
+
+  here::load(pt,path+".Atom_Records",Atom_Records,st); if(st==1) { status=1;}
+  here::load(pt,path+".Bond_Records",Bond_Records,st); if(st==1) { status=1;}
+  here::load(pt,path+".Angle_Records",Angle_Records,st); if(st==1) { status=1;}
+  here::load(pt,path+".Dihedral_Records",Dihedral_Records,st); if(st==1) { status=1;}
+  here::load(pt,path+".Improper_Records",Improper_Records,st); if(st==1) { status=1;}
+  here::load(pt,path+".Fragment_Records",Fragment_Records,st); if(st==1) { status=1;}
 
 }
 
@@ -3095,6 +3114,12 @@ int ForceField::show_fragment_records(){
 
     return 1;
 }
+
+
+}// namespace libforcefield
+}// namespace libhamiltonian_mm
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
 
 
 

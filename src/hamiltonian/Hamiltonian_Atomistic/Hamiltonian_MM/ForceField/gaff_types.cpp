@@ -1,4 +1,11 @@
-#include "../ForceField.h"
+#include "ForceField.h"
+
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_mm{
+namespace libforcefield{
+
+
 
 string ForceField::gaff_type(string elt,int geometry,string func_grp,int min_ring,int& coordination){
 
@@ -74,3 +81,8 @@ string ForceField::gaff_type(string elt,int geometry,string func_grp,int min_rin
 
   return type;
 }
+
+}// namespace libforcefield
+}// namespace libhamiltonian_mm
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian

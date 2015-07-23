@@ -1,3 +1,6 @@
+#ifndef LIB_FORCEFIELD_H
+#define LIB_FORCEFIELD_H
+
 #include "ForceField.h"
 
 namespace libhamiltonian{
@@ -6,11 +9,7 @@ namespace libhamiltonian_mm{
 namespace libforcefield{
 
 
-
-int ForceField::get_cg_parameters(map<string,double>& prms){
-
-  return 1;
-}
+void export_forcefield_objects();
 
 
 }// namespace libforcefield
@@ -18,3 +17,5 @@ int ForceField::get_cg_parameters(map<string,double>& prms){
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
 
+
+#endif // LIB_FORCEFIELD_H

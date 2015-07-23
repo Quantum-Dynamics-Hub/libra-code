@@ -1,4 +1,11 @@
-#include "../ForceField.h"
+#include "ForceField.h"
+
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_mm{
+namespace libforcefield{
+
+
 
 int ForceField::is_valid_atom_type(std::string ff_type){
   int res = 1;
@@ -194,5 +201,10 @@ int ForceField::get_bond_parameters(string ff_type1, string ff_type2, /*Inputs*/
 }
 
 
+
+}// namespace libforcefield
+}// namespace libhamiltonian_mm
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
 
 

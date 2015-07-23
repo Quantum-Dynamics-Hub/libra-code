@@ -1,4 +1,11 @@
-#include "../ForceField.h"
+#include "ForceField.h"
+
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_mm{
+namespace libforcefield{
+
+
 
 
 int ForceField::get_mb_parameters(map<string,double>& prms                           /*Outputs*/
@@ -148,4 +155,9 @@ int ForceField::get_mb_excl_parameters(map<string,double>& prms                 
   return status;
 }
 
+
+}// namespace libforcefield
+}// namespace libhamiltonian_mm
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
 

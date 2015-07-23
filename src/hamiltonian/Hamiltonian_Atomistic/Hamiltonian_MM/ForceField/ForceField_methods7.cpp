@@ -1,4 +1,11 @@
-#include "../ForceField.h"
+#include "ForceField.h"
+
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_mm{
+namespace libforcefield{
+
+
 
 int ForceField::set_ff_charges(int sz, vector<string> types, VECTOR** r, double** q){
 
@@ -21,4 +28,10 @@ int ForceField::set_ff_charges(int sz, vector<string> types, VECTOR** r, double*
 
   return res;
 }
+
+
+}// namespace libforcefield
+}// namespace libhamiltonian_mm
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
 

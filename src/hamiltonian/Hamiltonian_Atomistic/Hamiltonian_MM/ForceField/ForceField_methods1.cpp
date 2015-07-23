@@ -1,4 +1,10 @@
-#include "../ForceField.h"
+#include "ForceField.h"
+
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_mm{
+namespace libforcefield{
+
 
 void ForceField::vdw_sigma_rule(string ff_type1,string ff_type2,double& sigma,int& is_sigma){
 
@@ -203,5 +209,9 @@ cout<<"In get_vdw_parameters:\n";
 
 }
 
+}// namespace libforcefield
+}// namespace libhamiltonian_mm
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
 
 

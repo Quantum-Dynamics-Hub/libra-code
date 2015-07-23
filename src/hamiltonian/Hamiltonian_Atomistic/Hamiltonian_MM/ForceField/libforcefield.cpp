@@ -1,11 +1,19 @@
-#include "../ForceField_objects.h"
+#include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+using namespace boost::python;
+
+#include "libforcefield.h"
+
+
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_mm{
+namespace libforcefield{
+
+
 
 
 //---------------------------------------------------------------------
-//int (*CREATE_ATOM1)(ObjectSpace&)            = &CREATE_ATOM;
-//int (*CREATE_ATOM2)(ObjectSpace&,Atom)       = &CREATE_ATOM;
-//double (MATRIX::*get1)(int)            = &MATRIX::get;
-//double (MATRIX::*get2)(int,int)        = &MATRIX::get;
 int (ForceField::*Add_Angle_Record1)(Angle_Record)       = &ForceField::Add_Angle_Record;
 int (ForceField::*Add_Angle_Record2)(Angle_Record,int)   = &ForceField::Add_Angle_Record;
 
@@ -13,15 +21,11 @@ int (ForceField::*Add_Dihedral_Record1)(Dihedral_Record)       = &ForceField::Ad
 int (ForceField::*Add_Dihedral_Record2)(Dihedral_Record,int)   = &ForceField::Add_Dihedral_Record;
 
 int (ForceField::*Add_Improper_Record1)(Dihedral_Record)       = &ForceField::Add_Improper_Record;
-//int (ForceField::*Add_Improper_Record2)(Dihedral_Record,int)   = &ForceField::Add_Improper_Record;
-
-//void (ForceField::*set1)(object)  = &ForceField::set;
-//void (ForceField::*set2)(boost::python::dict) = &ForceField::set
 
 
 
 
-void export_FORCE_FIELDS_objects(){
+void export_forcefield_objects(){
 
     class_<Atom_Record>("Atom_Record",init<>())      
         .def_readwrite("Atom_ff_type",&Atom_Record::Atom_ff_type)
@@ -193,7 +197,29 @@ void export_FORCE_FIELDS_objects(){
         .def("set_functionals",&ForceField::set_functionals)
     ;
 
+}// export_forcefield_objects
+
+
+#ifdef CYGWIN
+BOOST_PYTHON_MODULE(cygforcefield){
+#else
+BOOST_PYTHON_MODULE(libforcefield){
+#endif
+
+  // Register converters:
+  // See here: https://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters/
+  //to_python_converter<std::vector<DATA>, VecToList<DATA> >();
+
+//  export_Mathematics_objects();
+  export_forcefield_objects();
 
 }
 
+
+
+
+}// namespace libforcefield
+}// namespace libhamiltonian_mm
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
 

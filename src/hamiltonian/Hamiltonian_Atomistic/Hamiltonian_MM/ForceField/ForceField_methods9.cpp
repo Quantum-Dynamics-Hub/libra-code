@@ -1,4 +1,11 @@
-#include "../ForceField.h"
+#include "ForceField.h"
+
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_mm{
+namespace libforcefield{
+
+
 
 
 int ForceField::set_ff_epsilon_and_sigma(int sz, vector<string> types,double** epsilon, double** sigma){
@@ -24,4 +31,10 @@ int ForceField::set_ff_epsilon_and_sigma(int sz, vector<string> types,double** e
   return res;
 
 }
+
+
+}// namespace libforcefield
+}// namespace libhamiltonian_mm
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
 

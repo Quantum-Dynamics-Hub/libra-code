@@ -1,4 +1,11 @@
-#include "../ForceField.h"
+#include "ForceField.h"
+
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_mm{
+namespace libforcefield{
+
+
 
 void ForceField::set_functionals(boost::python::dict d){
   std::string key,value;
@@ -14,4 +21,10 @@ void ForceField::set_functionals(boost::python::dict d){
     else if(key=="elec"){ elec_functional = value; is_elec_functional = 1;}
   }// for i
 }
+
+
+}// namespace libforcefield
+}// namespace libhamiltonian_mm
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
 

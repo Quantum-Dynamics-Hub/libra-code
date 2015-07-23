@@ -1,4 +1,11 @@
-#include "../ForceField.h"
+#include "ForceField.h"
+
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_mm{
+namespace libforcefield{
+
+
 
 void ForceField::dihedral_rule(std::string ff_type1,std::string ff_type2,
                                std::string ff_type3,std::string ff_type4,
@@ -269,4 +276,10 @@ int ForceField::get_dihedral_parameters(string ff_type1, string ff_type2, /*Inpu
   }
   return status;
 }
+
+
+}// namespace libforcefield
+}// namespace libhamiltonian_mm
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
 
