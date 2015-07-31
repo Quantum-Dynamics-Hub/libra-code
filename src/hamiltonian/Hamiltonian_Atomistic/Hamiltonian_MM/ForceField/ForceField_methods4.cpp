@@ -258,6 +258,13 @@ int ForceField::get_dihedral_parameters(string ff_type1, string ff_type2, /*Inpu
 
   //------------ Additional relations --------------------------------------
 
+  // Convert to atomic units
+  Vphi *= (1.0/hartree);
+  Vphi1 *= (1.0/hartree);
+  Vphi2 *= (1.0/hartree);
+  Vphi3 *= (1.0/hartree);
+
+
 
   // Assign parameters according to the force field and the potential used 
   // Do necessary scaling of the pre-computed variables

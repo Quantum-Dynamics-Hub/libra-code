@@ -151,6 +151,17 @@ int ForceField::get_vdw_parameters(string ff_type1, string ff_type2,string excl_
       R_off  = R_on + 1.0;
     }
   }
+
+  // Convert to atomic units
+  R_on *= Angst;
+  R_off *= Angst;
+  sigma *= Angst;
+  r0 *= Angst;
+  epsilon *= (1.0/hartree);
+  D *= (1.0/hartree);
+  alpha *= (1.0/Angst);
+
+
   if(is_cut){  
     prms["is_cutoff"] = 1;
     prms["R_on"]  = R_on;

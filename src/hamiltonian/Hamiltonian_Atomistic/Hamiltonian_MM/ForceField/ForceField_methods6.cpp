@@ -67,6 +67,15 @@ int ForceField::get_elec_parameters(string ff_type1, string ff_type2,std::string
       R_off  = R_on + 1.0;
     }
   }
+
+
+  // Convert to atomic units
+  R_on *= Angst;
+  R_off *= Angst;
+  delta *= Angst;
+  eps *= (1.0/hartree);
+
+
   if(is_cut){
     prms["is_cutoff"] = 1;
     prms["R_on"]  = R_on;

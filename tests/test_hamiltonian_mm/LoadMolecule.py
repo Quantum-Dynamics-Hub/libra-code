@@ -12,6 +12,7 @@ sys.path.insert(1,cwd+"/../../_build/src/chemobjects")
 from cygmmath import *
 from cygchemobjects import *
 
+Angst_to_Bohr = 1.889725989  
 
 
 def Load_Molecule(univ,syst,mol_file,format):
@@ -21,6 +22,8 @@ def Load_Molecule(univ,syst,mol_file,format):
 # In this particular implementation my .ent format is
 # loading
 
+
+######### Assume coordinates are given in Angstroms #############
 
 #------- Here are some basic patterns -------------
     INT    = '([1-9]([0-9]*))'
@@ -87,9 +90,9 @@ def Load_Molecule(univ,syst,mol_file,format):
             atom_dict = {}
 
             atom_dict["Atom_element"] = a[m1.start('Atom_element'):m1.end('Atom_element')]
-            atom_dict["Atom_cm_x"] = float(a[m1.start('Atom_x_coord'):m1.end('Atom_x_coord')])
-            atom_dict["Atom_cm_y"] = float(a[m1.start('Atom_y_coord'):m1.end('Atom_y_coord')])
-            atom_dict["Atom_cm_z"] = float(a[m1.start('Atom_z_coord'):m1.end('Atom_z_coord')])     
+            atom_dict["Atom_cm_x"] = float(a[m1.start('Atom_x_coord'):m1.end('Atom_x_coord')]) * Angst_to_Bohr
+            atom_dict["Atom_cm_y"] = float(a[m1.start('Atom_y_coord'):m1.end('Atom_y_coord')]) * Angst_to_Bohr
+            atom_dict["Atom_cm_z"] = float(a[m1.start('Atom_z_coord'):m1.end('Atom_z_coord')]) * Angst_to_Bohr
 
             if format=="pdb" or format=="true_pdb":
                 atom_dict["Atom_charge"] = float(a[m1.start('Atom_charge'):m1.end('Atom_charge')])

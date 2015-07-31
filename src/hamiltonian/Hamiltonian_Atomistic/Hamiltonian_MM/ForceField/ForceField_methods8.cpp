@@ -36,6 +36,12 @@ int ForceField::get_mb_parameters(map<string,double>& prms                      
         R_off  = R_on + 1.0;
       }
     }
+
+    // Convert to atomic units
+    R_on *= Angst;
+    R_off *= Angst;
+    elec_etha *= (1.0/Angst);
+
     if(is_cut){
       prms["is_cutoff"] = 1;
       prms["R_on"]  = R_on;
@@ -45,7 +51,7 @@ int ForceField::get_mb_parameters(map<string,double>& prms                      
       status = 1;
     }
     // Default values:
-    prms["elec_etha"] = 3.0; 
+    prms["elec_etha"] = 3.0 * (1.0/Angst); 
     if(is_elec_etha){  prms["elec_etha"] = elec_etha; }
 
   }// Ewald_3D
@@ -65,6 +71,10 @@ int ForceField::get_mb_parameters(map<string,double>& prms                      
         R_off  = R_on + 1.0;
       }
     }
+
+    R_on *= Angst;
+    R_off *= Angst;
+
     if(is_cut){
       prms["is_cutoff"] = 1;
       prms["R_on"]  = R_on;
@@ -110,6 +120,12 @@ int ForceField::get_mb_excl_parameters(map<string,double>& prms                 
         R_off  = R_on + 1.0;
       }
     }
+
+    // Convert to atomic units
+    R_on *= Angst;
+    R_off *= Angst;
+    elec_etha *= (1.0/Angst);
+
     if(is_cut){
       prms["is_cutoff"] = 1;
       prms["R_on"]  = R_on;
@@ -119,7 +135,7 @@ int ForceField::get_mb_excl_parameters(map<string,double>& prms                 
       status = 1;
     }
     // Default values:
-    prms["elec_etha"] = 3.0;
+    prms["elec_etha"] = 3.0 * (1.0/Angst);
     if(is_elec_etha){  prms["elec_etha"] = elec_etha; }
 
   }// Ewald_3D
@@ -139,6 +155,11 @@ int ForceField::get_mb_excl_parameters(map<string,double>& prms                 
         R_off  = R_on + 1.0;
       }
     }
+
+    // Convert to atomic units
+    R_on *= Angst;
+    R_off *= Angst;
+
     if(is_cut){
       prms["is_cutoff"] = 1;
       prms["R_on"]  = R_on;

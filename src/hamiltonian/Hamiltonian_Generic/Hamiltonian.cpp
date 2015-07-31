@@ -71,8 +71,8 @@ void Hamiltonian::set_v(boost::python::list v_){
 
 void Hamiltonian::compute(){
 
-  if(rep==0){  compute_diabatic();  }
-  else if(rep==1){  compute_adiabatic(); }
+  if(rep==0){  compute_diabatic();   }
+  else if(rep==1){  compute_adiabatic();  }
 
 }
 

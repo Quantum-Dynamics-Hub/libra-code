@@ -117,6 +117,10 @@ int ForceField::get_angle_parameters(string ff_type1, string ff_type2,string ff_
 //  cout<<"is_theta_0 = "<<is_theta_0<<"is_k_theta = "<<is_k_theta<<"is_cos_theta_0 = "<<is_cos_theta_0
 //      <<"is_C0 = "<<is_C0<<"is_C1 = "<<is_C1<<"is_C2 = "<<is_C2<<endl;
 
+  // Convert to atomic units
+  k_theta *= (1.0/hartree);
+
+
   // Assign parameters according to the force field and the potential used 
   // Do necessary scaling of the pre-computed variables
   if(angle_functional=="Harmonic"){

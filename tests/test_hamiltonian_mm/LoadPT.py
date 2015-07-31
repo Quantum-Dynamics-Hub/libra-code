@@ -13,6 +13,7 @@ from cygmmath import *
 from cygchemobjects import *
 
 
+Mass_conv = 1822.8881840387910605563454737686  # convert Dalton to atomic units
 
 def Load_PT(U,pt_file, verbose=0):
        
@@ -72,7 +73,7 @@ def Load_PT(U,pt_file, verbose=0):
             elem.Elt_id          = int(float(a[m1.start('Element_atomic_number'):m1.end('Element_atomic_number')]))
             elem.Elt_number      = elem.Elt_id
             elem.Elt_nucleus_charge = elem.Elt_id
-            elem.Elt_mass        = float(a[m1.start('Element_atomic_mass'):m1.end('Element_atomic_mass')])
+            elem.Elt_mass        = float(a[m1.start('Element_atomic_mass'):m1.end('Element_atomic_mass')]) * Mass_conv
             elem.Elt_period      = int(float(a[m1.start('Element_period'):m1.end('Element_period')]))
             elem.Elt_group       = int(float(a[m1.start('Element_group'):m1.end('Element_group')]))
             elem.Elt_block       = a[m1.start('Element_block'):m1.end('Element_block')]

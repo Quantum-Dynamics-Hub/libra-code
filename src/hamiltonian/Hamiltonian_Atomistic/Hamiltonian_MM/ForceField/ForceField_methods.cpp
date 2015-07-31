@@ -64,6 +64,7 @@ void ForceField::bond_r0_rule(string ff_type1,string ff_type2,double bond_order,
 
     }// if is_r0
   }// if (ff_type1_indx>=-1 && ff_type2_indx>-1)
+
  
 }
 
@@ -183,6 +184,14 @@ int ForceField::get_bond_parameters(string ff_type1, string ff_type2, /*Inputs*/
   if(!is_K)    { if(is_D && is_alpha){ K = 2.0*D*alpha*alpha; is_K = 1; } }
 
 
+  // Convert to atomic units
+  r0 *= Angst;
+  K *= (1.0/hartree)/(Angst*Angst);
+  D *= (1.0/hartree);
+  alpha *= (1.0/Angst);
+
+
+
   // Assign parameters according to the force field and the potential used 
   // Do necessary scaling of the pre-computed variables
   if(bond_functional=="Harmonic"||bond_functional=="Quartic"){
@@ -197,6 +206,8 @@ int ForceField::get_bond_parameters(string ff_type1, string ff_type2, /*Inputs*/
     status = is_K * is_r0 * is_alpha;
   }
   return status;
+
+
 
 }
 

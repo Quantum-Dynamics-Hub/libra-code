@@ -54,34 +54,35 @@ int ForceField::get_oop_parameters(string ff_type1, string ff_type2, /*Inputs*/
     }
 
   }
+
+
+
+  // Convert to atomic units
+  //Vphi *= (1.0/hartree);
+  //Vphi1 *= (1.0/hartree);
+  //Vphi2 *= (1.0/hartree);
+  //Vphi3 *= (1.0/hartree);
+
 /*
-  //------------- Apply rules to calculate missing parameters --------------
-  if(!is_r0){  bond_r0_rule(ff_type1,ff_type2,bond_order,r0,is_r0); } 
-  if(!is_K) {  bond_K_rule(ff_type1,ff_type2,bond_order,K,is_K); }
-  if(!is_D) {  bond_D_rule(ff_type1,ff_type2,bond_order,D,is_D); }
-  if(!is_alpha){ bond_alpha_rule(ff_type1,ff_type2,bond_order,alpha,is_alpha); }
-
-  //------------ Additional relations --------------------------------------
-  if(!is_alpha){ if(is_D && is_K){ alpha = sqrt(0.5*K/D); is_alpha = 1;}  }
-  if(!is_D)    { if(is_K && is_alpha){ D = 0.5*K/(alpha*alpha); is_D = 1; }  }
-  if(!is_K)    { if(is_D && is_alpha){ K = 2.0*D*alpha*alpha; is_K = 1; } }
-
-
   // Assign parameters according to the force field and the potential used 
   // Do necessary scaling of the pre-computed variables
-  if(bond_functional=="Harmonic"||bond_functional=="Quartic"){
-    prms["K"] = K;
-    prms["r0"]= r0;
-    status = is_K * is_r0 ;
+  if(oop_functional=="General0"||oop_functional=="General1"||
+     oop_functional=="General2"||oop_functional=="General3"){
+    prms["Vphi"] = 0.5*Vphi;
+    prms["phi0"]= phi0;
+    prms["n"]=n;
+    status = is_Vphi * is_phi0 * is_n ;
   }
-  else if(bond_functional=="Morse"){
-    prms["D"] = D;
-    prms["r0"]= r0;
-    prms["alpha"]=alpha;
-    status = is_K * is_r0 * is_alpha;
+  else if(oop_functional=="Fourier0"||oop_functional=="Fourier1"){
+    prms["Vphi1"] = Vphi1;
+    prms["Vphi2"] = Vphi2;
+    prms["Vphi3"] = Vphi3;
+    status = is_Vphi1 * is_Vphi2 * is_Vphi3;
   }
 */
+
   return status;
+
 }
 
 

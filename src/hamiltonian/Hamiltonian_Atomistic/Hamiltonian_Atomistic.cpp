@@ -177,8 +177,8 @@ void Hamiltonian_Atomistic::set_q(vector<double>& q_){
   status_dia = 0;
   status_adi = 0;
 
-  //_syst->set_atomic_q(q);
-  _syst->set_fragment_q(q);
+  _syst->set_atomic_q(q);
+  //_syst->set_fragment_q(q);
 
 }
 
@@ -192,8 +192,8 @@ void Hamiltonian_Atomistic::set_v(vector<double>& v_){
   v = v_;
   status_adi = 0;  // only affects adiabatic computations
 
-  //_syst->set_atomic_v(v);
-  _syst->set_fragment_v(v);
+  _syst->set_atomic_v(v);
+  //_syst->set_fragment_v(v);
   
 
 }
@@ -282,7 +282,7 @@ void Hamiltonian_Atomistic::compute_diabatic(){
       int tmp;
       for(int i=0;i<sz;i++){
         res += mm_ham->interactions[i].calculate(tmp);
-        cout<<"interactions #"<<i<<", energy = "<<mm_ham->interactions[i].calculate(tmp)<<endl;
+        //cout<<"interactions #"<<i<<", energy = "<<mm_ham->interactions[i].calculate(tmp)<<endl;
       }
 
       // Energies
@@ -291,18 +291,18 @@ void Hamiltonian_Atomistic::compute_diabatic(){
 
       
       // First derivatives     
-      _syst->update_fragment_forces_and_torques();
+      //_syst->update_fragment_forces_and_torques();
 
       // But take only atomistic forces at this time
       for(i=0;i<_syst->Number_of_atoms;i++){         
 
-        d1ham_dia[3*i  ]->M[0] = _syst->Atoms[i].Atom_RB.rb_force.x; 
-        d1ham_dia[3*i+1]->M[0] = _syst->Atoms[i].Atom_RB.rb_force.y; 
-        d1ham_dia[3*i+2]->M[0] = _syst->Atoms[i].Atom_RB.rb_force.z; 
+        d1ham_dia[3*i  ]->M[0] = -_syst->Atoms[i].Atom_RB.rb_force.x;
+        d1ham_dia[3*i+1]->M[0] = -_syst->Atoms[i].Atom_RB.rb_force.y;
+        d1ham_dia[3*i+2]->M[0] = -_syst->Atoms[i].Atom_RB.rb_force.z;
 
-        d1ham_adi[3*i  ]->M[0] = _syst->Atoms[i].Atom_RB.rb_force.x; 
-        d1ham_adi[3*i+1]->M[0] = _syst->Atoms[i].Atom_RB.rb_force.y; 
-        d1ham_adi[3*i+2]->M[0] = _syst->Atoms[i].Atom_RB.rb_force.z; 
+        d1ham_adi[3*i  ]->M[0] = -_syst->Atoms[i].Atom_RB.rb_force.x;
+        d1ham_adi[3*i+1]->M[0] = -_syst->Atoms[i].Atom_RB.rb_force.y;
+        d1ham_adi[3*i+2]->M[0] = -_syst->Atoms[i].Atom_RB.rb_force.z;
 
       }
 
