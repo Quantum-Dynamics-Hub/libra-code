@@ -11,12 +11,14 @@ namespace libhamiltonian{
 
 using namespace libhamiltonian_generic;
 using namespace libhamiltonian_model;
+using namespace libhamiltonian_atomistic;
 
 void export_Hamiltonian_objects(){
 
 
   export_hamiltonian_generic_objects();
   export_hamiltonian_model_objects();
+  export_hamiltonian_atomistic_objects();
 
 }
 

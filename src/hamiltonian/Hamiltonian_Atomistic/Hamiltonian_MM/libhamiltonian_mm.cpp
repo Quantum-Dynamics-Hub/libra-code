@@ -19,7 +19,11 @@ void export_Hamiltonian_MM_objects(){
   export_forcefield_objects();
 
   // Also export self classes:
-  //  void (Hamiltonian::*set_params)(boost::python::list) = &Hamiltonian::set_params;
+  bool (listHamiltonian_MM::*expt_is_active_v1)(Atom&,Atom&) = &listHamiltonian_MM::is_active;
+  bool (listHamiltonian_MM::*expt_is_active_v2)(Atom&,Atom&,Atom&) = &listHamiltonian_MM::is_active;
+  bool (listHamiltonian_MM::*expt_is_active_v3)(Atom&,Atom&,Atom&,Atom&) = &listHamiltonian_MM::is_active;
+
+
 
   class_<Hamiltonian_MM>("Hamiltonian_MM",init<>())
       .def("__copy__", &generic__copy__<Hamiltonian_MM>)
@@ -39,9 +43,26 @@ void export_Hamiltonian_MM_objects(){
       .def("__copy__", &generic__copy__<listHamiltonian_MM>)
       .def("__deepcopy__", &generic__deepcopy__<listHamiltonian_MM>)
 
-//      .def("set_interactions_for_atoms",&System::set_interactions_for_atoms)
-//      .def("set_respa_types",&System::set_respa_types)
-//      .def("show_interactions_statistics",&System::show_interactions_statistics)
+      .def("is_new_interaction", &listHamiltonian_MM::is_new_interaction)
+      .def("show_interactions_statistics", &listHamiltonian_MM::show_interactions_statistics)
+
+      .def("set_atom_types", &listHamiltonian_MM::set_atom_types)
+      .def("set_fragment_types", &listHamiltonian_MM::set_fragment_types)
+
+      .def("set_atom_interactions_for_atoms", &listHamiltonian_MM::set_atom_interactions_for_atoms)
+      .def("set_group_interactions_for_atoms", &listHamiltonian_MM::set_group_interactions_for_atoms)
+
+      .def("set_interactions_for_atoms", &listHamiltonian_MM::set_interactions_for_atoms)
+      .def("set_interactions_for_fragments", &listHamiltonian_MM::set_interactions_for_fragments)
+
+      .def("apply_pbc_to_interactions", &listHamiltonian_MM::apply_pbc_to_interactions)
+      .def("set_respa_types", &listHamiltonian_MM::set_respa_types)
+
+      .def("is_active", expt_is_active_v1)
+      .def("is_active", expt_is_active_v2)
+      .def("is_active", expt_is_active_v3)
+
+
   ;
 
 

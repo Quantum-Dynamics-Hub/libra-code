@@ -18,6 +18,10 @@
 namespace libhamiltonian{
 namespace libhamiltonian_atomistic{
 
+using namespace libchemobjects;
+using namespace libchemobjects::libchemsys;
+using namespace libhamiltonian_mm;
+
 
 using namespace libmmath;
 using namespace libmmath::libmeigen;
@@ -39,12 +43,14 @@ Hamiltonian_Atomistic::Hamiltonian_Atomistic(int _nelec, int _nnucl){
   ham_adi = new MATRIX(nelec,nelec); *ham_adi = 0.0;
 
   d1ham_dia = vector<MATRIX*>(nnucl);
-  d2ham_dia = vector<MATRIX*>(nnucl);
   d1ham_adi = vector<MATRIX*>(nnucl);
+
   for(i=0;i<nnucl;i++){  
     d1ham_dia[i] = new MATRIX(nelec,nelec); *d1ham_dia[i] = 0.0; 
     d1ham_adi[i] = new MATRIX(nelec,nelec); *d1ham_adi[i] = 0.0; 
   }
+
+  d2ham_dia = vector<MATRIX*>(nnucl*nnucl);
   for(i=0;i<nnucl*nnucl;i++){  d2ham_dia[i] = new MATRIX(nelec,nelec); *d2ham_dia[i] = 0.0;  }
 
 
@@ -52,7 +58,93 @@ Hamiltonian_Atomistic::Hamiltonian_Atomistic(int _nelec, int _nnucl){
   status_dia = 0;
   status_adi = 0;
 
+
+  // Setup Hamiltonian types:
+  ham_types = vector<int>(5,0);
+
 }
+
+
+void Hamiltonian_Atomistic::set_Hamiltonian_type(std::string ham_type){ // libchemobjects::libchemsys::System& syst){
+
+  if(ham_type=="MM"){
+    rep = 0;  // diabatic is same as adiabatic
+
+    if(ham_types[0]==0){    
+      mm_ham = new listHamiltonian_MM();
+      ham_types[0] = 1;
+    }
+
+  }
+  else{
+    cout<<"Error: Unrecognized Hamiltonian type. Supported types are: MM\n";
+    cout<<"Exiting...\n"; exit(0);
+  }
+
+}
+
+void Hamiltonian_Atomistic::show_interactions_statistics(){
+  mm_ham->show_interactions_statistics();
+}
+
+void Hamiltonian_Atomistic::set_atom_types(System& syst, vector<int>& lst, ForceField& ff){
+  mm_ham->set_atom_types(syst, lst, ff);
+}
+
+void Hamiltonian_Atomistic::set_fragment_types(System& syst, vector<int>& lst, ForceField& ff){
+  mm_ham->set_fragment_types(syst, lst, ff);  
+}
+
+bool Hamiltonian_Atomistic::is_active(Atom& a1, Atom& a2){
+  return mm_ham->is_active(a1,a2);
+}
+
+bool Hamiltonian_Atomistic::is_active(Atom& a1, Atom& a2, Atom& a3){
+  return mm_ham->is_active(a1,a2,a3);
+}
+
+bool Hamiltonian_Atomistic::is_active(Atom& a1, Atom& a2, Atom& a3, Atom& a4){
+  return mm_ham->is_active(a1,a2,a3,a4);
+}
+
+void Hamiltonian_Atomistic::set_atom_interactions_for_atoms
+(System& syst,string int_type,vector<Atom>& top_elt,vector<int>& lst1,vector<int>& lst2,ForceField& ff,int verb){
+
+  mm_ham->set_atom_interactions_for_atoms(syst,int_type,top_elt,lst1,lst2,ff,verb);
+
+}
+
+void Hamiltonian_Atomistic::set_group_interactions_for_atoms
+(System& syst,string int_type,vector<Group>& top_elt,vector<int>& lst1,vector<int>& lst2,ForceField& ff){
+
+  mm_ham->set_group_interactions_for_atoms(syst,int_type,top_elt,lst1,lst2,ff);
+}
+
+void Hamiltonian_Atomistic::set_interactions_for_atoms
+(System& syst, boost::python::list lst1, boost::python::list lst2, ForceField& ff, int verb, int assign_rings){
+
+  mm_ham->set_interactions_for_atoms(syst,lst1,lst2,ff,verb,assign_rings);
+}
+
+void Hamiltonian_Atomistic::set_interactions_for_fragments
+(System& syst, boost::python::list lst1, boost::python::list lst2, ForceField& ff){
+
+  mm_ham->set_interactions_for_fragments(syst,lst1,lst2,ff);
+
+}
+
+void Hamiltonian_Atomistic::apply_pbc_to_interactions(System& syst, int int_type,int nx,int ny,int nz){
+
+  mm_ham->apply_pbc_to_interactions(syst, int_type, nx, ny, nz);
+}
+
+void Hamiltonian_Atomistic::set_respa_types(std::string inter_type,std::string respa_type){
+
+  mm_ham->set_respa_types(inter_type, respa_type);
+}
+
+
+
 
 Hamiltonian_Atomistic::~Hamiltonian_Atomistic(){
   int i;
@@ -72,10 +164,48 @@ Hamiltonian_Atomistic::~Hamiltonian_Atomistic(){
 
 
 }
+
+
+void Hamiltonian_Atomistic::set_q(vector<double>& q_){
+
+  if(q_.size()!=nnucl){
+    cout<<"Error in Hamiltonian_Atomistic::set_q - the size of input array ("<<q_.size()<<") does not match";
+    cout<<"the number of nuclear degrees of freedom ("<<nnucl<<")\nExiting...\n"; exit(0);
+  }
+
+  q = q_;
+  status_dia = 0;
+  status_adi = 0;
+
+  //_syst->set_atomic_q(q);
+  _syst->set_fragment_q(q);
+
+}
+
+void Hamiltonian_Atomistic::set_v(vector<double>& v_){
+
+  if(v_.size()!=nnucl){
+    cout<<"Error in Hamiltonian_Atomistic::set_v - the size of input array ("<<v_.size()<<") does not match";
+    cout<<"the number of nuclear degrees of freedom ("<<nnucl<<")\nExiting...\n"; exit(0);
+  }
+
+  v = v_;
+  status_adi = 0;  // only affects adiabatic computations
+
+  //_syst->set_atomic_v(v);
+  _syst->set_fragment_v(v);
+  
+
+}
+
+
+
 /*
 void Hamiltonian_Atomistic::set_rep(int rep_){
   rep = rep_;
 }
+
+//  ham->set_q(mol->q);
 
 void Hamiltonian_Atomistic::set_params(vector<double>& params_){
 
@@ -107,23 +237,7 @@ void Hamiltonian_Atomistic::set_params(boost::python::list params_){
 
 }
 
-void Hamiltonian_Atomistic::set_q(vector<double>& q_){
-  q = q_;
-  status_dia = 0;
-  status_adi = 0;
-}
 
-void Hamiltonian_Atomistic::set_q(boost::python::list q_){
- 
-  int sz = boost::python::len(q_);
-  vector<double> tmp_q(sz,0.0);
-
-  for(int i=0;i<sz; i++){
-    tmp_q[i] = boost::python::extract<double>(q_[i]);
-  }
-
-  set_q(tmp_q);
-}
 
 void Hamiltonian_Atomistic::set_v(vector<double>& v_){
   v = v_;
@@ -153,9 +267,53 @@ void Hamiltonian_Atomistic::compute(){
 
 */
 void Hamiltonian_Atomistic::compute_diabatic(){
+  int i;
 
   if(status_dia == 0){ // only compute this is the result is not up to date
   
+    if(ham_types[0]==1){
+
+      // Zero forces
+      _syst->zero_forces_and_torques();
+
+      // Do actual computations
+      int sz = mm_ham->interactions.size();
+      double res = 0.0;
+      int tmp;
+      for(int i=0;i<sz;i++){
+        res += mm_ham->interactions[i].calculate(tmp);
+        cout<<"interactions #"<<i<<", energy = "<<mm_ham->interactions[i].calculate(tmp)<<endl;
+      }
+
+      // Energies
+      ham_dia->M[0] = res;
+      ham_adi->M[0] = res;
+
+      
+      // First derivatives     
+      _syst->update_fragment_forces_and_torques();
+
+      // But take only atomistic forces at this time
+      for(i=0;i<_syst->Number_of_atoms;i++){         
+
+        d1ham_dia[3*i  ]->M[0] = _syst->Atoms[i].Atom_RB.rb_force.x; 
+        d1ham_dia[3*i+1]->M[0] = _syst->Atoms[i].Atom_RB.rb_force.y; 
+        d1ham_dia[3*i+2]->M[0] = _syst->Atoms[i].Atom_RB.rb_force.z; 
+
+        d1ham_adi[3*i  ]->M[0] = _syst->Atoms[i].Atom_RB.rb_force.x; 
+        d1ham_adi[3*i+1]->M[0] = _syst->Atoms[i].Atom_RB.rb_force.y; 
+        d1ham_adi[3*i+2]->M[0] = _syst->Atoms[i].Atom_RB.rb_force.z; 
+
+      }
+
+      // Second derivatives
+      for(i=0;i<nnucl*nnucl;i++){ 
+        d2ham_dia[i]->M[0] = 0.0;
+      }
+
+
+    }// MM
+
     //==========================================================
 
     // class - specific computations: MM, semi-empirical, HF, etc   

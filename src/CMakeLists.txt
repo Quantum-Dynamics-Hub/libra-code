@@ -46,6 +46,9 @@ MESSAGE("Going into subdirectory dyn...")
 ADD_SUBDIRECTORY("dyn")
 
 
+MESSAGE("Going into subdirectory converters...")
+ADD_SUBDIRECTORY("converters")
+
 
 
 

@@ -48,12 +48,13 @@ Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
   ham_adi = new MATRIX(nelec,nelec); *ham_adi = 0.0;
 
   d1ham_dia = vector<MATRIX*>(nnucl);
-  d2ham_dia = vector<MATRIX*>(nnucl);
   d1ham_adi = vector<MATRIX*>(nnucl);
   for(i=0;i<nnucl;i++){  
     d1ham_dia[i] = new MATRIX(nelec,nelec); *d1ham_dia[i] = 0.0; 
     d1ham_adi[i] = new MATRIX(nelec,nelec); *d1ham_adi[i] = 0.0; 
   }
+
+  d2ham_dia = vector<MATRIX*>(nnucl*nnucl);
   for(i=0;i<nnucl*nnucl;i++){  d2ham_dia[i] = new MATRIX(nelec,nelec); *d2ham_dia[i] = 0.0;  }
 
 

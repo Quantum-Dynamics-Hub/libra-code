@@ -1,4 +1,8 @@
-#include "../System.h"
+#include "System.h"
+
+namespace libchemobjects{
+namespace libchemsys{
+
 
 void System::zero_atom_forces(){
   is_stress_at = 0;
@@ -280,11 +284,13 @@ void System::init_box(){
 
 //  apply_frag_pbc("abc");
 
+/*
   //------------- Update interactions ----------------
   int n_inter = interactions.size();
   for(i=0;i<n_inter;i++){
     interactions[i].set_pbc(&Box,0,0,0);
   }
+*/
 
   //cout<<"is_Box = "<<is_Box<<endl;
 }
@@ -300,10 +306,10 @@ void System::init_box(VECTOR tv1,VECTOR tv2,VECTOR tv3){
 //  apply_frag_pbc("abc");
 
   //------------- Update interactions ----------------
-  int n_inter = interactions.size();
-  for(int i=0;i<n_inter;i++){
-    interactions[i].set_pbc(&Box,0,0,0);
-  }
+//  int n_inter = interactions.size();
+//  for(int i=0;i<n_inter;i++){
+//    interactions[i].set_pbc(&Box,0,0,0);
+//  }
 
 }
 
@@ -324,10 +330,10 @@ void System::init_box(double maxx,double maxy,double maxz){
 //  apply_frag_pbc("abc");
 
   //------------- Update interactions ----------------
-  int n_inter = interactions.size();
-  for(int i=0;i<n_inter;i++){
-    interactions[i].set_pbc(&Box,0,0,0);
-  }
+//  int n_inter = interactions.size();
+//  for(int i=0;i<n_inter;i++){
+//    interactions[i].set_pbc(&Box,0,0,0);
+//  }
 
 }
 
@@ -535,7 +541,7 @@ void System::fix_fragment(int gr_id){
 }
 
 
-
+/*
 double System::energy(){
 //  int sz = active_interactions.size();
   int sz = interactions.size();
@@ -620,6 +626,7 @@ double System::energy_respa(std::string s_respa_type){
   return res;
 }
 
+*/
 
 double System::ekin_tr(){
   double res = 0.0;
@@ -656,6 +663,7 @@ double System::volume(){
 // else{ init_box(); res = Box.Determinant(); } // This is wrong!
   return res;
 }
+
 
 MATRIX3x3 System::pressure_tensor(){  
 
@@ -697,6 +705,8 @@ MATRIX3x3 System::pressure_tensor(){
 
   stat = 1;
   if(stat){
+
+/*  Revise to get stresses from outside
   // In this case we recalculate (update) required stess tensor
   int nint = active_interactions.size();
   stress_at = 0.0;
@@ -709,6 +719,7 @@ MATRIX3x3 System::pressure_tensor(){
       else if(stress_opt=="ml"){ stress_ml += interactions[active_interactions[i]].stress_ml; }
     }
   }
+*/
   }// if stat
 
   if(stress_opt=="at"){ Pvir = stress_at; }
@@ -725,3 +736,7 @@ MATRIX3x3 System::pressure_tensor(){
   return P_tens;
 
 }
+
+
+}// namespace libchemsys
+}// namespace libchemobjects

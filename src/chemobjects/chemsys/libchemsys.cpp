@@ -20,9 +20,9 @@ void (System::*LINK_ATOMS2)(int,int) = &System::LINK_ATOMS;
 //double (System::*energy1)()         = &System::energy;
 //double (System::*energy2)(std::string) = &System::energy;
 
-//void (System::*init_box1)()         = &System::init_box;
-//void (System::*init_box2)(double,double,double) = &System::init_box;
-//void (System::*init_box3)(VECTOR,VECTOR,VECTOR) = &System::init_box;
+void (System::*init_box1)()         = &System::init_box;
+void (System::*init_box2)(double,double,double) = &System::init_box;
+void (System::*init_box3)(VECTOR,VECTOR,VECTOR) = &System::init_box;
 
 void (System::*show_interactions1)()            = &System::show_interactions;
 void (System::*show_interactions2)(std::string) = &System::show_interactions;
@@ -92,7 +92,8 @@ void (System::*print_xyz2)(std::string,int,std::string,int) = &System::print_xyz
 //      .def("set_interactions_for_atoms",&System::set_interactions_for_atoms)
 //      .def("set_respa_types",&System::set_respa_types)
 //      .def("show_interactions_statistics",&System::show_interactions_statistics)
-/*
+
+
       .def("zero_atom_forces",&System::zero_atom_forces)
       .def("zero_fragment_forces",&System::zero_fragment_forces)
       .def("zero_fragment_torques",&System::zero_fragment_torques)
@@ -109,13 +110,45 @@ void (System::*print_xyz2)(std::string,int,std::string,int) = &System::print_xyz
       .def("fix_fragment_rotation", &System::fix_fragment_rotation)
       .def("fix_fragment", &System::fix_fragment)
 
-
-      .def("energy",energy1)
-      .def("energy",energy2)
+//      .def("energy",energy1)
+//      .def("energy",energy2)
       .def("ekin_tr",&System::ekin_tr)
       .def("ekin_rot",&System::ekin_rot)
       .def("volume",&System::volume)
-*/
+
+
+      .def("extract_atomic_q", &System::extract_atomic_q)
+      .def("set_atomic_q", &System::set_atomic_q)
+
+      .def("extract_atomic_p", &System::extract_atomic_p)
+      .def("set_atomic_p", &System::set_atomic_p)
+
+      .def("extract_atomic_v", &System::extract_atomic_v)
+      .def("set_atomic_v", &System::set_atomic_v)
+
+      .def("extract_atomic_f", &System::extract_atomic_f)
+      .def("set_atomic_f", &System::set_atomic_f)
+
+      .def("extract_atomic_mass", &System::extract_atomic_mass)
+      .def("set_atomic_mass", &System::set_atomic_mass)
+
+
+      .def("extract_fragment_q", &System::extract_fragment_q)
+      .def("set_fragment_q", &System::set_fragment_q)
+
+      .def("extract_fragment_p", &System::extract_fragment_p)
+      .def("set_fragment_p", &System::set_fragment_p)
+
+      .def("extract_fragment_v", &System::extract_fragment_v)
+      .def("set_fragment_v", &System::set_fragment_v)
+
+      .def("extract_fragment_f", &System::extract_fragment_f)
+      .def("set_fragment_f", &System::set_fragment_f)
+
+      .def("extract_fragment_mass", &System::extract_fragment_mass)
+      .def("set_fragment_mass", &System::set_fragment_mass)
+
+
 
       .def("print_ent",print_ent1)
       .def("print_ent",print_ent2)

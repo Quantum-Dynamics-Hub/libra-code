@@ -2,6 +2,16 @@ import os
 import sys
 import math
 
+######################################################################
+#
+# Basic test for surface hopping schemes - now using object of Ensemble
+# type. We can choose TSH methods: FSSH, MSSH, GFSH;  we can choose
+# Tully's models and initial conditions. Computed populations are 
+# resolved only by state, not like reflection/transmission
+#
+######################################################################
+
+
 # Fisrt, we add the location of the library to test to the PYTHON path
 cwd = os.getcwd()
 print "Current working directory", cwd

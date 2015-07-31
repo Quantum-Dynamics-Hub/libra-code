@@ -56,10 +56,10 @@ class System{
   void create_dihedral(int,int,int,int,int);
   void create_improper(int,int,int,int);
 
-/*
+
   //---------- Interactions parameters ------------------------
-  vector<Interaction> interactions;
-  vector<int> active_interactions;
+//  vector<Interaction> interactions;
+//  vector<int> active_interactions;
 
   std::string stress_opt;int is_stress_opt;
   MATRIX3x3 stress_at;   int is_stress_at;
@@ -72,7 +72,7 @@ class System{
   vector<VECTOR> respa_t_fast,respa_t_medium;
   MATRIX3x3 respa_s_fast,respa_s_medium;
   double respa_E_fast,respa_E_medium;
-*/
+
 
 public:
 
@@ -198,30 +198,39 @@ public:
   // Chemistry related functions:
   void determine_functional_groups(int assign_ring);
 
-/*
-  //----------- Defined in System_methods5.cpp ------------------
-  // Interaction related functions:
-  void show_interactions_statistics();
-//  void set_// To be hidden
-  int is_new_interaction(Interaction&);
-  // Private
-  void set_atom_types(vector<int>& lst,ForceField& ff);
-  void set_fragment_types(vector<int>& lst,ForceField& ff);
 
-  bool is_active(Atom&,Atom&);
-  bool is_active(Atom&,Atom&,Atom&);
-  bool is_active(Atom&,Atom&,Atom&,Atom&);
-  void set_atom_interactions_for_atoms(string int_type,vector<Atom>& top_elt,vector<int>& lst1,vector<int>& lst2,ForceField& ff,int verb);
-  void set_group_interactions_for_atoms(string int_type,vector<Group>& top_elt,vector<int>& lst1,vector<int>& lst2,ForceField& ff);
+  //----------- Defined in System_methods5.cpp (extractors/converters) -------
+  void extract_atomic_q(vector<double>& q);
+  void set_atomic_q(vector<double>& q);
 
-  // Public
-  void set_interactions_for_atoms(boost::python::list,boost::python::list,ForceField&,int verb);
-  void set_interactions_for_fragments(boost::python::list,boost::python::list,ForceField&);
+  void extract_atomic_p(vector<double>& p);
+  void set_atomic_p(vector<double>& p);
 
-  void set_interactions();
-  void apply_pbc_to_interactions(int,int,int,int);
+  void extract_atomic_v(vector<double>& v);
+  void set_atomic_v(vector<double>& v);
 
-  void set_respa_types(std::string inter_type,std::string respa_type);
+  void extract_atomic_f(vector<double>& f);
+  void set_atomic_f(vector<double>& f);
+
+  void extract_atomic_mass(vector<double>& mass);
+  void set_atomic_mass(vector<double>& mass);
+
+
+  void extract_fragment_q(vector<double>& q);
+  void set_fragment_q(vector<double>& q);
+
+  void extract_fragment_p(vector<double>& p);
+  void set_fragment_p(vector<double>& p);
+
+  void extract_fragment_v(vector<double>& v);
+  void set_fragment_v(vector<double>& v);
+
+  void extract_fragment_f(vector<double>& f);
+  void set_fragment_f(vector<double>& f);
+
+  void extract_fragment_mass(vector<double>& mass);
+  void set_fragment_mass(vector<double>& mass);
+  
 
   //------------- Defined in System_methods6.cpp ------------------
   void zero_atom_forces();
@@ -256,15 +265,16 @@ public:
   void fix_fragment_rotation(int);
   void fix_fragment(int);
 
-  double energy(std::string);
-  double energy();
-  double energy_respa(std::string respa_type);
+//  double energy(std::string);
+//  double energy();
+//  double energy_respa(std::string respa_type);
   double ekin_tr();
   double ekin_tr_int(); // internal translational kinetic energy
   double ekin_rot();
   double volume();
   MATRIX3x3 pressure_tensor();
-*/
+
+
   //---------------- Defined in System_methods7.cpp -----------------
   void print_ent(std::string);
   void print_ent(std::string,int,std::string);
@@ -277,6 +287,9 @@ public:
 
   
 };
+
+
+
 
 }// namespace libchemsys
 }// namespace libchemobjects

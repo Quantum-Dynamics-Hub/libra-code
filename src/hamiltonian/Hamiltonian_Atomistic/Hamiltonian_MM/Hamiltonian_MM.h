@@ -289,7 +289,7 @@ public:
   void set_interactions_for_fragments(System& syst, boost::python::list,boost::python::list,ForceField&);
 
 
-  void apply_pbc_to_interactions(System&, int,int,int,int);
+  void apply_pbc_to_interactions(System& syst, int int_type,int nx,int ny,int nz);
   void set_respa_types(std::string inter_type,std::string respa_type);
 
 

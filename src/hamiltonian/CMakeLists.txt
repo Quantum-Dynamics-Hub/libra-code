@@ -36,7 +36,7 @@ ADD_LIBRARY(hamiltonian_stat STATIC ${HAMILTONIAN_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(hamiltonian      hamiltonian_model_stat hamiltonian_generic_stat mmath_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(hamiltonian_stat hamiltonian_model_stat hamiltonian_generic_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(hamiltonian      hamiltonian_atomistic_stat hamiltonian_model_stat hamiltonian_generic_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(hamiltonian_stat hamiltonian_atomistic_stat hamiltonian_model_stat hamiltonian_generic_stat mmath_stat ${ext_libs})
 
 

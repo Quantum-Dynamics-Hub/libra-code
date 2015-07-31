@@ -3,6 +3,7 @@
 
 #include "Hamiltonian_Generic/libhamiltonian_generic.h"
 #include "Hamiltonian_Model/libhamiltonian_model.h"
+#include "Hamiltonian_Atomistic/libhamiltonian_atomistic.h"
 
 namespace libhamiltonian{
 

@@ -1,0 +1,54 @@
+Adamantane
+HETATM    1  C           0      -1.960   1.316  -0.348                       C
+HETATM    2  H           0      -0.841   1.316  -0.348                       H
+HETATM    3  H           0      -2.307   2.381  -0.348                       H
+HETATM    4  C           0      -2.477   0.605   0.899                       C
+HETATM    5  H           0      -2.096   1.129   1.815                       H
+HETATM    6  C           0      -2.477   0.604  -1.595                       C
+HETATM    7  H           0      -2.097   1.129  -2.511                       H
+HETATM    8  C           0      -1.988  -0.840  -1.593                       C
+HETATM    9  H           0      -0.868  -0.862  -1.606                       H
+HETATM   10  H           0      -2.354  -1.366  -2.512                       H
+HETATM   11  C           0      -1.987  -0.840   0.897                       C
+HETATM   12  H           0      -2.353  -1.366   1.816                       H
+HETATM   13  H           0      -0.868  -0.861   0.909                       H
+HETATM   14  C           0      -2.504  -1.555  -0.348                       C
+HETATM   15  H           0      -2.143  -2.617  -0.348                       H
+HETATM   16  C           0      -4.030  -1.534  -0.348                       C
+HETATM   17  H           0      -4.416  -2.066  -1.254                       H
+HETATM   18  H           0      -4.416  -2.066   0.558                       H
+HETATM   19  C           0      -4.003   0.623   0.897                       C
+HETATM   20  H           0      -4.369   1.681   0.910                       H
+HETATM   21  H           0      -4.389   0.112   1.816                       H
+HETATM   22  C           0      -4.003   0.623  -1.593                       C
+HETATM   23  H           0      -4.370   1.681  -1.605                       H
+HETATM   24  H           0      -4.389   0.112  -2.511                       H
+HETATM   25  C           0      -4.522  -0.090  -0.348                       C
+HETATM   26  H           0      -5.644  -0.076  -0.348                       H
+END
+CONECT    1    2    3    4    6
+CONECT    2    1
+CONECT    3    1
+CONECT    4    1    5   11   19
+CONECT    5    4
+CONECT    6    1    7    8   22
+CONECT    7    6
+CONECT    8    6    9   10   14
+CONECT    9    8
+CONECT   10    8
+CONECT   11    4   12   13   14
+CONECT   12   11
+CONECT   13   11
+CONECT   14    8   11   15   16
+CONECT   15   14
+CONECT   16   14   17   18   25
+CONECT   17   16
+CONECT   18   16
+CONECT   19    4   20   21   25
+CONECT   20   19
+CONECT   21   19
+CONECT   22    6   23   24   25
+CONECT   23   22
+CONECT   24   22
+CONECT   25   16   19   22   26
+CONECT   26   25

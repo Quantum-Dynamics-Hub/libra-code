@@ -339,6 +339,9 @@ double Hamiltonian_MM::calculate(int call_type,int& update_displ2){
   if(int_type==0){
     if(is_active){
     VECTOR& r1 = *(data_bond->r1); VECTOR& r2 = *(data_bond->r2);
+//    cout<<"bond interaction "<<data_bond->id1<<"  "<<data_bond->id2<<"\n";
+//    cout<<"r1 = "<<r1<<"  r2 = "<<r2<<endl;
+
     VECTOR f1,f2; f1 = f2 = 0.0;
     if(functional==0){ energy = Bond_Harmonic(r1,r2,f1,f2,data_bond->K,data_bond->r0);}
     else if(functional==1){ energy = Bond_Quartic(r1,r2,f1,f2,data_bond->K,data_bond->r0); }
@@ -359,9 +362,11 @@ double Hamiltonian_MM::calculate(int call_type,int& update_displ2){
 
     VECTOR& r1 = *(data_angle->r1); VECTOR& r2 = *(data_angle->r2); VECTOR& r3 = *(data_angle->r3);
     VECTOR f1,f2,f3; f1 = f2 = f3 = 0.0;
+
 //    cout<<"~~~~~~~~~~~~angle interaction "<<data_angle->id1<<" "<<data_angle->id2<<" "<<data_angle->id3<<"~~~~~~~~~~~~~"<<endl;
 //    cout<<"&r1 = "<<(data_angle->r1)<<" &r2 = "<<(data_angle->r2)<<" &r3 = "<<(data_angle->r3)<<endl;
 //    cout<<" r1 = "<<r1<<" r2 = "<<r2<<" r3 = "<<r3<<endl;
+
     if(functional==0){ energy = Angle_Harmonic(r1,r2,r3,f1,f2,f3,data_angle->k_theta,data_angle->theta_0); }
     else if(functional==1){ energy = Angle_Fourier(r1,r2,r3,f1,f2,f3,data_angle->k_theta,data_angle->C0, data_angle->C1,data_angle->C2,data_angle->coordination); }
     else if(functional==2){ energy = Angle_Fourier_General(r1,r2,r3,f1,f2,f3,data_angle->k_theta,data_angle->C0, data_angle->C1,data_angle->C2); }

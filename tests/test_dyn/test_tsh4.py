@@ -2,6 +2,14 @@ import os
 import sys
 import math
 
+######################################################################
+#
+# This example is designed to show scattering probabilities calculation
+# for ECWR (or choose other Tully's model) you can also set momenta spread
+# compute reflections and transmission probabilities on all states
+#
+######################################################################
+
 # Fisrt, we add the location of the library to test to the PYTHON path
 cwd = os.getcwd()
 print "Current working directory", cwd

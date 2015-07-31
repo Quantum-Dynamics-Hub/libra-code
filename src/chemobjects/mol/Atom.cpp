@@ -119,15 +119,15 @@ Atom::Atom(Universe& u, boost::python::dict at){
     else if(key=="Atom_formal_charge") { Atom_formal_charge = extract<double>(at.values()[i]); is_Atom_formal_charge = 1; }
     else if(key=="Atom_ff_type") { Atom_ff_type = extract<std::string>(at.values()[i]); is_Atom_ff_type = 1; }
 
-    else if(key=="Atom_x") {
+    else if(key=="Atom_cm_x") {
       Atom_RB.rb_cm.x = extract<double>(at.values()[i]); is_Atom_RB = 1; Atom_RB.is_rb_cm = 1;
       Atom_RB_old.rb_cm.x = Atom_RB.rb_cm.x; is_Atom_RB_old = 1; Atom_RB.is_rb_cm = 1;
     }
-    else if(key=="Atom_y") {
+    else if(key=="Atom_cm_y") {
       Atom_RB.rb_cm.y = extract<double>(at.values()[i]); is_Atom_RB = 1; Atom_RB.is_rb_cm = 1;
       Atom_RB_old.rb_cm.y = Atom_RB.rb_cm.y; is_Atom_RB_old = 1; Atom_RB.is_rb_cm = 1;
     }
-    else if(key=="Atom_z") { 
+    else if(key=="Atom_cm_z") { 
       Atom_RB.rb_cm.z = extract<double>(at.values()[i]); is_Atom_RB = 1; Atom_RB.is_rb_cm = 1;
       Atom_RB_old.rb_cm.z = Atom_RB.rb_cm.z; is_Atom_RB_old = 1; Atom_RB.is_rb_cm = 1;
     }
