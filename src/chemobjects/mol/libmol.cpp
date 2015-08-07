@@ -65,12 +65,75 @@ void export_Mol_objects(){
       .def(vector_indexing_suite<std::vector<Atom> >())
   ;
 
-//  def("save",save);
-//  def("load",load);
+
+//  void (Atom::*expt_save_v1)(boost::property_tree::ptree& pt,std::string path) = &Atom::save;
+//  void (Atom::*expt_save_v2)(std::string path) = &Atom::save;
+
+
+  class_<Group>("Group",init<>())
+      .def("__copy__", &generic__copy__<Group>)
+      .def("__deepcopy__", &generic__deepcopy__<Group>)
+
+      // Topology
+      .def_readwrite("globGroup_Size",&Group::globGroup_Size)
+      .def_readwrite("locGroup_Size",&Group::locGroup_Size)
+      .def_readwrite("Group_Size",&Group::Group_Size)
+      .def_readwrite("globAtom_Index",&Group::globAtom_Index)
+      .def_readwrite("locAtom_Index",&Group::locAtom_Index)
+      .def_readwrite("globGroup_Index",&Group::globGroup_Index)
+      .def_readwrite("locGroup_Index",&Group::locGroup_Index)
+      .def_readwrite("globMolecule_Index",&Group::globMolecule_Index)
+
+      .def_readwrite("Group_name",&Group::Group_name)
+      .def_readwrite("Group_id",&Group::Group_id)
+      .def_readwrite("Group_radius",&Group::Group_radius)
+      .def_readwrite("Group_RB",&Group::Group_RB)
+      .def_readwrite("Group_ff_type",&Group::Group_ff_type)
+
+      .def_readwrite("Group_bond_order",&Group::Group_bond_order)
+      .def_readwrite("Group_bond_alpha",&Group::Group_bond_alpha)
+
+      .def("set",&Group::set)
+      .def("show_inf",&Group::show_info)
+
+  ;
+
+  class_<std::vector<Group> >("GroupList")
+      .def(vector_indexing_suite<std::vector<Group> >())
+  ;
+
+
+  class_<Molecule>("Molecule",init<>())
+      .def("__copy__", &generic__copy__<Molecule>)
+      .def("__deepcopy__", &generic__deepcopy__<Molecule>)
+
+      // Topology
+      .def_readwrite("globMolecule_Size",&Molecule::globMolecule_Size)
+      .def_readwrite("locMolecule_Size",&Molecule::locMolecule_Size)
+      .def_readwrite("Molecule_Size",&Molecule::Molecule_Size)
+      .def_readwrite("globAtom_Index",&Molecule::globAtom_Index)
+      .def_readwrite("locAtom_Index",&Molecule::locAtom_Index)
+      .def_readwrite("globMolecule_Index",&Molecule::globMolecule_Index)
+      .def_readwrite("locMolecule_Index",&Molecule::locMolecule_Index)
+
+      .def_readwrite("Molecule_Number_of_bonds",&Molecule::Molecule_Number_of_bonds)
+      .def_readwrite("Molecule_Number_of_angles",&Molecule::Molecule_Number_of_angles)
+      .def_readwrite("Molecule_Number_of_dihedrals",&Molecule::Molecule_Number_of_dihedrals)
+      .def_readwrite("Molecule_Number_of_impropers",&Molecule::Molecule_Number_of_impropers)
+
+      .def_readwrite("Molecule_name",&Molecule::Molecule_name)
+      .def_readwrite("Molecule_id",&Molecule::Molecule_id)
+      .def_readwrite("Molecule_RB",&Molecule::Molecule_RB)
+
+  ;
+
+  class_<std::vector<Molecule> >("MoleculeList")
+      .def(vector_indexing_suite<std::vector<Molecule> >())
+  ;
 
 
 
-}// export_Atom_objects
+}// export_Mol_objects
 
 
 

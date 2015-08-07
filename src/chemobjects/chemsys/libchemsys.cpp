@@ -17,16 +17,9 @@ void (System::*CREATE_ATOM2)(Atom)  = &System::CREATE_ATOM;
 void (System::*LINK_ATOMS1)(Atom&,Atom&) = &System::LINK_ATOMS;
 void (System::*LINK_ATOMS2)(int,int) = &System::LINK_ATOMS;
 
-//double (System::*energy1)()         = &System::energy;
-//double (System::*energy2)(std::string) = &System::energy;
-
 void (System::*init_box1)()         = &System::init_box;
 void (System::*init_box2)(double,double,double) = &System::init_box;
 void (System::*init_box3)(VECTOR,VECTOR,VECTOR) = &System::init_box;
-
-void (System::*show_interactions1)()            = &System::show_interactions;
-void (System::*show_interactions2)(std::string) = &System::show_interactions;
-
 
 void (System::*print_ent1)(std::string) = &System::print_ent;
 void (System::*print_ent2)(std::string,int,std::string) = &System::print_ent;
@@ -36,6 +29,10 @@ void (System::*print_ent4)(std::string,boost::python::list,int,std::string) = &S
 void (System::*print_xyz1)(std::string,int) = &System::print_xyz;
 void (System::*print_xyz2)(std::string,int,std::string,int) = &System::print_xyz;
 
+int (System::*expt_Find_Angle_v1)(int,int) = &System::Find_Angle;
+int (System::*expt_Find_Angle_v2)(int,int,int) = &System::Find_Angle;
+
+
 
 
   class_<System>("System",init<>())
@@ -43,9 +40,15 @@ void (System::*print_xyz2)(std::string,int,std::string,int) = &System::print_xyz
       .def("__deepcopy__", &generic__deepcopy__<System>)
       .def(init<const System&>())
 
+      .def_readwrite("name", &System::name)
       .def_readwrite("id",&System::id)
+      .def_readwrite("mass",&System::mass)
+      .def_readwrite("Nf_t",&System::Nf_t)
+      .def_readwrite("Nf_r",&System::Nf_r)
 
 //      .def("set",&System::set)
+      .def("show_info",&System::show_info)
+
       .def_readwrite("Number_of_atoms",&System::Number_of_atoms)
       .def_readwrite("Number_of_bonds",&System::Number_of_bonds)
       .def_readwrite("Number_of_angles",&System::Number_of_angles)
@@ -56,15 +59,36 @@ void (System::*print_xyz2)(std::string,int,std::string,int) = &System::print_xyz
       .def_readwrite("Number_of_rings",&System::Number_of_rings)
       .def_readwrite("Number_of_molecules",&System::Number_of_molecules)
 
+      .def_readwrite("Atoms",&System::Atoms)
+      .def_readwrite("Bonds",&System::Bonds)
+      .def_readwrite("Angles",&System::Angles)
+      .def_readwrite("Dihedrals",&System::Dihedrals)
+      .def_readwrite("Impropers",&System::Impropers)
+      .def_readwrite("Pairs",&System::Pairs)
+      .def_readwrite("Fragments",&System::Fragments)
+      .def_readwrite("Rings",&System::Rings)
+      .def_readwrite("Molecules",&System::Molecules)
+
+      .def_readwrite("Frag_bonds",&System::Frag_bonds)
+      .def_readwrite("Frag_angles",&System::Frag_angles)
+      .def_readwrite("Frag_dihedrals",&System::Frag_dihedrals)
+      .def_readwrite("Frag_impropers",&System::Frag_impropers)
+      .def_readwrite("Frag_pairs",&System::Frag_pairs)
+      .def_readwrite("Surface_atoms",&System::Surface_atoms)
+
+      .def_readwrite("Number_of_frag_bonds",&System::Number_of_frag_bonds)
+      .def_readwrite("Number_of_frag_angles",&System::Number_of_frag_angles)
+      .def_readwrite("Number_of_frag_dihedrals",&System::Number_of_frag_dihedrals)
+      .def_readwrite("Number_of_frag_impropers",&System::Number_of_frag_impropers)
+      .def_readwrite("Number_of_frag_pairs",&System::Number_of_frag_pairs)
+      .def_readwrite("Number_of_surface_atoms",&System::Number_of_surface_atoms)
+
       .def_readwrite("Box",&System::Box)
       .def_readwrite("Box_origin",&System::Box_origin)
  
-      .def_readwrite("Atoms",&System::Atoms)
 
-      .def("show_info",&System::show_info)
-      .def("move_atom_by_index",&System::move_atom_by_index)
-      .def("move_fragment_by_index",&System::move_fragment_by_index)
-      .def("move_molecule_by_index",&System::move_molecule_by_index)
+
+  //---------- Defined in System_methods.cpp  ------------------
 
       .def("show_atoms",&System::show_atoms)
       .def("show_bonds",&System::show_bonds)
@@ -80,42 +104,72 @@ void (System::*print_xyz2)(std::string,int,std::string,int) = &System::print_xyz
       .def("show_fragments",&System::show_fragments)
       .def("show_rings",&System::show_rings)
       .def("show_molecules",&System::show_molecules)
-      .def("show_interactions",show_interactions1)
-      .def("show_interactions",show_interactions2)
 
-//      .def("CREATE_ATOM",CREATE_ATOM1)
+
+      .def("get_atom_index_by_atom_id", &System::get_atom_index_by_atom_id)
+      .def("get_fragment_index_by_fragment_id", &System::get_fragment_index_by_fragment_id)
+      .def("get_molecule_index_by_molecule_id", &System::get_molecule_index_by_molecule_id)
+      .def("Find_Bond", &System::Find_Bond)
+      .def("Find_Frag_Pair", &System::Find_Frag_Pair)
+      .def("Find_Angle", expt_Find_Angle_v1)
+      .def("Find_Angle", expt_Find_Angle_v2)
+      .def("Find_Dihedral", &System::Find_Dihedral)
+      .def("Find_Improper", &System::Find_Improper)
+      .def("is_12pair", &System::is_12pair)
+      .def("is_13pair", &System::is_13pair)
+      .def("is_14pair", &System::is_14pair)
+      .def("is_group_pair", &System::is_group_pair)
+
+      
+
+  //----------- Defined in System_methods1.cpp -----------
+
+      .def("Generate_Connectivity_Matrix", &System::Generate_Connectivity_Matrix)
+      .def("Assign_Rings", &System::Assign_Rings)
+      .def("DIVIDE_GRAPH", &System::DIVIDE_GRAPH)
+
+
+  //----------- Defined in System_methods2.cpp ------------------
+
+      .def("update_max_id",&System::update_max_id)
       .def("CREATE_ATOM",CREATE_ATOM2)
       .def("LINK_ATOMS",LINK_ATOMS2)
       .def("GROUP_ATOMS",&System::GROUP_ATOMS)
+      .def("UPDATE_FRAG_TOPOLOGY", &System::UPDATE_FRAG_TOPOLOGY)
+      .def("ADD_ATOM_TO_FRAGMENT", &System::ADD_ATOM_TO_FRAGMENT)
+      .def("CREATE_BONDS", &System::CREATE_BONDS)
+      .def("CLONE_MOLECULE", &System::CLONE_MOLECULE)
+
+
+
+  //----------- Defined in System_methods3.cpp ------------------
+
+      .def("move_atom_by_index",&System::move_atom_by_index)
+      .def("move_fragment_by_index",&System::move_fragment_by_index)
+      .def("move_molecule_by_index",&System::move_molecule_by_index)
+
+      .def("update_atoms_for_fragment", &System::update_atoms_for_fragment)
+      .def("update_fragments_for_molecule", &System::update_fragments_for_molecule)
+      .def("update_atoms_for_molecule", &System::update_atoms_for_molecule)
+
+      .def("rotate_atoms_of_fragment", &System::rotate_atoms_of_fragment)
+      .def("rotate_fragments_of_molecule", &System::rotate_fragments_of_molecule)
+      .def("rotate_atoms_of_molecule", &System::rotate_atoms_of_molecule)
+
+      .def("TRANSLATE_ATOM", &System::TRANSLATE_ATOM)
+      .def("TRANSLATE_FRAGMENT", &System::TRANSLATE_FRAGMENT)
+      .def("TRANSLATE_MOLECULE", &System::TRANSLATE_MOLECULE)
+      .def("ROTATE_FRAGMENT", &System::ROTATE_FRAGMENT)
+      .def("ROTATE_MOLECULE", &System::ROTATE_MOLECULE)
+
+
+
+  //----------- Defined in System_methods4.cpp ------------------
 
       .def("determine_functional_groups",&System::determine_functional_groups)
-//      .def("set_interactions_for_atoms",&System::set_interactions_for_atoms)
-//      .def("set_respa_types",&System::set_respa_types)
-//      .def("show_interactions_statistics",&System::show_interactions_statistics)
 
 
-      .def("zero_atom_forces",&System::zero_atom_forces)
-      .def("zero_fragment_forces",&System::zero_fragment_forces)
-      .def("zero_fragment_torques",&System::zero_fragment_torques)
-      .def("zero_forces",&System::zero_forces)
-      .def("zero_forces_and_torques",&System::zero_forces_and_torques)
-      .def("init_fragments",&System::init_fragments)
-      .def("init_molecules",&System::init_molecules)
-      .def("init_box",init_box1)
-      .def("init_box",init_box2)
-      .def("init_box",init_box3)
-      .def("apply_frag_pbc",&System::apply_frag_pbc)
-
-      .def("fix_fragment_translation", &System::fix_fragment_translation)
-      .def("fix_fragment_rotation", &System::fix_fragment_rotation)
-      .def("fix_fragment", &System::fix_fragment)
-
-//      .def("energy",energy1)
-//      .def("energy",energy2)
-      .def("ekin_tr",&System::ekin_tr)
-      .def("ekin_rot",&System::ekin_rot)
-      .def("volume",&System::volume)
-
+  //----------- Defined in System_methods5.cpp (extractors/converters) -------
 
       .def("extract_atomic_q", &System::extract_atomic_q)
       .def("set_atomic_q", &System::set_atomic_q)
@@ -149,7 +203,48 @@ void (System::*print_xyz2)(std::string,int,std::string,int) = &System::print_xyz
       .def("set_fragment_mass", &System::set_fragment_mass)
 
 
+  //------------- Defined in System_methods6.cpp ------------------
 
+      .def("zero_atom_forces",&System::zero_atom_forces)
+      .def("zero_fragment_forces",&System::zero_fragment_forces)
+      .def("zero_fragment_torques",&System::zero_fragment_torques)
+      .def("zero_forces",&System::zero_forces)
+      .def("zero_forces_and_torques",&System::zero_forces_and_torques)
+      .def("update_fragment_forces",&System::update_fragment_forces)
+      .def("update_fragment_torques",&System::update_fragment_torques)
+      .def("update_fragment_forces_and_torques",&System::update_fragment_forces_and_torques)
+
+      .def("save_forces", &System::save_forces)
+      .def("save_torques", &System::save_torques)
+      .def("load_forces", &System::load_forces)
+      .def("load_torques", &System::load_torques)
+    
+      .def("save_stress", &System::save_stress)
+      .def("increment_stress", &System::increment_stress)
+      .def("save_respa_state", &System::save_respa_state)
+      .def("load_respa_state", &System::load_respa_state)
+
+      .def("init_fragments",&System::init_fragments)
+      .def("init_molecules",&System::init_molecules)
+
+      .def("init_box_origin", &System::init_box_origin)
+      .def("init_box",init_box1)
+      .def("init_box",init_box2)
+      .def("init_box",init_box3)
+      .def("apply_frag_pbc",&System::apply_frag_pbc)
+
+      .def("fix_fragment_translation", &System::fix_fragment_translation)
+      .def("fix_fragment_rotation", &System::fix_fragment_rotation)
+      .def("fix_fragment", &System::fix_fragment)
+
+      .def("ekin_tr",&System::ekin_tr)
+      .def("ekin_tr_int",&System::ekin_tr_int)
+      .def("ekin_rot",&System::ekin_rot)
+      .def("volume",&System::volume)
+      .def("pressure_tensor", &System::pressure_tensor)
+
+
+  //---------------- Defined in System_methods7.cpp -----------------
       .def("print_ent",print_ent1)
       .def("print_ent",print_ent2)
       .def("print_ent",print_ent3)

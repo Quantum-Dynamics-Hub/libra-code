@@ -73,7 +73,7 @@ int ForceField::get_elec_parameters(string ff_type1, string ff_type2,std::string
   R_on *= Angst;
   R_off *= Angst;
   delta *= Angst;
-  eps *= (1.0/hartree);
+  eps *= hartree; // eps is the permittivity, so in denominator
 
 
   if(is_cut){

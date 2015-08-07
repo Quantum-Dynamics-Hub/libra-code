@@ -255,27 +255,6 @@ void System::show_molecules(){
   for(int i=0;i<Number_of_molecules;i++){ Molecules[i].show_info();  }
 }
 
-void System::show_interactions(){
-//  for(int i=0;i<interactions.size();i++){ interactions[i].show_info();  }
-}
-
-
-void System::show_interactions(std::string s_int_type){
-  int int_type = -1;
-  if(s_int_type=="bond")         { int_type = 0; }
-  else if(s_int_type=="angle")   { int_type = 1; }
-  else if(s_int_type=="dihedral"){ int_type = 2; }
-  else if(s_int_type=="oop")     { int_type = 3; }
-  else if(s_int_type=="vdw")     { int_type = 4; }
-  else if(s_int_type=="elec")    { int_type = 5; }
-  else if(s_int_type=="mb")      { int_type = 6; }
-  else if(s_int_type=="cg")      { int_type = 7; }
-
-//  for(int i=0;i<interactions.size();i++){
-//    if(interactions[i].get_type()==int_type){    interactions[i].show_info();    }
-//  }
-
-}
 
 
 

@@ -64,6 +64,14 @@ void RigidBody::propagate_dlml(double t,double& Ps){
 
 }
 
+double RigidBody::propagate_dlml(double t){
+  double Ps = 0.0;
+  propagate_dlml(t, Ps);
+  return Ps;
+}
+
 }// namespace librigidbody
 }// namespace libdyn
+
+
 

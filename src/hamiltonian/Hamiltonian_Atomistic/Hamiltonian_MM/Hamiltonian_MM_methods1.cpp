@@ -63,6 +63,7 @@ void Hamiltonian_MM::set_interaction_type_and_functional(std::string t,std::stri
     if(f=="Ewald_3D"){ functional = 0; is_functional = 1; }
     else if(f=="vdw_LJ"){ functional = 1; is_functional = 1; } 
     else if(f=="vdw_LJ1"){ functional = 2; is_functional = 1; }
+    else if(f=="LJ_Coulomb"){ functional = 3; is_functional = 1; }
     else{ std::cout<<"Warning: Many-body potential "<<f<<" is not implemented\n"; }
   }
   else if(t=="cg"){ int_type = 7; is_int_type = 1; 
@@ -1049,10 +1050,24 @@ double Hamiltonian_MM::calculate(int call_type,int& update_displ2){
 //    en = Vdw_LJ1(r,g,m,f,at_st,fr_st,ml_st,sz,epsilon,sigma,data_mb->nexcl,data_mb->excl1,data_mb->excl2,data_mb->scale,Box,rec_deg,pbc_deg,data_mb->elec_etha,is_cutoff,R_on,R_off,data_mb->time,data_mb->at_neib,data_mb->central_translation,dr2,*(data_mb->displT_2),is_update);
 
 //    cout<<"data_mb->excl_scales.size = "<<data_mb->excl_scales.size()<<endl;
+      try{
       en = Vdw_LJ2_no_excl(r,g,m,f,at_st,fr_st,ml_st,sz,epsilon,sigma,data_mb->nexcl,data_mb->excl1,data_mb->excl2,data_mb->scale,Box,rec_deg,pbc_deg,data_mb->elec_etha,is_cutoff,R_on,R_off,data_mb->time,data_mb->excl_scales);
-      is_update = 1;
+      is_update = 1; 
+
+      }catch(char *e){ printf("Exception Caught: %s\n",e); exit(0);   }
 
     }
+
+    else if(functional==3){
+// This gonna be a universal LJ+Coulomb potential
+//    cout<<"Going to compute LJ_Coulomb\n";
+//    exit(0);
+    en = LJ_Coulomb(r,g,m,f,at_st,fr_st,ml_st,
+                    sz,epsilon,sigma,q,is_cutoff,R_on,R_off,
+                    data_mb->nexcl,data_mb->excl1,data_mb->excl2,data_mb->scale);
+//      exit(0);
+    }
+
 
 
     energy += en;
@@ -1060,6 +1075,7 @@ double Hamiltonian_MM::calculate(int call_type,int& update_displ2){
     stress_fr += fr_st;
     stress_ml += ml_st;
 
+    is_update = 1; // no Verlet list
     if(is_update){ update_displ2 = 1; }
 
     for(i=0;i<sz;i++){   *(data_mb->f[i]) += f[i];   }

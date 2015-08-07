@@ -230,6 +230,7 @@ public:
   void propagate_exact_rb(double t);
   // Defined in RigidBody_methods5_2.cpp
   void propagate_dlml(double t,double&);
+  double propagate_dlml(double t);
   // Defined in RigidBody_methods5_3.cpp
   void propagate_no_squish(double t);
   // Defined in RigidBody_methods5_4.cpp

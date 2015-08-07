@@ -40,6 +40,11 @@ void export_RigidBody_objects(){
   void (RigidBody::*Rotate2)(QUATERNION&)      = &RigidBody::Rotate;
   void (RigidBody::*Rotate3)(double,VECTOR&)   = &RigidBody::Rotate;
 
+  void (RigidBody::*expt_propagate_dlml_v1)(double t,double&) = &RigidBody::propagate_dlml;
+  double (RigidBody::*expt_propagate_dlml_v2)(double t) = &RigidBody::propagate_dlml;
+
+
+
 
 
 
@@ -143,7 +148,9 @@ void export_RigidBody_objects(){
 
       .def("initialize_exact_rb",&RigidBody::initialize_exact_rb,"initialization of the R van Zon integrator")
       .def("propagate_exact_rb",&RigidBody::propagate_exact_rb,"exact solution for free RB problem, based on Jacoby method as discussed by R van Zon")
-      .def("propagate_dlml",&RigidBody::propagate_dlml,"DLML = Dullweber, Leimkuhler, McLachlan")
+      .def("propagate_dlml", expt_propagate_dlml_v1,"DLML = Dullweber, Leimkuhler, McLachlan")
+      .def("propagate_dlml", expt_propagate_dlml_v2,"DLML = Dullweber, Leimkuhler, McLachlan")
+
       .def("propagate_no_squish",&RigidBody::propagate_no_squish,"Symplectic quaternion scheme of Miller and co-workers")
       .def("initialize_terec",&RigidBody::initialize_terec,"inialization of the Terec integrator, see JCTC paper by Akimov & Kolomeisky")
       .def("propagate_terec",&RigidBody::propagate_terec,"Terec integrator with matrices, see JCTC paper by Akimov & Kolomeisky")

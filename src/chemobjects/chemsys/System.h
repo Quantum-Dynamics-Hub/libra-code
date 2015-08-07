@@ -121,10 +121,7 @@ public:
   void show_info();
   void set(object);
 
-  //--------- Defined in System_aux1.cpp ----------------------
-  void move_atom_by_index(VECTOR&,int);
-  void move_fragment_by_index(VECTOR&,int);
-  void move_molecule_by_index(VECTOR&,int);
+
 
   //---------- Defined in System_methods.cpp  ------------------
   // Search and show functions
@@ -143,8 +140,6 @@ public:
   void show_rings();
   void show_molecules();
 
-  void show_interactions();
-  void show_interactions(std::string);
 
 
   int get_atom_index_by_atom_id(int);
@@ -182,6 +177,10 @@ public:
 
   //----------- Defined in System_methods3.cpp ------------------
   // Manipulation functions: Translations, rotations and updates
+  void move_atom_by_index(VECTOR&,int);
+  void move_fragment_by_index(VECTOR&,int);
+  void move_molecule_by_index(VECTOR&,int);
+
   void update_atoms_for_fragment(int);
   void update_fragments_for_molecule(int);
   void update_atoms_for_molecule(int);

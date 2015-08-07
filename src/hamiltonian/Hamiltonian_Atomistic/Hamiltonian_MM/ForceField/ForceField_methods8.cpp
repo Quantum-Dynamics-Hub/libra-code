@@ -56,7 +56,7 @@ int ForceField::get_mb_parameters(map<string,double>& prms                      
 
   }// Ewald_3D
 
-  else if(mb_functional=="vdw_LJ"||mb_functional=="vdw_LJ1"){
+  else if(mb_functional=="vdw_LJ"||mb_functional=="vdw_LJ1"||mb_functional=="LJ_Coulomb"){
 
     if((is_R_vdw_off==1)&&(is_R_vdw_on==1)){ is_cut = 1; R_off = R_vdw_off; R_on = R_vdw_on; }
     else if((is_R_vdw_off==0)&&(is_R_vdw_on==0)){}

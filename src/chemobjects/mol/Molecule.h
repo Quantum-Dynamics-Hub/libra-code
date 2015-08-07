@@ -59,6 +59,9 @@ public:
  ~Molecule();                // destructor
 
   Molecule& operator=(const Molecule&); // assignment operator
+  bool operator==(const Molecule& a) const { return globMolecule_Index == a.globMolecule_Index; }
+  bool operator!=(const Molecule& a) const { return globMolecule_Index != a.globMolecule_Index; }
+
   void show_info();
   void set(object);
 
