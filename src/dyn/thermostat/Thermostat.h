@@ -102,6 +102,7 @@ public:
   void update_thermostat_forces(double, double, double, int);
   void init_nhc();
   void propagate_nhc(double,double, double, double);
+  void cool();
 
 
 };

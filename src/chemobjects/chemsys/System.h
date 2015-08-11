@@ -232,6 +232,10 @@ public:
   
 
   //------------- Defined in System_methods6.cpp ------------------
+  void cool_atoms();
+  void cool_fragments();
+  void cool();
+
   void zero_atom_forces();
   void zero_fragment_forces();
   void zero_fragment_torques();
@@ -272,6 +276,9 @@ public:
   double ekin_rot();
   double volume();
   MATRIX3x3 pressure_tensor();
+
+  void init_fragment_velocities(double Temp);
+  void init_fragment_velocities(double Temp,VECTOR TOT_P,VECTOR TOT_L);
 
 
   //---------------- Defined in System_methods7.cpp -----------------

@@ -33,6 +33,9 @@ int (System::*expt_Find_Angle_v1)(int,int) = &System::Find_Angle;
 int (System::*expt_Find_Angle_v2)(int,int,int) = &System::Find_Angle;
 
 
+void (System::*expt_init_fragment_velocities_v1)(double Temp) = &System::init_fragment_velocities;
+void (System::*expt_init_fragment_velocities_v2)(double Temp,VECTOR TOT_P,VECTOR TOT_L) = &System::init_fragment_velocities;
+
 
 
   class_<System>("System",init<>())
@@ -204,6 +207,9 @@ int (System::*expt_Find_Angle_v2)(int,int,int) = &System::Find_Angle;
 
 
   //------------- Defined in System_methods6.cpp ------------------
+      .def("cool_atoms", &System::cool_atoms)
+      .def("cool_fragments", &System::cool_fragments)
+      .def("cool", &System::cool)
 
       .def("zero_atom_forces",&System::zero_atom_forces)
       .def("zero_fragment_forces",&System::zero_fragment_forces)
@@ -242,6 +248,9 @@ int (System::*expt_Find_Angle_v2)(int,int,int) = &System::Find_Angle;
       .def("ekin_rot",&System::ekin_rot)
       .def("volume",&System::volume)
       .def("pressure_tensor", &System::pressure_tensor)
+
+      .def("init_fragment_velocities", expt_init_fragment_velocities_v1)
+      .def("init_fragment_velocities", expt_init_fragment_velocities_v2)
 
 
   //---------------- Defined in System_methods7.cpp -----------------

@@ -170,7 +170,7 @@ int ForceField::get_vdw_parameters(string ff_type1, string ff_type2,string excl_
     prms["R_off2"]= R_off*R_off;
   }
 
-  if(vdw_functional=="LJ"||vdw_functional=="Buffered14_7"||mb_functional=="vdw_LJ"||mb_functional=="vdw_LJ1"){
+  if(vdw_functional=="LJ"||vdw_functional=="Buffered14_7"||mb_functional=="vdw_LJ"||mb_functional=="vdw_LJ1"||mb_functional=="LJ_Coulomb"){
     prms["sigma"] = sigma;
     prms["epsilon"]= epsilon;
     status = is_sigma * is_epsilon ;

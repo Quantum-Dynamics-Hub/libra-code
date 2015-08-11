@@ -43,7 +43,7 @@ void Barostat::update_barostat_forces(double ekin_tr,double ekin_rot,double curr
 }
 
 void Barostat::init(double Temperature){
-  double kTb = (boltzmann * Temperature / (nu_baro * nu_baro));
+  double kTb = ((boltzmann/hartree) * Temperature / (nu_baro * nu_baro));
   Wg = (Nf_t + Nf_r + 3.0)*kTb/3.0;
 }
 
@@ -80,6 +80,11 @@ MATRIX3x3 Barostat::ang_vel_scale(double dt,double ksi_r){
   if(Nf_b==9){ res =  exp(  -dt*(ksi_r/*+(ksi_eps.tr()/Nf)*/)  ) * I; }
   else if(Nf_b==1){ res = exp(-dt*(ksi_r/*+ (3.0/Nf)*ksi_eps_iso*/) ) * I; }
   return res;
+}
+
+void Barostat::cool(){
+  ksi_eps = 0.0;     is_ksi_eps = 1;
+  ksi_eps_iso = 0.0; is_ksi_eps_iso = 1;
 }
 
 

@@ -14,7 +14,7 @@ ADD_LIBRARY(state_stat STATIC ${STATE_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(state      mmath_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(state_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(state      hamiltonian_stat chemobjects_stat dyn_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(state_stat hamiltonian_stat chemobjects_stat dyn_stat mmath_stat ${ext_libs})
 
 

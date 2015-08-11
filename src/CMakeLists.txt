@@ -50,6 +50,9 @@ MESSAGE("Going into subdirectory converters...")
 ADD_SUBDIRECTORY("converters")
 
 
+MESSAGE("Going into subdirectory scripts...")
+ADD_SUBDIRECTORY("scripts")
+
 
 
 

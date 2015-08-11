@@ -1,18 +1,17 @@
 #ifndef LIB_STATE_H
 #define LIB_STATE_H
 
-
 #include "State.h"
 
-namespace libdyn{
+namespace libscripts{
 namespace libstate{
 
 
-void export_State_objects();
+void export_state_objects();
 
 
 }// namespace libstate
-}// namespace libdyn
+}// namespace libscripts
 
 
 

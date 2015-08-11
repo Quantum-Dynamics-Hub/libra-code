@@ -1,5 +1,7 @@
 ###################################################################
 # Tutorial: Here is another version of MD: RB-MD via Systems objects
+# Now, lets make it in a modular way
+# and also add cooling
 ###################################################################
 
 import os
@@ -46,12 +48,59 @@ def init_md(syst, mol, el, ham):
     E_pot = compute_potential_energy(mol, el, ham, 1)  # 1 - FSSH forces
     compute_forces(mol, el, ham, 1)
     syst.set_atomic_f(mol.f)  # mol -> syst
-
     syst.update_fragment_forces_and_torques();
 
     E_tot = E_pot + E_kin;
 
     return [E_kin, E_pot, E_tot]
+
+
+def md_step(syst, mol, el, ham, dt, integrator):
+
+    ekin = 0.0
+    for n in xrange(syst.Number_of_fragments):
+        # Linear momentum propagation:
+        syst.Fragments[n].Group_RB.apply_force(0.5*dt)
+        # Angular momentum propagation:
+        syst.Fragments[n].Group_RB.apply_torque(0.5*dt)        
+        ekin += (syst.Fragments[n].Group_RB.ekin_tr() + syst.Fragments[n].Group_RB.ekin_rot() )
+
+    ps = 0.0
+    for n in xrange(syst.Number_of_fragments):
+        # Propagate translational DOFs 
+        syst.Fragments[n].Group_RB.shift_position(dt * syst.Fragments[n].Group_RB.rb_p * syst.Fragments[n].Group_RB.rb_iM);
+ 
+        # Propagate rotational DOFs
+        if integrator=="Jacobi":
+            syst.Fragments[n].Group_RB.propagate_exact_rb(dt)
+        elif integrator=="DLML":
+            ps = syst.Fragments[n].Group_RB.propagate_dlml(dt)
+
+    # Update atomic coordinates
+    for n in xrange(syst.Number_of_fragments):
+        syst.update_atoms_for_fragment(n)
+
+    #=========== Potential ===================
+    syst.zero_forces_and_torques()
+    syst.extract_atomic_q(mol.q)
+
+    epot = compute_potential_energy(mol, el, ham, 1)  # 1 - FSSH forces
+    compute_forces(mol, el, ham, 1)
+
+    syst.set_atomic_f(mol.f)
+    syst.update_fragment_forces_and_torques()
+
+
+    ekin = 0.0
+    for n in xrange(syst.Number_of_fragments):
+        # Linear momentum propagation:
+        syst.Fragments[n].Group_RB.apply_force(0.5*dt)
+        # Angular momentum propagation:
+        syst.Fragments[n].Group_RB.apply_torque(0.5*dt)        
+        ekin += (syst.Fragments[n].Group_RB.ekin_tr() + syst.Fragments[n].Group_RB.ekin_rot() )
+
+    etot = ekin+epot
+    return [ekin, epot, etot]
 
 
 
@@ -95,11 +144,6 @@ for i in [1]:
     syst.init_fragments()
 #    syst.show_fragments()
 #    syst.show_molecules()
-
-#    syst.
-    
-
-    #syst.print_xyz("molecule1.xyz",1)
 
     print "Number of atoms in the system = ", syst.Number_of_atoms
     atlst1 = range(1,syst.Number_of_atoms+1)
@@ -148,84 +192,49 @@ for i in [1]:
     syst.show_fragments()
 
 
-#    sys.exit(0)
-
-
 
     #=================== Propagation ====================
 
     integrator = "DLML"
 
-    f = open("_en_traj.txt","w")
-    dt = 1.0 # = 0.5 fs
-    for i in xrange(100):
 
+    ########################## Cooling #################################
+
+    f = open("_en_cooling.txt","w")
+    f.close()
+    dt = 1.0 
+
+    for i in xrange(100):
         syst.set_atomic_q(mol.q)
-        syst.print_xyz("_mol_traj.xyz",i)
+        syst.print_xyz("_mol_cooling.xyz",i)
 
         for j in xrange(10):
+            ekin, epot, etot = md_step(syst, mol, el, ham, dt, integrator)
 
-            ekin = 0.0
-            for n in xrange(syst.Number_of_fragments):
-                # Linear momentum propagation:
-                #syst.Fragments[n].Group_RB.scale_linear_(0.5*dt)
-                syst.Fragments[n].Group_RB.apply_force(0.5*dt)
+        syst.cool()
 
-                # Angular momentum propagation:
-                #syst.Fragments[n].Group_RB.scale_angular_(0.5*dt)
-                syst.Fragments[n].Group_RB.apply_torque(0.5*dt)
-                
-                ekin += (syst.Fragments[n].Group_RB.ekin_tr() + syst.Fragments[n].Group_RB.ekin_rot() )
+        f = open("_en_cooling.txt","a")
+        f.write("i= %3i ekin= %8.5f  epot= %8.5f  etot= %8.5f\n" % (i, ekin, epot, etot))
+        f.close()
 
 
-            ps = 0.0
-            for n in xrange(syst.Number_of_fragments):
-                # Propagate translational DOFs 
-                syst.Fragments[n].Group_RB.shift_position(dt * syst.Fragments[n].Group_RB.rb_p * syst.Fragments[n].Group_RB.rb_iM);
- 
-                # Propagate rotational DOFs
-                if integrator=="Jacobi":
-                    syst.Fragments[n].Group_RB.propagate_exact_rb(dt)
-                elif integrator=="DLML":
-                    ps = syst.Fragments[n].Group_RB.propagate_dlml(dt)
+    ########################## Production MD #################################
 
-            for n in xrange(syst.Number_of_fragments):
-                syst.update_atoms_for_fragment(n)
-
-
-            #=========== Potential ===================
-            syst.zero_forces_and_torques()
-            syst.extract_atomic_q(mol.q)
-
-            epot = compute_potential_energy(mol, el, ham, 1)  # 1 - FSSH forces
-            compute_forces(mol, el, ham, 1)
-
-            syst.set_atomic_f(mol.f)
-            syst.update_fragment_forces_and_torques()
-
-
-
-
-            ekin = 0.0
-            for n in xrange(syst.Number_of_fragments):
-                # Linear momentum propagation:
-                #syst.Fragments[n].Group_RB.scale_linear_(0.5*dt)
-                syst.Fragments[n].Group_RB.apply_force(0.5*dt)
-
-                # Angular momentum propagation:
-                #syst.Fragments[n].Group_RB.scale_angular_(0.5*dt)
-                syst.Fragments[n].Group_RB.apply_torque(0.5*dt)
-                
-                ekin += (syst.Fragments[n].Group_RB.ekin_tr() + syst.Fragments[n].Group_RB.ekin_rot() )
-
-
-        f.write("i= %3i ekin= %8.5f  epot= %8.5f  etot= %8.5f\n" % (i, ekin, epot, ekin+epot))
-
-        
-
-
-      
+    f = open("_en_md.txt","w")
     f.close()
+    dt = 20.0 
+
+    for i in xrange(100):
+        syst.set_atomic_q(mol.q)
+        syst.print_xyz("_mol_md.xyz",i)
+
+        for j in xrange(10):
+            ekin, epot, etot = md_step(syst, mol, el, ham, dt, integrator)
+
+        f = open("_en_md.txt","a")
+        f.write("i= %3i ekin= %8.5f  epot= %8.5f  etot= %8.5f\n" % (i, ekin, epot, etot))
+        f.close()
+
 
 
 

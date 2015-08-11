@@ -13,18 +13,44 @@ namespace libbarostat{
 
 void export_Barostat_objects(){
 
+  void (Barostat::*expt_set_Nf_t_v1)(int nf_t) = &Barostat::set_Nf_t;
+  void (Barostat::*expt_set_Nf_t_v2)(double nf_t) = &Barostat::set_Nf_t;
+  void (Barostat::*expt_set_Nf_r_v1)(int nf_t) = &Barostat::set_Nf_r;
+  void (Barostat::*expt_set_Nf_r_v2)(double nf_t) = &Barostat::set_Nf_r;
+  void (Barostat::*expt_set_Nf_b_v1)(int nf_t) = &Barostat::set_Nf_b;
+  void (Barostat::*expt_set_Nf_b_v2)(double nf_t) = &Barostat::set_Nf_b;
+
+
   class_<Barostat>("Barostat",init<>())
       .def(init<boost::python::dict>())
-//      .def_readwrite("s_var",&Thermostat::s_var)
-//      .def_readwrite("Ps",&Thermostat::Ps)
-//      .def_readwrite("Q",&Thermostat::Q)
-//      .def_readwrite("NHC_size",&Thermostat::NHC_size)
-//      .def_readwrite("nu_therm",&Thermostat::nu_therm)
-//      .def_readwrite("Temperature",&Thermostat::Temperature)
-//      .def_readwrite("thermostat_type",&Thermostat::thermostat_type)
 
-//      .def("set",&MD::set)
+      .def_readwrite("ksi_eps",&Barostat::ksi_eps)
+      .def_readwrite("G_eps",&Barostat::G_eps)
+      .def_readwrite("eps_iso",&Barostat::eps_iso)
+      .def_readwrite("ksi_eps_iso",&Barostat::ksi_eps_iso)
+      .def_readwrite("G_eps_iso",&Barostat::G_eps_iso)
+      .def_readwrite("Wg",&Barostat::Wg)
+      .def_readwrite("nu_baro",&Barostat::nu_baro)
+      .def_readwrite("Pressure",&Barostat::Pressure)
+      .def_readwrite("barostat_type",&Barostat::barostat_type)
+
       .def("show_info",&Barostat::show_info)
+      .def("set_Nf_t", expt_set_Nf_t_v1)
+      .def("set_Nf_t", expt_set_Nf_t_v2)
+      .def("set_Nf_r", expt_set_Nf_r_v1)
+      .def("set_Nf_r", expt_set_Nf_r_v2)
+      .def("set_Nf_b", expt_set_Nf_b_v1)
+      .def("set_Nf_b", expt_set_Nf_b_v2)
+      .def("get_Nf_t", &Barostat::get_Nf_t)
+      .def("get_Nf_r", &Barostat::get_Nf_r)
+      .def("get_Nf_b", &Barostat::get_Nf_b)
+
+      .def("ekin_baro", &Barostat::ekin_baro)
+      .def("apply_barostat_force", &Barostat::apply_barostat_force)
+      .def("scale_velocity", &Barostat::scale_velocity)
+      .def("propagate_velocity", &Barostat::propagate_velocity)      
+      .def("cool", &Barostat::cool)
+
   ;
 
 

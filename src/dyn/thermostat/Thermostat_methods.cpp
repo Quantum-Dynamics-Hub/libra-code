@@ -9,7 +9,7 @@ double Thermostat::energy(){
   int i;
   if(thermostat_type=="Nose-Hoover"){
 
-  double kT = boltzmann*Temperature;
+  double kT = (boltzmann/hartree)*Temperature;
   if(Nf_t>0){
   for(i=0;i<NHC_size;i++){
       if(i==0){ comp += kT * Nf_t * s_t[i]; }
@@ -34,7 +34,7 @@ double Thermostat::energy(){
   }// if Nose-Hoover
 
   else if(thermostat_type=="Nose-Poincare"){
-    comp =(0.5*Ps*Ps/Q)+ (Nf_t + Nf_r)*boltzmann*Temperature*log(s_var); 
+    comp = (0.5*Ps*Ps/Q)+ (Nf_t + Nf_r)*(boltzmann/hartree)*Temperature*log(s_var); 
   }
 
   return comp;
@@ -88,7 +88,7 @@ void Thermostat::update_thermostat_forces(double ekin_tr, double ekin_rot,double
  in original article
 *******************************************************************/
   if(thermostat_type=="Nose-Hoover"){
-  double kT = boltzmann * Temperature;
+  double kT = (boltzmann/hartree) * Temperature;
 
   for(int i=0;i<NHC_size;i++){
     if(i==0){
@@ -117,7 +117,7 @@ void Thermostat::update_thermostat_forces(double ekin_tr, double ekin_rot,double
  particle
 *******************************************************************/
   if(thermostat_type=="Nose-Hoover"){
-  double kT = boltzmann * Temperature;
+  double kT = (boltzmann/hartree) * Temperature;
     if(i==0){
       if(Nf_t>0){G_t[i] = (2.0*ekin_tr  - Nf_t * kT)/Q_t[i];}//else{ G_t[0] = 0.0; }
       if(Nf_r>0){G_r[i] = (2.0*ekin_rot - Nf_r * kT)/Q_r[i];}//else{ G_r[0] = 0.0; }
@@ -146,7 +146,7 @@ void Thermostat::init_nhc(){
   double Qt,Qr,Qb;
 
   if(thermostat_type=="Nose-Hoover"){
-  double kTt = (boltzmann * Temperature / (nu_therm * nu_therm));
+  double kTt = ((boltzmann/hartree) * Temperature / (nu_therm * nu_therm));
 
   // Clear all variables
   if(s_t_size>0)  { s_t.clear();   s_t_size = 0; }
@@ -284,6 +284,18 @@ void Thermostat::propagate_nhc(double dt,double ekin_tr, double ekin_rot,double 
   if(Nf_b>0){ ksi_b[M] = ksi_b[M] + 0.5*dt*G_b[M]; }
 
   }//if Nose-Hoover
+
+}
+
+void Thermostat::cool(){
+
+  if(thermostat_type=="Nose-Poincare"){
+    Ps = 0.0;     is_Ps = 1;
+    s_var = 1.0;  is_s_var = 1;   
+  }
+  else if(thermostat_type=="Nose-Hoover"){
+    init_nhc();
+  }
 
 }
 

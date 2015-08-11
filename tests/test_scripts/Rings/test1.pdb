@@ -1,0 +1,26 @@
+Benzene
+HETATM    1  C           0      -0.231   0.996   0.000                       C
+HETATM    2  C           0       1.164   0.996   0.000                       C
+HETATM    3  C           0       1.861   2.204   0.000                       C
+HETATM    4  C           0       1.164   3.413  -0.001                       C
+HETATM    5  C           0      -0.231   3.413  -0.002                       C
+HETATM    6  C           0      -0.929   2.204  -0.001                       C
+HETATM    7  H           0      -0.781   0.044   0.000                       H
+HETATM    8  H           0       1.713   0.044   0.001                       H
+HETATM    9  H           0       2.961   2.204   0.001                       H
+HETATM   10  H           0       1.714   4.365  -0.001                       H
+HETATM   11  H           0      -0.781   4.365  -0.003                       H
+HETATM   12  H           0      -2.028   2.205  -0.001                       H
+END
+CONECT    1    2    6    7
+CONECT    2    1    3    8
+CONECT    3    2    4    9
+CONECT    4    3    5   10
+CONECT    5    4    6   11
+CONECT    6    1    5   12
+CONECT    7    1
+CONECT    8    2
+CONECT    9    3
+CONECT   10    4
+CONECT   11    5
+CONECT   12    6

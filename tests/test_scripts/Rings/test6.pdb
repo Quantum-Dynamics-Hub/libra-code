@@ -1,0 +1,54 @@
+Pyrene
+HETATM    1  C           0      -4.382  -3.102   0.197                       C
+HETATM    2  C           0      -2.989  -3.102   0.197                       C
+HETATM    3  C           0      -2.281  -1.893   0.197                       C
+HETATM    4  C           0      -2.998  -0.669   0.197                       C
+HETATM    5  C           0      -4.417  -0.678   0.197                       C
+HETATM    6  C           0      -5.094  -1.905   0.197                       C
+HETATM    7  C           0      -0.842  -1.851   0.197                       C
+HETATM    8  C           0      -2.289   0.577   0.198                       C
+HETATM    9  C           0      -0.870   0.586   0.198                       C
+HETATM   10  C           0      -0.171  -0.672   0.198                       C
+HETATM   11  C           0      -0.193   1.813   0.198                       C
+HETATM   12  H           0       0.907   1.826   0.198                       H
+HETATM   13  C           0      -0.905   3.010   0.198                       C
+HETATM   14  C           0      -2.298   3.010   0.198                       C
+HETATM   15  C           0      -3.006   1.802   0.198                       C
+HETATM   16  C           0      -4.445   1.759   0.198                       C
+HETATM   17  C           0      -5.116   0.580   0.197                       C
+HETATM   18  H           0      -6.217   0.552   0.197                       H
+HETATM   19  H           0      -4.983   2.720   0.198                       H
+HETATM   20  H           0      -0.303  -2.812   0.197                       H
+HETATM   21  H           0      -4.926  -4.058   0.197                       H
+HETATM   22  H           0      -2.438  -4.054   0.197                       H
+HETATM   23  H           0      -6.194  -1.917   0.197                       H
+HETATM   24  H           0       0.930  -0.644   0.197                       H
+HETATM   25  H           0      -0.361   3.967   0.198                       H
+HETATM   26  H           0      -2.849   3.962   0.198                       H
+END
+CONECT    1    2    6   21
+CONECT    2    1    3   22
+CONECT    3    2    4    7
+CONECT    4    3    5    8
+CONECT    5    4    6   17
+CONECT    6    1    5   23
+CONECT    7    3   10   20
+CONECT    8    4    9   15
+CONECT    9    8   10   11
+CONECT   10    7    9   24
+CONECT   11    9   12   13
+CONECT   12   11
+CONECT   13   11   14   25
+CONECT   14   13   15   26
+CONECT   15    8   14   16
+CONECT   16   15   17   19
+CONECT   17    5   16   18
+CONECT   18   17
+CONECT   19   16
+CONECT   20    7
+CONECT   21    1
+CONECT   22    2
+CONECT   23    6
+CONECT   24   10
+CONECT   25   13
+CONECT   26   14

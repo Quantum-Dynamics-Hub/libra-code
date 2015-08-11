@@ -85,6 +85,7 @@ public:
   MATRIX3x3 vpos_scale(double);
   MATRIX3x3 vel_scale(double,double);
   MATRIX3x3 ang_vel_scale(double,double);
+  void cool();
 
 
 };
