@@ -20,6 +20,7 @@ rnd = Random()
 
 
 def boltz():
+# This function generates x and p taken from the Boltzmann distribution
 
     Er = 2.39e-2
     omega = 3.5e-4
@@ -57,11 +58,18 @@ def x_ave(ens):
 
     x = 0.0
     for j in xrange(ens.ntraj): # for all trajectories
-        x += ens.mol[j].q[0]
+        x = x + ens.mol[j].q[0]
 
     x = x / float(ens.ntraj)
 
-    return x
+    sigma = 0
+    for j in xrange(ens.ntraj): # for all trajectories
+        sigma = sigma + (ens.mol[j].q[0] - x)**2
+
+    sigma = math.sqrt(sigma / float(ens.ntraj))
+
+    
+    return x, sigma
 
 
 
@@ -72,11 +80,14 @@ def sh_pop1(ens, rep, xmin, xmax):
  
     for j in xrange(ens.ntraj): # for all trajectories
 
+        ens.ham_set_q(j, ens.mol[j].q )
+        #ens.ham_compute_adiabatic(i)
         ens.ham_compute_adiabatic(j)
 
         # Adiabatic energies
         E0 = ens.ham_H(j,0,0).real
         E1 = ens.ham_H(j,1,1).real
+
         # Extract diabatic energies:
         ens.ham_set_rep(j,0)
         H0 = ens.ham_H(j,0,0).real 
@@ -92,19 +103,19 @@ def sh_pop1(ens, rep, xmin, xmax):
                 if(ens.el[j].istate == 0): # we are in 0-th adiabatic state
         
                     if(i==0):             # Probability to be on 0-th (left) diabat - f0           
-                        pops[0] += V*V/((H0 - E0)*(H0 - E0) + V*V);  # f0^2
+                        pops[0] = pops[0] + V*V/((H0 - E0)*(H0 - E0) + V*V);  # f0^2
 
                     elif(i==1):           # Probability to be on 1-th (right) diabat - g0           
-                        pops[1] += (H0 - E0)*(H0 - E0)/((H0 - E0)*(H0 - E0) + V*V);  # g0^2
+                        pops[1] = pops[1] + (H0 - E0)*(H0 - E0)/((H0 - E0)*(H0 - E0) + V*V);  # g0^2
                 # state == 0
 
                 elif(ens.el[j].istate == 1):  # on 1-st adiabatic state
 
                     if(i==0):             # Probability to be on 0-th (left) diabat - f1         
-                        pops[0] += V*V/((H0 - E1)*(H0 - E1) + V*V);  # f1
+                        pops[0] = pops[0] + V*V/((H0 - E1)*(H0 - E1) + V*V);  # f1
 
                     elif(i==1):           # Probability to be on 1-th (right) diabat - g1
-                        pops[1] += (H0 - E1)*(H0 - E1)/((H0 - E1)*(H0 - E1) + V*V);  # g1
+                        pops[1] = pops[1] + (H0 - E1)*(H0 - E1)/((H0 - E1)*(H0 - E1) + V*V);  # g1
 
                 # state == 1
             # if  xmin< x <xmax
@@ -122,18 +133,19 @@ def sh_pop1(ens, rep, xmin, xmax):
 
 print "\nTest 2: Set parameters"
 method = "fssh"
+#method = "esh"
 ntraj = 1000
 use_boltz_factor = 0
 T = 300.0
 kb = 3.166811429e-6
 do_rescaling = 1 
-do_reverse = 1
+do_reverse = 0
 rep = 1 # adiabatic
 ham_indx = 3
 nel = 2
 nnucl = 1
-nsnap = 1000
-nstep = 200
+nsnap = 500
+nstep = 100
 dt = 2.5
 isurface = 0
 
@@ -141,18 +153,20 @@ isurface = 0
 mass = 1.0
 omega = 3.5e-4
 Er = 2.39e-2
-V = 5.0e-5
+V_ = 5.0e-5
 kT = 9.5e-4
 dE = (3.0e-2 - 1.5e-2)/16.0
-eps_0 = 0.0
+#eps_0 = 0.0
 
 gamma = 3.0e-4
-sigma = math.sqrt(2.0*1.0*3.0e-4*kT/dt)
+sigma = math.sqrt(2.0*mass*gamma*kT/dt)
 
 
 
+e_tot = 0.0
 
-for ie in xrange(16):
+#for ie in xrange(16):
+for ie in [8]:
 
     print "ie = ", ie
     print "Step 1: Initialize ensemble and Hamiltonians"
@@ -162,10 +176,26 @@ for ie in xrange(16):
 
     ens.ham_set_ham("model", ham_indx)
     ens.ham_set_rep(rep)
-    ens.ham_set_params([mass, omega, Er, V, 1.5e-2+ie*dE ])
+    ens.ham_set_params([mass, omega, Er, V_, 1.5e-2+ie*dE ])
 
 
+
+
+
+    THERM = Thermostat({"Q":100.0, "nu_therm":0.01, "NHC_size":2, "Temperature":300.0, "thermostat_type":"Nose-Hoover" })   
+    THERM.set_Nf_t(1)
+    THERM.set_Nf_r(0);
+    THERM.init_nhc();
+    therms = []   
+  
     for i in xrange(ntraj):
+        # Array of thermostats
+        therm = Thermostat({"Q":100.0, "nu_therm":0.01, "NHC_size":2, "Temperature":300.0, "thermostat_type":"Nose-Hoover" })   
+        therm.set_Nf_t(1);
+        therm.set_Nf_r(0);
+        therm.init_nhc();
+        therms.append(therm)
+
         # Initialization of nuclear variables
         ens.mol[i].mass[0] = mass
         ens.mol[i].q[0], ens.mol[i].p[0] = boltz()
@@ -176,13 +206,12 @@ for ie in xrange(16):
         # Initialization of electronic variables
         if rep==0:    # Diabatic - we start in left diabatic well 
             ens.el[i].istate = isurface
+
         elif rep==1:  # Adiabatic
         # We start in left diabatic state - this corresponds to a mixture of two adiabatic states
         # The TD-SE populations are set from the transformation coefficients:
         # Later - set Hamiltonian parameters, if vary them
-
             ens.ham_compute_adiabatic(i)
-
 
             # Adiabatic energies
             E0 = ens.ham_H(i,0,0).real
@@ -193,6 +222,8 @@ for ie in xrange(16):
             H1 = ens.ham_H(i,1,1).real
             V  = ens.ham_H(i,0,1).real
             ens.ham_set_rep(i, rep) # set representation to the original one
+
+            #print E0, E1, H0, H1, V
 
             f0 = V/math.sqrt((H0 - E0)*(H0 - E0) + V*V)          # f0 - left diabat on 0
             g0 = (H0 - E0)/math.sqrt((H0 - E0)*(H0 - E0) + V*V)  # g0 - right diabat on 0
@@ -206,11 +237,11 @@ for ie in xrange(16):
             # Inverse C:
             # It is easy to prove that transpose is equal to inverse, so we don't need explicit inverse (below)
             # But still, lets use direct inverse:
-            den = g1*f0 - g0*f1;
-            a00 = g1/den;
-            a01 = -f1/den;
-            a10 = -g0/den;
-            a11 = f0/den;
+            #den = g1*f0 - g0*f1;
+            #a00 = g1/den;
+            #a01 = -f1/den;
+            #a10 = -g0/den;
+            #a11 = f0/den;
 
             ksi = rnd.uniform(-2.0*math.pi, 2.0*math.pi);
 
@@ -223,12 +254,12 @@ for ie in xrange(16):
 
             # Set initial discrete state randomly:
             ksi = rnd.uniform(0.0, 1.0)
-
        
             if(ksi<f0*f0):
                 ens.el[i].istate = 0  # 0-th adiabatic state
             else:
                 ens.el[i].istate = 1
+            #print i, ens.el[i], ens.el[i].istate
 
             
 
@@ -237,19 +268,23 @@ for ie in xrange(16):
     epot = compute_potential_energy(ens, 1)  # 0 - MF forces, 1 - FSSH
     compute_forces(ens, 1)
 
+    ekin = compute_kinetic_energy(ens)
 
-
+    e_tot = epot + ekin
 
     pops = sh_pop1(ens, rep, -1000000, 1000000)
-    x = x_ave(ens)
+    x, sigma_ = x_ave(ens)
     snap = 0
 
+
     f = open("relax"+str(ie)+".txt","w")
-    f.write("%10.8f   %10.8f   %10.8f  %10.8f\n" % (snap*nstep*dt, pops[0], pops[1], x))
+    f.write("%10.8f   %10.8f   %10.8f  %10.8f  %10.8f  %10.8f\n" % (snap*nstep*dt, pops[0], pops[1], x, sigma_, e_tot))
     f.close()
 
 
-    #---------------------- Propagation -------------------------------
+    #---------------------- Propagation -------------------------------    
+        
+
     print "Step 2: Propagation"
     for snap in xrange(nsnap):
         for step in xrange(nstep):
@@ -258,34 +293,56 @@ for ie in xrange(16):
         
             # Nuclear dynamics
             #----- Thermostat -------
+
             for i in xrange(ens.ntraj):
+                s = rnd.normal()
                 # Effect of Langevin thermostat
+                #ens.mol[i].p[0] = ens.mol[i].p[0] * THERM.vel_scale(0.5*dt)
+                #ens.mol[i].p[0] = ens.mol[i].p[0] * therms[i].vel_scale(0.5*dt)
+
                 ens.mol[i].p[0] = ens.mol[i].p[0] * math.exp(-gamma*0.25*dt)
-                ens.mol[i].p[0] = ens.mol[i].p[0] + sigma*rnd.normal() * 0.5*dt
+                ens.mol[i].p[0] = ens.mol[i].p[0] + sigma * s * 0.5*dt
                 ens.mol[i].p[0] = ens.mol[i].p[0] * math.exp(-gamma*0.25*dt)
+
 
             ens.mol_propagate_p(0.5*dt)
             ens.mol_propagate_q(dt)
             ens.ham_set_v()
         
+            ekin = compute_kinetic_energy(ens)
+            THERM.propagate_nhc(dt, ekin, 0.0, 0.0)
+
+            for i in xrange(ens.ntraj):
+                ekin_m = compute_kinetic_energy(ens.mol[i])
+                therms[i].propagate_nhc(dt, ekin_m, 0.0, 0.0)
+            
+
+
             epot = compute_potential_energy(ens, 1)  # 0 - MF forces, 1 - FSSH
-            compute_forces(ens, 1)
-        
+            compute_forces(ens, 1)        
             ens.mol_propagate_p(0.5*dt)
 
             #----- Thermostat -------
             for i in xrange(ens.ntraj):
+                s = rnd.normal()
                 # Effect of Langevin thermostat
+                #ens.mol[i].p[0] = ens.mol[i].p[0] * THERM.vel_scale(0.5*dt)
+                #ens.mol[i].p[0] = ens.mol[i].p[0] * therms[i].vel_scale(0.5*dt)
+
                 ens.mol[i].p[0] = ens.mol[i].p[0] * math.exp(-gamma*0.25*dt)
-                ens.mol[i].p[0] = ens.mol[i].p[0] + sigma*rnd.normal() * 0.5*dt
+                ens.mol[i].p[0] = ens.mol[i].p[0] + sigma * s * 0.5*dt
                 ens.mol[i].p[0] = ens.mol[i].p[0] * math.exp(-gamma*0.25*dt)
 
         
             # el-dyn
-            ens.el_propagate_electronic(0.5*dt)    
             ens.ham_set_v()
-        
+#            for i in xrange(ens.ntraj):
+#                ens.ham_compute(i)
+
+            ens.el_propagate_electronic(0.5*dt)  
             ekin = compute_kinetic_energy(ens)
+
+            e_tot = epot + ekin
         
         
             # Now, incorporate surface hop
@@ -308,13 +365,24 @@ for ie in xrange(16):
                         compute_hopping_probabilities_gfsh(ens, i, g, dt, use_boltz_factor, T) 
         
                     ksi = rnd.uniform(0.0, 1.0)
+                    old = ens.el[i].istate
                     ens.el[i].istate = hop(ens.el[i].istate, ens, i , ksi, g, do_rescaling, rep, do_reverse)  # this operation will also rescale velocities, if necessary
+
+                    #print g.get(0,1)
+                    #if(old!=ens.el[i].istate):
+                    #    print snap, step, i
+                    #print "%5i -> %5i" % (old, ens.el[i].istate)
         
         #---------------------- Compute and print info for given snap ------------------------------
 
+        pops = sh_pop1(ens, rep, -1000000, 1000000)
+        x, sigma_ = x_ave(ens)
+
         f = open("relax"+str(ie)+".txt","a")
-        f.write("%10.8f   %10.8f   %10.8f  %10.8f\n" % (snap*nstep*dt, pops[0], pops[1], x))
+        f.write("%10.8f   %10.8f   %10.8f  %10.8f  %10.8f  %10.8f\n" % ((snap+1)*nstep*dt, pops[0], pops[1], x, sigma_, e_tot))
         f.close()
+
+    
 
 
 print "time propagation is done"      

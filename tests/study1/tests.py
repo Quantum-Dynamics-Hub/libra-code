@@ -62,7 +62,7 @@ for P in P_list:
     for i in xrange(ntraj):
         ens.mol[i].mass[0] = 2000.0
         ens.mol[i].q[0] = -14.0
-        ens.mol[i].p[0] = P + 0.1*(rnd.normal() - 0.5)*P
+        ens.mol[i].p[0] = P + 0.01*(rnd.normal() - 0.5)*P
         ens.ham_set_v(i, [ens.mol[i].p[0]/ens.mol[i].mass[0]] )
 
     epot = compute_potential_energy(ens, 1)  # 0 - MF forces, 1 - FSSH
