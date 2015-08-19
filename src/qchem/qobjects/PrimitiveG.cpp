@@ -146,6 +146,8 @@ void PrimitiveG::shift_position(const VECTOR& dR){  R += dR; }
 ///=======================================================================================================
 ///===================== Overload basic functions from libmolint to Gaussian objects  ====================
 
+///======================== Overlaps =================================
+
 double gaussian_overlap
 ( PrimitiveG& GA, PrimitiveG& GB,int is_normalize, int is_derivs,
   VECTOR& dIdA, VECTOR& dIdB, vector<double*>& auxd,int n_aux
@@ -208,6 +210,158 @@ double gaussian_overlap
 
   double res = 
   libmolint::gaussian_overlap
+  ( GA.x_exp,GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    GB.x_exp,GB.y_exp, GB.z_exp, GB.alpha, GB.R
+  );
+
+  return res;
+}
+
+
+///======================== Moments =================================
+
+double gaussian_moment
+( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdR, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+){
+
+  double res = 
+  libmolint::gaussian_moment
+  ( GA.x_exp,GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    G.x_exp, G.y_exp,  G.z_exp,  G.alpha,  G.R,
+    GB.x_exp,GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    is_normalize, is_derivs, dIdA, dIdR, dIdB, auxd, n_aux
+  );
+
+  return res;
+}
+
+double gaussian_moment
+( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdR, VECTOR& dIdB
+){
+
+  double res = 
+  libmolint::gaussian_moment
+  ( GA.x_exp,GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    G.x_exp, G.y_exp,  G.z_exp,  G.alpha,  G.R,
+    GB.x_exp,GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    is_normalize, is_derivs, dIdA, dIdR, dIdB
+  );
+
+  return res;
+}
+
+boost::python::list gaussian_moment
+( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB,int is_normalize, int is_derivs){
+
+  boost::python::list res;
+  res = 
+  libmolint::gaussian_moment
+  ( GA.x_exp,GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    G.x_exp, G.y_exp,  G.z_exp,  G.alpha,  G.R,
+    GB.x_exp,GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    is_normalize, is_derivs
+  );
+
+  return res;
+}
+
+double gaussian_moment
+( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB,int is_normalize){
+
+  double res = 
+  libmolint::gaussian_moment
+  ( GA.x_exp,GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    G.x_exp, G.y_exp,  G.z_exp,  G.alpha,  G.R,
+    GB.x_exp,GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    is_normalize
+  );
+
+  return res;
+}
+
+double gaussian_moment
+( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB){
+
+  double res = 
+  libmolint::gaussian_moment
+  ( GA.x_exp,GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    G.x_exp, G.y_exp,  G.z_exp,  G.alpha,  G.R,
+    GB.x_exp,GB.y_exp, GB.z_exp, GB.alpha, GB.R
+  );
+
+  return res;
+}
+
+
+
+
+
+///======================== Kinetic integrals =================================
+
+double kinetic_integral
+( PrimitiveG& GA, PrimitiveG& GB,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+){
+
+  double res = 
+  libmolint::kinetic_integral
+  ( GA.x_exp,GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    GB.x_exp,GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    is_normalize, is_derivs, dIdA, dIdB, auxd, n_aux
+  );
+
+  return res;
+}
+
+double kinetic_integral
+( PrimitiveG& GA, PrimitiveG& GB,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdB
+){
+
+  double res = 
+  libmolint::kinetic_integral
+  ( GA.x_exp,GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    GB.x_exp,GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    is_normalize, is_derivs, dIdA, dIdB
+  );
+
+  return res;
+}
+
+boost::python::list kinetic_integral
+( PrimitiveG& GA, PrimitiveG& GB,int is_normalize, int is_derivs){
+
+  boost::python::list res;
+  res = 
+  libmolint::kinetic_integral
+  ( GA.x_exp,GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    GB.x_exp,GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    is_normalize, is_derivs
+  );
+
+  return res;
+}
+
+double kinetic_integral
+( PrimitiveG& GA, PrimitiveG& GB,int is_normalize){
+
+  double res = 
+  libmolint::kinetic_integral
+  ( GA.x_exp,GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    GB.x_exp,GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    is_normalize
+  );
+
+  return res;
+}
+
+double kinetic_integral
+( PrimitiveG& GA, PrimitiveG& GB){
+
+  double res = 
+  libmolint::kinetic_integral
   ( GA.x_exp,GA.y_exp, GA.z_exp, GA.alpha, GA.R,
     GB.x_exp,GB.y_exp, GB.z_exp, GB.alpha, GB.R
   );

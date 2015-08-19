@@ -72,6 +72,7 @@ public:
 };
 
 // Molints functions exported for use with Gaussians objects:
+// Overlaps
 double gaussian_overlap
 ( PrimitiveG& GA, PrimitiveG& GB,int is_normalize, int is_derivs,
   VECTOR& dIdA, VECTOR& dIdB, vector<double*>& auxd,int n_aux
@@ -87,6 +88,46 @@ boost::python::list gaussian_overlap
 );
 double gaussian_overlap( PrimitiveG& GA, PrimitiveG& GB,int is_normalize);
 double gaussian_overlap( PrimitiveG& GA, PrimitiveG& GB);
+
+
+// Moments
+double gaussian_moment
+( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdR, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+);
+
+double gaussian_moment
+( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdR, VECTOR& dIdB
+);
+
+boost::python::list gaussian_moment
+( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB,int is_normalize, int is_derivs
+);
+double gaussian_moment( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB,int is_normalize);
+double gaussian_moment( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB);
+
+
+// Kinetic integrals
+double kinetic_integral
+( PrimitiveG& GA, PrimitiveG& GB,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+);
+
+double kinetic_integral
+( PrimitiveG& GA, PrimitiveG& GB,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdB
+);
+
+boost::python::list kinetic_integral
+( PrimitiveG& GA, PrimitiveG& GB,int is_normalize, int is_derivs
+);
+double kinetic_integral( PrimitiveG& GA, PrimitiveG& GB,int is_normalize);
+double kinetic_integral( PrimitiveG& GA, PrimitiveG& GB);
+
+
+
+
 
 
 

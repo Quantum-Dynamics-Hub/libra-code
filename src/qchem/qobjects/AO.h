@@ -77,6 +77,7 @@ public:
 };
 
 
+///====================== Overlaps ================================
 // Versions with references
 double gaussian_overlap
 ( AO& AOa, AO& AOb,int is_normalize, int is_derivs,
@@ -96,6 +97,51 @@ double gaussian_overlap
 double gaussian_overlap( AO* AOa, AO* AOb,int is_normalize, int is_derivs, VECTOR& dIdA, VECTOR& dIdB );
 double gaussian_overlap(AO* AOa, AO* AOb,int is_normalize);
 double gaussian_overlap(AO* AOa, AO* AOb);
+
+
+///====================== Moments ================================
+// Versions with references
+double gaussian_moment
+( AO& AOa, PrimitiveG& G, AO& AOb,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdR, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+);
+double gaussian_moment( AO& AOa, PrimitiveG& G, AO& AOb,int is_normalize, int is_derivs, VECTOR& dIdA, VECTOR& dIdG, VECTOR& dIdB );
+boost::python::list gaussian_moment( AO& AOa, PrimitiveG& G, AO& AOb,int is_normalize, int is_derivs);
+double gaussian_moment(AO& AOa, PrimitiveG& G, AO& AOb,int is_normalize);
+double gaussian_moment(AO& AOa, PrimitiveG& G, AO& AOb);
+
+
+// Versions with pointers - only for C++
+double gaussian_moment
+( AO* AOa, PrimitiveG& G, AO* AOb,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdR, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+);
+double gaussian_moment( AO* AOa, PrimitiveG& G, AO* AOb,int is_normalize, int is_derivs, VECTOR& dIdA, VECTOR& dIdR, VECTOR& dIdB );
+double gaussian_moment(AO* AOa, PrimitiveG& G, AO* AOb,int is_normalize);
+double gaussian_moment(AO* AOa, PrimitiveG& G, AO* AOb);
+
+
+
+///====================== Kinetic integral ================================
+// Versions with references
+double kinetic_integral
+( AO& AOa, AO& AOb,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+);
+double kinetic_integral( AO& AOa, AO& AOb,int is_normalize, int is_derivs, VECTOR& dIdA, VECTOR& dIdB );
+boost::python::list kinetic_integral( AO& AOa, AO& AOb,int is_normalize, int is_derivs);
+double kinetic_integral(AO& AOa, AO& AOb,int is_normalize);
+double kinetic_integral(AO& AOa, AO& AOb);
+
+
+// Versions with pointers - only for C++
+double kinetic_integral
+( AO* AOa, AO* AOb,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+);
+double kinetic_integral( AO* AOa, AO* AOb,int is_normalize, int is_derivs, VECTOR& dIdA, VECTOR& dIdB );
+double kinetic_integral(AO* AOa, AO* AOb,int is_normalize);
+double kinetic_integral(AO* AOa, AO* AOb);
 
 
 

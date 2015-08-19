@@ -182,6 +182,8 @@ void AO::shift_position(const VECTOR& dR){
 ///=======================================================================================================
 ///===================== Overload basic functions from libmolint to AO objects  ==========================
 
+///=========================  Overlaps ================================
+
 // Reference verions
 
 double gaussian_overlap
@@ -340,6 +342,333 @@ double gaussian_overlap(AO* AOa, AO* AOb){
 
 }
 
+
+///=========================  Moments ================================
+
+// Reference verions
+
+double gaussian_moment
+( AO& AOa, PrimitiveG& G, AO& AOb,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdR, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+){
+
+  dIdA = 0.0;
+  dIdR = 0.0;
+  dIdB = 0.0; 
+  
+  VECTOR dida, didr, didb;
+  double w;
+  double res = 0.0;
+  for(int i=0;i<AOa.expansion_size;i++){
+    for(int j=0;j<AOb.expansion_size;j++){
+
+      w = AOa.coefficients[i] * AOb.coefficients[j];
+      res += w * gaussian_moment(AOa.primitives[i], G, AOb.primitives[j],0, is_derivs, dida, didr, didb, auxd, n_aux); 
+      dIdA += w * dida;
+      dIdR += w * didr;
+      dIdB += w * didb;
+
+    }// j
+  }// i
+
+  if(is_normalize){
+    double nrm = AOa.normalization_factor() * AOb.normalization_factor();
+    res *= nrm;
+    dIdA *= nrm;
+    dIdR *= nrm;
+    dIdB *= nrm;
+  }//
+  return res;
+}
+
+double gaussian_moment
+( AO& AOa, PrimitiveG& G, AO& AOb,int is_normalize, int is_derivs, VECTOR& dIdA, VECTOR& dIdR, VECTOR& dIdB ){
+
+  // Allocate working memory
+  int i;
+  int n_aux = 20;
+  vector<double*> auxd(5);
+  for(i=0;i<5;i++){ auxd[i] = new double[n_aux]; }
+
+  // Do computations
+  double res = gaussian_moment(AOa, G, AOb, is_normalize, is_derivs, dIdA, dIdR, dIdB, auxd, n_aux);
+
+  // Clean working memory
+  for(i=0;i<5;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+ 
+  return res;
+}
+
+boost::python::list gaussian_moment
+( AO& AOa, PrimitiveG& G, AO& AOb,int is_normalize, int is_derivs){
+
+  VECTOR dIdA, dIdR, dIdB;
+  double I = gaussian_moment(AOa, G, AOb, is_normalize, is_derivs, dIdA, dIdR, dIdB);
+
+  boost::python::list res;
+
+  res.append(I);
+ 
+  if(is_derivs){
+    res.append(dIdA);
+    res.append(dIdR);
+    res.append(dIdB);
+  }
+
+  return res;
+ 
+}
+
+
+double gaussian_moment(AO& AOa, PrimitiveG& G, AO& AOb,int is_normalize){
+
+  VECTOR dIdA, dIdR, dIdB;
+  double res = gaussian_moment(AOa, G, AOb, is_normalize, 0, dIdA, dIdR, dIdB);
+  return res;
+}
+
+double gaussian_moment(AO& AOa, PrimitiveG& G, AO& AOb){
+
+  double res = gaussian_moment(AOa, G, AOb, 1);
+  return res;
+
+}
+
+
+
+// Pointer versions
+
+double gaussian_moment
+( AO* AOa, PrimitiveG& G, AO* AOb,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdR, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+){
+
+  dIdA = 0.0;
+  dIdB = 0.0;
+  
+  VECTOR dida, didr, didb;
+  double w;
+  double res = 0.0;
+  for(int i=0;i<AOa->expansion_size;i++){
+    for(int j=0;j<AOb->expansion_size;j++){
+
+      w = AOa->coefficients[i] * AOb->coefficients[j];
+      res += w * gaussian_moment(AOa->primitives[i], G, AOb->primitives[j],0, is_derivs, dida, didr, didb, auxd, n_aux); 
+      dIdA += w * dida;
+      dIdR += w * didr;
+      dIdB += w * didb;
+
+    }// j
+  }// i
+
+  if(is_normalize){
+    double nrm = AOa->normalization_factor() * AOb->normalization_factor();
+    res *= nrm;
+    dIdA *= nrm;
+    dIdR *= nrm;
+    dIdB *= nrm;
+  }//
+
+
+  return res;
+}
+
+double gaussian_moment
+( AO* AOa, PrimitiveG& G, AO* AOb,int is_normalize, int is_derivs, VECTOR& dIdA, VECTOR& dIdR, VECTOR& dIdB ){
+
+  // Allocate working memory
+  int i;
+  int n_aux = 20;
+  vector<double*> auxd(5);
+  for(i=0;i<5;i++){ auxd[i] = new double[n_aux]; }
+
+  // Do computations
+  double res = gaussian_moment(AOa, G, AOb, is_normalize, is_derivs, dIdA, dIdR, dIdB, auxd, n_aux);
+
+  // Clean working memory
+  for(i=0;i<5;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+ 
+  return res;
+}
+
+
+double gaussian_moment(AO* AOa, PrimitiveG& G, AO* AOb,int is_normalize){
+
+  VECTOR dIdA, dIdR, dIdB;
+  double res = gaussian_moment(AOa, G, AOb, is_normalize, 0, dIdA, dIdR, dIdB);
+  return res;
+}
+
+double gaussian_moment(AO* AOa, PrimitiveG& G, AO* AOb){
+
+  double res = gaussian_moment(AOa, G, AOb, 1);
+  return res;
+
+}
+
+
+
+
+///=========================  Kinetic integrals ================================
+
+// Reference verions
+
+double kinetic_integral
+( AO& AOa, AO& AOb,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+){
+
+  dIdA = 0.0;
+  dIdB = 0.0;
+  
+  VECTOR dida, didb;
+  double w;
+  double res = 0.0;
+  for(int i=0;i<AOa.expansion_size;i++){
+    for(int j=0;j<AOb.expansion_size;j++){
+
+      w = AOa.coefficients[i] * AOb.coefficients[j];
+      res += w * kinetic_integral(AOa.primitives[i],AOb.primitives[j],0, is_derivs, dida, didb, auxd, n_aux); 
+      dIdA += w * dida;
+      dIdB += w * didb;
+
+    }// j
+  }// i
+
+  if(is_normalize){
+    double nrm = AOa.normalization_factor() * AOb.normalization_factor();
+    res *= nrm;
+    dIdA *= nrm;
+    dIdB *= nrm;
+  }//
+  return res;
+}
+
+double kinetic_integral
+( AO& AOa, AO& AOb,int is_normalize, int is_derivs, VECTOR& dIdA, VECTOR& dIdB ){
+
+  // Allocate working memory
+  int i;
+  int n_aux = 20;
+  vector<double*> auxd(5);
+  for(i=0;i<5;i++){ auxd[i] = new double[n_aux]; }
+
+  // Do computations
+  double res = kinetic_integral(AOa, AOb, is_normalize, is_derivs, dIdA, dIdB, auxd, n_aux);
+
+  // Clean working memory
+  for(i=0;i<5;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+ 
+  return res;
+}
+
+boost::python::list kinetic_integral
+( AO& AOa, AO& AOb,int is_normalize, int is_derivs){
+
+  VECTOR dIdA, dIdB;
+  double I = kinetic_integral(AOa, AOb, is_normalize, is_derivs, dIdA, dIdB);
+
+  boost::python::list res;
+
+  res.append(I);
+ 
+  if(is_derivs){
+    res.append(dIdA);
+    res.append(dIdB);
+  }
+
+  return res;
+ 
+}
+
+
+double kinetic_integral(AO& AOa, AO& AOb,int is_normalize){
+
+  VECTOR dIdA, dIdB;
+  double res = kinetic_integral(AOa, AOb, is_normalize, 0, dIdA, dIdB);
+  return res;
+}
+
+double kinetic_integral(AO& AOa, AO& AOb){
+
+  double res = kinetic_integral(AOa, AOb, 1);
+  return res;
+
+}
+
+
+
+// Pointer versions
+
+double kinetic_integral
+( AO* AOa, AO* AOb,int is_normalize, int is_derivs,
+  VECTOR& dIdA, VECTOR& dIdB, vector<double*>& auxd,int n_aux
+){
+
+  dIdA = 0.0;
+  dIdB = 0.0;
+  
+  VECTOR dida, didb;
+  double w;
+  double res = 0.0;
+  for(int i=0;i<AOa->expansion_size;i++){
+    for(int j=0;j<AOb->expansion_size;j++){
+
+      w = AOa->coefficients[i] * AOb->coefficients[j];
+      res += w * kinetic_integral(AOa->primitives[i],AOb->primitives[j],0, is_derivs, dida, didb, auxd, n_aux); 
+      dIdA += w * dida;
+      dIdB += w * didb;
+
+    }// j
+  }// i
+
+  if(is_normalize){
+    double nrm = AOa->normalization_factor() * AOb->normalization_factor();
+    res *= nrm;
+    dIdA *= nrm;
+    dIdB *= nrm;
+  }//
+
+
+  return res;
+}
+
+double kinetic_integral
+( AO* AOa, AO* AOb,int is_normalize, int is_derivs, VECTOR& dIdA, VECTOR& dIdB ){
+
+  // Allocate working memory
+  int i;
+  int n_aux = 20;
+  vector<double*> auxd(5);
+  for(i=0;i<5;i++){ auxd[i] = new double[n_aux]; }
+
+  // Do computations
+  double res = kinetic_integral(AOa, AOb, is_normalize, is_derivs, dIdA, dIdB, auxd, n_aux);
+
+  // Clean working memory
+  for(i=0;i<5;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+ 
+  return res;
+}
+
+
+double kinetic_integral(AO* AOa, AO* AOb,int is_normalize){
+
+  VECTOR dIdA, dIdB;
+  double res = kinetic_integral(AOa, AOb, is_normalize, 0, dIdA, dIdB);
+  return res;
+}
+
+double kinetic_integral(AO* AOa, AO* AOb){
+
+  double res = kinetic_integral(AOa, AOb, 1);
+  return res;
+
+}
 
 
 

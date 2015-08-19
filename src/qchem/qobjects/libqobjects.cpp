@@ -16,31 +16,58 @@ namespace libqobjects{
 
 void export_qobjects_objects(){
 
-
+  ///==================  Overlaps ===========================
   double (*expt_gaussian_overlap_G_v1)
   ( PrimitiveG& GA, PrimitiveG& GB) = &gaussian_overlap;
-
   double (*expt_gaussian_overlap_G_v2)
   ( PrimitiveG& GA, PrimitiveG& GB,int is_normalize) = &gaussian_overlap;
-
   boost::python::list (*expt_gaussian_overlap_G_v3)
   ( PrimitiveG& GA, PrimitiveG& GB,int is_normalize, int is_derivs  ) = &gaussian_overlap;
 
-
   double (*expt_gaussian_overlap_AO_v1)
   (AO& AOa, AO& AOb) = &gaussian_overlap;
-
   double (*expt_gaussian_overlap_AO_v2)
   (AO& AOa, AO& AOb,int is_normalize) = &gaussian_overlap;
-
   boost::python::list (*expt_gaussian_overlap_AO_v3)
   (AO& AOa, AO& AOb,int is_normalize, int is_derivs) = &gaussian_overlap;
 
 
+  ///==================  Moments ===========================
+  double (*expt_gaussian_moment_G_v1)
+  ( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB) = &gaussian_moment;
+  double (*expt_gaussian_moment_G_v2)
+  ( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB,int is_normalize) = &gaussian_moment;
+  boost::python::list (*expt_gaussian_moment_G_v3)
+  ( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB,int is_normalize, int is_derivs  ) = &gaussian_moment;
+
+  double (*expt_gaussian_moment_AO_v1)
+  (AO& AOa, PrimitiveG& G, AO& AOb) = &gaussian_moment;
+  double (*expt_gaussian_moment_AO_v2)
+  (AO& AOa, PrimitiveG& G, AO& AOb,int is_normalize) = &gaussian_moment;
+  boost::python::list (*expt_gaussian_moment_AO_v3)
+  (AO& AOa, PrimitiveG& G, AO& AOb,int is_normalize, int is_derivs) = &gaussian_moment;
+
+
+
+  ///==================  Kinetic integrals ===========================
+  double (*expt_kinetic_integral_G_v1)
+  ( PrimitiveG& GA, PrimitiveG& GB) = &kinetic_integral;
+  double (*expt_kinetic_integral_G_v2)
+  ( PrimitiveG& GA, PrimitiveG& GB,int is_normalize) = &kinetic_integral;
+  boost::python::list (*expt_kinetic_integral_G_v3)
+  ( PrimitiveG& GA, PrimitiveG& GB,int is_normalize, int is_derivs  ) = &kinetic_integral;
+
+  double (*expt_kinetic_integral_AO_v1)
+  (AO& AOa, AO& AOb) = &kinetic_integral;
+  double (*expt_kinetic_integral_AO_v2)
+  (AO& AOa, AO& AOb,int is_normalize) = &kinetic_integral;
+  boost::python::list (*expt_kinetic_integral_AO_v3)
+  (AO& AOa, AO& AOb,int is_normalize, int is_derivs) = &kinetic_integral;
 
 
 
   // ============ Now export functions =============
+  // Overlaps
   def("gaussian_overlap", expt_gaussian_overlap_G_v1);
   def("gaussian_overlap", expt_gaussian_overlap_G_v2);
   def("gaussian_overlap", expt_gaussian_overlap_G_v3);
@@ -48,6 +75,26 @@ void export_qobjects_objects(){
   def("gaussian_overlap", expt_gaussian_overlap_AO_v1);
   def("gaussian_overlap", expt_gaussian_overlap_AO_v2);
   def("gaussian_overlap", expt_gaussian_overlap_AO_v3);
+
+  // Moments
+  def("gaussian_moment", expt_gaussian_moment_G_v1);
+  def("gaussian_moment", expt_gaussian_moment_G_v2);
+  def("gaussian_moment", expt_gaussian_moment_G_v3);
+
+  def("gaussian_moment", expt_gaussian_moment_AO_v1);
+  def("gaussian_moment", expt_gaussian_moment_AO_v2);
+  def("gaussian_moment", expt_gaussian_moment_AO_v3);
+
+
+  // Kinetic integrals
+  def("kinetic_integral", expt_kinetic_integral_G_v1);
+  def("kinetic_integral", expt_kinetic_integral_G_v2);
+  def("kinetic_integral", expt_kinetic_integral_G_v3);
+
+  def("kinetic_integral", expt_kinetic_integral_AO_v1);
+  def("kinetic_integral", expt_kinetic_integral_AO_v2);
+  def("kinetic_integral", expt_kinetic_integral_AO_v3);
+
 
 
 
