@@ -1,4 +1,4 @@
-#include "Hamiltonian.h"
+#include "Hamiltonian_INDO.h"
 
 /****************************************************************************
 
@@ -24,21 +24,29 @@
 
 ****************************************************************************/
 
-void indo_core_parameters(vector<int>& fragment, vector<int>& basis_fo,vector<AO>& basis_ao, Nuclear& mol,
-                          vector<double>& eri, vector<double>& V_AB, Memory* mem, int opt){
+
+
+
+namespace libhamiltonian{
+namespace libhamiltonian_atomistic{
+namespace libhamiltonian_indo{
+
+
+
+void indo_core_parameters
+( System& syst, vector<AO>& basis_ao, 
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  vector<double>& eri, vector<double>& V_AB, int opt){
 // opt == 0 - cndo
 // opt == 1 - indo
-
   int DF = 0;
-
   int i,j,a,b,i1,a1,I,J,A;
   VECTOR da,db,dc;
-
 
   if(DF){ cout<<"in indo_core_parameters\n"; }
 
   // Allocate memory if needed
-  int sz = fragment.size(); // number of atoms in the group <fragment>
+  int sz = syst.Number_of_atoms; // number of atoms in the system
 
   if(eri.size()!=sz*sz){  cout<<"In indo_core_parameters: eri array is not allocated\nDo allocation...\n"; 
     eri.clear(); eri = vector<double>(sz*sz,0.0); 
@@ -51,20 +59,19 @@ void indo_core_parameters(vector<int>& fragment, vector<int>& basis_fo,vector<AO
   // Compute global indices of s-type orbitals on each atom
   vector<int> sorb_indx(sz,0); // global index of s-type orbital on i-th atom
 
-  for(i=0;i<sz;i++){
-    a = fragment[i];  // global index of i-th atom in the group <fragment>
+  for(i=0;i<sz;i++){  // for all atoms
+    for(j=0;j<atom_to_ao_map[i].size();j++){
 
-    for(i1=0;i1<basis_fo.size();i1++){ // all orbitals in the group <fragment>
-      I = basis_fo[i1]; // global index of i1-th orbital in the fragment
+      I = atom_to_ao_map[i][j];  // j-th AO on atom i, I - is the global index of this AO in the given basis
 
-      if(basis_ao[I].at_indx==i && basis_ao[I].ao_shell_type=="s" ){  sorb_indx[i] = I; }
+      if(basis_ao[I].ao_shell_type=="s" ){  sorb_indx[i] = I; }
           
-    }// for i1
+    }// for j
   }// for i
 
   // Printing mapping
   if(DF){ 
-    cout<<"i - runs over local indices of atoms in given fragment\n";
+    cout<<"i - runs over indices of atoms in given system\n";
     cout<<"sorb_indx[i] - is the global index of s-type orbital (assuming only one) centered on atom i\n";
     for(i=0;i<sorb_indx.size();i++){
       cout<<"i= "<<i<<" sorb_indx[i]= "<<sorb_indx[i]<<endl;
@@ -101,7 +108,7 @@ void indo_core_parameters(vector<int>& fragment, vector<int>& basis_fo,vector<AO
 
 }
 
-
+/*
 
 void Hamiltonian_core_indo(Control_Parameters& prms,Model_Parameters& modprms,Nuclear& mol,
                            vector<int>& fragment, vector<int>& basis_fo,vector<AO>& basis_ao, vector<vector<int> >& at_orbitals, 
@@ -433,3 +440,11 @@ void Hamiltonian_Fock_indo(Control_Parameters& prms,Model_Parameters& modprms,Nu
 
 
 }
+
+*/
+
+
+}// namespace libhamiltonian_indo
+}// namespace libhamiltonian_atomistic
+}// namespace libhamiltonian
+
