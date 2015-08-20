@@ -48,6 +48,39 @@ void export_qobjects_objects(){
   (AO& AOa, PrimitiveG& G, AO& AOb,int is_normalize, int is_derivs) = &gaussian_moment;
 
 
+  ///==================  Pseudopotentials ===========================
+  double (*expt_pseudopot02_G_v1)
+  (double C0, double C2, double alp, const VECTOR& R, PrimitiveG& GA, PrimitiveG& GB) = &pseudopot02;
+  double (*expt_pseudopot02_G_v2)
+  (double C0, double C2, double alp, const VECTOR& R, PrimitiveG& GA, PrimitiveG& GB,int is_normalize) = &pseudopot02;
+  boost::python::list (*expt_pseudopot02_G_v3)
+  (double C0, double C2, double alp, const VECTOR& R, PrimitiveG& GA, PrimitiveG& GB,int is_normalize, int is_derivs) = &pseudopot02;
+
+
+  double (*expt_pseudopot02_AO_v1)
+  (double C0, double C2, double alp, const VECTOR& R, AO& AOa, AO& AOb) = &pseudopot02;
+  double (*expt_pseudopot02_AO_v2)
+  (double C0, double C2, double alp, const VECTOR& R, AO& AOa, AO& AOb,int is_normalize) = &pseudopot02;
+  boost::python::list (*expt_pseudopot02_AO_v3)
+  (double C0, double C2, double alp, const VECTOR& R, AO& AOa, AO& AOb,int is_normalize, int is_derivs) = &pseudopot02;
+
+
+  ///==================  Multipoles ===========================
+  VECTOR (*expt_transition_dipole_moment_G_v1)
+  (PrimitiveG& GA, PrimitiveG& GB) = &transition_dipole_moment;
+  VECTOR (*expt_transition_dipole_moment_G_v2)
+  (PrimitiveG& GA, PrimitiveG& GB, int is_normalize) = &transition_dipole_moment;
+  boost::python::list (*expt_transition_dipole_moment_G_v3)
+  (PrimitiveG& GA, PrimitiveG& GB, int is_normalize, int is_derivs) = &transition_dipole_moment;
+
+  VECTOR (*expt_transition_dipole_moment_AO_v1)
+  (AO& AOa, AO& AOb) = &transition_dipole_moment;
+  VECTOR (*expt_transition_dipole_moment_AO_v2)
+  (AO& AOa, AO& AOb, int is_normalize) = &transition_dipole_moment;
+  boost::python::list (*expt_transition_dipole_moment_AO_v3)
+  (AO& AOa, AO& AOb, int is_normalize, int is_derivs) = &transition_dipole_moment;
+
+
 
   ///==================  Kinetic integrals ===========================
   double (*expt_kinetic_integral_G_v1)
@@ -63,6 +96,23 @@ void export_qobjects_objects(){
   (AO& AOa, AO& AOb,int is_normalize) = &kinetic_integral;
   boost::python::list (*expt_kinetic_integral_AO_v3)
   (AO& AOa, AO& AOb,int is_normalize, int is_derivs) = &kinetic_integral;
+
+
+  ///==================  ERI ===========================
+  double (*expt_electron_repulsion_integral_G_v1)
+  ( PrimitiveG& GA, PrimitiveG& GB, PrimitiveG& GC, PrimitiveG& GD
+  ) = &electron_repulsion_integral;
+
+  double (*expt_electron_repulsion_integral_G_v2)
+  ( PrimitiveG& GA, PrimitiveG& GB, PrimitiveG& GC, PrimitiveG& GD,
+    int is_normalize
+  ) = &electron_repulsion_integral;
+
+  boost::python::list (*expt_electron_repulsion_integral_G_v3)
+  ( PrimitiveG& GA, PrimitiveG& GB, PrimitiveG& GC, PrimitiveG& GD,
+    int is_normalize, int is_derivs
+  ) = &electron_repulsion_integral;
+
 
 
 
@@ -85,6 +135,25 @@ void export_qobjects_objects(){
   def("gaussian_moment", expt_gaussian_moment_AO_v2);
   def("gaussian_moment", expt_gaussian_moment_AO_v3);
 
+  // Pseudopotentials
+  def("pseudopot02", expt_pseudopot02_G_v1);
+  def("pseudopot02", expt_pseudopot02_G_v2);
+  def("pseudopot02", expt_pseudopot02_G_v3);
+
+  def("pseudopot02", expt_pseudopot02_AO_v1);
+  def("pseudopot02", expt_pseudopot02_AO_v2);
+  def("pseudopot02", expt_pseudopot02_AO_v3);
+
+  // Multipoles
+  def("transition_dipole_moment", expt_transition_dipole_moment_G_v1);
+  def("transition_dipole_moment", expt_transition_dipole_moment_G_v2);
+  def("transition_dipole_moment", expt_transition_dipole_moment_G_v3);
+
+  def("transition_dipole_moment", expt_transition_dipole_moment_AO_v1);
+  def("transition_dipole_moment", expt_transition_dipole_moment_AO_v2);
+  def("transition_dipole_moment", expt_transition_dipole_moment_AO_v3);
+
+
 
   // Kinetic integrals
   def("kinetic_integral", expt_kinetic_integral_G_v1);
@@ -96,6 +165,10 @@ void export_qobjects_objects(){
   def("kinetic_integral", expt_kinetic_integral_AO_v3);
 
 
+  // ERIs
+  def("electron_repulsion_integral", expt_electron_repulsion_integral_G_v1);
+  def("electron_repulsion_integral", expt_electron_repulsion_integral_G_v2);
+  def("electron_repulsion_integral", expt_electron_repulsion_integral_G_v3);
 
 
 

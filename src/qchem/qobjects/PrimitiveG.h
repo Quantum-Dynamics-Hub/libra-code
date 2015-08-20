@@ -108,6 +108,50 @@ double gaussian_moment( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB,int is_nor
 double gaussian_moment( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB);
 
 
+// Pseudopotentials
+double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
+                   PrimitiveG&  GA, PrimitiveG& GB,
+                   int is_normalize, 
+                   int is_derivs, VECTOR& dIdR, VECTOR& dIdA, VECTOR& dIdB,
+                   vector<double*>& auxd,int n_aux
+                  );
+double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
+                   PrimitiveG&  GA, PrimitiveG& GB,
+                   int is_normalize, 
+                   int is_derivs, VECTOR& dIdR, VECTOR& dIdA, VECTOR& dIdB
+                  );
+
+boost::python::list pseudopot02(double C0, double C2, double alp, const VECTOR& R,
+                                PrimitiveG&  GA, PrimitiveG& GB,
+                                int is_normalize, int is_derivs
+                               );
+
+double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
+                   PrimitiveG&  GA, PrimitiveG& GB,
+                   int is_normalize
+                  );
+
+double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
+                   PrimitiveG&  GA, PrimitiveG& GB
+                  );
+
+
+// Multipoles
+VECTOR transition_dipole_moment
+( PrimitiveG& GA, PrimitiveG& GB,
+  int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB,
+  vector<double*>& auxd,int n_aux
+);
+VECTOR transition_dipole_moment
+( PrimitiveG& GA, PrimitiveG& GB,int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB
+);
+boost::python::list transition_dipole_moment( PrimitiveG& GA, PrimitiveG& GB, int is_normalize,int is_derivs);
+VECTOR transition_dipole_moment( PrimitiveG& GA, PrimitiveG& GB, int is_normalize);
+VECTOR transition_dipole_moment( PrimitiveG& GA, PrimitiveG& GB);
+
+
+
+
 // Kinetic integrals
 double kinetic_integral
 ( PrimitiveG& GA, PrimitiveG& GB,int is_normalize, int is_derivs,
@@ -124,6 +168,33 @@ boost::python::list kinetic_integral
 );
 double kinetic_integral( PrimitiveG& GA, PrimitiveG& GB,int is_normalize);
 double kinetic_integral( PrimitiveG& GA, PrimitiveG& GB);
+
+
+
+// Electron Repulsion Integral
+double electron_repulsion_integral
+( PrimitiveG& GA, PrimitiveG& GB, PrimitiveG& GC, PrimitiveG& GD,
+  int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,VECTOR& DD,
+  vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+);
+double electron_repulsion_integral
+( PrimitiveG& GA, PrimitiveG& GB, PrimitiveG& GC, PrimitiveG& GD,
+  int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,VECTOR& DD
+);
+boost::python::list electron_repulsion_integral
+( PrimitiveG& GA, PrimitiveG& GB, PrimitiveG& GC, PrimitiveG& GD,
+  int is_normalize, int is_derivs
+);
+double electron_repulsion_integral
+( PrimitiveG& GA, PrimitiveG& GB, PrimitiveG& GC, PrimitiveG& GD,
+  int is_normalize
+);
+double electron_repulsion_integral
+( PrimitiveG& GA, PrimitiveG& GB, PrimitiveG& GC, PrimitiveG& GD
+);
+
 
 
 

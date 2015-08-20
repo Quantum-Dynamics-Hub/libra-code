@@ -31,6 +31,13 @@ boost::python::list pseudopot02(double C0, double C2, double alp, const VECTOR& 
 
 double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
                    int nxa,int nya, int nza, double alp_a, const VECTOR& Ra,
+                   int nxb,int nyb, int nzb, double alp_b, const VECTOR& Rb,
+                   int is_normalize
+                  );
+
+
+double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
+                   int nxa,int nya, int nza, double alp_a, const VECTOR& Ra,
                    int nxb,int nyb, int nzb, double alp_b, const VECTOR& Rb
                   );
 

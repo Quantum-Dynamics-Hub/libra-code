@@ -121,6 +121,67 @@ double gaussian_moment(AO* AOa, PrimitiveG& G, AO* AOb,int is_normalize);
 double gaussian_moment(AO* AOa, PrimitiveG& G, AO* AOb);
 
 
+///====================== Pseudopotentials ================================
+// Versions with references
+double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
+                   AO& AOa, AO& AOb, int is_normalize, 
+                   int is_derivs, VECTOR& dIdR, VECTOR& dIdA, VECTOR& dIdB,
+                   vector<double*>& auxd,int n_aux      );
+double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
+                   AO& AOa, AO& AOb,int is_normalize, 
+                   int is_derivs, VECTOR& dIdR, VECTOR& dIdA, VECTOR& dIdB  );
+boost::python::list pseudopot02(double C0, double C2, double alp, const VECTOR& R,
+                                AO& AOa, AO& AOb, int is_normalize, int is_derivs );
+double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
+                   AO& AOa, AO& AOb,int is_normalize );
+double pseudopot02(double C0, double C2, double alp, const VECTOR& R, AO& AOa, AO& AOb );
+
+
+// Versions with pointers - only for C++
+double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
+                   AO* AOa, AO* AOb, int is_normalize, 
+                   int is_derivs, VECTOR& dIdR, VECTOR& dIdA, VECTOR& dIdB,
+                   vector<double*>& auxd,int n_aux      );
+double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
+                   AO* AOa, AO* AOb,int is_normalize, 
+                   int is_derivs, VECTOR& dIdR, VECTOR& dIdA, VECTOR& dIdB  );
+boost::python::list pseudopot02(double C0, double C2, double alp, const VECTOR& R,
+                                AO* AOa, AO* AOb, int is_normalize, int is_derivs );
+double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
+                   AO* AOa, AO* AOb,int is_normalize );
+double pseudopot02(double C0, double C2, double alp, const VECTOR& R, AO* AOa, AO* AOb );
+
+
+
+///====================== Multipoles ================================
+// Versions with references
+VECTOR transition_dipole_moment
+( AO& AOa, AO& AOb,
+  int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB,
+  vector<double*>& auxd,int n_aux
+);
+VECTOR transition_dipole_moment
+( AO& AOa, AO& AOb,int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB
+);
+boost::python::list transition_dipole_moment( AO& AOa, AO& AOb, int is_normalize,int is_derivs);
+VECTOR transition_dipole_moment( AO& AOa, AO& AOb, int is_normalize);
+VECTOR transition_dipole_moment( AO& AOa, AO& AOb);
+
+
+// Versions with pointers - only for C++
+VECTOR transition_dipole_moment
+( AO* AOa, AO* AOb,
+  int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB,
+  vector<double*>& auxd,int n_aux
+);
+VECTOR transition_dipole_moment
+( AO* AOa, AO* AOb,int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB
+);
+boost::python::list transition_dipole_moment( AO* AOa, AO* AOb, int is_normalize,int is_derivs);
+VECTOR transition_dipole_moment( AO* AOa, AO* AOb, int is_normalize);
+VECTOR transition_dipole_moment( AO* AOa, AO* AOb);
+
+
 
 ///====================== Kinetic integral ================================
 // Versions with references

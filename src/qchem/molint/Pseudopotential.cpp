@@ -104,16 +104,30 @@ boost::python::list pseudopot02(double C0, double C2, double alp, const VECTOR& 
 
 double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
                    int nxa,int nya, int nza, double alp_a, const VECTOR& Ra,
+                   int nxb,int nyb, int nzb, double alp_b, const VECTOR& Rb,
+                   int is_normalize
+                  ){
+
+  VECTOR dIdR,dIdA,dIdB;
+
+  double res = pseudopot02(C0, C2, alp, R, nxa,nya,nza,alp_a,Ra, nxb,nyb,nzb,alp_b,Rb, is_normalize, 0, dIdR, dIdA, dIdB);
+
+  return res;
+
+} 
+
+double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
+                   int nxa,int nya, int nza, double alp_a, const VECTOR& Ra,
                    int nxb,int nyb, int nzb, double alp_b, const VECTOR& Rb
                   ){
 
   VECTOR dIdR,dIdA,dIdB;
 
-  double res = pseudopot02(C0, C2, alp, R, nxa,nya,nza,alp_a,Ra, nxb,nyb,nzb,alp_b,Rb, 1, 0, dIdR, dIdA, dIdB);
+  double res = pseudopot02(C0, C2, alp, R, nxa,nya,nza,alp_a,Ra, nxb,nyb,nzb,alp_b,Rb, 1);
 
   return res;
-
 } 
+
 
 
 
