@@ -43,6 +43,14 @@ VECTOR derivative_coupling_integral
   vector<double*>& auxd,int n_aux
 );
 
+VECTOR derivative_coupling_integral
+( int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
+  int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,
+  int is_normalize, int is_derivs,
+  MATRIX3x3& dDdA, MATRIX3x3& dDdB
+);
+
+
 boost::python::list derivative_coupling_integral
 ( int nxa,int nya, int nza, double alp_a, VECTOR& Ra,
   int nxb,int nyb, int nzb, double alp_b, VECTOR& Rb,

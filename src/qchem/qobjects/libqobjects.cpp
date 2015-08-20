@@ -81,6 +81,22 @@ void export_qobjects_objects(){
   (AO& AOa, AO& AOb, int is_normalize, int is_derivs) = &transition_dipole_moment;
 
 
+  ///==================  Derivative coupling integrals ===========================
+  VECTOR (*expt_derivative_coupling_integral_G_v1)
+  (PrimitiveG& GA, PrimitiveG& GB) = &derivative_coupling_integral;
+  VECTOR (*expt_derivative_coupling_integral_G_v2)
+  (PrimitiveG& GA, PrimitiveG& GB, int is_normalize) = &derivative_coupling_integral;
+  boost::python::list (*expt_derivative_coupling_integral_G_v3)
+  (PrimitiveG& GA, PrimitiveG& GB, int is_normalize, int is_derivs) = &derivative_coupling_integral;
+
+  VECTOR (*expt_derivative_coupling_integral_AO_v1)
+  (AO& AOa, AO& AOb) = &derivative_coupling_integral;
+  VECTOR (*expt_derivative_coupling_integral_AO_v2)
+  (AO& AOa, AO& AOb, int is_normalize) = &derivative_coupling_integral;
+  boost::python::list (*expt_derivative_coupling_integral_AO_v3)
+  (AO& AOa, AO& AOb, int is_normalize, int is_derivs) = &derivative_coupling_integral;
+
+
 
   ///==================  Kinetic integrals ===========================
   double (*expt_kinetic_integral_G_v1)
@@ -98,21 +114,40 @@ void export_qobjects_objects(){
   (AO& AOa, AO& AOb,int is_normalize, int is_derivs) = &kinetic_integral;
 
 
+  ///==================  NAI ===========================
+  double (*expt_nuclear_attraction_integral_G_v1)
+  ( PrimitiveG& GA, PrimitiveG& GB, VECTOR& Rc  ) = &nuclear_attraction_integral;
+  double (*expt_nuclear_attraction_integral_G_v2)
+  ( PrimitiveG& GA, PrimitiveG& GB, VECTOR& Rc, int is_normalize ) = &nuclear_attraction_integral;
+  boost::python::list (*expt_nuclear_attraction_integral_G_v3)
+  ( PrimitiveG& GA, PrimitiveG& GB, VECTOR& Rc, int is_normalize, int is_derivs  ) = &nuclear_attraction_integral;
+
+  double (*expt_nuclear_attraction_integral_AO_v1)
+  ( AO& AOa, AO& AOb, VECTOR& Rc  ) = &nuclear_attraction_integral;
+  double (*expt_nuclear_attraction_integral_AO_v2)
+  ( AO& AOa, AO& AOb, VECTOR& Rc,  int is_normalize ) = &nuclear_attraction_integral;
+  boost::python::list (*expt_nuclear_attraction_integral_AO_v3)
+  ( AO& AOa, AO& AOb, VECTOR& Rc,  int is_normalize, int is_derivs  ) = &nuclear_attraction_integral;
+
+
+
   ///==================  ERI ===========================
   double (*expt_electron_repulsion_integral_G_v1)
   ( PrimitiveG& GA, PrimitiveG& GB, PrimitiveG& GC, PrimitiveG& GD
   ) = &electron_repulsion_integral;
-
   double (*expt_electron_repulsion_integral_G_v2)
   ( PrimitiveG& GA, PrimitiveG& GB, PrimitiveG& GC, PrimitiveG& GD,
-    int is_normalize
-  ) = &electron_repulsion_integral;
-
+    int is_normalize ) = &electron_repulsion_integral;
   boost::python::list (*expt_electron_repulsion_integral_G_v3)
   ( PrimitiveG& GA, PrimitiveG& GB, PrimitiveG& GC, PrimitiveG& GD,
-    int is_normalize, int is_derivs
-  ) = &electron_repulsion_integral;
+    int is_normalize, int is_derivs  ) = &electron_repulsion_integral;
 
+  double (*expt_electron_repulsion_integral_AO_v1)
+  ( AO& AOa, AO& AOb, AO& AOc, AO& AOd  ) = &electron_repulsion_integral;
+  double (*expt_electron_repulsion_integral_AO_v2)
+  ( AO& AOa, AO& AOb, AO& AOc, AO& AOd, int is_normalize ) = &electron_repulsion_integral;
+  boost::python::list (*expt_electron_repulsion_integral_AO_v3)
+  ( AO& AOa, AO& AOb, AO& AOc, AO& AOd, int is_normalize, int is_derivs) = &electron_repulsion_integral;
 
 
 
@@ -154,6 +189,15 @@ void export_qobjects_objects(){
   def("transition_dipole_moment", expt_transition_dipole_moment_AO_v3);
 
 
+  // Derivative coupling integrals
+  def("derivative_coupling_integral", expt_derivative_coupling_integral_G_v1);
+  def("derivative_coupling_integral", expt_derivative_coupling_integral_G_v2);
+  def("derivative_coupling_integral", expt_derivative_coupling_integral_G_v3);
+
+  def("derivative_coupling_integral", expt_derivative_coupling_integral_AO_v1);
+  def("derivative_coupling_integral", expt_derivative_coupling_integral_AO_v2);
+  def("derivative_coupling_integral", expt_derivative_coupling_integral_AO_v3);
+
 
   // Kinetic integrals
   def("kinetic_integral", expt_kinetic_integral_G_v1);
@@ -165,10 +209,25 @@ void export_qobjects_objects(){
   def("kinetic_integral", expt_kinetic_integral_AO_v3);
 
 
+  // NAIs
+  def("nuclear_attraction_integral", expt_nuclear_attraction_integral_G_v1);
+  def("nuclear_attraction_integral", expt_nuclear_attraction_integral_G_v2);
+  def("nuclear_attraction_integral", expt_nuclear_attraction_integral_G_v3);
+
+  def("nuclear_attraction_integral", expt_nuclear_attraction_integral_AO_v1);
+  def("nuclear_attraction_integral", expt_nuclear_attraction_integral_AO_v2);
+  def("nuclear_attraction_integral", expt_nuclear_attraction_integral_AO_v3);
+
+
+
   // ERIs
   def("electron_repulsion_integral", expt_electron_repulsion_integral_G_v1);
   def("electron_repulsion_integral", expt_electron_repulsion_integral_G_v2);
   def("electron_repulsion_integral", expt_electron_repulsion_integral_G_v3);
+
+  def("electron_repulsion_integral", expt_electron_repulsion_integral_AO_v1);
+  def("electron_repulsion_integral", expt_electron_repulsion_integral_AO_v2);
+  def("electron_repulsion_integral", expt_electron_repulsion_integral_AO_v3);
 
 
 

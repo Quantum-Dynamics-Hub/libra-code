@@ -901,6 +901,187 @@ VECTOR transition_dipole_moment
 
 
 
+///=========================  Derivative coupling integrals ================================
+
+// Reference verions
+VECTOR derivative_coupling_integral
+( AO& AOa, AO& AOb,
+  int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB,
+  vector<double*>& auxd,int n_aux
+){
+
+  dMdA = 0.0;
+  dMdB = 0.0;
+  
+  MATRIX3x3 dmda, dmdb;
+  double w;
+  VECTOR res; res = 0.0;
+  for(int i=0;i<AOa.expansion_size;i++){
+    for(int j=0;j<AOb.expansion_size;j++){
+
+      w = AOa.coefficients[i] * AOb.coefficients[j];
+      // use unnormalized primitives!
+      res += w * derivative_coupling_integral(AOa.primitives[i], AOb.primitives[j], 0, is_derivs, dmda, dmdb, auxd, n_aux); 
+      dMdA += w * dmda;
+      dMdB += w * dmdb;
+
+    }// j
+  }// i
+
+  if(is_normalize){
+    double nrm = AOa.normalization_factor() * AOb.normalization_factor();
+    res *= nrm;
+    dMdA *= nrm;
+    dMdB *= nrm;
+  }//
+  return res;
+}
+
+VECTOR derivative_coupling_integral
+( AO& AOa, AO& AOb,
+  int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB
+){
+  // Allocate working memory
+  int i;
+  int n_aux = 20;
+  vector<double*> auxd(5);
+  for(i=0;i<5;i++){ auxd[i] = new double[n_aux]; }
+
+  // Do computations
+  VECTOR res; res = derivative_coupling_integral(AOa, AOb, is_normalize, is_derivs, dMdA, dMdB, auxd, n_aux);
+
+  // Clean working memory
+  for(i=0;i<5;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+ 
+  return res;
+}
+
+boost::python::list derivative_coupling_integral
+( AO& AOa, AO& AOb, int is_normalize,int is_derivs
+){
+  MATRIX3x3 dMdA, dMdB;
+  VECTOR I; I = derivative_coupling_integral(AOa, AOb, is_normalize, is_derivs, dMdA, dMdB);
+
+  boost::python::list res;
+
+  res.append(I);
+ 
+  if(is_derivs){
+    res.append(dMdA);
+    res.append(dMdB);
+  }
+
+  return res;
+ 
+}
+
+VECTOR derivative_coupling_integral
+( AO& AOa, AO& AOb, int is_normalize
+){
+  MATRIX3x3 dMdA, dMdB;
+  VECTOR res; res = derivative_coupling_integral(AOa, AOb, is_normalize, 0, dMdA, dMdB);
+  return res;
+}
+
+VECTOR derivative_coupling_integral
+( AO& AOa, AO& AOb
+){
+  VECTOR res; res = derivative_coupling_integral(AOa, AOb, 1);
+  return res;
+}
+
+
+// Pointer versions
+VECTOR derivative_coupling_integral
+( AO* AOa, AO* AOb,
+  int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB,
+  vector<double*>& auxd,int n_aux
+){
+
+  dMdA = 0.0;
+  dMdB = 0.0;
+  
+  MATRIX3x3 dmda, dmdb;
+  double w;
+  VECTOR res; res = 0.0;
+  for(int i=0;i<AOa->expansion_size;i++){
+    for(int j=0;j<AOb->expansion_size;j++){
+
+      w = AOa->coefficients[i] * AOb->coefficients[j];
+      // use unnormalized primitives!
+      res += w * derivative_coupling_integral(AOa->primitives[i], AOb->primitives[j], 0, is_derivs, dmda, dmdb, auxd, n_aux); 
+      dMdA += w * dmda;
+      dMdB += w * dmdb;
+
+    }// j
+  }// i
+
+  if(is_normalize){
+    double nrm = AOa->normalization_factor() * AOb->normalization_factor();
+    res *= nrm;
+    dMdA *= nrm;
+    dMdB *= nrm;
+  }//
+  return res;
+}
+
+VECTOR derivative_coupling_integral
+( AO* AOa, AO* AOb,
+  int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB
+){
+  // Allocate working memory
+  int i;
+  int n_aux = 20;
+  vector<double*> auxd(5);
+  for(i=0;i<5;i++){ auxd[i] = new double[n_aux]; }
+
+  // Do computations
+  VECTOR res; res = derivative_coupling_integral(AOa, AOb, is_normalize, is_derivs, dMdA, dMdB, auxd, n_aux);
+
+  // Clean working memory
+  for(i=0;i<5;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+ 
+  return res;
+}
+
+boost::python::list derivative_coupling_integral
+( AO* AOa, AO* AOb, int is_normalize,int is_derivs
+){
+  MATRIX3x3 dMdA, dMdB;
+  VECTOR I; I = derivative_coupling_integral(AOa, AOb, is_normalize, is_derivs, dMdA, dMdB);
+
+  boost::python::list res;
+
+  res.append(I);
+ 
+  if(is_derivs){
+    res.append(dMdA);
+    res.append(dMdB);
+  }
+
+  return res;
+ 
+}
+
+VECTOR derivative_coupling_integral
+( AO* AOa, AO* AOb, int is_normalize
+){
+  MATRIX3x3 dMdA, dMdB;
+  VECTOR res; res = derivative_coupling_integral(AOa, AOb, is_normalize, 0, dMdA, dMdB);
+  return res;
+}
+
+VECTOR derivative_coupling_integral
+( AO* AOa, AO* AOb
+){
+  VECTOR res; res = derivative_coupling_integral(AOa, AOb, 1);
+  return res;
+}
+
+
+
 
 
 
@@ -1063,6 +1244,459 @@ double kinetic_integral(AO* AOa, AO* AOb){
   return res;
 
 }
+
+
+///====================== Nuclear Attraction Integral ================================
+// Versions with references
+
+double nuclear_attraction_integral
+( AO& AOa, AO& AOb, VECTOR& Rc, int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,
+  vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+){
+
+  DA = 0.0;
+  DB = 0.0;
+  DC = 0.0;
+  
+  VECTOR dida, didb, didc;
+  double w;
+  double res = 0.0;
+  for(int i=0;i<AOa.expansion_size;i++){
+    for(int j=0;j<AOb.expansion_size;j++){
+
+      w = AOa.coefficients[i] * AOb.coefficients[j];
+
+      // use unnormalized primitives!
+      res += w * nuclear_attraction_integral(AOa.primitives[i], AOb.primitives[j],
+                 Rc , 0, is_derivs, dida, didb, didc, aux, n_aux, auxv, n_auxv); 
+
+      DA += w * dida;
+      DB += w * didb;
+      DC += w * didc;
+   
+    }// j
+  }// i
+
+  if(is_normalize){
+    double nrm = AOa.normalization_factor() * AOb.normalization_factor();
+    res *= nrm;
+    DA *= nrm;
+    DB *= nrm;
+    DC *= nrm;
+
+  }//
+  return res;
+}
+
+double nuclear_attraction_integral
+( AO& AOa, AO& AOb, VECTOR& Rc, int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC
+){
+
+  // Allocate working memory
+  int i;
+  int n_aux = 20;
+  int n_auxv = 10;
+  vector<double*> auxd(20);
+  for(i=0;i<20;i++){ auxd[i] = new double[n_aux]; }
+  vector<VECTOR*> auxv(5);
+  for(i=0;i<5;i++){ auxv[i] = new VECTOR[n_auxv]; }
+
+  // Do computations
+  double res = nuclear_attraction_integral(AOa, AOb, Rc,is_normalize, is_derivs, DA, DB, DC,
+                                           auxd, n_aux, auxv, n_auxv);
+  // Clean working memory
+  for(i=0;i<20;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+  for(i=0;i<5;i++){ delete [] auxv[i]; }  
+  auxv.clear();
+ 
+  return res;
+}
+
+
+boost::python::list nuclear_attraction_integral
+( AO& AOa, AO& AOb, VECTOR& Rc, int is_normalize, int is_derivs
+){
+
+  VECTOR DA, DB, DC;
+  double I = nuclear_attraction_integral(AOa, AOb, Rc, is_normalize, is_derivs, DA, DB, DC );
+
+  boost::python::list res;
+  res.append(I);
+ 
+  if(is_derivs){
+    res.append(DA);
+    res.append(DB);
+    res.append(DC);
+  }
+
+  return res;
+ 
+}
+
+
+double nuclear_attraction_integral
+( AO& AOa, AO& AOb, VECTOR& Rc, int is_normalize
+){
+  VECTOR DA, DB, DC;
+  double res = nuclear_attraction_integral(AOa, AOb, Rc, is_normalize, 0, DA, DB, DC);
+  return res;
+}
+
+double nuclear_attraction_integral
+( AO& AOa, AO& AOb, VECTOR& Rc){
+
+  double res = nuclear_attraction_integral(AOa, AOb, Rc, 1);
+  return res;
+}
+
+
+// Pointer versions
+double nuclear_attraction_integral
+( AO* AOa, AO* AOb, VECTOR& Rc, int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,
+  vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+){
+
+  DA = 0.0;
+  DB = 0.0;
+  DC = 0.0;
+  
+  VECTOR dida, didb, didc;
+  double w;
+  double res = 0.0;
+  for(int i=0;i<AOa->expansion_size;i++){
+    for(int j=0;j<AOb->expansion_size;j++){
+
+      w = AOa->coefficients[i] * AOb->coefficients[j];
+
+      // use unnormalized primitives!
+      res += w * nuclear_attraction_integral(AOa->primitives[i], AOb->primitives[j],
+                 Rc , 0, is_derivs, dida, didb, didc, aux, n_aux, auxv, n_auxv); 
+
+      DA += w * dida;
+      DB += w * didb;
+      DC += w * didc;
+   
+    }// j
+  }// i
+
+  if(is_normalize){
+    double nrm = AOa->normalization_factor() * AOb->normalization_factor();
+    res *= nrm;
+    DA *= nrm;
+    DB *= nrm;
+    DC *= nrm;
+
+  }//
+  return res;
+}
+
+double nuclear_attraction_integral
+( AO* AOa, AO* AOb, VECTOR& Rc, int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC
+){
+
+  // Allocate working memory
+  int i;
+  int n_aux = 20;
+  int n_auxv = 10;
+  vector<double*> auxd(20);
+  for(i=0;i<20;i++){ auxd[i] = new double[n_aux]; }
+  vector<VECTOR*> auxv(5);
+  for(i=0;i<5;i++){ auxv[i] = new VECTOR[n_auxv]; }
+
+  // Do computations
+  double res = nuclear_attraction_integral(AOa, AOb, Rc,is_normalize, is_derivs, DA, DB, DC,
+                                           auxd, n_aux, auxv, n_auxv);
+  // Clean working memory
+  for(i=0;i<20;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+  for(i=0;i<5;i++){ delete [] auxv[i]; }  
+  auxv.clear();
+ 
+  return res;
+}
+
+
+boost::python::list nuclear_attraction_integral
+( AO* AOa, AO* AOb, VECTOR& Rc, int is_normalize, int is_derivs
+){
+  VECTOR DA, DB, DC;
+  double I = nuclear_attraction_integral(AOa, AOb, Rc, is_normalize, is_derivs, DA, DB, DC );
+
+  boost::python::list res;
+  res.append(I);
+ 
+  if(is_derivs){
+    res.append(DA);
+    res.append(DB);
+    res.append(DC);
+  }
+
+  return res;
+ 
+}
+
+
+double nuclear_attraction_integral
+( AO* AOa, AO* AOb, VECTOR& Rc, int is_normalize
+){
+  VECTOR DA, DB, DC;
+  double res = nuclear_attraction_integral(AOa, AOb, Rc, is_normalize, 0, DA, DB, DC);
+  return res;
+}
+
+double nuclear_attraction_integral
+( AO* AOa, AO* AOb, VECTOR& Rc){
+
+  double res = nuclear_attraction_integral(AOa, AOb, Rc, 1);
+  return res;
+}
+
+
+
+///====================== Electron Repulsion Integral ================================
+// Versions with references
+double electron_repulsion_integral
+( AO& AOa, AO& AOb, AO& AOc, AO& AOd, int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,VECTOR& DD,
+  vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+){
+
+  DA = 0.0;
+  DB = 0.0;
+  DC = 0.0;
+  DD = 0.0;
+
+  
+  VECTOR dida, didb, didc, didd;
+  double w;
+  double res = 0.0;
+  for(int i=0;i<AOa.expansion_size;i++){
+    for(int j=0;j<AOb.expansion_size;j++){
+      for(int k=0;k<AOc.expansion_size;k++){
+        for(int l=0;l<AOd.expansion_size;l++){
+
+          w = AOa.coefficients[i] * AOb.coefficients[j] * AOc.coefficients[k] * AOd.coefficients[l];
+
+          // use unnormalized primitives!
+          res += w * electron_repulsion_integral(AOa.primitives[i], AOb.primitives[j],
+                  AOc.primitives[k], AOd.primitives[l], 0, is_derivs, dida, didb, didc, didd, aux, n_aux, auxv, n_auxv); 
+
+          DA += w * dida;
+          DB += w * didb;
+          DC += w * didc;
+          DD += w * didd;
+   
+        }// l
+      }// k
+    }// j
+  }// i
+
+  if(is_normalize){
+    double nrm = AOa.normalization_factor() * AOb.normalization_factor() * AOc.normalization_factor() * AOd.normalization_factor();
+    res *= nrm;
+    DA *= nrm;
+    DB *= nrm;
+    DC *= nrm;
+    DD *= nrm;
+
+  }//
+  return res;
+}
+
+
+double electron_repulsion_integral
+( AO& AOa, AO& AOb, AO& AOc, AO& AOd,
+  int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,VECTOR& DD
+){
+
+  // Allocate working memory
+  int i;
+  int n_aux = 40;
+  int n_auxv = 40;
+  vector<double*> auxd(30);
+  for(i=0;i<30;i++){ auxd[i] = new double[n_aux]; }
+  vector<VECTOR*> auxv(5);
+  for(i=0;i<5;i++){ auxv[i] = new VECTOR[n_auxv]; }
+
+  // Do computations
+  double res = electron_repulsion_integral(AOa, AOb, AOc, AOd, 
+                                           is_normalize, is_derivs, DA, DB, DC, DD,
+                                           auxd, n_aux, auxv, n_auxv);
+  // Clean working memory
+  for(i=0;i<30;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+  for(i=0;i<5;i++){ delete [] auxv[i]; }  
+  auxv.clear();
+ 
+  return res;
+}
+
+
+boost::python::list electron_repulsion_integral
+( AO& AOa, AO& AOb, AO& AOc, AO& AOd,
+  int is_normalize, int is_derivs
+){
+
+
+  VECTOR DA, DB, DC, DD;
+  double I = electron_repulsion_integral(AOa, AOb, AOc, AOd, is_normalize, is_derivs, DA, DB, DC, DD);
+
+  boost::python::list res;
+  res.append(I);
+ 
+  if(is_derivs){
+    res.append(DA);
+    res.append(DB);
+    res.append(DC);
+    res.append(DD);
+  }
+
+  return res;
+ 
+}
+
+
+double electron_repulsion_integral
+( AO& AOa, AO& AOb, AO& AOc, AO& AOd, int is_normalize
+){
+
+  VECTOR DA, DB, DC, DD;
+  double res = electron_repulsion_integral(AOa, AOb, AOc, AOd, is_normalize, 0, DA, DB, DC, DD);
+  return res;
+}
+
+double electron_repulsion_integral
+( AO& AOa, AO& AOb, AO& AOc, AO& AOd){
+
+  double res = electron_repulsion_integral(AOa, AOb, AOc, AOd, 1);
+  return res;
+}
+
+
+// Pointer versions
+
+double electron_repulsion_integral
+( AO* AOa, AO* AOb, AO* AOc, AO* AOd,
+  int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,VECTOR& DD,
+  vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+){
+
+  DA = 0.0;
+  DB = 0.0;
+  DC = 0.0;
+  DD = 0.0;
+  
+  VECTOR dida, didb, didc, didd;
+  double w;
+  double res = 0.0;
+  for(int i=0;i<AOa->expansion_size;i++){
+    for(int j=0;j<AOb->expansion_size;j++){
+      for(int k=0;k<AOc->expansion_size;k++){
+        for(int l=0;l<AOd->expansion_size;l++){
+
+          w = AOa->coefficients[i] * AOb->coefficients[j]*AOc->coefficients[k] * AOd->coefficients[l];
+
+          // use unnormalized primitives!
+          res += w * electron_repulsion_integral(AOa->primitives[i], AOb->primitives[j],
+          AOc->primitives[k], AOd->primitives[l], 0, is_derivs, dida, didb, didc, didd, aux, n_aux, auxv, n_auxv); 
+
+          DA += w * dida;
+          DB += w * didb;
+          DC += w * didc;
+          DD += w * didd;
+
+        }// l
+      }// k
+    }// j
+  }// i
+
+  if(is_normalize){
+    double nrm = AOa->normalization_factor() * AOb->normalization_factor() * AOc->normalization_factor() * AOd->normalization_factor();
+    res *= nrm;
+    DA *= nrm;
+    DB *= nrm;
+    DC *= nrm;
+    DD *= nrm;
+
+  }//
+  return res;
+}
+
+
+double electron_repulsion_integral
+( AO* AOa, AO* AOb, AO* AOc, AO* AOd,
+  int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,VECTOR& DD
+){
+
+  // Allocate working memory
+  int i;
+  int n_aux = 40;
+  int n_auxv = 40;
+  vector<double*> auxd(30);
+  for(i=0;i<30;i++){ auxd[i] = new double[n_aux]; }
+  vector<VECTOR*> auxv(5);
+  for(i=0;i<5;i++){ auxv[i] = new VECTOR[n_auxv]; }
+
+  // Do computations
+  double res = electron_repulsion_integral(AOa, AOb, AOc, AOd, 
+                                           is_normalize, is_derivs, DA, DB, DC, DD,
+                                           auxd, n_aux, auxv, n_auxv);
+  // Clean working memory
+  for(i=0;i<30;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+  for(i=0;i<5;i++){ delete [] auxv[i]; }  
+  auxv.clear();
+ 
+  return res;
+}
+
+
+boost::python::list electron_repulsion_integral
+( AO* AOa, AO* AOb, AO* AOc, AO* AOd,
+  int is_normalize, int is_derivs
+){
+
+  VECTOR DA, DB, DC, DD;
+  double I = electron_repulsion_integral(AOa, AOb, AOc, AOd, is_normalize, is_derivs, DA, DB, DC, DD);
+
+  boost::python::list res;
+  res.append(I);
+ 
+  if(is_derivs){
+    res.append(DA);
+    res.append(DB);
+    res.append(DC);
+    res.append(DD);
+  }
+
+  return res;
+ 
+}
+
+
+double electron_repulsion_integral
+( AO* AOa, AO* AOb, AO* AOc, AO* AOd, int is_normalize
+){
+  VECTOR DA, DB, DC, DD;
+  double res = electron_repulsion_integral(AOa, AOb, AOc, AOd, is_normalize, 0, DA, DB, DC, DD);
+  return res;
+}
+
+double electron_repulsion_integral
+( AO* AOa, AO* AOb, AO* AOc, AO* AOd){
+
+  double res = electron_repulsion_integral(AOa, AOb, AOc, AOd, 1);
+  return res;
+}
+
 
 
 

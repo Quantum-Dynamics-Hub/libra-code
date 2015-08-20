@@ -150,6 +150,20 @@ VECTOR transition_dipole_moment( PrimitiveG& GA, PrimitiveG& GB, int is_normaliz
 VECTOR transition_dipole_moment( PrimitiveG& GA, PrimitiveG& GB);
 
 
+// Derivative coupling integrals
+VECTOR derivative_coupling_integral
+( PrimitiveG& GA, PrimitiveG& GB,
+  int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB,
+  vector<double*>& auxd,int n_aux
+);
+VECTOR derivative_coupling_integral
+( PrimitiveG& GA, PrimitiveG& GB,int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB
+);
+boost::python::list derivative_coupling_integral( PrimitiveG& GA, PrimitiveG& GB, int is_normalize,int is_derivs);
+VECTOR derivative_coupling_integral( PrimitiveG& GA, PrimitiveG& GB, int is_normalize);
+VECTOR derivative_coupling_integral( PrimitiveG& GA, PrimitiveG& GB);
+
+
 
 
 // Kinetic integrals
@@ -168,6 +182,31 @@ boost::python::list kinetic_integral
 );
 double kinetic_integral( PrimitiveG& GA, PrimitiveG& GB,int is_normalize);
 double kinetic_integral( PrimitiveG& GA, PrimitiveG& GB);
+
+
+// Nuclear Attraction Integral
+double nuclear_attraction_integral
+( PrimitiveG& GA, PrimitiveG& GB, VECTOR& Rc,
+  int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,
+  vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+);
+double nuclear_attraction_integral
+( PrimitiveG& GA, PrimitiveG& GB, VECTOR& Rc,
+  int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC
+);
+boost::python::list nuclear_attraction_integral
+( PrimitiveG& GA, PrimitiveG& GB, VECTOR& Rc,
+  int is_normalize, int is_derivs
+);
+double nuclear_attraction_integral
+( PrimitiveG& GA, PrimitiveG& GB, VECTOR& Rc,
+  int is_normalize
+);
+double nuclear_attraction_integral
+( PrimitiveG& GA, PrimitiveG& GB, VECTOR& Rc
+);
 
 
 

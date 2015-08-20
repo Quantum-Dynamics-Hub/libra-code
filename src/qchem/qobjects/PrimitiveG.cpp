@@ -456,6 +456,77 @@ VECTOR transition_dipole_moment
 }
 
 
+///======================== Derivative coupling integrals =================================
+VECTOR derivative_coupling_integral
+( PrimitiveG& GA, PrimitiveG& GB,
+  int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB,
+  vector<double*>& auxd,int n_aux
+){
+
+  VECTOR res;
+  res = libmolint::derivative_coupling_integral
+  ( GA.x_exp, GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    GB.x_exp, GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    is_normalize, is_derivs, dMdA, dMdB, auxd, n_aux
+  );
+
+  return res;
+}
+
+VECTOR derivative_coupling_integral
+( PrimitiveG& GA, PrimitiveG& GB,
+  int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB
+){
+
+  VECTOR res;
+  res = libmolint::derivative_coupling_integral
+  ( GA.x_exp, GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    GB.x_exp, GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    is_normalize, is_derivs, dMdA, dMdB
+  );
+
+  return res;
+}
+
+boost::python::list derivative_coupling_integral
+( PrimitiveG& GA, PrimitiveG& GB, int is_normalize,int is_derivs){
+
+  boost::python::list res;
+  res = libmolint::derivative_coupling_integral
+  ( GA.x_exp, GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    GB.x_exp, GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    is_normalize, is_derivs
+  );
+
+  return res;
+}
+
+VECTOR derivative_coupling_integral
+( PrimitiveG& GA, PrimitiveG& GB,int is_normalize){
+
+  VECTOR res;
+  res = libmolint::derivative_coupling_integral
+  ( GA.x_exp, GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    GB.x_exp, GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    is_normalize
+  );
+
+  return res;
+}
+
+VECTOR derivative_coupling_integral
+( PrimitiveG& GA, PrimitiveG& GB){
+
+  VECTOR res;
+  res = libmolint::derivative_coupling_integral
+  ( GA.x_exp, GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    GB.x_exp, GB.y_exp, GB.z_exp, GB.alpha, GB.R
+  );
+
+  return res;
+}
+
+
 
 ///======================== Kinetic integrals =================================
 
@@ -527,6 +598,84 @@ double kinetic_integral
 
   return res;
 }
+
+
+///======================== NAIs =================================
+
+double nuclear_attraction_integral
+( PrimitiveG& GA, PrimitiveG& GB, VECTOR& Rc,
+  int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,
+  vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+){
+
+  double res = 
+  libmolint::nuclear_attraction_integral
+  ( GA.x_exp, GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    GB.x_exp, GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    Rc, is_normalize, is_derivs, DA, DB, DC, aux, n_aux, auxv, n_auxv
+  );
+
+  return res;
+}
+
+double nuclear_attraction_integral
+( PrimitiveG& GA, PrimitiveG& GB, VECTOR& Rc,
+  int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC
+){
+
+  double res = 
+  libmolint::nuclear_attraction_integral
+  ( GA.x_exp, GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    GB.x_exp, GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    Rc, is_normalize, is_derivs, DA, DB, DC  );
+
+  return res;
+}
+
+boost::python::list nuclear_attraction_integral
+( PrimitiveG& GA, PrimitiveG& GB, VECTOR& Rc,
+  int is_normalize,  int is_derivs
+){
+
+  boost::python::list res = 
+  libmolint::nuclear_attraction_integral
+  ( GA.x_exp, GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    GB.x_exp, GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    Rc, is_normalize, is_derivs );
+
+  return res;
+}
+
+double nuclear_attraction_integral
+( PrimitiveG& GA, PrimitiveG& GB, VECTOR& Rc,
+  int is_normalize
+){
+
+  double res = 
+  libmolint::nuclear_attraction_integral
+  ( GA.x_exp, GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    GB.x_exp, GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    Rc, is_normalize  );
+
+  return res;
+}
+
+double nuclear_attraction_integral
+( PrimitiveG& GA, PrimitiveG& GB, VECTOR& Rc
+){
+
+  double res = 
+  libmolint::nuclear_attraction_integral
+  ( GA.x_exp, GA.y_exp, GA.z_exp, GA.alpha, GA.R,
+    GB.x_exp, GB.y_exp, GB.z_exp, GB.alpha, GB.R,
+    Rc
+  );
+
+  return res;
+}
+
 
 
 

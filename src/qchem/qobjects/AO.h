@@ -183,6 +183,36 @@ VECTOR transition_dipole_moment( AO* AOa, AO* AOb);
 
 
 
+///====================== Derivative coupling integrals ================================
+// Versions with references
+VECTOR derivative_coupling_integral
+( AO& AOa, AO& AOb,
+  int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB,
+  vector<double*>& auxd,int n_aux
+);
+VECTOR derivative_coupling_integral
+( AO& AOa, AO& AOb,int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB
+);
+boost::python::list derivative_coupling_integral( AO& AOa, AO& AOb, int is_normalize,int is_derivs);
+VECTOR derivative_coupling_integral( AO& AOa, AO& AOb, int is_normalize);
+VECTOR derivative_coupling_integral( AO& AOa, AO& AOb);
+
+
+// Versions with pointers - only for C++
+VECTOR derivative_coupling_integral
+( AO* AOa, AO* AOb,
+  int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB,
+  vector<double*>& auxd,int n_aux
+);
+VECTOR derivative_coupling_integral
+( AO* AOa, AO* AOb,int is_normalize,int is_derivs, MATRIX3x3& dMdA, MATRIX3x3& dMdB
+);
+boost::python::list derivative_coupling_integral( AO* AOa, AO* AOb, int is_normalize,int is_derivs);
+VECTOR derivative_coupling_integral( AO* AOa, AO* AOb, int is_normalize);
+VECTOR derivative_coupling_integral( AO* AOa, AO* AOb);
+
+
+
 ///====================== Kinetic integral ================================
 // Versions with references
 double kinetic_integral
@@ -204,6 +234,71 @@ double kinetic_integral( AO* AOa, AO* AOb,int is_normalize, int is_derivs, VECTO
 double kinetic_integral(AO* AOa, AO* AOb,int is_normalize);
 double kinetic_integral(AO* AOa, AO* AOb);
 
+
+///====================== Nuclear Attraction Integral ================================
+// Versions with references
+double nuclear_attraction_integral
+( AO& AOa, AO& AOb, VECTOR& Rc, int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,
+  vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+);
+double nuclear_attraction_integral
+( AO& AOa, AO& AOb, VECTOR& Rc, int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC
+);
+boost::python::list nuclear_attraction_integral( AO& AOa, AO& AOb, VECTOR& Rc, int is_normalize, int is_derivs );
+double nuclear_attraction_integral( AO& AOa, AO& AOb, VECTOR& Rc, int is_normalize );
+double nuclear_attraction_integral( AO& AOa, AO& AOb, VECTOR& Rc );
+
+
+// Versions with pointers - only for C++
+double nuclear_attraction_integral
+( AO* AOa, AO* AOb, VECTOR& Rc, int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,
+  vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+);
+double nuclear_attraction_integral
+( AO* AOa, AO* AOb, VECTOR& Rc, int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC
+);
+boost::python::list nuclear_attraction_integral( AO* AOa, AO* AOb, VECTOR& Rc, int is_normalize, int is_derivs );
+double nuclear_attraction_integral( AO* AOa, AO* AOb, VECTOR& Rc, int is_normalize );
+double nuclear_attraction_integral( AO* AOa, AO* AOb, VECTOR& Rc );
+
+
+///====================== Electron Repulsion Integral ================================
+// Versions with references
+double electron_repulsion_integral
+( AO& AOa, AO& AOb, AO& AOc, AO& AOd,
+  int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,VECTOR& DD,
+  vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+);
+double electron_repulsion_integral
+( AO& AOa, AO& AOb, AO& AOc, AO& AOd,
+  int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,VECTOR& DD
+);
+boost::python::list electron_repulsion_integral( AO& AOa, AO& AOb, AO& AOc, AO& AOd, int is_normalize, int is_derivs);
+double electron_repulsion_integral( AO& AOa, AO& AOb, AO& AOc, AO& AOd,int is_normalize);
+double electron_repulsion_integral( AO& AOa, AO& AOb, AO& AOc, AO& AOd);
+
+
+// Versions with pointers - only for C++
+double electron_repulsion_integral
+( AO* AOa, AO* AOb, AO* AOc, AO* AOd,
+  int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,VECTOR& DD,
+  vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+);
+double electron_repulsion_integral
+( AO* AOa, AO* AOb, AO* AOc, AO* AOd,
+  int is_normalize, 
+  int is_derivs,  VECTOR& DA,VECTOR& DB,VECTOR& DC,VECTOR& DD
+);
+boost::python::list electron_repulsion_integral( AO* AOa, AO* AOb, AO* AOc, AO* AOd, int is_normalize, int is_derivs);
+double electron_repulsion_integral( AO* AOa, AO* AOb, AO* AOc, AO* AOd,int is_normalize);
+double electron_repulsion_integral( AO* AOa, AO* AOb, AO* AOc, AO* AOd);
 
 
 
