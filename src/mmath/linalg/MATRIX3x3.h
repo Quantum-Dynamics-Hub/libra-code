@@ -162,16 +162,33 @@ class MATRIX3x3{
     m.zx = zx - ob.zx; m.zy = zy - ob.zy; m.zz = zz - ob.zz;
     return m;
   }
-  void operator+=(MATRIX3x3 ob){
+  MATRIX3x3 operator+=(MATRIX3x3 ob){
     xx = xx + ob.xx; xy = xy + ob.xy; xz = xz + ob.xz;
     yx = yx + ob.yx; yy = yy + ob.yy; yz = yz + ob.yz;
     zx = zx + ob.zx; zy = zy + ob.zy; zz = zz + ob.zz;
+    return *this;
   }
-  void operator-=(MATRIX3x3 ob){
+  MATRIX3x3 operator-=(MATRIX3x3 ob){
     xx = xx - ob.xx; xy = xy - ob.xy; xz = xz - ob.xz;
     yx = yx - ob.yx; yy = yy - ob.yy; yz = yz - ob.yz;
     zx = zx - ob.zx; zy = zy - ob.zy; zz = zz - ob.zz;
+    return *this;
   }
+
+  MATRIX3x3 operator*=(double f){
+    xx *= f; xy *= f; xz *= f;
+    yx *= f; yy *= f; yz *= f;
+    zx *= f; zy *= f; zz *= f;
+    return *this;
+  }
+  MATRIX3x3 operator/=(double f){
+    xx /= f; xy /= f; xz /= f;
+    yx /= f; yy /= f; yz /= f;
+    zx /= f; zy /= f; zz /= f;
+    return *this;
+  }
+
+
   MATRIX3x3 operator/(double num){
     MATRIX3x3 m;
     m.xx = xx/num; m.xy = xy/num; m.xz = xz/num;
