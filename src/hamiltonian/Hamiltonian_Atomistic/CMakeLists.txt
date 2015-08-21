@@ -10,6 +10,10 @@ MESSAGE("Going into subdirectory Hamiltonian_MM...")
 ADD_SUBDIRECTORY("Hamiltonian_MM")
 
 
+MESSAGE("Going into subdirectory Hamiltonian_QM...")
+ADD_SUBDIRECTORY("Hamiltonian_QM")
+
+
 #
 #  Create both static and dynamic libraries
 #
@@ -21,7 +25,7 @@ ADD_LIBRARY(hamiltonian_atomistic_stat STATIC ${HAMILTONIAN_ATOMISTIC_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES( hamiltonian_atomistic      hamiltonian_mm_stat hamiltonian_generic_stat mmath_stat ${ext_libs})
-TARGET_LINK_LIBRARIES( hamiltonian_atomistic_stat hamiltonian_mm_stat hamiltonian_generic_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES( hamiltonian_atomistic      hamiltonian_qm_stat hamiltonian_mm_stat hamiltonian_generic_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES( hamiltonian_atomistic_stat hamiltonian_qm_stat hamiltonian_mm_stat hamiltonian_generic_stat mmath_stat ${ext_libs})
 
 
