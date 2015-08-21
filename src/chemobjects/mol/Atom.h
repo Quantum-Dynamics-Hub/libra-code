@@ -41,6 +41,7 @@ public:
   double      Atom_displ2;         int is_Atom_displ2; // square of atomic displacements 
 
   //----------Basic physical properties of the atom ---------
+  int         Atom_Z;              int is_Atom_Z;
   std::string Atom_element;        int is_Atom_element;
   double      Atom_atomic_radius;  int is_Atom_atomic_radius;
   double      Atom_charge;         int is_Atom_charge;
@@ -56,7 +57,11 @@ public:
 
   //----------- Force-field related properties ---------------
   std::string Atom_ff_type;         int is_Atom_ff_type;
+  double Atom_Zeff;                 int is_Atom_Zeff;
 
+  //----------- Electronic structure-related properties ---------------
+  double Atom_mull_charge_gross;         int is_Atom_mull_charge_gross;
+  double Atom_mull_charge_net;           int is_Atom_mull_charge_net;
  
   //---------- Keep this for a while --------------------
 //  int         Atom_ff_int_type;     int is_Atom_ff_int_type;

@@ -16,6 +16,7 @@ void Atom::init_variables(){
   is_Atom_RB_old  = 0;
   Atom_displ2     = 0.0;   is_Atom_displ2 = 1;
 
+  is_Atom_Z = 0;
   is_Atom_element = 0;
   is_Atom_atomic_radius = 0;
   is_Atom_charge  = 0;
@@ -28,6 +29,11 @@ void Atom::init_variables(){
   Atom_min_ring_size = 1;  is_Atom_min_ring_size = 1;
 
   is_Atom_ff_type     = 0;
+  is_Atom_Zeff = 0;
+
+  is_Atom_mull_charge_gross = 0;
+  is_Atom_mull_charge_net = 0;
+
 
 //  is_Atom_ff_int_type = 0;
 //  Atom_is_surface_atom = 0;  is_Atom_is_surface_atom = 1;
@@ -65,6 +71,7 @@ void Atom::copy_content(const Atom& at){
   if(at.is_Atom_RB_old){ Atom_RB_old = at.Atom_RB_old; is_Atom_RB_old = 1; }
   if(at.is_Atom_displ2){ Atom_displ2 = at.Atom_displ2; is_Atom_displ2 = 1; }
 
+  if(at.is_Atom_Z) { Atom_Z = at.Atom_Z;  is_Atom_Z = 1;}
   if(at.is_Atom_element) { Atom_element = at.Atom_element;  is_Atom_element = 1;}
   if(at.is_Atom_atomic_radius){Atom_atomic_radius = at.Atom_atomic_radius;  is_Atom_atomic_radius = 1;} 
   if(at.is_Atom_charge){ Atom_charge = at.Atom_charge;  is_Atom_charge = 1;}
@@ -77,6 +84,11 @@ void Atom::copy_content(const Atom& at){
   if(at.is_Atom_min_ring_size){Atom_min_ring_size = at.Atom_min_ring_size; is_Atom_min_ring_size = 1; }
 
   if(at.is_Atom_ff_type) { Atom_ff_type = at.Atom_ff_type;  is_Atom_ff_type = 1;}
+  if(at.is_Atom_Zeff) { Atom_Zeff = at.Atom_Zeff;  is_Atom_Zeff = 1;}
+
+  if(at.is_Atom_mull_charge_gross) { Atom_mull_charge_gross = at.Atom_mull_charge_gross;  is_Atom_mull_charge_gross = 1;}
+  if(at.is_Atom_mull_charge_net) { Atom_mull_charge_net = at.Atom_mull_charge_net;  is_Atom_mull_charge_net = 1;}
+
 
 //  if(at.is_Atom_ff_int_type) { Atom_ff_int_type = at.Atom_ff_int_type;  is_Atom_ff_int_type = 1;}
 //  if(at.is_Atom_is_surface_atom){ Atom_is_surface_atom = at.Atom_is_surface_atom; is_Atom_is_surface_atom = 1;}
@@ -110,14 +122,19 @@ Atom::Atom(Universe& u, boost::python::dict at){
     else if(key=="Atom_element") { 
       Atom_element = extract<std::string>(at.values()[i]); is_Atom_element = 1; 
       Element elt = universe->Get_Element(Atom_element);
+
       // Get basic atomic properties
       if(elt.is_Elt_mass){  Atom_RB.set_mass(elt.Elt_mass); }
+      if(elt.is_Elt_number){  Atom_Z = elt.Elt_number;  is_Atom_Z = 1; }
+
     }
     else if(key=="Atom_atomic_radius") { Atom_atomic_radius = extract<double>(at.values()[i]); is_Atom_atomic_radius = 1; }
     else if(key=="Atom_charge") { Atom_charge = extract<double>(at.values()[i]); is_Atom_charge = 1; }
     else if(key=="Atom_electronegativity") { Atom_electronegativity = extract<double>(at.values()[i]); is_Atom_electronegativity = 1; }
     else if(key=="Atom_formal_charge") { Atom_formal_charge = extract<double>(at.values()[i]); is_Atom_formal_charge = 1; }
     else if(key=="Atom_ff_type") { Atom_ff_type = extract<std::string>(at.values()[i]); is_Atom_ff_type = 1; }
+    else if(key=="Atom_Zeff") { Atom_Zeff = extract<double>(at.values()[i]); is_Atom_Zeff = 1; }
+    else if(key=="Atom_Z") { Atom_Z = extract<int>(at.values()[i]); is_Atom_Z = 1; }
 
     else if(key=="Atom_cm_x") {
       Atom_RB.rb_cm.x = extract<double>(at.values()[i]); is_Atom_RB = 1; Atom_RB.is_rb_cm = 1;
@@ -131,6 +148,10 @@ Atom::Atom(Universe& u, boost::python::dict at){
       Atom_RB.rb_cm.z = extract<double>(at.values()[i]); is_Atom_RB = 1; Atom_RB.is_rb_cm = 1;
       Atom_RB_old.rb_cm.z = Atom_RB.rb_cm.z; is_Atom_RB_old = 1; Atom_RB.is_rb_cm = 1;
     }
+
+    else if(key=="Atom_mull_charge_gross") { Atom_mull_charge_gross = extract<double>(at.values()[i]); is_Atom_mull_charge_gross = 1; }
+    else if(key=="Atom_mull_charge_net") { Atom_mull_charge_net = extract<double>(at.values()[i]); is_Atom_mull_charge_net = 1; }
+
 
 
   }// for i
@@ -166,6 +187,7 @@ Atom& Atom::operator=(const Atom& at){
 void Atom::set(object at){
   set_value(is_Atom_id,      Atom_id,      at,"Atom_id");
 
+  set_value(is_Atom_Z, Atom_Z, at, "Atom_Z");
   set_value(is_Atom_element, Atom_element, at,"Atom_element");
   set_value(is_Atom_atomic_radius,        Atom_atomic_radius,       at,"Atom_atomic_radius");
   set_value(is_Atom_charge,  Atom_charge,  at,"Atom_charge");
@@ -175,6 +197,10 @@ void Atom::set(object at){
   set_value(is_Atom_coordination,   Atom_coordination,   at,"Atom_coordination");
 
   set_value(is_Atom_ff_type, Atom_ff_type, at, "Atom_ff_type");
+  set_value(is_Atom_Zeff, Atom_Zeff, at, "Atom_Zeff");
+
+  set_value(is_Atom_mull_charge_gross, Atom_mull_charge_gross, at, "Atom_mull_charge_gross");
+  set_value(is_Atom_mull_charge_net, Atom_mull_charge_net, at, "Atom_mull_charge_net");
 
 //  set_value(is_Atom_ff_int_type, Atom_ff_int_type, at, "Atom_ff_int_type");
 //  set_value(is_Atom_is_surface_atom, Atom_is_surface_atom, at, "Atom_is_surface_atom");
@@ -197,6 +223,7 @@ void Atom::show_info(){
    if(is_Atom_displ2) {std::cout<<"Atom_displ2 = "<<Atom_displ2<<std::endl; }
 //   if(is_Atom_RB){  Atom_RB.show_info(); }
 
+   if(is_Atom_Z){std::cout<<"Atom_Z = "<<Atom_Z<<std::endl;}
    if(is_Atom_element){std::cout<<"Atom_element = "<<Atom_element<<std::endl;}
    if(is_Atom_atomic_radius) {std::cout<<"Atom_atomic_radius = "<<Atom_atomic_radius<<std::endl;}
    if(is_Atom_charge) {std::cout<<"Atom_charge = "<<Atom_charge<<std::endl;}
@@ -212,6 +239,10 @@ void Atom::show_info(){
    if(is_Atom_min_ring_size){ std::cout<<"Atom_min_ring_size = "<<Atom_min_ring_size<<std::endl;}
 
    if(is_Atom_ff_type) {std::cout<<"Atom_ff_type = "<<Atom_ff_type<<std::endl;}
+   if(is_Atom_Zeff) {std::cout<<"Atom_Zeff = "<<Atom_Zeff<<std::endl;}
+
+   if(is_Atom_mull_charge_gross) {std::cout<<"Atom_mull_charge_gross = "<<Atom_mull_charge_gross<<std::endl;}
+   if(is_Atom_mull_charge_net) {std::cout<<"Atom_mull_charge_net = "<<Atom_mull_charge_net<<std::endl;}
 
 //   if(is_Atom_ff_int_type) {std::cout<<"Atom_ff_int_type = "<<Atom_ff_int_type<<std::endl;}
 //   if(is_Atom_is_surface_atom){std::cout<<"Atom_is_surface_atom = "<<Atom_is_surface_atom<<std::endl;}
@@ -238,6 +269,7 @@ void Atom::save(boost::property_tree::ptree& pt,std::string path){
 
   if(is_Atom_displ2) { ::save(pt,path+".Atom_displ2",Atom_displ2); }
 
+  if(is_Atom_Z){  ::save(pt,path+".Atom_Z",Atom_Z);    }
   if(is_Atom_element){  ::save(pt,path+".Atom_element",Atom_element);    }
   if(is_Atom_atomic_radius){  ::save(pt,path+".Atom_atomic_radius",Atom_atomic_radius);    }
   if(is_Atom_charge){  ::save(pt,path+".Atom_charge",Atom_charge);    }
@@ -248,6 +280,10 @@ void Atom::save(boost::property_tree::ptree& pt,std::string path){
   if(is_Atom_ring_sizes){  ::save(pt,path+".Atom_ring_sizes",Atom_ring_sizes);    }
   if(is_Atom_min_ring_size){  ::save(pt,path+".Atom_min_ring_size",Atom_min_ring_size);    }
   if(is_Atom_ff_type){  ::save(pt,path+".Atom_ff_type",Atom_ff_type);    }
+  if(is_Atom_Zeff){  ::save(pt,path+".Atom_Zeff",Atom_Zeff);    }
+
+  if(is_Atom_mull_charge_gross){  ::save(pt,path+".Atom_mull_charge_gross",Atom_mull_charge_gross);    }
+  if(is_Atom_mull_charge_net){  ::save(pt,path+".Atom_mull_charge_net",Atom_mull_charge_net);    }
 
 }
 
@@ -295,6 +331,7 @@ void Atom::load(boost::property_tree::ptree& pt,std::string path,int& status){
 
   ::load(pt,path+".Atom_displ2",Atom_displ2,is_Atom_displ2); if(is_Atom_displ2==1) { status=1;}
 
+  ::load(pt,path+".Atom_Z",Atom_Z,is_Atom_Z); if(is_Atom_Z==1) { status=1;}
   ::load(pt,path+".Atom_element",Atom_element,is_Atom_element); if(is_Atom_element==1) { status=1;}
   ::load(pt,path+".Atom_atomic_radius",Atom_atomic_radius,is_Atom_atomic_radius); if(is_Atom_atomic_radius==1) { status=1;}
   ::load(pt,path+".Atom_charge",Atom_charge,is_Atom_charge); if(is_Atom_charge==1) { status=1;}
@@ -305,6 +342,10 @@ void Atom::load(boost::property_tree::ptree& pt,std::string path,int& status){
   ::load(pt,path+".Atom_ring_sizes",Atom_ring_sizes,is_Atom_ring_sizes); if(is_Atom_ring_sizes==1) { status=1;}
   ::load(pt,path+".Atom_min_ring_size",Atom_min_ring_size,is_Atom_min_ring_size); if(is_Atom_min_ring_size==1) { status=1;}
   ::load(pt,path+".Atom_ff_type",Atom_ff_type,is_Atom_ff_type); if(is_Atom_ff_type==1) { status=1;}
+  ::load(pt,path+".Atom_Zeff",Atom_Zeff,is_Atom_Zeff); if(is_Atom_Zeff==1) { status=1;}
+
+  ::load(pt,path+".Atom_mull_charge_gross",Atom_mull_charge_gross,is_Atom_mull_charge_gross); if(is_Atom_mull_charge_gross==1) { status=1;}
+  ::load(pt,path+".Atom_mull_charge_net",Atom_mull_charge_net,is_Atom_mull_charge_net); if(is_Atom_mull_charge_net==1) { status=1;}
 
 }
 

@@ -37,6 +37,7 @@ void export_Mol_objects(){
       .def_readwrite("Atom_displ2",&Atom::Atom_displ2)
 
       // Properties
+      .def_readwrite("Atom_Z",&Atom::Atom_Z)
       .def_readwrite("Atom_element",&Atom::Atom_element)
       .def_readwrite("Atom_atomic_radius",&Atom::Atom_atomic_radius)
       .def_readwrite("Atom_charge",&Atom::Atom_charge)
@@ -49,6 +50,7 @@ void export_Mol_objects(){
 
       // FF types
       .def_readwrite("Atom_ff_type",&Atom::Atom_ff_type)
+      .def_readwrite("Atom_Zeff",&Atom::Atom_Zeff)
 //      .def_readwrite("Atom_ff_int_type",&Atom::Atom_ff_int_type)
 //      .def_readwrite("Atom_is_surface_atom",&Atom::Atom_is_surface_atom)
 //      .def_readwrite("Atom_surface_index",&Atom::Atom_surface_index)
