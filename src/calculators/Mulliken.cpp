@@ -70,4 +70,40 @@ void update_Mull_charges(vector<int>& fragment, vector<int>& basis_fo, vector<ve
 }// void update_Mull_charges(vector<double>& Mull_orb_pop_gross, vector<double>& Mull_orb_pop_net, ...
 
 
+
+void update_Mull_charges(vector<int>& ao_to_atom_map, vector<double>& Zeff,
+                         vector<double>& Mull_orb_pop_gross, vector<double>& Mull_orb_pop_net,
+                         vector<double>& Mull_charges_gross, vector<double>& Mull_charges_net){
+// fragment - contains indexes of all nuclei, for which the Mull charges should be updated
+// at_orbitals - contains indexes of AO for each of all nuclei in the system  - size is Nnucl
+// len(Mull_orb_pop_*) = size of fragment basis = len(basis_fo)
+// len(Mull_charges_*) = size of global nuclear array = len(Zeff)
+
+
+  int i, a;
+  int Nat = Zeff.size();  // number of atoms
+
+  for(a=0;a<Nat;a++){  // all atoms 
+
+    Mull_charges_gross[a] = Zeff[a];
+    Mull_charges_net[a] = Zeff[a];
+
+  }// for n
+
+
+  for(i=0;i<ao_to_atom_map.size();i++){  // O(AOs)
+
+    a = ao_to_atom_map[i]; // index of atom on which i-th AO is located
+
+    Mull_charges_gross[a] -= Mull_orb_pop_gross[i];
+    Mull_charges_net[a] -= Mull_orb_pop_net[i];
+
+  }// for i
+
+
+}// void update_Mull_charges(vector<double>& Mull_orb_pop_gross, vector<double>& Mull_orb_pop_net, ...
+
+
+
+
 }// namespace libcalculators

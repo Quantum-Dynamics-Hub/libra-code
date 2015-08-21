@@ -8,6 +8,7 @@
 #include "Annihilate.h"
 #include "Density_Matrix.h"
 #include "Excitations.h"
+#include "Mulliken.h"
 
 
 namespace libcalculators{
