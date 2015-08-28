@@ -1,3 +1,14 @@
+/*********************************************************************************
+* Copyright (C) 2015 Alexey V. Akimov
+*
+* This file is distributed under the terms of the GNU General Public License
+* as published by the Free Software Foundation, either version 2 of
+* the License, or (at your option) any later version.
+* See the file LICENSE in the root directory of this distribution
+* or <http://www.gnu.org/licenses/>.
+*
+*********************************************************************************/
+
 #ifndef MATRIX3x3_H
 #define MATRIX3x3_H
 
@@ -270,6 +281,7 @@ class MATRIX3x3{
 };
 
 typedef std::vector<MATRIX3x3> MATRIX3x3List;
+typedef std::vector<vector<MATRIX3x3> > MATRIX3x3Map;
 
 //-------- IO functions --------
 void set_value(int& defined, MATRIX3x3& value, boost::python::object obj, std::string attrName);

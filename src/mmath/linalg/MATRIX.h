@@ -1,3 +1,14 @@
+/*********************************************************************************
+* Copyright (C) 2015 Alexey V. Akimov
+*
+* This file is distributed under the terms of the GNU General Public License
+* as published by the Free Software Foundation, either version 2 of
+* the License, or (at your option) any later version.
+* See the file LICENSE in the root directory of this distribution
+* or <http://www.gnu.org/licenses/>.
+*
+*********************************************************************************/
+
 #ifndef MATRIX_H
 #define MATRIX_H
 
@@ -166,6 +177,7 @@ void pop_submatrix(MATRIX*,MATRIX*,vector<int>&);
 void push_submatrix(MATRIX*,MATRIX*,vector<int>&);
 
 typedef std::vector<MATRIX> MATRIXList;
+typedef std::vector<vector<MATRIX> > MATRIXMap;
 
 //-------- IO functions --------
 void set_value(int& defined, MATRIX& value, boost::python::object obj, std::string attrName);

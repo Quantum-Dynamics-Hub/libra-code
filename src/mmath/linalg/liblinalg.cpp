@@ -1,3 +1,14 @@
+/*********************************************************************************
+* Copyright (C) 2015 Alexey V. Akimov
+*
+* This file is distributed under the terms of the GNU General Public License
+* as published by the Free Software Foundation, either version 2 of
+* the License, or (at your option) any later version.
+* See the file LICENSE in the root directory of this distribution
+* or <http://www.gnu.org/licenses/>.
+*
+*********************************************************************************/
+
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "liblinalg.h"
@@ -36,6 +47,24 @@ void export_linalg_objects(){
   class_< complexList >("complexList")
       .def(vector_indexing_suite< complexList >())
   ;
+
+
+  class_< intMap >("intMap")
+      .def(vector_indexing_suite< intMap >())
+  ;
+
+  class_< floatMap >("floatMap")
+      .def(vector_indexing_suite< floatMap >())
+  ;
+
+  class_< doubleMap >("doubleMap")
+      .def(vector_indexing_suite< doubleMap >())
+  ;
+
+  class_< complexMap >("complexMap")
+      .def(vector_indexing_suite< complexMap >())
+  ;
+
 
 
 
@@ -109,6 +138,11 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
   class_< VECTORList >("VECTORList")
       .def(vector_indexing_suite< VECTORList >())
   ;
+
+  class_< VECTORMap >("VECTORMap")
+      .def(vector_indexing_suite< VECTORMap >())
+  ;
+
 
 
 
@@ -188,6 +222,11 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
       .def(vector_indexing_suite< MATRIXList >())
   ;
 
+  class_< MATRIXMap >("MATRIXMap")
+      .def(vector_indexing_suite< MATRIXMap >())
+  ;
+
+
 
   class_<MATRIX3x3>("MATRIX3x3",init<>())      
       .def(init<const VECTOR&, const VECTOR&, const VECTOR&>())
@@ -223,6 +262,11 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
   class_< MATRIX3x3List >("MATRIX3x3List")
       .def(vector_indexing_suite< MATRIX3x3List >())
   ;
+
+  class_< MATRIX3x3Map >("MATRIX3x3Map")
+      .def(vector_indexing_suite< MATRIX3x3Map >())
+  ;
+
 
 
   class_<CMATRIX>("CMATRIX",init<>())      
@@ -292,6 +336,11 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
       .def(vector_indexing_suite< CMATRIXList >())
   ;
 
+  class_< CMATRIXMap >("CMATRIXMap")
+      .def(vector_indexing_suite< CMATRIXMap >())
+  ;
+
+
 
 
 
@@ -317,6 +366,11 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
   class_< QUATERNIONList >("QUATERNIONList")
       .def(vector_indexing_suite< QUATERNIONList >())
   ;
+
+  class_< QUATERNIONMap >("QUATERNIONMap")
+      .def(vector_indexing_suite< QUATERNIONMap >())
+  ;
+
 
 
 }// export_linalg_objects()

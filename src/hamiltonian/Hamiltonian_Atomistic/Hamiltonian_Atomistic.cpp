@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2014 Alexey V. Akimov
+* Copyright (C) 2015 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -106,6 +106,7 @@ bool Hamiltonian_Atomistic::is_active(Atom& a1, Atom& a2, Atom& a3){
 bool Hamiltonian_Atomistic::is_active(Atom& a1, Atom& a2, Atom& a3, Atom& a4){
   return mm_ham->is_active(a1,a2,a3,a4);
 }
+
 
 void Hamiltonian_Atomistic::set_atom_interactions_for_atoms
 (System& syst,string int_type,vector<Atom>& top_elt,vector<int>& lst1,vector<int>& lst2,ForceField& ff,int verb){

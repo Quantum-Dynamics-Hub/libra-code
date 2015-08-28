@@ -1,3 +1,14 @@
+/*********************************************************************************
+* Copyright (C) 2015 Alexey V. Akimov
+*
+* This file is distributed under the terms of the GNU General Public License
+* as published by the Free Software Foundation, either version 2 of
+* the License, or (at your option) any later version.
+* See the file LICENSE in the root directory of this distribution
+* or <http://www.gnu.org/licenses/>.
+*
+*********************************************************************************/
+
 #ifndef QUATERNION_H
 #define QUATERNION_H
 
@@ -244,6 +255,7 @@ class QUATERNION{
 
 
 typedef std::vector<QUATERNION> QUATERNIONList;
+typedef std::vector<vector<QUATERNION> > QUATERNIONMap;
 
 //-------- IO functions --------
 void set_value(int& defined, QUATERNION& value,  boost::python::object obj, std::string attrName);

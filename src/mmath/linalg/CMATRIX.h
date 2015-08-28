@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2012 Alexey V. Akimov
+* Copyright (C) 2015 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -159,6 +159,8 @@ void inv_cfft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmi
 
 
 typedef std::vector<CMATRIX> CMATRIXList;
+
+typedef std::vector<vector<CMATRIX> > CMATRIXMap;
 
 }//namespace liblinalg
 }// namespace libmmath
