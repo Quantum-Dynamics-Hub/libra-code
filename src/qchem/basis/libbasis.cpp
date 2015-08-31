@@ -40,7 +40,14 @@ void export_basis_objects(){
 
 
   void (*expt_add_basis_ao_v1)
-  (std::string, int, VECTOR&, std::string, int, int, double, double, double, double, double, vector<AO>&, int&) = &add_basis_ao;
+  (std::string Atom_name, VECTOR& R, std::string Atom_shell, int Nzeta, int Nquant,
+  double  IP, double exp1, double exp2, double coeff1, double coeff2, vector<AO>& basis_ao) = &add_basis_ao;
+
+  void (*expt_add_basis_ao_v2)
+  (std::string Atom_name, VECTOR& R, std::string Atom_shell, int Nzeta, int Nquant,
+  double  IP, double exp1, double exp2, double coeff1, double coeff2, boost::python::list basis_ao) = &add_basis_ao;
+
+
 
   int (*expt_num_valence_elec_v1)(int) = &num_valence_elec;
   //int set_basis_STO_3G_DZ(Nuclear&, Model_Parameters&, vector<AO>&, int&, int&);
@@ -61,6 +68,7 @@ void export_basis_objects(){
   def("basis_params_d", expt_basis_params_d_v1);
 
   def("add_basis_ao", expt_add_basis_ao_v1);
+  def("add_basis_ao", expt_add_basis_ao_v2);
   def("num_valence_elec", expt_num_valence_elec_v1);
 
   def("update_overlap_matrix", expt_update_overlap_matrix_v1);

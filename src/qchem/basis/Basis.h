@@ -33,7 +33,15 @@ void basis_params_s(int, vector<double>&, vector<double>&);
 void basis_params_p(int, vector<double>&, vector<double>&);
 void basis_params_d(int, vector<double>&, vector<double>&);
 
-void add_basis_ao(std::string, int, VECTOR&, std::string, int, int, double, double, double, double, double, vector<AO>&, int&);
+void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int Nzeta, int Nquant,
+                  double  IP, double exp1, double exp2, double coeff1, double coeff2,
+                  vector<AO>& basis_ao);
+
+void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int Nzeta, int Nquant,
+                  double  IP, double exp1, double exp2, double coeff1, double coeff2,
+                  boost::python::list basis_ao);
+
+
 
 int num_valence_elec(int);
 //int set_basis_STO_3G_DZ(Nuclear&, Model_Parameters&, vector<AO>&, int&, int&);
