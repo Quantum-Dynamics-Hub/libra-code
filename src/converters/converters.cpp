@@ -81,6 +81,10 @@ void nuclear_to_system(Nuclear& nucl,System& syst){
 }
 
 
+void IndexError() { PyErr_SetString(PyExc_IndexError, "Index out of range"); }
+void KeyError() { PyErr_SetString(PyExc_KeyError, "Key not found"); }
+
+//boost::python::dict map_to_dict(std::map<std::string, double> map_){  return <std::string, double>map_to_dict_templ(map_); }
 
 
 

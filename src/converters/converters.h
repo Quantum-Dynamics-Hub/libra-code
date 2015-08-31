@@ -12,6 +12,8 @@
 #ifndef CONVERTERS_H
 #define CONVERTERS_H
 
+#include <boost/python/suite/indexing/map_indexing_suite.hpp>
+
 #include "../chemobjects/libchemobjects.h"
 #include "../dyn/libdyn.h"
 
@@ -27,6 +29,140 @@ void nuclear_to_system(Nuclear& nucl, System& syst);
 
 void system_to_vector_q(System& syst, vector<double>& q);
 void system_to_vector_p(System& syst, vector<double>& p);
+
+
+/*
+template<class K, class V>
+boost::python::dict map_to_dict_temp(std::map<K, V> map_)
+{
+  typename std::map<K, V>::iterator iter;
+  boost::python::dict dictionary;
+
+  for (iter = map_.begin(); iter != map_.end(); ++iter){
+    dictionary[iter->first] = iter->second;
+  }
+
+  return dictionary;
+
+}
+*/
+
+typedef std::map<std::string, double> StringDoubleMap;
+typedef std::map<std::string, int> StringIntMap;
+typedef std::map<std::string, vector<double> > StringVDoubleMap;
+//typedef std::map<std::string, double> StringIntMap;
+//boost::python::dict map_to_dict(std::map<std::string, double> map_);
+
+
+/// from : https://wiki.python.org/moin/boost.python/StlContainers
+void IndexError();
+void KeyError();
+
+template<class T>
+struct std_item
+{
+    typedef typename T::value_type V;
+    static V& get(T const& x, int i)
+    {
+        if( i<0 ) i+=x.size();
+        if( i>=0 && i<x.size() ) return x[i];
+        IndexError();
+    }
+    static void set(T const& x, int i, V const& v)
+    {
+        if( i<0 ) i+=x.size();
+        if( i>=0 && i<x.size() ) x[i]=v;
+        else IndexError();
+    }
+    static void del(T const& x, int i)
+    {
+        if( i<0 ) i+=x.size();
+        if( i>=0 && i<x.size() ) x.erase(i);
+        else IndexError();
+    }
+    static void add(T const& x, V const& v)
+    {
+        x.push_back(v);
+    }
+
+    static int index(T const& x, V const& v)
+    {
+        int i=0;
+        for(typename T::const_iterator it=x.begin; it!=x.end(); ++it,++i)
+          if( *it == v ) return i;
+        return -1;
+    }
+
+};
+
+//static bool in(T const& x, V const& v)
+//{
+//        return find_eq(x.begin, x.end, v) != x.end();
+//}
+
+
+
+template<class T>
+struct map_item
+{
+    typedef typename T::key_type K;
+    typedef typename T::mapped_type V;
+    static V& get(T const& x, K const& i)
+    {
+        if( x.find(i) != x.end() ) return x[i];
+        KeyError();
+    }
+    static void set(T const& x, K const& i, V const& v)
+    {
+        x[i]=v; // use map autocreation feature
+    }
+    static void del(T const& x, K const& i)
+    {
+        if( x.find(i) != x.end() ) x.erase(i);
+        else KeyError();
+    }
+
+    static int index(T const& x, K const& k)
+    {
+        int i=0;
+        for(typename T::const_iterator it=x.begin; it!=x.end(); ++it,++i)
+          if( it->first == k ) return i;
+        return -1;
+    }
+ 
+    static bool in(T const& x, K const& i)
+    {
+        return x.find(i) != x.end();
+    }
+
+
+};
+
+template<class T>
+static boost::python::list keys(T const& x){
+  boost::python::list t;
+  for(typename T::const_iterator it=x.begin(); it!=x.end(); ++it){  t.append(it->first); }
+
+  return t;
+}
+
+template<class T>
+static boost::python::list values(T const& x){
+  boost::python::list t;
+ 
+  for(typename T::const_iterator it=x.begin(); it!=x.end(); ++it){  t.append(it->second); }
+
+  return t;
+}
+
+template<class T>
+static boost::python::list items(T const& x){
+  boost::python::list t;
+  for(typename T::const_iterator it=x.begin(); it!=x.end(); ++it){  t.append(make_tuple(it->first,it->second)); }
+
+  return t;
+}
+
 
 
 
