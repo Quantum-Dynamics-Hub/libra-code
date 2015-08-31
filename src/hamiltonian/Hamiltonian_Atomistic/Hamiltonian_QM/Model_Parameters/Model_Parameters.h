@@ -37,7 +37,7 @@ class HF_integrals{
   struct data_element{
     int a, b, c, d;
     double J_abcd;
-    double K_adcb;
+    double K_adcb; // !!! no, really - it should be adcb, not abcd here
   };
 
   vector<data_element> data;
@@ -52,7 +52,33 @@ class HF_integrals{
   void set_JK_values(int,int,int,int,double, double);  
   void get_JK_values(int,int,int,int,double&,double&);  
 
+  friend bool operator == (const HF_integrals& m1, const HF_integrals& m2){
+    // Equal
+    int res = 1;
+    if(m1.data.size()!=m2.data.size()){  res = 0; }
+    else{ 
+      for(int i=0;i<m1.data.size();i++){  
+        res *= (m1.data[i].a==m2.data[i].a);  
+        res *= (m1.data[i].b==m2.data[i].b);  
+        res *= (m1.data[i].c==m2.data[i].c);  
+        res *= (m1.data[i].d==m2.data[i].d);  
+        res *= (m1.data[i].J_abcd==m2.data[i].J_abcd);  
+        res *= (m1.data[i].K_adcb==m2.data[i].K_adcb);  
+      }
+    }
+    return  res;  
+  }
+  friend bool operator != (const HF_integrals& m1, const HF_integrals& m2){
+    return  (!(m1==m2));
+  }
+
+
+
 };
+
+typedef std::vector<HF_integrals > HF_integralsList;
+typedef std::vector<vector<HF_integrals> > HF_integralsMap;
+
 
 
 class EHT_K{
@@ -105,6 +131,7 @@ class EHT_K{
   int find_data(std::string,std::string,std::string,std::string); // in PP_data
   int find_data(int, int, int, int); // in PSPS_data
  
+
 
 public:
 
@@ -162,10 +189,73 @@ public:
   double get_C4_value(std::string,std::string,std::string,std::string);
 
 
+  friend bool operator == (const EHT_K& m1, const EHT_K& m2){
+    // Equal
+    int res = 1;
+    if(m1.data.size()!=m2.data.size()){  res = 0; }
+    else{ 
+      for(int i=0;i<m1.data.size();i++){  
+        res *= (m1.data[i].elt1==m2.data[i].elt1);  
+        res *= (m1.data[i].orb_type1==m2.data[i].orb_type1);  
+        res *= (m1.data[i].elt2==m2.data[i].elt2);  
+        res *= (m1.data[i].orb_type2==m2.data[i].orb_type2);  
+
+        res *= (m1.data[i].K_value==m2.data[i].K_value);  
+        res *= (m1.data[i].K1_value==m2.data[i].K1_value);  
+        res *= (m1.data[i].K2_value==m2.data[i].K2_value);  
+        res *= (m1.data[i].K3_value==m2.data[i].K3_value);  
+        res *= (m1.data[i].K4_value==m2.data[i].K4_value);  
+
+        res *= (m1.data[i].C0_value==m2.data[i].C0_value);  
+        res *= (m1.data[i].C1_value==m2.data[i].C1_value);  
+        res *= (m1.data[i].C2_value==m2.data[i].C2_value);  
+        res *= (m1.data[i].C3_value==m2.data[i].C3_value);  
+        res *= (m1.data[i].C4_value==m2.data[i].C4_value);  
+
+      }// for i
+    }// m1.data
+
+    if(m1.pp_data.size()!=m2.pp_data.size()){  res = 0; }
+    else{ 
+      for(int i=0;i<m1.pp_data.size();i++){  
+        res *= (m1.pp_data[i].elt1==m2.pp_data[i].elt1);  
+        res *= (m1.pp_data[i].orb_type1==m2.pp_data[i].orb_type1);  
+
+        res *= (m1.pp_data[i].PPa_value==m2.pp_data[i].PPa_value);  
+        res *= (m1.pp_data[i].PP0_value==m2.pp_data[i].PP0_value);  
+        res *= (m1.pp_data[i].PP1_value==m2.pp_data[i].PP1_value);  
+        res *= (m1.pp_data[i].PP2_value==m2.pp_data[i].PP2_value);  
+
+      }// for i
+    }// m1.pp_data
+
+    if(m1.psps_data.size()!=m2.psps_data.size()){  res = 0; }
+    else{ 
+      for(int i=0;i<m1.psps_data.size();i++){  
+        res *= (m1.psps_data[i].n1==m2.psps_data[i].n1);  
+        res *= (m1.psps_data[i].n2==m2.psps_data[i].n2);  
+        res *= (m1.psps_data[i].n3==m2.psps_data[i].n3);  
+        res *= (m1.psps_data[i].n4==m2.psps_data[i].n4);
+  
+        res *= (m1.psps_data[i].K==m2.psps_data[i].K);  
+
+      }// for i
+    }// m1.pp_data
+
+    return  res;  
+  }
+
+  friend bool operator != (const EHT_K& m1, const EHT_K& m2){
+    return  (!(m1==m2));
+  }
 
 
 
 };
+
+typedef std::vector<EHT_K > EHT_KList;
+typedef std::vector<vector<EHT_K> > EHT_KMap;
+
 
 
 class mEHT_K{
@@ -211,7 +301,42 @@ public:
   inline double get_C4_value(int I,int J){ return eht_C4[I*size+J]; }
 
 
+  friend bool operator == (const mEHT_K& m1, const mEHT_K& m2){
+    // Equal
+    int res = m1.size==m2.size;
+
+    res *= (m1.eht_K==m2.eht_K);  
+    res *= (m1.eht_K1==m2.eht_K1);  
+    res *= (m1.eht_K2==m2.eht_K2);  
+    res *= (m1.eht_K3==m2.eht_K3);  
+    res *= (m1.eht_K4==m2.eht_K4);  
+
+    res *= (m1.eht_C0==m2.eht_C0);  
+    res *= (m1.eht_C1==m2.eht_C1);  
+    res *= (m1.eht_C2==m2.eht_C2);  
+    res *= (m1.eht_C3==m2.eht_C3);  
+    res *= (m1.eht_C4==m2.eht_C4);  
+
+    res *= (m1.eht_PPa==m2.eht_PPa);  
+    res *= (m1.eht_PP0==m2.eht_PP0);  
+    res *= (m1.eht_PP1==m2.eht_PP1);  
+    res *= (m1.eht_PP2==m2.eht_PP2);  
+
+
+    return  res;  
+  }
+
+  friend bool operator != (const mEHT_K& m1, const mEHT_K& m2){
+    return  (!(m1==m2));
+  }
+
+
+
 };
+
+typedef std::vector<mEHT_K > mEHT_KList;
+typedef std::vector<vector<mEHT_K> > mEHT_KMap;
+
 
 
 class Element{
@@ -265,7 +390,48 @@ class Element{
 
   void set_mass(double m_){ mass = m_; }
 
+
+
+  friend bool operator == (const Element& m1, const Element& m2){
+    // Equal
+    int res = m1.elt_name==m2.elt_name;
+
+    res *= (m1.Z==m2.Z);  
+    res *= (m1.PQN==m2.PQN);  
+    res *= (m1.Nval==m2.Nval);  
+    res *= (m1.Zeff==m2.Zeff);  
+    res *= (m1.mass==m2.mass);  
+
+    res *= (m1.IP==m2.IP);  
+    res *= (m1.EA==m2.EA);  
+    res *= (m1.Nquant==m2.Nquant);  
+    res *= (m1.Nzeta==m2.Nzeta);  
+    res *= (m1.zetas==m2.zetas);  
+    res *= (m1.coeffs==m2.coeffs);  
+
+    res *= (m1.J_param1==m2.J_param1);  
+    res *= (m1.J_param2==m2.J_param2);  
+    res *= (m1.J_param3==m2.J_param3);  
+    res *= (m1.J_param4==m2.J_param4);  
+
+    res *= (m1.G1==m2.G1);  
+    res *= (m1.F2==m2.F2);  
+    res *= (m1.beta0==m2.beta0);  
+    res *= (m1.Zeta==m2.Zeta);  
+
+
+    return  res;  
+  }
+
+  friend bool operator != (const Element& m1, const Element& m2){
+    return  (!(m1==m2));
+  }
+
+
 };
+
+typedef std::vector<Element > ElementList;
+typedef std::vector<vector<Element> > ElementMap;
 
 
 
@@ -300,8 +466,41 @@ class OrbParams{
      if(coeffs.size()>0) { coeffs.clear();}
   }
 
+  friend bool operator == (const OrbParams& m1, const OrbParams& m2){
+    // Equal
+    int res = 1;
+
+    res *= (m1.IP==m2.IP);  
+    res *= (m1.EA==m2.EA);  
+    res *= (m1.Nquant==m2.Nquant);  
+    res *= (m1.Nzeta==m2.Nzeta);  
+    res *= (m1.zetas==m2.zetas);  
+    res *= (m1.coeffs==m2.coeffs);  
+
+    res *= (m1.J_param1==m2.J_param1);  
+    res *= (m1.J_param2==m2.J_param2);  
+    res *= (m1.J_param3==m2.J_param3);  
+    res *= (m1.J_param4==m2.J_param4);  
+
+    res *= (m1.G1==m2.G1);  
+    res *= (m1.F2==m2.F2);  
+    res *= (m1.beta0==m2.beta0);  
+
+
+    return  res;  
+  }
+
+  friend bool operator != (const OrbParams& m1, const OrbParams& m2){
+    return  (!(m1==m2));
+  }
+
+
 
 };
+
+typedef std::vector<OrbParams> OrbParamsList;
+typedef std::vector<vector<OrbParams> > OrbParamsMap;
+
 
 
 

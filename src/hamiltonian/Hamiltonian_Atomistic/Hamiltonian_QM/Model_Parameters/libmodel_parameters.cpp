@@ -12,6 +12,7 @@
 #include <memory> // for std::auto_ptr<>
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/python/suite/indexing/map_indexing_suite.hpp>
 
 #include "libmodel_parameters.h"
 
@@ -31,6 +32,14 @@ void export_Model_Parameters_objects(){
       .def("get_JK_values", &HF_integrals::get_JK_values)
 
   ;
+
+  class_< HF_integralsList >("HF_integralsList")
+      .def(vector_indexing_suite< HF_integralsList >())
+  ;
+  class_< HF_integralsMap >("HF_integralsMap")
+      .def(vector_indexing_suite< HF_integralsMap >())
+  ;
+
 
   class_<EHT_K>("EHT_K",init<>())
       .def("set_PSPS_value", &EHT_K::set_PSPS_value)
@@ -65,6 +74,16 @@ void export_Model_Parameters_objects(){
       .def("get_C4_value", &EHT_K::get_C4_value)
 
   ;
+
+
+  class_< EHT_KList >("EHT_KList")
+      .def(vector_indexing_suite< EHT_KList >())
+  ;
+  class_< EHT_KMap >("EHT_KMap")
+      .def(vector_indexing_suite< EHT_KMap >())
+  ;
+
+
 
   class_<mEHT_K>("mEHT_K",init<>())
 
@@ -105,6 +124,15 @@ void export_Model_Parameters_objects(){
   ;
 
 
+  class_< mEHT_KList >("mEHT_KList")
+      .def(vector_indexing_suite< mEHT_KList >())
+  ;
+  class_< mEHT_KMap >("mEHT_KMap")
+      .def(vector_indexing_suite< mEHT_KMap >())
+  ;
+
+
+
   class_<Element>("Element",init<>())
 //      .def(_s)
 //  void _set(std::string en,int z){ elt_name = en; Z = z;  }
@@ -142,109 +170,94 @@ void export_Model_Parameters_objects(){
   ;
 
 
+  class_< ElementList >("ElementList")
+      .def(vector_indexing_suite< ElementList >())
+  ;
+  class_< ElementMap >("ElementMap")
+      .def(vector_indexing_suite< ElementMap >())
+  ;
+
+  class_< map<std::string,Element> >("StringElementMap")
+      .def(map_indexing_suite<map<std::string,Element> >())
+  ;
 
 
+  class_<OrbParams>("OrbParams",init<>())
 
-  class_<Control_Parameters>("Control_Parameters",init<>())
-      .def("__copy__", &generic__copy__<Control_Parameters>)
-      .def("__deepcopy__", &generic__deepcopy__<Control_Parameters>)
+      .def_readwrite("IP",   &OrbParams::IP)
+      .def_readwrite("EA",   &OrbParams::EA)
+      .def_readwrite("Nquant",   &OrbParams::Nquant)
+      .def_readwrite("Nzeta",   &OrbParams::Nzeta)
+      .def_readwrite("coeffs",   &OrbParams::zetas)
 
-      .def_readwrite("runtype", &Control_Parameters::runtype)
-      .def_readwrite("hamiltonian", &Control_Parameters::hamiltonian)
-      .def_readwrite("spin_method", &Control_Parameters::spin_method)
-      .def_readwrite("DF", &Control_Parameters::DF)
+      .def_readwrite("J_param1",   &OrbParams::J_param1)
+      .def_readwrite("J_param2",   &OrbParams::J_param2)
+      .def_readwrite("J_param3",   &OrbParams::J_param3)
+      .def_readwrite("J_param4",   &OrbParams::J_param4)
 
-      .def_readwrite("guess_type", &Control_Parameters::guess_type)
-
-      .def_readwrite("scf_algo", &Control_Parameters::scf_algo)
-      .def_readwrite("use_disk", &Control_Parameters::use_disk)
-      .def_readwrite("use_rosh", &Control_Parameters::use_rosh)
-      .def_readwrite("do_annihilate", &Control_Parameters::do_annihilate)
-      .def_readwrite("pop_opt", &Control_Parameters::pop_opt)
-      .def_readwrite("use_diis", &Control_Parameters::use_diis)
-      .def_readwrite("diis_max", &Control_Parameters::diis_max)
-      .def_readwrite("diis_start_iter", &Control_Parameters::diis_start_iter)
-      .def_readwrite("use_level_shift", &Control_Parameters::use_level_shift)
-      .def_readwrite("shift_magnitude", &Control_Parameters::shift_magnitude)
-      .def_readwrite("use_damping", &Control_Parameters::use_damping)
-      .def_readwrite("damping_start", &Control_Parameters::damping_start)
-      .def_readwrite("damping_const", &Control_Parameters::damping_const)
-      .def_readwrite("etol", &Control_Parameters::etol)
-      .def_readwrite("den_tol", &Control_Parameters::den_tol)
-      .def_readwrite("Niter", &Control_Parameters::Niter)
-      .def_readwrite("degen_tol", &Control_Parameters::degen_tol)
-
-      .def_readwrite("parameters", &Control_Parameters::parameters)
-      .def_readwrite("eht_params_format", &Control_Parameters::eht_params_format)
-      .def_readwrite("eht_formula", &Control_Parameters::eht_formula)
-      .def_readwrite("eht_sce_formula", &Control_Parameters::eht_sce_formula)
-      .def_readwrite("eht_fock_opt", &Control_Parameters::eht_fock_opt)
-      .def_readwrite("eht_electrostatics", &Control_Parameters::eht_electrostatics)
-
-
-      .def_readwrite("compute_vertical_ip", &Control_Parameters::compute_vertical_ip)
-      .def_readwrite("compute_vertical_ea", &Control_Parameters::compute_vertical_ea)
-
-      .def_readwrite("md_dt", &Control_Parameters::md_dt)
-      .def_readwrite("md_nsteps", &Control_Parameters::md_nsteps)
-
-      .def_readwrite("opt_dt", &Control_Parameters::opt_dt)
-      .def_readwrite("opt_nsteps", &Control_Parameters::opt_nsteps)
-
-      .def_readwrite("compute_dipole", &Control_Parameters::compute_dipole)
-
-      .def_readwrite("compute_dos", &Control_Parameters::compute_dos)
-      .def_readwrite("dos_opt", &Control_Parameters::dos_opt)
-      .def_readwrite("dos_prefix", &Control_Parameters::dos_prefix)
-
-      .def_readwrite("compute_charge_density", &Control_Parameters::compute_charge_density)
-      .def_readwrite("nx_grid", &Control_Parameters::nx_grid)
-      .def_readwrite("ny_grid", &Control_Parameters::ny_grid)
-      .def_readwrite("nz_grid", &Control_Parameters::nz_grid)
-      .def_readwrite("charge_density_prefix", &Control_Parameters::charge_density_prefix)
-      .def_readwrite("orbs", &Control_Parameters::orbs)
-
-      .def_readwrite("nac_md_trajectory_filename", &Control_Parameters::nac_md_trajectory_filename)
-      .def_readwrite("nac_prefix", &Control_Parameters::nac_prefix)
-      .def_readwrite("nac_min_frame", &Control_Parameters::nac_min_frame)
-      .def_readwrite("nac_max_frame", &Control_Parameters::nac_max_frame)
-      .def_readwrite("nac_min_orbs", &Control_Parameters::nac_min_orbs)
-      .def_readwrite("nac_max_orbs", &Control_Parameters::nac_max_orbs)
-      .def_readwrite("nac_dt", &Control_Parameters::nac_dt)
-      .def_readwrite("nac_opt", &Control_Parameters::nac_opt)
-
-      .def_readwrite("scan_mov_at", &Control_Parameters::scan_mov_at)
-      .def_readwrite("scan_ref_at", &Control_Parameters::scan_ref_at)
-      .def_readwrite("scan_dir", &Control_Parameters::scan_dir)
-      .def_readwrite("scan_dxmin", &Control_Parameters::scan_dxmin)
-      .def_readwrite("scan_dxmax", &Control_Parameters::scan_dxmax)
-      .def_readwrite("scan_dx", &Control_Parameters::scan_dx)
-
-
-      .def_readwrite("compute_excitations", &Control_Parameters::compute_excitations)
-      .def_readwrite("num_excitations", &Control_Parameters::num_excitations)
-      .def_readwrite("excitations_opt", &Control_Parameters::excitations_opt)
-      .def_readwrite("spectral_width", &Control_Parameters::spectral_width)
-      .def_readwrite("excitations", &Control_Parameters::excitations)  
-
-      .def_readwrite("t1", &Control_Parameters::t1)
-      .def_readwrite("t2", &Control_Parameters::t2)
-      .def_readwrite("t3", &Control_Parameters::t3)
-      .def_readwrite("x_period", &Control_Parameters::x_period)
-      .def_readwrite("y_period", &Control_Parameters::y_period)
-      .def_readwrite("z_period", &Control_Parameters::z_period)
-
-      .def_readwrite("Natoms", &Control_Parameters::Natoms)
-      .def_readwrite("charge", &Control_Parameters::charge)
-      .def_readwrite("spin", &Control_Parameters::spin)
-      .def_readwrite("coordinates", &Control_Parameters::coordinates)
-
-      .def_readwrite("fragments", &Control_Parameters::fragments)
-      .def_readwrite("frag_size", &Control_Parameters::frag_size)
-      .def_readwrite("frag_name", &Control_Parameters::frag_name)
-      .def_readwrite("frag_charge", &Control_Parameters::frag_charge)
+      .def_readwrite("G1",   &OrbParams::G1)
+      .def_readwrite("F2",   &OrbParams::F2)
+      .def_readwrite("beta0",   &OrbParams::beta0)
 
   ;
+
+  class_< OrbParamsList >("OrbParamsList")
+      .def(vector_indexing_suite< OrbParamsList >())
+  ;
+  class_< OrbParamsMap >("OrbParamsMap")
+      .def(vector_indexing_suite< OrbParamsMap >())
+  ;
+
+
+
+
+  class_<Model_Parameters>("Model_Parameters",init<>())
+      .def("__copy__", &generic__copy__<Model_Parameters>)
+      .def("__deepcopy__", &generic__deepcopy__<Model_Parameters>)
+
+      .def_readwrite("PT", &Model_Parameters::PT)
+      .def_readwrite("orb_params", &Model_Parameters::orb_params)
+      .def_readwrite("eht_k", &Model_Parameters::eht_k)
+      .def_readwrite("meht_k", &Model_Parameters::meht_k)
+      .def_readwrite("hf_int", &Model_Parameters::hf_int)
+
+      .def("set_PT_mapping", &Model_Parameters::set_PT_mapping)
+
+  ;
+
+
+
+  void (*expt_set_parameters_eht_v1)
+  (Control_Parameters&, Model_Parameters&) = &set_parameters_eht;
+
+  void (*expt_set_parameters_hf_v1)
+  (Control_Parameters&, Model_Parameters&, vector<AO>&) = &set_parameters_hf;
+
+  void (*expt_set_parameters_indo_v1)
+  (Control_Parameters&, Model_Parameters&) = &set_parameters_indo;
+
+  void (*expt_set_parameters_geht1_v1)
+  (Control_Parameters& prms, Model_Parameters& modprms) = &set_parameters_geht1; 
+
+  void (*expt_set_parameters_geht2_v1)
+  (Control_Parameters& prms, Model_Parameters& modprms) = &set_parameters_geht2;
+
+  void (*expt_set_parameters_eht_mapping_v1)
+  (Model_Parameters& modprms, const vector<AO>& basis_ao) = &set_parameters_eht_mapping;
+
+  void (*expt_set_parameters_eht_mapping1_v1)
+  (Model_Parameters& modprms, int nat, vector<std::string>& mol_at_types) = &set_parameters_eht_mapping1;
+
+
+  def("set_parameters_eht", expt_set_parameters_eht_v1);
+  def("set_parameters_hf", expt_set_parameters_hf_v1);
+  def("set_parameters_indo", expt_set_parameters_indo_v1);
+  def("set_parameters_geht1", expt_set_parameters_geht1_v1);
+  def("set_parameters_geht2", expt_set_parameters_geht2_v1);
+
+  def("set_parameters_eht_mapping", expt_set_parameters_eht_mapping_v1);
+  def("set_parameters_eht_mapping1", expt_set_parameters_eht_mapping1_v1);
+
 
 
 }

@@ -143,6 +143,12 @@ void export_Control_Parameters_objects(){
 
   ;
 
+  void (*expt_get_parameters_from_file_v1)
+  (std::string, Control_Parameters&) = &get_parameters_from_file;
+
+
+  def("get_parameters_from_file",expt_get_parameters_from_file_v1);
+
 
 }
 
