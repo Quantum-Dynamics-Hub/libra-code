@@ -33,7 +33,7 @@ namespace libhamiltonian_qm{
 
 
 /// Implementation of the copy constructor of the class Electronic
-Electronic::Electronic(const Electronic& obj){
+Electronic_Structure::Electronic_Structure(const Electronic_Structure& obj){
 
     Norb = obj.Norb;
     Nocc_alp = obj.Nocc_alp;
@@ -68,7 +68,7 @@ Electronic::Electronic(const Electronic& obj){
 }
 
 /// Implementation of the constructor from the address pointing to an existing object of class Electronic
-Electronic::Electronic(Electronic* obj){
+Electronic_Structure::Electronic_Structure(Electronic_Structure* obj){
 
     Norb = obj->Norb;
     Nocc_alp = obj->Nocc_alp;
@@ -102,12 +102,117 @@ Electronic::Electronic(Electronic* obj){
 }
 
 
+void Electronic_Structure::check_matrix_dimensionas(MATRIX* A, MATRIX& B, std::string A_name, std::string B_name, std::string func_name){
+  if(B.num_of_cols != A->num_of_cols){
+    cout<<"In "<<func_name<<"\n";
+    cout<<"Number of cols of matrix "<<A_name<<" is not equal to the number of cols of matrix "<<B_name<<"\n";
+    exit(0);
+  }
+  if(B.num_of_rows != A->num_of_rows){
+    cout<<"In "<<func_name<<"\n";
+    cout<<"Number of rows of matrix "<<A_name<<" is not equal to the number of rows of matrix "<<B_name<<"\n";
+    exit(0);
+  }
+
+}
+
+void Electronic_Structure::set_P_alp(MATRIX& x_){
+  check_matrix_dimensionas(P_alp, x_, "Electronic::P_alp", "x_", "Electronic::set_P_alp");
+  *P_alp = x_;
+}
+void Electronic_Structure::set_P_bet(MATRIX& x_){
+  check_matrix_dimensionas(P_bet, x_, "Electronic::P_bet", "x_", "Electronic::set_P_bet");
+  *P_bet = x_;
+}
+void Electronic_Structure::set_P(MATRIX& x_){
+  check_matrix_dimensionas(P, x_, "Electronic::P", "x_", "Electronic::set_P");
+  *P = x_;
+}
+MATRIX Electronic_Structure::get_P_alp(){  return *P_alp; }
+MATRIX Electronic_Structure::get_P_bet(){  return *P_bet; }
+MATRIX Electronic_Structure::get_P(){  return *P; }
+
+
+void Electronic_Structure::set_C_alp(MATRIX& x_){
+  check_matrix_dimensionas(C_alp, x_, "Electronic::C_alp", "x_", "Electronic::set_C_alp");
+  *C_alp = x_;
+}
+void Electronic_Structure::set_C_bet(MATRIX& x_){
+  check_matrix_dimensionas(C_bet, x_, "Electronic::C_bet", "x_", "Electronic::set_C_bet");
+  *C_bet = x_;
+}
+MATRIX Electronic_Structure::get_C_alp(){  return *C_alp; }
+MATRIX Electronic_Structure::get_C_bet(){  return *C_bet; }
+
+
+void Electronic_Structure::set_Sao(MATRIX& x_){
+  check_matrix_dimensionas(Sao, x_, "Electronic::Sao", "x_", "Electronic::set_Sao");
+  *Sao = x_;
+}
+void Electronic_Structure::set_Hao(MATRIX& x_){
+  check_matrix_dimensionas(Hao, x_, "Electronic::Hao", "x_", "Electronic::set_Hao");
+  *Hao = x_;
+}
+MATRIX Electronic_Structure::get_Sao(){  return *Sao; }
+MATRIX Electronic_Structure::get_Hao(){  return *Hao; }
+
+
+void Electronic_Structure::set_Fao_alp(MATRIX& x_){
+  check_matrix_dimensionas(Fao_alp, x_, "Electronic::Fao_alp", "x_", "Electronic::set_Fao_alp");
+  *Fao_alp = x_;
+}
+void Electronic_Structure::set_Fao_bet(MATRIX& x_){
+  check_matrix_dimensionas(Fao_bet, x_, "Electronic::Fao_bet", "x_", "Electronic::set_Fao_bet");
+  *Fao_bet = x_;
+}
+MATRIX Electronic_Structure::get_Fao_alp(){  return *Fao_alp; }
+MATRIX Electronic_Structure::get_Fao_bet(){  return *Fao_bet; }
+
+
+
+void Electronic_Structure::set_dFao_alp_dP_alp(MATRIX& x_){
+  check_matrix_dimensionas(dFao_alp_dP_alp, x_, "Electronic::dFao_alp_dP_alp", "x_", "Electronic::set_dFao_alp_dP_alp");
+  *dFao_alp_dP_alp = x_;
+}
+void Electronic_Structure::set_dFao_alp_dP_bet(MATRIX& x_){
+  check_matrix_dimensionas(dFao_alp_dP_bet, x_, "Electronic::dFao_alp_dP_bet", "x_", "Electronic::set_dFao_alp_dP_bet");
+  *dFao_alp_dP_bet = x_;
+}
+void Electronic_Structure::set_dFao_bet_dP_alp(MATRIX& x_){
+  check_matrix_dimensionas(dFao_bet_dP_alp, x_, "Electronic::dFao_bet_dP_alp", "x_", "Electronic::set_dFao_bet_dP_alp");
+  *dFao_bet_dP_alp = x_;
+}
+void Electronic_Structure::set_dFao_bet_dP_bet(MATRIX& x_){
+  check_matrix_dimensionas(dFao_bet_dP_bet, x_, "Electronic::dFao_bet_dP_bet", "x_", "Electronic::set_dFao_bet_dP_bet");
+  *dFao_bet_dP_bet = x_;
+}
+MATRIX Electronic_Structure::get_dFao_alp_dP_alp(){  return *dFao_alp_dP_alp; }
+MATRIX Electronic_Structure::get_dFao_alp_dP_bet(){  return *dFao_alp_dP_bet; }
+MATRIX Electronic_Structure::get_dFao_bet_dP_alp(){  return *dFao_bet_dP_alp; }
+MATRIX Electronic_Structure::get_dFao_bet_dP_bet(){  return *dFao_bet_dP_bet; }
+
+
+
+void Electronic_Structure::set_E_alp(MATRIX& x_){
+  check_matrix_dimensionas(E_alp, x_, "Electronic::E_alp", "x_", "Electronic::set_E_alp");
+  *E_alp = x_;
+}
+void Electronic_Structure::set_E_bet(MATRIX& x_){
+  check_matrix_dimensionas(E_bet, x_, "Electronic::E_bet", "x_", "Electronic::set_E_bet");
+  *E_bet = x_;
+}
+MATRIX Electronic_Structure::get_E_alp(){  return *E_alp; }
+MATRIX Electronic_Structure::get_E_bet(){  return *E_bet; }
+
+
+
+
 /// Initialization of central numbers describing electronic variables\n
 /// The function computes the number of electrons on a given set of atoms (fragment)\n
 /// Then it determines the number of alpha and beta electrons \n
 /// Then it sets the occupations numbers of alpha and beta orbitals to 0 or 1, according to aufbau principle\n
 /// charge = total charge on given fragment
-int init_numbers(Electronic& el, System& syst, vector<AO>& basis_ao, Model_Parameters& modprms, double charge){
+int init_numbers(Electronic_Structure& el, System& syst, vector<AO>& basis_ao, Model_Parameters& modprms, double charge){
 
   int i;
 

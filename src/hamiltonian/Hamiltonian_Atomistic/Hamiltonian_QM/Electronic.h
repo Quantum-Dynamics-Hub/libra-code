@@ -48,13 +48,15 @@ namespace libhamiltonian_qm{
 
 
 /// \brief This class implements the container for information about electronic variables
-class Electronic{
+class Electronic_Structure{
+
+  void check_matrix_dimensionas(MATRIX* A, MATRIX& B, std::string A_name, std::string B_name, std::string func_name);
 
   public:
 
   //-------------- Constructors --------------
   /// Default constructor
-  Electronic(){
+  Electronic_Structure(){
     Norb  = 0;
     Nocc_alp = Nocc_bet = 0;
     Nelec = 0.0;
@@ -67,7 +69,7 @@ class Electronic{
     E_alp = NULL; E_bet = NULL;
   }
   /// Constructor with one argument
-  Electronic(int n){
+  Electronic_Structure(int n){
     Norb = n;
     Nocc_alp = Nocc_bet = 0;
     Nelec = 0.0;
@@ -91,11 +93,11 @@ class Electronic{
 
   }
 
-  Electronic(const Electronic&);   ///< Copy constructor;
-  Electronic(Electronic*);         ///< Constructor from the address of the other existing object
+  Electronic_Structure(const Electronic_Structure&);   ///< Copy constructor;
+  Electronic_Structure(Electronic_Structure*);         ///< Constructor from the address of the other existing object
   
   /// Destructor
-  ~Electronic(){
+  ~Electronic_Structure(){
     delete P_alp;   delete P_bet;    delete P;        
     delete C_alp;   delete C_bet;
     delete Sao;     delete Hao;
@@ -143,31 +145,65 @@ class Electronic{
   MATRIX* P_alp;                        ///< Density matrix, alpha-channel
   MATRIX* P_bet;                        ///< Density matrix, beta-channel
   MATRIX* P;                            ///< Density matrix, total
+  void set_P_alp(MATRIX& x_);
+  void set_P_bet(MATRIX& x_);
+  void set_P(MATRIX& x_);
+  MATRIX get_P_alp();
+  MATRIX get_P_bet();
+  MATRIX get_P();
+
 
   // Wfc coefficients
   MATRIX* C_alp;                        ///< \brief MO coefficients, alpha-channel
                                         ///< C_alp[k][i] - is the i-th MO (column) k-th AO (row)
   MATRIX* C_bet;                        ///< \brief MO coefficients, beta-channel                     
                                         ///< C_bet[k][i] - is the i-th MO (column) k-th AO (row)
+  void set_C_alp(MATRIX& x_);
+  void set_C_bet(MATRIX& x_);
+  MATRIX get_C_alp();
+  MATRIX get_C_bet();
+
   // Overlaps
   MATRIX* Sao;                          ///< Overlap in AO basis
+  void set_Sao(MATRIX& x_);
+  MATRIX get_Sao();
 
   // Core Hamiltonian
   MATRIX* Hao;                          ///< Core Hamiltonian in AO basis
+  void set_Hao(MATRIX& x_);
+  MATRIX get_Hao();
 
   // Fock matrices
   MATRIX* Fao_alp;                      ///< Fock matrix in AO basis, alpha-channel
   MATRIX* Fao_bet;                      ///< Fock matrix in AO basis, beta-channel
+  void set_Fao_alp(MATRIX& x_);
+  void set_Fao_bet(MATRIX& x_);
+  MATRIX get_Fao_alp();
+  MATRIX get_Fao_bet();
+
 
   // Corrections:
   MATRIX* dFao_alp_dP_alp;              ///< derivative of the Fock matrix (alpha component) w.r.t. alpha component of density matrix
   MATRIX* dFao_alp_dP_bet;              ///< derivative of the Fock matrix (alpha component) w.r.t. beta component of density matrix
   MATRIX* dFao_bet_dP_alp;              ///< derivative of the Fock matrix (beta component) w.r.t. alpha component of density matrix
   MATRIX* dFao_bet_dP_bet;              ///< derivative of the Fock matrix (beta component) w.r.t. beta component of density matrix
+  void set_dFao_alp_dP_alp(MATRIX& x_);
+  void set_dFao_alp_dP_bet(MATRIX& x_);
+  void set_dFao_bet_dP_alp(MATRIX& x_);
+  void set_dFao_bet_dP_bet(MATRIX& x_);
+  MATRIX get_dFao_alp_dP_alp();
+  MATRIX get_dFao_alp_dP_bet();
+  MATRIX get_dFao_bet_dP_alp();
+  MATRIX get_dFao_bet_dP_bet();
+
 
   // Eigenvalues
   MATRIX* E_alp;                        ///< MO energies, alpha-channel
   MATRIX* E_bet;                        ///< MO energies, beta-channel
+  void set_E_alp(MATRIX& x_);
+  void set_E_bet(MATRIX& x_);
+  MATRIX get_E_alp();
+  MATRIX get_E_bet();
 
   vector<double> Mull_orb_pop_net;      ///< Net Mulliken populations for all (molecular) orbitals
   vector<double> Mull_orb_pop_gross;    ///< Gross Mulliken populations for all (molecular) orbitals
@@ -175,7 +211,7 @@ class Electronic{
 };
 
 // Electronic.cpp
-int init_numbers(vector<int>&,Electronic*, vector<AO>&, Model_Parameters&, System&, double);
+int init_numbers(vector<int>&,Electronic_Structure*, vector<AO>&, Model_Parameters&, System&, double);
 
 //int init_electronic_subsystems(vector<vector<int> >&,vector<vector<int> >&, vector<vector<int> >&, vector<Electronic*>&,
 //                               vector<AO>&,Model_Parameters&, Nuclear&,vector<double>&);

@@ -14,6 +14,7 @@
 
 #include "molint/libmolint.h"
 #include "qobjects/libqobjects.h"
+#include "basis/libbasis.h"
 
 namespace libqchem{
 

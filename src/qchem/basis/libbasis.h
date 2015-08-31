@@ -9,22 +9,22 @@
 *
 *********************************************************************************/
 
-#ifndef LIB_QOBJECTS_H
-#define LIB_QOBJECTS_H
+#ifndef LIB_BASIS_H
+#define LIB_BASIS_H
 
-#include "PrimitiveG.h"
-#include "AO.h"
+#include "Basis.h"
+
 
 namespace libqchem{
-namespace libqobjects{
+namespace libbaiss{
 
 
-void export_qobjects_objects();
+void export_basis_objects();
 
 
-}// namespace libqobjects
+}// namespace libbasis
 }// namespace libqchem
 
 
 
-#endif// LIB_QOBJECTS_H
+#endif// LIB_BASIS_H

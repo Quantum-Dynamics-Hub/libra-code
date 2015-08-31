@@ -301,7 +301,7 @@ void get_integrals(int i,int j,vector<AO>& basis_ao, double eri_aa, double G1, d
 }
 
 
-void Hamiltonian_Fock_indo(Electronic* el, System& syst, vector<AO>& basis_ao,
+void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
                            Control_Parameters& prms,Model_Parameters& modprms,
                            vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
                            vector<double>& eri, vector<double>& V_AB){
@@ -435,7 +435,7 @@ void Hamiltonian_Fock_indo(Electronic* el, System& syst, vector<AO>& basis_ao,
 
 }
 
-void Hamiltonian_Fock_indo(Electronic& el, System& syst, vector<AO>& basis_ao,
+void Hamiltonian_Fock_indo(Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
                            Control_Parameters& prms,Model_Parameters& modprms,
                            vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
                            vector<double>& eri, vector<double>& V_AB){

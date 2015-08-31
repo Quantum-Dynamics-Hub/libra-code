@@ -24,9 +24,97 @@ namespace libhamiltonian_qm{
 
 void export_Hamiltonian_QM_objects(){
 
-//  export_model_parameters_objects();
+  //----------- Electronic_Structure ------------
+  class_<Electronic_Structure>("Electronic_Structure",init<>())
+      .def("__copy__", &generic__copy__<Electronic_Structure>)
+      .def("__deepcopy__", &generic__deepcopy__<Electronic_Structure>)
+
+      .def_readwrite("Norb", &Electronic_Structure::Norb)
+      .def_readwrite("Nocc_alp", &Electronic_Structure::Nocc_alp)
+      .def_readwrite("Nocc_bet", &Electronic_Structure::Nocc_bet)
+      .def_readwrite("Nelec", &Electronic_Structure::Nelec)
+
+      .def_readwrite("bands_alp", &Electronic_Structure::bands_alp)
+      .def_readwrite("bands_bet", &Electronic_Structure::bands_bet)
+      .def_readwrite("occ_alp", &Electronic_Structure::occ_alp)
+      .def_readwrite("occ_bet", &Electronic_Structure::occ_bet)
+
+      .def_readwrite("Mull_orb_pop_net", &Electronic_Structure::Mull_orb_pop_net)
+      .def_readwrite("Mull_orb_pop_gross", &Electronic_Structure::Mull_orb_pop_gross)
+
+      .def("set_P_alp", &Electronic_Structure::set_P_alp)
+      .def("set_P_bet", &Electronic_Structure::set_P_bet)
+      .def("set_P", &Electronic_Structure::set_P)
+      .def("get_P_alp", &Electronic_Structure::get_P_alp)
+      .def("get_P_bet", &Electronic_Structure::get_P_bet)
+      .def("get_P", &Electronic_Structure::get_P)
+
+      .def("set_C_alp", &Electronic_Structure::set_C_alp)
+      .def("set_C_bet", &Electronic_Structure::set_C_bet)
+      .def("get_C_alp", &Electronic_Structure::get_C_alp)
+      .def("get_C_bet", &Electronic_Structure::get_C_bet)
 
 
+      .def("set_Sao", &Electronic_Structure::set_Sao)
+      .def("set_Hao", &Electronic_Structure::set_Hao)
+      .def("get_Sao", &Electronic_Structure::get_Sao)
+      .def("get_Hao", &Electronic_Structure::get_Hao)
+
+
+      .def("set_Fao_alp", &Electronic_Structure::set_Fao_alp)
+      .def("set_Fao_bet", &Electronic_Structure::set_Fao_bet)
+      .def("get_Fao_alp", &Electronic_Structure::get_Fao_alp)
+      .def("get_Fao_bet", &Electronic_Structure::get_Fao_bet)
+
+
+      .def("set_dFao_alp_dP_alp", &Electronic_Structure::set_dFao_alp_dP_alp)
+      .def("set_dFao_alp_dP_bet", &Electronic_Structure::set_dFao_alp_dP_bet)
+      .def("set_dFao_bet_dP_alp", &Electronic_Structure::set_dFao_bet_dP_alp)
+      .def("set_dFao_bet_dP_bet", &Electronic_Structure::set_dFao_bet_dP_bet)
+      .def("get_dFao_alp_dP_alp", &Electronic_Structure::get_dFao_alp_dP_alp)
+      .def("get_dFao_alp_dP_bet", &Electronic_Structure::get_dFao_alp_dP_bet)
+      .def("get_dFao_bet_dP_alp", &Electronic_Structure::get_dFao_bet_dP_alp)
+      .def("get_dFao_bet_dP_bet", &Electronic_Structure::get_dFao_bet_dP_bet)
+
+
+      .def("set_E_alp", &Electronic_Structure::set_E_alp)
+      .def("set_E_bet", &Electronic_Structure::set_E_bet)
+      .def("get_E_alp", &Electronic_Structure::get_E_alp)
+      .def("get_E_bet", &Electronic_Structure::get_E_bet)
+
+
+
+  ;
+
+
+  //----------- INDO -----------------
+  void (*expt_indo_core_parameters_v1)
+  ( System& syst, vector<AO>& basis_ao, 
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  vector<double>& eri, vector<double>& V_AB, int opt) = &indo_core_parameters;
+
+  void (*expt_Hamiltonian_core_indo_v1)
+  ( System& syst, vector<AO>& basis_ao, 
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  vector<double>& eri, vector<double>& V_AB, int opt,
+  Control_Parameters& prms, Model_Parameters& modprms,
+  MATRIX& Hao, MATRIX& Sao) = &Hamiltonian_core_indo;
+
+  void (*expt_get_integrals_v1)
+  (int i,int j,vector<AO>& basis_ao, double eri_aa, double G1, double F2, double& ii_jj,double& ij_ij) = &get_integrals;
+
+  void (*expt_Hamiltonian_Fock_indo_v1)
+  (Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+   Control_Parameters& prms,Model_Parameters& modprms,
+   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+   vector<double>& eri, vector<double>& V_AB) = &Hamiltonian_Fock_indo;
+
+
+
+  def("indo_core_parameters", expt_indo_core_parameters_v1);
+  def("Hamiltonian_core_indo", expt_Hamiltonian_core_indo_v1);
+  def("get_integrals",expt_get_integrals_v1);
+  def("Hamiltonian_Fock_indo",expt_Hamiltonian_Fock_indo_v1);
 
 
 }

@@ -20,6 +20,9 @@
 
 ****************************************************************************/
 
+namespace libqchem{
+namespace libbasis{
+
 
 void map_atoms_and_orbitals(int Nnucl, const vector<AO>&  basis_ao, vector<vector<int> >& at_orbitals){
 //  Global mapping 
@@ -34,7 +37,7 @@ void map_atoms_and_orbitals(int Nnucl, const vector<AO>&  basis_ao, vector<vecto
     vector<int> x;
     for(int i=0;i<basis_ao.size();i++){
 
-      if(basis_ao[i].at_indx==n){  x.push_back(i);   }
+//      if(basis_ao[i].at_indx==n){  x.push_back(i);   }
 
     }// for i
 
@@ -55,5 +58,9 @@ void show_mapping(const vector<vector<int> >& at_orbitals){
   }// for n
 
 }
+
+
+}//namespace libbasis
+}//namespace libqchem
 
 

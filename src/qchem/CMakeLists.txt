@@ -13,6 +13,9 @@ ADD_SUBDIRECTORY("molint")
 MESSAGE("Going into subdirectory qobjects...")
 ADD_SUBDIRECTORY("qobjects")
 
+MESSAGE("Going into subdirectory basis...")
+ADD_SUBDIRECTORY("basis")
+
 
 
 #
@@ -32,8 +35,8 @@ ADD_LIBRARY(qchem_stat STATIC ${QCHEM_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(qchem      qobjects_stat molint_stat mmath_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(qchem_stat qobjects_stat molint_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(qchem      basis_stat qobjects_stat molint_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(qchem_stat basis_stat qobjects_stat molint_stat mmath_stat ${ext_libs})
 
 
 
