@@ -12,6 +12,7 @@
 #ifndef CONVERTERS_H
 #define CONVERTERS_H
 
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 
 #include "../chemobjects/libchemobjects.h"
@@ -31,21 +32,10 @@ void system_to_vector_q(System& syst, vector<double>& q);
 void system_to_vector_p(System& syst, vector<double>& p);
 
 
-/*
-template<class K, class V>
-boost::python::dict map_to_dict_temp(std::map<K, V> map_)
-{
-  typename std::map<K, V>::iterator iter;
-  boost::python::dict dictionary;
 
-  for (iter = map_.begin(); iter != map_.end(); ++iter){
-    dictionary[iter->first] = iter->second;
-  }
+typedef std::vector<std::string> StringList;
+typedef std::vector<vector<std::string> > StringMap;
 
-  return dictionary;
-
-}
-*/
 
 typedef std::map<std::string, double> StringDoubleMap;
 typedef std::map<std::string, int> StringIntMap;
@@ -92,13 +82,14 @@ struct std_item
           if( *it == v ) return i;
         return -1;
     }
+    static bool in(T const& x, V const& v)
+    {
+        return find_eq(x.begin, x.end, v) != x.end();
+    }
+
 
 };
 
-//static bool in(T const& x, V const& v)
-//{
-//        return find_eq(x.begin, x.end, v) != x.end();
-//}
 
 
 
@@ -125,8 +116,9 @@ struct map_item
     static int index(T const& x, K const& k)
     {
         int i=0;
-        for(typename T::const_iterator it=x.begin; it!=x.end(); ++it,++i)
-          if( it->first == k ) return i;
+        for(typename T::const_iterator it=x.begin(); it!=x.end(); ++it,++i){
+          if( it->first == k ) return i;        
+        }
         return -1;
     }
  

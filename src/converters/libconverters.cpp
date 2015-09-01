@@ -32,6 +32,24 @@ void export_converters_objects(){
   def("system_to_nuclear", expt_system_to_nuclear_v1);
   def("nuclear_to_system", expt_nuclear_to_system_v1);
 
+
+  class_< StringList >("StringList")
+    .def(vector_indexing_suite< StringList >())
+//    .def("__len__", &StringList::size)
+//    .def("clear", &StringList::clear)
+//    .def("append", &std_item<StringList>::add,  with_custodian_and_ward<1,2>()) // to let container keep value
+//    .def("__getitem__", &std_item<StringList>::get, return_value_policy<copy_non_const_reference>())
+//    .def("__setitem__", &std_item<StringList>::set, with_custodian_and_ward<1,2>()) // to let container keep value
+//    .def("__delitem__", &std_item<StringList>::del)
+//    .def("index", &std_item<StringList>::index)
+//    .def("in", &std_item<StringList>::in)
+//    .def("__iter__", boost::python::iterator<StringList>())
+  ;
+
+  class_< StringMap >("StringMap")
+      .def(vector_indexing_suite< StringMap >())
+  ;
+
   
 
   class_<StringDoubleMap >("StringDoubleMap")
@@ -41,6 +59,7 @@ void export_converters_objects(){
     .def("__getitem__", &map_item<StringDoubleMap>::get,  return_value_policy<copy_non_const_reference>())
     .def("__setitem__", &map_item<StringDoubleMap>::set,  with_custodian_and_ward<1,2>()) // to let container keep value
     .def("__delitem__", &map_item<StringDoubleMap>::del)
+    .def("index", &map_item<StringDoubleMap>::index)
     .def("in", &map_item<StringDoubleMap>::in)
     .def("items", &items<StringDoubleMap>)
     .def("keys", &keys<StringDoubleMap>)
@@ -54,6 +73,7 @@ void export_converters_objects(){
     .def("__getitem__", &map_item<StringIntMap>::get,  return_value_policy<copy_non_const_reference>())
     .def("__setitem__", &map_item<StringIntMap>::set,  with_custodian_and_ward<1,2>()) // to let container keep value
     .def("__delitem__", &map_item<StringIntMap>::del)
+    .def("index", &map_item<StringIntMap>::index)
     .def("in", &map_item<StringIntMap>::in)
     .def("items", &items<StringIntMap>)
     .def("keys", &keys<StringIntMap>)
