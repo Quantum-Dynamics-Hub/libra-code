@@ -10,7 +10,6 @@
 *********************************************************************************/
 
 #include "Basis.h"
-//#include "Nuclear.h"
 
 namespace libqchem{
 namespace libbasis{

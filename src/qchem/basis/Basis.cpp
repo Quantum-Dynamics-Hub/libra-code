@@ -572,63 +572,7 @@ int num_valence_elec(int Z){
 }
 
 
-/*
-int set_basis_STO_3G_DZ(Nuclear& mol, Model_Parameters& modpar,vector<AO>& basis_ao, int& Nelec, int& Norb){
 
-// According to Pople: Hehre, Stewart, Pople  JCP 1969, 51, 2657
-// This is for any atoms with S-P shells only (no D shells!!!)
-// But the exponents may be varied
-// Exponent is the same for S and P orbitals
-// KSI[Z] - is the exponent of the S and P valence orbitals of the atom with atomic charge Z (number in periodic table)
-
-  // Initialization
-  int i;
-  PrimitiveG s;
-  PrimitiveS sto;
-  AO ao;
-
-  Nelec = 0;
-  Norb = 0;
-
-  cout<<"Setting STO-3G_DZ basis:\n";
-  for(i=0;i<mol.Nnucl;i++){   
-
-    std::map<std::string,double>::iterator iter;
-
-    for(iter = modpar.PT[mol.at_type[i]].IP.begin(); iter != modpar.PT[mol.at_type[i]].IP.end(); iter++){ // Iterate over all shells of the given atom 
-
-      std::string shell = iter->first;  
-      int Nzeta = modpar.PT[mol.at_type[i]].Nzeta[shell];
-      int Nquant = modpar.PT[mol.at_type[i]].Nquant[shell];
-      double IP = modpar.PT[mol.at_type[i]].IP[shell];
-      double exp1 = modpar.PT[mol.at_type[i]].zetas[shell][0];
-      double exp2 = modpar.PT[mol.at_type[i]].zetas[shell][1];
-      double coeff1 = modpar.PT[mol.at_type[i]].coeffs[shell][0];
-      double coeff2 = modpar.PT[mol.at_type[i]].coeffs[shell][1];
-
-                             // Here we turn 1s to s, 2p to p, etc.
-      add_basis_ao(mol.at_type[i], i, mol.R[i], shell.substr(1), Nzeta, Nquant, IP, exp1, exp2, coeff1, coeff2, basis_ao, Norb);
-
-    }// for iter - all shells of the atom of given elements
-
-
-    // Compute the number of valence electrons
-    //Nelec += num_valence_elec(mol.Z[i]);
-    Nelec += modpar.PT[mol.at_type[i]].Nval;
-    cout<<"Atom "<<i<<" contributes "<<modpar.PT[mol.at_type[i]].Nval<<" electrons\n";
-
-  }// for i - all atoms in the system
-
-//  Now print all AOs:
-  cout<<"Printing atomic basis: \n";
-  for(i=0;i<Norb;i++){
-    cout<<i<<"  ao_name= "<<basis_ao[i].ao_name<<"  at_indx= "<<basis_ao[i].at_indx<<"  element= "<<basis_ao[i].element<<endl;
-  }
-
-
-}  //int set_basis_STO_3G_DZ(Nuclear& mol, Model_Parameters& modpar,vector<AO>& basis_ao, int& Nelec, int& Norb)
-
-*/
 
 }// namespace libbasis
 }// namespace libqchem

@@ -44,21 +44,19 @@ void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int 
 
 
 int num_valence_elec(int);
-//int set_basis_STO_3G_DZ(Nuclear&, Model_Parameters&, vector<AO>&, int&, int&);
 
 
 // Basis_ovlp.cpp
 void update_overlap_matrix(int,int,int,const VECTOR&,const VECTOR&,const VECTOR&, vector<AO>&,MATRIX&);
 
 // Basis_map.cpp
-void map_atoms_and_orbitals(int, const vector<AO>&, vector<vector<int> >&);
 void show_mapping(const vector<vector<int> >&);
 
-
-#endif // BASIS_H
 
 
 }//namespace libbasis
 }//namespace libqchem
+
+#endif // BASIS_H
 
 

@@ -10,7 +10,9 @@
 #*********************************************************************************/
 
 ###################################################################
-# Tutorial: Here we manually construct AO (STO-3G_DZ) basis for H2O molecule
+# Tutorial: AO basis construction & AO to atoms (and reverse) mappings are taken care of in built-in function
+# this helps to simplify script and hide standard details
+# also print overlaps matrix
 ###################################################################
 
 import os
@@ -27,6 +29,7 @@ sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/Hamiltonian_Atomistic")
 sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM")
 sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Control_Parameters")
 sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Model_Parameters")
+sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Basis_Setups")
 sys.path.insert(1,cwd+"/../../_build/src/dyn")
 sys.path.insert(1,cwd+"/../../_build/src/qchem/qobjects")
 sys.path.insert(1,cwd+"/../../_build/src/qchem/basis")
@@ -38,6 +41,7 @@ from cygchemobjects import *
 from cyghamiltonian import *
 from cygcontrol_parameters import *
 from cygmodel_parameters import *
+from cygbasis_setups import *
 from cygdyn import *
 from cygqobjects import *
 from cygbasis import *
@@ -86,42 +90,48 @@ elif(prms.hamiltonian=="geht2"):
 Nelec = 0;
 Norb = 0;
 
-print "Setting STO-3G_DZ basis:";
-basis_ao = []
-
+#------- Input --------------
+mol_at_types = StringList()
+R = VECTORList()
 for i in xrange(syst.Number_of_atoms):
-    print syst.Atoms[i].Atom_element, len(modprms.PT[syst.Atoms[i].Atom_element].IP)
+    mol_at_types.append(syst.Atoms[i].Atom_element)
+    R.append(syst.Atoms[i].Atom_RB.rb_cm)
 
-    Nelec = Nelec + modprms.PT[syst.Atoms[i].Atom_element].Nval
-    print "Atom", syst.Atoms[i].Atom_element, "contributes", modprms.PT[syst.Atoms[i].Atom_element].Nval, "electrons"
-
-    for shell in modprms.PT[syst.Atoms[i].Atom_element].IP.keys():
-        print shell, modprms.PT[syst.Atoms[i].Atom_element].IP[shell]
-
-        Nzeta = modprms.PT[syst.Atoms[i].Atom_element].Nzeta[shell]
-        Nquant = modprms.PT[syst.Atoms[i].Atom_element].Nquant[shell]
-        IP = modprms.PT[syst.Atoms[i].Atom_element].IP[shell]
-        exp1 = modprms.PT[syst.Atoms[i].Atom_element].zetas[shell][0]
-        exp2 = modprms.PT[syst.Atoms[i].Atom_element].zetas[shell][1]
-        coeff1 = modprms.PT[syst.Atoms[i].Atom_element].coeffs[shell][0]
-        coeff2 = modprms.PT[syst.Atoms[i].Atom_element].coeffs[shell][1]
+#-------- Output -----------
+basis = AOList()
+atom_to_ao_map = intMap()
+ao_to_atom_map = intList()
 
 
-        add_basis_ao(syst.Atoms[i].Atom_element, syst.Atoms[i].Atom_RB.rb_cm,
-                   shell[1], Nzeta, Nquant, IP, exp1, exp2, coeff1, coeff2, basis_ao)
-
-    
-        print len(basis_ao), "orbitals added"
-        print Nzeta, Nquant, IP, exp1, exp2, coeff1, coeff2
+verb = 0
+basis, Nelec, Norb, atom_to_ao_map, ao_to_atom_map = set_basis_STO_3G_DZ(mol_at_types, R, modprms, verb)
 
 
-Norb = len(basis_ao)
-print "Total number of orbitals added is = ", Norb
-print "Total number of electrons is = ", Nelec
+#=========== STEP 6: Depending on hamiltonian to use, set internal parameters ================
 
-# Print info about loaded AOs
-for i in xrange(Norb):
-    print "orbital ",i
-    basis_ao[i].show_info()
+if(prms.hamiltonian=="eht" or prms.hamiltonian=="geht" or prms.hamiltonian=="geht1" or prms.hamiltonian=="geht2"):
+    set_parameters_eht_mapping(modprms, basis)
+    set_parameters_eht_mapping1(modprms,syst.Number_of_atoms,mol_at_types)
+
+
+
+#=========== STEP 7: Overlap matrix ================
+
+Sao = MATRIX(Norb, Norb)
+x_period = 0
+y_period = 0
+z_period = 0
+t1 = VECTOR()
+t2 = VECTOR()
+t3 = VECTOR()
+
+
+update_overlap_matrix(x_period, y_period, z_period, t1, t2, t3, basis, Sao);
+
+print "AO overlap matrix"
+Sao.show_matrix()
+
+
+
 
 

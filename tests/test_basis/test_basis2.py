@@ -10,7 +10,7 @@
 #*********************************************************************************/
 
 ###################################################################
-# Tutorial: Here we manually construct AO (STO-3G_DZ) basis for H2O molecule
+# Tutorial: see previous + set internal (efficient) parameters and orbital mappings
 ###################################################################
 
 import os
@@ -89,11 +89,14 @@ Norb = 0;
 print "Setting STO-3G_DZ basis:";
 basis_ao = []
 
+atom_to_ao_map = intMap()
+
+####### Now we also add mapping between AO and atomic indices #################
+
 for i in xrange(syst.Number_of_atoms):
     print syst.Atoms[i].Atom_element, len(modprms.PT[syst.Atoms[i].Atom_element].IP)
 
     Nelec = Nelec + modprms.PT[syst.Atoms[i].Atom_element].Nval
-    print "Atom", syst.Atoms[i].Atom_element, "contributes", modprms.PT[syst.Atoms[i].Atom_element].Nval, "electrons"
 
     for shell in modprms.PT[syst.Atoms[i].Atom_element].IP.keys():
         print shell, modprms.PT[syst.Atoms[i].Atom_element].IP[shell]
@@ -110,18 +113,75 @@ for i in xrange(syst.Number_of_atoms):
         add_basis_ao(syst.Atoms[i].Atom_element, syst.Atoms[i].Atom_RB.rb_cm,
                    shell[1], Nzeta, Nquant, IP, exp1, exp2, coeff1, coeff2, basis_ao)
 
-    
-        print len(basis_ao), "orbitals added"
-        print Nzeta, Nquant, IP, exp1, exp2, coeff1, coeff2
+        print Nzeta, Nquant, IP, exp1, exp2, coeff1, coeff2    
+
+    print "Atom", syst.Atoms[i].Atom_element, "contributes", len(basis_ao)-Norb, "orbitals"
+    print "Atom", syst.Atoms[i].Atom_element, "contributes", modprms.PT[syst.Atoms[i].Atom_element].Nval, "electrons"
 
 
-Norb = len(basis_ao)
+    orbs_i = intList()  # orbitals of atom i
+    for o in range(Norb,len(basis_ao)):
+        orbs_i.append(o)
+    atom_to_ao_map.append(orbs_i)
+
+
+    Norb = len(basis_ao)
+
+##======= Compute reverse mapping AO index to atom index
+# Initialization (memory allocation)
+ao_to_atom_map = intList()
+for i in xrange(Norb):
+    ao_to_atom_map.append(0)
+
+# Actuall computation:
+for a in xrange(syst.Number_of_atoms):
+    norbs_a = len(atom_to_ao_map[a])  # how many orbitals on the atoms a
+    for i in xrange(norbs_a):
+        I = atom_to_ao_map[a][i]  # index of orbital i of atom a    
+    ao_to_atom_map[I] = a
+
+
 print "Total number of orbitals added is = ", Norb
 print "Total number of electrons is = ", Nelec
 
+print "Atom to AO mapping:"
+show_mapping(atom_to_ao_map)
+
+print "AO to Atom mapping:"
+for i in xrange(Norb):
+    print "orbital", i, "is sitting on atom", ao_to_atom_map[i]
+
+
 # Print info about loaded AOs
 for i in xrange(Norb):
-    print "orbital ",i
-    basis_ao[i].show_info()
+    pass
+    #print "orbital ",i
+    #basis_ao[i].show_info()
+
+
+
+#=========== STEP 6: Depending on hamiltonian to use, set internal parameters ================
+mol_at_types = StringList()
+for i in xrange(syst.Number_of_atoms):
+    mol_at_types.append(syst.Atoms[i].Atom_element)
+
+basis = AOList()
+for i in xrange(Norb):    
+    basis.append(basis_ao[i])
+
+
+if(prms.hamiltonian=="eht" or prms.hamiltonian=="geht" or prms.hamiltonian=="geht1" or prms.hamiltonian=="geht2"):
+    set_parameters_eht_mapping(modprms, basis)
+    set_parameters_eht_mapping1(modprms,syst.Number_of_atoms,mol_at_types)
+
+
+print "K matrix:"
+for i in xrange(Norb):
+    for j in xrange(Norb):
+        print i, j, modprms.meht_k.get_K_value(i,j)
+    print "----"
+
+
+
 
 

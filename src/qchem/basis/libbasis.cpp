@@ -50,7 +50,7 @@ void export_basis_objects(){
 
 
   int (*expt_num_valence_elec_v1)(int) = &num_valence_elec;
-  //int set_basis_STO_3G_DZ(Nuclear&, Model_Parameters&, vector<AO>&, int&, int&);
+
 
 
   // Basis_ovlp.cpp
@@ -58,7 +58,6 @@ void export_basis_objects(){
   vector<AO>&,MATRIX&) = &update_overlap_matrix;
 
   // Basis_map.cpp
-  void (*expt_map_atoms_and_orbitals_v1)(int, const vector<AO>&, vector<vector<int> >&) = &map_atoms_and_orbitals;
   void (*expt_show_mapping_v1)(const vector<vector<int> >&) = &show_mapping;
 
 
@@ -73,7 +72,6 @@ void export_basis_objects(){
 
   def("update_overlap_matrix", expt_update_overlap_matrix_v1);
 
-  def("map_atoms_and_orbitals", expt_map_atoms_and_orbitals_v1);
   def("show_mapping", expt_show_mapping_v1);
 
 
