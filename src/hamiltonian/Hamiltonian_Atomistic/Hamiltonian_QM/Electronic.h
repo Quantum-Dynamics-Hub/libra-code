@@ -34,6 +34,9 @@ using namespace libqchem::libqobjects;
 using namespace libchemobjects;
 using namespace libchemobjects::libchemsys;
 
+#include "Basis_Setups/libbasis_setups.h"
+using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::libbasis_setups;
+
 #include "Control_Parameters/libcontrol_parameters.h"
 using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::libcontrol_parameters;
 

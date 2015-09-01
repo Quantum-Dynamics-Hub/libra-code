@@ -48,6 +48,9 @@ class HF_integrals{
   public:
 
   HF_integrals(){ ; ; }
+  HF_integrals(const HF_integrals& ob){
+    data = ob.data;
+  }
 
   void set_JK_values(int,int,int,int,double, double);  
   void get_JK_values(int,int,int,int,double&,double&);  
@@ -141,6 +144,10 @@ public:
 
 
   EHT_K(){ ;; }
+  EHT_K(const EHT_K& ob){
+    data = ob.data;  pp_data = ob.pp_data; psps_data = ob.psps_data;
+  }
+
 
   void set_PSPS_value(int, int, int, int, double);
 
@@ -285,6 +292,12 @@ public:
 
 
   mEHT_K(){  size = -1; }
+  mEHT_K(const mEHT_K& ob){
+    eht_K   = ob.eht_K;   eht_K1 = ob.eht_K1;  eht_K2 = ob.eht_K2;  eht_K3 = ob.eht_K3;  eht_K4 = ob.eht_K4; 
+    eht_C0  = ob.eht_C0;  eht_C1 = ob.eht_C1;  eht_C2 = ob.eht_C2;  eht_C3 = ob.eht_C3;  eht_C4 = ob.eht_C4; 
+    eht_PPa = ob.eht_PPa; eht_PP0 = ob.eht_PP0;  eht_PP1 = ob.eht_PP1;  eht_PP2 = ob.eht_PP2;
+  }
+
   void set_mapping(EHT_K& k, const vector<AO>& basis);
   void set_mapping1(EHT_K& k, int nat, vector<std::string>& mol_at_types);
 
@@ -376,6 +389,25 @@ class Element{
 
   
   Element(){}
+  Element(const Element& ob){
+    elt_name = ob.elt_name;
+    Z = ob.Z;
+    PQN = ob.PQN;
+    Nval = ob.Nval;
+    Zeff = ob.Zeff;
+    mass = ob.mass;
+    IP = ob.IP;
+    EA = ob.EA;
+    Nquant = ob.Nquant;
+    Nzeta = ob.Nzeta;
+    zetas = ob.zetas;
+    coeffs = ob.coeffs;
+    J_param1 = ob.J_param1;
+    J_param2 = ob.J_param2;
+    J_param3 = ob.J_param3;
+    J_param4 = ob.J_param4;
+    G1 = ob.G1; F2 = ob.F2; beta0 = ob.beta0;    
+  }
   Element(std::string en,int z,int nv,map<std::string, double> ip){ elt_name = en; Z = z; Nval = nv; IP = ip; }
 
   ~Element(){ 
@@ -460,6 +492,19 @@ class OrbParams{
 
   
   OrbParams(){}
+  OrbParams(const OrbParams& ob){
+    IP = ob.IP;
+    EA = ob.EA;
+    Nquant = ob.Nquant;
+    zetas = ob.zetas;
+    coeffs = ob.coeffs;
+    J_param1 = ob.J_param1;
+    J_param2 = ob.J_param2;
+    J_param3 = ob.J_param3;
+    J_param4 = ob.J_param4;
+
+    G1 = ob.G1; F2 = ob.F2; beta0 = ob.beta0;
+  }
 
   ~OrbParams(){ 
      if(zetas.size()>0) { zetas.clear();}
@@ -537,6 +582,16 @@ public:
   Model_Parameters(){  
     set_default_elements(PT);
   }
+
+  // Copy constructor
+  Model_Parameters(const Model_Parameters& ob){
+    PT = ob.PT;
+    orb_params = ob.orb_params;
+    eht_k = ob.eht_k;
+    meht_k = ob.meht_k;
+    hf_int = ob.hf_int;
+  }
+
 
   void set_PT_mapping(const vector<AO>&);
 

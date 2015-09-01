@@ -256,11 +256,12 @@ int init_numbers(Electronic_Structure& el, System& syst, vector<AO>& basis_ao, M
 }
 
 /*
-int init_electronic_subsystems(vector<vector<int> >& fragments,vector<vector<int> >& at_orbitals,
-                               vector<vector<int> >& basis_fo, vector<Electronic*>& el,
+int init_electronic_subsystems(System& syst,
+                               vector<vector<int> >& fragments,vector<vector<int> >& atom_to_ao_map,
+                               vector<vector<int> >& basis_fo, vector<Electronic>& el,
                                vector<AO>& basis_ao, Model_Parameters& modprms, Nuclear& mol, vector<double>& frag_charge){
 /// fragments[n][i] (input) - index of i-th atom belonging to n-th fragment\n
-/// at_orbitals[n][i] (input) - index of i-th AO belonging to n-th atom ( global array )\n
+/// atom_to_ao_map[n][i] (input) - index of i-th AO belonging to n-th atom ( global array )\n
 /// basis_fo[n][i] (output) - index of i-th AO belonging to n-th fragment/subsystem\n
 /// el (output) - will contain Nfrag electronic structure variables\n
 /// basis_ao (input) - need for extra info\n
@@ -281,7 +282,7 @@ int init_electronic_subsystems(vector<vector<int> >& fragments,vector<vector<int
     so:
 
     fragments = [[0,1,2], [3,4,5]], so e.g. fragments[0][2] = 2 and fragments[1][1] = 4
-    at_orbitals = [[0,1,2,3],[4],[5],[6,7,8,9],[10],[11]]
+    atom_to_ao_map = [[0,1,2,3],[4],[5],[6,7,8,9],[10],[11]]
     basis_fo = [[0,1,2,3,4,5],[6,7,8,9,10,11]]
     frag_charge = [0.0, 0.0]   
 
@@ -303,8 +304,8 @@ int init_electronic_subsystems(vector<vector<int> >& fragments,vector<vector<int
     for(int n=0;n<fragments[i].size();n++){ 
       int a = fragments[i][n]; // n-th atom in i-th fragment
 
-      for(int j=0;j<at_orbitals[a].size();j++){
-        x.push_back(at_orbitals[a][j]);  // j-th orbital of a-th atom
+      for(int j=0;j<atom_to_ao_map[a].size();j++){
+        x.push_back(atom_to_ao_map[a][j]);  // j-th orbital of a-th atom
       }// for j
     }// for n
 
@@ -313,6 +314,7 @@ int init_electronic_subsystems(vector<vector<int> >& fragments,vector<vector<int
 
     ell = new Electronic(x.size());
     init_numbers(fragments[i],ell,basis_ao,modprms,mol,frag_charge[i]);
+
 
     el.push_back(ell);
 
