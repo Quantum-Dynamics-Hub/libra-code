@@ -18,6 +18,7 @@ namespace libuniverse{
 void Element::init_variables(){
   is_Elt_name = 0;
   is_Elt_mass = 0;
+  is_Elt_number = 0;
   is_Elt_nucleus_charge = 0;
   is_Elt_period = 0;
   is_Elt_group = 0; 
@@ -34,6 +35,7 @@ void Element::copy_content(const Element& at){
 
   if(at.is_Elt_name){ Elt_name = at.Elt_name;  is_Elt_name = 1;}
   if(at.is_Elt_mass){ Elt_mass = at.Elt_mass;  is_Elt_mass = 1;}
+  if(at.is_Elt_number){ Elt_number = at.Elt_number;  is_Elt_number = 1;}
   if(at.is_Elt_nucleus_charge){ Elt_nucleus_charge = at.Elt_nucleus_charge;  is_Elt_nucleus_charge = 1;}
   if(at.is_Elt_period){ Elt_period = at.Elt_period;  is_Elt_period = 1;}
   if(at.is_Elt_group){ Elt_group = at.Elt_group;  is_Elt_group = 1;}
@@ -81,6 +83,7 @@ Element::~Element(){ }
 void Element::set(object at){
   set_value(is_Elt_name,    Elt_name,    at,"Elt_name");
   set_value(is_Elt_mass,    Elt_mass,    at,"Elt_mass");  
+  set_value(is_Elt_number,  Elt_number,  at,"Elt_number");
   set_value(is_Elt_nucleus_charge,Elt_nucleus_charge,at,"Elt_nucleus_charge");
   set_value(is_Elt_period,  Elt_period,  at,"Elt_period");
   set_value(is_Elt_group,   Elt_group,   at,"Elt_group");
@@ -96,6 +99,7 @@ void Element::set(object at){
 void Element::show_info(){
   if(is_Elt_name) {std::cout<<"Elt_name = "<<Elt_name<<std::endl;   } 
   if(is_Elt_mass) {std::cout<<"Elt_mass = "<<Elt_mass<<std::endl;   }
+  if(is_Elt_number) {std::cout<<"Elt_number = "<<Elt_number<<std::endl;}
   if(is_Elt_nucleus_charge) {std::cout<<"Elt_nucleus_charge = "<<Elt_nucleus_charge<<std::endl;}
   if(is_Elt_period){std::cout<<"Elt_period = "<<Elt_period<<std::endl;}
   if(is_Elt_group){std::cout<<"Elt_group = "<<Elt_group<<std::endl;}

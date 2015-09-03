@@ -114,6 +114,7 @@ Atom::Atom(Universe& u){
      Constructor
   ******************/
   universe = &u;
+
   // Initialize variables to default values
   init_variables();
 }
@@ -125,6 +126,7 @@ Atom::Atom(Universe& u, boost::python::dict at){
   universe = &u;
   // Initialize variables to default values
   init_variables();
+
   std::string key;
   for(int i=0;i<len(at.values());i++){
     key = extract<std::string>(at.keys()[i]);
@@ -136,7 +138,9 @@ Atom::Atom(Universe& u, boost::python::dict at){
 
       // Get basic atomic properties
       if(elt.is_Elt_mass){  Atom_RB.set_mass(elt.Elt_mass); }
-      if(elt.is_Elt_number){  Atom_Z = elt.Elt_number;  is_Atom_Z = 1; }
+      if(elt.is_Elt_number){  Atom_Z = elt.Elt_number;  is_Atom_Z = 1;  }
+      if(!is_Atom_Z && elt.is_Elt_nucleus_charge){  Atom_Z = elt.Elt_nucleus_charge;  is_Atom_Z = 1; }
+
 
     }
     else if(key=="Atom_atomic_radius") { Atom_atomic_radius = extract<double>(at.values()[i]); is_Atom_atomic_radius = 1; }
