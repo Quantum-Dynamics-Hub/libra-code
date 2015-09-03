@@ -203,7 +203,9 @@ void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int 
       ao.element = Atom_name;               ao.is_element = 1;       // Li, Be, B, etc.
       ao.ao_shell = out+Atom_shell;         ao.is_ao_shell = 1;      // 3s, 3p, etc.
       ao.ao_shell_type = Atom_shell;        ao.is_ao_shell_type = 1; // s, p, d, etc.
-
+      ao.x_exp = 0;                         ao.is_x_exp = 1;
+      ao.y_exp = 0;                         ao.is_y_exp = 1;
+      ao.z_exp = 0;                         ao.is_z_exp = 1;
       ao.normalize(); basis_ao.push_back(ao); ao.clear(); basis_size++; Norb++;
 
     }// Atom_shell=="s"
@@ -216,7 +218,9 @@ void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int 
       ao.element = Atom_name;               ao.is_element = 1;       // Li, Be, B, etc.
       ao.ao_shell = out+Atom_shell;         ao.is_ao_shell = 1;      // 3s, 3p, etc.
       ao.ao_shell_type = Atom_shell;        ao.is_ao_shell_type = 1; // s, p, d, etc.
-
+      ao.x_exp = 1;                         ao.is_x_exp = 1;
+      ao.y_exp = 0;                         ao.is_y_exp = 1;
+      ao.z_exp = 0;                         ao.is_z_exp = 1;
       ao.normalize(); basis_ao.push_back(ao); ao.clear(); basis_size++; Norb++;
 
 
@@ -228,7 +232,9 @@ void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int 
       ao.element = Atom_name;               ao.is_element = 1;       // Li, Be, B, etc.
       ao.ao_shell = out+Atom_shell;         ao.is_ao_shell = 1;      // 3s, 3p, etc.
       ao.ao_shell_type = Atom_shell;        ao.is_ao_shell_type = 1; // s, p, d, etc.
-
+      ao.x_exp = 0;                         ao.is_x_exp = 1;
+      ao.y_exp = 1;                         ao.is_y_exp = 1;
+      ao.z_exp = 0;                         ao.is_z_exp = 1;
       ao.normalize(); basis_ao.push_back(ao); ao.clear(); basis_size++; Norb++;
 
 
@@ -240,7 +246,9 @@ void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int 
       ao.element = Atom_name;               ao.is_element = 1;       // Li, Be, B, etc.
       ao.ao_shell = out+Atom_shell;         ao.is_ao_shell = 1;      // 3s, 3p, etc.
       ao.ao_shell_type = Atom_shell;        ao.is_ao_shell_type = 1; // s, p, d, etc.
-
+      ao.x_exp = 0;                         ao.is_x_exp = 1;
+      ao.y_exp = 0;                         ao.is_y_exp = 1;
+      ao.z_exp = 1;                         ao.is_z_exp = 1;
       ao.normalize(); basis_ao.push_back(ao); ao.clear(); basis_size++; Norb++;
 
     }// Atom_shell=="p"
@@ -293,7 +301,6 @@ void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int 
       s.init(1,1,0, d_alp[2]*exp1*exp1, R);  ao.add_primitive( d_coeff[2]*coeff1, s);
       
       ao.ao_name = out+Atom_shell+"xy";          ao.is_ao_name = 1;      
-//      ao.at_indx = Atom_index;              ao.is_at_indx = 1;       // 1, 2, ...
       ao.element = Atom_name;               ao.is_element = 1;       // Li, Be, B, etc.
       ao.ao_shell = out+Atom_shell;         ao.is_ao_shell = 1;      // 3s, 3p, etc.
       ao.ao_shell_type = Atom_shell;        ao.is_ao_shell_type = 1; // s, p, d, etc.
@@ -306,7 +313,6 @@ void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int 
       s.init(1,0,1, d_alp[2]*exp1*exp1, R);  ao.add_primitive( d_coeff[2]*coeff1, s);
       
       ao.ao_name = out+Atom_shell+"xz";          ao.is_ao_name = 1;      
-//      ao.at_indx = Atom_index;              ao.is_at_indx = 1;       // 1, 2, ...
       ao.element = Atom_name;               ao.is_element = 1;       // Li, Be, B, etc.
       ao.ao_shell = out+Atom_shell;         ao.is_ao_shell = 1;      // 3s, 3p, etc.
       ao.ao_shell_type = Atom_shell;        ao.is_ao_shell_type = 1; // s, p, d, etc.
@@ -319,7 +325,6 @@ void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int 
       s.init(0,1,1, d_alp[2]*exp1*exp1, R);  ao.add_primitive( d_coeff[2]*coeff1, s);
       
       ao.ao_name = out+Atom_shell+"yz";          ao.is_ao_name = 1;      
-//      ao.at_indx = Atom_index;              ao.is_at_indx = 1;       // 1, 2, ...
       ao.element = Atom_name;               ao.is_element = 1;       // Li, Be, B, etc.
       ao.ao_shell = out+Atom_shell;         ao.is_ao_shell = 1;      // 3s, 3p, etc.
       ao.ao_shell_type = Atom_shell;        ao.is_ao_shell_type = 1; // s, p, d, etc.
@@ -344,11 +349,12 @@ void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int 
       s.init(0,0,0, s_alp[2]*exp2*exp2, R);  ao.add_primitive( s_coeff[2]*coeff2, s);
       
       ao.ao_name = out+Atom_shell;          ao.is_ao_name = 1;      
-//      ao.at_indx = Atom_index;              ao.is_at_indx = 1;       // 1, 2, ...
       ao.element = Atom_name;               ao.is_element = 1;       // Li, Be, B, etc.
       ao.ao_shell = out+Atom_shell;         ao.is_ao_shell = 1;      // 3s, 3p, etc.
       ao.ao_shell_type = Atom_shell;        ao.is_ao_shell_type = 1; // s, p, d, etc.
-
+      ao.x_exp = 0;                         ao.is_x_exp = 1;
+      ao.y_exp = 0;                         ao.is_y_exp = 1;
+      ao.z_exp = 0;                         ao.is_z_exp = 1;
       ao.normalize(); basis_ao.push_back(ao); ao.clear(); basis_size++; Norb++;
 
     }// Atom_shell=="s"
@@ -361,11 +367,12 @@ void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int 
       s.init(1,0,0, p_alp[2]*exp2*exp2, R);  ao.add_primitive( p_coeff[2]*coeff2, s);
       
       ao.ao_name = out+Atom_shell+"x";          ao.is_ao_name = 1;      
-//      ao.at_indx = Atom_index;              ao.is_at_indx = 1;       // 1, 2, ...
       ao.element = Atom_name;               ao.is_element = 1;       // Li, Be, B, etc.
       ao.ao_shell = out+Atom_shell;         ao.is_ao_shell = 1;      // 3s, 3p, etc.
       ao.ao_shell_type = Atom_shell;        ao.is_ao_shell_type = 1; // s, p, d, etc.
-
+      ao.x_exp = 1;                         ao.is_x_exp = 1;
+      ao.y_exp = 0;                         ao.is_y_exp = 1;
+      ao.z_exp = 0;                         ao.is_z_exp = 1;
       ao.normalize(); basis_ao.push_back(ao); ao.clear(); basis_size++; Norb++;
 
 
@@ -377,11 +384,12 @@ void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int 
       s.init(0,1,0, p_alp[2]*exp2*exp2, R);  ao.add_primitive( p_coeff[2]*coeff2, s);
       
       ao.ao_name = out+Atom_shell+"y";          ao.is_ao_name = 1;      
-//      ao.at_indx = Atom_index;              ao.is_at_indx = 1;       // 1, 2, ...
       ao.element = Atom_name;               ao.is_element = 1;       // Li, Be, B, etc.
       ao.ao_shell = out+Atom_shell;         ao.is_ao_shell = 1;      // 3s, 3p, etc.
       ao.ao_shell_type = Atom_shell;        ao.is_ao_shell_type = 1; // s, p, d, etc.
-
+      ao.x_exp = 0;                         ao.is_x_exp = 1;
+      ao.y_exp = 1;                         ao.is_y_exp = 1;
+      ao.z_exp = 0;                         ao.is_z_exp = 1;
       ao.normalize(); basis_ao.push_back(ao); ao.clear(); basis_size++; Norb++;
 
 
@@ -393,11 +401,12 @@ void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int 
       s.init(0,0,1, p_alp[2]*exp2*exp2, R);  ao.add_primitive( p_coeff[2]*coeff2, s);
       
       ao.ao_name = out+Atom_shell+"z";          ao.is_ao_name = 1;      
-//      ao.at_indx = Atom_index;              ao.is_at_indx = 1;       // 1, 2, ...
       ao.element = Atom_name;               ao.is_element = 1;       // Li, Be, B, etc.
       ao.ao_shell = out+Atom_shell;         ao.is_ao_shell = 1;      // 3s, 3p, etc.
       ao.ao_shell_type = Atom_shell;        ao.is_ao_shell_type = 1; // s, p, d, etc.
-
+      ao.x_exp = 0;                         ao.is_x_exp = 1;
+      ao.y_exp = 0;                         ao.is_y_exp = 1;
+      ao.z_exp = 1;                         ao.is_z_exp = 1;
       ao.normalize(); basis_ao.push_back(ao); ao.clear(); basis_size++; Norb++;
 
     }// Atom_shell=="p"
