@@ -88,6 +88,15 @@ void solve_eigen(int Norb, MATRIX* H, MATRIX* S, MATRIX* E, MATRIX* C){
 
 }//void solve_eigen(int Norb, MATRIX* H, MATRIX* S, MATRIX* E, MATRIX* C)
 
+void solve_eigen(int Norb, MATRIX& H, MATRIX& S, MATRIX& E, MATRIX& C){
+// Solve H * C = S * C * E
+// i-th column of C contains i-th MO (coefficients of expansion in terms of AOs)
+// C[i][j] - is the weight of j-th AO in i-th MO
+
+  solve_eigen(Norb, &H, &S, &E, &C);
+
+}
+
 
 void solve_eigen(int Norb, MATRIX* H, MATRIX* E, MATRIX* C){
 // Solve H * C = C * E

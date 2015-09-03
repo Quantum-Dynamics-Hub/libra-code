@@ -31,6 +31,10 @@ void export_mEigen_objects(){
 //  def("shift", expt_shift1);
 //  def("scale", expt_scale1);
 
+  void (*expt_solve_eigen_v1)
+  (int Norb, MATRIX& H, MATRIX& S, MATRIX& E, MATRIX& C) = &solve_eigen;
+
+  def("solve_eigen", expt_solve_eigen_v1);
 
 }
 

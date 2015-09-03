@@ -22,6 +22,7 @@ namespace libmeigen{
 
 
 void solve_eigen(int, MATRIX*, MATRIX*, MATRIX*, MATRIX*);
+void solve_eigen(int, MATRIX&, MATRIX&, MATRIX&, MATRIX&);
 void solve_eigen(int, MATRIX*, MATRIX*, MATRIX*);
 
 
