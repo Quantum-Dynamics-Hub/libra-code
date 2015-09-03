@@ -10,9 +10,8 @@
 #*********************************************************************************/
 
 ###################################################################
-# Tutorial: AO basis construction & AO to atoms (and reverse) mappings are taken care of in built-in function
-# this helps to simplify script and hide standard details
-# also print overlaps matrix
+# Tutorial: Now, lets go to Fock matrix construction - only initial iteration
+# add a choice of systems: C, C2, CH4
 ###################################################################
 
 import os
@@ -34,11 +33,13 @@ sys.path.insert(1,cwd+"/../../_build/src/dyn")
 sys.path.insert(1,cwd+"/../../_build/src/qchem/qobjects")
 sys.path.insert(1,cwd+"/../../_build/src/qchem/basis")
 sys.path.insert(1,cwd+"/../../_build/src/converters")
+sys.path.insert(1,cwd+"/../../_build/src/calculators")
 
 print "\nTest 1: Importing the library and its content"
 from cygmmath import *
 from cygchemobjects import *
 from cyghamiltonian import *
+from cyghamiltonian_qm import *
 from cygcontrol_parameters import *
 from cygmodel_parameters import *
 from cygbasis_setups import *
@@ -46,6 +47,7 @@ from cygdyn import *
 from cygqobjects import *
 from cygbasis import *
 from cygconverters import *
+from cygcalculators import *
 
 from LoadPT import * # Load_PT
 from LoadMolecule import * # Load_Molecule
@@ -54,12 +56,14 @@ from LoadMolecule import * # Load_Molecule
 
 #=========== STEP 1:  Create Universe and populate it ================
 U = Universe()
-Load_PT(U, "elements.dat", 0)
+Load_PT(U, "elements.dat", 1)
 
 
 #=========== STEP 2:  Create system and load a molecule ================
 syst = System()
-Load_Molecule(U, syst, os.getcwd()+"/1water.ent", "pdb")
+#Load_Molecule(U, syst, os.getcwd()+"/c.pdb", "pdb_1")
+#Load_Molecule(U, syst, os.getcwd()+"/c2.pdb", "pdb_1")
+Load_Molecule(U, syst, os.getcwd()+"/ch4.pdb", "pdb_1")
 
 print "Number of atoms in the system = ", syst.Number_of_atoms
 atlst1 = range(0,syst.Number_of_atoms)
@@ -104,13 +108,13 @@ ao_to_atom_map = intList()
 
 
 verb = 0
-basis, Nelec, Norb, atom_to_ao_map, ao_to_atom_map = set_basis_STO_3G_DZ(mol_at_types, R, modprms, verb)
+basis_ao, Nelec, Norb, atom_to_ao_map, ao_to_atom_map = set_basis_STO_3G_DZ(mol_at_types, R, modprms, verb)
 
 
 #=========== STEP 6: Depending on hamiltonian to use, set internal parameters ================
 
 if(prms.hamiltonian=="eht" or prms.hamiltonian=="geht" or prms.hamiltonian=="geht1" or prms.hamiltonian=="geht2"):
-    set_parameters_eht_mapping(modprms, basis)
+    set_parameters_eht_mapping(modprms, basis_ao)
     set_parameters_eht_mapping1(modprms,syst.Number_of_atoms,mol_at_types)
 
 
@@ -126,12 +130,84 @@ t2 = VECTOR()
 t3 = VECTOR()
 
 
-update_overlap_matrix(x_period, y_period, z_period, t1, t2, t3, basis, Sao);
 
+update_overlap_matrix(x_period, y_period, z_period, t1, t2, t3, basis_ao, Sao);
 print "AO overlap matrix"
 Sao.show_matrix()
 
+#=========== STEP 8: Parameters ================
+eri = doubleList()
+V_AB = doubleList()
+opt = 1  # 1 - for INDO, 0 - for CNDO/CNDO2
 
+     
+if(prms.hamiltonian=="indo"):
+    Sao.Init_Unit_Matrix(1.0);  
+    indo_core_parameters(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, eri, V_AB, opt);
+
+
+Hao = MATRIX(Norb, Norb)
+debug = 1
+Hamiltonian_core_indo(syst, basis_ao, atom_to_ao_map, ao_to_atom_map, eri, V_AB, opt, prms, modprms, Hao,  Sao, debug)
+print "Core Hamiltonian"
+Hao.show_matrix()
+
+Nelec_alp = Nelec/2
+Nelec_bet = Nelec - Nelec_alp
+print "Nelec_alp = ", Nelec_alp
+print "Nelec_bet = ", Nelec_bet
+
+degen = 1.0
+kT = 0.025
+etol = 0.0001
+pop_opt = 0  #  0 -  integer populations,  1 - Fermi distribution              
+
+res_alp = Fock_to_P(Hao, Sao, Nelec_alp, degen, kT, etol, pop_opt)
+res_bet = Fock_to_P(Hao, Sao, Nelec_bet, degen, kT, etol, pop_opt)
+
+
+print "Eigenvalues (alp):\n"
+res_alp[0].show_matrix()
+print "Eigenvalues (bet):\n"
+res_bet[0].show_matrix()
+
+print "Eigenvectors(alp):\n"
+res_alp[1].show_matrix()
+print "Eigenvectors(bet):\n"
+res_bet[1].show_matrix()
+
+
+print "Density matrix(alp):\n"
+res_alp[2].show_matrix()
+print "Density matrix(bet):\n"
+res_bet[2].show_matrix()
+
+
+print "Bands(alp):\n"
+print res_alp[3]
+print "Bands(bet):\n"
+print res_bet[3]
+
+
+print "Occupations(alp):\n"
+print res_alp[4]
+print "Occupations(bet):\n"
+print res_bet[4]
+
+
+
+el = Electronic_Structure(Norb)
+el.set_Hao(Hao)
+el.set_Sao(Sao)
+el.set_P_alp(res_alp[2])
+el.set_P_bet(res_bet[2])
+#el.set_P(res_alp[2]+res_bet[2])
+
+
+Hamiltonian_Fock_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, eri, V_AB)
+
+print "Fock matrix at first iteration (alp)"
+el.get_Fao_alp().show_matrix()
 
 
 

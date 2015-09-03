@@ -1,11 +1,11 @@
 <calculation>
   runtype = scf
-  hamiltonian = eht
+  hamiltonian = indo
   DF = 0
 </calculation>
 
 <hamiltonian>
-  parameters = muller_params
+  parameters = params_indo
   eht_params_format = eht+2
   eht_formula = 0
   eht_sce_formula = 0

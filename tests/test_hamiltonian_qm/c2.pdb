@@ -1,0 +1,4 @@
+Carbon atom
+HETATM    1  C           0       0.000   0.000   0.000                       C
+HETATM    2  C           0       2.000   0.000   0.000                       C
+END
