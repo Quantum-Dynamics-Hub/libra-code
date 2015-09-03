@@ -40,7 +40,7 @@ namespace libhamiltonian_qm{
 
 // Hamiltonian_INDO.cpp
 void indo_core_parameters
-( System& syst, vector<AO>& basis_ao, 
+( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   vector<double>& eri, vector<double>& V_AB, int opt);
 
@@ -50,7 +50,7 @@ void Hamiltonian_core_indo
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   vector<double>& eri, vector<double>& V_AB, int opt,
   Control_Parameters& prms, Model_Parameters& modprms,
-  MATRIX* Hao, MATRIX* Sao
+  MATRIX* Hao, MATRIX* Sao, int DF
 );
 
 void Hamiltonian_core_indo
@@ -58,7 +58,7 @@ void Hamiltonian_core_indo
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   vector<double>& eri, vector<double>& V_AB, int opt,
   Control_Parameters& prms, Model_Parameters& modprms,
-  MATRIX& Hao, MATRIX& Sao
+  MATRIX& Hao, MATRIX& Sao, int DF
 );
 
 void get_integrals(int i,int j,vector<AO>& basis_ao, double eri_aa, double G1, double F2, double& ii_jj,double& ij_ij);

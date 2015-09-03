@@ -26,6 +26,7 @@ void export_Hamiltonian_QM_objects(){
 
   //----------- Electronic_Structure ------------
   class_<Electronic_Structure>("Electronic_Structure",init<>())
+      .def(init<int>())
       .def("__copy__", &generic__copy__<Electronic_Structure>)
       .def("__deepcopy__", &generic__deepcopy__<Electronic_Structure>)
 
@@ -89,7 +90,7 @@ void export_Hamiltonian_QM_objects(){
 
   //----------- INDO -----------------
   void (*expt_indo_core_parameters_v1)
-  ( System& syst, vector<AO>& basis_ao, 
+  ( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   vector<double>& eri, vector<double>& V_AB, int opt) = &indo_core_parameters;
 
@@ -98,7 +99,7 @@ void export_Hamiltonian_QM_objects(){
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   vector<double>& eri, vector<double>& V_AB, int opt,
   Control_Parameters& prms, Model_Parameters& modprms,
-  MATRIX& Hao, MATRIX& Sao) = &Hamiltonian_core_indo;
+  MATRIX& Hao, MATRIX& Sao, int DF) = &Hamiltonian_core_indo;
 
   void (*expt_get_integrals_v1)
   (int i,int j,vector<AO>& basis_ao, double eri_aa, double G1, double F2, double& ii_jj,double& ij_ij) = &get_integrals;

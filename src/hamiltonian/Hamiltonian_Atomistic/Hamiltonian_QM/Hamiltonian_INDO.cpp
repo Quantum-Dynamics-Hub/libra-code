@@ -45,7 +45,7 @@ namespace libhamiltonian_qm{
 
 
 void indo_core_parameters
-( System& syst, vector<AO>& basis_ao, 
+( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   vector<double>& eri, vector<double>& V_AB, int opt){
 // opt == 0 - cndo
@@ -103,10 +103,10 @@ void indo_core_parameters
       // V_AB
       int B = ao_to_atom_map[b]; // global index of atom on orbital b
       if(opt==0){
-        V_AB[a*sz+b] = syst.Atoms[B].Atom_Zeff*nuclear_attraction_integral(basis_ao[J],basis_ao[J], syst.Atoms[B].Atom_RB.rb_cm);// V_AB[a][b]
+        V_AB[a*sz+b] = modprms.PT[syst.Atoms[B].Atom_element].Zeff*nuclear_attraction_integral(basis_ao[J],basis_ao[J], syst.Atoms[B].Atom_RB.rb_cm);// V_AB[a][b]
       }
       else if(opt==1){
-        V_AB[a*sz+b] = syst.Atoms[B].Atom_Zeff*eri[a*sz+b];
+        V_AB[a*sz+b] = modprms.PT[syst.Atoms[B].Atom_element].Zeff*eri[a*sz+b];
       }
 
       if(DF){ cout<<"a= "<<a<<" b= "<<b<<" I= "<<I<<" J= "<<J<<" eri= "<<eri[a*sz+b]<<" V_AB= "<<V_AB[a*sz+b]<<endl; }
@@ -123,10 +123,9 @@ void Hamiltonian_core_indo
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   vector<double>& eri, vector<double>& V_AB, int opt,
   Control_Parameters& prms, Model_Parameters& modprms,
-  MATRIX* Hao, MATRIX* Sao
+  MATRIX* Hao, MATRIX* Sao, int DF
 ){
 
-  int DF = 0;
   int i,j,k,a,b,I,J,A,B;
   VECTOR dIdA,dIdB;
   //cout<<"in Hamiltonian_core_indo\n";
@@ -145,13 +144,13 @@ void Hamiltonian_core_indo
 
 
   // Compute global indices of s-type orbitals on each atom
-  vector<int> sorb_indx(sz,0); // global index of s-type orbital on i-th atom
-  for(a=0;a<sz;a++){  // for all atoms
-    for(i=0;i<atom_to_ao_map[a].size();i++){  // all orbitals on given atom (i-dummy)
-      I = atom_to_ao_map[a][i];  // i-th AO on atom a, I - is the global index of this AO in the given basis
-      if(basis_ao[I].ao_shell_type=="s" ){  sorb_indx[a] = I; }          
-    }// for j
-  }// for i
+//  vector<int> sorb_indx(sz,0); // global index of s-type orbital on i-th atom
+//  for(a=0;a<sz;a++){  // for all atoms
+//    for(i=0;i<atom_to_ao_map[a].size();i++){  // all orbitals on given atom (i-dummy)
+//      I = atom_to_ao_map[a][i];  // i-th AO on atom a, I - is the global index of this AO in the given basis
+//      if(basis_ao[I].ao_shell_type=="s" ){  sorb_indx[a] = I; }          
+//    }// for j
+//  }// for i
 
 
 
@@ -181,7 +180,7 @@ void Hamiltonian_core_indo
    
     /// Eqs. 3.17 - 3.23 from Pople, Beveridge, Dobosh, JCP 47, 2026 (1967)
     ///
-    int Z = syst.Atoms[a].Atom_Z;
+    int Z = syst.Atoms[a].Atom_Z;  // modprms.PT[elt].Z - e.g. 6 for C
 
          if(Z==1){ Hao->M[i*Norb+i] -= 0.5*eri[a*sz+a]; }  // H
     else if(Z==3 || Z==11){ 
@@ -253,10 +252,10 @@ void Hamiltonian_core_indo
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   vector<double>& eri, vector<double>& V_AB, int opt,
   Control_Parameters& prms, Model_Parameters& modprms,
-  MATRIX& Hao, MATRIX& Sao
+  MATRIX& Hao, MATRIX& Sao, int DF
 ){
 
-  Hamiltonian_core_indo( syst, basis_ao, atom_to_ao_map, ao_to_atom_map,  eri, V_AB, opt, prms, modprms, &Hao, &Sao);
+  Hamiltonian_core_indo( syst, basis_ao, atom_to_ao_map, ao_to_atom_map,  eri, V_AB, opt, prms, modprms, &Hao, &Sao, DF);
 
 }
 
@@ -287,7 +286,7 @@ void get_integrals(int i,int j,vector<AO>& basis_ao, double eri_aa, double G1, d
   else if( basis_ao[i].ao_shell_type=="p" && basis_ao[j].ao_shell_type=="p" ){ 
     if( (basis_ao[i].x_exp == basis_ao[j].x_exp) && 
         (basis_ao[i].y_exp == basis_ao[j].y_exp) && 
-        (basis_ao[i].x_exp == basis_ao[j].x_exp)){
+        (basis_ao[i].z_exp == basis_ao[j].z_exp)){
       ij_ij = ii_jj = eri_aa + 0.16*F2;      // xx_xx = yy_yy = zz_zz
     }
     else{
@@ -335,7 +334,7 @@ void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& b
   vector<double> Mull_charges_gross(syst.Number_of_atoms, 0.0);
   vector<double> Mull_charges_net(syst.Number_of_atoms, 0.0);
 
-  for(a=0;a<syst.Number_of_atoms;a++){ Zeff[i] = syst.Atoms[a].Atom_Zeff; }
+  for(a=0;a<syst.Number_of_atoms;a++){ Zeff[a] = modprms.PT[syst.Atoms[a].Atom_element].Zeff; } // e.g. 4 for STO-3G C
 
   update_Mull_charges(ao_to_atom_map, Zeff, el->Mull_orb_pop_gross, el->Mull_orb_pop_net, Mull_charges_gross, Mull_charges_net);
 
@@ -343,6 +342,11 @@ void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& b
     syst.Atoms[a].Atom_mull_charge_gross = Mull_charges_gross[a]; 
     syst.Atoms[a].Atom_mull_charge_net = Mull_charges_net[a]; 
   }
+
+//  for(a=0;a<syst.Number_of_atoms;a++){ 
+//    cout<<"Zeff[a]= "<<Zeff[a]<<endl;
+//    cout<<"syst.Atoms[a].Atom_mull_charge_net= " <<syst.Atoms[a].Atom_mull_charge_net<<endl;
+//  }
 
 
     
@@ -355,15 +359,31 @@ void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& b
 
       if(i==j){  // Diagonal terms
 
+//        cout<<"Diagonal terms, i= "<<i<<endl;
+//        cout<<"el->Fao_alp->M[i*Norb+i] = "<<el->Fao_alp->M[i*Norb+i]<<endl;
+
         for(int kk=0;kk<atom_to_ao_map[a].size();kk++){    // for all orbitals on atom a
           k = atom_to_ao_map[a][kk];                       // global orbital index of AO kk on atom a
 
+
           double ii_kk, ik_ik; ii_kk = ik_ik = 0.0;
-          double G1 = modprms.PT[basis_ao[i].element].G1[basis_ao[j].ao_shell];
-          double F2 = modprms.PT[basis_ao[i].element].F2[basis_ao[j].ao_shell];
+          double G1 = modprms.PT[basis_ao[i].element].G1[basis_ao[i].ao_shell];
+          double F2 = modprms.PT[basis_ao[i].element].F2[basis_ao[i].ao_shell];
           double eri_aa = eri[a*syst.Number_of_atoms + a];
 
           get_integrals(i,k,basis_ao,eri_aa,G1,F2,ii_kk,ik_ik);
+
+/*
+          cout<<"kk= "<<kk<<" k= "<<k
+              <<" basis_ao[i].ao_shell_type= "<<basis_ao[i].ao_shell_type
+              <<" basis_ao[k].ao_shell_type= "<<basis_ao[k].ao_shell_type
+              <<"basis_ao[i].exponents = ("<<basis_ao[i].x_exp<<","<<basis_ao[i].y_exp<<","<<basis_ao[i].z_exp
+              <<"basis_ao[k].exponents = ("<<basis_ao[k].x_exp<<","<<basis_ao[k].y_exp<<","<<basis_ao[k].z_exp
+              <<" el->P->M[k*Norb+k]= "<<el->P->M[k*Norb+k]
+              <<" el->P_alp->M[k*Norb+k]= "<<el->P_alp->M[k*Norb+k]
+              <<" ii_kk= "<<ii_kk<<" ik_ik= "<<ik_ik
+              <<endl;
+*/
 
           if(prms.use_rosh){ // Restricted open-shell
             el->Fao_alp->M[i*Norb+i] += (el->P->M[k*Norb+k]*ii_kk - 0.5*el->P->M[k*Norb+k]*ik_ik);
@@ -373,7 +393,10 @@ void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& b
           else{ // unrestricted
             el->Fao_alp->M[i*Norb+i] += (el->P->M[k*Norb+k]*ii_kk - el->P_alp->M[k*Norb+k]*ik_ik);
             el->Fao_bet->M[i*Norb+i] += (el->P->M[k*Norb+k]*ii_kk - el->P_bet->M[k*Norb+k]*ik_ik);
+
           }
+
+//          cout<<"at this point el->Fao_bet->M[i*Norb+i]= "<<el->Fao_bet->M[i*Norb+i]<<endl;
   
         }// for kk - all orbitals on atom A
   
@@ -385,8 +408,8 @@ void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& b
           if(b!=a){
 
             // Compute density matrix due to all orbitals on atom b 
-            el->Fao_alp->M[i*Norb+i] += (syst.Atoms[b].Atom_Zeff - syst.Atoms[b].Atom_mull_charge_net)*eri[a*syst.Number_of_atoms+b]; 
-            el->Fao_bet->M[i*Norb+i] += (syst.Atoms[b].Atom_Zeff - syst.Atoms[b].Atom_mull_charge_net)*eri[a*syst.Number_of_atoms+b]; 
+            el->Fao_alp->M[i*Norb+i] += (Zeff[b] - syst.Atoms[b].Atom_mull_charge_net)*eri[a*syst.Number_of_atoms+b]; 
+            el->Fao_bet->M[i*Norb+i] += (Zeff[b] - syst.Atoms[b].Atom_mull_charge_net)*eri[a*syst.Number_of_atoms+b]; 
           }
         }// for b
   
@@ -401,6 +424,8 @@ void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& b
           double F2 = modprms.PT[basis_ao[i].element].F2[basis_ao[i].ao_shell];
           double eri_aa = eri[a*syst.Number_of_atoms+a];
           get_integrals(i,j,basis_ao,eri_aa,G1,F2,ii_jj,ij_ij);
+
+          //cout<<"i= "<<i<<" j= "<<j<<" ii_jj= "<<ii_jj<<", ij_ij= "<<ij_ij<<endl;
 
           if(prms.use_rosh){
             el->Fao_alp->M[i*Norb+j] += ( (2.0*el->P->M[i*Norb+j] - 0.5*el->P->M[i*Norb+j])*ij_ij - 0.5*el->P->M[i*Norb+j]*ii_jj );
