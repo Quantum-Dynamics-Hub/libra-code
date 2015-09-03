@@ -42,7 +42,7 @@ namespace libhamiltonian_qm{
 void indo_core_parameters
 ( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-  vector<double>& eri, vector<double>& V_AB, int opt);
+  vector<double>& eri, vector<double>& V_AB, int opt, int DF);
 
 
 void Hamiltonian_core_indo

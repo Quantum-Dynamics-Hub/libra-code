@@ -141,7 +141,7 @@ opt = 1  # 1 - for INDO, 0 - for CNDO/CNDO2
      
 if(prms.hamiltonian=="indo"):
     Sao.Init_Unit_Matrix(1.0);  
-    indo_core_parameters(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, eri, V_AB, opt);
+    indo_core_parameters(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, eri, V_AB, opt,0);
 
 
 Hao = MATRIX(Norb, Norb)

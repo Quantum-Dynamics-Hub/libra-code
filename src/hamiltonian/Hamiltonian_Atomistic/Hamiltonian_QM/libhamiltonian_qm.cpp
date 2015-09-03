@@ -92,7 +92,7 @@ void export_Hamiltonian_QM_objects(){
   void (*expt_indo_core_parameters_v1)
   ( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-  vector<double>& eri, vector<double>& V_AB, int opt) = &indo_core_parameters;
+  vector<double>& eri, vector<double>& V_AB, int opt, int DF) = &indo_core_parameters;
 
   void (*expt_Hamiltonian_core_indo_v1)
   ( System& syst, vector<AO>& basis_ao, 

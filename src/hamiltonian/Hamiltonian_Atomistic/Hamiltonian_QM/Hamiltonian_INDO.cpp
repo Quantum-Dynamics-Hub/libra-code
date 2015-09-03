@@ -47,10 +47,10 @@ namespace libhamiltonian_qm{
 void indo_core_parameters
 ( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-  vector<double>& eri, vector<double>& V_AB, int opt){
+  vector<double>& eri, vector<double>& V_AB, int opt, int DF){
 // opt == 0 - cndo
 // opt == 1 - indo
-  int DF = 0;
+//  int DF = 0;
   int i,j,a,b,i1,a1,I,J,A;
   VECTOR da,db,dc;
 
@@ -101,7 +101,7 @@ void indo_core_parameters
       eri[a*sz+b] = electron_repulsion_integral(basis_ao[I],basis_ao[I],basis_ao[J],basis_ao[J]);
 
       // V_AB
-      int B = ao_to_atom_map[b]; // global index of atom on orbital b
+      int B = b; //ao_to_atom_map[b]; // global index of atom on orbital b
       if(opt==0){
         V_AB[a*sz+b] = modprms.PT[syst.Atoms[B].Atom_element].Zeff*nuclear_attraction_integral(basis_ao[J],basis_ao[J], syst.Atoms[B].Atom_RB.rb_cm);// V_AB[a][b]
       }

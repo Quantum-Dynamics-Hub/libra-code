@@ -1,0 +1,4 @@
+BH molecule
+HETATM    1  B           0       0.000         0.000   0.000                       B
+HETATM    2  H           0       1.264733625   0.000   0.000                       H
+END

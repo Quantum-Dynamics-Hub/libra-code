@@ -63,7 +63,10 @@ Load_PT(U, "elements.dat", 1)
 syst = System()
 #Load_Molecule(U, syst, os.getcwd()+"/c.pdb", "pdb_1")
 #Load_Molecule(U, syst, os.getcwd()+"/c2.pdb", "pdb_1")
-Load_Molecule(U, syst, os.getcwd()+"/ch4.pdb", "pdb_1")
+#Load_Molecule(U, syst, os.getcwd()+"/bh.pdb", "pdb_1")
+Load_Molecule(U, syst, os.getcwd()+"/co.pdb", "pdb_1")
+#Load_Molecule(U, syst, os.getcwd()+"/ch4.pdb", "pdb_1")
+
 
 print "Number of atoms in the system = ", syst.Number_of_atoms
 atlst1 = range(0,syst.Number_of_atoms)
@@ -143,7 +146,7 @@ opt = 1  # 1 - for INDO, 0 - for CNDO/CNDO2
      
 if(prms.hamiltonian=="indo"):
     Sao.Init_Unit_Matrix(1.0);  
-    indo_core_parameters(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, eri, V_AB, opt);
+    indo_core_parameters(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, eri, V_AB, opt,1);
 
 
 Hao = MATRIX(Norb, Norb)
