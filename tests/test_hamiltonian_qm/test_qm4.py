@@ -63,8 +63,8 @@ Load_PT(U, "elements.dat", 1)
 syst = System()
 #Load_Molecule(U, syst, os.getcwd()+"/c.pdb", "pdb_1")
 #Load_Molecule(U, syst, os.getcwd()+"/c2.pdb", "pdb_1")
-Load_Molecule(U, syst, os.getcwd()+"/bh.pdb", "pdb_1")
-#Load_Molecule(U, syst, os.getcwd()+"/co.pdb", "pdb_1")
+#Load_Molecule(U, syst, os.getcwd()+"/bh.pdb", "pdb_1")
+Load_Molecule(U, syst, os.getcwd()+"/co.pdb", "pdb_1")
 #Load_Molecule(U, syst, os.getcwd()+"/ch4.pdb", "pdb_1")
 
 
@@ -211,6 +211,68 @@ Hamiltonian_Fock_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_a
 
 print "Fock matrix at first iteration (alp)"
 el.get_Fao_alp().show_matrix()
+
+#===============  Now to SCF iterations =======================
+
+
+E = energy_elec(el.get_P_alp(), el.get_Hao(), el.get_Fao_alp()) + energy_elec(el.get_P_bet(), el.get_Hao(), el.get_Fao_bet())
+print "Initial energy = ", E
+E_old = E
+e_err = 2.0*prms.etol
+d_err = 2.0*prms.den_tol
+
+P_alp_old = el.get_P_alp()
+P_bet_old = el.get_P_bet()
+
+i = 0
+run = 1
+while run:
+    
+    degen = 1.0
+    kT = 0.025
+    etol = 0.0001
+    pop_opt = 0  #  0 -  integer populations,  1 - Fermi distribution              
+
+    res_alp = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_alp, degen, kT, etol, pop_opt)
+    res_bet = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_bet, degen, kT, etol, pop_opt)
+
+
+    el.set_P_alp(res_alp[2])
+    el.set_P_bet(res_bet[2])
+    Hamiltonian_Fock_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, eri, V_AB)
+
+
+    d_err = math.fabs((el.get_P_alp()-P_alp_old).max_elt()) + math.fabs((el.get_P_bet()-P_bet_old).max_elt())
+
+    P_alp_old = el.get_P_alp()
+    P_bet_old = el.get_P_bet()
+
+
+    E_old = E
+    E = energy_elec(el.get_P_alp(), el.get_Hao(), el.get_Fao_alp()) + energy_elec(el.get_P_bet(), el.get_Hao(), el.get_Fao_bet())
+    e_err = math.fabs(E_old - E)
+
+    print "Iteration ",i, " e_err = ", e_err, " d_err = ", d_err, " E_el = ", E
+
+    if i>100:
+        run = 0
+        print "Convergence is not achieved in 100 iterations"
+    if e_err<prms.etol and d_err<prms.den_tol:
+        run = 0
+        print "Success: Convergence is achieved"    
+        print "Electronic energy = ", E
+
+        
+        print "Bands(alp)    Occupations(alp)       Bands(bet)    Occupations(bet)"
+        for j in xrange(Norb):
+            print "%12.8f   %12.8f  %12.8f   %12.8f" %(res_alp[3][j][1], res_alp[4][j][1], res_bet[3][j][1], res_bet[4][j][1])
+
+    i = i + 1
+
+    
+
+
+
 
 
 
