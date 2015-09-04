@@ -1,0 +1,3 @@
+0 Eelec= 0 dE= 33.9183 den_err = 0
+1 Eelec= 0 dE= 0 den_err = 1.95753
+2 Eelec= 0 dE= 0 den_err = 0

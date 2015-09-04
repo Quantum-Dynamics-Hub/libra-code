@@ -577,9 +577,15 @@ public:
 //  vector<double> eri;    // precomputed electron repulsion integrals - for all atoms
 //  vector<> V_A
 
+  // For INDO/CNDO/CNDO2
+  int indo_opt;  // 1 = INDO, 0 = CNDO/CNDO2
+  vector<double> eri;
+  vector<double> V_AB;
+
   
   //-------------- Constructor --------------
   Model_Parameters(){  
+    indo_opt = 1;
     set_default_elements(PT);
   }
 
@@ -590,6 +596,9 @@ public:
     eht_k = ob.eht_k;
     meht_k = ob.meht_k;
     hf_int = ob.hf_int;
+    indo_opt = ob.indo_opt;
+    eri = ob.eri;
+    V_AB = ob.V_AB;
   }
 
 

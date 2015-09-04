@@ -10,8 +10,7 @@
 #*********************************************************************************/
 
 ###################################################################
-# Tutorial: Compute core INDO Hamiltonian, solve eigenvalue problem, 
-#  get populations and density matrices
+# Tutorial: SCF computations are hidden - use built-in function
 ###################################################################
 
 import os
@@ -61,7 +60,12 @@ Load_PT(U, "elements.dat", 1)
 
 #=========== STEP 2:  Create system and load a molecule ================
 syst = System()
-Load_Molecule(U, syst, os.getcwd()+"/c.pdb", "pdb_1")
+#Load_Molecule(U, syst, os.getcwd()+"/c.pdb", "pdb_1")
+#Load_Molecule(U, syst, os.getcwd()+"/c2.pdb", "pdb_1")
+#Load_Molecule(U, syst, os.getcwd()+"/bh.pdb", "pdb_1")
+Load_Molecule(U, syst, os.getcwd()+"/co.pdb", "pdb_1")
+#Load_Molecule(U, syst, os.getcwd()+"/ch4.pdb", "pdb_1")
+
 
 print "Number of atoms in the system = ", syst.Number_of_atoms
 atlst1 = range(0,syst.Number_of_atoms)
@@ -141,71 +145,110 @@ opt = 1  # 1 - for INDO, 0 - for CNDO/CNDO2
      
 if(prms.hamiltonian=="indo"):
     Sao.Init_Unit_Matrix(1.0);  
-    indo_core_parameters(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, opt,0);
+    indo_core_parameters(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, opt,1);
 
 
 Hao = MATRIX(Norb, Norb)
-debug = 0
+debug = 1
 Hamiltonian_core_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao,  Sao, debug)
+print "Core Hamiltonian"
 Hao.show_matrix()
-
-
-el = Electronic_Structure(Norb)
-el.set_Hao(Hao)
-el.set_Sao(Sao);
-
-E_alp = MATRIX(Norb, Norb)
-C_alp = MATRIX(Norb, Norb)
-E_bet = MATRIX(Norb, Norb)
-C_bet = MATRIX(Norb, Norb)
-
-
-solve_eigen(Norb, Hao, Sao, E_alp, C_alp)
-solve_eigen(Norb, Hao, Sao, E_bet, C_bet)
-
-#
-E_alp.show_matrix()
-
-e_alp = []
-e_bet = []
-for i in xrange(Norb):
-    e_alp.append(E_alp.get(i,i))
-    e_bet.append(E_bet.get(i,i))
 
 Nelec_alp = Nelec/2
 Nelec_bet = Nelec - Nelec_alp
 print "Nelec_alp = ", Nelec_alp
 print "Nelec_bet = ", Nelec_bet
 
+degen = 1.0
+kT = 0.025
+etol = 0.0001
+pop_opt = 0  #  0 -  integer populations,  1 - Fermi distribution              
+
+res_alp = Fock_to_P(Hao, Sao, Nelec_alp, degen, kT, etol, pop_opt)
+res_bet = Fock_to_P(Hao, Sao, Nelec_bet, degen, kT, etol, pop_opt)
+
+
+print "Eigenvalues (alp):\n"
+res_alp[0].show_matrix()
+print "Eigenvalues (bet):\n"
+res_bet[0].show_matrix()
+
+print "Eigenvectors(alp):\n"
+res_alp[1].show_matrix()
+print "Eigenvectors(bet):\n"
+res_bet[1].show_matrix()
+
+
+print "Density matrix(alp):\n"
+res_alp[2].show_matrix()
+print "Density matrix(bet):\n"
+res_bet[2].show_matrix()
+
+
+print "Bands(alp):\n"
+print res_alp[3]
+print "Bands(bet):\n"
+print res_bet[3]
+
+
+print "Occupations(alp):\n"
+print res_alp[4]
+print "Occupations(bet):\n"
+print res_bet[4]
+
+
+
+el = Electronic_Structure(Norb)
+el.set_Hao(Hao)
+el.set_Sao(Sao)
+el.set_P_alp(res_alp[2])
+el.set_P_bet(res_bet[2])
+#el.set_P(res_alp[2]+res_bet[2])
+
+
+Hamiltonian_Fock_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map)
+
+print "Fock matrix at first iteration (alp)"
+el.get_Fao_alp().show_matrix()
+
+#===============  Now to SCF iterations =======================
+
+
+E = energy_elec(el.get_P_alp(), el.get_Hao(), el.get_Fao_alp()) + energy_elec(el.get_P_bet(), el.get_Hao(), el.get_Fao_bet())
+print "Initial energy = ", E
+E_old = E
+e_err = 2.0*prms.etol
+d_err = 2.0*prms.den_tol
+
+P_alp_old = el.get_P_alp()
+P_bet_old = el.get_P_bet()
+
+BM = 0 # BM - benchmarking
+
+E = scf(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, BM); 
+
+print "Success: Convergence is achieved"    
+print "Electronic energy = ", E
+
 
 degen = 1.0
 kT = 0.025
 etol = 0.0001
-Ef_alp = fermi_energy(e_alp, Nelec_alp, degen, kT, etol)
-Ef_bet = fermi_energy(e_bet, Nelec_bet, degen, kT, etol)
-print "Fermi energy (alpha) = ", Ef_alp
-print "Fermi energy (beta) = ", Ef_bet
-
-bnds_alp = order_bands(E_alp)
-bnds_bet = order_bands(E_bet)
-print "Printing orbital energies"
-print bnds_alp
-print bnds_bet
-
 pop_opt = 0  #  0 -  integer populations,  1 - Fermi distribution              
-occ_alp = populate_bands(Nelec_alp, degen, kT, etol, pop_opt, bnds_alp)
-occ_bet = populate_bands(Nelec_bet, degen, kT, etol, pop_opt, bnds_bet)
-print "Printing orbital occupations"
-print occ_alp
-print occ_bet
+
+res_alp = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_alp, degen, kT, etol, pop_opt)
+res_bet = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_bet, degen, kT, etol, pop_opt)
 
 
-P_alp = compute_density_matrix(occ_alp, C_alp)
-P_bet = compute_density_matrix(occ_bet, C_bet)
+print "Bands(alp)    Occupations(alp)       Bands(bet)    Occupations(bet)"
+for j in xrange(Norb):
+#    print "%12.8f   %12.8f  %12.8f   %12.8f" %(el.bands_alp[3][j][1], el.occ_alp[4][j][1], el.bands_bet[3][j][1], el.occ_bet[4][j][1])
+     print "%12.8f   %12.8f  %12.8f   %12.8f" %(res_alp[3][j][1], res_alp[4][j][1], res_bet[3][j][1], res_bet[4][j][1])
 
-print "Density matrix (alpha)\n"
-P_alp.show_matrix()
-print "Density matrix (bet)\n"
-P_bet.show_matrix()
+    
+
+
+
+
 
 

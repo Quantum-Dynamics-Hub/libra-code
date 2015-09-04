@@ -42,22 +42,20 @@ namespace libhamiltonian_qm{
 void indo_core_parameters
 ( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-  vector<double>& eri, vector<double>& V_AB, int opt, int DF);
+  int opt, int DF);
 
 
 void Hamiltonian_core_indo
 ( System& syst, vector<AO>& basis_ao, 
-  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-  vector<double>& eri, vector<double>& V_AB, int opt,
   Control_Parameters& prms, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   MATRIX* Hao, MATRIX* Sao, int DF
 );
 
 void Hamiltonian_core_indo
 ( System& syst, vector<AO>& basis_ao, 
-  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-  vector<double>& eri, vector<double>& V_AB, int opt,
   Control_Parameters& prms, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   MATRIX& Hao, MATRIX& Sao, int DF
 );
 
@@ -65,13 +63,13 @@ void get_integrals(int i,int j,vector<AO>& basis_ao, double eri_aa, double G1, d
 
 void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
                            Control_Parameters& prms,Model_Parameters& modprms,
-                           vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-                           vector<double>& eri, vector<double>& V_AB);
+                           vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
+                          );
 
 void Hamiltonian_Fock_indo(Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
                            Control_Parameters& prms,Model_Parameters& modprms,
-                           vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-                           vector<double>& eri, vector<double>& V_AB);
+                           vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
+                          );
 
 
 

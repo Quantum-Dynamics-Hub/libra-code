@@ -92,13 +92,12 @@ void export_Hamiltonian_QM_objects(){
   void (*expt_indo_core_parameters_v1)
   ( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-  vector<double>& eri, vector<double>& V_AB, int opt, int DF) = &indo_core_parameters;
+  int opt, int DF) = &indo_core_parameters;
 
   void (*expt_Hamiltonian_core_indo_v1)
   ( System& syst, vector<AO>& basis_ao, 
-  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-  vector<double>& eri, vector<double>& V_AB, int opt,
   Control_Parameters& prms, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   MATRIX& Hao, MATRIX& Sao, int DF) = &Hamiltonian_core_indo;
 
   void (*expt_get_integrals_v1)
@@ -107,8 +106,8 @@ void export_Hamiltonian_QM_objects(){
   void (*expt_Hamiltonian_Fock_indo_v1)
   (Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
    Control_Parameters& prms,Model_Parameters& modprms,
-   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-   vector<double>& eri, vector<double>& V_AB) = &Hamiltonian_Fock_indo;
+   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
+  ) = &Hamiltonian_Fock_indo;
 
 
 
@@ -116,6 +115,68 @@ void export_Hamiltonian_QM_objects(){
   def("Hamiltonian_core_indo", expt_Hamiltonian_core_indo_v1);
   def("get_integrals",expt_get_integrals_v1);
   def("Hamiltonian_Fock_indo",expt_Hamiltonian_Fock_indo_v1);
+
+
+
+  //----------- HF -----------------
+  void (*expt_Hamiltonian_core_hf_v1)
+  ( System& syst, vector<AO>& basis_ao, 
+  Control_Parameters& prms, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  MATRIX& Hao, MATRIX& Sao, int DF) = &Hamiltonian_core_hf;
+
+
+  void (*expt_Hamiltonian_Fock_hf_v1)
+  (Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+   Control_Parameters& prms,Model_Parameters& modprms,
+   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
+  ) = &Hamiltonian_Fock_hf;
+
+
+
+
+  def("Hamiltonian_core_hf", expt_Hamiltonian_core_hf_v1);
+  def("Hamiltonian_Fock_hf", expt_Hamiltonian_Fock_hf_v1);
+
+
+
+  //----------- Hamiltonian_QM -----------------
+  void (*expt_Hamiltonian_core_v1)
+  ( System& syst, vector<AO>& basis_ao, 
+  Control_Parameters& prms, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  MATRIX& Hao, MATRIX& Sao, int DF) = &Hamiltonian_core;
+
+  void (*expt_Hamiltonian_Fock_v1)
+  (Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+   Control_Parameters& prms,Model_Parameters& modprms,
+   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
+  ) = &Hamiltonian_Fock;
+
+
+  def("Hamiltonian_core_hf", expt_Hamiltonian_core_v1);
+  def("Hamiltonian_Fock_hf", expt_Hamiltonian_Fock_v1);
+
+
+
+  //--------------- SCF.*** ------------------------------------
+  double (*expt_scf_v1)
+  (Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+   Control_Parameters& prms,Model_Parameters& modprms,
+   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, int BM) = &scf;
+
+  double (*expt_scf_oda_v1)
+  (Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+   Control_Parameters& prms,Model_Parameters& modprms,
+   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, int BM) = &scf_oda;
+
+  double (*expt_scf_oda_disk_v1)(Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+           Control_Parameters& prms,Model_Parameters& modprms,
+           vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, int BM) = &scf_oda_disk;
+
+  def("scf", expt_scf_v1);
+  def("scf_oda", expt_scf_oda_v1);
+  def("scf_oda_disk", expt_scf_oda_disk_v1);
 
 
 }

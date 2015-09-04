@@ -13,7 +13,8 @@
 #define LIB_HAMILTONIAN_QM_H
 
 
-#include "Hamiltonian_INDO.h"
+#include "Hamiltonian_QM.h"
+#include "SCF.h"
 
 
 namespace libhamiltonian{

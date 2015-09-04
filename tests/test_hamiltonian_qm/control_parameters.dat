@@ -32,8 +32,8 @@
   shift_magnitude = 2.5
 
   use_damping = 1
-  damping_start = 10
-  damping_const = 0.15
+  damping_start = 1
+  damping_const = 0.015
 
   Niter = 1500
   etol = 1e-3

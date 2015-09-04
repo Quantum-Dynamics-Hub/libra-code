@@ -47,9 +47,11 @@ namespace libhamiltonian_qm{
 void indo_core_parameters
 ( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-  vector<double>& eri, vector<double>& V_AB, int opt, int DF){
+  int opt, int DF){
 // opt == 0 - cndo
 // opt == 1 - indo
+  modprms.indo_opt = opt;
+
 //  int DF = 0;
   int i,j,a,b,i1,a1,I,J,A;
   VECTOR da,db,dc;
@@ -59,11 +61,11 @@ void indo_core_parameters
   // Allocate memory if needed
   int sz = syst.Number_of_atoms; // number of atoms in the system
 
-  if(eri.size()!=sz*sz){  cout<<"In indo_core_parameters: eri array is not allocated\nDo allocation...\n"; 
-    eri.clear(); eri = vector<double>(sz*sz,0.0); 
+  if(modprms.eri.size()!=sz*sz){  cout<<"In indo_core_parameters: eri array is not allocated\nDo allocation...\n"; 
+    modprms.eri.clear(); modprms.eri = vector<double>(sz*sz,0.0); 
   }
-  if(V_AB.size()!=sz*sz){  cout<<"In indo_core_parameters: V_AB array is not allocated\nDo allocation...\n"; 
-    V_AB.clear(); V_AB = vector<double>(sz*sz,0.0); 
+  if(modprms.V_AB.size()!=sz*sz){  cout<<"In indo_core_parameters: V_AB array is not allocated\nDo allocation...\n"; 
+    modprms.V_AB.clear(); modprms.V_AB = vector<double>(sz*sz,0.0); 
   }
 
 
@@ -98,18 +100,18 @@ void indo_core_parameters
       J = sorb_indx[b];
      
       // ERI
-      eri[a*sz+b] = electron_repulsion_integral(basis_ao[I],basis_ao[I],basis_ao[J],basis_ao[J]);
+      modprms.eri[a*sz+b] = electron_repulsion_integral(basis_ao[I],basis_ao[I],basis_ao[J],basis_ao[J]);
 
       // V_AB
       int B = b; //ao_to_atom_map[b]; // global index of atom on orbital b
       if(opt==0){
-        V_AB[a*sz+b] = modprms.PT[syst.Atoms[B].Atom_element].Zeff*nuclear_attraction_integral(basis_ao[J],basis_ao[J], syst.Atoms[B].Atom_RB.rb_cm);// V_AB[a][b]
+        modprms.V_AB[a*sz+b] = modprms.PT[syst.Atoms[B].Atom_element].Zeff*nuclear_attraction_integral(basis_ao[J],basis_ao[J], syst.Atoms[B].Atom_RB.rb_cm);// V_AB[a][b]
       }
       else if(opt==1){
-        V_AB[a*sz+b] = modprms.PT[syst.Atoms[B].Atom_element].Zeff*eri[a*sz+b];
+        modprms.V_AB[a*sz+b] = modprms.PT[syst.Atoms[B].Atom_element].Zeff*modprms.eri[a*sz+b];
       }
 
-      if(DF){ cout<<"a= "<<a<<" b= "<<b<<" I= "<<I<<" J= "<<J<<" eri= "<<eri[a*sz+b]<<" V_AB= "<<V_AB[a*sz+b]<<endl; }
+      if(DF){ cout<<"a= "<<a<<" b= "<<b<<" I= "<<I<<" J= "<<J<<" eri= "<<modprms.eri[a*sz+b]<<" V_AB= "<<modprms.V_AB[a*sz+b]<<endl; }
 
     }// for j
   }// for i
@@ -120,9 +122,8 @@ void indo_core_parameters
 
 void Hamiltonian_core_indo
 ( System& syst, vector<AO>& basis_ao, 
-  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-  vector<double>& eri, vector<double>& V_AB, int opt,
   Control_Parameters& prms, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   MATRIX* Hao, MATRIX* Sao, int DF
 ){
 
@@ -138,8 +139,8 @@ void Hamiltonian_core_indo
   }
   int sz = syst.Number_of_atoms; // number of atoms in this fragment
 
-  if(eri.size()!=sz*sz){  cout<<"Error in Hamiltonian_core_indo: size of auxiliary eri array is not right\n"; exit(0);}
-  if(V_AB.size()!=sz*sz){  cout<<"Error in Hamiltonian_core_indo: size of auxiliary V_AB array is not right\n"; exit(0);}
+  if(modprms.eri.size()!=sz*sz){  cout<<"Error in Hamiltonian_core_indo: size of auxiliary eri array is not right\n"; exit(0);}
+  if(modprms.V_AB.size()!=sz*sz){  cout<<"Error in Hamiltonian_core_indo: size of auxiliary V_AB array is not right\n"; exit(0);}
 
 
 
@@ -182,18 +183,18 @@ void Hamiltonian_core_indo
     ///
     int Z = syst.Atoms[a].Atom_Z;  // modprms.PT[elt].Z - e.g. 6 for C
 
-         if(Z==1){ Hao->M[i*Norb+i] -= 0.5*eri[a*sz+a]; }  // H
+         if(Z==1){ Hao->M[i*Norb+i] -= 0.5*modprms.eri[a*sz+a]; }  // H
     else if(Z==3 || Z==11){ 
 
-      if(basis_ao[i].ao_shell_type=="s"){   Hao->M[i*Norb+i] -= 0.5*eri[a*sz+a]; } // s
-      else if(basis_ao[i].ao_shell_type=="p"){  Hao->M[i*Norb+i] -= (0.5*eri[a*sz+a] - G1/12.0); } // p
+      if(basis_ao[i].ao_shell_type=="s"){   Hao->M[i*Norb+i] -= 0.5*modprms.eri[a*sz+a]; } // s
+      else if(basis_ao[i].ao_shell_type=="p"){  Hao->M[i*Norb+i] -= (0.5*modprms.eri[a*sz+a] - G1/12.0); } // p
 
     }  // Li or Na
 
     else if(Z==4 || Z==12){ 
 
-      if(basis_ao[i].ao_shell_type=="s"){  Hao->M[i*Norb+i] -= (1.5*eri[a*sz+a] - 0.5*G1); } // s
-      else if(basis_ao[i].ao_shell_type=="p"){  Hao->M[i*Norb+i] -= (1.5*eri[a*sz+a] - 0.25*G1); } // p
+      if(basis_ao[i].ao_shell_type=="s"){  Hao->M[i*Norb+i] -= (1.5*modprms.eri[a*sz+a] - 0.5*G1); } // s
+      else if(basis_ao[i].ao_shell_type=="p"){  Hao->M[i*Norb+i] -= (1.5*modprms.eri[a*sz+a] - 0.25*G1); } // p
 
     }  // Be or Mg
 
@@ -202,10 +203,10 @@ void Hamiltonian_core_indo
       double Z_core = modprms.PT[basis_ao[i].element].Nval; // core charge of atom 
 
       if(basis_ao[i].ao_shell_type=="s"){      
-        Hao->M[i*Norb+i] -= ( ( Z_core - 0.5 )*eri[a*sz+a] - (1.0/6.0)*( Z_core - 1.5 )*G1); // s
+        Hao->M[i*Norb+i] -= ( ( Z_core - 0.5 )*modprms.eri[a*sz+a] - (1.0/6.0)*( Z_core - 1.5 )*G1); // s
       }
       else if(basis_ao[i].ao_shell_type=="p"){
-        Hao->M[i*Norb+i] -= ( ( Z_core - 0.5 )*eri[a*sz+a] - (1.0/3.0)*G1 - 0.08*( Z_core - 2.5 )*F2); // p
+        Hao->M[i*Norb+i] -= ( ( Z_core - 0.5 )*modprms.eri[a*sz+a] - (1.0/3.0)*G1 - 0.08*( Z_core - 2.5 )*F2); // p
       }
 
     }
@@ -217,7 +218,7 @@ void Hamiltonian_core_indo
 
     for(b=0;b<sz;b++){
       if(b!=a){
-        Hao->M[i*Norb+i] -= V_AB[a*sz+b];  //  = V_AB = Z_B * eri[A][B] -in INDO
+        Hao->M[i*Norb+i] -= modprms.V_AB[a*sz+b];  //  = V_AB = Z_B * eri[A][B] -in INDO
       }
     }// for b
     if(DF){  cout<<" + Contribution from Coulombic terms = "<<Hao->M[i*Norb+i]<<endl;   }
@@ -249,13 +250,12 @@ void Hamiltonian_core_indo
 
 void Hamiltonian_core_indo
 ( System& syst, vector<AO>& basis_ao, 
-  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-  vector<double>& eri, vector<double>& V_AB, int opt,
   Control_Parameters& prms, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   MATRIX& Hao, MATRIX& Sao, int DF
 ){
 
-  Hamiltonian_core_indo( syst, basis_ao, atom_to_ao_map, ao_to_atom_map,  eri, V_AB, opt, prms, modprms, &Hao, &Sao, DF);
+  Hamiltonian_core_indo( syst, basis_ao, prms, modprms,  atom_to_ao_map, ao_to_atom_map, &Hao, &Sao, DF);
 
 }
 
@@ -301,9 +301,9 @@ void get_integrals(int i,int j,vector<AO>& basis_ao, double eri_aa, double G1, d
 
 
 void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
-                           Control_Parameters& prms,Model_Parameters& modprms,
-                           vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-                           vector<double>& eri, vector<double>& V_AB){
+                           Control_Parameters& prms, Model_Parameters& modprms,
+                           vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
+                          ){
 
   
 // This function constructs INDO (CNDO/2) Fock matrix
@@ -343,10 +343,6 @@ void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& b
     syst.Atoms[a].Atom_mull_charge_net = Mull_charges_net[a]; 
   }
 
-//  for(a=0;a<syst.Number_of_atoms;a++){ 
-//    cout<<"Zeff[a]= "<<Zeff[a]<<endl;
-//    cout<<"syst.Atoms[a].Atom_mull_charge_net= " <<syst.Atoms[a].Atom_mull_charge_net<<endl;
-//  }
 
 
     
@@ -369,7 +365,7 @@ void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& b
           double ii_kk, ik_ik; ii_kk = ik_ik = 0.0;
           double G1 = modprms.PT[basis_ao[i].element].G1[basis_ao[i].ao_shell];
           double F2 = modprms.PT[basis_ao[i].element].F2[basis_ao[i].ao_shell];
-          double eri_aa = eri[a*syst.Number_of_atoms + a];
+          double eri_aa = modprms.eri[a*syst.Number_of_atoms + a];
 
           get_integrals(i,k,basis_ao,eri_aa,G1,F2,ii_kk,ik_ik);
 
@@ -408,8 +404,8 @@ void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& b
           if(b!=a){
 
             // Compute density matrix due to all orbitals on atom b 
-            el->Fao_alp->M[i*Norb+i] += (Zeff[b] - syst.Atoms[b].Atom_mull_charge_net)*eri[a*syst.Number_of_atoms+b]; 
-            el->Fao_bet->M[i*Norb+i] += (Zeff[b] - syst.Atoms[b].Atom_mull_charge_net)*eri[a*syst.Number_of_atoms+b]; 
+            el->Fao_alp->M[i*Norb+i] += (Zeff[b] - syst.Atoms[b].Atom_mull_charge_net)*modprms.eri[a*syst.Number_of_atoms+b]; 
+            el->Fao_bet->M[i*Norb+i] += (Zeff[b] - syst.Atoms[b].Atom_mull_charge_net)*modprms.eri[a*syst.Number_of_atoms+b]; 
           }
         }// for b
   
@@ -422,7 +418,7 @@ void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& b
 
           double G1 = modprms.PT[basis_ao[i].element].G1[basis_ao[i].ao_shell];
           double F2 = modprms.PT[basis_ao[i].element].F2[basis_ao[i].ao_shell];
-          double eri_aa = eri[a*syst.Number_of_atoms+a];
+          double eri_aa = modprms.eri[a*syst.Number_of_atoms+a];
           get_integrals(i,j,basis_ao,eri_aa,G1,F2,ii_jj,ij_ij);
 
           //cout<<"i= "<<i<<" j= "<<j<<" ii_jj= "<<ii_jj<<", ij_ij= "<<ij_ij<<endl;
@@ -441,12 +437,12 @@ void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& b
         else{ // different orbitals are on different atoms
 
           if(prms.use_rosh){
-            el->Fao_alp->M[i*Norb+j] -= 0.5*el->P->M[i*Norb+j]*eri[a*syst.Number_of_atoms+b]; 
-            el->Fao_bet->M[i*Norb+j] -= 0.5*el->P->M[i*Norb+j]*eri[a*syst.Number_of_atoms+b]; 
+            el->Fao_alp->M[i*Norb+j] -= 0.5*el->P->M[i*Norb+j]*modprms.eri[a*syst.Number_of_atoms+b]; 
+            el->Fao_bet->M[i*Norb+j] -= 0.5*el->P->M[i*Norb+j]*modprms.eri[a*syst.Number_of_atoms+b]; 
           }
           else{
-            el->Fao_alp->M[i*Norb+j] -= el->P_alp->M[i*Norb+j]*eri[a*syst.Number_of_atoms+b]; 
-            el->Fao_bet->M[i*Norb+j] -= el->P_bet->M[i*Norb+j]*eri[a*syst.Number_of_atoms+b]; 
+            el->Fao_alp->M[i*Norb+j] -= el->P_alp->M[i*Norb+j]*modprms.eri[a*syst.Number_of_atoms+b]; 
+            el->Fao_bet->M[i*Norb+j] -= el->P_bet->M[i*Norb+j]*modprms.eri[a*syst.Number_of_atoms+b]; 
           }
 
         }
@@ -461,11 +457,11 @@ void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& b
 }
 
 void Hamiltonian_Fock_indo(Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
-                           Control_Parameters& prms,Model_Parameters& modprms,
-                           vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-                           vector<double>& eri, vector<double>& V_AB){
+                           Control_Parameters& prms, Model_Parameters& modprms,
+                           vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
+                          ){
 
-  Hamiltonian_Fock_indo(&el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, eri, V_AB);
+  Hamiltonian_Fock_indo(&el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map);
 
 }
 

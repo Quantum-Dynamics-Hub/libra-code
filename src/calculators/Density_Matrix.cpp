@@ -73,6 +73,46 @@ MATRIX compute_density_matrix(boost::python::list occ, MATRIX C){
 }
 
 
+void Fock_to_P(int Norb,int Nocc, int degen, double Nel, std::string eigen_method, int pop_opt,
+               MATRIX* Fao, MATRIX* Sao, MATRIX* C, MATRIX* E,
+               vector< pair<int,double> >& bands, vector< pair<int,double> >& occ,
+               MATRIX* P, vector<Timer>& bench_t){
+// Iterative unit: from a given Hamiltonian (Fock matrix) we obtain density matrix
+// In these steps there is no coupling of spin-up and spin-down channels, so they can
+// be solved one by one, independently
+//exit(0);
+  int BM = 1;
+    
+  // Get electronic structure (wfc and energies) from given Fock matrix
+  if(BM){ bench_t[0].start(); }
+  if(eigen_method=="generalized"){    solve_eigen(Norb, Fao, Sao, E,C);    }// generalized
+  else if(eigen_method=="standard"){  
+    MATRIX* I; I = new MATRIX(Norb,Norb); *I = 0.0; for(int i=0;i<Norb;i++){ I->M[i*Norb+i] = 1.0; }
+    solve_eigen(Norb, Fao, I, E,C);       // generalized, but with unit overlap
+    delete I;
+  }// standard
+  if(BM){ bench_t[0].stop(); }
+
+  // Generate and order bands in compressed form from the matrices
+  if(BM){ bench_t[1].start(); }
+  order_bands(E, bands);
+  if(BM){ bench_t[1].stop(); }
+
+  // Populate bands
+  if(BM){ bench_t[2].start(); }
+  double kT = 0.025; // 300 K
+  double etol = 0.0001; // how accurately determine E_f
+  populate_bands(Nel, degen, kT, etol, pop_opt, bands, occ);
+  if(BM){ bench_t[2].stop(); }
+
+  // Update density matrix
+  if(BM){ bench_t[3].start(); }
+  compute_density_matrix(occ, C, P);
+  if(BM){ bench_t[3].stop(); }
+
+}//void Fock_to_P(int Norb,int Nocc, int degen, double Nel, std::string eigen_method, int pop_opt, ....
+ 
+
 
 void Fock_to_P(MATRIX* Fao, MATRIX* Sao, double Nel, double degen, double kT, double etol, int pop_opt, /*Inputs*/
                MATRIX* E, MATRIX* C, MATRIX* P,                                              /*Outputs*/
@@ -118,6 +158,10 @@ void Fock_to_P(MATRIX* Fao, MATRIX* Sao, double Nel, double degen, double kT, do
   Fock_to_P(Fao, Sao, Nel, degen, kT, etol, pop_opt, E, C, P, bands, occ, BM, bench_t);
 
 }
+
+
+
+
 
 boost::python::list Fock_to_P(MATRIX Fao, MATRIX Sao, double Nel, double degen, double kT, double etol, int pop_opt){ 
 

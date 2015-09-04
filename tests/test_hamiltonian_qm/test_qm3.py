@@ -146,12 +146,12 @@ opt = 1  # 1 - for INDO, 0 - for CNDO/CNDO2
      
 if(prms.hamiltonian=="indo"):
     Sao.Init_Unit_Matrix(1.0);  
-    indo_core_parameters(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, eri, V_AB, opt,1);
+    indo_core_parameters(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, opt,1);
 
 
 Hao = MATRIX(Norb, Norb)
 debug = 1
-Hamiltonian_core_indo(syst, basis_ao, atom_to_ao_map, ao_to_atom_map, eri, V_AB, opt, prms, modprms, Hao,  Sao, debug)
+Hamiltonian_core_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao,  Sao, debug)
 print "Core Hamiltonian"
 Hao.show_matrix()
 
@@ -207,7 +207,7 @@ el.set_P_bet(res_bet[2])
 #el.set_P(res_alp[2]+res_bet[2])
 
 
-Hamiltonian_Fock_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, eri, V_AB)
+Hamiltonian_Fock_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map)
 
 print "Fock matrix at first iteration (alp)"
 el.get_Fao_alp().show_matrix()

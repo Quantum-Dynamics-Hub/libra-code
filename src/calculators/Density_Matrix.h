@@ -20,6 +20,11 @@ namespace libcalculators{
 void compute_density_matrix(vector< pair<int,double> >& occ, MATRIX* C, MATRIX* P);
 MATRIX compute_density_matrix(boost::python::list occ, MATRIX C);
 
+void Fock_to_P(int Norb,int Nocc, int degen, double Nel, std::string eigen_method, int pop_opt,
+               MATRIX* Fao, MATRIX* Sao, MATRIX* C, MATRIX* E,
+               vector< pair<int,double> >& bands, vector< pair<int,double> >& occ,
+               MATRIX* P, vector<Timer>& bench_t);
+
 void Fock_to_P(MATRIX* Fao, MATRIX* Sao, double Nel, double degen, double kT, double etol, int pop_opt, /*Inputs*/
                MATRIX* E, MATRIX* C, MATRIX* P,                                              /*Outputs*/
                vector< pair<int,double> >& bands, vector< pair<int,double> >& occ,           /*Outputs*/
