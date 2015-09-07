@@ -42,9 +42,9 @@ void propagate_nuclear(double dt,Nuclear* mol,Electronic* el,Hamiltonian* ham,in
   mol->propagate_p(0.5*dt);
 
 
-  ham->set_q(mol->q);
+//  ham->set_q(mol->q);
   for(i=0;i<mol->nnucl;i++){ v_[i] = mol->p[i]/mol->mass[i]; }  ham->set_v(v_);
-  ham->compute();  
+//  ham->compute();  
 
 
 

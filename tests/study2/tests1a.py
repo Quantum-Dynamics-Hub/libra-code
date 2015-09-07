@@ -32,6 +32,7 @@ rnd = Random()
 
 def boltz_old():
 # This function generates x and p taken from the Boltzmann distribution
+    rnd = Random()
 
     Er = 2.39e-2
     omega = 3.5e-4
@@ -133,7 +134,7 @@ def x_ave(ens):
 
 
 
-def sh_pop1(ens, rep, xmin, xmax):
+def sh_pop1_ext(ens, rep, xmin, xmax):
 # ens - ensemble
 
     pops = [0.0, 0.0]
@@ -142,9 +143,10 @@ def sh_pop1(ens, rep, xmin, xmax):
 
         ens.ham_set_q(j, ens.mol[j].q )
         #ens.ham_compute_adiabatic(i)
-        ens.ham_compute_adiabatic(j)
+        ens.ham_compute(j)
 
         # Adiabatic energies
+        ens.ham_set_rep(j,1)
         E0 = ens.ham_H(j,0,0).real
         E1 = ens.ham_H(j,1,1).real
 
@@ -263,7 +265,9 @@ for ie in range(0,1):
 
         # Initialization of nuclear variables
         ens.mol[i].mass[0] = mass
-        ens.mol[i].q[0], ens.mol[i].p[0] = boltz_old()
+        ens.mol[i].q[0], ens.mol[i].p[0] = boltz()
+#        print i, ens.mol[i].q[0], ens.mol[i].p[0]
+        ens.mol[i].f[0] = 0.0
         ens.ham_set_v(i, [ens.mol[i].p[0]/ens.mol[i].mass[0]] )
         ens.ham_set_q(i, ens.mol[i].q )
 
@@ -271,12 +275,13 @@ for ie in range(0,1):
         # Initialization of electronic variables
         if rep==0:    # Diabatic - we start in left diabatic well 
             ens.el[i].istate = isurface
+            ens.ham_compute(i)
 
         elif rep==1:  # Adiabatic
         # We start in left diabatic state - this corresponds to a mixture of two adiabatic states
         # The TD-SE populations are set from the transformation coefficients:
         # Later - set Hamiltonian parameters, if vary them
-            ens.ham_compute_adiabatic(i)
+            ens.ham_compute(i)
 
             # Adiabatic energies
             E0 = ens.ham_H(i,0,0).real
@@ -347,7 +352,7 @@ for ie in range(0,1):
     e_tot = epot + ekin
     e_ext = e_tot + e_bath
 
-    pops = sh_pop1(ens, rep, -1000000, 1000000)
+    pops = ens.sh_pop1(-1000000, 1000000)
     x, sigma_ = x_ave(ens)
     snap = 0
 
@@ -366,74 +371,10 @@ for ie in range(0,1):
     for snap in xrange(nsnap):
         for step in xrange(nstep):
 
-            ens.el_propagate_electronic(0.5*dt)
+            propagate_ensemble(dt, ens, 1)
         
-            # Nuclear dynamics
-            #----- Thermostat -------
-            for i in xrange(ens.ntraj):
-                S[i] = rnd.normal()
-
-            #s = rnd.normal()
-            for i in xrange(ens.ntraj):
-                #rnd = Random() 
-                # Effect of Langevin thermostat
-                if t_method=="nhc":
-                    ens.mol[i].p[0] = ens.mol[i].p[0] * THERM.vel_scale(0.5*dt)
-                elif t_method=="ens_nhc":
-                    ens.mol[i].p[0] = ens.mol[i].p[0] * therms[i].vel_scale(0.5*dt)
-                elif t_method=="lang":
-                    s = S[i] #rnd.normal()
-#                    ens.mol[i].p[0] = ens.mol[i].p[0] * math.exp(-gamma*0.25*dt)
-#                    ens.mol[i].p[0] = ens.mol[i].p[0] + sigma * s * 0.5*dt
-#                    ens.mol[i].p[0] = ens.mol[i].p[0] * math.exp(-gamma*0.25*dt)
-
-
-            ens.mol_propagate_p(0.5*dt)
-            ens.ham_set_v()
-            ens.mol_propagate_q(dt)
-            
-        
-            ekin = compute_kinetic_energy(ens)
-
-            if t_method=="nhc":
-                THERM.propagate_nhc(dt, ekin, 0.0, 0.0)
-            elif t_method=="ens_nhc":
-                for i in xrange(ens.ntraj):
-                    ekin_m = compute_kinetic_energy(ens.mol[i])
-                    therms[i].propagate_nhc(dt, ekin_m, 0.0, 0.0)
-            
-
-
             epot = compute_potential_energy(ens, 1)  # 0 - MF forces, 1 - FSSH
-            compute_forces(ens, 1)
-            ens.mol_propagate_p(0.5*dt)
-
-            #----- Thermostat -------
-            #s = rnd.normal()
-            for i in xrange(ens.ntraj):
-                #rnd = Random()                
-                # Effect of Langevin thermostat
-                if t_method=="nhc":
-                    ens.mol[i].p[0] = ens.mol[i].p[0] * THERM.vel_scale(0.5*dt)
-                elif t_method=="ens_nhc":
-                    ens.mol[i].p[0] = ens.mol[i].p[0] * therms[i].vel_scale(0.5*dt)
-                elif t_method=="lang":
-                    s = S[i] #rnd.normal()
-#                    ens.mol[i].p[0] = ens.mol[i].p[0] * math.exp(-gamma*0.25*dt)
-#                    ens.mol[i].p[0] = ens.mol[i].p[0] + sigma * s * 0.5*dt
-#                    ens.mol[i].p[0] = ens.mol[i].p[0] * math.exp(-gamma*0.25*dt)
-        
-            # el-dyn
-            ens.ham_set_v() 
-#            for i in xrange(ens.ntraj):
-#                ens.ham_compute(i)
-            epot = compute_potential_energy(ens, 1)  # 0 - MF forces, 1 - FSSH
-            compute_forces(ens, 1)
-
-
-            ens.el_propagate_electronic(0.5*dt)  
             ekin = compute_kinetic_energy(ens)
-
             e_tot = epot + ekin
         
         
@@ -467,7 +408,7 @@ for ie in range(0,1):
         
         #---------------------- Compute and print info for given snap ------------------------------
 
-        pops = sh_pop1(ens, rep, -1000000, 1000000)
+        pops = ens.sh_pop1(-1000000, 1000000)
         x, sigma_ = x_ave(ens)
 
         e_bath = 0.0
