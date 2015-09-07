@@ -78,6 +78,14 @@ void export_Ensemble_objects(){
   boost::python::list (Ensemble::*expt_sh_pop_v4)() = &Ensemble::sh_pop;
 
 
+  void (Ensemble::*expt_sh_pop1_v1)(vector<double>& v,double xmax,double xmin) = &Ensemble::sh_pop1;
+  void (Ensemble::*expt_sh_pop1_v2)(vector<double>& v) = &Ensemble::sh_pop1;
+  boost::python::list (Ensemble::*expt_sh_pop1_v3)(double xmax,double xmin) = &Ensemble::sh_pop1;
+  boost::python::list (Ensemble::*expt_sh_pop1_v4)() = &Ensemble::sh_pop1;
+
+
+
+
 
 
 
@@ -149,9 +157,16 @@ void export_Ensemble_objects(){
       .def("sh_pop", expt_sh_pop_v3)
       .def("sh_pop", expt_sh_pop_v4)
 
+      .def("sh_pop1", expt_sh_pop1_v1)
+      .def("sh_pop1", expt_sh_pop1_v2)
+      .def("sh_pop1", expt_sh_pop1_v3)
+      .def("sh_pop1", expt_sh_pop1_v4)
+
 
  
   ;
+
+
 
 
 

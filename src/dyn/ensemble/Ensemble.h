@@ -138,8 +138,11 @@ class Ensemble{
   boost::python::list sh_pop(double,double);
   boost::python::list sh_pop();
 
-  void sh_pop1(vector<double>&);
   void sh_pop1(vector<double>&,double,double);
+  void sh_pop1(vector<double>&);
+  boost::python::list sh_pop1(double,double);
+  boost::python::list sh_pop1();
+
 
 
   void print_map(std::string prefix, double Xmin, double Xmax, double dx, double Ymin, double Ymax, double dy, int snap); // for 2D projections on XY plane
@@ -149,6 +152,7 @@ class Ensemble{
 
 
 };
+
 
 }// namespace libensemble
 }// namespace libdyn

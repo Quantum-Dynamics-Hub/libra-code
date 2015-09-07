@@ -1,5 +1,5 @@
 #
-set terminal png font "Arial,26" size 800, 600 enhanced
+set terminal pngcairo font "Arial,26" size 800, 600 enhanced
 
 set lmargin at screen 0.17
 set rmargin at screen 0.95
@@ -34,7 +34,7 @@ set xtics 0.005
 #set ytics 2
 
 set output "rates.png"
-plot "rates.txt"  using ($1):($2*1e+6)   w l   ls  11   lw 3  t "Marcus",\
-     "rates.txt"  using ($1):($3*1e+6)   w lp  ls  31   lw 3  t "FSSH_{adiabatic}"
+plot "marcus.dat"  using ($1):($2*1e+6)   w l   ls  11   lw 3  t "Marcus",\
+     "marcus.dat"  using ($1):($3*1e+6)   w lp  ls  31   lw 3  t "FSSH_{adiabatic}"
 
 

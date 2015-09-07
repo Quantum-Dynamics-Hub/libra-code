@@ -9,36 +9,37 @@
 *
 *********************************************************************************/
 
-#ifndef LIBDYN_H
-#define LIBDYN_H
+#ifndef DYNAMICS_ENSEMBLE_H
+#define DYNAMICS_ENSEMBLE_H
 
+// External dependencies
+#include "../mmath/libmmath.h"
+#include "../hamiltonian/libhamiltonian.h"
 
 // Dynamics classes
 #include "nuclear/libnuclear.h"
-#include "rigidbody/librigidbody.h"
 #include "electronic/libelectronic.h"
 #include "thermostat/libthermostat.h"
-#include "barostat/libbarostat.h"
-#include "wfcgrid/libwfcgrid.h"
 #include "ensemble/libensemble.h"
 
-// General dynamics
-#include "Energy_and_Forces.h"
-#include "Surface_Hopping.h"
-#include "Surface_Hopping_method1.h"
 #include "Dynamics_Nuclear.h"
-#include "Dynamics_Ensemble.h"
 
 
-
+using namespace libhamiltonian;
 
 namespace libdyn{
 
+using namespace libnuclear;
+using namespace libelectronic;
+using namespace libthermostat;
+using namespace libensemble;
 
-void export_Dyn_objects();
+
+
+void propagate_ensemble(double dt,Ensemble* ens,int opt);
+void propagate_ensemble(double dt,Ensemble& ens,int opt);
 
 
 }// namespace libdyn
 
-#endif // LIBDYN_H
-
+#endif // DYNAMICS_ENSEMBLE_H

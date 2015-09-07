@@ -20,6 +20,7 @@ namespace libdyn{
 void propagate_nuclear(double dt,Nuclear* mol,Electronic* el,Hamiltonian* ham,int opt){
 
   int i;
+  vector<double> v_(mol->nnucl); 
 
   // Propagate momenta and positions of all nuclei
   // exp(iL_q*dt)*exp(iL_p*dt/2)
@@ -27,7 +28,9 @@ void propagate_nuclear(double dt,Nuclear* mol,Electronic* el,Hamiltonian* ham,in
   mol->propagate_q(dt);
 
   // Update Hamiltonian
-  ham->set_q(mol->q);  ham->compute();  
+  ham->set_q(mol->q);
+  for(i=0;i<mol->nnucl;i++){ v_[i] = mol->p[i]/mol->mass[i]; }  ham->set_v(v_);
+  ham->compute();  
 
   // Update forces and potential energy
   compute_potential_energy(mol, el, ham, opt);
@@ -37,6 +40,12 @@ void propagate_nuclear(double dt,Nuclear* mol,Electronic* el,Hamiltonian* ham,in
   // Propagate momenta of all nucleii
   // operator exp(iL_p*dt/2)
   mol->propagate_p(0.5*dt);
+
+
+  ham->set_q(mol->q);
+  for(i=0;i<mol->nnucl;i++){ v_[i] = mol->p[i]/mol->mass[i]; }  ham->set_v(v_);
+  ham->compute();  
+
 
 
 }// propagate_nuclear

@@ -45,6 +45,10 @@ void export_Dyn_objects(){
   void (*expt_compute_forces_v2)(Ensemble& ens, int opt) = &compute_forces;
 
 
+  void (*expt_propagate_ensemble_v1)(double dt,Ensemble& ens,int opt) = &propagate_ensemble;
+  def("propagate_ensemble", expt_propagate_ensemble_v1);
+
+
   void (*expt_compute_hopping_probabilities_fssh_v1)
   (Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
    double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_fssh;

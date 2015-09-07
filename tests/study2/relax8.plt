@@ -34,8 +34,8 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 
 set xlabel "time, a.u." offset 0.0, 0.5
 set ylabel "SH pops" offset 1.5, 0.0
-set output "relax8.png"
-plot "relax8.txt" using 1:6   w p  ls 31  lw 2  t "SH(0), FSSH"
+set output "relax0.png"
+plot "relax0.txt" using 1:4   w p  ls 31  lw 2  t "SH(0), FSSH"
 
     
 

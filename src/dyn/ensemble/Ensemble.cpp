@@ -313,47 +313,48 @@ boost::python::list Ensemble::sh_pop(double xmin, double xmax){
 
 
 void Ensemble::sh_pop1(vector<double>& pops,double xmin, double xmax){
-/*
+
 // This is specially for Marcus spin-boson problem
 
   int i,j;
+  vector<double> v_(ntraj);
 
   // In case array is of wrong size
-  if(pops.size()!=el[0]->nstates){
-
-    pops.reserve(el[0]->nstates);
-    pops.resize(el[0]->nstates,0.0);  
-
+  if(pops.size()!=nelec){
+    pops.reserve(nelec);
+    pops.resize(nelec,0.0);  
   }
 
-
-
-  for(i=0;i<el[0]->nstates;i++){  // all electronic states
+  for(i=0;i<nelec;i++){  // all electronic states
     pops[i] = 0.0;
   }
 
  
-  for(j=0;j<size;j++){ // for all trajectories
+  for(j=0;j<ntraj;j++){ // for all trajectories
 
-    ham[j]->set_status(0);
-    ham[j]->compute(mol[j]);
+//    ham[j]->set_status(0);
+    ham[j]->set_q(mol[j].q); 
+    for(i=0;i<mol[j].nnucl;i++){ v_[i] = mol[j].p[i]/mol[j].mass[i]; }  ham[j]->set_v(v_);
+    ham[j]->compute();
 
     double E0, E1, H0, H1, V;
-    E0 = ham[j]->H(mol[j],0,0).real();
-    E1 = ham[j]->H(mol[j],1,1).real();
-    H0 = ham[j]->H(mol[j],0,0,0).real(); // diabatic
-    H1 = ham[j]->H(mol[j],1,1,0).real();
-    V  = ham[j]->H(mol[j],0,1,0).real();
+    ham[j]->set_rep(1);
+    E0 = ham[j]->H(0,0).real();   // adiabatic
+    E1 = ham[j]->H(1,1).real();
 
+    ham[j]->set_rep(0);
+    H0 = ham[j]->H(0,0).real(); // diabatic
+    H1 = ham[j]->H(1,1).real();
+    V  = ham[j]->H(0,1).real();
 
+    ham[j]->set_rep(1); // return back to adiabatic
 
-    for(i=0;i<el[0]->nstates;i++){  // all electronic states
+    for(i=0;i<nelec;i++){  // all electronic states
 
-      if(mol[j]->R[0].x>xmin && mol[j]->R[0].x<xmax){ // only those trajectories that are in given range
+      if(mol[j].q[0] > xmin && mol[j].q[0] < xmax){ // only those trajectories that are in given range
 
-        if(el[j]->istate == 0){ // we are in 0-th adiabatic state
+        if(el[j].istate == 0){ // we are in 0-th adiabatic state
         
-
           if(i==0){             // Probability to be on 0-th (left) diabat - f0
            
             pops[0] += V*V/((H0 - E0)*(H0 - E0) + V*V);  // f0^2
@@ -367,7 +368,7 @@ void Ensemble::sh_pop1(vector<double>& pops,double xmin, double xmax){
 
 
         }// 0-th adiabatic state
-        else if(el[j]->istate == 1){
+        else if(el[j].istate == 1){
 
           if(i==0){             // Probability to be on 0-th (left) diabat - f1
          
@@ -390,14 +391,15 @@ void Ensemble::sh_pop1(vector<double>& pops,double xmin, double xmax){
 
 
 
-  for(i=0;i<el[0]->nstates;i++){  // all electronic states
+  for(i=0;i<nelec;i++){  // all electronic states
 
-    pops[i] /= (double)size;   // normalize
+    pops[i] /= ((double)ntraj);   // normalize
 
   }
   
-*/
+
 }
+
 
 void Ensemble::sh_pop1(vector<double>& pops){
   // Wavefunction population of all states, without regard to nuclear wavefunction localization
@@ -407,6 +409,33 @@ void Ensemble::sh_pop1(vector<double>& pops){
   sh_pop1(pops,-100000000.0,100000000.0);
 
 }
+
+boost::python::list Ensemble::sh_pop1(){
+
+  vector<double> pops;
+  sh_pop1(pops);
+
+  boost::python::list res;
+  for(int i=0;i<pops.size();i++){
+    res.append(pops[i]);
+  }
+
+  return res;
+}
+
+boost::python::list Ensemble::sh_pop1(double xmin, double xmax){
+
+  vector<double> pops;
+  sh_pop1(pops, xmin, xmax);
+
+  boost::python::list res;
+  for(int i=0;i<pops.size();i++){
+    res.append(pops[i]);
+  }
+
+  return res;
+}
+
 
 
 void Ensemble::print_map(std::string prefix, double Xmin, double Xmax, double dx, double Ymin, double Ymax, double dy, int snap){
