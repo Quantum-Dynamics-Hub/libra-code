@@ -19,7 +19,7 @@
 
 <scf_options> 
   use_disk = 0
-  scf_algo = oda  
+  scf_algo = none  
   use_rosh = 0
 
   pop_opt = 0
@@ -31,9 +31,9 @@
   use_level_shift = 0
   shift_magnitude = 2.5
 
-  use_damping = 1
-  damping_start = 1
-  damping_const = 0.015
+  use_damping = 0
+  damping_start = 5
+  damping_const = 0.1
 
   Niter = 1500
   etol = 1e-3

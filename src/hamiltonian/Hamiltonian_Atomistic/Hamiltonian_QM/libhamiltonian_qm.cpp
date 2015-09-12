@@ -154,8 +154,8 @@ void export_Hamiltonian_QM_objects(){
   ) = &Hamiltonian_Fock;
 
 
-  def("Hamiltonian_core_hf", expt_Hamiltonian_core_v1);
-  def("Hamiltonian_Fock_hf", expt_Hamiltonian_Fock_v1);
+  def("Hamiltonian_core", expt_Hamiltonian_core_v1);
+  def("Hamiltonian_Fock", expt_Hamiltonian_Fock_v1);
 
 
 
@@ -164,6 +164,11 @@ void export_Hamiltonian_QM_objects(){
   (Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
    Control_Parameters& prms,Model_Parameters& modprms,
    vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, int BM) = &scf;
+
+  double (*expt_scf_none_v1)
+  (Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+   Control_Parameters& prms,Model_Parameters& modprms,
+   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, int BM) = &scf_none;
 
   double (*expt_scf_oda_v1)
   (Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
@@ -175,6 +180,7 @@ void export_Hamiltonian_QM_objects(){
            vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, int BM) = &scf_oda_disk;
 
   def("scf", expt_scf_v1);
+  def("scf_none", expt_scf_none_v1);
   def("scf_oda", expt_scf_oda_v1);
   def("scf_oda_disk", expt_scf_oda_disk_v1);
 

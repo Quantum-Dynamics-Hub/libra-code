@@ -44,7 +44,7 @@ Control_Parameters::Control_Parameters(){
   // </guess_options>
 
   // <scf_options>
-  scf_algo = "oda";      // This is the most robust option
+  scf_algo = "none";     // This is the most robust option
   use_disk = 0;          // 0 - do not use  disk (faster);  1 - use disk (less memory required)
   use_rosh = 0;          // use open shell (not to use restricted open-shell)
   do_annihilate = 0;     // do not do spin annihilation by default
@@ -621,11 +621,12 @@ void get_parameters_from_file(std::string filename, Control_Parameters& prms){
 
 
   //===================== Some analysis of what is read from input/used as default ===================
-  if(prms.scf_algo=="oda"||prms.scf_algo=="diis_fock"||prms.scf_algo=="diis_dm"){
+  if(prms.scf_algo=="oda"||prms.scf_algo=="diis_fock"||prms.scf_algo=="diis_dm"||prms.scf_algo=="none"){
   }else{
     cout<<"Error: prms.scf_algo = "<<prms.scf_algo<<" is unknown or not registered\n";
     cout<<" possible values are:\n";
-    cout<<" oda       - for optimal damping algorithm (default)\n";
+    cout<<" none      - for standard SCF algorithm (default)\n";
+    cout<<" oda       - for optimal damping algorithm\n";
     cout<<" diis_fock - for DIIS with Fock matrix mixing/extrapolation\n";
     cout<<" diis_dm   - for DIIS with density matrix mixing/extrapolation\n";
     exit(0);

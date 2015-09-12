@@ -150,7 +150,7 @@ if(prms.hamiltonian=="indo"):
 
 Hao = MATRIX(Norb, Norb)
 debug = 1
-Hamiltonian_core_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao,  Sao, debug)
+Hamiltonian_core(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao,  Sao, debug)
 print "Core Hamiltonian"
 Hao.show_matrix()
 
@@ -199,36 +199,22 @@ print res_bet[4]
 
 
 el = Electronic_Structure(Norb)
+el.Nocc_alp = Nelec_alp
+el.Nocc_bet = Nelec_bet
 el.set_Hao(Hao)
 el.set_Sao(Sao)
 el.set_P_alp(res_alp[2])
 el.set_P_bet(res_bet[2])
-#el.set_P(res_alp[2]+res_bet[2])
 
 
-Hamiltonian_Fock_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map)
+Hamiltonian_Fock(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map)
 
 print "Fock matrix at first iteration (alp)"
 el.get_Fao_alp().show_matrix()
 
 #===============  Now to SCF iterations =======================
 
-
-E = energy_elec(el.get_P_alp(), el.get_Hao(), el.get_Fao_alp()) + energy_elec(el.get_P_bet(), el.get_Hao(), el.get_Fao_bet())
-print "Initial energy = ", E
-E_old = E
-e_err = 2.0*prms.etol
-d_err = 2.0*prms.den_tol
-
-P_alp_old = el.get_P_alp()
-P_bet_old = el.get_P_bet()
-
-BM = 0 # BM - benchmarking
-
-E = scf(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, BM); 
-
-print "Success: Convergence is achieved"    
-print "Electronic energy = ", E
+E = scf(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, 0); 
 
 
 degen = 1.0
@@ -242,7 +228,6 @@ res_bet = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_bet, degen, kT, etol, 
 
 print "Bands(alp)    Occupations(alp)       Bands(bet)    Occupations(bet)"
 for j in xrange(Norb):
-#    print "%12.8f   %12.8f  %12.8f   %12.8f" %(el.bands_alp[3][j][1], el.occ_alp[4][j][1], el.bands_bet[3][j][1], el.occ_bet[4][j][1])
      print "%12.8f   %12.8f  %12.8f   %12.8f" %(res_alp[3][j][1], res_alp[4][j][1], res_bet[3][j][1], res_bet[4][j][1])
 
     

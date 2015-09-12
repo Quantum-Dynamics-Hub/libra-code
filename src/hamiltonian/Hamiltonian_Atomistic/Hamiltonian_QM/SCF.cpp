@@ -48,7 +48,10 @@ double scf(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
 
   double res = 0.0;
 
-  if(prms.scf_algo=="oda"){
+  if(prms.scf_algo=="none"){
+    res = scf_none(el,syst,basis_ao, prms,modprms, atom_to_ao_map,ao_to_atom_map, BM);
+  }
+  else if(prms.scf_algo=="oda"){
     if(prms.use_disk){
       res = scf_oda_disk(el,syst,basis_ao, prms,modprms, atom_to_ao_map,ao_to_atom_map, BM);
     } 

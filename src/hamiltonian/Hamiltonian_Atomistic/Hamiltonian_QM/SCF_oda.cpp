@@ -107,8 +107,11 @@ double scf_oda(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
 
 
   if(BM){ bench_t[1].stop(); }
-  *Fao_til_alp = *el_tmp->Fao_alp;
-  *Fao_til_bet = *el_tmp->Fao_bet;
+//  *Fao_til_alp = *el_tmp->Fao_alp;
+//  *Fao_til_bet = *el_tmp->Fao_bet;
+  *Fao_til_alp = *el->Fao_alp;
+  *Fao_til_bet = *el->Fao_bet;
+
 
 
   if(BM){ bench_t[0].start(); }
@@ -134,7 +137,7 @@ double scf_oda(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
     //---------- Obtain a new density for this iteration -------------------------
     // ODA Step 1: Diagonalize F~_k, assemble D_{k+1} via aufbau (so forcibly set prms.pop_opt = 0) 
     if(BM){ bench_t[2].start(); }
-    if(prms.use_damping==0){
+    if(prms.use_damping==0){  // Here we use normal ODA algorithm
       Fock_to_P(Norb, Nocc_alp, 1, Nocc_alp, eigen_method, 0, Fao_til_alp, el_tmp->Sao, el_tmp->C_alp, el_tmp->E_alp, el_tmp->bands_alp, el_tmp->occ_alp, P_alp, bench_t2);
       Fock_to_P(Norb, Nocc_bet, 1, Nocc_bet, eigen_method, 0, Fao_til_bet, el_tmp->Sao, el_tmp->C_bet, el_tmp->E_bet, el_tmp->bands_bet, el_tmp->occ_bet, P_bet, bench_t2);
       *P = *P_alp + *P_bet;
