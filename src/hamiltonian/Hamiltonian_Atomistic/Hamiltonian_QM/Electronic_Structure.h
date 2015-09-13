@@ -22,8 +22,8 @@
 
 ****************************************************************************/
 
-#ifndef ELECTRONIC_H
-#define ELECTRONIC_H
+#ifndef ELECTRONIC_STRUCTURE_H
+#define ELECTRONIC_STRUCTURE_H
 
 
 #include "../../../qchem/libqchem.h"
@@ -238,5 +238,5 @@ void collect_matrices(int, vector<MATRIX*>&, vector<int>&, vector<int>&,
 
 
 
-#endif // ELECTRONIC_H
+#endif // ELECTRONIC_STRUCTURE_H
 

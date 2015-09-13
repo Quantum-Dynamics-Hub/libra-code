@@ -29,7 +29,7 @@ using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::lib
 #include "Model_Parameters/libmodel_parameters.h"
 using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::libmodel_parameters;
 
-#include "Electronic.h"
+#include "Electronic_Structure.h"
 
 
 namespace libhamiltonian{

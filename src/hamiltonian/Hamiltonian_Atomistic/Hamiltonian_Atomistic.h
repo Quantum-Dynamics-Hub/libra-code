@@ -15,6 +15,7 @@
 #include "../Hamiltonian_Generic/Hamiltonian.h"
 //#include "Hamiltonian_MM/Hamiltonian_MM.h"
 #include "Hamiltonian_MM/libhamiltonian_mm.h"
+#include "Hamiltonian_QM/libhamiltonian_qm.h"
 
 #include "../../chemobjects/libchemobjects.h"
 //#include "../../converters/libconverters.h"
@@ -30,6 +31,7 @@ namespace libhamiltonian_atomistic{
 using namespace libmmath;
 using namespace libhamiltonian_generic;
 using namespace libhamiltonian_mm;
+using namespace libhamiltonian_qm;
 
 
 class Hamiltonian_Atomistic : public Hamiltonian{
@@ -42,6 +44,7 @@ public:
 
   // Data members:
   listHamiltonian_MM*  mm_ham;   // mm part: type = 0
+  listHamiltonian_QM*  qm_ham;   // qm part: type = 1
 
 
   // Constructor: only allocates memory and sets up related variables
@@ -73,8 +76,8 @@ public:
   void set_respa_types(std::string inter_type,std::string respa_type);
 
 
-  //----------------------------------------
-   
+  //--------- QM Hamiltonians -----------   
+  void init_qm_Hamiltonian(std::string ctrl_filename);
 
 
   // Destructor
@@ -99,7 +102,7 @@ public:
   void compute();
 */
 //  void compute();
-  void set_system(System& syst){ _syst = &syst; }
+  void set_system(System& syst){ _syst = &syst; }  // by reference
   void compute_diabatic();
   void compute_adiabatic();
 

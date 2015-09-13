@@ -17,6 +17,7 @@
 #include "Hamiltonian_HF.h"
 
 
+
 namespace libhamiltonian{
 namespace libhamiltonian_atomistic{
 namespace libhamiltonian_qm{
@@ -41,6 +42,43 @@ void Hamiltonian_Fock(
   Control_Parameters& prms,Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
 );
+
+
+
+
+class listHamiltonian_QM{
+
+public:
+
+    listHamiltonian_QM(){ ;; }
+    listHamiltonian_QM(std::string ctrl_filename,System& syst);
+
+    int Nelec;
+    int Norb;
+    Control_Parameters prms; 
+    Model_Parameters modprms;
+
+    std::vector<AO> basis_ao;
+    std::vector<vector<int> > atom_to_ao_map;
+    std::vector<int> ao_to_atom_map;
+
+
+    Electronic_Structure* el;
+
+
+    // Methods
+    void init(std::string ctrl_filename,System& syst);
+
+    void get_parameters_from_file(std::string filename){ libcontrol_parameters::get_parameters_from_file(filename, prms); }
+    void set_electronic_structure(Electronic_Structure& el_);
+
+
+
+
+
+};
+
+
 
 
 

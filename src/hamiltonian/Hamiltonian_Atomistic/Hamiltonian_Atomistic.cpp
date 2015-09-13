@@ -21,6 +21,7 @@ namespace libhamiltonian_atomistic{
 using namespace libchemobjects;
 using namespace libchemobjects::libchemsys;
 using namespace libhamiltonian_mm;
+using namespace libhamiltonian_qm;
 
 
 using namespace libmmath;
@@ -34,6 +35,8 @@ using std::sqrt;
 
 Hamiltonian_Atomistic::Hamiltonian_Atomistic(int _nelec, int _nnucl){
 
+  _syst = NULL;
+  
   int i;
 
   nelec = _nelec;
@@ -60,7 +63,7 @@ Hamiltonian_Atomistic::Hamiltonian_Atomistic(int _nelec, int _nnucl){
 
 
   // Setup Hamiltonian types:
-  ham_types = vector<int>(5,0);
+  ham_types = vector<int>(5,0);  // which Hamiltonians are initialized ham_types[0] = MM, ham_types[1] = QM
 
 }
 
@@ -76,6 +79,16 @@ void Hamiltonian_Atomistic::set_Hamiltonian_type(std::string ham_type){ // libch
     }
 
   }
+  else if(ham_type=="QM"){
+    rep = 1;  // adiabatic
+
+    if(ham_types[1]==0){    
+      qm_ham = new listHamiltonian_QM();
+      ham_types[1] = 1;
+    }
+
+  }
+
   else{
     cout<<"Error: Unrecognized Hamiltonian type. Supported types are: MM\n";
     cout<<"Exiting...\n"; exit(0);
@@ -369,6 +382,18 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
 }
 
 
+
+
+
+void Hamiltonian_Atomistic::init_qm_Hamiltonian(std::string ctrl_filename){
+
+  if(_syst==NULL){ cout<<"Error: System is not initialized yet\n"; exit(0); }
+  
+  else{
+    qm_ham->init(ctrl_filename, *_syst);
+  }
+
+}
 
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian

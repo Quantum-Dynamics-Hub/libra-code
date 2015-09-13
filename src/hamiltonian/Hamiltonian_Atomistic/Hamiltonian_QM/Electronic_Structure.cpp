@@ -23,7 +23,7 @@
 
 ****************************************************************************/
 
-#include "Electronic.h"
+#include "Electronic_Structure.h"
 
 
 namespace libhamiltonian{

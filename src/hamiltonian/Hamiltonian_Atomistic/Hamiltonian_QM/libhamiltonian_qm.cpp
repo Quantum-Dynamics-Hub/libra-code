@@ -185,6 +185,29 @@ void export_Hamiltonian_QM_objects(){
   def("scf_oda_disk", expt_scf_oda_disk_v1);
 
 
+
+  class_<listHamiltonian_QM>("listHamiltonian_QM",init<>())
+      .def(init<std::string, System&>())
+      .def("__copy__", &generic__copy__<listHamiltonian_QM>)
+      .def("__deepcopy__", &generic__deepcopy__<listHamiltonian_QM>)
+
+      .def_readwrite("Norb", &listHamiltonian_QM::Norb)
+      .def_readwrite("Nelec", &listHamiltonian_QM::Nelec)
+      .def_readwrite("prms", &listHamiltonian_QM::prms)
+      .def_readwrite("modprms", &listHamiltonian_QM::modprms)
+      .def_readwrite("basis_ao", &listHamiltonian_QM::basis_ao)
+      .def_readwrite("atom_to_ao_map", &listHamiltonian_QM::atom_to_ao_map)
+      .def_readwrite("ao_to_atom_map", &listHamiltonian_QM::ao_to_atom_map)
+
+
+      .def("init", &listHamiltonian_QM::init)
+      .def("get_parameters_from_file", &listHamiltonian_QM::get_parameters_from_file)
+      .def("set_electronic_structure", &listHamiltonian_QM::set_electronic_structure)
+
+
+  ;
+
+
 }
 
 
