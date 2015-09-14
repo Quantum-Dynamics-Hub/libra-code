@@ -68,6 +68,7 @@ public:
 
     // Methods
     void init(std::string ctrl_filename,System& syst);
+    double compute_scf(System& syst);
 
     void get_parameters_from_file(std::string filename){ libcontrol_parameters::get_parameters_from_file(filename, prms); }
     void set_electronic_structure(Electronic_Structure& el_);

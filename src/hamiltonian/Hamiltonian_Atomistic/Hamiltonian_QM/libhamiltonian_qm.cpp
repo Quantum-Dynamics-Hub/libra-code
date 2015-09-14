@@ -201,6 +201,7 @@ void export_Hamiltonian_QM_objects(){
 
 
       .def("init", &listHamiltonian_QM::init)
+      .def("compute_scf", &listHamiltonian_QM::compute_scf)
       .def("get_parameters_from_file", &listHamiltonian_QM::get_parameters_from_file)
       .def("set_electronic_structure", &listHamiltonian_QM::set_electronic_structure)
 

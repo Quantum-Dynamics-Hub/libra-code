@@ -1,0 +1,1308 @@
+Current working directory /home/Alexey_2/Programming/Project_libra/tests/test_hamiltonian_qm
+
+Test 1: Importing the library and its content
+load element Xu
+Elt_name = Xu
+Elt_mass = 1822.89
+Elt_number = 999
+Elt_nucleus_charge = 999
+Elt_period = 99
+Elt_group = 99
+Elt_block = S
+
+load element Xd
+Elt_name = Xd
+Elt_mass = 1822.89
+Elt_number = 998
+Elt_nucleus_charge = 998
+Elt_period = 99
+Elt_group = 99
+Elt_block = S
+
+load element H
+Elt_name = H
+Elt_mass = 1837.38
+Elt_number = 1
+Elt_nucleus_charge = 1
+Elt_period = 1
+Elt_group = 1
+Elt_block = S
+
+load element He
+Elt_name = He
+Elt_mass = 7296.3
+Elt_number = 2
+Elt_nucleus_charge = 2
+Elt_period = 1
+Elt_group = 8
+Elt_block = S
+
+load element Li
+Elt_name = Li
+Elt_mass = 12652.7
+Elt_number = 3
+Elt_nucleus_charge = 3
+Elt_period = 2
+Elt_group = 1
+Elt_block = S
+
+load element Be
+Elt_name = Be
+Elt_mass = 16428.2
+Elt_number = 4
+Elt_nucleus_charge = 4
+Elt_period = 2
+Elt_group = 2
+Elt_block = S
+
+load element B
+Elt_name = B
+Elt_mass = 19709.1
+Elt_number = 5
+Elt_nucleus_charge = 5
+Elt_period = 2
+Elt_group = 3
+Elt_block = P
+
+load element C
+Elt_name = C
+Elt_mass = 21894.3
+Elt_number = 6
+Elt_nucleus_charge = 6
+Elt_period = 2
+Elt_group = 4
+Elt_block = P
+
+load element N
+Elt_name = N
+Elt_mass = 25532.6
+Elt_number = 7
+Elt_nucleus_charge = 7
+Elt_period = 2
+Elt_group = 5
+Elt_block = P
+
+load element O
+Elt_name = O
+Elt_mass = 29165.1
+Elt_number = 8
+Elt_nucleus_charge = 8
+Elt_period = 2
+Elt_group = 6
+Elt_block = P
+
+load element F
+Elt_name = F
+Elt_mass = 34632
+Elt_number = 9
+Elt_nucleus_charge = 9
+Elt_period = 2
+Elt_group = 7
+Elt_block = P
+
+load element Ne
+Elt_name = Ne
+Elt_mass = 36785.5
+Elt_number = 10
+Elt_nucleus_charge = 10
+Elt_period = 2
+Elt_group = 8
+Elt_block = P
+
+load element Na
+Elt_name = Na
+Elt_mass = 41907.8
+Elt_number = 11
+Elt_nucleus_charge = 11
+Elt_period = 3
+Elt_group = 1
+Elt_block = S
+
+load element Mg
+Elt_name = Mg
+Elt_mass = 44305.5
+Elt_number = 12
+Elt_nucleus_charge = 12
+Elt_period = 3
+Elt_group = 2
+Elt_block = S
+
+load element Al
+Elt_name = Al
+Elt_mass = 49184.3
+Elt_number = 13
+Elt_nucleus_charge = 13
+Elt_period = 3
+Elt_group = 3
+Elt_block = P
+
+load element Si
+Elt_name = Si
+Elt_mass = 51196.7
+Elt_number = 14
+Elt_nucleus_charge = 14
+Elt_period = 3
+Elt_group = 4
+Elt_block = P
+
+load element P
+Elt_name = P
+Elt_mass = 56461.7
+Elt_number = 15
+Elt_nucleus_charge = 15
+Elt_period = 3
+Elt_group = 5
+Elt_block = P
+
+load element S
+Elt_name = S
+Elt_mass = 58452.7
+Elt_number = 16
+Elt_nucleus_charge = 16
+Elt_period = 3
+Elt_group = 6
+Elt_block = P
+
+load element Cl
+Elt_name = Cl
+Elt_mass = 64626.9
+Elt_number = 17
+Elt_nucleus_charge = 17
+Elt_period = 3
+Elt_group = 7
+Elt_block = P
+
+load element Ar
+Elt_name = Ar
+Elt_mass = 72820.7
+Elt_number = 18
+Elt_nucleus_charge = 18
+Elt_period = 3
+Elt_group = 8
+Elt_block = P
+
+load element K
+Elt_name = K
+Elt_mass = 71271.8
+Elt_number = 19
+Elt_nucleus_charge = 19
+Elt_period = 4
+Elt_group = 1
+Elt_block = S
+
+load element Ca
+Elt_name = Ca
+Elt_mass = 73057.7
+Elt_number = 20
+Elt_nucleus_charge = 20
+Elt_period = 4
+Elt_group = 2
+Elt_block = S
+
+load element Sc
+Elt_name = Sc
+Elt_mass = 81949.6
+Elt_number = 21
+Elt_nucleus_charge = 21
+Elt_period = 4
+Elt_group = 3
+Elt_block = D
+
+load element Ti
+Elt_name = Ti
+Elt_mass = 87256.2
+Elt_number = 22
+Elt_nucleus_charge = 22
+Elt_period = 4
+Elt_group = 4
+Elt_block = D
+
+load element V
+Elt_name = V
+Elt_mass = 92860.7
+Elt_number = 23
+Elt_nucleus_charge = 23
+Elt_period = 4
+Elt_group = 5
+Elt_block = D
+
+load element Cr
+Elt_name = Cr
+Elt_mass = 94783.1
+Elt_number = 24
+Elt_nucleus_charge = 24
+Elt_period = 4
+Elt_group = 6
+Elt_block = D
+
+load element Mn
+Elt_name = Mn
+Elt_mass = 100146
+Elt_number = 25
+Elt_nucleus_charge = 25
+Elt_period = 4
+Elt_group = 7
+Elt_block = D
+
+load element Fe
+Elt_name = Fe
+Elt_mass = 101799
+Elt_number = 26
+Elt_nucleus_charge = 26
+Elt_period = 4
+Elt_group = 8
+Elt_block = D
+
+load element Co
+Elt_name = Co
+Elt_mass = 107429
+Elt_number = 27
+Elt_nucleus_charge = 27
+Elt_period = 4
+Elt_group = 8
+Elt_block = D
+
+load element Ni
+Elt_name = Ni
+Elt_mass = 106992
+Elt_number = 28
+Elt_nucleus_charge = 28
+Elt_period = 4
+Elt_group = 8
+Elt_block = D
+
+load element Cu
+Elt_name = Cu
+Elt_mass = 115837
+Elt_number = 29
+Elt_nucleus_charge = 29
+Elt_period = 4
+Elt_group = 1
+Elt_block = D
+
+load element Zn
+Elt_name = Zn
+Elt_mass = 119233
+Elt_number = 30
+Elt_nucleus_charge = 30
+Elt_period = 4
+Elt_group = 2
+Elt_block = D
+
+load element Ga
+Elt_name = Ga
+Elt_mass = 127097
+Elt_number = 31
+Elt_nucleus_charge = 31
+Elt_period = 4
+Elt_group = 3
+Elt_block = P
+
+load element Ge
+Elt_name = Ge
+Elt_mass = 132415
+Elt_number = 32
+Elt_nucleus_charge = 32
+Elt_period = 4
+Elt_group = 4
+Elt_block = P
+
+load element As
+Elt_name = As
+Elt_mass = 136574
+Elt_number = 33
+Elt_nucleus_charge = 33
+Elt_period = 4
+Elt_group = 5
+Elt_block = P
+
+load element Se
+Elt_name = Se
+Elt_mass = 143935
+Elt_number = 34
+Elt_nucleus_charge = 34
+Elt_period = 4
+Elt_group = 6
+Elt_block = P
+
+load element Br
+Elt_name = Br
+Elt_mass = 145656
+Elt_number = 35
+Elt_nucleus_charge = 35
+Elt_period = 4
+Elt_group = 7
+Elt_block = P
+
+load element Kr
+Elt_name = Kr
+Elt_mass = 152754
+Elt_number = 36
+Elt_nucleus_charge = 36
+Elt_period = 4
+Elt_group = 8
+Elt_block = P
+
+load element Rb
+Elt_name = Rb
+Elt_mass = 155798
+Elt_number = 37
+Elt_nucleus_charge = 37
+Elt_period = 5
+Elt_group = 1
+Elt_block = S
+
+load element Sr
+Elt_name = Sr
+Elt_mass = 159721
+Elt_number = 38
+Elt_nucleus_charge = 38
+Elt_period = 5
+Elt_group = 2
+Elt_block = S
+
+load element Y
+Elt_name = Y
+Elt_mass = 162065
+Elt_number = 39
+Elt_nucleus_charge = 39
+Elt_period = 5
+Elt_group = 3
+Elt_block = D
+
+load element Zr
+Elt_name = Zr
+Elt_mass = 166291
+Elt_number = 40
+Elt_nucleus_charge = 40
+Elt_period = 5
+Elt_group = 4
+Elt_block = D
+
+load element Nb
+Elt_name = Nb
+Elt_mass = 169358
+Elt_number = 41
+Elt_nucleus_charge = 41
+Elt_period = 5
+Elt_group = 5
+Elt_block = D
+
+load element Mo
+Elt_name = Mo
+Elt_mass = 174888
+Elt_number = 42
+Elt_nucleus_charge = 42
+Elt_period = 5
+Elt_group = 6
+Elt_block = D
+
+load element Tc
+Elt_name = Tc
+Elt_mass = 178643
+Elt_number = 43
+Elt_nucleus_charge = 43
+Elt_period = 5
+Elt_group = 7
+Elt_block = D
+
+load element Ru
+Elt_name = Ru
+Elt_mass = 184239
+Elt_number = 44
+Elt_nucleus_charge = 44
+Elt_period = 5
+Elt_group = 8
+Elt_block = D
+
+load element Rh
+Elt_name = Rh
+Elt_mass = 187585
+Elt_number = 45
+Elt_nucleus_charge = 45
+Elt_period = 5
+Elt_group = 8
+Elt_block = D
+
+load element Pd
+Elt_name = Pd
+Elt_mass = 193992
+Elt_number = 46
+Elt_nucleus_charge = 46
+Elt_period = 5
+Elt_group = 8
+Elt_block = D
+
+load element Ag
+Elt_name = Ag
+Elt_mass = 196632
+Elt_number = 47
+Elt_nucleus_charge = 47
+Elt_period = 5
+Elt_group = 1
+Elt_block = D
+
+load element Cd
+Elt_name = Cd
+Elt_mass = 204913
+Elt_number = 48
+Elt_nucleus_charge = 48
+Elt_period = 5
+Elt_group = 2
+Elt_block = D
+
+load element In
+Elt_name = In
+Elt_mass = 209300
+Elt_number = 49
+Elt_nucleus_charge = 49
+Elt_period = 5
+Elt_group = 3
+Elt_block = P
+
+load element Sn
+Elt_name = Sn
+Elt_mass = 216395
+Elt_number = 50
+Elt_nucleus_charge = 50
+Elt_period = 5
+Elt_group = 4
+Elt_block = P
+
+load element Sb
+Elt_name = Sb
+Elt_mass = 221955
+Elt_number = 51
+Elt_nucleus_charge = 51
+Elt_period = 5
+Elt_group = 5
+Elt_block = P
+
+load element Te
+Elt_name = Te
+Elt_mass = 232601
+Elt_number = 52
+Elt_nucleus_charge = 52
+Elt_period = 5
+Elt_group = 6
+Elt_block = P
+
+load element I
+Elt_name = I
+Elt_mass = 231333
+Elt_number = 53
+Elt_nucleus_charge = 53
+Elt_period = 5
+Elt_group = 7
+Elt_block = P
+
+load element Xe
+Elt_name = Xe
+Elt_mass = 239332
+Elt_number = 54
+Elt_nucleus_charge = 54
+Elt_period = 5
+Elt_group = 8
+Elt_block = P
+
+load element Cs
+Elt_name = Cs
+Elt_mass = 242272
+Elt_number = 55
+Elt_nucleus_charge = 55
+Elt_period = 6
+Elt_group = 1
+Elt_block = S
+
+load element Ba
+Elt_name = Ba
+Elt_mass = 250332
+Elt_number = 56
+Elt_nucleus_charge = 56
+Elt_period = 6
+Elt_group = 2
+Elt_block = S
+
+load element Pr
+Elt_name = Pr
+Elt_mass = 256859
+Elt_number = 59
+Elt_nucleus_charge = 59
+Elt_period = 6
+Elt_group = 3
+Elt_block = F
+
+load element Nd
+Elt_name = Nd
+Elt_mass = 262937
+Elt_number = 60
+Elt_nucleus_charge = 60
+Elt_period = 6
+Elt_group = 3
+Elt_block = F
+
+load element Sm
+Elt_name = Sm
+Elt_mass = 274089
+Elt_number = 62
+Elt_nucleus_charge = 62
+Elt_period = 6
+Elt_group = 3
+Elt_block = F
+
+load element Eu
+Elt_name = Eu
+Elt_mass = 277013
+Elt_number = 63
+Elt_nucleus_charge = 63
+Elt_period = 6
+Elt_group = 3
+Elt_block = F
+
+load element Gd
+Elt_name = Gd
+Elt_mass = 286649
+Elt_number = 64
+Elt_nucleus_charge = 64
+Elt_period = 6
+Elt_group = 3
+Elt_block = F
+
+load element Tb
+Elt_name = Tb
+Elt_mass = 289703
+Elt_number = 65
+Elt_nucleus_charge = 65
+Elt_period = 6
+Elt_group = 3
+Elt_block = F
+
+load element Dy
+Elt_name = Dy
+Elt_mass = 296219
+Elt_number = 66
+Elt_nucleus_charge = 66
+Elt_period = 6
+Elt_group = 3
+Elt_block = F
+
+load element Ho
+Elt_name = Ho
+Elt_mass = 300650
+Elt_number = 67
+Elt_nucleus_charge = 67
+Elt_period = 6
+Elt_group = 3
+Elt_block = F
+
+load element Er
+Elt_name = Er
+Elt_mass = 304894
+Elt_number = 68
+Elt_nucleus_charge = 68
+Elt_period = 6
+Elt_group = 3
+Elt_block = F
+
+load element Tm
+Elt_name = Tm
+Elt_mass = 307948
+Elt_number = 69
+Elt_nucleus_charge = 69
+Elt_period = 6
+Elt_group = 3
+Elt_block = F
+
+load element Yb
+Elt_name = Yb
+Elt_mass = 315433
+Elt_number = 70
+Elt_nucleus_charge = 70
+Elt_period = 6
+Elt_group = 3
+Elt_block = F
+
+load element Lu
+Elt_name = Lu
+Elt_mass = 318945
+Elt_number = 71
+Elt_nucleus_charge = 71
+Elt_period = 6
+Elt_group = 3
+Elt_block = D
+
+load element Hf
+Elt_name = Hf
+Elt_mass = 325367
+Elt_number = 72
+Elt_nucleus_charge = 72
+Elt_period = 6
+Elt_group = 4
+Elt_block = D
+
+load element Ta
+Elt_name = Ta
+Elt_mass = 329848
+Elt_number = 73
+Elt_nucleus_charge = 73
+Elt_period = 6
+Elt_group = 5
+Elt_block = D
+
+load element W
+Elt_name = W
+Elt_mass = 335120
+Elt_number = 74
+Elt_nucleus_charge = 74
+Elt_period = 6
+Elt_group = 6
+Elt_block = D
+
+load element Re
+Elt_name = Re
+Elt_mass = 339435
+Elt_number = 75
+Elt_nucleus_charge = 75
+Elt_period = 6
+Elt_group = 7
+Elt_block = D
+
+load element Os
+Elt_name = Os
+Elt_mass = 346768
+Elt_number = 76
+Elt_nucleus_charge = 76
+Elt_period = 6
+Elt_group = 8
+Elt_block = D
+
+load element Ir
+Elt_name = Ir
+Elt_mass = 350390
+Elt_number = 77
+Elt_nucleus_charge = 77
+Elt_period = 6
+Elt_group = 8
+Elt_block = D
+
+load element Pt
+Elt_name = Pt
+Elt_mass = 355616
+Elt_number = 78
+Elt_nucleus_charge = 78
+Elt_period = 6
+Elt_group = 8
+Elt_block = D
+
+load element Au
+Elt_name = Au
+Elt_mass = 359048
+Elt_number = 79
+Elt_nucleus_charge = 79
+Elt_period = 6
+Elt_group = 1
+Elt_block = D
+
+load element Hg
+Elt_name = Hg
+Elt_mass = 365653
+Elt_number = 80
+Elt_nucleus_charge = 80
+Elt_period = 6
+Elt_group = 2
+Elt_block = D
+
+load element Tl
+Elt_name = Tl
+Elt_mass = 372568
+Elt_number = 81
+Elt_nucleus_charge = 81
+Elt_period = 6
+Elt_group = 3
+Elt_block = P
+
+load element Pb
+Elt_name = Pb
+Elt_mass = 377702
+Elt_number = 82
+Elt_nucleus_charge = 82
+Elt_period = 6
+Elt_group = 4
+Elt_block = P
+
+load element Bi
+Elt_name = Bi
+Elt_mass = 380948
+Elt_number = 83
+Elt_nucleus_charge = 83
+Elt_period = 6
+Elt_group = 5
+Elt_block = P
+
+load element Po
+Elt_name = Po
+Elt_mass = 380984
+Elt_number = 84
+Elt_nucleus_charge = 84
+Elt_period = 6
+Elt_group = 6
+Elt_block = P
+
+CREATE_ATOM  C
+CREATE_ATOM  O
+4
+----------------------------
+----------------------------
+----------------------------
+----------------------------
+Number of atoms in the system =  2
+Constructing single excitation: 0 1 -> 0 1
+Reading input file = control_parameters.dat
+Echo tokenized file content
+<calculation>  
+runtype  =  scf  
+hamiltonian  =  indo  
+DF  =  0  
+</calculation>  
+
+<hamiltonian>  
+parameters  =  params_indo  
+eht_params_format  =  eht+2  
+eht_formula  =  0  
+eht_sce_formula  =  0  
+eht_fock_opt  =  0  
+eht_electrostatics  =  0  
+</hamiltonian>  
+
+<guess_options>  
+guess_type  =  core  
+</guess_options>  
+
+<scf_options>  
+use_disk  =  0  
+scf_algo  =  none  
+use_rosh  =  0  
+
+pop_opt  =  0  
+
+use_diis  =  0  
+diis_max  =  5  
+diis_start_iter  =  10  
+
+use_level_shift  =  0  
+shift_magnitude  =  2.5  
+
+use_damping  =  0  
+damping_start  =  5  
+damping_const  =  0.1  
+
+Niter  =  1500  
+etol  =  1e-3  
+den_tol  =  1e-4  
+
+degen_tol  =  0.2  
+</scf_options>  
+
+<properties>  
+compute_vertical_ip  =  0  
+compute_vertical_ea  =  0  
+</properties>  
+
+
+<dos_options>  
+compute_dos  =  0  
+dos_prefix  =  dos/  
+</dos_options>  
+
+<multipole_options>  
+compute_dipole  =  0  
+</multipole_options>  
+
+<charge_density_options>  
+compute_charge_density  =  0  
+nx_grid  =  40  
+ny_grid  =  40  
+nz_grid  =  40  
+charge_density_prefix  =  orbs/  
+orbs  =  3  
+</charge_density_options>  
+
+
+
+<nac_options>  
+nac_md_trajectory_filename  =  md_un_traj.xyz  
+nac_prefix  =  res/Ham_  
+nac_min_frame  =  0  
+nac_max_frame  =  5  
+nac_dt  =  1.0  
+nac_min_orbs  1  1  
+nac_max_orbs  1  2  
+
+</nac_options>  
+
+<md_options>  
+dt  =  1  #  in  fs  
+nsteps  =  10  #  number  of  steps  
+</md_options>  
+
+<opt_options>  
+dt  =  1  #  in  fs  
+nsteps  =  10  #  number  of  steps  
+</opt_options>  
+
+<unit_cell>  
+1.00000000000000  
+14.0000000000000000  0.0000000000000000  0.0000000000000000  0  
+0.0000000000000000  14.0000000000000000  0.0000000000000000  0  
+0.0000000000000000  0.0000000000000000  14.0000000000000000  0  
+</unit_cell>  
+
+<excitations>  
+compute_excitations  =  0  
+spectral_width  =  0.25  
+excitations_opt  =  scf  
+num_excitations  =  17  
+1  0A  ->  0A  
+1  0A  ->  1A  
+1  0A  ->  2A  
+1  0A  ->  3A  
+1  0A  ->  4A  
+1  -1A  ->  1A  
+1  -1A  ->  2A  
+1  -1A  ->  3A  
+1  -1A  ->  4A  
+1  -2A  ->  1A  
+1  -2A  ->  2A  
+1  -2A  ->  3A  
+1  -2A  ->  4A  
+1  -3A  ->  1A  
+1  -3A  ->  2A  
+1  -3A  ->  3A  
+1  -3A  ->  4A  
+</excitations>  
+
+
+
+<coordinates>  
+5  0.0  1  
+Cartesian  
+Si  -0.19323673  0.55555555  0.00000000  
+H  0.30007967  -0.83980782  0.00000000  
+H  0.30010514  1.25322781  1.20841516  
+H  0.30010514  1.25322781  -1.20841516  
+H  -1.67323673  0.55557379  0.00000000  
+</coordinates>  
+
+<fragments>  
+1  
+Frag_indx  Frag_name  Frag_charge  Frag_size  Atomic  indices  -  overall  this  is  comment  line  
+1  1SiH4  0.0  5  1  2  3  4  5  
+</fragments>  
+
+
+
+Internalizing <excitations> info:
+Excitation #0A
+_f_o = 0
+_f_s = 1
+_t_o = 0
+_t_s = 1
+Constructing single excitation: 0 1 -> 0 1
+Excitation #1A
+_f_o = 0
+_f_s = 1
+_t_o = 1
+_t_s = 1
+Constructing single excitation: 0 1 -> 1 1
+Excitation #2A
+_f_o = 0
+_f_s = 1
+_t_o = 2
+_t_s = 1
+Constructing single excitation: 0 1 -> 2 1
+Excitation #3A
+_f_o = 0
+_f_s = 1
+_t_o = 3
+_t_s = 1
+Constructing single excitation: 0 1 -> 3 1
+Excitation #4A
+_f_o = 0
+_f_s = 1
+_t_o = 4
+_t_s = 1
+Constructing single excitation: 0 1 -> 4 1
+Excitation #5A
+_f_o = -1
+_f_s = 1
+_t_o = 1
+_t_s = 1
+Constructing single excitation: -1 1 -> 1 1
+Excitation #6A
+_f_o = -1
+_f_s = 1
+_t_o = 2
+_t_s = 1
+Constructing single excitation: -1 1 -> 2 1
+Excitation #7A
+_f_o = -1
+_f_s = 1
+_t_o = 3
+_t_s = 1
+Constructing single excitation: -1 1 -> 3 1
+Excitation #8A
+_f_o = -1
+_f_s = 1
+_t_o = 4
+_t_s = 1
+Constructing single excitation: -1 1 -> 4 1
+Excitation #9A
+_f_o = -2
+_f_s = 1
+_t_o = 1
+_t_s = 1
+Constructing single excitation: -2 1 -> 1 1
+Excitation #10A
+_f_o = -2
+_f_s = 1
+_t_o = 2
+_t_s = 1
+Constructing single excitation: -2 1 -> 2 1
+Excitation #11A
+_f_o = -2
+_f_s = 1
+_t_o = 3
+_t_s = 1
+Constructing single excitation: -2 1 -> 3 1
+Excitation #12A
+_f_o = -2
+_f_s = 1
+_t_o = 4
+_t_s = 1
+Constructing single excitation: -2 1 -> 4 1
+Excitation #13A
+_f_o = -3
+_f_s = 1
+_t_o = 1
+_t_s = 1
+Constructing single excitation: -3 1 -> 1 1
+Excitation #14A
+_f_o = -3
+_f_s = 1
+_t_o = 2
+_t_s = 1
+Constructing single excitation: -3 1 -> 2 1
+Excitation #15A
+_f_o = -3
+_f_s = 1
+_t_o = 3
+_t_s = 1
+Constructing single excitation: -3 1 -> 3 1
+Excitation #16A
+_f_o = -3
+_f_s = 1
+_t_o = 4
+_t_s = 1
+Constructing single excitation: -3 1 -> 4 1
+Number of excitations = 17
+guess type =  core
+Setting parameters
+Reading CNDO/CNDO2/INDO parameters file = params_indo
+Echo tokenized CNDO/CNDO2/INDO parameters file content
+#  Structure  of  input  file  -  do  not  add  or  delete  the  next  4  lines  
+#  Element  Nelec  Nshells  
+#  {  indx_of_basis_function  nquant  lquant  label  energy  nzeta  {  coeff_i  zeta_i  }  }  
+#  each  {}  indicates  loop  over  some  quantity,  but  is  not  shown  in  file  
+#  each  dataset  (for  each  element)  should  be  separated  by  a  blank  line  
+<At_constants>  
+H  1  1  
+1  1  0  1s  -7.176  1  1.0000  1.2000  -9.000  0.000  0.000  0.000  
+
+Li  1  2  
+1  2  0  2s  -3.106  1  1.0000  0.6500  -9.000  2.503774969  1.356896262  0.000  
+2  2  1  2p  -1.258  1  1.0000  0.6500  -9.000  2.503774969  1.356896262  0.000  
+
+Be  2  2  
+1  2  0  2s  -5.946  1  1.0000  0.9750  -13.000  3.828643417  2.425215669  0.000  
+2  2  1  2p  -2.563  1  1.0000  0.9750  -13.000  3.828643417  2.425215669  0.000  
+
+B  3  2  
+1  2  0  2s  -9.594  1  1.0000  1.3000  -17.000  5.422278824  3.548638153  0.000  
+2  2  1  2p  -4.001  1  1.0000  1.3000  -17.000  5.422278824  3.548638153  0.000  
+
+C  4  2  
+1  2  0  2s  -14.051  1  1.0000  1.6250  -21.000  7.284708401  4.727163713  0.000  
+2  2  1  2p  -5.572  1  1.0000  1.6250  -21.000  7.284708401  4.727163713  0.000  
+
+N  5  2  
+1  2  0  2s  -19.316  1  1.0000  1.9500  -25.000  9.415932147  5.960792351  0.000  
+2  2  1  2p  -7.275  1  1.0000  1.9500  -25.000  9.415932147  5.960792351  0.000  
+
+O  6  2  
+1  2  0  2s  -25.390  1  1.0000  2.2750  -31.000  11.81600449  7.249524066  0.000  
+2  2  1  2p  -9.111  1  1.0000  2.2750  -31.000  11.81600449  7.249524066  0.000  
+
+F  7  2  
+1  2  0  2s  -32.272  1  1.0000  2.6000  -39.000  14.48476215  8.593358857  0.000  
+2  2  1  2p  -11.080  1  1.0000  2.6000  -39.000  14.48476215  8.593358857  0.000  
+
+</At_constants>  
+
+
+
+Reading parameters for element H
+Nval = 1
+Zeff = 1
+  reading parameters for 1 orbital shells
+    j= 1 sh= 1s Nquant= 1 IP= -7.176 eV Nzeta= 1   coeff[0]= 1 zetas[0]= 1.2 Bohr^-1  
+Reading parameters for element Li
+Nval = 1
+Zeff = 1
+  reading parameters for 2 orbital shells
+    j= 1 sh= 2s Nquant= 2 IP= -3.106 eV Nzeta= 1   coeff[0]= 1 zetas[0]= 0.65 Bohr^-1  
+    j= 2 sh= 2p Nquant= 2 IP= -1.258 eV Nzeta= 1   coeff[0]= 1 zetas[0]= 0.65 Bohr^-1  
+Reading parameters for element Be
+Nval = 2
+Zeff = 2
+  reading parameters for 2 orbital shells
+    j= 1 sh= 2s Nquant= 2 IP= -5.946 eV Nzeta= 1   coeff[0]= 1 zetas[0]= 0.975 Bohr^-1  
+    j= 2 sh= 2p Nquant= 2 IP= -2.563 eV Nzeta= 1   coeff[0]= 1 zetas[0]= 0.975 Bohr^-1  
+Reading parameters for element B
+Nval = 3
+Zeff = 3
+  reading parameters for 2 orbital shells
+    j= 1 sh= 2s Nquant= 2 IP= -9.594 eV Nzeta= 1   coeff[0]= 1 zetas[0]= 1.3 Bohr^-1  
+    j= 2 sh= 2p Nquant= 2 IP= -4.001 eV Nzeta= 1   coeff[0]= 1 zetas[0]= 1.3 Bohr^-1  
+Reading parameters for element C
+Nval = 4
+Zeff = 4
+  reading parameters for 2 orbital shells
+    j= 1 sh= 2s Nquant= 2 IP= -14.051 eV Nzeta= 1   coeff[0]= 1 zetas[0]= 1.625 Bohr^-1  
+    j= 2 sh= 2p Nquant= 2 IP= -5.572 eV Nzeta= 1   coeff[0]= 1 zetas[0]= 1.625 Bohr^-1  
+Reading parameters for element N
+Nval = 5
+Zeff = 5
+  reading parameters for 2 orbital shells
+    j= 1 sh= 2s Nquant= 2 IP= -19.316 eV Nzeta= 1   coeff[0]= 1 zetas[0]= 1.95 Bohr^-1  
+    j= 2 sh= 2p Nquant= 2 IP= -7.275 eV Nzeta= 1   coeff[0]= 1 zetas[0]= 1.95 Bohr^-1  
+Reading parameters for element O
+Nval = 6
+Zeff = 6
+  reading parameters for 2 orbital shells
+    j= 1 sh= 2s Nquant= 2 IP= -25.39 eV Nzeta= 1   coeff[0]= 1 zetas[0]= 2.275 Bohr^-1  
+    j= 2 sh= 2p Nquant= 2 IP= -9.111 eV Nzeta= 1   coeff[0]= 1 zetas[0]= 2.275 Bohr^-1  
+Reading parameters for element F
+Nval = 7
+Zeff = 7
+  reading parameters for 2 orbital shells
+    j= 1 sh= 2s Nquant= 2 IP= -32.272 eV Nzeta= 1   coeff[0]= 1 zetas[0]= 2.6 Bohr^-1  
+    j= 2 sh= 2p Nquant= 2 IP= -11.08 eV Nzeta= 1   coeff[0]= 1 zetas[0]= 2.6 Bohr^-1  
+End of set_parameters_indo function
+Total number of orbitals added is = 8
+Total number of electrons is = 10
+Atom to AO mapping:
+List n= 0 has following entries: 0  1  2  3  
+List n= 1 has following entries: 4  5  6  7  
+AO to Atom mapping:
+orbital 0 is sitting on atom 0
+orbital 1 is sitting on atom 0
+orbital 2 is sitting on atom 0
+orbital 3 is sitting on atom 0
+orbital 4 is sitting on atom 1
+orbital 5 is sitting on atom 1
+orbital 6 is sitting on atom 1
+orbital 7 is sitting on atom 1
+AO overlap matrix
+
+              1              0              0              0    -0.29712762              0              0     0.50249638
+              0              1              0              0              0      0.2569952              0              0
+              0              0              1              0              0              0      0.2569952              0
+              0              0              0              1    -0.33175784              0              0     0.42096131
+    -0.29712762              0              0    -0.33175784              1              0              0              0
+              0      0.2569952              0              0              0              1              0              0
+              0              0      0.2569952              0              0              0              1              0
+     0.50249638              0              0     0.42096131              0              0              0              1
+in indo_core_parameters
+In indo_core_parameters: eri array is not allocated
+Do allocation...
+In indo_core_parameters: V_AB array is not allocated
+Do allocation...
+i - runs over indices of atoms in given system
+sorb_indx[i] - is the global index of s-type orbital (assuming only one) centered on atom i
+i= 0 sorb_indx[i]= 3
+i= 1 sorb_indx[i]= 7
+a= 0 b= 0 I= 3 J= 3 eri= 0.59020452 V_AB= 2.3608181
+a= 0 b= 1 I= 3 J= 7 eri= 0.43437728 V_AB= 2.6062637
+a= 1 b= 0 I= 7 J= 3 eri= 0.43437728 V_AB= 1.7375091
+a= 1 b= 1 I= 7 J= 7 eri= 0.82628632 V_AB= 4.9577179
+Setting diagonal element i = 0
+Contribution from IP = -0.20476715
+a= 0 G1= 0.267708 F2= 0.17372 Atom[a].Atom_Z= 6 basis_ao[i].ao_shell_type= p
+ + Contribution from Frank-Condon factors = -2.1604006
+ + Contribution from Coulombic terms = -4.7666643
+Setting diagonal element i = 1
+Contribution from IP = -0.20476715
+a= 0 G1= 0.267708 F2= 0.17372 Atom[a].Atom_Z= 6 basis_ao[i].ao_shell_type= p
+ + Contribution from Frank-Condon factors = -2.1604006
+ + Contribution from Coulombic terms = -4.7666643
+Setting diagonal element i = 2
+Contribution from IP = -0.20476715
+a= 0 G1= 0.267708 F2= 0.17372 Atom[a].Atom_Z= 6 basis_ao[i].ao_shell_type= p
+ + Contribution from Frank-Condon factors = -2.1604006
+ + Contribution from Coulombic terms = -4.7666643
+Setting diagonal element i = 3
+Contribution from IP = -0.51636454
+a= 0 G1= 0.267708 F2= 0.17372 Atom[a].Atom_Z= 6 basis_ao[i].ao_shell_type= s
+ + Contribution from Frank-Condon factors = -2.4705354
+ + Contribution from Coulombic terms = -5.076799
+Setting diagonal element i = 4
+Contribution from IP = -0.33482295
+a= 1 G1= 0.43423 F2= 0.266415 Atom[a].Atom_Z= 8 basis_ao[i].ao_shell_type= p
+ + Contribution from Frank-Condon factors = -4.6600582
+ + Contribution from Coulombic terms = -6.3975673
+Setting diagonal element i = 5
+Contribution from IP = -0.33482295
+a= 1 G1= 0.43423 F2= 0.266415 Atom[a].Atom_Z= 8 basis_ao[i].ao_shell_type= p
+ + Contribution from Frank-Condon factors = -4.6600582
+ + Contribution from Coulombic terms = -6.3975673
+Setting diagonal element i = 6
+Contribution from IP = -0.33482295
+a= 1 G1= 0.43423 F2= 0.266415 Atom[a].Atom_Z= 8 basis_ao[i].ao_shell_type= p
+ + Contribution from Frank-Condon factors = -4.6600582
+ + Contribution from Coulombic terms = -6.3975673
+Setting diagonal element i = 7
+Contribution from IP = -0.93306496
+a= 1 G1= 0.43423 F2= 0.266415 Atom[a].Atom_Z= 8 basis_ao[i].ao_shell_type= s
+ + Contribution from Frank-Condon factors = -5.1519672
+ + Contribution from Coulombic terms = -6.8894764
+Core Hamiltonian
+
+     -4.7666643              0              0              0      0.2839001              0              0    -0.48012627
+              0     -4.7666643              0              0              0     -0.2455543              0              0
+              0              0     -4.7666643              0              0              0     -0.2455543              0
+              0              0              0      -5.076799     0.31698865              0              0    -0.40222097
+      0.2839001              0              0     0.31698865     -6.3975673              0              0              0
+              0     -0.2455543              0              0              0     -6.3975673              0              0
+              0              0     -0.2455543              0              0              0     -6.3975673              0
+    -0.48012627              0              0    -0.40222097              0              0              0     -6.8894764
+Nelec_alp =  5
+Nelec_bet =  5
+Eigenvalues (alp):
+
+
+     -7.0930906              0              0              0              0              0              0              0
+              0     -6.4728695              0              0              0              0              0              0
+              0              0     -6.4337367              0              0              0              0              0
+              0              0              0     -6.4337367              0              0              0              0
+              0              0              0              0     -4.9887253              0              0              0
+              0              0              0              0              0     -4.7304949              0              0
+              0              0              0              0              0              0     -4.7304949              0
+              0              0              0              0              0              0              0     -4.5758216
+Eigenvalues (bet):
+
+
+     -7.0930906              0              0              0              0              0              0              0
+              0     -6.4728695              0              0              0              0              0              0
+              0              0     -6.4337367              0              0              0              0              0
+              0              0              0     -6.4337367              0              0              0              0
+              0              0              0              0     -4.9887253              0              0              0
+              0              0              0              0              0     -4.7304949              0              0
+              0              0              0              0              0              0     -4.7304949              0
+              0              0              0              0              0              0              0     -4.5758216
+Eigenvectors(alp):
+
+
+     -0.2154884   -0.089915108              0              0    -0.37677485              0              0     0.89639318
+  9.3104579e-17   6.496216e-16     0.11404887   -0.090710773 -1.0368974e-15     0.68165731     0.71701306 -3.4828814e-16
+  2.1602309e-16  -9.740646e-16    0.090710773     0.11404887  3.1477006e-16    -0.71701306     0.68165731  8.6529873e-17
+    -0.21560083     -0.1461646 -4.6306903e-17 -6.0961596e-17     0.91200865  1.0872205e-15  5.1784253e-16     0.31684761
+     0.18621979     0.95428124  2.9903223e-16  -1.013054e-16     0.12927637 -8.1159774e-16  2.0784334e-16     0.19482588
+  9.3311156e-17 -4.2074713e-16     0.77427978    -0.61583702  1.3596491e-16    -0.10040589    -0.10561367  3.7376572e-17
+              0              0     0.61583702     0.77427978              0     0.10561367    -0.10040589              0
+    -0.93402528     0.24474169  1.6979018e-16  -6.400622e-17   -0.097818969 -5.5888967e-16  5.4492511e-17    -0.24110108
+Eigenvectors(bet):
+
+
+     -0.2154884   -0.089915108              0              0    -0.37677485              0              0     0.89639318
+  9.3104579e-17   6.496216e-16     0.11404887   -0.090710773 -1.0368974e-15     0.68165731     0.71701306 -3.4828814e-16
+  2.1602309e-16  -9.740646e-16    0.090710773     0.11404887  3.1477006e-16    -0.71701306     0.68165731  8.6529873e-17
+    -0.21560083     -0.1461646 -4.6306903e-17 -6.0961596e-17     0.91200865  1.0872205e-15  5.1784253e-16     0.31684761
+     0.18621979     0.95428124  2.9903223e-16  -1.013054e-16     0.12927637 -8.1159774e-16  2.0784334e-16     0.19482588
+  9.3311156e-17 -4.2074713e-16     0.77427978    -0.61583702  1.3596491e-16    -0.10040589    -0.10561367  3.7376572e-17
+              0              0     0.61583702     0.77427978              0     0.10561367    -0.10040589              0
+    -0.93402528     0.24474169  1.6979018e-16  -6.400622e-17   -0.097818969 -5.5888967e-16  5.4492511e-17    -0.24110108
+Density matrix(alp):
+
+
+     0.19647926  3.1220311e-16 -7.7564788e-17    -0.28402004    -0.17464059 -3.3504105e-17              0     0.21612137
+  3.1220311e-16     0.02123559  2.3876165e-17 -1.0604359e-15  5.4650707e-16     0.14416879 -4.4743668e-16  1.9862613e-16
+ -7.7564788e-17  2.3876165e-17     0.02123559   3.717189e-16 -8.3303979e-16  6.2477828e-16     0.14416879 -4.6285376e-16
+    -0.28402004 -1.0604359e-15   3.717189e-16     0.89960759   -0.061730115  1.6706946e-16 -7.5718836e-17    0.076392301
+    -0.17464059  5.4650707e-16 -8.3303979e-16   -0.061730115     0.96204288 -7.2635439e-17  1.0571639e-16     0.04697273
+ -3.3504105e-17     0.14416879  6.2477828e-16  1.6706946e-16 -7.2635439e-17     0.97876441  1.0356841e-16 -3.2546789e-17
+              0 -4.4743668e-16     0.14416879 -7.5718836e-17  1.0571639e-16  1.0356841e-16     0.97876441  5.5004356e-17
+     0.21612137  1.9862613e-16 -4.6285376e-16    0.076392301     0.04697273 -3.2546789e-17  5.5004356e-17     0.94187027
+Density matrix(bet):
+
+
+     0.19647926  3.1220311e-16 -7.7564788e-17    -0.28402004    -0.17464059 -3.3504105e-17              0     0.21612137
+  3.1220311e-16     0.02123559  2.3876165e-17 -1.0604359e-15  5.4650707e-16     0.14416879 -4.4743668e-16  1.9862613e-16
+ -7.7564788e-17  2.3876165e-17     0.02123559   3.717189e-16 -8.3303979e-16  6.2477828e-16     0.14416879 -4.6285376e-16
+    -0.28402004 -1.0604359e-15   3.717189e-16     0.89960759   -0.061730115  1.6706946e-16 -7.5718836e-17    0.076392301
+    -0.17464059  5.4650707e-16 -8.3303979e-16   -0.061730115     0.96204288 -7.2635439e-17  1.0571639e-16     0.04697273
+ -3.3504105e-17     0.14416879  6.2477828e-16  1.6706946e-16 -7.2635439e-17     0.97876441  1.0356841e-16 -3.2546789e-17
+              0 -4.4743668e-16     0.14416879 -7.5718836e-17  1.0571639e-16  1.0356841e-16     0.97876441  5.5004356e-17
+     0.21612137  1.9862613e-16 -4.6285376e-16    0.076392301     0.04697273 -3.2546789e-17  5.5004356e-17     0.94187027
+Bands(alp):
+
+[[0, -7.0930905735959664], [1, -6.4728694844503396], [2, -6.4337366769287785], [3, -6.4337366769287767], [4, -4.9887253413833683], [5, -4.7304949142968891], [6, -4.7304949142968882], [7, -4.575821608514028]]
+Bands(bet):
+
+[[0, -7.0930905735959664], [1, -6.4728694844503396], [2, -6.4337366769287785], [3, -6.4337366769287767], [4, -4.9887253413833683], [5, -4.7304949142968891], [6, -4.7304949142968882], [7, -4.575821608514028]]
+Occupations(alp):
+
+[[0, 1.0], [1, 1.0], [2, 1.0], [3, 1.0], [4, 1.0], [5, 0.0], [6, 0.0], [7, 0.0]]
+Occupations(bet):
+
+[[0, 1.0], [1, 1.0], [2, 1.0], [3, 1.0], [4, 1.0], [5, 0.0], [6, 0.0], [7, 0.0]]
+Fock matrix at first iteration (alp)
+
+    -0.26089975 -1.6039988e-16  3.9850284e-17    0.091595473     0.35976001  1.4553422e-17              0    -0.57400448
+ -1.6039988e-16     -0.1708652 -1.2266803e-17  3.4198688e-16 -2.3739026e-16    -0.30817795  1.9435633e-16 -8.6278678e-17
+  3.9850284e-17 -1.2266803e-17     -0.1708652 -1.1987805e-16  3.6185356e-16 -2.7138949e-16    -0.30817795  2.0105316e-16
+    0.091595473  3.4198688e-16 -1.1987805e-16    -0.93046497     0.34380281 -7.2571176e-17  3.2890542e-17    -0.43540405
+     0.35976001 -2.3739026e-16  3.6185356e-16     0.34380281   -0.063394571  5.1503155e-17 -7.4959657e-17   -0.018415956
+  1.4553422e-17    -0.30817795 -2.7138949e-16 -7.2571176e-17  5.1503155e-17   -0.075251204 -7.3436604e-17  1.2760174e-17
+              0  1.9435633e-16    -0.30817795  3.2890542e-17 -7.4959657e-17 -7.3436604e-17   -0.075251204 -2.1564806e-17
+    -0.57400448 -8.6278678e-17  2.0105316e-16    -0.43540405   -0.018415956  1.2760174e-17 -2.1564806e-17    -0.71987857
+Initial energy = -33.918271
+Iteration 0 e_err = 0.66044037 d_err = 1.1108232 E_el = -34.578712
+Iteration 1 e_err = 0.4398522 d_err = 0.76327845 E_el = -35.018564
+Iteration 2 e_err = 0.10477704 d_err = 0.39650502 E_el = -35.123341
+Iteration 3 e_err = 0.046077229 d_err = 0.2549213 E_el = -35.169418
+Iteration 4 e_err = 0.01389837 d_err = 0.13887568 E_el = -35.183317
+Iteration 5 e_err = 0.0051823616 d_err = 0.08615657 E_el = -35.188499
+Iteration 6 e_err = 0.0016967571 d_err = 0.048132059 E_el = -35.190196
+Iteration 7 e_err = 0.00059783008 d_err = 0.029275696 E_el = -35.190794
+Iteration 8 e_err = 0.00020149698 d_err = 0.016592217 E_el = -35.190995
+Iteration 9 e_err = 6.9658895e-05 d_err = 0.0099787483 E_el = -35.191065
+Iteration 10 e_err = 2.3720579e-05 d_err = 0.0057049142 E_el = -35.191089
+Iteration 11 e_err = 8.148586e-06 d_err = 0.0034069319 E_el = -35.191097
+Iteration 12 e_err = 2.784907e-06 d_err = 0.0019589702 E_el = -35.191099
+Iteration 13 e_err = 9.5468034e-07 d_err = 0.001164254 E_el = -35.1911
+Iteration 14 e_err = 3.2670158e-07 d_err = 0.00067218191 E_el = -35.191101
+Iteration 15 e_err = 1.119189e-07 d_err = 0.00039808534 E_el = -35.191101
+Iteration 16 e_err = 3.8317971e-08 d_err = 0.00023053693 E_el = -35.191101
+Iteration 17 e_err = 1.3123896e-08 d_err = 0.00013616687 E_el = -35.191101
+Iteration 18 e_err = 4.4940683e-09 d_err = 7.9040447e-05 E_el = -35.191101
+Success: Convergence is achieved
+Electronic energy = -35.191101
+Bands(alp)    Occupations(alp)       Bands(bet)    Occupations(bet)
+ -1.70347303     1.00000000   -1.70347303     1.00000000
+ -0.84137608     1.00000000   -0.84137608     1.00000000
+ -0.76428527     1.00000000   -0.76428527     1.00000000
+ -0.76428527     1.00000000   -0.76428527     1.00000000
+ -0.55764021     1.00000000   -0.55764021     1.00000000
+  0.20264254     0.00000000    0.20264254     0.00000000
+  0.20264254     0.00000000    0.20264254     0.00000000
+  0.45515146     0.00000000    0.45515146     0.00000000

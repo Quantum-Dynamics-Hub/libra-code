@@ -284,11 +284,11 @@ void Hamiltonian_Atomistic::compute_diabatic(){
   int i;
 
   if(status_dia == 0){ // only compute this is the result is not up to date
+
+    // Zero forces
+    _syst->zero_forces_and_torques();
   
     if(ham_types[0]==1){
-
-      // Zero forces
-      _syst->zero_forces_and_torques();
 
       // Do actual computations
       int sz = mm_ham->interactions.size();
@@ -328,6 +328,32 @@ void Hamiltonian_Atomistic::compute_diabatic(){
 
     }// MM
 
+    if(ham_types[1]==1){
+
+      qm_ham->compute_scf(*_syst);
+
+      // Energies
+      *ham_dia = 0.0;
+
+      if(nelec < qm_ham->el->Fao_alp->num_of_cols){
+      
+        vector<int> subset(nelec); for(int i=0;i<nelec;i++){ subset[i] = i; }  
+        pop_submatrix(qm_ham->el->Fao_alp, ham_dia, subset);
+
+      }
+      else{
+
+        vector<int> subset(qm_ham->el->Fao_alp->num_of_cols); for(int i=0;i<qm_ham->el->Fao_alp->num_of_cols;i++){ subset[i] = i; }  
+        push_submatrix(ham_dia, qm_ham->el->Fao_alp, subset);
+
+      }
+
+
+      cout<<"internal Fao = \n"<<*qm_ham->el->Fao_alp<<endl;
+      cout<<"diabatic Ham = \n"<<*ham_dia<<endl;
+//      pop_submatrix(qm_ham->el->E_alp,   ham_adi, subset);
+
+    }// QM
     //==========================================================
 
     // class - specific computations: MM, semi-empirical, HF, etc   
@@ -356,28 +382,82 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
 
   if(status_adi == 0){
 
-    MATRIX* S; S = new MATRIX(nelec, nelec);  S->Init_Unit_Matrix(1.0);
-    MATRIX* C; C = new MATRIX(nelec, nelec);  *C = 0.0;
+    if(ham_types[0]==1){
 
-    // Transformation to adiabatic basis
-    solve_eigen(nelec, ham_dia, S, ham_adi, C);  // H_dia * C = S * C * H_adi
+      MATRIX* S; S = new MATRIX(nelec, nelec);  S->Init_Unit_Matrix(1.0);
+      MATRIX* C; C = new MATRIX(nelec, nelec);  *C = 0.0;
+
+      // Transformation to adiabatic basis
+      solve_eigen(nelec, ham_dia, S, ham_adi, C);  // H_dia * C = S * C * H_adi
+
+      // Now compute the derivative couplings (off-diagonal, multiplied by energy difference) and adiabatic gradients (diagonal)
+      for(int n=0;n<nnucl;n++){
+
+        *d1ham_adi[n] = (*C).T() * (*d1ham_dia[n]) * (*C);
+
+      }// for n
+
+      delete S;
+      delete C;
+
+    }// ham_type[0]==1
+
+    else if(ham_types[1]==1){
+
+      MATRIX* S; S = new MATRIX(nelec, nelec);  *S = 0.0;
+      MATRIX* C; C = new MATRIX(nelec, nelec);  *C = 0.0;
+
+      if(nelec < qm_ham->el->Sao->num_of_cols){
+      
+        vector<int> subset(nelec); for(int i=0;i<nelec;i++){ subset[i] = i; }  
+        pop_submatrix(qm_ham->el->Sao, S, subset);
+
+      }
+      else{
+
+        vector<int> subset(qm_ham->el->Sao->num_of_cols); for(int i=0;i<qm_ham->el->Sao->num_of_cols;i++){ subset[i] = i; }  
+        push_submatrix(S, qm_ham->el->Sao, subset);
+
+        for(int i=qm_ham->el->Sao->num_of_cols;i<nelec;i++){
+          S->set(i,i,1.0);
+        }
+
+      }
+      
 
 
-    // Now compute the derivative couplings (off-diagonal, multiplied by energy difference) and adiabatic gradients (diagonal)
-    for(int n=0;n<nnucl;n++){
+      cout<<"Sao = \n"<<*qm_ham->el->Sao<<endl;
+      cout<<"S= \n"<<*S<<endl;
+      cout<<"internal MO = \n"<<*qm_ham->el->C_alp<<endl;
 
-      *d1ham_adi[n] = (*C).T() * (*d1ham_dia[n]) * (*C);
+      // Transformation to adiabatic basis
+      solve_eigen(nelec, ham_dia, S, ham_adi, C);  // H_dia * C = S * C * H_adi
 
-    }// for n
+      cout<<"new C =\n"<<*C<<endl;
+
+      cout<<"internal E_alp = \n"<<*qm_ham->el->E_alp<<endl;
+      cout<<"adiabatic Ham = \n"<<*ham_adi<<endl;
 
 
-    delete S;
-    delete C;
+      // Now compute the derivative couplings (off-diagonal, multiplied by energy difference) and adiabatic gradients (diagonal)
+      for(int n=0;n<nnucl;n++){
+
+        *d1ham_adi[n] = (*C).T() * (*d1ham_dia[n]) * (*C);
+
+      }// for n
+
+      delete S;
+      delete C;
+
+
+    }// ham_type[1]==1
+
 
     // Set status flag
     status_adi = 1;
 
   }// status_adi == 0
+
   
 }
 

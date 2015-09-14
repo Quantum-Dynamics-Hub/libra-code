@@ -72,6 +72,8 @@ void export_hamiltonian_atomistic_objects(){
       .def("apply_pbc_to_interactions", &Hamiltonian_Atomistic::apply_pbc_to_interactions)
       .def("set_respa_types", &Hamiltonian_Atomistic::set_respa_types)
 
+      .def("init_qm_Hamiltonian",&Hamiltonian_Atomistic::init_qm_Hamiltonian)
+
       .def("is_active", expt_is_active_v1a)
       .def("is_active", expt_is_active_v2a)
       .def("is_active", expt_is_active_v3a)
