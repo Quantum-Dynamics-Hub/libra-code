@@ -361,7 +361,7 @@ void Hamiltonian_core_deriv_indo
 
   int i,j,k,a,b,I,J,A,B;
   VECTOR dIdA,dIdB;
-  cout<<"in Hamiltonian_core_deriv_indo\n";
+//  cout<<"in Hamiltonian_core_deriv_indo\n";
 
   int Norb = basis_ao.size(); // how many AOs are included in this fragment
   if(Norb!=Hao->num_of_cols){  
@@ -387,7 +387,7 @@ void Hamiltonian_core_deriv_indo
 
   int sz = syst.Number_of_atoms; // number of atoms in this fragment
 
-  cout<<"sz= "<<sz<<endl;
+//  cout<<"sz= "<<sz<<endl;
 
   if(modprms.eri.size()!=sz*sz){  cout<<"Error in Hamiltonian_core_deriv_indo: size of auxiliary eri array is not right\n"; exit(0);}
   if(modprms.V_AB.size()!=sz*sz){  cout<<"Error in Hamiltonian_core_deriv_indo: size of auxiliary V_AB array is not right\n"; exit(0);}
@@ -471,7 +471,7 @@ void Hamiltonian_core_deriv_indo
 
 
     for(b=0;b<sz;b++){
-      cout<<"i= "<<i<<" a= "<<a<<" b= "<<b<<endl;
+//      cout<<"i= "<<i<<" a= "<<a<<" b= "<<b<<endl;
 
       if(b!=a){
         Hao->M[i*Norb+i] -= modprms.V_AB[a*sz+b];  //  = V_AB = Z_B * eri[A][B] -in INDO
@@ -480,7 +480,7 @@ void Hamiltonian_core_deriv_indo
         compute_indo_core_parameters_derivs(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map,
                                             sorb_indx, modprms.indo_opt, a, b, c, deri, dV_AB);
 
-        cout<<"i= "<<i<<" a= "<<a<<" b= "<<b<<" c= "<<c<<" deri= "<<deri<<" dV_AB= "<<dV_AB<<endl;
+//        cout<<"i= "<<i<<" a= "<<a<<" b= "<<b<<" c= "<<c<<" deri= "<<deri<<" dV_AB= "<<dV_AB<<endl;
 
         dHao_dx->M[i*Norb+i] -= dV_AB.x;
         dHao_dy->M[i*Norb+i] -= dV_AB.y;
