@@ -8,10 +8,10 @@
 #* or <http://www.gnu.org/licenses/>.
 #*
 #*********************************************************************************/
-
 ###################################################################
-# Tutorial: Now, lets go to Fock matrix construction - only initial iteration
-# add a choice of systems: C, C2, CH4
+# Tutorial: SCF computations are hidden - use built-in function
+# Compute derivatives of Sao, Hao, Fao, and also Dao in AO basis
+# Now, get step-by-step to the dE/dR, Dmo and forces (only for alpha component)
 ###################################################################
 
 import os
@@ -120,8 +120,6 @@ if(prms.hamiltonian=="eht" or prms.hamiltonian=="geht" or prms.hamiltonian=="geh
     set_parameters_eht_mapping(modprms, basis_ao)
     set_parameters_eht_mapping1(modprms,syst.Number_of_atoms,mol_at_types)
 
-
-
 #=========== STEP 7: Overlap matrix ================
 
 Sao = MATRIX(Norb, Norb)
@@ -151,7 +149,7 @@ if(prms.hamiltonian=="indo"):
 
 Hao = MATRIX(Norb, Norb)
 debug = 1
-Hamiltonian_core_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao,  Sao, debug)
+Hamiltonian_core(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao,  Sao, debug)
 print "Core Hamiltonian"
 Hao.show_matrix()
 
@@ -200,76 +198,116 @@ print res_bet[4]
 
 
 el = Electronic_Structure(Norb)
+el.Nocc_alp = Nelec_alp
+el.Nocc_bet = Nelec_bet
 el.set_Hao(Hao)
 el.set_Sao(Sao)
 el.set_P_alp(res_alp[2])
 el.set_P_bet(res_bet[2])
-#el.set_P(res_alp[2]+res_bet[2])
 
 
-Hamiltonian_Fock_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map)
+Hamiltonian_Fock(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map)
 
 print "Fock matrix at first iteration (alp)"
 el.get_Fao_alp().show_matrix()
 
 #===============  Now to SCF iterations =======================
 
-
-E = energy_elec(el.get_P_alp(), el.get_Hao(), el.get_Fao_alp()) + energy_elec(el.get_P_bet(), el.get_Hao(), el.get_Fao_bet())
-print "Initial energy = ", E
-E_old = E
-e_err = 2.0*prms.etol
-d_err = 2.0*prms.den_tol
-
-P_alp_old = el.get_P_alp()
-P_bet_old = el.get_P_bet()
-
-i = 0
-run = 1
-while run:
-    
-    degen = 1.0
-    kT = 0.025
-    etol = 0.0001
-    pop_opt = 0  #  0 -  integer populations,  1 - Fermi distribution              
-
-    res_alp = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_alp, degen, kT, etol, pop_opt)
-    res_bet = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_bet, degen, kT, etol, pop_opt)
+E = scf(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, 0); 
 
 
-    el.set_P_alp(res_alp[2])
-    el.set_P_bet(res_bet[2])
-    Hamiltonian_Fock_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map)
+degen = 1.0
+kT = 0.025
+etol = 0.0001
+pop_opt = 0  #  0 -  integer populations,  1 - Fermi distribution              
+
+res_alp = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_alp, degen, kT, etol, pop_opt)
+res_bet = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_bet, degen, kT, etol, pop_opt)
 
 
-    d_err = math.fabs((el.get_P_alp()-P_alp_old).max_elt()) + math.fabs((el.get_P_bet()-P_bet_old).max_elt())
+print "Bands(alp)    Occupations(alp)       Bands(bet)    Occupations(bet)"
+for j in xrange(Norb):
+     print "%12.8f   %12.8f  %12.8f   %12.8f" %(res_alp[3][j][1], res_alp[4][j][1], res_bet[3][j][1], res_bet[4][j][1])
 
-    P_alp_old = el.get_P_alp()
-    P_bet_old = el.get_P_bet()
 
-
-    E_old = E
-    E = energy_elec(el.get_P_alp(), el.get_Hao(), el.get_Fao_alp()) + energy_elec(el.get_P_bet(), el.get_Hao(), el.get_Fao_bet())
-    e_err = math.fabs(E_old - E)
-
-    print "Iteration ",i, " e_err = ", e_err, " d_err = ", d_err, " E_el = ", E
-
-    if i>100:
-        run = 0
-        print "Convergence is not achieved in 100 iterations"
-    if e_err<prms.etol and d_err<prms.den_tol:
-        run = 0
-        print "Success: Convergence is achieved"    
-        print "Electronic energy = ", E
-
-        
-        print "Bands(alp)    Occupations(alp)       Bands(bet)    Occupations(bet)"
-        for j in xrange(Norb):
-            print "%12.8f   %12.8f  %12.8f   %12.8f" %(res_alp[3][j][1], res_alp[4][j][1], res_bet[3][j][1], res_bet[4][j][1])
-
-    i = i + 1
 
     
+dHao_dx = MATRIX(Norb, Norb)
+dHao_dy = MATRIX(Norb, Norb)
+dHao_dz = MATRIX(Norb, Norb)
+dSao_dx = MATRIX(Norb, Norb)
+dSao_dy = MATRIX(Norb, Norb)
+dSao_dz = MATRIX(Norb, Norb)
+dFao_alp_dx = MATRIX(Norb, Norb)
+dFao_alp_dy = MATRIX(Norb, Norb)
+dFao_alp_dz = MATRIX(Norb, Norb)
+dFao_bet_dx = MATRIX(Norb, Norb)
+dFao_bet_dy = MATRIX(Norb, Norb)
+dFao_bet_dz = MATRIX(Norb, Norb)
+Dao_x = MATRIX(Norb, Norb)
+Dao_y = MATRIX(Norb, Norb)
+Dao_z = MATRIX(Norb, Norb)
+
+
+DF = 0
+c = 0
+
+Hamiltonian_core_deriv_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao, Sao, DF, c, dHao_dx, dHao_dy, dHao_dz, dSao_dx, dSao_dy, dSao_dz )
+Hamiltonian_Fock_derivs_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, c, dHao_dx, dHao_dy, dHao_dz, dFao_alp_dx, dFao_alp_dy, dFao_alp_dz, dFao_bet_dx, dFao_bet_dy, dFao_bet_dz)
+update_derivative_coupling_matrix(x_period, y_period, z_period, t1, t2, t3, atom_to_ao_map, ao_to_atom_map, basis_ao, c, Dao_x, Dao_y, Dao_z);
+
+C_alp = MATRIX(Norb, Norb)
+C_alp = el.get_C_alp()
+T = MATRIX(Norb, Norb)
+
+E_alp = el.get_E_alp()
+T = E_alp * C_alp * Dao_x * C_alp.T()
+
+
+A = MATRIX(Norb,Norb)
+A = C_alp * dFao_alp_dx * C_alp.T() - (T + T.T())
+A.show_matrix()
+
+dE_dx = MATRIX(Norb,Norb)
+Dmo_x = MATRIX(Norb,Norb)
+#dE_dx = 0.0
+#Dmo_x = 0.0
+for i in xrange(Norb):
+    dE_dx.set(i,i,A.get(i,i))
+    for j in xrange(Norb):
+        if(i!=j):
+            Dmo_x.set(i,j,A.get(i,j)/(E_alp.get(j,j)-E_alp.get(i,i)))
+
+print "dE_dx"
+dE_dx.show_matrix()
+
+print "Dmo_x"
+Dmo_x.show_matrix()
+
+
+O = MATRIX(Norb,Norb)
+# P = C * O * C.T(), and C^T * S * C = O  =>  O = C^T * S * P * S * C
+O = C_alp.T() * Sao * el.get_P_alp() * Sao * C_alp
+O.show_matrix()
+
+T = C_alp * C_alp.T() * Dao_x * C_alp
+dP_alp_dx = C_alp * (Dmo_x * O - O * Dmo_x) * C_alp.T() - (T + T.T())
+
+print "dP_alp_dx ="
+dP_alp_dx.show_matrix()
+
+
+F_x = ( dP_alp_dx * (Hao + el.get_Fao_alp()) + el.get_P_alp() * (dHao_dx + dFao_alp_dx) ).tr()
+
+print " Force = ", F_x
+
+
+# checking:
+print "Checking properties of Dao vs. dSao"
+tmp = MATRIX(Norb, Norb)
+tmp = ( Dao_x + Dao_x.T() ) - dSao_dx
+tmp.show_matrix()
+
 
 
 
