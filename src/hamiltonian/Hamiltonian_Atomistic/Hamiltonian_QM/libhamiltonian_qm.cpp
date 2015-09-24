@@ -8,7 +8,7 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
-
+#define BOOST_PYTHON_MAX_ARITY 30
 #include <memory> // for std::auto_ptr<>
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -89,16 +89,48 @@ void export_Hamiltonian_QM_objects(){
 
 
   //----------- INDO -----------------
+  vector<int> (*expt_compute_sorb_indices_v1)
+  ( int sz, vector<AO>& basis_ao, vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
+  ) = &compute_sorb_indices;
+
+  void (*expt_compute_indo_core_parameters_v1)
+  ( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
+    vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+    vector<int>& sorb_indx,
+    int opt, int a, int b, double& eri, double& V_AB
+  ) = &compute_indo_core_parameters;
+
+  void (*expt_compute_indo_core_parameters_derivs_v1)
+  ( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
+    vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+    vector<int>& sorb_indx,
+    int opt, int a, int b, int c, VECTOR& deri, VECTOR& dV_AB
+  ) = &compute_indo_core_parameters_derivs;
+
   void (*expt_indo_core_parameters_v1)
   ( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   int opt, int DF) = &indo_core_parameters;
+
+
 
   void (*expt_Hamiltonian_core_indo_v1)
   ( System& syst, vector<AO>& basis_ao, 
   Control_Parameters& prms, Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   MATRIX& Hao, MATRIX& Sao, int DF) = &Hamiltonian_core_indo;
+
+  void (*expt_Hamiltonian_core_deriv_indo_v1)
+  ( System& syst, vector<AO>& basis_ao, 
+    Control_Parameters& prms, Model_Parameters& modprms,
+    vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+    MATRIX& Hao, MATRIX& Sao, int DF,
+    int c,
+    MATRIX& dHao_dx, MATRIX& dHao_dy, MATRIX& dHao_dz, 
+    MATRIX& dSao_dx, MATRIX& dSao_dy, MATRIX& dSao_dz
+  ) = &Hamiltonian_core_deriv_indo;
+
+
 
   void (*expt_get_integrals_v1)
   (int i,int j,vector<AO>& basis_ao, double eri_aa, double G1, double F2, double& ii_jj,double& ij_ij) = &get_integrals;
@@ -109,13 +141,29 @@ void export_Hamiltonian_QM_objects(){
    vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
   ) = &Hamiltonian_Fock_indo;
 
+  void (*expt_Hamiltonian_Fock_derivs_indo_v1)
+  ( Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+    Control_Parameters& prms, Model_Parameters& modprms,
+    vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+    int c, 
+    MATRIX& dHao_dx,     MATRIX& dHao_dy,     MATRIX& dHao_dz,
+    MATRIX& dFao_alp_dx, MATRIX& dFao_alp_dy, MATRIX& dFao_alp_dz,
+    MATRIX& dFao_bet_dx, MATRIX& dFao_bet_dy, MATRIX& dFao_bet_dz
+  ) = &Hamiltonian_Fock_derivs_indo;
 
 
+
+  def("compute_sorb_indices", expt_compute_sorb_indices_v1);
+  def("compute_indo_core_parameters", expt_compute_indo_core_parameters_v1);
+  def("compute_indo_core_parameters_derivs", expt_compute_indo_core_parameters_derivs_v1);
   def("indo_core_parameters", expt_indo_core_parameters_v1);
+
   def("Hamiltonian_core_indo", expt_Hamiltonian_core_indo_v1);
+  def("Hamiltonian_core_deriv_indo", expt_Hamiltonian_core_deriv_indo_v1);
+
   def("get_integrals",expt_get_integrals_v1);
   def("Hamiltonian_Fock_indo",expt_Hamiltonian_Fock_indo_v1);
-
+  def("Hamiltonian_Fock_derivs_indo",expt_Hamiltonian_Fock_derivs_indo_v1);
 
 
   //----------- HF -----------------

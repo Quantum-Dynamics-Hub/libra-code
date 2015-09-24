@@ -1,0 +1,25 @@
+FORCE_FIELD  GB
+
+SIGMA_COMB_RULE      GEOMETRIC
+EPSILON_COMB_RULE    GEOMETRIC
+
+VDW_SCALE12          0.0
+VDW_SCALE13          0.0
+VDW_SCALE14          1.0
+
+ELEC_SCALE12         0.0
+ELEC_SCALE13         0.0
+ELEC_SCALE14         1.0
+
+
+
+Format:
+
+  type:             int              phrase              double        double       double       double    double     double    double
+  meaning:  Fragment_ff_int_type  Fragment_ff_type         di           li            e0          rat        dw         mu       nu
+
+                      0               "C6H6"               4.65         2.03         0.540        3.67      0.6       2.000     1.000
+                      1               "H20"                2.35         2.35         0.200        1.00      1.0       2.000     1.000
+                      2               "CH3OH"              2.55         3.18         0.542        1.03      1.0       2.000     1.000
+
+

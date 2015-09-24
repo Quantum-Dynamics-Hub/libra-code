@@ -94,6 +94,7 @@ double scf_none(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
     i = i + 1;
   }// while
 
+  return E;
 }
 
 
@@ -102,7 +103,7 @@ double scf_none(Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
            vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, int BM
 ){
 
-  scf_none(&el,syst,basis_ao,  prms,modprms,  atom_to_ao_map,ao_to_atom_map, BM);
+  return scf_none(&el,syst,basis_ao,  prms,modprms,  atom_to_ao_map,ao_to_atom_map, BM);
 }
 
 

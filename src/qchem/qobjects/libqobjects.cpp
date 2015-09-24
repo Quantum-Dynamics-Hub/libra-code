@@ -311,6 +311,7 @@ void export_qobjects_objects(){
       .def("normalize",&AO::normalize)
 
       .def("shift_position",&AO::shift_position)
+      .def("set_position",&AO::set_position)
 
   ;
 

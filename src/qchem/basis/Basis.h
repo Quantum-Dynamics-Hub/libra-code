@@ -53,6 +53,15 @@ void update_overlap_matrix(int,int,int,const VECTOR&,const VECTOR&,const VECTOR&
 void show_mapping(const vector<vector<int> >&);
 
 
+// Basis_nac.cpp
+void update_derivative_coupling_matrix
+(int x_period,int y_period,int z_period,const VECTOR& t1, const VECTOR& t2, const VECTOR& t3,
+ vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+ vector<AO>& basis_ao, int c, MATRIX& Dao_x, MATRIX& Dao_y, MATRIX& Dao_z
+);
+
+
+
 
 }//namespace libbasis
 }//namespace libqchem

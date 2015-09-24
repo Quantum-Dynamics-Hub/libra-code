@@ -188,6 +188,12 @@ void AO::shift_position(const VECTOR& dR){
   for(int i=0;i<expansion_size;i++){  primitives[i].shift_position(dR);   }
 }
 
+void AO::set_position(const VECTOR& R_){
+// Move all primitives by vector dR
+  for(int i=0;i<expansion_size;i++){  primitives[i].set_R(R_);   }
+}
+
+
 
 
 ///=======================================================================================================

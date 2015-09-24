@@ -1,0 +1,16 @@
+FORCE_FIELD = SUTTON-CHEN parameters set
+Here is the Q-SC (quantum Sutton-Chen) parameter set
+
+Format:
+
+  type:             word         int         int       double       double      double
+  meaning:      Atom_element      n           m          D            c           a 
+                    
+                     Ni           10          5        7.3767       84.745       3.5157
+                     Cu           10          5        5.7921       84.843       3.6030                     
+                     Rh           13          5        2.4612      305.499       3.7984
+                     Pd           12          6        3.2864      148.205       3.8813
+                     Ag           11          6        3.9450       96.524       4.0691
+                     Ir           13          6        3.7674      224.815       3.8344
+                     Pt           11          7        9.7894       71.336       3.9163 
+                     Au           11          8        7.8052       53.581       4.0651   

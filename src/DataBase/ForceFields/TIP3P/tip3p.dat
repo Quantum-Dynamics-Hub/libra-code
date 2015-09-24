@@ -1,0 +1,27 @@
+FORCE_FIELD  TIP3P
+
+SIGMA_COMB_RULE      GEOMETRIC
+EPSILON_COMB_RULE    GEOMETRIC
+VDW_SCALE12          0.0
+VDW_SCALE13          0.0
+VDW_SCALE14          1.0
+
+ELEC_SCALE12          0.0
+ELEC_SCALE13          0.0
+ELEC_SCALE14          1.0
+
+
+     type   sigma      epsilon     charge
+
+TYPE  O     3.5365      0.15207     -0.834
+TYPE  H     0.0         0.0          0.417
+
+                    r_eq       k_bond
+BOND  H     H      0.9572     700.0
+
+
+                   theta_eq     k_theta
+ANGLEH    O    H     104.52       100.0
+
+
+

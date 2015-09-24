@@ -668,7 +668,7 @@ double scf_oda_disk(Electronic_Structure& el, System& syst, vector<AO>& basis_ao
            vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, int BM
 ){
 
-  scf_oda_disk(&el,syst,basis_ao,  prms,modprms,  atom_to_ao_map,ao_to_atom_map, BM);
+  return scf_oda_disk(&el,syst,basis_ao,  prms,modprms,  atom_to_ao_map,ao_to_atom_map, BM);
 }
 
 

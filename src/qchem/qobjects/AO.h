@@ -66,6 +66,7 @@ public:
 
   // Transformations
   void shift_position(const VECTOR&);
+  void set_position(const VECTOR&);
 
 
 

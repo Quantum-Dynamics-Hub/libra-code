@@ -60,6 +60,15 @@ void export_basis_objects(){
   // Basis_map.cpp
   void (*expt_show_mapping_v1)(const vector<vector<int> >&) = &show_mapping;
 
+  // Basis_nac.cpp
+  void (*expt_update_derivative_coupling_matrix_v1)
+  (int x_period,int y_period,int z_period,const VECTOR& t1, const VECTOR& t2, const VECTOR& t3,
+   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+   vector<AO>& basis_ao, int c, MATRIX& Dao_x, MATRIX& Dao_y, MATRIX& Dao_z
+  ) = &update_derivative_coupling_matrix;
+
+
+
 
 
   def("basis_params_s", expt_basis_params_s_v1);
@@ -73,6 +82,8 @@ void export_basis_objects(){
   def("update_overlap_matrix", expt_update_overlap_matrix_v1);
 
   def("show_mapping", expt_show_mapping_v1);
+
+  def("update_derivative_coupling_matrix", expt_update_derivative_coupling_matrix_v1);
 
 
 

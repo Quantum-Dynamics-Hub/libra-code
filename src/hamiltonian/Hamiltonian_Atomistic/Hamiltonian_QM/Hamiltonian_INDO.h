@@ -39,10 +39,31 @@ namespace libhamiltonian_qm{
 
 
 // Hamiltonian_INDO.cpp
+vector<int> compute_sorb_indices
+( int sz, vector<AO>& basis_ao, vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
+);
+
+void compute_indo_core_parameters
+( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  vector<int>& sorb_indx,
+  int opt, int a, int b, double& eri, double& V_AB
+);
+
+void compute_indo_core_parameters_derivs
+( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  vector<int>& sorb_indx,
+  int opt, int a, int b, int c, VECTOR& deri, VECTOR& dV_AB
+);
+
 void indo_core_parameters
 ( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-  int opt, int DF);
+  int opt, int DF
+);
+
+
 
 
 void Hamiltonian_core_indo
@@ -59,7 +80,31 @@ void Hamiltonian_core_indo
   MATRIX& Hao, MATRIX& Sao, int DF
 );
 
+void Hamiltonian_core_deriv_indo
+( System& syst, vector<AO>& basis_ao, 
+  Control_Parameters& prms, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  MATRIX* Hao, MATRIX* Sao, int DF,
+  int c,
+  MATRIX* dHao_dx, MATRIX* dHao_dy, MATRIX* dHao_dz, 
+  MATRIX* dSao_dx, MATRIX* dSao_dy, MATRIX* dSao_dz
+);
+
+void Hamiltonian_core_deriv_indo
+( System& syst, vector<AO>& basis_ao, 
+  Control_Parameters& prms, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  MATRIX& Hao, MATRIX& Sao, int DF,
+  int c,
+  MATRIX& dHao_dx, MATRIX& dHao_dy, MATRIX& dHao_dz, 
+  MATRIX& dSao_dx, MATRIX& dSao_dy, MATRIX& dSao_dz
+);
+
+
+
 void get_integrals(int i,int j,vector<AO>& basis_ao, double eri_aa, double G1, double F2, double& ii_jj,double& ij_ij);
+
+
 
 void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
                            Control_Parameters& prms,Model_Parameters& modprms,
@@ -70,6 +115,28 @@ void Hamiltonian_Fock_indo(Electronic_Structure& el, System& syst, vector<AO>& b
                            Control_Parameters& prms,Model_Parameters& modprms,
                            vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
                           );
+
+void Hamiltonian_Fock_derivs_indo
+( Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
+  Control_Parameters& prms, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  int c, 
+  MATRIX* dHao_dx, MATRIX* dHao_dy, MATRIX* dHao_dz,
+  MATRIX* dFao_alp_dx, MATRIX* dFao_alp_dy, MATRIX* dFao_alp_dz,
+  MATRIX* dFao_bet_dx, MATRIX* dFao_bet_dy, MATRIX* dFao_bet_dz
+);
+
+void Hamiltonian_Fock_derivs_indo
+( Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+  Control_Parameters& prms, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  int c, 
+  MATRIX& dHao_dx,     MATRIX& dHao_dy,     MATRIX& dHao_dz,
+  MATRIX& dFao_alp_dx, MATRIX& dFao_alp_dy, MATRIX& dFao_alp_dz,
+  MATRIX& dFao_bet_dx, MATRIX& dFao_bet_dy, MATRIX& dFao_bet_dz
+);
+
+
 
 
 

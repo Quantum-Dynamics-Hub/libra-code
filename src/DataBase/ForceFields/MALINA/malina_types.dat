@@ -1,0 +1,17 @@
+FORCE_FIELD = MALINA
+
+SIGMA_COMB_RULE      SLATER-KIRKWOOD
+EPSILON_COMB_RULE    SLATER-KIRKWOOD
+VDW_SCALE13          0.0
+VDW_SCALE14          1.0
+ELEC_SCALE13         0.0
+ELEC_SCALE14         0.75
+
+
+
+TYPE   "Xu"      1     999     0.0
+TYPE   "Xd"      2     998     0.0
+TYPE   "C"      3       6      0.0
+TYPE   "H"      4       1      0.0
+
+

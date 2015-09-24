@@ -49,7 +49,7 @@ public:
   void set_y_exp(int _y);
   void set_z_exp(int _z);
   void set_alpha(double _alp);
-  void set_R(VECTOR& _R);
+  void set_R(const VECTOR& _R);
 
 
 
