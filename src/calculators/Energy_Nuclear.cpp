@@ -32,4 +32,38 @@ double energy_nucl(vector<VECTOR>& R, vector<double>& Zeff){
 
 }// energy_nucl
 
+double energy_nucl(vector<VECTOR>& R, vector<double>& Zeff, vector<VECTOR>& G){
+/// Compute nuclear energy and gradients of a sub-system
+
+  int I,J;
+  int sz = R.size();
+  double en = 0.0;
+  //if(G.size()!=sz){  G = vector<VECTOR>(sz,VECTOR(0.0,0.0,0.0)); }
+  //else{ for(int i=0;i<sz;i++){  G[i] = 0.0; }  }
+  if(G.size()>0) { G.clear(); }
+  for(int i=0;i<sz;i++){  G.push_back(VECTOR(0.0, 0.0, 0.0)); } 
+
+  for(int i=0;i<sz;i++){
+    for(int j=i+1;j<sz;j++){
+
+      double rij = (R[i] - R[j]).length();
+      double tmp = Zeff[i] * Zeff[j] / rij;
+      en += tmp;
+
+      double modg = -tmp/(rij * rij);
+      VECTOR Gij; Gij = (R[i] - R[j]) * modg;
+
+      G[i] += Gij;
+      G[j] -= Gij;
+      
+      
+    }// for j
+  }// for i
+
+  return en;
+
+}// energy_nucl
+
+
+
 }//namespace libcalculators

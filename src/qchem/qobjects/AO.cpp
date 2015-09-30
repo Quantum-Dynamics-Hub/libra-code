@@ -183,15 +183,41 @@ double AO::normalization_factor(){
 }
 
 
-void AO::shift_position(const VECTOR& dR){
+void AO::shift_position(VECTOR dR){
 // Move all primitives by vector dR
   for(int i=0;i<expansion_size;i++){  primitives[i].shift_position(dR);   }
 }
+
+void AO::set_position(VECTOR R_){
+// Move all primitives by vector dR
+  for(int i=0;i<expansion_size;i++){  primitives[i].set_position(R_);   }
+}
+
+void AO::shift_position_const_ref(const VECTOR& dR){
+// Move all primitives by vector dR
+  for(int i=0;i<expansion_size;i++){  primitives[i].shift_position_const_ref(dR);   }
+}
+
+void AO::set_position_const_ref(const VECTOR& R_){
+// Move all primitives by vector dR
+  for(int i=0;i<expansion_size;i++){  primitives[i].set_position_const_ref(R_);   }
+}
+
+
+/*  This one is gonna MESS you a LOT!!!
+
+ This is a good reminder that the Python uses references a lot !!!
+
+  Alright!!! I keep the refernece version - for use in C++ only!!!
+ 
+  Export the object version to Python to avoid messing up your calculations!!!
 
 void AO::set_position(const VECTOR& R_){
 // Move all primitives by vector dR
   for(int i=0;i<expansion_size;i++){  primitives[i].set_R(R_);   }
 }
+*/
+
 
 
 

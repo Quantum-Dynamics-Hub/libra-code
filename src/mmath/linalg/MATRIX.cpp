@@ -757,18 +757,18 @@ MATRIX MATRIX::operator /(double num)
         return m;
 }
 
-MATRIX& MATRIX::operator=(const MATRIX& ob){  
+MATRIX MATRIX::operator=(const MATRIX& ob){  
 
   memcpy(M,ob.M,sizeof(double)*num_of_elems);
 
-  return *this; // return reference to allow chaining: A = B = C =...
+  return *this; // return reference to allow chaining: A = B = C =... !!! No: so crap doesn't happen in PYthon
 }
 
-MATRIX& MATRIX::operator=(double num){
+MATRIX MATRIX::operator=(double num){
   for(int i=0;i<num_of_elems;i++){
     M[i] = num;
   }
-  return *this;  // return reference to allow chaining: A = B = C = 7
+  return *this;  // return reference to allow chaining: A = B = C = 7!!! No: so crap doesn't happen in PYthon
 }
 
 

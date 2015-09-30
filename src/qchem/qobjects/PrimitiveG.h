@@ -49,7 +49,7 @@ public:
   void set_y_exp(int _y);
   void set_z_exp(int _z);
   void set_alpha(double _alp);
-  void set_R(const VECTOR& _R);
+
 
 
 
@@ -71,7 +71,12 @@ public:
   void show_info();
 
   // Transformations
-  void shift_position(const VECTOR&);
+  void shift_position_const_ref(const VECTOR&);
+  void set_position_const_ref(const VECTOR& _R);
+
+  void shift_position(VECTOR);
+  void set_position(VECTOR);
+
 
 
   friend int operator == (const PrimitiveG& g1, const PrimitiveG& g2){

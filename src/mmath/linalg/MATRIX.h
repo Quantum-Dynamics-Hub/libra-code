@@ -130,8 +130,8 @@ public:
   MATRIX& operator-=(const MATRIX&);
   MATRIX& operator*=(double);
   MATRIX operator/(double num);
-  MATRIX& operator=(const MATRIX&);
-  MATRIX& operator=(double num);
+  MATRIX operator=(const MATRIX&);
+  MATRIX operator=(double num);
 
   friend int operator == (const MATRIX& m1, const MATRIX& m2);  // Are matrices equal;
   friend int operator != (const MATRIX& m1, const MATRIX& m2);  // Are matrices not equal;

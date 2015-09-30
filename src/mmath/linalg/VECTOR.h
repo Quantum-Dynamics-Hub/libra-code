@@ -146,13 +146,13 @@ class VECTOR
     tmp.z=z-v;
     return tmp;
   }
-  VECTOR& operator=(const VECTOR &v){
+  VECTOR operator=(const VECTOR &v){  // Important to return object, not the reference!!! otherwise crap happens on the Python side
     x=v.x;
     y=v.y;
     z=v.z;
     return *this;
   }
-  VECTOR& operator=(const double &v){
+  VECTOR operator=(const double &v){  // same business with the reference
     x=v;
     y=v;
     z=v;

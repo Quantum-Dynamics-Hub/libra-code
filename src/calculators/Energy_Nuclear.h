@@ -18,6 +18,7 @@ using namespace libmmath;
 namespace libcalculators{
 
 double energy_nucl(vector<VECTOR>& R, vector<double>& Zeff);
+double energy_nucl(vector<VECTOR>& R, vector<double>& Zeff, vector<VECTOR>& G);
 
 
 }// namespace libcalculators

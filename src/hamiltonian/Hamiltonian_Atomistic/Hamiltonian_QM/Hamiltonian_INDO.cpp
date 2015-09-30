@@ -106,12 +106,16 @@ void compute_indo_core_parameters_derivs
   // ERI
   //eri = electron_repulsion_integral(basis_ao[I],basis_ao[I],basis_ao[J],basis_ao[J]); // eri[a][b]
 
+
   VECTOR DA,DB,DC,DD;
   double eri = electron_repulsion_integral(&basis_ao[I],&basis_ao[I],&basis_ao[J],&basis_ao[J],1,1,DA,DB,DC,DD);
 
   VECTOR deri_dc; deri_dc = 0.0;
-  if(K==I){ deri += (DA + DB); }
-  if(K==J){ deri += (DC + DD); }
+  if(a==b){ ;; }
+  else{
+    if(c==a){ deri += (DA + DB); }
+    if(c==b){ deri += (DC + DD); }
+  }
 
 
   // V_AB

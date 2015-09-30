@@ -155,14 +155,14 @@ class QUATERNION{
     tmp.Lz = f*Lz;
     return tmp;
   }
-  QUATERNION& operator=(const QUATERNION &q){
+  QUATERNION operator=(const QUATERNION &q){
     Lt = q.Lt;
     Lx = q.Lx;
     Ly = q.Ly;
     Lz = q.Lz;
     return *this;
   }
-  QUATERNION& operator=(const double &q){
+  QUATERNION operator=(const double &q){
     Lt = q;
     Lx = q;
     Ly = q;

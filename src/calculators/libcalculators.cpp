@@ -65,6 +65,7 @@ void export_calculators_objects(){
 
   //----------------- Energy_Nuclear.cpp ---------------------
   double (*expt_energy_nucl_v1)(vector<VECTOR>& R, vector<double>& Zeff) = &energy_nucl;
+  double (*expt_energy_nucl_v2)(vector<VECTOR>& R, vector<double>& Zeff, vector<VECTOR>& G) = &energy_nucl;
 
 
 
@@ -87,6 +88,7 @@ void export_calculators_objects(){
   def("energy_elec",expt_energy_elec_v2);
 
   def("energy_nucl",expt_energy_nucl_v1);
+  def("energy_nucl",expt_energy_nucl_v2);
 
 
 

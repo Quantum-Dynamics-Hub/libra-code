@@ -242,6 +242,9 @@ void export_qobjects_objects(){
 
 
 
+  void (PrimitiveG::*expt_set_position_PrimitiveG_v1)(VECTOR) = &PrimitiveG::set_position;
+  void (AO::*expt_set_position_AO_v1)(VECTOR) = &AO::set_position;
+
   class_<PrimitiveG>("PrimitiveG",init<>())
       .def(init<int,int,int,double,VECTOR&>()) 
       .def(init<const PrimitiveG&>())
@@ -266,7 +269,7 @@ void export_qobjects_objects(){
       .def("set_y_exp",&PrimitiveG::set_y_exp)
       .def("set_z_exp",&PrimitiveG::set_z_exp)
       .def("set_alpha",&PrimitiveG::set_alpha)
-      .def("set_R",&PrimitiveG::set_R)
+//      .def("set_R",&PrimitiveG::set_R)
 
       .def("compute",&PrimitiveG::compute)
       .def("norm2",&PrimitiveG::norm2)
@@ -275,6 +278,7 @@ void export_qobjects_objects(){
       .def("show_info",&PrimitiveG::show_info)
 
       .def("shift_position",&PrimitiveG::shift_position)
+      .def("set_position",expt_set_position_PrimitiveG_v1)
 
   ;
 
@@ -311,7 +315,7 @@ void export_qobjects_objects(){
       .def("normalize",&AO::normalize)
 
       .def("shift_position",&AO::shift_position)
-      .def("set_position",&AO::set_position)
+      .def("set_position",expt_set_position_AO_v1)
 
   ;
 

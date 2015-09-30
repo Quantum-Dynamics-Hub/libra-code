@@ -32,7 +32,8 @@ void PrimitiveG::set_x_exp(int _x){ x_exp = _x; is_x_exp = 1; }
 void PrimitiveG::set_y_exp(int _y){ y_exp = _y; is_y_exp = 1; }
 void PrimitiveG::set_z_exp(int _z){ z_exp = _z; is_z_exp = 1; }
 void PrimitiveG::set_alpha(double _alp){ alpha = _alp; is_alpha = 1; }
-void PrimitiveG::set_R(const VECTOR& _R){ R = _R; is_R = 1; }
+void PrimitiveG::set_position_const_ref(const VECTOR& _R){ R = _R; is_R = 1; }
+void PrimitiveG::set_position(VECTOR _R){ R = _R; is_R = 1; }
 
 
 // General initialization
@@ -151,7 +152,8 @@ double PrimitiveG::normalization_factor(){
 
 }// norm
 
-void PrimitiveG::shift_position(const VECTOR& dR){  R += dR; }
+void PrimitiveG::shift_position_const_ref(const VECTOR& dR){  R += dR; }
+void PrimitiveG::shift_position(VECTOR dR){  R += dR; }
 
 
 ///=======================================================================================================
