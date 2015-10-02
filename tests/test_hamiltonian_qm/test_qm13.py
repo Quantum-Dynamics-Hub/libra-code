@@ -77,6 +77,14 @@ def force(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao
     Hamiltonian_Fock_derivs_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, c, dHao_dx, dHao_dy, dHao_dz, dFao_alp_dx, dFao_alp_dy, dFao_alp_dz, dFao_bet_dx, dFao_bet_dy, dFao_bet_dz)
     update_derivative_coupling_matrix(x_period, y_period, z_period, t1, t2, t3, atom_to_ao_map, ao_to_atom_map, basis_ao, c, Dao_x, Dao_y, Dao_z);
 
+    #print "dHao_dx = ";    dHao_dx.show_matrix()
+    #print "dHao_dy = ";    dHao_dy.show_matrix()
+    #print "dHao_dz = ";    dHao_dz.show_matrix()
+
+    #print "dFao_alp_dx = ";    dFao_alp_dx.show_matrix()
+    #print "dFao_alp_dy = ";    dFao_alp_dy.show_matrix()
+    #print "dFao_alp_dz = ";    dFao_alp_dz.show_matrix()
+
     #print "Dao_x = ";    Dao_x.show_matrix()
     #print "Dao_y = ";    Dao_y.show_matrix()
     #print "Dao_z = ";    Dao_z.show_matrix()
@@ -347,6 +355,11 @@ def energy_and_forces(syst, basis_ao, Nelec, Norb, atom_to_ao_map, ao_to_atom_ma
     res_alp = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_alp, degen, kT, etol, pop_opt)
     res_bet = Fock_to_P(el.get_Fao_bet(), el.get_Sao(), Nelec_bet, degen, kT, etol, pop_opt)
 
+    #print "Fao_alp = \n";  el.get_Fao_alp().show_matrix()
+    #print "Sao = \n"; el.get_Sao().show_matrix()
+    #print "C_alp = \n"; el.get_C_alp().show_matrix()
+    #print "E_alp = \n"; el.get_E_alp().show_matrix()
+
 
     #print "Bands(alp)    Occupations(alp)       Bands(bet)    Occupations(bet)"
     #for j in xrange(Norb):
@@ -375,6 +388,11 @@ def energy_and_forces(syst, basis_ao, Nelec, Norb, atom_to_ao_map, ao_to_atom_ma
 #        syst.Atoms[i].Atom_RB.rb_force.x = 0.0 
 #        syst.Atoms[i].Atom_RB.rb_force.y = 0.0 
 #        syst.Atoms[i].Atom_RB.rb_force.z = 0.0 
+
+    #print "Atomic forces (electronic)"
+    #for i in xrange(syst.Number_of_atoms):
+    #    print i, syst.Atoms[i].Atom_RB.rb_force.x, syst.Atoms[i].Atom_RB.rb_force.y, syst.Atoms[i].Atom_RB.rb_force.z
+
 
     # Compute nuclear-nuclear contributions explicitly:
     en = 0.0
@@ -479,6 +497,7 @@ basis_ao, Nelec, Norb, atom_to_ao_map, ao_to_atom_map = set_basis_STO_3G_DZ(mol_
 res = energy_and_forces(syst, basis_ao, Nelec, Norb, atom_to_ao_map, ao_to_atom_map)
 
 
+#sys.exit(0)
 
 eri = electron_repulsion_integral(basis_ao[4],basis_ao[4],basis_ao[5],basis_ao[5],1,1);    
 # Gradients of ERI

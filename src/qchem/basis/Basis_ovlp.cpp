@@ -129,5 +129,6 @@ void update_overlap_matrix(int x_period,int y_period,int z_period,const VECTOR& 
 
 
 
+
 }//namespace libbasis
 }//namespace libqchem
