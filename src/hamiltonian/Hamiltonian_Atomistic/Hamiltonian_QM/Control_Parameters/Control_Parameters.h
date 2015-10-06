@@ -54,6 +54,8 @@ class excitation{
     cout<<"Constructing single excitation: "<<_f_o<<" "<<_f_s<<" -> "<<_t_o<<" "<<_t_s<<endl;
   }
 
+
+
 };
 
 

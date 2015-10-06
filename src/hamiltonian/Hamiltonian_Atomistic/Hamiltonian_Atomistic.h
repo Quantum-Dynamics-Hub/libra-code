@@ -78,6 +78,10 @@ public:
 
   //--------- QM Hamiltonians -----------   
   void init_qm_Hamiltonian(std::string ctrl_filename);
+  void add_excitation(int f_o, int f_s, int t_o, int t_s){ qm_ham->add_excitation(f_o, f_s, t_o, t_s); }
+//  void set_excitonic_basis(boost::python::list basis_ex) { qm_ham->set_excitonic_basis(basis_ex); }
+  void excite_alp(int I,int J);
+  void excite_bet(int I,int J);
 
 
   // Destructor

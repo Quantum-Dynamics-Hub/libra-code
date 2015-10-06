@@ -1,30 +1,5 @@
-x=   0.11000000 Numerical derivative=  -0.00220603 Analytical derivative=  -0.00220499 Energy=  -9.84322291 
-x=   0.22000000 Numerical derivative=  -0.00536562 Analytical derivative=  -0.00536362 Energy=  -9.84281686 
-x=   0.33000000 Numerical derivative=  -0.00996423 Analytical derivative=  -0.00996149 Energy=  -9.84198993 
-x=   0.44000000 Numerical derivative=  -0.01652853 Analytical derivative=  -0.01652537 Energy=  -9.84055297 
-x=   0.55000000 Numerical derivative=  -0.02536353 Analytical derivative=  -0.02536029 Energy=  -9.83827077 
-x=   0.66000000 Numerical derivative=  -0.03653070 Analytical derivative=  -0.03652769 Energy=  -9.83488789 
-x=   0.77000000 Numerical derivative=  -0.04985792 Analytical derivative=  -0.04985543 Energy=  -9.83015522 
-x=   0.88000000 Numerical derivative=  -0.06497563 Analytical derivative=  -0.06497386 Energy=  -9.82385386 
-x=   0.99000000 Numerical derivative=  -0.08137018 Analytical derivative=  -0.08136924 Energy=  -9.81581405 
-x=   1.10000000 Numerical derivative=  -0.09844450 Analytical derivative=  -0.09844442 Energy=  -9.80592767 
-x=   1.21000000 Numerical derivative=  -0.11557752 Analytical derivative=  -0.11557826 Energy=  -9.79415416 
-x=   1.32000000 Numerical derivative=  -0.13217559 Analytical derivative=  -0.13217706 Energy=  -9.78052016 
-x=   1.43000000 Numerical derivative=  -0.14771222 Analytical derivative=  -0.14771428 Energy=  -9.76511425 
-x=   1.54000000 Numerical derivative=  -0.16175453 Analytical derivative=  -0.16175704 Energy=  -9.74807794 
-x=   1.65000000 Numerical derivative=  -0.17397698 Analytical derivative=  -0.17397979 Energy=  -9.72959456 
-x=   1.76000000 Numerical derivative=  -0.18416394 Analytical derivative=  -0.18416690 Energy=  -9.70987716 
-x=   1.87000000 Numerical derivative=  -0.19220364 Analytical derivative=  -0.19220663 Energy=  -9.68915669 
-x=   1.98000000 Numerical derivative=  -0.19807592 Analytical derivative=  -0.19807883 Energy=  -9.66767127 
-x=   2.09000000 Numerical derivative=  -0.20183646 Analytical derivative=  -0.20183921 Energy=  -9.64565685 
-x=   2.20000000 Numerical derivative=  -0.20359955 Analytical derivative=  -0.20360209 Energy=  -9.62333993 
-x=   2.31000000 Numerical derivative=  -0.20352128 Analytical derivative=  -0.20352357 Energy=  -9.60093194 
-x=   2.42000000 Numerical derivative=  -0.20178424 Analytical derivative=  -0.20178625 Energy=  -9.57862559 
-x=   2.53000000 Numerical derivative=  -0.19858468 Analytical derivative=  -0.19858642 Energy=  -9.55659260 
-x=   2.64000000 Numerical derivative=  -0.19412243 Analytical derivative=  -0.19412390 Energy=  -9.53498287 
-x=   2.75000000 Numerical derivative=  -0.18859350 Analytical derivative=  -0.18859471 Energy=  -9.51392444 
-x=   2.86000000 Numerical derivative=  -0.18218513 Analytical derivative=  -0.18218609 Energy=  -9.49352426 
-x=   2.97000000 Numerical derivative=  -0.17507281 Analytical derivative=  -0.17507355 Energy=  -9.47386929 
-x=   3.08000000 Numerical derivative=  -0.16741877 Analytical derivative=  -0.16741930 Energy=  -9.45502792 
-x=   3.19000000 Numerical derivative=  -0.15937137 Analytical derivative=  -0.15937172 Energy=  -9.43705145 
-x=   3.30000000 Numerical derivative=  -0.15106505 Analytical derivative=  -0.15106524 Energy=  -9.41997562 
+  2.49000000  -3.84459762  -3.75181133  -3.75181133   0.00000000   0.00000000   0.00000000  -0.00000000  -0.00000000  -0.00000000 
+  2.59000000  -3.84459762  -3.75181133  -3.75181133   0.00000000   0.00000000   0.00000000  -0.00000000  -0.00000000  -0.00000000 
+  2.69000000  -3.84459762  -3.75181133  -3.75181133   0.00000000   0.00000000   0.00000000  -0.00000000  -0.00000000  -0.00000000 
+  2.79000000  -3.84459762  -3.75181133  -3.75181133   0.00000000   0.00000000   0.00000000  -0.00000000  -0.00000000  -0.00000000 
+  2.89000000  -3.84459762  -3.75181133  -3.75181133   0.00000000   0.00000000   0.00000000  -0.00000000  -0.00000000  -0.00000000 

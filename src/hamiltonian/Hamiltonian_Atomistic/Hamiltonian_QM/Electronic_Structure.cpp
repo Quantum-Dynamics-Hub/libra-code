@@ -25,6 +25,9 @@
 
 #include "Electronic_Structure.h"
 
+#include "../../../calculators/libcalculators.h"
+using namespace libcalculators;
+
 
 namespace libhamiltonian{
 namespace libhamiltonian_atomistic{
@@ -203,6 +206,33 @@ void Electronic_Structure::set_E_bet(MATRIX& x_){
 }
 MATRIX Electronic_Structure::get_E_alp(){  return *E_alp; }
 MATRIX Electronic_Structure::get_E_bet(){  return *E_bet; }
+
+
+void Electronic_Structure::excite_alp(int I, int J){
+
+  vector< pair<int,double> > occ_fin;
+  excite(I, J, occ_alp, occ_fin);  occ_alp = occ_fin;
+
+  // And recompute density matrix
+  compute_density_matrix(occ_alp, C_alp, P_alp);
+
+  // Also update the total density matrix:
+  *P = *P_alp + *P_bet;
+
+}
+
+void Electronic_Structure::excite_bet(int I, int J){
+
+  vector< pair<int,double> > occ_fin;
+  excite(I, J, occ_bet, occ_fin);  occ_bet = occ_fin;
+
+  // And recompute density matrix
+  compute_density_matrix(occ_alp, C_bet, P_bet);
+
+  // Also update the total density matrix:
+  *P = *P_alp + *P_bet;
+
+}
 
 
 

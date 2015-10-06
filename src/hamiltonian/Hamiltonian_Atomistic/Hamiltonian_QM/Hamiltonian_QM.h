@@ -63,6 +63,10 @@ VECTOR force
 
 
 
+// Excitations.cpp
+void excite(int Norb, excitation& ex, 
+            int Nocc_alp, vector< pair<int,double> >& occ_alp,
+            int Nocc_bet, vector< pair<int,double> >& occ_bet);
 
 
 
@@ -71,7 +75,7 @@ class listHamiltonian_QM{
 
 public:
 
-    listHamiltonian_QM(){ ;; }
+    listHamiltonian_QM(){ add_excitation(0,1,0,1); }
     listHamiltonian_QM(std::string ctrl_filename,System& syst);
 
     int Nelec;
@@ -79,13 +83,17 @@ public:
     Control_Parameters prms; 
     Model_Parameters modprms;
 
+    //============= Ground state =================
     std::vector<AO> basis_ao;
     std::vector<vector<int> > atom_to_ao_map;
     std::vector<int> ao_to_atom_map;
-
-
     Electronic_Structure* el;
 
+    //============ Excited states ================
+    vector<excitation> basis_ex;  // may be the same as in prms, but may be different
+
+
+    
 
     // Methods
     void init(std::string ctrl_filename,System& syst);
@@ -93,6 +101,14 @@ public:
 
     void get_parameters_from_file(std::string filename){ libcontrol_parameters::get_parameters_from_file(filename, prms); }
     void set_electronic_structure(Electronic_Structure& el_);
+
+    double energy_and_forces(System& syst);
+
+    void add_excitation(int f_o, int f_s, int t_o, int t_s);
+
+    //void set_excitonic_basis(boost::python::list basis_ex);
+    void excite_alp(int I,int J);
+    void excite_bet(int I,int J);
 
 
 

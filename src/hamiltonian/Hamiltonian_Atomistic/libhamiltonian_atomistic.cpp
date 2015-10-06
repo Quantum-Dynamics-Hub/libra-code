@@ -47,11 +47,11 @@ void export_hamiltonian_atomistic_objects(){
 /*
       .def("set_params", set_params)
       .def("set_rep", &Hamiltonian_Atomistic::set_rep)
-      .def("set_q", set_q)
-      .def("set_v", set_v)
 
       .def("compute",          &Hamiltonian_Atomistic::compute)
 */
+      .def("set_q", &Hamiltonian_Atomistic::set_q)
+      .def("set_v", &Hamiltonian_Atomistic::set_v)
 
 
       .def("set_Hamiltonian_type", &Hamiltonian_Atomistic::set_Hamiltonian_type)
@@ -73,6 +73,9 @@ void export_hamiltonian_atomistic_objects(){
       .def("set_respa_types", &Hamiltonian_Atomistic::set_respa_types)
 
       .def("init_qm_Hamiltonian",&Hamiltonian_Atomistic::init_qm_Hamiltonian)
+      .def("add_excitation",&Hamiltonian_Atomistic::add_excitation)
+      .def("excite_alp",&Hamiltonian_Atomistic::excite_alp)
+      .def("excite_bet",&Hamiltonian_Atomistic::excite_bet)
 
       .def("is_active", expt_is_active_v1a)
       .def("is_active", expt_is_active_v2a)

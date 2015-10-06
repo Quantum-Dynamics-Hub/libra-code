@@ -473,6 +473,7 @@ double energy_and_forces
 listHamiltonian_QM::listHamiltonian_QM(std::string ctrl_filename,System& syst){
 
   init(ctrl_filename, syst);
+  add_excitation(0,1,0,1);
 
 }
 
@@ -647,7 +648,7 @@ double listHamiltonian_QM::compute_scf(System& syst){
 
 */
   //=========== STEP 8: Core Hamiltonian ================
-  int debug = 1;
+  int debug = 0;
   Hamiltonian_core(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, *el->Hao,  *el->Sao, debug);
 
 
@@ -676,6 +677,56 @@ void listHamiltonian_QM::set_electronic_structure(Electronic_Structure& el_){
   el = &el_;  // by reference
 
 }
+
+double listHamiltonian_QM::energy_and_forces(System& syst){ 
+
+  return libhamiltonian_qm::energy_and_forces(*el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map );
+
+}
+
+
+void listHamiltonian_QM::add_excitation(int f_o, int f_s, int t_o, int t_s){
+
+  int sz = basis_ex.size();
+
+  if(sz==0){ basis_ex.push_back(excitation(f_o, f_s, t_o, t_s)); }
+  else{
+
+    int is_new = 1;
+    for(int i=0;i<sz;i++){ 
+      if(basis_ex[i].from_orbit[0]==f_o){
+        if(basis_ex[i].from_spin[0]==f_s){
+          if(basis_ex[i].to_orbit[0]==t_o){
+            if(basis_ex[i].to_spin[0]==t_s){
+              is_new = 0;
+            }
+          }
+        }
+      }
+    }// for i
+
+    if(is_new==1){  basis_ex.push_back(excitation(f_o, f_s, t_o, t_s)); }
+
+  }
+
+}
+
+//void listHamiltonian_QM::set_excitonic_basis(boost::python::list basis_ex){
+//}
+
+void listHamiltonian_QM::excite_alp(int I, int J){
+
+  el->excite_alp(I,J);
+
+}
+
+void listHamiltonian_QM::excite_bet(int I, int J){
+
+  el->excite_bet(I,J);
+
+}
+
+
 
 
 }// namespace libhamiltonian_qm

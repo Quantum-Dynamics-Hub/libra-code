@@ -211,6 +211,11 @@ class Electronic_Structure{
   vector<double> Mull_orb_pop_net;      ///< Net Mulliken populations for all (molecular) orbitals
   vector<double> Mull_orb_pop_gross;    ///< Gross Mulliken populations for all (molecular) orbitals
 
+
+
+  void excite_alp(int I,int J);
+  void excite_bet(int I,int J);
+
 };
 
 // Electronic.cpp

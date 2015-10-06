@@ -404,51 +404,229 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
 
     else if(ham_types[1]==1){
 
-      MATRIX* S; S = new MATRIX(nelec, nelec);  *S = 0.0;
-      MATRIX* C; C = new MATRIX(nelec, nelec);  *C = 0.0;
+      int method_option = 1; // 0 - simple case: energies are the orbital energies
+                             // 1 - excitonic case: energies are the total energies for different density matrices
 
-      if(nelec < qm_ham->el->Sao->num_of_cols){
+      if(method_option==0){
+ 
+
+        MATRIX* S; S = new MATRIX(nelec, nelec);  *S = 0.0;
+        MATRIX* C; C = new MATRIX(nelec, nelec);  *C = 0.0;
+
+        if(nelec < qm_ham->el->Sao->num_of_cols){
       
-        vector<int> subset(nelec); for(int i=0;i<nelec;i++){ subset[i] = i; }  
-        pop_submatrix(qm_ham->el->Sao, S, subset);
+          vector<int> subset(nelec); for(int i=0;i<nelec;i++){ subset[i] = i; }  
+          pop_submatrix(qm_ham->el->Sao, S, subset);
 
-      }
-      else{
+        }
+        else{
 
-        vector<int> subset(qm_ham->el->Sao->num_of_cols); for(int i=0;i<qm_ham->el->Sao->num_of_cols;i++){ subset[i] = i; }  
-        push_submatrix(S, qm_ham->el->Sao, subset);
+          vector<int> subset(qm_ham->el->Sao->num_of_cols); for(int i=0;i<qm_ham->el->Sao->num_of_cols;i++){ subset[i] = i; }  
+          push_submatrix(S, qm_ham->el->Sao, subset);
 
-        for(int i=qm_ham->el->Sao->num_of_cols;i<nelec;i++){
-          S->set(i,i,1.0);
+          for(int i=qm_ham->el->Sao->num_of_cols;i<nelec;i++){
+            S->set(i,i,1.0);
+          }
+
+        }
+      
+        // Debug:
+        //cout<<"Sao = \n"<<*qm_ham->el->Sao<<endl;
+        //cout<<"S= \n"<<*S<<endl;
+        //cout<<"internal MO = \n"<<*qm_ham->el->C_alp<<endl;
+
+        // Transformation to adiabatic basis
+        solve_eigen(nelec, ham_dia, S, ham_adi, C);  // H_dia * C = S * C * H_adi
+
+        // Debug:
+        //cout<<"new C =\n"<<*C<<endl;
+        //cout<<"internal E_alp = \n"<<*qm_ham->el->E_alp<<endl;
+        //cout<<"adiabatic Ham = \n"<<*ham_adi<<endl;
+
+
+        // Now compute the derivative couplings (off-diagonal, multiplied by energy difference) and adiabatic gradients (diagonal)
+        for(int n=0;n<nnucl;n++){
+
+          *d1ham_adi[n] = (*C).T() * (*d1ham_dia[n]) * (*C);
+
+        }// for n
+
+        delete S;
+        delete C;
+
+      }// method_option == 0
+
+      else if(method_option==1){ // This is true case - excitonic one
+
+
+        int i = 0;
+        double E_i = qm_ham->energy_and_forces(*_syst); // ground state energy
+
+        ham_adi->set(i,i,E_i);
+
+
+        for(int n=0;n<_syst->Number_of_atoms;n++){         
+
+          d1ham_adi[3*n  ]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.x);
+          d1ham_adi[3*n+1]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.y);
+          d1ham_adi[3*n+2]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.z);
+
         }
 
-      }
+
+
+
+        //================ Now excitations ===========================
+        int Norb = qm_ham->el->Norb;
+        vector< pair<int,double> > occ_alp_grnd(Norb,pair<int,double>(0,0.0)); occ_alp_grnd = qm_ham->el->occ_alp;
+        vector< pair<int,double> > occ_bet_grnd(Norb,pair<int,double>(0,0.0)); occ_bet_grnd = qm_ham->el->occ_bet;
+
+        for(int i=1;i<qm_ham->basis_ex.size();i++){  // over all excitons in this basis
+        
+          
+          cout<<"excitation "<<i<<"  \n";
+          qm_ham->el->occ_alp = occ_alp_grnd;
+          qm_ham->el->occ_bet = occ_bet_grnd;
+
+          excite(Norb, qm_ham->basis_ex[i], qm_ham->el->Nocc_alp, qm_ham->el->occ_alp, 
+                                            qm_ham->el->Nocc_bet, qm_ham->el->occ_bet); // ground state excitation
+
+          // And recompute density matrix
+          compute_density_matrix(qm_ham->el->occ_alp, qm_ham->el->C_alp, qm_ham->el->P_alp);
+          compute_density_matrix(qm_ham->el->occ_bet, qm_ham->el->C_bet, qm_ham->el->P_bet);
+
+          // Also update the total density matrix:
+          *qm_ham->el->P = *qm_ham->el->P_alp + *qm_ham->el->P_bet;
+
+          // Update Fock
+          Hamiltonian_Fock(qm_ham->el, *_syst, qm_ham->basis_ao, qm_ham->prms, qm_ham->modprms, qm_ham->atom_to_ao_map, qm_ham->ao_to_atom_map);
+
+
+          // Finally, compute energy
+          E_i = (energy_elec(qm_ham->el->P_alp, qm_ham->el->Hao, qm_ham->el->Fao_alp) +
+                 energy_elec(qm_ham->el->P_bet, qm_ham->el->Hao, qm_ham->el->Fao_bet) 
+                );
+
+          cout<<"E_i = "<<E_i<<endl;
+ 
+
+          // Forces and nuclear contributions:
+          int x_period = 0; 
+          int y_period = 0; 
+          int z_period = 0; 
+          VECTOR t1, t2, t3;
+
+          for(int n=0;n<_syst->Number_of_atoms;n++){
+
+            _syst->Atoms[n].Atom_RB.rb_force = 
+            force(*qm_ham->el, *_syst, qm_ham->basis_ao, qm_ham->prms, qm_ham->modprms,
+                  qm_ham->atom_to_ao_map, qm_ham->ao_to_atom_map, *qm_ham->el->Hao, *qm_ham->el->Sao,
+                  qm_ham->el->Norb, n, x_period, y_period, z_period, t1, t2, t3);
+
+          }// for n
+
+
+          // - nuclear-nuclear repulsion
+          vector<double> Zeff;
+          vector<VECTOR> G;
+          vector<VECTOR> R;
+          for(n=0;n<_syst->Number_of_atoms;n++){
+            R.push_back(_syst->Atoms[n].Atom_RB.rb_cm);
+            Zeff.push_back(qm_ham->modprms.PT[_syst->Atoms[n].Atom_element].Zeff);
+          }// for n
+
+          double Enucl = energy_nucl(R, Zeff, G);
+          for(n=0;n<_syst->Number_of_atoms;n++){   _syst->Atoms[n].Atom_RB.rb_force -= G[n];   }
+
+          E_i += Enucl;
+                    
+          ham_adi->set(i,i,E_i);
+
+
+          for(int n=0;n<_syst->Number_of_atoms;n++){         
+
+            d1ham_adi[3*n  ]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.x);
+            d1ham_adi[3*n+1]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.y);
+            d1ham_adi[3*n+2]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.z);
+
+          }
+                  
+
+        }// for i
+
+        //=================== Reset current variables to be those of the ground state ===============
+        i = 0;
+        cout<<"excitation "<<i<<"  \n";
+        qm_ham->el->occ_alp = occ_alp_grnd;
+        qm_ham->el->occ_bet = occ_bet_grnd;
+
+        excite(Norb, qm_ham->basis_ex[i], qm_ham->el->Nocc_alp, qm_ham->el->occ_alp, 
+                                          qm_ham->el->Nocc_bet, qm_ham->el->occ_bet); // ground state excitation
+
+        // And recompute density matrix
+        compute_density_matrix(qm_ham->el->occ_alp, qm_ham->el->C_alp, qm_ham->el->P_alp);
+        compute_density_matrix(qm_ham->el->occ_bet, qm_ham->el->C_bet, qm_ham->el->P_bet);
+
+        // Also update the total density matrix:
+        *qm_ham->el->P = *qm_ham->el->P_alp + *qm_ham->el->P_bet;
+
+        // Update Fock
+        Hamiltonian_Fock(qm_ham->el, *_syst, qm_ham->basis_ao, qm_ham->prms, qm_ham->modprms, qm_ham->atom_to_ao_map, qm_ham->ao_to_atom_map);
+
+
+        // Finally, compute energy
+        E_i = (energy_elec(qm_ham->el->P_alp, qm_ham->el->Hao, qm_ham->el->Fao_alp) +
+               energy_elec(qm_ham->el->P_bet, qm_ham->el->Hao, qm_ham->el->Fao_bet) 
+              );
+
+        cout<<"E_i = "<<E_i<<endl;
+ 
+
+        // Forces and nuclear contributions:
+        int x_period = 0; 
+        int y_period = 0; 
+        int z_period = 0; 
+        VECTOR t1, t2, t3;
+
+        for(int n=0;n<_syst->Number_of_atoms;n++){
+
+          _syst->Atoms[n].Atom_RB.rb_force = 
+          force(*qm_ham->el, *_syst, qm_ham->basis_ao, qm_ham->prms, qm_ham->modprms,
+                qm_ham->atom_to_ao_map, qm_ham->ao_to_atom_map, *qm_ham->el->Hao, *qm_ham->el->Sao,
+                qm_ham->el->Norb, n, x_period, y_period, z_period, t1, t2, t3);
+
+        }// for n
+
+
+        // - nuclear-nuclear repulsion
+        vector<double> Zeff;
+        vector<VECTOR> G;
+        vector<VECTOR> R;
+        for(n=0;n<_syst->Number_of_atoms;n++){
+          R.push_back(_syst->Atoms[n].Atom_RB.rb_cm);
+          Zeff.push_back(qm_ham->modprms.PT[_syst->Atoms[n].Atom_element].Zeff);
+        }// for n
+
+        double Enucl = energy_nucl(R, Zeff, G);
+        for(n=0;n<_syst->Number_of_atoms;n++){   _syst->Atoms[n].Atom_RB.rb_force -= G[n];   }
+
+        E_i += Enucl;
+                
+        ham_adi->set(i,i,E_i);
+
+
+        for(int n=0;n<_syst->Number_of_atoms;n++){     
+
+          d1ham_adi[3*n  ]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.x);
+          d1ham_adi[3*n+1]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.y);
+          d1ham_adi[3*n+2]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.z);
+
+        }
+
+              
       
-
-
-      cout<<"Sao = \n"<<*qm_ham->el->Sao<<endl;
-      cout<<"S= \n"<<*S<<endl;
-      cout<<"internal MO = \n"<<*qm_ham->el->C_alp<<endl;
-
-      // Transformation to adiabatic basis
-      solve_eigen(nelec, ham_dia, S, ham_adi, C);  // H_dia * C = S * C * H_adi
-
-      cout<<"new C =\n"<<*C<<endl;
-
-      cout<<"internal E_alp = \n"<<*qm_ham->el->E_alp<<endl;
-      cout<<"adiabatic Ham = \n"<<*ham_adi<<endl;
-
-
-      // Now compute the derivative couplings (off-diagonal, multiplied by energy difference) and adiabatic gradients (diagonal)
-      for(int n=0;n<nnucl;n++){
-
-        *d1ham_adi[n] = (*C).T() * (*d1ham_dia[n]) * (*C);
-
-      }// for n
-
-      delete S;
-      delete C;
-
+ 
+      }// method_option == 1
 
     }// ham_type[1]==1
 
@@ -474,6 +652,29 @@ void Hamiltonian_Atomistic::init_qm_Hamiltonian(std::string ctrl_filename){
   }
 
 }
+
+
+void Hamiltonian_Atomistic::excite_alp(int I, int J){
+
+  qm_ham->excite_alp(I,J);
+
+  status_dia = 0;
+  status_adi = 0;
+
+}
+
+void Hamiltonian_Atomistic::excite_bet(int I, int J){
+                 
+  qm_ham->excite_bet(I,J);
+
+  status_dia = 0;
+  status_adi = 0;
+
+}
+
+
+
+
 
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian

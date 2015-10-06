@@ -88,6 +88,7 @@ void export_Hamiltonian_QM_objects(){
   ;
 
 
+
   //----------- INDO -----------------
   vector<int> (*expt_compute_sorb_indices_v1)
   ( int sz, vector<AO>& basis_ao, vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
@@ -188,6 +189,7 @@ void export_Hamiltonian_QM_objects(){
 
 
 
+
   //----------- Hamiltonian_QM -----------------
   void (*expt_Hamiltonian_core_v1)
   ( System& syst, vector<AO>& basis_ao, 
@@ -272,6 +274,10 @@ void export_Hamiltonian_QM_objects(){
       .def("compute_scf", &listHamiltonian_QM::compute_scf)
       .def("get_parameters_from_file", &listHamiltonian_QM::get_parameters_from_file)
       .def("set_electronic_structure", &listHamiltonian_QM::set_electronic_structure)
+      .def("energy_and_forces", &listHamiltonian_QM::energy_and_forces)
+
+      .def("excite_alp", &listHamiltonian_QM::excite_alp)
+      .def("excite_bet", &listHamiltonian_QM::excite_bet)
 
 
   ;
