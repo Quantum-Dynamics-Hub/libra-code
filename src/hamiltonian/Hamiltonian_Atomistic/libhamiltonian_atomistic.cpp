@@ -30,8 +30,10 @@ void export_hamiltonian_atomistic_objects(){
 
 
 //  void (Hamiltonian_Atomistic::*set_params)(boost::python::list) = &Hamiltonian_Atomistic::set_params;
-//  void (Hamiltonian_Atomistic::*set_q)(boost::python::list) = &Hamiltonian_Atomistic::set_q;
-//  void (Hamiltonian_Atomistic::*set_v)(boost::python::list) = &Hamiltonian_Atomistic::set_v;
+  void (Hamiltonian_Atomistic::*expt_set_q_v1)(vector<double>&) = &Hamiltonian_Atomistic::set_q;
+  void (Hamiltonian_Atomistic::*expt_set_q_v2)(boost::python::list) = &Hamiltonian_Atomistic::set_q;
+  void (Hamiltonian_Atomistic::*expt_set_v_v1)(vector<double>&) = &Hamiltonian_Atomistic::set_v;
+  void (Hamiltonian_Atomistic::*expt_set_v_v2)(boost::python::list) = &Hamiltonian_Atomistic::set_v;
 
   bool (Hamiltonian_Atomistic::*expt_is_active_v1a)(Atom&,Atom&) = &Hamiltonian_Atomistic::is_active;
   bool (Hamiltonian_Atomistic::*expt_is_active_v2a)(Atom&,Atom&,Atom&) = &Hamiltonian_Atomistic::is_active;
@@ -50,8 +52,10 @@ void export_hamiltonian_atomistic_objects(){
 
       .def("compute",          &Hamiltonian_Atomistic::compute)
 */
-      .def("set_q", &Hamiltonian_Atomistic::set_q)
-      .def("set_v", &Hamiltonian_Atomistic::set_v)
+      .def("set_q", expt_set_q_v1)
+      .def("set_q", expt_set_q_v2)
+      .def("set_v", expt_set_v_v1)
+      .def("set_v", expt_set_v_v2)
 
 
       .def("set_Hamiltonian_type", &Hamiltonian_Atomistic::set_Hamiltonian_type)

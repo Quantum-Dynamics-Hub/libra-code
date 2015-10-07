@@ -56,7 +56,7 @@ class Ensemble{
   vector<int> is_active;    // flag stating if the i-th trajectory is active, if not - it is assumed to be adsorbed
   vector<Nuclear>    mol;   // nuclear subsystems
   vector<Electronic>  el;   // electronic subsystems
-  vector<Hamiltonian*> ham;  // Hamiltonian "handlers" - unique for each copy
+  vector<Hamiltonian*> ham; // Hamiltonian "handlers" - unique for each copy
 
   // For Python access:
 //  Nuclear get_mol(int i){ return *mol[i]; }

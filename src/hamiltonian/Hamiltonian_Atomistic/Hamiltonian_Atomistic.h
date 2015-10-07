@@ -89,6 +89,9 @@ public:
 
   void set_q(vector<double>& q_);
   void set_v(vector<double>& v_);
+  void set_q(boost::python::list q_);
+  void set_v(boost::python::list v_);
+
 
 /*
   // Set properties

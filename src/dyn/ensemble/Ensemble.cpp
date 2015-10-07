@@ -64,6 +64,14 @@ void Ensemble::ham_set_ham(int i, std::string opt, int mopt){
   if(opt=="model"){
     ham[i] = new Hamiltonian_Model(mopt);    
   }// model
+  /*
+  else if(opt=="QM"){
+
+    ham[i] = new Hamiltonian_Atomistic(nelec, nnucl);
+    ham[i].set_Hamiltonian_type("QM");
+
+  }// atomistic
+  */
 }
 void Ensemble::ham_set_ham(std::string opt, int mopt){  for(int i=0;i<ntraj;i++){  ham_set_ham(i,opt,mopt); } }
 

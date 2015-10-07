@@ -196,6 +196,16 @@ void Hamiltonian_Atomistic::set_q(vector<double>& q_){
 
 }
 
+void Hamiltonian_Atomistic::set_q(boost::python::list q_){
+
+  int sz = len(q_);
+  vector<double> q__(sz,0.0);
+  for(int i=0;i<sz;i++){ q__[i] = extract<double>(q_[i]); }
+
+  set_q(q__);
+
+}
+
 void Hamiltonian_Atomistic::set_v(vector<double>& v_){
 
   if(v_.size()!=nnucl){
@@ -211,6 +221,17 @@ void Hamiltonian_Atomistic::set_v(vector<double>& v_){
   
 
 }
+
+void Hamiltonian_Atomistic::set_v(boost::python::list v_){
+
+  int sz = len(v_);
+  vector<double> v__(sz,0.0);
+  for(int i=0;i<sz;i++){ v__[i] = extract<double>(v_[i]); }
+
+  set_v(v__);
+
+}
+
 
 
 
@@ -459,25 +480,155 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
       else if(method_option==1){ // This is true case - excitonic one
 
 
+        int x_period = 0; 
+        int y_period = 0; 
+        int z_period = 0; 
+        VECTOR t1, t2, t3;
+
         int i = 0;
         double E_i = qm_ham->energy_and_forces(*_syst); // ground state energy
+        int Norb = qm_ham->el->Norb;
 
         ham_adi->set(i,i,E_i);
+
+      
+        MATRIX* Dmo_a_x; Dmo_a_x = new MATRIX(Norb,Norb);
+        MATRIX* Dmo_a_y; Dmo_a_y = new MATRIX(Norb,Norb);
+        MATRIX* Dmo_a_z; Dmo_a_z = new MATRIX(Norb,Norb);
+        MATRIX* Dmo_b_x; Dmo_b_x = new MATRIX(Norb,Norb);
+        MATRIX* Dmo_b_y; Dmo_b_y = new MATRIX(Norb,Norb);
+        MATRIX* Dmo_b_z; Dmo_b_z = new MATRIX(Norb,Norb);
 
 
         for(int n=0;n<_syst->Number_of_atoms;n++){         
 
+
           d1ham_adi[3*n  ]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.x);
           d1ham_adi[3*n+1]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.y);
           d1ham_adi[3*n+2]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.z);
+            
+          //-------- Also, here we want to compute NACs ----------------
 
-        }
+          // ----------- Derivative couplings are set once and for all -------------------
+          derivative_couplings(*qm_ham->el, *_syst, qm_ham->basis_ao, qm_ham->prms, qm_ham->modprms,
+             qm_ham->atom_to_ao_map, qm_ham->ao_to_atom_map, *qm_ham->el->Hao, *qm_ham->el->Sao,
+             qm_ham->el->Norb, n, x_period, y_period, z_period, t1, t2, t3,
+             *Dmo_a_x, *Dmo_a_y, *Dmo_a_z, *Dmo_b_x, *Dmo_b_y, *Dmo_b_z
+          );
+
+
+          for(int I=0;I<nelec;I++){    // over all excitons
+
+            // [0] - implies we only work with single excitations!
+            int I_fo = qm_ham->basis_ex[I].from_orbit[0];
+            int I_fs = qm_ham->basis_ex[I].from_spin[0];
+            int I_to = qm_ham->basis_ex[I].to_orbit[0];
+            int I_ts = qm_ham->basis_ex[I].to_spin[0];
+
+
+            for(int J=0;J<nelec;J++){  // over all excitons
+
+              int J_fo = qm_ham->basis_ex[J].from_orbit[0];
+              int J_fs = qm_ham->basis_ex[J].from_spin[0];
+              int J_to = qm_ham->basis_ex[J].to_orbit[0];
+              int J_ts = qm_ham->basis_ex[J].to_spin[0];
+
+
+
+              if(I!=J){
+
+                double dc_x = 0.0;
+                double dc_y = 0.0;
+                double dc_z = 0.0;
+
+
+                //========== Here we need to work out the conditions very carefully =========
+                // but for now we will just compare the final (only) spins               
+
+
+                if(I_ts==J_ts){  // final spins must be the same 
+
+
+                  if(I_ts==1){ // alpha channel
+
+                    if(I_fo==J_fo && I_to != J_to){  // electronic coupling
+                    
+                      int glob_I_to_indx = I_to + qm_ham->el->Nocc_alp; // index of the obital
+                      int glob_J_to_indx = J_to + qm_ham->el->Nocc_alp; // index of the obital
+
+                      dc_x = Dmo_a_x->get(glob_I_to_indx,glob_J_to_indx);
+                      dc_y = Dmo_a_y->get(glob_I_to_indx,glob_J_to_indx);
+                      dc_z = Dmo_a_z->get(glob_I_to_indx,glob_J_to_indx);
+
+                    }
+                    if(I_to==J_to && I_fo != J_fo){  // hole coupling
+
+                      int glob_I_fo_indx = I_fo + qm_ham->el->Nocc_alp; // index of the obital
+                      int glob_J_fo_indx = J_fo + qm_ham->el->Nocc_alp; // index of the obital
+
+                      dc_x = Dmo_a_x->get(glob_I_fo_indx,glob_J_fo_indx);
+                      dc_y = Dmo_a_y->get(glob_I_fo_indx,glob_J_fo_indx);
+                      dc_z = Dmo_a_z->get(glob_I_fo_indx,glob_J_fo_indx);
+        
+                    }
+                    else{ ;; }  // in this case couplings are zero
+
+                  }// alpha
+
+
+                  else if(I_ts==-1){ // beta channel
+
+                    if(I_fo==J_fo && I_to != J_to){  // electronic coupling
+
+                      int glob_I_to_indx = I_to + qm_ham->el->Nocc_alp; // index of the obital
+                      int glob_J_to_indx = J_to + qm_ham->el->Nocc_alp; // index of the obital
+
+                      dc_x = Dmo_b_x->get(glob_I_to_indx,glob_J_to_indx);
+                      dc_y = Dmo_b_y->get(glob_I_to_indx,glob_J_to_indx);
+                      dc_z = Dmo_b_z->get(glob_I_to_indx,glob_J_to_indx);
+
+                    }
+                    if(I_to==J_to && I_fo != J_fo){  // hole coupling
+
+                      int glob_I_fo_indx = I_fo + qm_ham->el->Nocc_alp; // index of the obital
+                      int glob_J_fo_indx = J_fo + qm_ham->el->Nocc_alp; // index of the obital
+
+                      dc_x = Dmo_b_x->get(glob_I_fo_indx,glob_J_fo_indx);
+                      dc_y = Dmo_b_y->get(glob_I_fo_indx,glob_J_fo_indx);
+                      dc_z = Dmo_b_z->get(glob_I_fo_indx,glob_J_fo_indx);
+        
+                    }
+                    else{ ;; }  // in this case couplings are zero
+
+
+                  }// beta
+
+
+
+                }// I_ts == J_ts
+                else{ ;; } // in this case couplings are zero
+
+
+                
+                d1ham_adi[3*n  ]->set(I,J, dc_x);
+                d1ham_adi[3*n+1]->set(I,J, dc_y);
+                d1ham_adi[3*n+2]->set(I,J, dc_z);
+
+              }// I!=J
+
+            }// for J
+          }// for I
+
+
+        }// for n
+
+        delete Dmo_a_x;  delete Dmo_a_y;  delete Dmo_a_z;
+        delete Dmo_b_x;  delete Dmo_b_y;  delete Dmo_b_z;
 
 
 
 
         //================ Now excitations ===========================
-        int Norb = qm_ham->el->Norb;
         vector< pair<int,double> > occ_alp_grnd(Norb,pair<int,double>(0,0.0)); occ_alp_grnd = qm_ham->el->occ_alp;
         vector< pair<int,double> > occ_bet_grnd(Norb,pair<int,double>(0,0.0)); occ_bet_grnd = qm_ham->el->occ_bet;
 
@@ -511,10 +662,6 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
  
 
           // Forces and nuclear contributions:
-          int x_period = 0; 
-          int y_period = 0; 
-          int z_period = 0; 
-          VECTOR t1, t2, t3;
 
           for(int n=0;n<_syst->Number_of_atoms;n++){
 
@@ -583,11 +730,6 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
  
 
         // Forces and nuclear contributions:
-        int x_period = 0; 
-        int y_period = 0; 
-        int z_period = 0; 
-        VECTOR t1, t2, t3;
-
         for(int n=0;n<_syst->Number_of_atoms;n++){
 
           _syst->Atoms[n].Atom_RB.rb_force = 

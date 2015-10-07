@@ -210,6 +210,18 @@ void export_Hamiltonian_QM_objects(){
     vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
   ) = &energy_and_forces;
 
+
+  void (*expt_derivative_couplings_v1)
+  ( Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+    Control_Parameters& prms,Model_Parameters& modprms,
+    vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+    MATRIX& Hao, MATRIX& Sao,   int Norb, int at_indx, 
+    int x_period, int y_period, int z_period, VECTOR& t1, VECTOR& t2, VECTOR& t3,
+    MATRIX& Dmo_a_x, MATRIX& Dmo_a_y, MATRIX& Dmo_a_z,
+    MATRIX& Dmo_b_x, MATRIX& Dmo_b_y, MATRIX& Dmo_b_z
+  ) = &derivative_couplings;
+
+
   VECTOR (*expt_force_v1)
   ( Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
     Control_Parameters& prms,Model_Parameters& modprms,
@@ -224,6 +236,7 @@ void export_Hamiltonian_QM_objects(){
 
   def("Hamiltonian_core", expt_Hamiltonian_core_v1);
   def("Hamiltonian_Fock", expt_Hamiltonian_Fock_v1);
+  def("derivative_couplings", expt_derivative_couplings_v1);
   def("force", expt_force_v1);
   def("energy_and_forces", expt_energy_and_forces_v1);
 

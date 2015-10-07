@@ -53,6 +53,17 @@ double energy_and_forces
 );
 
 
+void derivative_couplings
+( Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+  Control_Parameters& prms,Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  MATRIX& Hao, MATRIX& Sao,   int Norb, int at_indx, 
+  int x_period, int y_period, int z_period, VECTOR& t1, VECTOR& t2, VECTOR& t3,
+  MATRIX& Dmo_a_x, MATRIX& Dmo_a_y, MATRIX& Dmo_a_z,
+  MATRIX& Dmo_b_x, MATRIX& Dmo_b_y, MATRIX& Dmo_b_z
+);
+
+
 VECTOR force
 ( Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
   Control_Parameters& prms,Model_Parameters& modprms,

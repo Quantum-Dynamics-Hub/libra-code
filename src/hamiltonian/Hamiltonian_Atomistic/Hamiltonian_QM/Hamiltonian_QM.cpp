@@ -72,6 +72,146 @@ void Hamiltonian_Fock(Electronic_Structure& el, System& syst, vector<AO>& basis_
 
 
 
+void derivative_couplings
+( Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+  Control_Parameters& prms,Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  MATRIX& Hao, MATRIX& Sao,   int Norb, int at_indx, 
+  int x_period, int y_period, int z_period, VECTOR& t1, VECTOR& t2, VECTOR& t3,
+  MATRIX& Dmo_a_x, MATRIX& Dmo_a_y, MATRIX& Dmo_a_z,
+  MATRIX& Dmo_b_x, MATRIX& Dmo_b_y, MATRIX& Dmo_b_z
+){
+
+
+
+  int i,j;
+    
+  MATRIX* dHao_dx; dHao_dx = new MATRIX(Norb, Norb);
+  MATRIX* dHao_dy; dHao_dy = new MATRIX(Norb, Norb);
+  MATRIX* dHao_dz; dHao_dz = new MATRIX(Norb, Norb);
+
+  MATRIX* dSao_dx; dSao_dx = new MATRIX(Norb, Norb);
+  MATRIX* dSao_dy; dSao_dy = new MATRIX(Norb, Norb);
+  MATRIX* dSao_dz; dSao_dz = new MATRIX(Norb, Norb);
+
+  MATRIX* dFao_alp_dx; dFao_alp_dx = new MATRIX(Norb, Norb);
+  MATRIX* dFao_alp_dy; dFao_alp_dy = new MATRIX(Norb, Norb);
+  MATRIX* dFao_alp_dz; dFao_alp_dz = new MATRIX(Norb, Norb);
+
+  MATRIX* dFao_bet_dx; dFao_bet_dx = new MATRIX(Norb, Norb);
+  MATRIX* dFao_bet_dy; dFao_bet_dy = new MATRIX(Norb, Norb);
+  MATRIX* dFao_bet_dz; dFao_bet_dz = new MATRIX(Norb, Norb);
+
+  MATRIX* Dao_x; Dao_x = new MATRIX(Norb, Norb);
+  MATRIX* Dao_y; Dao_y = new MATRIX(Norb, Norb);
+  MATRIX* Dao_z; Dao_z = new MATRIX(Norb, Norb);
+
+  int DF = 0;
+
+  Hamiltonian_core_deriv_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao, Sao, DF, at_indx, *dHao_dx, *dHao_dy, *dHao_dz, *dSao_dx, *dSao_dy, *dSao_dz );
+  Hamiltonian_Fock_derivs_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, at_indx, *dHao_dx, *dHao_dy, *dHao_dz, *dFao_alp_dx, *dFao_alp_dy, *dFao_alp_dz, *dFao_bet_dx, *dFao_bet_dy, *dFao_bet_dz);
+  update_derivative_coupling_matrix(x_period, y_period, z_period, t1, t2, t3, atom_to_ao_map, ao_to_atom_map, basis_ao, at_indx, *Dao_x, *Dao_y, *Dao_z);
+
+
+  // !!! Because in INDO  S = I => Dao = 0.0
+  *dSao_dx = 0.0;
+  *dSao_dy = 0.0;
+  *dSao_dz = 0.0;
+  *Dao_x = 0.0;
+  *Dao_y = 0.0;
+  *Dao_z = 0.0;
+
+
+  MATRIX* T; T = new MATRIX(Norb,Norb);
+  MATRIX* A_ax; A_ax = new MATRIX(Norb,Norb);
+  MATRIX* A_ay; A_ay = new MATRIX(Norb,Norb);
+  MATRIX* A_az; A_az = new MATRIX(Norb,Norb);
+  MATRIX* A_bx; A_bx = new MATRIX(Norb,Norb);
+  MATRIX* A_by; A_by = new MATRIX(Norb,Norb);
+  MATRIX* A_bz; A_bz = new MATRIX(Norb,Norb);
+
+
+  *T = (*el.E_alp) * (*el.C_alp) * (*Dao_x) * (*el.C_alp).T();
+  *A_ax = (*el.C_alp) * (*dFao_alp_dx) * (*el.C_alp).T() - (*T + (*T).T());
+
+  *T = (*el.E_alp) * (*el.C_alp) * (*Dao_y) * (*el.C_alp).T();
+  *A_ay = (*el.C_alp) * (*dFao_alp_dy) * (*el.C_alp).T() - (*T + (*T).T());
+
+  *T = (*el.E_alp) * (*el.C_alp) * (*Dao_z) * (*el.C_alp).T();
+  *A_az = (*el.C_alp) * (*dFao_alp_dz) * (*el.C_alp).T() - (*T + (*T).T());
+
+  *T = (*el.E_bet) * (*el.C_bet) * (*Dao_x) * (*el.C_bet).T();
+  *A_bx = (*el.C_bet) * (*dFao_bet_dx) * (*el.C_bet).T() - (*T + (*T).T());
+
+  *T = (*el.E_bet) * (*el.C_bet) * (*Dao_y) * (*el.C_bet).T();
+  *A_by = (*el.C_bet) * (*dFao_bet_dy) * (*el.C_bet).T() - (*T + (*T).T());
+
+  *T = (*el.E_bet) * (*el.C_bet) * (*Dao_z) * (*el.C_bet).T();
+  *A_bz = (*el.C_bet) * (*dFao_bet_dz) * (*el.C_bet).T() - (*T + (*T).T());
+
+
+  MATRIX* dEa_dx; dEa_dx = new MATRIX(Norb,Norb);
+  MATRIX* dEa_dy; dEa_dy = new MATRIX(Norb,Norb);
+  MATRIX* dEa_dz; dEa_dz = new MATRIX(Norb,Norb);
+  MATRIX* dEb_dx; dEb_dx = new MATRIX(Norb,Norb);
+  MATRIX* dEb_dy; dEb_dy = new MATRIX(Norb,Norb);
+  MATRIX* dEb_dz; dEb_dz = new MATRIX(Norb,Norb);
+
+
+  for(i=0;i<Norb;i++){
+    dEa_dx->set(i,i,A_ax->get(i,i));
+    dEa_dy->set(i,i,A_ay->get(i,i));
+    dEa_dz->set(i,i,A_az->get(i,i));
+    dEb_dx->set(i,i,A_bx->get(i,i));
+    dEb_dy->set(i,i,A_by->get(i,i));
+    dEb_dz->set(i,i,A_bz->get(i,i));
+
+    for(j=0;j<Norb;j++){
+      if(i!=j){
+        double dEa = ( el.E_alp->get(j,j)-el.E_alp->get(i,i) );
+        if(fabs(dEa)>1e-12){
+          Dmo_a_x.set(i,j,A_ax->get(i,j)/dEa);
+          Dmo_a_y.set(i,j,A_ay->get(i,j)/dEa);
+          Dmo_a_z.set(i,j,A_az->get(i,j)/dEa);
+        }
+
+        double dEb = ( el.E_bet->get(j,j)-el.E_bet->get(i,i) );
+        if(fabs(dEb)>1e-12){
+          Dmo_b_x.set(i,j,A_bx->get(i,j)/dEb);
+          Dmo_b_y.set(i,j,A_by->get(i,j)/dEb);
+          Dmo_b_z.set(i,j,A_bz->get(i,j)/dEb);
+        }
+      }// i!=j
+      else{
+          Dmo_a_x.set(i,j,0.0);
+          Dmo_a_y.set(i,j,0.0);
+          Dmo_a_z.set(i,j,0.0);
+          Dmo_b_x.set(i,j,0.0);
+          Dmo_b_y.set(i,j,0.0);
+          Dmo_b_z.set(i,j,0.0);
+      }
+    }// for j
+  }// for i
+
+
+  //================= Clean up - delete temporary memory blocks ==============
+  delete dHao_dx;  delete dHao_dy;  delete dHao_dz;
+  delete dSao_dx;  delete dSao_dy;  delete dSao_dz;
+  delete dFao_alp_dx;  delete dFao_alp_dy;  delete dFao_alp_dz;
+  delete dFao_bet_dx;  delete dFao_bet_dy;  delete dFao_bet_dz;
+  delete Dao_x;  delete Dao_y;  delete Dao_z;  delete T;
+  delete A_ax;  delete A_ay;  delete A_az;
+  delete A_bx;  delete A_by;  delete A_bz;
+  delete dEa_dx;  delete dEa_dy;  delete dEa_dz;
+  delete dEb_dx;  delete dEb_dy;  delete dEb_dz;
+
+
+}
+
+
+
+
+
 VECTOR force
 ( Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
   Control_Parameters& prms,Model_Parameters& modprms,
@@ -79,6 +219,74 @@ VECTOR force
   MATRIX& Hao, MATRIX& Sao,   int Norb, int at_indx, 
   int x_period, int y_period, int z_period, VECTOR& t1, VECTOR& t2, VECTOR& t3){
 
+
+
+  int i,j;
+    
+  MATRIX* dHao_dx; dHao_dx = new MATRIX(Norb, Norb);
+  MATRIX* dHao_dy; dHao_dy = new MATRIX(Norb, Norb);
+  MATRIX* dHao_dz; dHao_dz = new MATRIX(Norb, Norb);
+
+  MATRIX* dSao_dx; dSao_dx = new MATRIX(Norb, Norb);
+  MATRIX* dSao_dy; dSao_dy = new MATRIX(Norb, Norb);
+  MATRIX* dSao_dz; dSao_dz = new MATRIX(Norb, Norb);
+
+  MATRIX* dFao_alp_dx; dFao_alp_dx = new MATRIX(Norb, Norb);
+  MATRIX* dFao_alp_dy; dFao_alp_dy = new MATRIX(Norb, Norb);
+  MATRIX* dFao_alp_dz; dFao_alp_dz = new MATRIX(Norb, Norb);
+
+  MATRIX* dFao_bet_dx; dFao_bet_dx = new MATRIX(Norb, Norb);
+  MATRIX* dFao_bet_dy; dFao_bet_dy = new MATRIX(Norb, Norb);
+  MATRIX* dFao_bet_dz; dFao_bet_dz = new MATRIX(Norb, Norb);
+
+  int DF = 0;
+
+  Hamiltonian_core_deriv_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao, Sao, DF, at_indx, *dHao_dx, *dHao_dy, *dHao_dz, *dSao_dx, *dSao_dy, *dSao_dz );
+  Hamiltonian_Fock_derivs_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, at_indx, *dHao_dx, *dHao_dy, *dHao_dz, *dFao_alp_dx, *dFao_alp_dy, *dFao_alp_dz, *dFao_bet_dx, *dFao_bet_dy, *dFao_bet_dz);
+
+
+  VECTOR F; F = 0.0;
+
+  // But this one seems to work pretty well - at least for INDO!
+  F.x  = (  (*el.P_alp) * (*dHao_dx + *dFao_alp_dx)  ).tr();
+  F.x += (  (*el.P_bet) * (*dHao_dx + *dFao_bet_dx)  ).tr();
+  F.x  = -0.5 * F.x;
+
+  F.y  = (  (*el.P_alp) * (*dHao_dy + *dFao_alp_dy)  ).tr();
+  F.y += (  (*el.P_bet) * (*dHao_dy + *dFao_bet_dy)  ).tr();
+  F.y  = -0.5 * F.y;
+
+  F.z  = (  (*el.P_alp) * (*dHao_dz + *dFao_alp_dz)  ).tr();
+  F.z += (  (*el.P_bet) * (*dHao_dz + *dFao_bet_dz)  ).tr();
+  F.z  = -0.5 * F.z;
+
+
+
+
+
+  //================= Clean up - delete temporary memory blocks ==============
+  delete dHao_dx;  delete dHao_dy;  delete dHao_dz;
+  delete dSao_dx;  delete dSao_dy;  delete dSao_dz;
+  delete dFao_alp_dx;  delete dFao_alp_dy;  delete dFao_alp_dz;
+  delete dFao_bet_dx;  delete dFao_bet_dy;  delete dFao_bet_dz;
+
+
+  return F;
+
+}
+
+
+
+VECTOR force_extended
+( Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+  Control_Parameters& prms,Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  MATRIX& Hao, MATRIX& Sao,   int Norb, int at_indx, 
+  int x_period, int y_period, int z_period, VECTOR& t1, VECTOR& t2, VECTOR& t3){
+
+
+// This is the extended version of forces computations - just in case we need 
+// more general formulation - but at present (for INDO) it is not used
 
 
   int i,j;
@@ -275,20 +483,24 @@ VECTOR force
 
   VECTOR F; F = 0.0;
 
-  // These are the forces from my derivation, but they do not work for some reason:
+  // These are the forces from my derivation, but they do not work for some reason - it seems like there is some
+  // sort of sign uncertainty in dP_alp_dx or some other fluctuations accumulate on top of it. Yet, theoretically
+  // it looks more accurate than the version below - in tests the agreement with numerical forces is better on average,
+  // but the fluctuations are terrible.
   /*
-  F.x = (  (*el.C_alp).T() * (dHao_dx + *dFao_alp_dx) * (*C_alp) ).tr() +  ((*dP_alp_dx) * (Hao + (*el.Fao_alp)) ).tr();
-  F.x = (  (*el.C_bet).T() * (dHao_dx + *dFao_bet_dx) * (*C_bet) ).tr() +  ((*dP_bet_dx) * (Hao + (*el.Fao_bet)) ).tr();
-  F.x = -0.5 * F.x;
-
-  F.y = (  (*el.C_alp).T() * (dHao_dy + *dFao_alp_dy) * (*C_alp) ).tr() +  ((*dP_alp_dy) * (Hao + (*el.Fao_alp)) ).tr();
-  F.y = (  (*el.C_bet).T() * (dHao_dy + *dFao_bet_dy) * (*C_bet) ).tr() +  ((*dP_bet_dy) * (Hao + (*el.Fao_bet)) ).tr();
-  F.y = -0.5 * F.y;
-
-  F.z = (  (*el.C_alp).T() * (dHao_dz + *dFao_alp_dz) * (*C_alp) ).tr() +  ((*dP_alp_dz) * (Hao + (*el.Fao_alp)) ).tr();
-  F.z = (  (*el.C_bet).T() * (dHao_dz + *dFao_bet_dz) * (*C_bet) ).tr() +  ((*dP_bet_dz) * (Hao + (*el.Fao_bet)) ).tr();
-  F.z = -0.5 * F.z;
+  F.x  = (  (*el.P_alp) * (*dHao_dx + *dFao_alp_dx)  ).tr()  +  ((*dP_alp_dx) * (Hao + (*el.Fao_alp)) ).tr();
+  F.x += (  (*el.P_bet) * (*dHao_dx + *dFao_bet_dx)  ).tr()  +  ((*dP_bet_dx) * (Hao + (*el.Fao_bet)) ).tr();
+  F.x  = -0.5 * F.x;                                                                                         
+                                                                                                             
+  F.y  = (  (*el.P_alp) * (*dHao_dy + *dFao_alp_dy)  ).tr()  +  ((*dP_alp_dy) * (Hao + (*el.Fao_alp)) ).tr();
+  F.y += (  (*el.P_bet) * (*dHao_dy + *dFao_bet_dy)  ).tr()  +  ((*dP_bet_dy) * (Hao + (*el.Fao_bet)) ).tr();
+  F.y  = -0.5 * F.y;                                                                                         
+                                                                                                             
+  F.z  = (  (*el.P_alp) * (*dHao_dz + *dFao_alp_dz)  ).tr()  +  ((*dP_alp_dz) * (Hao + (*el.Fao_alp)) ).tr();
+  F.z += (  (*el.P_bet) * (*dHao_dz + *dFao_bet_dz)  ).tr()  +  ((*dP_bet_dz) * (Hao + (*el.Fao_bet)) ).tr();
+  F.z  = -0.5 * F.z;
   */
+
 
   // But this one seems to work pretty well - at least for INDO!
   F.x  = (  (*el.P_alp) * (*dHao_dx + *dFao_alp_dx)  ).tr();
@@ -302,6 +514,9 @@ VECTOR force
   F.z  = (  (*el.P_alp) * (*dHao_dz + *dFao_alp_dz)  ).tr();
   F.z += (  (*el.P_bet) * (*dHao_dz + *dFao_bet_dz)  ).tr();
   F.z  = -0.5 * F.z;
+
+
+
 
 
   //================= Clean up - delete temporary memory blocks ==============
