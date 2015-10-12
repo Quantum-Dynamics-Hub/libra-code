@@ -32,6 +32,27 @@ using namespace libensemble;
 
 void compute_hopping_probabilities_esh(Ensemble& ens, MATRIX* g, double dt, int use_boltz_factor,double T);
 
+void hop(int ntraj, vector<int>& initstate, vector<Nuclear*>& mol, vector<Hamiltonian*>& ham, 
+         vector<double> ksi, vector<MATRIX*>& g, int do_rescaling, int rep, int do_reverse);
+vector<int>
+hop(int ntraj, vector<int> initstate, vector<Nuclear>& mol, vector<Hamiltonian>& ham, 
+    vector<double> ksi, vector<MATRIX>& g, int do_rescaling, int rep, int do_reverse);
+
+boost::python::list
+hop(int ntraj, boost::python::list initstate, boost::python::list mol, boost::python::list ham, 
+    boost::python::list ksi, boost::python::list g, int do_rescaling, int rep, int do_reverse);
+
+
+void rescale_velocities_adiabatic(int ntraj, vector<Nuclear*>& mol, vector<Hamiltonian*>& ham,
+      vector<int>& new_st, vector<int>& old_st, int do_reverse);
+void rescale_velocities_adiabatic(int ntraj, vector<Nuclear>& mol, vector<Hamiltonian>& ham,
+      vector<int>& new_st, vector<int>& old_st, int do_reverse);
+
+
+
+
+
+
 }// namespace libdyn
 
 #endif // SURFACE_HOPPING_METHOD1_H

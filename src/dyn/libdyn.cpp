@@ -83,6 +83,12 @@ void export_Dyn_objects(){
   int (*expt_hop_v2)
   (int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse) = &hop;
 
+  vector<int> (*expt_hop_v3)
+  (int ntraj, vector<int> initstate, vector<Nuclear>& mol, vector<Hamiltonian>& ham, 
+   vector<double> ksi, vector<MATRIX>& g, int do_rescaling, int rep, int do_reverse) = &hop;
+
+
+
 
   int (*expt_rescale_velocities_adiabatic_v1)
   (Nuclear& mol, Hamiltonian& ham, int old_st, int do_reverse) = &rescale_velocities_adiabatic;
@@ -110,6 +116,7 @@ void export_Dyn_objects(){
 
   def("hop", expt_hop_v1);
   def("hop", expt_hop_v2);
+  def("hop", expt_hop_v3);
 
   def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v1);
   def("rescale_velocities_diabatic", expt_rescale_velocities_diabatic_v1);
