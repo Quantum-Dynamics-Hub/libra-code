@@ -140,7 +140,63 @@ void compute_indo_core_parameters_derivs
 
 }
 
+void compute_all_indo_core_parameters_derivs
+( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, 
+  vector<int>& sorb_indx, int opt
+){
 
+  int N = syst.Number_of_atoms;
+
+
+  MATRIX* aux1;  aux1 = new MATRIX(N,N);
+  MATRIX* aux2;  aux2 = new MATRIX(N,N);
+  MATRIX* aux3;  aux3 = new MATRIX(N,N);
+
+  MATRIX* aux4;  aux4 = new MATRIX(N,N);
+  MATRIX* aux5;  aux5 = new MATRIX(N,N);
+  MATRIX* aux6;  aux6 = new MATRIX(N,N);
+
+
+  for(int c=0;c<N;c++){
+
+    for(int a=0;a<N;a++){
+      for(int b=0;b<N;b++){
+
+        VECTOR deri, dV_AB;
+        deri = 0.0; dV_AB = 0.0;
+
+        compute_indo_core_parameters_derivs(syst,basis_ao,modprms, atom_to_ao_map, ao_to_atom_map, sorb_indx, opt, a, b, c, deri, dV_AB);
+    
+        aux1->set(a, b, deri.x);
+        aux2->set(a, b, deri.y);
+        aux3->set(a, b, deri.z);
+
+        aux4->set(a, b, dV_AB.x);
+        aux5->set(a, b, dV_AB.y);
+        aux6->set(a, b, dV_AB.z);
+
+      }// for b
+    }// for a
+
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string out;
+    (ss << c);  ss >> out;
+
+    aux1->bin_dump("deri.x_"+out+".bin");
+    aux2->bin_dump("deri.y_"+out+".bin");
+    aux3->bin_dump("deri.z_"+out+".bin");
+
+    aux4->bin_dump("dV_AB.x_"+out+".bin");
+    aux5->bin_dump("dV_AB.y_"+out+".bin");
+    aux6->bin_dump("dV_AB.z_"+out+".bin");
+
+  }// for c
+
+  delete aux1; delete aux2; delete aux3;
+  delete aux4; delete aux5; delete aux6;
+  
+}
 
 
 
@@ -217,6 +273,10 @@ void indo_core_parameters
 
     }// for b
   }// for a
+
+  // Compute their derivatives and store on the disk
+  compute_all_indo_core_parameters_derivs(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, sorb_indx, opt);
+
 
 }
 
@@ -391,11 +451,46 @@ void Hamiltonian_core_deriv_indo
 
   int sz = syst.Number_of_atoms; // number of atoms in this fragment
 
-//  cout<<"sz= "<<sz<<endl;
 
   if(modprms.eri.size()!=sz*sz){  cout<<"Error in Hamiltonian_core_deriv_indo: size of auxiliary eri array is not right\n"; exit(0);}
   if(modprms.V_AB.size()!=sz*sz){  cout<<"Error in Hamiltonian_core_deriv_indo: size of auxiliary V_AB array is not right\n"; exit(0);}
 
+
+  stringstream ss(stringstream::in | stringstream::out);
+  std::string out;
+  (ss << c);  ss >> out;
+
+
+  int use_disk = 1;
+
+  
+
+  MATRIX* aux1;  
+  MATRIX* aux2;  
+  MATRIX* aux3;  
+  MATRIX* aux4;  
+  MATRIX* aux5;  
+  MATRIX* aux6;  
+
+  if(use_disk){
+
+    aux1 = new MATRIX(sz,sz);
+    aux2 = new MATRIX(sz,sz);
+    aux3 = new MATRIX(sz,sz);
+    aux4 = new MATRIX(sz,sz);
+    aux5 = new MATRIX(sz,sz);
+    aux6 = new MATRIX(sz,sz);
+
+    // Load matrices with derivatives of the core parameters
+    aux1->bin_load("deri.x_"+out+".bin");
+    aux2->bin_load("deri.y_"+out+".bin");
+    aux3->bin_load("deri.z_"+out+".bin");
+
+    aux4->bin_load("dV_AB.x_"+out+".bin");
+    aux5->bin_load("dV_AB.y_"+out+".bin");
+    aux6->bin_load("dV_AB.z_"+out+".bin");
+
+  }
 
   //----------- Compute core terms of the Hamiltonian ------------
   *Hao = 0.0;
@@ -480,15 +575,24 @@ void Hamiltonian_core_deriv_indo
       if(b!=a){
         Hao->M[i*Norb+i] -= modprms.V_AB[a*sz+b];  //  = V_AB = Z_B * eri[A][B] -in INDO
 
-        VECTOR deri, dV_AB;    
-        compute_indo_core_parameters_derivs(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map,
-                                            sorb_indx, modprms.indo_opt, a, b, c, deri, dV_AB);
 
-//        cout<<"i= "<<i<<" a= "<<a<<" b= "<<b<<" c= "<<c<<" deri= "<<deri<<" dV_AB= "<<dV_AB<<endl;
+        VECTOR deri, dV_AB;    
+        if(use_disk){
+
+          dV_AB.x = aux4->get(a,b);
+          dV_AB.y = aux5->get(a,b);
+          dV_AB.z = aux6->get(a,b);
+
+        }
+        else{
+          compute_indo_core_parameters_derivs(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map,
+                                              sorb_indx, modprms.indo_opt, a, b, c, deri, dV_AB);
+        }
 
         dHao_dx->M[i*Norb+i] -= dV_AB.x;
         dHao_dy->M[i*Norb+i] -= dV_AB.y;
         dHao_dz->M[i*Norb+i] -= dV_AB.z;
+        
 
 
       }
@@ -536,6 +640,11 @@ void Hamiltonian_core_deriv_indo
     }// for j    
 
   }// for i
+
+  if(use_disk){
+    delete aux1; delete aux2; delete aux3;
+    delete aux4; delete aux5; delete aux6;
+  }
 
 }
 
@@ -782,13 +891,49 @@ void Hamiltonian_Fock_derivs_indo
 
   int i,j,k,n,I,J,K,a,b,A,B;
 
-
+  Timer tim1;
 
   int Norb = basis_ao.size(); // how many AOs are included in this fragment
   if(Norb!=el->Hao->num_of_cols){  
     cout<<"In Hamiltonian_Fock_indo: Dimension of input/output matrix is not compatible whith the number of the fragment-localized orbitals\n";
     exit(0);
   }
+
+  stringstream ss(stringstream::in | stringstream::out);
+  std::string out;
+  (ss << c);  ss >> out;
+
+  int use_disk = 1;  
+
+  MATRIX* aux1;  
+  MATRIX* aux2;  
+  MATRIX* aux3;  
+  MATRIX* aux4;  
+  MATRIX* aux5;  
+  MATRIX* aux6;  
+
+  int nat = syst.Number_of_atoms;
+  if(use_disk){
+
+    aux1 = new MATRIX(nat,nat);
+    aux2 = new MATRIX(nat,nat);
+    aux3 = new MATRIX(nat,nat);
+    aux4 = new MATRIX(nat,nat);
+    aux5 = new MATRIX(nat,nat);
+    aux6 = new MATRIX(nat,nat);
+
+    // Load matrices with derivatives of the core parameters
+    aux1->bin_load("deri.x_"+out+".bin");
+    aux2->bin_load("deri.y_"+out+".bin");
+    aux3->bin_load("deri.z_"+out+".bin");
+
+    aux4->bin_load("dV_AB.x_"+out+".bin");
+    aux5->bin_load("dV_AB.y_"+out+".bin");
+    aux6->bin_load("dV_AB.z_"+out+".bin");
+
+  }
+
+
 
 
   // Formation of the Fock matrix: Core part
@@ -880,9 +1025,20 @@ void Hamiltonian_Fock_derivs_indo
 
             // Derivatives
 
-            VECTOR deri, dV_AB;    
-            compute_indo_core_parameters_derivs(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map,
-                                                sorb_indx, modprms.indo_opt, a, b, c, deri, dV_AB);
+            VECTOR deri, dV_AB; 
+
+            tim1.start();
+            if(use_disk){
+              deri.x = aux1->get(a,b);
+              deri.y = aux2->get(a,b);
+              deri.z = aux3->get(a,b);
+            }
+            else{
+              compute_indo_core_parameters_derivs(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map,
+                                                  sorb_indx, modprms.indo_opt, a, b, c, deri, dV_AB);
+            }
+
+            tim1.stop();
 
             dFao_alp_dx->M[i*Norb+i] += (Zeff[b] - syst.Atoms[b].Atom_mull_charge_net)*deri.x;
             dFao_alp_dy->M[i*Norb+i] += (Zeff[b] - syst.Atoms[b].Atom_mull_charge_net)*deri.y;
@@ -926,9 +1082,19 @@ void Hamiltonian_Fock_derivs_indo
             el->Fao_alp->M[i*Norb+j] -= 0.5*el->P->M[i*Norb+j]*modprms.eri[a*syst.Number_of_atoms+b]; 
             el->Fao_bet->M[i*Norb+j] -= 0.5*el->P->M[i*Norb+j]*modprms.eri[a*syst.Number_of_atoms+b]; 
 
+            tim1.start();
             VECTOR deri, dV_AB;    
-            compute_indo_core_parameters_derivs(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map,
-                                                sorb_indx, modprms.indo_opt, a, b, c, deri, dV_AB);
+
+            if(use_disk){
+              deri.x = aux1->get(a,b);
+              deri.y = aux2->get(a,b);
+              deri.z = aux3->get(a,b);
+            }
+            else{
+              compute_indo_core_parameters_derivs(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map,
+                                                  sorb_indx, modprms.indo_opt, a, b, c, deri, dV_AB);
+            }
+            tim1.stop();
 
             dFao_alp_dx->M[i*Norb+j] -= 0.5*el->P->M[i*Norb+j]*deri.x; 
             dFao_alp_dy->M[i*Norb+j] -= 0.5*el->P->M[i*Norb+j]*deri.y; 
@@ -944,9 +1110,18 @@ void Hamiltonian_Fock_derivs_indo
             el->Fao_bet->M[i*Norb+j] -= el->P_bet->M[i*Norb+j]*modprms.eri[a*syst.Number_of_atoms+b]; 
 
 
+            tim1.start();
             VECTOR deri, dV_AB;    
-            compute_indo_core_parameters_derivs(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map,
-                                                sorb_indx, modprms.indo_opt, a, b, c, deri, dV_AB);
+            if(use_disk){
+              deri.x = aux1->get(a,b);
+              deri.y = aux2->get(a,b);
+              deri.z = aux3->get(a,b);
+            }
+            else{
+              compute_indo_core_parameters_derivs(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map,
+                                                  sorb_indx, modprms.indo_opt, a, b, c, deri, dV_AB);
+            }
+            tim1.stop();
 
             dFao_alp_dx->M[i*Norb+j] -= el->P_alp->M[i*Norb+j]*deri.x; 
             dFao_alp_dy->M[i*Norb+j] -= el->P_alp->M[i*Norb+j]*deri.y; 
@@ -965,6 +1140,14 @@ void Hamiltonian_Fock_derivs_indo
   
     }// for j
   }// for i
+
+  if(use_disk){
+    delete aux1; delete aux2; delete aux3;
+    delete aux4; delete aux5; delete aux6;
+  }
+
+
+  cout<<"End of Hamiltonian_Fock_derivs_indo: Time to compute core_parameters_derivs = "<<tim1.show()<<endl;
 
 }
 

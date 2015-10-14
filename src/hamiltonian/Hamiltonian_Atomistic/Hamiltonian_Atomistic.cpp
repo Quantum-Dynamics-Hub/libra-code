@@ -304,6 +304,8 @@ void Hamiltonian_Atomistic::compute(){
 void Hamiltonian_Atomistic::compute_diabatic(){
   int i;
 
+  cout<<"in Hamiltonian_Atomistic::compute_diabatic()\n";
+
   if(status_dia == 0){ // only compute this is the result is not up to date
 
     // Zero forces
@@ -351,28 +353,40 @@ void Hamiltonian_Atomistic::compute_diabatic(){
 
     if(ham_types[1]==1){
 
-      qm_ham->compute_scf(*_syst);
-
-      // Energies
-      *ham_dia = 0.0;
-
-      if(nelec < qm_ham->el->Fao_alp->num_of_cols){
+      int method_option = 1;  // 
       
-        vector<int> subset(nelec); for(int i=0;i<nelec;i++){ subset[i] = i; }  
-        pop_submatrix(qm_ham->el->Fao_alp, ham_dia, subset);
+      if(method_option==0){ // Orbital picture
 
+        qm_ham->compute_scf(*_syst);
+
+        // Energies
+        *ham_dia = 0.0;
+
+        if(nelec < qm_ham->el->Fao_alp->num_of_cols){
+      
+          vector<int> subset(nelec); for(int i=0;i<nelec;i++){ subset[i] = i; }  
+          pop_submatrix(qm_ham->el->Fao_alp, ham_dia, subset);
+
+        }
+        else{
+
+          vector<int> subset(qm_ham->el->Fao_alp->num_of_cols); for(int i=0;i<qm_ham->el->Fao_alp->num_of_cols;i++){ subset[i] = i; }  
+          push_submatrix(ham_dia, qm_ham->el->Fao_alp, subset);
+
+        }
+
+
+        if(0){
+          cout<<"internal Fao = \n"<<*qm_ham->el->Fao_alp<<endl;
+          cout<<"diabatic Ham = \n"<<*ham_dia<<endl;
+        }
+      }// method == 0 - orbital picture
+
+      else if(method_option==1){ // Excitonic case
+
+        // don't do anything here - for atomistic system we only use adiabatic basis anyways
       }
-      else{
 
-        vector<int> subset(qm_ham->el->Fao_alp->num_of_cols); for(int i=0;i<qm_ham->el->Fao_alp->num_of_cols;i++){ subset[i] = i; }  
-        push_submatrix(ham_dia, qm_ham->el->Fao_alp, subset);
-
-      }
-
-
-      cout<<"internal Fao = \n"<<*qm_ham->el->Fao_alp<<endl;
-      cout<<"diabatic Ham = \n"<<*ham_dia<<endl;
-//      pop_submatrix(qm_ham->el->E_alp,   ham_adi, subset);
 
     }// QM
     //==========================================================
@@ -386,6 +400,8 @@ void Hamiltonian_Atomistic::compute_diabatic(){
 
   }//   status_dia == 0
 
+  cout<<"finishing Hamiltonian_Atomistic::compute_diabatic()\n";
+
 }
 
 
@@ -398,6 +414,10 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
 // actually, here is gonna be SCF solver - to get adiabatic states
 
 //------------------------------------------------------------------
+
+  cout<<"in Hamiltonian_Atomistic::compute_adiabatic()\n";
+
+  Timer tim1;
 
   compute_diabatic();
 
@@ -485,12 +505,18 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
         int z_period = 0; 
         VECTOR t1, t2, t3;
 
+        tim1.start();
+
         int i = 0;
         double E_i = qm_ham->energy_and_forces(*_syst); // ground state energy
         int Norb = qm_ham->el->Norb;
 
         ham_adi->set(i,i,E_i);
 
+        cout<<"Ground state calculations, time = "<<tim1.stop()<<endl;
+
+
+        tim1.start();
       
         MATRIX* Dmo_a_x; Dmo_a_x = new MATRIX(Norb,Norb);
         MATRIX* Dmo_a_y; Dmo_a_y = new MATRIX(Norb,Norb);
@@ -626,11 +652,14 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
         delete Dmo_b_x;  delete Dmo_b_y;  delete Dmo_b_z;
 
 
+        cout<<"Derivative couplings computations for all atoms, time = "<<tim1.stop()<<endl;
 
 
         //================ Now excitations ===========================
         vector< pair<int,double> > occ_alp_grnd(Norb,pair<int,double>(0,0.0)); occ_alp_grnd = qm_ham->el->occ_alp;
         vector< pair<int,double> > occ_bet_grnd(Norb,pair<int,double>(0,0.0)); occ_bet_grnd = qm_ham->el->occ_bet;
+
+        tim1.start();
 
         for(int i=1;i<qm_ham->basis_ex.size();i++){  // over all excitons in this basis
         
@@ -701,6 +730,12 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
 
         }// for i
 
+        
+        cout<<"Excited states energies and forces, time = "<<tim1.stop()<<endl;
+
+
+        tim1.start();
+
         //=================== Reset current variables to be those of the ground state ===============
         i = 0;
         cout<<"excitation "<<i<<"  \n";
@@ -729,6 +764,10 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
         cout<<"E_i = "<<E_i<<endl;
  
 
+        cout<<"Resetting to ground state, time = "<<tim1.stop()<<endl;
+
+
+        tim1.start();
         // Forces and nuclear contributions:
         for(int n=0;n<_syst->Number_of_atoms;n++){
 
@@ -765,7 +804,8 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
 
         }
 
-              
+        cout<<"Nuclear-nuclear calculations, time = "<<tim1.stop()<<endl;
+      
       
  
       }// method_option == 1
@@ -778,6 +818,8 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
 
   }// status_adi == 0
 
+
+  cout<<"finishing Hamiltonian_Atomistic::compute_adiabatic()\n";
   
 }
 
