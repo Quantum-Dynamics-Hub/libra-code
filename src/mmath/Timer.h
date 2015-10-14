@@ -26,7 +26,7 @@ public:
   Timer(){ acc = 0.0; }
 
   inline void start(){ t1 = clock(); }
-  inline void stop(){ t2 = clock(); acc += (t2-t1); }
+  inline double stop(){ t2 = clock(); acc += (t2-t1); return ((t2-t1)/((double)CLOCKS_PER_SEC)); }
   inline double show(){  return (acc/((double)CLOCKS_PER_SEC)); }
 
 
