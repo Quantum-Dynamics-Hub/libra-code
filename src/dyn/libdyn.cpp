@@ -41,8 +41,8 @@ void export_Dyn_objects(){
   double (*expt_compute_potential_energy_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt) = &compute_potential_energy;
   double (*expt_compute_potential_energy_v2)(Ensemble& ens, int opt) = &compute_potential_energy;
 
-  void (*expt_compute_forces_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt) = &compute_forces;
-  void (*expt_compute_forces_v2)(Ensemble& ens, int opt) = &compute_forces;
+  double (*expt_compute_forces_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt) = &compute_forces;
+  double (*expt_compute_forces_v2)(Ensemble& ens, int opt) = &compute_forces;
 
 
   void (*expt_propagate_ensemble_v1)(double dt,Ensemble& ens,int opt) = &propagate_ensemble;
