@@ -53,6 +53,7 @@ double compute_potential_energy(Nuclear* mol, Electronic* el, Hamiltonian* ham, 
   ham->set_q(mol->q);
   ham->compute();
 
+
   // Mean-field/Ehrenfest mixing
   if(opt==0){
 
@@ -71,7 +72,6 @@ double compute_potential_energy(Nuclear* mol, Electronic* el, Hamiltonian* ham, 
   // FSSH mixing 
   else if(opt==1){   
     i = el->istate; // current electornic state
-
     Epot = ham->H(i,i).real();  
   }
 
@@ -98,11 +98,14 @@ double compute_potential_energy(Ensemble& ens, int opt){
 
 
 
-void compute_forces(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt){
+double compute_forces(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt){
 // opt == 0   -  Ehrenfest/MF
 // opt == 1   -  FSSH
 
   int i,j,k;
+  double Heff = 0.0;
+  double Epot = 0.0;
+
 
   // Calculate all surfaces, if needed
   ham->set_q(mol->q);
@@ -117,12 +120,14 @@ void compute_forces(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt){
 
     // Potential energy - electronic Hamiltonian
     // working in a.u., so hbar = 1
-
     for(i=0;i<el->nstates;i++){
       for(j=0;j<el->nstates;j++){
 
         double cij_re = (el->q[i] * el->q[j] + el->p[i] * el->p[j]);
         double cij_im = el->p[i] * el->q[j];
+
+        Heff += 0.5*ham->Hvib(i,j).real() * cij_re;
+        Heff += ham->Hvib(i,j).imag() * cij_im; 
 
         for(k=0;k<mol->nnucl;k++){
           
@@ -134,31 +139,42 @@ void compute_forces(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt){
       }// for j
     }// for i
 
+    Epot = 2.0*Heff;  // in a.u. - hbar is assumed = 1
+
   }// algo = "MF"
 
   // FSSH mixing 
   else if(opt==1){
 
     i = el->istate; // current electornic state
+    Epot = ham->H(i,i).real();  
 
     for(k=0;k<mol->nnucl;k++){  
       mol->f[k] = -ham->dHdq(i,i,k).real(); 
     }// for k
+
   }// opt == 1
 
-}
-
-void compute_forces(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt){
-
-  compute_forces(&mol, &el, &ham, opt);
+  return Epot;
 
 }
 
-void compute_forces(Ensemble& ens, int opt){
+double compute_forces(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt){
+
+  return compute_forces(&mol, &el, &ham, opt);
+
+}
+
+double compute_forces(Ensemble& ens, int opt){
+
+  double epot = 0.0;
 
   for(int traj=0;traj<ens.ntraj;traj++){
-    compute_forces(&ens.mol[traj], &ens.el[traj], ens.ham[traj], opt);
+    epot += compute_forces(&ens.mol[traj], &ens.el[traj], ens.ham[traj], opt);
   }
+  epot = epot/float(ens.ntraj);
+
+  return epot;
   
 }
 
