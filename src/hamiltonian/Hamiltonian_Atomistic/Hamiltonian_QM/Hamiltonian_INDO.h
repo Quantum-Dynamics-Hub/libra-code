@@ -50,12 +50,30 @@ void compute_indo_core_parameters
   int opt, int a, int b, double& eri, double& V_AB
 );
 
+
+
 void compute_indo_core_parameters_derivs
 ( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   vector<int>& sorb_indx,
   int opt, int a, int b, int c, VECTOR& deri, VECTOR& dV_AB
 );
+void compute_indo_core_parameters_derivs
+( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  vector<int>& sorb_indx,
+  int opt, int a, int b, int c, VECTOR& deri, VECTOR& dV_AB,
+  vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+);
+void compute_indo_core_parameters_derivs
+( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  vector<int>& sorb_indx,
+  int opt, int a, int b, vector<VECTOR>& deri, vector<VECTOR>& dV_AB,
+  vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+);
+
+
 
 
 void compute_all_indo_core_parameters_derivs
@@ -63,6 +81,12 @@ void compute_all_indo_core_parameters_derivs
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, 
   vector<int>& sorb_indx, int opt
 );
+void compute_all_indo_core_parameters_derivs1
+( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, 
+  vector<int>& sorb_indx, int opt
+);
+
 
 
 

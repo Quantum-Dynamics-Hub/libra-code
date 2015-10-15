@@ -140,6 +140,109 @@ void compute_indo_core_parameters_derivs
 
 }
 
+
+
+void compute_indo_core_parameters_derivs
+( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  vector<int>& sorb_indx,
+  int opt, int a, int b, int c, VECTOR& deri, VECTOR& dV_AB,
+  vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+){
+
+  // Compute dERIs and dV_AB:  d ERI[a][b] / dR[c]  and d V[a][b] / dR[c]
+
+  int I = sorb_indx[a];
+  int J = sorb_indx[b];
+  int K = sorb_indx[c]; 
+     
+  // ERI
+  //eri = electron_repulsion_integral(basis_ao[I],basis_ao[I],basis_ao[J],basis_ao[J]); // eri[a][b]
+
+
+  VECTOR DA,DB,DC,DD;
+  // Version that doesn't do memory re-allocation every time
+  double eri = electron_repulsion_integral(&basis_ao[I],&basis_ao[I],&basis_ao[J],&basis_ao[J],1,1,DA,DB,DC,DD, aux, n_aux, auxv, n_auxv);
+
+
+  VECTOR deri_dc; deri_dc = 0.0;
+  if(a==b){ ;; }
+  else{
+    if(c==a){ deri += (DA + DB); }
+    if(c==b){ deri += (DC + DD); }
+  }
+
+
+  // V_AB
+  double V_AB = 0.0;
+  int B = b; //ao_to_atom_map[b]; // global index of atom on orbital b
+  double Zeff = modprms.PT[syst.Atoms[B].Atom_element].Zeff; 
+
+  if(opt==0){
+    V_AB = Zeff*nuclear_attraction_integral(basis_ao[J],basis_ao[J], syst.Atoms[B].Atom_RB.rb_cm);// V_AB[a][b]
+
+    double nai = nuclear_attraction_integral(basis_ao[J],basis_ao[J], syst.Atoms[B].Atom_RB.rb_cm, 1, 1, DA, DB, DC);// V_AB[a][b]
+    // Alright - i'm not really sure about this, so skip this part for now
+    //if(K==J){ dV_AB += (DA + DB); }
+    //if(K==J){ dV_AB += (DA + DB); }
+
+  }
+  else if(opt==1){
+    V_AB = Zeff*eri; //[a*sz+b];
+    dV_AB = Zeff * deri;
+  }
+
+}
+
+void compute_indo_core_parameters_derivs
+( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  vector<int>& sorb_indx,
+  int opt, int a, int b, vector<VECTOR>& deri, vector<VECTOR>& dV_AB,
+  vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
+){
+
+
+  // compute derivatives only once - for a fixed pair of a and b
+  VECTOR DA,DB,DC,DD;  
+
+  int I = sorb_indx[a];
+  int J = sorb_indx[b];
+
+  double eri = electron_repulsion_integral(&basis_ao[I],&basis_ao[I],&basis_ao[J],&basis_ao[J],1,1,DA,DB,DC,DD, aux, n_aux, auxv, n_auxv);
+
+
+
+  if(deri.size()!=syst.Number_of_atoms){  deri = vector<VECTOR>(syst.Number_of_atoms, VECTOR(0.0, 0.0, 0.0)); }
+  if(dV_AB.size()!=syst.Number_of_atoms){  dV_AB = vector<VECTOR>(syst.Number_of_atoms, VECTOR(0.0, 0.0, 0.0)); }
+
+
+  for(int c=0;c<syst.Number_of_atoms;c++){  // all atoms
+
+    // Now set up derivatives
+    deri[c] = 0.0;
+    dV_AB[c] = 0.0;
+
+    if(c==a){ deri[c] += (DA + DB); }
+    if(c==b){ deri[c] += (DC + DD); }
+
+    double Zeff = modprms.PT[syst.Atoms[b].Atom_element].Zeff; 
+
+    if(opt==0){
+    }
+    else if(opt==1){
+      dV_AB[c] = Zeff * deri[c];
+    }
+
+
+  }// for c
+
+
+}
+
+
+
+
 void compute_all_indo_core_parameters_derivs
 ( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, 
@@ -157,6 +260,15 @@ void compute_all_indo_core_parameters_derivs
   MATRIX* aux5;  aux5 = new MATRIX(N,N);
   MATRIX* aux6;  aux6 = new MATRIX(N,N);
 
+  // Memory for ERI computations
+  int i;
+  int n_auxd = 40;
+  int n_auxv = 40;
+  vector<double*> auxd(30);
+  for(i=0;i<30;i++){ auxd[i] = new double[n_auxd]; }
+  vector<VECTOR*> auxv(5);
+  for(i=0;i<5;i++){ auxv[i] = new VECTOR[n_auxv]; }
+
 
   for(int c=0;c<N;c++){
 
@@ -166,7 +278,10 @@ void compute_all_indo_core_parameters_derivs
         VECTOR deri, dV_AB;
         deri = 0.0; dV_AB = 0.0;
 
-        compute_indo_core_parameters_derivs(syst,basis_ao,modprms, atom_to_ao_map, ao_to_atom_map, sorb_indx, opt, a, b, c, deri, dV_AB);
+//        compute_indo_core_parameters_derivs(syst,basis_ao,modprms, atom_to_ao_map, ao_to_atom_map, sorb_indx, opt, a, b, c, deri, dV_AB);
+
+        // Memory-efficient version
+        compute_indo_core_parameters_derivs(syst,basis_ao,modprms, atom_to_ao_map, ao_to_atom_map, sorb_indx, opt, a, b, c, deri, dV_AB, auxd, n_auxd, auxv, n_auxv);
     
         aux1->set(a, b, deri.x);
         aux2->set(a, b, deri.y);
@@ -193,10 +308,112 @@ void compute_all_indo_core_parameters_derivs
 
   }// for c
 
+  // Clean working memory
+  for(i=0;i<30;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+  for(i=0;i<5;i++){ delete [] auxv[i]; }  
+  auxv.clear();
+ 
+
+
   delete aux1; delete aux2; delete aux3;
   delete aux4; delete aux5; delete aux6;
   
 }
+
+
+
+void compute_all_indo_core_parameters_derivs1
+( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, 
+  vector<int>& sorb_indx, int opt
+){
+
+  int N = syst.Number_of_atoms;
+
+
+  MATRIX* aux1;  aux1 = new MATRIX(N,N);
+  MATRIX* aux2;  aux2 = new MATRIX(N,N);
+  MATRIX* aux3;  aux3 = new MATRIX(N,N);
+
+  MATRIX* aux4;  aux4 = new MATRIX(N,N);
+  MATRIX* aux5;  aux5 = new MATRIX(N,N);
+  MATRIX* aux6;  aux6 = new MATRIX(N,N);
+
+  // Memory for ERI computations
+  int i;
+  int n_auxd = 40;
+  int n_auxv = 40;
+  vector<double*> auxd(30);
+  for(i=0;i<30;i++){ auxd[i] = new double[n_auxd]; }
+  vector<VECTOR*> auxv(5);
+  for(i=0;i<5;i++){ auxv[i] = new VECTOR[n_auxv]; }
+
+
+  // This is bad memory scaling, i know, but should be more-or-less fine for now
+  vector< vector<vector<VECTOR> > > deri;
+  vector< vector<vector<VECTOR> > > dV_AB;
+  deri = vector< vector<vector<VECTOR> > >(N, vector<vector<VECTOR> >(N, vector<VECTOR>(N, VECTOR(0.0, 0.0, 0.0) ) ) );
+  dV_AB = vector< vector<vector<VECTOR> > >(N, vector<vector<VECTOR> >(N, vector<VECTOR>(N, VECTOR(0.0, 0.0, 0.0) ) ) );
+
+
+  for(int a=0;a<N;a++){
+    for(int b=0;b<N;b++){
+
+      // Memory-efficient version
+      compute_indo_core_parameters_derivs(syst,basis_ao,modprms, atom_to_ao_map, ao_to_atom_map, sorb_indx, opt, a, b , deri[a][b], dV_AB[a][b], auxd, n_auxd, auxv, n_auxv);
+    
+    }// for b
+  }// for a
+
+
+
+  for(int c=0;c<N;c++){
+
+    // Form matrices
+    for(int a=0;a<N;a++){
+      for(int b=0;b<N;b++){
+
+        aux1->set(a, b, deri[a][b][c].x);
+        aux2->set(a, b, deri[a][b][c].y);
+        aux3->set(a, b, deri[a][b][c].z);
+
+        aux4->set(a, b, dV_AB[a][b][c].x);
+        aux5->set(a, b, dV_AB[a][b][c].y);
+        aux6->set(a, b, dV_AB[a][b][c].z);
+
+      }// for b
+    }// for a
+
+    // Print matrices
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string out;
+    (ss << c);  ss >> out;
+
+    aux1->bin_dump("deri.x_"+out+".bin");
+    aux2->bin_dump("deri.y_"+out+".bin");
+    aux3->bin_dump("deri.z_"+out+".bin");
+
+    aux4->bin_dump("dV_AB.x_"+out+".bin");
+    aux5->bin_dump("dV_AB.y_"+out+".bin");
+    aux6->bin_dump("dV_AB.z_"+out+".bin");
+
+  }// for c
+
+  // Clean working memory
+  for(i=0;i<30;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+  for(i=0;i<5;i++){ delete [] auxv[i]; }  
+  auxv.clear();
+ 
+
+
+  delete aux1; delete aux2; delete aux3;
+  delete aux4; delete aux5; delete aux6;
+  
+}
+
+
 
 
 
@@ -275,7 +492,8 @@ void indo_core_parameters
   }// for a
 
   // Compute their derivatives and store on the disk
-  compute_all_indo_core_parameters_derivs(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, sorb_indx, opt);
+  //compute_all_indo_core_parameters_derivs(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, sorb_indx, opt);
+  compute_all_indo_core_parameters_derivs1(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, sorb_indx, opt);
 
 
 }
