@@ -817,6 +817,8 @@ void System::init_fragment_velocities(double Temp,VECTOR TOT_P,VECTOR TOT_L){
   double size = Number_of_fragments;
   tot_p = (TOT_P - tot_p)/size;
   for(i=0;i<Number_of_fragments;i++){   temp_p[i] +=  tot_p; }
+  cout<<"size = "<<size<<endl;
+  cout<<"tot_p = "<<tot_p<<endl;
 
   // Required temperature value scaling
   double temp_tr  = 0.0;
@@ -826,11 +828,14 @@ void System::init_fragment_velocities(double Temp,VECTOR TOT_P,VECTOR TOT_L){
     top.set_momentum(temp_p[i]);
     temp_tr += top.ekin_tr();
   }// for i
+  cout<<"temp_tr= "<<temp_tr<<endl;
 
   // Rescale linear momenta to satisfy the translational kinetic energy
   double target_ekin_tr = 0.5*((double)Nf_t)*(boltzmann*Temp)/hartree;  // in a.u. of energy
   double scaling_factor_tr = (temp_tr==0.0)?0.0:sqrt(target_ekin_tr/temp_tr);
   for(i=0;i<Number_of_fragments;i++){  temp_p[i] *= scaling_factor_tr; }
+  cout<<"target_ekin_tr= "<<target_ekin_tr<<endl;
+  cout<<"scaling_factor_tr = "<<scaling_factor_tr<<endl;
 
   // Angular momenta
   for(i=0;i<Number_of_fragments;i++){
@@ -840,6 +845,7 @@ void System::init_fragment_velocities(double Temp,VECTOR TOT_P,VECTOR TOT_L){
   }
   tot_l = (TOT_L - tot_l)/size;
   for(i=0;i<Number_of_fragments;i++){  temp_l[i] =  Fragments[i].Group_RB.rb_A_I_to_e * tot_l;   }
+  cout<<"tot_l = "<<tot_l<<endl;
 
   temp_tr = 0.0;
   for(i=0;i<Number_of_fragments;i++){
@@ -849,9 +855,13 @@ void System::init_fragment_velocities(double Temp,VECTOR TOT_P,VECTOR TOT_L){
     temp_rot += top.ekin_rot();
     temp_tr += top.ekin_tr();
   }
+  cout<<"temp_tr = "<<temp_tr<<endl;
 
   double target_ekin = 0.5*((double)(Nf_r + Nf_t))*(boltzmann*Temp)/hartree;
-  double scaling_factor = (temp_rot==0.0)?0.0:sqrt(target_ekin/(temp_rot+temp_tr));
+  double scaling_factor = ((temp_rot+temp_tr)==0.0)?0.0:sqrt(target_ekin/(temp_rot+temp_tr));
+
+  cout<<"target_ekin = "<<target_ekin<<endl;
+  cout<<"scaling_factor = "<<scaling_factor<<endl;
 
 
   for(i=0;i<Number_of_fragments;i++){
