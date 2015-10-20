@@ -220,7 +220,7 @@ VECTOR force
   int x_period, int y_period, int z_period, VECTOR& t1, VECTOR& t2, VECTOR& t3){
 
 
-  cout<<"in force (Hamiltonia_QM.cpp)\n";
+//  cout<<"in force (Hamiltonian_QM.cpp)\n";
   Timer tim1;
 
   int i,j;
@@ -242,18 +242,18 @@ VECTOR force
   MATRIX* dFao_bet_dz; dFao_bet_dz = new MATRIX(Norb, Norb);
 
   int DF = 0;
-  tim1.start();
+//  tim1.start();
 
   Hamiltonian_core_deriv_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao, Sao, DF, at_indx, *dHao_dx, *dHao_dy, *dHao_dz, *dSao_dx, *dSao_dy, *dSao_dz );
-  cout<<"Time for core derivatives = "<<tim1.stop()<<endl;
+//  cout<<"Time for core derivatives = "<<tim1.stop()<<endl;
 
-  tim1.start();
+//  tim1.start();
   Hamiltonian_Fock_derivs_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, at_indx, *dHao_dx, *dHao_dy, *dHao_dz, *dFao_alp_dx, *dFao_alp_dy, *dFao_alp_dz, *dFao_bet_dx, *dFao_bet_dy, *dFao_bet_dz);
-  cout<<"Time for Fock derivatives = "<<tim1.stop()<<endl;
+//  cout<<"Time for Fock derivatives = "<<tim1.stop()<<endl;
 
 
   VECTOR F; F = 0.0;
-  tim1.start();
+//  tim1.start();
   // But this one seems to work pretty well - at least for INDO!
   F.x  = (  (*el.P_alp) * (*dHao_dx + *dFao_alp_dx)  ).tr();
   F.x += (  (*el.P_bet) * (*dHao_dx + *dFao_bet_dx)  ).tr();
@@ -267,7 +267,7 @@ VECTOR force
   F.z += (  (*el.P_bet) * (*dHao_dz + *dFao_bet_dz)  ).tr();
   F.z  = -0.5 * F.z;
 
-  cout<<"Time for matrix multiplication = "<<tim1.stop()<<endl;
+//  cout<<"Time for matrix multiplication = "<<tim1.stop()<<endl;
 
 
 
@@ -603,7 +603,7 @@ double energy_and_forces
      
   if(prms.hamiltonian=="indo"){
     Sao->Init_Unit_Matrix(1.0);  
-    indo_core_parameters(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, opt, 1);
+    indo_core_parameters(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, opt, 0);
 //    compute_all_indo_core_parameters_derivs(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, opt);
 
   }

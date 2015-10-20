@@ -1365,7 +1365,7 @@ void Hamiltonian_Fock_derivs_indo
   }
 
 
-  cout<<"End of Hamiltonian_Fock_derivs_indo: Time to compute core_parameters_derivs = "<<tim1.show()<<endl;
+//  cout<<"End of Hamiltonian_Fock_derivs_indo: Time to compute core_parameters_derivs = "<<tim1.show()<<endl;
 
 }
 
