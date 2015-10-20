@@ -175,6 +175,7 @@ double gamma_lower(double s,double x){
 // http://en.wikipedia.org/wiki/Incomplete_gamma_function
 // We use series expansion, as in the link
 
+/*  Old version
   double res = 0.0;
   double t1,term;
   
@@ -196,6 +197,23 @@ double gamma_lower(double s,double x){
     iter++;
   }
   res = res*expt; 
+*/
+
+  double res = 0.0;
+  double t1,term;
+
+  if(x<0){ x = 0.0; }
+
+  term = exp(-x)/s;
+  res = term;
+
+  int iter = 1;
+  while((term>0.0) && (iter<1000)){
+    term = term * (x/(s + iter));
+    res += term;
+    iter++;
+  }
+
     
   return res;
 }
