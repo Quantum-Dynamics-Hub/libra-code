@@ -33,11 +33,11 @@
 
   use_damping = 1
   damping_start = 5
-  damping_const = 0.2
+  damping_const = 0.12
 
   Niter = 1500
-  etol = 1e-6
-  den_tol = 1e-5
+  etol = 1e-4
+  den_tol = 1e-3
 
   degen_tol = 0.2
 </scf_options>

@@ -56,3 +56,9 @@ set ylabel "Energy, Ha" offset 1.5, 0.0
 set output "relax_energy_tot.png"
 plot "relax.txt" using 2:12   w lp  ls 11  lw 2  t "E_{tot}"
 
+
+
+set xlabel "time, steps" offset 0.0, 0.5
+set ylabel "Dihedral" offset 1.5, 0.0
+set output "dihedral.png"
+plot "dihedral.txt" using 1:2   w lp  ls 11  lw 2  t "Dihedral"

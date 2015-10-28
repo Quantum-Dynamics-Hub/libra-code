@@ -11,7 +11,7 @@
 
 ######################################################################
 #
-# Here we try to work on some acceleration of computations
+# Here we try to combine INDO + MM hamiltonian to improve the description of the dispersion
 #
 ######################################################################
 
@@ -21,6 +21,8 @@ import math
 
 # Fisrt, we add the location of the library to test to the PYTHON path
 cwd = os.getcwd()
+#cwd = "/projects/alexeyak/Software/libracode-code/tests/study2"
+
 print "Current working directory", cwd
 
 sys.path.insert(1,cwd+"/../../_build/src/mmath")
@@ -53,8 +55,24 @@ from cygbasis import *
 from cygconverters import *
 from cygcalculators import *
 
+#from libmmath import *
+#from libdyn import *
+#from libchemobjects import *
+#from libhamiltonian import *
+#from libhamiltonian_qm import *
+#from libcontrol_parameters import *
+#from libmodel_parameters import *
+#from libbasis_setups import *
+#from libdyn import *
+#from libqobjects import *
+#from libbasis import *
+#from libconverters import *
+#from libcalculators import *
+
 from LoadPT import * # Load_PT
 from LoadMolecule import * # Load_Molecule
+from LoadUFF import*
+
 
 
 
@@ -63,25 +81,63 @@ U = Universe()
 Load_PT(U, "elements.dat", 1)
 
 
-ntraj = 10
+# Create force field
+uff = ForceField({"mb_functional":"LJ_Coulomb","R_vdw_on":10.0,"R_vdw_off":15.0 })
+
+#uff = ForceField({"bond_functional":"Harmonic",
+#                  "angle_functional":"Fourier",
+#                  "dihedral_functional":"General0",
+#                  "oop_functional":"Fourier",
+#                  "mb_functional":"LJ_Coulomb",
+#                  "R_vdw_on":10.0,"R_vdw_off":15.0 })
+
+
+#uff = ForceField({ "vdw":"LJ" } ) 
+#"bond_functional":"Harmonic" })
+#                  "angle_functional":"Fourier" })
+#                  "dihedral_functional":"General0" } )
+#                  "oop_functional":"Fourier",
+#                  "mb_functional":"LJ_Coulomb","R_vdw_on":10.0,"R_vdw_off":15.0 })
+
+Load_UFF(uff)
+verb = 0
+assign_rings = 1
+
+
+
+ntraj = 1
 use_boltz_factor = 0
 T = 300.0
 rnd = Random()
 do_rescaling = 1 
 do_reverse = 1
+nu_therm = 0.001
 rep = 1 # adiabatic
 #ham_indx = 1
 nel = 2
-dt = 20.0
+dt = 20.00
 
+
+Tcool1 = 50; Ncool1 = 2
+Tcool2 = 100; Ncool2 = 10
+Tcool = 150
+Tstart = 250  # 10 fs
+Ttot = 5000   # 5 ps
+istate = 0
 
 #=========== STEP 2:  Create system and load a molecule ================
 SYST = []
 for i in xrange(ntraj):
     syst = System()
 #    Load_Molecule(U, syst, os.getcwd()+"/ch4.pdb", "pdb_1")
-    Load_Molecule(U, syst, os.getcwd()+"/c2h4.pdb", "pdb_1")
+#    Load_Molecule(U, syst, os.getcwd()+"/c2h4.pdb", "pdb_1")
 #    Load_Molecule(U, syst, os.getcwd()+"/bh.pdb", "pdb_1")
+#    Load_Molecule(U, syst, os.getcwd()+"/azobenz_cis.pdb", "pdb_1")
+    Load_Molecule(U, syst, os.getcwd()+"/azobenz_cis.ent", "pdb")
+#    Load_Molecule(U, syst, os.getcwd()+"/azobenz_cis_250.ent", "pdb")
+
+
+    syst.determine_functional_groups(1)  # 
     syst.init_fragments()
     syst.init_fragment_velocities(300.0 )
     # In this case Atoms are Fragments, so:
@@ -90,7 +146,9 @@ for i in xrange(ntraj):
 
 
     for n in xrange(syst.Number_of_atoms):
+        print n, syst.Atoms[n].Atom_RB.rb_p.x, syst.Atoms[n].Atom_RB.rb_p.y, syst.Atoms[n].Atom_RB.rb_p.z
         syst.Atoms[n].Atom_RB.rb_p = syst.Fragments[n].Group_RB.rb_p
+        print n, syst.Atoms[n].Atom_RB.rb_p.x, syst.Atoms[n].Atom_RB.rb_p.y, syst.Atoms[n].Atom_RB.rb_p.z
 
     SYST.append(syst)
 
@@ -105,11 +163,17 @@ nnucl = 3*SYST[0].Number_of_atoms
 HAM = []
 for i in xrange(ntraj):
     ham = Hamiltonian_Atomistic(nel, 3*syst.Number_of_atoms)
+    # MM part
+    ham.set_Hamiltonian_type("MM")
+    atlst1 = range(1,SYST[i].Number_of_atoms+1)
+    ham.set_interactions_for_atoms(SYST[i], atlst1, atlst1, uff, verb, assign_rings)  
+    # QM part
     ham.set_Hamiltonian_type("QM")
+    # Common part
     ham.set_system(SYST[i])
     ham.init_qm_Hamiltonian("control_parameters.dat")
+    ham.show_interactions_statistics()
     ham.set_rep(rep)
-
 
     # Create all excited states
     for e in range(1,nel):
@@ -117,6 +181,16 @@ for i in xrange(ntraj):
     HAM.append(ham)
 
 
+
+therms = []  
+for i in xrange(ntraj):
+    therm = Thermostat({"nu_therm":nu_therm, "NHC_size":2, "Temperature":300.0, "thermostat_type":"Nose-Hoover" }) 
+    therm.set_Nf_t(1);
+    therm.set_Nf_r(0);
+    therm.init_nhc();
+    therms.append(therm)
+
+#sys.exit(0)
 
 MOL = []
 for i in xrange(ntraj):
@@ -127,11 +201,11 @@ for i in xrange(ntraj):
     SYST[i].extract_atomic_mass(mol.mass)
 
     MOL.append(mol)
-
+print "Number of atoms = ", syst.Number_of_atoms
 
 EL = []
 for i in xrange(ntraj):
-    el = Electronic(nel,1)  # start on the 1-st excited state!!!
+    el = Electronic(nel,istate)  # start on the 1-st excited state!!!
     EL.append(el)
 
 
@@ -144,35 +218,39 @@ f.close()
 
 
 # Initialization
+#sys.exit(0)
 Etot = []
 
 for i in xrange(ntraj):
     v = []
     for n in xrange(nnucl):
         v.append(MOL[i].p[n]/MOL[i].mass[n])
+    print v
     HAM[i].set_v( v )
-    #epot = compute_potential_energy(MOL[i], EL[i], HAM[i], 1)  # 0 - MF forces, 1 - FSSH (state-resolved) forces
 
     t2.start()
-
+    #sys.exit(0)
     epot = compute_forces(MOL[i], EL[i], HAM[i], 1) # 0 - MF, 1 - FSSH
-
+#    sys.exit(0)
     print "Time to compute epot = ", t2.stop()
 
-
-#    sys.exit(0)
     ekin = compute_kinetic_energy(MOL[i])
-
     Etot.append(epot+ekin)
 
 
 # Propagation
+#sys.exit(0)
 t1.start()
 
-
 print "Step 2: Propagation"
-for snap in xrange(250):
+for snap in xrange(Ttot):
 
+    if snap==Tstart:
+        for i in xrange(ntraj):
+            EL[i] = Electronic(nel,1)
+            EL[i].istate = 1
+              
+    
     for t in xrange(1):
 
 
@@ -181,73 +259,104 @@ for snap in xrange(250):
             # el-dyn
             EL[i].propagate_electronic(0.5*dt, HAM[i])
 
-            
-            print "start ", MOL[i].q[3], MOL[i].p[3], MOL[i].f[3]
-    
-            # Nuclear dynamics
+
+
+            #******************** Nuclear dynamics *****************************
+
+#            for n in xrange(nnucl):
+#                print "n=", "p[n]=",MOL[i].p[n]
+
+
+            # Thermostat:            
+            if Tcool<snap and snap<Tstart:
+                for n in xrange(nnucl):               
+                    MOL[i].p[n] = MOL[i].p[n] * therms[i].vel_scale(0.5*dt)
+
+
             MOL[i].propagate_p(0.5*dt)            
             MOL[i].propagate_q(dt)
-            #SYST[i].set_atomic_q(MOL[i].q)
+
 
             v = []
             for n in xrange(nnucl):
                 v.append(MOL[i].p[n]/MOL[i].mass[n])
-                print "n=", n, "D(0,1,n)= ", HAM[i].D(0,1,n).real
             HAM[i].set_v(v)
-            print "v= ", v
 
-            t2.start()
-            #epot = compute_potential_energy(MOL[i], EL[i], HAM[i], 1)  # 0 - MF forces, 1 - FSSH
-
-            print "Time to compute epot = ", t2.stop()
 
             t2.start()
             epot = compute_forces(MOL[i], EL[i], HAM[i], 1)
+            ekin = compute_kinetic_energy(MOL[i])
             print "Time to compute forces = ", t2.stop()
+#            for n in xrange(nnucl):
+#                print "n=", "f[n]=",MOL[i].f[n]
 
 
-            for n in xrange(nnucl):
-                print "actual force: n= ", n, "MOL[i].f[n]= ", MOL[i].f[n]
-                         
-                print "all forces: n= \n"
-                for s in xrange(nel):
-                    print "s= ",s, "force(s,n)= ", -HAM[i].dHdq(s,s,n)
+            if Tcool<snap and snap<Tstart:
+                therms[i].propagate_nhc(dt, ekin, 0.0, 0.0)
 
-            print "half ", MOL[i].q[3], MOL[i].p[3], MOL[i].f[3], epot
 
             MOL[i].propagate_p(0.5*dt)
-    
+
+
+            # Thermostat
+            if Tcool<snap and snap<Tstart:
+                for n in xrange(nnucl):               
+                    MOL[i].p[n] = MOL[i].p[n] * therms[i].vel_scale(0.5*dt)
+
+            #******************** Nuclear dynamics ends **************************
+
+
+
+            ########### Annealing ################
+            if(snap<Tcool):
+                status = 0
+                # Choose annealing protocol here
+                if(snap<Tcool1 and snap % Ncool1==0):
+                    status = 1
+                elif(Tcool1<snap and snap<Tcool2 and snap % Ncool2==0):
+                    status = 1
+                
+                if status==1:
+                    for n in xrange(nnucl):               
+                        MOL[i].p[n] = 0.0
+
+
+
             # el-dyn
-            EL[i].propagate_electronic(0.5*dt, HAM[i])
             v = []
             for n in xrange(nnucl):
                 v.append(MOL[i].p[n]/MOL[i].mass[n])
-            HAM[i].set_v(v)            
+            HAM[i].set_v(v)
+    
+            EL[i].propagate_electronic(0.5*dt, HAM[i])
+
             ekin = compute_kinetic_energy(MOL[i])
+
 
             Etot[i] = epot + ekin        
 
-            print "end ", MOL[0].q[3], MOL[0].p[3], MOL[0].f[3], ekin
+
 
 
             # Now, incorporate surface hop
+            if snap >= Tstart:
 
-            t2.start()
+                t2.start()
 
-            g = MATRIX(nel, nel)
-            compute_hopping_probabilities_fssh(MOL[i], EL[i], HAM[i], g, dt, use_boltz_factor, T) 
-            print "Hopping probability matrix = "
-            g.show_matrix()
+                g = MATRIX(nel, nel)
+                compute_hopping_probabilities_fssh(MOL[i], EL[i], HAM[i], g, dt, use_boltz_factor, T) 
+                print "Hopping probability matrix = "
+                g.show_matrix()
 
-            print "Time to compute hopping probabilities = ", t2.stop()
+                print "Time to compute hopping probabilities = ", t2.stop()
 
  
-            t2.start()
+                t2.start()
 
-            ksi = rnd.uniform(0.0, 1.0)
-            EL[i].istate = hop(EL[i].istate, MOL[i], HAM[i], ksi, g, do_rescaling, rep, do_reverse)  # this operation will also rescale velocities, if necessary
+                ksi = rnd.uniform(0.0, 1.0)
+                EL[i].istate = hop(EL[i].istate, MOL[i], HAM[i], ksi, g, do_rescaling, rep, do_reverse)  # this operation will also rescale velocities, if necessary
 
-            print "Time to do actual hops = ", t2.stop()
+                print "Time to do actual hops = ", t2.stop()
 
 
     # Compute statistics for this snap    
@@ -278,7 +387,6 @@ for snap in xrange(250):
         SYST[i].print_xyz("tsh_copy_"+str(i)+".xyz",snap)
 
 
-t1.start()
 print "time propagation is done"      
 print "file is closed"
 print "Time to complete = ", t1.stop(), " sec"
