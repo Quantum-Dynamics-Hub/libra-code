@@ -35,7 +35,8 @@ Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
   ham_indx = ham_indx_;
 
   // 2-level models
-  if(ham_indx==0 || ham_indx==1 || ham_indx==2 || ham_indx==3 || ham_indx==5){  // SAC, DAC, ECWR, Marcus, Rabi2
+  if(ham_indx==0 || ham_indx==1 || ham_indx==2 || ham_indx==3 
+  || ham_indx==5 || ham_indx==6 || ham_indx==7 ){  // SAC, DAC, ECWR, Marcus, Rabi2, sin
     nelec = 2;
     nnucl = 1;
   }
@@ -90,10 +91,10 @@ void Hamiltonian_Model::set_params(vector<double>& params_){
 
   int num_params = 0;
 
-  if(ham_indx==0 || ham_indx==2){ // SAC, ECWR
+  if(ham_indx==0 || ham_indx==2|| ham_indx==7){ // SAC, ECWR, sin
     num_params = 4;
   }
-  else if(ham_indx==5){ // Rabi2
+  else if(ham_indx==5 || ham_indx==6){ // Rabi2
     num_params = 3;
   }
   else if(ham_indx==1 || ham_indx==3){  // DAC, Marcus
@@ -132,6 +133,8 @@ void Hamiltonian_Model::compute_diabatic(){
     else if(ham_indx==3){ Marcus_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params); } // Marcus potential
     else if(ham_indx==4){ SEXCH_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);  } // SEXCH potential
     else if(ham_indx==5){ Rabi2_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);  } // Rabi2 potential
+    else if(ham_indx==6){ ;; }// Nothing here
+    else if(ham_indx==7){ sin_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);  } // sin potential
 
 
     // Set status flag 
@@ -149,6 +152,7 @@ void Hamiltonian_Model::compute_adiabatic(){
 
   if(status_adi == 0){
 
+
     MATRIX* S; S = new MATRIX(nelec, nelec);  S->Init_Unit_Matrix(1.0);
     MATRIX* C; C = new MATRIX(nelec, nelec);  *C = 0.0;
 
@@ -163,9 +167,9 @@ void Hamiltonian_Model::compute_adiabatic(){
 
     }// for n
 
-
     delete S;
     delete C;
+
 
     // Set status flag
     status_adi = 1;

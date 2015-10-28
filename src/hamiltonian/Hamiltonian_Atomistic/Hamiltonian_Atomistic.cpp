@@ -57,7 +57,7 @@ Hamiltonian_Atomistic::Hamiltonian_Atomistic(int _nelec, int _nnucl){
   for(i=0;i<nnucl*nnucl;i++){  d2ham_dia[i] = new MATRIX(nelec,nelec); *d2ham_dia[i] = 0.0;  }
 
 
-  rep = 0; // default representation is diabatic  
+  rep = 1; // default representation is adiabatic  
   status_dia = 0;
   status_adi = 0;
 
@@ -71,7 +71,7 @@ Hamiltonian_Atomistic::Hamiltonian_Atomistic(int _nelec, int _nnucl){
 void Hamiltonian_Atomistic::set_Hamiltonian_type(std::string ham_type){ // libchemobjects::libchemsys::System& syst){
 
   if(ham_type=="MM"){
-    rep = 0;  // diabatic is same as adiabatic
+    rep = 1;  // diabatic is same as adiabatic
 
     if(ham_types[0]==0){    
       mm_ham = new listHamiltonian_MM();
@@ -304,12 +304,15 @@ void Hamiltonian_Atomistic::compute(){
 void Hamiltonian_Atomistic::compute_diabatic(){
   int i;
 
-  cout<<"in Hamiltonian_Atomistic::compute_diabatic()\n";
+  //cout<<"in Hamiltonian_Atomistic::compute_diabatic()\n";
 
   if(status_dia == 0){ // only compute this is the result is not up to date
 
-    // Zero forces
+    // Zero forces   
     _syst->zero_forces_and_torques();
+    *ham_dia = 0.0;
+    for(int n=0;n<nnucl;n++){   *d1ham_dia[n] = 0.0;   }
+     
   
     if(ham_types[0]==1){
 
@@ -322,31 +325,22 @@ void Hamiltonian_Atomistic::compute_diabatic(){
         //cout<<"interactions #"<<i<<", energy = "<<mm_ham->interactions[i].calculate(tmp)<<endl;
       }
 
-      // Energies
-      ham_dia->M[0] = res;
-      ham_adi->M[0] = res;
-
+      for(int st=0;st<nelec;st++){
+        // Energies
+        ham_dia->M[st*nelec+st] += res;
       
-      // First derivatives     
-      //_syst->update_fragment_forces_and_torques();
+        // First derivatives     
+        // But take only atomistic forces at this time
+        for(int i=0;i<_syst->Number_of_atoms;i++){         
+          d1ham_dia[3*i  ]->M[st*nelec+st] -= _syst->Atoms[i].Atom_RB.rb_force.x;
+          d1ham_dia[3*i+1]->M[st*nelec+st] -= _syst->Atoms[i].Atom_RB.rb_force.y;
+          d1ham_dia[3*i+2]->M[st*nelec+st] -= _syst->Atoms[i].Atom_RB.rb_force.z;
+        }
 
-      // But take only atomistic forces at this time
-      for(i=0;i<_syst->Number_of_atoms;i++){         
+        // Second derivatives
+        for(i=0;i<nnucl*nnucl;i++){    d2ham_dia[i]->M[st*nelec+st] = 0.0;      }
 
-        d1ham_dia[3*i  ]->M[0] = -_syst->Atoms[i].Atom_RB.rb_force.x;
-        d1ham_dia[3*i+1]->M[0] = -_syst->Atoms[i].Atom_RB.rb_force.y;
-        d1ham_dia[3*i+2]->M[0] = -_syst->Atoms[i].Atom_RB.rb_force.z;
-
-        d1ham_adi[3*i  ]->M[0] = -_syst->Atoms[i].Atom_RB.rb_force.x;
-        d1ham_adi[3*i+1]->M[0] = -_syst->Atoms[i].Atom_RB.rb_force.y;
-        d1ham_adi[3*i+2]->M[0] = -_syst->Atoms[i].Atom_RB.rb_force.z;
-
-      }
-
-      // Second derivatives
-      for(i=0;i<nnucl*nnucl;i++){ 
-        d2ham_dia[i]->M[0] = 0.0;
-      }
+      } // for i
 
 
     }// MM
@@ -357,23 +351,29 @@ void Hamiltonian_Atomistic::compute_diabatic(){
       
       if(method_option==0){ // Orbital picture
 
+        _syst->zero_forces_and_torques();
         qm_ham->compute_scf(*_syst);
 
         // Energies
-        *ham_dia = 0.0;
+        MATRIX* tmp; tmp = new MATRIX(nelec,nelec);
+        *tmp = 0.0;
 
         if(nelec < qm_ham->el->Fao_alp->num_of_cols){
       
           vector<int> subset(nelec); for(int i=0;i<nelec;i++){ subset[i] = i; }  
-          pop_submatrix(qm_ham->el->Fao_alp, ham_dia, subset);
+          pop_submatrix(qm_ham->el->Fao_alp, tmp, subset);
 
         }
         else{
 
           vector<int> subset(qm_ham->el->Fao_alp->num_of_cols); for(int i=0;i<qm_ham->el->Fao_alp->num_of_cols;i++){ subset[i] = i; }  
-          push_submatrix(ham_dia, qm_ham->el->Fao_alp, subset);
+          push_submatrix(tmp, qm_ham->el->Fao_alp, subset);
 
         }
+
+        *ham_dia += *tmp;
+
+        delete tmp;
 
 
         if(0){
@@ -400,7 +400,7 @@ void Hamiltonian_Atomistic::compute_diabatic(){
 
   }//   status_dia == 0
 
-  cout<<"finishing Hamiltonian_Atomistic::compute_diabatic()\n";
+  //cout<<"finishing Hamiltonian_Atomistic::compute_diabatic()\n";
 
 }
 
@@ -415,60 +415,61 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
 
 //------------------------------------------------------------------
 
-  cout<<"in Hamiltonian_Atomistic::compute_adiabatic()\n";
+  //cout<<"in Hamiltonian_Atomistic::compute_adiabatic()\n";
 
   Timer tim1;
 
   compute_diabatic();
 
+//  exit(0);
+
   if(status_adi == 0){
 
-    if(ham_types[0]==1){
+    // Zero forces   
+    _syst->zero_forces_and_torques();
 
-      MATRIX* S; S = new MATRIX(nelec, nelec);  S->Init_Unit_Matrix(1.0);
-      MATRIX* C; C = new MATRIX(nelec, nelec);  *C = 0.0;
+    *ham_adi = 0.0;
+    for(int n=0;n<nnucl;n++){    *d1ham_adi[n] = 0.0;    }
 
-      // Transformation to adiabatic basis
-      solve_eigen(nelec, ham_dia, S, ham_adi, C);  // H_dia * C = S * C * H_adi
 
-      // Now compute the derivative couplings (off-diagonal, multiplied by energy difference) and adiabatic gradients (diagonal)
-      for(int n=0;n<nnucl;n++){
 
-        *d1ham_adi[n] = (*C).T() * (*d1ham_dia[n]) * (*C);
+    if(ham_types[0]==1){  // MM hamiltonian
 
-      }// for n
+      *ham_adi += *ham_dia;  
+      
+      // Just use diabatic forces
+      for(int n=0;n<nnucl;n++){       *d1ham_adi[n] += *d1ham_dia[n];      }// for n
 
-      delete S;
-      delete C;
 
     }// ham_type[0]==1
 
-    else if(ham_types[1]==1){
+    if(ham_types[1]==1){
 
       int method_option = 1; // 0 - simple case: energies are the orbital energies
                              // 1 - excitonic case: energies are the total energies for different density matrices
 
-      if(method_option==0){
- 
+//      cout<<"*ham_adi= \n"<<*ham_adi<<endl;
+//      exit(0);
 
+      if(method_option==0){
+        // For this case ham_dia and d1ham_dia already contain (possible) contribution from MM part, so
+        // we just substitute the final ham_adi and d1ham_adi with the obtained result, no need to keep track of the 
+        // above adiabatic MM contributions (which is seemingly disregarded, but is actually included via diabatic part)
+ 
         MATRIX* S; S = new MATRIX(nelec, nelec);  *S = 0.0;
         MATRIX* C; C = new MATRIX(nelec, nelec);  *C = 0.0;
 
-        if(nelec < qm_ham->el->Sao->num_of_cols){
-      
+        if(nelec < qm_ham->el->Sao->num_of_cols){      
           vector<int> subset(nelec); for(int i=0;i<nelec;i++){ subset[i] = i; }  
           pop_submatrix(qm_ham->el->Sao, S, subset);
-
         }
         else{
-
           vector<int> subset(qm_ham->el->Sao->num_of_cols); for(int i=0;i<qm_ham->el->Sao->num_of_cols;i++){ subset[i] = i; }  
           push_submatrix(S, qm_ham->el->Sao, subset);
 
           for(int i=qm_ham->el->Sao->num_of_cols;i<nelec;i++){
             S->set(i,i,1.0);
           }
-
         }
       
         // Debug:
@@ -484,13 +485,8 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
         //cout<<"internal E_alp = \n"<<*qm_ham->el->E_alp<<endl;
         //cout<<"adiabatic Ham = \n"<<*ham_adi<<endl;
 
-
         // Now compute the derivative couplings (off-diagonal, multiplied by energy difference) and adiabatic gradients (diagonal)
-        for(int n=0;n<nnucl;n++){
-
-          *d1ham_adi[n] = (*C).T() * (*d1ham_dia[n]) * (*C);
-
-        }// for n
+        for(int n=0;n<nnucl;n++){   *d1ham_adi[n] = (*C).T() * (*d1ham_dia[n]) * (*C);    }// for n
 
         delete S;
         delete C;
@@ -500,18 +496,21 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
       else if(method_option==1){ // This is true case - excitonic one
 
 
-        int x_period = 0; 
-        int y_period = 0; 
-        int z_period = 0; 
+        int x_period = 0;  int y_period = 0;  int z_period = 0; 
         VECTOR t1, t2, t3;
 
         tim1.start();
 
         int i = 0;
+        _syst->zero_forces_and_torques();
+
+//        exit(0);
+
         double E_i = qm_ham->energy_and_forces(*_syst); // ground state energy
         int Norb = qm_ham->el->Norb;
 
-        ham_adi->set(i,i,E_i);
+        // Additive contribution - so to potentially include MM part
+        ham_adi->M[i*nelec+i] += E_i;
 
         cout<<"Ground state calculations, time = "<<tim1.stop()<<endl;
 
@@ -528,15 +527,15 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
 
         for(int n=0;n<_syst->Number_of_atoms;n++){         
 
-
-          d1ham_adi[3*n  ]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.x);
-          d1ham_adi[3*n+1]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.y);
-          d1ham_adi[3*n+2]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.z);
+          // Additive contribution - so to potentially include MM part      
+          d1ham_adi[3*n  ]->M[i*nelec+i] -= _syst->Atoms[n].Atom_RB.rb_force.x;
+          d1ham_adi[3*n+1]->M[i*nelec+i] -= _syst->Atoms[n].Atom_RB.rb_force.y;
+          d1ham_adi[3*n+2]->M[i*nelec+i] -= _syst->Atoms[n].Atom_RB.rb_force.z;
             
           //-------- Also, here we want to compute NACs ----------------
 
           // ----------- Derivative couplings are set once and for all -------------------
-          derivative_couplings(*qm_ham->el, *_syst, qm_ham->basis_ao, qm_ham->prms, qm_ham->modprms,
+          derivative_couplings1(*qm_ham->el, *_syst, qm_ham->basis_ao, qm_ham->prms, qm_ham->modprms,
              qm_ham->atom_to_ao_map, qm_ham->ao_to_atom_map, *qm_ham->el->Hao, *qm_ham->el->Sao,
              qm_ham->el->Norb, n, x_period, y_period, z_period, t1, t2, t3,
              *Dmo_a_x, *Dmo_a_y, *Dmo_a_z, *Dmo_b_x, *Dmo_b_y, *Dmo_b_z
@@ -635,6 +634,7 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
                 else{ ;; } // in this case couplings are zero
 
 
+
                 
                 d1ham_adi[3*n  ]->set(I,J, dc_x);
                 d1ham_adi[3*n+1]->set(I,J, dc_y);
@@ -715,15 +715,19 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
           for(n=0;n<_syst->Number_of_atoms;n++){   _syst->Atoms[n].Atom_RB.rb_force -= G[n];   }
 
           E_i += Enucl;
+
                     
-          ham_adi->set(i,i,E_i);
+
+          // Additive contribution - so to potentially include MM part
+          ham_adi->M[i*nelec+i] += E_i;
 
 
           for(int n=0;n<_syst->Number_of_atoms;n++){         
 
-            d1ham_adi[3*n  ]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.x);
-            d1ham_adi[3*n+1]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.y);
-            d1ham_adi[3*n+2]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.z);
+            // Additive contribution - so to potentially include MM part
+            d1ham_adi[3*n  ]->M[i*nelec+i] -= _syst->Atoms[n].Atom_RB.rb_force.x;
+            d1ham_adi[3*n+1]->M[i*nelec+i] -= _syst->Atoms[n].Atom_RB.rb_force.y;
+            d1ham_adi[3*n+2]->M[i*nelec+i] -= _syst->Atoms[n].Atom_RB.rb_force.z;
 
           }
                   
@@ -755,7 +759,7 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
         // Update Fock
         Hamiltonian_Fock(qm_ham->el, *_syst, qm_ham->basis_ao, qm_ham->prms, qm_ham->modprms, qm_ham->atom_to_ao_map, qm_ham->ao_to_atom_map);
 
-
+        /*
         // Finally, compute energy
         E_i = (energy_elec(qm_ham->el->P_alp, qm_ham->el->Hao, qm_ham->el->Fao_alp) +
                energy_elec(qm_ham->el->P_bet, qm_ham->el->Hao, qm_ham->el->Fao_bet) 
@@ -792,18 +796,22 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
         for(n=0;n<_syst->Number_of_atoms;n++){   _syst->Atoms[n].Atom_RB.rb_force -= G[n];   }
 
         E_i += Enucl;
-                
-        ham_adi->set(i,i,E_i);
+
+
+        // Additive contribution - so to potentially include MM part
+        ham_adi->M[i*nelec+i] += E_i;
 
 
         for(int n=0;n<_syst->Number_of_atoms;n++){     
 
-          d1ham_adi[3*n  ]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.x);
-          d1ham_adi[3*n+1]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.y);
-          d1ham_adi[3*n+2]->set(i,i, -_syst->Atoms[n].Atom_RB.rb_force.z);
+          // Additive contribution - so to potentially include MM part
+          d1ham_adi[3*n  ]->M[i*nelec+i] -= _syst->Atoms[n].Atom_RB.rb_force.x;
+          d1ham_adi[3*n+1]->M[i*nelec+i] -= _syst->Atoms[n].Atom_RB.rb_force.y;
+          d1ham_adi[3*n+2]->M[i*nelec+i] -= _syst->Atoms[n].Atom_RB.rb_force.z;
+
 
         }
-
+        */
         cout<<"Nuclear-nuclear calculations, time = "<<tim1.stop()<<endl;
       
       
@@ -819,7 +827,7 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
   }// status_adi == 0
 
 
-  cout<<"finishing Hamiltonian_Atomistic::compute_adiabatic()\n";
+  //cout<<"finishing Hamiltonian_Atomistic::compute_adiabatic()\n";
   
 }
 

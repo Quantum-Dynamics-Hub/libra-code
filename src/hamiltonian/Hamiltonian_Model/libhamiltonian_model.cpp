@@ -30,6 +30,7 @@ void export_hamiltonian_model_objects(){
   boost::python::list (*expt_Marcus_Ham1)(double,boost::python::list) = &Marcus_Ham;
   boost::python::list (*expt_SEXCH_Ham1)(double,boost::python::list) = &SEXCH_Ham;
   boost::python::list (*expt_Rabi2_Ham1)(double,boost::python::list) = &Rabi2_Ham;
+  boost::python::list (*expt_sin_Ham1)(double,boost::python::list) = &sin_Ham;
 
   def("SAC_Ham", expt_SAC_Ham1);
   def("DAC_Ham", expt_DAC_Ham1);
@@ -37,6 +38,7 @@ void export_hamiltonian_model_objects(){
   def("Marcus_Ham", expt_Marcus_Ham1);
   def("SEXCH_Ham", expt_SEXCH_Ham1);
   def("Rabi2_Ham", expt_Rabi2_Ham1);
+  def("sin_Ham", expt_sin_Ham1);
 
 
 //  void (Hamiltonian_Model::*expt_set_params_v1)(boost::python::list) = &Hamiltonian_Model::set_params;

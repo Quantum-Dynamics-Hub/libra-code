@@ -128,6 +128,8 @@ std::complex<double> Hamiltonian::D(int i,int j,int n){
   else if(rep==1){    // Adiabatic Hamiltonian - real, symmetric => Hermitian
     if(i!=j){  
 
+//      cout<<"in Hamiltonian::D  ... ham_adi = \n"<<*ham_adi<<endl;
+
       double dE = (ham_adi->get(j,j) - ham_adi->get(i,i) );
       if(fabs(dE)<1e-10){ dE = 1e-10 * (dE>0.0 ? 1.0 : -1.0); }
 

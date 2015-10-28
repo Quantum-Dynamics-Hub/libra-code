@@ -19,6 +19,7 @@
 #include "Model_Marcus.h"
 #include "Model_SEXCH.h"
 #include "Model_Rabi2.h"
+#include "Model_sin.h"
 
 
 

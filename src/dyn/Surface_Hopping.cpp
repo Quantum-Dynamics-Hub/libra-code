@@ -300,6 +300,8 @@ void rescale_velocities_adiabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,in
   // Here i - old state, j - new state
   int st;
 
+  cout<<"in rescale_velocities_adiabatic\n";
+
   if(new_st!=old_st){
 
     int final_st = old_st;  // no hopping by default
@@ -311,12 +313,14 @@ void rescale_velocities_adiabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,in
     for(int k=0;k<mol->nnucl;k++){
 
       double D = ham->D(old_st,new_st,k).real(); // derivative coupling w.r.t. nuclear DOF k
+      cout<<"D= "<<D<<endl;
 
       a_ij += 0.5*(D*D / mol->mass[k]); 
       b_ij += (D*mol->p[k])/mol->mass[k];
     }
     double det = b_ij*b_ij + 4.0*a_ij*(ham->Hvib(old_st,old_st).real() - ham->Hvib(new_st,new_st).real());
 
+    cout<<"det= "<<det<<" a_ij= "<<a_ij<<"  b_ij= "<<b_ij<<endl;
 
     // Calculate the scaling factor and new state
     double gamma_ij = 0.0;
@@ -330,6 +334,8 @@ void rescale_velocities_adiabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,in
 
     }
     else{
+      cout<<"gamma_ij= "<<gamma_ij<<endl;
+
       if(b_ij<0){ gamma_ij = 0.5*(b_ij + sqrt(det))/a_ij; }
       else{       gamma_ij = 0.5*(b_ij - sqrt(det))/a_ij; }
       final_st = new_st;
@@ -338,6 +344,7 @@ void rescale_velocities_adiabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,in
     //Rescale velocities and do the hop
     for(int k=0;k<mol->nnucl;k++){ 
       double D = ham->D(old_st,new_st,k).real(); 
+      cout<<"D= "<<D<<endl;
       mol->p[k] = mol->p[k] - gamma_ij * D; 
     }
 

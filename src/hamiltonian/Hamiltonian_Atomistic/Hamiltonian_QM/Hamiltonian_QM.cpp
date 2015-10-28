@@ -210,6 +210,157 @@ void derivative_couplings
 
 
 
+void derivative_couplings1
+( Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+  Control_Parameters& prms,Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  MATRIX& Hao, MATRIX& Sao,   int Norb, int at_indx, 
+  int x_period, int y_period, int z_period, VECTOR& t1, VECTOR& t2, VECTOR& t3,
+  MATRIX& Dmo_a_x, MATRIX& Dmo_a_y, MATRIX& Dmo_a_z,
+  MATRIX& Dmo_b_x, MATRIX& Dmo_b_y, MATRIX& Dmo_b_z,
+  MATRIX& dEa_dx,  MATRIX& dEa_dy,  MATRIX& dEa_dz,
+  MATRIX& dEb_dx,  MATRIX& dEb_dy,  MATRIX& dEb_dz
+){
+
+/*******************************************************
+ This is simpler version of the derivative couplings:
+
+ From the derivation of Hellman-Feynman theorem:
+
+ <i| dH/dR |j> = dE_i/dR * delta_ij - (E_i - E_j)*D_ij
+
+ where D_ij = <i| dj/dR > - derivative coupling in MO basis
+
+ <i| dH/dR |j> - is also in MO basis, but can be transformed from
+ the AO basis
+
+*******************************************************/
+
+
+  int i,j;
+    
+  MATRIX* dHao_dx; dHao_dx = new MATRIX(Norb, Norb);
+  MATRIX* dHao_dy; dHao_dy = new MATRIX(Norb, Norb);
+  MATRIX* dHao_dz; dHao_dz = new MATRIX(Norb, Norb);
+
+  MATRIX* dSao_dx; dSao_dx = new MATRIX(Norb, Norb);
+  MATRIX* dSao_dy; dSao_dy = new MATRIX(Norb, Norb);
+  MATRIX* dSao_dz; dSao_dz = new MATRIX(Norb, Norb);
+
+  MATRIX* dFao_alp_dx; dFao_alp_dx = new MATRIX(Norb, Norb);
+  MATRIX* dFao_alp_dy; dFao_alp_dy = new MATRIX(Norb, Norb);
+  MATRIX* dFao_alp_dz; dFao_alp_dz = new MATRIX(Norb, Norb);
+
+  MATRIX* dFao_bet_dx; dFao_bet_dx = new MATRIX(Norb, Norb);
+  MATRIX* dFao_bet_dy; dFao_bet_dy = new MATRIX(Norb, Norb);
+  MATRIX* dFao_bet_dz; dFao_bet_dz = new MATRIX(Norb, Norb);
+
+
+  int DF = 0;
+
+  Hamiltonian_core_deriv_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao, Sao, DF, at_indx, *dHao_dx, *dHao_dy, *dHao_dz, *dSao_dx, *dSao_dy, *dSao_dz );
+  Hamiltonian_Fock_derivs_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, at_indx, *dHao_dx, *dHao_dy, *dHao_dz, *dFao_alp_dx, *dFao_alp_dy, *dFao_alp_dz, *dFao_bet_dx, *dFao_bet_dy, *dFao_bet_dz);
+
+// Don't need this
+//  update_derivative_coupling_matrix(x_period, y_period, z_period, t1, t2, t3, atom_to_ao_map, ao_to_atom_map, basis_ao, at_indx, *Dao_x, *Dao_y, *Dao_z);
+
+
+  MATRIX* A_ax; A_ax = new MATRIX(Norb,Norb);
+  MATRIX* A_ay; A_ay = new MATRIX(Norb,Norb);
+  MATRIX* A_az; A_az = new MATRIX(Norb,Norb);
+  MATRIX* A_bx; A_bx = new MATRIX(Norb,Norb);
+  MATRIX* A_by; A_by = new MATRIX(Norb,Norb);
+  MATRIX* A_bz; A_bz = new MATRIX(Norb,Norb);
+
+  // From AO basis to MO basis
+  *A_ax = (*el.C_alp).T() * (*dFao_alp_dx) * (*el.C_alp);
+  *A_ay = (*el.C_alp).T() * (*dFao_alp_dy) * (*el.C_alp);
+  *A_az = (*el.C_alp).T() * (*dFao_alp_dz) * (*el.C_alp);
+  *A_bx = (*el.C_bet).T() * (*dFao_bet_dx) * (*el.C_bet);
+  *A_by = (*el.C_bet).T() * (*dFao_bet_dy) * (*el.C_bet);
+  *A_bz = (*el.C_bet).T() * (*dFao_bet_dz) * (*el.C_bet);
+
+
+  for(i=0;i<Norb;i++){
+    dEa_dx.set(i,i,A_ax->get(i,i));
+    dEa_dy.set(i,i,A_ay->get(i,i));
+    dEa_dz.set(i,i,A_az->get(i,i));
+    dEb_dx.set(i,i,A_bx->get(i,i));
+    dEb_dy.set(i,i,A_by->get(i,i));
+    dEb_dz.set(i,i,A_bz->get(i,i));
+
+    for(j=0;j<Norb;j++){
+      if(i!=j){
+        double dEa = ( el.E_alp->get(j,j)-el.E_alp->get(i,i) );
+        if(fabs(dEa)>1e-12){
+          double nac;
+          nac = A_ax->get(i,j)/dEa; if(fabs(nac)>1.0){ nac /= fabs(nac); }     Dmo_a_x.set(i,j,nac);
+          nac = A_ay->get(i,j)/dEa; if(fabs(nac)>1.0){ nac /= fabs(nac); }     Dmo_a_y.set(i,j,nac);
+          nac = A_az->get(i,j)/dEa; if(fabs(nac)>1.0){ nac /= fabs(nac); }     Dmo_a_z.set(i,j,nac);
+        }
+
+        double dEb = ( el.E_bet->get(j,j)-el.E_bet->get(i,i) );
+        if(fabs(dEb)>1e-12){
+          double nac;
+          nac = A_bx->get(i,j)/dEb; if(fabs(nac)>1.0){ nac /= fabs(nac); }     Dmo_b_x.set(i,j,nac);
+          nac = A_by->get(i,j)/dEb; if(fabs(nac)>1.0){ nac /= fabs(nac); }     Dmo_b_y.set(i,j,nac);
+          nac = A_bz->get(i,j)/dEb; if(fabs(nac)>1.0){ nac /= fabs(nac); }     Dmo_b_z.set(i,j,nac);
+        }
+      }// i!=j
+      else{ // i==j - diagonal terms
+          Dmo_a_x.set(i,j,0.0);
+          Dmo_a_y.set(i,j,0.0);
+          Dmo_a_z.set(i,j,0.0);
+          Dmo_b_x.set(i,j,0.0);
+          Dmo_b_y.set(i,j,0.0);
+          Dmo_b_z.set(i,j,0.0);
+      }
+    }// for j
+  }// for i
+
+
+  //================= Clean up - delete temporary memory blocks ==============
+  delete dHao_dx;  delete dHao_dy;  delete dHao_dz;
+  delete dSao_dx;  delete dSao_dy;  delete dSao_dz;
+  delete dFao_alp_dx;  delete dFao_alp_dy;  delete dFao_alp_dz;
+  delete dFao_bet_dx;  delete dFao_bet_dy;  delete dFao_bet_dz;
+  delete A_ax;  delete A_ay;  delete A_az;
+  delete A_bx;  delete A_by;  delete A_bz;
+
+
+}
+
+void derivative_couplings1
+( Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+  Control_Parameters& prms,Model_Parameters& modprms,
+  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+  MATRIX& Hao, MATRIX& Sao,   int Norb, int at_indx, 
+  int x_period, int y_period, int z_period, VECTOR& t1, VECTOR& t2, VECTOR& t3,
+  MATRIX& Dmo_a_x, MATRIX& Dmo_a_y, MATRIX& Dmo_a_z,
+  MATRIX& Dmo_b_x, MATRIX& Dmo_b_y, MATRIX& Dmo_b_z
+){
+
+  MATRIX* dEa_dx; dEa_dx = new MATRIX(Norb,Norb);
+  MATRIX* dEa_dy; dEa_dy = new MATRIX(Norb,Norb);
+  MATRIX* dEa_dz; dEa_dz = new MATRIX(Norb,Norb);
+  MATRIX* dEb_dx; dEb_dx = new MATRIX(Norb,Norb);
+  MATRIX* dEb_dy; dEb_dy = new MATRIX(Norb,Norb);
+  MATRIX* dEb_dz; dEb_dz = new MATRIX(Norb,Norb);
+
+  derivative_couplings1(el, syst, basis_ao,
+  prms,modprms,atom_to_ao_map,ao_to_atom_map,
+  Hao, Sao, Norb, at_indx, x_period, y_period, z_period, t1, t2, t3,
+  Dmo_a_x, Dmo_a_y, Dmo_a_z,  Dmo_b_x, Dmo_b_y, Dmo_b_z,
+  *dEa_dx,  *dEa_dy,  *dEa_dz,  *dEb_dx,  *dEb_dy,  *dEb_dz);
+
+
+  delete dEa_dx;  delete dEa_dy;  delete dEa_dz;
+  delete dEb_dx;  delete dEb_dy;  delete dEb_dz;
+
+
+}
+
+
 
 
 VECTOR force
@@ -242,18 +393,12 @@ VECTOR force
   MATRIX* dFao_bet_dz; dFao_bet_dz = new MATRIX(Norb, Norb);
 
   int DF = 0;
-//  tim1.start();
 
   Hamiltonian_core_deriv_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao, Sao, DF, at_indx, *dHao_dx, *dHao_dy, *dHao_dz, *dSao_dx, *dSao_dy, *dSao_dz );
-//  cout<<"Time for core derivatives = "<<tim1.stop()<<endl;
-
-//  tim1.start();
   Hamiltonian_Fock_derivs_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, at_indx, *dHao_dx, *dHao_dy, *dHao_dz, *dFao_alp_dx, *dFao_alp_dy, *dFao_alp_dz, *dFao_bet_dx, *dFao_bet_dy, *dFao_bet_dz);
-//  cout<<"Time for Fock derivatives = "<<tim1.stop()<<endl;
 
 
   VECTOR F; F = 0.0;
-//  tim1.start();
   // But this one seems to work pretty well - at least for INDO!
   F.x  = (  (*el.P_alp) * (*dHao_dx + *dFao_alp_dx)  ).tr();
   F.x += (  (*el.P_bet) * (*dHao_dx + *dFao_bet_dx)  ).tr();
@@ -266,8 +411,6 @@ VECTOR force
   F.z  = (  (*el.P_alp) * (*dHao_dz + *dFao_alp_dz)  ).tr();
   F.z += (  (*el.P_bet) * (*dHao_dz + *dFao_bet_dz)  ).tr();
   F.z  = -0.5 * F.z;
-
-//  cout<<"Time for matrix multiplication = "<<tim1.stop()<<endl;
 
 
 
