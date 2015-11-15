@@ -895,6 +895,7 @@ void MATRIX::skew1(VECTOR v) {
 
 }
 
+/*
 void MATRIX::exp(MATRIX &m) {
     for(int i=0;i<num_of_elems;i++){
                 M[i] = 0.0;
@@ -926,37 +927,37 @@ void MATRIX::exp(MATRIX &m) {
         exit(0);
     }
 }
-void MATRIX::exp(const MATRIX &m) {
-    for(int i=0;i<num_of_elems;i++){
-                M[i] = 0.0;
-        }
-        for(int i=0;i<num_of_rows;i++){ M[i * num_of_cols + i] = 1.0;}
+*/
 
-    MATRIX &a=*this;
-    MATRIX mul(num_of_rows,num_of_cols);
-    mul = m;
-        //cout<<(this)<<endl;
-        //cout<<mul.M[0]<<"  "<<mul.M[1]<<"  "<<mul.M[2]<<endl;
-        //cout<<mul.M[3]<<"  "<<mul.M[4]<<"  "<<mul.M[5]<<endl;
-        //cout<<mul.M[6]<<"  "<<mul.M[7]<<"  "<<mul.M[8]<<endl;
-    double sum;
-    int i,j;
-    for (i = 1; i < 40; i++) {
-        mul = mul/double(i);
-        a = a + mul;
-        mul = mul * m;
-        sum = 0.0;
-        for (j = 0; j < num_of_elems; j++) {
-            sum += fabs(mul.M[j]);
-        }
-        if (sum < 1e-16) break;
-    }
-    if (i > 35) {
-        cout << "ERROR: exponent didn't converge" << endl;
-                cout << "sum = "<<sum;
-        exit(0);
-    }
+void MATRIX::exp(MATRIX& m) {
+
+  int i,j;
+
+  for(i=0;i<num_of_elems;i++){ M[i] = 0.0; }
+  for(i=0;i<num_of_rows;i++){ M[i * num_of_cols + i] = 1.0;}
+
+  MATRIX &a=*this;
+  MATRIX mul(num_of_rows,num_of_cols);
+  mul = m;
+
+  double sum;
+  for (i = 1; i < 40; i++) {
+    mul = mul/double(i);
+    a = a + mul;
+    mul = mul * m;
+    sum = 0.0;
+    for (j = 0; j < num_of_elems; j++) {  sum += fabs(mul.M[j]);   }
+    if (sum < 1e-16) break;
+  }
+
+  if (i > 35) {
+    cout << "ERROR: exponent didn't converge" << endl;
+    cout << "sum = "<<sum;
+    exit(0);
+  }
+
 }
+
 void MATRIX::FindMaxNondiagonalElement(int& row,int& col,double& value){
     int k=0;
     double elem, max_elem;
@@ -1158,6 +1159,21 @@ double MATRIX::dot_product(MATRIX* B){
 
   return res;
   
+}
+
+MATRIX MATRIX::col(int i){
+// takes given column and makes it n x 1 MATRIX
+  MATRIX tmp(num_of_rows,1);
+  for(int j=0;j<num_of_rows;j++){ tmp.M[j] = M[j*num_of_cols+i]; }
+  return tmp;
+}
+
+
+MATRIX MATRIX::row(int i){
+// takes given row and makes it 1 x n MATRIX
+  MATRIX tmp(1,num_of_cols);
+  for(int j=0;j<num_of_cols;j++){ tmp.M[j] = M[i*num_of_cols+j]; }
+  return tmp;
 }
 
 

@@ -33,8 +33,13 @@ void export_mEigen_objects(){
 
   void (*expt_solve_eigen_v1)
   (int Norb, MATRIX& H, MATRIX& S, MATRIX& E, MATRIX& C) = &solve_eigen;
+  void (*expt_solve_eigen_v2)
+  (int Norb, MATRIX& H, MATRIX& S, CMATRIX& E, CMATRIX& C) = &solve_eigen;
+
+
 
   def("solve_eigen", expt_solve_eigen_v1);
+  def("solve_eigen", expt_solve_eigen_v2);
 
 }
 

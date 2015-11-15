@@ -85,7 +85,7 @@ double (MATRIX::*expt_dot_product_v2)(MATRIX&)    = &MATRIX::dot_product;
 void   (MATRIX::*expt_show_matrix_v1)() = &MATRIX::show_matrix;
 void   (MATRIX::*expt_show_matrix_v2)(char*) = &MATRIX::show_matrix;
 void   (MATRIX::*expt_exp_v1)(MATRIX&) = &MATRIX::exp;
-void   (MATRIX::*expt_exp_v2)(const MATRIX&) = &MATRIX::exp;
+//void   (MATRIX::*expt_exp_v2)(const MATRIX&) = &MATRIX::exp;
 void (MATRIX::*expt_JACOBY_EIGEN_v1)(MATRIX&, MATRIX&) = &MATRIX::JACOBY_EIGEN;
 void (MATRIX::*expt_JACOBY_EIGEN_v2)(MATRIX&, MATRIX&,double) = &MATRIX::JACOBY_EIGEN;
 
@@ -192,6 +192,8 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
       .def("Inverse",expt_Inverse_v2)    
       .def("tensor_product",&MATRIX::tensor_product)
       .def("dot_product",expt_dot_product_v2)
+      .def("col", &MATRIX::col)     // return given column of the matrix 
+      .def("row", &MATRIX::row)     // return given row of the matrix 
 
       .def("show_matrix", expt_show_matrix_v1)
       .def("show_matrix", expt_show_matrix_v2)
@@ -200,7 +202,7 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
       .def("skew",&MATRIX::skew)
       .def("skew1",&MATRIX::skew1)
       .def("exp", expt_exp_v1)
-      .def("exp", expt_exp_v2)
+//      .def("exp", expt_exp_v2)
       .def("JACOBY_EIGEN", expt_JACOBY_EIGEN_v1)
       .def("JACOBY_EIGEN", expt_JACOBY_EIGEN_v2)
 
@@ -271,6 +273,8 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
 
   class_<CMATRIX>("CMATRIX",init<>())      
       .def(init<int,int>())
+      .def(init<MATRIX&>())
+      .def(init<MATRIX&,MATRIX&>())
       .def(init<const CMATRIX&>())
       .def("__copy__", &generic__copy__<CMATRIX>)
       .def("__deepcopy__", &generic__deepcopy__<CMATRIX>)
@@ -290,7 +294,7 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
       .def(self*double())
       .def(double()*self)
 
-      .def("show", &CMATRIX::show)
+      .def("show_matrix", &CMATRIX::show_matrix)
       .def("conj", &CMATRIX::conj)   // return complex conjugate matrix
       .def("T", &CMATRIX::T)         // return transposed matrix
       .def("H", &CMATRIX::H)         // return Hermitian-conjugate matrix
@@ -314,6 +318,8 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
       .def("inverse",        &CMATRIX::inverse)        // interface
       .def("direct_inverse", &CMATRIX::direct_inverse)
 
+      .def("bin_dump",&CMATRIX::bin_dump)
+      .def("bin_load",&CMATRIX::bin_load)
 
 
 /*

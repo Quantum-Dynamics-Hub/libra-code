@@ -67,6 +67,47 @@ CMATRIX::CMATRIX(vector<vector<double> >& re_part,vector<vector<double> >& im_pa
  
 }
 
+CMATRIX::CMATRIX(MATRIX& re_part){
+
+  n_rows = re_part.num_of_rows;
+  n_cols = re_part.num_of_cols;
+  n_elts = n_rows * n_cols;
+
+  M = new complex<double>[n_elts];
+  int n = 0;
+  for(int i=0;i<n_rows;i++){ 
+    for(int j=0;j<n_cols;j++){
+      M[n] = complex<double>(re_part.get(i,j), 0.0); n++;
+    }
+  }
+
+
+}
+
+CMATRIX::CMATRIX(MATRIX& re_part,MATRIX& im_part){
+
+  if(re_part.num_of_rows!=im_part.num_of_rows){ 
+    cout<<"Error in CMATRIX constructor: num_of_rows of the real and imaginary matrices are not equal\n"; exit(0); 
+  }
+  if(re_part.num_of_cols!=im_part.num_of_cols){
+    cout<<"Error in CMATRIX constructor: num_of_cols of the real and imaginary arrays are not equal\n"; exit(0);
+  }
+  n_rows = re_part.num_of_rows;
+  n_cols = re_part.num_of_cols;
+  n_elts = n_rows * n_cols;
+
+  M = new complex<double>[n_elts];
+  int n = 0;
+  for(int i=0;i<n_rows;i++){ 
+    for(int j=0;j<n_cols;j++){
+      M[n] = complex<double>(re_part.get(i,j),im_part.get(i,j)); n++;
+    }
+  }
+
+}
+
+
+
 
 CMATRIX::CMATRIX(const CMATRIX& obj){
   n_rows = obj.n_rows;
@@ -335,7 +376,7 @@ istream& operator>>(istream& strm,CMATRIX &ob){
   return strm;
 }
 
-void CMATRIX::show(){
+void CMATRIX::show_matrix(){
 
   std::cout.setf(ios::showpoint);
   for(int i=0;i<n_rows;i++){
@@ -721,6 +762,34 @@ void CMATRIX::QR1(CMATRIX& w,CMATRIX& R){
 
 
 }
+
+
+void CMATRIX::bin_dump(std::string filename){
+
+  std::ofstream f(filename.c_str(), ios::out|ios::binary);
+
+  if(f.is_open()){
+    f.seekp(0);
+    f.write((char*)M, sizeof(complex<double>)*n_elts);
+    f.close();    
+  }
+  else{  cout<<"File "<<filename<<" cann't be open\n"; }
+}
+ 
+void CMATRIX::bin_load(std::string filename){
+
+  std::ifstream f(filename.c_str(), ios::in|ios::binary);
+
+  if(f.is_open()){
+    f.seekg(0);
+    f.read((char *)M, sizeof(complex<double>)*n_elts);
+    f.close();   
+  }
+  else{  cout<<"File "<<filename<<" cann't be open\n"; }
+
+
+}
+
 
 
 void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval){

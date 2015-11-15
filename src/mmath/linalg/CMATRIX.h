@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <iomanip>
+#include "MATRIX.h"
 
 using namespace std;
 
@@ -48,6 +49,8 @@ public:
     for(int i=0;i<n_elts;i++){  M[i] = std::complex<double>(0.0,0.0); }
   }
   CMATRIX(vector<vector<double> >& re_part,vector<vector<double> >& im_part);
+  CMATRIX(MATRIX& re_part);
+  CMATRIX(MATRIX& re_part,MATRIX& im_part);
  
   // Copy constructor
   CMATRIX(const CMATRIX& ob);  
@@ -86,7 +89,7 @@ public:
   friend istream& operator>>(istream& strm,CMATRIX &ob);
 
   // Basic printing
-  void show();
+  void show_matrix();
 
   // Some basic functions
   CMATRIX conj();
@@ -120,6 +123,11 @@ public:
   friend CMATRIX sin(CMATRIX& m1,complex<double> scl,double eps);
   friend CMATRIX cos(CMATRIX& m1,complex<double> scl,double eps);
   friend CMATRIX pow(CMATRIX& m1,double scl,double eps);
+
+  // Binary output/input
+  void bin_dump(std::string filename);
+  void bin_load(std::string filename);
+
 
 };
 

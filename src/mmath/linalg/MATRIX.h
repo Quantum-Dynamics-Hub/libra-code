@@ -114,6 +114,10 @@ public:
 
   double dot_product(MATRIX&);
   double dot_product(MATRIX*);
+
+  MATRIX col(int); // takes given column and makes it n x 1 MATRIX
+  MATRIX row(int); // takes given row and makes it 1 x n MATRIX
+
 /*
   inline void tensor_product(VECTOR& v1,VECTOR& v2){
     M[0] = v1.x*v2.x;   M[1] = v1.x*v2.y;  M[2] = v1.x*v2.z;
@@ -156,7 +160,7 @@ public:
   void skew(VECTOR);
   void skew1(VECTOR);
   void exp(MATRIX&);
-  void exp(const MATRIX&);
+//  void exp(const MATRIX&);
   void JACOBY_EIGEN(MATRIX&, MATRIX&);
   void JACOBY_EIGEN(MATRIX&, MATRIX&,double);
 
