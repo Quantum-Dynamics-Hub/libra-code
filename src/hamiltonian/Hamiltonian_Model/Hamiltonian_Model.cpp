@@ -106,9 +106,12 @@ void Hamiltonian_Model::set_params(vector<double>& params_){
 
   params = vector<double>(num_params, 0.0);
 
+//  cout<<"In Hamiltonian_Mode::set_params\n";
   // Now copy input params:
   for(int i=0;i<params_.size() && i<num_params; i++){
     params[i] = params_[i];
+
+//    cout<<"params["<<i<<"] = "<< params_[i]<<endl;
   }
 
   // Since the parameters have changed - we need to recompute everything

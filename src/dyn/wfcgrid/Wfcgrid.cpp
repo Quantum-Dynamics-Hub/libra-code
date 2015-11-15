@@ -336,7 +336,7 @@ double Wfcgrid::print_populations_1D(string filename,int snap){
   for(int nst=0;nst<nstates;nst++){
     out<<"  P("<<nst<<")= "<<setprecision(5)<<Pop[nst];
   }
-  out<<" P_total(active)= "<<Pop_tot<<" | ";
+  out<<" P_total(active)= "<<Pop_tot<<" | \n";
   Pop_tot_active = Pop_tot;
 
 
