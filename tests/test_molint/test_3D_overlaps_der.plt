@@ -6,7 +6,7 @@ set rmargin at screen 0.95
 set bmargin at screen 0.15
 set tmargin at screen 0.95
 
-#set xtics 1000.0
+set xtics 1.0
 #set xrange [0.0:4.5]
 #set yrange [-40:40]
 #set key spacing 1.0 font ",24"
@@ -32,21 +32,38 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 
 
 
-set xlabel "x" offset 0.0, 0.5
-set ylabel "3D overlaps" offset 1.5, 0.0 
+set xlabel "x, a.u." offset 0.0, 0.5
+set ylabel "3D overlaps derivatives" offset 1.5, 0.0 
+
+
 
 # Normalized overlaps
+set xrange [0.0:5.0]
 set output "3D_overlaps_der_compare1_x.png"
+plot "3D_overlaps_der_anal_x.txt" using 1:2  w l   ls 11  lw 5  notitle "<s|s>",\
+     "3D_overlaps_der_num_x.txt"  using 1:2  w p   ls 11  lw 5  notitle "<s|s>",\
+     "3D_overlaps_der_anal_x.txt" using 1:3  w l   ls 12  lw 5  notitle "<s|p_x>",\
+     "3D_overlaps_der_num_x.txt"  using 1:3  w p   ls 12  lw 5  notitle "<s|p_x>",\
+     "3D_overlaps_der_anal_x.txt" using 1:4  w l   ls 13  lw 5  notitle "<s|p_y>",\
+     "3D_overlaps_der_num_x.txt"  using 1:4  w p   ls 13  lw 5  notitle "<s|p_y>",\
+     "3D_overlaps_der_anal_x.txt" using 1:11 w l   ls 41  lw 5  notitle "<p_x|d_{xy}>",\
+     "3D_overlaps_der_num_x.txt"  using 1:11 w p   ls 41  lw 5  notitle "<p_x|d_{xy}>",\
+     "3D_overlaps_der_anal_x.txt" using 1:9  w l   ls 31  lw 5  notitle "<s|d_{z^2}>",\
+     "3D_overlaps_der_num_x.txt"  using 1:9  w p   ls 31  lw 5  notitle "<s|d_{z^2}>"
+
+set xrange [0.0:10.0]
+set output "3D_overlaps_der_compare1_x_title.png"
 plot "3D_overlaps_der_anal_x.txt" using 1:2  w l   ls 11  lw 5  t "<s|s>",\
      "3D_overlaps_der_num_x.txt"  using 1:2  w p   ls 11  lw 5  t "<s|s>",\
-     "3D_overlaps_der_anal_x.txt" using 1:3  w l   ls 12  lw 5  t "<s|p>",\
-     "3D_overlaps_der_num_x.txt"  using 1:3  w p   ls 12  lw 5  t "<s|p>",\
-     "3D_overlaps_der_anal_x.txt" using 1:4  w l   ls 13  lw 5  t "<s|d>",\
-     "3D_overlaps_der_num_x.txt"  using 1:4  w p   ls 13  lw 5  t "<s|d>",\
-     "3D_overlaps_der_anal_x.txt" using 1:11 w l   ls 41  lw 5  t "<f|f>",\
-     "3D_overlaps_der_num_x.txt"  using 1:11 w p   ls 41  lw 5  t "<f|f>",\
-     "3D_overlaps_der_anal_x.txt" using 1:9  w l   ls 31  lw 5  t "<d|d>",\
-     "3D_overlaps_der_num_x.txt"  using 1:9  w p   ls 31  lw 5  t "<d|d>"
+     "3D_overlaps_der_anal_x.txt" using 1:3  w l   ls 12  lw 5  t "<s|p_x>",\
+     "3D_overlaps_der_num_x.txt"  using 1:3  w p   ls 12  lw 5  t "<s|p_x>",\
+     "3D_overlaps_der_anal_x.txt" using 1:4  w l   ls 13  lw 5  t "<s|p_y>",\
+     "3D_overlaps_der_num_x.txt"  using 1:4  w p   ls 13  lw 5  t "<s|p_y>",\
+     "3D_overlaps_der_anal_x.txt" using 1:11 w l   ls 41  lw 5  t "<p_x|d_{xy}>",\
+     "3D_overlaps_der_num_x.txt"  using 1:11 w p   ls 41  lw 5  t "<p_x|d_{xy}>",\
+     "3D_overlaps_der_anal_x.txt" using 1:9  w l   ls 31  lw 5  t "<s|d_{z^2}>",\
+     "3D_overlaps_der_num_x.txt"  using 1:9  w p   ls 31  lw 5  t "<s|d_{z^2}>"
+
 
 
 

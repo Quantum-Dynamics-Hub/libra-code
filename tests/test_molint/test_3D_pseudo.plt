@@ -6,7 +6,7 @@ set rmargin at screen 0.95
 set bmargin at screen 0.15
 set tmargin at screen 0.95
 
-#set xtics 1000.0
+set xtics 1.0
 #set xrange [0.0:4.5]
 #set yrange [-40:40]
 #set key spacing 1.0 font ",24"
@@ -32,14 +32,13 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 
 
 
-set xlabel "x" offset 0.0, 0.5
-set ylabel "1D overlaps" offset 1.5, 0.0 
-
+set xlabel "x, a.u." offset 0.0, 0.5
+set ylabel "Pseudopotential" offset 1.5, 0.0 
 
 set output "3D_pseudopot02.png"
-plot "3D_pseudopot02.txt" using 1:2  w l  ls 11  lw 5  t "<s||s>",\
-     "3D_pseudopot02.txt" using 1:3  w l  ls 12  lw 5  t "<s||px>",\
-     "3D_pseudopot02.txt" using 1:4  w l  ls 13  lw 5  t "<s||py>",\
-     "3D_pseudopot02.txt" using 1:5  w l  ls 14  lw 5  t "<px||px>",\
-     "3D_pseudopot02.txt" using 1:6  w l  ls 21  lw 5  t "<px||py>"
+plot "3D_pseudopot02.txt" using 1:2  w l  ls 11  lw 5  t "<s|V|s>",\
+     "3D_pseudopot02.txt" using 1:3  w l  ls 12  lw 5  t "<s|V|px>",\
+     "3D_pseudopot02.txt" using 1:4  w l  ls 13  lw 5  t "<s|V|py>",\
+     "3D_pseudopot02.txt" using 1:5  w l  ls 14  lw 5  t "<px|V|px>",\
+     "3D_pseudopot02.txt" using 1:6  w l  ls 21  lw 5  t "<px|V|py>"
 
