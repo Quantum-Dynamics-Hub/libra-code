@@ -27,11 +27,14 @@ void sin_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& param
 
   // Default parameters
   double A = -0.010;  double B = 0.010;
-  double C = 0.005;   double L = 1.0;
+  double C = 0.005;   double D = 0.001;
+  double L = 1.0;
 
-  if(params.size()>=4){
+
+  if(params.size()>=5){
     A = params[0];    B = params[1];
-    C = params[2];    L = params[3];
+    C = params[2];    D = params[3];
+    L = params[4];
   }
 
   // H00
@@ -43,12 +46,18 @@ void sin_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& param
   H->M[3] = B; 
   dH->M[3] = 0.0;
   d2H->M[3] = 0.0;
-  
+
   // H01 and H10
+  H->M[1] = H->M[2] = C;
+  dH->M[1] = dH->M[2] = 0.0;
+  d2H->M[1] = d2H->M[2] = 0.0;
+
+  
+  // Now the correction to E1
   double om = 2.0*M_PI/L;
-  H->M[1] = H->M[2] = C*sin(om*x);
-  dH->M[1] = dH->M[2] = om*C*cos(om*x);
-  d2H->M[1] = d2H->M[2] = -om*om*H->M[1];
+  H->M[3] += D*sin(om*x);
+  dH->M[3] += om*D*cos(om*x);
+  d2H->M[3] += -om*om*D*sin(om*x);
 
 
 }

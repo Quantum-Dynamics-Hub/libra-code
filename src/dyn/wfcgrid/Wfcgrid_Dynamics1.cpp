@@ -104,77 +104,34 @@ void Wfcgrid::update_propagator_1D(double dt,double m0){
     // Transformation to adiabatic basis
     solve_eigen(nstates, diaH, S, adiH, C);  // diaH * C = S * C * adiH
 
-
-
-    // Now compute sin and cos matrixes: diagonal
+    *cs = 0.0;   *si = 0.0;
     for(int nst=0;nst<nstates;nst++){  
-      cs->M[nst*nstates+nst] = std::cos(dt*adiH->M[nst*nstates+nst]);
-      si->M[nst*nstates+nst] = std::sin(dt*adiH->M[nst*nstates+nst]);
+      cs->M[nst*nstates+nst] = std::cos(-dt*adiH->M[nst*nstates+nst]);
+      si->M[nst*nstates+nst] = std::sin(-dt*adiH->M[nst*nstates+nst]);
     }
- 
+
     // Transform cs and si according to matrix C:
     *cs = (*C) * (*cs) * ((*C).T());
     *si = (*C) * (*si) * ((*C).T());
 
-//----------- Explicit computation of exponent of a complex matrix -i*diaH*dt -----------
-    CMATRIX* X;    X = new CMATRIX(nstates,nstates);
-    CMATRIX* pwX;  pwX = new CMATRIX(nstates,nstates);
-    CMATRIX* expX; expX = new CMATRIX(nstates,nstates);
 
-    for(nst=0;nst<nstates;nst++){  
-      for(nst1=0;nst1<nstates;nst1++){  
-        X->M[nst*nstates+nst1] = complex<double>(0.0, -dt*diaH->M[nst*nstates+nst1]);
-
-        if(nst!=nst1){
-          expX->M[nst*nstates+nst1] = complex<double>(0.0, 0.0);
-        }
-        else{
-          expX->M[nst*nstates+nst1] = complex<double>(1.0, 0.0);
-        }
-      }
-    }
-
-    *pwX = *expX; // identity
-
-    for(int term=1;term<40;term++){
-        *pwX *= (1.0/float(term))*(*X);
-        *expX += *pwX;
-    }
-  
-
+    //----------- Explicit computation of exponent of a complex matrix -i*diaH*dt -----------
 
     // Finally construct complex exp(-i*dt*H) matrix from real cs and si matrices
     for(nst=0;nst<nstates;nst++){  
       for(nst1=0;nst1<nstates;nst1++){  
-
-//        expH[nst][nst1].M[nx] = complex<double>(cs->M[nst*nstates+nst1], -si->M[nst*nstates+nst1]);  // exp(-i*H*dt)
-
-          expH[nst][nst1].M[nx] = expX->M[nst*nstates+nst1];
-
+          expH[nst][nst1].M[nx] = complex<double>(cs->M[nst*nstates+nst1], si->M[nst*nstates+nst1]);  // exp(-i*H*dt)
       }
     }//for nst
 
-    delete expX;
-    delete pwX;
-    delete X;
-
-//    expH[0][0].M[nx] = complex<double>( 1.0,   -7.07107e-05);
-//    expH[1][0].M[nx] = expH[0][1].M[nx] = complex<double>(-4.39102e-17,   -0.000170711);
-//    expH[1][1].M[nx] = complex<double>( 1.0,   7.07107e-05);    
-//    cout<<"nx= \n"<<nx<<" *diaH= "<<*diaH<<" *adiH= "<<*adiH<<" *C= "<<*C
-//        <<" expH[0][0]= "<<expH[0][0].M[nx]
-//        <<" expH[0][1]= "<<expH[0][1].M[nx]
-//        <<" expH[1][1]= "<<expH[1][1].M[nx]<<endl;
-
   }// for nx
-
 
   delete S;
   delete C;
   delete diaH;
   delete adiH;
-  delete cs;
   delete si;
+  delete cs;
 
 
 }// update_propagator_1D
@@ -212,6 +169,7 @@ void Wfcgrid::update_propagator_2D(double dt,double m0){
 
 
       // Now compute sin and cos matrixes: diagonal
+      *cs = 0.0;  *si = 0.0;
       for(int nst=0;nst<nstates;nst++){  
         cs->M[nst*nstates+nst] = std::cos(-dt*adiH->M[nst*nstates+nst]);
         si->M[nst*nstates+nst] = std::sin(-dt*adiH->M[nst*nstates+nst]);
@@ -220,6 +178,7 @@ void Wfcgrid::update_propagator_2D(double dt,double m0){
       // Transform cs and si according to matrix C:
       *cs = (*C) * (*cs) * ((*C).T());
       *si = (*C) * (*si) * ((*C).T());
+
 
 
       // Finally construct complex exp(-i*dt*H) matrix from real cs and si matrices

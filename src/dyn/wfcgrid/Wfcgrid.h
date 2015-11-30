@@ -88,6 +88,7 @@ public:
  
   // Print state-resolved populations 
   double print_populations_1D(string filename,int snap);
+  double print_populations_2D(string filename,int snap);
 
   // Flux
   void flux_1D(double xf,vector<double>& res, double m0);

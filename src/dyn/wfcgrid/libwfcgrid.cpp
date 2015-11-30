@@ -45,6 +45,7 @@ void export_Wfcgrid_objects(){
       .def("print_expK_1D", &Wfcgrid::print_expK_1D)
 
       .def("print_populations_1D", &Wfcgrid::print_populations_1D)
+      .def("print_populations_2D", &Wfcgrid::print_populations_2D)
 
       .def("update_potential_1D", &Wfcgrid::update_potential_1D)
       .def("update_potential_2D", &Wfcgrid::update_potential_2D)

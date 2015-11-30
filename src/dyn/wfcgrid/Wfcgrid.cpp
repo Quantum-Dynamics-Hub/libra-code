@@ -358,6 +358,55 @@ double Wfcgrid::print_populations_1D(string filename,int snap){
 }
 
 
+double Wfcgrid::print_populations_2D(string filename,int snap){
+
+  vector<double> Pop(nstates,0.0);
+  double Pop_tot = 0.0;
+  double Pop_tot_active = 0.0;
+
+  for(int nx=0;nx<Nx;nx++){
+    for(int ny=0;ny<Ny;ny++){
+      for(int nst=0;nst<nstates;nst++){
+
+        double pii = real(std::conj(PSI[nst].M[nx*Ny+ny])*PSI[nst].M[nx*Ny+ny]);
+
+        Pop[nst] += dx*dy*pii;  // population on state nst
+        Pop_tot += dx*dy*pii;   // total population
+
+      }// for nst
+    }// for ny
+  }// for nx
+
+  ofstream out(filename.c_str(),ios::app);
+
+  out<<"nsnap= "<<snap;
+  // Probabilities of the wavepackets that still remain in active calculation area
+  for(int nst=0;nst<nstates;nst++){
+    out<<"  P("<<nst<<")= "<<setprecision(5)<<Pop[nst];
+  }
+  out<<" P_total(active)= "<<Pop_tot<<" | \n";
+  Pop_tot_active = Pop_tot;
+
+
+/*
+  // Now the reflection and transition probabilities on all states
+  double sum = 0.0;
+  for(nst=0;nst<nstates;nst++){
+    out<<"  P_re("<<nst<<")= "<<setprecision(5)<<Pops[nst][0];
+    out<<"  P_tr("<<nst<<")= "<<setprecision(5)<<Pops[nst][1];
+    sum += Pops[nst][0] + Pops[nst][1];
+  }
+  out<<" P_total(absorbed)= "<<sum<<" | ";
+  out<<" P_total(all)= "<<Pop_tot + sum<<endl;
+*/
+  
+  out.close();
+
+  return Pop_tot_active;
+}
+
+
+
 void Wfcgrid::flux_1D(double xf,vector<double>& res, double m0){
 // xf - the point at which flux is computed
 

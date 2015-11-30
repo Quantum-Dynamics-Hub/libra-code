@@ -44,6 +44,11 @@ Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
     nelec = 3;
     nnucl = 1;
   }
+  else if(ham_indx==200){    // sin_2D
+    nelec = 2;
+    nnucl = 2;
+  }
+
 
   ham_dia = new MATRIX(nelec,nelec); *ham_dia = 0.0;
   ham_adi = new MATRIX(nelec,nelec); *ham_adi = 0.0;
@@ -91,9 +96,10 @@ void Hamiltonian_Model::set_params(vector<double>& params_){
 
   int num_params = 0;
 
-  if(ham_indx==0 || ham_indx==2|| ham_indx==7){ // SAC, ECWR, sin
+  if(ham_indx==0 || ham_indx==2){ // SAC, ECWR
     num_params = 4;
   }
+  else if(ham_indx==7){ num_params = 5; } // sin
   else if(ham_indx==5 || ham_indx==6){ // Rabi2
     num_params = 3;
   }
@@ -103,6 +109,11 @@ void Hamiltonian_Model::set_params(vector<double>& params_){
   else if(ham_indx==4){  // SEXCH
     num_params = 12;
   }
+
+  else if(ham_indx==200){  // SEXCH
+    num_params = 6;
+  }
+
 
   params = vector<double>(num_params, 0.0);
 
@@ -126,9 +137,11 @@ void Hamiltonian_Model::compute_diabatic(){
   if(status_dia == 0){ // only compute this is the result is not up to date
   
     double e;
+    double x = q[0];
+    double y = 0.0;  if(q.size()>=2){ y = q[1]; }
+
 
     //=============== 1D models ========================
-    double x = q[0];
 
     if(ham_indx==0){  SAC_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);     }    // SAC potetnial
     else if(ham_indx==1){ DAC_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params); }    // DAC potential
@@ -138,6 +151,11 @@ void Hamiltonian_Model::compute_diabatic(){
     else if(ham_indx==5){ Rabi2_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);  } // Rabi2 potential
     else if(ham_indx==6){ ;; }// Nothing here
     else if(ham_indx==7){ sin_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);  } // sin potential
+
+
+    //=============== 2D models ========================
+    else if(ham_indx==200){  sin_2D_Ham(x, y, ham_dia, d1ham_dia[0], d1ham_dia[1], d2ham_dia[0], d2ham_dia[3], params);     }    // sin potetnial
+
 
 
     // Set status flag 
