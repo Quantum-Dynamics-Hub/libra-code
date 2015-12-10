@@ -83,8 +83,8 @@ for i in xrange(2500):
 
     # Just choose the TSH scheme below
 #    compute_hopping_probabilities_mssh(mol, el, ham, g, dt, use_boltz_factor, T)
-#    compute_hopping_probabilities_fssh(mol, el, ham, g, dt, use_boltz_factor, T)
-    compute_hopping_probabilities_gfsh(mol, el, ham, g, dt, use_boltz_factor, T)
+    compute_hopping_probabilities_fssh(mol, el, ham, g, dt, use_boltz_factor, T)
+#    compute_hopping_probabilities_gfsh(mol, el, ham, g, dt, use_boltz_factor, T)
 
  
     do_rescaling = 1 

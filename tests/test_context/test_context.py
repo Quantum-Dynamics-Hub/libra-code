@@ -102,4 +102,11 @@ print "path=", ctx2.get_path()
 ctx2.save_xml("ctx_5.xml") 
 
 
+print "\nTest 8: We can extract one context from the other"
+ctx3 = ctx.get("old_path.param3", ctx)
+print "path=", ctx3.get_path()
+ctx3.save_xml("ctx_5a.xml") 
+
+
+
 

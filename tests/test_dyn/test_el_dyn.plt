@@ -36,12 +36,23 @@ set xlabel "x" offset 0.0, 0.5
 set ylabel "Population" offset 1.5, 0.0 
 
 # SAC, adiabatic Hamiltonian
+set xrange [-10:10]
+set xtics 2
+set yrange [-0.2:1.5]
+set ytics 0.4
+
 set output "dyn_sac.png"
 plot "dyn_sac.txt" using 2:3  w l  ls 11  lw 5  t "P(0)",\
      "dyn_sac.txt" using 2:5  w l  ls 21  lw 5  t "Re(rho(0,1))",\
      "dyn_sac.txt" using 2:6  w l  ls 31  lw 5  t "Im(rho(0,1))"
 
+
 # Rabi2, diabatic Hamiltonian
+set xrange [-10:90]
+set xtics 20
+set yrange [-0.6:1.5]
+set ytics 0.4
+
 set output "dyn_rabi2.png"
 plot "dyn_rabi2.txt" using 2:3  w l  ls 11  lw 5  t "P(0)",\
      "dyn_rabi2.txt" using 2:5  w l  ls 21  lw 5  t "Re(rho(0,1))",\

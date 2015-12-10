@@ -34,31 +34,45 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 
 set xlabel "t" offset 0.0, 0.5
 set ylabel "Energy" offset 1.5, 0.0 
+set xrange [0:500]
+set xtics 100
+set yrange [0:8]
+set ytics 1.0
 set output "_nucl_en.png"
 plot "_nucl.txt" using 2:8   w l  ls 11  lw 5  t "Ekin",\
      "_nucl.txt" using 2:10  w l  ls 21  lw 5  t "Epot",\
      "_nucl.txt" using 2:12  w l  ls 32  lw 5  t "Etot"
 
 
-set xlabel "q" offset 0.0, 0.5
-set ylabel "p" offset 1.5, 0.0 
-set output "_nucl_phase.png"
-plot "_nucl.txt" using 4:6  w l  ls 11  lw 5  t "Phase space"
-
-
-
-
-
 set xlabel "t" offset 0.0, 0.5
 set ylabel "Energy" offset 1.5, 0.0 
+set xrange [0:500]
+set xtics 100
+set yrange [-5:5]
+set ytics 1.0
 set output "_nucl2_en.png"
 plot "_nucl2.txt" using 2:8   w l  ls 11  lw 5  t "Ekin",\
      "_nucl2.txt" using 2:10  w l  ls 21  lw 5  t "Epot",\
      "_nucl2.txt" using 2:12  w l  ls 32  lw 5  t "Etot"
 
 
+
 set xlabel "q" offset 0.0, 0.5
 set ylabel "p" offset 1.5, 0.0 
+set xrange [-1.5:1.5]
+set xtics 0.5
+set yrange [-150:150]
+set ytics 50
+set output "_nucl_phase.png"
+plot "_nucl.txt" using 4:6  w l  ls 11  lw 5  notitle "Phase space"
+
+
+set xlabel "q" offset 0.0, 0.5
+set ylabel "p" offset 1.5, 0.0 
+set xrange [-0.6:1.2]
+set xtics 0.4
+set yrange [-100:100]
+set ytics 40
 set output "_nucl2_phase.png"
-plot "_nucl2.txt" using 4:6  w l  ls 11  lw 5  t "Phase space"
+plot "_nucl2.txt" using 4:6  w l  ls 11  lw 5  notitle "Phase space"
 
