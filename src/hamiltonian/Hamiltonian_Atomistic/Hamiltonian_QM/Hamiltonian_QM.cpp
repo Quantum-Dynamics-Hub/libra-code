@@ -39,6 +39,12 @@ void Hamiltonian_core(
     Hamiltonian_core_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao, Sao, DF);
 
   }
+  else if(prms.hamiltonian=="eht"){
+
+    Hamiltonian_core_eht(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao, Sao, DF);
+
+  }
+
 
 }
 
@@ -58,6 +64,12 @@ void Hamiltonian_Fock(Electronic_Structure* el, System& syst, vector<AO>& basis_
     Hamiltonian_Fock_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map);
 
   }
+  else if(prms.hamiltonian=="eht"){
+
+    Hamiltonian_Fock_eht(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map);
+
+  }
+
 
 
 }

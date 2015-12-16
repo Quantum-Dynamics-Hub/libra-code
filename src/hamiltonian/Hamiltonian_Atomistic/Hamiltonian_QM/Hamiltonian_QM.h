@@ -13,6 +13,7 @@
 #define HAMILTONIAN_QM_H
 
 
+#include "Hamiltonian_EHT.h"
 #include "Hamiltonian_INDO.h"
 #include "Hamiltonian_HF.h"
 #include "Electronic_Structure.h"

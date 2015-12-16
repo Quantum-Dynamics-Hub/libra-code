@@ -167,6 +167,34 @@ void export_Hamiltonian_QM_objects(){
   def("Hamiltonian_Fock_derivs_indo",expt_Hamiltonian_Fock_derivs_indo_v1);
 
 
+  //----------- EHT -----------------
+
+  void (*expt_Hamiltonian_core_eht_v1)
+  ( System& syst, vector<AO>& basis_ao, 
+    Control_Parameters& prms, Model_Parameters& modprms,
+    vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+    MATRIX& Hao, MATRIX& Sao, int DF
+  ) = &Hamiltonian_core_eht;
+
+  void (*expt_Hamiltonian_core_deriv_eht_v1)
+  ( System& syst, vector<AO>& basis_ao, 
+    Control_Parameters& prms, Model_Parameters& modprms,
+    vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
+    MATRIX& Hao, MATRIX& Sao, int DF,
+    int c,
+    MATRIX& dHao_dx, MATRIX& dHao_dy, MATRIX& dHao_dz, 
+    MATRIX& dSao_dx, MATRIX& dSao_dy, MATRIX& dSao_dz
+  ) = &Hamiltonian_core_deriv_eht;
+
+
+  void (*expt_Hamiltonian_Fock_eht_v1)
+  ( Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
+    Control_Parameters& prms, Model_Parameters& modprms,
+    vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
+  ) = &Hamiltonian_Fock_eht;
+
+
+
   //----------- HF -----------------
   void (*expt_Hamiltonian_core_hf_v1)
   ( System& syst, vector<AO>& basis_ao, 
