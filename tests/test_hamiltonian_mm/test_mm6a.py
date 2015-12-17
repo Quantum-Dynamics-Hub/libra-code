@@ -213,7 +213,7 @@ for i in [1]:
 
     f = open("_en_cooling.txt","w")
     f.close()
-    dt = 1.0 
+    dt = 20.0 
 
     for i in xrange(100):
         syst.set_atomic_q(mol.q)
@@ -239,7 +239,7 @@ for i in [1]:
         syst.set_atomic_q(mol.q)
         syst.print_xyz("_mol_md.xyz",i)
 
-        for j in xrange(10):
+        for j in xrange(100):
             ekin, epot, etot = md_step(syst, mol, el, ham, dt, integrator)
 
         f = open("_en_md.txt","a")

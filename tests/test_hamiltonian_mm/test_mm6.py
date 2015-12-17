@@ -168,13 +168,13 @@ for i in [1]:
     integrator = "DLML"
 
     f = open("_en_traj.txt","w")
-    dt = 1.0 # = 0.5 fs
+    dt = 20.0 # = 0.5 fs
     for i in xrange(100):
 
         syst.set_atomic_q(mol.q)
         syst.print_xyz("_mol_traj.xyz",i)
 
-        for j in xrange(10):
+        for j in xrange(100):
 
             ekin = 0.0
             for n in xrange(syst.Number_of_fragments):

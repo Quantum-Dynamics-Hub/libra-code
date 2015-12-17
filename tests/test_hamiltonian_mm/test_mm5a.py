@@ -117,7 +117,7 @@ for i in [1]:
         syst.set_atomic_q(mol.q)
         syst.print_xyz("_mol_traj.xyz",i)
 
-        for j in xrange(10):
+        for j in xrange(100):
             mol.propagate_p(0.5*dt)
             mol.propagate_q(dt)            
 

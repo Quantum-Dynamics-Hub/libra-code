@@ -114,7 +114,7 @@ for i in [1]:
     
 
     f = open("_en_traj.txt","w")
-    dt = 40.0 #  0.5 fs
+    dt = 40.0 #  1.0 fs
     for i in xrange(30):
         syst.print_xyz("_mol_traj.xyz",i)
 

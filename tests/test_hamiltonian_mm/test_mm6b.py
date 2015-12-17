@@ -254,14 +254,14 @@ for i in [1]:
     f.close()
     dt = 20.0 
 
-    syst.init_fragment_velocities(300.0, VECTOR(0.0, 0.0, 0.0), VECTOR(1.0, 0.0, 0.0) )
+    syst.init_fragment_velocities(300.0, VECTOR(1.0, 0.0, 0.0), VECTOR(0.0, 0.0, 1.0) )
 
 
     for i in xrange(100):
         syst.set_atomic_q(mol.q)
         syst.print_xyz("_mol_free.xyz",i)
 
-        for j in xrange(10):
+        for j in xrange(100):
             ekin, epot, etot = md_step(syst, mol, el, ham, dt, integrator)
 
         f = open("_en_free.txt","a")

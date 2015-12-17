@@ -32,11 +32,16 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 
 
 
-set xlabel "time, steps" offset 0.0, 0.5
-set ylabel "Energy, a.u." offset 1.5, 0.0
+set xlabel "time, ps" offset 0.0, 0.5
+set ylabel "Energy, a.u." offset 3.5, 0.0
 set output "_en_traj.png"
-plot "_en_traj.txt" using 2:4   w lp  ls 11  lw 2  t "E_{kin}",\
-     "_en_traj.txt" using 2:6   w lp  ls 21  lw 2  t "E_{pot}",\
-     "_en_traj.txt" using 2:8   w lp  ls 31  lw 2  t "E_{tot}"
+set yrange [0.0: 0.01]
+set ytics 0.0025
+set xrange [0:5]
+set xtics 1.0
+
+plot "_en_traj.txt" using ($2/20.0):4   w lp  ls 11  lw 3  t "E_{kin}",\
+     "_en_traj.txt" using ($2/20.0):6   w lp  ls 21  lw 3  t "E_{pot}",\
+     "_en_traj.txt" using ($2/20.0):8   w lp  ls 31  lw 3  t "E_{tot}"
 
     

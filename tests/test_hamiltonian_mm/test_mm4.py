@@ -70,7 +70,7 @@ for i in range(1,13):
     syst.show_fragments()
     syst.show_molecules()
 
-    syst.print_xyz("molecule1.xyz",1)
+    syst.print_xyz("molecule"+str(i)+".xyz",1)
 
     print "Number of atoms in the system = ", syst.Number_of_atoms
     atlst1 = range(1,syst.Number_of_atoms+1)
@@ -85,8 +85,8 @@ for i in range(1,13):
 
     ham.set_system(syst)
     ham.compute()
-    print "Energy = ", ham.H(0,0)/627.5094709, " a.u."
-    print "Force 1 = ", ham.dHdq(0,0,0)/627.5094709, " a.u."
-    print "Force 3 = ", ham.dHdq(0,0,3)/627.5094709, " a.u."
+    print "Energy = ", ham.H(0,0), " a.u."
+    print "Gradient 1 = ", ham.dHdq(0,0,0), " a.u."
+    print "Gradient 3 = ", ham.dHdq(0,0,3), " a.u."
 
 
