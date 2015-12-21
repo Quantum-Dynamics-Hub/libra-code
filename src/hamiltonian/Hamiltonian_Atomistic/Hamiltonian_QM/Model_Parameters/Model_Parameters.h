@@ -607,11 +607,11 @@ public:
 };
 
 
-void set_parameters_eht(Control_Parameters&, Model_Parameters&);
+//void set_parameters_eht(Control_Parameters&, Model_Parameters&);
 void set_parameters_hf(Control_Parameters&, Model_Parameters&, vector<AO>&);
 void set_parameters_indo(Control_Parameters&, Model_Parameters&);
-void set_parameters_geht1(Control_Parameters& prms, Model_Parameters& modprms); // Model_Parameters_GEHT.cpp
-void set_parameters_geht2(Control_Parameters& prms, Model_Parameters& modprms); // Model_Parameters_GEHT2.cpp
+//void set_parameters_geht1(Control_Parameters& prms, Model_Parameters& modprms); // Model_Parameters_GEHT.cpp
+void set_parameters_eht(Control_Parameters& prms, Model_Parameters& modprms); // Model_Parameters_GEHT2.cpp
 
 void set_parameters_eht_mapping(Model_Parameters& modprms, const vector<AO>& basis_ao);
 void set_parameters_eht_mapping1(Model_Parameters& modprms, int nat, vector<std::string>& mol_at_types);

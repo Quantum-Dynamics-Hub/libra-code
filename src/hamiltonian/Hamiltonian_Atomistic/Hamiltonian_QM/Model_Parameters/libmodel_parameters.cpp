@@ -227,8 +227,8 @@ void export_Model_Parameters_objects(){
 
 
 
-  void (*expt_set_parameters_eht_v1)
-  (Control_Parameters&, Model_Parameters&) = &set_parameters_eht;
+//  void (*expt_set_parameters_eht_v1)
+//  (Control_Parameters&, Model_Parameters&) = &set_parameters_eht;
 
   void (*expt_set_parameters_hf_v1)
   (Control_Parameters&, Model_Parameters&, vector<AO>&) = &set_parameters_hf;
@@ -236,11 +236,11 @@ void export_Model_Parameters_objects(){
   void (*expt_set_parameters_indo_v1)
   (Control_Parameters&, Model_Parameters&) = &set_parameters_indo;
 
-  void (*expt_set_parameters_geht1_v1)
-  (Control_Parameters& prms, Model_Parameters& modprms) = &set_parameters_geht1; 
+//  void (*expt_set_parameters_geht1_v1)
+//  (Control_Parameters& prms, Model_Parameters& modprms) = &set_parameters_geht1; 
 
-  void (*expt_set_parameters_geht2_v1)
-  (Control_Parameters& prms, Model_Parameters& modprms) = &set_parameters_geht2;
+  void (*expt_set_parameters_eht_v1)
+  (Control_Parameters& prms, Model_Parameters& modprms) = &set_parameters_eht;
 
   void (*expt_set_parameters_eht_mapping_v1)
   (Model_Parameters& modprms, const vector<AO>& basis_ao) = &set_parameters_eht_mapping;
@@ -249,11 +249,11 @@ void export_Model_Parameters_objects(){
   (Model_Parameters& modprms, int nat, vector<std::string>& mol_at_types) = &set_parameters_eht_mapping1;
 
 
-  def("set_parameters_eht", expt_set_parameters_eht_v1);
+//  def("set_parameters_eht", expt_set_parameters_eht_v1);
   def("set_parameters_hf", expt_set_parameters_hf_v1);
   def("set_parameters_indo", expt_set_parameters_indo_v1);
-  def("set_parameters_geht1", expt_set_parameters_geht1_v1);
-  def("set_parameters_geht2", expt_set_parameters_geht2_v1);
+//  def("set_parameters_geht1", expt_set_parameters_geht1_v1);
+  def("set_parameters_eht", expt_set_parameters_eht_v1);
 
   def("set_parameters_eht_mapping", expt_set_parameters_eht_mapping_v1);
   def("set_parameters_eht_mapping1", expt_set_parameters_eht_mapping1_v1);

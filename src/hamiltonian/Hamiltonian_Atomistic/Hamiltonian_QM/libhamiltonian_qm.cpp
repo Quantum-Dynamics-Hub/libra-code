@@ -186,12 +186,16 @@ void export_Hamiltonian_QM_objects(){
     MATRIX& dSao_dx, MATRIX& dSao_dy, MATRIX& dSao_dz
   ) = &Hamiltonian_core_deriv_eht;
 
-
   void (*expt_Hamiltonian_Fock_eht_v1)
   ( Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
     Control_Parameters& prms, Model_Parameters& modprms,
     vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
   ) = &Hamiltonian_Fock_eht;
+
+  def("Hamiltonian_core_eht", expt_Hamiltonian_core_eht_v1);
+  def("Hamiltonian_core_deriv_eht", expt_Hamiltonian_core_deriv_eht_v1);
+  def("Hamiltonian_Fock_eht", expt_Hamiltonian_Fock_eht_v1);
+
 
 
 

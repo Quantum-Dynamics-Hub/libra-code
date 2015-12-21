@@ -734,8 +734,8 @@ double energy_and_forces
 
   //=========== STEP 2: Depending on hamiltonian to use, set internal parameters ================
 
-  if(prms.hamiltonian=="eht" || prms.hamiltonian=="geht" ||
-     prms.hamiltonian=="geht1" || prms.hamiltonian=="geht2"){
+  if(prms.hamiltonian=="eht"){ //|| prms.hamiltonian=="geht" ||
+//     prms.hamiltonian=="geht1" || prms.hamiltonian=="geht2"){
 
     vector<string> mol_at_types;
     for(i=0;i<syst.Number_of_atoms;i++){  mol_at_types.push_back(syst.Atoms[i].Atom_element); }
@@ -864,18 +864,18 @@ void listHamiltonian_QM::init(std::string ctrl_filename,System& syst){
 
   //=========== STEP 2:  Create model parameters and load them from file (using control parameters options) ================
   // Initialize/read model parameters (need basis info)
-  if(prms.hamiltonian=="eht" or prms.hamiltonian=="geht"){
+  if(prms.hamiltonian=="eht"/* or prms.hamiltonian=="geht"*/){
     set_parameters_eht(prms, modprms);
   }
   else if(prms.hamiltonian=="indo"){
     set_parameters_indo(prms, modprms);
   }
-  else if(prms.hamiltonian=="geht1"){
-    set_parameters_geht1(prms, modprms); 
-  }
-  else if(prms.hamiltonian=="geht2"){
-    set_parameters_geht2(prms, modprms); 
-  }
+//  else if(prms.hamiltonian=="geht1"){
+//    set_parameters_geht1(prms, modprms); 
+//  }
+//  else if(prms.hamiltonian=="geht2"){
+//    set_parameters_geht2(prms, modprms); 
+//  }
 
   //=========== STEP 3: Set basis (STO-3G_DZ) ================
   //------- Input --------------
@@ -902,8 +902,8 @@ void listHamiltonian_QM::init(std::string ctrl_filename,System& syst){
   //=========== STEP 5: Depending on hamiltonian to use, set internal parameters ================
   // this step runs after AO basis is set!!!
 
-  if(prms.hamiltonian=="eht" || prms.hamiltonian=="geht" ||
-     prms.hamiltonian=="geht1" || prms.hamiltonian=="geht2"){
+  if(prms.hamiltonian=="eht" /*|| prms.hamiltonian=="geht" ||
+     prms.hamiltonian=="geht1" || prms.hamiltonian=="geht2"*/){
       set_parameters_eht_mapping(modprms, basis_ao);
       set_parameters_eht_mapping1(modprms,syst.Number_of_atoms,mol_at_types);
   }

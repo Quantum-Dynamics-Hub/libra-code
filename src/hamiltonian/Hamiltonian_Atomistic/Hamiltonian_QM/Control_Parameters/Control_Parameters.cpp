@@ -644,6 +644,7 @@ void get_parameters_from_file(std::string filename, Control_Parameters& prms){
       }       
     }// SC-EHT
 
+/*
     if(prms.eht_sce_formula==0 && prms.guess_type!="core"){
       cout<<"Non self-consistent EHT must be used with guess_type=\"core\"\n"; exit(0);
     }
@@ -651,6 +652,7 @@ void get_parameters_from_file(std::string filename, Control_Parameters& prms){
     if(prms.eht_sce_formula>0 && prms.guess_type!="sad"){
       cout<<"Self-consistent EHT must be used with guess_type=\"sad\"\n"; exit(0);
     }
+*/
 
   }// eht
 

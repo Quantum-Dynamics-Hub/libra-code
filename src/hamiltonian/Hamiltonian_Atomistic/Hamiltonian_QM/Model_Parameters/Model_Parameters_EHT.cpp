@@ -12,21 +12,20 @@
 #include "Model_Parameters.h"
 
 
-
 namespace libhamiltonian{
 namespace libhamiltonian_atomistic{
 namespace libhamiltonian_qm{
 namespace libmodel_parameters{
 
-
 /*********************************************************************************
   This file contains the following functions:
 
 
-  void set_parameters_eht(Control_Parameters& prms, Model_Parameters& modprms)
+  void set_parameters_geht1(Control_Parameters& prms, Model_Parameters& modprms)
   
 
 *********************************************************************************/
+
 
 void set_parameters_eht(Control_Parameters& prms, Model_Parameters& modprms){
 
@@ -225,8 +224,8 @@ void set_parameters_eht(Control_Parameters& prms, Model_Parameters& modprms){
 
 
           if(file[i1].size()>=8){
-            cout<<" K3 (eV) = "<<atof(file[i1][7].c_str());
-            modprms.eht_k.set_K3_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][7].c_str())*eV ); // convert into a.u.
+            cout<<" K3 (Angst) = "<<atof(file[i1][7].c_str());
+            modprms.eht_k.set_K3_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][7].c_str())*Angst ); // convert into a.u. of length
 
 
 
@@ -242,13 +241,136 @@ void set_parameters_eht(Control_Parameters& prms, Model_Parameters& modprms){
         }// >=7
 
 
-//        cout<<"i1 = "<<i1<<endl;
-//          if(i1==21){  cout<<"file = "<<file[i1].size()<<endl;  exit(0);          }
-
       }// for i1
 
       i = end_i + 1;
     }// <K_constants>
+
+
+
+    else if(file[i][0]=="<C_constants>"){
+      // search for end of this group - atomic pseudopotential parameters
+      int end_i = i;
+      for(int i1=i+1;i1<sz;i1++){
+        if(file[i1].size()>0){  if(file[i1][0]=="</C_constants>"){ end_i = i1; break; }    }// non-empty line
+      }// for i1
+
+
+      // now analyze all lines in between
+      for(int i1=i+1;i1<end_i;i1++){
+
+        if(file[i1].size()>=7){  
+
+
+ 
+          cout<<"Adding C0, C1 and C2 parameters: "
+              <<file[i1][0]<<"  "<<file[i1][1]<<"  "<<file[i1][2]<<"  "<<file[i1][3]<<"  "
+              <<" C0 (eV) = "<<atof(file[i1][4].c_str())
+              <<" C1 (eV/Angst) = "<<atof(file[i1][5].c_str())
+              <<" C2 (eV/Angst^2) = "<<atof(file[i1][6].c_str());
+                                                                                                                 
+          modprms.eht_k.set_C0_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][4].c_str())*eV );
+          modprms.eht_k.set_C1_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][5].c_str())*(eV/Angst) ); // convert into a.u.
+          modprms.eht_k.set_C2_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][6].c_str())*(eV/(Angst*Angst)) ); // convert into a.u.
+
+
+          if(file[i1].size()>=8){
+            cout<<" C3 (eV/Angst^3) = "<<atof(file[i1][7].c_str()); // reserved
+            modprms.eht_k.set_C3_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][7].c_str())*(eV/(Angst*Angst*Angst)) ); // convert into a.u.
+
+
+            if(file[i1].size()>=9){
+              cout<<" C4 (1/Angst^2) = "<<atof(file[i1][8].c_str()); // will be used as beta
+              modprms.eht_k.set_C4_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][8].c_str())/(Angst*Angst) ); // convert into a.u. of length
+
+            }// >=9
+
+
+          }// >=8
+          cout<<endl;
+        }// >=7
+
+
+      }// for i1
+
+      i = end_i + 1;
+    }// <C_constants>
+
+
+    else if(file[i][0]=="<PP_data>"){
+      // search for end of this group - atomic pseudopotential parameters (new, rotationally-invariant version!!!)
+      int end_i = i;
+      for(int i1=i+1;i1<sz;i1++){
+        if(file[i1].size()>0){  if(file[i1][0]=="</PP_data>"){ end_i = i1; break; }    }// non-empty line
+      }// for i1
+
+
+      // now analyze all lines in between
+      for(int i1=i+1;i1<end_i;i1++){
+
+        if(file[i1].size()>=6){  
+
+         // below we square the input value for PPa, so not to has diverging exponents - which is bad for parameterization
+ 
+          cout<<"Adding PP parameters for atom: "<<file[i1][0]<<" and orbital type "<<file[i1][1] 
+              <<" PPa^2 (1/Angst) = "<<atof(file[i1][2].c_str()) * atof(file[i1][2].c_str())    
+              <<" PP0 (eV) = "<<atof(file[i1][3].c_str())
+              <<" PP1 (eV/Angst) = "<<atof(file[i1][4].c_str())
+              <<" PP2 (eV/Angst^2) = "<<atof(file[i1][5].c_str());
+                                                                                                                 
+          modprms.eht_k.set_PPa_value(file[i1][0], file[i1][1], atof(file[i1][2].c_str())*atof(file[i1][2].c_str())*(1.0/Angst) );        // convert into a.u. of length (inverse)
+          modprms.eht_k.set_PP0_value(file[i1][0], file[i1][1], atof(file[i1][3].c_str())*(eV) );               // convert into a.u.
+          modprms.eht_k.set_PP1_value(file[i1][0], file[i1][1], atof(file[i1][4].c_str())*(eV/(Angst)) );       // convert into a.u.
+          modprms.eht_k.set_PP2_value(file[i1][0], file[i1][1], atof(file[i1][5].c_str())*(eV/(Angst*Angst)) ); // convert into a.u.
+
+          cout<<endl;
+        }// >=6
+
+
+      }// for i1
+
+      i = end_i + 1;
+    }// <PP_data>
+
+
+    else if(file[i][0]=="<PSPS_data>"){
+      // search for end of this group - atomic pseudopotential parameters (new, rotationally-invariant version!!!)
+      int end_i = i;
+      for(int i1=i+1;i1<sz;i1++){
+        if(file[i1].size()>0){  if(file[i1][0]=="</PSPS_data>"){ end_i = i1; break; }    }// non-empty line
+      }// for i1
+
+
+      // now analyze all lines in between
+      for(int i1=i+1;i1<end_i;i1++){
+
+        if(file[i1].size()>=6){  
+                                      
+          int n1 = atoi(file[i1][1].c_str());
+          int n2 = atoi(file[i1][2].c_str());
+          int n3 = atoi(file[i1][3].c_str());
+          int n4 = atoi(file[i1][4].c_str());
+          double K = atof(file[i1][5].c_str());
+
+          cout<<"Adding PSPS parameters: "<<n1<<" , "<<n2<<" , "<<n3<<" , "<<n4<<" K(eV) = "<<K<<endl;
+                                                                           
+          modprms.eht_k.set_PSPS_value(n1,n2,n3,n4,K);    
+
+          cout<<endl;
+        }// >=6
+
+
+      }// for i1
+ 
+//      exit(0);
+
+      i = end_i + 1;
+    }// <PSPS_data>
+
+
+   
+
+
 
   }// for i
   }// if file[i].size>0
@@ -258,8 +380,11 @@ void set_parameters_eht(Control_Parameters& prms, Model_Parameters& modprms){
 }
 
 
+
 }// namespace libmodel_parameters
 }// namespace libhamiltonian_qm
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
+
+
 

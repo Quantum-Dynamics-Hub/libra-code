@@ -688,7 +688,7 @@ void Hamiltonian_Fock_eht(Electronic_Structure* el, System& syst, vector<AO>& ba
               double dist = (syst.Atoms[a].Atom_RB.rb_cm - syst.Atoms[b].Atom_RB.rb_cm).length();
 
               double K2_const = modprms.meht_k.get_K2_value(orb_a,orb_b); // a.u. of energy
-              double K3_const = modprms.meht_k.get_K3_value(orb_a,orb_b); // a.u. of length  (!!!! Modify reading of parameters!!!!)
+              double K3_const = modprms.meht_k.get_K3_value(orb_a,orb_b); // a.u. of length 
               double K4_const = modprms.meht_k.get_K4_value(orb_a,orb_b); // a.u. of length
               if(K4_const<0.0){  K4_const = 0.0; }
 
@@ -733,7 +733,7 @@ void Hamiltonian_Fock_eht(Electronic_Structure* el, System& syst, vector<AO>& ba
               double dist = (syst.Atoms[a].Atom_RB.rb_cm - syst.Atoms[b].Atom_RB.rb_cm).length();
 
               double K2_const = modprms.meht_k.get_K2_value(orb_a,orb_b); // a.u. of energy
-              double K3_const = modprms.meht_k.get_K3_value(orb_a,orb_b); // a.u. of length  (!!!! Modify reading of parameters!!!!)
+              double K3_const = modprms.meht_k.get_K3_value(orb_a,orb_b); // a.u. of length  
               double K4_const = modprms.meht_k.get_K4_value(orb_a,orb_b); // a.u. of length
               if(K4_const<0.0){  K4_const = 0.0; }
 
