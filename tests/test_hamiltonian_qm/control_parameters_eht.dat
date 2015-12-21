@@ -1,0 +1,141 @@
+<calculation>
+  runtype = scf
+  hamiltonian = eht
+  DF = 0
+</calculation>
+
+<hamiltonian>
+  parameters = muller_params
+  eht_params_format = eht+2
+  eht_formula = 0
+  eht_sce_formula = 0
+  eht_fock_opt = 0
+  eht_electrostatics = 0
+</hamiltonian>
+
+<guess_options>
+  guess_type = core
+</guess_options>
+
+<scf_options> 
+  use_disk = 0
+  scf_algo = none  
+  use_rosh = 0
+
+  pop_opt = 0
+
+  use_diis = 0
+  diis_max = 5
+  diis_start_iter = 10
+
+  use_level_shift = 0
+  shift_magnitude = 2.5
+
+  use_damping = 0
+  damping_start = 5
+  damping_const = 0.1
+
+  Niter = 1500
+  etol = 1e-8
+  den_tol = 1e-7
+
+  degen_tol = 0.2
+</scf_options>
+
+<properties>
+  compute_vertical_ip = 0
+  compute_vertical_ea = 0
+</properties>
+
+
+<dos_options>
+  compute_dos = 0
+  dos_prefix = dos/
+</dos_options>
+
+<multipole_options>
+  compute_dipole = 0
+</multipole_options>
+
+<charge_density_options>
+  compute_charge_density = 0
+  nx_grid = 40
+  ny_grid = 40
+  nz_grid = 40
+  charge_density_prefix = orbs/
+  orbs = 3
+</charge_density_options>
+
+
+
+<nac_options>
+  nac_md_trajectory_filename = md_un_traj.xyz
+  nac_prefix = res/Ham_
+  nac_min_frame = 0
+  nac_max_frame = 5
+  nac_dt = 1.0
+  nac_min_orbs  1    1
+  nac_max_orbs  1    2
+
+</nac_options>
+
+<md_options>
+  dt = 1         # in fs
+  nsteps = 10    # number of steps
+</md_options>
+
+<opt_options>
+  dt = 1         # in fs
+  nsteps = 10    # number of steps
+</opt_options>
+
+<unit_cell>
+  1.00000000000000     
+ 14.0000000000000000    0.0000000000000000    0.0000000000000000  0
+  0.0000000000000000   14.0000000000000000    0.0000000000000000  0
+  0.0000000000000000    0.0000000000000000   14.0000000000000000  0
+</unit_cell>
+
+<excitations>
+  compute_excitations = 0
+  spectral_width = 0.25
+  excitations_opt = scf
+  num_excitations = 17  
+  1  0A -> 0A
+  1  0A -> 1A
+  1  0A -> 2A
+  1  0A -> 3A
+  1  0A -> 4A
+  1 -1A -> 1A
+  1 -1A -> 2A
+  1 -1A -> 3A
+  1 -1A -> 4A
+  1 -2A -> 1A
+  1 -2A -> 2A
+  1 -2A -> 3A
+  1 -2A -> 4A
+  1 -3A -> 1A
+  1 -3A -> 2A
+  1 -3A -> 3A
+  1 -3A -> 4A
+</excitations>
+
+
+
+<coordinates>
+  5   0.0  1
+Cartesian
+ Si                -0.19323673    0.55555555    0.00000000
+ H                  0.30007967   -0.83980782    0.00000000
+ H                  0.30010514    1.25322781    1.20841516
+ H                  0.30010514    1.25322781   -1.20841516
+ H                 -1.67323673    0.55557379    0.00000000
+</coordinates>
+
+<fragments>
+ 1
+Frag_indx   Frag_name  Frag_charge Frag_size      Atomic indices    - overall this is comment line
+ 1            1SiH4      0.0         5          1  2  3  4  5 
+</fragments>
+
+

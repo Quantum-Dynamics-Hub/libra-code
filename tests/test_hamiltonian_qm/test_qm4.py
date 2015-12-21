@@ -74,7 +74,9 @@ atlst1 = range(0,syst.Number_of_atoms)
 
 #=========== STEP 3: Create control parameters (setting computation options) ================
 prms = Control_Parameters()
-get_parameters_from_file("control_parameters.dat", prms)
+get_parameters_from_file("control_parameters_indo.dat", prms)
+#get_parameters_from_file("control_parameters_eht.dat", prms)
+
 print "guess type = ", prms.guess_type
 
 
@@ -83,14 +85,10 @@ modprms = Model_Parameters()
 
 # Initialize/read model parameters (need basis info)
 print "Setting parameters"
-if(prms.hamiltonian=="eht" or prms.hamiltonian=="geht"):
+if(prms.hamiltonian=="eht"):
     set_parameters_eht(prms, modprms)
 elif(prms.hamiltonian=="indo"):
-    set_parameters_indo(prms, modprms);
-elif(prms.hamiltonian=="geht1"):
-    set_parameters_geht1(prms, modprms); 
-elif(prms.hamiltonian=="geht2"):
-    set_parameters_geht2(prms, modprms); 
+    set_parameters_indo(prms, modprms)
 
 
 #=========== STEP 5: Set basis (STO-3G_DZ) ================
@@ -116,7 +114,7 @@ basis_ao, Nelec, Norb, atom_to_ao_map, ao_to_atom_map = set_basis_STO_3G_DZ(mol_
 
 #=========== STEP 6: Depending on hamiltonian to use, set internal parameters ================
 
-if(prms.hamiltonian=="eht" or prms.hamiltonian=="geht" or prms.hamiltonian=="geht1" or prms.hamiltonian=="geht2"):
+if(prms.hamiltonian=="eht"):
     set_parameters_eht_mapping(modprms, basis_ao)
     set_parameters_eht_mapping1(modprms,syst.Number_of_atoms,mol_at_types)
 
@@ -142,16 +140,19 @@ Sao.show_matrix()
 eri = doubleList()
 V_AB = doubleList()
 opt = 1  # 1 - for INDO, 0 - for CNDO/CNDO2
+Hao = MATRIX(Norb, Norb)
+debug = 1
 
      
 if(prms.hamiltonian=="indo"):
     Sao.Init_Unit_Matrix(1.0);  
     indo_core_parameters(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, opt,1);
+    Hamiltonian_core_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao,  Sao, debug)
+
+elif(prms.hamiltonian=="eht"):
+    Hamiltonian_core_eht(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao,  Sao, debug)
 
 
-Hao = MATRIX(Norb, Norb)
-debug = 1
-Hamiltonian_core_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao,  Sao, debug)
 print "Core Hamiltonian"
 Hao.show_matrix()
 
@@ -207,7 +208,11 @@ el.set_P_bet(res_bet[2])
 #el.set_P(res_alp[2]+res_bet[2])
 
 
-Hamiltonian_Fock_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map)
+if(prms.hamiltonian=="indo"):
+    Hamiltonian_Fock_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map)
+elif(prms.hamiltonian=="eht"):
+    Hamiltonian_Fock_eht(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map)
+
 
 print "Fock matrix at first iteration (alp)"
 el.get_Fao_alp().show_matrix()
@@ -234,12 +239,16 @@ while run:
     pop_opt = 0  #  0 -  integer populations,  1 - Fermi distribution              
 
     res_alp = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_alp, degen, kT, etol, pop_opt)
-    res_bet = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_bet, degen, kT, etol, pop_opt)
+    res_bet = Fock_to_P(el.get_Fao_bet(), el.get_Sao(), Nelec_bet, degen, kT, etol, pop_opt)
 
 
     el.set_P_alp(res_alp[2])
     el.set_P_bet(res_bet[2])
-    Hamiltonian_Fock_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map)
+
+    if(prms.hamiltonian=="indo"):
+        Hamiltonian_Fock_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map)
+    elif(prms.hamiltonian=="eht"):
+        Hamiltonian_Fock_eht(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map)
 
 
     d_err = math.fabs((el.get_P_alp()-P_alp_old).max_elt()) + math.fabs((el.get_P_bet()-P_bet_old).max_elt())

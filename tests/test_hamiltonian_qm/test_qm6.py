@@ -61,8 +61,8 @@ Load_PT(U, "elements.dat", 1)
 syst = System()
 #Load_Molecule(U, syst, os.getcwd()+"/c.pdb", "pdb_1")
 #Load_Molecule(U, syst, os.getcwd()+"/c2.pdb", "pdb_1")
-#Load_Molecule(U, syst, os.getcwd()+"/bh.pdb", "pdb_1")
-Load_Molecule(U, syst, os.getcwd()+"/co.pdb", "pdb_1")
+Load_Molecule(U, syst, os.getcwd()+"/bh.pdb", "pdb_1")
+#Load_Molecule(U, syst, os.getcwd()+"/co.pdb", "pdb_1")
 #Load_Molecule(U, syst, os.getcwd()+"/ch4.pdb", "pdb_1")
 
 
@@ -77,17 +77,15 @@ atlst1 = range(0,syst.Number_of_atoms)
 ham = Hamiltonian_Atomistic(10, 3*syst.Number_of_atoms)
 ham.set_Hamiltonian_type("QM")
 ham.set_system(syst)
-ham.init_qm_Hamiltonian("control_parameters.dat")
+ham.init_qm_Hamiltonian("control_parameters_indo.dat")
+#ham.init_qm_Hamiltonian("control_parameters_eht.dat")
 ham.set_rep(1)
 ham.compute()
 
 
 
-#    sys.exit(0)
-
 for i in xrange(10):
     print "Energy = ", ham.H(i,i), " a.u."
-
 print "Force 1 = ", ham.dHdq(0,0,0), " a.u."
 print "Force 3 = ", ham.dHdq(0,0,3), " a.u."
 
