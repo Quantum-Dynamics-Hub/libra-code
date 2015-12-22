@@ -73,7 +73,8 @@ atlst1 = range(0,syst.Number_of_atoms)
 
 #=========== STEP 3: Create control parameters (setting computation options) ================
 prms = Control_Parameters()
-get_parameters_from_file("control_parameters.dat", prms)
+get_parameters_from_file("control_parameters_indo.dat", prms)
+#get_parameters_from_file("control_parameters_eht.dat", prms)
 print "guess type = ", prms.guess_type
 
 
@@ -82,14 +83,10 @@ modprms = Model_Parameters()
 
 # Initialize/read model parameters (need basis info)
 print "Setting parameters"
-if(prms.hamiltonian=="eht" or prms.hamiltonian=="geht"):
+if(prms.hamiltonian=="eht"):
     set_parameters_eht(prms, modprms)
 elif(prms.hamiltonian=="indo"):
-    set_parameters_indo(prms, modprms);
-elif(prms.hamiltonian=="geht1"):
-    set_parameters_geht1(prms, modprms); 
-elif(prms.hamiltonian=="geht2"):
-    set_parameters_geht2(prms, modprms); 
+    set_parameters_indo(prms, modprms)
 
 
 #=========== STEP 5: Set basis (STO-3G_DZ) ================
@@ -115,7 +112,7 @@ basis_ao, Nelec, Norb, atom_to_ao_map, ao_to_atom_map = set_basis_STO_3G_DZ(mol_
 
 #=========== STEP 6: Depending on hamiltonian to use, set internal parameters ================
 
-if(prms.hamiltonian=="eht" or prms.hamiltonian=="geht" or prms.hamiltonian=="geht1" or prms.hamiltonian=="geht2"):
+if(prms.hamiltonian=="eht"):
     set_parameters_eht_mapping(modprms, basis_ao)
     set_parameters_eht_mapping1(modprms,syst.Number_of_atoms,mol_at_types)
 
@@ -132,7 +129,7 @@ t3 = VECTOR()
 
 
 
-update_overlap_matrix(x_period, y_period, z_period, t1, t2, t3, basis_ao, Sao);
+update_overlap_matrix(x_period, y_period, z_period, t1, t2, t3, basis_ao, Sao)
 print "AO overlap matrix"
 Sao.show_matrix()
 
@@ -149,7 +146,9 @@ if(prms.hamiltonian=="indo"):
 
 Hao = MATRIX(Norb, Norb)
 debug = 1
+
 Hamiltonian_core(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao,  Sao, debug)
+
 print "Core Hamiltonian"
 Hao.show_matrix()
 

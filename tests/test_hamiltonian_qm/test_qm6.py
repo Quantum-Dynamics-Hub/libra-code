@@ -74,20 +74,23 @@ atlst1 = range(0,syst.Number_of_atoms)
 
 
 # Creating Hamiltonian
-ham = Hamiltonian_Atomistic(10, 3*syst.Number_of_atoms)
+ham = Hamiltonian_Atomistic(2, 3*syst.Number_of_atoms)
 ham.set_Hamiltonian_type("QM")
 ham.set_system(syst)
 ham.init_qm_Hamiltonian("control_parameters_indo.dat")
 #ham.init_qm_Hamiltonian("control_parameters_eht.dat")
 ham.set_rep(1)
+ham.add_excitation(0,1,1,1)
+
+
 ham.compute()
 
 
 
-for i in xrange(10):
+for i in xrange(2):
     print "Energy = ", ham.H(i,i), " a.u."
-print "Force 1 = ", ham.dHdq(0,0,0), " a.u."
-print "Force 3 = ", ham.dHdq(0,0,3), " a.u."
+print "Force 1 = ", -ham.dHdq(0,0,0), " a.u."
+print "Force 3 = ", -ham.dHdq(0,0,3), " a.u."
 
 
 
