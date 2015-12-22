@@ -541,6 +541,24 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
              *Dmo_a_x, *Dmo_a_y, *Dmo_a_z, *Dmo_b_x, *Dmo_b_y, *Dmo_b_z
           );
 
+//          cout<<"Derivative couplings1 for n = "<<n<<endl;
+          //exit(0);
+          if(qm_ham->basis_ex.size()<nelec){
+            cout<<"Error: in Hamiltonian_Atomistic::compute_adiabatic()...\n";
+            cout<<"The number of excitations ("<<qm_ham->basis_ex.size()<<") is less than the dimensionality of the Hamiltonian ("<<nelec<<")\n";
+            cout<<"Use the ham.add_excitation(int,int,int,int) function to add the appropriate number of excitations\n";
+            cout<<"Exiting now...\n";
+            exit(0);
+          }
+          else if(qm_ham->basis_ex.size()>nelec){
+            cout<<"Warning: in Hamiltonian_Atomistic::compute_adiabatic()...\n";
+            cout<<"The number of excitations ("<<qm_ham->basis_ex.size()<<") is larger than the dimensionality of the Hamiltonian ("<<nelec<<")\n";
+            cout<<"Only first "<<nelec<<" states will be handled. Other excitations are disregarded\n";
+          }
+
+ 
+//          cout<<"nelec = "<<nelec<<endl;
+
 
           for(int I=0;I<nelec;I++){    // over all excitons
 
@@ -634,7 +652,7 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
                 else{ ;; } // in this case couplings are zero
 
 
-
+//                cout<<"I= "<<I<<" J= "<<J<<endl;
                 
                 d1ham_adi[3*n  ]->set(I,J, dc_x);
                 d1ham_adi[3*n+1]->set(I,J, dc_y);
@@ -645,6 +663,8 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
             }// for J
           }// for I
 
+
+//          cout<<"Excitations are done:\n";
 
         }// for n
 
