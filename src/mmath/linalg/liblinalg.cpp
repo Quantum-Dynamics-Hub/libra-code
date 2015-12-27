@@ -97,6 +97,9 @@ complex<double> (CMATRIX::*get3)(int)            = &CMATRIX::get;
 complex<double> (CMATRIX::*get4)(int,int)        = &CMATRIX::get;
 void   (CMATRIX::*set3)(int,double,double)       = &CMATRIX::set;
 void   (CMATRIX::*set4)(int,int,double,double)   = &CMATRIX::set; 
+void   (CMATRIX::*set5)(int,complex<double>)       = &CMATRIX::set;
+void   (CMATRIX::*set6)(int,int,complex<double>)   = &CMATRIX::set; 
+
 
 void (CMATRIX::*tridiagonalize1)(CMATRIX& T)              = &CMATRIX::tridiagonalize;
 void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagonalize;
@@ -283,6 +286,9 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
       .def("get",get4)
       .def("set",set3)
       .def("set",set4)
+      .def("set",set5)
+      .def("set",set6)
+
 
       .def_readwrite("num_of_cols",&CMATRIX::n_cols)
       .def_readwrite("num_of_rows",&CMATRIX::n_rows)

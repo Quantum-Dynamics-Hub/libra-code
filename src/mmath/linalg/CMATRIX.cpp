@@ -27,6 +27,12 @@ void CMATRIX::set(int indx,double value1, double value2){
     M[indx] = complex<double>(value1,value2);
 }
 
+void CMATRIX::set(int indx, complex<double> value1){
+
+    M[indx] = value1;
+}
+
+
 complex<double> CMATRIX::get(int indx){
 
     return M[indx];
@@ -36,6 +42,12 @@ void CMATRIX::set(int row,int col,double value1,double value2){
 
    M[row*n_cols+col] = complex<double>(value1,value2);
 }
+
+void CMATRIX::set(int row,int col, complex<double> value1){
+
+   M[row*n_cols+col] = value1;
+}
+
 
 complex<double> CMATRIX::get(int row,int col){
 

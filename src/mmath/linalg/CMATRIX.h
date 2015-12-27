@@ -36,8 +36,10 @@ public:
   complex<double>* M;
 
   void set(int,double,double);
+  void set(int,complex<double>);
   complex<double> get(int);
   void set(int,int,double,double);
+  void set(int,int,complex<double>);
   complex<double> get(int,int);
 
 
