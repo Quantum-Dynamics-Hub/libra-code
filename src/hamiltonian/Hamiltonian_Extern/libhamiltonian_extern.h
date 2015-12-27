@@ -9,20 +9,19 @@
 *
 *********************************************************************************/
 
-#ifndef LIB_HAMILTONIAN_H
-#define LIB_HAMILTONIAN_H
+#ifndef LIB_HAMILTONIAN_EXTERN_H
+#define LIB_HAMILTONIAN_EXTERN_H
 
-#include "Hamiltonian_Generic/libhamiltonian_generic.h"
-#include "Hamiltonian_Model/libhamiltonian_model.h"
-#include "Hamiltonian_Atomistic/libhamiltonian_atomistic.h"
-#include "Hamiltonian_Extern/libhamiltonian_extern.h"
+#include "Hamiltonian_Extern.h"
 
 namespace libhamiltonian{
+namespace libhamiltonian_extern{
 
-void export_Hamiltonian_objects();
+void export_hamiltonian_extern_objects();
 
 
+}// namespace libhamiltonian_extern
 }// namespace libhamiltonian
 
 
-#endif// LIB_HAMILTONIAN_H
+#endif// LIB_HAMILTONIAN_EXTERN_H
