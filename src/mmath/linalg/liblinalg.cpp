@@ -299,6 +299,9 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
       .def(self/double())
       .def(self*double())
       .def(double()*self)
+      .def(self*complex<double>())
+      .def(complex<double>()*self)
+
 
       .def("show_matrix", &CMATRIX::show_matrix)
       .def("conj", &CMATRIX::conj)   // return complex conjugate matrix

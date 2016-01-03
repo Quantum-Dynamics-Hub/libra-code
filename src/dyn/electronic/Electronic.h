@@ -86,8 +86,9 @@ typedef std::vector< Electronic > ElectronicList;
 // In Electronic_Dynamics1.cpp
 void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham);
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib);
-void propagate_electronic(double dt,Electronic& el, MATRIX& S, CMATRIX& Hvib);
-void propagate_electronic(double dt,Electronic& el, CMATRIX& S, CMATRIX& Hvib);
+void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S);
+void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S);
+void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S, CMATRIX& Sdot);
 
 
 }// namespace libelectronic

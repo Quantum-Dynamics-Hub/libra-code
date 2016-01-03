@@ -55,12 +55,14 @@ void export_Electronic_objects(){
 
   
   void (*expt_propagate_electronic_v1)(double dt,Electronic& el, CMATRIX& Hvib) = &propagate_electronic;
-  void (*expt_propagate_electronic_v2)(double dt,Electronic& el, MATRIX& S, CMATRIX& Hvib) = &propagate_electronic;
-  void (*expt_propagate_electronic_v3)(double dt,Electronic& el, CMATRIX& S, CMATRIX& Hvib) = &propagate_electronic;
+  void (*expt_propagate_electronic_v2)(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S) = &propagate_electronic;
+  void (*expt_propagate_electronic_v3)(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S) = &propagate_electronic;
+  void (*expt_propagate_electronic_v4)(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S, CMATRIX& Sdot) = &propagate_electronic;
 
   def("propagate_electronic", expt_propagate_electronic_v1);
   def("propagate_electronic", expt_propagate_electronic_v2);
   def("propagate_electronic", expt_propagate_electronic_v3);
+  def("propagate_electronic", expt_propagate_electronic_v4);
 
 
 
