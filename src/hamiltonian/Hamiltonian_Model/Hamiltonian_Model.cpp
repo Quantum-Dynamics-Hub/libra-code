@@ -18,6 +18,7 @@
 namespace libhamiltonian{
 namespace libhamiltonian_model{
 
+using namespace libhamiltonian_generic;
 using namespace libmmath;
 using namespace libmmath::libmeigen;
 using std::complex;
@@ -130,6 +131,12 @@ void Hamiltonian_Model::set_params(vector<double>& params_){
   status_adi = 0;
 
 }
+
+//void Hamiltonian_Model::set_q(vector<double>& q_){ Hamiltonian::set_q(q_); }
+//void Hamiltonian_Model::set_q(boost::python::list q_){ Hamiltonian::set_q(q_); }
+//void Hamiltonian_Model::set_v(vector<double>& v_){ Hamiltonian::set_v(v_); }
+//void Hamiltonian_Model::set_v(boost::python::list v_){ Hamiltonian::set_v(v_); }
+
 
 
 void Hamiltonian_Model::compute_diabatic(){
