@@ -15,7 +15,6 @@
 #include "libelectronic.h"
 
 using namespace boost::python;
-//using namespace libdyn::libelectronic;
 
 
 namespace libdyn{
@@ -24,8 +23,6 @@ namespace libelectronic{
 
 void export_Electronic_objects(){
 
-//  def("SAC_Ham", expt_SAC_Ham1);
-//  void (Hamiltonian_Model::*set_params)(boost::python::list) = &Hamiltonian_Model::set_params;
   void (Electronic::*expt_propagate_electronic)(double,Hamiltonian&) = &Electronic::propagate_electronic;
 
 
@@ -85,6 +82,6 @@ BOOST_PYTHON_MODULE(libelectronic){
 }
 
 
-}// namespace libdyn
-}// namespace libelectronic
+}/// namespace libdyn
+}/// namespace libelectronic
 

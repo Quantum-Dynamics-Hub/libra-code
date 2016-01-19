@@ -10,14 +10,6 @@
 *********************************************************************************/
 
 #include "Electronic.h"
-
-/****************************************************************************
-  This file contains following functions:
-
-  void propagate_electronic(double dt,Electronic& el,Hamiltonian& pot)
-
-****************************************************************************/
-
 #include "../../mmath/libmmath.h"
 #include <cmath>
 
@@ -43,22 +35,19 @@ void Electronic::propagate_electronic(double dt,Hamiltonian& ham){
 
 
 void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
-// This version is based on the Hamiltonian formulation of TD-SE
-// This propagator is good for general Hamiltonian - diabatic of adiabatic
-//
-// iL = iL_qp + iL_qq + iL_pp
-//
-// iL_qp = sum_i,j {}
-//
-// ...
+/*! This version is based on the Hamiltonian formulation of TD-SE
+    This propagator is good for general Hamiltonian - diabatic of adiabatic
+    iL = iL_qp + iL_qq + iL_pp
+    iL_qp = sum_i,j {}
+*/ ...
 
 
   int i,j;
 
   double dt_half = 0.5*dt;
 
-  //------------- Phase evolution (adiabatic) ---------------- 
-  // exp(iL_qp * dt/2)
+  ///------------- Phase evolution (adiabatic) ---------------- 
+  /// exp(iL_qp * dt/2)
   for(i=0;i<el->nstates;i++){
     for(j=0;j<el->nstates;j++){
 
@@ -67,7 +56,7 @@ void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
     }// for j
   }// for i
 
-  //------------- Population transfer (adiabatic) ----------------
+  ///------------- Population transfer (adiabatic) ----------------
   // exp((iL_qq + iL_pp) * dt/2)
   for(i=0;i<el->nstates;i++){
     for(j=i+1;j<el->nstates;j++){
@@ -78,7 +67,7 @@ void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
     }// for j
   }// for i
 
-  // exp((iL_qq + iL_pp) * dt/2)
+  /// exp((iL_qq + iL_pp) * dt/2)
   for(i=el->nstates-1;i>=0;i--){
     for(j=el->nstates-1;j>i;j--){
 
@@ -90,8 +79,8 @@ void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
   }// for i
 
 
-  //------------- Phase evolution (adiabatic) ----------------
-  // exp(iL_qp * dt/2)
+  ///------------- Phase evolution (adiabatic) ----------------
+  /// exp(iL_qp * dt/2)
   for(i=el->nstates-1;i>=0;i--){
     for(j=el->nstates-1;j>=0;j--){
 
@@ -101,7 +90,7 @@ void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
   }// for i
 
 
-}// propagate_electronic
+}/// propagate_electronic
 
 
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib){
@@ -427,6 +416,7 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S, C
 
 
   // Clean temporary memory
+  delete expH;
   delete coeff;
   delete Hvib_eff;
   delete S_i_half;

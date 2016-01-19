@@ -24,39 +24,41 @@ namespace libdyn{
 namespace libelectronic{
 
 
+/*! This class describes a time-dependent state (multiconfigurational in sense that 
+    it can have time-dependent contributions from different stationary states )
+
+*/
 
 class Electronic{
-  // This class describes a time-dependent state (multiconfigurational in sense that 
-  // it can have time-dependent contributions from different stationary states )
   
-  Random* rnd_obj;
+  Random* rnd_obj;                           
   void rnd_phase(double&, double&, double);
 
   public:
 
-  int nstates;             // number of stationary (basis) states
-  int istate;              // index of current basis state (for stochastic)
-  std::vector<double> q;   // MMTS variables for all basis states Re(c)
-  std::vector<double> p;   // MMTS variables        --- // ---    Im(c)
+  int nstates;             ///< number of stationary (basis) states
+  int istate;              ///< index of current basis state (for stochastic)
+  std::vector<double> q;   ///< MMTS variables for all basis states: q = Re(c)
+  std::vector<double> p;   ///< MMTS variables for all basis states: p = Im(c)
 
 
   //--------------- Class functions ---------------
 
-  void init(int,int);
-  void init(int);
+  void init(int,int);      ///< initialize object: 1-st parameter - the number of electronic DOF, 2-nd - the initial state index
+  void init(int);          ///< initialize object: parameter - the number of electronic DOF
 
   Electronic();
   Electronic(int);
   Electronic(int,int);
-  Electronic(const Electronic&); // cctor
+  Electronic(const Electronic&); ///< cctor
 
   ~Electronic();
 
   Electronic& operator=(const Electronic& ob);
 
 
-  std::complex<double> c(int i);      // return amplitude in the complex format: c_i = q_i + i*p_i
-  std::complex<double> rho(int i, int j); // return the density matrix element: rho_ij = c^*_i * c_j
+  std::complex<double> c(int i);          ///< return amplitude in the complex format: c_i = q_i + i*p_i
+  std::complex<double> rho(int i, int j); ///< return the density matrix element: rho_ij = c^*_i * c_j
 
 
   //------ Methods ------------

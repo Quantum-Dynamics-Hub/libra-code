@@ -22,8 +22,8 @@ namespace libelectronic{
 void export_Electronic_objects();
 
 
-}// namespace libdyn
-}// namespace libelectronic
+}/// namespace libdyn
+}/// namespace libelectronic
 
 
 
