@@ -8,6 +8,12 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+ \file libcalculators.h
+ \brief The file that exprots libcalculator objects to Python
+        
+*/
+
 
 #ifndef LIB_CALCULATORS_H
 #define LIB_CALCULATORS_H
@@ -22,6 +28,7 @@
 #include "Mulliken.h"
 
 
+/// libcalculators namespace
 namespace libcalculators{
 
 

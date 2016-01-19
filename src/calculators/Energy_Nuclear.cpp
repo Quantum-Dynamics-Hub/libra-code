@@ -8,13 +8,28 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Energy_Nuclear.cpp
+  \brief The file implement functions for nuclear interaction energy/force calculations
+    
+*/
 
 #include "Energy_Nuclear.h"
 
+/// libcalculators namespace
 namespace libcalculators{
 
 double energy_nucl(vector<VECTOR>& R, vector<double>& Zeff){
-/// Compute nuclear energy of a sub-system
+/**
+  \brief Compute nuclear energy of a sub-system
+
+  Simple nuclear-nuclear Coulombic interaction
+
+  \param[in]  R  Coordinates of all atoms in the system
+  \param[in] Zeff effective charges of all atoms in the system
+*/
+
+
 
   int I,J;
   int sz = R.size();
@@ -32,8 +47,18 @@ double energy_nucl(vector<VECTOR>& R, vector<double>& Zeff){
 
 }// energy_nucl
 
+
 double energy_nucl(vector<VECTOR>& R, vector<double>& Zeff, vector<VECTOR>& G){
-/// Compute nuclear energy and gradients of a sub-system
+/**
+  \brief Compute nuclear energy and energy gradients of a sub-system 
+
+  Simple nuclear-nuclear Coulombic interaction. Derivatives w.r.t. all coordinates
+
+  \param[in]  R  Coordinates of all atoms in the system
+  \param[in] Zeff Effective charges of all atoms in the system
+  \param[out] G  Will contain gradients w.r.t. to each nuclear coordinates
+*/
+
 
   int I,J;
   int sz = R.size();

@@ -8,12 +8,18 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file NList.h
+  \brief The file describes auxiliary and main functions for the neighbor list construction
+    
+*/
 
 #ifndef NList_H
 #define NList_H
 
 #include "Cell.h"
 
+/// libcell namespace
 namespace libcell{
 
 // Auxiliary functions

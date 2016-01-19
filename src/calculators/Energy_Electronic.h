@@ -8,6 +8,12 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Energy_Electronic.h
+  \brief The file defines functions for electronic energy/derivatives calculations
+    
+*/
+
 
 #ifndef ENERGY_ELECTRONIC_H
 #define ENERGY_ELECTRONIC_H
@@ -15,6 +21,7 @@
 #include "../mmath/libmmath.h"
 using namespace libmmath;
 
+/// libcalculators namespace
 namespace libcalculators{
 
 double energy_elec(MATRIX* Pao,MATRIX* Hao,MATRIX* Fao);

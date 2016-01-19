@@ -8,15 +8,30 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Bands.cpp
+  \brief The file implements functions for ordering, converting, and printing bands (energies and occupations) information
+    
+*/
 
 #include "Bands.h"
 #include "Fermi.h"
 
+/// libcalculators namespace
 namespace libcalculators{
 
 
 void convert_1(boost::python::list bands,  vector< pair<int,double> >& int_bands){
-// Converst list to vector< pair<int, double> >
+/**
+  \brief Auxiliary converter function
+
+  This function converts Python list into vector of pairs, so we can conveniently 
+  conver input in Python-friendly functions, to use internal functions
+
+  \param[in] bands The Python input - it is expected to be the list of 2-element lists
+  \param[out] int_bands The C++ output - the vector of pairs
+*/
+
   int Norb = len(bands);
 
   for(int i=0;i<Norb;i++){
@@ -37,8 +52,15 @@ void convert_1(boost::python::list bands,  vector< pair<int,double> >& int_bands
 }
 
 boost::python::list convert_2( vector< pair<int,double> >& bands){
+/**
+  \brief Auxiliary converter function
 
-  // Now create list of lists
+  This function converts C++ vector of pairs into Python list
+
+  \param[in] bands The C++ input - the vector of pairs
+  The function returns a list of 2-element lists
+*/
+
   boost::python::list res;
 
   for(int i=0;i<bands.size();i++){
@@ -57,6 +79,17 @@ boost::python::list convert_2( vector< pair<int,double> >& bands){
 
 
 void order_bands(MATRIX* E, vector< pair<int,double> >& bands){
+/**
+  \brief Ordering of bands 
+
+  This function takes the diagonal elements of the E matrix, orders them and packs into a vector of pairs. Each 
+  pair is contains the index of the state (in the original, petentially disordered, structure E) and the corresponding
+  value of the matrix element.
+
+  \param[in] E The pointer to the diagonal matrix with energies
+  \param[in,out] bands The packed structure containing ordered eigenvalues and their original ordering indices
+*/
+
 
   int Norb = E->num_of_cols;
 
@@ -86,6 +119,18 @@ void order_bands(MATRIX* E, vector< pair<int,double> >& bands){
 
 
 boost::python::list order_bands(MATRIX E){
+/**
+  \brief Ordering of bands (Python-friendly version)
+
+  This function takes the diagonal elements of the E matrix, orders them and packs into a vector of pairs. Each 
+  pair is contains the index of the state (in the original, petentially disordered, structure E) and the corresponding
+  value of the matrix element.
+
+  \param[in] E The diagonal matrix with energies
+  The function returns the packed structure (represented as a list of 2-element lists) containing ordered eigenvalues 
+  and their original ordering indices
+*/
+
 
   vector< pair<int,double> > bands;
   order_bands(&E, bands);
@@ -97,6 +142,22 @@ boost::python::list order_bands(MATRIX E){
 
 void populate_bands(double Nel, double degen, double kT, double etol, int pop_opt,
          vector< pair<int,double> >& bands,vector< pair<int,double> >& occ){
+/**
+  \brief Compute populations of bands
+
+  The function computes populations of bands, depending on the chosen poulation scheme and the corresponding parameters.
+
+  \param[in] Nel The number of electrons
+  \param[in] degen Dengeneracy of orbitals (the maximal number of electrons that can occupay one orbital)
+  \params[in] kT  Broadening factor for Fermi distribution
+  \params[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
+  \param[in] pop_opt The flag controlling the population scheme
+             pop_opt = 0 - integer occupation numbers will be used (good in many standard cases)
+             pop_opt = 1 - fractional occupations will be possible (can help in difficult cases)
+  \param[in] bands The packed structure containing ordered eigenvalues and their original ordering indices
+  \param[in,out] occ The packed structure containing populations of the energy levels packed in bands
+
+*/
 
   int Norb = bands.size();
   int i;
@@ -142,6 +203,23 @@ void populate_bands(double Nel, double degen, double kT, double etol, int pop_op
 
 boost::python::list populate_bands(double Nel, double degen, double kT, double etol, int pop_opt,
          boost::python::list bands){
+/**
+  \brief Compute populations of bands (Python-friendly version)
+
+  The function computes populations of bands, depending on the chosen poulation scheme and the corresponding parameters.
+
+  \param[in] Nel The number of electrons
+  \param[in] degen Dengeneracy of orbitals (the maximal number of electrons that can occupay one orbital)
+  \params[in] kT  Broadening factor for Fermi distribution
+  \params[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
+  \param[in] pop_opt The flag controlling the population scheme
+             pop_opt = 0 - integer occupation numbers will be used (good in many standard cases)
+             pop_opt = 1 - fractional occupations will be possible (can help in difficult cases)
+  \param[in] bands The packed structure containing ordered eigenvalues and their original ordering indices
+  The function returns the packed structure (list of 2-element lists) containing populations of the energy levels packed in bands
+
+*/
+
 
   // General bands:
   int Norb = len(bands);
@@ -173,6 +251,18 @@ boost::python::list populate_bands(double Nel, double degen, double kT, double e
 
 
 void show_bands(int Norb, int Nocc, vector< pair<int,double> >& bands,vector< pair<int,double> >& occ){
+/**
+  \brief Formatter printout of the bands
+
+  The function will print energy levels and the corresponding populations
+
+  \param[in] Norb The number of orbitals to show (starting with index 0) - usually all
+  \param[in] Nocc The number of occupied orbitals - we just print this number. This parameter is not used in any other way.
+  \param[in] bands The packed structure containing ordered eigenvalues and their original ordering indices
+  \param[in] occ The packed structure containing populations of the energy levels packed in bands
+
+*/
+
 // Show only Norb bands
 
   int sz = Norb;

@@ -9,13 +9,19 @@
 *
 *********************************************************************************/
 
+/**
+  \file Mulliken.h
+  \brief The file defines functions for Mulliken population analysis    
+    
+*/
+
 #ifndef MULLIKEN_H
 #define MULLIKEN_H
 
 #include "../mmath/libmmath.h"
 using namespace libmmath;
 
-
+/// libcalculators namespace
 namespace libcalculators{
 
 

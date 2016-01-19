@@ -8,14 +8,34 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Annihilate.cpp
+  \brief The file implements functions for spin annihilation - which may be needed in unrestricted (spin-polarized) calculations
+    
+*/
 
 #include "Annihilate.h"
 
+/// libcalculators namespace
 namespace libcalculators{
 
 void annihilate(int Na, int Nb, MATRIX* Pa, MATRIX* Pb, MATRIX* Ra, MATRIX* Rb){
-// Spin annihilation
-// according to Eqs. 2.19 - 2.21 from Pople, Beveridge, Dobosh JCP 47, 2026 (1967)
+/**
+  \brief Auxiliary function for spin annihilation
+
+  This function pre-computes the annihilation corrected density matrices for both spin channels, but
+  does not change the original density matrices.
+
+  \param[in] Na the number of alpha electrons
+  \param[in] Nb the number of beta electrons
+  \param[in] Pa The pointer to the original density matrix for alpha-channel
+  \param[in] Pb The pointer to the original density matrix for beta-channel
+  \param[in] Ra The pointer to the spin-annihilated density matrix for alpha-channel
+  \param[in] Rb The pointer to the spin-annihilated density matrix for beta-channel
+
+  According to Eqs. 2.19 - 2.21 from Pople, Beveridge, Dobosh JCP 47, 2026 (1967)
+
+*/
 
   int DF = 0;
 
@@ -97,6 +117,21 @@ void annihilate(int Na, int Nb, MATRIX* Pa, MATRIX* Pb, MATRIX* Ra, MATRIX* Rb){
 }
 
 void annihilate(int Na, int Nb, MATRIX* Pa, MATRIX* Pb){
+/**
+  \brief The function for spin annihilation
+
+  This function pre-computes the annihilation-corrected density matrices and change 
+  the original density matrices to the annihilated density matrices
+
+  \param[in] Na the number of alpha electrons
+  \param[in] Nb the number of beta electrons
+  \param[in,out] Pa The pointer to the original density matrix for alpha-channel
+  \param[in,out] Pb The pointer to the original density matrix for beta-channel
+
+  According to Eqs. 2.19 - 2.21 from Pople, Beveridge, Dobosh JCP 47, 2026 (1967)
+
+*/
+
 
   int Norb = Pa->num_of_cols;
   MATRIX* Ra;   Ra   = new MATRIX(Norb,Norb);

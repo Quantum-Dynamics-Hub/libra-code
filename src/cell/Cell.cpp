@@ -8,13 +8,35 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Cell.cpp
+  \brief The file implements classes and functions for periodic calculations
+    
+*/
 
 #include "Cell.h"
 
+/// libcell namespace
 namespace libcell{
 
 
 void Cell::brute_force(VECTOR& rij, int degree, vector<triple>& res,triple& central_translation){
+/**
+  \brief Brute force generation of the neighbor list for a given pair of atoms
+
+  \param[in] rij  Vector connecting the two atoms for which we want to construct neighbor list
+  \param[in] degree The maximal number of unit cells to consider in all directions (usually, if the
+             cell is large and the cutoff distance is not, it may be sufficient to have degree=1). Degree = 0 
+             implies only the original unit cell with no periodic re[licas. Set degree to a larger value, if
+             the simulation cell is small.
+  \param[out] res The list of triples with each triple describing the integer translations (for given specific pair of atoms)
+             of the original cell needed to account for all neighbors
+  \param[out] central_translation The triple that makes the two atoms to be minimally separated (be in the central cell). For instance, if the two
+              atoms are near the opposite sides of the box, the 1 box translation will put them together (nearby). That translation is 
+              then the central translation.
+    
+*/
+
 
   double Roff2 = Roff * Roff;
   VECTOR r;
@@ -52,6 +74,18 @@ void Cell::brute_force(VECTOR& rij, int degree, vector<triple>& res,triple& cent
 
 
 void Cell::calculate(VECTOR& rij,vector<triple>& res,triple& central_translation){
+/**
+  \brief Function for generation of the neighbor list for a given pair of atoms. This is more efficient version than the brute
+         force. Use the brute force only for verification.
+
+  \param[in] rij  Vector connecting the two atoms for which we want to construct neighbor list
+  \param[out] res The list of triples with each triple describing the integer translations (for given specific pair of atoms)
+             of the original cell needed to account for all neighbors
+  \param[out] central_translation The triple that makes the two atoms to be minimally separated (be in the central cell). For instance, if the two
+              atoms are near the opposite sides of the box, the 1 box translation will put them together (nearby). That translation is 
+              then the central translation.
+    
+*/
 
 //  int db = 0;
 //  if(fabs(rij.x-3.5)<0.001 && fabs(rij.y+4.033)<0.001 && fabs(rij.z-0.747)<0.001){ db = 1; }
@@ -147,6 +181,23 @@ void Cell::calculate(VECTOR& rij,vector<triple>& res,triple& central_translation
 }
 
 void Cell::update_vlist(int sz,VECTOR* r,vector< vector<quartet> >& at_neib, vector<triple>& central_translation){
+/**
+  \brief Function to update the Verlet list
+
+  In this case, we supply the coordinates of all atoms and for all atom we find an integer unit cell translation vector
+  that corresponds to the cells that may contain atoms within the cutoff range of the considered atom.
+
+  \param[in] sz Size of the atoms array = the number of atoms.
+  \param[in] r  Pointer to the array of the atomic coordinates
+  \param[out] at_neib The list of neighbor cell translations for each atom. Such translations are chosen to ensure that there are
+              some atoms (replicas) in the translated cell that(atoms) are within the cutoff distance from the original (central) one.
+  \param[out] central_translation The triple that makes the two atoms to be minimally separated (be in the central cell). For instance, if the two
+              atoms are near the opposite sides of the box, the 1 box translation will put them together (nearby). That translation is 
+              then the central translation.
+    
+*/
+
+
 // Unconditional Update - in all cases:
 
   // Clean result holders

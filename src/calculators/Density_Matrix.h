@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Density_Matrix.h
+  \brief The file defines functions for density matrix and Fock-to-density calculations
+    
+*/
 
 #ifndef DENSITY_MATRIX_H
 #define DENSITY_MATRIX_H
@@ -15,6 +20,7 @@
 #include "../mmath/libmmath.h"
 using namespace libmmath;
 
+/// libcalculators namespace
 namespace libcalculators{
 
 void compute_density_matrix(vector< pair<int,double> >& occ, MATRIX* C, MATRIX* P);

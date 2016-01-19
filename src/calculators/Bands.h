@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Bands.h
+  \brief The file describes functions for ordering, converting, and printing bands (energies and occupations) information
+    
+*/
 
 #ifndef BANDS_H
 #define BANDS_H
@@ -15,6 +20,7 @@
 #include "../mmath/libmmath.h"
 using namespace libmmath;
 
+/// libcalculators namespace
 namespace libcalculators{
 
 

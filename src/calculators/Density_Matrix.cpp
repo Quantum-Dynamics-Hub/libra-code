@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Density_Matrix.cpp
+  \brief The file implements functions for density matrix and Fock-to-density calculations
+    
+*/
 
 #include "Density_Matrix.h"
 #include "Fermi.h"
@@ -18,13 +23,22 @@ using namespace libmmath;
 using namespace libmmath::libmeigen;
 
 
+/// libcalculators namespace
 namespace libcalculators{
 
-
 void compute_density_matrix(vector< pair<int,double> >& occ, MATRIX* C, MATRIX* P){
-// Scales as O(Norb^3)
-// P = C * N * C.T(), where N - is diagonal - populations in MO basis
-// occ - represents N
+/**
+  \brief Straightforward density matrix computation
+
+  Scales as O(Norb^3)
+  P = C * N * C.T(), where N - is diagonal - populations in MO basis
+
+  \param[in] occ Occupations of the molecular orbitals (list of MO-index/MO-occupation pairs), represents N
+  \param[in] C Pointer the matrix of the MO-LCAO coefficients
+  \param[out] P Pointer to the density matrix (in AO basis)
+
+*/
+
 
   int a,b,jj,j;
 
@@ -59,7 +73,19 @@ void compute_density_matrix(vector< pair<int,double> >& occ, MATRIX* C, MATRIX* 
 
 }// void compute_density_matrix(...)
 
+
 MATRIX compute_density_matrix(boost::python::list occ, MATRIX C){
+/**
+  \brief Straightforward density matrix computation (Python-friendly)
+
+  Scales as O(Norb^3)
+  P = C * N * C.T(), where N - is diagonal - populations in MO basis
+
+  \param[in] occ Occupations of the molecular orbitals (Python list of MO-index/MO-occupation pairs), represents N 
+  \param[in] C The matrix of the MO-LCAO coefficients
+  Density matrix (in AO basis) is returned as a MATRIX object
+
+*/
 
   int Norb = C.num_of_cols;
   vector< pair<int,double> > int_occ;
@@ -77,10 +103,40 @@ void Fock_to_P(int Norb,int Nocc, int degen, double Nel, std::string eigen_metho
                MATRIX* Fao, MATRIX* Sao, MATRIX* C, MATRIX* E,
                vector< pair<int,double> >& bands, vector< pair<int,double> >& occ,
                MATRIX* P, vector<Timer>& bench_t){
-// Iterative unit: from a given Hamiltonian (Fock matrix) we obtain density matrix
-// In these steps there is no coupling of spin-up and spin-down channels, so they can
-// be solved one by one, independently
-//exit(0);
+/**
+  \brief Set of instructions to compute density matrix from the Fock matrix
+
+  This is a somewhat older version
+
+  Iterative unit: from a given Hamiltonian (Fock matrix) we obtain density matrix
+  In these steps there is no coupling of spin-up and spin-down channels, so they can
+  be solved one by one, independently. 
+  1) solve  Fao * C  = Sao * C * E
+  2) order bands
+  3) compute P as  P = C * N * C.T(), where N = occ
+
+
+  \param[in] Norb The number of orbitals = the dimensionality of electronic problem
+  \param[in] Nocc The number of occupied (integer occupation) orbitals
+  \param[in] degen Dengeneracy of orbitals (the maximal number of electrons that can occupay one orbital)
+  \param[in] Nel The number of electrons
+  \param[in] eigen_method The flag controlling the assumer orthogonality of basis orbitals:
+             eigen_method = "generalized" - non-orthogonal orbitals are assumed, solve a generalized eigenvalue problem
+             eigen_method = "standard" - orthogonal orbitals are assumed, solve standard eigenvalue problem
+  \param[in] pop_opt The flag controlling the population scheme
+             pop_opt = 0 - integer occupation numbers will be used (good in many standard cases)
+             pop_opt = 1 - fractional occupations will be possible (can help in difficult cases)
+  \param[in] Fao The pointer to the Fock matrix
+  \param[in] Sao The pointer to the AO overlap matrix
+  \param[in,out] C The pointer to MO-LCAO matrix
+  \param[out] E The pointer to the eigenvalues (of the Fock operator) matrix
+  \param[in,out] bands The orbital energies in the vector of pairs format
+  \param[in,out] occ The orbital occupancies (MO basis populations) in the vector of pairs format
+  \param[in,out] P The pointer to the density matrix 
+  \param[in,out] bench_t The benchmarking information: bench_t[0] - eigenvalue solvers, bench_t[1] - ordering bands,
+                 bench_t[2] - populate bands, bench_t[3] - density matrix computations
+*/
+
   int BM = 1;
     
   // Get electronic structure (wfc and energies) from given Fock matrix
@@ -113,15 +169,41 @@ void Fock_to_P(int Norb,int Nocc, int degen, double Nel, std::string eigen_metho
 }//void Fock_to_P(int Norb,int Nocc, int degen, double Nel, std::string eigen_method, int pop_opt, ....
  
 
-
 void Fock_to_P(MATRIX* Fao, MATRIX* Sao, double Nel, double degen, double kT, double etol, int pop_opt, /*Inputs*/
                MATRIX* E, MATRIX* C, MATRIX* P,                                              /*Outputs*/
                vector< pair<int,double> >& bands, vector< pair<int,double> >& occ,           /*Outputs*/
                int BM, vector<Timer>& bench_t){                                              /*Benchmarking data*/
-// Iterative unit: from a given Hamiltonian (Fock matrix) we obtain density matrix:
-// 1) solve  Fao * C  = Sao * C * E
-// 2) order bands
-// 3) compute P as  P = C * N * C.T(), where N = occ
+/**
+  \brief Set of instructions to compute density matrix from the Fock matrix
+
+  This is a newer version - takes less argiments and makes some inferrences
+
+  Iterative unit: from a given Hamiltonian (Fock matrix) we obtain density matrix
+  In these steps there is no coupling of spin-up and spin-down channels, so they can
+  be solved one by one, independently. 
+  1) solve  Fao * C  = Sao * C * E
+  2) order bands
+  3) compute P as  P = C * N * C.T(), where N = occ
+
+  \param[in] Fao The pointer to the Fock matrix
+  \param[in] Sao The pointer to the AO overlap matrix
+  \param[in] Nel The number of electrons
+  \param[in] degen Dengeneracy of orbitals (the maximal number of electrons that can occupay one orbital)
+  \params[in] kT  Broadening factor for Fermi distribution
+  \params[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
+  \param[in] pop_opt The flag controlling the population scheme
+             pop_opt = 0 - integer occupation numbers will be used (good in many standard cases)
+             pop_opt = 1 - fractional occupations will be possible (can help in difficult cases)
+  \param[out] E The pointer to the eigenvalues (of the Fock operator) matrix
+  \param[in,out] C The pointer to MO-LCAO matrix
+  \param[in,out] P The pointer to the density matrix 
+  \param[in,out] bands The orbital energies in the vector of pairs format
+  \param[in,out] occ The orbital occupancies (MO basis populations) in the vector of pairs format
+  \param[in] BM Benchmark flag: = 0 - don't do benchmarking, 1 - do it
+  \param[in,out] bench_t The benchmarking information: bench_t[0] - eigenvalue solvers, bench_t[1] - ordering bands,
+                 bench_t[2] - populate bands, bench_t[3] - density matrix computations
+*/
+
 
   int Norb = Fao->num_of_cols;
     
@@ -147,10 +229,39 @@ void Fock_to_P(MATRIX* Fao, MATRIX* Sao, double Nel, double degen, double kT, do
 
 }//void Fock_to_P(...)
 
+
 void Fock_to_P(MATRIX* Fao, MATRIX* Sao, double Nel, double degen, double kT, double etol, int pop_opt, /*Inputs*/
                MATRIX* E, MATRIX* C, MATRIX* P,                                                         /*Outputs*/
                vector< pair<int,double> >& bands, vector< pair<int,double> >& occ                       /*Outputs*/
               ){       
+/**
+  \brief Set of instructions to compute density matrix from the Fock matrix
+
+  This is a newer version - even simpler: no benchmarking
+
+  Iterative unit: from a given Hamiltonian (Fock matrix) we obtain density matrix
+  In these steps there is no coupling of spin-up and spin-down channels, so they can
+  be solved one by one, independently. 
+  1) solve  Fao * C  = Sao * C * E
+  2) order bands
+  3) compute P as  P = C * N * C.T(), where N = occ
+
+  \param[in] Fao The pointer to the Fock matrix
+  \param[in] Sao The pointer to the AO overlap matrix
+  \param[in] Nel The number of electrons
+  \param[in] degen Dengeneracy of orbitals (the maximal number of electrons that can occupay one orbital)
+  \params[in] kT  Broadening factor for Fermi distribution
+  \params[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
+  \param[in] pop_opt The flag controlling the population scheme
+             pop_opt = 0 - integer occupation numbers will be used (good in many standard cases)
+             pop_opt = 1 - fractional occupations will be possible (can help in difficult cases)
+  \param[out] E The pointer to the eigenvalues (of the Fock operator) matrix
+  \param[in,out] C The pointer to MO-LCAO matrix
+  \param[in,out] P The pointer to the density matrix 
+  \param[in,out] bands The orbital energies in the vector of pairs format
+  \param[in,out] occ The orbital occupancies (MO basis populations) in the vector of pairs format
+*/
+
 
   int BM = 0; 
   vector<Timer> bench_t;
@@ -164,6 +275,31 @@ void Fock_to_P(MATRIX* Fao, MATRIX* Sao, double Nel, double degen, double kT, do
 
 
 boost::python::list Fock_to_P(MATRIX Fao, MATRIX Sao, double Nel, double degen, double kT, double etol, int pop_opt){ 
+/**
+  \brief Set of instructions to compute density matrix from the Fock matrix
+
+  The simplest and Python-friendly version
+
+  Iterative unit: from a given Hamiltonian (Fock matrix) we obtain density matrix
+  In these steps there is no coupling of spin-up and spin-down channels, so they can
+  be solved one by one, independently. 
+  1) solve  Fao * C  = Sao * C * E
+  2) order bands
+  3) compute P as  P = C * N * C.T(), where N = occ
+
+  \param[in] Fao The Fock matrix
+  \param[in] Sao The AO overlap matrix
+  \param[in] Nel The number of electrons
+  \param[in] degen Dengeneracy of orbitals (the maximal number of electrons that can occupay one orbital)
+  \params[in] kT  Broadening factor for Fermi distribution
+  \params[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
+  \param[in] pop_opt The flag controlling the population scheme
+             pop_opt = 0 - integer occupation numbers will be used (good in many standard cases)
+             pop_opt = 1 - fractional occupations will be possible (can help in difficult cases)
+  Returns the list of the objects: res[0] = E (eigenvalues matrix), res[1] = C (eigenvectors matrix),
+  res[2] = P (density matrix), res[3] = bands (energies, list of lists), res[4] = occ (occupations, list of lists)
+*/
+
 
   int Norb = Fao.num_of_cols;
   MATRIX E(Norb,Norb);

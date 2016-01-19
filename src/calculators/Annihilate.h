@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Annihilate.h
+  \brief The file describes functions for spin annihilation - which may be needed in unrestricted (spin-polarized) calculations
+    
+*/
 
 #ifndef ANNIHILATE_H
 #define ANNIHILATE_H
@@ -15,6 +20,7 @@
 #include "../mmath/libmmath.h"
 using namespace libmmath;
 
+/// libcalculators namespace
 namespace libcalculators{
 
 void annihilate(int Na, int Nb, MATRIX* Pa, MATRIX* Pb, MATRIX* Ra, MATRIX* Rb);

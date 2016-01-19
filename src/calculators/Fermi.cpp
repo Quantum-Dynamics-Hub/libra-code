@@ -8,16 +8,32 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Fermi.cpp
+  \brief The file implements functions for Fermi energy/population calculations
+    
+*/
 
 #include "Fermi.h"
 
+/// libcalculators namespace
 namespace libcalculators{
 
 double fermi_population(double e,double ef,double degen, double kT){
-// 
-// Compute Fermi-based occupation of energy level with energy e
-// ef - is the assumed Fermi energy
-//  double kT = 0.00095; // kT in a.u. for T = 300 K
+/** 
+  \brief Fermi populations.
+
+  Compute Fermi-based occupation of energy level with energy e
+  ef - is the assumed Fermi energy
+  double kT = 0.00095;  kT in a.u. for T = 300 K
+
+  \param[in] e  Energy level
+  \param[in] ef Fermi energy
+  \param[in] degen Degeneracy of the energy levels
+  \params[in] kT  Broadening factor for Fermi distribution
+
+*/
+
 
   double argg = ((e-ef)/kT);
   double pop;
@@ -31,15 +47,24 @@ double fermi_population(double e,double ef,double degen, double kT){
 }// fermi_population
 
 
-
 double fermi_integral(std::vector<double>& bnds, double ef, double degen, double kT){
-// Compute integral(sum):
-//
-//   sum [degen / (1 + exp(e-ef))]   
-//    i
-//
-// where N - is a number of electrons (valence)
-//  double kT = 0.00095; // kT in a.u. for T = 300 K
+/**
+  \brief Auxiliary function to compute Fermi integral
+
+  \param[in] bnds 
+  Compute integral(actually the sum):
+    sum [degen / (1 + exp(e-ef))]   
+     i
+  where N - is a number of electrons (valence)
+  double kT = 0.00095; // kT in a.u. for T = 300 K
+
+  \param[in] bnds Input band (energy level index and the energy)
+  \param[in] ef Fermi energy
+  \param[in] degen Degeneracy of the energy levels
+  \params[in] kT  Broadening factor for Fermi distribution
+
+*/
+
 
   int Norb = bnds.size();
 
@@ -58,7 +83,25 @@ double fermi_integral(std::vector<double>& bnds, double ef, double degen, double
 
 }// double fermi_integral
 
+
 double fermi_integral(boost::python::list bnds,double ef,double degen, double kT){
+/**
+  \brief Auxiliary function to compute Fermi integral (Python-friendly)
+
+  \param[in] bnds 
+  Compute integral(actually the sum):
+    sum [degen / (1 + exp(e-ef))]   
+     i
+  where N - is a number of electrons (valence)
+  double kT = 0.00095; // kT in a.u. for T = 300 K
+
+  \param[in] bnds Input band (energy level index and the energy)
+  \param[in] ef Fermi energy
+  \param[in] degen Degeneracy of the energy levels
+  \params[in] kT  Broadening factor for Fermi distribution
+
+*/
+
 
   int sz = boost::python::len(bnds);
   vector<double> int_bnds(sz,0.0);
@@ -71,12 +114,22 @@ double fermi_integral(boost::python::list bnds,double ef,double degen, double kT
 }
 
 
-
 double fermi_energy(std::vector<double>& bnds,double Nel,double degen, double kT, double etol){
-// Computes Fermi energy by solving equation
-// fermi_integral( ...  ef ... )  = Nel
-//
-// Using bisection method
+/**
+  \brief Fermi energy solver
+
+  Computes Fermi energy by solving equation
+  fermi_integral( ...  ef ... )  = Nel
+  Using bisection method
+
+  \param[in] bnds Input band (energy level index and the energy)
+  \param[in] Nel The number of electrons to distribute on energy levels
+  \param[in] degen Degeneracy of the energy levels
+  \params[in] kT  Broadening factor for Fermi distribution
+  \params[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
+
+*/
+
 
   double ef_l,ef_m,ef_r,i_l,i_m,i_r;
   double err = 2.0*etol;
@@ -117,7 +170,23 @@ double fermi_energy(std::vector<double>& bnds,double Nel,double degen, double kT
 
 }// double fermi_energy
 
+
 double fermi_energy(boost::python::list bnds,double Nel,double degen, double kT, double etol){
+/**
+  \brief Fermi energy solver (Python-friendly version)
+
+  Computes Fermi energy by solving equation
+  fermi_integral( ...  ef ... )  = Nel
+  Using bisection method
+
+  \param[in] bnds Input band (energy level index and the energy)
+  \param[in] Nel The number of electrons to distribute on energy levels
+  \param[in] degen Degeneracy of the energy levels
+  \params[in] kT  Broadening factor for Fermi distribution
+  \params[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
+
+*/
+
 
   int sz = boost::python::len(bnds);
   vector<double> int_bnds(sz,0.0);

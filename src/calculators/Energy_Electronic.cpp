@@ -8,14 +8,29 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Energy_Electronic.cpp
+  \brief The file implements functions for electronic energy/derivatives calculations
+    
+*/
 
 #include "Energy_Electronic.h"
 
+/// libcalculators namespace
 namespace libcalculators{
- 
+
 double energy_elec(MATRIX* Pao,MATRIX* Hao,MATRIX* Fao){
-// Compute electronic energy (true for HF-derived methods: HF, CNDO, CNDO/2, INDO)
-// this general formula is also true for EHT (F = Hcore, so the energy is simply a weighted sum of the eigenvalues)
+/**
+  \brief Electronic energy
+
+  Compute electronic energy (true for HF-derived methods: HF, CNDO, CNDO/2, INDO)
+  this general formula is also true for EHT (F = Hcore, so the energy is simply a weighted sum of the eigenvalues)
+
+  \param[in] Pao Pointer to the density matrix
+  \param[in] Hao Pointer to the core Hamiltonian matrix
+  \param[in] Fao Pointer to the Fock matrix
+*/
+
 
   int Norb = Pao->num_of_cols;
   
@@ -36,7 +51,19 @@ double energy_elec(MATRIX* Pao,MATRIX* Hao,MATRIX* Fao){
 
 }// double energy_elec(...)
 
+
 double energy_elec(MATRIX Pao,MATRIX Hao,MATRIX Fao){
+/**
+  \brief Electronic energy (Python-friendly)
+
+  Compute electronic energy (true for HF-derived methods: HF, CNDO, CNDO/2, INDO)
+  this general formula is also true for EHT (F = Hcore, so the energy is simply a weighted sum of the eigenvalues)
+
+  \param[in] Pao The density matrix
+  \param[in] Hao The core Hamiltonian matrix
+  \param[in] Fao The Fock matrix
+*/
+
 
   return energy_elec(&Pao,&Hao,&Fao);
 }
@@ -49,11 +76,32 @@ double energy_elec(MATRIX* P_alp, MATRIX* P_bet,
                    MATRIX* dFao_bet_dP_alp, MATRIX* dFao_bet_dP_bet,
                    MATRIX* temp
                   ){
-// Compute electronic energy (true for HF-derived methods: HF, CNDO, CNDO/2, INDO)
-// this general formula is also true for EHT (F = Hcore, so the energy is simply a weighted sum of the eigenvalues)
-// temp - is just a temporary array - preallocate it before calling this function
-//        this will give some acceleration if the energy function is called very often
-// Scaling - O(N^3)
+/**
+  \brief Electronic energy for the charge-dependent Fock matrices (e.g. in SC-EHT)
+
+  Note: this energy definition correct for the only case when the Fock matrix is corrected only by the 
+  function linear in the corresponding component of the density matrix. Otherwise, we need a tensor contraction scheme
+
+  \param[in] Pao_alp Pointer to the density matrix for alpha electrons
+  \param[in] Pao_bet Pointer to the density matrix for beta electrons
+  \param[in] Hao_alp Pointer to the core Hamiltonian matrix for alpha electrons
+  \param[in] Hao_bet Pointer to the core Hamiltonian matrix for bet electrons
+  \param[in] Fao_alp Pointer to the Fock Hamiltonian matrix for alpha electrons
+  \param[in] Fao_bet Pointer to the Fock Hamiltonian matrix for bet electrons
+  \param[in] dFao_alp_dP_alp Pointer to the matrix with the derivatives of the Fock matrix for alpha electrons
+                             w.r.t to the density matrix for alpha electrons
+  \param[in] dFao_alp_dP_bet Pointer to the matrix with the derivatives of the Fock matrix for alpha electrons
+                             w.r.t to the density matrix for beta electrons
+  \param[in] dFao_bet_dP_alp Pointer to the matrix with the derivatives of the Fock matrix for beta electrons
+                             w.r.t to the density matrix for alpha electrons
+  \param[in] dFao_bet_dP_bet Pointer to the matrix with the derivatives of the Fock matrix for beta electrons
+                             w.r.t to the density matrix for beta electrons
+  \param[in] temp  Is just a temporary array - preallocate it before calling this function
+                   this will give some acceleration if the energy function is called very often
+
+*/
+
+
 
   int Norb = P_alp->num_of_cols;
   
@@ -103,6 +151,31 @@ double energy_elec(MATRIX P_alp, MATRIX P_bet,
                    MATRIX dFao_bet_dP_alp, MATRIX dFao_bet_dP_bet,
                    MATRIX temp
                   ){
+/**
+  \brief Electronic energy for the charge-dependent Fock matrices (e.g. in SC-EHT) - Python-friendly
+
+  Note: this energy definition correct for the only case when the Fock matrix is corrected only by the 
+  function linear in the corresponding component of the density matrix. Otherwise, we need a tensor contraction scheme
+
+  \param[in] Pao_alp The density matrix for alpha electrons
+  \param[in] Pao_bet The density matrix for beta electrons
+  \param[in] Hao_alp The core Hamiltonian matrix for alpha electrons
+  \param[in] Hao_bet The core Hamiltonian matrix for bet electrons
+  \param[in] Fao_alp The Fock Hamiltonian matrix for alpha electrons
+  \param[in] Fao_bet The Fock Hamiltonian matrix for bet electrons
+  \param[in] dFao_alp_dP_alp The matrix with the derivatives of the Fock matrix for alpha electrons
+                             w.r.t to the density matrix for alpha electrons
+  \param[in] dFao_alp_dP_bet The matrix with the derivatives of the Fock matrix for alpha electrons
+                             w.r.t to the density matrix for beta electrons
+  \param[in] dFao_bet_dP_alp The matrix with the derivatives of the Fock matrix for beta electrons
+                             w.r.t to the density matrix for alpha electrons
+  \param[in] dFao_bet_dP_bet The matrix with the derivatives of the Fock matrix for beta electrons
+                             w.r.t to the density matrix for beta electrons
+  \param[in] temp  Is just a temporary array - preallocate it before calling this function
+                   this will give some acceleration if the energy function is called very often
+
+*/
+
 
   return energy_elec(&P_alp,&P_bet,&Hao_alp,&Hao_bet,&Fao_alp,&Fao_bet,
                      &dFao_alp_dP_alp, &dFao_alp_dP_bet, &dFao_bet_dP_alp, &dFao_bet_dP_bet, &temp);

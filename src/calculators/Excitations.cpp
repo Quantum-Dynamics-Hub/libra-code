@@ -8,16 +8,29 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Excitations.cpp
+  \brief The file implements functions for creation of the excitation objects for excited state calculations
+    
+*/
 
 #include "Excitations.h"
 #include "Bands.h"
 
+/// libcalculators namespace
 namespace libcalculators{
 
-
 void excite(int I, int J, vector< pair<int,double> >& occ_ini, vector< pair<int,double> >& occ_fin){
-  // Create I --> J ecxitation
-  // basically, vector< pair<int,double> > datastructure represents Slater determinant (by selecting ordering of orbitals in the active space)
+/**
+  \brief Create a list representing a I --> J ecxitation
+
+  basically, vector< pair<int,double> > datastructure represents Slater determinant (by selecting ordering of orbitals in
+  the active space)
+
+  \param[in]  occ_ini  initial occupation list 
+  \param[out] occ_fin  final occupation list
+*/
+
 
   int Norb = occ_ini.size();
 
@@ -39,6 +52,16 @@ void excite(int I, int J, vector< pair<int,double> >& occ_ini, vector< pair<int,
 }
 
 boost::python::list excite(int I, int J, boost::python::list occ_ini){
+/**
+  \brief Create a list representing a I --> J ecxitation (Python-friendly)
+
+  basically, vector< pair<int,double> > datastructure represents Slater determinant (by selecting ordering of orbitals in
+  the active space)
+  Returns the final occupation list
+
+  \param[in]  occ_ini  initial occupation list 
+*/
+
   vector< pair<int,double> > occ_i;
   vector< pair<int,double> > occ_f;
 

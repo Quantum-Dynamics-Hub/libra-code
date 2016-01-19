@@ -8,15 +8,20 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libcell.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #include "libcell.h"
 
-//using namespace libcell;
 using namespace boost::python;
 
+/// libcell namespace
 namespace libcell{
 
 void export_Cell_objects(){
@@ -45,7 +50,7 @@ void export_Cell_objects(){
   def("make_nlist",make_nlist);
   def("make_nlist_auto",make_nlist_auto);
 
-  def("bruteforce",bruteforce);
+  def("bruteforce",bruteforce);  
   def("energy",energy);
 
 

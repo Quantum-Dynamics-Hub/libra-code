@@ -9,14 +9,27 @@
 *
 *********************************************************************************/
 
+/**
+  \file libcalculators.cpp
+  \brief The file that implements the exprots of libcalculator objects to Python
+        
+*/
+
+
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "libcalculators.h"
 
+/// libcalculators namespace
 namespace libcalculators{
 
 
 void export_calculators_objects(){
+/** 
+  \brief Exporter of libcalculators classes and functions
+
+*/
+
 
   //----------------- Fermi.cpp ------------------------------
 

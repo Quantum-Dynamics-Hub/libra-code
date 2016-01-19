@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Energy_Nuclear.h
+  \brief The file defines functions for nuclear interaction energy/force calculations
+    
+*/
 
 #ifndef ENERGY_NUCLEAR_H
 #define ENERGY_NUCLEAR_H
@@ -15,6 +20,7 @@
 #include "../mmath/libmmath.h"
 using namespace libmmath;
 
+/// libcalculators namespace
 namespace libcalculators{
 
 double energy_nucl(vector<VECTOR>& R, vector<double>& Zeff);

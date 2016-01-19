@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Fermi.h
+  \brief The file defines functions for Fermi energy/population calculations
+    
+*/
 
 #ifndef FERMI_H
 #define FERMI_H
@@ -15,16 +20,16 @@
 #include "../mmath/libmmath.h"
 using namespace libmmath;
 
+/// libcalculators namespace
 namespace libcalculators{
 
+double fermi_population(double e,double ef,double degen, double kT);  
 
-double fermi_population(double e,double ef,double degen, double kT);
-
-double fermi_integral(vector<double>& bnds, double ef, double degen, double kT);
+double fermi_integral(std::vector<double>& bnds, double ef, double degen, double kT);
 double fermi_integral(boost::python::list bnds, double ef, double degen, double kT);
 
-double fermi_energy(vector<double>& bnds,double Nel,double degen, double kT, double etol);
-double fermi_energy(boost::python::list bnds,double Nel,double degen, double kT, double etol);
+double fermi_energy(std::vector<double>& bnds,double Nel,double degen, double kT, double etol);
+double fermi_energy(boost::python::list bnds,double Nel,double degen, double kT, double etol); 
 
 
 

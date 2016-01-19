@@ -9,14 +9,31 @@
 *
 *********************************************************************************/
 
+/**
+  \file Mulliken.cpp
+  \brief The file implement functions for Mulliken population analysis    
+    
+*/
+
 #include "Mulliken.h"
 
+/// libcalculators namespace
 namespace libcalculators{
 
 void update_Mull_orb_pop(MATRIX* P, MATRIX* S, vector<double>& Mull_orb_pop_gross,vector<double>& Mull_orb_pop_net){
-// Compute Mulliken orbital-resolved populations from the density matrix
-// memory for Mull_orb_pop_*  is assumed already allocated
-// gross and net populations are computed
+/**
+  \brief Recompute(update) Mulliken-type orbital-resolved populations
+
+  Compute Mulliken orbital-resolved populations from the density matrix
+  memory for Mull_orb_pop_*  is assumed already allocated
+  gross and net populations are computed
+
+  \param[in] P Pointer to the density matrix 
+  \param[in] S Pointer to the overlap matrix 
+  \param[in,out] Mull_orb_pop_gross The vector which will collect orbital-resolved Mulliken gross populations
+  \param[in,out] Mull_orb_pop_net The vector which will collect orbital-resolved Mulliken net populations
+*/
+
 
   int a,b;
   double tmp_a, tmp_ab;
@@ -51,10 +68,25 @@ void update_Mull_orb_pop(MATRIX* P, MATRIX* S, vector<double>& Mull_orb_pop_gros
 void update_Mull_charges(vector<int>& fragment, vector<int>& basis_fo, vector<vector<int> >& at_orbitals,vector<double>& Zeff,
                          vector<double>& Mull_orb_pop_gross, vector<double>& Mull_orb_pop_net,
                          vector<double>& Mull_charges_gross, vector<double>& Mull_charges_net){
-// fragment - contains indexes of all nuclei, for which the Mull charges should be updated
-// at_orbitals - contains indexes of AO for each of all nuclei in the system  - size is Nnucl
-// len(Mull_orb_pop_*) = size of fragment basis = len(basis_fo)
-// len(Mull_charges_*) = size of global nuclear array = len(Zeff)
+/**
+  \brief Update Mulliken charges on atoms
+
+  This is older (and not very efficient) version
+
+  \params[in] fragment  Contains indices of all nuclei, for which the Mull charges should be updated.
+                        So that fragment[a] - is the global index of the a-th atom of the fragment.
+  \params[in]  basis_fo  Contains the global indices of the basis functions centered on the chosen (by the "fragment" variable) fragment
+  \params[in] at_orbitals Mapping bewteen the local indices of the basis functions in the atom set and the global indices of all
+                        basis functions. For instance at_orbitals[n][i] is the global index of the i-th basis fucntion of n-th
+                        atoms.
+  \params[in] Zeff Effective charges of all nuclei
+  \param[out] Mull_orb_pop_gross Mulliken gross populations on all orbitals
+  \param[out] Mull_orb_pop_net Mulliken net populations on all orbitals
+  \param[out] Mull_charges_gross Mulliken gross charges on all atoms 
+  \param[out] Mull_charges_net Mulliken net charges on all atoms 
+
+*/
+
 
 
   int Nat_frag = fragment.size(); 
@@ -81,14 +113,24 @@ void update_Mull_charges(vector<int>& fragment, vector<int>& basis_fo, vector<ve
 }// void update_Mull_charges(vector<double>& Mull_orb_pop_gross, vector<double>& Mull_orb_pop_net, ...
 
 
-
 void update_Mull_charges(vector<int>& ao_to_atom_map, vector<double>& Zeff,
                          vector<double>& Mull_orb_pop_gross, vector<double>& Mull_orb_pop_net,
                          vector<double>& Mull_charges_gross, vector<double>& Mull_charges_net){
-// fragment - contains indexes of all nuclei, for which the Mull charges should be updated
-// at_orbitals - contains indexes of AO for each of all nuclei in the system  - size is Nnucl
-// len(Mull_orb_pop_*) = size of fragment basis = len(basis_fo)
-// len(Mull_charges_*) = size of global nuclear array = len(Zeff)
+/**
+  \brief Update Mulliken charges on atoms
+
+  This is newer (and more efficient) version
+
+  \params[in] ao_to_atom_map Mapping from the grobal indices of orbitals to the global indices nuclei:
+                         ao_to_atom_map[i] - is the index of the atom on which i-th AO is localized.
+  \params[in] Zeff Effective charges of all nuclei
+  \param[out] Mull_orb_pop_gross Mulliken gross populations on all orbitals
+  \param[out] Mull_orb_pop_net Mulliken net populations on all orbitals
+  \param[out] Mull_charges_gross Mulliken gross charges on all atoms 
+  \param[out] Mull_charges_net Mulliken net charges on all atoms 
+
+*/
+
 
 
   int i, a;

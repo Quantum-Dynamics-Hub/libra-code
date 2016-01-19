@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libcell.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIBCELL_H
 #define LIBCELL_H
@@ -15,6 +20,7 @@
 #include "Cell.h"
 #include "NList.h"
 
+/// libcell namespace
 namespace libcell{
 
 void export_Cell_objects();

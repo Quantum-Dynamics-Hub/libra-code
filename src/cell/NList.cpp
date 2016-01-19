@@ -8,17 +8,31 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file NList.cpp
+  \brief The file implements auxiliary and main functions for the neighbor list construction
+    
+*/
 
 #include "NList.h"
 
+/// libcell namespace
 namespace libcell{
 
 void max_vector(VECTOR& t1,VECTOR& t2,VECTOR& t3,VECTOR& T){
-/***************************************************
- This function finds the maximal projections on X,Y and
- Z coordinate axes. In absolute value!
- in the box H = (t1,t2,t3)
-***************************************************/
+/**
+  \brief Finding the maximal-length vector
+
+  This function finds the maximal projections on X,Y and
+  Z coordinate axes. In absolute value!
+  in the box H = (t1,t2,t3)
+
+  \param[in] t1 unit cell vector (a direction)
+  \param[in] t2 unit cell vector (b direction)
+  \param[in] t3 unit cell vector (c direction)
+  \param[out] T the resulting vector containing the projections of the maximal-length vector
+
+*/
 
   VECTOR t;
   double x,y,z,maxx,maxy,maxz; 
@@ -38,14 +52,22 @@ void max_vector(VECTOR& t1,VECTOR& t2,VECTOR& t3,VECTOR& T){
 }
 
 void apply_pbc(MATRIX3x3& H,int sz, VECTOR* in, VECTOR* out,vector<quartet>& T){
-/**************************************************************
- This function decomposes the array of vectors <in> of size <sz>
- into array of vectors <out>, such that they all belong to the 
- box given by matrix <H> and positioned on global origin (0,0,0)
- and on the corresponding integer translation <T>, which are then
- stored. Combination of <T> and <out> contains all the information
- about original vectors <in>
-***************************************************************/
+/**
+  \brief Apply the periodic boundary conditions to the array of vectors
+
+  This function decomposes the array of vectors <in> of size <sz>
+  into array of vectors <out>, such that they all belong to the 
+  box given by matrix <H> and positioned on global origin (0,0,0)
+  and on the corresponding integer translation <T>, which are then
+  stored. Combination of <T> and <out> contains all the information
+  about original vectors <in>
+  
+  \param[in] H The matrix containing the parameters of the unit cell
+  \param[in] sz The number of atoms to be processed
+  \param[in] in The pointer to the array of input atomic coordinates (unfolded)
+  \param[out] out The pointer to the array of the output atomic coordinates (folded)
+  \param[out] the array of integer vectors(in units of the cell vectors) that fold each atom into the central unit cell
+*/
 
   VECTOR t1,t2,t3,g1,g2,g3,res;
   quartet qt;
@@ -66,17 +88,28 @@ void apply_pbc(MATRIX3x3& H,int sz, VECTOR* in, VECTOR* out,vector<quartet>& T){
 }
 
 void serial_to_vector(int c,int Nx,int Ny,int Nz,int& nx,int& ny,int& nz){
-/*******************************************************************
- This function calculates the indexes of projections <nx>, <ny>, <nz>
- of given cell (given by its serial index <c>) in the 3-D array of such
- cells. The array is rectangular. Indexing goes as:
- nx in [0, Nx]
-  ny in [0, Ny]
-   nz in [0, Nz]
-  c <---> nx,ny,nz
- <Nx>,<Ny> and <Nz> - are maximal number of cells in  corresponding
- dimension
-*******************************************************************/
+/**
+  \brief Mapping of a single integer index (serial) into 3 integers (vector)
+
+  This function calculates the indexes of projections <nx>, <ny>, <nz>
+  of given cell (given by its serial index <c>) in the 3-D array of such
+  cells. The array is rectangular. Indexing goes as:
+  nx in [0, Nx]
+   ny in [0, Ny]
+    nz in [0, Nz]
+   c <---> nx,ny,nz
+  <Nx>,<Ny> and <Nz> - are maximal number of cells in  corresponding
+  dimension
+
+  \param[in] c the serial index of the cell in the array of cells
+  \param[in] Nx maximal number of cell replicas in x dimension (along a vector, actually)
+  \param[in] Ny maximal number of cell replicas in y dimension (along b vector, actually)
+  \param[in] Nz maximal number of cell replicas in z dimension (along c vector, actually)
+  \param[out] nx the x (first) component of the integer translation vector for given cell
+  \param[out] ny the y (second) component of the integer translation vector for given cell
+  \param[out] nz the z (third) component of the integer translation vector for given cell
+
+*/
 /*
   double m1,m2;
   m2 = Nz;
@@ -97,19 +130,30 @@ void serial_to_vector(int c,int Nx,int Ny,int Nz,int& nx,int& ny,int& nz){
 }
 
 void serial_to_vector_symm(int c,int Nx,int Ny,int Nz,int& nx,int& ny,int& nz){
-/*******************************************************************
- This function calculates the indexes of projections <nx>, <ny>, <nz>
- of given cell (given by its serial index <c>) in the 3-D array of such
- cells. The array is rectangular. Indexing goes as:
- nx in [-Nx, Nx]
-  ny in [-Ny, Ny]
-   nz in [-Nz, Nz]
-  c <---> nx,ny,nz
- <Nx>,<Ny> and <Nz> - are maximal number of cells in  corresponding
- dimension
- This function is similar to serial_to_vector functions, but is designed 
- for symmetric range of nx,ny and nz
-*******************************************************************/
+/**
+  \brief Mapping of a single integer index (serial) into 3 integers (vector)
+
+  This function calculates the indexes of projections <nx>, <ny>, <nz>
+  of given cell (given by its serial index <c>) in the 3-D array of such
+  cells. The array is rectangular. Indexing goes as:
+  nx in [-Nx, Nx]
+   ny in [-Ny, Ny]
+    nz in [-Nz, Nz]
+   c <---> nx,ny,nz
+  <Nx>,<Ny> and <Nz> - are maximal number of cells in  corresponding
+  dimension
+  This function is similar to serial_to_vector functions, but is designed 
+  for symmetric range of nx,ny and nz
+
+  \param[in] c the serial index of the cell in the array of cells
+  \param[in] Nx maximal number of cell replicas in x dimension (along a vector, actually)
+  \param[in] Ny maximal number of cell replicas in y dimension (along b vector, actually)
+  \param[in] Nz maximal number of cell replicas in z dimension (along c vector, actually)
+  \param[out] nx the x (first) component of the integer translation vector for given cell
+  \param[out] ny the y (second) component of the integer translation vector for given cell
+  \param[out] nz the z (third) component of the integer translation vector for given cell
+
+*/
 
   double m1,m2;
   m2 = (2*Nz+1);
@@ -122,22 +166,36 @@ void serial_to_vector_symm(int c,int Nx,int Ny,int Nz,int& nx,int& ny,int& nz){
   nx -= Nx;
   ny -= Ny;
   nz -= Nz;
+
 }
 
 
 
 void form_neibc(int c,vector<int>& neibc,int Nx,int Ny,int Nz,double cellx,double celly,double cellz,double Roff){  
-/********************************************************************
- This function calculates serial indexes of the cells (neighbor cells)
- of the cells which are neighbor to the one with serial index <c>
- Cell a is defined as neighbor to cell b if at least in one dimension
- (x,y or z) the cells (any same poins) are less then <Roff> apart
- Parameters <cellx>,<celly> and <cellz> give the size of the sub-cell
- in corresponding dimension. 
- <Nx>,<Ny> and <Nz> - are maximal number of cells in  corresponding
- dimension
- Serial indexes are stored in <neibc> variable
-********************************************************************/
+/**
+  \brief Form the neighbor cells list
+
+  This function calculates serial indexes of the cells (neighbor cells)
+  of the cells which are neighbor to the one with serial index <c>
+  Cell a is defined as neighbor to cell b if at least in one dimension
+  (x,y or z) the cells (any same poins) are less then <Roff> apart
+  Parameters <cellx>,<celly> and <cellz> give the size of the sub-cell
+  in corresponding dimension. 
+  <Nx>,<Ny> and <Nz> - are maximal number of cells in  corresponding
+  dimension
+  Serial indexes are stored in <neibc> variable
+
+  \param[in] c Index of the cell for which we want to construct neighbor cells list
+  \param[out] neibc Indices (serial) of the cells that are neighbor to the cell c
+  \param[in] Nx maximal number of cells in the a direction
+  \param[in] Ny maximal number of cells in the b direction
+  \param[in] Nz maximal number of cells in the c direction
+  \param[in] cellx the size of the cell in a direction
+  \param[in] celly the size of the cell in b direction
+  \param[in] cellz the size of the cell in c direction
+  \param[in] Roff cutoff distance that is used to determine of the atoms are neighbor
+
+*/
 
   if(neibc.size()>0){ neibc.clear(); }
 
@@ -188,15 +246,32 @@ void form_neibc(int c,vector<int>& neibc,int Nx,int Ny,int Nz,double cellx,doubl
 void find_min_shell(VECTOR& t1,VECTOR& t2,VECTOR& t3,
                     VECTOR& g1,VECTOR& g2,VECTOR& g3,double Roff,
                     triple& minb,triple& maxb){
-/************************************************************************
- This function calculates the minimal shell for the given cell shape
- which will satisfy the condition:
- n1*t1.x + n2*t2.x + n3*t3.x +/-  |maxT.x|  >= Roff
- n1*t1.y + n2*t2.y + n3*t3.y +/-  |maxT.y|  >= Roff
- n1*t1.z + n2*t2.z + n3*t3.z +/-  |maxT.z|  >= Roff
- minb,maxb - are the triples, corresponding to minimal
- (left,down) and maximal (upper,right) boundaries
-************************************************************************/
+/**
+  \brief Compute a minimal shell around given central unit cell
+
+  This function calculates the minimal shell for the given cell shape
+  which will satisfy the condition:
+  n1*t1.x + n2*t2.x + n3*t3.x +/-  |maxT.x|  >= Roff
+  n1*t1.y + n2*t2.y + n3*t3.y +/-  |maxT.y|  >= Roff
+  n1*t1.z + n2*t2.z + n3*t3.z +/-  |maxT.z|  >= Roff
+  minb,maxb - are the triples, corresponding to minimal
+  (left,down) and maximal (upper,right) boundaries
+
+  This is basically the way to construct the all the replicas of the original cell around it
+  such that the most far distant point of the replicated cells is not closer than by Roff 
+  to any point (even the closest one) of the original cell.
+
+  \param[in] t1 unit cell vector in the a direction
+  \param[in] t2 unit cell vector in the b direction
+  \param[in] t3 unit cell vector in the c direction
+  \param[in] g1 vector reciprocal to t1
+  \param[in] g2 vector reciprocal to t2
+  \param[in] g3 vector reciprocal to t3
+  \param[in] Roff cutoff distance
+  \param[out] minb is the triple containing the integer translations of the unit cell to form the minimal boundary of the super-cell
+  \param[out] maxb is the triple containing the integer translations of the unit cell to form the maximal boundary of the super-cell
+
+*/
   double d1,d2,d3;
   int n1,n2,n3,m1,m2,m3;
   minb.n1 = 0; minb.n2 = 0; minb.n3 = 0;
@@ -261,23 +336,38 @@ void find_min_shell(VECTOR& t1,VECTOR& t2,VECTOR& t3,
 void make_nlist(int Nat,VECTOR* r,MATRIX3x3& H,
                     int maxa,int maxb,int maxc,double cellx,double celly,double cellz,
                     double Roff,vector< vector<quartet> >& nlist){
-/************************************************************************
- Implement improved Verlet list method (combination of Verlet list and
- linked cell list). Many ideas according to:
- Yao, Z.; Wang, J-S.; Liu, G-R. and Cheng, M "Improved neighbor list
- algorithm in molecular simulations using cell decomposition and data
- sorting method" Computer Physics Communications 2004, 161, 27-35
+/**
+  \brief Create neighbor list
 
- This function calculates the neighbor lists for all <Nat> atoms with
- original coordinates given by array <r> in simulation cell given by
- box <H> subject to periodic boundary conditions. The parameters <maxa>,
- <maxb> and <maxc> give the number of periodic translations of original
- simulation cell in each direction. They should be chosen such that all
- real atoms interact with all other atoms and images within <Roff> distance
- Parameters <cellx>, <celly>, <cellz> give the size of the sub-cell used
- to accelerate in computations and make them scale as O(NlogN)
- Final results will then be stored in <nlist> array
-************************************************************************/
+  Implement an improved Verlet list method (combination of Verlet list and
+  linked cell list). Many ideas according to:
+  Yao, Z.; Wang, J-S.; Liu, G-R. and Cheng, M "Improved neighbor list
+  algorithm in molecular simulations using cell decomposition and data
+  sorting method" Computer Physics Communications 2004, 161, 27-35
+
+  This function calculates the neighbor lists for all <Nat> atoms with
+  original coordinates given by array <r> in simulation cell given by
+  box <H> subject to periodic boundary conditions. The parameters <maxa>,
+  <maxb> and <maxc> give the number of periodic translations of original
+  simulation cell in each direction. They should be chosen such that all
+  real atoms interact with all other atoms and images within <Roff> distance
+  Parameters <cellx>, <celly>, <cellz> give the size of the sub-cell used
+  to accelerate in computations and make them scale as O(NlogN)
+  Final results will then be stored in <nlist> array
+
+  \param[in] Nat The number of atoms in the system
+  \param[in] r The pointer to the array containing the coordinates of all atoms
+  \param[in] H is the matrix describing the shape and size of the unit cell
+  \param[in] maxa The maximal number of periodic translation of the unit cell along a axis
+  \param[in] maxb The maximal number of periodic translation of the unit cell along b axis
+  \param[in] maxc The maximal number of periodic translation of the unit cell along c axis
+  \param[in] cellx The size of the sub-cells in x direction
+  \param[in] celly The size of the sub-cells in y direction
+  \param[in] cellz The size of the sub-cells in z direction
+  \param[in] Roff The cutoff distance which controls the formation of the neighbor list
+  \param[in,out] nlist Indices of the neighboring sub-cells for all sub-cells
+
+*/
 
   VECTOR t1,t2,t3,g1,g2,g3;
   VECTOR t;//,maxT;
@@ -413,23 +503,35 @@ void make_nlist(int Nat,VECTOR* r,MATRIX3x3& H,
 void make_nlist_auto(int Nat,VECTOR* r,MATRIX3x3& H,
                      double cellx,double celly,double cellz,
                      double Roff,vector< vector<quartet> >& nlist){
-/************************************************************************
- Implement improved Verlet list method (combination of Verlet list and
- linked cell list). Many ideas according to:
- Yao, Z.; Wang, J-S.; Liu, G-R. and Cheng, M "Improved neighbor list
- algorithm in molecular simulations using cell decomposition and data
- sorting method" Computer Physics Communications 2004, 161, 27-35
+/**
+  \brief Create neighbor list (no manual maximal translation parameters)
 
- This function calculates the neighbor lists for all <Nat> atoms with
- original coordinates given by array <r> in simulation cell given by
- box <H> subject to periodic boundary conditions. The parameters <maxa>,
- <maxb> and <maxc> give the number of periodic translations of original
- simulation cell in each direction. In this version they are determined
- automatically from the shape of the simulation cell such that all
- real atoms interact with all other atoms and images within <Roff> distance
- Parameters <cellx>, <celly>, <cellz> give the size of the sub-cell used
- to accelerate in computations and make them scale as O(NlogN)
- Final results will then be stored in <nlist> array
+  Implement improved Verlet list method (combination of Verlet list and
+  linked cell list). Many ideas according to:
+  Yao, Z.; Wang, J-S.; Liu, G-R. and Cheng, M "Improved neighbor list
+  algorithm in molecular simulations using cell decomposition and data
+  sorting method" Computer Physics Communications 2004, 161, 27-35
+
+  This function calculates the neighbor lists for all <Nat> atoms with
+  original coordinates given by array <r> in simulation cell given by
+  box <H> subject to periodic boundary conditions. The parameters <maxa>,
+  <maxb> and <maxc> give the number of periodic translations of original
+  simulation cell in each direction. In this version they are determined
+  automatically from the shape of the simulation cell such that all
+  real atoms interact with all other atoms and images within <Roff> distance
+  Parameters <cellx>, <celly>, <cellz> give the size of the sub-cell used
+  to accelerate in computations and make them scale as O(NlogN)
+  Final results will then be stored in <nlist> array
+
+  \param[in] Nat The number of atoms in the system
+  \param[in] r The pointer to the array containing the coordinates of all atoms
+  \param[in] H is the matrix describing the shape and size of the unit cell
+  \param[in] cellx The size of the sub-cells in x direction
+  \param[in] celly The size of the sub-cells in y direction
+  \param[in] cellz The size of the sub-cells in z direction
+  \param[in] Roff The cutoff distance which controls the formation of the neighbor list
+  \param[in,out] nlist Indices of the neighboring sub-cells for all sub-cells
+
 ************************************************************************/
 
   VECTOR t1,t2,t3,g1,g2,g3;
@@ -585,6 +687,18 @@ void make_nlist_auto(int Nat,VECTOR* r,MATRIX3x3& H,
 
 
 double energy(int Nat,VECTOR* r,MATRIX3x3& H,vector< vector<quartet> >& nlist){
+/**
+  \brief Auxiliary function to test neighbor list
+
+  The function computes the sum of distances from all atoms to all their replicas
+
+  \param[in] Nat The number of atoms
+  \param[in] r The pointer to the array of atomic coordinates
+  \param[in] H Matrix describing the size and shape of the simulation cell
+  \param[in] nlist The neighbor list for all atoms
+ 
+  The function returs the computed sum - to serve a the quantitative descriptor of summation 
+*/
 
   VECTOR t1,t2,t3,t;
  
@@ -608,6 +722,23 @@ double energy(int Nat,VECTOR* r,MATRIX3x3& H,vector< vector<quartet> >& nlist){
 
 
 void bruteforce(int Nat,VECTOR* r,MATRIX3x3& H,int maxa,int maxb,int maxc,double Roff,vector< vector<quartet> >& nlist){
+/**
+  \brief The function for the brute force formation of the neighbor list
+
+  \param[in] Nat The number of atoms
+  \param[in] r The pointer to the array of atomic coordinates
+  \param[in] H Matrix describing the size and shape of the simulation cell
+  \param[in] maxa The maximal number of periodic translation of the unit cell along a axis
+  \param[in] maxb The maximal number of periodic translation of the unit cell along b axis
+  \param[in] maxc The maximal number of periodic translation of the unit cell along c axis
+  \param[in] cellx The size of the sub-cells in x direction
+  \param[in] celly The size of the sub-cells in y direction
+  \param[in] cellz The size of the sub-cells in z direction
+  \param[in] Roff The cutoff distance which controls the formation of the neighbor list
+  \param[in,out] nlist Indices of the neighboring sub-cells for all sub-cells
+ 
+*/
+
 
   VECTOR t1,t2,t3,g1,g2,g3;
   VECTOR t;
