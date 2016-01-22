@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libbarostat.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -16,13 +21,20 @@
 
 using namespace boost::python;
 
-
+/// libdyn namespace
 namespace libdyn{
+
+/// libbarostat namespace
 namespace libbarostat{
 
 
 
 void export_Barostat_objects(){
+/** 
+  \brief Exporter of libbarostat classes and functions
+
+*/
+
 
   void (Barostat::*expt_set_Nf_t_v1)(int nf_t) = &Barostat::set_Nf_t;
   void (Barostat::*expt_set_Nf_t_v2)(double nf_t) = &Barostat::set_Nf_t;

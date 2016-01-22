@@ -8,20 +8,30 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file RigidBody.cpp
+  \brief The file implements the most basic methods (constructors, destructors, load/save, initialization, copying, etc)
+  of the RigidBody class 
+    
+*/
 
 #include "RigidBody.h"
 
 // ======================= Internal methods ============================
+
+/// libdyn namespace
 namespace libdyn{
+
+/// librigidbody namespace
 namespace librigidbody{
 
 void RigidBody::init_permutations(){
+/**
+  \brief Internal function to generate the list of permutation matrices
 
-/******************************************************
- Permutation matrices are listed according to:
- http://en.wikipedia.org/wiki/File:Symmetric_group_3;_Cayley_table;_matrices.svg
- 
-********************************************************/
+  Permutation matrices are listed according to:
+  http://en.wikipedia.org/wiki/File:Symmetric_group_3;_Cayley_table;_matrices.svg 
+*/
 
   // U[0] * diag(I1,I2,I3) * U[0] = diag(I1,I2,I3)
   // det = 1
@@ -89,7 +99,7 @@ void RigidBody::init_permutations(){
 }
 
 void RigidBody::init_variables(int is_new){
-//  is_new = 1 for Cctor and ctor, =0 for assignment operator
+///  is_new = 1 for Cctor and ctor, =0 for assignment operator
 
 //----------- Parameters ---------------
   MACHPREC = 1e-15;
@@ -163,6 +173,8 @@ void RigidBody::init_variables(int is_new){
 }
 
 void RigidBody::copy_content(const RigidBody& rb){
+/// Internal auxiliary function that actually implements the copy constructor
+
   if(rb.rb_centers_size>0){ rb_centers = rb.rb_centers; rb_centers_size = rb.rb_centers_size;}
 
   if(rb.is_rb_mass) { rb_mass = rb.rb_mass; is_rb_mass = 1; }
@@ -233,9 +245,11 @@ void RigidBody::set(object){
 
 
 RigidBody::RigidBody(){
-  /****************
-     Constructor
-  ******************/
+/** 
+  \brief Constructor
+
+  Initializes parameters and permutation matrices
+*/
 
   // Initialize precision parameters
   init_variables(1);
@@ -246,9 +260,15 @@ RigidBody::RigidBody(){
 }
 
 RigidBody::RigidBody(const RigidBody& rb){
-  /********************
-    Copy constructor
-  *********************/
+/**
+  \brief Copy constructor
+
+  Initializes parameters and permutation matrices (default) 
+  and then copies the data from the input object
+
+  \param[in] rb Input parameter
+
+*/
   // Initialize precision parameters
   init_variables(1);
   // Initialize permutation matrix
@@ -258,9 +278,9 @@ RigidBody::RigidBody(const RigidBody& rb){
 }
 
 RigidBody& RigidBody::operator=(const RigidBody& rb){
-  /********************
-    Assignment operator
-  *********************/
+/**
+  \brief Assignment operator
+*/
   // Initialize precision parameters
   init_variables(0);
   // Initialize permutation matrix
@@ -272,6 +292,9 @@ RigidBody& RigidBody::operator=(const RigidBody& rb){
 
 
 RigidBody::~RigidBody(){ 
+/**
+  \brief Destructor
+*/
   if(cr!=NULL) { delete [] cr; cr = NULL; }
   if(ci!=NULL) { delete [] ci; ci = NULL; }
   NT = 0;
@@ -284,6 +307,9 @@ RigidBody::~RigidBody(){
 
 
 void RigidBody::show_info(){
+/**
+  \brief Printing internal variables and parameters of RigidBody object
+*/
 
   std::cout<<"Information about object of type RigidBody\n";
   if(rb_centers_size>0){
@@ -317,6 +343,15 @@ void RigidBody::show_info(){
 
 
 void RigidBody::save(boost::property_tree::ptree& pt,std::string path){
+/**
+  \brief Save the state of the RigidBody object as a property tree
+
+  Each defined data member is added as a node to the property tree. The nodes are added to 
+  the level of the tree controlled by the path variable.
+ 
+  \param[in,out] pt The property tree to which the properties of the RigidBody are added
+  \param[in] path The parameter controlling the level of the tree to which the RigidBody members will be added.
+*/
 
   if(rb_centers_size>0){  ::save(pt,path+".rb_centers",rb_centers);    }
   if(is_rb_mass){  ::save(pt,path+".rb_mass",rb_mass);    }
@@ -407,6 +442,16 @@ void RigidBody::save(boost::property_tree::ptree& pt,std::string path){
 }
 
 void save(boost::property_tree::ptree& pt,std::string path,vector<RigidBody>& vt){
+/**
+  \brief Save the state of the vector of RigidBody objects as a property tree
+
+  Each RigidBody object is added as a separate branch. 
+ 
+  \param[in,out] pt The property tree to which the list of the RigidBody objects will be added
+  \param[in] path The parameter controlling the level of the tree to which the list of RigidBody will be added.
+  \param[in] vt The list of RigidBody objects to be printed out into property tree
+*/
+
   int sz = vt.size();
   for(int i=0;i<sz;i++){
     stringstream ss(stringstream::in | stringstream::out);
@@ -417,6 +462,18 @@ void save(boost::property_tree::ptree& pt,std::string path,vector<RigidBody>& vt
 
 
 void RigidBody::load(boost::property_tree::ptree& pt,std::string path,int& status){
+/**
+  \brief Load the state of the RigidBody object from a property tree
+
+  Each data member found in the property tree is extracted as the member of the RigidBody object. The
+  status of each found data member is set to 1.
+ 
+  \param[in] pt The property tree from which the properties of the RigidBody will be extracted
+  \param[in] path The parameter controlling from which level of the tree we try to extract the Barostat object
+  \param[out] status Is the global status of the success of the operation. It is 1 is at least one RigidBody member is found at
+              given level of the property tree.
+*/
+
 
   int st;
   status = 0;
@@ -482,6 +539,16 @@ void RigidBody::load(boost::property_tree::ptree& pt,std::string path,int& statu
 
 
 void load(boost::property_tree::ptree& pt,std::string path,vector<RigidBody>& vt,int& status){
+/**
+  \brief Load the vector of RigidBody objects from a property tree
+
+  Each RigidBody object is extracted from a separate branch. 
+ 
+  \param[in] pt The property tree from which the vector of RigidBody objects will be extracted
+  \param[in] path The parameter controlling from which level of the property tree we will try to extract the vector of RigidBody objects
+  \param[out] status Is the global status of the success of the operation. It is 1 is at least one RigidBody object is extracted
+*/
+
   int st;
   status = 0;
   try{

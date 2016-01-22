@@ -30,7 +30,7 @@ double fermi_population(double e,double ef,double degen, double kT){
   \param[in] e  Energy level
   \param[in] ef Fermi energy
   \param[in] degen Degeneracy of the energy levels
-  \params[in] kT  Broadening factor for Fermi distribution
+  \param[in] kT  Broadening factor for Fermi distribution
 
 */
 
@@ -61,7 +61,7 @@ double fermi_integral(std::vector<double>& bnds, double ef, double degen, double
   \param[in] bnds Input band (energy level index and the energy)
   \param[in] ef Fermi energy
   \param[in] degen Degeneracy of the energy levels
-  \params[in] kT  Broadening factor for Fermi distribution
+  \param[in] kT  Broadening factor for Fermi distribution
 
 */
 
@@ -98,7 +98,7 @@ double fermi_integral(boost::python::list bnds,double ef,double degen, double kT
   \param[in] bnds Input band (energy level index and the energy)
   \param[in] ef Fermi energy
   \param[in] degen Degeneracy of the energy levels
-  \params[in] kT  Broadening factor for Fermi distribution
+  \param[in] kT  Broadening factor for Fermi distribution
 
 */
 
@@ -125,8 +125,8 @@ double fermi_energy(std::vector<double>& bnds,double Nel,double degen, double kT
   \param[in] bnds Input band (energy level index and the energy)
   \param[in] Nel The number of electrons to distribute on energy levels
   \param[in] degen Degeneracy of the energy levels
-  \params[in] kT  Broadening factor for Fermi distribution
-  \params[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
+  \param[in] kT  Broadening factor for Fermi distribution
+  \param[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
 
 */
 
@@ -182,8 +182,8 @@ double fermi_energy(boost::python::list bnds,double Nel,double degen, double kT,
   \param[in] bnds Input band (energy level index and the energy)
   \param[in] Nel The number of electrons to distribute on energy levels
   \param[in] degen Degeneracy of the energy levels
-  \params[in] kT  Broadening factor for Fermi distribution
-  \params[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
+  \param[in] kT  Broadening factor for Fermi distribution
+  \param[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
 
 */
 

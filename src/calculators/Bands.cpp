@@ -149,8 +149,8 @@ void populate_bands(double Nel, double degen, double kT, double etol, int pop_op
 
   \param[in] Nel The number of electrons
   \param[in] degen Dengeneracy of orbitals (the maximal number of electrons that can occupay one orbital)
-  \params[in] kT  Broadening factor for Fermi distribution
-  \params[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
+  \param[in] kT  Broadening factor for Fermi distribution
+  \param[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
   \param[in] pop_opt The flag controlling the population scheme
              pop_opt = 0 - integer occupation numbers will be used (good in many standard cases)
              pop_opt = 1 - fractional occupations will be possible (can help in difficult cases)
@@ -210,8 +210,8 @@ boost::python::list populate_bands(double Nel, double degen, double kT, double e
 
   \param[in] Nel The number of electrons
   \param[in] degen Dengeneracy of orbitals (the maximal number of electrons that can occupay one orbital)
-  \params[in] kT  Broadening factor for Fermi distribution
-  \params[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
+  \param[in] kT  Broadening factor for Fermi distribution
+  \param[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
   \param[in] pop_opt The flag controlling the population scheme
              pop_opt = 0 - integer occupation numbers will be used (good in many standard cases)
              pop_opt = 1 - fractional occupations will be possible (can help in difficult cases)

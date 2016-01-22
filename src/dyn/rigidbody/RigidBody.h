@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file RigidBody.h
+  \brief The file describes RigidBody class and related functions
+    
+*/
 
 #ifndef RigidBody_H
 #define RigidBody_H
@@ -16,119 +21,128 @@
 
 using namespace libmmath;
 
+/// libdyn namespace 
 namespace libdyn{
+
+/// librigidbody namespace
 namespace librigidbody{
 
 class RigidBody{
+/** 
+  \brief the RigidBody class to represent the coordinates of a rigid body
+
+  See reference  "Rigid_Body_Mechancs"
+  Defenitions of coordinate system names.   
+   i - laboratory coordinate system          
+   I - movable    coordinate system          
+   e - internal   coordinate system          
+
+*/
+
 
 public:
 
-  //*********************************************
-  //* See reference /* Rigid_Body_Mechancs */   *
-  //* Defenitions of coordinate system names.   *
-  //* i - laboratory coordinate system          *
-  //* I - movable    coordinate system          *
-  //* e - internal   coordinate system          *
-  //*********************************************
   vector<VECTOR> rb_centers;  int rb_centers_size;
 
   //------ Basic dynamical variables and constants --------
   // Total mass
-  double rb_mass;             int is_rb_mass;
-  double rb_iM;               int is_rb_iM;
+  double rb_mass;             int is_rb_mass;  ///< the mass of the RB and the flag showing its status (defined or not)
+  double rb_iM;               int is_rb_iM;    ///< the inverse mass of the RB and the flag showing its status (defined or not)
 
   // Center of mass
-  VECTOR rb_cm;               int is_rb_cm;
+  VECTOR rb_cm;               int is_rb_cm;    ///< the position of the center of mass of the RB and the flag showing its status (defined or not)
 
   // Linear momentum and velocity of the center of mass
-  VECTOR rb_p;                int is_rb_p;
-  VECTOR rb_v;                int is_rb_v;
+  VECTOR rb_p;                int is_rb_p;     ///< the RB momentum and the flag showing its status (defined or not)
+  VECTOR rb_v;                int is_rb_v;     ///< the RB velocity and the flag showing its status (defined or not)
 
   // Total force acting on the center of mass 
-  VECTOR rb_force;            int is_rb_force;
+  VECTOR rb_force;            int is_rb_force; ///< the RB force and the flag showing its status (defined or not)
 
   // Inertia moments
-  MATRIX3x3 rb_I_I;           int is_rb_I_I;
-  MATRIX3x3 rb_I_e;           int is_rb_I_e; // Diagonal
+  MATRIX3x3 rb_I_I;           int is_rb_I_I;   ///< the RB intertia tensor in movable coordinate system and the flag showing its status (defined or not)
+  MATRIX3x3 rb_I_e;           int is_rb_I_e;   ///< the RB intertia tensor (diagonal) in internal coordinate system and the flag showing its status (defined or not)
 
   // Inverse inertia moments
-  MATRIX3x3 rb_invI_I;        int is_rb_invI_I;
-  MATRIX3x3 rb_invI_e;        int is_rb_invI_e;
+  MATRIX3x3 rb_invI_I;        int is_rb_invI_I;///< the inverse RB intertia tensor in movable coordinate system and the flag showing its status (defined or not)            
+  MATRIX3x3 rb_invI_e;        int is_rb_invI_e;///< the inverse RB intertia tensor (diagonal) in internal coordinate system and the flag showing its status (defined or not)
 
   // Rotational constants
-  double rb_A;                int is_rb_A;
-  double rb_B;                int is_rb_B;
-  double rb_C;                int is_rb_C;
+  double rb_A;                int is_rb_A;  ///< the RB rotational constant the flag showing its status (defined or not)            
+  double rb_B;                int is_rb_B;  ///< the RB rotational constant the flag showing its status (defined or not)            
+  double rb_C;                int is_rb_C;  ///< the RB rotational constant the flag showing its status (defined or not)            
 
   //  Attitude matrix and its transpose
-  MATRIX3x3 rb_A_I_to_e;      int is_rb_A_I_to_e;
-  MATRIX3x3 rb_A_I_to_e_T;    int is_rb_A_I_to_e_T;
- 
+  MATRIX3x3 rb_A_I_to_e;      int is_rb_A_I_to_e;   ///< the RB transformation matrix: from the movable to internal and the flag showing its status (defined or not)            
+                                                    ///< this is essentially the orientation variable (matrix)
+  MATRIX3x3 rb_A_I_to_e_T;    int is_rb_A_I_to_e_T; ///< the transpose of the RB transformation matrix: from the movable to internal and the flag showing its status (defined or not)  
+                                                    ///< this is essentially inverse of the rb_A_I_to_e matrix (inverse rotation)
+
   // Orientation quaternion and its conjugate momentum 
-  QUATERNION rb_L;            int is_rb_L; 
-  QUATERNION rb_p_r;          int is_rb_p_r;
+  QUATERNION rb_L;            int is_rb_L;   ///< The orientation variables in the quaternion form and the the flag showing its status (defined or not)   
+  QUATERNION rb_p_r;          int is_rb_p_r; ///< The momentum conjugate to quaternion variables and the flag showing its status (defined or not)            
 
   // Angular momentum and angular velocity (in body frame) 
-  VECTOR rb_l_e;              int is_rb_l_e; 
-  VECTOR rb_w_e;              int is_rb_w_e; 
+  VECTOR rb_l_e;              int is_rb_l_e; ///< The angular momentum in the body frame and the the flag showing its status (defined or not)   
+  VECTOR rb_w_e;              int is_rb_w_e; ///< The angular velocity in the body frame and the the flag showing its status (defined or not)   
 
   // Total torque (in body-fixed coordinate system)
-  VECTOR rb_torque_e;         int is_rb_torque_e;
+  VECTOR rb_torque_e;         int is_rb_torque_e; ///< The torque (angular generalized force) in the body frame and the the flag showing its status (defined or not)   
 
   // Fixation (constraint) flags
-  int is_fixed_translation;
-  int is_fixed_rotation;
+  int is_fixed_translation;  ///< The flag showing whether the translation of this RB is forbidden (if = 1) or not (if = 0)
+  int is_fixed_rotation;     ///< The flag showing whether the rotation of this RB is forbidden (if = 1) or not (if = 0)
 
 
 private:
 
   //---------- Auxiliary internal variables ------------
 
-  // Constants  
-  double MACHPREC;
-  int IntN;
-  double tol;
-  double IEPS;     
-  double BIG;           // When to set rotational constants to zero
-  double MAX_NO;        // Stopping criteria for Jacobi orthogonalization method
-  double minDet;        // Minimal value of determinant to treat matrix as non-degenerate
+  // Constants      
+  double MACHPREC;      ///< "Machine precision". Defined to 1e-15 during the initialization. 
+  int IntN;             ///< Elliptic integrals evaluation parameter (???): 10 
+  double tol;           ///< Tolerance for some (???) calculations: 1e-15
+  double IEPS;          ///< another accurcy parameter (???): 1e-3
+  double BIG;           ///< When to set rotational constants to zero. If they are larger than this: 1e+10
+  double MAX_NO;        ///< Stopping criteria for Jacobi orthogonalization method: 1e-15
+  double minDet;        ///< Minimal value of determinant to treat matrix as non-degenerate: 1e-10
     
-  MATRIX3x3 U[7];       // Permutation matrices
-  int permutindx;       // Index of permutation matrix necessary for Jacobi ordering
-  int invpermutindx;    // Index of permutation matrix inverse for that with permutindx;
+  MATRIX3x3 U[7];       ///< Permutation matrices
+  int permutindx;       ///< Index of permutation matrix necessary for Jacobi ordering
+  int invpermutindx;    ///< Index of permutation matrix inverse for that with permutindx;
   int orderflag;
-  int SERIES_EXPANSION; // For TEREC algorithm, the number of terms in expansion
+  int SERIES_EXPANSION; ///< For TEREC algorithm, the number of terms in expansion. Default: 10
 
   // Internal variables used for exact solution of free rigid-body problem
 
-  VECTOR top_l;         // initial angular momentum
-  VECTOR top_w;         // initial angular velocity
-  VECTOR top_wm;        // angular velocity amplitudes
-  MATRIX3x3 Iint;       // Tensor of inertia in principal axes (diagonal)
-  MATRIX3x3 invI;       // inversion of the inertia moment tensor (diagonal)
+  VECTOR top_l;         ///< initial angular momentum
+  VECTOR top_w;         ///< initial angular velocity
+  VECTOR top_wm;        ///< angular velocity amplitudes
+  MATRIX3x3 Iint;       ///< Tensor of inertia in principal axes (diagonal)
+  MATRIX3x3 invI;       ///< inversion of the inertia moment tensor (diagonal)
 
-  double I1, I2, I3;    // Jacobi-ordered principal inertia moments
-  double m;             // elliptic parameter
+  double I1, I2, I3;    ///< Jacobi-ordered principal inertia moments
+  double m;             ///< elliptic parameter
   double eps;
-  double K, Kcompl;     // quater period and complimentary quater period K = F(1|m), Kcompl = F(1|1-m)
-  double q;             // nome q = exp(-pi*Kcompl/K)
+  double K, Kcompl;     ///< quater period and complimentary quater period K = F(1|m), Kcompl = F(1|1-m)
+  double q;             ///< nome q = exp(-pi*Kcompl/K)
   double A1,A2;
   int NT;
-  double* cr;           // Real expansion coefficients
-  double* ci;           // Imaginary expansion coefficient
-  double wp;            // precession frequency
+  double* cr;           ///< Real expansion coefficients
+  double* ci;           ///< Imaginary expansion coefficient
+  double wp;            ///< precession frequency
 
-  // Internal variables for no_squish integrator
+  ///< Internal variables for no_squish integrator
   MATRIX *P1, *P2, *P3;
 
-  // Internal variables for TEREC integrator
+  ///< Internal variables for TEREC integrator
   double* Coeffs;
 
   //--------- Auxiliary internal functions -------------
   // Defined in RigidBody.cpp
-  void init_permutations(); // Initializes permutation matrices U
-  void init_variables(int);// Initializes dynamical variables
-  void copy_content(const RigidBody&); // Copies the content which is defined
+  void init_permutations(); ///< Initializes permutation matrices U
+  void init_variables(int);///< Initializes dynamical variables
+  void copy_content(const RigidBody&); ///< Copies the content which is defined
 
   // The following functions are the sub-routines of 
   // public method init(int,double*,VECTOR*) which must
@@ -152,11 +166,11 @@ public:
 
   // Basic class methods
   // Defined in RigidBody.cpp
-  RigidBody();                  // constructor
-  RigidBody(const RigidBody&);  // copy-constructor
- ~RigidBody();                  // destructor
+  RigidBody();                  ///< constructor
+  RigidBody(const RigidBody&);  ///< copy-constructor
+ ~RigidBody();                  ///< destructor
 
-  RigidBody& operator=(const RigidBody&); // assignment operator
+  RigidBody& operator=(const RigidBody&); ///< assignment operator
   void show_info();
   void set(object);
   void save(boost::property_tree::ptree& pt,std::string path);

@@ -250,8 +250,8 @@ void Fock_to_P(MATRIX* Fao, MATRIX* Sao, double Nel, double degen, double kT, do
   \param[in] Sao The pointer to the AO overlap matrix
   \param[in] Nel The number of electrons
   \param[in] degen Dengeneracy of orbitals (the maximal number of electrons that can occupay one orbital)
-  \params[in] kT  Broadening factor for Fermi distribution
-  \params[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
+  \param[in] kT  Broadening factor for Fermi distribution
+  \param[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
   \param[in] pop_opt The flag controlling the population scheme
              pop_opt = 0 - integer occupation numbers will be used (good in many standard cases)
              pop_opt = 1 - fractional occupations will be possible (can help in difficult cases)
@@ -291,8 +291,8 @@ boost::python::list Fock_to_P(MATRIX Fao, MATRIX Sao, double Nel, double degen, 
   \param[in] Sao The AO overlap matrix
   \param[in] Nel The number of electrons
   \param[in] degen Dengeneracy of orbitals (the maximal number of electrons that can occupay one orbital)
-  \params[in] kT  Broadening factor for Fermi distribution
-  \params[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
+  \param[in] kT  Broadening factor for Fermi distribution
+  \param[in] etol Tolerance level (stop when 0.5*|e_f(old) - e_f(new)|<tol)
   \param[in] pop_opt The flag controlling the population scheme
              pop_opt = 0 - integer occupation numbers will be used (good in many standard cases)
              pop_opt = 1 - fractional occupations will be possible (can help in difficult cases)

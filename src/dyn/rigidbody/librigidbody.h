@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file librigidbody.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIBRIGIDBODY_H
 #define LIBRIGIDBODY_H
@@ -15,7 +20,10 @@
 
 #include "RigidBody.h"
 
+/// libdyn namespace
 namespace libdyn{
+
+/// librigidbody namespace
 namespace librigidbody{
 
 

@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libio.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_IO_H
 #define LIB_IO_H
@@ -15,7 +20,7 @@
 
 #include "io.h"
 
-
+/// libio namespace
 namespace libio{
 
 

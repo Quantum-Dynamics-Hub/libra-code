@@ -8,14 +8,27 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Barostat.cpp
+  \brief The file implements the Barostat class for constant-pressure calculations
+    
+*/
 
 #include "Barostat.h"
 
+/// libdyn namespace
 namespace libdyn{
+
+/// libbarostat namespace
 namespace libbarostat{
 
 
 void Barostat::set(object at){
+/** Set properties of the Barostat object from an arbitrary Python object.
+
+  The object must contain the members with the names that match the names of the internal variables.
+*/
+
  set_value(is_Wg,      Wg,       at,"Wg");
  set_value(is_Nf_t,    Nf_t,     at,"Nf_t");
  set_value(is_Nf_r,    Nf_r,     at,"Nf_r");
@@ -26,6 +39,9 @@ void Barostat::set(object at){
 }
 
 void Barostat::show_info(){
+/** Show info about Barostat state and properties
+*/
+
 
   std::cout<<"Barostat properties:"<<std::endl;
   if(is_Wg)   {std::cout<<"Wg  = "<<Wg<<" some units"<<std::endl;   }
@@ -39,6 +55,9 @@ void Barostat::show_info(){
 }
 
 void Barostat::init_variables(){
+/** Initialize Barostat variables to the default values
+*/
+
   ksi_eps = 0.0;                is_ksi_eps = 1;
   G_eps = 0.0;                  is_G_eps = 1;      
   eps_iso = 0.0;                is_eps_iso = 1;  
@@ -55,6 +74,10 @@ void Barostat::init_variables(){
 }
 
 void Barostat::copy_content(const Barostat& bar){
+/** Copies one barostat object into the other one. Only the properties that are set in the 
+  source object are copied into the target project
+*/
+
 
   if(bar.is_ksi_eps){ ksi_eps = bar.ksi_eps; is_ksi_eps = 1; }
   if(bar.is_G_eps){ G_eps = bar.G_eps; is_G_eps = 1; }
@@ -72,6 +95,11 @@ void Barostat::copy_content(const Barostat& bar){
 }
 
 void Barostat::extract_dictionary(boost::python::dict d){
+/** Set properties of the Barostat object from the Python dictionary
+
+  The dictionary must contain the keys that match the internal variables names
+*/
+
   std::string key;
   for(int i=0;i<len(d.values());i++){
     key = extract<std::string>(d.keys()[i]);
@@ -85,26 +113,39 @@ void Barostat::extract_dictionary(boost::python::dict d){
 }
 
 Barostat::Barostat(){
-  /****************
-     Constructor
-  ******************/
-  // Initialize variables to default values
+/**
+  \brief Default Constructor.
+
+  Initializes variables to default values
+*/
+
   init_variables();
 }
 
 Barostat::Barostat(boost::python::dict d){
-  /****************
-     Constructor
-  ******************/
+/**
+  \brief Constructor with Python dictionary argument
+
+  Constructs the Barostat object using the key:value pairs defined 
+  in the input dictionary. The parameters not defined in the dictionary are set to the default values
+ 
+  \param[in] d The Python dictionary. The key names must be consistent with the internal variable (class member) names
+*/
   // Initialize variables to default values
   init_variables();
   extract_dictionary(d);
 }
 
 Barostat::Barostat(const Barostat& bar){
-  /********************
-    Copy constructor
-  *********************/
+/**
+  \brief Copy constructor
+
+  Constructs the Barostat object from another Barostat object using only those members that are initialized in the
+  input object. The parameters not defined in the input object are set to the default values
+ 
+  \param[in] bar The input Barostat object.
+*/
+
   // Initialize variables to default values
   init_variables();
   // Copy content of bar object which is defined
@@ -112,9 +153,11 @@ Barostat::Barostat(const Barostat& bar){
 }
 
 Barostat& Barostat::operator=(const Barostat& bar){
-  /********************
-    Assignment operator
-  *********************/
+/**
+  \brief Copy (assignment) operator
+
+*/
+
   // Initialize variables to default values
   init_variables();
   // Copy content of bar object which is defined
@@ -123,10 +166,28 @@ Barostat& Barostat::operator=(const Barostat& bar){
 }
 
 
-Barostat::~Barostat(){ ;; }
+Barostat::~Barostat(){ 
+/**
+  \brief Destructor
+
+  Does nothing at all
+*/
+
+;;
+}
 
 
 void Barostat::save(boost::property_tree::ptree& pt,std::string path){
+/**
+  \brief Save the state of the Barostat object as a property tree
+
+  Each defined data member is added as a node to the property tree. The nodes are added to 
+  the level of the tree controlled by the path variable.
+ 
+  \param[in,out] pt The property tree to which the properties of the Barostat are added
+  \param[in] path The parameter controlling the level of the tree to which the Barostat members will be added.
+*/
+
 
   if(is_Nf_t){  ::save(pt,path+".Nf_t",Nf_t);    }
   if(is_Nf_r){  ::save(pt,path+".Nf_r",Nf_r);    }
@@ -145,6 +206,16 @@ void Barostat::save(boost::property_tree::ptree& pt,std::string path){
 }
 
 void save(boost::property_tree::ptree& pt,std::string path,vector<Barostat>& vt){
+/**
+  \brief Save the state of the vector of Barostat objects as a property tree
+
+  Each Barostat object is added as a separate branch. 
+ 
+  \param[in,out] pt The property tree to which the list of the Barostat objects will be added
+  \param[in] path The parameter controlling the level of the tree to which the list of Barostats will be added.
+  \param[in] vt The list of Barostat objects to be printed out into property tree
+*/
+
   int sz = vt.size();
   for(int i=0;i<sz;i++){
     stringstream ss(stringstream::in | stringstream::out);
@@ -155,6 +226,18 @@ void save(boost::property_tree::ptree& pt,std::string path,vector<Barostat>& vt)
 
  
 void Barostat::load(boost::property_tree::ptree& pt,std::string path,int& status){
+/**
+  \brief Load the state of the Barostat object from a property tree
+
+  Each data member found in the property tree is extracted as the member of the Barostat object. The
+  status of each found data member is set to 1.
+ 
+  \param[in] pt The property tree from which the properties of the Barostat will be extracted
+  \param[in] path The parameter controlling from which level of the tree we try to extract the Barostat object
+  \param[out] status Is the global status of the success of the operation. It is 1 is at least one Barostat member is found at
+              given level of the property tree.
+*/
+
 
   int st;
   status = 0;
@@ -176,6 +259,16 @@ void Barostat::load(boost::property_tree::ptree& pt,std::string path,int& status
 }
 
 void load(boost::property_tree::ptree& pt,std::string path,vector<Barostat>& vt,int& status){
+/**
+  \brief Load the vector of Barostat objects from a property tree
+
+  Each Barostat object is extracted from a separate branch. 
+ 
+  \param[in] pt The property tree from which the vector of Barostat objects will be extracted
+  \param[in] path The parameter controlling from which level of the property tree we will try to extract the vector of Barostat objects
+  \param[out] status Is the global status of the success of the operation. It is 1 is at least one Barostat object is extracted
+*/
+
   int st;
   status = 0;
   try{

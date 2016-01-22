@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libelectronic.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_ELECTRONIC_H
 #define LIB_ELECTRONIC_H
@@ -15,15 +20,18 @@
 
 #include "Electronic.h"
 
+/// libdyn namespace
 namespace libdyn{
+
+/// libelectronic namespace
 namespace libelectronic{
 
 
 void export_Electronic_objects();
 
 
-}/// namespace libdyn
-}/// namespace libelectronic
+}// namespace libdyn
+}// namespace libelectronic
 
 
 

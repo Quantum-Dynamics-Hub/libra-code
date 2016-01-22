@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libensemble.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -16,12 +21,19 @@
 
 using namespace boost::python;
 
-
+/// libdyn namespace 
 namespace libdyn{
+
+/// libensemble namespace 
 namespace libensemble{
 
 
 void export_Ensemble_objects(){
+/** 
+  \brief Exporter of the libensemble classes and functions
+
+*/
+
 
 //  def("SAC_Ham", expt_SAC_Ham1);
 //  void (Electronic::*expt_propagate_electronic)(double,Hamiltonian&) = &Electronic::propagate_electronic;

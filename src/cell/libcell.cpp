@@ -25,6 +25,11 @@ using namespace boost::python;
 namespace libcell{
 
 void export_Cell_objects(){
+/** 
+  \brief Exporter of libcell classes and functions
+
+*/
+
 
 
 //int (DATA::*ScaleData1)(double)                = &DATA::ScaleData;

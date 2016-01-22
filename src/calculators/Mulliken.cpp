@@ -73,13 +73,13 @@ void update_Mull_charges(vector<int>& fragment, vector<int>& basis_fo, vector<ve
 
   This is older (and not very efficient) version
 
-  \params[in] fragment  Contains indices of all nuclei, for which the Mull charges should be updated.
+  \param[in] fragment  Contains indices of all nuclei, for which the Mull charges should be updated.
                         So that fragment[a] - is the global index of the a-th atom of the fragment.
-  \params[in]  basis_fo  Contains the global indices of the basis functions centered on the chosen (by the "fragment" variable) fragment
-  \params[in] at_orbitals Mapping bewteen the local indices of the basis functions in the atom set and the global indices of all
+  \param[in]  basis_fo  Contains the global indices of the basis functions centered on the chosen (by the "fragment" variable) fragment
+  \param[in] at_orbitals Mapping bewteen the local indices of the basis functions in the atom set and the global indices of all
                         basis functions. For instance at_orbitals[n][i] is the global index of the i-th basis fucntion of n-th
                         atoms.
-  \params[in] Zeff Effective charges of all nuclei
+  \param[in] Zeff Effective charges of all nuclei
   \param[out] Mull_orb_pop_gross Mulliken gross populations on all orbitals
   \param[out] Mull_orb_pop_net Mulliken net populations on all orbitals
   \param[out] Mull_charges_gross Mulliken gross charges on all atoms 
@@ -121,9 +121,9 @@ void update_Mull_charges(vector<int>& ao_to_atom_map, vector<double>& Zeff,
 
   This is newer (and more efficient) version
 
-  \params[in] ao_to_atom_map Mapping from the grobal indices of orbitals to the global indices nuclei:
+  \param[in] ao_to_atom_map Mapping from the grobal indices of orbitals to the global indices nuclei:
                          ao_to_atom_map[i] - is the index of the atom on which i-th AO is localized.
-  \params[in] Zeff Effective charges of all nuclei
+  \param[in] Zeff Effective charges of all nuclei
   \param[out] Mull_orb_pop_gross Mulliken gross populations on all orbitals
   \param[out] Mull_orb_pop_net Mulliken net populations on all orbitals
   \param[out] Mull_charges_gross Mulliken gross charges on all atoms 

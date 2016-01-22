@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Nuclear.h
+  \brief The file describes Nuclear class and functions for propagation of nuclear DOF
+    
+*/
 
 #ifndef NUCLEAR_H
 #define NUCLEAR_H
@@ -15,30 +20,37 @@
 #include "../../mmath/libmmath.h"
 using namespace libmmath;
 
+
+/// libdyn namespace
 namespace libdyn{
+
+/// libnuclear namespace
 namespace libnuclear{
 
 
 class Nuclear{
-  // This clas represents a point in a N-dimensional phase space, N = 6*Nnucl
-  // plus some properties are associated with each projection (coordinate)
+/** 
+  \brief This clas represents a point in a N-dimensional phase space, N = 6*Nnucl
+  plus some properties are associated with each projection (coordinate)
 
+*/
   public:
 
   //------------- Data members ---------------------
-  int nnucl;                      // number of nuclear DOFs
+  int nnucl;                      ///< the number of nuclear DOFs
 
   // Atomic properties
-  vector<double> mass;            // (generalized) masses of particles
+  vector<double> mass;            ///< (generalized) masses of particles
 
   // Dynamic variables
-  vector<double> q;               // nuclear DOFs
-  vector<double> p;               // conjugate momenta
-  vector<double> f;               // forces
-  vector<int> ctyp;               // coordinate type, for instance one can set 0,1,2 to be x,y,z projections of all atoms, so
-                                  // in this case ctyp will be: [0, 1, 2, 0, 1, 2, 0, 1, 2. ..]
-                                  // or one can set 0 to be the x coordinates of atoms in given fragment, so the ordering may look like:
-                                  // [0, 0, 0, 0, 0, ... 1, 1, 1, 1, 1, ... ]
+  vector<double> q;               ///< nuclear DOFs - these are generalized scalar coordinates 
+  vector<double> p;               ///< conjugate momenta
+  vector<double> f;               ///< forces
+  vector<int> ctyp;               ///< coordinate type, for instance one can set 0,1,2 to be x,y,z projections of all atoms, so
+                                  ///< in this case ctyp will be: [0, 1, 2, 0, 1, 2, 0, 1, 2. ..]
+                                  ///< or one can set 0 to be the x coordinates of atoms in given fragment, so the ordering may look like:
+                                  ///< [0, 0, 0, 0, 0, ... 1, 1, 1, 1, 1, ... ]
+
 
 
   //------------- Constructors ----------------------
@@ -75,7 +87,7 @@ class Nuclear{
   
 };
 
-typedef std::vector< Nuclear > NuclearList;
+typedef std::vector< Nuclear > NuclearList; ///< Type containing the vector of Nuclear objects
 
 
 

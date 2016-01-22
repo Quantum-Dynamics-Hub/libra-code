@@ -8,6 +8,12 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libbarostat.h
+  \brief The file describes Python export function
+    
+*/
+
 
 #ifndef LIB_BAROSTAT_H
 #define LIB_BAROSTAT_H
@@ -15,7 +21,10 @@
 
 #include "Barostat.h"
 
+/// libdyn namespace
 namespace libdyn{
+
+/// libbarostat namespace
 namespace libbarostat{
 
 

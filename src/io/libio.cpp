@@ -8,19 +8,28 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libio.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "libio.h"
 
-
+/// libio namespace
 namespace libio{
 
 
 void export_io_objects(){
+/** 
+  \brief Exporter of libio classes and functions
 
-// Nothing to export to Python
+  It is empty - so far no functions/classes are exported to Python
+  mostly, they are for C++ utilization
 
+*/
 
 }// export_io_objects()
 

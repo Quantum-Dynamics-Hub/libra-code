@@ -8,20 +8,32 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file librigidbody.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #include "librigidbody.h"
 
-//using namespace librigidbody;
 
+/// libdyn namespace
 namespace libdyn{
+
+/// librigidbody namespace
 namespace librigidbody{
 
 
 
 void export_RigidBody_objects(){
+/** 
+  \brief Exporter of librigidbody classes and functions
+
+*/
+
 
   int (RigidBody::*init1)(int,double*,VECTOR*) = &RigidBody::init;
   int (RigidBody::*init2)(int sz,boost::python::list masses,boost::python::list positions) = &RigidBody::init;

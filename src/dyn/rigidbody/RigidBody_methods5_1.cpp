@@ -8,26 +8,35 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file RigidBody_methods_1.cpp
+  \brief The file implements the exact propagation method for free RB, based on Euler elliptic integrals
+
+*/
 
 #include "RigidBody.h"
-//#include <boost/math/special_functions.hpp>
 
+
+/// libdyn namespace
 namespace libdyn{
+
+/// librigidbody namespace
 namespace librigidbody{
 
+
 void RigidBody::initialize_exact_rb(){
-/*******************************************************************
- This function pre-computes some auxiliary quantities which are used
- later in exact solution to the free rigid-body problem in terms
- of Jacobi elliptic functions as described by:
- 1)
- Hernandez de la Pena, L.; van Zon, R.; Schofield, J.; Opps, S. B.
- "Discontinuous molecular dynamics for semiflexible and rigid bodies"
- J. Chem. Phys. 2007, 126, 074105
- 2)
- van Zon, R.; Schofield, J. "Numerical implementation of the exact
- dynamics of free rigid bodies" J. Comp. Phys. 2007, 225, 145-164
-********************************************************************/
+/**
+  \brief Initialize auxiliary variables for exact free RB integration
+
+  This function pre-computes some auxiliary quantities which are used
+  later in exact solution to the free rigid-body problem in terms
+  of Jacobi elliptic functions as described by:
+  1) Hernandez de la Pena, L.; van Zon, R.; Schofield, J.; Opps, S. B.
+  "Discontinuous molecular dynamics for semiflexible and rigid bodies"
+  J. Chem. Phys. 2007, 126, 074105
+  2) van Zon, R.; Schofield, J. "Numerical implementation of the exact
+  dynamics of free rigid bodies" J. Comp. Phys. 2007, 225, 145-164
+*/
 
   // Here we need to check if the necessary quantities has been calculated
   // and calculate them if necessary
@@ -244,17 +253,20 @@ void RigidBody::initialize_exact_rb(){
 }
 
 void RigidBody::propagate_exact_rb(double dt){
-/*******************************************************************
- This function provides the exact solution to the free rigid-body
- problem in terms of Jacobi elliptic functions as described by:
- 1)
- Hernandez de la Pena, L.; van Zon, R.; Schofield, J.; Opps, S. B.
- "Discontinuous molecular dynamics for semiflexible and rigid bodies"
- J. Chem. Phys. 2007, 126, 074105
- 2)
- van Zon, R.; Schofield, J. "Numerical implementation of the exact
- dynamics of free rigid bodies" J. Comp. Phys. 2007, 225, 145-164
-********************************************************************/
+/**
+  \brief Exact propagation of the free RB dynamics
+
+  \param[in] dt The propagation duration
+
+  This function provides the exact solution to the free rigid-body
+  problem in terms of Jacobi elliptic functions as described by:
+  1) Hernandez de la Pena, L.; van Zon, R.; Schofield, J.; Opps, S. B.
+  "Discontinuous molecular dynamics for semiflexible and rigid bodies"
+  J. Chem. Phys. 2007, 126, 074105
+  2) van Zon, R.; Schofield, J. "Numerical implementation of the exact
+  dynamics of free rigid bodies" J. Comp. Phys. 2007, 225, 145-164
+
+*/
   // Pre-compute auxiliary parameters
   initialize_exact_rb();
 

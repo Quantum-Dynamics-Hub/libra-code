@@ -8,15 +8,32 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file RigidBody_methods.cpp
+  \brief The file implements RigidBody class interfaces - initializers and setters
+  So far these methods are private, so they are not reflected in the auto-generated documentation    
+
+*/
 
 #include "RigidBody.h"
 
+/// libdyn namespace
 namespace libdyn{
+
+/// librigidbody namespace
 namespace librigidbody{
 
 // ======================= Internal methods ============================
 
 void RigidBody::calc_mass(int sz, double* m){
+/**
+  \brief compute mass
+
+  Calculates mass of the RB 
+
+  \param[in] sz The number of material points included on the rigid body
+  \param[in] m Pointer to the array of material point masses
+*/
   rb_mass = 0.0;              is_rb_mass = 1;
   for(int i=0;i<sz;i++){ rb_mass += m[i];  }
   rb_iM = (rb_mass==0.0)?0.0:(1.0/rb_mass); is_rb_iM = 1;

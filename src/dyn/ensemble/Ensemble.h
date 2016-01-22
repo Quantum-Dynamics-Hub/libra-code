@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Ensemble.h
+  \brief The file implements Python export function
+    
+*/
 
 #ifndef ENSEMBLE_H
 #define ENSEMBLE_H
@@ -25,38 +30,46 @@ using namespace libhamiltonian::libhamiltonian_generic;
 using namespace libhamiltonian::libhamiltonian_model;
 
 
+/// libdyn namespace
 namespace libdyn{
 
 using namespace libnuclear;
 using namespace libelectronic;
 
+
+/// libensemble namespace
 namespace libensemble{
 
 
 class Ensemble{
-  // Object of Ensemble type essentially represents a time-dependent electron-nuclear wavefunction
-  // el - represents electronic component
-  // mol - represent nuclear component
-  // This is a semiclassical representation of a wavefunction via a swarm (ensemble) of trajectories
-  //
-  // PSI(t) = sum_k {  delta((R,P)-mol[k]) * sum_i { el[k][i] * |i;k> } }
-  //
-  // mol[k] - k-th copy of the nuclear system (k-th trajectory)
-  // el[k][i] - coefficients of i-th electronic basis state associated with k-th copy of the system
-  // |i;k> - is i-th electronic basis state parameterized by nuclear degrees of freedom mol[k]
-  //
+/** 
+  \brief Ensemble class that is designed to propagate many trajectories (entangled or independent) at once
+
+  Object of Ensemble type essentially represents a time-dependent electron-nuclear wavefunction
+  el - represents electronic component
+  mol - represent nuclear component
+  This is a semiclassical representation of a wavefunction via a swarm (ensemble) of trajectories
+  
+  PSI(t) = sum_k {  delta((R,P)-mol[k]) * sum_i { el[k][i] * |i;k> } }
+  
+  mol[k] - k-th copy of the nuclear system (k-th trajectory)
+  el[k][i] - coefficients of i-th electronic basis state associated with k-th copy of the system
+  |i;k> - is i-th electronic basis state parameterized by nuclear degrees of freedom mol[k]  
+
+*/
+
 
   public:
 
   // Propagated variables
-  int ntraj;                // number of trajectories in ensemble 
-  int nnucl;                // number of nuclear degrees of freedom
-  int nelec;                // number of electronic DOFs
+  int ntraj;                ///< number of trajectories in ensemble 
+  int nnucl;                ///< number of nuclear degrees of freedom
+  int nelec;                ///< number of electronic DOFs
 
-  vector<int> is_active;    // flag stating if the i-th trajectory is active, if not - it is assumed to be adsorbed
-  vector<Nuclear>    mol;   // nuclear subsystems
-  vector<Electronic>  el;   // electronic subsystems
-  vector<Hamiltonian*> ham; // Hamiltonian "handlers" - unique for each copy
+  vector<int> is_active;    ///< flag stating if the i-th trajectory is active, if not - it is assumed to be adsorbed
+  vector<Nuclear>    mol;   ///< nuclear subsystems
+  vector<Electronic>  el;   ///< electronic subsystems
+  vector<Hamiltonian*> ham; ///< Hamiltonian "handlers" - unique for each copy
 
   // For Python access:
 //  Nuclear get_mol(int i){ return *mol[i]; }

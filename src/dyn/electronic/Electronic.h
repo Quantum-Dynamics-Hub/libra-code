@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Electronic.h
+  \brief The file describes Electronic class and functions for propagation of electronic DOF
+    
+*/
 
 #ifndef ELECTRONIC_H
 #define ELECTRONIC_H
@@ -19,8 +24,10 @@ using namespace libmmath;
 using namespace libmmath::librandom;
 using namespace libhamiltonian;
 
-
+/// libdyn namespace 
 namespace libdyn{
+
+/// libelectronic namespace 
 namespace libelectronic{
 
 
@@ -30,6 +37,23 @@ namespace libelectronic{
 */
 
 class Electronic{
+/** 
+  \brief Electronic class that is designed to represent electronic degrees of freedom
+
+  The electronic DOF in this case are just the (time-dependent) coefficients of the 
+  basis functions in the representation of the overall time-dependent wavefunction:
+  |PSI> = sum_i { c_i(t) * |i>} , so c_i - is the electronic DOF
+
+  In this case, we use the Meyer-Miller-Thoss-Stock (MMTS) classically-mapped coordinates: q = Re(c), p = Im(c)
+
+  See more: 
+  (1) Meyer, H.-D.; Miller, W. H. A Classical Analog for Electronic Degrees of Freedom in Nonadiabatic Collision Processes. J. Chem. Phys. 1979, 70, 3214–3223.
+  (2) Meyer, H.-D.; Miller, W. H. Analysis and Extension of Some Recently Proposed Classical Models for Electronic Degrees of Freedom. J. Chem. Phys. 1980, 72, 2272–2281.
+  (3) Thoss, M.; Stock, G. Mapping Approach to the Semiclassical Description of Nonadiabatic Quantum Dynamics. Phys. Rev. A 1999, 59, 64–79.
+  (4) Stock, G.; Thoss, M. Semiclassical Description of Nonadiabatic Quantum Dynamics. Phys. Rev. Lett. 1997, 78, 578–581.
+
+*/
+
   
   Random* rnd_obj;                           
   void rnd_phase(double&, double&, double);
@@ -50,7 +74,7 @@ class Electronic{
   Electronic();
   Electronic(int);
   Electronic(int,int);
-  Electronic(const Electronic&); ///< cctor
+  Electronic(const Electronic&); 
 
   ~Electronic();
 
@@ -82,7 +106,7 @@ class Electronic{
 };
 
 
-typedef std::vector< Electronic > ElectronicList;
+typedef std::vector< Electronic > ElectronicList; ///< Type containing the vector of Electronic objects
 
 
 // In Electronic_Dynamics1.cpp
@@ -94,6 +118,7 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S, C
 
 
 }// namespace libelectronic
+
 }// namespace libdyn
 
 #endif // ELECTRONIC_H

@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libelectronic.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -16,12 +21,19 @@
 
 using namespace boost::python;
 
-
+/// libdyn namespace
 namespace libdyn{
+
+/// libelectronic namespace
 namespace libelectronic{
 
 
 void export_Electronic_objects(){
+/** 
+  \brief Exporter of libelectronic classes and functions
+
+*/
+
 
   void (Electronic::*expt_propagate_electronic)(double,Hamiltonian&) = &Electronic::propagate_electronic;
 
@@ -82,6 +94,6 @@ BOOST_PYTHON_MODULE(libelectronic){
 }
 
 
-}/// namespace libdyn
-}/// namespace libelectronic
+}// namespace libdyn
+}// namespace libelectronic
 

@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libensemble.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_ENSEMBLE_H
 #define LIB_ENSEMBLE_H
@@ -15,7 +20,10 @@
 
 #include "Ensemble.h"
 
+/// libdyn namespace 
 namespace libdyn{
+
+/// libensemble namespace 
 namespace libensemble{
 
 

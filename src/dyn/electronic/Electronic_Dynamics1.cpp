@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Electronic_Dynamics1.cpp
+  \brief The file implements the methods for solving TD-SE (electronic dynamics)
+    
+*/
 
 #include "Electronic.h"
 #include "../../mmath/libmmath.h"
@@ -17,8 +22,10 @@
 using namespace libmmath;
 using namespace libmmath::libmeigen;
 
-
+/// libdyn namespace 
 namespace libdyn{
+
+/// libelectronic namespace 
 namespace libelectronic{
 
 
@@ -26,28 +33,68 @@ using libmmath::liboperators::rotate;
 
 
 void Electronic::propagate_electronic(double dt,Hamiltonian* ham){
+/**
+  \brief Propagate electronic DOF using sequential rotations in the MMTS variables
+
+  Methodologically: This version is based on the Hamiltonian formulation of TD-SE
+  This propagator is good for general Hamiltonian - diabatic of adiabatic
+  iL = iL_qp + iL_qq + iL_pp
+  iL_qp = sum_i,j {}
+
+  API: The member function of the Electronic function, with the pointer to Hamiltonian object
+
+  \param[in] dt The integration time step (also the duration of propagation)
+  \param[in] ham The pointer to Hamiltonian object, that affects the dynamics
+
+*/ 
+
   libdyn::libelectronic::propagate_electronic(dt,this,ham);
 }
 
 void Electronic::propagate_electronic(double dt,Hamiltonian& ham){
+/**
+  \brief Propagate electronic DOF using sequential rotations in the MMTS variables
+
+  Methodologically: This version is based on the Hamiltonian formulation of TD-SE
+  This propagator is good for general Hamiltonian - diabatic of adiabatic
+  iL = iL_qp + iL_qq + iL_pp
+  iL_qp = sum_i,j {}
+
+  API: The member function of the Electronic function, with the reference to Hamiltonian object
+
+  \param[in] dt The integration time step (also the duration of propagation)
+  \param[in] ham The reference to Hamiltonian object, that affects the dynamics
+
+*/ 
+
   libdyn::libelectronic::propagate_electronic(dt,this,&ham);
 }
 
 
 void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
-/*! This version is based on the Hamiltonian formulation of TD-SE
-    This propagator is good for general Hamiltonian - diabatic of adiabatic
-    iL = iL_qp + iL_qq + iL_pp
-    iL_qp = sum_i,j {}
-*/ ...
+/**
+  \brief Propagate electronic DOF using sequential rotations in the MMTS variables
+
+  Methodologically: This version is based on the Hamiltonian formulation of TD-SE
+  This propagator is good for general Hamiltonian - diabatic of adiabatic
+  iL = iL_qp + iL_qq + iL_pp
+  iL_qp = sum_i,j {}
+
+  API: A free function that takes Electronic object as the input and modifies it
+
+  \param[in] dt The integration time step (also the duration of propagation)
+  \param[in,out] el The pointer to the Electronic object containing the electronic DOF
+  \param[in] ham The pointer to Hamiltonian object, that affects the dynamics
+
+*/ 
 
 
   int i,j;
 
   double dt_half = 0.5*dt;
 
-  ///------------- Phase evolution (adiabatic) ---------------- 
-  /// exp(iL_qp * dt/2)
+  //------------- Phase evolution (adiabatic) ---------------- 
+  // exp(iL_qp * dt/2)
   for(i=0;i<el->nstates;i++){
     for(j=0;j<el->nstates;j++){
 
@@ -56,7 +103,7 @@ void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
     }// for j
   }// for i
 
-  ///------------- Population transfer (adiabatic) ----------------
+  //------------- Population transfer (adiabatic) ----------------
   // exp((iL_qq + iL_pp) * dt/2)
   for(i=0;i<el->nstates;i++){
     for(j=i+1;j<el->nstates;j++){
@@ -67,7 +114,7 @@ void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
     }// for j
   }// for i
 
-  /// exp((iL_qq + iL_pp) * dt/2)
+  // exp((iL_qq + iL_pp) * dt/2)
   for(i=el->nstates-1;i>=0;i--){
     for(j=el->nstates-1;j>i;j--){
 
@@ -79,8 +126,8 @@ void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
   }// for i
 
 
-  ///------------- Phase evolution (adiabatic) ----------------
-  /// exp(iL_qp * dt/2)
+  //------------- Phase evolution (adiabatic) ----------------
+  // exp(iL_qp * dt/2)
   for(i=el->nstates-1;i>=0;i--){
     for(j=el->nstates-1;j>=0;j--){
 
@@ -90,18 +137,26 @@ void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
   }// for i
 
 
-}/// propagate_electronic
+}// propagate_electronic
 
 
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib){
-// This version is based on the Hamiltonian formulation of TD-SE
-// This propagator is good for general Hamiltonian - diabatic of adiabatic
-//
-// iL = iL_qp + iL_qq + iL_pp
-//
-// iL_qp = sum_i,j {}
-//
-// ...
+/**
+  \brief Propagate electronic DOF using sequential rotations in the MMTS variables
+
+  Methodologically: This version is based on the Hamiltonian formulation of TD-SE
+  This propagator is good for general Hamiltonian - diabatic of adiabatic
+  iL = iL_qp + iL_qq + iL_pp
+  iL_qp = sum_i,j {}
+
+  API: A free function that takes Electronic object as the input and modifies it
+
+  \param[in] dt The integration time step (also the duration of propagation)
+  \param[in,out] el The reference to the Electronic object containing the electronic DOF
+  \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) 
+
+  This is the Python-friendly function
+*/ 
 
 
   int i,j;
@@ -156,15 +211,26 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib){
 
 
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S){
-//
-// i*hbar*S*dc/dt = Hvib*c
-//
-//!!! this is good only for time-independent S matrix
+/**
+  \brief Propagate electronic DOF in the MMTS variables
+
+  Methodologically: solve i*hbar*S*dc/dt = Hvib*c directly, using Lowdin-type transformation and 
+  matrix exponentiation. This solver is good only for time-independent S matrix
+
+  API: A free function that takes Electronic object as the input and modifies it
+
+  \param[in] dt The integration time step (also the duration of propagation)
+  \param[in,out] el The reference to the Electronic object containing the electronic DOF
+  \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) - the complex-valued matrix, CMATRIX
+  \param[in] S The reference to the overlap matrix (assumed to be a real-valued matrix, MATRIX)
+
+  This integrator is fully unitary (the norm is conserved exactly)
+  This is the Python-friendly function
+*/ 
 
   int i,j;
 
-// Let us first diagonalize the overlap matrix S
-
+  // Let us first diagonalize the overlap matrix S
   int sz = S.num_of_cols;
   
   MATRIX* I; I = new MATRIX(sz, sz);  I->Init_Unit_Matrix(1.0);
@@ -240,10 +306,22 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S){
 
 
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S){
-//
-// i*hbar*S*dc/dt = Hvib*c 
-//
-//!!! this is good only for time-independent S matrix
+/**
+  \brief Propagate electronic DOF in the MMTS variables
+
+  Methodologically: solve i*hbar*S*dc/dt = Hvib*c directly, using Lowdin-type transformation and 
+  matrix exponentiation. This solver is good only for time-independent S matrix
+
+  API: A free function that takes Electronic object as the input and modifies it
+
+  \param[in] dt The integration time step (also the duration of propagation)
+  \param[in,out] el The reference to the Electronic object containing the electronic DOF
+  \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) - the complex-valued matrix, CMATRIX
+  \param[in] S The reference to the overlap matrix (assumed to be a complex-valued matrix, CMATRIX)
+
+  This integrator is fully unitary (the norm is conserved exactly)
+  This is the Python-friendly function
+*/ 
 
   int i,j;
  
@@ -335,10 +413,24 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S){
 
 
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S, CMATRIX& Sdot){
-//
-// i*hbar*S*dc/dt = Hvib*c 
-//
-// this is good also for time-dependent S matrix
+/**
+  \brief Propagate electronic DOF in the MMTS variables
+
+  Methodologically: solve i*hbar*S*dc/dt = Hvib*c directly, using Lowdin-type transformation and 
+  matrix exponentiation. This solver is good for deneral time-independent S matrix
+
+  API: A free function that takes Electronic object as the input and modifies it
+
+  \param[in] dt The integration time step (also the duration of propagation)
+  \param[in,out] el The reference to the Electronic object containing the electronic DOF
+  \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) - the complex-valued matrix, CMATRIX
+  \param[in] S The reference to the overlap matrix (assumed to be a complex-valued matrix, CMATRIX)
+  \param[in] Sdot The reference to the time-derivative of the overlap matrix (assumed to be a complex-valued matrix, CMATRIX)
+
+  This integrator is not unitary - the norm is not necessarily conserved exactly!!!
+  This is the Python-friendly function
+*/ 
+
 
   int i,j;
  

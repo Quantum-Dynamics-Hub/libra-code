@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libnuclear.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_NUCLEAR_H
 #define LIB_NUCLEAR_H
@@ -15,7 +20,10 @@
 
 #include "Nuclear.h"
 
+/// libdyn namespace
 namespace libdyn{
+
+/// libnuclear namespace
 namespace libnuclear{
 
 

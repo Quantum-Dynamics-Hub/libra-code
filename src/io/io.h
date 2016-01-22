@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file io.h
+  \brief The file describes auxiliary (but basic) functions for Python input/output operations
+    
+*/
 
 #ifndef IO_H
 #define IO_H
@@ -32,13 +37,13 @@ using namespace std;
 using namespace boost::python;
 using boost::property_tree::ptree;
 
-
+/// libio namespace
 namespace libio{
 
 
 bool hasattr(boost::python::object obj, std::string attrName);
 
-/// For extracting values from Python object to C++ representation
+// For extracting values from Python object to C++ representation
 void set_value(int& is_defined, int& value,         boost::python::object obj, std::string attrName);
 void set_value(int& is_defined, double& value,      boost::python::object obj, std::string attrName);
 void set_value(int& is_defined, std::string& value, boost::python::object obj, std::string attrName);
@@ -50,7 +55,7 @@ void set_list(int& is_defined, vector<std::string>& value,boost::python::object 
 
 
 //------------------------ XML via property_tree ---------------------------
-/// For convertion between XML datafile and internal C++ representation
+// For convertion between XML datafile and internal C++ representation
 void save(boost::property_tree::ptree& pt,std::string path,double& vt);
 void save(boost::property_tree::ptree& pt,std::string path,vector<double>& vt);
 void save(boost::property_tree::ptree& pt,std::string path,int& vt);

@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libnuclear.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -17,12 +22,19 @@
 using namespace boost::python;
 //using namespace libdyn::libnuclear;
 
-
+/// libdyn namespace
 namespace libdyn{
+
+/// libnuclear namespace
 namespace libnuclear{
 
 
 void export_Nuclear_objects(){
+/** 
+  \brief Exporter of libnuclear classes and functions
+
+*/
+
 
 //  def("SAC_Ham", expt_SAC_Ham1);
   void (Nuclear::*expt_propagate_p_v1)(int, double) = &Nuclear::propagate_p;
