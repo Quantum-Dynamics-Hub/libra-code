@@ -8,14 +8,32 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Wfcgrid.cpp
+  \brief The file implements some basic methods of the Wfcgrid class: initialization, printing, memory allocation, etc.
+    
+*/
 
 #include "Wfcgrid.h"
 
+/// libdyn namespace
 namespace libdyn{
+
+/// libwfcgrid namespace
 namespace libwfcgrid{
 
 
 void Wfcgrid::init_numbers(double minx_, double maxx_, double dx_, int nstates_){
+/**
+  \brief Initialize 1D grid dimensions
+  \param[in] minx_ The minimal (leftmost) boundary of the grid
+  \param[in] maxx_ The maximal (rightmost) boundary of the grid
+  \param[in] dx_ The spacing between the grid points.
+  \param[in] nstates_ The number of electronic states to consider
+
+  Computes the number of points in X dimension so that the boundaries are satisfied and the number
+  of point is the lowest power of 2 needed to enclose the interval. Also sets other class variables.
+*/
 
   nstates = nstates_;
 
@@ -38,6 +56,20 @@ void Wfcgrid::init_numbers(double minx_, double maxx_, double dx_, int nstates_)
 
 
 void Wfcgrid::init_numbers(double minx_, double maxx_, double dx_, double miny_, double maxy_, double dy_, int nstates_){
+/**
+  \brief Initialize 2D grid dimensions
+  \param[in] minx_ The minimal (leftmost) boundary of the grid in X direction
+  \param[in] maxx_ The maximal (rightmost) boundary of the grid in X direction
+  \param[in] dx_ The spacing between the grid points in X direction
+  \param[in] miny_ The minimal (leftmost) boundary of the grid in Y direction
+  \param[in] maxy_ The maximal (rightmost) boundary of the grid in Y direction
+  \param[in] dy_ The spacing between the grid points in Y direction
+  \param[in] nstates_ The number of electronic states to consider
+
+  Computes the number of points in X and Y dimension so that the boundaries are satisfied and the number
+  of point is the lowest power of 2 needed to enclose the interval. Also sets other class variables.
+*/
+
 
   nstates = nstates_;
 
@@ -67,8 +99,12 @@ void Wfcgrid::init_numbers(double minx_, double maxx_, double dx_, double miny_,
 
 // Memory allocator
 void Wfcgrid::allocate_1D(){
+/**
+  \brief Allocates memory for 1D wavefucntion and associted objects
 
-  // all numbers are assumed to be defined by this time
+  all numbers are assumed to be defined by this time, so the init_numbers() function must be called first
+*/
+  
   cout<<"Nx = "<<Nx<<endl;
   cout<<"Ny = "<<Ny<<endl;
   cout<<"nstates = "<<nstates<<endl;
@@ -98,8 +134,12 @@ void Wfcgrid::allocate_1D(){
 
 
 void Wfcgrid::allocate_2D(){
+/**
+  \brief Allocates memory for 2D wavefucntion and associted objects
 
-  // all numbers are assumed to be defined by this time
+  all numbers are assumed to be defined by this time, so the init_numbers() function must be called first
+*/
+
   cout<<"Nx = "<<Nx<<endl;
   cout<<"Ny = "<<Ny<<endl;
   cout<<"nstates = "<<nstates<<endl;
@@ -135,11 +175,14 @@ void Wfcgrid::allocate_2D(){
 
 
 void Wfcgrid::init_grid_1D(){
+/**
+  \brief Initialize 1D grids (X and Kx points)
 
-  // all numbers are assumed to be defined by this time
+  memory is assumed to be allocated by this time. If not, call allocate_1D() function first
+*/
 
-  // Initialize grids and wavefunctions
-  *X = libdyn::libwfcgrid::init_grid(xmin,xmax,dx);                                        // real space
+  // Initialize grids
+  *X = libdyn::libwfcgrid::init_grid(xmin,xmax,dx);                    // real space
   for(int nx=0;nx<Nx;nx++){ Kx->M[nx] = kxmin + nx/((double)Nx*dx);}   // reciprocal space
   cout<<"Grids are initialized\n";
 
@@ -147,13 +190,16 @@ void Wfcgrid::init_grid_1D(){
 
 
 void Wfcgrid::init_grid_2D(){
+/**
+  \brief Initialize 2D grids (X, Y and Kx, Ky points)
 
-  // all numbers are assumed to be defined by this time
+  memory is assumed to be allocated by this time. If not, call allocate_2D() function first
+*/
 
-  // Initialize grids and wavefunctions
-  *X = libdyn::libwfcgrid::init_grid(xmin,xmax,dx);                                        // real space
+  // Initialize grids
+  *X = libdyn::libwfcgrid::init_grid(xmin,xmax,dx);                    // real space
   for(int nx=0;nx<Nx;nx++){ Kx->M[nx] = kxmin + nx/((double)Nx*dx);}   // reciprocal space
-  *Y = libdyn::libwfcgrid::init_grid(ymin,ymax,dy);                                        // real space
+  *Y = libdyn::libwfcgrid::init_grid(ymin,ymax,dy);                    // real space
   for(int ny=0;ny<Ny;ny++){ Ky->M[ny] = kymin + ny/((double)Ny*dy);}   // reciprocal space            
   cout<<"Grids are initialized\n";
 
@@ -162,16 +208,37 @@ void Wfcgrid::init_grid_2D(){
 
 
 // 1D Constructor
-
 Wfcgrid::Wfcgrid(double minx_, double maxx_, double dx_, int nstates_){
+/**
+  \brief 1D wavefunction constructors with parameters
+  \param[in] minx_ The minimal (leftmost) boundary of the grid in X direction
+  \param[in] maxx_ The maximal (rightmost) boundary of the grid in X direction
+  \param[in] dx_ The spacing between the grid points in X direction
+  \param[in] nstates_ The number of electronic states to consider
+
+  This constructor will: 1) initialize numbers, 2) allocate memory; 3) initialize grids
+*/
 
   init_numbers(minx_, maxx_, dx_, nstates_);
   allocate_1D();
   init_grid_1D();
 
 }
+
 // 2D Constructor
 Wfcgrid::Wfcgrid(double minx_, double maxx_, double dx_, double miny_, double maxy_, double dy_, int nstates_){
+/**
+  \brief 2D wavefunction constructors with parameters
+  \param[in] minx_ The minimal (leftmost) boundary of the grid in X direction
+  \param[in] maxx_ The maximal (rightmost) boundary of the grid in X direction
+  \param[in] dx_ The spacing between the grid points in X direction
+  \param[in] miny_ The minimal (leftmost) boundary of the grid in Y direction
+  \param[in] maxy_ The maximal (rightmost) boundary of the grid in Y direction
+  \param[in] dy_ The spacing between the grid points in Y direction
+  \param[in] nstates_ The number of electronic states to consider
+
+  This constructor will: 1) initialize numbers, 2) allocate memory; 3) initialize grids
+*/
 
   init_numbers(minx_, maxx_, dx_, miny_, maxy_, dy_, nstates_);
   allocate_2D();
@@ -181,6 +248,16 @@ Wfcgrid::Wfcgrid(double minx_, double maxx_, double dx_, double miny_, double ma
 
 
 void Wfcgrid::init_wfc_1D(double x0, double px0, double dx0, int init_state){
+/**
+  \brief Initialize 1D wavefunction - taken as moving Gaussian wavepacket
+  \param[in] x0 Position of the center of the Gaussian wavepacket
+  \param[in] px0 Momentum of the Gaussian wavepacket
+  \param[in] dx0 Spread (distribution width) of the spatial component of the Gaussian wavepacket
+  \param[in] init_state Index of the electronic state on which the wavepacket is initialized
+
+   G(x) = [ (1/(2.0*pi*dx0^2))^(1/4) ] * exp(-((x-x0)/(2*dx0))^2 + i*((x-x0)/dx0)*px0)
+
+*/
 
   init_gauss_1D(PSI, *X, x0, px0, dx0, nstates, init_state);
 
@@ -191,6 +268,22 @@ void Wfcgrid::init_wfc_1D(double x0, double px0, double dx0, int init_state){
 
 
 void Wfcgrid::init_wfc_2D(double x0, double y0, double px0, double py0, double dx0, double dy0, int init_state){
+/**
+  \brief Initialize 2D wavefunction - taken as moving Gaussian wavepacket
+  \param[in] x0 Position of the center of the Gaussian wavepacket in X dimension
+  \param[in] y0 Position of the center of the Gaussian wavepacket in Y dimension
+  \param[in] px0 Momentum of the Gaussian wavepacket in X dimension
+  \param[in] py0 Momentum of the Gaussian wavepacket in Y dimension
+  \param[in] dx0 Spread (distribution width) of the spatial component of the Gaussian wavepacket in X dimension
+  \param[in] dy0 Spread (distribution width) of the spatial component of the Gaussian wavepacket in Y dimension
+  \param[in] init_state Index of the electronic state on which the wavepacket is initialized
+
+  G(x,y) = G(x)*G(y), 
+  where
+  G(x) = [ (1/(2.0*pi*dx0^2))^(1/4) ] * exp(-((x-x0)/(2*dx0))^2 + i*((x-x0)/dx0)*px0)
+  G(y) = [ (1/(2.0*pi*dy0^2))^(1/4) ] * exp(-((y-y0)/(2*dy0))^2 + i*((y-y0)/dy0)*py0)
+
+*/
 
   init_gauss_2D(PSI, *X, x0, px0, dx0,    *Y, y0, py0, dy0,  nstates, init_state);
 
@@ -201,8 +294,14 @@ void Wfcgrid::init_wfc_2D(double x0, double y0, double px0, double py0, double d
 
 
 void Wfcgrid::print_wfc_1D(std::string prefix, int snap, int state){
+/**
+  \brief Print 1D wavefunction into a file
+  \param[in] prefix The prefix of the filenames to which the wfc will be printed out
+  \param[in] snap This is the integer indexing the printed out wavefunction - e.g. convenient for printing wfc at different times
+  \param[in] state The wavefunction projection on this state will be printed out
 
-// for 1D profile on XY plane
+  for 1D profile on XY plane
+*/
 
   std::string filename, snaps, states;
   stringstream ss(stringstream::in | stringstream::out);
@@ -229,8 +328,14 @@ void Wfcgrid::print_wfc_1D(std::string prefix, int snap, int state){
 
 
 void Wfcgrid::print_wfc_2D(std::string prefix, int snap, int state){
+/**
+  \brief Print 2D wavefunction into a file
+  \param[in] prefix The prefix of the filenames to which the wfc will be printed out
+  \param[in] snap This is the integer indexing the printed out wavefunction - e.g. convenient for printing wfc at different times
+  \param[in] state The wavefunction projection on this state will be printed out
 
-// for 2D projections on XY plane
+  for 2D profile on XY plane
+*/
 
   std::string filename, snaps, states;
   stringstream ss(stringstream::in | stringstream::out);
@@ -260,8 +365,14 @@ void Wfcgrid::print_wfc_2D(std::string prefix, int snap, int state){
 
 
 void Wfcgrid::print_reci_wfc_1D(std::string prefix, int snap, int state){
+/**
+  \biref Print 1D wavefunction (in k-representation, reciprocal space) into a file
+  \param[in] prefix The prefix of the filenames to which the wfc will be printed out
+  \param[in] snap This is the integer indexing the printed out wavefunction - e.g. convenient for printing wfc at different times
+  \param[in] state The wavefunction projection on this state will be printed out
 
-// for 1D profile on XY plane
+  for 1D profile on XY plane
+*/
 
   std::string filename, snaps, states;
   stringstream ss(stringstream::in | stringstream::out);
@@ -286,6 +397,11 @@ void Wfcgrid::print_reci_wfc_1D(std::string prefix, int snap, int state){
 }// print_wfc_1D
 
 void Wfcgrid::print_complex_matrix_1D(CMATRIX& CM, std::string filename){
+/**
+  \brief An auxiliary function for printing a complex matrix into a file
+  \param[in] CM The complex matrix (1 by Nx or Nx by 1 to be printed out)
+  \param[in] filename The name of the file to which the matrix will be printed out
+*/
 
   ofstream out(filename.c_str(),ios::out);
 
@@ -298,14 +414,40 @@ void Wfcgrid::print_complex_matrix_1D(CMATRIX& CM, std::string filename){
 }
 
 void Wfcgrid::print_ham_1D(std::string prefix, int i, int j){
+/**
+  \brief Printing of the Hamiltonian of 1D wavefunctions
+  \param[in] prefix The prefix of the file to which the info will be printed out
+  \param[in] i The index of one of the states
+  \param[in] j The index of the other state
+
+  Printing <i|H|j>
+*/
+
   print_complex_matrix_1D(H[i][j],prefix);
 }
 
 void Wfcgrid::print_expH_1D(std::string prefix, int i, int j){
+/**
+  \brief Printing of the exponential of the Hamiltonian of 1D wavefunctions (component of propagator)
+  \param[in] prefix The prefix of the file to which the info will be printed out
+  \param[in] i The index of one of the states
+  \param[in] j The index of the other state
+
+  Printing exp(-i*dt/hbar * <i|H|j>)
+*/
+
   print_complex_matrix_1D(expH[i][j],prefix);
 }
 
 void Wfcgrid::print_expK_1D(std::string prefix, int i){
+/**
+  \brief Printing of the exponential of the kinetic energy operator (in reciprocal space) for 1D wavefunctions
+  \param[in] prefix The prefix of the file to which the info will be printed out
+  \param[in] i The index of the state - the operator is diagonal, so only need this one index
+
+  Printing exp(-i*dt/hbar * <i|T|i>)
+*/
+
   print_complex_matrix_1D(expK[i],prefix);
 }
 
@@ -313,6 +455,14 @@ void Wfcgrid::print_expK_1D(std::string prefix, int i){
 
 
 double Wfcgrid::print_populations_1D(string filename,int snap){
+/**
+  \brief Print population of 1D wavefunction into a file
+  \param[in] filename The name of the file to which the wavefunction will be printed out
+  \param[in] snap This is the integer indexing the printed out wavefunction - e.g. convenient for printing wfc at different times
+  
+  Populations of all states will be printed out
+  for 1D profile on XY plane
+*/
 
   vector<double> Pop(nstates,0.0);
   double Pop_tot = 0.0;
@@ -359,6 +509,15 @@ double Wfcgrid::print_populations_1D(string filename,int snap){
 
 
 double Wfcgrid::print_populations_2D(string filename,int snap){
+/**
+  \brief Print population of 1D wavefunction into a file
+  \param[in] filename The name of the file to which the wavefunction will be printed out
+  \param[in] snap This is the integer indexing the printed out wavefunction - e.g. convenient for printing wfc at different times
+
+  Populations of all states will be printed out
+  for 2D profile on XY plane
+*/
+
 
   vector<double> Pop(nstates,0.0);
   double Pop_tot = 0.0;
@@ -408,7 +567,12 @@ double Wfcgrid::print_populations_2D(string filename,int snap){
 
 
 void Wfcgrid::flux_1D(double xf,vector<double>& res, double m0){
-// xf - the point at which flux is computed
+/**
+  \brief Compute the population flux in 1D case
+  \param[in] xf The point at which flux is computed
+  \param[out] res The collector of the fluxes (for each electronic state projection of the wfc)
+  \param[in] m0 The effective mass of the quantum particle (DOF)
+*/
 
   if(res.size()<nstates){ res = vector<double>(nstates,0.0);  }
 

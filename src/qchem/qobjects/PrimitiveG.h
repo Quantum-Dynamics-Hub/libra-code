@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file PrimitiveG.h
+  \brief The file describes: a) the PrimitiveG class that represents Gaussian primitives; b) related functions
+    
+*/
 
 #ifndef PrimitiveG_H
 #define PrimitiveG_H
@@ -15,26 +20,32 @@
 #include "../../mmath/libmmath.h"
 using namespace libmmath;
 
-
+/// libqchem namespace
 namespace libqchem{
+
+/// libqobjects namespace
 namespace libqobjects{
 
 
 //============ Primitive Gaussian functions class ====================
 
 class PrimitiveG{
-  // f = (x-X)^{x_exp} * (y-Y)^{y_exp} * (z-Z)^(z_exp) * exp(-alpha * (r - R)^2)
-  // R = (X, Y, Z)^T
+/** 
+  \brief The class that represents Gaussian primitive functions of arbitrary angular momentum and exponent
+
+  f = (x-X)^{x_exp} * (y-Y)^{y_exp} * (z-Z)^(z_exp) * exp(-alpha * (r - R)^2)
+  R = (X, Y, Z)^T
+*/
 
 public:
   // Members data
-  int x_exp;          int is_x_exp;
-  int y_exp;          int is_y_exp;
-  int z_exp;          int is_z_exp;
-  double alpha;       int is_alpha;
-  VECTOR R;           int is_R; 
+  int x_exp;          int is_x_exp;  ///< quantum number of the x-projection of the angular momentum operator 
+  int y_exp;          int is_y_exp;  ///< quantum number of the y-projection of the angular momentum operator 
+  int z_exp;          int is_z_exp;  ///< quantum number of the z-projection of the angular momentum operator 
+  double alpha;       int is_alpha;  ///< Gaussian exponent
+  VECTOR R;           int is_R;      ///< coordinates (Cartesian) of the primitive
   // Function value
-  double value;       int is_value;
+  double value;       int is_value;  ///< The value of the function at some point
 
 
   // Getters-setters
@@ -55,12 +66,12 @@ public:
 
   //----------------------------------------------
   // Member functions
-  void init(int l,int m,int n,double alp,VECTOR& center);  /// general initialization/setup
+  void init(int l,int m,int n,double alp,VECTOR& center);  ///< general initialization/setup
 
-  PrimitiveG::PrimitiveG();   /// Default c-tor
-  PrimitiveG::PrimitiveG(int l,int m,int n,double alp,VECTOR& center); /// general c-tor
-  PrimitiveG(const PrimitiveG&);  /// Copy c-tor
-  PrimitiveG& operator=(const PrimitiveG&);  /// assignment operator
+  PrimitiveG::PrimitiveG();   ///< Default c-tor
+  PrimitiveG::PrimitiveG(int l,int m,int n,double alp,VECTOR& center); ///< general c-tor, with parameters
+  PrimitiveG(const PrimitiveG&);  ///< Copy c-tor
+  PrimitiveG& operator=(const PrimitiveG&);  ///< assignment operator
 
 
   // Computations and print
@@ -254,10 +265,7 @@ double electron_repulsion_integral
 
 
 
-
-
-
-typedef std::vector<PrimitiveG> PrimitiveGList;
+typedef std::vector<PrimitiveG> PrimitiveGList;  ///< This is the data type for representing vector of PrimitiveG objects
 
 
 }// namespace libqobjects

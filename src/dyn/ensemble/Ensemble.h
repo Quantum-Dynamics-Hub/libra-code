@@ -66,7 +66,7 @@ class Ensemble{
   int nnucl;                ///< number of nuclear degrees of freedom
   int nelec;                ///< number of electronic DOFs
 
-  vector<int> is_active;    ///< flag stating if the i-th trajectory is active, if not - it is assumed to be adsorbed
+  vector<int> is_active;    ///< flag stating if the i-th trajectory is active, if not - it is assumed to be fixed: no integration is applied
   vector<Nuclear>    mol;   ///< nuclear subsystems
   vector<Electronic>  el;   ///< electronic subsystems
   vector<Hamiltonian*> ham; ///< Hamiltonian "handlers" - unique for each copy

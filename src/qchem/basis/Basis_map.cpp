@@ -8,23 +8,26 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Basis_map.cpp
+  \brief The file implements functions for mapping atom-orbital indices
+    
+*/
 
 #include "Basis.h"
 
-/****************************************************************************
-
-  This file contains following functions:
-
-  void map_atoms_and_orbitals(int Nnucl, const vector<AO>&  basis_ao, vector<vector<int> >& at_orbitals)
-  void show_mapping(const vector<vector<int> >& at_orbitals)
-
-****************************************************************************/
-
+/// libqchem namespace
 namespace libqchem{
+
+/// libbasis namespace
 namespace libbasis{
 
 
 void show_mapping(const vector<vector<int> >& at_orbitals){
+/** 
+  \brief Printing the mapping information
+  \param[in] at_orbital The mapping table: at_orbitals[n] is the list of the global indices of the AOs attached to the atom n
+*/
 
   for(int n=0;n<at_orbitals.size();n++){
   

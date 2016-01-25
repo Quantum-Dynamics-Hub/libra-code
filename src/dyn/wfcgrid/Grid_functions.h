@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Grid_functions.h
+  \brief The file describes some auxiliary functions for grid operations
+    
+*/
 
 #ifndef GRID_FUNCTIONS_H
 #define GRID_FUNCTIONS_H
@@ -15,8 +20,10 @@
 #include "../../mmath/libmmath.h"
 using namespace libmmath;
 
-
+/// libdyn namespace
 namespace libdyn{
+
+/// libwfcgrid namespace
 namespace libwfcgrid{
 
 

@@ -8,24 +8,35 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file RigidBody_methods5_6.cpp
+  \brief The file implements the method of Omelyan for RB propagation 
+  
+*/
 
 #include "RigidBody.h"
 
+/// libdyn namespace
 namespace libdyn{
+
+/// librigidbody namespace
 namespace librigidbody{
 
 void RigidBody::propagate_omelyan(double t){
-/*******************************************************************
- This function provides an approximate solution to the torqued
- rigid-body problem in terms of leap-frog-like algorithm  as
- described by:
- Omelyan I. P. "Algorithm for numerical integration of the rigid-body
- equations of motion" Phys. Rev. E. 1998, V. 58, P. 1169-1172
- Here we, however, consider a free rigid-body propagation
- The variables propagate here according to the following scheme:
- l_e (w_e):  t-h/2 -> t+h/2
- A_I_to_e :  t     -> t+h
-*******************************************************************/
+/**
+  \brief Omelyan integrator
+  \param[in] t Integration duration
+
+  This function provides an approximate solution to the torqued
+  rigid-body problem in terms of leap-frog-like algorithm  as
+  described by:
+  Omelyan I. P. "Algorithm for numerical integration of the rigid-body
+  equations of motion" Phys. Rev. E. 1998, V. 58, P. 1169-1172
+  Here we, however, consider a free rigid-body propagation
+  The variables propagate here according to the following scheme:
+  l_e (w_e):  t-h/2 -> t+h/2
+  A_I_to_e :  t     -> t+h
+*/
 
 //  set_angular_momentum(rb_l_e);
 // l_e = l_e(t-h/2)

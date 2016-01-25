@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libthermostat.cpp
+  \brief The file de Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -16,13 +21,20 @@
 
 using namespace boost::python;
 
-
+/// libdyn namespace
 namespace libdyn{
+
+/// libthermostat namespace
 namespace libthermostat{
 
 
 
 void export_Thermostat_objects(){
+/** 
+  \brief Exporter of libthermostat classes and functions
+
+*/
+
 
   void (Thermostat::*expt_set_Nf_t_v1)(int nf_t) = &Thermostat::set_Nf_t;
   void (Thermostat::*expt_set_Nf_t_v2)(double nf_t) = &Thermostat::set_Nf_t;

@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libqobjects.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_QOBJECTS_H
 #define LIB_QOBJECTS_H
@@ -15,7 +20,10 @@
 #include "PrimitiveG.h"
 #include "AO.h"
 
+/// libqchem namespace
 namespace libqchem{
+
+/// libqobjects namespace
 namespace libqobjects{
 
 

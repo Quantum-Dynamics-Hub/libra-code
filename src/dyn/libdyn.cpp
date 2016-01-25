@@ -8,13 +8,18 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libdyn.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "libdyn.h"
 using namespace boost::python;
 
-
+/// libdyn namespace
 namespace libdyn{
 
 using namespace libnuclear;
@@ -27,6 +32,11 @@ using namespace libensemble;
 
 
 void export_Dyn_objects(){
+/** 
+  \brief Exporter of libdyn classes and functions
+
+*/
+
 
   export_Nuclear_objects();
   export_RigidBody_objects();

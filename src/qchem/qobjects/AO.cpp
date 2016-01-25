@@ -8,25 +8,38 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file AO.cpp
+  \brief The file implement: a) the AO class that represents atomic orbtals as a linear combination of 
+  Gaussian primitives; b) related functions
+    
+*/
 
 #include "AO.h"
 #include "../molint/libmolint.h"
 
-
+/// libqchem namespace
 namespace libqchem{
 
 using namespace libmolint;
 
+/// libqobjects namespace
 namespace libqobjects{
 
 
 //------------------ Members of  AO class -------------------------
 AO::AO(){
+/**
+  \brif The default constructor.
+*/
   init();
 }
 
 
 void AO::init(){
+/** 
+  \brief Initialize the member data to the default values
+*/
 
   is_element = 0;
   is_ao_shell = 0;
@@ -44,6 +57,9 @@ void AO::init(){
 }
 
 void AO::clear(){
+/**
+  \brief Clears internal variables containing the primitive Gaussians and their coefficients in the contraction
+*/
   if(primitives.size()>0) { primitives.clear(); }
   if(coefficients.size()>0){ coefficients.clear(); }
 
@@ -51,6 +67,11 @@ void AO::clear(){
 }
 
 void AO::add_primitive(double c,PrimitiveG g){   
+/**
+  \brief Add primitive Gaussian to the contraction.
+  \param[in] c The coefficient with which the primitive Gaussian enters the contraction
+  \param[in] g The primitive Gaussian object to add to AO
+*/
   coefficients.push_back(c * g.normalization_factor());  is_coefficients = 1;
   primitives.push_back(g);    is_primitives   = 1;
   expansion_size++;
@@ -58,6 +79,12 @@ void AO::add_primitive(double c,PrimitiveG g){
 
 
 AO::AO(const AO& g){
+/**
+  \brief Copy constructor
+
+  Only the properties defined in the source object will be copied to the destination object
+*/
+
   clear();
 
   if(g.is_x_exp)   {  x_exp = g.x_exp; is_x_exp = 1; }
@@ -82,6 +109,12 @@ AO::AO(const AO& g){
 
 // Assignment operator
 AO& AO::operator=(const AO& g){
+/**
+  \brief Assignment operator
+
+  Only the properties defined in the source object will be copied to the destination object  
+*/
+
 
   clear();
 
@@ -109,6 +142,9 @@ AO& AO::operator=(const AO& g){
 
 
 void AO::show_info(){
+/**
+  \brief Printing properties of the AO
+*/
 
   std::cout<<"AO properties:"<<std::endl;
 
@@ -132,6 +168,11 @@ void AO::show_info(){
 }
 
 double AO::compute(VECTOR& pos){
+/**
+  \brief Evaluate the AO function at given point 
+  \param[in] pos The position at which the function is evaluated
+  The result is returned.
+*/
 
   double res = 0.0;
   for(int i=0;i<expansion_size;i++){
@@ -142,6 +183,9 @@ double AO::compute(VECTOR& pos){
 }
 
 void AO::normalize(){
+/** 
+  \brief Scale the coefficients of the contraction, so that the AO is normalized
+*/
 
   double res = normalization_factor();
 
@@ -156,11 +200,11 @@ void AO::normalize(){
 
 
 double AO::norm2(){
-
-  // Calculate the normalization of entire contraction
-  // AO = N*summ(c_i * prim[i]) , where prim - are not normalized
-  //         i
-  // Calculate the norm:  <AO(A)|AO(A)>
+/**
+  \brief The square of the norm of the entire contraction: <AO(A)|AO(A)>
+  AO = N*summ(c_i * prim[i]) , where prim - are not normalized
+           i
+*/
 
   double res = 0.0;
   for(int i=0;i<expansion_size;i++){
@@ -173,33 +217,60 @@ double AO::norm2(){
 }
 
 double AO::norm1(){
+/**
+  \brief The magnitude (square root of the square of the norm) of the entire contraction: |<AO(A)|AO(A)>| = sqrt(<AO(A)|AO(A)>)
+  AO = N*summ(c_i * prim[i]) , where prim - are not normalized
+           i
+*/
 
   return sqrt(norm2());
 }
 
 double AO::normalization_factor(){
+/**
+  \brief The normalization factor for the entire contraction: = 1.0/sqrt(<AO(A)|AO(A)>
+*/
 
   return (1.0/sqrt(norm2()));
 }
 
 
 void AO::shift_position(VECTOR dR){
-// Move all primitives by vector dR
+/**
+  \brief Shift the center of all primitive by a given vector - Python-friendly
+  \param[in] dR The translation vector
+*/
+
   for(int i=0;i<expansion_size;i++){  primitives[i].shift_position(dR);   }
 }
 
-void AO::set_position(VECTOR R_){
-// Move all primitives by vector dR
-  for(int i=0;i<expansion_size;i++){  primitives[i].set_position(R_);   }
-}
-
 void AO::shift_position_const_ref(const VECTOR& dR){
-// Move all primitives by vector dR
+/**
+  \brief Shift the center of all primitive by a given vector
+  \param[in] dR The translation vector
+*/
+
   for(int i=0;i<expansion_size;i++){  primitives[i].shift_position_const_ref(dR);   }
 }
 
+
+void AO::set_position(VECTOR R_){
+/**
+  \brief Set the center of all primitives to a given vector - Python-friendly
+  \param[in] R_ The new vector position
+*/
+
+
+  for(int i=0;i<expansion_size;i++){  primitives[i].set_position(R_);   }
+}
+
+
 void AO::set_position_const_ref(const VECTOR& R_){
-// Move all primitives by vector dR
+/**
+  \brief Set the center of all primitives to a given vector
+  \param[in] R_ The new vector position
+*/
+
   for(int i=0;i<expansion_size;i++){  primitives[i].set_position_const_ref(R_);   }
 }
 
@@ -222,10 +293,10 @@ void AO::set_position(const VECTOR& R_){
 
 
 
-///=======================================================================================================
-///===================== Overload basic functions from libmolint to AO objects  ==========================
+//=======================================================================================================
+//===================== Overload basic functions from libmolint to AO objects  ==========================
 
-///=========================  Overlaps ================================
+//=========================  Overlaps ================================
 
 // Reference verions
 
@@ -233,6 +304,21 @@ double gaussian_overlap
 ( AO& AOa, AO& AOb,int is_normalize, int is_derivs,
   VECTOR& dIdA, VECTOR& dIdB, vector<double*>& auxd,int n_aux
 ){
+/**
+  \brief Compute the overlap of two arbitrary AOs: <AO(A)|AO(B)>
+
+  \param[in] AOa One primitive Gaussian
+  \param[in] AOb Second primitive Gaussian
+  \param[in] is_normalize The flag telling whether we need to normalize the result: is_normalize = 1 - 
+  the overlap will be normalized; is_normalize = 0 - no need for normalization (AOs are assumed to be normalized)
+  \param[in] is_derivs if = 1 - also compute the derivatives of the overlap w.r.t. coordinates of each AO center
+  \param[out] dIdA The derivative of the integral w.r.t. the coordinates of the first (A) AO (if is_derivs = 1)
+  \param[out] dIdB The derivative of the integral w.r.t. the coordinates of the second (B) AO (if is_derivs = 1)
+  \param[in,out] auxd The list of the pointers to pre-allocated pieces of memory (for variables of the double type)
+  \param[in] n_aux The length of the array to which each of the auxd[i] pointers points.
+
+*/
+
 
   dIdA = 0.0;
   dIdB = 0.0;
@@ -388,7 +474,7 @@ double gaussian_overlap(AO* AOa, AO* AOb){
 }
 
 
-///=========================  Moments ================================
+//=========================  Moments ================================
 
 // Reference verions
 
@@ -556,7 +642,7 @@ double gaussian_moment(AO* AOa, PrimitiveG& G, AO* AOb){
 }
 
 
-///=========================  Pseudopotentials ================================
+//=========================  Pseudopotentials ================================
 
 // Reference verions
 
@@ -762,7 +848,7 @@ double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
 
 
 
-///=========================  Multipoles ================================
+//=========================  Multipoles ================================
 
 // Reference verions
 VECTOR transition_dipole_moment
@@ -944,7 +1030,7 @@ VECTOR transition_dipole_moment
 
 
 
-///=========================  Derivative coupling integrals ================================
+//=========================  Derivative coupling integrals ================================
 
 // Reference verions
 VECTOR derivative_coupling_integral
@@ -1128,7 +1214,7 @@ VECTOR derivative_coupling_integral
 
 
 
-///=========================  Kinetic integrals ================================
+//=========================  Kinetic integrals ================================
 
 // Reference verions
 
@@ -1289,7 +1375,7 @@ double kinetic_integral(AO* AOa, AO* AOb){
 }
 
 
-///====================== Nuclear Attraction Integral ================================
+//====================== Nuclear Attraction Integral ================================
 // Versions with references
 
 double nuclear_attraction_integral
@@ -1501,7 +1587,7 @@ double nuclear_attraction_integral
 
 
 
-///====================== Electron Repulsion Integral ================================
+//====================== Electron Repulsion Integral ================================
 // Versions with references
 double electron_repulsion_integral
 ( AO& AOa, AO& AOb, AO& AOc, AO& AOd, int is_normalize, 

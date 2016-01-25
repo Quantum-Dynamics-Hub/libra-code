@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Surface_Hopping.h
+  \brief The file describes the functions used in surface hopping methods
+    
+*/
 
 #ifndef SURFACE_HOPPING_H
 #define SURFACE_HOPPING_H
@@ -23,6 +28,8 @@
 
 using namespace libhamiltonian;
 
+
+/// libdyn namespace
 namespace libdyn{
 
 using namespace libnuclear;

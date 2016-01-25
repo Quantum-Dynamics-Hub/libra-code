@@ -8,6 +8,14 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Energy_and_Forces.h
+  \brief The file describes the functions for dynamics-immediate energy calculations
+
+  The "dynamics-immediate" means the energies and forces computed and organized to 
+  be used in dynamical calculations of different type - classical, quantum, quantum-classical.
+    
+*/
 
 #ifndef ENERGY_AND_FORCES_H
 #define ENERGY_AND_FORCES_H
@@ -24,6 +32,7 @@
 
 using namespace libhamiltonian;
 
+/// libdyn namespace
 namespace libdyn{
 
 using namespace libnuclear;

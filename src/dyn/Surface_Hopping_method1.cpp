@@ -8,22 +8,45 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Surface_Hopping_method1.cpp
+  \brief The file implements the functions used in multi-trajectory (including entangled) surface hopping methods
+
+  This is only an experimental direction - still need to test and clean up the functions. Then, we need to study the 
+  properties of different options
+    
+*/
 
 #include "Surface_Hopping.h"
 #include "Surface_Hopping_method1.h"
 #include "Energy_and_Forces.h"
 
+
+/// libdyn namespace
 namespace libdyn{
 
 
-
 void compute_hopping_probabilities_esh(Ensemble& ens, MATRIX* g, double dt, int use_boltz_factor,double T){
+/**
+  \brief Compute the ESH surface hopping probabilities for the trajectory described by mol, el, and ham
+  \param[in] ent Describes the ensemble of trajectories that are being propagated
+  \param[out] g The matrix of hopping probabilities
+  \param[in] dt Time duration of nuclear propagation step
+  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
+  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
 
-// esh - entangled surface hopping
+  Assume ham internal processings are done outside
+  Assume matrix g is allocated
 
-// Assume ham internal processings are done outside
-// assume matrix g is allocated
+  Abbreviation: ESH - entangled surface hopping
 
+  IMPORTANT!!! This is my experimental approach - trying to determine the surface hopping probabilities based on the
+  properties of all trajectories - this is done by averaging some terms that enter computation of hopping probabilities
+
+  Don't use this method unless you make it work. The main idea behind this block so far is to use it as a template/placeholder
+  for implementing different entngled SH methods
+
+*/
 
   const double kb = 3.166811429e-6; // Hartree/K
   int i,j,k,n, traj;
@@ -148,7 +171,7 @@ void hop(int ntraj, vector<int>& initstate, vector<Nuclear*>& mol, vector<Hamilt
   double left, right; 
   vector<int> finstate; finstate = initstate;
 
-  for(int traj=0;traj<ntraj++;traj++){
+  for(int traj=0;traj<ntraj;traj++){
 
     left = right = 0.0;
 

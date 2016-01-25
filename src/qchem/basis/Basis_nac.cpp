@@ -8,30 +8,46 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Basis_nac.cpp
+  \brief The file implements function for creating derivative coupling matrix
+    
+*/
 
 #include "Basis.h"
 
+/// libqchem namespace
 namespace libqchem{
+
+/// libbasis namespace
 namespace libbasis{
 
 
-/****************************************************************************
-
-  This file contains following functions:
-
-  void update_derivative_coupling_matrix
-  (int x_period,int y_period,int z_period,const VECTOR& t1, const VECTOR& t2, const VECTOR& t3,
-   vector<AO>& basis_ao, MATRIX& Dao
-  )
-
-
-****************************************************************************/
 
 void update_derivative_coupling_matrix
 (int x_period,int y_period,int z_period,const VECTOR& t1, const VECTOR& t2, const VECTOR& t3,
  vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
  vector<AO>& basis_ao, int c, MATRIX& Dao_x, MATRIX& Dao_y, MATRIX& Dao_z
 ){
+/**
+  \brief Update the derivative coupling matrix (in AO basis): <AO(i)|d/dR_c|AO(j)>
+  \param[in] x_period Then number of periodic shells in X direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] y_period Then number of periodic shells in Y direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] z_period Then number of periodic shells in Z direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] t1 The periodicity vector along a crystal direction ("X")
+  \param[in] t2 The periodicity vector along b crystal direction ("Y")
+  \param[in] t3 The periodicity vector along c crystal direction ("Z")
+  \param[in] atom_to_ao_map The mapping from atomic indices to AO indices: atom_to_ao_map[n][i] - is the global index of i-th AO on the n-th atom
+  \param[in] ao_to_atom_map The mapping from the global AO index to the atomic index: ao_to_atom_map[I] - is the index of the atom on which 
+  AO with the global index I is located
+  \param[in] basis_ao The list of all AOs (basis)
+  \param[in] c The index of the nuclear DOF (atom index) to which the electronic states are coupled - only this derivative matrix is considered here
+  \param[out] Dao_x The derivative coupling matrix in AO basis, coupled to x coordinate of the atom with index c
+  \param[out] Dao_y The derivative coupling matrix in AO basis, coupled to y coordinate of the atom with index c
+  \param[out] Dao_z The derivative coupling matrix in AO basis, coupled to z coordinate of the atom with index c
+
+  This function also takes periodic images of the system into account
+*/
 
   int i,j,n,I,J;
   VECTOR dIdA,dIdB,TV, Rij,Rij0;

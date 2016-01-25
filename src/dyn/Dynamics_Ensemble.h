@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Dynamics_Ensemble.h
+  \brief The file describes the functions for dynamics of ensemble of trajectories
+    
+*/
 
 #ifndef DYNAMICS_ENSEMBLE_H
 #define DYNAMICS_ENSEMBLE_H
@@ -27,6 +32,7 @@
 
 using namespace libhamiltonian;
 
+/// libdyn namespace 
 namespace libdyn{
 
 using namespace libnuclear;

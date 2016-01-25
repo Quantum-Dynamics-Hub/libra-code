@@ -8,13 +8,29 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file RigidBody_methods5_5.cpp
+  \brief The file implements the Terec and qTerec propagation method based on recursive Taylor series expansion
+  
+  See more in:
+  Akimov, A. V.; Kolomeisky, A. B. Recursive Taylor Series Expansion Method for Rigid-Body Molecular Dynamics. J. Chem. Theory Comput. 2011, 7, 3062–3071.
+
+*/
 
 #include "RigidBody.h"
 
+/// libdyn namespace
 namespace libdyn{
+
+/// librigidbody namespace
 namespace librigidbody{
 
+
 void RigidBody::initialize_terec(int series_expansion){
+/**
+  \brief This is an auxiliary function that initializes auxiliary variables and parameters
+  \param[in] series_expansion The length of the Taylor expansion chosen for the integration
+*/
 
   //--------------- Calculate expansion coefficients ---------------------
   int i,n,k,indx,Coeffs_size;
@@ -36,12 +52,19 @@ void RigidBody::initialize_terec(int series_expansion){
 }
 
 void RigidBody::propagate_terec(double t){
-/*  This is my TEylor RECursive algorithm for free rigid body
-    problem. The following convention is used:
+/**
+  \brief Terec propagation scheme
+  \param[in] t Time of propagation
 
-                u1[0].x  u2[0].x  u3[0].x
-    A_I_to_e =  u1[0].y  u2[0].y  u3[0].y
-                u1[0].z  u2[0].z  u3[0].z
+  This is my TEylor RECursive algorithm for free rigid body
+  problem. See more in:
+  Akimov, A. V.; Kolomeisky, A. B. Recursive Taylor Series Expansion Method for Rigid-Body Molecular Dynamics. J. Chem. Theory Comput. 2011, 7, 3062–3071.
+
+  The following convention is used:
+
+              u1[0].x  u2[0].x  u3[0].x
+  A_I_to_e =  u1[0].y  u2[0].y  u3[0].y
+              u1[0].z  u2[0].z  u3[0].z
 */
 
   VECTOR *u1,*u2,*u3,*deriv;
@@ -152,13 +175,21 @@ void RigidBody::propagate_terec(double t){
 }
 
 void RigidBody::propagate_qterec(double t){
-/*  This is my TEylor RECursive algorithm for free rigid body
-    problem. The following convention is used:
+/**
+  \brief Terec propagation scheme - quaternion version
+  \param[in] t Time of propagation
 
-                u1[0].x  u2[0].x  u3[0].x
-    A_I_to_e =  u1[0].y  u2[0].y  u3[0].y
-                u1[0].z  u2[0].z  u3[0].z
+  This is my TEylor RECursive algorithm for free rigid body
+  problem. See more in:
+  Akimov, A. V.; Kolomeisky, A. B. Recursive Taylor Series Expansion Method for Rigid-Body Molecular Dynamics. J. Chem. Theory Comput. 2011, 7, 3062–3071.
+
+  The following convention is used:
+
+              u1[0].x  u2[0].x  u3[0].x
+  A_I_to_e =  u1[0].y  u2[0].y  u3[0].y
+              u1[0].z  u2[0].z  u3[0].z
 */
+
 
   QUATERNION *derivq;
   VECTOR *deriv;

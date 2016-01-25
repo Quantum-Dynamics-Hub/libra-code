@@ -8,6 +8,12 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Surface_Hopping_method1.h
+  \brief The file describes the functions used in multi-trajectory (including entangled) surface hopping methods
+    
+*/
+
 
 #ifndef SURFACE_HOPPING_METHOD1_H
 #define SURFACE_HOPPING_METHOD1_H
@@ -23,6 +29,7 @@
 
 using namespace libhamiltonian;
 
+/// libdyn namespace
 namespace libdyn{
 
 using namespace libnuclear;
@@ -47,9 +54,6 @@ void rescale_velocities_adiabatic(int ntraj, vector<Nuclear*>& mol, vector<Hamil
       vector<int>& new_st, vector<int>& old_st, int do_reverse);
 void rescale_velocities_adiabatic(int ntraj, vector<Nuclear>& mol, vector<Hamiltonian>& ham,
       vector<int>& new_st, vector<int>& old_st, int do_reverse);
-
-
-
 
 
 

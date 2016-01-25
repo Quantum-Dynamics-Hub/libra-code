@@ -8,10 +8,19 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Wfcgrid_Dynamics1.cpp
+  \brief The file implements the propagators for numerical solution of TD-SE on the grid
+    
+*/
 
 #include "Wfcgrid.h"
 
+
+/// libdyn namespace
 namespace libdyn{
+
+/// libwfcgrid namespace
 namespace libwfcgrid{
 
 using namespace libmmath;
@@ -19,8 +28,17 @@ using namespace libmmath::libmeigen;
 
 
 void Wfcgrid::update_potential_1D(Hamiltonian& ham){
-// This function recomputes the Hamiltonian for all points
-// working in atomic units: hbar = 1
+/**
+  \brief Update the Hamiltonian for 1D grid
+  \param[in,out] ham The Hamiltonian object. The internal state of the object will be updated
+  Eventually, it will correspond to that of the last point on the grid. Here, we use this
+  Hamiltonian object only as the functor (it defines how to compute potential and couplings), but
+  we don't care about the final state of the ham variable. The results for each point of the grid 
+  will be saved internally in H matrix.
+
+  This function recomputes the Hamiltonian for all points
+  working in atomic units: hbar = 1
+*/
 
   vector<double> q(1, 0.0);
 
@@ -45,8 +63,17 @@ void Wfcgrid::update_potential_1D(Hamiltonian& ham){
 }// update_potential_1D
 
 void Wfcgrid::update_potential_2D(Hamiltonian& ham){
-// This function recomputes the Hamiltonian for all points
-// working in atomic units: hbar = 1
+/**
+  \brief Update the Hamiltonian for 2D grid
+  \param[in,out] ham The Hamiltonian object. The internal state of the object will be updated
+  Eventually, it will correspond to that of the last point on the grid. Here, we use this
+  Hamiltonian object only as the functor (it defines how to compute potential and couplings), but
+  we don't care about the final state of the ham variable. The results for each point of the grid 
+  will be saved internally in H matrix.
+
+  This function recomputes the Hamiltonian for all points
+  working in atomic units: hbar = 1
+*/
 
   vector<double> q(2,0.0);
 
@@ -77,8 +104,13 @@ void Wfcgrid::update_potential_2D(Hamiltonian& ham){
 
 
 void Wfcgrid::update_propagator_1D(double dt,double m0){
-// This function updates real- and recoprocal-space propagators (diagonal matrices)
-// working in atomic units: hbar = 1
+/**
+  \brief Update real-space propagators for 1D grid
+  \param[in] dt Integration time
+  \param[in] m0 Mass of the particle (effective DOF)
+
+  working in atomic units: hbar = 1
+*/
 
   int nst, nst1;
 
@@ -138,8 +170,13 @@ void Wfcgrid::update_propagator_1D(double dt,double m0){
 
 
 void Wfcgrid::update_propagator_2D(double dt,double m0){
-// This function updates real- and recoprocal-space propagators (diagonal matrices)
-// working in atomic units: hbar = 1
+/**
+  \brief Update real-space propagators for 2D grid
+  \param[in] dt Integration time
+  \param[in] m0 Mass of the particle (effective DOF)
+
+  working in atomic units: hbar = 1
+*/
 
   int nst, nst1;
 
@@ -207,8 +244,13 @@ void Wfcgrid::update_propagator_2D(double dt,double m0){
 
 
 void Wfcgrid::update_propagator_K_1D(double dt,double m0){
-// This function updates real- and recoprocal-space propagators (diagonal matrices)
-// working in atomic units: hbar = 1
+/**
+  \brief Update reciprocal-space propagators for 1D grid
+  \param[in] dt Integration time
+  \param[in] m0 Mass of the particle (effective DOF)
+
+  working in atomic units: hbar = 1
+*/
 
   // Precompute H, d_ij, ... along grid
   for(int nx=0;nx<Nx;nx++){
@@ -227,8 +269,13 @@ void Wfcgrid::update_propagator_K_1D(double dt,double m0){
 
 
 void Wfcgrid::update_propagator_K_2D(double dt,double m0){
-// This function updates real- and recoprocal-space propagators (diagonal matrices)
-// working in atomic units: hbar = 1
+/**
+  \brief Update reciprocal-space propagators for 2D grid
+  \param[in] dt Integration time
+  \param[in] m0 Mass of the particle (effective DOF)
+
+  working in atomic units: hbar = 1
+*/
 
   // Precompute H, d_ij, ... along grid
   for(int nx=0;nx<Nx;nx++){
@@ -253,6 +300,10 @@ void Wfcgrid::update_propagator_K_2D(double dt,double m0){
 
 
 void Wfcgrid::propagate_exact_1D(int Nmts){
+/**
+  \brief Propagator for 1D grid wavefunction
+  \param[in] Nmts The number of sub-integration loops in the nonadiabatic term interations (not presently used)
+*/
 
   int nst,nst1,kx,nx;
 
@@ -321,6 +372,11 @@ void Wfcgrid::propagate_exact_1D(int Nmts){
 
 
 void Wfcgrid::propagate_exact_2D(int Nmts){
+/**
+  \brief Propagator for 2D grid wavefunction
+  \param[in] Nmts The number of sub-integration loops in the nonadiabatic term interations (not presently used)
+*/
+
 
   int nst,nst1,kx,ky, nx, ny;
 
@@ -393,7 +449,13 @@ void Wfcgrid::propagate_exact_2D(int Nmts){
 
 
 void Wfcgrid::absorb_1D(double dL,vector<double>& Pops_l,vector<double>& Pops_r){
-// dL - is a length of the absorbing layer
+/**
+  \brief Absorbing potential near the boundaries for 1D wavefunction
+  \param[in] dL the length of the absorbing layer
+  \param[out] Pops_l Population in the left trapping region (absorbing layer)
+  \param[out] Pops_r Population in the right trapping region (absorbing layer)
+*/
+
   int nL = dL/dx;  // how many points from each boundary to set to zero
 
   if(Pops_l.size()<nstates){ Pops_l = vector<double>(nstates,0.0);  } // Population in the left trapping region
@@ -424,6 +486,14 @@ void Wfcgrid::absorb_1D(double dL,vector<double>& Pops_l,vector<double>& Pops_r)
 
 
 boost::python::list Wfcgrid::absorb_1D(double dL){
+/**
+  \brief Absorbing potential near the boundaries for 1D wavefunction - Python-friendly
+  \param[in] dL the length of the absorbing layer
+  Return value - the list of 2 lists, res, such that
+  res[0] Population in the left trapping region (absorbing layer)
+  res[1] Population in the right trapping region (absorbing layer)
+*/
+
 
   vector<double> Pops_l(nstates,0.0);
   vector<double> Pops_r(nstates,0.0);

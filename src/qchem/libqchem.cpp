@@ -8,22 +8,33 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libqchem.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "libqchem.h"
 using namespace boost::python;
 
-
+/// libqchem namespace
 namespace libqchem{
 
 using namespace libmolint;
 using namespace libqobjects;
 
+
 void export_Qchem_objects(){
+/** 
+  \brief Exporter of libqchem classes and functions
+
+*/
 
   export_molint_objects();
   export_qobjects_objects();
+  export_basis_objects();
 
 }// export_Qchem_objects()
 

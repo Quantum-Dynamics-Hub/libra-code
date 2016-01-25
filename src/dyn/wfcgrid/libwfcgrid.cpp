@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libwfcgrid.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -15,17 +20,21 @@
 #include "libwfcgrid.h"
 
 using namespace boost::python;
-//using namespace libdyn::libelectronic;
 
-
+/// libdyn namespace
 namespace libdyn{
+
+/// libwfcgrid namespace
 namespace libwfcgrid{
 
 
 void export_Wfcgrid_objects(){
+/** 
+  \brief Exporter of libwfcgrid classes and functions
 
-//  def("SAC_Ham", expt_SAC_Ham1);
-//  void (Electronic::*expt_propagate_electronic)(double,Hamiltonian&) = &Electronic::propagate_electronic;
+*/
+
+
   boost::python::list (Wfcgrid::*expt_absorb_1D)(double dL) = &Wfcgrid::absorb_1D;
 
 

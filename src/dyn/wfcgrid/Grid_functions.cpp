@@ -8,20 +8,36 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Grid_functions.cpp
+  \brief The file implements some auxiliary functions for grid operations
+    
+*/
 
 #include <sstream>
 #include "Grid_functions.h"
 
 using namespace std;
 
-
+/// libdyn namespace
 namespace libdyn{
+
+/// libwfcgrid namespace
 namespace libwfcgrid{
 
 
 //--------------------- General ---------------------
 
 int find_grid_size(double xmin,double xmax, double dx){
+/**
+  \brief Compute the minimal number of points that is a power of 2 and
+  encloses the selected interval with the given spacing between the points
+
+  \param[in] xmin The minimal (leftmost) boundary of the grid
+  \param[in] xmax The maximal (rightmost) boundary of the grid
+  \param[in] dx The spacing between the grid points.
+
+*/
   int sz = int((xmax - xmin)/dx) + 1;
 
   // Automatically expands the grid to the next closest power of 2
@@ -31,6 +47,19 @@ int find_grid_size(double xmin,double xmax, double dx){
 }
 
 CMATRIX init_grid(double xmin,double xmax, double dx){
+/**
+  \brief Initialize 1D grid
+
+  The number of points that is a power of 2 and encloses the selected interval
+  with the given spacing between the points is computed, and then these points 
+  will be generated as a Nx x 1 complex-valued matrix (elements are actually real-valued)
+
+  \param[in] xmin The minimal (leftmost) boundary of the grid
+  \param[in] xmax The maximal (rightmost) boundary of the grid
+  \param[in] dx The spacing between the grid points.
+
+*/
+
   int sz = find_grid_size(xmin, xmax, dx);
                                      
   CMATRIX x(sz,1);
@@ -39,14 +68,21 @@ CMATRIX init_grid(double xmin,double xmax, double dx){
 }
 
 //------------------ 1D specific --------------------------
-//void init_gauss_1D(vector<CMATRIX>& wfc, CMATRIX& X, double x_, double p_, double dx, int nstates, int occ_state);
-//void print_1D(CMATRIX& X,vector<CMATRIX>& OUT,string filename);
-//void ft_1D(vector<CMATRIX>& psi,vector<CMATRIX>& reci_psi,int opt,double xmin,double kxmin,double dx);
-
 
 void init_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double dx, int nstates, int occ_state){
-// Gaussian wavepacket on 1D grid
-// G(x) = [ (1/(2.0*pi*dx^2))^(1/4) ] * exp(-((x-X)/(2*dx))^2 + i*x*px)
+/**
+  \brief Initialize a Gaussian wavepacket on a 1D grid
+  \param[out] wfc Is a list of complex matrices (vectors), each containing numerical wavefunction for different electronic state
+  \param[in] X is the complex matrix(vector) containing the grid points
+  \param[in] x_ Position of the center of the Gaussian wavepacket
+  \param[in] px_ Momentum of the Gaussian wavepacket
+  \param[in] dx Spread (distribution width) of the spatial component of the Gaussian wavepacket
+  \param[in] nstates The number of electronic states for which to initialize the wavefunction
+  \param[in] occ_state Index of the occupied electronic state on which the wavepacket is initialized
+
+  G(x) = [ (1/(2.0*pi*dx^2))^(1/4) ] * exp(-((x-x_)/(2*dx))^2 + i*((x-x_)/dx)*px_)
+
+*/
 
   // Get the size of the 1D grid
   int Nx = X.n_elts; 
@@ -82,6 +118,16 @@ void init_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double d
 
 
 void print_1D(CMATRIX& X,vector<CMATRIX>& PSI,string prefix, int frame){
+/**
+  \brief Printing populations of all states in different files (one state per file)
+  \param[in] X The grid points (Nx x 1 matrix)
+  \param[in] PSI The wavefunctions for all states to be printed out. This is a vector of Nx x 1 matrices
+  \param[in] prefix The common part of the names of the files to which the wfc will be printed out
+  \param[in] frame The integer index to be added into the file name - for instance, when printing snapshots of dynamical simulations
+  
+  All files have a common prefix, which also includes indexing via frame parameter, but all 
+  files have different suffixes - depending on the electronic state
+*/
 
   std::string sframe,filename;
   stringstream ss(stringstream::in | stringstream::out);
@@ -93,6 +139,16 @@ void print_1D(CMATRIX& X,vector<CMATRIX>& PSI,string prefix, int frame){
 }
 
 void print_1D(CMATRIX& X,vector<CMATRIX>& PSI,string filename){
+/**
+  \brief Printing populations of all states in different files (one state per file)
+  \param[in] X The grid points (Nx x 1 matrix)
+  \param[in] PSI The wavefunctions for all states to be printed out. This is a vector of Nx x 1 matrices
+  \param[in] filename The common part of the names of the files to which the wfc will be printed out
+  
+  All files have a common prefix, which also includes indexing via frame parameter, but all 
+  files have different suffixes - depending on the electronic state
+*/
+
   
   int nstates = PSI.size();
   int Nx = X.n_elts;
@@ -119,11 +175,17 @@ void print_1D(CMATRIX& X,vector<CMATRIX>& PSI,string filename){
 
 void ft_1D(vector<CMATRIX>& psi,vector<CMATRIX>& reci_psi,int opt,
            double xmin,double kxmin,double dx){
-// Do cfft for each state independently
-// psi = nstates x Nx x 1 - that is nstates matrices Nx x Ny each
-// opt = 1:  psi ---> reci_psi
-// opt = 2:  psi <--- reci_psi
-// Note: the actual meaning of psi and reci_psi is defined by opt parameter
+/**
+  \brief Do 1D cfft (complex fast Fourier transform) for each state independently
+  \param[in,out] psi  Reals space wavefunctions: nstates x Nx x 1 - that is nstates complex-valued matrices Nx x 1 each
+  \param[in,out] reci_psi  Reciprocal space wavefunctions: nstates x Nx x 1 - that is nstates complex-valued matrices Nx x 1 each
+  \param[in] opt option to control the direction of transformation:  opt = 1:  psi ---> reci_psi;  opt = 2:  psi <--- reci_psi
+  \param[in] xmin The lower boundary of the real-space grid
+  \param[in] kxmin The lower boundary of the reciprocal-space grid
+  \param[in] dx The real-space grid point spacing 
+
+  Note: the actual meaning of psi and reci_psi is defined by opt parameter
+*/
 
   int nstates = psi.size();
   int Nx = psi[0].n_rows;
@@ -149,6 +211,26 @@ void init_gauss_2D(vector<CMATRIX>& wfc,
                    CMATRIX& X,double x_,double px_,double dx,
                    CMATRIX& Y,double y_,double py_,double dy,
                    int nstates, int occ_state){
+/**
+  \brief Initialize a Gaussian wavepacket on a 2D grid
+  \param[out] wfc Is a list of complex matrices (vectors), each containing numerical wavefunction for different electronic state
+  \param[in] X is the complex matrix(vector) containing the grid points along X direction
+  \param[in] x_ Position of the center of the Gaussian wavepacket in X direction
+  \param[in] px_ Momentum of the Gaussian wavepacket in X direction
+  \param[in] dx Spread (distribution width) of the spatial component of the Gaussian wavepacket along the axis X
+  \param[in] Y is the complex matrix(vector) containing the grid points along Y direction
+  \param[in] y_ Position of the center of the Gaussian wavepacket in Y direction
+  \param[in] py_ Momentum of the Gaussian wavepacket in Y direction
+  \param[in] dy Spread (distribution width) of the spatial component of the Gaussian wavepacket along the axis Y
+  \param[in] nstates The number of electronic states for which to initialize the wavefunction
+  \param[in] occ_state Index of the occupied electronic state on which the wavepacket is initialized
+
+  G(x,y) = G(x)*G(y)
+  G(x) = [ (1/(2.0*pi*dx^2))^(1/4) ] * exp(-((x-x_)/(2*dx))^2 + i*((x-x_)/dx)*px_)
+  G(y) = [ (1/(2.0*pi*dy^2))^(1/4) ] * exp(-((y-y_)/(2*dy))^2 + i*((y-y_)/dy)*py_)
+
+*/
+
 
   int Nx = X.n_elts; 
   int Ny = Y.n_elts;
@@ -177,6 +259,18 @@ void init_gauss_2D(vector<CMATRIX>& wfc,
 
 
 void print_2D(CMATRIX& X,CMATRIX& Y,vector<CMATRIX>& PSI,string prefix, int frame){
+/**
+  \brief Printing populations of all states in different files (one state per file)
+  \param[in] X The grid points (Nx x 1 matrix) along X direction
+  \param[in] Y The grid points (Ny x 1 matrix) along Y direction
+  \param[in] PSI The wavefunctions for all states to be printed out. This is a vector of Nx x Ny matrices
+  \param[in] prefix The common part of the names of the files to which the wfc will be printed out
+  \param[in] frame The integer index to be added into the file name - for instance, when printing snapshots of dynamical simulations
+  
+  All files have a common prefix, which also includes indexing via frame parameter, but all 
+  files have different suffixes - depending on the electronic state
+*/
+
 
   std::string sframe,filename;
   stringstream ss(stringstream::in | stringstream::out);
@@ -189,6 +283,17 @@ void print_2D(CMATRIX& X,CMATRIX& Y,vector<CMATRIX>& PSI,string prefix, int fram
 
 
 void print_2D(CMATRIX& X,CMATRIX& Y,vector<CMATRIX>& PSI,string filename){
+/**
+  \brief Printing populations of all states in different files (one state per file)
+  \param[in] X The grid points (Nx x 1 matrix) along X direction
+  \param[in] Y The grid points (Ny x 1 matrix) along Y direction
+  \param[in] PSI The wavefunctions for all states to be printed out. This is a vector of Nx x Ny matrices
+  \param[in] filename The common part of the names of the files to which the wfc will be printed out
+  
+  All files have a common prefix, which also includes indexing via frame parameter, but all 
+  files have different suffixes - depending on the electronic state
+*/
+
 
   int nstates = PSI.size();
   int Nx = X.n_elts;
@@ -221,11 +326,17 @@ void print_2D(CMATRIX& X,CMATRIX& Y,vector<CMATRIX>& PSI,string filename){
 
 void ft_2D(vector<CMATRIX>& psi,vector<CMATRIX>& reci_psi,int opt,
            double xmin,double ymin,double kxmin,double kymin,double dx,double dy){
-// Do cfft for each state independently
-// psi = nstates x Nx x Ny - that is nstates matrices Nx x Ny each
-// opt = 1:  psi ---> reci_psi
-// opt = 2:  psi <--- reci_psi
-// Note: the actual meaning of psi and reci_psi is defined by opt parameter
+/**
+  \brief Do 2D cfft (complex fast Fourier transform) for each state independently
+  \param[in,out] psi  Reals space wavefunctions: nstates x Nx x Ny - that is nstates complex-valued matrices Nx x Ny each
+  \param[in,out] reci_psi  Reciprocal space wavefunctions: nstates x Nx x Ny - that is nstates complex-valued matrices Nx x Ny each
+  \param[in] opt option to control the direction of transformation:  opt = 1:  psi ---> reci_psi;  opt = 2:  psi <--- reci_psi
+  \param[in] xmin The lower boundary of the real-space grid
+  \param[in] kxmin The lower boundary of the reciprocal-space grid
+  \param[in] dx The real-space grid point spacing 
+
+  Note: the actual meaning of psi and reci_psi is defined by opt parameter
+*/
 
   int nstates = psi.size();
   int Nx = psi[0].n_rows;

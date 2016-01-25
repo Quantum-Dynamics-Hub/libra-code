@@ -384,7 +384,7 @@ double dJab_dqa(int m,int n,double alpha,double betha,double R){
 double Coulomb_Integral(double R,int n_i, double Jii, double ksi_i, std::string type_i, double q_i,
                                  int n_j, double Jjj, double ksi_j, std::string type_j, double q_j,
                                  double epsilon, int mode){
-/*********************************************************************************
+/**
   Literature references:
 
 [1] - A. K. Rappe, W. A. Goddard III "Charge Equilibration for Molecular Dynamics
@@ -401,8 +401,7 @@ double Coulomb_Integral(double R,int n_i, double Jii, double ksi_i, std::string 
       computational chemistry of molecular sieves" J. Mol. Catal. A. 1998, V. 134,
       P. 63 - 77
 
-
-**********************************************************************************/
+*/
 
   // Jij is in Hartrees (a.u. of energy)
   // R should be in Atomic units

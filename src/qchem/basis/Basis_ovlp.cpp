@@ -8,26 +8,39 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Basis_ovlp.cpp
+  \brief The file implements function for updating the AO overlap matrix
+    
+*/
 
 #include "Basis.h"
 
+
+/// libqchem namespace
 namespace libqchem{
+
+/// libbasis namespace
 namespace libbasis{
 
 
-/****************************************************************************
-
-  This file contains following functions:
-
-  void update_overlap_matrix(int x_period,int y_period,int z_period,const VECTOR& t1, const VECTOR& t2, const VECTOR& t3,
-                             vector<int>& basis_fo,vector<AO>& basis_ao,
-                             MATRIX* Sao,vector<double*>& aux, int n_aux, Nuclear& mol)
-
-
-****************************************************************************/
 
 void update_overlap_matrix(int x_period,int y_period,int z_period,const VECTOR& t1, const VECTOR& t2, const VECTOR& t3,
                            vector<AO>& basis_ao, MATRIX& Sao){
+/**
+  \brief Update the oberlap matrix (in AO basis): <AO(i)|AO(j)>
+  \param[in] x_period Then number of periodic shells in X direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] y_period Then number of periodic shells in Y direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] z_period Then number of periodic shells in Z direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] t1 The periodicity vector along a crystal direction ("X")
+  \param[in] t2 The periodicity vector along b crystal direction ("Y")
+  \param[in] t3 The periodicity vector along c crystal direction ("Z")
+  \param[in] basis_ao The list of all AOs (basis)
+  \param[out] Sao The output overlap matrix
+
+  This function can also take periodic images of the system into account
+*/
+
 
   int i,j,n,I,J;
   VECTOR dIdA,dIdB,TV, Rij,Rij0;

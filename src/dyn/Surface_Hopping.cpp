@@ -8,19 +8,43 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Surface_Hopping.cpp
+  \brief The file implements the functions used in surface hopping methods
+    
+*/
 
 #include "Surface_Hopping.h"
 #include "Energy_and_Forces.h"
 
+/// libdyn namespace
 namespace libdyn{
-
 
 
 void compute_hopping_probabilities_fssh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,
                                         double dt, int use_boltz_factor,double T){
+/**
+  \brief Compute the FSSH surface hopping probabilities for the trajectory described by mol, el, and ham
+  \param[in] mol Describes the nuclear DOF
+  \param[in] el Describes electronic DOF
+  \param[in] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) -its internal variables
+  are changed during the compuations
+  \param[out] g The matrix of hopping probabilities
+  \param[in] dt Time duration of nuclear propagation step
+  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
+  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
 
-// Assume ham internal processings are done outside
-// assume matrix g is allocated
+  Assume ham internal processings are done outside
+  Assume matrix g is allocated
+
+  Abbreviation: FSSH - fewest switches surface hopping
+  References: 
+  (1) Tully, J. C. Molecular Dynamics with Electronic Transitions. J. Chem. Phys. 1990, 93, 1061–1071. - the original paper
+  (2) Fabiano, E.; Keal, T. W.; Thiel, W. Implementation of Surface Hopping Molecular Dynamics Using Semiempirical Methods. Chem. Phys. 2008, 349, 334–347.
+  Here, we generalized the formula, so it works equally well for both diabatic and adiabatic representations
+
+*/
+
 
 
   const double kb = 3.166811429e-6; // Hartree/K
@@ -85,12 +109,54 @@ void compute_hopping_probabilities_fssh(Nuclear* mol, Electronic* el, Hamiltonia
 
 void compute_hopping_probabilities_fssh(Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
                                         double dt, int use_boltz_factor,double T){
+/**
+  \brief Compute the FSSH surface hopping probabilities for the trajectory described by mol, el, and ham - Python-friendly
+  \param[in] mol Describes the nuclear DOF
+  \param[in] el Describes electronic DOF
+  \param[in] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) -its internal variables
+  are changed during the compuations
+  \param[out] g The matrix of hopping probabilities
+  \param[in] dt Time duration of nuclear propagation step
+  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
+  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
+
+  Assume ham internal processings are done outside
+  Assume matrix g is allocated
+
+  Abbreviation: FSSH - fewest switches surface hopping
+  References: 
+  (1) Tully, J. C. Molecular Dynamics with Electronic Transitions. J. Chem. Phys. 1990, 93, 1061–1071. - the original paper
+  (2) Fabiano, E.; Keal, T. W.; Thiel, W. Implementation of Surface Hopping Molecular Dynamics Using Semiempirical Methods. Chem. Phys. 2008, 349, 334–347.
+  Here, we generalized the formula, so it works equally well for both diabatic and adiabatic representations
+
+*/
+
 
   compute_hopping_probabilities_fssh(&mol, &el, &ham, &g, dt, use_boltz_factor, T);
 
 }
 
 void compute_hopping_probabilities_fssh(Ensemble& ens, int i, MATRIX& g, double dt, int use_boltz_factor,double T){
+/**
+  \brief Compute the FSSH surface hopping probabilities for a selected trajectory of an ensemble - Python friendly
+  \param[in] ens Describes the ensemble of trajectories
+  \param[in] i Is the index of the trajectory of interest
+  \param[out] g The matrix of hopping probabilities for this tranjectory
+  \param[in] dt Time duration of nuclear propagation step
+  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
+  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
+
+  Assume ham internal processings are done outside
+  Assume matrix g is allocated
+
+  Abbreviation: FSSH - fewest switches surface hopping
+  References: 
+  (1) Tully, J. C. Molecular Dynamics with Electronic Transitions. J. Chem. Phys. 1990, 93, 1061–1071. - the original paper
+  (2) Fabiano, E.; Keal, T. W.; Thiel, W. Implementation of Surface Hopping Molecular Dynamics Using Semiempirical Methods. Chem. Phys. 2008, 349, 334–347.
+  Here, we generalized the formula, so it works equally well for both diabatic and adiabatic representations
+
+*/
+
 
   compute_hopping_probabilities_fssh(&ens.mol[i], &ens.el[i], ens.ham[i], &g, dt, use_boltz_factor, T);
 
@@ -102,6 +168,25 @@ void compute_hopping_probabilities_fssh(Ensemble& ens, int i, MATRIX& g, double 
 
 void compute_hopping_probabilities_gfsh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,
                                         double dt, int use_boltz_factor,double T){
+/**
+  \brief Compute the GFSH surface hopping probabilities for the trajectory described by mol, el, and ham
+  \param[in] mol Describes the nuclear DOF
+  \param[in] el Describes electronic DOF
+  \param[in] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) -its internal variables
+  are changed during the compuations
+  \param[out] g The matrix of hopping probabilities
+  \param[in] dt Time duration of nuclear propagation step
+  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
+  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
+
+  Assume ham internal processings are done outside
+  Assume matrix g is allocated
+
+  Abbreviation: GFSH - global flux surface hopping
+  References: 
+  (1) Wang, L.; Trivedi, D.; Prezhdo, O. V. Global Flux Surface Hopping Approach for Mixed Quantum-Classical Dynamics. J. Chem. Theory Comput. 2014, 10, 3598–3605.
+
+*/
 
 
   const double kb = 3.166811429e-6; // Hartree/K
@@ -178,12 +263,50 @@ void compute_hopping_probabilities_gfsh(Nuclear* mol, Electronic* el, Hamiltonia
 
 void compute_hopping_probabilities_gfsh(Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
                                         double dt, int use_boltz_factor,double T){
+/**
+  \brief Compute the GFSH surface hopping probabilities for the trajectory described by mol, el, and ham - Python-friendly
+  \param[in] mol Describes the nuclear DOF
+  \param[in] el Describes electronic DOF
+  \param[in] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) -its internal variables
+  are changed during the compuations
+  \param[out] g The matrix of hopping probabilities
+  \param[in] dt Time duration of nuclear propagation step
+  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
+  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
+
+  Assume ham internal processings are done outside
+  Assume matrix g is allocated
+
+  Abbreviation: GFSH - global flux surface hopping
+  References: 
+  (1) Wang, L.; Trivedi, D.; Prezhdo, O. V. Global Flux Surface Hopping Approach for Mixed Quantum-Classical Dynamics. J. Chem. Theory Comput. 2014, 10, 3598–3605.
+
+*/
+
 
   compute_hopping_probabilities_gfsh(&mol, &el, &ham, &g, dt, use_boltz_factor, T);
 
 }
 
 void compute_hopping_probabilities_gfsh(Ensemble& ens, int i, MATRIX& g, double dt, int use_boltz_factor,double T){
+/**
+  \brief Compute the GFSH surface hopping probabilities for a selected trajectory of an ensemble - Python friendly
+  \param[in] ens Describes the ensemble of trajectories
+  \param[in] i Is the index of the trajectory of interest
+  \param[out] g The matrix of hopping probabilities for this tranjectory
+  \param[in] dt Time duration of nuclear propagation step
+  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
+  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
+
+  Assume ham internal processings are done outside
+  Assume matrix g is allocated
+
+  Abbreviation: GFSH - global flux surface hopping
+  References: 
+  (1) Wang, L.; Trivedi, D.; Prezhdo, O. V. Global Flux Surface Hopping Approach for Mixed Quantum-Classical Dynamics. J. Chem. Theory Comput. 2014, 10, 3598–3605.
+
+*/
+
 
   compute_hopping_probabilities_gfsh(&ens.mol[i], &ens.el[i], ens.ham[i], &g, dt, use_boltz_factor, T);
 
@@ -195,6 +318,26 @@ void compute_hopping_probabilities_gfsh(Ensemble& ens, int i, MATRIX& g, double 
 
 void compute_hopping_probabilities_mssh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,
                                         double dt, int use_boltz_factor,double T){
+/**
+  \brief Compute the MSSH surface hopping probabilities for the trajectory described by mol, el, and ham
+  \param[in] mol Describes the nuclear DOF
+  \param[in] el Describes electronic DOF
+  \param[in] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) -its internal variables
+  are changed during the compuations
+  \param[out] g The matrix of hopping probabilities
+  \param[in] dt Time duration of nuclear propagation step
+  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
+  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
+
+  Assume ham internal processings are done outside
+  Assume matrix g is allocated
+
+  Abbreviation: MSSH - Markov state surface hopping
+  References: 
+  (1) Akimov, A. V.; Trivedi, D.; Wang, L.; Prezhdo, O. V. Analysis of the Trajectory Surface Hopping Method from the Markov State Model Perspective. J. Phys. Soc. Jpn. 2015, 84, 094002.
+
+*/
+
 
 
   const double kb = 3.166811429e-6; // Hartree/K
@@ -219,12 +362,50 @@ void compute_hopping_probabilities_mssh(Nuclear* mol, Electronic* el, Hamiltonia
 
 void compute_hopping_probabilities_mssh(Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
                                         double dt, int use_boltz_factor,double T){
+/**
+  \brief Compute the MSSH surface hopping probabilities for the trajectory described by mol, el, and ham - Python-friendly
+  \param[in] mol Describes the nuclear DOF
+  \param[in] el Describes electronic DOF
+  \param[in] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) -its internal variables
+  are changed during the compuations
+  \param[out] g The matrix of hopping probabilities
+  \param[in] dt Time duration of nuclear propagation step
+  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
+  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
+
+  Assume ham internal processings are done outside
+  Assume matrix g is allocated
+
+  Abbreviation: MSSH - Markov state surface hopping
+  References: 
+  (1) Akimov, A. V.; Trivedi, D.; Wang, L.; Prezhdo, O. V. Analysis of the Trajectory Surface Hopping Method from the Markov State Model Perspective. J. Phys. Soc. Jpn. 2015, 84, 094002.
+
+*/
+
 
   compute_hopping_probabilities_mssh(&mol, &el, &ham, &g, dt, use_boltz_factor, T);
 
 }
 
 void compute_hopping_probabilities_mssh(Ensemble& ens, int i, MATRIX& g, double dt, int use_boltz_factor,double T){
+/**
+  \brief Compute the MSSH surface hopping probabilities for a selected trajectory of an ensemble - Python friendly
+  \param[in] ens Describes the ensemble of trajectories
+  \param[in] i Is the index of the trajectory of interest
+  \param[out] g The matrix of hopping probabilities for this tranjectory
+  \param[in] dt Time duration of nuclear propagation step
+  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
+  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
+
+  Assume ham internal processings are done outside
+  Assume matrix g is allocated
+
+  Abbreviation: MSSH - Markov state surface hopping
+  References: 
+  (1) Akimov, A. V.; Trivedi, D.; Wang, L.; Prezhdo, O. V. Analysis of the Trajectory Surface Hopping Method from the Markov State Model Perspective. J. Phys. Soc. Jpn. 2015, 84, 094002.
+
+*/
+
 
   compute_hopping_probabilities_mssh(&ens.mol[i], &ens.el[i], ens.ham[i], &g, dt, use_boltz_factor, T);
 
@@ -233,14 +414,21 @@ void compute_hopping_probabilities_mssh(Ensemble& ens, int i, MATRIX& g, double 
 
 
 void hop(int& initstate, Nuclear* mol, Hamiltonian* ham, double ksi, MATRIX* g, int do_rescaling, int rep, int do_reverse){
-// Do actual hop from state initstate
-// initstate - state from which we try to hop out - it will also be updated after the hop has happened
-// mol - nuclear DOF
-// ham - handler of Hamiltonian
-// ksi - a random number
-// g   - hopping probabilities matrix
-// do_rescaling - flag to turn on/off CPA: 0 - no rescaling (CPA), 1 - do rescaling (back-reaction)
-// rep - representation:  0 - for diabatic, 1 - for adiabatic
+/** 
+  \brief Do actual hop from the state initstate 
+  \param[in,out] initstate The state from which we try to hop out - it will also be updated after the hop has happened
+  \param[in,out] mol Nuclear DOF. Can be updated (velocity rescaling or reversal)
+  \param[in,out] ham A handler of Hamiltonian. Internal parameters may be updated, if the Hamiltonian is recomputed
+  \param[in] ksi A random number that determines the outcome of the "hop" procedure
+  \param[in] g The hopping probabilities matrix
+  \param[in] do_rescaling The flag to turn on/off CPA: 0 - no velocity rescaling (CPA, no back-reaction),
+  in this case one should use Boltzmann factor (consider use_boltz_factor when computing the hopping probability matrix, g)
+  1 - do rescaling (back-reaction), in this case it would be wrong to use Boltzmann factor
+  \param[in] rep Selects the used representation:  0 - for diabatic, 1 - for adiabatic
+  \param[in] do_reverse The option that determines what to do if the hop was rejected because of the energy conservation
+  (frustrated hop): do_reverse = 0 - nuclear momenta(velocities) stay unchanged; do_reverse = 1 - nuclear momenta(velocities)
+  are inverted.
+*/
 
   int nstates = g->num_of_cols;
   double left, right; left = right = 0.0;
@@ -276,6 +464,24 @@ void hop(int& initstate, Nuclear* mol, Hamiltonian* ham, double ksi, MATRIX* g, 
 }// hop
 
 int hop(int initstate, Nuclear& mol, Hamiltonian& ham, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse){
+/** 
+  \brief Do actual hop from the state initstate - Python-friendly
+  \param[in] initstate The state from which we try to hop out - it will also be updated after the hop has happened
+  \param[in,out] mol Nuclear DOF. Can be updated (velocity rescaling or reversal)
+  \param[in,out] ham A handler of Hamiltonian. Internal parameters may be updated, if the Hamiltonian is recomputed
+  \param[in] ksi A random number that determines the outcome of the "hop" procedure
+  \param[in] g The hopping probabilities matrix
+  \param[in] do_rescaling The flag to turn on/off CPA: 0 - no velocity rescaling (CPA, no back-reaction),
+  in this case one should use Boltzmann factor (consider use_boltz_factor when computing the hopping probability matrix, g)
+  1 - do rescaling (back-reaction), in this case it would be wrong to use Boltzmann factor
+  \param[in] rep Selects the used representation:  0 - for diabatic, 1 - for adiabatic
+  \param[in] do_reverse The option that determines what to do if the hop was rejected because of the energy conservation
+  (frustrated hop): do_reverse = 0 - nuclear momenta(velocities) stay unchanged; do_reverse = 1 - nuclear momenta(velocities)
+  are inverted.
+
+  The function returns the index of the final state (new or old).
+*/
+
 
   int res = initstate; 
   hop(res, &mol, &ham, ksi, &g, do_rescaling, rep, do_reverse);
@@ -285,6 +491,24 @@ int hop(int initstate, Nuclear& mol, Hamiltonian& ham, double ksi, MATRIX& g, in
 }
 
 int hop(int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse){
+/** 
+  \brief Do actual hop from the state initstate of the i-th trajectory of an ensemble - Python-friendly
+  \param[in] initstate The state from which we try to hop out - it will also be updated after the hop has happened
+  \param[in] i The index of the trajectory of interest
+  \param[in,out] ens Describes the ensemble of trajectories which we propagate (including hops)
+  \param[in] ksi A random number that determines the outcome of the "hop" procedure
+  \param[in] g The hopping probabilities matrix
+  \param[in] do_rescaling The flag to turn on/off CPA: 0 - no velocity rescaling (CPA, no back-reaction),
+  in this case one should use Boltzmann factor (consider use_boltz_factor when computing the hopping probability matrix, g)
+  1 - do rescaling (back-reaction), in this case it would be wrong to use Boltzmann factor
+  \param[in] rep Selects the used representation:  0 - for diabatic, 1 - for adiabatic
+  \param[in] do_reverse The option that determines what to do if the hop was rejected because of the energy conservation
+  (frustrated hop): do_reverse = 0 - nuclear momenta(velocities) stay unchanged; do_reverse = 1 - nuclear momenta(velocities)
+  are inverted.
+
+  The function returns the index of the final state (new or old).
+*/
+
 
   int res = initstate; 
   hop(res, &ens.mol[i], ens.ham[i], ksi, &g, do_rescaling, rep, do_reverse);
@@ -296,11 +520,23 @@ int hop(int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_resca
 
 
 void rescale_velocities_adiabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,int& old_st, int do_reverse){
-  // Calculate auxiliary variables to determine the case
-  // Here i - old state, j - new state
+/**
+  \brief Determine whether we need to do velocity rescaling/reversal when going from one state to another
+  \param[in,out] mol Nuclear DOF. Can be updated (velocity rescaling or reversal)
+  \param[in,out] ham A handler of Hamiltonian. Internal parameters may be updated, if the Hamiltonian is recomputed
+  \param[in,out] new_st The index of the new state: this is a truly new state if the attempted hop was successfull, or just can be 
+             an old state, otherwise
+  \param[in] old_st The index of the old state (from which we try to hop)
+  \param[in] do_reverse The option that determines what to do if the hop was rejected because of the energy conservation
+  (frustrated hop): do_reverse = 0 - nuclear momenta(velocities) stay unchanged; do_reverse = 1 - nuclear momenta(velocities)
+  are inverted.
+
+  This verions implies that the adiabatic representation is used
+*/
+
   int st;
 
-  cout<<"in rescale_velocities_adiabatic\n";
+  //cout<<"in rescale_velocities_adiabatic\n";
 
   if(new_st!=old_st){
 
@@ -359,6 +595,21 @@ void rescale_velocities_adiabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,in
 } // rescale velocities adiabatic
 
 int rescale_velocities_adiabatic(Nuclear& mol, Hamiltonian& ham, int old_st, int do_reverse){
+/**
+  \brief Determine whether we need to do velocity rescaling/reversal when going from one state to another - Python-friendly
+  \param[in,out] mol Nuclear DOF. Can be updated (velocity rescaling or reversal)
+  \param[in,out] ham A handler of Hamiltonian. Internal parameters may be updated, if the Hamiltonian is recomputed
+  \param[in] old_st The index of the old state (from which we try to hop)
+  \param[in] do_reverse The option that determines what to do if the hop was rejected because of the energy conservation
+  (frustrated hop): do_reverse = 0 - nuclear momenta(velocities) stay unchanged; do_reverse = 1 - nuclear momenta(velocities)
+  are inverted.
+
+  The function returns the index of the new state: this is a truly new state if the attempted hop was successfull, or just can be 
+  an old state, otherwise
+
+  This verions implies that the adiabatic representation is used
+*/
+
 
   int new_st = old_st;
   rescale_velocities_adiabatic(&mol, &ham, new_st, old_st, do_reverse);
@@ -368,17 +619,28 @@ int rescale_velocities_adiabatic(Nuclear& mol, Hamiltonian& ham, int old_st, int
 
 
 void rescale_velocities_diabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,int& old_st){
+/**
+  \brief Determine whether we need to do velocity rescaling/reversal when going from one state to another
+  \param[in,out] mol Nuclear DOF. Can be updated (velocity rescaling or reversal)
+  \param[in,out] ham A handler of Hamiltonian. Internal parameters may be updated, if the Hamiltonian is recomputed
+  \param[in,out] new_st The index of the new state: this is a truly new state if the attempted hop was successfull, or just can be 
+             an old state, otherwise
+  \param[in] old_st The index of the old state (from which we try to hop)
 
-// In this case, derivative couplings are zero by definition of diabatic (position-independent) states
-// so one can not rescale velocities along directions of derivative couplings, since there is no such directions
-// We just scale velocities uniformly - based on energy conservation principle
-// In principle, this rescaling procedure can be applied to surface hopping scheme in adiabatic basis, too
+  This verions implies that the diabatic representation is used
+
+  In this case, derivative couplings are zero by definition of diabatic (position-independent) states
+  so one can not rescale velocities along directions of derivative couplings, since there is no such directions
+  We just scale velocities uniformly - based on energy conservation principle
+  In principle, this rescaling procedure can be applied to surface hopping scheme in adiabatic basis, too
+*/
+
 
   double T_i = compute_kinetic_energy(mol); // initial kinetic energy
   double E_i = ham->Hvib(old_st,old_st).real();// initial potential energy
   double E_f = ham->Hvib(new_st,new_st).real();// final potential energy
   
-  double T_f = T_i + E_i - E_f;             // pedicted final kinetic energy
+  double T_f = T_i + E_i - E_f;             // predicted final kinetic energy
 
   if(T_f>0.0){  // hop is possible - accept it
  
@@ -402,6 +664,23 @@ void rescale_velocities_diabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,int
 } // rescale velocities diabatic
 
 int rescale_velocities_diabatic(Nuclear& mol, Hamiltonian& ham, int old_st){
+/**
+  \brief Determine whether we need to do velocity rescaling/reversal when going from one state to another - Python-friendly
+  \param[in,out] mol Nuclear DOF. Can be updated (velocity rescaling or reversal)
+  \param[in,out] ham A handler of Hamiltonian. Internal parameters may be updated, if the Hamiltonian is recomputed
+  \param[in] old_st The index of the old state (from which we try to hop)
+
+  The function returns the index of the new state: this is a truly new state if the attempted hop was successfull, or just can be 
+  an old state, otherwise
+
+  This verions implies that the diabatic representation is used
+
+  In this case, derivative couplings are zero by definition of diabatic (position-independent) states
+  so one can not rescale velocities along directions of derivative couplings, since there is no such directions
+  We just scale velocities uniformly - based on energy conservation principle
+  In principle, this rescaling procedure can be applied to surface hopping scheme in adiabatic basis, too
+*/
+
 
   int new_st = old_st;
   rescale_velocities_diabatic(&mol, &ham, new_st, old_st);

@@ -8,13 +8,28 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Energy_and_Forces.cpp
+  \brief The file implements the functions for dynamics-immediate energy calculations
+
+  The "dynamics-immediate" means the energies and forces computed and organized to 
+  be used in dynamical calculations of different type - classical, quantum, quantum-classical.
+    
+*/
 
 #include "Energy_and_Forces.h"
 
+/// libdyn namespace 
 namespace libdyn{
 
 
 double compute_kinetic_energy(Nuclear* mol){
+/**
+  \brief Compute kinetic energy of Nuclear object 
+  \param[in] mol The pointer to the Nuclear DOF object
+
+  This is the classical nuclear kinetic energy
+*/
 
   double Ekin = 0.0;
 
@@ -25,9 +40,25 @@ double compute_kinetic_energy(Nuclear* mol){
 
 }
 
-double compute_kinetic_energy(Nuclear& mol){  return compute_kinetic_energy(&mol);  }
+double compute_kinetic_energy(Nuclear& mol){  
+/**
+  \brief Compute kinetic energy of Nuclear object - Python-friendly
+  \param[in] mol The reference to the Nuclear DOF object
+
+  This is the classical nuclear kinetic energy
+*/
+
+  return compute_kinetic_energy(&mol); 
+}
 
 double compute_kinetic_energy(Ensemble& ens){
+/**
+  \brief Compute average kinetic energy of an ensemble of Nuclear objects - Python-friendly
+  \param[in] ens The reference to the Ensemble object
+
+  This is the classical nuclear kinetic energy
+*/
+
 
   double res = 0.0;
   for(int traj=0;traj<ens.ntraj;traj++){
@@ -41,8 +72,19 @@ double compute_kinetic_energy(Ensemble& ens){
 
 
 double compute_potential_energy(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt){
-// opt == 0   -  Ehrenfest/MF
-// opt == 1   -  FSSH
+/**
+  \brief Compute potential energy of a quantum-classical system
+  \param[in,out] mol Describes the nuclear DOF
+  \param[in] el Describes electronic DOF
+  \param[in,out] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) -its internal variables
+  are changed during the compuations
+  \param[in] opt Option for selecting the way to describe the electron-nuclear interaction: = 0 - Ehrenfest (mean-field, MF), =1 -
+  (fewest switched surface hopping, FSSH)
+
+  Returns the potential energy computed according to the selected option: either the poetial energy of an active electronic level
+  (as given by el variable) - this is for opt = 1 - or the state averaged potential energy (the averaging also accounts for
+  nonadiabatic couplings or off-diagonal Hamiltonian terms) - this is for opt = 0
+*/
 
   int i,j;
   double Heff = 0.0;
@@ -80,12 +122,39 @@ double compute_potential_energy(Nuclear* mol, Electronic* el, Hamiltonian* ham, 
 }
 
 double compute_potential_energy(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt){
+/**
+  \brief Compute potential energy of a quantum-classical system - Python-friendly
+  \param[in,out] mol Describes the nuclear DOF
+  \param[in] el Describes electronic DOF
+  \param[in,out] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) -its internal variables
+  are changed during the compuations
+  \param[in] opt Option for selecting the way to describe the electron-nuclear interaction: = 0 - Ehrenfest (mean-field, MF), =1 -
+  (fewest switched surface hopping, FSSH)
+
+  Returns the potential energy computed according to the selected option: either the poetial energy of an active electronic level
+  (as given by el variable) - this is for opt = 1 - or the state averaged potential energy (the averaging also accounts for
+  nonadiabatic couplings or off-diagonal Hamiltonian terms) - this is for opt = 0
+
+*/
 
   return compute_potential_energy(&mol, &el, &ham, opt);
 
 }
 
 double compute_potential_energy(Ensemble& ens, int opt){
+/**
+  \brief Compute potential energy of a quantum-classical system - Python-friendly
+  \param[in,out] ens The reference to the ensemble of trajectories
+  \param[in] opt Option for selecting the way to describe the electron-nuclear interaction: = 0 - Ehrenfest (mean-field, MF), =1 -
+  (fewest switched surface hopping, FSSH)
+
+  Returns the potential energy computed according to the selected option: either the poetial energy of an active electronic level
+  (as given by el variable) - this is for opt = 1 - or the state averaged potential energy (the averaging also accounts for
+  nonadiabatic couplings or off-diagonal Hamiltonian terms) - this is for opt = 0
+
+  The returned potential energy is also averaged over all trajectories included in the ensemble object ens.
+
+*/
 
   double res = 0.0;
   for(int traj=0;traj<ens.ntraj;traj++){
@@ -99,8 +168,21 @@ double compute_potential_energy(Ensemble& ens, int opt){
 
 
 double compute_forces(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt){
-// opt == 0   -  Ehrenfest/MF
-// opt == 1   -  FSSH
+/**
+  \brief Compute potential energy and forces (an all classical DOF) of a quantum-classical system
+  \param[in,out] mol Describes the nuclear DOF, is modified during calculations to update forces
+  \param[in] el Describes electronic DOF
+  \param[in,out] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) -its internal variables
+  are changed during the compuations
+  \param[in] opt Option for selecting the way to describe the electron-nuclear interaction: = 0 - Ehrenfest (mean-field, MF), =1 -
+  (fewest switched surface hopping, FSSH)
+
+  Returns the potential energy computed according to the selected option: either the poetial energy of an active electronic level
+  (as given by el variable) - this is for opt = 1 - or the state averaged potential energy (the averaging also accounts for
+  nonadiabatic couplings or off-diagonal Hamiltonian terms) - this is for opt = 0
+  The computed forces are stored in the mol object
+*/
+
 
   int i,j,k;
   double Heff = 0.0;
@@ -160,12 +242,42 @@ double compute_forces(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt){
 }
 
 double compute_forces(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt){
+/**
+  \brief Compute potential energy and forces (an all classical DOF) of a quantum-classical system - Python-friendly
+  \param[in,out] mol Describes the nuclear DOF, is modified during calculations to update forces
+  \param[in] el Describes electronic DOF
+  \param[in,out] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) -its internal variables
+  are changed during the compuations
+  \param[in] opt Option for selecting the way to describe the electron-nuclear interaction: = 0 - Ehrenfest (mean-field, MF), =1 -
+  (fewest switched surface hopping, FSSH)
+
+  Returns the potential energy computed according to the selected option: either the poetial energy of an active electronic level
+  (as given by el variable) - this is for opt = 1 - or the state averaged potential energy (the averaging also accounts for
+  nonadiabatic couplings or off-diagonal Hamiltonian terms) - this is for opt = 0
+  The computed forces are stored in the mol object
+*/
 
   return compute_forces(&mol, &el, &ham, opt);
 
 }
 
 double compute_forces(Ensemble& ens, int opt){
+/**
+  \brief Compute potential energy and forces (an all classical DOF) of a quantum-classical system
+  \param[in,out] ens The reference to the ensemble of trajectories
+  \param[in] opt Option for selecting the way to describe the electron-nuclear interaction: = 0 - Ehrenfest (mean-field, MF), =1 -
+  (fewest switched surface hopping, FSSH)
+
+  Returns the potential energy computed according to the selected option: either the poetial energy of an active electronic level
+  (as given by el variable) - this is for opt = 1 - or the state averaged potential energy (the averaging also accounts for
+  nonadiabatic couplings or off-diagonal Hamiltonian terms) - this is for opt = 0
+  The computed forces are stored in the mol object
+
+  The returned potential energy is also averaged over all trajectories included in the ensemble object ens.
+  No averaging of forces is needed.
+
+*/
+
 
   double epot = 0.0;
 
@@ -181,7 +293,17 @@ double compute_forces(Ensemble& ens, int opt){
 
 
 void compute_energies(Ensemble* ens, double& Epot, double& Ekin, double& Etot,int opt){
+/**
+  \brief Compute ensemble-averaged potential, kinetic and total energy
+  \param[in,out] ens The pointer to Ensemble object for which we want to compute properties
+  \param[out] Epot The computed averaged potential energy will be stored here
+  \param[out] Ekin The computed averaged kinetic energy will be stored here
+  \param[out] Etot The computed averaged total energy will be stored here
+  \param[in] opt Option for selecting the way to describe the electron-nuclear interaction: = 0 - Ehrenfest (mean-field, MF), =1 -
+  (fewest switched surface hopping, FSSH)
 
+  
+*/
   Epot = 0.0;
   Ekin = 0.0;
   Etot = 0.0;

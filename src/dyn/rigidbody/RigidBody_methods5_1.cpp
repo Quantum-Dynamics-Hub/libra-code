@@ -9,7 +9,7 @@
 *
 *********************************************************************************/
 /**
-  \file RigidBody_methods_1.cpp
+  \file RigidBody_methods5_1.cpp
   \brief The file implements the exact propagation method for free RB, based on Euler elliptic integrals
 
 */

@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libdyn.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIBDYN_H
 #define LIBDYN_H
@@ -31,7 +36,7 @@
 
 
 
-
+/// libdyn namespace
 namespace libdyn{
 
 

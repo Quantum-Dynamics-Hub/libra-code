@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libqobjects.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #define BOOST_PYTHON_MAX_ARITY 30
 #include <boost/python.hpp>
@@ -19,15 +24,23 @@ using namespace boost::python;
 using namespace libmmath;
 
 
+/// libqchem namespace
 namespace libqchem{
+
+/// libqobjects namespace
 namespace libqobjects{
 
 
 
 
 void export_qobjects_objects(){
+/** 
+  \brief Exporter of libqobjects classes and functions
 
-  ///==================  Overlaps ===========================
+*/
+
+
+  //==================  Overlaps ===========================
   double (*expt_gaussian_overlap_G_v1)
   ( PrimitiveG& GA, PrimitiveG& GB) = &gaussian_overlap;
   double (*expt_gaussian_overlap_G_v2)
@@ -43,7 +56,7 @@ void export_qobjects_objects(){
   (AO& AOa, AO& AOb,int is_normalize, int is_derivs) = &gaussian_overlap;
 
 
-  ///==================  Moments ===========================
+  //==================  Moments ===========================
   double (*expt_gaussian_moment_G_v1)
   ( PrimitiveG& GA, PrimitiveG& G, PrimitiveG& GB) = &gaussian_moment;
   double (*expt_gaussian_moment_G_v2)
@@ -59,7 +72,7 @@ void export_qobjects_objects(){
   (AO& AOa, PrimitiveG& G, AO& AOb,int is_normalize, int is_derivs) = &gaussian_moment;
 
 
-  ///==================  Pseudopotentials ===========================
+  //==================  Pseudopotentials ===========================
   double (*expt_pseudopot02_G_v1)
   (double C0, double C2, double alp, const VECTOR& R, PrimitiveG& GA, PrimitiveG& GB) = &pseudopot02;
   double (*expt_pseudopot02_G_v2)
@@ -76,7 +89,7 @@ void export_qobjects_objects(){
   (double C0, double C2, double alp, const VECTOR& R, AO& AOa, AO& AOb,int is_normalize, int is_derivs) = &pseudopot02;
 
 
-  ///==================  Multipoles ===========================
+  //==================  Multipoles ===========================
   VECTOR (*expt_transition_dipole_moment_G_v1)
   (PrimitiveG& GA, PrimitiveG& GB) = &transition_dipole_moment;
   VECTOR (*expt_transition_dipole_moment_G_v2)
@@ -92,7 +105,7 @@ void export_qobjects_objects(){
   (AO& AOa, AO& AOb, int is_normalize, int is_derivs) = &transition_dipole_moment;
 
 
-  ///==================  Derivative coupling integrals ===========================
+  //==================  Derivative coupling integrals ===========================
   VECTOR (*expt_derivative_coupling_integral_G_v1)
   (PrimitiveG& GA, PrimitiveG& GB) = &derivative_coupling_integral;
   VECTOR (*expt_derivative_coupling_integral_G_v2)
@@ -109,7 +122,7 @@ void export_qobjects_objects(){
 
 
 
-  ///==================  Kinetic integrals ===========================
+  //==================  Kinetic integrals ===========================
   double (*expt_kinetic_integral_G_v1)
   ( PrimitiveG& GA, PrimitiveG& GB) = &kinetic_integral;
   double (*expt_kinetic_integral_G_v2)
@@ -125,7 +138,7 @@ void export_qobjects_objects(){
   (AO& AOa, AO& AOb,int is_normalize, int is_derivs) = &kinetic_integral;
 
 
-  ///==================  NAI ===========================
+  //==================  NAI ===========================
   double (*expt_nuclear_attraction_integral_G_v1)
   ( PrimitiveG& GA, PrimitiveG& GB, VECTOR& Rc  ) = &nuclear_attraction_integral;
   double (*expt_nuclear_attraction_integral_G_v2)
@@ -142,7 +155,7 @@ void export_qobjects_objects(){
 
 
 
-  ///==================  ERI ===========================
+  //==================  ERI ===========================
   double (*expt_electron_repulsion_integral_G_v1)
   ( PrimitiveG& GA, PrimitiveG& GB, PrimitiveG& GC, PrimitiveG& GD
   ) = &electron_repulsion_integral;

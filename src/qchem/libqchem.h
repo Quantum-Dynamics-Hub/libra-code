@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libqchem.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIBQCHEM_H
 #define LIBQCHEM_H
@@ -16,6 +21,7 @@
 #include "qobjects/libqobjects.h"
 #include "basis/libbasis.h"
 
+/// libqchem namespace
 namespace libqchem{
 
 

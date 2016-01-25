@@ -8,6 +8,12 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file AO.h
+  \brief The file describes: a) the AO class that represents atomic orbtals as a linear combination of 
+  Gaussian primitives; b) related functions
+    
+*/
 
 #ifndef AO_H
 #define AO_H
@@ -22,26 +28,27 @@ namespace libqobjects{
 
 
 class AO{
-
-// Objects of this class are atomic orbitals
-// AO = linear combination of primitive gaussians (contraction)
+/**
+  Objects of this class are atomic orbitals
+  AO = linear combination of primitive gaussians (contraction)
+*/
 
 public:
 
   // Members
-  std::string element;              int is_element;
-  std::string ao_shell;             int is_ao_shell;      // e.g. 1s, 2p, 3p, 3d, etc.
-  std::string ao_shell_type;        int is_ao_shell_type; // e.g. s, p, d,  etc.
-  std::string ao_name;              int is_ao_name;       // e.g. 1s, 2px, 3dxy,  etc.  int at_indx;
+  std::string element;              int is_element;       ///< name of chemical element on which this AO is localized (if so)
+  std::string ao_shell;             int is_ao_shell;      ///< name of the AO shell e.g. 1s, 2p, 3p, 3d, etc.
+  std::string ao_shell_type;        int is_ao_shell_type; ///< type of the AO shell e.g. s, p, d,  etc.
+  std::string ao_name;              int is_ao_name;       ///< name of the AO e.g. 1s, 2px, 3dxy,  etc.  int at_indx;
 
   // Angular momentum is defined for AOs, but each AO may have many Gaussians with different
   // alpha constants
-  int x_exp;                        int is_x_exp;
-  int y_exp;                        int is_y_exp;
-  int z_exp;                        int is_z_exp;
-  int expansion_size;               int is_expansion_size;
-  vector<PrimitiveG> primitives;    int is_primitives;
-  vector<double> coefficients;      int is_coefficients;  // these coefficients correspond to normalized primitive Gaussians
+  int x_exp;                        int is_x_exp;         ///< angular momentum quantum number (x projection) - if all primitives have it same
+  int y_exp;                        int is_y_exp;         ///< angular momentum quantum number (y projection) - if all primitives have it same
+  int z_exp;                        int is_z_exp;         ///< angular momentum quantum number (z projection) - if all primitives have it same
+  int expansion_size;               int is_expansion_size;///< The number of Primitive Gaussians in the contraction
+  vector<PrimitiveG> primitives;    int is_primitives;    ///< Primitive Gaussians that constitute this AO
+  vector<double> coefficients;      int is_coefficients;  ///< Contraction coefficients: these coefficients correspond to normalized primitive Gaussians
 
 
 
@@ -92,7 +99,7 @@ public:
 };
 
 
-///====================== Overlaps ================================
+//====================== Overlaps ================================
 // Versions with references
 double gaussian_overlap
 ( AO& AOa, AO& AOb,int is_normalize, int is_derivs,
@@ -114,7 +121,7 @@ double gaussian_overlap(AO* AOa, AO* AOb,int is_normalize);
 double gaussian_overlap(AO* AOa, AO* AOb);
 
 
-///====================== Moments ================================
+//====================== Moments ================================
 // Versions with references
 double gaussian_moment
 ( AO& AOa, PrimitiveG& G, AO& AOb,int is_normalize, int is_derivs,
@@ -136,7 +143,7 @@ double gaussian_moment(AO* AOa, PrimitiveG& G, AO* AOb,int is_normalize);
 double gaussian_moment(AO* AOa, PrimitiveG& G, AO* AOb);
 
 
-///====================== Pseudopotentials ================================
+//====================== Pseudopotentials ================================
 // Versions with references
 double pseudopot02(double C0, double C2, double alp, const VECTOR& R,
                    AO& AOa, AO& AOb, int is_normalize, 
@@ -168,7 +175,7 @@ double pseudopot02(double C0, double C2, double alp, const VECTOR& R, AO* AOa, A
 
 
 
-///====================== Multipoles ================================
+//====================== Multipoles ================================
 // Versions with references
 VECTOR transition_dipole_moment
 ( AO& AOa, AO& AOb,
@@ -198,7 +205,7 @@ VECTOR transition_dipole_moment( AO* AOa, AO* AOb);
 
 
 
-///====================== Derivative coupling integrals ================================
+//====================== Derivative coupling integrals ================================
 // Versions with references
 VECTOR derivative_coupling_integral
 ( AO& AOa, AO& AOb,
@@ -228,7 +235,7 @@ VECTOR derivative_coupling_integral( AO* AOa, AO* AOb);
 
 
 
-///====================== Kinetic integral ================================
+//====================== Kinetic integral ================================
 // Versions with references
 double kinetic_integral
 ( AO& AOa, AO& AOb,int is_normalize, int is_derivs,
@@ -250,7 +257,7 @@ double kinetic_integral(AO* AOa, AO* AOb,int is_normalize);
 double kinetic_integral(AO* AOa, AO* AOb);
 
 
-///====================== Nuclear Attraction Integral ================================
+//====================== Nuclear Attraction Integral ================================
 // Versions with references
 double nuclear_attraction_integral
 ( AO& AOa, AO& AOb, VECTOR& Rc, int is_normalize, 
@@ -281,7 +288,7 @@ double nuclear_attraction_integral( AO* AOa, AO* AOb, VECTOR& Rc, int is_normali
 double nuclear_attraction_integral( AO* AOa, AO* AOb, VECTOR& Rc );
 
 
-///====================== Electron Repulsion Integral ================================
+//====================== Electron Repulsion Integral ================================
 // Versions with references
 double electron_repulsion_integral
 ( AO& AOa, AO& AOb, AO& AOc, AO& AOd,
@@ -317,7 +324,7 @@ double electron_repulsion_integral( AO* AOa, AO* AOb, AO* AOc, AO* AOd);
 
 
 
-typedef std::vector<AO> AOList;
+typedef std::vector<AO> AOList; ///< This is the data type for representing vector of AP objects
 
 
 

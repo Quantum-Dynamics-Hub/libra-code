@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libwfcgrid.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_WFCGRID_H
 #define LIB_WFCGRID_H
@@ -15,7 +20,10 @@
 
 #include "Wfcgrid.h"
 
+/// libdyn namespace
 namespace libdyn{
+
+/// libwfcgrid namespace
 namespace libwfcgrid{
 
 

@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Basis.h
+  \brief The file describes functions for creating basis atomic orbitals from molecular structure information
+    
+*/
 
 #ifndef BASIS_H
 #define BASIS_H
@@ -22,8 +27,10 @@ using namespace libmmath;
 using namespace libqchem::libqobjects;
 
 
-
+/// libqchem namespace
 namespace libqchem{
+
+/// libbasis namespace
 namespace libbasis{
 
 

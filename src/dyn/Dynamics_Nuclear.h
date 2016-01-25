@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Dynamics_Nuclear.h
+  \brief The file describes the functions for nuclear (classical) dynamics
+    
+*/
 
 #ifndef DYNAMICS_NUCLEAR_H
 #define DYNAMICS_NUCLEAR_H
@@ -23,6 +28,7 @@
 
 using namespace libhamiltonian;
 
+/// libdyn namespace
 namespace libdyn{
 
 using namespace libnuclear;

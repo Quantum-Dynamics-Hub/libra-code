@@ -8,36 +8,41 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Basis.cpp
+  \brief The file implements functions for creating basis atomic orbitals from molecular structure information
+    
+*/
 
 #include "Basis.h"
 
-/****************************************************************************
-  This file contains following functions:
-
-  void basis_params_s(int Nquant, vector<double>& alp, vector<double>& coeff)
-  void basis_params_p(int Nquant, vector<double>& alp, vector<double>& coeff)
-  void basis_params_d(int Nquant, vector<double>& alp, vector<double>& coeff)
-
-  void add_basis_ao(std::string Atom_name, int Atom_index, VECTOR& R,
-                    std::string Atom_shell, int Nzeta, int Nquant,
-                    double  IP, double exp1, double exp2, double coeff1, double coeff2,
-                    vector<AO>& basis_ao, int& Norb)
-
-  int num_valence_elec(int Z)
-  int set_basis_STO_3G_DZ(Nuclear& mol, Model_Parameters& modpar,vector<AO>& basis_ao, int& Nelec, int& Norb)
-
-
-****************************************************************************/
-
+/// libqchem namespace
 namespace libqchem{
+
+/// libbasis namespace
 namespace libbasis{
 
 
-// In the next 3 functions we take expansion coefficients to be equal the expansion coefficients
-// fron STO-3G basis in the valence shell. The alphas are obtained from scaling law. 
-// Data are taken from EMSL website.
-
 void basis_params_s(int Nquant, vector<double>& alp, vector<double>& coeff){
+/**
+  \brief An auxiliary function that returns parameters of STO-3G s-type orbitals
+  \param[in] Nquant The principal quantum number of the atom for which we construct the AO
+  \param[out] alp The exponents of the primitive Gaussians in the STO-3G expansion
+  \param[out] coeff The contraction coefficients the primitive Gaussians enter with in the STO-3G expansion
+
+  The function takes expansion coefficients to be equal to the expansion coefficients
+  fron the STO-3G basis in the valence shell. The alphas are obtained from a scaling law.
+  Data are taken from EMSL website (mostly) or extrapolated
+
+  Nquant = 1 - H exp is taken directly from Pople: Hehre, Stewart, Pople  JCP 1969, 51, 2657
+  Nquant = 2 - C exp is taken directly from Pople: Hehre, Stewart, Pople  JCP 1969, 51, 2657
+  Nquant = 3 - Si exp is calibrated to zeta = 1.383
+  Nquant = 4 - Ge exp is calibrated to zeta = 2.160
+  Nquant = 5 - Sn exp is calibrated to zeta = 2.120
+  There is no STO-3G bases for 6-row elements, so will need to extrapolate
+  so far - just keep it the same as for 5-row
+
+*/
 
 
   if(Nquant==1){  // H exp is taken directly from Pople: Hehre, Stewart, Pople  JCP 1969, 51, 2657
@@ -83,7 +88,26 @@ void basis_params_s(int Nquant, vector<double>& alp, vector<double>& coeff){
 }
 
 void basis_params_p(int Nquant, vector<double>& alp, vector<double>& coeff){
- // Exponents are the same as in basis_params_p, only expansion coefficients are different
+/**
+  \brief An auxiliary function that returns parameters of STO-3G p-type orbitals
+  \param[in] Nquant The principal quantum number of the atom for which we construct the AO
+  \param[out] alp The exponents of the primitive Gaussians in the STO-3G expansion
+  \param[out] coeff The contraction coefficients the primitive Gaussians enter with in the STO-3G expansion
+
+  The function takes expansion coefficients to be equal to the expansion coefficients
+  fron the STO-3G basis in the valence shell. The alphas are obtained from a scaling law.
+  Data are taken from EMSL website (mostly) or extrapolated
+
+  Nquant = 1 - H exp is taken directly from Pople: Hehre, Stewart, Pople  JCP 1969, 51, 2657
+  Nquant = 2 - C exp is taken directly from Pople: Hehre, Stewart, Pople  JCP 1969, 51, 2657
+  Nquant = 3 - Si exp is calibrated to zeta = 1.383
+  Nquant = 4 - Ge exp is calibrated to zeta = 2.160
+  Nquant = 5 - Sn exp is calibrated to zeta = 2.120
+  There is no STO-3G bases for 6-row elements, so will need to extrapolate
+  so far - just keep it the same as for 5-row
+
+  The exponents are the same as in basis_params_s, only the contraction coefficients are different
+*/
 
   if(Nquant==1){  // H exp is taken directly from Pople: Hehre, Stewart, Pople  JCP 1969, 51, 2657
 /*
@@ -129,6 +153,26 @@ void basis_params_p(int Nquant, vector<double>& alp, vector<double>& coeff){
 }
 
 void basis_params_d(int Nquant, vector<double>& alp, vector<double>& coeff){
+/**
+  \brief An auxiliary function that returns parameters of STO-3G d-type orbitals
+  \param[in] Nquant The principal quantum number of the atom for which we construct the AO
+  \param[out] alp The exponents of the primitive Gaussians in the STO-3G expansion
+  \param[out] coeff The contraction coefficients the primitive Gaussians enter with in the STO-3G expansion
+
+  The function takes expansion coefficients to be equal to the expansion coefficients
+  fron the STO-3G basis in the valence shell. The alphas are obtained from a scaling law.
+  Data are taken from EMSL website (mostly) or extrapolated
+
+  Nquant = 1 - H exp is taken directly from Pople: Hehre, Stewart, Pople  JCP 1969, 51, 2657
+  Nquant = 2 - C exp is taken directly from Pople: Hehre, Stewart, Pople  JCP 1969, 51, 2657
+  Nquant = 3 - taken to be the same as for Nquant = 4
+  Nquant = 4 - Sc  exp is calibrated to zeta = 1.7 (exponent with the largest weight)
+  Nquant = 5 - Nb exp is calibrated to zeta = 1.64
+  There is no STO-3G bases for 6-row elements, so will need to extrapolate
+  so far - just keep it the same as for 5-row
+
+*/
+
 
   if(Nquant==1){  // H exp is taken directly from Pople: Hehre, Stewart, Pople  JCP 1969, 51, 2657
   }// n = 1
@@ -169,6 +213,28 @@ void basis_params_d(int Nquant, vector<double>& alp, vector<double>& coeff){
 void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int Nzeta, int Nquant,
                     double  IP, double exp1, double exp2, double coeff1, double coeff2,
                     vector<AO>& basis_ao){
+/**
+  \brief Create a new AO (STO-3G) object and add it to existing (including empty) list of orbitals (basis)
+  \param[in] Atom_name The name of the atom (element) for which we want to create AO 
+  \param[in] R The coordinate at which to create the atomic orbital. 
+  \param[in] Atom_shell The name of the AO shell e.g. 1s, 2p, 3p, 3d, etc.
+  \param[in] Nzeta The number of different Slater-type zetas - in most cases 1, for d-orbitals can be 2
+  \param[in] Nquant The principal quantum number of the orbital
+  \param[in] IP The state-specific ionization potential (not actually used in this function!)
+  \param[in] exp1 The first Slater-type exponent
+  \param[in] exp2 The second Slater-type exponent - is not used when Nzeta = 1
+  \param[in] coeff1 The contraction coefficient of the first Slater zeta orbital
+  \param[in] coeff2 The contraction coefficient of the second Slater zeta orbital (is effectively = 0 if Nzeta = 1)
+  \param[in,out] basis_ao The list of AO objects - the basis we are creating
+
+  Sequential application of this function with proper parameters will generate the atomic basis - the list of AO objects
+
+  For conversion of the spherical hamonics to Cartesian coordinates see e.g.:
+  http://csi.chemie.tu-darmstadt.de/ak/immel/script/redirect.cgi?filename=http://csi.chemie.tu-darmstadt.de/ak/immel/tutorials/orbitals/hydrogenic.html
+  So the z2 orbital is actually: (1/(?)) *[ 2*z2 - (x2+x2) ]  
+  and the x2-y2 orbital is (1/sqrt(2)) * [x2 - y2]
+
+*/
 
   int basis_size = 0;
 
@@ -546,6 +612,31 @@ void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int 
 void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int Nzeta, int Nquant,
                     double  IP, double exp1, double exp2, double coeff1, double coeff2,
                     boost::python::list basis_ao){
+/**
+  \brief Create a new AO (STO-3G) object and add it to existing (including empty) list of orbitals (basis) - 
+  this version produces the Python list of AO objects.
+
+  \param[in] Atom_name The name of the atom (element) for which we want to create AO 
+  \param[in] R The coordinate at which to create the atomic orbital. 
+  \param[in] Atom_shell The name of the AO shell e.g. 1s, 2p, 3p, 3d, etc.
+  \param[in] Nzeta The number of different Slater-type zetas - in most cases 1, for d-orbitals can be 2
+  \param[in] Nquant The principal quantum number of the orbital
+  \param[in] IP The state-specific ionization potential (not actually used in this function!)
+  \param[in] exp1 The first Slater-type exponent
+  \param[in] exp2 The second Slater-type exponent - is not used when Nzeta = 1
+  \param[in] coeff1 The contraction coefficient of the first Slater zeta orbital
+  \param[in] coeff2 The contraction coefficient of the second Slater zeta orbital (is effectively = 0 if Nzeta = 1)
+  \param[in,out] basis_ao The list of AO objects - the basis we are creating
+
+  Sequential application of this function with proper parameters will generate the atomic basis - the list of AO objects
+
+  For conversion of the spherical hamonics to Cartesian coordinates see e.g.:
+  http://csi.chemie.tu-darmstadt.de/ak/immel/script/redirect.cgi?filename=http://csi.chemie.tu-darmstadt.de/ak/immel/tutorials/orbitals/hydrogenic.html
+  So the z2 orbital is actually: (1/(?)) *[ 2*z2 - (x2+x2) ]  
+  and the x2-y2 orbital is (1/sqrt(2)) * [x2 - y2]
+
+*/
+
 
   vector<AO> tmp;
   add_basis_ao(Atom_name,R,Atom_shell, Nzeta, Nquant, IP, exp1, exp2, coeff1, coeff2, tmp);
@@ -559,6 +650,11 @@ void add_basis_ao(std::string Atom_name, VECTOR& R, std::string Atom_shell, int 
 
 
 int num_valence_elec(int Z){
+/**
+  \brief The function to compute the number of valence electrons in the atom with given nucleus charge.
+
+  param[in] Z The charge of the atomic nucleus
+*/
 
   // Compute the number of valence electrons
   int dn = 0; 

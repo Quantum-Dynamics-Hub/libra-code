@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libmolint.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_MOLINT_H
 #define LIB_MOLINT_H
@@ -25,8 +30,10 @@
 #include "Integral_Derivative_Couplings.h"
 #include "Integral_Approx1.h"
 
-
+/// libqchem namespace
 namespace libqchem{
+
+/// libmolint namespace
 namespace libmolint{
 
 

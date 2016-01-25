@@ -8,30 +8,41 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file RigidBody_methods5_4.cpp
+  \brief The file implements the KLN propagation method based on 4 in-plane  rotations. 
+
+*/
 
 #include "RigidBody.h"
 
+/// libdyn namespace
 namespace libdyn{
+
+/// librigidbody namespace
 namespace librigidbody{
 
 void RigidBody::propagate_kln(double t){
-/*******************************************************************
- This function provides an approximate (but not symplectic) solution
- to the free rigid-body problem in terms of 4 consequtive rotations as
- described by:
- Kamberaj, H.; Low, R. J; Neal, M. P. "Time reversible and symplectic
- integrators for molecular dynamics simulations of rigid molecules"
- J. Chem. Phys. 2005, 122, 224114-1 - 224114-30
+/**
+  \brief The KLN propagation scheme for RB dynamics
+  \param[in] t The duration of the propagation
 
- Notes on sign in rotation angle:
- direct derivation of action of operator
- iL_i = phi_i *(S_i * d/dS_k - S_k * d/dS_j ) gives:
+  This function provides an approximate (but not symplectic) solution
+  to the free rigid-body problem in terms of 4 consequtive rotations as
+  described by:
+  Kamberaj, H.; Low, R. J; Neal, M. P. "Time reversible and symplectic
+  integrators for molecular dynamics simulations of rigid molecules"
+  J. Chem. Phys. 2005, 122, 224114-1 - 224114-30
 
-            S_i = S_i
- exp(iL_i)  S_j = cos(phi_i) * S_j - sin(phi_i) * S_k
-            S_k = sin(phi_i) * S_j - cos(phi_i) * S_k
+  Notes on sign in rotation angle:
+  direct derivation of action of operator
+  iL_i = phi_i *(S_i * d/dS_k - S_k * d/dS_j ) gives:
 
-*******************************************************************/
+             S_i = S_i
+  exp(iL_i)  S_j = cos(phi_i) * S_j - sin(phi_i) * S_k
+             S_k = sin(phi_i) * S_j - cos(phi_i) * S_k
+
+*/
   MATRIX3x3 R;
   VECTOR nx(1.0,0.0,0.0);
   VECTOR ny(0.0,1.0,0.0);

@@ -24,9 +24,10 @@ namespace libbarostat{
 
 
 void Barostat::set(object at){
-/** Set properties of the Barostat object from an arbitrary Python object.
+/** 
+  \brief Set properties of the Barostat object from an arbitrary Python object.
 
-  The object must contain the members with the names that match the names of the internal variables.
+  \param[in] at The input object - must contain the members with the names that match the names of the internal variables.
 */
 
  set_value(is_Wg,      Wg,       at,"Wg");
@@ -39,7 +40,8 @@ void Barostat::set(object at){
 }
 
 void Barostat::show_info(){
-/** Show info about Barostat state and properties
+/** 
+  \brief Show info about Barostat state and properties
 */
 
 
@@ -55,7 +57,8 @@ void Barostat::show_info(){
 }
 
 void Barostat::init_variables(){
-/** Initialize Barostat variables to the default values
+/** 
+  \brief Initialize Barostat variables to the default values
 */
 
   ksi_eps = 0.0;                is_ksi_eps = 1;
@@ -74,8 +77,12 @@ void Barostat::init_variables(){
 }
 
 void Barostat::copy_content(const Barostat& bar){
-/** Copies one barostat object into the other one. Only the properties that are set in the 
-  source object are copied into the target project
+/** 
+  \brief Copies one barostat object into the other one. 
+
+  Only the properties that are set in the source object are copied into the target project
+
+  \param[in] bar The input Barostat object
 */
 
 
@@ -95,9 +102,10 @@ void Barostat::copy_content(const Barostat& bar){
 }
 
 void Barostat::extract_dictionary(boost::python::dict d){
-/** Set properties of the Barostat object from the Python dictionary
+/** 
+  \brief Set properties of the Barostat object from the Python dictionary
 
-  The dictionary must contain the keys that match the internal variables names
+  \param[in] d The input dictionary - must contain the keys that match the internal variables names
 */
 
   std::string key;

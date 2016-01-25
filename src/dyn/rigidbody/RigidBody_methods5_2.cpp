@@ -8,21 +8,34 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file RigidBody_methods5_2.cpp
+  \brief The file implements the DLML propagation method based on 5 rotations 
+
+*/
 
 #include "RigidBody.h"
 
+/// libdyn namespace
 namespace libdyn{
+
+/// librigidbody namespace
 namespace librigidbody{
 
 void RigidBody::propagate_dlml(double t,double& Ps){
-/*******************************************************************
- This function provides an approximate (symplectic) solution to the
- free rigid-body problem in terms of 5 consequtive rotations as
- described by:
- Dullweber, A.; Leimkuhler, B.; McLachlan, R.
- "Symplectic splitting methods for rigid body molecular dynamics"
- J. Chem. Phys. 1997, 107, 5840-5851
-*******************************************************************/
+/** 
+  \brief DLML propagation scheme
+  \param[in] t Propagation duration
+  \param[out] Ps The variable that is needed for Nose-Poincare thermostat evolvution, when 
+                 DLML is coupled to it   
+
+  This function provides an approximate (symplectic) solution to the
+  free rigid-body problem in terms of 5 consequtive rotations as
+  described by:
+  Dullweber, A.; Leimkuhler, B.; McLachlan, R.
+  "Symplectic splitting methods for rigid body molecular dynamics"
+  J. Chem. Phys. 1997, 107, 5840-5851
+*/
   MATRIX3x3 R;
   VECTOR nx(1.0,0.0,0.0);
   VECTOR ny(0.0,1.0,0.0);
@@ -76,6 +89,18 @@ void RigidBody::propagate_dlml(double t,double& Ps){
 }
 
 double RigidBody::propagate_dlml(double t){
+/** 
+  \brief DLML propagation scheme
+  \param[in] t Propagation duration
+
+  This function provides an approximate (symplectic) solution to the
+  free rigid-body problem in terms of 5 consequtive rotations as
+  described by:
+  Dullweber, A.; Leimkuhler, B.; McLachlan, R.
+  "Symplectic splitting methods for rigid body molecular dynamics"
+  J. Chem. Phys. 1997, 107, 5840-5851
+*/
+
   double Ps = 0.0;
   propagate_dlml(t, Ps);
   return Ps;

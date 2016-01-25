@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libmolint.cpp
+  \brief The file describes Python export function
+    
+*/
 
 #define BOOST_PYTHON_MAX_ARITY 30
 #include <boost/python.hpp>
@@ -19,13 +24,19 @@ using namespace boost::python;
 using namespace libmmath;
 
 
+/// libqchem namespace
 namespace libqchem{
+
+/// libmolint namespace
 namespace libmolint{
 
 
 
-
 void export_molint_objects(){
+/** 
+  \brief Exporter of libmolint classes and functions
+
+*/
 
 
   // Basic overlaps

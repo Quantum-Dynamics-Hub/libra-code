@@ -8,14 +8,21 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libbasis.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_BASIS_H
 #define LIB_BASIS_H
 
 #include "Basis.h"
 
-
+/// libqchem namespace
 namespace libqchem{
+
+/// libbasis namespace
 namespace libbaiss{
 
 

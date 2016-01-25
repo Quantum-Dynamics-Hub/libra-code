@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libbasis.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #define BOOST_PYTHON_MAX_ARITY 30
 #include <boost/python.hpp>
@@ -18,14 +23,21 @@
 using namespace boost::python;
 using namespace libmmath;
 
-
+/// libqchem namespace
 namespace libqchem{
+
+/// libbasis namespace
 namespace libbasis{
 
 
 
 
 void export_basis_objects(){
+/** 
+  \brief Exporter of libbasis classes and functions
+
+*/
+
 
 
   // Basis.cpp

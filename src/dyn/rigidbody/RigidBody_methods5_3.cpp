@@ -8,13 +8,27 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file RigidBody_methods5_3.cpp
+  \brief The file implements the SQUISH propagation method based on quaternion rotations. This is a symplectic scheme.
+
+*/
 
 #include "RigidBody.h"
 
+/// libdyn namespace
 namespace libdyn{
+
+/// librigidbody
 namespace librigidbody{
 
+
 void RigidBody::rotate_no_squish(int k,double dt){
+/** 
+  \brief A single SQUISH rotation.
+  \param[in] k The selectron of the plane in which the rotation occurs
+  \param[in] dt Duration of the propagation for this step 
+*/
   double zeta,cos_zeta,sin_zeta, rot_const;
   MATRIX P(4,4);
 
@@ -33,6 +47,14 @@ void RigidBody::rotate_no_squish(int k,double dt){
 }
 
 void RigidBody::propagate_no_squish(double t){
+/**
+  \brief The eventual SQUISH propagation scheme
+  \param[in] t The propagation timestep
+
+  Implemented according to:
+  Ikeguchi, M. Partial Rigid-Body Dynamics in NPT, NPAT and NP$\gamma$T Ensembles for Proteins and Membranes. J. Comput. Chem. 2004, 25 (4), 529–541.
+
+*/
 
   double t_half = 0.5 * t;
 

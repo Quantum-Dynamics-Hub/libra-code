@@ -8,14 +8,28 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Thermostat_methods.cpp
+  \brief The file implements the methods to propagate Thermostat state
+    
+*/
 
 #include "Thermostat.h"
 
+/// libdyn namespace
 namespace libdyn{
+
+/// libthermostat namespace
 namespace libthermostat{
 
 
 double Thermostat::energy(){
+/** 
+  \brief Return the energy of Thermostat
+
+  So far only Nose-Hoover (including chain) and Nose-Poincare thermostats are possible
+*/
+
   double comp = 0.0;
   int i;
   if(thermostat_type=="Nose-Hoover"){
@@ -53,15 +67,19 @@ double Thermostat::energy(){
 
 
 void Thermostat::propagate_sPs(double t){
-/****************************************************************
- Action of the operator exp(t*D(H_3)), where 
- D(H_3) = (s*Ps/Q)(d/ds) - (Ps^2/2Q)(d/dPs), and
- H_3 = s*Ps^2/2Q
- on the state variables s_var and Ps
- according to:   Nose, S. "An Improved Symplectic
- Integrator for Nose-Poincare Thermostat" 
- 2001, JPSJ, 70, 75-77
-******************************************************************/
+/**
+  \brief Propagate s and Ps variables - only for the case of Nose-Poincare thermostat
+  \param[in] t The propagation time
+
+  Action of the operator exp(t*D(H_3)), where 
+  D(H_3) = (s*Ps/Q)(d/ds) - (Ps^2/2Q)(d/dPs), and
+  H_3 = s*Ps^2/2Q
+  on the state variables s_var and Ps
+  according to:   Nose, S. "An Improved Symplectic
+  Integrator for Nose-Poincare Thermostat" 
+  2001, JPSJ, 70, 75-77
+
+*/
   if(thermostat_type=="Nose-Poincare"){
     double tmp = (1.0+(0.5*t*Ps/Q));
     s_var *= (tmp*tmp);
@@ -70,18 +88,36 @@ void Thermostat::propagate_sPs(double t){
 }
 
 void Thermostat::propagate_Ps(double amnt){
+/**
+  \brief Propagate Ps variable - only for Nose-Poincare thermostat
+  \param[in] amnt Amount of shift: Ps -> Ps + amnt
+*/
+
   if(thermostat_type=="Nose-Poincare"){
     Ps += amnt;
   }
 }
 
 double Thermostat::vel_scale(double dt){
+/**
+  \brief Return velocity (momentum) scaling coeffieicent.
+  \param[in] dt The propagation time
+  
+  Used to constructe NVT-MD algorithm. Only for Nose-Hoover thermostat
+*/
   double res = 1.0;
   if(thermostat_type=="Nose-Hoover"){  res = exp(-dt*ksi_t[0]);  }
   return res;
 }
 
 double Thermostat::ang_vel_scale(double dt){
+/**
+  \brief Return angular velocity (angular momentum) scaling coeffieicent.
+  \param[in] dt The propagation time
+  
+  Used to constructe NVT-MD algorithm. Only for Nose-Hoover thermostat
+*/
+
   double res = 1.0;
   if(thermostat_type=="Nose-Hoover"){  res = exp(-dt*ksi_r[0]);  }
   return res;
@@ -89,15 +125,18 @@ double Thermostat::ang_vel_scale(double dt){
 
 
 void Thermostat::update_thermostat_forces(double ekin_tr, double ekin_rot,double ekin_baro){
-/*******************************************************************
- This function calculates the thermostat forces for Nose-Hoover
- chain thermostat as described by:
- Kamberaj, H.; Low, R. J; Neal, M. P. "Time reversible and symplectic
- integrators for molecular dynamics simulations of rigid molecules"
- J. Chem. Phys. 2005, 122, 224114-1 - 224114-30
- Note: The indexing for barostat chains is slightly different than
- in original article
-*******************************************************************/
+/**
+  \brief This function calculates the thermostat forces for Nose-Hoover chain thermostat
+  \param[in] ekin_tr Translational kinetic energy of the system to which thermostat is coupled
+  \param[in] ekin_rot Rotational kinetic energy of the system to which thermostat is coupled
+  \param[in] ekin_baro Barostat kinetic energy of the system to which thermostat is coupled
+
+  This procedure is applied only to Nose-Hoover thermostat
+
+  As described in: Kamberaj, H.; Low, R. J; Neal, M. P. "Time reversible and symplectic
+  integrators for molecular dynamics simulations of rigid molecules" J. Chem. Phys. 2005, 122, 224114-1 - 224114-30
+  Note: The indexing for barostat chains is slightly different than in the original article
+*/
   if(thermostat_type=="Nose-Hoover"){
   double kT = (boltzmann/hartree) * Temperature;
 
@@ -116,17 +155,23 @@ void Thermostat::update_thermostat_forces(double ekin_tr, double ekin_rot,double
 }
 
 void Thermostat::update_thermostat_forces(double ekin_tr, double ekin_rot,double ekin_baro,int i){
-/*******************************************************************
- This function calculates the thermostat forces for Nose-Hoover
- chain thermostat as described by:
- Kamberaj, H.; Low, R. J; Neal, M. P. "Time reversible and symplectic
- integrators for molecular dynamics simulations of rigid molecules"
- J. Chem. Phys. 2005, 122, 224114-1 - 224114-30
- Note: The indexing for barostat chains is slightly different than
- in original article
- This function calculates the thermostat forces only for the i-th
- particle
-*******************************************************************/
+/**
+  \brief This function calculates the thermostat forces for Nose-Hoover chain thermostat
+  \param[in] ekin_tr Translational kinetic energy of the system to which thermostat is coupled
+  \param[in] ekin_rot Rotational kinetic energy of the system to which thermostat is coupled
+  \param[in] ekin_baro Barostat kinetic energy of the system to which thermostat is coupled
+  \param[in] i The index of the thermostat in the chain for which (thermostat) we want to compute the force
+
+  This procedure is applied only to Nose-Hoover thermostat
+
+  As described in: Kamberaj, H.; Low, R. J; Neal, M. P. "Time reversible and symplectic
+  integrators for molecular dynamics simulations of rigid molecules" J. Chem. Phys. 2005, 122, 224114-1 - 224114-30
+  Note: The indexing for barostat chains is slightly different than in the original article
+
+  This function calculates the thermostat forces only for the i-th thermostat in the chain
+
+*/
+
   if(thermostat_type=="Nose-Hoover"){
   double kT = (boltzmann/hartree) * Temperature;
     if(i==0){
@@ -143,16 +188,16 @@ void Thermostat::update_thermostat_forces(double ekin_tr, double ekin_rot,double
 
 
 void Thermostat::init_nhc(){
-/*******************************************************************
- This function calculates the masses for Nose-Hoover chain thermostat
- and allocates the memory for corresponding dynamic variables as
- described by:
- Kamberaj, H.; Low, R. J; Neal, M. P. "Time reversible and symplectic
- integrators for molecular dynamics simulations of rigid molecules"
- J. Chem. Phys. 2005, 122, 224114-1 - 224114-30
- Note: For distinguishing between different barostats we use number
- of degrees of freedom corresponding to barostat.
-*******************************************************************/
+/**
+  \brief This function calculates the masses for Nose-Hoover chain thermostat and allocates the memory for corresponding dynamic variables 
+  As described in: Kamberaj, H.; Low, R. J; Neal, M. P. "Time reversible and symplectic
+  integrators for molecular dynamics simulations of rigid molecules" J. Chem. Phys. 2005, 122, 224114-1 - 224114-30
+
+  This function initializes variables, masses, and computes thermostat forces
+  Note: For distinguishing between different barostats we use the number of degrees of freedom corresponding to barostat.
+  
+*/
+
   int i;
   double Qt,Qr,Qb;
 
@@ -228,14 +273,18 @@ void Thermostat::init_nhc(){
 }
 
 void Thermostat::propagate_nhc(double dt,double ekin_tr, double ekin_rot,double ekin_baro){
-/*******************************************************************
- This function provides an approximate solution for the Nose-Hoover
- chain thermostat via symplectic splitting as described by:
- Kamberaj, H.; Low, R. J; Neal, M. P. "Time reversible and symplectic
- integrators for molecular dynamics simulations of rigid molecules"
- J. Chem. Phys. 2005, 122, 224114-1 - 224114-30
- Note: The indexing for barostat chains is slightly different than
- in original article
+/**
+  \brief This function provides an approximate solution for the Nose-Hoover chain thermostat via symplectic splitting 
+  \param[in] dt The integration time
+  \param[in] ekin_tr Translational kinetic energy of the system to which thermostat is coupled
+  \param[in] ekin_rot Rotational kinetic energy of the system to which thermostat is coupled
+  \param[in] ekin_baro Barostat kinetic energy of the system to which thermostat is coupled
+
+  As described in: Kamberaj, H.; Low, R. J; Neal, M. P. "Time reversible and symplectic
+  integrators for molecular dynamics simulations of rigid molecules" J. Chem. Phys. 2005, 122, 224114-1 - 224114-30
+
+  Note: The indexing for barostat chains is slightly different than in original article
+
 *******************************************************************/
 
 
@@ -299,6 +348,12 @@ void Thermostat::propagate_nhc(double dt,double ekin_tr, double ekin_rot,double 
 }
 
 void Thermostat::cool(){
+/**
+  \brief Cool down the thermostat
+
+  This is done by setting Ps = 0 and s_var = 1 for Nose-Poincare thermostat,
+  and by re-initializing NHC variables for the Nose-Hoover chain thermostats
+*/
 
   if(thermostat_type=="Nose-Poincare"){
     Ps = 0.0;     is_Ps = 1;
