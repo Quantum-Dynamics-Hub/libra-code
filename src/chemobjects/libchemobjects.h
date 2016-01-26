@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libchemobjects.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIBCHEMOBJECTS_H
 #define LIBCHEMOBJECTS_H
@@ -16,7 +21,7 @@
 #include "mol/libmol.h"
 #include "chemsys/libchemsys.h"
 
-
+/// libchemobjects namespace
 namespace libchemobjects{
 
 

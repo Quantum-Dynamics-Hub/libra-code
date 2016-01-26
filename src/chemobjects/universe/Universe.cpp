@@ -8,10 +8,17 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Universe.cpp
+  \brief The file implements the Universe class member functions    
+*/
 
 #include "Universe.h"
 
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libuniverse namespace
 namespace libuniverse{
 
 
@@ -25,30 +32,36 @@ void Universe::copy_content(const Universe& u){
 }
 
 Universe::Universe(){
-  /****************
-     Constructor
-  ******************/
+/**
+  \brief Constructor
+  Initialize variables to default values
+*/
+
   // Initialize variables to default values
   init_variables();
 }
 
 Universe::Universe(const Universe& u){
-  /********************
-    Copy constructor
-  *********************/
+/**
+  \brief Copy constructor
+  Initialize variables to default values
+  Copy content of the input object which is defined
+*/
   // Initialize variables to default values
   init_variables();
-  // Copy content of bar object which is defined
+  // Copy content of the input object which is defined
   copy_content(u);
 }
 
 Universe& Universe::operator=(const Universe& u){
-  /********************
-    Assignment operator
-  *********************/
+/**
+  \brief Assignment operator
+  Initialize variables to default values
+  Copy content of the input object which is defined
+*/
   // Initialize variables to default values
   init_variables();
-  // Copy content of bar object which is defined
+  // Copy content of the input object which is defined
   copy_content(u);
   return *this;
 }

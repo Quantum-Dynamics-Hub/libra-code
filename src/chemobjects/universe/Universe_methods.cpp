@@ -8,22 +8,33 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Universe_methods.cpp
+  \brief The file implements the functions for setting and accessing the properties of chemical elements
+*/
 
 #include "Universe.h"
 
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libuniverse namespace
 namespace libuniverse{
 
 
 void Universe::Add_Element_To_Periodic_Table(Element rec){
-/*********************************************************************
-   This is user-interface function. It checks for existance of the
-   Element rec in array PeriodicTable. If this element  exists
-   - do nothing if it does not - add it to array
-   Returns 1 if this is a new record (it just has been added) and 0 if
-   record existed in array (we did not add it this time). Returns -1
-   if there is an error.
-*********************************************************************/
+/**
+  \brief Adding (chemical) Element object to the Universe object.
+  \param[in] rec The input Element object to be added as a record in the Universe object
+
+  This is user-interface function. It checks for existance of the
+  Element rec in array PeriodicTable. If this element  exists
+  - do nothing; if it does not - add it to array
+  Returns 1 if this is a new record (it just has been added) and 0 if
+  record existed in array (we did not add it this time). Returns -1
+  if there is an error.
+
+*/
   int res = 1;
   map<std::string,Element>::iterator it;
   if(rec.is_Elt_name){
@@ -49,6 +60,10 @@ void Universe::Add_Element_To_Periodic_Table(Element rec){
 
 
 Element Universe::Get_Element(std::string elt){
+/**
+  \brief Retrieve the chemical element record in the Universe object by the name of the element
+  \param[in] elt The element name: e.g. Na, Ca, Fr, Mo, Ru, H, F, etc
+*/
  int res = 0;
  Element el;
   // Very first step - check for periodic system!

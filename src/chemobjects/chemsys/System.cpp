@@ -8,11 +8,18 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file System.cpp
+  \brief The file implements the basic methods of the System class
+    
+*/
 
 #include "System.h"
 
-
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libchemsys namespace
 namespace libchemsys{
 
 
@@ -125,17 +132,21 @@ void System::copy_content(const System& sys){
 
 
 System::System(){
-  /****************
-     Constructor
-  ******************/
+/**
+  \brief Constructor
+  Initialize variables to default values
+*/
   // Initialize variables to default values
   init_variables();
 }
 
 System::System(const System& sys){
-  /********************
-    Copy constructor
-  *********************/
+/**
+  \brief Copy constructor
+  \param[in] sys The input object
+  Initialize variables to default values
+  Copy content of the "sys" object which is defined
+*/
   // Initialize variables to default values
   init_variables();
   // Copy content of th object which is defined
@@ -143,9 +154,11 @@ System::System(const System& sys){
 } 
   
 System& System::operator=(const System& sys){
-  /********************
-    Assignment operator
-  *********************/
+/**
+  \brief Assignment operator
+  Initialize variables to default values
+  Copy content of the "sys" object which is defined
+*/
   // Initialize variables to default values
   init_variables(); 
   // Copy content of th object which is defined
@@ -154,11 +167,22 @@ System& System::operator=(const System& sys){
 } 
   
   
-System::~System(){ }
+System::~System(){ 
+/**
+  \brief Destructor
+  Does nothing at all
+*/
+}
 
 
 
 void System::set(object at){
+/** 
+  \brief Set properties of the System object from an arbitrary Python object.
+  \param[in] at The input object - must contain the members with the names that match the names of the internal variables.
+
+*/
+
   set_value(is_name,    name,    at,"name");
   set_value(is_id,      id,      at,"id");
   set_value(is_mass,    mass,    at,"mass");
@@ -166,6 +190,10 @@ void System::set(object at){
 }
 
 void System::show_info(){
+/** 
+  \brief Show System state and properties info
+*/
+
   std::cout<<"========System information===========\n";
   std::cout<<"Number_of_atoms = "<<Number_of_atoms<<endl;
   std::cout<<"Number_of_bonds = "<<Number_of_bonds<<endl;

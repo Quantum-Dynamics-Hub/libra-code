@@ -8,6 +8,12 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Universe.h
+  \brief The file describes the Universe class for keeping fundamental properties and parameters
+  (e.g. atomic masses and other properties)
+    
+*/
 
 #ifndef UNIVERSE_H
 #define UNIVERSE_H
@@ -17,12 +23,21 @@ using namespace libmmath;
 
 #include "Element.h"
 
+/// libchemobject namespace
 namespace libchemobjects{
+
+/// libuniverse namespace
 namespace libuniverse{
 
 
 
 class Universe{
+/**
+  \brief The class for keeping fundamental properties and parameters
+  (e.g. atomic masses and other properties)
+    
+*/
+
 
   //----------- Databases -----------------
   // Periodic Table of Elements
@@ -39,11 +54,11 @@ public:
 
   //----------- Basic class operations ---------------------------
   // Defined in Universe.cpp
-  Universe();                   // constructor
-  Universe(const Universe&);    // copy-constructor
- ~Universe();                   // destructor
+  Universe();                   ///< constructor
+  Universe(const Universe&);    ///< copy-constructor
+ ~Universe();                   ///< destructor
 
-  Universe& operator=(const Universe&); // assignment operator
+  Universe& operator=(const Universe&); ///< assignment operator
   void show_info();
   void set(object);
 

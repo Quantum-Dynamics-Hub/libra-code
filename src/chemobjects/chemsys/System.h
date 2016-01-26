@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file System.h
+  \brief The file describes the System class for manipulations on and analysis of chemical systems
+    
+*/
 
 #ifndef SYSTEM_H
 #define SYSTEM_H
@@ -19,26 +24,32 @@ using namespace libmmath::libgraph;
 #include "../mol/libmol.h"
 
 
-//#include "Interaction.h"
-//#include "ForceField.h"
-//#include "RigidBody.h"
-//#include "Universe.h"
-
-
+/// libchemobjects namespace
 namespace libchemobjects{
+
 using namespace libmol;
 
+/// libchemsys namespace
 namespace libchemsys{
 
 
 struct connect{
+/**
+  \brief The data type for representing connectivities in chemical systems (topology)
+*/
 public:
-  int self;
-  vector<int> others;
+  int self;   ///< The index of the active atom
+  vector<int> others; ///< The indices of the atoms connected to the active one
 };
 
 
 class System{
+/**
+  \brief The System class for representation of chemical system (topology, geometry, properties)
+  and manipulations on and analysis of it
+    
+*/
+
 
   //--------- Auxiliary internal functions -------------
   void init_variables();// Initializes variables
@@ -89,46 +100,46 @@ public:
 
 //---------- All objects comprising the system -------------------
 
-  MATRIX*  GroupConnMatrix;     int is_GroupConnMatrix;
-  GRAPH<Atom*,Group*> AtomGraph;int is_AtomGraph;
+  MATRIX*  GroupConnMatrix;     int is_GroupConnMatrix;   ///< The group connectivity matrix and its status
+  GRAPH<Atom*,Group*> AtomGraph;int is_AtomGraph;         ///< The atomic connectivity matrix represented as a graph
 
-  MATRIX3x3 Box;              int is_Box;
-  MATRIX3x3 Boxold;           int is_Boxold;
-  VECTOR Box_origin;          int is_Box_origin;
-  double dT_2;                int is_dT_2;  // cell vectors displacements 
+  MATRIX3x3 Box;              int is_Box;                 ///< The matrix that defines the periodicity (unit cell) of the system
+  MATRIX3x3 Boxold;           int is_Boxold;              ///< Same as Box, but for previous state
+  VECTOR Box_origin;          int is_Box_origin;          ///< The coordinate of the bottom left (the lowest value in all 3 dimensions) corner of the unit cell
+  double dT_2;                int is_dT_2;                ///< cell vectors displacements 
 
-  vector<Atom>  Atoms;        int Number_of_atoms;
-  vector<Group> Bonds;        int Number_of_bonds;
-  vector<Group> Angles;       int Number_of_angles;
-  vector<Group> Dihedrals;    int Number_of_dihedrals;
-  vector<Group> Impropers;    int Number_of_impropers;
-  vector<Group> Pairs;        int Number_of_pairs;     // in future we need to get rid of this!
-  vector<Group> Fragments;    int Number_of_fragments;
-  vector<Group> Rings;        int Number_of_rings; // only smallest rings!
-  vector<Molecule> Molecules; int Number_of_molecules;
+  vector<Atom>  Atoms;        int Number_of_atoms;        ///< The vector of all atoms and the number of atoms
+  vector<Group> Bonds;        int Number_of_bonds;        ///< The vector of all bonds (1-2 connections) and the number of bonds
+  vector<Group> Angles;       int Number_of_angles;       ///< The vector of all angles (1-2-3 connections) and the number of angles
+  vector<Group> Dihedrals;    int Number_of_dihedrals;    ///< The vector of all dihedral (1-2-3-4 connections) and the number of dihedrals
+  vector<Group> Impropers;    int Number_of_impropers;    ///< The vector of all impropers (connections with 2, 3, 4 attached to 1) and the number of impropers
+  vector<Group> Pairs;        int Number_of_pairs;     ///< The vector of all pairs (1-2 pairs, not necessarily connections). In future we need to get rid of this! and the number of such pairs
+  vector<Group> Fragments;    int Number_of_fragments; ///< The vector of fragments. Each fragment is essentially a list of atomic indices for the atoms put together
+  vector<Group> Rings;        int Number_of_rings; ///< The vector of rings. Each ring is a vector indices of atoms forming the ring. Only smallest rings!
+  vector<Molecule> Molecules; int Number_of_molecules; ///< The vector of molecules. Each molecule is a group, but disconnected from all other groups.
 //  vector<Surface> Surfaces;   int Number_of_surfaces;
 
-  vector<int> Frag_bonds;    int Number_of_frag_bonds;
-  vector<int> Frag_angles;   int Number_of_frag_angles;
-  vector<int> Frag_dihedrals;int Number_of_frag_dihedrals;
-  vector<int> Frag_impropers;int Number_of_frag_impropers;
-  vector<int> Frag_pairs;    int Number_of_frag_pairs;
+  vector<int> Frag_bonds;    int Number_of_frag_bonds;  ///< The indices of the bonds that are also intra-fragmental bonds. The number of such bonds
+  vector<int> Frag_angles;   int Number_of_frag_angles; ///< The indices of the angles that are also intra-fragmental angles. The number of such angles
+  vector<int> Frag_dihedrals;int Number_of_frag_dihedrals; ///< The indices of the dihedrals that are also intra-fragmental dihedrals. The number of such dihedrals
+  vector<int> Frag_impropers;int Number_of_frag_impropers; ///< The indices of the impropers that are also intra-fragmental impropers. The number of such improperss
+  vector<int> Frag_pairs;    int Number_of_frag_pairs;  ///< The indices of the pairs that are also intra-fragmental pairs. The number of such pairs
   vector<int> Surface_atoms; int Number_of_surface_atoms;
 
 //---------- Properties ---------------
-  std::string name;         int is_name;
-  int         id;           int is_id;
-  double      mass;         int is_mass;
-  int         Nf_t;         int is_Nf_t;
-  int         Nf_r;         int is_Nf_r;
+  std::string name;         int is_name;  ///< Name of the system and the status flag
+  int         id;           int is_id;    ///< Integer-values ID of the system and the status flag
+  double      mass;         int is_mass;  ///< The total mass of the system and the status flag
+  int         Nf_t;         int is_Nf_t;  ///< The total number of translational DOF and the status flag
+  int         Nf_r;         int is_Nf_r;  ///< The total number of rotational DOF and the status flag
 
   //----------- Basic class operations ---------------------------
   // Defined in System.cpp
-  System();                // constructor
-  System(const System&);   // copy-constructor
- ~System();                // destructor
+  System();                ///< constructor
+  System(const System&);   ///< copy-constructor
+ ~System();                ///< destructor
+  System& operator=(const System&); ///< assignment operator
 
-  System& operator=(const System&); // assignment operator
   void show_info();
   void set(object);
 

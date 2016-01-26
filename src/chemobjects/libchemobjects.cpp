@@ -8,13 +8,18 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libchemobjects.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "libchemobjects.h"
 using namespace boost::python;
 
-
+/// libchemobjects
 namespace libchemobjects{
 
 using namespace libuniverse;
@@ -23,6 +28,10 @@ using namespace libchemsys;
 
 
 void export_chemobjects_objects(){
+/** 
+  \brief Exporter of libchemobjects classes and functions
+
+*/
 
   export_Universe_objects();
   export_Mol_objects();

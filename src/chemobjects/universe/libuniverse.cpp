@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libuniverse.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #define BOOST_PYTHON_MAX_ARITY 30
 #include <boost/python.hpp>
@@ -18,12 +23,19 @@
 using namespace boost::python;
 using namespace libmmath;
 
-
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libuniverse namespace
 namespace libuniverse{
 
 
 void export_Universe_objects(){
+/** 
+  \brief Exporter of libuniverse classes and functions
+
+*/
+
 
   class_<Element>("Element",init<>())
       .def_readwrite("Elt_name",&Element::Elt_name)

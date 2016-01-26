@@ -8,10 +8,18 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Atom.cpp
+  \brief The file implement the Atom class for keeping the atomic information
+    
+*/
 
 #include "Atom.h"
 
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libmol namespace
 namespace libmol{
 
 
@@ -110,19 +118,39 @@ void Atom::copy_content(const Atom& at){
 }
 
 Atom::Atom(Universe& u){
-  /****************
-     Constructor
-  ******************/
+/**
+  \brief Constructor
+  \param[in] The reference to the Universe object. This external object will be 
+  pointing to the same memory as the internal pointer (kept for all atom), so that when
+  the Universe object is modified, all atoms will be affected. This may be not very convenient
+  to keep a pointer to the Universe object in every atom, but this makes the conceptual structure 
+  pretty logical - so that the Atoms belong to the universe, but the "belonging" is more than just
+  sub-grouping - it is actually a relationship.
+
+  Initialize variables to default values
+*/
   universe = &u;
 
-  // Initialize variables to default values
+
   init_variables();
 }
 
 Atom::Atom(Universe& u, boost::python::dict at){
-  /****************
-     Constructor
-  ******************/
+/**
+  \brief Constructor with parameters
+  \param[in] The reference to the Universe object. This external object will be 
+  pointing to the same memory as the internal pointer (kept for all atom), so that when
+  the Universe object is modified, all atoms will be affected. This may be not very convenient
+  to keep a pointer to the Universe object in every atom, but this makes the conceptual structure 
+  pretty logical - so that the Atoms belong to the universe, but the "belonging" is more than just
+  sub-grouping - it is actually a relationship.
+  \param at The Python dictionary. The key names must be consistent with the internal variable (class member) names
+
+  Initialize variables to default values
+  Read what is possible from the input dictionary
+  Make some inferrences
+*/
+
   universe = &u;
   // Initialize variables to default values
   init_variables();
@@ -175,9 +203,12 @@ Atom::Atom(Universe& u, boost::python::dict at){
 
 
 Atom::Atom(const Atom& at){
-  /********************
-    Copy constructor
-  *********************/
+/**
+  \brief Copy constructor
+  \param[in] at The input object
+  Initialize variables to default values
+  Copy content of the at object which is defined
+*/
   // Initialize variables to default values
   init_variables();
   // Copy content of at object which is defined
@@ -185,13 +216,19 @@ Atom::Atom(const Atom& at){
 }
 
 Atom::~Atom(){
+/**
+  \brief Destructor
+*/
   if(globAtom_Adjacent_Atoms.size()>0) { globAtom_Adjacent_Atoms.clear(); }
 }
 
 Atom& Atom::operator=(const Atom& at){
-  /********************
-    Assignment operator
-  *********************/
+/**
+  \brief Assignment operator
+  \param[in] at The input object
+  Initialize variables to default values
+  Copy content of the at object which is defined
+*/
   // Initialize variables to default values
   init_variables();
   // Copy content of at object which is defined
@@ -200,6 +237,12 @@ Atom& Atom::operator=(const Atom& at){
 }
 
 void Atom::set(object at){
+/** 
+  \brief Set properties of the Atom object from an arbitrary Python object.
+
+  \param[in] at The input object - must contain the members with the names that match the names of the internal variables.
+*/
+
   set_value(is_Atom_id,      Atom_id,      at,"Atom_id");
 
   set_value(is_Atom_Z, Atom_Z, at, "Atom_Z");
@@ -226,6 +269,9 @@ void Atom::set(object at){
 }
 
 void Atom::show_info(){
+/** 
+  \brief Atom properties info
+*/
 
 //   std::cout<<"Atom "<<globAtom_Index<<" topology:"<<std::endl;
 //   std::cout<<"globAtom_Index = "<<globAtom_Index<<std::endl;
@@ -268,6 +314,16 @@ void Atom::show_info(){
 }
 
 void Atom::save(boost::property_tree::ptree& pt,std::string path){
+/**
+  \brief Save the state of the Atom object as a property tree
+
+  Each defined data member is added as a node to the property tree. The nodes are added to 
+  the level of the tree controlled by the path variable.
+ 
+  \param[in,out] pt The property tree to which the properties of the Atom are added
+  \param[in] path The parameter controlling the level of the tree to which the Barostat members will be added.
+*/
+
 
   if(is_Atom_id){  ::save(pt,path+".Atom_id",Atom_id);    }
 
@@ -303,6 +359,11 @@ void Atom::save(boost::property_tree::ptree& pt,std::string path){
 }
 
 void Atom::save(std::string filename){
+/**
+  \brief Save the atom info into the XML file
+  \param[in] The output file name 
+  This is done by forming a property tree and then writing it as XML, using Boost write_xml function
+*/
 
   using boost::property_tree::ptree;
   ptree pt;
@@ -317,6 +378,16 @@ void Atom::save(std::string filename){
 
 
 void save(boost::property_tree::ptree& pt,std::string path,vector<Atom>& vt){
+/**
+  \brief Save the state of the vector of Atom objects as a property tree
+
+  Each Atom object is added as a separate branch. 
+ 
+  \param[in,out] pt The property tree to which the list of the Atom objects will be added
+  \param[in] path The parameter controlling the level of the tree to which the list of Atoms will be added.
+  \param[in] vt The list of Atom objects to be printed out into property tree
+*/
+
   int sz = vt.size();
   for(int i=0;i<sz;i++){
     stringstream ss(stringstream::in | stringstream::out);
@@ -327,6 +398,17 @@ void save(boost::property_tree::ptree& pt,std::string path,vector<Atom>& vt){
 
 
 void Atom::load(boost::property_tree::ptree& pt,std::string path,int& status){
+/**
+  \brief Load the state of the Atom object from a property tree
+
+  Each data member found in the property tree is extracted as the member of the Atom object. The
+  status of each found data member is set to 1.
+ 
+  \param[in] pt The property tree from which the properties of the Atom will be extracted
+  \param[in] path The parameter controlling from which level of the tree we try to extract the Atom object
+  \param[out] status Is the global status of the success of the operation. It is 1 is at least one Atom member is found at
+              given level of the property tree.
+*/
 
   int st;
   status = 0;
@@ -365,6 +447,18 @@ void Atom::load(boost::property_tree::ptree& pt,std::string path,int& status){
 }
 
 void load(boost::property_tree::ptree& pt,std::string path,vector<Atom>& vt,Universe& u,int& status){
+/**
+  \brief Load the vector of Atom objects from a property tree
+
+  Each Atom object is extracted from a separate branch. 
+ 
+  \param[in] pt The property tree from which the vector of Atom objects will be extracted
+  \param[in] path The parameter controlling from which level of the property tree we will try to extract the vector of Atom objects
+  \param[out] vt The vector of created Atom objects
+  \param[in] u The Universe in which the atoms are created
+  \param[out] status Is the global status of the success of the operation. It is 1 is at least one Barostat object is extracted
+*/
+
   int st;
   status = 0;
   try{

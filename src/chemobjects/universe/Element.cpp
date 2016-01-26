@@ -8,10 +8,17 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Element.cpp
+  \brief The file describes the Element class and related functions    
+*/
 
 #include "Element.h"
 
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libuniverse namespace
 namespace libuniverse{
 
 
@@ -49,17 +56,22 @@ void Element::copy_content(const Element& at){
 }
 
 Element::Element(){
-  /****************
-     Constructor
-  ******************/
+/**
+  \brief Constructor
+  Initialize variables to default values
+*/
   // Initialize variables to default values
   init_variables();
 }
 
 Element::Element(const Element& at){
-  /********************
-    Copy constructor
-  *********************/
+/**
+  \brief Copy constructor
+  \param[in] at The input object
+
+  Initialize variables to default values
+  Copy content of the at object which is defined
+*/
   // Initialize variables to default values
   init_variables();
   // Copy content of at object which is defined
@@ -67,9 +79,11 @@ Element::Element(const Element& at){
 }
 
 Element& Element::operator=(const Element& at){
-  /********************
-    Assignment operator
-  *********************/
+/**
+  \brief Assignment operator
+  Initialize variables to default values
+  Copy content of at object which is defined
+*/
   // Initialize variables to default values
   init_variables();
   // Copy content of at object which is defined
@@ -81,6 +95,12 @@ Element::~Element(){ }
 
 
 void Element::set(object at){
+/** 
+  \brief Set properties of the Element object from an arbitrary Python object.
+
+  \param[in] at The input object - must contain the members with the names that match the names of the internal variables.
+*/
+
   set_value(is_Elt_name,    Elt_name,    at,"Elt_name");
   set_value(is_Elt_mass,    Elt_mass,    at,"Elt_mass");  
   set_value(is_Elt_number,  Elt_number,  at,"Elt_number");
@@ -97,6 +117,10 @@ void Element::set(object at){
 
 
 void Element::show_info(){
+/** 
+  \brief Show info about Element properties
+*/
+
   if(is_Elt_name) {std::cout<<"Elt_name = "<<Elt_name<<std::endl;   } 
   if(is_Elt_mass) {std::cout<<"Elt_mass = "<<Elt_mass<<std::endl;   }
   if(is_Elt_number) {std::cout<<"Elt_number = "<<Elt_number<<std::endl;}
@@ -113,6 +137,15 @@ void Element::show_info(){
 }
 
 void Element::save(boost::property_tree::ptree& pt,std::string path){
+/**
+  \brief Save the state of the Element object as a property tree
+
+  Each defined data member is added as a node to the property tree. The nodes are added to 
+  the level of the tree controlled by the path variable.
+ 
+  \param[in,out] pt The property tree to which the properties of the Element are added
+  \param[in] path The parameter controlling the level of the tree to which the Element members will be added.
+*/
 
   if(is_Elt_name){  ::save(pt,path+".Elt_name",Elt_name);    }
   if(is_Elt_id){  ::save(pt,path+".Elt_id",Elt_id);    }
@@ -131,6 +164,16 @@ void Element::save(boost::property_tree::ptree& pt,std::string path){
 }
 
 void save(boost::property_tree::ptree& pt,std::string path,vector<Element>& vt){
+/**
+  \brief Save the state of the vector of Element objects as a property tree
+
+  Each Element object is added as a separate branch. 
+ 
+  \param[in,out] pt The property tree to which the list of the Element objects will be added
+  \param[in] path The parameter controlling the level of the tree to which the list of Element will be added.
+  \param[in] vt The list of Element objects to be printed out into property tree
+*/
+
   int sz = vt.size();
   for(int i=0;i<sz;i++){
     stringstream ss(stringstream::in | stringstream::out);
@@ -141,6 +184,18 @@ void save(boost::property_tree::ptree& pt,std::string path,vector<Element>& vt){
 
 
 void Element::load(boost::property_tree::ptree& pt,std::string path,int& status){
+/**
+  \brief Load the state of the Element object from a property tree
+
+  Each data member found in the property tree is extracted as the member of the Barostat object. The
+  status of each found data member is set to 1.
+ 
+  \param[in] pt The property tree from which the properties of the Element will be extracted
+  \param[in] path The parameter controlling from which level of the tree we try to extract the Element object
+  \param[out] status Is the global status of the success of the operation. It is 1 is at least one Element member is found at
+              given level of the property tree.
+*/
+
   int st;
   status = 0;
 
@@ -161,6 +216,16 @@ void Element::load(boost::property_tree::ptree& pt,std::string path,int& status)
 }
 
 void load(boost::property_tree::ptree& pt,std::string path,vector<Element>& vt,int& status){
+/**
+  \brief Load the vector of Element objects from a property tree
+
+  Each Element object is extracted from a separate branch. 
+ 
+  \param[in] pt The property tree from which the vector of Element objects will be extracted
+  \param[in] path The parameter controlling from which level of the property tree we will try to extract the vector of Element objects
+  \param[out] status Is the global status of the success of the operation. It is 1 is at least one Element object is extracted
+*/
+
   int st;
   status = 0;
   try{

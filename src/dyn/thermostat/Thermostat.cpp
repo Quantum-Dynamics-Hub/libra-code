@@ -335,6 +335,7 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<Thermostat>& v
  
   \param[in] pt The property tree from which the vector of Thermostat objects will be extracted
   \param[in] path The parameter controlling from which level of the property tree we will try to extract the vector of Thermostat objects
+  \param[out] vt The vector of created Thermostat objects
   \param[out] status Is the global status of the success of the operation. It is 1 is at least one Thermostat object is extracted
 */
 

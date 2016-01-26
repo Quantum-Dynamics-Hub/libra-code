@@ -8,21 +8,30 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file System_methods.cpp
+  \brief The file implements the search and info output methods of the System class
+    
+*/
 
 #include "System.h"
 
-
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libchemsys namespace
 namespace libchemsys{
 
 
 //================= ObjectSpace member-functions =========================
 
 int System::get_atom_index_by_atom_id(int id){
-/*****************************************************************
- This auxiliary function returns the index of the atom given the id
- of the atom. If no atom with given id were found -1 is returned.
-*****************************************************************/
+/**
+  \brief This auxiliary function returns the index of the atom given the id
+  of the atom. If no atom with given id were found -1 is returned.
+  \param[in] id The ID of the atom (note that this can be any integer, not necessarily sequential)
+*/
+
   int indx = -1;
   for(int i=0;i<Number_of_atoms;i++){
     if(Atoms[i].is_Atom_id){ if(Atoms[i].Atom_id==id){indx = i; }  }
@@ -31,10 +40,12 @@ int System::get_atom_index_by_atom_id(int id){
 }
 
 int System::get_fragment_index_by_fragment_id(int id){
-/*****************************************************************
- This auxiliary function returns the index of the fragment given the id
- of the fragment. If no fragment with given id were found -1 is returned.
-*****************************************************************/
+/**
+  \brief This auxiliary function returns the index of the fragment given the id
+  of the fragment. If no fragment with given id were found -1 is returned.
+  \param[in] id The ID of the fragment (note that this can be any integer, not necessarily sequential)
+*/
+
   int indx = -1;
   for(int i=0;i<Number_of_fragments;i++){
     if(Fragments[i].is_Group_id){ if(Fragments[i].Group_id==id){indx = i; }  }
@@ -43,10 +54,12 @@ int System::get_fragment_index_by_fragment_id(int id){
 }
 
 int System::get_molecule_index_by_molecule_id(int id){
-/*****************************************************************
- This auxiliary function returns the index of the molecule given the id
- of the molecule. If no molecule with given id were found -1 is returned.
-*****************************************************************/
+/**
+  \brief This auxiliary function returns the index of the molecule given the id
+  of the molecule. If no molecule with given id were found -1 is returned.
+  \param[in] id The ID of the molecule (note that this can be any integer, not necessarily sequential)
+*/
+
   int indx = -1;
   for(int i=0;i<Number_of_molecules;i++){
     if(Molecules[i].is_Molecule_id){ if(Molecules[i].Molecule_id==id){indx = i; }  }
@@ -56,11 +69,15 @@ int System::get_molecule_index_by_molecule_id(int id){
 
 
 int System::Find_Bond(int at_indx1,int at_indx2){
-/*****************************************************************
-   This class System method is looking for bond formed by 2 atoms 
-   with globAtom_Indexes given by at_indx1, at_indx2
-   It returns globGroup_Index of corresponding bond
-******************************************************************/
+/**
+  \param[in] at_indx1 The index of the atom #1
+  \param[in] at_indx2 The index of the atom #2
+
+  This class System method is looking for the bond formed by 2 atoms 
+  with globAtom_Indexes given by at_indx1, at_indx2
+  It returns globGroup_Index of corresponding bond
+*/
+
   int res = -1;
   for(int i=0;i<Number_of_bonds;i++){
     if((  (Bonds[i].globAtom_Index[0]==at_indx1) && (Bonds[i].globAtom_Index[1]==at_indx2)  )||
@@ -71,11 +88,15 @@ int System::Find_Bond(int at_indx1,int at_indx2){
 }
 
 int System::Find_Frag_Pair(int at_indx1,int at_indx2){
-/*****************************************************************
-   This class System method is looking for bond formed by 2 atoms
-   with globAtom_Indexes given by at_indx1, at_indx2
-   It returns globGroup_Index of corresponding bond
-******************************************************************/
+/**
+  \param[in] at_indx1 The index of the atom #1
+  \param[in] at_indx2 The index of the atom #2
+
+  This class System method is looking for the pair formed by 2 atoms
+  with globAtom_Indexes given by at_indx1, at_indx2
+  It returns globGroup_Index of corresponding bond
+*/
+
   int res = -1;
   for(int i=0;i<Number_of_frag_pairs;i++){
     int fp = Frag_pairs[i];
@@ -87,11 +108,15 @@ int System::Find_Frag_Pair(int at_indx1,int at_indx2){
 }
 
 int System::Find_Angle(int at_indx1,int at_indx3){
-/*****************************************************************
-   This class System method is looking for angle formed by 3 atoms
-   with globAtom_Indexes given by at_indx1, (any) at_indx3
-   It returns globGroup_Index of corresponding angle
-******************************************************************/
+/**
+  \param[in] at_indx1 The index of the atom #1
+  \param[in] at_indx3 The index of the atom #2 or #3, connected to the atom #1
+
+  This class System method is looking for angle formed by 3 atoms
+  with globAtom_Indexes given by at_indx1, (any) at_indx3
+  It returns globGroup_Index of corresponding angle
+*/
+
   int res = -1;
   for(int i=0;i<Number_of_angles;i++){
     if((  (Angles[i].globAtom_Index[0]==at_indx1) && (Angles[i].globAtom_Index[2]==at_indx3)  )||
@@ -102,11 +127,16 @@ int System::Find_Angle(int at_indx1,int at_indx3){
 }
 
 int System::Find_Angle(int at_indx1,int at_indx2,int at_indx3){
-/*****************************************************************
-   This class System method is looking for angle formed by 3 atoms
-   with globAtom_Indexes given by at_indx1, at_indx2, at_indx3
-   It returns globGroup_Index of corresponding angle
-******************************************************************/
+/**
+  \param[in] at_indx1 The index of the atom #1
+  \param[in] at_indx2 The index of the atom #2 connected to the atom #1
+  \param[in] at_indx3 The index of the atom #3 connected to the atom #1
+
+  This class System method is looking for angle formed by 3 atoms
+  with globAtom_Indexes given by at_indx1, at_indx2, at_indx3
+  It returns globGroup_Index of corresponding angle
+*/
+
   int res = -1;
   for(int i=0;i<Number_of_angles;i++){
     if((  (Angles[i].globAtom_Index[0]==at_indx1) && (Angles[i].globAtom_Index[1]==at_indx2) && (Angles[i].globAtom_Index[2]==at_indx3) )||
@@ -117,11 +147,17 @@ int System::Find_Angle(int at_indx1,int at_indx2,int at_indx3){
 }
 
 int System::Find_Dihedral(int at_indx1,int at_indx2,int at_indx3,int at_indx4){
-/*****************************************************************
-   This class System method looking for dihedral formed by 4 atoms
-   with globAtom_Indexes given by at_indx1, at_indx2, at_indx3, at_indx4
-   It returns globGroup_Index of corresponding dihedral
-******************************************************************/
+/**
+  \param[in] at_indx1 The index of the atom #1 connected to the atom #2
+  \param[in] at_indx2 The index of the atom #2 connected to the atom #1 and #3
+  \param[in] at_indx3 The index of the atom #3 connected to the atom #2 and #4
+  \param[in] at_indx4 The index of the atom #4 connected to the atom #3
+
+  This class System method looking for dihedral formed by 4 atoms
+  with globAtom_Indexes given by at_indx1, at_indx2, at_indx3, at_indx4
+  It returns globGroup_Index of corresponding dihedral
+*/
+
   int res = -1;
   for(int i=0;i<Number_of_dihedrals;i++){
     if((  (Dihedrals[i].globAtom_Index[0]==at_indx1)
@@ -140,7 +176,8 @@ int System::Find_Dihedral(int at_indx1,int at_indx2,int at_indx3,int at_indx4){
 }
 
 int System::Find_Improper(int at_indx1){
-/*****************************************************************
+/**
+  \param[in] at_indx1 The index o
    This class System method is looking for an improper with a
    central atom having index at_indx1
    It returns globGroup_Index of corresponding improper

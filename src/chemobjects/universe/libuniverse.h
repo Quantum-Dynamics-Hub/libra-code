@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libuniverse.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_UNIVERSE_H
 #define LIB_UNIVERSE_H
@@ -15,7 +20,10 @@
 #include "Element.h"
 #include "Universe.h"
 
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libuniverse namespace
 namespace libuniverse{
 
 void export_Universe_objects();
