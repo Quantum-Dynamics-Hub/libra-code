@@ -23,7 +23,7 @@
 namespace libqchem{
 
 /// libbasis namespace
-namespace libbaiss{
+namespace libbasis{
 
 
 void export_basis_objects();
