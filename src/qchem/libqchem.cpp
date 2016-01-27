@@ -24,6 +24,7 @@ namespace libqchem{
 
 using namespace libmolint;
 using namespace libqobjects;
+using namespace libbasis;
 
 
 void export_Qchem_objects(){
