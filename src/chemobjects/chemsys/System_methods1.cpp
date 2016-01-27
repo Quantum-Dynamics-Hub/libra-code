@@ -8,19 +8,29 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file System_methods1.cpp
+  \brief The file implements some topological functions
+    
+*/
 
 #include "System.h"
 
-
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libchemsys namespace
 namespace libchemsys{
 
 
 //================ Not-member functions =================================
 
 void System::Generate_Connectivity_Matrix(){
-  // We do not need atomic connectivity matrix since it is too big
-  // We are interested in group connectivity matrix though
+/** 
+  Generate a group connectivity matrix - if atoms of a bond belong to different groups, then these two groups are connected
+  We do not need atomic connectivity matrix since it is too big
+*/
+
   GroupConnMatrix = new MATRIX(Number_of_fragments,Number_of_fragments); // Group connectivity matrix
   *GroupConnMatrix = 0.0;
   is_GroupConnMatrix =1;
@@ -38,6 +48,10 @@ void System::Generate_Connectivity_Matrix(){
 
 
 void System::Assign_Rings(){
+/**
+  This function assings the rings - meaning it determines how many and which rings are present in the system. 
+  Carefully - this may become a very slow procedure for large and dense graphs. 
+*/
 
   cout<<"In System::Assign_Rings\n";
   typedef GRAPH<Atom*,Group*> Graph;
@@ -143,12 +157,21 @@ void System::Assign_Rings(){
 }
 
 void System::DIVIDE_GRAPH(int IndxStart,int IndxException, vector<int>& P){
-/***************************************************************************
- This function returns to the vector P indexes corresponding to the part of the graph
- given by connectivity matrix ConnMatrix. This part starts at vertex IndxStart in
- the direction opposite to IndxException
- g1 and g2 - are indexes of starting and finishing group
-*****************************************************************************/
+/**
+  \param[in] IndxStart The index of the vertex that, together with all connected (including indirectly) to it vertices will constitute one of the subgraphs
+  \param[in] IndxException The index of the vertex connected to IndxStart, which with all connected (including indirectly) to it vertices will constitute second subgraph
+  \param[out] P The list of vertex indices of the first subgraph
+
+  This function returns to the vector P indexes corresponding to the part of the graph
+  given by connectivity matrix ConnMatrix. This part starts at vertex IndxStart in
+  the direction opposite to IndxException
+  g1 and g2 - are indexes of starting and finishing group
+
+  This function is needed to split the connectivity graph into two parts, divided by a single bond IndxStart - IndxException
+  eventually, this is to be used for rotating one part of the system w.r.t. another around the bond selected by the above
+  pair of indices
+*/
+
   int g1 = IndxStart;
   int g2 = IndxException;
   P.push_back(g1);

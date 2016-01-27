@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file System_methods2.cpp
+  \brief The file implements topology building functions as well as general creation (building) functions
+    
+*/
 
 #include "System.h"
 #include <map>
@@ -15,16 +20,20 @@
 using namespace std;
 
 
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libchemsys namespace
 namespace libchemsys{
 
 
 int is_in_vector(int indx,vector<int> vect){
-/*************************************************************************
+/**
    This functions is not to be exposed to user.
    It searches for index "indx" of int type in a vector of ints
    Return 1 if "indx" has been found, 0 - otherwise
-**************************************************************************/
+*/
+
   int res = 0;
   int sz = vect.size();
   for(int i=0;i<sz;i++){
@@ -367,7 +376,7 @@ void System::create_improper(int a1,int a2,int a3,int a4){
 
 
 void System::update_max_id(){
-/**************************************************************************
+/**
     This function updated maximal ids of Atom, Fragment and Molecule
     It is not to be exposed to user. Usually it should be placed at the end
     of other building functions.
@@ -376,7 +385,8 @@ void System::update_max_id(){
     Note that max_id is not the actual number of object of corresponding type
     E.g. in a system of 2 atoms they may have ids 20 and 40, so the max_atom_id
     will be 40 not 2(of 1 as index)
-**************************************************************************/
+*/
+
   int max_atom_id;
   int max_frag_id;
   int max_mol_id;
@@ -418,11 +428,12 @@ void System::update_max_id(){
 }
 
 void System::CREATE_ATOM(Atom at1){
-/*************************************************************************
-    This function creates atom, fragment and molecule instances which all
-    describe the same simplest object. Function adds all them to the object
-    space spacified. All interrelations (cross-references) are also constructed.
-***************************************************************************/
+/**
+  This function creates atom, fragment and molecule instances which all
+  describe the same simplest object. Function adds all them to the object
+  space spacified. All interrelations (cross-references) are also constructed.
+*/
+
     Atom at = at1;
 
     if(is_max_atom_id){    
@@ -556,11 +567,11 @@ void System::CREATE_ATOM(){
 */
 
 int System::is_in_vector(int indx,vector<int>& vect){
-/*************************************************************************
-   This functions is not to be exposed to user.
-   It searches for index "indx" of int type in a vector of ints
-   Return 1 if "indx" has been found, 0 - otherwise
-**************************************************************************/
+/**
+  This functions is not to be exposed to user.
+  It searches for index "indx" of int type in a vector of ints
+  Return 1 if "indx" has been found, 0 - otherwise
+*/
 
    int res = 0;
    int sz = vect.size();
@@ -571,12 +582,14 @@ int System::is_in_vector(int indx,vector<int>& vect){
 }
 
 void System::LINK_ATOMS(Atom& at1,Atom& at2){
-/*************************************************************************
-   This function performs one of the simplest operations on two atoms
-   It connects them. Other connections also taken into account - thus
-   we create not only bonds (pairs of atoms), but also angles, dihedrals, etc.
-   
-**************************************************************************/
+/**
+  \param[in] at1 One of the connected atoms
+  \param[in] at2 One of the connected atoms
+
+  This function performs one of the simplest operations on two atoms
+  It connects them. Other connections also taken into account - thus
+  we create not only bonds (pairs of atoms), but also angles, dihedrals, etc.
+*/
 
   // Here are some control parameters which then should be made user-definable
   // They control if we want to exclude 1,2, 1,3 and 1,4 - pairs from the pair list
@@ -786,11 +799,15 @@ void System::LINK_ATOMS(Atom& at1,Atom& at2){
 
 
 void System::LINK_ATOMS(int At1_id,int At2_id){
-/**************************************************************************************
-   This function is a more user-frendly version of LINK_ATOMS(Atom&,Atom&)
-   function. It searches for two atoms by their id and then performens the same task on
-   that atoms as the other variant
-***************************************************************************************/
+/**
+  \param[in] at1 The atom ID (not index!) of one of the connected atoms
+  \param[in] at2 The atom ID (not index!) of one of the connected atoms
+
+  This function is a more user-frendly version of LINK_ATOMS(Atom&,Atom&)
+  function. It searches for two atoms by their id and then performens the same task on
+  that atoms as the other variant
+*/
+
   int v1,v2;
   v1 = get_atom_index_by_atom_id(At1_id);
   v2 = get_atom_index_by_atom_id(At2_id);
@@ -805,13 +822,14 @@ void System::LINK_ATOMS(int At1_id,int At2_id){
 }
 
 void System::UPDATE_FRAG_TOPOLOGY(){
-/*************************************************************************
-   This function is not to be exposed to user (or is to do this - i've not
-   decided yet). Noramlly it should be used at the end of all functions 
-   dealing with fragments and related topological elements.
-   It simply excludes frag_bonds, frag_angles and frag_dihedrals. 
-   Note it does not add these topological elements. 
-*************************************************************************/
+/**
+  This function is not to be exposed to user (or is to do this - i've not
+  decided yet). Noramlly it should be used at the end of all functions 
+  dealing with fragments and related topological elements.
+  It simply excludes frag_bonds, frag_angles and frag_dihedrals. 
+  Note it does not add these topological elements. 
+*/
+
   int a1,a2,a3,a4;
   int g1,g2,g3,g4;
   int indx1,indx2;
@@ -1027,7 +1045,11 @@ void System::UPDATE_FRAG_TOPOLOGY(){
 }
 
 void System::ADD_ATOM_TO_FRAGMENT(int Atom_Id,int Group_Id){
+/**
+  This function does nothing so far
+*/
 }
+
 /*
 void System::ADD_ATOM_TO_FRAGMENT(int Atom_Id,int Group_Id){
 **************************************************************************
@@ -1228,11 +1250,15 @@ void System::GROUP_ATOMS(boost::python::list atoms_list,int Group_Id){
 }
 */
 void System::GROUP_ATOMS(boost::python::list atoms_list,int Group_Id){
-/***************************************************************
+/**
+  \param[in] atoms_list The Python list containing IDs (not indices!) of the atoms to be grouped
+  \param[in] Group_Id The ID of the group to be created
+ 
   This function groups atoms from atoms_list and makes a group
   The group just created is assigned the Group_Id id.
   This gonna be improved version with more intuitive functioning
-*****************************************************************/
+*/
+
   // Get atom indexs
   vector<int> at_indxs;  
   for(int i=0;i<len(atoms_list);i++){
@@ -1328,15 +1354,21 @@ void System::GROUP_ATOMS(boost::python::list atoms_list,int Group_Id){
 
 
 void System::CREATE_BONDS(boost::python::list atoms_list,boost::python::dict valence_by_element){
-/* This function will search for neighbour atoms. If the atoms
-   are located on the distance smaller then the sum of their 
-   radii (+/- some tolerance) and if the valence is satisfied then 
-   the bond between atoms will be created. If necessary the 
-   order of the bond will be assigned to value bigger then 1.
-   Only atoms from the atom list will be considered.
-   hyper_atoms dictionalry specifies some special cases of hypervalent atoms
-   this dictionalry contains pairs: [ atom element : valence ]
+/**
+  \param[in] atoms_list The list of the IDs of the atoms that are considered in automatic bonding assignment
+  \param[in] valence_by_element Defines the valences (the maximal number of connections a given element may have) of elements
+
+  This function will search for neighbour atoms. If the atoms
+  are located on the distance smaller then the sum of their 
+  radii (+/- some tolerance) and if the valence is satisfied then 
+  the bond between atoms will be created. If necessary the 
+  order of the bond will be assigned to value bigger then 1.
+  Only atoms from the atom list will be considered.
+  hyper_atoms dictionalry specifies some special cases of hypervalent atoms
+  this dictionalry contains pairs: [ atom element : valence ]
+
 */
+
   vector<int> at_indexes; // Indexes of the atoms in the list, not their IDs
   vector<int> at_valences;
   // Sorted
@@ -1511,11 +1543,14 @@ void System::CREATE_BONDS(boost::python::list atoms_list,boost::python::dict val
 }
 
 void System::CLONE_MOLECULE(int mol_id){
-/********************************************************************
- This function copies the molecule with id number = mol_id (not index
- but ID!) and all internal structure. Also it makes necessary changes to
- the structure of the object space
-*********************************************************************/
+/**
+  \param[in] mol_id The ID (not index!) of the molecule to be copied
+
+  This function copies the molecule with id number = mol_id (not index
+  but ID!) and all internal structure. Also it makes necessary changes to
+  the structure of the object space
+*/
+
   // First - find indexes
   int m; // Index of the molecule with mol_id
   int is_found = 0;

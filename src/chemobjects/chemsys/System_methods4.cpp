@@ -8,24 +8,32 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file System_methods4.cpp
+  \brief The file implements the function for determining functional group name for each given atom.
+    
+*/
 
 #include "System.h"
 
-
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libchemsys namespace
 namespace libchemsys{
 
 
 int System::is(std::string X, int n, int m,int sz,Atom** at,vector<Atom*>& which){
-/*****************************************************************
- This auxiliary function searches for an atom of element X with
- n connections in array of pointers to Atom objects "at", which is
- of size sz. 
- It returnes 1 if m such atoms was found in array, 0 otherwise
- The vector of matching atoms (addresses) is formed in the "which" variable
- Note: for the special cases like X = OH the adresses of next neighbors
- (in this case of H atom) will also be added to the "which" variable
-******************************************************************/
+/**
+  This auxiliary function searches for an atom of element X with
+  n connections in array of pointers to Atom objects "at", which is
+  of size sz. 
+  It returnes 1 if m such atoms was found in array, 0 otherwise
+  The vector of matching atoms (addresses) is formed in the "which" variable
+  Note: for the special cases like X = OH the adresses of next neighbors
+  (in this case of H atom) will also be added to the "which" variable
+*/
+
   if(which.size()>0){ which.clear(); }
   int res = 0;
   for(int i=0;i<sz;i++){
@@ -80,11 +88,12 @@ void System::store(vector<Atom*>& w,vector<Atom*>& W){
 }
 
 void System::set(vector<Atom*>& at,std::string grp_name){
-/*******************************************************************
- This auxiliary function sets the Atom_functional_group property
- of the atoms at[which[i]] to the value of grp_name and sets the flag
- that it is defined
-********************************************************************/
+/**
+  This auxiliary function sets the Atom_functional_group property
+  of the atoms at[which[i]] to the value of grp_name and sets the flag
+  that it is defined
+*/
+
   for(int i=0;i<at.size();i++){
     at[i]->Atom_functional_group = grp_name;
     at[i]->is_Atom_functional_group = 1;
@@ -92,93 +101,94 @@ void System::set(vector<Atom*>& at,std::string grp_name){
 }
 
 void System::determine_functional_groups(int assign_rings){
-/***************************************************************
- This function uses the information on atom connectivity 
- stored in AtomGraph variable (of type GRAPH<Atom*,Group*>)
- and determines to which functional group (from standard
- list of organic and inorganic functional groups) each atom
- belongs. This information is then stored in functional_groups
- variable of type (map<int,std::string>) where the int - is
- the index of the atom and std::string is the name of the 
- functional group
- Functional groups are defined in:
- http://en.wikipedia.org/wiki/Functional_group
+/**
+  This function uses the information on atom connectivity 
+  stored in AtomGraph variable (of type GRAPH<Atom*,Group*>)
+  and determines to which functional group (from standard
+  list of organic and inorganic functional groups) each atom
+  belongs. This information is then stored in functional_groups
+  variable of type (map<int,std::string>) where the int - is
+  the index of the atom and std::string is the name of the 
+  functional group
+  Functional groups are defined in:
+  http://en.wikipedia.org/wiki/Functional_group
  
- additional groups are from:
- http://www.thechemblog.com/?p=375
+  additional groups are from:
+  http://www.thechemblog.com/?p=375
 
- http://en.wikipedia.org/wiki/Sulfonamide_%28chemistry%29   # sulfonamide
+  http://en.wikipedia.org/wiki/Sulfonamide_%28chemistry%29   # sulfonamide
 
- order: most general - first
+  order: most general - first
  
- Total list of functional groups:
- Alkyl
-   Ketal
-   Hemiketal
-   Acetal
-   Hemiacetal
-   Orthoester
- Alkenyl
-   Carbonyl
-     Aldehyde 
-     Haloformyl
-   Carbonate_ester
-   Carboxylate
-   Ester
-     Carboxyl
-   Carboxamide
-   Secondary_ketimine
-   Primary_ketimine
-     Secondary_aldimine
-     Primary_aldimine
-   Thione
-     Thial
- Alkynyl
-   Nitrile
-   Cyanate
-   Isocyanate
-   Thiocyanate
-   Isothiocyanate
- Isonitrile
- Ammoniun
- Tertiary_amine
- Secondary_amine
- Primary_amine
- Imide
- Nito
- Nitrate
- Azo
- Azide
- Nitroso
- Nitrosooxy
- Thioether
-   Sulfhydril
-   Disulphide
- Sulfinyl
- Sulfino
- Sulfonamide
- Phosphino
- Phosphono
- Phosphate
- Phosphodiester
- Ether
-   Hydroxyl
-   Water
-   Peroxy
-     Hydroperoxy
-
+  Total list of functional groups:
+  Alkyl
+    Ketal
+    Hemiketal
+    Acetal
+    Hemiacetal
+    Orthoester
+  Alkenyl
+    Carbonyl
+      Aldehyde 
+      Haloformyl
+    Carbonate_ester
+    Carboxylate
+    Ester
+      Carboxyl
+    Carboxamide
+    Secondary_ketimine
+    Primary_ketimine
+      Secondary_aldimine
+      Primary_aldimine
+    Thione
+      Thial
+  Alkynyl
+    Nitrile
+    Cyanate
+    Isocyanate
+    Thiocyanate
+    Isothiocyanate
+  Isonitrile
+  Ammoniun
+  Tertiary_amine
+  Secondary_amine
+  Primary_amine
+  Imide
+  Nito
+  Nitrate
+  Azo
+  Azide
+  Nitroso
+  Nitrosooxy
+  Thioether
+    Sulfhydril
+    Disulphide
+  Sulfinyl
+  Sulfino
+  Sulfonamide
+  Phosphino
+  Phosphono
+  Phosphate
+  Phosphodiester
+  Ether
+    Hydroxyl
+    Water
+    Peroxy
+      Hydroperoxy
+ 
 // Hydrogen functional groups!
- Sulfonamide_H_on_N
- Sulfonamide_H_on_S
- Hemiacetal_H_on_O
- Hemiacetal_H_on_C
- Primary_aldimine_H_on_N
- Primary_aldimine_H_on_C
- Imide_H_on_N
- Imide_H_on_C
- Carboxamide_H_on_N
- Carboxamide_H_on_C
-***************************************************************/
+  Sulfonamide_H_on_N
+  Sulfonamide_H_on_S
+  Hemiacetal_H_on_O
+  Hemiacetal_H_on_C
+  Primary_aldimine_H_on_N
+  Primary_aldimine_H_on_C
+  Imide_H_on_N
+  Imide_H_on_C
+  Carboxamide_H_on_N
+  Carboxamide_H_on_C
+*/
+
   cout<<"In System::determine_functional_groups()\n";
 
   if(assign_rings==1){    Assign_Rings();   }

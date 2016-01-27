@@ -8,27 +8,55 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file System_methods3.cpp
+  \brief The file implements functions for manipulating chemical objects: translations, rotations and updates
+    
+*/
 
 #include "System.h"
 
-
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libchemsys namespace
 namespace libchemsys{
 
 
 void System::move_atom_by_index(VECTOR& displ,int indx){
+/**
+  \param[in] displ The amount and direction of the translation
+  \param[in] indx The index of the atom to be translated
+
+  Translate atom with index indx on the amount given by displ
+*/
+
   if(Atoms[indx].is_Atom_RB){
      Atoms[indx].Atom_RB.shift_position(displ); 
   }
 }
 
 void System::move_fragment_by_index(VECTOR& displ,int indx){
+/**
+  \param[in] displ The amount and direction of the translation
+  \param[in] indx The index of the fragment to be translated
+
+  Translate fragment with index indx on the amount given by displ
+*/
+
   if(Fragments[indx].is_Group_RB){
     Fragments[indx].Group_RB.shift_position(displ);
   }
 }
 
 void System::move_molecule_by_index(VECTOR& displ,int indx){
+/**
+  \param[in] displ The amount and direction of the translation
+  \param[in] indx The index of the molecule to be translated
+
+  Translate molecule with index indx on the amount given by displ
+*/
+
   if(Molecules[indx].is_Molecule_RB){
     Molecules[indx].Molecule_RB.shift_position(displ);
   }
@@ -36,9 +64,14 @@ void System::move_molecule_by_index(VECTOR& displ,int indx){
 
 
 
-
-
 void System::update_atoms_for_fragment(int indx){
+/**
+  \param[in] indx The index of the fragment for which we update positions of atoms
+
+  Recompute Cartesian coordinates of all atoms included in the fragment with index indx
+  This is needed when only rigid-body (fragmental) variables are propagated or changed
+*/
+
   RigidBody& ftop = Fragments[indx].Group_RB;
 
   for(int i=0;i<Fragments[indx].Group_Size;i++){
@@ -54,6 +87,8 @@ void System::update_atoms_for_fragment(int indx){
 }
 
 void System::update_fragments_for_molecule(int indx){
+/// So far this function does nothing
+
 /* AAAAA
   RigidBody& mtop = Molecules[indx].Molecule_RB;
 
@@ -65,6 +100,13 @@ void System::update_fragments_for_molecule(int indx){
 }
 
 void System::update_atoms_for_molecule(int indx){
+/**
+  \param[in] indx The index of the molecule for which we update positions of atoms
+
+  Recompute Cartesian coordinates of all atoms included in the molecule with index indx
+  This is needed when only rigid-body (fragmental) variables of the molecule are propagated or changed
+*/
+
   RigidBody& mtop = Molecules[indx].Molecule_RB;
 
   for(int i=0;i<Molecules[indx].Molecule_Size;i++){
@@ -104,11 +146,16 @@ void System::rotate_atoms_of_molecule(int indx,MATRIX3x3& R){
 
 
 void System::TRANSLATE_ATOM(double amount,VECTOR direction,int At){
-/*******************************************************************
- Simplest manipulation
- Translates atom with atom id "int At" on amount of "double amount"
- in direction of "VECTOR direction"
-********************************************************************/
+/**
+  \param[in] amount The magnitude of translation
+  \param[in] direction The vector definining the direction of the translation. The magnitude of this vector does not matter.
+  \param[in] At The ID (not index!) of the atom to be translated
+
+  Simplest manipulation
+  Translates atom with atom id "int At" on amount of "double amount"
+  in direction of "VECTOR direction"
+*/
+
   int v;
   VECTOR displ = amount * direction.unit();
   v = get_atom_index_by_atom_id(At);
@@ -127,11 +174,16 @@ void System::TRANSLATE_ATOM(double amount,VECTOR direction,int At){
 }
 
 void System::TRANSLATE_FRAGMENT(double amount,VECTOR direction,int Fr){
-/*******************************************************************
- Simplest manipulation
- Translates Fragment with fragment id "int Fr" on amount of "double amount"
- in direction of "VECTOR direction"
-********************************************************************/
+/**
+  \param[in] amount The magnitude of the translation
+  \param[in] direction The vector definining the direction of the translation. The magnitude of this vector does not matter.
+  \param[in] Fr The ID (not index!) of the fragment to be translated
+
+  Simplest manipulation
+  Translates Fragment with fragment id "int Fr" on amount of "double amount"
+  in direction of "VECTOR direction"
+*/
+
   int v;
   VECTOR displ = amount * direction.unit();
   v = get_fragment_index_by_fragment_id(Fr);
@@ -148,11 +200,16 @@ void System::TRANSLATE_FRAGMENT(double amount,VECTOR direction,int Fr){
 }
 
 void System::TRANSLATE_MOLECULE(double amount,VECTOR direction,int Mol){
-/*******************************************************************
- Simplest manipulation
- Translates Molecule with molecule id "int Mol" on amount of "double amount"
- in direction of "VECTOR direction"
-********************************************************************/
+/**
+  \param[in] amount The magnitude of the translation
+  \param[in] direction The vector definining the direction of the translation. The magnitude of this vector does not matter.
+  \param[in] Mol The ID (not index!) of the molecule to be translated
+
+  Simplest manipulation
+  Translates Molecule with molecule id "int Mol" on amount of "double amount"
+  in direction of "VECTOR direction"
+*/
+
   int v;
   VECTOR displ = amount * direction.unit();
   v = get_molecule_index_by_molecule_id(Mol);
@@ -167,6 +224,16 @@ void System::TRANSLATE_MOLECULE(double amount,VECTOR direction,int Mol){
 }
 
 void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr){
+/**
+  \param[in] degree_amount The magnitude of rotation, in degrees
+  \param[in] direction The vector definining the axis of rotation. The magnitude of this vector does not matter.
+  \param[in] Gr The ID (not index!) of the group/fragment to be rotated
+
+  Simplest manipulation
+  Rotates the fragment with the fragment ID "int Gr" on amount of "double amount"
+  around the axis given by "VECTOR direction"
+*/
+
 
   MATRIX3x3 R;
   double phi = M_PI*degree_amount/180.0; // Convert to the radians
@@ -187,6 +254,16 @@ void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr){
 }
 
 void System::ROTATE_MOLECULE(double degree_amount, VECTOR direction,int Mol){
+/**
+  \param[in] degree_amount The magnitude of rotation, in degrees
+  \param[in] direction The vector definining the axis of rotation. The magnitude of this vector does not matter.
+  \param[in] Mol The ID (not index!) of the molecule to be rotated
+
+  Simplest manipulation
+  Rotates Molecule with molecule id "int Mol" on amount of "double amount"
+  around the axis given by "VECTOR direction"
+*/
+
 
   MATRIX3x3 R;
   double phi = M_PI*degree_amount/180.0; // Convert to the radians

@@ -177,11 +177,12 @@ int System::Find_Dihedral(int at_indx1,int at_indx2,int at_indx3,int at_indx4){
 
 int System::Find_Improper(int at_indx1){
 /**
-  \param[in] at_indx1 The index o
-   This class System method is looking for an improper with a
-   central atom having index at_indx1
-   It returns globGroup_Index of corresponding improper
-******************************************************************/
+  \param[in] at_indx1 The index of the central atom to which 3 other atoms are connected
+  This class System method is looking for an improper with a
+  central atom having index at_indx1
+  It returns globGroup_Index of corresponding improper
+*/
+
   int res = -1;
   for(int i=0;i<Number_of_impropers;i++){
     if(Impropers[i].globAtom_Index[0]==at_indx1 ){   res = i;break;   }
@@ -190,12 +191,16 @@ int System::Find_Improper(int at_indx1){
 }
 
 int System::is_12pair(int at_indx1,int at_indx2){
-/*******************************************************************
+/**
+  \param[in] at_indx1 The index of the atom #1 
+  \param[in] at_indx2 The index of the atom #2 
+
   This function checks if the atoms with indexes at_indx1 and at_indx2
   are directly connected to each other
-  Return 1 if they are connected to each other
-         0 otherwise
-*******************************************************************/
+  Return 1 if they are connected to each other (bonded pair)
+         0 otherwise (non-bonded pair)
+*/
+
   int res = 0;
   for(int i=0;i<Atoms[at_indx1].globAtom_Adjacent_Atoms.size();i++){
     if(Atoms[at_indx1].globAtom_Adjacent_Atoms[i]==at_indx2){ res = 1; }
@@ -204,12 +209,16 @@ int System::is_12pair(int at_indx1,int at_indx2){
 }
 
 int System::is_13pair(int at_indx1,int at_indx2){
-/*******************************************************************
+/**
+  \param[in] at_indx1 The index of the atom #1 
+  \param[in] at_indx2 The index of the atom #3 (!)
+
   This function checks if the atoms with indexes at_indx1 and at_indx2
-  are connected to common atom (form 1,3-pair)
+  are connected to common atom (form a 1,3-pair)
   Return 1 if they are connected common atom
          0 otherwise
-*******************************************************************/
+*/
+
   int res = 0;
   for(int i=0;i<Atoms[at_indx1].globAtom_Adjacent_Atoms.size();i++){
     for(int j=0;j<Atoms[at_indx2].globAtom_Adjacent_Atoms.size();j++){
@@ -220,13 +229,17 @@ int System::is_13pair(int at_indx1,int at_indx2){
 }
 
 int System::is_14pair(int at_indx1,int at_indx2){
-/*******************************************************************
+/**
+  \param[in] at_indx1 The index of the atom #1 
+  \param[in] at_indx2 The index of the atom #4 (!)
+
   This function checks if the atoms with indexes at_indx1 and at_indx2
   are connected to some other atoms which are directly conneted to 
   each other (form 1,4-pair)
   Return 1 if they form 1,4-pair
          0 otherwise
-*******************************************************************/
+*/
+
   int res = 0;
   for(int i=0;i<Atoms[at_indx1].globAtom_Adjacent_Atoms.size();i++){
     for(int j=0;j<Atoms[at_indx2].globAtom_Adjacent_Atoms.size();j++){
@@ -237,69 +250,128 @@ int System::is_14pair(int at_indx1,int at_indx2){
 }
 
 int System::is_group_pair(int at_indx1,int at_indx2){
-/***********************************************************************
+/**
+  \param[in] at_indx1 The index of the atom #1 
+  \param[in] at_indx2 The index of the atom #2 
+
   This function checks if the atoms with indexes at_indx1 and at_indx
   belong to the same group(fragment)
   Return 1 if they belong to the same group
          0 otherwise
-***********************************************************************/
+*/
+
   return (Atoms[at_indx1].globGroup_Index == Atoms[at_indx2].globGroup_Index);
 }
 
 
 void System::show_atoms(){
+/**
+  Print out the information for all atoms
+*/
   for(int i=0;i<Number_of_atoms;i++){ Atoms[i].show_info();  }
 }
 
 void System::show_bonds(){
+/**
+  Print out the information for all bonds
+*/
+
   for(int i=0;i<Number_of_bonds;i++){ Bonds[i].show_info();  }
 }
 
 void System::show_angles(){
+/**
+  Print out the information for all angles
+*/
+
   for(int i=0;i<Number_of_angles;i++){ Angles[i].show_info(); }
 }
 
 void System::show_dihedrals(){
+/**
+  Print out the information for all dihedrals
+*/
+
   for(int i=0;i<Number_of_dihedrals;i++){ Dihedrals[i].show_info(); }
 }
 
 void System::show_impropers(){
+/**
+  Print out the information for all impropers
+*/
+
   for(int i=0;i<Number_of_impropers;i++){ Impropers[i].show_info();  }
 }
 
 void System::show_pairs(){
+/**
+  Print out the information for all pairs
+*/
+
   for(int i=0;i<Number_of_pairs;i++){ Pairs[i].show_info();  }
 }
 
 void System::show_frag_bonds(){
+/**
+  Print out the information for all inter-fragmental bonds
+*/
+
   for(int i=0;i<Number_of_frag_bonds;i++){ Bonds[Frag_bonds[i]].show_info();  }
 }
 
 void System::show_frag_angles(){
+/**
+  Print out the information for all inter-fragmental angles
+*/
+
   for(int i=0;i<Number_of_frag_angles;i++){ Angles[Frag_angles[i]].show_info(); }
 }
 
 void System::show_frag_dihedrals(){
+/**
+  Print out the information for all inter-fragmental dihedrals
+*/
+
   for(int i=0;i<Number_of_frag_dihedrals;i++){ Dihedrals[Frag_dihedrals[i]].show_info(); }
 }
 
 void System::show_frag_impropers(){
+/**
+  Print out the information for all inter-fragmental impropers
+*/
+
   for(int i=0;i<Number_of_frag_impropers;i++){ Impropers[Frag_impropers[i]].show_info();  }
 }
 
 void System::show_frag_pairs(){
+/**
+  Print out the information for all inter-fragmental pairs
+*/
+
   for(int i=0;i<Number_of_frag_pairs;i++){ Pairs[Frag_pairs[i]].show_info();  }
 } 
 
 void System::show_fragments(){
+/**
+  Print out the information for all fragments
+*/
+
   for(int i=0;i<Number_of_fragments;i++){ Fragments[i].show_info();  }
 }
 
 void System::show_rings(){
+/**
+  Print out the information for all rigns
+*/
+
   for(int i=0;i<Number_of_rings;i++){ Rings[i].show_info();  }
 }
 
 void System::show_molecules(){
+/**
+  Print out the information for all molecules
+*/
+
   for(int i=0;i<Number_of_molecules;i++){ Molecules[i].show_info();  }
 }
 

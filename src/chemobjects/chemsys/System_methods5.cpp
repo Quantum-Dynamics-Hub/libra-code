@@ -8,13 +8,27 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file System_methods5.cpp
+  \brief The file implements converter functions between System class members and dynamical datatypes (see libdyn)
+    
+*/
 
 #include "System.h"
 
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libchemsys namespace
 namespace libchemsys{
 
+
 void System::extract_atomic_q(vector<double>& q){
+/** 
+  \param[out] q The vector of generalized nuclear coordinates (each is 1D)
+
+  System::Atom[i].Atom_RB.rb_cm (VECTOR) -> q (3 components)
+*/
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -35,6 +49,13 @@ void System::extract_atomic_q(vector<double>& q){
 }
 
 void System::set_atomic_q(vector<double>& q){
+/** 
+  \param[in] q The vector of generalized nuclear coordinates (each is 1D)
+
+  q (3 components) -> System::Atom[i].Atom_RB.rb_cm (VECTOR)
+  Special care is taken to ensure assignment by value (so changing q will not affect internals)
+*/
+
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -55,6 +76,11 @@ void System::set_atomic_q(vector<double>& q){
 
 
 void System::extract_atomic_p(vector<double>& p){
+/** 
+  \param[out] p The vector of generalized nuclear momenta (each is 1D)
+
+  System::Atom[i].Atom_RB.rb_p (VECTOR) -> p (3 components)
+*/
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -76,6 +102,12 @@ void System::extract_atomic_p(vector<double>& p){
 }
 
 void System::set_atomic_p(vector<double>& p){
+/** 
+  \param[in] p The vector of generalized nuclear momenta (each is 1D)
+
+  p (3 components) -> System::Atom[i].Atom_RB.rb_p (VECTOR) (and also rb_v)
+  Special care is taken to ensure assignment by value (so changing p will not affect internals)
+*/
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -94,6 +126,11 @@ void System::set_atomic_p(vector<double>& p){
 }
 
 void System::extract_atomic_v(vector<double>& v){
+/** 
+  \param[out] v The vector of generalized nuclear velocities (each is 1D)
+
+  System::Atom[i].Atom_RB.rb_v (VECTOR) -> v (3 components)
+*/
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -113,6 +150,13 @@ void System::extract_atomic_v(vector<double>& v){
 }
 
 void System::set_atomic_v(vector<double>& v){
+/** 
+  \param[in] v The vector of generalized nuclear velocities (each is 1D)
+
+  v (3 components) -> System::Atom[i].Atom_RB.rb_v (VECTOR) (and also rb_p)
+  Special care is taken to ensure assignment by value (so changing v will not affect internals)
+*/
+
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
