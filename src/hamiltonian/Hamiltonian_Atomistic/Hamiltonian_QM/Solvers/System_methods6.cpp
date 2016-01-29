@@ -16,10 +16,7 @@
 #include "Density_Builder.h"
 
 /*********************************************************************************
-   This file contains the following functions:
-   
-   int System::scf(std::string method)
-
+ 
 *********************************************************************************/
 
 double p_up(double e, double e_up, double de){

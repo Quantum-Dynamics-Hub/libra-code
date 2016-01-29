@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libhamiltonian_generic.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_HAMILTONIAN_GENERIC_H
 #define LIB_HAMILTONIAN_GENERIC_H
@@ -15,7 +20,10 @@
 
 #include "Hamiltonian.h"
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_generic namespace
 namespace libhamiltonian_generic{
 
 

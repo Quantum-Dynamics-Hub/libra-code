@@ -1,27 +1,65 @@
+/*********************************************************************************
+* Copyright (C) 2015 Alexey V. Akimov
+*
+* This file is distributed under the terms of the GNU General Public License
+* as published by the Free Software Foundation, either version 2 of
+* the License, or (at your option) any later version.
+* See the file LICENSE in the root directory of this distribution
+* or <http://www.gnu.org/licenses/>.
+*
+*********************************************************************************/
+/**
+  \file SCF_oda_disk.cpp
+  \brief The file implements the self-consistent field (SCF) algorithm for solving 
+  stationary Schrodinger's equation using the optimal damping algorithm (ODA) with
+  matrix storage on disk (binary files)
+    
+*/
+
 #include "SCF.h"
 
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
-namespace libhamiltonian_atomistic{
-namespace libhamiltonian_qm{
 
+/// libhamiltonian_atomistic namespace
+namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
+namespace libhamiltonian_qm{
 
 
 
 double scf_oda_disk(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
            Control_Parameters& prms,Model_Parameters& modprms,
            vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, int BM){
+/**
+  This function implements the SCF based on the optimal damping algorithm (ODA)
+  which uses fractional occupation numbers, leading to robust convergence in difficult cases
+  See more details in: 
+  [1] Kudin K.N.; Scuseria, G.E.; Cances, E. J. Chem. Phys. 116, 8255 (2002)
+  [2] Cances J. Chem. Phys. 114, 10616 (2001) 
+
+  In this version we will try using as few temporary matrices as possible, the rest will be stored on the disk via I/O
+  This is good for large systems, when you run out of RAM, but may be slower than non-disk version, especially if the
+  disk access is slow.
+
+  When the optimization step is fixed, this method becomes the density mixing scheme
+  Also note that for spin-polarized calculations the present implementation may or may not work - we still need
+  to implement a more rigorous approach for spin-polarized wavefunctions
 
 
-/// This function implements the SCF based on the optimal damping algorithm (ODA)
-/// which uses fractional occupation numbers, leading to robust convergence in difficult cases
-/// See more details in: 
-/// [1] Kudin K.N.; Scuseria, G.E.; Cances, E. J. Chem. Phys. 116, 8255 (2002)
-/// [2] Cances J. Chem. Phys. 114, 10616 (2001) 
-///
-/// In this version we will try using as few temporary matrices as possible, the rest will be stored on the disk via I/O
+  \param[in,out] el The pointer to the object containing all the electronic structure information (MO-LCAO coefficients, 
+  density matrix, Fock, etc)
+  \param[in,out] syst The reference to the object containing all the nuclear information - geometry and atomic types
+  \param[in] basis_ao The vector of AO objects - the AO basis for given calculations
+  \param[in] prms The object that contains all the parameters controlling the simulation - all settings, flags, etc.
+  \param[in,out] modprms The object that contains all the Hamiltonian parameters for given system and method choice
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] BM Benchmark flag - if =1 - do some benchmarking, if =0 - don't do it
 
-//  int BM = 1; // bemchmark flag
+  Returns the converged total electronic energy 
+*/
 
   int i;
   double lamb_min;
@@ -667,6 +705,35 @@ double scf_oda_disk(Electronic_Structure& el, System& syst, vector<AO>& basis_ao
            Control_Parameters& prms,Model_Parameters& modprms,
            vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, int BM
 ){
+/**
+  Python-friendly version
+  This function implements the SCF based on the optimal damping algorithm (ODA)
+  which uses fractional occupation numbers, leading to robust convergence in difficult cases
+  See more details in: 
+  [1] Kudin K.N.; Scuseria, G.E.; Cances, E. J. Chem. Phys. 116, 8255 (2002)
+  [2] Cances J. Chem. Phys. 114, 10616 (2001) 
+
+  In this version we will try using as few temporary matrices as possible, the rest will be stored on the disk via I/O
+  This is good for large systems, when you run out of RAM, but may be slower than non-disk version, especially if the
+  disk access is slow.
+
+  When the optimization step is fixed, this method becomes the density mixing scheme
+  Also note that for spin-polarized calculations the present implementation may or may not work - we still need
+  to implement a more rigorous approach for spin-polarized wavefunctions
+
+
+  \param[in,out] el The object containing all the electronic structure information (MO-LCAO coefficients, 
+  density matrix, Fock, etc)
+  \param[in,out] syst The reference to the object containing all the nuclear information - geometry and atomic types
+  \param[in] basis_ao The vector of AO objects - the AO basis for given calculations
+  \param[in] prms The object that contains all the parameters controlling the simulation - all settings, flags, etc.
+  \param[in,out] modprms The object that contains all the Hamiltonian parameters for given system and method choice
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] BM Benchmark flag - if =1 - do some benchmarking, if =0 - don't do it
+
+  Returns the converged total electronic energy 
+*/
 
   return scf_oda_disk(&el,syst,basis_ao,  prms,modprms,  atom_to_ao_map,ao_to_atom_map, BM);
 }

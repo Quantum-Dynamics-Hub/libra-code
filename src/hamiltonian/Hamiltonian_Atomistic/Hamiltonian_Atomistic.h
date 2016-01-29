@@ -8,24 +8,29 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_Atomistic.h
+  \brief The file describes the atomistic Hamiltonian class (derived from the generic one)
+  for calculations of atomistic systems
+    
+*/
 
 #ifndef HAMILTONIAN_ATOMISTIC_H
 #define HAMILTONIAN_ATOMISTIC_H
 
 #include "../Hamiltonian_Generic/Hamiltonian.h"
-//#include "Hamiltonian_MM/Hamiltonian_MM.h"
 #include "Hamiltonian_MM/libhamiltonian_mm.h"
 #include "Hamiltonian_QM/libhamiltonian_qm.h"
-
 #include "../../chemobjects/libchemobjects.h"
-//#include "../../converters/libconverters.h"
 
 
 using namespace libchemobjects;
 using namespace libchemobjects::libchemsys;
 
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
 
 using namespace libmmath;
@@ -35,22 +40,26 @@ using namespace libhamiltonian_qm;
 
 
 class Hamiltonian_Atomistic : public Hamiltonian{
+/**
+  The class for atomistic Hamiltonian calculations
+*/
 
-  System* _syst;          // reference to the system object
-  vector<int> ham_types;  // we can have several types
-
+  System* _syst;          ///< reference to the system object (which can be allocated internally, or can be an external object)
+  vector<int> ham_types;  ///< we can have several types of Hamiltonians. Their status is kept in this array:
+                          ///< ham_types[0] - is the status of MM Hamiltonian (0 -not set, 1 - ready to use)
+                          ///< ham_types[1] - is the status of QM Hamiltonian (0 -not set, 1 - ready to use)
   
 public:
 
   // Data members:
-  listHamiltonian_MM*  mm_ham;   // mm part: type = 0
-  listHamiltonian_QM*  qm_ham;   // qm part: type = 1
+  listHamiltonian_MM*  mm_ham;   ///< mm part: type = 0 This is the list of classical (MM) Hamiltonians for the sub-systems (e.g. bonds, angles, etc.)
+  listHamiltonian_QM*  qm_ham;   ///< qm part: type = 1 This is the list of quantum (QM) Hamiltonians for the sub-systems (e.g. fragments, blocks, etc)
 
 
-  // Constructor: only allocates memory and sets up related variables
+  /// Constructor: only allocates memory and sets up related variables
   Hamiltonian_Atomistic(int, int);
 
-  // Setups
+  /// Setups the type of Hamiltonian for this system
   void set_Hamiltonian_type(std::string); 
 
 
@@ -109,7 +118,7 @@ public:
   void compute();
 */
 //  void compute();
-  void set_system(System& syst){ _syst = &syst; }  // by reference
+  void set_system(System& syst){ _syst = &syst; }  ///< Making the internal _syst variable to point to the external object (binding)
   void compute_diabatic();
   void compute_adiabatic();
 
@@ -118,7 +127,7 @@ public:
 
 };
 
-typedef std::vector<Hamiltonian_Atomistic> Hamiltonian_AtomisticList;
+typedef std::vector<Hamiltonian_Atomistic> Hamiltonian_AtomisticList; ///< data type for keeping a list of atomistic Hamiltonians
 
 
 }// namespace libhamiltonian_atomistic

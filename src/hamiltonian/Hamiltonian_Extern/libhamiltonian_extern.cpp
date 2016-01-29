@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libhamiltonian_extern.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <memory> // for std::auto_ptr<>
 #include <boost/python.hpp>
@@ -17,11 +22,19 @@
 
 using namespace boost::python;
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_extern namespace
 namespace libhamiltonian_extern{
 
 
 void export_hamiltonian_extern_objects(){
+/** 
+  \brief Exporter of the libhamiltonian_extern classes and functions
+
+*/
+
 
   class_<Hamiltonian_Extern, bases<Hamiltonian> >("Hamiltonian_Extern",init<int,int>())
       .def("__copy__", &generic__copy__<Hamiltonian_Extern>)

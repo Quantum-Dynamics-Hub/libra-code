@@ -8,18 +8,30 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file System_methods6.cpp
+  \brief The file implements various procedures for simulation of the chemical system
+    
+*/
 
 #include "System.h"
 
 using namespace libmmath::librandom;
 
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libchemsys namespace
 namespace libchemsys{
 
 
 
 
 void System::cool_atoms(){
+/** 
+  Sets linear and angular momenta and velocities of all atoms, as well as their forces to zero.
+*/
+
   for(int i=0;i<Number_of_atoms;i++){
     Atoms[i].Atom_RB.scale_angular_(0.0);
     Atoms[i].Atom_RB.scale_linear_(0.0);
@@ -28,6 +40,10 @@ void System::cool_atoms(){
 }
 
 void System::cool_fragments(){
+/** 
+  Sets linear and angular momenta and velocities of all fragments, as well as their forces to zero.
+*/
+
   for(int i=0;i<Number_of_fragments;i++){
     Fragments[i].Group_RB.scale_angular_(0.0);
     Fragments[i].Group_RB.scale_linear_(0.0);
@@ -42,6 +58,10 @@ void System::cool(){
 
 
 void System::zero_atom_forces(){
+/** 
+  Sets forces on all atoms to zero.
+*/
+
   is_stress_at = 0;
   is_stress_fr = 0;
   is_stress_ml = 0;
@@ -49,6 +69,10 @@ void System::zero_atom_forces(){
 }
 
 void System::zero_fragment_forces(){
+/** 
+  Sets forces on all fragments to zero.
+*/
+
   is_stress_at = 0;
   is_stress_fr = 0;
   is_stress_ml = 0;
@@ -56,20 +80,36 @@ void System::zero_fragment_forces(){
 }
 
 void System::zero_fragment_torques(){
+/** 
+  Sets torques on all fragments to zero.
+*/
+
   for(int i=0;i<Number_of_fragments;i++){ Fragments[i].Group_RB.rb_torque_e = 0.0; }
 }
 
 void System::zero_forces(){
+/** 
+  Sets all atomic and fragmental forces to zero.
+*/
+
   zero_atom_forces();
   zero_fragment_forces();
 }
 
 void System::zero_forces_and_torques(){
+/** 
+  Sets all atomic and fragmental forces to zero. Sets all fragmental torques to zero.
+*/
+
   zero_forces();
   zero_fragment_torques();
 }
 
 void System::update_fragment_forces(){
+/** 
+  Recompute total forces acting on all fragments from the corresponding atomic forces
+*/
+
   for(int i=0;i<Number_of_fragments;i++){
     for(int j=0;j<Fragments[i].Group_Size;j++){
       int at_indx = Fragments[i].globAtom_Index[j];
@@ -79,6 +119,10 @@ void System::update_fragment_forces(){
 }
 
 void System::update_fragment_torques(){
+/** 
+  Recompute total torques (in body frame) acting on all fragments from the corresponding atomic forces and the properties of RB
+*/
+
   for(int i=0;i<Number_of_fragments;i++){
     for(int j=0;j<Fragments[i].Group_Size;j++){
       int at_indx = Fragments[i].globAtom_Index[j];
@@ -88,6 +132,10 @@ void System::update_fragment_torques(){
 }
 
 void System::update_fragment_forces_and_torques(){
+/** 
+  Recompute total forces and torques (in body frame) acting on all fragments from the corresponding atomic forces and the properties of RB
+*/
+
   for(int i=0;i<Number_of_fragments;i++){
     for(int j=0;j<Fragments[i].Group_Size;j++){
       int at_indx = Fragments[i].globAtom_Index[j];
@@ -99,47 +147,84 @@ void System::update_fragment_forces_and_torques(){
 }
 
 void System::save_forces(vector<VECTOR>& frcs){
-// This function extracts current forces on fragments and saves them
-// in external vector <frcs>
+/** 
+  \param[out] frcs The output - the vector of fragmental forces
+
+  This function extracts current forces on fragments and saves them
+  in external vector <frcs>
+*/
+
   VECTOR x(0.0,0.0,0.0);
   frcs = std::vector<VECTOR>(Number_of_fragments,x);
   for(int i=0;i<Number_of_fragments;i++){  frcs[i] = Fragments[i].Group_RB.rb_force; }
 }
 
 void System::save_torques(vector<VECTOR>& trcs){
-// This function extracts current forces on fragments and saves them
-// in external vector <trcs>
+/** 
+  \param[out] trcs The output - the vector of fragmental torques
+
+  This function extracts current forces on fragments and saves them
+  in external vector <trcs>
+*/
+
   VECTOR x(0.0,0.0,0.0);
   trcs = std::vector<VECTOR>(Number_of_fragments,x);
   for(int i=0;i<Number_of_fragments;i++){  trcs[i] = Fragments[i].Group_RB.rb_torque_e; }
 }
 
 void System::load_forces(vector<VECTOR>& frcs){
-// This function assignes external forces <frcs> to
-// current forces on fragments 
+/** 
+  \param[in] frcs The external forces which we want to assign to the internal fragmental forces
+
+  This function assignes external forces <frcs> to
+  current forces on fragments 
+*/
+
   if(frcs.size()==Number_of_fragments){
     for(int i=0;i<Number_of_fragments;i++){  Fragments[i].Group_RB.rb_force = frcs[i]; }
   }
 }
 
 void System::load_torques(vector<VECTOR>& trcs){
-// This function assignes external torques <trcs> to
-// current torques on fragments
+/** 
+  \param[in] trcs The external torques which we want to assign to the internal fragmental torques (body frame)
+
+  This function assignes external torques <trcs> to
+  current torques on fragments
+*/
+
   if(trcs.size()==Number_of_fragments){
     for(int i=0;i<Number_of_fragments;i++){  Fragments[i].Group_RB.rb_torque_e = trcs[i]; }
   }
 }
 
 void System::save_stress(MATRIX3x3& strs){
+/**
+  \param[out] strs The variable into which the internal fragmental stress tensor will be copied
+
+  Saves the internal fragmental stress tensor into the external variable
+*/
+
   strs = stress_fr;
 }
 
 void System::increment_stress(MATRIX3x3& strs){
+/**
+  \param[out] strs The amount of the fragmental stress increment.
+
+  Increment the internal fragmental stress tensor by a given value 
+*/
+
   stress_fr += strs;
 }
 
 void System::save_respa_state(std::string respa_type){
+/**
+  \param[in] respa_type Controls into which internal variable the present forces and torques should be saved
+  Allowed values are: "fast" and "medium"
 
+  Saves the present fragmental forces and torques into iternal (private) varables for RESPA-calculations 
+*/
 // Former version: memory leak, memory-intensive
   VECTOR x(0.0,0.0,0.0);
   std::vector<VECTOR> frcs(Number_of_fragments,x);
@@ -171,6 +256,13 @@ void System::save_respa_state(std::string respa_type){
 }
 
 void System::load_respa_state(std::string respa_type){
+/**
+  \param[in] respa_type Controls from which internal variable the present forces and torques will be loaded
+  Allowed values are: "fast" and "medium"
+
+  Loads the present fragmental forces and torques from the iternal (private) varables for RESPA-calculations 
+*/
+
 
   VECTOR x(0.0,0.0,0.0);
   std::vector<VECTOR> frcs(Number_of_fragments,x);
@@ -225,6 +317,11 @@ void System::load_respa_state(std::string respa_type){
 
 
 void System::init_fragments(){
+/**
+  Initialize some basic properties of the framents: total masses, tensor moments, rotational parameters,
+  basis transformation matrices, etc. Also compute the numbers of rotational and translational DOF for this fragment.
+*/
+
   Nf_t = 0;     is_Nf_t = 1;
   Nf_r = 0;     is_Nf_r = 1;
   for(int i=0;i<Number_of_fragments;i++){
@@ -249,6 +346,12 @@ void System::init_fragments(){
 }
 
 void System::init_molecules(){
+/**
+  Initialize some basic properties of all framents included in the molecule: total masses, tensor moments, rotational parameters,
+  basis transformation matrices, etc. Also compute the numbers of rotational and translational DOF for this fragment.
+  Also, repeat these all procedures for the entire molecule considered as a rigid body.
+*/
+
 
   init_fragments();
 
@@ -272,6 +375,9 @@ void System::init_molecules(){
 }
 
 void System::init_box_origin(){
+/**
+  Initialize the box origin to be the at the atom with the most negative coordinates in all 3 dimensions
+*/
   Box_origin = Atoms[0].Atom_RB.rb_cm;
   for(int i=0;i<Number_of_atoms;i++){
     if(Atoms[i].Atom_RB.rb_cm.x<Box_origin.x){ Box_origin.x = Atoms[i].Atom_RB.rb_cm.x; }
@@ -282,10 +388,11 @@ void System::init_box_origin(){
 }
 
 void System::init_box(){
-/******************************************************************
+/**
   This function automatically determines the size of the box
   based on the system size. The box will be cubical or parallelepiped
-******************************************************************/
+*/
+
   double maxx, maxy,maxz;
   VECTOR rij;
   maxx = maxy = maxz = 0.0;
@@ -333,9 +440,14 @@ void System::init_box(){
 }
 
 void System::init_box(VECTOR tv1,VECTOR tv2,VECTOR tv3){
-/******************************************************************
+/**
+  \param[in] tv1 The vector defining the "a" unit cell direction
+  \param[in] tv2 The vector defining the "b" unit cell direction
+  \param[in] tv3 The vector defining the "c" unit cell direction
+
   This function creats the box based on argument vectors
-******************************************************************/
+*/
+
   Box.init(tv1,tv2,tv3); is_Box = 1;
   Boxold.init(tv1,tv2,tv3); is_Boxold = 1;
   if(!is_Box_origin){ init_box_origin(); }
@@ -351,10 +463,15 @@ void System::init_box(VECTOR tv1,VECTOR tv2,VECTOR tv3){
 }
 
 void System::init_box(double maxx,double maxy,double maxz){
-/******************************************************************
+/**
+  \param[in] maxx The length of the "a" (Cartesian X) unit cell dimension
+  \param[in] maxy The length of the "b" (Cartesian Y) unit cell dimension
+  \param[in] maxz The length of the "c" (Cartesian Z) unit cell dimension
+
   This function creates the parralelepiped box with dimensions
-  given by argument
-******************************************************************/
+  given by the arguments
+*/
+
   VECTOR tv1,tv2,tv3;
   tv1.x = maxx; tv1.y = 0.0;  tv1.z = 0.0;
   tv2.x = 0.0;  tv2.y = maxy; tv2.z = 0.0;
@@ -405,15 +522,19 @@ void System::apply_atom_pbc(std::string pbc_type){
 */
 
 void System::apply_frag_pbc(std::string pbc_type){
-/****************************************************************
- This function shifts the centers of mass of all fragments such
- that they are inside of the box [0,X] x [0,Y] x [0,Z]
- Because the basic unit of all simulations is rigid body(fragment)
- the PBC will be applied to it. This will cure the problem of several
- molecules grouped into one fragment. However, if the molecule is
- build up of several fragments, the special care should be taken for
- bonded interactions (bonds, angles, dihedrals,exclusions, etc.)!
-*****************************************************************/
+/**
+  \param[in] pbc_type The parameter controlling the periodicity of the unit cell
+  Can take values: "a", "b", "c", "ab", "ac", "bc", and "abc"
+
+  This function shifts the centers of mass of all fragments such
+  that they are inside of the box [0,X] x [0,Y] x [0,Z]
+  Because the basic unit of all simulations is rigid body(fragment)
+  the PBC will be applied to it. This will cure the problem of several
+  molecules grouped into one fragment. However, if the molecule is
+  build up of several fragments, the special care should be taken for
+  bonded interactions (bonds, angles, dihedrals,exclusions, etc.)!
+*/
+
   if(is_Box){
   MATRIX3x3 invBox;
   invBox = Box.inverse();
@@ -546,6 +667,9 @@ void System::apply_mol_pbc(std::string pbc_type){
 
 
 void System::fix_fragment_translation(int gr_id){
+/**
+  Fix the translation of the fragments with the given ID
+*/
   int indx = get_fragment_index_by_fragment_id(gr_id);
   if(indx>-1){ 
     cout<<"Fixing fragment with indx = "<<indx<<". Translational DOFs\n";
@@ -555,6 +679,10 @@ void System::fix_fragment_translation(int gr_id){
 }
 
 void System::fix_fragment_rotation(int gr_id){
+/**
+  Fix the rotation of the fragments with the given ID
+*/
+
   int indx = get_fragment_index_by_fragment_id(gr_id);
   if(indx>-1){
     cout<<"Fixing fragment with indx = "<<indx<<". Rotational DOFs\n";
@@ -564,6 +692,10 @@ void System::fix_fragment_rotation(int gr_id){
 }
 
 void System::fix_fragment(int gr_id){
+/**
+  Fix the translation and rotation of the fragments with the given ID
+*/
+
   int indx = get_fragment_index_by_fragment_id(gr_id);
   if(indx>-1){ 
     cout<<"Fixing fragment with indx = "<<indx<<". Translational DOFs\n";
@@ -666,6 +798,10 @@ double System::energy_respa(std::string s_respa_type){
 */
 
 double System::ekin_tr(){
+/**
+  Returns the translational kinetic energy of the COMs of all fragments in the system
+*/
+
   double res = 0.0;
   for(int i=0;i<Number_of_fragments;i++){
     res += Fragments[i].Group_RB.ekin_tr();
@@ -674,6 +810,10 @@ double System::ekin_tr(){
 }
 
 double System::ekin_tr_int(){
+/**
+  Returns the translational kinetic of the COMs of the whole system
+*/
+
   double res = 0.0;
   VECTOR p_tot; p_tot = 0.0; // total momentum of the system
   double m_tot; m_tot = 0.0; // total mass of the system
@@ -687,6 +827,10 @@ double System::ekin_tr_int(){
 
 
 double System::ekin_rot(){
+/**
+  Returns the rotational kinetic energy of the COMs of all fragments in the system
+*/
+
   double res = 0.0;
   for(int i=0;i<Number_of_fragments;i++){
     res += Fragments[i].Group_RB.ekin_rot();
@@ -695,6 +839,10 @@ double System::ekin_rot(){
 }
 
 double System::volume(){
+/** 
+  Returns the volume of the simulation cell. Assume 10^10, if no Box was defined (e.g. non-periodic systems)
+*/
+
   double res = 1e+10;
   if(is_Box){ res = Box.Determinant(); }
 // else{ init_box(); res = Box.Determinant(); } // This is wrong!
@@ -703,6 +851,11 @@ double System::volume(){
 
 
 MATRIX3x3 System::pressure_tensor(){  
+/**
+  Returns the pressure tensor for the system. The type of the tensor to compute is controlled by the
+  stress_opt variable. The variable can take values: "at", "fr", "ml" for the pressure tensors to be computed
+  on the basis of atomic, fragmental, or molecular centers of mass.
+*/
 
   MATRIX3x3 P_tens,Pid,Pvir,tmp;
 
@@ -776,20 +929,30 @@ MATRIX3x3 System::pressure_tensor(){
 
 
 void System::init_fragment_velocities(double Temp){
+/**
+  \param[in] Temp Target temperature, in K
+
+  Initializes fragmental velocities (momenta) such that the total linear and angular moments are zeroes
+  and the total kinetic energy corresponds to the input temperature given by Temp.
+*/
+
   VECTOR TOT_P,TOT_L; TOT_P = 0.0; TOT_L = 0.0;
   init_fragment_velocities(Temp,TOT_P,TOT_L);
 }
 
 void System::init_fragment_velocities(double Temp,VECTOR TOT_P,VECTOR TOT_L){
-  // This approach sets linear and angular momenta independently
-  // and makes sure that the total linear and angular momenta are
-  // proportional to corresponding arguments (or equal if this is consistent)
-  // with the Temperature parameters
-  // In any case the temperature is enforced to be constrained, while the
-  // amplitude of the total momenta may be scaled if needed
+/**
+  \param[in] Temp The target temperature, in K
+  \param[in] TOT_P The expected total linear momentum (or at least its direction) of the system after initialization
+  \param[in] TOT_L The expected total angular momentum (or at least its direction) of the system after initialization
 
-//  VECTOR L_tot; L_tot = 0.0;
-//  VECTOR P_tot; P_tot = 0.0;
+  This method sets linear and angular momenta independently
+  and makes sure that the total linear and angular momenta are
+  proportional to corresponding arguments (or equal if this is consistent)
+  with the Temperature parameters
+  In any case, the temperature is enforced to be constrained, while the
+  amplitude of the total momenta may be scaled if needed
+*/
 
   // Initialize random number generator
   srand( (unsigned)time(NULL) );

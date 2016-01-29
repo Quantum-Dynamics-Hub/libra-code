@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_QM.cpp
+  \brief The file implements functions and for quantum-mechanical Hamiltonian calculations as well
+  as the classes for organizing such computations in an object-oriented way. 
+*/
 
 #include "Hamiltonian_QM.h"
 #include "SCF.h"
@@ -18,9 +23,6 @@ namespace libhamiltonian_atomistic{
 namespace libhamiltonian_qm{
 
 
-/****************************************************************************
-
-****************************************************************************/
 
 void Hamiltonian_core(
   System& syst, vector<AO>& basis_ao, 

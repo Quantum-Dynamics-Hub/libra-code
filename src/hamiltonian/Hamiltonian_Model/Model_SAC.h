@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Model_SAC.h
+  \brief The file describes the functions for computing SAC (single avoided crossing) Hamiltonian and its derivatives
+    
+*/
 
 #ifndef MODEL_SAC_H
 #define MODEL_SAC_H
@@ -15,7 +20,10 @@
 #include "../../mmath/libmmath.h"
 using namespace libmmath;
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_model namespace
 namespace libhamiltonian_model{
 
 

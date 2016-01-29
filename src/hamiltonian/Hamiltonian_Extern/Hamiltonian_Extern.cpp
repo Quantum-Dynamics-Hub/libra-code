@@ -8,14 +8,20 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_Extern.cpp
+  \brief The file implements the external Hamiltonian class - for interface with 3-rd party codes    
+*/
 
 
 #include <complex>
 #include <cmath>
 #include "Hamiltonian_Extern.h"
 
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_extern namespace
 namespace libhamiltonian_extern{
 
 using namespace libmmath;
@@ -28,6 +34,14 @@ using std::sqrt;
 
 
 Hamiltonian_Extern::Hamiltonian_Extern(int _nelec, int _nnucl){
+/**
+  \param[in] _nelec The number of electronic basis states 
+  \param[in] _nnucl The number of nuclear DOF
+
+  This Hamiltonian_Extern constructor does not allocate any internal memory, so make sure 
+  you create external objects for all variables: ham_dia, ham_adi, d1ham_dia, d1ham_adi, d2ham_dia and bind them
+  to the internal variables after the Hamiltoninan_Extern object is created
+*/
 
   cout<<"Warning: Hamiltonian_Extern does not allocate any internal memory, so make sure \
   you create external objects for all variables: ham_dia, ham_adi, d1ham_dia, d1ham_adi, d2ham_dia and bind them \
@@ -74,6 +88,13 @@ Hamiltonian_Extern::Hamiltonian_Extern(int _nelec, int _nnucl){
 }
 
 void Hamiltonian_Extern::set_adiabatic_opt(int ad_opt){
+/**
+  \param[in] ad_opt The new adiabatic_opt value to set:
+  0 - use provided adiabatic Hamiltonian and its derivatives directly (default)
+  1 - use provided diabatic Hamiltonian and its derivatives, and the transformation from diabatic to adiabatic basis
+
+  Sets the adiabatic_opt variable
+*/
 
   if(ad_opt==0 || ad_opt==1){ adiabatic_opt = ad_opt;  }
   else{
@@ -86,6 +107,12 @@ void Hamiltonian_Extern::set_adiabatic_opt(int ad_opt){
 }
 
 void Hamiltonian_Extern::bind_ham_dia(MATRIX& _ham_dia){
+/**
+  \param[in] _ham_dia The external matrix containing the diabatic Hamiltonian
+
+  Makes the internal pointer, ham_dia, to point to the external object containing diabatic Hamiltonian matrix
+*/
+
   if(_ham_dia.num_of_cols!=nelec){
     cout<<"Error in Hamiltonian_Extern::bind_ham_dia\n";
     cout<<"Expected number of electronic DOF = "<<nelec<<" the number of cols in the input matrix is = "<<_ham_dia.num_of_cols<<"\n";
@@ -104,6 +131,14 @@ void Hamiltonian_Extern::bind_ham_dia(MATRIX& _ham_dia){
 }
 
 void Hamiltonian_Extern::bind_d1ham_dia(vector<MATRIX>& _d1ham_dia){
+/**
+  \param[in] _d1ham_dia The external vector of matrices containing the 1-st order derivatives of diabatic Hamiltonian
+  w.r.t. all nuclear DOF
+
+  Makes the internal pointers, d1ham_dia[i], to point to the external objects containing the 1-st order 
+  derivatives of diabatic Hamiltonian matrix w.r.t. nuclear DOF
+*/
+
   int sz = _d1ham_dia.size();
 
   if(sz!=nnucl){
@@ -133,6 +168,14 @@ void Hamiltonian_Extern::bind_d1ham_dia(vector<MATRIX>& _d1ham_dia){
 }
 
 void Hamiltonian_Extern::bind_d2ham_dia(vector<MATRIX>& _d2ham_dia){
+/**
+  \param[in] _d2ham_dia The external vector of matrices containing the 2-nd order derivatives of diabatic Hamiltonian
+  w.r.t. all nuclear DOF
+
+  Makes the internal pointers, d2ham_dia[i], to point to the external objects containing the 2-nd order 
+  derivatives of diabatic Hamiltonian matrix w.r.t. nuclear DOF
+*/
+
   int sz = _d2ham_dia.size();
 
   if(sz!=nnucl*nnucl){
@@ -163,6 +206,12 @@ void Hamiltonian_Extern::bind_d2ham_dia(vector<MATRIX>& _d2ham_dia){
 
 
 void Hamiltonian_Extern::bind_ham_adi(MATRIX& _ham_adi){
+/**
+  \param[in] _ham_adi The external matrix containing the adiabatic Hamiltonian
+
+  Makes the internal pointer, ham_adi, to point to the external object containing adiabatic Hamiltonian matrix
+*/
+
   if(_ham_adi.num_of_cols!=nelec){
     cout<<"Error in Hamiltonian_Extern::bind_ham_adi\n";
     cout<<"Expected number of electronic DOF = "<<nelec<<" the number of cols in the input matrix is = "<<_ham_adi.num_of_cols<<"\n";
@@ -181,6 +230,14 @@ void Hamiltonian_Extern::bind_ham_adi(MATRIX& _ham_adi){
 }
 
 void Hamiltonian_Extern::bind_d1ham_adi(vector<MATRIX>& _d1ham_adi){
+/**
+  \param[in] _d1ham_adi The external vector of matrices containing the 1-st order derivatives of adiabatic Hamiltonian
+  w.r.t. all nuclear DOF
+
+  Makes the internal pointers, d1ham_adi[i], to point to the external objects containing the 1-st order 
+  derivatives of adiabatic Hamiltonian matrix w.r.t. nuclear DOF
+*/
+
   int sz = _d1ham_adi.size();
 
   if(sz!=nnucl){
@@ -213,6 +270,9 @@ void Hamiltonian_Extern::bind_d1ham_adi(vector<MATRIX>& _d1ham_adi){
 
 
 Hamiltonian_Extern::~Hamiltonian_Extern(){
+/** 
+  Destructor - does nothing at all at this point
+*/
   int i;
 
 /* 
@@ -236,6 +296,14 @@ Hamiltonian_Extern::~Hamiltonian_Extern(){
 
 
 void Hamiltonian_Extern::compute_diabatic(){
+/**
+  Performs the "computations" of the diabatic Hamiltonian and its derivatives
+  Basically, we only check if the ham_dia and d1ham_dia have been bound to the
+  external variables, which contain the results.
+  If everything is bound, then update the status of diabatic computations,
+  if not - there appropriate error message will be printed out
+  
+*/
 
   if(status_dia == 0){ // only compute this is the result if not up to date
 
@@ -245,13 +313,13 @@ void Hamiltonian_Extern::compute_diabatic(){
     if(bs_ham_dia == 0){  
       cout<<"Error in Hamiltonian_Extern::compute_diabatic\n";
       cout<<"Diabatic Hamiltonian has not been bound to the Hamiltonian_Extern object\n";
-      cout<<"us \"bind_ham_dia\" function\n";
+      cout<<"use \"bind_ham_dia\" function\n";
       exit(0);
     }
     if(bs_d1ham_dia == 0){  
       cout<<"Error in Hamiltonian_Extern::compute_diabatic\n";
       cout<<"Derivatives of diabatic Hamiltonian have not been bound to the Hamiltonian_Extern object\n";
-      cout<<"us \"bind_d1ham_dia\" function\n";
+      cout<<"use \"bind_d1ham_dia\" function\n";
       exit(0);
     }
 
@@ -266,16 +334,44 @@ void Hamiltonian_Extern::compute_diabatic(){
 
 
 void Hamiltonian_Extern::compute_adiabatic(){
-// This function computes adiabatic PESs and derivative couplings
-// Here, we have 2 options:
-//  - adiabatic Hamiltonian and its derivatives are bound - we simply use them
-//  - diabatic Hamiltonian and its derivatives are bound (and also adiabatic, but they just used a memory arrays) -
-//    - we need to perfrom diabatic -> adiabatic transformation, like in the Hamiltonian_Model case
-// To distinguish these two cases, we use additional parameter - "adiabatic_opt"
+/** This function "computes" adiabatic PESs (energies and derivatives) and derivative couplings
+  Here, we have 2 options:
+  - adiabatic Hamiltonian and its derivatives are bound - we simply use them ("adiabatic_opt==0")
+  - diabatic Hamiltonian and its derivatives are bound (bud we use "adiabatic_opt ==1" ) -
+    - we need to perfrom diabatic -> adiabatic transformation, like in the Hamiltonian_Model case
+
+ To distinguish these two cases, we use additional parameter - "adiabatic_opt"
+*/
  
   if(adiabatic_opt==0){ 
-    // Everything is done already - don't do anything special
-  }
+    // Everything is done already - don't do anything special, other than check the bindings
+
+    if(status_adi == 0){ // only compute this is the result if not up to date
+
+      // setup ham_adi, d1ham_adi, and d2ham_adi matrices, so below we will basically 
+      // check regarding the status of bindings
+
+      if(bs_ham_adia == 0){  
+        cout<<"Error in Hamiltonian_Extern::compute_adiabatic (with option adiabatic_opt == 0)\n";
+        cout<<"Adiabatic Hamiltonian has not been bound to the Hamiltonian_Extern object\n";
+        cout<<"use \"bind_ham_adi\" function\n";
+        exit(0);
+      }
+      if(bs_d1ham_adi == 0){  
+        cout<<"Error in Hamiltonian_Extern::compute_adiabatic (with option adiabatic_opt == 0)\n";
+        cout<<"Derivatives of adiabatic Hamiltonian have not been bound to the Hamiltonian_Extern object\n";
+        cout<<"use \"bind_d1ham_dia\" function\n";
+        exit(0);
+      }
+
+      // Now it is ok, so far we don't care about d2ham_dia matrices!!!  
+
+      // Set status flag 
+      status_adi = 1;
+
+    }//   status_dia == 0
+
+  }// adiabatic_opt == 0
 
   else if(adiabatic_opt==1){
 
@@ -304,7 +400,7 @@ void Hamiltonian_Extern::compute_adiabatic(){
 
     }// status_adi == 0
 
-  }// adiabatic_opt
+  }// adiabatic_opt == 1
   
 }
 

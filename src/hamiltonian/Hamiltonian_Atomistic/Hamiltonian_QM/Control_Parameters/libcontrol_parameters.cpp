@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libcontrol_parameters.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <memory> // for std::auto_ptr<>
 #include <boost/python.hpp>
@@ -17,13 +22,26 @@
 
 using namespace boost::python;
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
+
+/// libcontrol_parameters namespace
 namespace libcontrol_parameters{
 
 
+
 void export_Control_Parameters_objects(){
+/** 
+  \brief Exporter of the libcontrol_parameters classes and functions
+
+*/
+
 
   class_<excitation>("excitation",init<>())
       .def(init<int,int,int,int>())

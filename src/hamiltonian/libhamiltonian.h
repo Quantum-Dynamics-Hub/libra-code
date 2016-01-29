@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libhamiltonian.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_HAMILTONIAN_H
 #define LIB_HAMILTONIAN_H

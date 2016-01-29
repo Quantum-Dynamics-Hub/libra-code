@@ -387,7 +387,7 @@ std::complex<double> Ensemble::ham_D(int traj, int i,int j,int n){
 
 std::complex<double> Ensemble::ham_nac(int traj,int i,int j){ 
 /**
-  \brief Return the nonadiabatic derivative coupling for given trajectory
+  \brief Return the nonadiabatic coupling for given trajectory
 
   The returned coupling depends on the selected representation - can be either diabatic or adiabatic.
   This function does not invoke actual computation - it only returns whatever exists in the internal variables.

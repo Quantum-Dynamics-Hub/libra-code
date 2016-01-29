@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libhamiltonian_qm.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_HAMILTONIAN_QM_H
 #define LIB_HAMILTONIAN_QM_H
@@ -16,9 +21,13 @@
 #include "Hamiltonian_QM.h"
 #include "SCF.h"
 
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
 
 

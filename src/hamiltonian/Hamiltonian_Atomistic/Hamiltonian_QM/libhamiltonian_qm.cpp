@@ -8,6 +8,12 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libhamiltonian_qm.cpp
+  \brief The file implements Python export function
+    
+*/
+
 #define BOOST_PYTHON_MAX_ARITY 30
 #include <memory> // for std::auto_ptr<>
 #include <boost/python.hpp>
@@ -17,12 +23,22 @@
 
 using namespace boost::python;
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
 
 
 void export_Hamiltonian_QM_objects(){
+/** 
+  \brief Exporter of the libhamiltonian_qm classes and functions
+
+*/
+
 
   //----------- Electronic_Structure ------------
   class_<Electronic_Structure>("Electronic_Structure",init<>())

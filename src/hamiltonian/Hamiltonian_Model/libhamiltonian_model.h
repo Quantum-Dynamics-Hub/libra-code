@@ -8,13 +8,21 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libhamiltonian_model.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_HAMILTONIAN_MODEL_H
 #define LIB_HAMILTONIAN_MODEL_H
 
 #include "Hamiltonian_Model.h"
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_model namespace
 namespace libhamiltonian_model{
 
 void export_hamiltonian_model_objects();

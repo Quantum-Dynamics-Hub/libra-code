@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_Model.h
+  \brief The file describes the model Hamiltonian class
+    
+*/
 
 #ifndef HAMILTONIAN_MODEL_H
 #define HAMILTONIAN_MODEL_H
@@ -23,26 +28,30 @@
 #include "Model_sin_2D.h"
 
 
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
 
 using namespace libhamiltonian_generic;
 using namespace libmmath;
 
+/// libhamiltonian_model namespace
 namespace libhamiltonian_model{
 
 
 class Hamiltonian_Model : public Hamiltonian{
+/**
+  This is a class derived from the generic Hamiltonian class, so it inherits many of its properties
+*/
 
-  // General specification of the model
-  int ham_indx;              // model index: 0 - SAC, 1 - DAC, 2 - ECWR, 3 - Marcus, 4 - superexchange (SEXCH), 5 - Rabi2
+  /// General specification of the model: 0 - SAC, 1 - DAC, 2 - ECWR, 3 - Marcus, 4 - superexchange (SEXCH), 5 - Rabi2
+  int ham_indx;    
    
 public:
 
-  // Constructor: only allocates memory and sets up related variables
+  /// Constructor: only allocates memory and sets up related variables
   Hamiltonian_Model(int ham_indx_);
 
-  // Destructor
+  /// Destructor
   ~Hamiltonian_Model();
 
   // Set properties
@@ -72,7 +81,7 @@ public:
 
 };
 
-typedef std::vector<Hamiltonian_Model> Hamiltonian_ModelList;
+typedef std::vector<Hamiltonian_Model> Hamiltonian_ModelList;  /// data type for keeping a list of model Hamiltonians of their derived classes
 
 
 }// namespace libhamiltonian_model

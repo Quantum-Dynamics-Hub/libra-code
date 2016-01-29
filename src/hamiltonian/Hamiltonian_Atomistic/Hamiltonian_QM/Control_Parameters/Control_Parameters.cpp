@@ -8,74 +8,80 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Control_Parameters.cpp
+  \brief The file implement the class that stores the parameters controlling the calculations.     
+*/
 
 #include "Control_Parameters.h"
 
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
+
+/// libcontrol_parameters namespace
 namespace libcontrol_parameters{
 
 
 
-/****************************************************************************
-  This file contains following functions:
- 
-  Control_Parameters::Control_Parameters()
-  void get_parameters_from_file(std::string filename, Control_Parameters& prms, vector<Atom>& atoms)
-
-****************************************************************************/
-
 Control_Parameters::Control_Parameters(){
+/**  
+  Default constructor - sets the parameters to the default values:
+*/
 
   //----------------- All simulation parameters and flags (set to default values) -------------------
   // Convert everything to internal units (mostly atomic)
 
   // <calculations>
-  runtype = "scf";         
-  hamiltonian = "eht";    
-  spin_method = "unrestricted"; 
-  DF = 0;                // no extra output by default, use it only for small systems and for benchmarking purposes
+  runtype = "scf";       /// runtype = "scf"
+  hamiltonian = "eht";    /// hamiltonian = "eht"
+  spin_method = "unrestricted";  /// spin_method = "unrestricted"
+  DF = 0;                /// DF = 0  - no extra output by default, use it only for small systems and for benchmarking purposes
   // </calculations>
 
   // <guess_options>
-  guess_type = "sad";
+  guess_type = "sad";  /// guess_type = "sad"
   // </guess_options>
 
   // <scf_options>
-  scf_algo = "none";     // This is the most robust option
-  use_disk = 0;          // 0 - do not use  disk (faster);  1 - use disk (less memory required)
-  use_rosh = 0;          // use open shell (not to use restricted open-shell)
-  do_annihilate = 0;     // do not do spin annihilation by default
-  pop_opt = 0;           // if = 0 - integer occupations,  if = 1 - fractional occupations based on Fermi distribution
+  scf_algo = "none";     /// scf_algo = "none" - This is the most robust option
+  use_disk = 0;          /// use_disk = 0 
+  use_rosh = 0;          /// use_rosh = 0 
+  do_annihilate = 0;     /// do_annihilate = 0 -  do not do spin annihilation by default
+  pop_opt = 0;           /// pop_opt = 0 - integer occupations
 
-  use_diis = 0;
-  diis_max = 3;
-  diis_start_iter = 0;
+  use_diis = 0;          /// use_diis = 0
+  diis_max = 3;          /// diis_max = 3
+  diis_start_iter = 0;   /// diis_start_iter = 0
 
-  use_level_shift = 0;
-  shift_magnitude = 2.5;
+  use_level_shift = 0;   /// use_level_shift = 0
+  shift_magnitude = 2.5; /// shift_magnitude = 2.5
 
-  use_damping = 0;       // if = 0 - ODA is used (default, robust), if = 1 - damping with constant mixing value is used
-  damping_start = 3;     // 3-rd iteration will start dampbing
-  damping_const = 0.05;  // the smaller the constant, more likely the SCF will convege, but it may be slower than for larger constant
+  use_damping = 0;       /// use_damping = 0 
+  damping_start = 3;     /// damping_start = 3 -  3-rd iteration will start damping
+  damping_const = 0.05;  /// damping_const = 0.05 
 
-  etol = 1e-6;       
-  den_tol = 1e-4;   
-  Niter = 300;       
+  etol = 1e-6;           /// etol = 1e-6
+  den_tol = 1e-4;        /// den_tol = 1e-4
+  Niter = 300;           /// Niter = 300
 
-  degen_tol = 0.2;
+  degen_tol = 0.2;       /// degen_tol = 0.2
   // </scf_options>
   
   // <hamiltonian_options>
-  parameters = "none";
+  parameters = "none";   ///parameters = "none"
   // For EHT
-  eht_params_format = "eht+0";     // default format for EHT parameters
-  eht_formula     = 1;             // weighted formula
-  eht_sce_formula = 0;             // no self-consisten electrostatics by default
-  eht_fock_opt    = 1;             // need self-consistency correction, if SC-EHT is used
-  eht_electrostatics = 0;          // no additional electrostatic effects
+  eht_params_format = "eht+0";  /// eht_params_format = "eht+0" default format for EHT parameters
+  eht_formula     = 1;          /// eht_formula     = 1 - weighted formula
+  eht_sce_formula = 0;          /// eht_sce_formula = 0 - no self-consistent electrostatics by default
+  eht_fock_opt    = 1;          /// eht_fock_opt    = 1 - need self-consistency correction, if SC-EHT is used
+  eht_electrostatics = 0;       /// eht_electrostatics = 0 -  no additional electrostatic effects
   // </hamiltonian_options>
 
 
@@ -157,9 +163,12 @@ Control_Parameters::Control_Parameters(){
 
 
 void get_parameters_from_file(std::string filename, Control_Parameters& prms){
-// filename - name of the input file
-// prms - control parameters
-// atoms - coordinates and properties of atoms (cann't be made part of control parameters)
+/**
+  Read the control parameters into the Control_Parameters object from an input file
+
+  \param[in] filename The name of the input file
+  \param[in,out] prms The object with control parameters
+*/
 
   std::string st;
   vector< vector<std::string> > file;

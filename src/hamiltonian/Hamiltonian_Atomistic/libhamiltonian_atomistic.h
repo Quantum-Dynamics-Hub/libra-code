@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libhamiltonian_atomistic.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_HAMILTONIAN_ATOMISTIC_H
 #define LIB_HAMILTONIAN_ATOMISTIC_H
@@ -15,7 +20,10 @@
 
 #include "Hamiltonian_Atomistic.h"
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
 
 

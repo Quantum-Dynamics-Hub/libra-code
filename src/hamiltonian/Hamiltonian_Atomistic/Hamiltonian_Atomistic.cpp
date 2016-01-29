@@ -8,14 +8,21 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_Atomistic.cpp
+  \brief The file implements the high-level computations in the atomistic Hamiltonians - allowing to
+  mix different resolutions (e.g. classical + quantum) and approaches (different force fields or quantum methods), fragmentation.
+*/
 
 
 #include <complex>
 #include <cmath>
 #include "Hamiltonian_Atomistic.h"
 
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
 
 using namespace libchemobjects;
@@ -34,6 +41,15 @@ using std::sqrt;
 
 
 Hamiltonian_Atomistic::Hamiltonian_Atomistic(int _nelec, int _nnucl){
+/**
+  \param[in] _nelec The number of electronic basis states 
+  \param[in] _nnucl The number of nuclear DOF
+
+  This Hamiltonian_Atomistic constructor allocates internal memory for ham_dia, ham_adi, d1ham_dia, d1ham_adi, 
+  and d2ham_dia and populates them with zeroes. The default representation is selected, status flags are 
+  set to zero (Hamiltonian is not up to date) and the hamiltonian types are initialized to 0 (meaning actual Hamiltonians
+  are not initialized)
+*/
 
   _syst = NULL;
   
@@ -69,6 +85,11 @@ Hamiltonian_Atomistic::Hamiltonian_Atomistic(int _nelec, int _nnucl){
 
 
 void Hamiltonian_Atomistic::set_Hamiltonian_type(std::string ham_type){ // libchemobjects::libchemsys::System& syst){
+/**
+  \param[in] ham_type The type of Hamiltonian to initialize. Options: "MM" and "QM"
+
+  Initialize the selected Hamiltonian type, if not done yet. The adiabatic representation will be chosen.
+*/
 
   if(ham_type=="MM"){
     rep = 1;  // diabatic is same as adiabatic
@@ -90,7 +111,7 @@ void Hamiltonian_Atomistic::set_Hamiltonian_type(std::string ham_type){ // libch
   }
 
   else{
-    cout<<"Error: Unrecognized Hamiltonian type. Supported types are: MM\n";
+    cout<<"Error: Unrecognized Hamiltonian type. Supported types are: \"MM\" and \"QM\" \n";
     cout<<"Exiting...\n"; exit(0);
   }
 
@@ -161,6 +182,10 @@ void Hamiltonian_Atomistic::set_respa_types(std::string inter_type,std::string r
 
 
 Hamiltonian_Atomistic::~Hamiltonian_Atomistic(){
+/**
+  Destructor: Free memory occupied by ham_dia, ham_adi, d1ham_dia, d1ham_adi, d2ham_dia
+*/
+
   int i;
 
   delete ham_dia;
@@ -181,6 +206,17 @@ Hamiltonian_Atomistic::~Hamiltonian_Atomistic(){
 
 
 void Hamiltonian_Atomistic::set_q(vector<double>& q_){
+/**
+  Update Hamiltonian coordinates (all are the real-valued scalars)
+
+  \param[in] q The vector of real-valued coordinates to be used for Hamiltonian calculations.
+  Note: this also sets the status_dia and status_adi variables to zero, impliying the Hamiltonian is not 
+  up to date - which is what we want: since the coordinates are changed, the Hamiltonian must be recomputed
+  From the prafmatic point of view, if you call this function - expect slower performance.
+
+  Keep in mind that this will also change the coordinates of the external system object bound to this Hamiltonian
+*/
+
 
   if(q_.size()!=nnucl){
     cout<<"Error in Hamiltonian_Atomistic::set_q - the size of input array ("<<q_.size()<<") does not match";
@@ -197,6 +233,16 @@ void Hamiltonian_Atomistic::set_q(vector<double>& q_){
 }
 
 void Hamiltonian_Atomistic::set_q(boost::python::list q_){
+/**
+  Update Hamiltonian coordinates (all are the real-valued scalars) - Python-friendly
+
+  \param[in] q The list of real-valued coordinates to be used for Hamiltonian calculations.
+  Note: this also sets the status_dia and status_adi variables to zero, impliying the Hamiltonian is not 
+  up to date - which is what we want: since the coordinates are changed, the Hamiltonian must be recomputed
+  From the prafmatic point of view, if you call this function - expect slower performance.
+
+  Keep in mind that this will also change the coordinates of the external system object bound to this Hamiltonian
+*/
 
   int sz = len(q_);
   vector<double> q__(sz,0.0);
@@ -207,6 +253,20 @@ void Hamiltonian_Atomistic::set_q(boost::python::list q_){
 }
 
 void Hamiltonian_Atomistic::set_v(vector<double>& v_){
+/**
+  Update Hamiltonian velocities (all are real-valued scalars)
+
+  \param[in] v The vector of real-valued velocities to be used for Hamiltonian calculations.
+
+  The velocities are only needed for vibronic Hamiltonian (adiabatic representation) calculations. 
+  Otherwise, they are not used.
+  Only status_adi is set to 0, so only adiabatic Hamiltonian is recomputed.
+  For future: in fact, we only need to update the vibronic Hamiltonian, so we still may save a lot, when adiabatic
+  calculations imply electronic structure calculations
+
+  Keep in mind that this will also change the velocities/momenta of the external system object bound to this Hamiltonian
+*/
+
 
   if(v_.size()!=nnucl){
     cout<<"Error in Hamiltonian_Atomistic::set_v - the size of input array ("<<v_.size()<<") does not match";
@@ -223,6 +283,20 @@ void Hamiltonian_Atomistic::set_v(vector<double>& v_){
 }
 
 void Hamiltonian_Atomistic::set_v(boost::python::list v_){
+/**
+  Update Hamiltonian velocities (all are real-valued scalars) - Python-friendly
+
+  \param[in] v The Python list of real-valued velocities to be used for Hamiltonian calculations.
+
+  The velocities are only needed for vibronic Hamiltonian (adiabatic representation) calculations. 
+  Otherwise, they are not used.
+  Only status_adi is set to 0, so only adiabatic Hamiltonian is recomputed.
+  For future: in fact, we only need to update the vibronic Hamiltonian, so we still may save a lot, when adiabatic
+  calculations imply electronic structure calculations
+
+  Keep in mind that this will also change the velocities/momenta of the external system object bound to this Hamiltonian
+*/
+
 
   int sz = len(v_);
   vector<double> v__(sz,0.0);
@@ -302,11 +376,24 @@ void Hamiltonian_Atomistic::compute(){
 
 */
 void Hamiltonian_Atomistic::compute_diabatic(){
+/**
+  This function computes diabatic PESs and derivative couplings
+
+  For MM - actual computations are performed here and then are used in compute_adiabatic (if needed)
+  For QM - we would call the SCF solver for orbital picture description, but we actually use the 
+  true excitonic description, so the nothing is actually done here for such type of calculations
+  
+  In other words, we use method_option = 1 
+  method_option = 0 is here, but is never reached, since this parameter is 
+  set inside of the code - you'd need to recompile the code to get to tht part). That part is left in the 
+  code for future developments.
+*/
+
   int i;
 
   //cout<<"in Hamiltonian_Atomistic::compute_diabatic()\n";
 
-  if(status_dia == 0){ // only compute this is the result is not up to date
+  if(status_dia == 0){ // only compute this if the result is not up to date
 
     // Zero forces   
     _syst->zero_forces_and_torques();
@@ -407,30 +494,31 @@ void Hamiltonian_Atomistic::compute_diabatic(){
 
 
 void Hamiltonian_Atomistic::compute_adiabatic(){
-// This function computes adiabatic PESs and derivative couplings
+/**
+  This function computes adiabatic PESs and derivative couplings
 
-//------------------------------------------------------------------
-
-// actually, here is gonna be SCF solver - to get adiabatic states
-
-//------------------------------------------------------------------
+  For MM - the actual computations are already done in the compute_diabatic() (called from here)
+  For QM - here is gonna be SCF solver, to get adiabatic states
+  
+  Note: at this point, no diabatic calculations are performed for QM in compute_diabatic - for QM 
+  we use only adiabatic so far. Moreover, we use the total energies/many-electron determinants rather
+  than 1-electron orbitals and their energies - so see only the section which comes with 
+  method_option = 1 (method_option = 0 is there, but is never reached, since this parameter is 
+  set inside of the code - you'd need to recompile the code to get to tht part). That part is left in the 
+  code for future developments.
+*/
 
   //cout<<"in Hamiltonian_Atomistic::compute_adiabatic()\n";
 
   Timer tim1;
-
   compute_diabatic();
 
-//  exit(0);
-
   if(status_adi == 0){
-
     // Zero forces   
     _syst->zero_forces_and_torques();
 
     *ham_adi = 0.0;
     for(int n=0;n<nnucl;n++){    *d1ham_adi[n] = 0.0;    }
-
 
 
     if(ham_types[0]==1){  // MM hamiltonian
@@ -448,13 +536,11 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
       int method_option = 1; // 0 - simple case: energies are the orbital energies
                              // 1 - excitonic case: energies are the total energies for different density matrices
 
-//      cout<<"*ham_adi= \n"<<*ham_adi<<endl;
-//      exit(0);
-
       if(method_option==0){
-        // For this case ham_dia and d1ham_dia already contain (possible) contribution from MM part, so
-        // we just substitute the final ham_adi and d1ham_adi with the obtained result, no need to keep track of the 
-        // above adiabatic MM contributions (which is seemingly disregarded, but is actually included via diabatic part)
+        /// method_option == 0
+        /// For this case ham_dia and d1ham_dia already contain (possible) contribution from MM part, so
+        /// we just substitute the final ham_adi and d1ham_adi with the obtained result, no need to keep track of the 
+        /// above adiabatic MM contributions (which is seemingly disregarded, but is actually included via diabatic part)
  
         MATRIX* S; S = new MATRIX(nelec, nelec);  *S = 0.0;
         MATRIX* C; C = new MATRIX(nelec, nelec);  *C = 0.0;
@@ -493,8 +579,8 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
 
       }// method_option == 0
 
-      else if(method_option==1){ // This is true case - excitonic one
-
+      else if(method_option==1){ 
+        /// method_option==1: This is true case - excitonic one
 
         int x_period = 0;  int y_period = 0;  int z_period = 0; 
         VECTOR t1, t2, t3;
@@ -504,8 +590,7 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
         int i = 0;
         _syst->zero_forces_and_torques();
 
-//        exit(0);
-
+        /// Compute the ground state energy first
         double E_i = qm_ham->energy_and_forces(*_syst); // ground state energy
         int Norb = qm_ham->el->Norb;
 
@@ -558,7 +643,6 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
 
  
 //          cout<<"nelec = "<<nelec<<endl;
-
 
           for(int I=0;I<nelec;I++){    // over all excitons
 
@@ -675,6 +759,7 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
         cout<<"Derivative couplings computations for all atoms, time = "<<tim1.stop()<<endl;
 
 
+        /// Then repeat the ground-state calculations with different MO occupation schemes (for excitations)
         //================ Now excitations ===========================
         vector< pair<int,double> > occ_alp_grnd(Norb,pair<int,double>(0,0.0)); occ_alp_grnd = qm_ham->el->occ_alp;
         vector< pair<int,double> > occ_bet_grnd(Norb,pair<int,double>(0,0.0)); occ_bet_grnd = qm_ham->el->occ_bet;
@@ -760,6 +845,8 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
 
         tim1.start();
 
+        /// When excitations are computed, reset the density matrix to current electronic state and recompute
+        /// electronic structure properties: Fock matrix, forces, derivative couplings, etc
         //=================== Reset current variables to be those of the ground state ===============
         i = 0;
         cout<<"excitation "<<i<<"  \n";
@@ -856,6 +943,20 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
 
 
 void Hamiltonian_Atomistic::init_qm_Hamiltonian(std::string ctrl_filename){
+/**
+  Initialize the QM Hamiltonian using control settings in the file
+  Note the file will also refer to another file - the one with Hamiltonian parameters, so
+  actually we would need to prepare 2 files: one - the control parameters file, ctrl_filename, 
+  the other - the parameters file.
+  This function will read the file, initialize all necessary variables (except for the coordinates)
+  and performe an SCF calculations, to compute electronic structure and related properties. 
+
+  Note: the molecular (chemical) system object we are studying must be created beforehand (e.g. loaded
+  from yet another file) and the object must be bound the the atomistic Hamiltonian object - this all
+  has to be done before calling the present function
+
+  \param[in] ctrl_filename The file containing all the control settings for the QM calculations
+*/
 
   if(_syst==NULL){ cout<<"Error: System is not initialized yet\n"; exit(0); }
   
@@ -867,6 +968,16 @@ void Hamiltonian_Atomistic::init_qm_Hamiltonian(std::string ctrl_filename){
 
 
 void Hamiltonian_Atomistic::excite_alp(int I, int J){
+/**
+  \param[in] I the index of the source orbital involved in the alpha-excitation
+  \param[in] J the index of the target orbital involved in the alpha-excitation
+
+  This function creates an excitation - the electronic excited state - the basis state for NA-MD
+  This excitation is for the alpha electron going from orbital with index I to that with index J (I-->J)  
+  Note: It is important to create such excitations before attempting NA-MD calculations 
+  the number of such excitation (calls of this + excite_bet function) must be the number of electronic 
+  states in the Electronic object (not the Electronic_Structure !!!) - 1 (ground state is already included)
+*/
 
   qm_ham->excite_alp(I,J);
 
@@ -876,6 +987,17 @@ void Hamiltonian_Atomistic::excite_alp(int I, int J){
 }
 
 void Hamiltonian_Atomistic::excite_bet(int I, int J){
+/**
+  \param[in] I the index of the source orbital involved in the beta-excitation
+  \param[in] J the index of the target orbital involved in the beta-excitation
+
+  This function creates an excitation - the electronic excited state - the basis state for NA-MD
+  This excitation is for the beta electron going from orbital with index I to that with index J (I-->J)  
+  Note: It is important to create such excitations before attempting NA-MD calculations 
+  the number of such excitation (calls of this + excite_alp function) must be the number of electronic 
+  states in the Electronic object (not the Electronic_Structure !!!) - 1 (ground state is already included)
+*/
+
                  
   qm_ham->excite_bet(I,J);
 

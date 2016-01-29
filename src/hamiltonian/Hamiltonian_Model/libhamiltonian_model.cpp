@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libhamiltonian_model.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <memory> // for std::auto_ptr<>
 #include <boost/python.hpp>
@@ -16,13 +21,20 @@
 #include "libhamiltonian_model.h"
 
 using namespace boost::python;
-//using namespace libhamiltonian;
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_model namespace
 namespace libhamiltonian_model{
 
 
 void export_hamiltonian_model_objects(){
+/** 
+  \brief Exporter of the libhamiltonian_model classes and functions
+
+*/
+
 
   boost::python::list (*expt_SAC_Ham1)(double,boost::python::list) = &SAC_Ham;
   boost::python::list (*expt_DAC_Ham1)(double,boost::python::list) = &DAC_Ham;

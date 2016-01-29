@@ -8,23 +8,43 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file System_methods7.cpp
+  \brief This file implements formatted printing and output of the System's properties
+    
+*/
 
 #include "System.h"
 
-
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libchemsys namespace
 namespace libchemsys{
 
 
 
 void System::print_ent(std::string filename){
+/** 
+  \param[in] filename The name of the file where the info will be trinted out
+   
+  Print the state of the system into file in Brookhaven PDB format (ENT). This version will fold atomic coordinates into 3D box
+*/
+
   print_ent(filename,1,"abc"); // by default - fold in 3D
 }
 
 void System::print_ent(std::string filename,int fold,std::string pbc_type){
-// if fold==1 - will output coordinates folded into simulation box
-// Print state of the system into file filename
-// which has a Brookhaven PDB format (ENT)
+/** 
+  \param[in] filename The name of the file where the info will be trinted out
+  \param[in] fold Controlls the folding of the coordinates into the unit-cell 
+  if fold==1 - will output coordinates folded into simulation box
+  \param[in] pbc_type The parameter controlling the periodicity (when and if folding) of the unit cell
+  Can take values: "a", "b", "c", "ab", "ac", "bc", and "abc"
+
+  Print the state of the system into file in Brookhaven PDB format (ENT)  
+*/
+
   FILE* fp;
   fp = fopen(filename.c_str(),"w");
 
@@ -84,13 +104,28 @@ void System::print_ent(std::string filename,int fold,std::string pbc_type){
 }
 
 void System::print_ent(std::string filename,boost::python::list atoms_list){
+/** 
+  \param[in] filename The name of the file where the info will be trinted out
+  \param[in] atoms_list The list of the atom IDs for the atoms to be printed out 
+
+  Print the state of the system into file in Brookhaven PDB format (ENT). Write only specified atoms which IDs are in the atomlist
+  This version will fold atomic coordinates into 3D box
+*/
+
   print_ent(filename,atoms_list,1,"abc"); // by default - fold in 3D
 }
 
 void System::print_ent(std::string filename,boost::python::list atoms_list,int fold,std::string pbc_type){
-// Print state of the system into file filename
-// which has a Brookhaven PDB format (ENT)
-// Write only those atoms which IDs are in atomlist
+/** 
+  \param[in] filename The name of the file where the info will be trinted out
+  \param[in] atoms_list The list of the atom IDs for the atoms to be printed out 
+  \param[in] fold Controlls the folding of the coordinates into the unit-cell 
+  if fold==1 - will output coordinates folded into simulation box
+  \param[in] pbc_type The parameter controlling the periodicity (when and if folding) of the unit cell
+  Can take values: "a", "b", "c", "ab", "ac", "bc", and "abc"
+
+  Print the state of the system into file in Brookhaven PDB format (ENT). Write only specified atoms which IDs are in the atomlist
+*/
 
   FILE* fp;
   fp = fopen(filename.c_str(),"w");
@@ -164,13 +199,33 @@ void System::print_ent(std::string filename,boost::python::list atoms_list,int f
 
 //==================== XYZ format ==========================
 void System::print_xyz(std::string filename,int frame){
+/** 
+  \param[in] filename The name of the file where the info will be trinted out
+  \param[in] frame The integer index (in MD - the MD step, for instance) to be printed in the label of each record
+
+  Print the state of the system into file in XYZ format. Note that this functions will append the output to the
+  file fileanme, if the latter is not empty. This way, we can print out the whole MD trajectory in a single file. 
+  If this is not what you want, you may need to delete the older version of the file
+  This version will fold atomic coordinates into 3D box
+*/
+
   print_xyz(filename,1,"abc",frame); // by default - fold in 3D
 }
 
 void System::print_xyz(std::string filename,int fold,std::string pbc_type,int frame){
-// if fold==1 - will output coordinates folded into simulation box
-// Print state of the system into file filename
-// which has a Brookhaven PDB format (ENT)
+/** 
+  \param[in] filename The name of the file where the info will be trinted out
+  \param[in] fold Controlls the folding of the coordinates into the unit-cell 
+  if fold==1 - will output coordinates folded into simulation box
+  \param[in] pbc_type The parameter controlling the periodicity (when and if folding) of the unit cell
+  Can take values: "a", "b", "c", "ab", "ac", "bc", and "abc"
+  \param[in] frame The integer index (in MD - the MD step, for instance) to be printed in the label of each record
+
+  Print the state of the system into file in XYZ format. Note that this functions will append the output to the
+  file fileanme, if the latter is not empty. This way, we can print out the whole MD trajectory in a single file. 
+  If this is not what you want, you may need to delete the older version of the file
+*/
+
   FILE* fp;
   fp = fopen(filename.c_str(),"a");
 

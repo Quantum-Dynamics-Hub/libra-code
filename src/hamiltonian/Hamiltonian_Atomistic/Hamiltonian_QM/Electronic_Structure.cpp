@@ -9,19 +9,11 @@
 *
 *********************************************************************************/
 /**
- \file Electronic.cpp
- \brief Implementation of the methods for handling electronic variables
+  \file Electronic_Structure.cpp
+  \brief This file implements the Electronic_Structure class - a container for electronic variables.
+  Some methods for handling the Electronic_Structure objects are also described here
 
 */
-/****************************************************************************
-  This file contains following functions:
-
-  int init_numbers(vector<int>& fragment,Electronic* el,vector<AO>& basis_ao, Model_Parameters& modprms, Nuclear& mol,double charge);
-  int init_electronic_subsystems(vector<vector<int> >& fragments,vector<vector<int> >& at_orbitals,
-                                vector<vector<int> >& basis_fo, vector<Electronic*>& el,
-                                vector<AO>& basis_ao, Model_Parameters& modprms,Nuclear&,vector<double>& frag_charge)
-
-****************************************************************************/
 
 #include "Electronic_Structure.h"
 
@@ -237,12 +229,19 @@ void Electronic_Structure::excite_bet(int I, int J){
 
 
 
-/// Initialization of central numbers describing electronic variables\n
-/// The function computes the number of electrons on a given set of atoms (fragment)\n
-/// Then it determines the number of alpha and beta electrons \n
-/// Then it sets the occupations numbers of alpha and beta orbitals to 0 or 1, according to aufbau principle\n
-/// charge = total charge on given fragment
 int init_numbers(Electronic_Structure& el, System& syst, vector<AO>& basis_ao, Model_Parameters& modprms, double charge){
+/** 
+  \param[in,out] el The object containing information about the electronic structure of the given system
+  \param[in,out] syst The object containing information about the nuclear coordinates and atom types of the given system
+  \param[in] basis_ao The vector of AO objects - the AO basis for given calculations
+  \param[in,out] modprms The object that contains all the Hamiltonian parameters for given system and method choice
+  \param[in] charge The total charge of the system
+
+  Initialization of the central numbers describing electronic variables
+  The function computes the number of electrons on a given set of atoms (fragment)
+  Then it determines the number of alpha and beta electrons 
+  Then it sets the occupations numbers of alpha and beta orbitals to 0 or 1, according to aufbau principle
+*/
 
   int i;
 

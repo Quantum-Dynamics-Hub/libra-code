@@ -8,13 +8,21 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libhamiltonian_extern.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_HAMILTONIAN_EXTERN_H
 #define LIB_HAMILTONIAN_EXTERN_H
 
 #include "Hamiltonian_Extern.h"
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_extern namespace
 namespace libhamiltonian_extern{
 
 void export_hamiltonian_extern_objects();

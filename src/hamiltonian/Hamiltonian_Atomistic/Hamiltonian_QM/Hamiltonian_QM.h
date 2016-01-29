@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_QM.h
+  \brief The file describes functions and for quantum-mechanical Hamiltonian calculations as well
+  as the classes for organizing such computations in an object-oriented way. 
+*/
 
 #ifndef HAMILTONIAN_QM_H
 #define HAMILTONIAN_QM_H
@@ -18,10 +23,13 @@
 #include "Hamiltonian_HF.h"
 #include "Electronic_Structure.h"
 
-
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
 
 
@@ -108,26 +116,32 @@ void excite(int Norb, excitation& ex,
 
 
 class listHamiltonian_QM{
+/**
+  This class contains everything that is needed for quantum calculations on a 
+  specified system. For this system we define its own charge, basis, nuclei, and electronic
+  structure variables, as well as an excitation. Consider this class encoding 
+  a fragment (sub-system). Such fragments can constitute a basis for large-scale calculations
+*/
 
 public:
 
     listHamiltonian_QM(){ add_excitation(0,1,0,1); }
     listHamiltonian_QM(std::string ctrl_filename,System& syst);
 
-    int Nelec;
-    int Norb;
-    Control_Parameters prms; 
-    Model_Parameters modprms;
+    int Nelec;  ///< The number of electrons in this sub-system
+    int Norb;   ///< The total number of orbitals in this sub-system
+    Control_Parameters prms;  ///< Control parameters defining how to perform calculations for this sub-system
+                              ///< Note: different levels of treatment are possible for different sub-systems
+    Model_Parameters modprms; ///< Model parameters for this sub-system
 
     //============= Ground state =================
-    std::vector<AO> basis_ao;
-    std::vector<vector<int> > atom_to_ao_map;
-    std::vector<int> ao_to_atom_map;
-    Electronic_Structure* el;
+    std::vector<AO> basis_ao;       ///< Basis for this sub-system
+    std::vector<vector<int> > atom_to_ao_map; ///< Nuclei --> AO mapping for this sub-system
+    std::vector<int> ao_to_atom_map;          ///< AO --> Nuclei mapping for this sub-system
+    Electronic_Structure* el;     ///< Electronic structure for this sub-system
 
     //============ Excited states ================
-    vector<excitation> basis_ex;  // may be the same as in prms, but may be different
-
+    vector<excitation> basis_ex;  ///< Excitations for this sub-system -  may be the same as in prms, but may be different
 
     
 

@@ -8,18 +8,23 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Model_DAC.h
+  \brief The file describes the functions for computing DAC (Double Avoided Crossing) Hamiltonian and its derivatives
+    
+*/
 
 #ifndef MODEL_DAC_H
 #define MODEL_DAC_H
 
 #include "../../mmath/libmmath.h"
 
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_model namespace
 namespace libhamiltonian_model{
 
-//using namespace libmmath;
-//using namespace libmmath::liblinalg;
 
 void DAC_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params_);
 boost::python::list DAC_Ham(double x, boost::python::list params_);

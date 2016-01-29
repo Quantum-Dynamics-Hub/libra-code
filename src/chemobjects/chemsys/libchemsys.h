@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libchemsys.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_CHEMSYS_H
 #define LIB_CHEMSYS_H
@@ -15,7 +20,10 @@
 
 #include "System.h"
 
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libchemsys namespace
 namespace libchemsys{
 
 

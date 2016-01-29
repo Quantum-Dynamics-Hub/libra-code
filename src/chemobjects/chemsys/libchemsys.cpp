@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libchemsys.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -16,12 +21,19 @@
 
 using namespace boost::python;
 
-
+/// libchemobjects namespace
 namespace libchemobjects{
+
+/// libchemsys namespace
 namespace libchemsys{
 
 
 void export_Chemsys_objects(){
+/** 
+  \brief Exporter of libchemsys classes and functions
+
+*/
+
 
 //void (System::*CREATE_ATOM1)()      = &System::CREATE_ATOM;
 void (System::*CREATE_ATOM2)(Atom)  = &System::CREATE_ATOM;

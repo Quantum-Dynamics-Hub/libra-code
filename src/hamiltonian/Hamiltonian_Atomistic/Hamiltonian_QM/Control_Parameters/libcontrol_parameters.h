@@ -8,16 +8,27 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libcontrol_parameters.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIB_CONTROL_PARAMETERS_H
 #define LIB_CONTROL_PARAMETERS_H
 
 #include "Control_Parameters.h"
 
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
+
+/// libcontrol_parameters namespace
 namespace libcontrol_parameters{
 
 

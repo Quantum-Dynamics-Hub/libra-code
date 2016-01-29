@@ -1,9 +1,30 @@
+/*********************************************************************************
+* Copyright (C) 2015 Alexey V. Akimov
+*
+* This file is distributed under the terms of the GNU General Public License
+* as published by the Free Software Foundation, either version 2 of
+* the License, or (at your option) any later version.
+* See the file LICENSE in the root directory of this distribution
+* or <http://www.gnu.org/licenses/>.
+*
+*********************************************************************************/
+/**
+  \file SCF_none.cpp
+  \brief The file implements the self-consistent field (SCF) algorithm for solving 
+  stationary Schrodinger's equation. This version of the algorithm does not involve
+  any additional convergence acceleration techniqes
+    
+*/
 
 #include "SCF.h"
 
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
 
 
@@ -11,13 +32,22 @@ namespace libhamiltonian_qm{
 double scf_none(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
            Control_Parameters& prms,Model_Parameters& modprms,
            vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, int BM){
+/**
+  This function implements the SCF algorithm without any additional convergnece acceleration techniques.
+  Just plain standard SCF
 
-/// This function implements the SCF based on the optimal damping algorithm (ODA)
-/// which uses fractional occupation numbers, leading to robust convergence in difficult cases
-/// See more details in: 
-/// [1] Kudin K.N.; Scuseria, G.E.; Cances, E. J. Chem. Phys. 116, 8255 (2002)
-/// [2] Cances J. Chem. Phys. 114, 10616 (2001) 
-/// BM - benchmark flag
+  \param[in,out] el The pointer to the object containing all the electronic structure information (MO-LCAO coefficients, 
+  density matrix, Fock, etc)
+  \param[in,out] syst The reference to the object containing all the nuclear information - geometry and atomic types
+  \param[in] basis_ao The vector of AO objects - the AO basis for given calculations
+  \param[in] prms The object that contains all the parameters controlling the simulation - all settings, flags, etc.
+  \param[in,out] modprms The object that contains all the Hamiltonian parameters for given system and method choice
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] BM Benchmark flag - if =1 - do some benchmarking, if =0 - don't do it
+
+  Returns the converged total electronic energy 
+*/
 
   int DF = 0;
   int Norb = el->Norb;
@@ -42,8 +72,6 @@ double scf_none(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
     el->get_Fao_alp().show_matrix();
   }
 
-//  double E = (energy_elec(el->get_P_alp(), el->get_Hao(), el->get_Fao_alp())
-//            + energy_elec(el->get_P_bet(), el->get_Hao(), el->get_Fao_bet()));
   double E = (energy_elec(el->P_alp, el->Hao, el->Fao_alp) + energy_elec(el->P_bet, el->Hao, el->Fao_bet)  );
 
   cout<<"Initial energy = "<< E<<endl;
@@ -102,6 +130,24 @@ double scf_none(Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
            Control_Parameters& prms,Model_Parameters& modprms,
            vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, int BM
 ){
+/**
+  Python-friendly version
+  This function implements the SCF algorithm without any additional convergnece acceleration techniques.
+  Just plain standard SCF
+
+  \param[in,out] el The object containing all the electronic structure information (MO-LCAO coefficients, 
+  density matrix, Fock, etc)
+  \param[in,out] syst The reference to the object containing all the nuclear information - geometry and atomic types
+  \param[in] basis_ao The vector of AO objects - the AO basis for given calculations
+  \param[in] prms The object that contains all the parameters controlling the simulation - all settings, flags, etc.
+  \param[in,out] modprms The object that contains all the Hamiltonian parameters for given system and method choice
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] BM Benchmark flag - if =1 - do some benchmarking, if =0 - don't do it
+
+  Returns the converged total electronic energy 
+*/
+
 
   return scf_none(&el,syst,basis_ao,  prms,modprms,  atom_to_ao_map,ao_to_atom_map, BM);
 }

@@ -177,6 +177,12 @@ void System::set_atomic_v(vector<double>& v){
 
 
 void System::extract_atomic_f(vector<double>& f){
+/** 
+  \param[out] f The vector of generalized nuclear forces (each is 1D)
+
+  System::Atom[i].Atom_RB.rb_force (VECTOR) -> f (3 components)
+*/
+
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -196,6 +202,12 @@ void System::extract_atomic_f(vector<double>& f){
 }
 
 void System::set_atomic_f(vector<double>& f){
+/** 
+  \param[in] f The vector of generalized nuclear forces (each is 1D)
+
+  f (3 components) -> System::Atom[i].Atom_RB.rb_forces (VECTOR)
+  Special care is taken to ensure assignment by value (so changing f will not affect internals)
+*/
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -215,6 +227,12 @@ void System::set_atomic_f(vector<double>& f){
 
 
 void System::extract_atomic_mass(vector<double>& mass){
+/** 
+  \param[out] mass The vector of generalized masses (each is 1D)
+
+  System::Atom[i].Atom_RB.rb_mass -> mass (3 consequtive values)
+*/
+
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -234,6 +252,12 @@ void System::extract_atomic_mass(vector<double>& mass){
 }
 
 void System::set_atomic_mass(vector<double>& mass){
+/** 
+  \param[in] mass The vector of generalized masses (each is 1D)
+
+  mass (3 consequtive values) -> System::Atom[i].Atom_RB.rb_mass (1 scalar)
+  Special care is taken to ensure assignment by value (so changing mass will not affect internals)
+*/
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -253,6 +277,7 @@ void System::set_atomic_mass(vector<double>& mass){
 
 
 void System::extract_fragment_q(vector<double>& q){
+/// Same as extract_atomic_q, but for the rigid-bodies
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -273,6 +298,7 @@ void System::extract_fragment_q(vector<double>& q){
 }
 
 void System::set_fragment_q(vector<double>& q){
+/// Same as set_atomic_q, but for the rigid-bodies
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -294,6 +320,7 @@ void System::set_fragment_q(vector<double>& q){
 
 
 void System::extract_fragment_p(vector<double>& p){
+/// Same as extract_atomic_p, but for the rigid-bodies
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -314,6 +341,7 @@ void System::extract_fragment_p(vector<double>& p){
 }
 
 void System::set_fragment_p(vector<double>& p){
+/// Same as set_atomic_p, but for the rigid-bodies
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -333,6 +361,7 @@ void System::set_fragment_p(vector<double>& p){
 }
 
 void System::extract_fragment_v(vector<double>& v){
+/// Same as extract_atomic_v, but for the rigid-bodies
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -352,6 +381,7 @@ void System::extract_fragment_v(vector<double>& v){
 }
 
 void System::set_fragment_v(vector<double>& v){
+/// Same as set_atomic_v, but for the rigid-bodies
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -373,6 +403,7 @@ void System::set_fragment_v(vector<double>& v){
 
 
 void System::extract_fragment_f(vector<double>& f){
+/// Same as extract_atomic_f, but for the rigid-bodies
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -393,6 +424,7 @@ void System::extract_fragment_f(vector<double>& f){
 }
 
 void System::set_fragment_f(vector<double>& f){
+/// Same as set_atomic_f, but for the rigid-bodies
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -413,6 +445,7 @@ void System::set_fragment_f(vector<double>& f){
 
 
 void System::extract_fragment_mass(vector<double>& mass){
+/// Same as extract_atomic_mass, but for the rigid-bodies
 
   // Simple data converter - no object creation (nor reduction of dimension)
 
@@ -434,6 +467,7 @@ void System::extract_fragment_mass(vector<double>& mass){
 
 
 void System::set_fragment_mass(vector<double>& mass){
+/// Same as set_atomic_mass, but for the rigid-bodies
 
   // Simple data converter - no object creation (nor reduction of dimension)
 

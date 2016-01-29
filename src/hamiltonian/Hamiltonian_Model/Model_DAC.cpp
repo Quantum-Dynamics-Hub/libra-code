@@ -8,15 +8,42 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Model_DAC.h
+  \brief The file implements the functions for computing DAC Hamiltonian and its derivatives
+    
+*/
 
 #include "Model_DAC.h"
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_model namespace
 namespace libhamiltonian_model{
 
 
 void DAC_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params){ 
-// DAC hamiltonian in diabatic representation
+/**
+  \param[in] x The nuclear coordinate (1D)
+  \param[out] H The pointer to the matrix in which the Hamiltonian will be written
+  \param[out] dH The pointer to the matrix in which the 1-st order derivatives of the Hamiltonian will be written
+  \param[out] d2H The pointer to the matrix in which the 2-nd order derivatives of the Hamiltonian will be written
+  \param[in] params The model parameters: can be up to 5 parameters (see the chart below). Otherwise, the default
+  values will be used:
+
+  Internal parameter        Input        Default value
+   A                       param[0]         0.100
+   B                       param[1]         0.028
+   C                       param[2]         0.015
+   D                       param[3]         0.060
+   E                       param[4]         0.050
+
+  DAC hamiltonian and its derivatives in diabatic representation:
+  H_00 = 0.0
+  H_11 = E - A*exp(-B*x^2)
+  H_01 = C*exp(-D*x^2)
+*/
 
   if(H->num_of_elems!=4){ std::cout<<"Error in DAC_Ham: H matrix must be allocated\n"; exit(0);}
   if(dH->num_of_elems!=4){ std::cout<<"Error in DAC_Ham: dH matrix must be allocated\n"; exit(0);}
@@ -27,11 +54,11 @@ void DAC_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& param
   double C = 0.015;  double D = 0.06;
   double E = 0.05;
 
-  if(params.size()>=5){
-    A = params[0];    B = params[1];
-    C = params[2];    D = params[3];
-    E = params[4];
-  }
+  if(params.size()>=1){   A = params[0];    }
+  if(params.size()>=2){   B = params[1];    }
+  if(params.size()>=3){   C = params[2];    }
+  if(params.size()>=4){   D = params[3];    }
+  if(params.size()>=5){   E = params[4];    }
 
 
   // H00
@@ -54,6 +81,30 @@ void DAC_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& param
 }
 
 boost::python::list DAC_Ham(double x, boost::python::list params_){ 
+/**
+  \param[in] x The nuclear coordinate (1D)
+  \param[in] params The model parameters: can be up to 5 parameters (see the chart below). Otherwise, the default
+  values will be used:
+
+  Internal parameter        Input        Default value
+   A                       param[0]         0.100
+   B                       param[1]         0.028
+   C                       param[2]         0.015
+   D                       param[3]         0.060
+   E                       param[4]         0.050
+
+  DAC hamiltonian and its derivatives in diabatic representation:
+  H_00 = 0.0
+  H_11 = E - A*exp(-B*x^2)
+  H_01 = C*exp(-D*x^2)
+
+  Returns the Python list, res, of the following objects:
+  res[0] = x - coordinate, res[1] = H - the Hamiltonian matrix 
+  res[1] = dH - the Hamiltonian derivatives of the 1-st order
+  res[2] = d2H - the Hamiltonian derivatives of the 2-nd order
+
+*/
+
 // DAC hamiltonian in diabatic representation
 
   MATRIX H(2,2);

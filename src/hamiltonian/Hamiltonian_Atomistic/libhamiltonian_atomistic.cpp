@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libhamiltonian_atomistic.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <memory> // for std::auto_ptr<>
 #include <boost/python.hpp>
@@ -18,13 +23,20 @@
 using namespace boost::python;
 
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
 
 using namespace libhamiltonian_mm;
 
 
 void export_hamiltonian_atomistic_objects(){
+/** 
+  \brief Exporter of the libhamiltonian_atomistic classes and functions
+
+*/
 
   export_Hamiltonian_MM_objects();
 

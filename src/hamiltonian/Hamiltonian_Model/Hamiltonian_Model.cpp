@@ -8,14 +8,21 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_Model.cpp
+  \brief The file implements the basic methods of the model Hamiltonian class
+    
+*/
 
 
 #include <complex>
 #include <cmath>
 #include "Hamiltonian_Model.h"
 
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_model namespace
 namespace libhamiltonian_model{
 
 using namespace libhamiltonian_generic;
@@ -29,6 +36,23 @@ using std::sqrt;
 
 
 Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
+/**
+  The constructor with parameter
+
+  \param[in] ham_indx_ The parameter that selects the model Hamiltonian
+  Possible options: 
+  ham_indx      Description     
+    0             SAC           
+    1             DAC           
+    2             ECWR          
+    3             Marcus        
+    4             SEXCH         
+    5             Rabi2         
+    6               --          
+    7             1D sin        
+   200            2D sin        
+
+*/
 
 //cout<<"Derived Ham_mod. constructor\n";
 
@@ -72,6 +96,9 @@ Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
 }
 
 Hamiltonian_Model::~Hamiltonian_Model(){
+/**
+  Destructor
+*/
   int i;
 
 //  cout<<"Derived Ham_mod. destructor\n";
@@ -94,6 +121,24 @@ Hamiltonian_Model::~Hamiltonian_Model(){
 
 
 void Hamiltonian_Model::set_params(vector<double>& params_){
+/**
+  \param[in] params_ The array (vector of doubles) of parameters to be used. The expected
+  maximal number of parameters is. Smaller # can be provided, but not more:
+
+  ham_indx      Description      max # of parameters
+    0             SAC                 4
+    1             DAC                 3
+    2             ECWR                4
+    3             Marcus              3
+    4             SEXCH               12
+    5             Rabi2               3
+    6               --               --
+    7             1D sin              5
+   200            2D sin              6
+
+  Setting parameters of the model Hamiltonian.
+  The number and the meaning of the parameters is different across different models
+*/
 
   int num_params = 0;
 
@@ -140,8 +185,12 @@ void Hamiltonian_Model::set_params(vector<double>& params_){
 
 
 void Hamiltonian_Model::compute_diabatic(){
+/**
+  Compute diabatic Hamiltonian, its 1-st and 2-nd order derivatives w.r.t. nuclear DOF
+  Computations are done only if they are not up to date (status_dia = 0)
+*/
 
-  if(status_dia == 0){ // only compute this is the result is not up to date
+  if(status_dia == 0){ // only compute this if the result is not up to date
   
     double e;
     double x = q[0];
@@ -174,6 +223,11 @@ void Hamiltonian_Model::compute_diabatic(){
 
 
 void Hamiltonian_Model::compute_adiabatic(){
+/**
+  Compute the adiabatic Hamiltonian, its 1-st and 2-nd order derivatives w.r.t. nuclear DOF
+  Computations are done only if they are not up to date (status_dia = 0)
+*/
+
 // This function computes adiabatic PESs and derivative couplings
 
   compute_diabatic();

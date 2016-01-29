@@ -8,14 +8,26 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file SCF.cpp
+  \brief The file describes the functions for the self-consistent field (SCF) algorithm for solving 
+  stationary Schrodinger's equation.
+  Here, the generic as well as specific version of the SCF-implementing functions are summarized
+    
+*/
 
 #ifndef SCF_H
 #define SCF_H
 
 #include "Hamiltonian_QM.h"
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
 
 

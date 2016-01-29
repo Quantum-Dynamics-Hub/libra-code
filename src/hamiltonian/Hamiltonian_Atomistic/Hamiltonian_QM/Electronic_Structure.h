@@ -9,18 +9,11 @@
 *
 *********************************************************************************/
 /**
- \file Electronic.h
- \brief Declaration of the containers for electronic variables and methods for handling them
+  \file Electronic_Structure.h
+  \brief This file describes the Electronic_Structure class - a container for electronic variables.
+  Some methods for handling the Electronic_Structure objects are also described here
 
 */
-/****************************************************************************
-  This file contains declaration of the following functions and classes:
-
-  class Electronic
-  int init_numbers(vector<int>&,Electronic*,vector<AO>&, Model_Parameters&, Nuclear&);
-  int init_electronic_subsystems(vector<vector<int> >&,vector<vector<int> >&, vector<vector<int> >&, vector<Electronic*>&,vector<AO>&,Model_Parameters&, Nuclear&);
-
-****************************************************************************/
 
 #ifndef ELECTRONIC_STRUCTURE_H
 #define ELECTRONIC_STRUCTURE_H
@@ -43,23 +36,31 @@ using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::lib
 #include "Model_Parameters/libmodel_parameters.h"
 using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::libmodel_parameters;
 
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
 
 
 
-/// \brief This class implements the container for information about electronic variables
 class Electronic_Structure{
+/** This class implements the container for storing all kinds of information about electronic structure
+  of an atomistic system
+*/
 
   void check_matrix_dimensionas(MATRIX* A, MATRIX& B, std::string A_name, std::string B_name, std::string func_name);
 
   public:
 
   //-------------- Constructors --------------
-  /// Default constructor
   Electronic_Structure(){
+  /** The default constructor - initializes all pointers to NULL-pointer. Sets the numbers to zero.
+  */
+
     Norb  = 0;
     Nocc_alp = Nocc_bet = 0;
     Nelec = 0.0;
@@ -71,8 +72,13 @@ class Electronic_Structure{
     dFao_bet_dP_alp = NULL;  dFao_bet_dP_bet = NULL;
     E_alp = NULL; E_bet = NULL;
   }
-  /// Constructor with one argument
+
   Electronic_Structure(int n){
+  /** \param[in] n The number of orbitals (the dimensionality of the electronic problem) in given system
+
+  The constructor with one argument - it also allocates memory for the variables
+  */
+
     Norb = n;
     Nocc_alp = Nocc_bet = 0;
     Nelec = 0.0;
@@ -99,8 +105,9 @@ class Electronic_Structure{
   Electronic_Structure(const Electronic_Structure&);   ///< Copy constructor;
   Electronic_Structure(Electronic_Structure*);         ///< Constructor from the address of the other existing object
   
-  /// Destructor
   ~Electronic_Structure(){
+  /** The destructor - frees the memory for all matrices, vectors, sets them to NULL-pointer, sets the numbers to zero
+  */
     delete P_alp;   delete P_bet;    delete P;        
     delete C_alp;   delete C_bet;
     delete Sao;     delete Hao;
@@ -133,15 +140,15 @@ class Electronic_Structure{
 
  
   //-------------- Data members --------------
-  int Norb;        ///< number of orbitals in this subsystem
-  int Nocc_alp;    ///< number of occupied alpha orbitals in this subsystem
-  int Nocc_bet;    ///< number of occupied beta orbitals in this subsystem
-  double Nelec;    ///< number of electrons in this subsystem
+  int Norb;        ///< the total number of orbitals in this subsystem
+  int Nocc_alp;    ///< the number of occupied alpha orbitals in this subsystem
+  int Nocc_bet;    ///< the number of occupied beta orbitals in this subsystem
+  double Nelec;    ///< the number of electrons in this subsystem
 
-  vector< pair<int,double> > bands_alp; ///< orbital index and orbital energy, alpha-channel
-  vector< pair<int,double> > bands_bet; ///< orbital index and orbital energy, beta-channel
-  vector< pair<int,double> > occ_alp;   ///< orbital index and orbital occupation number, alpha-channel
-  vector< pair<int,double> > occ_bet;   ///< orbital index and orbital occupation number, beta-channel
+  vector< pair<int,double> > bands_alp; ///< orbital indices and orbital energies, alpha-channel
+  vector< pair<int,double> > bands_bet; ///< orbital indices and orbital energies, beta-channel
+  vector< pair<int,double> > occ_alp;   ///< orbital indices and orbital occupation numbers, alpha-channel
+  vector< pair<int,double> > occ_bet;   ///< orbital indices and orbital occupation numbers, beta-channel
   
 
   // Density matrices
@@ -157,9 +164,9 @@ class Electronic_Structure{
 
 
   // Wfc coefficients
-  MATRIX* C_alp;                        ///< \brief MO coefficients, alpha-channel
+  MATRIX* C_alp;                        ///< MO-LCAO coefficients, alpha-channel
                                         ///< C_alp[k][i] - is the i-th MO (column) k-th AO (row)
-  MATRIX* C_bet;                        ///< \brief MO coefficients, beta-channel                     
+  MATRIX* C_bet;                        ///< MO-LCAO coefficients, beta-channel                     
                                         ///< C_bet[k][i] - is the i-th MO (column) k-th AO (row)
   void set_C_alp(MATRIX& x_);
   void set_C_bet(MATRIX& x_);

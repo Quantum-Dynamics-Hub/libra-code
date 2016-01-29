@@ -8,15 +8,43 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Model_SAC.cpp
+  \brief The file implements the functions for computing SAC (single avoided crossing) Hamiltonian and its derivatives
+    
+*/
 
 #include "Model_SAC.h"
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_model namespace
 namespace libhamiltonian_model{
 
 
 void SAC_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params){ 
-// SAC hamiltonian in diabatic representation
+/**
+  \param[in] x The nuclear coordinate (1D)
+  \param[out] H The pointer to the matrix in which the Hamiltonian will be written
+  \param[out] dH The pointer to the matrix in which the 1-st order derivatives of the Hamiltonian will be written
+  \param[out] d2H The pointer to the matrix in which the 2-nd order derivatives of the Hamiltonian will be written
+  \param[in] params The model parameters: can be up to 4 parameters (see the chart below). Otherwise, the default
+  values will be used:
+
+  Internal parameter        Input        Default value
+   A                       param[0]         0.010
+   B                       param[1]         1.600
+   C                       param[2]         0.005
+   D                       param[3]         1.000
+
+  SAC hamiltonian and its derivatives in diabatic representation:
+  H_00 = A*(1.0-exp(-B*x)) x>0,  
+       = A*(exp(B*x)-1.0 ) x<0
+  H_11 = -H_00
+  H_01 = C*exp(-D*x^2)
+*/
+
 
   if(H->num_of_elems!=4){ std::cout<<"Error in SAC_Ham: H matrix must be allocated\n"; exit(0);}
   if(dH->num_of_elems!=4){ std::cout<<"Error in SAC_Ham: dH matrix must be allocated\n"; exit(0);}
@@ -63,7 +91,29 @@ void SAC_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& param
 }
 
 boost::python::list SAC_Ham(double x, boost::python::list params_){ 
-// SAC hamiltonian in diabatic representation
+/**
+  \param[in] x The nuclear coordinate (1D)
+  \param[in] params The model parameters: can be up to 4 parameters (see the chart below). Otherwise, the default
+  values will be used:
+
+  Internal parameter        Input        Default value
+   A                       param[0]         0.010
+   B                       param[1]         1.600
+   C                       param[2]         0.005
+   D                       param[3]         1.000
+
+  SAC hamiltonian and its derivatives in diabatic representation:
+  H_00 = A*(1.0-exp(-B*x)) x>0,  
+       = A*(exp(B*x)-1.0 ) x<0
+  H_11 = -H_00
+  H_01 = C*exp(-D*x^2)
+
+  Returns the Python list, res, of the following objects:
+  res[0] = x - coordinate, res[1] = H - the Hamiltonian matrix 
+  res[1] = dH - the Hamiltonian derivatives of the 1-st order
+  res[2] = d2H - the Hamiltonian derivatives of the 2-nd order
+
+*/
 
   MATRIX H(2,2);
   MATRIX dH(2,2);

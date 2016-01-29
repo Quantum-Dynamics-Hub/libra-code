@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_Extern.h
+  \brief The file describes the external Hamiltonian class - for interface with 3-rd party codes
+    
+*/
 
 #ifndef HAMILTONIAN_EXTERN_H
 #define HAMILTONIAN_EXTERN_H
@@ -15,50 +20,43 @@
 #include "../Hamiltonian_Generic/Hamiltonian.h"
 
 
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
 
 using namespace libhamiltonian_generic;
 using namespace libmmath;
 
+/// libhamiltonian_extern namespace
 namespace libhamiltonian_extern{
 
 
 class Hamiltonian_Extern : public Hamiltonian{
-
+/**
+  This is a class derived from the generic Hamiltonian class, so it inherits many of its properties
   //  We will use the Hamiltonian's members directly (see in Hamiltonian.h )
+*/
 
-  // Diabatic representation:
-  // MATRIX* ham_dia;           // Hamiltonian in diabatic representation
-  // vector<MATRIX*> d1ham_dia; // derivatives of the ham_dia w.r.t. all atomic DOFs: q0, q1, .. qN 
-  // vector<MATRIX*> d2ham_dia; // derivatives of the ham_dia w.r.t. all atomic DOFs: q00, q01, ..., q0N, q10, q11, ... qNN
-
-  // Adiabatic representation:
-  // MATRIX* ham_adi;           // Hamiltonian in adiabatic representation
-  // vector<MATRIX*> d1ham_adi; // first order derivative couplings: <i|d/dR|j> - is computed from the transformation coefficients
-
-
-  int adiabatic_opt; // defines how to perform adiabatic calculations: either use bound adiabatic matrices (0, default), or to
-                     // perform diabatic -> adiabatic transformation (1)
+  int adiabatic_opt; ///< defines how to perform adiabatic calculations: either use bound adiabatic matrices (0, default), or to
+                     ///< perform diabatic -> adiabatic transformation (1)
 
   // Bind status (bs_)
-  int bs_ham_dia;
-  int bs_d1ham_dia;
-  int bs_d2ham_dia;
-  int bs_ham_adi;
-  int bs_d1ham_adi;
-
+  int bs_ham_dia;   ///< bind status of diabatic Hamiltonian
+  int bs_d1ham_dia; ///< bind status of first-order derivatives of the diabatic Hamiltonian
+  int bs_d2ham_dia; ///< bind status of second-order derivatives of the diabatic Hamiltonian
+  int bs_ham_adi;   ///< bind status of adiabatic Hamiltonian                                
+  int bs_d1ham_adi; ///< bind status of first-order derivatives of the adiabatic Hamiltonian 
+                    
   
    
 public:
 
-  // Constructor: only allocates memory and sets up related variables
+  /// Constructor: only allocates memory and sets up related variables
   Hamiltonian_Extern(int _nelec, int _nnucl);
 
-  // Destructor
+  /// Destructor
   ~Hamiltonian_Extern();
 
-  // Set parameters
+  /// Set parameters
   void set_adiabatic_opt(int);
 
   void bind_ham_dia(MATRIX& _ham_dia);
@@ -75,7 +73,7 @@ public:
 
 };
 
-typedef std::vector<Hamiltonian_Extern> Hamiltonian_ExternList;
+typedef std::vector<Hamiltonian_Extern> Hamiltonian_ExternList;  /// data type for keeping a list of external Hamiltonians of their derived classes
 
 
 }// namespace libhamiltonian_extern
