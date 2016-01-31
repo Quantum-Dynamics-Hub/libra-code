@@ -871,6 +871,17 @@ double energy_and_forces
 
 
 listHamiltonian_QM::listHamiltonian_QM(std::string ctrl_filename,System& syst){
+/**
+  \param[in] ctrl_filename The name of the file that defines all the settings for the electronic structure calculations, including
+  the information on which atomistic Hamiltonian parameters to use
+  \param[in] syst The object containing structural information about system. 
+
+  Performes a sequanece of the initialization steps to form the QM Hamiltonian (eventually), but doesn't form the Hamiltonian yet
+  Also, adds a "ground state excitation" - the reference configuration, so that the excitonic basis of lenght 1 is defined
+  Optionally: Add more excitonic states (by using add_excitation) for excited-states calculations
+  The function listHamiltonian_QM::compute_scf() can be safely called after this constructor
+*/
+
 
   init(ctrl_filename, syst);
   add_excitation(0,1,0,1);
@@ -878,13 +889,25 @@ listHamiltonian_QM::listHamiltonian_QM(std::string ctrl_filename,System& syst){
 }
 
 void listHamiltonian_QM::init(std::string ctrl_filename,System& syst){
+/**
+  \param[in] ctrl_filename The name of the file that defines all the settings for the electronic structure calculations, including
+  the information on which atomistic Hamiltonian parameters to use
+  \param[in] syst The object containing structural information about system. 
+
+  Performes a sequanece of the initialization steps to form the QM Hamiltonian (eventually), but doesn't form the Hamiltonian yet
+  Usually should follow by a set of add_excitation() function calls, to create electronic (excitonic) basis 
+*/
+
 
   //=========== STEP 1: Create control parameters (setting computation options) ================
+  /// Create the Control_Paramters object from the ctrl_filename file
+
   libcontrol_parameters::get_parameters_from_file(ctrl_filename, prms);
 
 
   //=========== STEP 2:  Create model parameters and load them from file (using control parameters options) ================
-  // Initialize/read model parameters (need basis info)
+  /// Initialize/read model parameters (need basis info)
+
   if(prms.hamiltonian=="eht"/* or prms.hamiltonian=="geht"*/){
     set_parameters_eht(prms, modprms);
   }
@@ -899,6 +922,8 @@ void listHamiltonian_QM::init(std::string ctrl_filename,System& syst){
 //  }
 
   //=========== STEP 3: Set basis (STO-3G_DZ) ================
+  /// Set STO-3G_DZ basis
+
   //------- Input --------------
   vector<std::string> mol_at_types;
   vector<VECTOR> R;
@@ -914,14 +939,17 @@ void listHamiltonian_QM::init(std::string ctrl_filename,System& syst){
 
 
    //=========== STEP 4: Electronic structure ================
+   /// Ctreate the Electronic_Structure object and initialize its numbers
+
    el = new Electronic_Structure(Norb);
    el->Nelec = Nelec;
    el->Nocc_alp = Nelec/2;
    el->Nocc_bet = Nelec - el->Nocc_alp;
 
 
-  //=========== STEP 5: Depending on hamiltonian to use, set internal parameters ================
-  // this step runs after AO basis is set!!!
+  //========== STEP 5: Depending on hamiltonian to use, set internal parameters ================
+  /// Depending on hamiltonian to use, set internal parameters for faster calculations
+  /// this step runs after AO basis is set!!!
 
   if(prms.hamiltonian=="eht" /*|| prms.hamiltonian=="geht" ||
      prms.hamiltonian=="geht1" || prms.hamiltonian=="geht2"*/){
@@ -930,6 +958,8 @@ void listHamiltonian_QM::init(std::string ctrl_filename,System& syst){
   }
 
   //=========== STEP 6: Overlap matrix ================
+  /// Precompute AO overlap matrix and store it in the created above Electronic_Structure object
+
   int x_period = 0;
   int y_period = 0;
   int z_period = 0;
@@ -938,12 +968,18 @@ void listHamiltonian_QM::init(std::string ctrl_filename,System& syst){
   update_overlap_matrix(x_period, y_period, z_period, t1, t2, t3, basis_ao, *el->Sao); 
 
   //=========== STEP 7: Method-specific Parameters ================
+  /// Set up Hamiltonian-type-specific parameters
+
   if(prms.hamiltonian=="indo"){
+    /// For INDO: a) set overlap matrix to the identiy matrix; b) precompute INDO core parameters
+
     int opt = 1; 
     el->Sao->Init_Unit_Matrix(1.0);  
     indo_core_parameters(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, opt,1);
   }
   else if(prms.hamiltonian=="cndo"||prms.hamiltonian=="cndo2"){
+    /// For CNDO and CNDO/2: a) set overlap matrix to the identiy matrix; b) precompute CNDO/2 core parameters
+
     int opt = 0; 
     el->Sao->Init_Unit_Matrix(1.0);  
     indo_core_parameters(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, opt,1);
@@ -975,6 +1011,15 @@ void listHamiltonian_QM::init(std::string ctrl_filename,System& syst){
 }
 
 double listHamiltonian_QM::compute_scf(System& syst){
+/**
+  \param[in,out] syst The object containing structural information about system. It also will contain the forces on active state
+  in the end of this calculation.
+
+  Performes a sequanece of the preparatory steps for the SCF as well as the SCF calculations for the quantum system
+
+  Use after listHamiltonian_QM::init() and add_excitation()  !!!
+*/
+
 
 /*
   //=========== STEP 1: Create control parameters (setting computation options) ================
@@ -1048,11 +1093,15 @@ double listHamiltonian_QM::compute_scf(System& syst){
 
 */
   //=========== STEP 8: Core Hamiltonian ================
+  /// Form core Hamiltonian
+
   int debug = 0;
   Hamiltonian_core(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, *el->Hao,  *el->Sao, debug);
 
 
   //=========== STEP 9: Guess density matrix ================
+  /// Compute guss density matrix (from the core Hamiltonian)
+
   std::string eigen_method="generalized";
   vector<Timer> bench_t2(4);
 
@@ -1065,7 +1114,11 @@ double listHamiltonian_QM::compute_scf(System& syst){
             bench_t2);
 
   //=========== STEP 10: SCF solution ================
+  /// Perform the SCF calculations
+
   double E = scf(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, 0); 
+
+  /// Return the total electronic energy of the system
 
   return E;    
 
@@ -1073,12 +1126,24 @@ double listHamiltonian_QM::compute_scf(System& syst){
 
 
 void listHamiltonian_QM::set_electronic_structure(Electronic_Structure& el_){
+/**
+  \param[in,out] el_ The object containing all the information about electronic structure of the quantum subsystem.
+  Make the internal pointer to Electronic_Structure object point to an external object
+  This way also the changes made externally will affect the internal state, and vice versa - the 
+  internal modifications and updates will be available in the external object.
+*/
 
   el = &el_;  // by reference
 
 }
 
 double listHamiltonian_QM::energy_and_forces(System& syst){ 
+/**
+  \param[in,out] syst The object containing structural information about system. It also will contain the forces on active state
+  in the end of this calculation.
+
+  Computes energy and forces (inclding excited state) for quantum part of the chemical system (given by syst)
+*/
 
   return libhamiltonian_qm::energy_and_forces(*el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map );
 
@@ -1086,6 +1151,19 @@ double listHamiltonian_QM::energy_and_forces(System& syst){
 
 
 void listHamiltonian_QM::add_excitation(int f_o, int f_s, int t_o, int t_s){
+/**
+  \param[in] f_o "from orbital" The index of the orbital from which electron is excited
+  \param[in] f_s "from spin" The index of the spin from which electron is excited (1 - alpha; -1 - beta)
+  \param[in] t_o "to orbital" The index of the orbital to which electron is excited
+  \param[in] t_s "to spin" The index of the spin to which electron is excited (1 - alpha; -1 - beta)
+
+  Creates a new excitation and adds it to quantum Hamiltonian - as one of the basis states for 
+  excited states calculations
+
+  Note: It is important to create such excitations before attempting NA-MD calculations 
+  The number of such excitation (calls of this + excite_bet function) must be the number of electronic 
+  states in the Electronic object (not the Electronic_Structure !!!) - 1 (ground state is already included)
+*/
 
   int sz = basis_ex.size();
 
@@ -1115,12 +1193,28 @@ void listHamiltonian_QM::add_excitation(int f_o, int f_s, int t_o, int t_s){
 //}
 
 void listHamiltonian_QM::excite_alp(int I, int J){
+/**
+  \param[in] I the index of the source orbital involved in the alpha-excitation
+  \param[in] J the index of the target orbital involved in the alpha-excitation
+
+  This function creates an excitation - the electronic excited state - the basis state for NA-MD
+  This excitation is for the alpha electron going from orbital with index I to that with index J (I-->J)  
+*/
+
 
   el->excite_alp(I,J);
 
 }
 
 void listHamiltonian_QM::excite_bet(int I, int J){
+/**
+  \param[in] I the index of the source orbital involved in the beta-excitation
+  \param[in] J the index of the target orbital involved in the beta-excitation
+
+  This function creates an excitation - the electronic excited state - the basis state for NA-MD
+  This excitation is for the beta electron going from orbital with index I to that with index J (I-->J)  
+*/
+
 
   el->excite_bet(I,J);
 

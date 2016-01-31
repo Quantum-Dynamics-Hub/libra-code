@@ -974,9 +974,6 @@ void Hamiltonian_Atomistic::excite_alp(int I, int J){
 
   This function creates an excitation - the electronic excited state - the basis state for NA-MD
   This excitation is for the alpha electron going from orbital with index I to that with index J (I-->J)  
-  Note: It is important to create such excitations before attempting NA-MD calculations 
-  the number of such excitation (calls of this + excite_bet function) must be the number of electronic 
-  states in the Electronic object (not the Electronic_Structure !!!) - 1 (ground state is already included)
 */
 
   qm_ham->excite_alp(I,J);
@@ -993,9 +990,6 @@ void Hamiltonian_Atomistic::excite_bet(int I, int J){
 
   This function creates an excitation - the electronic excited state - the basis state for NA-MD
   This excitation is for the beta electron going from orbital with index I to that with index J (I-->J)  
-  Note: It is important to create such excitations before attempting NA-MD calculations 
-  the number of such excitation (calls of this + excite_alp function) must be the number of electronic 
-  states in the Electronic object (not the Electronic_Structure !!!) - 1 (ground state is already included)
 */
 
                  

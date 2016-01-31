@@ -351,7 +351,7 @@ void Hamiltonian_Extern::compute_adiabatic(){
       // setup ham_adi, d1ham_adi, and d2ham_adi matrices, so below we will basically 
       // check regarding the status of bindings
 
-      if(bs_ham_adia == 0){  
+      if(bs_ham_adi == 0){  
         cout<<"Error in Hamiltonian_Extern::compute_adiabatic (with option adiabatic_opt == 0)\n";
         cout<<"Adiabatic Hamiltonian has not been bound to the Hamiltonian_Extern object\n";
         cout<<"use \"bind_ham_adi\" function\n";
