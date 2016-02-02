@@ -14,10 +14,12 @@
 
 #include "../linalg/liblinalg.h"
 
+/// libmmath namespace
 namespace libmmath{
 
 using namespace liblinalg; 
 
+/// libmeigen namespace
 namespace libmeigen{
 
 

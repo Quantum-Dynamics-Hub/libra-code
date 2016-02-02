@@ -8,6 +8,12 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file CMATRIX.h
+  \brief The file describes the CMATRIX class for representing arbitrary size complex-valued matrices as well as the
+  set of functions of complex Fourier transforms and convolution
+    
+*/
 
 
 #ifndef CMATRIX_H
@@ -24,50 +30,63 @@
 
 using namespace std;
 
+/// libmmath namespace
 namespace libmmath{
+
+/// liblinalg namespace
 namespace liblinalg{
 
 class CMATRIX{
+/**
+  The class representing an arbitrary-sized complex valued matrices
+*/
 
   void max_nondiagonal(int& row,int& col);
 
 public:
-  int n_rows,n_cols,n_elts;
-  complex<double>* M;
+  int n_rows,n_cols,n_elts;  ///< The number of rows, coloumns, and elements in the matrix
+  complex<double>* M;        ///< The internal storage of the matrix elements
 
-  void set(int,double,double);
-  void set(int,complex<double>);
-  complex<double> get(int);
-  void set(int,int,double,double);
-  void set(int,int,complex<double>);
-  complex<double> get(int,int);
+  void set(int,double,double);  ///< Sets the indx's emelent of the M array to the input value (real and imaginary components)
+  void set(int,complex<double>);///< Sets the indx's emelent of the M array to the input value (a single complex-valued number)
+  complex<double> get(int);     ///< Returns the matrix element with the index "indx"
+  void set(int,int,double,double);  ///< Sets the "row","col" matrix emelent of the M array to the input value (real and imaginary components) 
+  void set(int,int,complex<double>);///< Sets the "row","col" matrix emelent of the M array to the input value (a single complex-valued number)
+  complex<double> get(int,int); ///< Returns the matrix element accessed by its row and coloumn indices
+
+
 
 
   // Constructors
-  CMATRIX(){ n_rows = n_cols = n_elts = 0; M = NULL;}
-  CMATRIX(int n_rows_,int n_cols_){
+  CMATRIX(){ n_rows = n_cols = n_elts = 0; M = NULL;} ///< Default constructor
+  CMATRIX(int n_rows_,int n_cols_){ 
+  /** Generates the complex matrix with given number of rows and coloumns */
+
     n_rows = n_rows_; n_cols = n_cols_; n_elts = n_rows * n_cols;
     M = new complex<double>[n_elts];
     for(int i=0;i<n_elts;i++){  M[i] = std::complex<double>(0.0,0.0); }
   }
-  CMATRIX(vector<vector<double> >& re_part,vector<vector<double> >& im_part);
-  CMATRIX(MATRIX& re_part);
-  CMATRIX(MATRIX& re_part,MATRIX& im_part);
+
+  CMATRIX(vector<vector<double> >& re_part,vector<vector<double> >& im_part); ///< Create the complex-valued matrix from two tables:
+                                                                              ///< one for real, one for imaginary components
+  CMATRIX(MATRIX& re_part);  ///< Create the complex-valued matrix (with zero imaginary components) from a real-valued matrix
+  CMATRIX(MATRIX& re_part,MATRIX& im_part); ///< Create the complex-valued matrix from two real-valued matrices: 
+                                            ///< one for real, one for imaginary components
  
   // Copy constructor
-  CMATRIX(const CMATRIX& ob);  
+  CMATRIX(const CMATRIX& ob);          ///< Copy constructor
 
   // Destructor
-  ~CMATRIX(){ delete [] M; n_rows = n_cols = n_elts = 0;}
+  ~CMATRIX(){ delete [] M; n_rows = n_cols = n_elts = 0;} ///< Destructor
 
   // Operatiions
   // Important! For memory efficiency it is crucial to use
   // (const CMATRIX& ob) instead of (CMATRIX ob) in some of the below
   // operators  - this avoid creation of the copy of the CMATRIX object
-  CMATRIX operator-();                 // Negation;
-  CMATRIX operator*(const CMATRIX& ob);
-  CMATRIX operator+(const CMATRIX& ob);
-  CMATRIX operator-(const CMATRIX& ob);
+  CMATRIX operator-();                 ///< Negation. Changes the caller object
+  CMATRIX operator*(const CMATRIX& ob); ///< complex matrix * complex matrix multiplication
+  CMATRIX operator+(const CMATRIX& ob); ///< complex matrix + complex matrix addition
+  CMATRIX operator-(const CMATRIX& ob); ///< complex matrix - complex matrix subtraction
   void operator*=(const double&);
   void operator*=(const complex<double>&);
   void operator*=(const CMATRIX& ob);
@@ -91,23 +110,23 @@ public:
   friend istream& operator>>(istream& strm,CMATRIX &ob);
 
   // Basic printing
-  void show_matrix();
+  void show_matrix(); ///< Print the matrix out in a formatted way
 
   // Some basic functions
-  CMATRIX conj();
-  CMATRIX T();   // transpose
-  CMATRIX H();   // Hermitian conj
-  void load_identity(); 
+  CMATRIX conj();///< Returns the matrix which is complex conjugate w.r.t. the caller matrix
+  CMATRIX T();   ///< Returns the matrix which is transposed w.r.t. the caller matrix
+  CMATRIX H();   ///< Returns the matrix which is Hermitian conjugate w.r.t. the caller matrix
+  void load_identity(); ///< Reset the caller matrix to the identity matrix (all real)
   void dot(const CMATRIX& ob1,const CMATRIX& ob2);
 
   CMATRIX col(int); // takes given column and makes it n x 1 CMATRIX
   CMATRIX row(int); // takes given row and makes it 1 x n CMATRIX
 
   // More advanced functions
-  void QR(CMATRIX& w,CMATRIX& R);  // QR for general (Hermitian or symmetric) matrices
-  void QR1(CMATRIX& w,CMATRIX& R); // QR for tridiagonal matrices
-  void tridiagonalize(CMATRIX& T);// for Hermitian or symmetric CMATRIX - only resulting tridiagonal CMATRIX
-  void tridiagonalize(CMATRIX& T,CMATRIX& H); // ---//---  also keep track of Householder transformation matrices
+  void QR(CMATRIX& w,CMATRIX& R);  ///< QR for general (Hermitian or symmetric) matrices
+  void QR1(CMATRIX& w,CMATRIX& R); ///< QR for tridiagonal matrices
+  void tridiagonalize(CMATRIX& T);///< for Hermitian or symmetric CMATRIX - only resulting tridiagonal CMATRIX
+  void tridiagonalize(CMATRIX& T,CMATRIX& H); ///< for Hermitian or symmetric CMATRIX - only resulting tridiagonal CMATRIX -  also keep track of Householder transformation matrices
 
   // Eigenvalues
   void eigen(double EPS,CMATRIX& EVAL,CMATRIX& EVECT,int opt); // interface
@@ -160,7 +179,7 @@ void convolve(CMATRIX& f,CMATRIX& g, CMATRIX& conv,double dx);
 void convolve_2D(CMATRIX& f,CMATRIX& g, CMATRIX& conv,double dx,double dy);
 
 //-------- Fast Fourier Transforms -------------
-void cfft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx);
+void cfft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx);  
 void inv_cfft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx);
 
 void cfft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy);
@@ -168,9 +187,8 @@ void inv_cfft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmi
 
 
 
-typedef std::vector<CMATRIX> CMATRIXList;
-
-typedef std::vector<vector<CMATRIX> > CMATRIXMap;
+typedef std::vector<CMATRIX> CMATRIXList;  ///< Data type holding a list of arbitrary-size complex-valued matrices
+typedef std::vector<vector<CMATRIX> > CMATRIXMap; ///< Data type for storing the table (grid) of the arbitrary-size complex-valued matrices
 
 }//namespace liblinalg
 }// namespace libmmath

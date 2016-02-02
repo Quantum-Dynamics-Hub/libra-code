@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file liboperators.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIBOPERATORS_H
 #define LIBOPERATORS_H
@@ -15,7 +20,10 @@
 
 #include "Operators.h"
 
+/// libmmath namespace
 namespace libmmath{
+
+/// liboperators namespace
 namespace liboperators{
 
 

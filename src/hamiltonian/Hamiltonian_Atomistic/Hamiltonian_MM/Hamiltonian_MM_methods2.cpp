@@ -8,21 +8,34 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_MM_methods2.cpp
+  \brief The file implements the main computational machinery of the listHamiltonian_MM class and some auxiliary functions
+*/
 
 #include "Hamiltonian_MM.h"
 
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_mm namespace
 namespace libhamiltonian_mm{
 
 
 int is_in_vector(int indx,vector<int> vect){
-/*************************************************************************
-   This functions is not to be exposed to user.
-   It searches for index "indx" of int type in a vector of ints
-   Return 1 if "indx" has been found, 0 - otherwise
-**************************************************************************/
+/**
+  \param[in] indx The index to be found in the vector of integers
+  \param[in] vect The vector of integers in which we want to find a given index
+
+  This functions is not to be exposed to user.
+  It searches for index "indx" of int type in a vector of ints
+  Return 1 if "indx" has been found, 0 - otherwise
+*/
+
   int res = 0;
   int sz = vect.size();
   for(int i=0;i<sz;i++){
@@ -38,17 +51,31 @@ int is_in_vector(int indx,vector<int> vect){
 //========================================================
 
 int listHamiltonian_MM::is_new_interaction(Hamiltonian_MM& inter){
+/**  
+  The function checks if the given interaction is not yet included in the internals of the
+  listHamiltonian_MM object.
+
+  This verification is time-consuming (~N^4) so for big systems we do not do this!
+  So we always assume the interaction is new.
+*/
+
   int res = 1; // Assume it is new
-/*  This verification is time-consuming (~N^4) so for big systems we do not do this!
+
+/*
   int sz = interactions.size();
   for(int i=0;i<sz;i++){
     if(inter==interactions[i]){ res = 0; }
   }
 */
+
   return res;
 }
 
 void listHamiltonian_MM::show_interactions_statistics(){
+/**
+  Show some basic information about the interactions in the system (given Hamiltonian)
+*/
+
   int sz = interactions.size();
   cout<<"Total number of interactions is "<<sz<<endl;
   int b,a,d,o,v,e,mb,cg, mbe;
@@ -91,13 +118,18 @@ void listHamiltonian_MM::show_interactions_statistics(){
 }
 
 void listHamiltonian_MM::set_atom_types(System& syst, vector<int>& lst,ForceField& ff){
-/********************************************************************
-  This function checks if the atom type of the atoms in the list are
+/**
+  \param[in,out]  syst The molecular system for which we perform the typization
+  \param[in] lst The list of atom ID for the atoms which need to be classified (force field typization)
+  \param[in] ff The ForceField object that defines the atom types and their properties
+
+  This function first checks if the atom type of the atoms in the list are
   valid for a given force field.
   If they are valid and defined - no action is required, otherwise the
   typization will be performed according to the rules of the given
   force field
-*********************************************************************/
+*/
+
   cout<<"listHamiltonian_MM::set_atom_types\n";
   cout<<"Setting up atom types for the force field "<< ff.ForceField_Name<<endl;
 
@@ -128,13 +160,18 @@ void listHamiltonian_MM::set_atom_types(System& syst, vector<int>& lst,ForceFiel
 }
 
 void listHamiltonian_MM::set_fragment_types(System& syst, vector<int>& lst,ForceField& ff){
-/********************************************************************
-  This function checks if the atom type of the atoms in the list are
-  valid for a given force field.
+/**
+  \param[in,out]  syst The molecular system for which we perform the fragment typization
+  \param[in] lst The list of fragment IDs for the fragments which need to be classified (force field typization)
+  \param[in] ff The ForceField object that defines the fragment types and their properties
+
+  This function checks if the fragment type of the atoms in the list are
+  valid for a given force field. Assuming some kine of coarse-grained force fields.
   If they are valid and defined - no action is required, otherwise the
   typization will be performed according to the rules of the given
   force field
-*********************************************************************/
+*/
+
   int sz = lst.size();
   for(int i=0;i<sz;i++){
 
@@ -162,14 +199,41 @@ void listHamiltonian_MM::set_fragment_types(System& syst, vector<int>& lst,Force
 
 
 bool listHamiltonian_MM::is_active(Atom& at1,Atom& at2){
+/**
+  Returns the status of the 2-body interaction: it is active is the two atoms belong to different fragments
+
+  \param[in] at1 One of the atoms involved in the 2-body interaction
+  \param[in] at2 One of the atoms involved in the 2-body interaction
+*/
+
   return !(at1.globGroup_Index==at2.globGroup_Index);
 }
+
 bool listHamiltonian_MM::is_active(Atom& at1,Atom& at2,Atom& at3){
+/**
+  Returns the status of the 3-body interaction: it is active is at least one of the 3 atoms belongs to the fragment other than other two
+
+  \param[in] at1 One of the atoms involved in the 3-body interaction
+  \param[in] at2 One of the atoms involved in the 3-body interaction
+  \param[in] at3 One of the atoms involved in the 3-body interaction
+*/
+
   return !((at1.globGroup_Index==at2.globGroup_Index) &&
            (at2.globGroup_Index==at3.globGroup_Index)
           );
 }
+
 bool listHamiltonian_MM::is_active(Atom& at1,Atom& at2,Atom& at3,Atom& at4){
+/**
+  Returns the status of the 4-body interaction: 
+  it is active is at least one of the 4 atoms belongs to the fragment other than other 3
+
+  \param[in] at1 One of the atoms involved in the 4-body interaction
+  \param[in] at2 One of the atoms involved in the 4-body interaction
+  \param[in] at3 One of the atoms involved in the 4-body interaction
+  \param[in] at3 One of the atoms involved in the 4-body interaction
+*/
+
   return !((at1.globGroup_Index==at2.globGroup_Index) &&
            (at2.globGroup_Index==at3.globGroup_Index) &&
            (at3.globGroup_Index==at4.globGroup_Index)
@@ -179,16 +243,26 @@ bool listHamiltonian_MM::is_active(Atom& at1,Atom& at2,Atom& at3,Atom& at4){
 
 void listHamiltonian_MM::set_atom_interactions_for_atoms
 (System& syst, string int_type,vector<Atom>& top_elt,vector<int>& lst1,vector<int>& lst2,ForceField& ff,int verb){
-/**************************************************************
+/**
   This function determines the parameters for many-body interactions
   corresponding to the force field and the functional form of the
   potential in use. It then creates the interaction objects
- (interactions) for all atoms defined in the system.
+  (interactions) for all atoms defined in the system.
   If the interactions were already defined - they are not included.
   Also if not all necessary parameters obtained - the interaction
   is not created.
-  <verb> determines verbosity level
-***************************************************************/
+
+  \param[in,out]  syst The molecular system for which we set up atomic interactions
+  \param[in] int_type The interaction type. Can be: "mb", "mb_excl"
+  \param[in] top_elt The topological element: the collection of the Atom objects which constitute molecular basis for the
+  interaction of given type for mb - these are just all atoms.
+  \param[in] lst1,lst2 The lists of atom IDs for which the interactions will be created. This is done to allow energy partitioning:
+  e.g. computing only molecule-surface or fragment-fragment interactions. The idea that one of the atoms in the (mostly 2-body)
+  interaction must belong to lst1, while the other to the list lst2
+  \param[in] ff The ForceField object that defines the fragment types and their properties
+  \param[in] verb Determines the verbosity level
+*/
+
   int sz = top_elt.size();
   int* at; at = new int[sz];
   int* id; id = new int[sz];
@@ -354,16 +428,27 @@ void listHamiltonian_MM::set_atom_interactions_for_atoms
 
 void listHamiltonian_MM::set_group_interactions_for_atoms
 (System& syst, string int_type,vector<Group>& top_elt,vector<int>& lst1,vector<int>& lst2,ForceField& ff){
-/**************************************************************
-  This function determines the parameters for group (=bonds,angles,dihedrals,etc.) interactions
+/**
+  This function determines the parameters for group (bonds, angles, dihedrals, etc.) interactions
   corresponding to the force field and the functional form of the
   potential in use. It then creates the interaction objects
- (interactions) for all groups defined in the system. It deactivates
+  (interactions) for all atoms defined in the system. It deactivates
   the intra-fragmental group interactions.
   If the interactions were already defined - they are not included.
   Also if not all necessary parameters obtained - the interaction
   is not created.
-***************************************************************/
+
+  \param[in,out]  syst The molecular system for which we set up atomic interactions
+  \param[in] int_type The interaction type. Can be: "bond", "angle", "dihedral", "oop", "vdw", "elec"
+  \param[in] top_elt The topological element: the collection of the Group objects which constitute molecular basis for the
+  interaction of given type: for 2-, 3- and 4-body - these are bonds, angles, dihedrals, etc.
+  \param[in] lst1,lst2 The lists of atom IDs for which the interactions will be created. This is done to allow energy partitioning:
+  e.g. computing only molecule-surface or fragment-fragment interactions. The idea that one of the atoms in the (mostly 2-body)
+  interaction must belong to lst1, while the other to the list lst2
+  \param[in] ff The ForceField object that defines the fragment types and their properties
+  \param[in] verb Determines the verbosity level
+*/
+
   int g_indx[4];
   int m_indx[4];
   for(int b=0;b<top_elt.size();b++){
@@ -543,13 +628,23 @@ void listHamiltonian_MM::set_group_interactions_for_atoms
 
 void listHamiltonian_MM::set_interactions_for_atoms
 (System& syst, boost::python::list lst1,boost::python::list lst2,ForceField& ff,int verb, int assign_rings){
-/**************************************************************
-  This function sets up all interactions existing in system, 
-  that is it determines the parameters for given force_fields
-  of potential and relates them with the functional form and
-  the atoms and groups of the system
-  <verb> - defines verbosity level
-***************************************************************/
+/**
+  The Python-friendly version of the function for setting all atomic (many-body, 2,3,4-body) interactions.
+
+  This function will first determine the functional groups, assign atom types, and then create many- and few-body
+  interactions
+
+  \param[in,out]  syst The molecular system for which we set up atomic interactions
+  \param[in] lst1,lst2 The lists of atom IDs for which the interactions will be created. This is done to allow energy partitioning:
+  e.g. computing only molecule-surface or fragment-fragment interactions. The idea that one of the atoms in the (mostly 2-body)
+  interaction must belong to lst1, while the other to the list lst2
+  \param[in] ff The ForceField object that defines the fragment types and their properties
+  \param[in] verb Determines the verbosity level
+  \param[in] assign_rings The flag controlling whether to include the ring determination procedure (maybe constly for complex
+  structure, especially with many fused rings) in the calculations or not. Options: 1 - include, 0 - do not include
+
+*/
+
   if(verb>0){ cout<<"Setting interactions with the force field "<<ff.ForceField_Name<<endl; }
 
   // Transform the lists of id into vectors of indexes
@@ -599,12 +694,20 @@ void listHamiltonian_MM::set_interactions_for_atoms
 
 void listHamiltonian_MM::set_interactions_for_fragments
 (System& syst, boost::python::list lst1,boost::python::list lst2,ForceField& ff){
-/**************************************************************
-  This function sets up all interactions existing in system,
-  that is it determines the parameters for given force_fields
-  of potential and relates them with the functional form and
-  the atoms and groups of the system
-***************************************************************/
+/**
+  The Python-friendly version of the function for setting all fragmental (e.g. Gay-Berne or other coarse-grained) interactions.
+
+  This function will first determine the functional groups, assign fragment types, and then create many- and few-body
+  interactions
+
+  \param[in,out]  syst The molecular system for which we set up atomic interactions
+  \param[in] lst1,lst2 The lists of fragment IDs for which the interactions will be created. This is done to allow energy partitioning:
+  e.g. computing only molecule-surface or fragment-fragment interactions. The idea that one of the atoms in the (mostly 2-body)
+  interaction must belong to lst1, while the other to the list lst2
+  \param[in] ff The ForceField object that defines the fragment types and their properties
+
+  Presently, this function doesn't do much since we don't have many fragmental potentials
+*/
 
   // Transform the lists of id into vectors of indexes
   vector<int> vlst1,vlst2;
@@ -639,13 +742,14 @@ void listHamiltonian_MM::set_interactions_for_fragments
 
 
 void listHamiltonian_MM::apply_pbc_to_interactions(System& syst, int int_type,int nx,int ny,int nz){
-/**********************************************************************
+/**
   Interactions will be multiplied by the number of possible distinct
   translations of maximal degrees nx,ny and nz, that is:
   1 -> (2*nx+1)*(2*ny+1)*(2*nz+1) new interactions
   one interaction for each distinct combination of kx,ky,kz:
   nx<=kx<=nx; ny<=ky<=ny; nz<=kz<=nz;
-***********************************************************************/
+*/
+
   if(syst.is_Box){
 
   int sz = interactions.size();
@@ -672,7 +776,9 @@ void listHamiltonian_MM::apply_pbc_to_interactions(System& syst, int int_type,in
 
 
 void listHamiltonian_MM::set_respa_types(std::string s_int_type,std::string s_respa_type){
-// Must be called after one or more new interactions are created
+/** 
+  Must be called after one or more new interactions are created
+*/
 
   int sz = interactions.size();
   // The following conversion should be consistent with function:

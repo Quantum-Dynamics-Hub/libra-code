@@ -8,20 +8,19 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libmmath.cpp
+  \brief The file describes Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "libmmath.h"
 
 using namespace boost::python;
-//using namespace libmmath;
-//using libmmath::VECTOR;
-//using libmmath::MATRIX;
-//using libmmath::CMATRIX;
-//using libmmath::MATRIX3x3;
-//using libmmath::QUATERNION;
-//using libmmath::DATA;
 
+/// libmmath namespace
 namespace libmmath{
 
 using namespace libspecialfunctions;
@@ -35,6 +34,20 @@ using namespace libmeigen;
 using namespace libsymmetry;
 
 void export_Mathematics_objects(){
+/** 
+  \brief Exporter of Timer class and other mathematical libraries and their components
+
+*/
+
+  export_linalg_objects();
+  export_SpecialFunctions_objects();
+  export_GRAPH_objects();
+  export_Operators_objects();
+  export_Random_objects();
+  export_Data_objects();
+  export_NeuralNetwork_objects();
+  export_mEigen_objects();
+  export_symmetry_objects();
 
 
   class_<Timer>("Timer",init<>())
@@ -64,16 +77,7 @@ BOOST_PYTHON_MODULE(libmmath){
   // Register converters:
   // See here: https://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters/
   //to_python_converter<std::vector<DATA>, VecToList<DATA> >();
-  export_linalg_objects();
-  export_SpecialFunctions_objects();
-  export_GRAPH_objects();
-  export_Operators_objects();
-  export_Random_objects();
-  export_Data_objects();
-  export_NeuralNetwork_objects();
-  export_mEigen_objects();
   export_Mathematics_objects();
-  export_symmetry_objects();
 
 }
 

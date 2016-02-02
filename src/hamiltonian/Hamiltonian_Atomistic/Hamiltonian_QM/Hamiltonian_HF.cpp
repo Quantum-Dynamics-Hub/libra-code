@@ -8,18 +8,20 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_HF.cpp
+  \brief The file implements functions for Hartree-Fock (HF) calculations
+*/
 
 #include "Hamiltonian_HF.h"
 
-/****************************************************************************
-
-  This file contains following functions:
-
-****************************************************************************/
-
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
 
 
@@ -29,13 +31,19 @@ void Hamiltonian_core_hf
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   MATRIX* Hao, MATRIX* Sao, int DF
 ){
-
-// prms - control parameters
-// modprms - model parameters
-// mol - nuclear geometry and charges
-// basis_fo - basis of fragment obitals - basis_fo[i] - is index of basis_ao, which is i-th in the given group
-// basis_ao - the full/complete pool of AOs (entire system)
-// Hao, Sao - Hamiltonian and overlap matrices
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[out] Hao The pointer to the matrix object in which the core Hamiltonian will be stored
+  \param Sao The pointer to the AO overla matrix (not actually used here)
+  \param[in] DF Debug flag - controlls how much of extra info is printed out
+  
+  Compute the core HF (Hartree-Fock) Hamiltonian
+*/
 
   int i,j,n, I,J;
   VECTOR da,db,dc;
@@ -70,6 +78,19 @@ void Hamiltonian_core_hf
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   MATRIX& Hao, MATRIX& Sao, int DF
 ){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[out] Hao The pointer to the matrix object in which the core Hamiltonian will be stored
+  \param Sao The pointer to the AO overla matrix (not actually used here)
+  \param[in] DF Debug flag - controlls how much of extra info is printed out
+  
+  Compute the core HF (Hartree-Fock) Hamiltonian - Python-friendly version
+*/
 
 
   Hamiltonian_core_hf( syst, basis_ao, prms, modprms,  atom_to_ao_map, ao_to_atom_map, &Hao, &Sao, DF);
@@ -80,7 +101,18 @@ void Hamiltonian_core_hf
 void Hamiltonian_Fock_hf(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
                          Control_Parameters& prms,Model_Parameters& modprms,
                          vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map){
-// This functions constructs HF Fock matrix
+/**
+  \param[in,out] el The electronic structure of the system (some of the results will be printed into it)
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  
+  Compute the Fock matrix of the HF (Hartree-Fock) Hamiltonian
+*/
+
   int a,b,c,d,A,B,C,D;
 
   int Norb = basis_ao.size(); // how many AOs 
@@ -148,6 +180,18 @@ void Hamiltonian_Fock_hf(Electronic_Structure& el, System& syst, vector<AO>& bas
                          Control_Parameters& prms,Model_Parameters& modprms,
                          vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
                         ){
+/**
+  \param[in,out] el The electronic structure of the system (some of the results will be printed into it)
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  
+  Compute the Fock matrix of the HF (Hartree-Fock) Hamiltonian - Python-friendly version
+*/
+
 
   Hamiltonian_Fock_hf(&el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map);
 

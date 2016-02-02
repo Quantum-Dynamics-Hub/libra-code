@@ -19,11 +19,12 @@
 using namespace Eigen;
 using namespace std;
 
-
+/// libmmath namespace
 namespace libmmath{
 
 using namespace liblinalg;
 
+/// libmeigen namespace
 namespace libmeigen{
 
 /****************************************************************************

@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file liblinalg.h
+  \brief The file describes Python export function and data types
+    
+*/
 
 #ifndef LIB_LINALG_H
 #define LIB_LINALG_H
@@ -27,20 +32,22 @@
 
 
 
-
+/// libmmath namespace
 namespace libmmath{
+
+/// liblinalg namespace
 namespace liblinalg{
 
 
-typedef std::vector<int> intList;
-typedef std::vector<float> floatList;
-typedef std::vector<double> doubleList;
-typedef std::vector<std::complex<double> > complexList;
+typedef std::vector<int> intList;  ///< data type for holding the list of integers
+typedef std::vector<float> floatList;  ///< data type for holding the list of floats
+typedef std::vector<double> doubleList;  ///< data type for holding the list of doubles
+typedef std::vector<std::complex<double> > complexList;  ///< data type for holding the list of complex values
 
-typedef std::vector<vector<int> > intMap;
-typedef std::vector<vector<float> > floatMap;
-typedef std::vector<vector<double> > doubleMap;
-typedef std::vector<vector<std::complex<double> > > complexMap;
+typedef std::vector<vector<int> > intMap;  ///< data type for holding the table of integers
+typedef std::vector<vector<float> > floatMap;  ///< data type for holding the table of floats
+typedef std::vector<vector<double> > doubleMap;  ///< data type for holding the table of doubles
+typedef std::vector<vector<std::complex<double> > > complexMap;  ///< data type for holding the table of complex values
 
 
 

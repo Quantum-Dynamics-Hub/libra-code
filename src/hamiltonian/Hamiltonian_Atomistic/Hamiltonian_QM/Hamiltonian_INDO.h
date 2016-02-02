@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_INDO.h
+  \brief The file describes functions for INDO calculations
+*/
+
 
 #ifndef HAMILTONIAN_INDO_H
 #define HAMILTONIAN_INDO_H
@@ -31,9 +36,13 @@ using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::lib
 
 #include "Electronic_Structure.h"
 
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
 
 

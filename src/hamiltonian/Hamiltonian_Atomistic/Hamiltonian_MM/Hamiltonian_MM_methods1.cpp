@@ -8,12 +8,20 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_MM_methods1.cpp
+  \brief The file implements the main computational machinery of the Hamiltonian_MM class
+*/
 
 #include "Hamiltonian_MM.h"
-//using namespace libcell;
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_mm namespace
 namespace libhamiltonian_mm{
 
 //========================================================
@@ -22,16 +30,69 @@ namespace libhamiltonian_mm{
 
 
 void Hamiltonian_MM::set_pbc(MATRIX3x3* box,int kx_,int ky_,int kz_){
+/**
+  Define the periodicity box (unit cell) for the system - in case periodic interactions are needed.
+  This affects the computation of interactions at some later point.
+  
+  \param[in] box The matrix defining the box size and shape
+  \param[in] kx_ The x component of the translation vector (in unit cell units) of the first center (e.g one of the atoms)
+  \param[in] ky_ The y component of the translation vector (in unit cell units) of the first center (e.g one of the atoms)
+  \param[in] kz_ The z component of the translation vector (in unit cell units) of the first center (e.g one of the atoms)
+*/
+
   Box = box;
   Box_old = *Box;
   kx = kx_; ky = ky_; kz = kz_;
 }
 
 int Hamiltonian_MM::is_origin(){
+/**
+  Returns the status of given interaction in terms of periodicity. If all components of the translation vector are 0, this means
+  that all atoms involved in this interaction are in the same periodic cell (not a ceter - image interaction)
+*/
+
   return ((kx==0) && (ky==0) && (kz==0));
 }
 
 void Hamiltonian_MM::set_interaction_type_and_functional(std::string t,std::string f){
+/**
+  Self-explanatory
+ 
+  \param[in] t Type of the MM functional to set for this interaction. Options are given below.
+  \param[in] f Functional of given type for this interaction. Options are given below.
+
+  Type       Functional
+  bond        Harmonic
+              Quartic
+              Morse
+  angle       Harmonic
+              Fourier
+              Fourier_General
+              Fourier_Special
+              Harmonic_Cos
+              Harmonic_Cos_General
+              Cubic
+  dihedral    General0
+              General1
+              General2
+              General3
+              Fourier0
+              Fourier1
+  oop         Fourier
+              Wilson
+              Harmonic
+  vdw         LJ
+              Buffered14_7
+              Morse
+  elec        Coulomb
+  mb          Ewald_3D
+              vdw_LJ
+              vdw_LJ1
+              LJ_Coulomb
+  cg          Gay-Berne
+  mb_excl     vdw_LJ1
+           
+*/
 
   if(t=="bond"){ int_type = 0; is_int_type = 1;
     if(f=="Harmonic")    { functional = 0; is_functional = 1; }
@@ -101,6 +162,54 @@ void Hamiltonian_MM::set_2a_interaction(std::string t,std::string f,
                                        VECTOR& f1,VECTOR& f2, 
                                        double& dr1_2, double& dr2_2,  double& dT_2,
                                        map<std::string,double> params){
+/**
+  Create 2-atomic interactions. This means that the internal pointers will be made to point to the 
+  external coordinates. And the internal parameters will be set up for this particular interaction.
+ 
+  \param[in] t Type of the MM functional to set for this interaction.See void Hamiltonian_MM::set_interaction_type_and_functional() for details
+  \param[in] f Functional of given type for this interaction. See void Hamiltonian_MM::set_interaction_type_and_functional() for details
+  \param[in] id1, id2 The IDs of the atoms invloved in the interaction
+  \param[in] r1, r2 The external atomic coordinates. Change of those coordinates will affect the computations with the same interaction object.
+  \param[in] g1, g2 The external group (fragment center of mass) coordinates - needed for coarse-grained functionals
+  \param[in] m1, m2 The external molecular coordinates - needed for coarse-grained (molecular level) functionals
+  \param[in,out] f1, f2 The external forces (atomic). The computed (not here) results will be stored in those objects
+  \param[in,out] dr1_2, dr2_2 Squares of the displacements of 2 atoms involved in this interaction. The results (when computed)
+                 will affect the external storage variables
+  \param[in,out] dT_2 Similar to dr1_2 and dr2_2, but describes the unit cell (size, shape) change
+  \param[in] params The dictionary of parameters to set to this ineraction. Possible options depend on the type of 2-body interaction
+
+  Functional type        Possible params keys      Meaning
+   bond                    K                      Harmonic force constant
+                           D                      Morse potential well depth
+                           r0                     Equilibrium bond length
+                           alpha                  Morse alpha parameter (exponent)
+
+  vdw                      sigma                  Atomic vdw radius
+                           epsilon                vdW binding energy in a pure substance
+                           D                      Morse potential well depth - for vdw interactions
+                           r0                     Equilibrium non-bonded length - for vdw interactions
+                           alpha                  Morse alpha parameter (exponent) - for vdw interactions
+                           scale                  The scaling factor for this specific interaction - usually 0 for bonded pairs and even for 1,3-pairs
+                           R_on                   Distance when the switching function starts (and is = 1)
+                           R_off                  Distance when the switching function stops (and is = 0)
+                           R_on2                  Square of R_on
+                           R_off2                 Square of R_off
+                           is_cutoff              The flag wheter the cutoff is used (if not - the full range is applied)
+
+  elec                     q1, q2                 Charges on the atoms in the pair
+                           xi1, xi2               The atomic electronegativities
+                           eps                    The dielectric constant for this pair
+                           J                      The Coulomb integral for this pair of atoms
+                           delta                  The shift of the interatomic distance, to remove the singularity when the two
+                                                  atoms are at the same position (or for self-interactions)
+                           scale                  The scaling factor for this specific interaction - usually 0 for bonded pairs and even for 1,3-pairs
+                           R_on                   Distance when the switching function starts (and is = 1)
+                           R_off                  Distance when the switching function stops (and is = 0)
+                           R_on2                  Square of R_on
+                           R_off2                 Square of R_off
+                           is_cutoff              The flag wheter the cutoff is used (if not - the full range is applied)
+
+*/
 
   set_interaction_type_and_functional(t,f);
 
@@ -183,6 +292,28 @@ void Hamiltonian_MM::set_3a_interaction(std::string t,std::string f,
                                        VECTOR& m1,VECTOR& m2,VECTOR& m3,
                                        VECTOR& f1,VECTOR& f2,VECTOR& f3,
                                        map<std::string,double> params){
+/**
+  Create 3-atomic interactions. This means that the internal pointers will be made to point to the 
+  external coordinates. And the internal parameters will be set up for this particular interaction.
+ 
+  \param[in] t Type of the MM functional to set for this interaction.See void Hamiltonian_MM::set_interaction_type_and_functional() for details
+  \param[in] f Functional of given type for this interaction. See void Hamiltonian_MM::set_interaction_type_and_functional() for details
+  \param[in] id1, id2, id3 The IDs of the atoms invloved in the interaction
+  \param[in] r1, r2, r3 The external atomic coordinates. Change of those coordinates will affect the computations with the same interaction object.
+  \param[in] g1, g2, g3 The external group (fragment center of mass) coordinates - needed for coarse-grained functionals
+  \param[in] m1, m2, m3 The external molecular coordinates - needed for coarse-grained (molecular level) functionals
+  \param[in,out] f1, f2, f3 The external forces (atomic). The computed (not here) results will be stored in those objects
+  \param[in] params The dictionary of parameters to set to this ineraction. Possible options depend on the type of 3-body interaction
+
+  Functional type        Possible params keys      Meaning
+   angle                   k_theta                Harmonic force constant
+                           theta_0                Equilibrium angle 
+                           cos_theta_0            The cosine of the equilibrium angle
+                           C0, C1, C2             The coefficients of the Fourier-type angle potential
+                           coordination           The integer describing the symmetry of the central atom
+
+*/
+
   set_interaction_type_and_functional(t,f);
 
   if(int_type==1){ // angle
@@ -214,6 +345,33 @@ void Hamiltonian_MM::set_4a_interaction(std::string t,std::string f,
                                         VECTOR& m1,VECTOR& m2,VECTOR& m3,VECTOR& m4,
                                         VECTOR& f1,VECTOR& f2,VECTOR& f3,VECTOR& f4,
                                         map<std::string,double> params){
+/**
+  Create 4-atomic interactions. This means that the internal pointers will be made to point to the 
+  external coordinates. And the internal parameters will be set up for this particular interaction.
+ 
+  \param[in] t Type of the MM functional to set for this interaction.See void Hamiltonian_MM::set_interaction_type_and_functional() for details
+  \param[in] f Functional of given type for this interaction. See void Hamiltonian_MM::set_interaction_type_and_functional() for details
+  \param[in] id1, id2, id3, id4 The IDs of the atoms invloved in the interaction
+  \param[in] r1, r2, r3, r4 The external atomic coordinates. Change of those coordinates will affect the computations with the same interaction object.
+  \param[in] g1, g2, g3, g4 The external group (fragment center of mass) coordinates - needed for coarse-grained functionals
+  \param[in] m1, m2, m3, m4 The external molecular coordinates - needed for coarse-grained (molecular level) functionals
+  \param[in,out] f1, f2, f3, f4 The external forces (atomic). The computed (not here) results will be stored in those objects
+  \param[in] params The dictionary of parameters to set to this ineraction. Possible options depend on the type of 4-body interaction
+
+  Functional type        Possible params keys      Meaning
+   dihedral                Vphi                   1-term force constant
+                           phi0                   Equilibrium dihedral angle 
+                           Vphi1, Vphi2, Vphi3    The Fourier coefficients 
+                           opt                    The option to choose dihedral or torsion angle
+                           n                      Angle multiplicity
+
+   oop                     K                      oop force constant
+                           xi_0                   oop equilibrium angle 
+                           C0, C1, C2             The Fourier coefficients of the potential
+                           opt                    The option to choose dihedral or torsion angle
+
+*/
+
 
   set_interaction_type_and_functional(t,f);
 
@@ -268,6 +426,40 @@ void Hamiltonian_MM::set_mb_interaction(std::string t,std::string p,int sz, int*
                                         int nexcl, int* excl1, int* excl2, double* scale,double** displr_2, double* displT_2,
                                         vector< vector<excl_scale> >& excl_scales,
                                         map<std::string,double> params){
+/**
+  Create many-body interaction. One many-body interaction can include the interaction of N particles at once. 
+  It can be factorized down to 2, 3, or 4-body interactions - e.g. for acceleration, or it may not be easily factorizable (e.g. lattice sums)
+  This functions sets the internal pointers to point to the external coordinates (also parameters, forces, etc).
+  And the internal parameters will be set up for this particular interaction.
+ 
+  \param[in] t Type of the MM functional to set for this interaction.See void Hamiltonian_MM::set_interaction_type_and_functional() for details
+  \param[in] p Functional of given type for this interaction. See void Hamiltonian_MM::set_interaction_type_and_functional() for details
+  \param[in] sz The number of atoms involved in the many-body interactions
+  \param[in] id The pointer to the array of IDs of the atoms invloved in the interaction
+  \param[in] r The pointer to the array of addresses of external atomic coordinates. Change of those coordinates will affect the computations with the same interaction object.
+  \param[in] g Same as r, but for fragmental coordinates. Change of these will affect only coarse-grained potentials
+  \param[in] m Same as r, but for fragmental coordinates. Change of these will affect only coarse-grained (molecular-level) potentials
+  \param[in] q The pointer to the array of addresses of external atomic charge. Change of those charges will affect the computations with the same interaction object.
+  \param[in] epsilon The pointer to the array of addresses of atomic vdw interaction strengths
+  \param[in] sigma The pointer to the array of addresses of atomic vdw radii
+  \param[in] nexcl The number of exclusions in the system
+  \param[in] excl1 The pointer to the array of atomic indices for the first atom in the exclusion pair
+  \param[in] excl2 The pointer to the array of atomic indices for the second atom in the exclusion pair
+  \param[in] scale The pointer to the array of scaling constants for each exclusion pair
+  \param[in] displr2 The pointer to the array of addresses each pointing to the variable that holds the square of the atomic displacement for each atom
+  \param[in] displT_2 The address of the variable that holds the square of the unit cell translation vector fluctuation
+  \param[in] params The dictionary of parameters to set to this ineraction. Possible options depend on the type of many-body interaction
+
+  Functional type        Possible params keys      Meaning
+
+  mb                       R_on                   Distance when the switching function starts (and is = 1)
+                           R_off                  Distance when the switching function stops (and is = 0)
+                           R_on2                  Square of R_on
+                           R_off2                 Square of R_off
+                           is_cutoff              The flag wheter the cutoff is used (if not - the full range is applied)
+
+*/
+
 
   set_interaction_type_and_functional(t,p);
 
@@ -309,6 +501,26 @@ void Hamiltonian_MM::set_2f_interaction(std::string t,std::string f,
                                         VECTOR& r1,VECTOR& r2,VECTOR& u1,VECTOR& u2,
                                         VECTOR& f1,VECTOR& f2,VECTOR& t1,VECTOR& t2,
                                         map<std::string,double> params){
+/**
+  Create a 2-fragmental interactions (coarse-grained). This means that the internal pointers will be made to point to the 
+  external coordinates. And the internal parameters will be set up for this particular interaction.
+ 
+  \param[in] t Type of the MM functional to set for this interaction.See void Hamiltonian_MM::set_interaction_type_and_functional() for details
+  \param[in] f Functional of given type for this interaction. See void Hamiltonian_MM::set_interaction_type_and_functional() for details
+  \param[in] id1, id2 The IDs of the fragments invloved in the interaction
+  \param[in] r1, r2 The external fragmental coordinates (e.g. center of mass). Change of those coordinates will affect the computations with the same interaction object.
+  \param[in] u1, u2 The external fragmental orientational variables (direction cosines)
+  \param[in,out] f1, f2 The external forces (fragmental). The computed (not here) results will be stored in those objects
+  \param[in,out] t1, t2 The external torques (fragmental). The computed (not here) results will be stored in those objects
+  \param[in] params The dictionary of parameters to set to this ineraction. Possible options depend on the type of 2-fragmental interaction
+
+  Functional type        Possible params keys      Meaning
+   gb                     Vphi                   1-term force constant
+                           phi0                   Equilibrium dihedral angle 
+                           Vphi1, Vphi2, Vphi3    The Fourier coefficients 
+                           opt                    The option to choose dihedral or torsion angle
+                           n                      Angle multiplicity
+*/
 
   set_interaction_type_and_functional(t,f);
 
@@ -335,10 +547,27 @@ void Hamiltonian_MM::set_2f_interaction(std::string t,std::string f,
 }
 
 double Hamiltonian_MM::calculate(int& update_displ2){
+/**
+  This function performs the calculations for the already pre-set type of interactions
+
+  \param[out] update_displ2 The square of the displacement of the atomic coordinates (old vs. new) - this is needed for 
+  Verlet list updates, but is presently not well tested
+*/
+
   return calculate(int_type,update_displ2);
 }
 
 double Hamiltonian_MM::calculate(int call_type,int& update_displ2){
+/**
+  This function performs the calculations for the selected type of interactions
+
+  \param[in] call_type The integer specifying the type if interactions we want to compute: 0 (bonds), 1 (angle), 2 (dihedral),
+  3 (oop), 4 (vdw, including periodic),  (electrostatic, including periodic), 6 (vdw + electrostatic, including periodic - all using many-body potential), 
+  7 (gay-berne), 8 (exclusions).
+  \param[out] update_displ2 The square of the displacement of the atomic coordinates (old vs. new) - this is needed for 
+  Verlet list updates, but is presently not well tested
+*/
+
   energy = 0.0;
   stress_at = 0.0;
   stress_fr = 0.0;

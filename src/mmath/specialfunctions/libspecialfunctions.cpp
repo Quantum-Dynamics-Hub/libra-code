@@ -15,21 +15,13 @@
 
 using namespace boost::python;
 
-//using namespace libmmath;
-//using namespace libmmath::libspecialfunctions;
-//using namespace libmmath::liblinalg;
-//using libmmath::VECTOR;
-//using libmmath::MATRIX;
-//using libmmath::CMATRIX;
-//using libmmath::MATRIX3x3;
-//using libmmath::QUATERNION;
-//using libmmath::DATA;
 
-
-
+/// libmmath namespace
 namespace libmmath{
+
+/// libspecialfunctions namespace
 namespace libspecialfunctions{
-//namespace liblinalg{
+
 
 void export_SpecialFunctions_objects(){
 

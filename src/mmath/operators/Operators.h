@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Operators.h
+  \brief The file describes the functions that perform some transformations being the operators found in many applications
+    
+*/
 
 #ifndef OPERATORS_H
 #define OPERATORS_H
@@ -16,8 +21,10 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 using namespace boost::python;
 
-
+/// libmmath namespace
 namespace libmmath{
+
+/// liboperators namespace
 namespace liboperators{
 
 

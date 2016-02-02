@@ -29,8 +29,13 @@ using namespace libqchem::libbasis;
 
 
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
 
 using namespace libmodel_parameters;

@@ -20,7 +20,10 @@
 
 using namespace std;
 
+/// libmmath namespace
 namespace libmmath{
+
+/// libgraph namespace
 namespace libgraph{
 
 typedef vector<int> Path;

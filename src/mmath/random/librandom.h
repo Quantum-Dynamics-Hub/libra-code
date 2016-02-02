@@ -15,7 +15,10 @@
 
 #include "random.h"
 
+/// libmmath namespace
 namespace libmmath{
+
+/// librandom namespace
 namespace librandom{
 
 

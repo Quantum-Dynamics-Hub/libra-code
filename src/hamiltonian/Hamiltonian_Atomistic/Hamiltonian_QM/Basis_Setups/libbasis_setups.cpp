@@ -19,9 +19,15 @@ using namespace boost::python;
 using namespace libmmath;
 
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
+
 namespace libbasis_setups{
 
 

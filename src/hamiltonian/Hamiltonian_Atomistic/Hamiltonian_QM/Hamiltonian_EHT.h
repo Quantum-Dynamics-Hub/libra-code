@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_EHT.h
+  \brief The file describes functions for extended Huckel theory (EHT) calculations
+*/
+
 #ifndef HAMILTONIAN_EHT_H
 #define HAMILTONIAN_EHT_H
 
@@ -31,9 +36,15 @@ using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::lib
 #include "Electronic_Structure.h"
 
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
+
 
 
 // Hamiltonian_EHT.cpp

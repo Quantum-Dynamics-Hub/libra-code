@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libhamiltonian_mm.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <memory> // for std::auto_ptr<>
 #include <boost/python.hpp>
@@ -16,16 +21,25 @@
 #include "libhamiltonian_mm.h"
 
 using namespace boost::python;
-//using namespace libhamiltonian;
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_mm namespace
 namespace libhamiltonian_mm{
 
 using namespace libforcefield;
 
 
 void export_Hamiltonian_MM_objects(){
+/** 
+  \brief Exporter of the libhamiltonian_mm classes and functions
+
+*/
+
 
   export_forcefield_objects();
 

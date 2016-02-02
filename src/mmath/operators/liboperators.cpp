@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file liboperators.cpp
+  \brief The file implements Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -15,12 +20,18 @@
 
 using namespace boost::python;
 
-
+/// libmmath namespace
 namespace libmmath{
+
+/// liboperators namespace
 namespace liboperators{
 
 
 void export_Operators_objects(){
+/** 
+  \brief Exporter of liboperators classes and functions
+
+*/
 
 
   boost::python::list (*expt_rotate1)(double,double,double) = &expt_rotate;

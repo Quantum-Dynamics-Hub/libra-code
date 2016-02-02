@@ -15,8 +15,10 @@
 
 using namespace boost::python;
 
-
+/// libmmath namespace
 namespace libmmath{
+
+/// libgraph namespace
 namespace libgraph{
 
 void export_GRAPH_objects(){

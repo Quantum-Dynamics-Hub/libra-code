@@ -23,8 +23,10 @@
 using namespace boost::python;
 using namespace std;
 
-
+/// libmmath namespace
 namespace libmmath{
+
+/// librandom namespace
 namespace librandom{
 
 class Random{

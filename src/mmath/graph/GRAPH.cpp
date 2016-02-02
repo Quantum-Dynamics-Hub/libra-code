@@ -15,7 +15,10 @@
 
 using namespace std;
 
+/// libmmath namespace
 namespace libmmath{
+
+/// libgraph namespace
 namespace libgraph{
 
 

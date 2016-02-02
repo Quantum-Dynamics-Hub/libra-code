@@ -15,7 +15,10 @@
 //#include "../../io/libio.h"
 using namespace libio;
 
+/// libmmath namespace
 namespace libmmath{
+
+/// liblinalg namespace
 namespace liblinalg{
 
 // In this file we define only those members of the MATRIX3x3 

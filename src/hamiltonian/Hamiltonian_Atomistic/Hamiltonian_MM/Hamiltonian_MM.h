@@ -8,6 +8,10 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_MM.h
+  \brief The file describes functions and classes for molecular-mechanical Hamiltonian calculations 
+*/
 
 #ifndef HAMILTONIAN_MM_H
 #define HAMILTONIAN_MM_H
@@ -27,32 +31,23 @@ using namespace libchemobjects::libchemsys;
 
 
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_mm namespace
 namespace libhamiltonian_mm{
 
 using namespace libforcefield;
 
-/*
-struct triple{
-  int is_central;
-  int n1,n2,n3;
-};
-
-struct quartet{
-  int is_central;
-  int j;        // index of the atom with which another one is interacting
-  int n1,n2,n3; // translation vector of atom j
-};
-
-struct excl_scale{
-  int at_indx1, at_indx2;
-  double scale;
-};
-*/
-
 
 class Hamiltonian_MM{
+/**
+  This class represents the classical interaction: bond (2-body), angle (3-body), etc... up to many-body interactions like
+  Ewald summation in periodic box
+*/
 
 
   //--------- Auxiliary internal functions -------------
@@ -176,38 +171,37 @@ class Hamiltonian_MM{
 
 public:
 
-  double energy;          int is_energy;
-  MATRIX3x3 hessian;      int is_hessian;
-  MATRIX3x3 stress_at;    int is_stress_at;  // atomic stress tensor
-  MATRIX3x3 stress_fr;    int is_stress_fr;  // fragmental stress tensor
-  MATRIX3x3 stress_ml;    int is_stress_ml;  // molecular stress tensor
+  double energy;          int is_energy;     ///< Energy for the given Hamiltonian and the status flag
+  MATRIX3x3 hessian;      int is_hessian;    ///< Hessian for the given Hamiltonian and the status flag
+  MATRIX3x3 stress_at;    int is_stress_at;  ///< atomic stress tensor and status
+  MATRIX3x3 stress_fr;    int is_stress_fr;  ///< fragmental stress tensor and status
+  MATRIX3x3 stress_ml;    int is_stress_ml;  ///< molecular stress tensor and status
 
   //----------- Basic class operations ---------------------------
   // Defined in Hamiltonian_MM.cpp
-  Hamiltonian_MM();                   // constructor
-  Hamiltonian_MM(const Hamiltonian_MM&); // copy-constructor
- ~Hamiltonian_MM();                   // destructor
-
-  Hamiltonian_MM& operator=(const Hamiltonian_MM&); // assignment operator
+  Hamiltonian_MM();                   ///< constructor
+  Hamiltonian_MM(const Hamiltonian_MM&); ///< copy-constructor
+ ~Hamiltonian_MM();                   ///< destructor
+  Hamiltonian_MM& operator=(const Hamiltonian_MM&); ///< assignment operator
   friend int operator == (const Hamiltonian_MM& i1, const Hamiltonian_MM& i2);
 
   void show_info();
 
   //---------------------------------------------------------------
-  int get_type()  { return int_type; }
-  int get_status(){ return is_active; }
-
+  int get_type()  { return int_type; }   ///< Returns the type of interaction for this Hamiltonian (bonds, angles, etc.)
+  int get_status(){ return is_active; }  ///< Returns the "active" status of the interaction (Hamiltonian) - if it is deactivated, 
+                                         ///< the interaction is not computed
 
   //------- Interface : Defined in Hamiltonian_MM_methods1.cpp -------------
   //General manipulations
-  void activate()  { is_active = 1; }
-  void deactivate(){ is_active = 0; }
+  void activate()  { is_active = 1; }    ///<  Makes this interaction active
+  void deactivate(){ is_active = 0; }    ///< Makes this interaction inactive
   void set_pbc(MATRIX3x3*,int,int,int);
   int is_origin();
   void set_respa_type(int int_type_,int respa_type_){ 
     if(int_type_==int_type && respa_type>=0){ respa_type = respa_type_; is_respa_type = 1; }
   }
-  int get_respa_type(){ return respa_type; }
+  int get_respa_type(){ return respa_type; }   ///< Returns the RESPA type
   // 2, 3, 4 - atomic interactions
   void set_interaction_type_and_functional(std::string t,std::string f);
   void set_2a_interaction(std::string t,std::string f,
@@ -258,6 +252,12 @@ public:
 
 
 class listHamiltonian_MM{
+/**
+  This class represents a collection of classical interactions in a molecular (or solid-state) system.
+  This is essentially a classical-mechanical Hamiltonian (although it is called a listHamiltonian - this is only for the
+  uniformity with QM Hamiltonian and also for better flexibility - this way, the actual Hamiltonian can be a multi-resolution
+  Hamiltonian, so each component can be tackeld by different MM level of theory)
+*/
 
 
 public:
@@ -265,20 +265,21 @@ public:
     listHamiltonian_MM(){ ;; }
 
 
-    vector<Hamiltonian_MM> interactions;
-    vector<int>     active_interactions;
+    vector<Hamiltonian_MM> interactions;  ///< The list of classical interaction (individual, primitive Hamiltonians)
+    vector<int>     active_interactions;  ///< The list with the indices showing which of these interactions are actually active
+                                          ///< Note that only "active" interactions are computed when "compute" is applied
 
-    std::string stress_opt;int is_stress_opt;
-    MATRIX3x3 stress_at;   int is_stress_at;
-    MATRIX3x3 stress_fr;   int is_stress_fr;
-    MATRIX3x3 stress_ml;   int is_stress_ml;
-    MATRIX3x3 hessian;     int is_hessian;
+    std::string stress_opt;int is_stress_opt;  ///< The option that selects which type of stress to compute: "at", "fr", "ml"
+    MATRIX3x3 stress_at;   int is_stress_at;   ///< Total atomic stress and the status flag
+    MATRIX3x3 stress_fr;   int is_stress_fr;   ///< Total fragment stress and the status flag
+    MATRIX3x3 stress_ml;   int is_stress_ml;   ///< Total molecular stress and the status flag
+    MATRIX3x3 hessian;     int is_hessian;     ///< Total hessian and the status flag
 
     // RESPA auxiliary variables
-    vector<VECTOR> respa_f_fast,respa_f_medium;
-    vector<VECTOR> respa_t_fast,respa_t_medium;
-    MATRIX3x3 respa_s_fast,respa_s_medium;
-    double respa_E_fast,respa_E_medium;
+    vector<VECTOR> respa_f_fast,respa_f_medium;  ///< RESPA forces: fast and medium components
+    vector<VECTOR> respa_t_fast,respa_t_medium;  ///< RESPA torques: fast and medium components
+    MATRIX3x3 respa_s_fast,respa_s_medium;     
+    double respa_E_fast,respa_E_medium;          ///< RESPA energies: fast and medium components
 
 
   //----------- Defined in Hamiltonian_MM_methods2.cpp ------------------

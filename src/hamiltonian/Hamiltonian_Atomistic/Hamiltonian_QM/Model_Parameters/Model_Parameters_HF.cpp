@@ -12,9 +12,15 @@
 #include "Model_Parameters.h"
 
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
+
 namespace libmodel_parameters{
 
 

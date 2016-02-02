@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Space_Groups.h
+  \brief The file describes and implements the SPACE_GROUP class and describes related functions
+    
+*/
 
 #ifndef SPACE_GROUPS_H
 #define SPACE_GROUPS_H
@@ -16,36 +21,47 @@
 #include <string>
 #include <vector>
 
+/// libmmath namespace
 namespace libmmath{
 
 using namespace liblinalg;
 
+/// libsymmetry namespace
 namespace libsymmetry{
 
 
 //----------- Some functions ----------------
-void Apply_Symmetry(std::string,VECTOR,vector<VECTOR>&);
+void Apply_Symmetry(std::string space_group_name,VECTOR r,std::vector<VECTOR>& r_equiv);
 
 //-------------------------------------------
 
 
 class SPACE_GROUP{
-/*   Internet source:
-     http://img.chem.ucl.ac.uk/sgp/large/sgp.htm
+/**
+  This class holds and generates the set of symmetry operations that correspond to a specific
+  space group of symmetry
+
+  Internet source: http://img.chem.ucl.ac.uk/sgp/large/sgp.htm
 */
 
 public:
       //------- Data ------------
-      vector<MATRIX> operators;
+      vector<MATRIX> operators; ///< The list of matrices representing the symmetry operations. These matrices are 3x4 in size
+                                ///< The first 3 coloumns form 3x3 matrix of rotations/reflections operations. The last coloumn
+                                ///< gives an additional shift operation 
 
 
       //------- Methods ---------
-      SPACE_GROUP(){;;}
+      SPACE_GROUP(){;;}  ///< Default constructor
       SPACE_GROUP(std::string space_group_name){
+      /**
+        This constructor creates all the symmetry operation for given space group name
+
+        \param[in] space_group_name Self-explanatory. Examples: P_1, P_-1, C1_2_1, I_a_-3_d, etc.
+      */
  
       int sz,i;
-      MATRIX m(3,4);
-      // m = R(3,3) + T(3,1) 
+      MATRIX m(3,4);  // This is actually a temporary object = R(3,3) + T(3,1) 
       //================== TRICLINIC ========================
       if(space_group_name == "P_1"){
          m = 0.0;

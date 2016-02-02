@@ -10,7 +10,7 @@
 *********************************************************************************/
 /**
   \file Hamiltonian_QM.h
-  \brief The file describes functions and for quantum-mechanical Hamiltonian calculations as well
+  \brief The file describes functions for quantum-mechanical Hamiltonian calculations as well
   as the classes for organizing such computations in an object-oriented way. 
 */
 

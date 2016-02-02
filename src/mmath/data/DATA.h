@@ -23,7 +23,10 @@
 using namespace boost::python;
 using namespace std;
 
+/// libmmath namespace
 namespace libmmath{
+
+/// libdata namespace
 namespace libdata{
 
 //========================= Class DATA ====================================

@@ -12,9 +12,15 @@
 #include "Basis_Setups.h"
 
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
+
 namespace libbasis_setups{
 
 

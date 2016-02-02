@@ -8,46 +8,42 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_INDO.cpp
+  \brief The file implements functions for INDO calculations
+*/
 
 #include "Hamiltonian_INDO.h"
 
-/****************************************************************************
-
-  This file contains following functions:
-
-  void indo_core_parameters(vector<int>& fragment, vector<int>& basis_fo,vector<AO>& basis_ao, Nuclear& mol,
-                            vector<double>& eri, vector<double>& V_AB, Memory* mem, int opt)
-
-
-  void Hamiltonian_core_indo(Control_Parameters& prms,Model_Parameters& modprms,Nuclear& mol,
-                             vector<int>& fragment, vector<int>& basis_fo,vector<AO>& basis_ao, vector<vector<int> >& at_orbitals, 
-                             MATRIX* Hao,MATRIX* Sao,Memory* mem, vector<double>& eri, vector<double>& V_AB)
-
-
-
-  void get_integrals(int i,int j,vector<AO>& basis_ao, double eri_aa, double G1, double F2, double& ii_jj,double& ij_ij)
-
-  void Hamiltonian_Fock_indo(Control_Parameters& prms,Model_Parameters& modprms,Nuclear& mol,
-                             vector<int>& fragment, vector<int>& basis_fo,vector<AO>& basis_ao,vector<vector<int> >& at_orbitals,
-                             Electronic* el, Memory* mem,vector<double>& eri, vector<double>& V_AB)
-
-
-
-****************************************************************************/
-
-
-
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
 
 
 vector<int> compute_sorb_indices
 ( int sz, vector<AO>& basis_ao, vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
 ){
+/** 
+  Compute the global indices of the last s-type orbitals on each atom
 
-  // Compute global indices of s-type orbitals on each atom
+  \param[in] sz The number of atoms in the system
+  \param[in] basis_ao The AO basis for the system, including s-type and other functions
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+
+  The function returns the vector of the indices of the first s-type AOs in the global array of AOs, sorb_indx, so
+  that is sorb_indx[i] is the index of the last found s-type orbital localized on the atom with index i.
+  We assume, that when the basis functions are created, the order of generation of orbitals is
+  1s, 2s, ....,  3s, ...., etc so the returned indices refer to the valence shell s-type orbital
+    
+*/
+
+
   vector<int> sorb_indx(sz,0); // global index of s-type orbital on i-th atom
 
   for(int a=0;a<sz;a++){  // for all atoms
@@ -69,6 +65,21 @@ void compute_indo_core_parameters
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   vector<int>& sorb_indx,
   int opt, int a, int b, double& eri, double& V_AB){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] sorb_indx The vector of global indices of the last s-type orbitals on each atom
+  \param[in] opt Option for computing V_AB terms: this controlls the distinction between INDO (opt = 1) and CNDO2 (opt = 0)
+  \param[in] a the index of one of the atoms, for which the V_ab term is computed
+  \param[in] b the index of one of the atoms, for which the V_ab term is computed
+  \param[out] eri The electron repulsion integral between a and b cores
+  \param[out] V_AB The core repulsion integral
+  
+  Computes ERIs and V_AB parameters for given pair of atoms, and for given geometry.
+*/
 
   // Compute ERIs and V_AB
 
@@ -79,7 +90,7 @@ void compute_indo_core_parameters
   eri = electron_repulsion_integral(basis_ao[I],basis_ao[I],basis_ao[J],basis_ao[J]); // eri[a][b]
 
   // V_AB
-  int B = b; //ao_to_atom_map[b]; // global index of atom on orbital b
+  int B = b;
   double Zeff = modprms.PT[syst.Atoms[B].Atom_element].Zeff; 
 
   if(opt==0){
@@ -96,8 +107,25 @@ void compute_indo_core_parameters_derivs
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   vector<int>& sorb_indx,
   int opt, int a, int b, int c, VECTOR& deri, VECTOR& dV_AB){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] sorb_indx The vector of global indices of the last s-type orbitals on each atom
+  \param[in] opt Option for computing V_AB terms: this controlls the distinction between INDO (opt = 1) and CNDO2 (opt = 0)
+  \param[in] a the index of one of the atoms, for which the V_ab term is computed
+  \param[in] b the index of one of the atoms, for which the V_ab term is computed
+  \param[in] c the index pf the atom w.r.t. which the derivatives are computed
+  \param[out] deri The derivative of the electron repulsion integral between a and b cores
+  \param[out] dV_AB The derivative of the core repulsion integral
+  
+  Compute derivatives of ERI and V_AB parameters:  d ERI[a][b] / dR[c]  and d V[a][b] / dR[c]
+*/
 
-  // Compute dERIs and dV_AB:  d ERI[a][b] / dR[c]  and d V[a][b] / dR[c]
+
+
 
   int I = sorb_indx[a];
   int J = sorb_indx[b];
@@ -149,8 +177,29 @@ void compute_indo_core_parameters_derivs
   int opt, int a, int b, int c, VECTOR& deri, VECTOR& dV_AB,
   vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
 ){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] sorb_indx The vector of global indices of the last s-type orbitals on each atom
+  \param[in] opt Option for computing V_AB terms: this controlls the distinction between INDO (opt = 1) and CNDO2 (opt = 0)
+  \param[in] a the index of one of the atoms, for which the V_ab term is computed
+  \param[in] b the index of one of the atoms, for which the V_ab term is computed
+  \param[in] c the index pf the atom w.r.t. which the derivatives are computed
+  \param[out] deri The derivative of the electron repulsion integral between a and b cores
+  \param[out] dV_AB The derivative of the core repulsion integral
+  \param[in,out] aux The auxiliary memory allocated for double values
+  \param[in] n_aux The length of each of the allocated double array
+  \param[in,out] auxv The auxiliary memory allocated for VECTOR values
+  \param[in] n_auxv The length of each of the allocated VECTOR array 
+  
+  Compute derivatives of ERI and V_AB parameters:  d ERI[a][b] / dR[c]  and d V[a][b] / dR[c] for given pair of atoms
+  and for the selected gradient component
+  This is supposed to be an accelerated version, since no memory allocation/deallocation is necessary
+*/
 
-  // Compute dERIs and dV_AB:  d ERI[a][b] / dR[c]  and d V[a][b] / dR[c]
 
   int I = sorb_indx[a];
   int J = sorb_indx[b];
@@ -161,7 +210,9 @@ void compute_indo_core_parameters_derivs
 
 
   VECTOR DA,DB,DC,DD;
-  // Version that doesn't do memory re-allocation every time
+
+  /// This version doesn't do memory re-allocation every time
+
   double eri = electron_repulsion_integral(&basis_ao[I],&basis_ao[I],&basis_ao[J],&basis_ao[J],1,1,DA,DB,DC,DD, aux, n_aux, auxv, n_auxv);
 
 
@@ -201,6 +252,29 @@ void compute_indo_core_parameters_derivs
   int opt, int a, int b, vector<VECTOR>& deri, vector<VECTOR>& dV_AB,
   vector<double*>& aux,int n_aux,vector<VECTOR*>& auxv,int n_auxv
 ){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] sorb_indx The vector of global indices of the last s-type orbitals on each atom
+  \param[in] opt Option for computing V_AB terms: this controlls the distinction between INDO (opt = 1) and CNDO2 (opt = 0)
+  \param[in] a the index of one of the atoms, for which the V_ab term is computed
+  \param[in] b the index of one of the atoms, for which the V_ab term is computed
+  \param[out] deri Thevector of derivatives of the electron repulsion integral between a and b cores w.r.t to each nuclear DOF
+  \param[out] dV_AB The derivative of the core repulsion integral between a and b cores w.r.t to each nuclear DOF
+  \param[in,out] aux The auxiliary memory allocated for double values
+  \param[in] n_aux The length of each of the allocated double array
+  \param[in,out] auxv The auxiliary memory allocated for VECTOR values
+  \param[in] n_auxv The length of each of the allocated VECTOR array 
+  
+  Compute derivatives of ERI and V_AB parameters:  d ERI[a][b] / dR[c]  and d V[a][b] / dR[c] for given pair of atoms
+  The derivatives w.r.t. all atoms are computed at once, in a single swipe - this is much more efficient approach than 
+  when we call this computations one by one.
+  This is supposed to be an accelerated version, since no memory allocation/deallocation is necessary
+*/
+
 
 
   // compute derivatives only once - for a fixed pair of a and b
@@ -248,6 +322,33 @@ void compute_all_indo_core_parameters_derivs
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, 
   vector<int>& sorb_indx, int opt
 ){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] sorb_indx The vector of global indices of the last s-type orbitals on each atom
+  \param[in] opt Option for computing V_AB terms: this controlls the distinction between INDO (opt = 1) and CNDO2 (opt = 0)
+  
+  Compute the ERI and V_AB parameters for all pairs of atoms, a and b.
+  Also, compute all derivatives of each ERI and V_AB parameter:  d ERI[a][b] / dR[c]  and d V[a][b] / dR[c]  w.r.t. all atoms 
+
+  The ERI and V_AB matrices are stored internally, while the derivatives are printed out in file in binary format
+  So, the following files will be created in the calling directory:
+  "deri.x_1.bin", "deri.x_2.bin", ... , "deri.x_N.bin"  (where N - is the number of atoms)
+  "deri.y_1.bin", "deri.y_2.bin", ... , "deri.y_N.bin"  (where N - is the number of atoms)
+  "deri.z_1.bin", "deri.z_2.bin", ... , "deri.z_N.bin"  (where N - is the number of atoms)
+  "dV_AB.x_1.bin", "dV_AB.x_2.bin", ... , "dV_AB.x_N.bin"  (where N - is the number of atoms)
+  "dV_AB.y_1.bin", "dV_AB.y_2.bin", ... , "dV_AB.y_N.bin"  (where N - is the number of atoms)
+  "dV_AB.z_1.bin", "dV_AB.z_2.bin", ... , "dV_AB.z_N.bin"  (where N - is the number of atoms)
+
+  These files will be accessed by the SCF procedures, so they are needed
+
+  This is the older (MUCH LESS EFFICIENT) version which takes O(N^3) computations because it computes derivatives one by one for
+  each nuclear DOF.
+*/
+
 
   int N = syst.Number_of_atoms;
 
@@ -328,6 +429,32 @@ void compute_all_indo_core_parameters_derivs1
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map, 
   vector<int>& sorb_indx, int opt
 ){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] sorb_indx The vector of global indices of the last s-type orbitals on each atom
+  \param[in] opt Option for computing V_AB terms: this controlls the distinction between INDO (opt = 1) and CNDO2 (opt = 0)
+  
+  Compute the ERI and V_AB parameters for all pairs of atoms, a and b.
+  Also, compute all derivatives of each ERI and V_AB parameter:  d ERI[a][b] / dR[c]  and d V[a][b] / dR[c]  w.r.t. all atoms 
+
+  The ERI and V_AB matrices are stored internally, while the derivatives are printed out in file in binary format
+  So, the following files will be created in the calling directory:
+  "deri.x_1.bin", "deri.x_2.bin", ... , "deri.x_N.bin"  (where N - is the number of atoms)
+  "deri.y_1.bin", "deri.y_2.bin", ... , "deri.y_N.bin"  (where N - is the number of atoms)
+  "deri.z_1.bin", "deri.z_2.bin", ... , "deri.z_N.bin"  (where N - is the number of atoms)
+  "dV_AB.x_1.bin", "dV_AB.x_2.bin", ... , "dV_AB.x_N.bin"  (where N - is the number of atoms)
+  "dV_AB.y_1.bin", "dV_AB.y_2.bin", ... , "dV_AB.y_N.bin"  (where N - is the number of atoms)
+  "dV_AB.z_1.bin", "dV_AB.z_2.bin", ... , "dV_AB.z_N.bin"  (where N - is the number of atoms)
+
+  These files will be accessed by the SCF procedures, so they are needed
+
+  This is the new (MUCH MORE EFFICIENT) version which takes O(N^2) computations because it computes derivatives in batches.
+*/
+
 
   int N = syst.Number_of_atoms;
 
@@ -421,6 +548,19 @@ void indo_core_parameters
 ( System& syst, vector<AO>& basis_ao, Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   int opt, int DF){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in,out] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] opt Option for computing V_AB terms: this controlls the distinction between INDO (opt = 1) and CNDO2 (opt = 0)
+  \param[in] DF Debug flag - controlls how much of extra info is printed out
+  
+  The upper-level function for initializing INDO parameters and their derivatives
+*/
+
+
 // opt == 0 - cndo
 // opt == 1 - indo
   modprms.indo_opt = opt;
@@ -431,7 +571,8 @@ void indo_core_parameters
 
   if(DF){ cout<<"in indo_core_parameters\n"; }
 
-  // Allocate memory if needed
+  /// Allocates memory, if needed
+
   int sz = syst.Number_of_atoms; // number of atoms in the system
 
   if(modprms.eri.size()!=sz*sz){  cout<<"In indo_core_parameters: eri array is not allocated\nDo allocation...\n"; 
@@ -440,6 +581,9 @@ void indo_core_parameters
   if(modprms.V_AB.size()!=sz*sz){  cout<<"In indo_core_parameters: V_AB array is not allocated\nDo allocation...\n"; 
     modprms.V_AB.clear(); modprms.V_AB = vector<double>(sz*sz,0.0); 
   }
+
+
+  /// Compute the indices of the valence shell s-type orbital
 
   vector<int> sorb_indx;
   sorb_indx = compute_sorb_indices(sz,basis_ao,atom_to_ao_map,ao_to_atom_map);
@@ -481,7 +625,8 @@ void indo_core_parameters
   }// for i
 */
 
-  // Compute ERIs and V_AB
+  /// Compute ERIs and V_AB
+
   for(a=0;a<sz;a++){
     for(b=0;b<sz;b++){
 
@@ -491,7 +636,8 @@ void indo_core_parameters
     }// for b
   }// for a
 
-  // Compute their derivatives and store on the disk
+  /// Compute their derivatives and store on the disk
+
   //compute_all_indo_core_parameters_derivs(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, sorb_indx, opt);
   compute_all_indo_core_parameters_derivs1(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, sorb_indx, opt);
 
@@ -507,6 +653,20 @@ void Hamiltonian_core_indo
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   MATRIX* Hao, MATRIX* Sao, int DF
 ){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in,out] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[out] Hao The pointer to the matrix object in which the core Hamiltonian will be stored
+  \param Sao The pointer to the AO overla matrix (not actually used here)
+  \param[in] DF Debug flag - controlls how much of extra info is printed out
+  
+  Compute the core INDO Hamiltonian
+*/
+
 
   int i,j,k,a,b,I,J,A,B;
   VECTOR dIdA,dIdB;
@@ -623,6 +783,20 @@ void Hamiltonian_core_indo
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   MATRIX& Hao, MATRIX& Sao, int DF
 ){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in,out] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[out] Hao The matrix object in which the core Hamiltonian will be stored
+  \param Sao The AO overla matrix (not actually used here)
+  \param[in] DF Debug flag - controlls how much of extra info is printed out
+  
+  Compute the core INDO Hamiltonian - Python-friendly version
+*/
+
 
   Hamiltonian_core_indo( syst, basis_ao, prms, modprms,  atom_to_ao_map, ao_to_atom_map, &Hao, &Sao, DF);
 
@@ -638,6 +812,27 @@ void Hamiltonian_core_deriv_indo
   MATRIX* dHao_dx, MATRIX* dHao_dy, MATRIX* dHao_dz, 
   MATRIX* dSao_dx, MATRIX* dSao_dy, MATRIX* dSao_dz
 ){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in,out] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[out] Hao The pointer to the matrix object in which the core Hamiltonian will be stored
+  \param[out] Sao The pointer to the AO overlap matrix computed here
+  \param[in] DF Debug flag - controlls how much of extra info is printed out
+  \param[in] c The index of the atom w.r.t. which coordinates we take the derivatives
+  \param[out] dHao_dx The derivative of the Hamiltonian w.r.t. the x-coordinate of the selected atom
+  \param[out] dHao_dy The derivative of the Hamiltonian w.r.t. the y-coordinate of the selected atom
+  \param[out] dHao_dz The derivative of the Hamiltonian w.r.t. the z-coordinate of the selected atom
+  \param[out] dSao_dx The derivative of the AO overlap matrix w.r.t. the x-coordinate of the selected atom
+  \param[out] dSao_dy The derivative of the AO overlap matrix w.r.t. the y-coordinate of the selected atom
+  \param[out] dSao_dz The derivative of the AO overlap matrix w.r.t. the z-coordinate of the selected atom
+  
+  Compute the core INDO Hamiltonian and its derivatives w.r.t. specified nuclear DOFs.
+*/
+
 
   //================ Basically, here we compute derivatives of the core Hamiltonian ========================
 
@@ -738,6 +933,7 @@ void Hamiltonian_core_deriv_indo
 
     /// The code below is the same for CNDO, CNDO2 and INDO - but the difference comes in use of different G1 and F2 parameters
     /// for CNDO and CNDO2 they are zero
+
     double G1 = modprms.PT[basis_ao[i].element].G1[basis_ao[i].ao_shell];
     double F2 = modprms.PT[basis_ao[i].element].F2[basis_ao[i].ao_shell];
     
@@ -748,6 +944,7 @@ void Hamiltonian_core_deriv_indo
    
     /// Eqs. 3.17 - 3.23 from Pople, Beveridge, Dobosh, JCP 47, 2026 (1967)
     ///
+
     int Z = syst.Atoms[a].Atom_Z;  // modprms.PT[elt].Z - e.g. 6 for C
 
 
@@ -827,7 +1024,8 @@ void Hamiltonian_core_deriv_indo
         if(b==a){ ;; }  // different orbitals centered on the same atom - give zero (not true for hybrid orbitals)
         else{           // centered on different atoms - use overlap formula
 
-          // Overlap is set to identity in INDO, so need to recompute it explicitly
+          /// Overlap is set to identity in INDO, so need to recompute it explicitly
+
           //double sao_ij = gaussian_overlap(basis_ao[i],basis_ao[j]); // 0, dIdA,dIdB), mem->aux, mem->n_aux);
 
           VECTOR dSda, dSdb, dSdc;
@@ -875,6 +1073,27 @@ void Hamiltonian_core_deriv_indo
   MATRIX& dHao_dx, MATRIX& dHao_dy, MATRIX& dHao_dz, 
   MATRIX& dSao_dx, MATRIX& dSao_dy, MATRIX& dSao_dz
 ){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in,out] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[out] Hao The pointer to the matrix object in which the core Hamiltonian will be stored
+  \param[out] Sao The pointer to the AO overlap matrix computed here
+  \param[in] DF Debug flag - controlls how much of extra info is printed out
+  \param[in] c The index of the atom w.r.t. which coordinates we take the derivatives
+  \param[out] dHao_dx The derivative of the Hamiltonian w.r.t. the x-coordinate of the selected atom
+  \param[out] dHao_dy The derivative of the Hamiltonian w.r.t. the y-coordinate of the selected atom
+  \param[out] dHao_dz The derivative of the Hamiltonian w.r.t. the z-coordinate of the selected atom
+  \param[out] dSao_dx The derivative of the AO overlap matrix w.r.t. the x-coordinate of the selected atom
+  \param[out] dSao_dy The derivative of the AO overlap matrix w.r.t. the y-coordinate of the selected atom
+  \param[out] dSao_dz The derivative of the AO overlap matrix w.r.t. the z-coordinate of the selected atom
+  
+  Compute the core INDO Hamiltonian and its derivatives w.r.t. specified nuclear DOFs.- Python-friendly version
+*/
+
 
   Hamiltonian_core_deriv_indo
   ( syst, basis_ao, prms, modprms,  atom_to_ao_map, ao_to_atom_map,  &Hao, &Sao, DF, c,
@@ -887,11 +1106,21 @@ void Hamiltonian_core_deriv_indo
 
 
 void get_integrals(int i,int j,vector<AO>& basis_ao, double eri_aa, double G1, double F2, double& ii_jj,double& ij_ij){
+/**
+  An auxiliary function: Compute Coulomb and exchange integrals for the orbitals i and j (global indices), both of which 
+  are centered on the same atom a (global index)
+  eri[a][a] is taken as input argument
+  parameters G1 and F2 (Slater-Condon) are taken as input
 
-  // Compute Coulomb and exchange integrals for the orbitals i and j (global indices), both of which 
-  // are centered on the same atom a (global index)
-  // eri[a][a] is taken as input argument
-  // parameters G1 and F2 (Slater-Condon) are taken as input
+  \param[in] i Index of one AO   
+  \param[in] j Index of another AO   
+  \param[in] basis_ao The list of the atomic orbitals - the AO basis
+  \param[in] eri_aa On-site electron repulsion integral taken as a parameter
+  \param[in] G1 Slater-Condon parameter
+  \param[in] F2 Slater-Condon parameter
+  \param[out] ii_jj The Coulomb intergal of the AOs i and j
+  \param[out] ij_ij The exchange intergal of the AOs i and j
+*/
 
   //=====================================================================================================
   // Integrals:
@@ -930,10 +1159,18 @@ void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& b
                            Control_Parameters& prms, Model_Parameters& modprms,
                            vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
                           ){
-
+/**
+  \param[in,out] el The electronic structre properties of the system
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in,out] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
   
-// This function constructs INDO (CNDO/2) Fock matrix
-// Unrestricted formulation
+  Compute the INDO (or CNDO/2) Fock Hamiltonian. Unrestricted formulation
+*/
+
 
   int i,j,k,n,I,J,K,a,b,A,B;
 
@@ -1087,6 +1324,18 @@ void Hamiltonian_Fock_indo(Electronic_Structure& el, System& syst, vector<AO>& b
                            Control_Parameters& prms, Model_Parameters& modprms,
                            vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
                           ){
+/**
+  \param[in,out] el The electronic structre properties of the system
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in,out] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  
+  Compute the INDO (or CNDO/2) Fock Hamiltonian. Unrestricted formulation - Python-friendly version
+*/
+
 
   Hamiltonian_Fock_indo(&el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map);
 
@@ -1104,8 +1353,27 @@ void Hamiltonian_Fock_derivs_indo
   MATRIX* dFao_alp_dx, MATRIX* dFao_alp_dy, MATRIX* dFao_alp_dz,
   MATRIX* dFao_bet_dx, MATRIX* dFao_bet_dy, MATRIX* dFao_bet_dz
 ){
-// This functions constructs INDO (CNDO/2) Fock matrix
-// with gradients, also for unrestricted formulation
+/**
+  \param[in,out] el The electronic structre properties of the system
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in,out] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] c The index of the atom w.r.t. which coordinates we take the derivatives
+  \param[in] dHao_dx The derivative of the core Hamiltonian w.r.t. the x-coordinate of the selected atom
+  \param[in] dHao_dy The derivative of the core Hamiltonian w.r.t. the y-coordinate of the selected atom
+  \param[in] dHao_dz The derivative of the core Hamiltonian w.r.t. the z-coordinate of the selected atom
+  \param[out] dFao_alp_dx The derivative of the Fock Hamiltonian (alpha-component) w.r.t. the x-coordinate of the selected atom
+  \param[out] dFao_alp_dy The derivative of the Fock Hamiltonian (alpha-component) w.r.t. the y-coordinate of the selected atom
+  \param[out] dFao_alp_dz The derivative of the Fock Hamiltonian (alpha-component) w.r.t. the z-coordinate of the selected atom
+  \param[out] dFao_bet_dx The derivative of the Fock Hamiltonian (beta-component) w.r.t. the x-coordinate of the selected atom
+  \param[out] dFao_bet_dy The derivative of the Fock Hamiltonian (beta-component) w.r.t. the y-coordinate of the selected atom
+  \param[out] dFao_bet_dz The derivative of the Fock Hamiltonian (beta-component) w.r.t. the z-coordinate of the selected atom
+  
+  Compute the INDO (or CNDO/2) Fock Hamiltonian as well as the gradients of the Fock matrix. Unrestricted formulation
+*/
 
   int i,j,k,n,I,J,K,a,b,A,B;
 
@@ -1378,6 +1646,28 @@ void Hamiltonian_Fock_derivs_indo
   MATRIX& dFao_alp_dx, MATRIX& dFao_alp_dy, MATRIX& dFao_alp_dz,
   MATRIX& dFao_bet_dx, MATRIX& dFao_bet_dy, MATRIX& dFao_bet_dz
 ){
+/**
+  \param[in,out] el The electronic structre properties of the system
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in,out] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] c The index of the atom w.r.t. which coordinates we take the derivatives
+  \param[in] dHao_dx The derivative of the core Hamiltonian w.r.t. the x-coordinate of the selected atom
+  \param[in] dHao_dy The derivative of the core Hamiltonian w.r.t. the y-coordinate of the selected atom
+  \param[in] dHao_dz The derivative of the core Hamiltonian w.r.t. the z-coordinate of the selected atom
+  \param[out] dFao_alp_dx The derivative of the Fock Hamiltonian (alpha-component) w.r.t. the x-coordinate of the selected atom
+  \param[out] dFao_alp_dy The derivative of the Fock Hamiltonian (alpha-component) w.r.t. the y-coordinate of the selected atom
+  \param[out] dFao_alp_dz The derivative of the Fock Hamiltonian (alpha-component) w.r.t. the z-coordinate of the selected atom
+  \param[out] dFao_bet_dx The derivative of the Fock Hamiltonian (beta-component) w.r.t. the x-coordinate of the selected atom
+  \param[out] dFao_bet_dy The derivative of the Fock Hamiltonian (beta-component) w.r.t. the y-coordinate of the selected atom
+  \param[out] dFao_bet_dz The derivative of the Fock Hamiltonian (beta-component) w.r.t. the z-coordinate of the selected atom
+  
+  Compute the INDO (or CNDO/2) Fock Hamiltonian as well as the gradients of the Fock matrix. Unrestricted formulation - Python-friendly version
+*/
+
 
   Hamiltonian_Fock_derivs_indo( &el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map,
   c, &dHao_dx, &dHao_dy, &dHao_dz,  &dFao_alp_dx, &dFao_alp_dy, &dFao_alp_dz,  &dFao_bet_dx, &dFao_bet_dy, &dFao_bet_dz);

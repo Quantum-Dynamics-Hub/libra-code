@@ -10,7 +10,7 @@
 *********************************************************************************/
 /**
   \file Hamiltonian_QM.cpp
-  \brief The file implements functions and for quantum-mechanical Hamiltonian calculations as well
+  \brief The file implements functions for quantum-mechanical Hamiltonian calculations as well
   as the classes for organizing such computations in an object-oriented way. 
 */
 
@@ -18,8 +18,13 @@
 #include "SCF.h"
 
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
 
 
@@ -30,6 +35,19 @@ void Hamiltonian_core(
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   MATRIX& Hao, MATRIX& Sao, int DF
 ){
+/**
+  \param[in,out] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the ab initio calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[out] Hao The Atomistic Hamiltonian we compute
+  \param[in] Sao The AO overlap matrix
+  \param[in] DF The debug flag - controlls the amount of additionally printed information
+
+  The generic function for computing the core Hamiltonian for a given system
+*/
 
   if(prms.hamiltonian=="hf"){
 
@@ -55,6 +73,18 @@ void Hamiltonian_Fock(Electronic_Structure* el, System& syst, vector<AO>& basis_
                       Control_Parameters& prms,Model_Parameters& modprms,
                       vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
                      ){
+/**
+  \param[in,out] el The object containing all information about electronic structure of the system, including the computed Fock matrix
+  \param[in,out] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the ab initio calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+
+  The generic function for computing the Fock Hamiltonian for a given system
+*/
+
 
   if(prms.hamiltonian=="hf"){
 
@@ -95,6 +125,37 @@ void derivative_couplings
   MATRIX& Dmo_a_x, MATRIX& Dmo_a_y, MATRIX& Dmo_a_z,
   MATRIX& Dmo_b_x, MATRIX& Dmo_b_y, MATRIX& Dmo_b_z
 ){
+/**
+  \param[in] el The object containing all information about electronic structure of the system
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the ab initio calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] Hao The core Hamiltonian matrix
+  \param[in] Sao The AO overlap matrix
+  \param[in] Norb The number of orbitals in the system
+  \param[in] at_indx The index of the atom w.r.t. whose coordinates we are computing the derivative couplings
+  \param[in] x_period Then number of periodic shells in X direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] y_period Then number of periodic shells in Y direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] z_period Then number of periodic shells in Z direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] t1 The periodicity vector along a crystal direction ("X")
+  \param[in] t2 The periodicity vector along b crystal direction ("Y")
+  \param[in] t3 The periodicity vector along c crystal direction ("Z")
+  \param[out] Dmo_a_x The derivative coupling of the alpha-orbitals w.r.t. x-projection of the selected atom 
+  \param[out] Dmo_a_y The derivative coupling of the alpha-orbitals w.r.t. y-projection of the selected atom 
+  \param[out] Dmo_a_z The derivative coupling of the alpha-orbitals w.r.t. z-projection of the selected atom 
+  \param[out] Dmo_b_x The derivative coupling of the beta-orbitals w.r.t. x-projection of the selected atom 
+  \param[out] Dmo_b_y The derivative coupling of the beta-orbitals w.r.t. y-projection of the selected atom 
+  \param[out] Dmo_b_z The derivative coupling of the beta-orbitals w.r.t. z-projection of the selected atom 
+
+
+  The function for computing the derivative couplings for a given system
+
+  WARNING: Use this version with caution - need more testing!
+*/
+
 
 
 
@@ -240,20 +301,51 @@ void derivative_couplings1
   MATRIX& dEa_dx,  MATRIX& dEa_dy,  MATRIX& dEa_dz,
   MATRIX& dEb_dx,  MATRIX& dEb_dy,  MATRIX& dEb_dz
 ){
+/**
+  \param[in] el The object containing all information about electronic structure of the system
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the ab initio calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] Hao The core Hamiltonian matrix
+  \param[in] Sao The AO overlap matrix
+  \param[in] Norb The number of orbitals in the system
+  \param[in] at_indx The index of the atom w.r.t. whose coordinates we are computing the derivative couplings
+  \param[in] x_period Then number of periodic shells in X direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] y_period Then number of periodic shells in Y direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] z_period Then number of periodic shells in Z direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] t1 The periodicity vector along a crystal direction ("X")
+  \param[in] t2 The periodicity vector along b crystal direction ("Y")
+  \param[in] t3 The periodicity vector along c crystal direction ("Z")
+  \param[out] Dmo_a_x The derivative coupling of the alpha-orbitals w.r.t. x-projection of the selected atom 
+  \param[out] Dmo_a_y The derivative coupling of the alpha-orbitals w.r.t. y-projection of the selected atom 
+  \param[out] Dmo_a_z The derivative coupling of the alpha-orbitals w.r.t. z-projection of the selected atom 
+  \param[out] Dmo_b_x The derivative coupling of the beta-orbitals w.r.t. x-projection of the selected atom 
+  \param[out] Dmo_b_y The derivative coupling of the beta-orbitals w.r.t. y-projection of the selected atom 
+  \param[out] Dmo_b_z The derivative coupling of the beta-orbitals w.r.t. z-projection of the selected atom 
+  \param[out] dEa_dx The derivative of the alpha eigenvalues w.r.t. x-projection of the selected atom
+  \param[out] dEa_dy The derivative of the alpha eigenvalues w.r.t. y-projection of the selected atom
+  \param[out] dEa_dz The derivative of the alpha eigenvalues w.r.t. z-projection of the selected atom
+  \param[out] dEb_dx The derivative of the beta eigenvalues w.r.t. x-projection of the selected atom
+  \param[out] dEb_dy The derivative of the beta eigenvalues w.r.t. y-projection of the selected atom
+  \param[out] dEb_dz The derivative of the beta eigenvalues w.r.t. z-projection of the selected atom
 
-/*******************************************************
- This is simpler version of the derivative couplings:
 
- From the derivation of Hellman-Feynman theorem:
+  The function computes the derivative couplings and the derivatives of the eigenvalues w.r.t. given nuclear coordinates
 
- <i| dH/dR |j> = dE_i/dR * delta_ij - (E_i - E_j)*D_ij
+  This is simpler version of the derivative couplings:
+  From the derivation of Hellman-Feynman theorem:
 
- where D_ij = <i| dj/dR > - derivative coupling in MO basis
+  <i| dH/dR |j> = dE_i/dR * delta_ij - (E_i - E_j)*D_ij
 
- <i| dH/dR |j> - is also in MO basis, but can be transformed from
- the AO basis
+  where D_ij = <i| dj/dR > - derivative coupling in MO basis
 
-*******************************************************/
+  <i| dH/dR |j> - is also in MO basis, but can be transformed from
+  the AO basis
+
+*/
 
 
   int i,j;
@@ -362,6 +454,46 @@ void derivative_couplings1
   MATRIX& Dmo_a_x, MATRIX& Dmo_a_y, MATRIX& Dmo_a_z,
   MATRIX& Dmo_b_x, MATRIX& Dmo_b_y, MATRIX& Dmo_b_z
 ){
+/**
+  \param[in] el The object containing all information about electronic structure of the system
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the ab initio calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] Hao The core Hamiltonian matrix
+  \param[in] Sao The AO overlap matrix
+  \param[in] Norb The number of orbitals in the system
+  \param[in] at_indx The index of the atom w.r.t. whose coordinates we are computing the derivative couplings
+  \param[in] x_period Then number of periodic shells in X direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] y_period Then number of periodic shells in Y direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] z_period Then number of periodic shells in Z direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] t1 The periodicity vector along a crystal direction ("X")
+  \param[in] t2 The periodicity vector along b crystal direction ("Y")
+  \param[in] t3 The periodicity vector along c crystal direction ("Z")
+  \param[out] Dmo_a_x The derivative coupling of the alpha-orbitals w.r.t. x-projection of the selected atom 
+  \param[out] Dmo_a_y The derivative coupling of the alpha-orbitals w.r.t. y-projection of the selected atom 
+  \param[out] Dmo_a_z The derivative coupling of the alpha-orbitals w.r.t. z-projection of the selected atom 
+  \param[out] Dmo_b_x The derivative coupling of the beta-orbitals w.r.t. x-projection of the selected atom 
+  \param[out] Dmo_b_y The derivative coupling of the beta-orbitals w.r.t. y-projection of the selected atom 
+  \param[out] Dmo_b_z The derivative coupling of the beta-orbitals w.r.t. z-projection of the selected atom 
+
+
+  The function computes the derivative couplings 
+
+  This is simpler version of the derivative couplings:
+  From the derivation of Hellman-Feynman theorem:
+
+  <i| dH/dR |j> = dE_i/dR * delta_ij - (E_i - E_j)*D_ij
+
+  where D_ij = <i| dj/dR > - derivative coupling in MO basis
+
+  <i| dH/dR |j> - is also in MO basis, but can be transformed from
+  the AO basis
+
+*/
+
 
   MATRIX* dEa_dx; dEa_dx = new MATRIX(Norb,Norb);
   MATRIX* dEa_dy; dEa_dy = new MATRIX(Norb,Norb);
@@ -392,6 +524,30 @@ VECTOR force
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   MATRIX& Hao, MATRIX& Sao,   int Norb, int at_indx, 
   int x_period, int y_period, int z_period, VECTOR& t1, VECTOR& t2, VECTOR& t3){
+/**
+  \param[in] el The object containing all information about electronic structure of the system
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the ab initio calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] Hao The core Hamiltonian matrix 
+  \param[in] Sao The AO overlap matrix
+  \param[in] Norb The number of orbitals in the system
+  \param[in] at_indx The index of the atom w.r.t. whose coordinates we are computing the derivative couplings
+  \param[in] x_period Then number of periodic shells in X direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] y_period Then number of periodic shells in Y direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] z_period Then number of periodic shells in Z direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] t1 The periodicity vector along a crystal direction ("X")
+  \param[in] t2 The periodicity vector along b crystal direction ("Y")
+  \param[in] t3 The periodicity vector along c crystal direction ("Z")
+
+  Compute the force (corresponding to the electronic structure given by el object) acting on the selected (with index
+  at_indx ) atom. Return the force vector. This is only electronic energy contribution
+
+  This version of the force computation is good for semiempirical methods with identity overlap matrix (e.g. INDO, but not EHT)
+*/
 
 
 //  cout<<"in force (Hamiltonian_QM.cpp)\n";
@@ -460,10 +616,34 @@ VECTOR force_extended
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   MATRIX& Hao, MATRIX& Sao,   int Norb, int at_indx, 
   int x_period, int y_period, int z_period, VECTOR& t1, VECTOR& t2, VECTOR& t3){
+/**
+  \param[in] el The object containing all information about electronic structure of the system
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the ab initio calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[in] Hao The core Hamiltonian matrix 
+  \param[in] Sao The AO overlap matrix
+  \param[in] Norb The number of orbitals in the system
+  \param[in] at_indx The index of the atom w.r.t. whose coordinates we are computing the derivative couplings
+  \param[in] x_period Then number of periodic shells in X direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] y_period Then number of periodic shells in Y direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] z_period Then number of periodic shells in Z direction: 0 - only the central shell, 1 - [-1,0,1], etc.
+  \param[in] t1 The periodicity vector along a crystal direction ("X")
+  \param[in] t2 The periodicity vector along b crystal direction ("Y")
+  \param[in] t3 The periodicity vector along c crystal direction ("Z")
+
+  Compute the force (corresponding to the electronic structure given by el object) acting on the selected (with index
+  at_indx ) atom. Return the force vector. This is only electronic energy contribution
+
+  This is the extended version of forces computations - just in case we need 
+  more general formulation - but at present (for INDO) it is not used
+
+*/
 
 
-// This is the extended version of forces computations - just in case we need 
-// more general formulation - but at present (for INDO) it is not used
 
 
   int i,j;
@@ -732,16 +912,33 @@ double energy_and_forces
   Control_Parameters& prms,Model_Parameters& modprms,
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
 ){
+/**
+  \param[in,out] el The object containing all information about electronic structure of the system
+  \param[in,out] syst The object defining molecular structure of the chemical system
+  \param[in,out] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the ab initio calculations
+  \param[in,out] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+
+  Compute the energy and forces (corresponding to the electronic structure given by el object) acting on all atoms
+  of the system. Returns the total electronic + nuclear energy. The forces are returned into the corresponding variables 
+  of the syst object.
+
+  This function will perform all calculations (including the parameters) from the scratch, so that the 
+  function can be used with MD or optimization context
+
+*/
+
+  /// Presently, configured for INDO calculations 
 
   int opt = 1;  // 1 - for INDO, 0 - for CNDO/CNDO2
 
   int i,j;
 
-  //MATRIX* Sao;  Sao = new MATRIX(el.Norb, el.Norb);
-  //MATRIX* Hao;  Hao = new MATRIX(el.Norb, el.Norb);
-
-
+  
   //=========== STEP 1: Update positions of the basis AOs ================
+  /// Update positions of the basis AOs to those given by the syst variables (atomic centers)
 
   for(i=0;i<el.Norb;i++){
     int at_indx = ao_to_atom_map[i];
@@ -754,9 +951,9 @@ double energy_and_forces
         
 
   //=========== STEP 2: Depending on hamiltonian to use, set internal parameters ================
+  /// Depending on hamiltonian to use, set internal parameters for faster calculations
 
-  if(prms.hamiltonian=="eht"){ //|| prms.hamiltonian=="geht" ||
-//     prms.hamiltonian=="geht1" || prms.hamiltonian=="geht2"){
+  if(prms.hamiltonian=="eht"){ 
 
     vector<string> mol_at_types;
     for(i=0;i<syst.Number_of_atoms;i++){  mol_at_types.push_back(syst.Atoms[i].Atom_element); }
@@ -766,6 +963,8 @@ double energy_and_forces
   }
 
   //=========== STEP 3: Overlap matrix ================
+  /// Update the AO overlap matrix
+
   MATRIX* Sao; Sao = new MATRIX(el.Norb, el.Norb);
 
   int x_period = 0;    int y_period = 0;    int z_period = 0;
@@ -775,6 +974,8 @@ double energy_and_forces
 
 
   //=========== STEP 4: Parameters ================
+  /// Precompute model parameters
+
   vector<double> eri;  vector<double> V_AB;
      
   if(prms.hamiltonian=="indo"){
@@ -786,6 +987,8 @@ double energy_and_forces
 
 
   //=========== STEP 5: Core and Fock matrices ================
+  /// Re-compute core and guess Fock matrices
+
   int debug = 0;
   double degen = 1.0;
   double kT = 0.025;
@@ -809,6 +1012,7 @@ double energy_and_forces
 
 
   //==============  STEP 6: SCF iterations =======================
+  /// Perform SCF iterations to get molecular orbitals and electronic energy
 
   double E = scf(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, 0);
 
@@ -828,6 +1032,7 @@ double energy_and_forces
 
   //==============  STEP 7: Now compute forces for all atoms =====================
   // - electronic contributions
+  /// Compute electronic contributions to forces for all atoms
 
   for(int n=0;n<syst.Number_of_atoms;n++){
 
@@ -842,6 +1047,7 @@ double energy_and_forces
 
 
   // - nuclear-nuclear repulsion
+  /// and then include nuclear-nuclear repulsion contributions (to energy and forces)
   vector<double> Zeff;
   vector<VECTOR> G;
   vector<VECTOR> R;
@@ -859,6 +1065,7 @@ double energy_and_forces
 
   delete Sao;  delete Hao;
  
+  /// Return the total energy (and the total forces are returned in the syst object)
 
   return E;
 

@@ -8,34 +8,22 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_EHT.cpp
+  \brief The file implements functions for extended Huckel theory (EHT) calculations
+*/
 
 #include "Hamiltonian_EHT.h"
 
-/****************************************************************************
-
-  This file contains following functions:
-
-  void Hamiltonian_core_eht
-  ( System& syst, vector<AO>& basis_ao, 
-    Control_Parameters& prms, Model_Parameters& modprms,
-    vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-    MATRIX* Hao, MATRIX* Sao, int DF
-  );
-
-  void Hamiltonian_core_eht
-  ( System& syst, vector<AO>& basis_ao, 
-    Control_Parameters& prms, Model_Parameters& modprms,
-    vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
-    MATRIX& Hao, MATRIX& Sao, int DF
-  );
-
-
-
-****************************************************************************/
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
+
 
 
 void Hamiltonian_core_eht
@@ -44,21 +32,26 @@ void Hamiltonian_core_eht
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   MATRIX* Hao, MATRIX* Sao, int DF
 ){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[out] Hao The pointer to the matrix object in which the core Hamiltonian will be stored
+  \param[in] Sao The pointer to the AO overlap matrix 
+  \param[in] DF Debug flag - controlls how much of extra info is printed out
+  
+  Compute the core EHT (extended Huckel theory) Hamiltonian
 
-// syst - nuclear geometry and charges
-// basis_ao - the full/complete pool of AOs (entire system)
-// prms - control parameters
-// modprms - model parameters
-// Hao, Sao - Hamiltonian and overlap matrices
+  Options:
+  prms.eht_formula == 0 - unweighted 
+  prms.eht_formula == 1 - weighted
+  prms.eht_formula == 2 - Calzaferi
+  prms.eht_formula == 3 - for the developments
 
-// prms.eht_formula == 0 - unweighted 
-// prms.eht_formula == 1 - weighted
-// prms.eht_formula == 2 - Calzaferi
-// prms.eht_formula == 3 - my developments (exhange parameters + long-range)
-
-// prms.eht_sce_formula == 0 - EHT (no self-consistent electrostatics)
-// prms.eht_sce_formula == 1 - SC-EHT (with self-consistent electrostatics based on atomic gross populations!)
-// prms.eht_sce_formula == 2 - SC-EHT (with self-consistent electrostatics based on net orbital populations wrt reference value)
+*/
 
            
   int i,j,n, a, b, I,J;
@@ -189,6 +182,27 @@ void Hamiltonian_core_eht
   vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map,
   MATRIX& Hao, MATRIX& Sao, int DF
 ){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[out] Hao The matrix object in which the core Hamiltonian will be stored
+  \param[in] Sao The AO overlap matrix 
+  \param[in] DF Debug flag - controlls how much of extra info is printed out
+  
+  Compute the core EHT (extended Huckel theory) Hamiltonian - Python-friendly version
+
+  Options:
+  prms.eht_formula == 0 - unweighted 
+  prms.eht_formula == 1 - weighted
+  prms.eht_formula == 2 - Calzaferi
+  prms.eht_formula == 3 - for the developments
+
+*/
+
 
   Hamiltonian_core_eht( syst, basis_ao, prms, modprms,  atom_to_ao_map, ao_to_atom_map, &Hao, &Sao, DF);
 
@@ -204,6 +218,34 @@ void Hamiltonian_core_deriv_eht
   MATRIX* dHao_dx, MATRIX* dHao_dy, MATRIX* dHao_dz, 
   MATRIX* dSao_dx, MATRIX* dSao_dy, MATRIX* dSao_dz
 ){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[out] Hao The pointer to the matrix object in which the core Hamiltonian will be stored
+  \param[out] Sao The pointer to the AO overlap matrix computed here
+  \param[in] DF Debug flag - controlls how much of extra info is printed out
+  \param[in] c The index of the atom w.r.t. which coordinates we take the derivatives
+  \param[out] dHao_dx The derivative of the Hamiltonian w.r.t. the x-coordinate of the selected atom
+  \param[out] dHao_dy The derivative of the Hamiltonian w.r.t. the y-coordinate of the selected atom
+  \param[out] dHao_dz The derivative of the Hamiltonian w.r.t. the z-coordinate of the selected atom
+  \param[out] dSao_dx The derivative of the AO overlap matrix w.r.t. the x-coordinate of the selected atom
+  \param[out] dSao_dy The derivative of the AO overlap matrix w.r.t. the y-coordinate of the selected atom
+  \param[out] dSao_dz The derivative of the AO overlap matrix w.r.t. the z-coordinate of the selected atom
+
+  Compute the core EHT (extended Huckel theory) Hamiltonian and its derivatives w.r.t. specific nuclear DOFs
+
+  Options:
+  prms.eht_formula == 0 - unweighted 
+  prms.eht_formula == 1 - weighted
+  prms.eht_formula == 2 - Calzaferi
+  prms.eht_formula == 3 - for the developments
+  
+*/
+
 
   //================ Basically, here we compute derivatives of the core Hamiltonian ========================
 
@@ -431,6 +473,34 @@ void Hamiltonian_core_deriv_eht
   MATRIX& dHao_dx, MATRIX& dHao_dy, MATRIX& dHao_dz, 
   MATRIX& dSao_dx, MATRIX& dSao_dy, MATRIX& dSao_dz
 ){
+/**
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  \param[out] Hao The matrix object in which the core Hamiltonian will be stored
+  \param[out] Sao The AO overlap matrix computed here
+  \param[in] DF Debug flag - controlls how much of extra info is printed out
+  \param[in] c The index of the atom w.r.t. which coordinates we take the derivatives
+  \param[out] dHao_dx The derivative of the Hamiltonian w.r.t. the x-coordinate of the selected atom
+  \param[out] dHao_dy The derivative of the Hamiltonian w.r.t. the y-coordinate of the selected atom
+  \param[out] dHao_dz The derivative of the Hamiltonian w.r.t. the z-coordinate of the selected atom
+  \param[out] dSao_dx The derivative of the AO overlap matrix w.r.t. the x-coordinate of the selected atom
+  \param[out] dSao_dy The derivative of the AO overlap matrix w.r.t. the y-coordinate of the selected atom
+  \param[out] dSao_dz The derivative of the AO overlap matrix w.r.t. the z-coordinate of the selected atom
+
+  Compute the core EHT (extended Huckel theory) Hamiltonian and its derivatives w.r.t. specific nuclear DOFs - Python-friendly version
+
+  Options:
+  prms.eht_formula == 0 - unweighted 
+  prms.eht_formula == 1 - weighted
+  prms.eht_formula == 2 - Calzaferi
+  prms.eht_formula == 3 - for the developments
+  
+*/
+
 
   Hamiltonian_core_deriv_eht
   ( syst, basis_ao, prms, modprms,  atom_to_ao_map, ao_to_atom_map,  &Hao, &Sao, DF, c,
@@ -444,6 +514,44 @@ void Hamiltonian_Fock_eht(Electronic_Structure* el, System& syst, vector<AO>& ba
                           Control_Parameters& prms, Model_Parameters& modprms,
                           vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
                          ){
+/**
+  \param[in,out] el The electronic structre properties of the system
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+  
+  Compute the EHT Fock Hamiltonian. Well, we are now talking about even further generalized EHT - the one that includes
+  self-consistent charges and so. That is why we get density-matrix-dependent Fock matrix.
+  Our options:
+
+  prms.eht_sce_formula==0  - charge-independent matrix, so F = H (core)
+  prms.eht_sce_formula==1  - we first add orbital energy correction that is linearly-dependent on atomic Mulliken charges, then
+                             the corrected orbital energies are used in one of the mixing formulas:
+                             
+    prms.eht_formula == 0 - unweighted 
+    prms.eht_formula == 1 - weighted
+    prms.eht_formula == 2 - Calzaferi
+    prms.eht_formula == 3 - for the developments
+
+  On top of this all, we also have a QE-type of correction:
+
+  prms.eht_electrostatics>=1
+
+    a) this gives on-site Fock matrix correction of the INDO type (breaking spin symmetry, in general) - this is actually controlled by the
+    model parameters
+
+    b) also, this correction gives the Fock matrix terms that originate from the energy term: xi_a * Q_a + 1/2*J_aa * Q_a^2 -on-site energies
+
+  prms.eht_electrostatics>=2
+
+    same as   prms.eht_electrostatics>=1 but also the terms originating from the energy terms 1/2 * J_ab * Q_a * Q_b are added to the 
+    Fock matrix
+
+*/
+
 
   int i,j,k,n,I,J,K,a,b,A,B;
   double delt, delt2, delt4;
@@ -768,6 +876,45 @@ void Hamiltonian_Fock_eht(Electronic_Structure& el, System& syst, vector<AO>& ba
                            Control_Parameters& prms, Model_Parameters& modprms,
                            vector< vector<int> >& atom_to_ao_map, vector<int>& ao_to_atom_map
                           ){
+/**
+  \param[in,out] el The electronic structre properties of the system
+  \param[in] syst The object defining molecular structure of the chemical system
+  \param[in] basis_ao The vector of AO objects - it constitutes the atomic basis of the system
+  \param[in] prms The parameters controlling the quantum mechanical calculations
+  \param[in] modprms The parameters of the atomistic Hamiltonian
+  \param[in] atom_to_ao_map The mapping from the atomic indices to the lists of the indices of AOs localized on given atom
+  \param[in] ao_to_atom_map The mapping from the AO index to the index of atoms on which given AO is localized
+
+  Just the Python-friendly version  
+  Compute the EHT Fock Hamiltonian. Well, we are now talking about even further generalized EHT - the one that includes
+  self-consistent charges and so. That is why we get density-matrix-dependent Fock matrix.
+  Our options:
+
+  prms.eht_sce_formula==0  - charge-independent matrix, so F = H (core)
+  prms.eht_sce_formula==1  - we first add orbital energy correction that is linearly-dependent on atomic Mulliken charges, then
+                             the corrected orbital energies are used in one of the mixing formulas:
+                             
+    prms.eht_formula == 0 - unweighted 
+    prms.eht_formula == 1 - weighted
+    prms.eht_formula == 2 - Calzaferi
+    prms.eht_formula == 3 - for the developments
+
+  On top of this all, we also have a QE-type of correction:
+
+  prms.eht_electrostatics>=1
+
+    a) this gives on-site Fock matrix correction of the INDO type (breaking spin symmetry, in general) - this is actually controlled by the
+    model parameters
+
+    b) also, this correction gives the Fock matrix terms that originate from the energy term: xi_a * Q_a + 1/2*J_aa * Q_a^2 -on-site energies
+
+  prms.eht_electrostatics>=2
+
+    same as   prms.eht_electrostatics>=1 but also the terms originating from the energy terms 1/2 * J_ab * Q_a * Q_b are added to the 
+    Fock matrix
+
+*/
+
 
   Hamiltonian_Fock_eht(&el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map);
 

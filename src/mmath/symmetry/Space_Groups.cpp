@@ -8,15 +8,22 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Space_Groups.cpp
+  \brief The file implements the Apply_Symmetry function
+    
+*/
 
 #include "Space_Groups.h"
 
 using namespace std;
 
+/// libmmath namespace
 namespace libmmath{
 
 using namespace liblinalg;
 
+/// libsymmetry namespace
 namespace libsymmetry{
 
 
@@ -33,12 +40,19 @@ int is_int_transl(double rem,double eps){
 }
 
 void Apply_Symmetry(std::string space_group_name,VECTOR r,std::vector<VECTOR>& r_equiv){
-// This function applies the symmetry defined by a space group Space_Group to
-// the vector r. New symmetrically equivalent positions (as well as original point r)
-// then added to array r_equiv. If new position just created by one of the group
-// operations is already included in r_equive then we do not include it again.
-// Also we do not include points which are just translations of the original point r
-// on any integer (also 0) number of lattice cell dimentions.
+/**
+  This function applies the symmetry defined by a space group Space_Group to
+  the vector r. New symmetrically equivalent positions (as well as original point r) are
+  then added to the array r_equiv. If new position just created by one of the group
+  operations is already included in r_equive then we do not include it again.
+  Also we do not include points which are just translations of the original point r
+  on any integer (also 0) number of lattice cell dimentions.
+
+  \param[in] space_group_name  Self-explanatory
+  \param[in] r The input coordinate, which we want to symmetrize
+  \param[out] r_equiv The list of unique points symmetrically-equivalent to the input point r
+
+*/
 
    double remx,remy,remz;
    double eps = 1e-5;

@@ -14,7 +14,10 @@
 
 using namespace libio;
 
+/// libmmath namespace
 namespace libmmath{
+
+/// liblinalg namespace
 namespace liblinalg{
 
 

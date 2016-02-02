@@ -10,23 +10,14 @@
 *********************************************************************************/
 
 #include "NeuralNetwork.h"
-//#include <ctime> 
-//#include <cstdlib>
 
-//using namespace std;
 using namespace boost;
-//using namespace libmmath;
-/*
-using libmmath::VECTOR;
-using libmmath::MATRIX;
-using libmmath::CMATRIX;
-using libmmath::MATRIX3x3;
-using libmmath::QUATERNION;
-using libmmath::DATA;
-*/
 
 
+/// libmmath namespace
 namespace libmmath{
+
+/// libann namespace
 namespace libann{
 
 

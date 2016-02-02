@@ -20,20 +20,15 @@
 #include <vector>
 
 
-
-//#include "MATRIX.h"
-//#include "MATRIX3x3.h"
-//#include "QUATERNION.h"
 #include "../linalg/liblinalg.h"
 
 
-//using libmmath::liblinalg;
-
-
+/// libmmath namespace
 namespace libmmath{
+
+/// libspecialfunctions namespace
 namespace libspecialfunctions{
 
-//using namespace libmmath::liblinalg;
 
 
 using libmmath::liblinalg::MATRIX;

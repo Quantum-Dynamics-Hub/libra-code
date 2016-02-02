@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file liblinalg.cpp
+  \brief The file implements Python export function and data types
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -24,12 +29,19 @@ using namespace boost::python;
 //using libmmath::DATA;
 
 
-
+/// libmmath namespace
 namespace libmmath{
+
+/// liblinalg namespace
 namespace liblinalg{
 
 
 void export_linalg_objects(){
+/** 
+  \brief Exporter of the liblinalg classes and functions
+
+*/
+
 
 
   class_< intList >("intList")

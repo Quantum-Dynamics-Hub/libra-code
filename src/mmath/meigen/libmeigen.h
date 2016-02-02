@@ -14,7 +14,10 @@
 
 #include "mEigen.h"
 
+/// libmmath namespace
 namespace libmmath{
+
+/// libmeigen namespace
 namespace libmeigen{
 
 

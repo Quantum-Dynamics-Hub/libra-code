@@ -8,12 +8,18 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Units.h
+  \brief The file defines the fundamental physical and conversion constants
+    
+*/
 
 #ifndef UNITS_H
 #define UNITS_H
 
-
+/// libmmath namespace
 namespace libmmath{
+
 //namespace liblinalg{
 
 //================= Mathematical and numeric constants ====================

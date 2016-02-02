@@ -14,7 +14,10 @@
 
 #include "NeuralNetwork.h"
 
+/// libmmath namespace
 namespace libmmath{
+
+/// libann namespace
 namespace libann{
 
 

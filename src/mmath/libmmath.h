@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libmmath.h
+  \brief The file describes Python export function
+    
+*/
 
 #ifndef LIBMMATH_H
 #define LIBMMATH_H
@@ -24,7 +29,7 @@
 
 #include "Timer.h"
 
-
+/// libmmath namespace
 namespace libmmath{
 
 void export_Mathematics_objects();

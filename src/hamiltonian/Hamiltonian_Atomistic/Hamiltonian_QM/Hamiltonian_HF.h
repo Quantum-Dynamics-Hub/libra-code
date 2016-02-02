@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_HF.h
+  \brief The file describes functions for Hartree-Fock (HF) calculations
+*/
+
 #ifndef HAMILTONIAN_HF_H
 #define HAMILTONIAN_HF_H
 
@@ -31,9 +36,15 @@ using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::lib
 #include "Electronic_Structure.h"
 
 
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_qm namespace
 namespace libhamiltonian_qm{
+
 
 
 // Hamiltonian_HF.cpp

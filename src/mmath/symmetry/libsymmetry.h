@@ -8,6 +8,12 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libsymmetry.h
+  \brief The file describes Python export function
+    
+*/
+
 
 #ifndef LIB_SYMMETRY_H
 #define LIB_SYMMETRY_H
@@ -15,8 +21,10 @@
 
 #include "Space_Groups.h"
 
-
+/// libmmath namespace
 namespace libmmath{
+
+/// libsymmetry namespace
 namespace libsymmetry{
 
 

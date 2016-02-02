@@ -29,7 +29,10 @@ using namespace libmmath::libspecialfunctions;
 using namespace std;
 
 
+/// libmmath namespace
 namespace libmmath{
+
+/// libann namespace
 namespace libann{
 
 //----------------------------------------------

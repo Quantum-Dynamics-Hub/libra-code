@@ -14,7 +14,10 @@
 
 #include "GRAPH.h"
 
+/// libmmath namespace
 namespace libmmath{
+
+/// libgraph namespace
 namespace libgraph{
 
 

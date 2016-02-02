@@ -8,12 +8,21 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Hamiltonian_MM.cpp
+  \brief The file implements functions for molecular-mechanical Hamiltonian calculations as well
+  as the classes for organizing such computations in an object-oriented way: basic functionality of the class
+*/
 
 #include "Hamiltonian_MM.h"
 
-
+/// libhamiltonian namespace
 namespace libhamiltonian{
+
+/// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
+
+/// libhamiltonian_mm namespace
 namespace libhamiltonian_mm{
 
 //========================================================
@@ -21,16 +30,10 @@ namespace libhamiltonian_mm{
 //========================================================
 
 
-/*
-void Hamiltonian_MM::set(object at){
-
- set_value(is_type,   type,   at,"type");
- set_value(is_potential_type,  potential_type, at,"potential_type");
-}
-*/
-
-
 void Hamiltonian_MM::show_info(){
+/**
+  Prints out the Hamiltonian_MM object properties
+*/
 
   std::cout<<"Hamiltonian_MM properties:"<<std::endl;
   std::cout<<"is_active = "<<is_active<<std::endl; 
@@ -131,17 +134,22 @@ void Hamiltonian_MM::copy_content(const Hamiltonian_MM& in){
 }
 
 Hamiltonian_MM::Hamiltonian_MM(){
-  /****************
-     Constructor
-  ******************/
+/**
+  Constructor
+  Initializes internal variables to default values
+*/
+
   // Initialize variables to default values
   init_variables();
 }
 
 Hamiltonian_MM::Hamiltonian_MM(const Hamiltonian_MM& in){
-  /********************
-    Copy constructor
-  *********************/
+/**
+  Copy constructor
+  Initializes internal variables to default values
+  Copies the defined content of the source object
+*/
+
   // Initialize variables to default values
   init_variables();
   // Copy content of th object which is defined
@@ -149,9 +157,12 @@ Hamiltonian_MM::Hamiltonian_MM(const Hamiltonian_MM& in){
 }
 
 Hamiltonian_MM& Hamiltonian_MM::operator=(const Hamiltonian_MM& in){
-  /********************
-    Assignment operator
-  *********************/
+/**
+  Assignment operator
+  Initializes internal variables to default values
+  Copies the defined content of the source object
+*/
+
   // Initialize variables to default values
   init_variables();
   // Copy content of th object which is defined
@@ -160,6 +171,10 @@ Hamiltonian_MM& Hamiltonian_MM::operator=(const Hamiltonian_MM& in){
 }
 
 Hamiltonian_MM::~Hamiltonian_MM(){
+/**
+  Destructor: frees the memory allocated for the internal variables
+*/
+
 //  if(Box!=NULL){ delete Box; Box = NULL; }
   if(data_bond!=NULL) { delete data_bond; data_bond = NULL; }
   if(data_angle!=NULL){ delete data_angle;data_angle = NULL;}

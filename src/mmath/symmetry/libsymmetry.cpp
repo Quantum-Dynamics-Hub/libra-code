@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file libsymmetry.cpp
+  \brief The file describes Python export function
+    
+*/
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -15,15 +20,21 @@
 using namespace boost::python;
 
 
-
+/// libmmath namespace
 namespace libmmath{
 
 using namespace liblinalg;
 
+/// libsymmetry namespace
 namespace libsymmetry{
 
 
 void export_symmetry_objects(){
+/** 
+  \brief Exporter of libsymmetry classes and functions
+
+*/
+
 
   void (*expt_Apply_Symmetry_v1)(std::string space_group_name,VECTOR r,std::vector<VECTOR>& r_equiv) = &Apply_Symmetry;
 //  voi (*expt_Apply_Symmetry_v1)(std::string space_group_name,VECTOR r,std::vector<VECTOR>& r_equiv) = &Apply_Symmetry;

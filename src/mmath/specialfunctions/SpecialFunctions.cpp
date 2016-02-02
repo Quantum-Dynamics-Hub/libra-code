@@ -16,7 +16,10 @@
 // Teylor expansions for some formula are from:
 // http://web.mit.edu/kenta/www/three/taylor.html
 
+/// libmmath namespace
 namespace libmmath{
+
+/// libspecialfunctions namespace
 namespace libspecialfunctions{
 
 

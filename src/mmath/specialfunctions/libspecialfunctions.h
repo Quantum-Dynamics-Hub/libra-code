@@ -14,7 +14,10 @@
 
 #include "SpecialFunctions.h"
 
+/// libmmath namespace
 namespace libmmath{
+
+/// libspecialfunctions namespace
 namespace libspecialfunctions{
 
 

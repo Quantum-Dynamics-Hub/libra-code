@@ -15,7 +15,10 @@
 
 #include "DATA.h"
 
+/// libmmath namespace
 namespace libmmath{
+
+/// libdata namespace
 namespace libdata{
 
 

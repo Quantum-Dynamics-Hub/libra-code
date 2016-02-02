@@ -13,7 +13,10 @@
 
 //=========================== DATA class ================================
 
+/// libmmath namespace
 namespace libmmath{
+
+/// libdata namespace
 namespace libdata{
 
 DATA::DATA(vector<double> d){

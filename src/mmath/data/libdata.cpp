@@ -16,8 +16,10 @@
 
 using namespace boost::python;
 
-
+/// libmmath namespace
 namespace libmmath{
+
+/// libdata namespace
 namespace libdata{
 
 

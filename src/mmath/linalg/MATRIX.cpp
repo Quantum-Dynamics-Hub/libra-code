@@ -8,18 +8,25 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file MATRIX.cpp
+  \brief The file implements the MATRIX class for representing arbitrary real-valued matrices
+    
+*/
 
 #include "MATRIX.h"
 #include "VECTOR.h"
 #include <stdio.h>
 #include <string.h>
-//using namespace std;
 
 // ========================= Matrices ================================
 // ------------------------- Constructors ----------------------------
 using namespace libio;
 
+/// libmmath namespace
 namespace libmmath{
+
+/// liblinalg namespace
 namespace liblinalg{
 
 
@@ -879,14 +886,29 @@ void MATRIX::get_vectors(VECTOR& u1,VECTOR& u2,VECTOR& u3){
   u1.z = M[6];  u2.z = M[7];  u3.z = M[8];
 
 }
-void MATRIX::skew(VECTOR v) {
+
+void MATRIX::skew(VECTOR v){
+/**
+                  | 0  -v.z  v.y |
+    W = skew(n) = | v.z  0  -v.x |
+                  |-v.y v.x  0   |
+*/
+
 
   M[0] = 0.0; M[1] =-v.z; M[2] = v.y;
   M[3] = v.z; M[4] = 0.0; M[5] =-v.x;
   M[6] =-v.y; M[7] = v.x; M[8] = 0.0;
 
 }
-void MATRIX::skew1(VECTOR v) {
+
+void MATRIX::skew1(VECTOR v){
+/**
+                   | 0    -v.x  -v.y  -v.z |
+    W = skew(n1) = | v.x    0    v.z  -v.y |
+                   | v.y  -v.z    0    v.x |
+                   | v.z   v.y  -v.x   0   |
+*/
+
 
   M[0] = 0.0; M[1] =-v.x; M[2] =-v.y; M[3] =-v.z;
   M[4] = v.x; M[5] = 0.0; M[6] = v.z; M[7] =-v.y;
@@ -973,9 +995,12 @@ void MATRIX::FindMaxNondiagonalElement(int& row,int& col,double& value){
 
 }
 void MATRIX::JACOBY_EIGEN(MATRIX& EVAL, MATRIX& EVECT) {
+/** Only for symmetric matrices!
+  EVECT * EVAL  =  M * EVECT
 
-        // Description: only for symmetric matrices!
-        // EVECT * EVAL  =  M * EVECT
+  \param[out] EVAL The matrix of eigenvalues
+  \param[out] EVECT The matrix of eigenvectors
+*/
 
         MATRIX V(num_of_rows,num_of_cols);
         MATRIX temp(num_of_rows,num_of_cols);
@@ -1034,13 +1059,18 @@ void MATRIX::JACOBY_EIGEN(MATRIX& EVAL, MATRIX& EVECT) {
                                     EVECT.Transpose();
 }
 void MATRIX::JACOBY_EIGEN(MATRIX& EVAL, MATRIX &EVECT,double EPS) {
+/**
+  Only for symmetric matrices!
+  EVECT * EVAL  =  M * EVECT
 
-        // Description: only for symmetric matrices!
-        // EVECT * EVAL  =  M * EVECT
+  \param[out] EVAL The matrix of eigenvalues
+  \param[out] EVECT The matrix of eigenvectors
+  \param[in] EPS Controlls the precision - when elimination of the matrix elements is done by the rotation
 
-// V = P^T
-// EVAL = V_M V_{M-1} ... V_0 * M * V_0^T * V_1^T ... V_M^T = Q^T * M * Q
-// EVECT = Q = V_0^T * V_1^T ... V_M^T
+  V = P^T  <-- this is the rotation matrix
+  EVAL = V_M V_{M-1} ... V_0 * M * V_0^T * V_1^T ... V_M^T = Q^T * M * Q
+  EVECT = Q = V_0^T * V_1^T ... V_M^T
+*/
 
        MATRIX V(num_of_rows,num_of_cols);
        MATRIX temp(num_of_rows,num_of_cols);
@@ -1098,22 +1128,36 @@ void MATRIX::JACOBY_EIGEN(MATRIX& EVAL, MATRIX &EVECT,double EPS) {
 double MATRIX::Determinant(){
 
   double res =0.0;
-  if((num_of_cols==3)&&(num_of_rows==3)){
+  if(num_of_cols==num_of_rows){
+    int n = num_of_cols;
 
-    res = M[0]*(M[4]*M[8]-M[5]*M[7])-
-          M[3]*(M[1]*M[8]-M[2]*M[7])+
-          M[6]*(M[1]*M[5]-M[2]*M[4]);
+    if(n==2){  res = M[0]*M[3]-M[1]*M[2];    }
+    else if(n==3){
+      res = M[0]*(M[4]*M[8]-M[5]*M[7])-
+            M[3]*(M[1]*M[8]-M[2]*M[7])+
+            M[6]*(M[1]*M[5]-M[2]*M[4]);
+    }
+    else{
+      cout<<"Error in MATRIX::Determinant. The function is only implemented for 2x2 and 3x3 matrices\n";
+      exit(0);
+    }
+
   }
   else{
-    cout<<"Error in MATRIX::Determinant. The function is only implemented for 3x3 matrix\n";
+    cout<<"Error in MATRIX::Determinant - only square matrices are allowed\n";
+    cout<<"The dimensions of the present matrix are: "<<num_of_rows<<" x "<<num_of_cols<<"\n";
+    cout<<"Exiting...\n";
     exit(0);
   }
+
 
   return res;
 }
 
 double MATRIX::dot_product(MATRIX& B){
-// A->dot_product(B) = sum_of_elements_of (A^T * B)
+/** 
+  A->dot_product(B) = sum_of_elements_of (A^T * B)
+*/
 
   double res = 0.0;
 
@@ -1162,7 +1206,8 @@ double MATRIX::dot_product(MATRIX* B){
 }
 
 MATRIX MATRIX::col(int i){
-// takes given column and makes it n x 1 MATRIX
+/// takes given column and makes it n x 1 MATRIX
+
   MATRIX tmp(num_of_rows,1);
   for(int j=0;j<num_of_rows;j++){ tmp.M[j] = M[j*num_of_cols+i]; }
   return tmp;
@@ -1170,7 +1215,8 @@ MATRIX MATRIX::col(int i){
 
 
 MATRIX MATRIX::row(int i){
-// takes given row and makes it 1 x n MATRIX
+/// takes given row and makes it 1 x n MATRIX
+
   MATRIX tmp(1,num_of_cols);
   for(int j=0;j<num_of_cols;j++){ tmp.M[j] = M[i*num_of_cols+j]; }
   return tmp;
@@ -1192,10 +1238,11 @@ double MATRIX::tr(){
 
 }
 void MATRIX::Rotation(const VECTOR& u){
-/*  This function initializes the matrix to a rotation matrix
-    for rotation around the axis given by direction of the vector: (u/|u|)
-    on amount given by norm of vector u: |u|.
-    If the vector has a zero length - this will be an identity matrix
+/**
+  This function initializes the matrix to a rotation matrix
+  for rotation around the axis given by direction of the vector: (u/|u|)
+  on amount given by norm of vector u: |u|.
+  If the vector has a zero length - this will be an identity matrix
 */
     double umod,umod2;
 
@@ -1214,7 +1261,7 @@ void MATRIX::Rotation(const VECTOR& u){
         cs = (1.0 - cos(umod));
         sn = sin(umod);
 
-        /* 
+        /**
         Here is efficient implementation of Rodrigues formula: 
         M = I + W * sin_psi + W*W*(1.0 - cos_psi)
         where I - identity matrix
@@ -1311,10 +1358,12 @@ void MATRIX::bin_load(std::string filename){
 
 
 void pop_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset){
-// Extract the submatrix x from the matrix X according to indices given in <subset>
-// Assume that memory for x is already allocated and its dimensions are consistent with the map dimensions:
-// subset_size == x->num_of_cols = x->num_of_rows = subset.size()
-// X->num_of_cols = X->num_of_rows >= subset_size
+/**
+  Extract the submatrix x from the matrix X according to indices given in <subset>
+  Assume that memory for x is already allocated and its dimensions are consistent with the map dimensions:
+  subset_size == x->num_of_cols = x->num_of_rows = subset.size()
+  X->num_of_cols = X->num_of_rows >= subset_size
+*/
 
   int N = X->num_of_cols;
   int n = x->num_of_cols;
@@ -1332,10 +1381,12 @@ void pop_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset){
 }// void pop_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset)
 
 void push_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset){
-// Pushes the smaller submatrix x back to the bigger matrix X, according to indices given in <subset>
-// Assume that memory for x is already allocated and its dimensions are consistent with the map dimensions:
-// subset_size == x->num_of_cols = x->num_of_rows = subset.size()
-// X->num_of_cols = X->num_of_rows >= subset_size
+/**
+  Pushes the smaller submatrix x back to the bigger matrix X, according to indices given in <subset>
+  Assume that memory for x is already allocated and its dimensions are consistent with the map dimensions:
+  subset_size == x->num_of_cols = x->num_of_rows = subset.size()
+  X->num_of_cols = X->num_of_rows >= subset_size
+*/
 
   int N = X->num_of_cols;
   int n = x->num_of_cols;

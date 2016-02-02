@@ -8,6 +8,12 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file CMATRIX.cpp
+  \brief The file implements the CMATRIX class for representing arbitrary size complex-valued matrices as well as the
+  set of functions of complex Fourier transforms and convolution
+    
+*/
 
 #include "CMATRIX.h"
 #include <cstdio>
@@ -17,8 +23,10 @@
 
 using namespace std;
 
-
+/// libmmath namespace
 namespace libmmath{
+
+/// liblinalg namespace
 namespace liblinalg{
 
 
@@ -56,9 +64,10 @@ complex<double> CMATRIX::get(int row,int col){
 
 
 CMATRIX::CMATRIX(vector<vector<double> >& re_part,vector<vector<double> >& im_part){
-/*****************************************************************
+/**
   Constructor: creates a CMATRIX from 2 2D-arrays - real and imaginary parts
-*****************************************************************/
+*/
+
   if(re_part.size()!=im_part.size()){ 
     cout<<"Error in CMATRIX constructor: y-dimensions(num of rows) of the real and imaginary arrays are not equal\n"; exit(0); 
   }
@@ -483,36 +492,37 @@ void CMATRIX::inverse(CMATRIX& inv,double EPS,int max_num_iter,int is_cycle,int 
 
 
 void CMATRIX::eigen0(CMATRIX& EVAL, CMATRIX& EVECT,double EPS,int max_num_iter,int is_cycle,int alg) {
-// Description: Jacobi Eigenvalue Solver - only for complex hermitian CMATRIX!
-// EVECT * EVAL  =  M * EVECT
-// V = P^T
-// EVAL = V_M V_{M-1} ... V_0 * M * V_0^T * V_1^T ... V_M^T = Q^T * M * Q
-// EVECT = Q = V_0^T * V_1^T ... V_M^T
-// http://coderov.net/vma/140-eigenvalues/862-direct-method-of-rotation.html  <- this is strange, so use
-// http://en.wikipedia.org/wiki/Jacobi_method_for_complex_Hermitian_matrices
-// Note: Wikipedia source contains an error: CMATRIX element for m=q and n=p should be changed from
-// exp(-i*teta1)*cos(teta2) to -i*exp(-i*teta1)*cos(teta2) !!!
-// Also in formula for tan(phi2) I assumed that the real part of H_{p,q} is used!
-
-// For Shur decomposition see: http://ndickson.wordpress.com/2011/07/13/jacobi-eigenvalue-algorithm-schur-decomposition-and-wikipedia/
-// My derivations are:
-// V = |  c  -s* |
-//     |  s   c* |
-// // Case 1:                    // Case 2: (this is also the case when Mii = Mjj)
-// c = 1 + sqrt(1 + a*b)         c = sqrt(b)
-// -s* = a                       s = conj(sqrt(a))
-// a = 2.0*Mij/(Mii-Mjj)         a = Mij/norm
-// b = 2.0*Mji/(Mii-Mjj)         b = Mji/norm, norm =sqrt(|Mij|^2+|Mji|^2)
-
-// New parameters: 
-// is_cycle:
-//       0 - will be using max non-diagonal element
-//       1 - cyclic order will be used
-//
-// alg: - choose algorithm
-//       0 - Shur decomposition
-//       1 - Jacobi rotations
-
+/**
+  Description: Jacobi Eigenvalue Solver - only for complex hermitian CMATRIX!
+  EVECT * EVAL  =  M * EVECT
+  V = P^T
+  EVAL = V_M V_{M-1} ... V_0 * M * V_0^T * V_1^T ... V_M^T = Q^T * M * Q
+  EVECT = Q = V_0^T * V_1^T ... V_M^T
+  http://coderov.net/vma/140-eigenvalues/862-direct-method-of-rotation.html  <- this is strange, so use
+  http://en.wikipedia.org/wiki/Jacobi_method_for_complex_Hermitian_matrices
+  Note: Wikipedia source contains an error: CMATRIX element for m=q and n=p should be changed from
+  exp(-i*teta1)*cos(teta2) to -i*exp(-i*teta1)*cos(teta2) !!!
+  Also in formula for tan(phi2) I assumed that the real part of H_{p,q} is used!
+  
+  For Shur decomposition see: http://ndickson.wordpress.com/2011/07/13/jacobi-eigenvalue-algorithm-schur-decomposition-and-wikipedia/
+  My derivations are:
+  V = |  c  -s* |
+      |  s   c* |
+  // Case 1:                    // Case 2: (this is also the case when Mii = Mjj)
+  c = 1 + sqrt(1 + a*b)         c = sqrt(b)
+  -s* = a                       s = conj(sqrt(a))
+  a = 2.0*Mij/(Mii-Mjj)         a = Mij/norm
+  b = 2.0*Mji/(Mii-Mjj)         b = Mji/norm, norm =sqrt(|Mij|^2+|Mji|^2)
+  
+  New parameters: 
+  is_cycle:
+        0 - will be using max non-diagonal element
+        1 - cyclic order will be used
+  
+  alg: - choose algorithm
+        0 - Shur decomposition
+        1 - Jacobi rotations
+*/
 
   int n = n_rows; // = n_cols
   int row, col, i, j, k, num_iter;
@@ -644,14 +654,13 @@ void CMATRIX::eigen0(CMATRIX& EVAL, CMATRIX& EVECT,double EPS,int max_num_iter,i
 }
 
 void CMATRIX::QR(CMATRIX& w,CMATRIX& R){
-/****************************************************************************
- Very helpful resource:
- http://www.math.umn.edu/~olver/aims_/qr.pdf
+/**
+  Very helpful resource: http://www.math.umn.edu/~olver/aims_/qr.pdf
+  QR decomposition is basically the Gram-Schmidt orthogonaliztion procedue:
 
- QR decomposition is basically the Gram-Schmidt orthogonaliztion procedue:
+  M = Q * R, where Q - is a set of orthonormal vectors and R are the weights
+*/
 
- M = Q * R, where Q - is a set of orthonormal vectors and R are the weights
-*****************************************************************************/
   int row, col, i, j, k;
   double nrm; // norm
   complex<double> dot; // dot product
@@ -707,16 +716,16 @@ void CMATRIX::QR(CMATRIX& w,CMATRIX& R){
 
 
 void CMATRIX::QR1(CMATRIX& w,CMATRIX& R){
-/****************************************************************************
- Very helpful resource:
- http://www.math.umn.edu/~olver/aims_/qr.pdf
+/**
+  Very helpful resource: http://www.math.umn.edu/~olver/aims_/qr.pdf
 
- QR decomposition is basically the Gram-Schmidt orthogonaliztion procedue:
+  QR decomposition is basically the Gram-Schmidt orthogonaliztion procedue:
 
- M = Q * R, where Q - is a set of orthonormal vectors and R are the weights
+  M = Q * R, where Q - is a set of orthonormal vectors and R are the weights
 
- This version is designed for tridiagonal matrices
-*****************************************************************************/
+  This version is designed for tridiagonal matrices
+*/
+
   int row, col, i, j, k;
   double nrm; // norm
   complex<double> dot; // dot product
@@ -805,9 +814,14 @@ void CMATRIX::bin_load(std::string filename){
 
 
 void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval){
-// --------- Recursive QR iterations ------------
-// eval - is the input tridiagonal CMATRIX
-// n - is a size of the problem
+/**
+  Recursive QR iterations 
+  \param[in] EPS The precision parameter
+  \param[in] n The size of the problem
+  \param[in] eval - is the input tridiagonal CMATRIX
+  \param[out] Eval - the output eigenvalues
+
+*/
 
   CMATRIX Q(n,n);
   CMATRIX R(n,n);
@@ -822,9 +836,10 @@ void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval){
 
     eval = 0.0;
 
-    // The following stepas are basically the efficient way to do:
-    // eval = R * Q
-    // Fill out the main diagonal
+    /// The following steps are basically the efficient way to do:
+    /// eval = R * Q
+    /// Fill out the main diagonal
+
     for(int i=0;i<n;i++){ 
       if(i==n-1){  eval.M[i*n+i]  = R.M[i*n+i]*Q.M[i*n+i];   }          // only 1 term here
       else{        eval.M[i*n+i]  = R.M[i*n+i]*Q.M[i*n+i] + R.M[i*n+(i+1)]*Q.M[(i+1)*n+i];}  // in fact just only 2 terms here
@@ -832,7 +847,9 @@ void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval){
       //eval.M[i*n+i] += mu;
  
     }
-    // Fill out upper diagonal
+
+    /// Fill out upper diagonal
+
     for(i=0;i<n-1;i++){ 
       // j = i+1
       if(i==n-2){  eval.M[i*n+(i+1)]  = R.M[i*n+i]*Q.M[i*n+(i+1)] + 
@@ -846,8 +863,9 @@ void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval){
     }
 
 
-    // m has a tridiagonal form, so judge convergence by the elements in
-    // the closest off-diagonal
+    /// m has a tridiagonal form, so judge convergence by the elements in
+    /// the closest off-diagonal (this is where EPS parameters is used)
+
     stop = 0;
     for(i=0;i<(n-1);i++){  
       if(  (fabs(eval.M[i*n+(i+1)].real())<EPS) && (fabs(eval.M[i*n+(i+1)].imag())<EPS) ){
@@ -945,11 +963,16 @@ void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval){
 
 
 void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval,CMATRIX& Evec){
-// Overloading qr function - to keep track of the transformation
-// CMATRIX
-// --------- Recursive QR iterations ------------
-// eval - is the input tridiagonal CMATRIX
-// n - is a size of the problem
+/**
+  Overloading qr function - to keep track of the transformation
+
+  \param[in] EPS The precision parameter
+  \param[in] n The size of the problem
+  \param[in] eval is the input tridiagonal CMATRIX
+  \param[out] Eval the output eigenvalues
+  \param[out] Evec Will contain the eigenvectors (the transformation matrix)
+*/
+
   double mu,d,a1,b2;
   int i1,i2;
   CMATRIX Q(n,n);
@@ -1141,8 +1164,12 @@ void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval,CMATRIX& Evec){
 }
 
 void CMATRIX::eigen(double EPS,CMATRIX& EVAL,CMATRIX& EVECT,int opt){
-// This is just a convenient interface
-// opt - is option - choose the method
+/**
+  This is just a convenient interface for several specific function implemented in this module
+  opt - is option - choose the method
+
+  Note: this is very manual implementation - so it works up to n = 250 or so, but is very slow 
+*/
 
   vector<double> Eval(n_rows,0.0);
   EVAL = 0.0;
@@ -1161,11 +1188,11 @@ void CMATRIX::eigen(double EPS,CMATRIX& EVAL,CMATRIX& EVECT,int opt){
 }
 
 void CMATRIX::eigen1(double EPS,vector<double>& Eval){
-//-------------------------------------------------------------
-// We do the job in reductionist way - once one of the elements on 
-// the off-diagonal is smaller than EPS - we split the CMATRIX into
-// 2 blocks and then deal with each other independently - deflation
-//-------------------------------------------------------------
+/**
+  We do the job in a reductionist way - once one of the elements on 
+  the off-diagonal is smaller than EPS - we split the CMATRIX into
+  2 blocks and then deal with each other independently - deflation
+*/
 
   int n = n_rows; // = n_cols
 
@@ -1190,14 +1217,14 @@ void CMATRIX::eigen1(double EPS,vector<double>& Eval){
 
 
 void CMATRIX::eigen2(double EPS,vector<double>& Eval,CMATRIX& Evec){
-//-------------------------------------------------------------
-// This is practically the same version as eigen1, but we also 
-// keep track of the transformation matrixes - so to compute all
-// eigenvectors
-// The relation is:
-// this * Evec = Evec * Eval  or (because Evec.H() * Evec = I)
-// Eval = Evec.H() * this * Evec
-//-------------------------------------------------------------
+/**
+  This is practically the same version as eigen1, but we also 
+  keep track of the transformation matrixes - so to compute all
+  eigenvectors
+  The relation is:
+  this * Evec = Evec * Eval  or (because Evec.H() * Evec = I)
+  Eval = Evec.H() * this * Evec
+*/
 
   int n = n_rows; // = n_cols
 
@@ -1222,14 +1249,14 @@ void CMATRIX::eigen2(double EPS,vector<double>& Eval,CMATRIX& Evec){
 }
 
 void CMATRIX::eigen3(double EPS,vector<double>& Eval,CMATRIX& Evec){
-//-------------------------------------------------------------
-// This is practically the same version as eigen1, but we also 
-// keep track of the transformation matrixes - so to compute all
-// eigenvectors
-// The relation is:
-// this * Evec = Evec * Eval  or (because Evec.H() * Evec = I)
-// Eval = Evec.H() * this * Evec
-//-------------------------------------------------------------
+/**
+  This is practically the same version as eigen1, but we also 
+  keep track of the transformation matrixes - so to compute all
+  eigenvectors
+  The relation is:
+  this * Evec = Evec * Eval  or (because Evec.H() * Evec = I)
+  Eval = Evec.H() * this * Evec
+*/
 
   int n = n_rows; // = n_cols
 
@@ -1268,7 +1295,7 @@ void CMATRIX::eigen3(double EPS,vector<double>& Eval,CMATRIX& Evec){
 
 
 void CMATRIX::tridiagonalize(CMATRIX& T){
-/****************************************************************************
+/**
   Here we will transfrom the CMATRIX to tridiagonal form (T) using the Householder
   transformations. We assume our CMATRIX is Hermitian or symmetric, otherwise
   the algorithm may not work
@@ -1280,7 +1307,8 @@ void CMATRIX::tridiagonalize(CMATRIX& T){
   http://math.fullerton.edu/mathews/n2003/HouseholderMod.html
 
   This algorithm scales as O(N^3)
-*****************************************************************************/
+*/
+
   int i,j,k,n;
   double nrm;
   complex<double> alp;
@@ -1328,7 +1356,7 @@ void CMATRIX::tridiagonalize(CMATRIX& T){
 
 
 void CMATRIX::tridiagonalize(CMATRIX& T,CMATRIX& H){
-/****************************************************************************
+/**
   Here we will transfrom the CMATRIX to tridiagonal form (T) using the Householder
   transformations. We assume our CMATRIX is Hermitian or symmetric, otherwise
   the algorithm may not work
@@ -1342,7 +1370,8 @@ void CMATRIX::tridiagonalize(CMATRIX& T,CMATRIX& H){
   http://math.fullerton.edu/mathews/n2003/HouseholderMod.html
 
   This algorithm scales as O(N^3)
-*****************************************************************************/
+*/
+
   int i,j,k,n;
   double nrm;
   complex<double> alp;
@@ -1400,10 +1429,11 @@ void CMATRIX::tridiagonalize(CMATRIX& T,CMATRIX& H){
 
 
 CMATRIX exp(CMATRIX& m1,complex<double> scl,double eps){
-/****************************************************************************
+/**
   Computes  exp(m1*scl)
   Works only for Hermitian m1: m1.H() = m1
-*****************************************************************************/
+*/
+
   if(m1.n_rows!=m1.n_cols){ cout<<"Error in exp: Can not exponentiate non-square CMATRIX\n"; exit(0); }
   int n = m1.n_rows;
   CMATRIX evec(n,n),eval(n,n);//,inv_evec(n,n);
@@ -1416,10 +1446,11 @@ CMATRIX exp(CMATRIX& m1,complex<double> scl,double eps){
  
 
 CMATRIX sin(CMATRIX& m1,complex<double> scl, double eps){
-/****************************************************************************
+/**
   Computes sin(m1*scl)
   Works only for Hermitian m1: m1.H() = m1
-*****************************************************************************/
+*/
+
   if(m1.n_rows!=m1.n_cols){ cout<<"Error in exp: Can not exponentiate non-square CMATRIX\n"; exit(0); }
   int n = m1.n_rows;
   CMATRIX evec(n,n),eval(n,n);//,inv_evec(n,n);
@@ -1431,10 +1462,11 @@ CMATRIX sin(CMATRIX& m1,complex<double> scl, double eps){
 }
 
 CMATRIX cos(CMATRIX& m1,complex<double> scl, double eps){
-/****************************************************************************
+/**
   Computes cos(m1*scl)
   Works only for Hermitian m1: m1.H() = m1
-*****************************************************************************/
+*/
+
   if(m1.n_rows!=m1.n_cols){ cout<<"Error in exp: Can not exponentiate non-square CMATRIX\n"; exit(0); }
   int n = m1.n_rows;
   CMATRIX evec(n,n),eval(n,n);//,inv_evec(n,n);
@@ -1446,10 +1478,11 @@ CMATRIX cos(CMATRIX& m1,complex<double> scl, double eps){
 }
 
 CMATRIX pow(CMATRIX& m1,double nn, double eps){
-/****************************************************************************
+/**
   Computes pow(m1,nn). In particular if nn = 1/2 result is sqrt(m1)
   Works only for Hermitian m1: m1.H() = m1
-*****************************************************************************/
+*/
+
   if(m1.n_rows!=m1.n_cols){ cout<<"Error in exp: Can not exponentiate non-square CMATRIX\n"; exit(0); }
   int n = m1.n_rows;
   CMATRIX evec(n,n),eval(n,n);//,inv_evec(n,n);
@@ -1571,34 +1604,33 @@ void CMATRIX::direct_inverse(double EPS,CMATRIX& INV){
 
 
 void solve_linsys(CMATRIX& C,CMATRIX& D, CMATRIX& X,double eps,int maxiter,double omega){
-/*********************************************
- Here we solve the system of linear equations
-      CX = D  --->     AX = D', where  A = C.T()*C   D' = C.T()*D
- using Gauss-Seidel iterative procedure
+/**
+  Here we solve the system of linear equations
+       CX = D  --->     AX = D', where  A = C.T()*C   D' = C.T()*D
+  using Gauss-Seidel iterative procedure
 
- Inputs: A, D - matrices
-         eps  - precision criterion
-         omega - parameter of overrelaxation - must be in range (1,2)
-                 to accelerate convergence
- Output: X
+  Inputs: A, D - matrices
+          eps  - precision criterion
+          omega - parameter of overrelaxation - must be in range (1,2)
+                  to accelerate convergence
+  Output: X
 
- Some preliminary transformations are made in order
- to be able to use Gauss-Seidel method for any CMATRIX A
+  Some preliminary transformations are made in order
+  to be able to use Gauss-Seidel method for any CMATRIX A
 
- More details:
- 80.47 An iterative Algorithm for Matrix Inversion
- Which is Always Convergent
- Authors: S. Simons
- Source: The Mathematical Gazette, Vol. 80, No. 489
- (Nov., 1996), pp. 567-569
+  More details:
+  80.47 An iterative Algorithm for Matrix Inversion
+  Which is Always Convergent
+  Authors: S. Simons
+  Source: The Mathematical Gazette, Vol. 80, No. 489
+  (Nov., 1996), pp. 567-569
 
- url: http://www.jstor.org/stable/pdfplus/3618529.pdf
+  url: http://www.jstor.org/stable/pdfplus/3618529.pdf
+*/
 
-**********************************************/
-
-// Do the transformations A = C^H * C and b = C^H * d
-// If matrices d and c have more then 1 columns we do the
-// procedure for each column
+/// Do the transformations A = C^H * C and b = C^H * d
+/// If matrices d and c have more then 1 columns we do the
+/// procedure for each column
 
 
     int i,j,k;   // counters
@@ -1696,40 +1728,40 @@ void solve_linsys(CMATRIX& C,CMATRIX& D, CMATRIX& X,double eps,int maxiter,doubl
 }
 
 void solve_linsys1(CMATRIX& C, CMATRIX& X,double eps,int maxiter,double omega){
-/*********************************************
- This is gonna be optimized version of the solve_linsys function
- for the case when D = 0
+/**
+  This is gonna be optimized version of the solve_linsys function
+  for the case when D = 0
 
- omega - is a convergence parameter:
- x^(n+1) = omega * z^(n+1) + (1-omega)*x^n, where:
+  omega - is a convergence parameter:
+  x^(n+1) = omega * z^(n+1) + (1-omega)*x^n, where:
  
- z^(n+1) - is a normal Gauss-Seidel iterate (that is omega = 1)
+  z^(n+1) - is a normal Gauss-Seidel iterate (that is omega = 1)
 
- Here we solve the system of linear equations
-      CX = D  --->     AX = D', where  A = C.T()*C   D' = C.T()*D
- using Gauss-Seidel iterative procedure
+  Here we solve the system of linear equations
+       CX = D  --->     AX = D', where  A = C.T()*C   D' = C.T()*D
+  using Gauss-Seidel iterative procedure
 
- Inputs: A, D - matrices
-         eps  - precision criterion
- Output: X
+  Inputs: A, D - matrices
+          eps  - precision criterion
+  Output: X
 
- Some preliminary transformations are made in order
- to be able to use Gauss-Seidel method for any CMATRIX A
+  Some preliminary transformations are made in order
+  to be able to use Gauss-Seidel method for any CMATRIX A
 
- More details:
- 80.47 An iterative Algorithm for Matrix Inversion
- Which is Always Convergent
- Authors: S. Simons
- Source: The Mathematical Gazette, Vol. 80, No. 489
- (Nov., 1996), pp. 567-569
+  More details:
+  80.47 An iterative Algorithm for Matrix Inversion
+  Which is Always Convergent
+  Authors: S. Simons
+  Source: The Mathematical Gazette, Vol. 80, No. 489
+  (Nov., 1996), pp. 567-569
 
- url: http://www.jstor.org/stable/pdfplus/3618529.pdf
+  url: http://www.jstor.org/stable/pdfplus/3618529.pdf
 
-**********************************************/
+*/
 
-// Do the transformations A = C^H * C and b = C^H * d
-// If matrices d and c have more then 1 columns we do the
-// procedure for each column
+/// Do the transformations A = C^H * C and b = C^H * d
+/// If matrices d and c have more then 1 columns we do the
+/// procedure for each column
 
 
     int i,j,k;   // counters
@@ -1823,10 +1855,15 @@ void solve_linsys1(CMATRIX& C, CMATRIX& X,double eps,int maxiter,double omega){
 
 
 void dft(CMATRIX& in,CMATRIX& out){
-/***************************************
+/**
   Discrete Fourier Transform
   e.g. http://en.wikipedia.org/wiki/Fast_Fourier_transform
-****************************************/
+
+  \param[in] in The input matrix
+  \param[out] out The output matrix
+
+  "in" and "out: are the vectors with n elements: n x 1
+*/
 
   int N = in.n_elts; // <in> and <out> are the vectors with n elements: n x 1
   complex<double> f,mul;
@@ -1849,10 +1886,17 @@ void dft(CMATRIX& in,CMATRIX& out){
 }
 
 void inv_dft(CMATRIX& in,CMATRIX& out){
-/***************************************
+/**
   Inverse Discrete Fourier Transform
   e.g. http://en.wikipedia.org/wiki/Discrete_Fourier_transform
-****************************************/
+
+  \param[in] in The input matrix
+  \param[out] out The output matrix
+
+  "in" and "out: are the vectors with n elements: n x 1
+
+*/
+
 
   int N = in.n_elts; // <in> and <out> are the vectors with n elements: n x 1
   complex<double> f,mul;
@@ -1880,7 +1924,7 @@ void inv_dft(CMATRIX& in,CMATRIX& out){
 
 
 void cft(CMATRIX& in,CMATRIX& out,double xmin,double dx){
-/***************************************
+/**
   Continuous Fourier Transform
   f(k) = Integral ( f(r) * exp(-2*pi*i*k*r) * dr ) =
 
@@ -1889,7 +1933,15 @@ void cft(CMATRIX& in,CMATRIX& out,double xmin,double dx){
   = dx *exp(-2*pi*i*k*xmin) * sum ( in[n] * exp(-2*pi*k*dx*n)  )
                                n
   r_n = xmin + dx * n
-****************************************/
+
+  \param[in] in The input matrix
+  \param[out] out The output matrix
+  \param[in] xmin The minimal boundary of the real-space grid (in)
+  \param[in] dx Spacing between points in the real space 
+
+  "in" and "out: are the vectors with n elements: n x 1
+
+*/
 
   int N = in.n_elts; // <in> and <out> are the vectors with n elements: n x 1
   complex<double> f,mul;
@@ -1914,7 +1966,7 @@ void cft(CMATRIX& in,CMATRIX& out,double xmin,double dx){
 }
 
 void cft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
-/***************************************
+/**
   Continuous Fourier Transform
   f(kmin + k) = Integral ( f(r) * exp(-2*pi*i*(kmin+k)*r) * dr ) =
 
@@ -1925,7 +1977,17 @@ void cft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
                                        n
   r_n = xmin + dx * n
 
-****************************************/
+  \param[in] in The input matrix
+  \param[out] out The output matrix
+  \param[in] xmin The minimal boundary of the real-space grid (in)
+  \param[in] kmin The minimal boundary of the reciprocal-space grid (out)
+  \param[in] dx Spacing between points in the real space 
+
+  "in" and "out: are the vectors with n elements: n x 1
+
+
+
+*/
 
   int N = in.n_elts; // <in> and <out> are the vectors with n elements: n x 1
   complex<double> f,mul;
@@ -1951,7 +2013,7 @@ void cft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
 }
 
 void cfft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
-/***************************************
+/**
   Continuous Fast Fourier Transform
 
   f(kmin + k) = Integral ( f(r) * exp(-2*pi*i*(kmin+k)*r) * dr ) =
@@ -1964,7 +2026,16 @@ void cfft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
   r_n = xmin + dx * n
 
   The size of the grid should be the power of 2
-****************************************/
+
+  \param[in] in The input matrix
+  \param[out] out The output matrix
+  \param[in] xmin The minimal boundary of the real-space grid (in)
+  \param[in] kmin The minimal boundary of the reciprocal-space grid (out)
+  \param[in] dx Spacing between points in the real space 
+
+  "in" and "out: are the vectors with n elements: n x 1
+
+*/
 
   // Initial check 
   int N = in.n_elts; // N must be 2^n, n - some integer
@@ -2017,7 +2088,7 @@ void cfft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
 
 
 void cft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy){
-/***************************************
+/**
   Continuous 2-D Fourier Transform
   f(kmin + k) = Integral ( f(r) * exp(-2*pi*i*(kmin+k)*r) * dr ) =
 
@@ -2031,7 +2102,19 @@ void cft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, do
   in and out - are now 2D matrices (columns and rows) - this is for convenience, although they both may be 
                reformulated as 1D matrices (colums or rows)
 
-****************************************/
+  \param[in] in The input matrix
+  \param[out] out The output matrix
+  \param[in] xmin The minimal boundary of the real-space grid along X axis
+  \param[in] ymin The minimal boundary of the real-space grid along Y axis
+  \param[in] kxmin The minimal boundary of the reciprocal-space grid along X direction
+  \param[in] kymin The minimal boundary of the reciprocal-space grid along Y direction
+  \param[in] dx Spacing between points in the real space, along the X direction
+  \param[in] dy Spacing between points in the real space, along the Y direction
+
+
+  "in" and "out: are Nx x Ny matrices
+
+*/
 
   // in and out are Nx x Ny matrices
   int Nx = in.n_rows;
@@ -2088,13 +2171,26 @@ void cft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, do
 }
 
 void cfft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy){
-/***************************************
+/**
   Continuous Fast Fourier Transform for 2D
   
   see derivation in .doc file
  
   The size of the grid should be the power of 2
-****************************************/
+
+  \param[in] in The input matrix
+  \param[out] out The output matrix
+  \param[in] xmin The minimal boundary of the real-space grid along X axis
+  \param[in] ymin The minimal boundary of the real-space grid along Y axis
+  \param[in] kxmin The minimal boundary of the reciprocal-space grid along X direction
+  \param[in] kymin The minimal boundary of the reciprocal-space grid along Y direction
+  \param[in] dx Spacing between points in the real space, along the X direction
+  \param[in] dy Spacing between points in the real space, along the Y direction
+
+
+  "in" and "out: are Nx x Ny matrices
+
+*/
 
   // Initial check 
   // in and out are Nx x Ny matrices
@@ -2296,7 +2392,7 @@ void cfft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, d
 
 
 void cft2(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk){
-/***************************************
+/**
   Continuous Fourier Transform
   f(k) = Integral ( f(r) * exp(-2*pi*i*k*r) * dr ) =
 
@@ -2310,7 +2406,19 @@ void cft2(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk){
   k =  kmin + dk * [k]    [k] - is integer equvalent of k
 
   Note: Number of real and reciprocal space grids is different
-****************************************/
+
+  \param[in] in The input matrix
+  \param[out] out The output matrix
+  \param[in] xmin The minimal boundary of the real-space grid along X axis
+  \param[in] kxmin The minimal boundary of the reciprocal-space grid along X direction
+  \param[in] dx Spacing between points in the real space, along the X direction
+  \param[in] dk Spacing between points in the reciprocal space, along the X direction
+
+
+  "in" is 1 x Nr or Nr x 1 matrix , Nr - the number of grid points in the real space
+  "out" is 1 x Nk or Nk x 1 matrix, Nk - the number of grid points in the reciprocal space
+
+*/
 
   int N_r =  in.n_elts; // <in> - is 1 x N_r or N_r x 1 CMATRIX
   int N_k = out.n_elts; // <out> - is 1 x N_k or N_k x 1 CMATRIX
@@ -2340,7 +2448,7 @@ void cft2(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk){
 
 
 void inv_cft(CMATRIX& in,CMATRIX& out,double xmin,double dx){
-/***************************************
+/**
   Inverse Continuous Fourier Transform
   f(n) = Integral ( f(k) * exp(2*pi*i*k*r) * dk ) =
 
@@ -2354,7 +2462,13 @@ void inv_cft(CMATRIX& in,CMATRIX& out,double xmin,double dx){
 
   k = k'/L, L = N*dx - reciprocal length
   r_n = xmin + dx*n
-****************************************/
+
+  \param[in] in The input matrix
+  \param[out] out The output matrix
+  \param[in] xmin The minimal boundary of the real-space grid along X axis
+  \param[in] dx Spacing between points in the real space, along the X direction
+
+*/
 
   int N = in.n_elts; // <in> and <out> are the vectors with n elements: n x 1
   complex<double> f,mul;
@@ -2384,7 +2498,7 @@ void inv_cft(CMATRIX& in,CMATRIX& out,double xmin,double dx){
 }
 
 void inv_cft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
-/***************************************
+/**
   Inverse Continuous Fourier Transform
   f(n) = Integral ( f(k) * exp(2*pi*i*k*r) * dk ) =
 
@@ -2400,7 +2514,7 @@ void inv_cft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
   k' - integer, discrete representation
   k  - double, continuous representation
 
-****************************************/
+*/
 
   int N = in.n_elts; // <in> and <out> are the vectors with n elements: n x 1
   complex<double> f,f1,mul;
@@ -2432,14 +2546,14 @@ void inv_cft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
 }
 
 void inv_cfft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
-/***************************************
+/**
   Inverse Continuous Fast Fourier Transform
 
   f(r) = Integral ( f(k) * exp(2*pi*i*(xmin+n*dr)*(kmin+k)) * dk )
                             
 
   The size of the grid should be the power of 2
-****************************************/
+*/
 
   // Initial check 
   int N = in.n_elts; // N must be 2^n, n - some integer
@@ -2494,7 +2608,7 @@ void inv_cfft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
 
 
 void inv_cft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy){
-/***************************************
+/**
   Inverse Continuous 2-D Fourier Transform
   f(r) = Integral ( f(k) * exp(2*pi*i*k*r) * dr ) =
 
@@ -2508,7 +2622,7 @@ void inv_cft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin
   in - k-space
   out - r-space
 
-****************************************/
+*/
 
   // in and out are Nx x Ny matrices
   int Nx = in.n_rows;
@@ -2566,13 +2680,13 @@ void inv_cft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin
 
 
 void inv_cfft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy){
-/***************************************
+/**
   Inverse Continuous Fast Fourier Transform for 2D
   
   see derivation in .doc file
  
   The size of the grid should be the power of 2
-****************************************/
+*/
 
   // Initial check 
   // in and out are Nx x Ny matrices
@@ -2774,7 +2888,7 @@ void inv_cfft1_2D(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmi
 
 
 void inv_cft2(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk){
-/***************************************
+/**
   Inverse Continuous Fourier Transform
   f(r) = Integral ( f(k) * exp(2*pi*i*k*r) * dk ) =
 
@@ -2787,7 +2901,7 @@ void inv_cft2(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double 
   k = kmin + dk * [k]  [k] - is integer equivalent of k
   r_n = xmin + dx*n
 
-****************************************/
+*/
 
   int N_k =  in.n_elts; // <in> - is 1 x N_k or N_k x 1 CMATRIX
   int N_r = out.n_elts; // <out> - is 1 x N_r or N_r x 1 CMATRIX
@@ -2818,11 +2932,14 @@ void inv_cft2(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double 
 
 
 void convolve(CMATRIX& f,CMATRIX& g, CMATRIX& conv,double dx){
-// Convolve two Fourier transforms
-//  conv(k) = integral(  f(k') * g(k-k') ) dk' = sum (n'/L) * f[n'] * g[n-n'] = conv[n]
-//                                               n'
-// n, n' - integers,  k = n/L, k' = n'/L
-// L = dx * N, N - size of the set
+/**
+  Convolve two Fourier transforms
+   conv(k) = integral(  f(k') * g(k-k') ) dk' = sum (n'/L) * f[n'] * g[n-n'] = conv[n]
+                                                n'
+  n, n' - integers,  k = n/L, k' = n'/L
+  L = dx * N, N - size of the set
+  <in> and <out> are the vectors with n elements: n x 1
+*/
 
   int N = f.n_elts; // <in> and <out> are the vectors with n elements: n x 1
   complex<double> G;
@@ -2845,12 +2962,15 @@ void convolve(CMATRIX& f,CMATRIX& g, CMATRIX& conv,double dx){
 
 
 void convolve_2D(CMATRIX& f,CMATRIX& g, CMATRIX& conv,double dx,double dy){
-// Convolve two Fourier transforms. Each in 2D
-//  conv(k) = integral(  f(k') * g(k-k') ) dk' = sum (n'/L) * f[n'] * g[n-n'] = conv[n]
-//                                               n'
-// n, n' - integers,  k = n/L, k' = n'/L
-// L = dx * N, N - size of the set
+/**
+  Convolve two Fourier transforms. Each in 2D
+   conv(k) = integral(  f(k') * g(k-k') ) dk' = sum (n'/L) * f[n'] * g[n-n'] = conv[n]
+                                                n'
+  n, n' - integers,  k = n/L, k' = n'/L
+  L = dx * N, N - size of the set
 
+  in and out are Nx x Ny matrices
+*/
 
   // in and out are Nx x Ny matrices
   int Nx = f.n_rows;

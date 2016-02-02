@@ -23,8 +23,10 @@ using namespace std;
 #include "../../io/libio.h"
 using namespace libio;
 
-
+/// libmmath namespace
 namespace libmmath{
+
+/// liblinalg namespace
 namespace liblinalg{
 
 //============================================================

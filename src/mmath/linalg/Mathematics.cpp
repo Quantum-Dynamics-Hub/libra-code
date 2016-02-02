@@ -14,7 +14,10 @@
 #include "MATRIX3x3.h"
 #include "MATRIX.h"
 
+/// libmmath namespace
 namespace libmmath{
+
+/// liblinalg namespace
 namespace liblinalg{
 
 // Here we define friend functions for all classes

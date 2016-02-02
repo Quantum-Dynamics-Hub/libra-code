@@ -242,7 +242,7 @@ void Barostat::load(boost::property_tree::ptree& pt,std::string path,int& status
  
   \param[in] pt The property tree from which the properties of the Barostat will be extracted
   \param[in] path The parameter controlling from which level of the tree we try to extract the Barostat object
-  \param[out] status Is the global status of the success of the operation. It is 1 is at least one Barostat member is found at
+  \param[out] status Is the global status of the success of the operation. It is 1 if at least one Barostat member is found at
               given level of the property tree.
 */
 
@@ -275,7 +275,7 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<Barostat>& vt,
   \param[in] pt The property tree from which the vector of Barostat objects will be extracted
   \param[in] path The parameter controlling from which level of the property tree we will try to extract the vector of Barostat objects
   \param[out] vt The vector of created Barostat objects
-  \param[out] status Is the global status of the success of the operation. It is 1 is at least one Barostat object is extracted
+  \param[out] status Is the global status of the success of the operation. It is 1 if at least one Barostat object is extracted
 */
 
   int st;
