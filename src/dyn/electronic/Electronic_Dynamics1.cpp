@@ -398,6 +398,7 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S){
 
 
   // Clean temporary memory
+  delete expH;
   delete coeff;
   delete Hvib_eff;
   delete S_i_half;
