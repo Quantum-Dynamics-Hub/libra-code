@@ -9,7 +9,7 @@
 *
 *********************************************************************************/
 /**
-  \file Model_DAC.h
+  \file Model_DAC.cpp
   \brief The file implements the functions for computing DAC Hamiltonian and its derivatives
     
 */
@@ -99,9 +99,10 @@ boost::python::list DAC_Ham(double x, boost::python::list params_){
   H_01 = C*exp(-D*x^2)
 
   Returns the Python list, res, of the following objects:
-  res[0] = x - coordinate, res[1] = H - the Hamiltonian matrix 
-  res[1] = dH - the Hamiltonian derivatives of the 1-st order
-  res[2] = d2H - the Hamiltonian derivatives of the 2-nd order
+  res[0] = x - coordinate, 
+  res[1] = H - the Hamiltonian matrix 
+  res[2] = dH - the Hamiltonian derivatives of the 1-st order
+  res[3] = d2H - the Hamiltonian derivatives of the 2-nd order
 
 */
 

@@ -26,6 +26,7 @@
 #include "Model_Rabi2.h"
 #include "Model_sin.h"
 #include "Model_sin_2D.h"
+#include "Model_cubic.h"
 
 
 /// libhamiltonian namespace

@@ -48,8 +48,9 @@ Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
     3             Marcus        
     4             SEXCH         
     5             Rabi2         
-    6               --          
+    6             --
     7             1D sin        
+    8             cubic
    200            2D sin        
 
 */
@@ -60,7 +61,12 @@ Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
   ham_indx = ham_indx_;
 
   // 2-level models
-  if(ham_indx==0 || ham_indx==1 || ham_indx==2 || ham_indx==3 
+  if(ham_indx==8){  // cubic
+    nelec = 1;
+    nnucl = 1;
+  }
+
+  else if(ham_indx==0 || ham_indx==1 || ham_indx==2 || ham_indx==3 
   || ham_indx==5 || ham_indx==6 || ham_indx==7 ){  // SAC, DAC, ECWR, Marcus, Rabi2, sin
     nelec = 2;
     nnucl = 1;
@@ -134,6 +140,7 @@ void Hamiltonian_Model::set_params(vector<double>& params_){
     5             Rabi2               3
     6               --               --
     7             1D sin              5
+    8             cubic               3
    200            2D sin              6
 
   Setting parameters of the model Hamiltonian.
@@ -146,7 +153,7 @@ void Hamiltonian_Model::set_params(vector<double>& params_){
     num_params = 4;
   }
   else if(ham_indx==7){ num_params = 5; } // sin
-  else if(ham_indx==5 || ham_indx==6){ // Rabi2
+  else if(ham_indx==5 || ham_indx==6 || ham_indx==8 ){ // Rabi2 or cubic
     num_params = 3;
   }
   else if(ham_indx==1 || ham_indx==3){  // DAC, Marcus
@@ -207,6 +214,7 @@ void Hamiltonian_Model::compute_diabatic(){
     else if(ham_indx==5){ Rabi2_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);  } // Rabi2 potential
     else if(ham_indx==6){ ;; }// Nothing here
     else if(ham_indx==7){ sin_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);  } // sin potential
+    else if(ham_indx==8){ cubic_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);  } // cubic potential
 
 
     //=============== 2D models ========================
