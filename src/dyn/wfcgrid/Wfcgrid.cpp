@@ -615,6 +615,75 @@ void Wfcgrid::flux_1D(double xf,vector<double>& res, double m0){
 
 
 
+double Wfcgrid::e_pot_1D(){
+/**
+  Compute potential energy for 1D wavefunction: <psi|V|psi> / <psi|psi>
+*/
+  double res; res = 0.0;
+  double norm; norm = 0.0;
+
+  for(int nx=0;nx<Nx;nx++){
+    for(int nst=0;nst<nstates;nst++){        
+
+      norm += real(std::conj(PSI[nst].M[nx]) * PSI[nst].M[nx] );  
+
+      for(int nst1=0;nst1<nstates;nst1++){               
+        res += real(std::conj(PSI[nst].M[nx]) * H[nst][nst1].M[nx] * PSI[nst1].M[nx] );                                                        
+      }// for nst1
+
+    }// for nst
+
+  }// for nx
+
+  res = res / norm;
+
+  return res;
+
+
+}// e_pot_1D
+
+
+double Wfcgrid::e_kin_1D(double m0){
+/**
+  Compute kinetic energy for 1D wavefunction: <psi|T|psi> / <psi|psi>
+*/
+  double hbar = 1.0;
+  double res; res = 0.0;
+  double norm; norm = 0.0;
+
+  for(int nx=0;nx<Nx;nx++){
+    for(int nst=0;nst<nstates;nst++){        
+
+      norm += real(std::conj(PSI[nst].M[nx]) * PSI[nst].M[nx] );  
+      res += real(Kx->M[nx]) * real(Kx->M[nx]) * real(std::conj(reciPSI[nst].M[nx]) * reciPSI[nst].M[nx] );
+
+    }// for nst
+
+  }// for nx
+
+  res *= (1.0/((double)Nx*dx));
+  res *= (2.0*M_PI*M_PI*(hbar/m0)/(norm*dx));
+
+  return res;
+
+
+}// e_kin_1D
+
+double Wfcgrid::e_tot_1D(double m0){
+/**
+  Compute total energy for 1D wavefunction: <psi|T+V|psi> / <psi|psi>
+*/
+  double res = e_kin_1D(m0) + e_pot_1D();
+  
+  return res;
+
+
+}// e_tot_1D
+
+
+
+
+
 
 }// namespace libwfcgrid
 }// namespace libdyn

@@ -68,7 +68,11 @@ void export_Wfcgrid_objects(){
       .def("propagate_exact_1D", &Wfcgrid::propagate_exact_1D)
       .def("propagate_exact_2D", &Wfcgrid::propagate_exact_2D)
 
-      .def("absorb",expt_absorb_1D);
+      .def("absorb_1D",expt_absorb_1D)
+
+      .def("e_kin_1D", &Wfcgrid::e_kin_1D)
+      .def("e_pot_1D", &Wfcgrid::e_pot_1D)
+      .def("e_tot_1D", &Wfcgrid::e_tot_1D)
  
   ;
 

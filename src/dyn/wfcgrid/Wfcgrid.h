@@ -109,6 +109,11 @@ public:
   // Flux
   void flux_1D(double xf,vector<double>& res, double m0);
 
+  // Energy
+  double e_pot_1D();
+  double e_kin_1D(double m0);
+  double e_tot_1D(double m0);
+
 
   //--------------- in Wfcgrid_Dynamics1 ------------------
 
