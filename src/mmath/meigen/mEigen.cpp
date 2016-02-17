@@ -398,6 +398,7 @@ void solve_eigen_gen(int Norb, CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C){
 
   // Solve eigenvalue problem
   GeneralizedSelfAdjointEigenSolver<MatrixXcd> solution(A,B);
+  //GeneralizedEigenSolver<MatrixXcd> solution(A,B);
   if(solution.info()!=Success){ cout<<"Eigen fails\n";   exit(0); }
 
 
