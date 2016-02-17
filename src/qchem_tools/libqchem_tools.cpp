@@ -35,6 +35,28 @@ void export_qchem_tools_objects(){
 
 
 
+  void (*expt_compute_dos_v1)
+  ( Electronic_Structure& el, vector<AO>& basis_ao, Control_Parameters& prms,
+    vector<int>& fragment, vector< vector<int> >& atom_to_ao_map
+  ) = &compute_dos;
+
+  void (*expt_compute_dos_v2)
+  ( Electronic_Structure& el, vector<AO>& basis_ao, Control_Parameters& prms,
+    boost::python::list fragment, vector< vector<int> >& atom_to_ao_map
+  ) = &compute_dos;
+
+  void (*expt_compute_dos_v3)
+  ( Electronic_Structure& el, System& syst, vector<AO>& basis_ao, 
+    Control_Parameters& prms, vector< vector<int> >& atom_to_ao_map
+  ) = &compute_dos;
+
+
+  def("compute_dos", expt_compute_dos_v1);
+  def("compute_dos", expt_compute_dos_v2);
+  def("compute_dos", expt_compute_dos_v3);
+
+
+
 }// export_qchem_tools_objects()
 
 

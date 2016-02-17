@@ -18,6 +18,7 @@
 #define LIBQCHEM_TOOLS_H
 
 #include "Charge_density.h"
+#include "DOS.h"
 
 /// libqchem_tools namespace
 namespace libqchem_tools{
