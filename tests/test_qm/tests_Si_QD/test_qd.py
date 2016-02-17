@@ -195,18 +195,28 @@ for j in xrange(Norb):
      print "%5.3i %12.8f   %12.8f  %12.8f   %12.8f" % (j, res_alp[3][j][1], res_alp[4][j][1], res_bet[3][j][1], res_bet[4][j][1])
 
 
-#vlist = intList()    
-#vlist.append(23)
-#vlist.append(24)
+# Compute charge densities for HOMO and LUMO
+vlist = intList()    
+vlist.append(118)
+vlist.append(119)
+prms.orbs = vlist
 
-#prms.orbs = vlist
-prms.nx_grid = 40
-prms.ny_grid = 40
-prms.nz_grid = 40
-#prms.charge_density_prefix = "char_dens"
+prms.nx_grid = 80
+prms.ny_grid = 80
+prms.nz_grid = 80
+prms.charge_density_prefix = "qd6/"
 
-#charge_density( el, syst, basis_ao, prms)
+charge_density( el, syst, basis_ao, prms)
 
 
+# Compute DOSs
+prms.dos_prefix = "qd6/"
+compute_dos( el, syst, basis_ao, prms, atom_to_ao_map)
+
+
+sys.path.insert(1,cwd+"/../../../_build/src/scripts")
+import proj_dos
+
+proj_dos.main(-35.0, 35.0, 0.1,[["tot",range(0,103)]],"qd6/_alpha_wfc_atom","dos_proj.txt",238)    
 
 
