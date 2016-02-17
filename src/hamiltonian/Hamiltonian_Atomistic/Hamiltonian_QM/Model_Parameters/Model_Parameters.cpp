@@ -8,31 +8,14 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Model_Parameters.cpp This file implements the functions and class methods for setting up
+  parameters of atomistic Hamiltonians
+
+*/
 
 #include "Model_Parameters.h"
 
-/****************************************************************************
-  This file contains following functions:
-
-  // HF_integrals class
-  int HF_integrals::find_data(int a,int b,int c,int d)
-  void HF_integrals::set_JK_values(int a,int b, int c, int d, double J, double K)
-  void HF_integrals::get_JK_values(int a,int b, int c, int d, double& J, double& K)
-  
-  // EHT_K class
-  int EHT_K::find_data(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2)
-  void EHT_K::set_K_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K)
-  double EHT_K::get_K_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2)
-  void EHT_K::set_K1_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K)
-  double EHT_K::get_K1_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2)
-  void EHT_K::set_K2_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K)
-  double EHT_K::get_K2_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2)
-
-
-  void set_default_elements(map<std::string,Element>& PT)
-
-
-****************************************************************************/
 
 
 /// libhamiltonian namespace
@@ -252,6 +235,19 @@ double EHT_K::get_PP2_value(std::string elt1,std::string orb_type1){
 
  
 void EHT_K::set_K_value(int k_indx,std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K){
+/**
+  This function sets the K parameters of the (generalized) EHT models for different types of pair interactions
+  If the pair of orbital is not found, the record will be created. If the pair exists, only the parameter will be changed
+
+  \param[in] k_indx The index of the paramter. So far can be: 0, 1, 2, 3, 4 
+  \param[in] elt1 The element name of the first atom in the interacting pair (e.g. H, Si, etc.)
+  \param[in] orb_type1 The orbital type for the first atom (orbital) in the interacting pair (1s, 2p, etc.)
+  \param[in] elt2 The element name of the second atom in the interacting pair (e.g. H, Si, etc.)
+  \param[in] orb_type2 The orbital type for the second atom (orbital) in the interacting pair (1s, 2p, etc.)
+  \param[in] K The value to which the corresponding parameter will be set
+
+*/
+
   int i = find_data(elt1,orb_type1,elt2,orb_type2);
   if(i>-1){ data[i].K_value[k_indx] = K;  data[i].is_K_value[k_indx] = 1; }
   else{ 
@@ -262,6 +258,18 @@ void EHT_K::set_K_value(int k_indx,std::string elt1,std::string orb_type1,std::s
 }
 
 double EHT_K::get_K_value(int k_indx,std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){  
+/**
+  This function returns the K parameters of the (generalized) EHT models for different types of pair interactions
+  If the pair of orbital is not found, the defaul value will be returned. 
+
+  \param[in] k_indx The index of the paramter. So far can be: 0, 1, 2, 3, 4 
+  \param[in] elt1 The element name of the first atom in the interacting pair (e.g. H, Si, etc.)
+  \param[in] orb_type1 The orbital type for the first atom (orbital) in the interacting pair (1s, 2p, etc.)
+  \param[in] elt2 The element name of the second atom in the interacting pair (e.g. H, Si, etc.)
+  \param[in] orb_type2 The orbital type for the second atom (orbital) in the interacting pair (1s, 2p, etc.)
+
+*/
+
   int i = find_data(elt1,orb_type1,elt2,orb_type2);
   double res = K_default[k_indx]; 
   if(i>-1){ 
@@ -271,77 +279,20 @@ double EHT_K::get_K_value(int k_indx,std::string elt1,std::string orb_type1,std:
   return res;
 }
 
-/*
-void EHT_K::set_K1_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K){
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  if(i>-1){ data[i].K1_value = K;  data[i].is_K1_value = 1; }
-  else{ 
-    data_element x; 
-    x.elt1 = elt1; x.orb_type1 = orb_type1; x.elt2 = elt2; x.orb_type2 = orb_type2; x.K1_value = K; x.is_K1_value = 1;
-    data.push_back(x); 
-  }
-}
+void EHT_K::set_C_value(int c_indx,std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double C){
+/**
+  This function sets the C parameters of the (generalized) EHT models for different types of pair interactions
+  If the pair of orbital is not found, the record will be created. If the pair exists, only the parameter will be changed
 
-double EHT_K::get_K1_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){  
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  double res = 0.0;
-  if(i>-1){ 
-    if(data[i].is_K1_value == 1){ res = data[i].K1_value;}
-  }
+  \param[in] c_indx The index of the paramter. So far can be: 0, 1, 2, 3, 4 
+  \param[in] elt1 The element name of the first atom in the interacting pair (e.g. H, Si, etc.)
+  \param[in] orb_type1 The orbital type for the first atom (orbital) in the interacting pair (1s, 2p, etc.)
+  \param[in] elt2 The element name of the second atom in the interacting pair (e.g. H, Si, etc.)
+  \param[in] orb_type2 The orbital type for the second atom (orbital) in the interacting pair (1s, 2p, etc.)
+  \param[in] C The value to which the corresponding parameter will be set
 
-  return res;
-}
-
-
-void EHT_K::set_K2_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K){
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  if(i>-1){ data[i].K2_value = K; }
-  else{ 
-    data_element x; x.elt1 = elt1; x.orb_type1 = orb_type1; x.elt2 = elt2; x.orb_type2 = orb_type2; x.K2_value = K; data.push_back(x); 
-  }
-}
-double EHT_K::get_K2_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){  
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  double res = 0.0;
-  if(i>-1){ res = data[i].K2_value; }
-
-  return res;
-}
-
-
-void EHT_K::set_K3_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K){
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  if(i>-1){ data[i].K3_value = K; }
-  else{ 
-    data_element x; x.elt1 = elt1; x.orb_type1 = orb_type1; x.elt2 = elt2; x.orb_type2 = orb_type2; x.K3_value = K; data.push_back(x); 
-  }
-}
-double EHT_K::get_K3_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){  
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  double res = 0.0;
-  if(i>-1){ res = data[i].K3_value; }
-
-  return res;
-}
-
-void EHT_K::set_K4_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K){
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  if(i>-1){ data[i].K4_value = K; }
-  else{ 
-    data_element x; x.elt1 = elt1; x.orb_type1 = orb_type1; x.elt2 = elt2; x.orb_type2 = orb_type2; x.K4_value = K; data.push_back(x); 
-  }
-}
-double EHT_K::get_K4_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){  
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  double res = 1.0;
-  if(i>-1){ res = data[i].K4_value; }
-
-  return res;
-}
 */
 
-
-void EHT_K::set_C_value(int c_indx,std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double C){
   int i = find_data(elt1,orb_type1,elt2,orb_type2);
   if(i>-1){ data[i].C_value[c_indx] = C;  data[i].is_C_value[c_indx] = 1; }
   else{ 
@@ -352,6 +303,18 @@ void EHT_K::set_C_value(int c_indx,std::string elt1,std::string orb_type1,std::s
 }
 
 double EHT_K::get_C_value(int c_indx,std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){  
+/**
+  This function returns the C parameters of the (generalized) EHT models for different types of pair interactions
+  If the pair of orbital is not found, the defaul value will be returned. 
+
+  \param[in] c_indx The index of the paramter. So far can be: 0, 1, 2, 3, 4 
+  \param[in] elt1 The element name of the first atom in the interacting pair (e.g. H, Si, etc.)
+  \param[in] orb_type1 The orbital type for the first atom (orbital) in the interacting pair (1s, 2p, etc.)
+  \param[in] elt2 The element name of the second atom in the interacting pair (e.g. H, Si, etc.)
+  \param[in] orb_type2 The orbital type for the second atom (orbital) in the interacting pair (1s, 2p, etc.)
+
+*/
+
   int i = find_data(elt1,orb_type1,elt2,orb_type2);
   double res = C_default[c_indx]; 
   if(i>-1){ 
@@ -362,91 +325,11 @@ double EHT_K::get_C_value(int c_indx,std::string elt1,std::string orb_type1,std:
 }
 
 
-
-
-
-/*
-void EHT_K::set_C0_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K){
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  if(i>-1){ data[i].C0_value = K; }
-  else{ 
-    data_element x; x.elt1 = elt1; x.orb_type1 = orb_type1; x.elt2 = elt2; x.orb_type2 = orb_type2; x.C0_value = K; data.push_back(x); 
-  }
-}
-
-double EHT_K::get_C0_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){  
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  double res = 0.0;
-  if(i>-1){ res = data[i].C0_value; }
-
-  return res;
-}
-
-
-void EHT_K::set_C1_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K){
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  if(i>-1){ data[i].C1_value = K; }
-  else{ 
-    data_element x; x.elt1 = elt1; x.orb_type1 = orb_type1; x.elt2 = elt2; x.orb_type2 = orb_type2; x.C1_value = K; data.push_back(x); 
-  }
-}
-double EHT_K::get_C1_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){  
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  double res = 0.0;
-  if(i>-1){ res = data[i].C1_value; }
-
-  return res;
-}
-
-
-void EHT_K::set_C2_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K){
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  if(i>-1){ data[i].C2_value = K; }
-  else{ 
-    data_element x; x.elt1 = elt1; x.orb_type1 = orb_type1; x.elt2 = elt2; x.orb_type2 = orb_type2; x.C2_value = K; data.push_back(x); 
-  }
-}
-double EHT_K::get_C2_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){  
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  double res = 0.0;
-  if(i>-1){ res = data[i].C2_value; }
-
-  return res;
-}
-
-
-void EHT_K::set_C3_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K){
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  if(i>-1){ data[i].C3_value = K; }
-  else{ 
-    data_element x; x.elt1 = elt1; x.orb_type1 = orb_type1; x.elt2 = elt2; x.orb_type2 = orb_type2; x.C3_value = K; data.push_back(x); 
-  }
-}
-double EHT_K::get_C3_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){  
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  double res = 0.0;
-  if(i>-1){ res = data[i].C3_value; }
-
-  return res;
-}
-
-void EHT_K::set_C4_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K){
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  if(i>-1){ data[i].C4_value = K; }
-  else{ 
-    data_element x; x.elt1 = elt1; x.orb_type1 = orb_type1; x.elt2 = elt2; x.orb_type2 = orb_type2; x.C4_value = K; data.push_back(x); 
-  }
-}
-double EHT_K::get_C4_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){  
-  int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  double res = 1.0;
-  if(i>-1){ res = data[i].C4_value; }
-
-  return res;
-}
-*/
-
 void EHT_K::show(){
+/**
+  Prints all the orbital pair records existing in the EHT_K object
+  Careful: this may be a very long listing
+*/
 
   int i,sz;
   
@@ -476,6 +359,18 @@ void EHT_K::show(){
 
 
 void mEHT_K::set_mapping(EHT_K& eht_k, const vector<AO>& basis_ao){
+/**
+  This function maps the data of EHT_K type (which is used as an intermediate storage - when we read the parameters from the
+  external files) onto the interanal variables of the mEHT_K type (which is much more efficient and, therefore, used in actual
+  computations). The internal storage of the mEHT_K type is specific to given system (as represented by the AO basis provided in
+  the input).
+
+  \param[in] eht_k The object containing the EHT parameters for generic orbital pairs, but without knowing actual orbital pairs of the
+                   system.
+  \param[in] basis_ao The list of AOs of the particular system - the parameters for all pairs of these AOs will be precomputed and
+                   stored internally in the mEHT_K object
+*/
+
   cout<<"In mEHT_K::set_mapping...\n";
 
   size = basis_ao.size();
@@ -484,19 +379,6 @@ void mEHT_K::set_mapping(EHT_K& eht_k, const vector<AO>& basis_ao){
     eht_K[k].reserve(size*size);   eht_K[k].resize(size*size,  0.0);
     eht_C[k].reserve(size*size);   eht_C[k].resize(size*size,  0.0);
   }
-/*
-  eht_K.reserve(size*size);   eht_K.resize(size*size,  0.0);
-  eht_K1.reserve(size*size);  eht_K1.resize(size*size, 0.0);
-  eht_K2.reserve(size*size);  eht_K2.resize(size*size, 0.0);
-  eht_K3.reserve(size*size);  eht_K3.resize(size*size, 0.0);
-  eht_K4.reserve(size*size);  eht_K4.resize(size*size, 1.0);
-
-  eht_C0.reserve(size*size);  eht_C0.resize(size*size, 0.0);
-  eht_C1.reserve(size*size);  eht_C1.resize(size*size, 0.0);
-  eht_C2.reserve(size*size);  eht_C2.resize(size*size, 0.0);
-  eht_C3.reserve(size*size);  eht_C3.resize(size*size, 0.0);
-  eht_C4.reserve(size*size);  eht_C4.resize(size*size, 1.0);
-*/
 
   //========================= Part 1 =======================================
   map<pair<string,string>,int> at_types;
@@ -529,20 +411,6 @@ void mEHT_K::set_mapping(EHT_K& eht_k, const vector<AO>& basis_ao){
   vector<vector<vector<double> > > k_vals(5,vector<vector<double> >(ntyp,vector<double>(ntyp,0.0)) );
   vector<vector<vector<double> > > c_vals(5,vector<vector<double> >(ntyp,vector<double>(ntyp,0.0)) );
 
-/*
-  vector<vector<double> > k_vals(ntyp,vector<double>(ntyp,0.0));
-  vector<vector<double> > k1_vals(ntyp,vector<double>(ntyp,0.0));
-  vector<vector<double> > k2_vals(ntyp,vector<double>(ntyp,0.0));
-  vector<vector<double> > k3_vals(ntyp,vector<double>(ntyp,0.0));
-  vector<vector<double> > k4_vals(ntyp,vector<double>(ntyp,0.0));
-
-  vector<vector<double> > c_vals(ntyp,vector<double>(ntyp,0.0));
-  vector<vector<double> > c1_vals(ntyp,vector<double>(ntyp,0.0));
-  vector<vector<double> > c2_vals(ntyp,vector<double>(ntyp,0.0));
-  vector<vector<double> > c3_vals(ntyp,vector<double>(ntyp,0.0));
-  vector<vector<double> > c4_vals(ntyp,vector<double>(ntyp,0.0));
-*/
-
   for(it_type=at_types.begin();it_type!=at_types.end();it_type++){
 
     std::string at1 = it_type->first.first;
@@ -559,23 +427,8 @@ void mEHT_K::set_mapping(EHT_K& eht_k, const vector<AO>& basis_ao){
         k_vals[k][i1][i2]  = eht_k.get_K_value(k,at1,sh1,at2,sh2);
         c_vals[k][i1][i2]  = eht_k.get_C_value(k,at1,sh1,at2,sh2);
       }
-/*
-      k_vals[i1][i2]  = k.get_K_value(0,at1,sh1,at2,sh2);
-      k1_vals[i1][i2] = k.get_K_value(1,at1,sh1,at2,sh2);
-      k2_vals[i1][i2] = k.get_K_value(2,at1,sh1,at2,sh2);
-      k3_vals[i1][i2] = k.get_K_value(3,at1,sh1,at2,sh2);
-      k4_vals[i1][i2] = k.get_K_value(4,at1,sh1,at2,sh2);
 
-
-      c_vals[i1][i2]  = k.get_C_value(0,at1,sh1,at2,sh2);
-      c1_vals[i1][i2] = k.get_C_value(1,at1,sh1,at2,sh2);
-      c2_vals[i1][i2] = k.get_C_value(2,at1,sh1,at2,sh2);
-      c3_vals[i1][i2] = k.get_C_value(3,at1,sh1,at2,sh2);
-      c4_vals[i1][i2] = k.get_C_value(4,at1,sh1,at2,sh2);
-*/
-
-      cout<<"i1= "<<i1<<" i2= "<<i2<<" at1= "<<at1<<" sh1= "<<sh1<<" at2= "<<at2<<" sh2= "<<sh2<<" k_vals[0][i1][i2]= "<<k_vals[0][i1][i2]<<endl;
-
+      //cout<<"i1= "<<i1<<" i2= "<<i2<<" at1= "<<at1<<" sh1= "<<sh1<<" at2= "<<at2<<" sh2= "<<sh2<<" k_vals[0][i1][i2]= "<<k_vals[0][i1][i2]<<endl;
 
     }// it_type2
   }// it_type
@@ -589,39 +442,15 @@ void mEHT_K::set_mapping(EHT_K& eht_k, const vector<AO>& basis_ao){
 
     for(int J=0;J<size;J++){
 
-//  This is older procedure
-/*
-      eht_K[I*size+J]  = k.get_K_value( basis_ao[I].element,basis_ao[I].ao_shell,basis_ao[J].element,basis_ao[J].ao_shell);
-      eht_K1[I*size+J] = k.get_K1_value(basis_ao[I].element,basis_ao[I].ao_shell,basis_ao[J].element,basis_ao[J].ao_shell);
-      eht_K2[I*size+J] = k.get_K2_value(basis_ao[I].element,basis_ao[I].ao_shell,basis_ao[J].element,basis_ao[J].ao_shell);
-      eht_K3[I*size+J] = k.get_K3_value(basis_ao[I].element,basis_ao[I].ao_shell,basis_ao[J].element,basis_ao[J].ao_shell);
-      eht_K4[I*size+J] = k.get_K4_value(basis_ao[I].element,basis_ao[I].ao_shell,basis_ao[J].element,basis_ao[J].ao_shell);
-*/
-
-// New procedure
-
+      // New procedure
       int i2 = at_types[std::pair<std::string,std::string>(basis_ao[J].element,basis_ao[J].ao_shell)];
 
-      cout<<"I= "<<I<<" i1= "<<i1<<" J= "<<J<<" i2= "<<i2<<" k_vals[i1][i2]= "<<k_vals[0][i1][i2]<<endl;
+      //cout<<"I= "<<I<<" i1= "<<i1<<" J= "<<J<<" i2= "<<i2<<" k_vals[i1][i2]= "<<k_vals[0][i1][i2]<<endl;
 
       for(k=0;k<5;k++){
         eht_K[k][I*size+J]  = k_vals[k][i1][i2];
         eht_C[k][I*size+J]  = c_vals[k][i1][i2];
       }
-/*
-      eht_K[I*size+J]  = k_vals[i1][i2];
-      eht_K1[I*size+J] = k1_vals[i1][i2];
-      eht_K2[I*size+J] = k2_vals[i1][i2];
-      eht_K3[I*size+J] = k3_vals[i1][i2];
-      eht_K4[I*size+J] = k4_vals[i1][i2];
-
-      eht_C0[I*size+J] = c_vals[i1][i2];
-      eht_C1[I*size+J] = c1_vals[i1][i2];
-      eht_C2[I*size+J] = c2_vals[i1][i2];
-      eht_C3[I*size+J] = c3_vals[i1][i2];
-      eht_C4[I*size+J] = c4_vals[i1][i2];
-*/
-
     }// for j
   }// for i
 
@@ -631,7 +460,9 @@ void mEHT_K::set_mapping(EHT_K& eht_k, const vector<AO>& basis_ao){
 
 
 void mEHT_K::set_mapping1(EHT_K& k, int nat, vector<std::string>& mol_at_types){
-// This is similar to set_mapping, but we now assume atomic (not orbital) arrays
+/**
+  This is similar to set_mapping, but we now assume atomic (not orbital) arrays
+*/
 
   //========================= Part 1 =======================================
   map<std::string,int> at_types;

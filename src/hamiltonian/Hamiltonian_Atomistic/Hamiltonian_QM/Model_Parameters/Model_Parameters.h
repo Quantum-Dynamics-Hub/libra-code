@@ -98,6 +98,7 @@ class EHT_K{
   may notably slow down the overall calculations, so we only use this class 
   for reading in the parameters from the input file
 */
+
   double K_default[5] = {1.75, 0.00, 0.00, 0.00, 0.00};
   double C_default[5] = {0.00, 0.00, 0.00, 0.00, 1.00};
 
@@ -113,20 +114,6 @@ class EHT_K{
 
     double C_value[5];
     int is_C_value[5] = {0, 0, 0, 0, 0};
-
-/*
-    double K_value;   int is_K_value;
-    double K1_value;  int is_K1_value;  // units of energy
-    double K2_value;  int is_K2_value;  // units of energy
-    double K3_value;  int is_K3_value;  // units of energy
-    double K4_value;  int is_K4_value;  // units of lengths
-
-    double C0_value;  int is_C0_value;  // units of energy
-    double C1_value;  int is_C1_value;  // units of energy/length
-    double C2_value;  int is_C2_value;  // units of energy/length^2
-    double C3_value;  int is_C3_value;  // units of energy/length^3
-    double C4_value;  int is_C4_value;  // units of lengths
-*/
 
   };
 
@@ -147,7 +134,6 @@ class EHT_K{
     int n1,n2,n3,n4;
     double K;
   };
-
 
 
   int find_data(std::string,std::string);  // in data
@@ -185,45 +171,8 @@ public:
   void set_K_value(int k_indx,std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K);
   double get_K_value(int k_indx,std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2);
 
-//  void set_K_value(int,std::string,std::string,std::string,std::string, double);
-//  double get_K_value(int,std::string,std::string,std::string,std::string);
-
-/*
-  void set_K_value(std::string,std::string,std::string,std::string, double);
-  double get_K_value(std::string,std::string,std::string,std::string);
-
-  void set_K1_value(std::string,std::string,std::string,std::string, double);
-  double get_K1_value(std::string,std::string,std::string,std::string);
-
-  void set_K2_value(std::string,std::string,std::string,std::string, double);
-  double get_K2_value(std::string,std::string,std::string,std::string);
-
-  void set_K3_value(std::string,std::string,std::string,std::string, double);
-  double get_K3_value(std::string,std::string,std::string,std::string);
-
-  void set_K4_value(std::string,std::string,std::string,std::string, double);
-  double get_K4_value(std::string,std::string,std::string,std::string);
-*/
-
   void set_C_value(int,std::string,std::string,std::string,std::string, double);
   double get_C_value(int,std::string,std::string,std::string,std::string);
-
-/*
-  void set_C0_value(std::string,std::string,std::string,std::string, double);
-  double get_C0_value(std::string,std::string,std::string,std::string);
-
-  void set_C1_value(std::string,std::string,std::string,std::string, double);
-  double get_C1_value(std::string,std::string,std::string,std::string);
-
-  void set_C2_value(std::string,std::string,std::string,std::string, double);
-  double get_C2_value(std::string,std::string,std::string,std::string);
-
-  void set_C3_value(std::string,std::string,std::string,std::string, double);
-  double get_C3_value(std::string,std::string,std::string,std::string);
-
-  void set_C4_value(std::string,std::string,std::string,std::string, double);
-  double get_C4_value(std::string,std::string,std::string,std::string);
-*/
 
   void show();
 
@@ -242,18 +191,6 @@ public:
           res *= (m1.data[i].K_value[k]==m2.data[i].K_value[k]);  
           res *= (m1.data[i].C_value[k]==m2.data[i].C_value[k]);  
         }
-/*
-        res *= (m1.data[i].K1_value==m2.data[i].K1_value);  
-        res *= (m1.data[i].K2_value==m2.data[i].K2_value);  
-        res *= (m1.data[i].K3_value==m2.data[i].K3_value);  
-        res *= (m1.data[i].K4_value==m2.data[i].K4_value);  
-
-        res *= (m1.data[i].C0_value==m2.data[i].C0_value);  
-        res *= (m1.data[i].C1_value==m2.data[i].C1_value);  
-        res *= (m1.data[i].C2_value==m2.data[i].C2_value);  
-        res *= (m1.data[i].C3_value==m2.data[i].C3_value);  
-        res *= (m1.data[i].C4_value==m2.data[i].C4_value);  
-*/
 
       }// for i
     }// m1.data
@@ -310,23 +247,9 @@ class mEHT_K{
 */
 
 public:
-  int size; // is the size of the matrix (N below - number of AOs in the basis)
-  vector< vector<double> > eht_K;   // eht_K[k_indx][I*N+J] = is the k_indx-type parameter for pair of orbitals I and J - each of special type and on special atom
-/*
-  vector<double> eht_K1;  
-  vector<double> eht_K2;
-  vector<double> eht_K3;
-  vector<double> eht_K4;
-*/
-
-  vector< vector<double> > eht_C;  // // eht_C[c_indx][I*N+J] = is the parameter for pair of orbitals I and J - each of special type and on special atom
-/*
-  vector<double> eht_C0;
-  vector<double> eht_C1;   
-  vector<double> eht_C2;
-  vector<double> eht_C3;
-  vector<double> eht_C4;
-*/
+  int size; ///< is the size of the matrix (N below - number of AOs in the basis)
+  vector< vector<double> > eht_K;  ///< eht_K[k_indx][I*N+J] = is the k_indx-type parameter for pair of orbitals I and J - each of special type and on special atom
+  vector< vector<double> > eht_C;  ///< eht_C[c_indx][I*N+J] = is the parameter for pair of orbitals I and J - each of special type and on special atom
 
     
   // Atomic-orbital pseudopotential variables
@@ -344,8 +267,8 @@ public:
     eht_C = vector<vector<double> >(5, vector<double>(1, 0.0));
   }
   mEHT_K(const mEHT_K& ob){
-    eht_K   = ob.eht_K; //  eht_K1 = ob.eht_K1;  eht_K2 = ob.eht_K2;  eht_K3 = ob.eht_K3;  eht_K4 = ob.eht_K4; 
-    eht_C   = ob.eht_C; // eht_C1 = ob.eht_C1;  eht_C2 = ob.eht_C2;  eht_C3 = ob.eht_C3;  eht_C4 = ob.eht_C4; 
+    eht_K   = ob.eht_K; 
+    eht_C   = ob.eht_C; 
     eht_PPa = ob.eht_PPa; eht_PP0 = ob.eht_PP0;  eht_PP1 = ob.eht_PP1;  eht_PP2 = ob.eht_PP2;
   }
 
@@ -353,20 +276,7 @@ public:
   void set_mapping1(EHT_K& k, int nat, vector<std::string>& mol_at_types);
 
   inline double get_K_value(int indx, int I,int J){ return eht_K[indx][I*size+J];  }
-/*
-  inline double get_K1_value(int I,int J){ return eht_K1[I*size+J]; }
-  inline double get_K2_value(int I,int J){ return eht_K2[I*size+J]; }
-  inline double get_K3_value(int I,int J){ return eht_K3[I*size+J]; }
-  inline double get_K4_value(int I,int J){ return eht_K4[I*size+J]; }
-*/
-
   inline double get_C_value(int indx, int I,int J){ return eht_C[indx][I*size+J];  }
-/*
-  inline double get_C1_value(int I,int J){ return eht_C1[I*size+J]; }
-  inline double get_C2_value(int I,int J){ return eht_C2[I*size+J]; }
-  inline double get_C3_value(int I,int J){ return eht_C3[I*size+J]; }
-  inline double get_C4_value(int I,int J){ return eht_C4[I*size+J]; }
-*/
 
   friend bool operator == (const mEHT_K& m1, const mEHT_K& m2){
     // Equal
@@ -376,20 +286,6 @@ public:
       res *= (m1.eht_K[k]==m2.eht_K[k]);  
       res *= (m1.eht_C[k]==m2.eht_C[k]);  
     }
-/*
-    res *= (m1.eht_K==m2.eht_K);  
-    res *= (m1.eht_K1==m2.eht_K1);  
-    res *= (m1.eht_K2==m2.eht_K2);  
-    res *= (m1.eht_K3==m2.eht_K3);  
-    res *= (m1.eht_K4==m2.eht_K4);  
-
-    res *= (m1.eht_C0==m2.eht_C0);  
-    res *= (m1.eht_C1==m2.eht_C1);  
-    res *= (m1.eht_C2==m2.eht_C2);  
-    res *= (m1.eht_C3==m2.eht_C3);  
-    res *= (m1.eht_C4==m2.eht_C4);  
-*/
-
     res *= (m1.eht_PPa==m2.eht_PPa);  
     res *= (m1.eht_PP0==m2.eht_PP0);  
     res *= (m1.eht_PP1==m2.eht_PP1);  
@@ -413,39 +309,41 @@ typedef std::vector<vector<mEHT_K> > mEHT_KMap;
 
 
 class Element{
+/** 
+  This class contains parameters for orbitals of given element 
+*/
 
   public:
 
   // General atomic properties
-  std::string elt_name;   // element symbol  
-  int Z;                  // nuclear charge
-  int PQN;                // principal quantum number
-  int Nval;               // effective number of electrons(e.g. valence electrons)  
-  double Zeff;            // effective(screened) nuclear charge
-  double mass;            // mass
+  std::string elt_name;   ///< element symbol  
+  int Z;                  ///< nuclear charge
+  int PQN;                ///< principal quantum number
+  int Nval;               ///< effective number of electrons(e.g. valence electrons)  
+  double Zeff;            ///< effective(screened) nuclear charge
+  double mass;            ///< mass
 
 
   // EHT, CNDO, CNDO/2, INDO
-  map<std::string,double> IP;   // Ionization potential for a given shell (first = 1s, 2s, 2p, ... 3d, so on)
-  map<std::string,double> EA;   // Electron affinity for a given shell (first = 1s, 2s, 2p, ... 3d, so on)  
+  map<std::string,double> IP; ///< Ionization potential for a given shell (first = 1s, 2s, 2p, ... 3d, so on)
+  map<std::string,double> EA; ///< Electron affinity for a given shell (first = 1s, 2s, 2p, ... 3d, so on)  
 
 
-  map<std::string, int > Nquant;    // principal quantum number for each shell
-  map<std::string, int> Nzeta;   // number of different zetas (exponents for given shell)
-  map<std::string, vector<double> > zetas;  // zetas for each shell 
-  map<std::string, vector<double> > coeffs; // coefficients for each shell
+  map<std::string, int > Nquant; ///< principal quantum number for each shell
+  map<std::string, int> Nzeta;   ///< number of different zetas (exponents for given shell)
+  map<std::string, vector<double> > zetas;  ///< zetas for each shell 
+  map<std::string, vector<double> > coeffs; ///< coefficients for each shell
 
-  map<std::string,double> J_param1; // in .../sqrt(r^2 + f(J_param1))
-  map<std::string,double> J_param2; // in f'(J_param2)/sqrt(...)
-  map<std::string,double> J_param3; // in .../sqrt(r^2 + f(J_param1))  - for el-nucl interaction
-  map<std::string,double> J_param4; // in f'(J_param2)/sqrt(...)       - for el-nucl interaction
-
+  map<std::string,double> J_param1; ///< in .../sqrt(r^2 + f(J_param1))
+  map<std::string,double> J_param2; ///< in f'(J_param2)/sqrt(...)
+  map<std::string,double> J_param3; ///< in .../sqrt(r^2 + f(J_param1))  - for el-nucl interaction
+  map<std::string,double> J_param4; ///< in f'(J_param2)/sqrt(...)       - for el-nucl interaction
 
 
   // CNDO, CNDO/2, INDO
-  map<std::string,double> G1,F2;    // Slater-Condon factors
-  map<std::string,double> beta0;    // proportionality constants for off-diagonal matrix elements
-  double Zeta;                  // exponent of the radial part of the STOs
+  map<std::string,double> G1,F2;    ///< Slater-Condon factors (for INDO)
+  map<std::string,double> beta0;    ///< proportionality constants for off-diagonal matrix elements
+  double Zeta;                      ///< exponent of the radial part of the STOs
 
   
   Element(){}
@@ -528,17 +426,18 @@ typedef std::vector<vector<Element> > ElementMap;
 
 
 class OrbParams{
-
-// Here we just keep parameters for a single orbital type (e.g. H(1s), Si(3p), etc.)
+/**
+  The class that keeps the parameters for a given orbital type (e.g. H(1s), Si(3p), etc.)
+*/
 
   public:
 
   // General atomic properties
-  double IP, EA;
-  int Nquant;             // principal quantum number for each shell
-  int Nzeta;              // number of different zetas (exponents for given shell)
-  vector<double> zetas;   // zetas for each shell 
-  vector<double> coeffs;  // coefficients for each shell
+  double IP, EA;          
+  int Nquant;             ///< principal quantum number for each shell
+  int Nzeta;              ///< number of different zetas (exponents for given shell)
+  vector<double> zetas;   ///< zetas for each shell 
+  vector<double> coeffs;  ///< coefficients for each shell
 
   double J_param1; 
   double J_param2; 
@@ -547,8 +446,8 @@ class OrbParams{
 
 
   // CNDO, CNDO/2, INDO
-  double G1,F2;          // Slater-Condon factors
-  double beta0;          // proportionality constants for off-diagonal matrix elements
+  double G1,F2;          ///< Slater-Condon factors
+  double beta0;          ///< proportionality constants for off-diagonal matrix elements
 
   
   OrbParams(){}
@@ -669,11 +568,9 @@ public:
 };
 
 
-//void set_parameters_eht(Control_Parameters&, Model_Parameters&);
 void set_parameters_hf(Control_Parameters&, Model_Parameters&, vector<AO>&);
 void set_parameters_indo(Control_Parameters&, Model_Parameters&);
-//void set_parameters_geht1(Control_Parameters& prms, Model_Parameters& modprms); // Model_Parameters_GEHT.cpp
-void set_parameters_eht(Control_Parameters& prms, Model_Parameters& modprms); // Model_Parameters_GEHT2.cpp
+void set_parameters_eht(Control_Parameters& prms, Model_Parameters& modprms); 
 
 void set_parameters_eht_mapping(Model_Parameters& modprms, const vector<AO>& basis_ao);
 void set_parameters_eht_mapping1(Model_Parameters& modprms, int nat, vector<std::string>& mol_at_types);
