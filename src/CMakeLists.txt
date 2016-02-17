@@ -53,6 +53,10 @@ ADD_SUBDIRECTORY("converters")
 MESSAGE("Going into subdirectory scripts...")
 ADD_SUBDIRECTORY("scripts")
 
+MESSAGE("Going into subdirectory qchem_tools...")
+ADD_SUBDIRECTORY("qchem_tools")
+
+
 
 
 

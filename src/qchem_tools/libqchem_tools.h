@@ -9,36 +9,25 @@
 *
 *********************************************************************************/
 /**
-  \file libhamiltonian_qm.h
+  \file libqchem_tools.h
   \brief The file describes Python export function
     
 */
 
-#ifndef LIB_HAMILTONIAN_QM_H
-#define LIB_HAMILTONIAN_QM_H
+#ifndef LIBQCHEM_TOOLS_H
+#define LIBQCHEM_TOOLS_H
+
+#include "Charge_density.h"
+
+/// libqchem_tools namespace
+namespace libqchem_tools{
 
 
-#include "Hamiltonian_QM.h"
-#include "SCF.h"
-
-
-/// libhamiltonian namespace
-namespace libhamiltonian{
-
-/// libhamiltonian_atomistic namespace
-namespace libhamiltonian_atomistic{
-
-/// libhamiltonian_qm namespace
-namespace libhamiltonian_qm{
-
-
-void export_Hamiltonian_QM_objects();
+void export_qchem_tools_objects();
 
 
 
-}// namespace libhamiltonian_qm
-}// namespace libhamiltonian_atomistic
-}// namespace libhamiltonian
+}// namespace libqchem_tools
 
+#endif // LIBQCHEM_TOOLS_H
 
-#endif// LIB_HAMILTONIAN_QM_H
