@@ -32,6 +32,7 @@ sys.path.insert(1,cwd+"/../../_build/src/qchem/qobjects")
 sys.path.insert(1,cwd+"/../../_build/src/qchem/basis")
 sys.path.insert(1,cwd+"/../../_build/src/converters")
 sys.path.insert(1,cwd+"/../../_build/src/calculators")
+sys.path.insert(1,cwd+"/../../_build/src/qchem_tools")
 
 print "\nTest 1: Importing the library and its content"
 from cygmmath import *
@@ -46,6 +47,7 @@ from cygqobjects import *
 from cygbasis import *
 from cygconverters import *
 from cygcalculators import *
+from cygqchem_tools import *
 
 from LoadPT import * # Load_PT
 from LoadMolecule import * # Load_Molecule
@@ -234,12 +236,20 @@ res_bet = Fock_to_P(el.get_Fao_bet(), el.get_Sao(), Nelec_bet, degen, kT, etol, 
 
 print "Bands(alp)    Occupations(alp)       Bands(bet)    Occupations(bet)"
 for j in xrange(Norb):
-     print "%12.8f   %12.8f  %12.8f   %12.8f" %(res_alp[3][j][1], res_alp[4][j][1], res_bet[3][j][1], res_bet[4][j][1])
-
-    
+     print "%5.3i %12.8f   %12.8f  %12.8f   %12.8f" % (j, res_alp[3][j][1], res_alp[4][j][1], res_bet[3][j][1], res_bet[4][j][1])
 
 
+vlist = intList()    
+vlist.append(23)
+vlist.append(24)
 
+prms.orbs = vlist
+prms.nx_grid = 40
+prms.ny_grid = 40
+prms.nz_grid = 40
+prms.charge_density_prefix = "char_dens"
+
+charge_density( el, syst, basis_ao, prms)
 
 
 
