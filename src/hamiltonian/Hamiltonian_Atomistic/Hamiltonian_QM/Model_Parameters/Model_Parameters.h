@@ -91,8 +91,15 @@ typedef std::vector<vector<HF_integrals> > HF_integralsMap;
 
 
 class EHT_K{
-// This data type realizes a container for a bunch of K constants for EHT
-// with some access methods
+/**
+  This data type realizes a container for a bunch of K constants for EHT
+  with some access methods. The data elements are indexed by 4 variables of 
+  string type, so very often access to these data elements in actual calculations
+  may notably slow down the overall calculations, so we only use this class 
+  for reading in the parameters from the input file
+*/
+  double K_default[5] = {1.75, 0.00, 0.00, 0.00, 0.00};
+  double C_default[5] = {0.00, 0.00, 0.00, 0.00, 1.00};
 
   struct data_element{
     // Example:   H  1s   Si  3s   1.34   K1_value
@@ -101,18 +108,25 @@ class EHT_K{
     std::string elt2;
     std::string orb_type2;
 
-    // H_ij = 0.5*K*(H_ii+H_jj)*S_ij + (K1 + K2*S_ij/sqrt(1+R^2))
-    double K_value;
-    double K1_value; // units of energy
-    double K2_value; // units of energy
-    double K3_value; // units of energy
-    double K4_value; // units of lengths
+    double K_value[5];
+    int is_K_value[5] = {0, 0, 0, 0, 0};
 
-    double C0_value; // units of energy
-    double C1_value; // units of energy/length
-    double C2_value; // units of energy/length^2
-    double C3_value; // units of energy/length^3
-    double C4_value; // units of lengths
+    double C_value[5];
+    int is_C_value[5] = {0, 0, 0, 0, 0};
+
+/*
+    double K_value;   int is_K_value;
+    double K1_value;  int is_K1_value;  // units of energy
+    double K2_value;  int is_K2_value;  // units of energy
+    double K3_value;  int is_K3_value;  // units of energy
+    double K4_value;  int is_K4_value;  // units of lengths
+
+    double C0_value;  int is_C0_value;  // units of energy
+    double C1_value;  int is_C1_value;  // units of energy/length
+    double C2_value;  int is_C2_value;  // units of energy/length^2
+    double C3_value;  int is_C3_value;  // units of energy/length^3
+    double C4_value;  int is_C4_value;  // units of lengths
+*/
 
   };
 
@@ -168,7 +182,13 @@ public:
   double get_PP2_value(std::string, std::string ); 
 
 
+  void set_K_value(int k_indx,std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K);
+  double get_K_value(int k_indx,std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2);
 
+//  void set_K_value(int,std::string,std::string,std::string,std::string, double);
+//  double get_K_value(int,std::string,std::string,std::string,std::string);
+
+/*
   void set_K_value(std::string,std::string,std::string,std::string, double);
   double get_K_value(std::string,std::string,std::string,std::string);
 
@@ -183,9 +203,12 @@ public:
 
   void set_K4_value(std::string,std::string,std::string,std::string, double);
   double get_K4_value(std::string,std::string,std::string,std::string);
+*/
 
+  void set_C_value(int,std::string,std::string,std::string,std::string, double);
+  double get_C_value(int,std::string,std::string,std::string,std::string);
 
-
+/*
   void set_C0_value(std::string,std::string,std::string,std::string, double);
   double get_C0_value(std::string,std::string,std::string,std::string);
 
@@ -200,7 +223,9 @@ public:
 
   void set_C4_value(std::string,std::string,std::string,std::string, double);
   double get_C4_value(std::string,std::string,std::string,std::string);
+*/
 
+  void show();
 
   friend bool operator == (const EHT_K& m1, const EHT_K& m2){
     // Equal
@@ -213,7 +238,11 @@ public:
         res *= (m1.data[i].elt2==m2.data[i].elt2);  
         res *= (m1.data[i].orb_type2==m2.data[i].orb_type2);  
 
-        res *= (m1.data[i].K_value==m2.data[i].K_value);  
+        for(int k=0;k<5;k++){
+          res *= (m1.data[i].K_value[k]==m2.data[i].K_value[k]);  
+          res *= (m1.data[i].C_value[k]==m2.data[i].C_value[k]);  
+        }
+/*
         res *= (m1.data[i].K1_value==m2.data[i].K1_value);  
         res *= (m1.data[i].K2_value==m2.data[i].K2_value);  
         res *= (m1.data[i].K3_value==m2.data[i].K3_value);  
@@ -224,6 +253,7 @@ public:
         res *= (m1.data[i].C2_value==m2.data[i].C2_value);  
         res *= (m1.data[i].C3_value==m2.data[i].C3_value);  
         res *= (m1.data[i].C4_value==m2.data[i].C4_value);  
+*/
 
       }// for i
     }// m1.data
@@ -272,20 +302,31 @@ typedef std::vector<vector<EHT_K> > EHT_KMap;
 
 
 class mEHT_K{
+/**
+  This is an efficient version of the EHT_K class - tuned for actual calculations. The efficiency is gained
+  due to 1-integer index access, which is much faster than the one using 4 strings.
+  The drawback is that the storage requirements are increased - about O(N^2) with N being the number of 
+  orbitals. The data for all orbital pairs will be stored.
+*/
 
 public:
   int size; // is the size of the matrix (N below - number of AOs in the basis)
-  vector<double> eht_K;
-  vector<double> eht_K1;   // eht_K1[I*N+J] = is the parameter for pair of orbitals I and J - each of special type and on special atom
+  vector< vector<double> > eht_K;   // eht_K[k_indx][I*N+J] = is the k_indx-type parameter for pair of orbitals I and J - each of special type and on special atom
+/*
+  vector<double> eht_K1;  
   vector<double> eht_K2;
   vector<double> eht_K3;
   vector<double> eht_K4;
+*/
 
+  vector< vector<double> > eht_C;  // // eht_C[c_indx][I*N+J] = is the parameter for pair of orbitals I and J - each of special type and on special atom
+/*
   vector<double> eht_C0;
-  vector<double> eht_C1;   // eht_C1[I*N+J] = is the parameter for pair of orbitals I and J - each of special type and on special atom
+  vector<double> eht_C1;   
   vector<double> eht_C2;
   vector<double> eht_C3;
   vector<double> eht_C4;
+*/
 
     
   // Atomic-orbital pseudopotential variables
@@ -297,33 +338,45 @@ public:
 
 
 
-  mEHT_K(){  size = -1; }
+  mEHT_K(){  
+    size = -1;
+    eht_K = vector<vector<double> >(5, vector<double>(1, 0.0));
+    eht_C = vector<vector<double> >(5, vector<double>(1, 0.0));
+  }
   mEHT_K(const mEHT_K& ob){
-    eht_K   = ob.eht_K;   eht_K1 = ob.eht_K1;  eht_K2 = ob.eht_K2;  eht_K3 = ob.eht_K3;  eht_K4 = ob.eht_K4; 
-    eht_C0  = ob.eht_C0;  eht_C1 = ob.eht_C1;  eht_C2 = ob.eht_C2;  eht_C3 = ob.eht_C3;  eht_C4 = ob.eht_C4; 
+    eht_K   = ob.eht_K; //  eht_K1 = ob.eht_K1;  eht_K2 = ob.eht_K2;  eht_K3 = ob.eht_K3;  eht_K4 = ob.eht_K4; 
+    eht_C   = ob.eht_C; // eht_C1 = ob.eht_C1;  eht_C2 = ob.eht_C2;  eht_C3 = ob.eht_C3;  eht_C4 = ob.eht_C4; 
     eht_PPa = ob.eht_PPa; eht_PP0 = ob.eht_PP0;  eht_PP1 = ob.eht_PP1;  eht_PP2 = ob.eht_PP2;
   }
 
   void set_mapping(EHT_K& k, const vector<AO>& basis);
   void set_mapping1(EHT_K& k, int nat, vector<std::string>& mol_at_types);
 
-  inline double get_K_value( int I,int J){ return eht_K[I*size+J];  }
+  inline double get_K_value(int indx, int I,int J){ return eht_K[indx][I*size+J];  }
+/*
   inline double get_K1_value(int I,int J){ return eht_K1[I*size+J]; }
   inline double get_K2_value(int I,int J){ return eht_K2[I*size+J]; }
   inline double get_K3_value(int I,int J){ return eht_K3[I*size+J]; }
   inline double get_K4_value(int I,int J){ return eht_K4[I*size+J]; }
+*/
 
-  inline double get_C0_value(int I,int J){ return eht_C0[I*size+J];  }
+  inline double get_C_value(int indx, int I,int J){ return eht_C[indx][I*size+J];  }
+/*
   inline double get_C1_value(int I,int J){ return eht_C1[I*size+J]; }
   inline double get_C2_value(int I,int J){ return eht_C2[I*size+J]; }
   inline double get_C3_value(int I,int J){ return eht_C3[I*size+J]; }
   inline double get_C4_value(int I,int J){ return eht_C4[I*size+J]; }
-
+*/
 
   friend bool operator == (const mEHT_K& m1, const mEHT_K& m2){
     // Equal
     int res = m1.size==m2.size;
 
+    for(int k=0;k<5;k++){
+      res *= (m1.eht_K[k]==m2.eht_K[k]);  
+      res *= (m1.eht_C[k]==m2.eht_C[k]);  
+    }
+/*
     res *= (m1.eht_K==m2.eht_K);  
     res *= (m1.eht_K1==m2.eht_K1);  
     res *= (m1.eht_K2==m2.eht_K2);  
@@ -335,6 +388,7 @@ public:
     res *= (m1.eht_C2==m2.eht_C2);  
     res *= (m1.eht_C3==m2.eht_C3);  
     res *= (m1.eht_C4==m2.eht_C4);  
+*/
 
     res *= (m1.eht_PPa==m2.eht_PPa);  
     res *= (m1.eht_PP0==m2.eht_PP0);  
@@ -560,33 +614,35 @@ void set_default_elements(map<std::string,Element>&);
 
 
 class Model_Parameters{
+/**
+  Class that stores the parameters of the atomistic quantal Hamiltonians (semiempirical and ab initio)
+
+*/
 
 public:
 //---------- Members --------
 
   // Parameters for semiempirical methods
   // Atomic parameters
-  map<std::string,Element> PT;    // General and specific (for a given method) atomic parameters
-  vector<OrbParams> orb_params;   // properties all orbitals!
+  map<std::string,Element> PT;    ///< General and specific (for a given method) atomic parameters
+  vector<OrbParams> orb_params;   ///< properties all orbitals!
 
   // Pair parameters
-  EHT_K  eht_k;                   // K values for EHT
+  EHT_K  eht_k;                   ///< K values for EHT - only for reading from the input file
 
   // Mapped variables - for greater efficiency
-  mEHT_K meht_k;                  // mapped EHT parameters
+  mEHT_K meht_k;                  ///< mapped EHT parameters - for greater efficiency
+                                  ///< this is what will actually be used in the EHT calculations
 
-  
-
-
-  HF_integrals  hf_int;           // precomputed J and K integrals in given basis
+  HF_integrals  hf_int;           ///< precomputed J and K integrals in given basis
 
 //  vector<double> eri;    // precomputed electron repulsion integrals - for all atoms
 //  vector<> V_A
 
   // For INDO/CNDO/CNDO2
-  int indo_opt;  // 1 = INDO, 0 = CNDO/CNDO2
-  vector<double> eri;
-  vector<double> V_AB;
+  int indo_opt;  ///< 1 = INDO, 0 = CNDO/CNDO2
+  vector<double> eri;  ///< precomputed electron repulsion integrals (only (ss|ss) type between all pairs of atoms)
+  vector<double> V_AB; ///< precomputed core-core repulsion terms for all pairs of atoms
 
   
   //-------------- Constructor --------------

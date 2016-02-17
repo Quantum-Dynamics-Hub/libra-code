@@ -99,6 +99,7 @@ void HF_integrals::get_JK_values(int a,int b, int c, int d, double& J, double& K
 int EHT_K::find_data(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){
   int i,j,sz; sz = data.size();
   j = -1;
+
   for(i=0;i<sz;i++){
 /*
     if((data[i].elt1==elt1 && data[i].orb_type1==orb_type1 && data[i].elt2==elt2 && data[i].orb_type2==orb_type2)||
@@ -127,6 +128,7 @@ int EHT_K::find_data(std::string elt1,std::string orb_type1,std::string elt2,std
       }
     }
     if(status){ j = i; break;}
+
 
   } // for i
   return j;
@@ -248,37 +250,44 @@ double EHT_K::get_PP2_value(std::string elt1,std::string orb_type1){
 
 
 
-
-
  
-void EHT_K::set_K_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K){
+void EHT_K::set_K_value(int k_indx,std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K){
   int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  if(i>-1){ data[i].K_value = K; }
+  if(i>-1){ data[i].K_value[k_indx] = K;  data[i].is_K_value[k_indx] = 1; }
   else{ 
-    data_element x; x.elt1 = elt1; x.orb_type1 = orb_type1; x.elt2 = elt2; x.orb_type2 = orb_type2; x.K_value = K; data.push_back(x); 
+    data_element x; 
+    x.elt1 = elt1; x.orb_type1 = orb_type1; x.elt2 = elt2; x.orb_type2 = orb_type2; x.K_value[k_indx] = K; x.is_K_value[k_indx] = 1;
+    data.push_back(x); 
   }
 }
 
-double EHT_K::get_K_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){  
+double EHT_K::get_K_value(int k_indx,std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){  
   int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  double res = 1.75;
-  if(i>-1){ res = data[i].K_value; }
+  double res = K_default[k_indx]; 
+  if(i>-1){ 
+    if(data[i].is_K_value[k_indx] == 1){ res = data[i].K_value[k_indx];}
+  }
 
   return res;
 }
 
-
+/*
 void EHT_K::set_K1_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K){
   int i = find_data(elt1,orb_type1,elt2,orb_type2);
-  if(i>-1){ data[i].K1_value = K; }
+  if(i>-1){ data[i].K1_value = K;  data[i].is_K1_value = 1; }
   else{ 
-    data_element x; x.elt1 = elt1; x.orb_type1 = orb_type1; x.elt2 = elt2; x.orb_type2 = orb_type2; x.K1_value = K; data.push_back(x); 
+    data_element x; 
+    x.elt1 = elt1; x.orb_type1 = orb_type1; x.elt2 = elt2; x.orb_type2 = orb_type2; x.K1_value = K; x.is_K1_value = 1;
+    data.push_back(x); 
   }
 }
+
 double EHT_K::get_K1_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){  
   int i = find_data(elt1,orb_type1,elt2,orb_type2);
   double res = 0.0;
-  if(i>-1){ res = data[i].K1_value; }
+  if(i>-1){ 
+    if(data[i].is_K1_value == 1){ res = data[i].K1_value;}
+  }
 
   return res;
 }
@@ -329,15 +338,34 @@ double EHT_K::get_K4_value(std::string elt1,std::string orb_type1,std::string el
 
   return res;
 }
+*/
+
+
+void EHT_K::set_C_value(int c_indx,std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double C){
+  int i = find_data(elt1,orb_type1,elt2,orb_type2);
+  if(i>-1){ data[i].C_value[c_indx] = C;  data[i].is_C_value[c_indx] = 1; }
+  else{ 
+    data_element x; 
+    x.elt1 = elt1; x.orb_type1 = orb_type1; x.elt2 = elt2; x.orb_type2 = orb_type2; x.C_value[c_indx] = C; x.is_C_value[c_indx] = 1;
+    data.push_back(x); 
+  }
+}
+
+double EHT_K::get_C_value(int c_indx,std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2){  
+  int i = find_data(elt1,orb_type1,elt2,orb_type2);
+  double res = C_default[c_indx]; 
+  if(i>-1){ 
+    if(data[i].is_C_value[c_indx] == 1){ res = data[i].C_value[c_indx];}
+  }
+
+  return res;
+}
 
 
 
 
 
-
-
-
-
+/*
 void EHT_K::set_C0_value(std::string elt1,std::string orb_type1,std::string elt2,std::string orb_type2, double K){
   int i = find_data(elt1,orb_type1,elt2,orb_type2);
   if(i>-1){ data[i].C0_value = K; }
@@ -416,6 +444,29 @@ double EHT_K::get_C4_value(std::string elt1,std::string orb_type1,std::string el
 
   return res;
 }
+*/
+
+void EHT_K::show(){
+
+  int i,sz;
+  
+  cout<<"Showing data...\n";
+  sz = data.size();
+  for(i=0;i<sz;i++){
+
+    cout<<"i= "<<i<<" "<<data[i].elt1<<" "<<data[i].orb_type1<<" "<<data[i].elt2<<" "<<data[i].orb_type2<<"\n";   
+    cout<<"K_values      C_values\n";
+    for(int k=0;k<5;k++){
+      cout<<data[i].K_value[k]<<"  "<<data[i].C_value[k]<<endl; 
+    }
+    cout<<endl;
+
+  }
+
+//  vector<pp_data_element> pp_data;  
+//  vector<psps_data_element> psps_data;
+
+}
 
 
 
@@ -424,10 +475,16 @@ double EHT_K::get_C4_value(std::string elt1,std::string orb_type1,std::string el
 
 
 
+void mEHT_K::set_mapping(EHT_K& eht_k, const vector<AO>& basis_ao){
+  cout<<"In mEHT_K::set_mapping...\n";
 
-void mEHT_K::set_mapping(EHT_K& k, const vector<AO>& basis_ao){
   size = basis_ao.size();
- 
+
+  for(int k=0;k<5;k++){
+    eht_K[k].reserve(size*size);   eht_K[k].resize(size*size,  0.0);
+    eht_C[k].reserve(size*size);   eht_C[k].resize(size*size,  0.0);
+  }
+/*
   eht_K.reserve(size*size);   eht_K.resize(size*size,  0.0);
   eht_K1.reserve(size*size);  eht_K1.resize(size*size, 0.0);
   eht_K2.reserve(size*size);  eht_K2.resize(size*size, 0.0);
@@ -439,35 +496,40 @@ void mEHT_K::set_mapping(EHT_K& k, const vector<AO>& basis_ao){
   eht_C2.reserve(size*size);  eht_C2.resize(size*size, 0.0);
   eht_C3.reserve(size*size);  eht_C3.resize(size*size, 0.0);
   eht_C4.reserve(size*size);  eht_C4.resize(size*size, 1.0);
-
+*/
 
   //========================= Part 1 =======================================
   map<pair<string,string>,int> at_types;
   map<pair<string,string>,int>::iterator it_type,it_type2;
 
   int ind = 0;
-  for(int I=0;I<size;I++){ // create a map of distinct types of atoms
+  for(int I=0;I<size;I++){ // create a map of distinct types of orbitals
 
     std::pair<std::string,std::string> pr(basis_ao[I].element,basis_ao[I].ao_shell);
 
     it_type = at_types.find(pr);
 
-    if(it_type==at_types.end()){  // new type
-      at_types.insert(std::pair<pair<string,string>,int>(pr,ind)); ind++;
+    // The pair pr is not found in the at_types (should actually be orb_types) array 
+    if(it_type==at_types.end()){  // so, this combination of element and AO shell is new type
+      at_types.insert(std::pair<pair<string,string>,int>(pr,ind)); ind++;  // so add it to the array
     }
 
   }// for I
 
-  // Print distinct types"
+  cout<<"Print distinct orbital types:\n";  
+  cout<<"Atom_element  AO_shell  Index of the orbital\n";
   for(it_type=at_types.begin();it_type!=at_types.end();it_type++){
-
     cout<<it_type->first.first<<"  "<<it_type->first.second<<"  "<<it_type->second<<endl;
   }
 
 
 
   //========================= Part 2 =======================================
-  int ntyp = at_types.size(); // number of distinct types
+  int ntyp = at_types.size(); // number of distinct orbital types
+  vector<vector<vector<double> > > k_vals(5,vector<vector<double> >(ntyp,vector<double>(ntyp,0.0)) );
+  vector<vector<vector<double> > > c_vals(5,vector<vector<double> >(ntyp,vector<double>(ntyp,0.0)) );
+
+/*
   vector<vector<double> > k_vals(ntyp,vector<double>(ntyp,0.0));
   vector<vector<double> > k1_vals(ntyp,vector<double>(ntyp,0.0));
   vector<vector<double> > k2_vals(ntyp,vector<double>(ntyp,0.0));
@@ -479,31 +541,40 @@ void mEHT_K::set_mapping(EHT_K& k, const vector<AO>& basis_ao){
   vector<vector<double> > c2_vals(ntyp,vector<double>(ntyp,0.0));
   vector<vector<double> > c3_vals(ntyp,vector<double>(ntyp,0.0));
   vector<vector<double> > c4_vals(ntyp,vector<double>(ntyp,0.0));
-
+*/
 
   for(it_type=at_types.begin();it_type!=at_types.end();it_type++){
 
     std::string at1 = it_type->first.first;
     std::string sh1 = it_type->first.second;
-    int i1 = it_type->second;
+    int i1 = it_type->second;   // index of this AO type
 
     for(it_type2=at_types.begin();it_type2!=at_types.end();it_type2++){
 
       std::string at2 = it_type2->first.first;
       std::string sh2 = it_type2->first.second;
-      int i2 = it_type2->second;
+      int i2 = it_type2->second; // index of this AO type
 
-      k_vals[i1][i2]  = k.get_K_value(at1,sh1,at2,sh2);
-      k1_vals[i1][i2] = k.get_K1_value(at1,sh1,at2,sh2);
-      k2_vals[i1][i2] = k.get_K2_value(at1,sh1,at2,sh2);
-      k3_vals[i1][i2] = k.get_K3_value(at1,sh1,at2,sh2);
-      k4_vals[i1][i2] = k.get_K4_value(at1,sh1,at2,sh2);
+      for(int k=0;k<5;k++){
+        k_vals[k][i1][i2]  = eht_k.get_K_value(k,at1,sh1,at2,sh2);
+        c_vals[k][i1][i2]  = eht_k.get_C_value(k,at1,sh1,at2,sh2);
+      }
+/*
+      k_vals[i1][i2]  = k.get_K_value(0,at1,sh1,at2,sh2);
+      k1_vals[i1][i2] = k.get_K_value(1,at1,sh1,at2,sh2);
+      k2_vals[i1][i2] = k.get_K_value(2,at1,sh1,at2,sh2);
+      k3_vals[i1][i2] = k.get_K_value(3,at1,sh1,at2,sh2);
+      k4_vals[i1][i2] = k.get_K_value(4,at1,sh1,at2,sh2);
 
-      c_vals[i1][i2]  = k.get_C0_value(at1,sh1,at2,sh2);
-      c1_vals[i1][i2] = k.get_C1_value(at1,sh1,at2,sh2);
-      c2_vals[i1][i2] = k.get_C2_value(at1,sh1,at2,sh2);
-      c3_vals[i1][i2] = k.get_C3_value(at1,sh1,at2,sh2);
-      c4_vals[i1][i2] = k.get_C4_value(at1,sh1,at2,sh2);
+
+      c_vals[i1][i2]  = k.get_C_value(0,at1,sh1,at2,sh2);
+      c1_vals[i1][i2] = k.get_C_value(1,at1,sh1,at2,sh2);
+      c2_vals[i1][i2] = k.get_C_value(2,at1,sh1,at2,sh2);
+      c3_vals[i1][i2] = k.get_C_value(3,at1,sh1,at2,sh2);
+      c4_vals[i1][i2] = k.get_C_value(4,at1,sh1,at2,sh2);
+*/
+
+      cout<<"i1= "<<i1<<" i2= "<<i2<<" at1= "<<at1<<" sh1= "<<sh1<<" at2= "<<at2<<" sh2= "<<sh2<<" k_vals[0][i1][i2]= "<<k_vals[0][i1][i2]<<endl;
 
 
     }// it_type2
@@ -531,6 +602,13 @@ void mEHT_K::set_mapping(EHT_K& k, const vector<AO>& basis_ao){
 
       int i2 = at_types[std::pair<std::string,std::string>(basis_ao[J].element,basis_ao[J].ao_shell)];
 
+      cout<<"I= "<<I<<" i1= "<<i1<<" J= "<<J<<" i2= "<<i2<<" k_vals[i1][i2]= "<<k_vals[0][i1][i2]<<endl;
+
+      for(k=0;k<5;k++){
+        eht_K[k][I*size+J]  = k_vals[k][i1][i2];
+        eht_C[k][I*size+J]  = c_vals[k][i1][i2];
+      }
+/*
       eht_K[I*size+J]  = k_vals[i1][i2];
       eht_K1[I*size+J] = k1_vals[i1][i2];
       eht_K2[I*size+J] = k2_vals[i1][i2];
@@ -542,7 +620,7 @@ void mEHT_K::set_mapping(EHT_K& k, const vector<AO>& basis_ao){
       eht_C2[I*size+J] = c2_vals[i1][i2];
       eht_C3[I*size+J] = c3_vals[i1][i2];
       eht_C4[I*size+J] = c4_vals[i1][i2];
-
+*/
 
     }// for j
   }// for i

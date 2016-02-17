@@ -60,10 +60,14 @@ void export_Model_Parameters_objects(){
       .def("get_PP2_value", &EHT_K::get_PP2_value)
 
       .def("set_K_value",  &EHT_K::set_K_value)
+      .def("get_K_value",  &EHT_K::get_K_value)
+      .def("set_C_value",  &EHT_K::set_C_value)
+      .def("get_C_value",  &EHT_K::get_C_value)
+
+/*
       .def("set_K1_value", &EHT_K::set_K1_value)
       .def("set_K2_value", &EHT_K::set_K2_value)
       .def("set_K4_value", &EHT_K::set_K4_value)
-      .def("get_K_value",  &EHT_K::get_K_value)
       .def("get_K1_value", &EHT_K::get_K1_value)
       .def("get_K2_value", &EHT_K::get_K2_value)
       .def("get_K4_value", &EHT_K::get_K4_value)
@@ -78,7 +82,9 @@ void export_Model_Parameters_objects(){
       .def("get_C2_value", &EHT_K::get_C2_value)
       .def("get_C3_value", &EHT_K::get_C3_value)
       .def("get_C4_value", &EHT_K::get_C4_value)
-
+*/
+      .def("show",&EHT_K::show)  
+      .def_readwrite("data", &EHT_K::data)
   ;
 
 
@@ -94,7 +100,9 @@ void export_Model_Parameters_objects(){
   class_<mEHT_K>("mEHT_K",init<>())
 
       .def_readwrite("size",   &mEHT_K::size)
-      .def_readwrite("eht_K",  &mEHT_K::eht_K)
+//      .def_readwrite("eht_K",  &mEHT_K::eht_K)
+//      .def_readwrite("eht_C",  &mEHT_K::eht_C)
+/*
       .def_readwrite("eht_K1", &mEHT_K::eht_K1)
       .def_readwrite("eht_K2", &mEHT_K::eht_K2)
       .def_readwrite("eht_K3", &mEHT_K::eht_K3)
@@ -105,7 +113,7 @@ void export_Model_Parameters_objects(){
       .def_readwrite("eht_C2", &mEHT_K::eht_C2)
       .def_readwrite("eht_C3", &mEHT_K::eht_C3)
       .def_readwrite("eht_C4", &mEHT_K::eht_C4)
-
+*/
       .def_readwrite("eht_PPa", &mEHT_K::eht_PPa)
       .def_readwrite("eht_PP0", &mEHT_K::eht_PP0)
       .def_readwrite("eht_PP1", &mEHT_K::eht_PP1)
@@ -116,6 +124,8 @@ void export_Model_Parameters_objects(){
       .def("set_mapping1", &mEHT_K::set_mapping1)
 
       .def("get_K_value",  &mEHT_K::get_K_value)
+      .def("get_C_value",  &mEHT_K::get_C_value)
+/*
       .def("get_K1_value", &mEHT_K::get_K1_value)
       .def("get_K2_value", &mEHT_K::get_K2_value)
       .def("get_K3_value", &mEHT_K::get_K3_value)
@@ -126,7 +136,7 @@ void export_Model_Parameters_objects(){
       .def("get_C2_value", &mEHT_K::get_C2_value)
       .def("get_C3_value", &mEHT_K::get_C3_value)
       .def("get_C4_value", &mEHT_K::get_C4_value)
-
+*/
   ;
 
 

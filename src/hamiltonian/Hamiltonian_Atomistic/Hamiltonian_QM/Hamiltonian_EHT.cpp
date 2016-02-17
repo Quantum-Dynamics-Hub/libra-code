@@ -82,7 +82,8 @@ void Hamiltonian_core_eht
         b = ao_to_atom_map[j];
         // This is old and slow version
         //K_const = modprms.eht_k.get_K_value(basis_ao[i].element,basis_ao[i].ao_shell,basis_ao[j].element,basis_ao[j].ao_shell);
-        K_const = modprms.meht_k.get_K_value(i,j);
+        K_const = modprms.meht_k.get_K_value(0, i,j);
+        cout<<"i= "<<i<<" j= "<<j<<" K_const= "<<K_const<<endl;
 
         if(prms.eht_formula==0){  // Unweighted formula
 
@@ -325,7 +326,7 @@ void Hamiltonian_core_deriv_eht
           if(c==b){ dSdc += dSdb; }
           
 
-          double K_const = modprms.meht_k.get_K_value(i,j);
+          double K_const = modprms.meht_k.get_K_value(0, i,j);
 
           if(prms.eht_formula==0){  // Unweighted formula
 
@@ -621,7 +622,7 @@ void Hamiltonian_Fock_eht(Electronic_Structure* el, System& syst, vector<AO>& ba
           b = ao_to_atom_map[j];
           // This is old and slow version
           //K_const = modprms.eht_k.get_K_value(basis_ao[i].element,basis_ao[i].ao_shell,basis_ao[j].element,basis_ao[j].ao_shell);
-          K_const = modprms.meht_k.get_K_value(i,j);
+          K_const = modprms.meht_k.get_K_value(0,i,j);
   
           if(prms.eht_formula==0){  // Unweighted formula
   
@@ -743,7 +744,7 @@ void Hamiltonian_Fock_eht(Electronic_Structure* el, System& syst, vector<AO>& ba
   
           //************ INDO-type on-site exchange *************   
           // Exchange effects - only local, to preserve rotational invariance - this is similar to INDO
-          double eri_ab = modprms.meht_k.get_K1_value(i,j); // a.u. of energy - exchange integral
+          double eri_ab = modprms.meht_k.get_K_value(1,i,j); // a.u. of energy - exchange integral
     
           if(prms.use_rosh){
             el->Fao_alp->M[i*Norb+j] -= 0.5*el->P->M[i*Norb+j]*eri_ab; 
@@ -795,9 +796,9 @@ void Hamiltonian_Fock_eht(Electronic_Structure* el, System& syst, vector<AO>& ba
               double Qb = syst.Atoms[b].Atom_mull_charge_gross;
               double dist = (syst.Atoms[a].Atom_RB.rb_cm - syst.Atoms[b].Atom_RB.rb_cm).length();
 
-              double K2_const = modprms.meht_k.get_K2_value(orb_a,orb_b); // a.u. of energy
-              double K3_const = modprms.meht_k.get_K3_value(orb_a,orb_b); // a.u. of length 
-              double K4_const = modprms.meht_k.get_K4_value(orb_a,orb_b); // a.u. of length
+              double K2_const = modprms.meht_k.get_K_value(2,orb_a,orb_b); // a.u. of energy
+              double K3_const = modprms.meht_k.get_K_value(3,orb_a,orb_b); // a.u. of length 
+              double K4_const = modprms.meht_k.get_K_value(4,orb_a,orb_b); // a.u. of length
               if(K4_const<0.0){  K4_const = 0.0; }
 
               double J_ab = 1.0/sqrt(dist*dist + K3_const*K3_const);
@@ -840,9 +841,9 @@ void Hamiltonian_Fock_eht(Electronic_Structure* el, System& syst, vector<AO>& ba
 
               double dist = (syst.Atoms[a].Atom_RB.rb_cm - syst.Atoms[b].Atom_RB.rb_cm).length();
 
-              double K2_const = modprms.meht_k.get_K2_value(orb_a,orb_b); // a.u. of energy
-              double K3_const = modprms.meht_k.get_K3_value(orb_a,orb_b); // a.u. of length  
-              double K4_const = modprms.meht_k.get_K4_value(orb_a,orb_b); // a.u. of length
+              double K2_const = modprms.meht_k.get_K_value(2,orb_a,orb_b); // a.u. of energy
+              double K3_const = modprms.meht_k.get_K_value(3,orb_a,orb_b); // a.u. of length  
+              double K4_const = modprms.meht_k.get_K_value(4,orb_a,orb_b); // a.u. of length
               if(K4_const<0.0){  K4_const = 0.0; }
 
               double J_ab = 1.0/sqrt(dist*dist + K3_const*K3_const);

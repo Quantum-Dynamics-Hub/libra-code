@@ -224,20 +224,20 @@ void set_parameters_eht(Control_Parameters& prms, Model_Parameters& modprms){
               <<" K1 (eV) = "<<atof(file[i1][5].c_str())
               <<" K2 (eV) = "<<atof(file[i1][6].c_str());
                                                                                                                  
-          modprms.eht_k.set_K_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][4].c_str()) );
-          modprms.eht_k.set_K1_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][5].c_str())*eV ); // convert into a.u.
-          modprms.eht_k.set_K2_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][6].c_str())*eV ); // convert into a.u.
+          modprms.eht_k.set_K_value(0, file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][4].c_str()) );
+          modprms.eht_k.set_K_value(1, file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][5].c_str())*eV ); // convert into a.u.
+          modprms.eht_k.set_K_value(2, file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][6].c_str())*eV ); // convert into a.u.
 
 
           if(file[i1].size()>=8){
             cout<<" K3 (Angst) = "<<atof(file[i1][7].c_str());
-            modprms.eht_k.set_K3_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][7].c_str())*Angst ); // convert into a.u. of length
+            modprms.eht_k.set_K_value(3, file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][7].c_str())*Angst ); // convert into a.u. of length
 
 
 
             if(file[i1].size()>=9){
               cout<<" K4 (Angst) = "<<atof(file[i1][8].c_str());
-              modprms.eht_k.set_K4_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][8].c_str())*Angst ); // convert into a.u. of length
+              modprms.eht_k.set_K_value(4, file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][8].c_str())*Angst ); // convert into a.u. of length
 
             }// >=9
 
@@ -275,19 +275,19 @@ void set_parameters_eht(Control_Parameters& prms, Model_Parameters& modprms){
               <<" C1 (eV/Angst) = "<<atof(file[i1][5].c_str())
               <<" C2 (eV/Angst^2) = "<<atof(file[i1][6].c_str());
                                                                                                                  
-          modprms.eht_k.set_C0_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][4].c_str())*eV );
-          modprms.eht_k.set_C1_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][5].c_str())*(eV/Angst) ); // convert into a.u.
-          modprms.eht_k.set_C2_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][6].c_str())*(eV/(Angst*Angst)) ); // convert into a.u.
+          modprms.eht_k.set_C_value(0, file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][4].c_str())*eV );
+          modprms.eht_k.set_C_value(1, file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][5].c_str())*(eV/Angst) ); // convert into a.u.
+          modprms.eht_k.set_C_value(2, file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][6].c_str())*(eV/(Angst*Angst)) ); // convert into a.u.
 
 
           if(file[i1].size()>=8){
             cout<<" C3 (eV/Angst^3) = "<<atof(file[i1][7].c_str()); // reserved
-            modprms.eht_k.set_C3_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][7].c_str())*(eV/(Angst*Angst*Angst)) ); // convert into a.u.
+            modprms.eht_k.set_C_value(3, file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][7].c_str())*(eV/(Angst*Angst*Angst)) ); // convert into a.u.
 
 
             if(file[i1].size()>=9){
               cout<<" C4 (1/Angst^2) = "<<atof(file[i1][8].c_str()); // will be used as beta
-              modprms.eht_k.set_C4_value(file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][8].c_str())/(Angst*Angst) ); // convert into a.u. of length
+              modprms.eht_k.set_C_value(4, file[i1][0],file[i1][1],file[i1][2],file[i1][3], atof(file[i1][8].c_str())/(Angst*Angst) ); // convert into a.u. of length
 
             }// >=9
 
