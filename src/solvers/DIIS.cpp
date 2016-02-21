@@ -193,6 +193,8 @@ void DIIS::add_diis_matrices(MATRIX* X, MATRIX* err){
   Note that this function will be only accumulating the matrices until the DIIS history is filled. Then, it will 
   be rotating matrices, adding these matrices to the end and removing very first set of matrices (queue mechanism)
 
+  Note: this operation also updates corresponding extrapolation coefficients.
+
 */
 
 //  cout<<"Starting add_diis_matrices\n  N_diis = "<<N_diis<<endl;

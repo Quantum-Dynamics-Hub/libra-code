@@ -34,7 +34,7 @@ void export_solvers_objects(){
   //----------------- DIIS.cpp ------------------------------
 
   void (DIIS::*expt_add_diis_matrices_v1)(MATRIX& X, MATRIX& err) = &DIIS::add_diis_matrices;
-  void (DIIS::*expt_update_diis_coefficients_v1)() = &DIIS::update_diis_coefficients;
+//  void (DIIS::*expt_update_diis_coefficients_v1)() = &DIIS::update_diis_coefficients;
   void (DIIS::*expt_extrapolate_matrix_v1)(MATRIX& X) = &DIIS::extrapolate_matrix;
 
   class_<DIIS>("DIIS",init<int,int>())
@@ -45,7 +45,7 @@ void export_solvers_objects(){
       .def("get_diis_err", &DIIS::get_diis_err)
       .def("get_diis_c", &DIIS::get_diis_c)
       .def("add_diis_matrices",expt_add_diis_matrices_v1)
-      .def("update_diis_coefficients",expt_update_diis_coefficients_v1)
+//      .def("update_diis_coefficients",expt_update_diis_coefficients_v1)
       .def("extrapolate_matrix",expt_extrapolate_matrix_v1)
 
 

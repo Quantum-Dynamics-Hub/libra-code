@@ -34,12 +34,12 @@ class DIIS{
 /**
   This is the class that handles DIIS (direct inversion of the iterative space) method
 */
+  void update_diis_coefficients();
 
 public:
 
   DIIS(int _N_diis_max,int Norb);  ///< Constructor
 
-  void update_diis_coefficients();
   void add_diis_matrices(MATRIX* X, MATRIX* err);
   void add_diis_matrices(MATRIX& X, MATRIX& err);
 

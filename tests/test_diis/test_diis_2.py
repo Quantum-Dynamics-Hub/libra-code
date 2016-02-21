@@ -1,0 +1,83 @@
+#*********************************************************************************
+#* Copyright (C) 2015 Alexey V. Akimov
+#*
+#* This file is distributed under the terms of the GNU General Public License
+#* as published by the Free Software Foundation, either version 2 of
+#* the License, or (at your option) any later version.
+#* See the file LICENSE in the root directory of this distribution
+#* or <http://www.gnu.org/licenses/>.
+#*
+#*********************************************************************************/
+
+########################################################################################
+#
+# In this example, we extend our line search algorithm, to minimize debug info printing
+# and showcase actual working of the algorithm: finding the root of a function 
+#
+########################################################################################
+
+
+import os
+import sys
+import math
+
+# Fisrt, we add the location of the library to test to the PYTHON path
+cwd = os.getcwd()
+print "Current working directory", cwd
+sys.path.insert(1,cwd+"/../../_build/src/mmath")
+sys.path.insert(1,cwd+"/../../_build/src/solvers")
+
+
+print "\nTest 1: Importing the library and its content"
+from cygmmath import *
+from cygsolvers import *
+
+
+# Here we will demonstrate how to apply DIIS for efficient line search in 1D 
+# so we use 1x1 matrices
+
+def func(x):
+    return (x-0.456)**2
+
+# In our case, f^2 is essentialy the error function
+
+def printout(diis):
+    print "DIIS coefficients", diis.get_diis_c()
+    print "DIIS objective matrices and errors"; 
+    X = diis.get_diis_X()
+    E = diis.get_diis_err()
+    sz = len(X)
+    for i in xrange(sz):
+        print i, X[i].get(0), E[i].get(0)
+
+
+
+# This is 3 element predictor for the matrices 1x1
+diis = DIIS(3,1)
+printout(diis)
+
+print "Adding one set"
+x = MATRIX(1,1); x.set(0, 0.0); f = MATRIX(1,1); f.set(0, func(0.0)); diis.add_diis_matrices(x, f);
+printout(diis)
+
+print "Adding the second set"
+x = MATRIX(1,1); x.set(0, 1.0); f = MATRIX(1,1); f.set(0, func(1.0)); diis.add_diis_matrices(x, f);
+printout(diis)
+
+
+print "The extrapolated objective matrix\n"
+x = MATRIX(1,1); diis.extrapolate_matrix(x); x.show_matrix()
+
+rt = x.get(0)
+
+for n in xrange(100):
+    x = MATRIX(1,1); x.set(0, rt); f = MATRIX(1,1); f.set(0, func(rt)); diis.add_diis_matrices(x, f);
+    x = MATRIX(1,1); diis.extrapolate_matrix(x); 
+    rt = x.get(0)
+
+    print n,rt, func(rt)
+
+
+
+    
+
