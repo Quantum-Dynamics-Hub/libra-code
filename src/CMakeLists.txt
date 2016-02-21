@@ -2,6 +2,7 @@
 # Set the libraries
 # 
 SET( ext_libs ${Boost_LIBRARIES} ${PYTHON_LIBRARIES}/libpython2.6.dll )
+#SET( EIGEN_INCLUDE /home/Alexey_2/Soft/eigen-eigen-2249f9c22fe8/ )
 
 
 #
@@ -56,6 +57,9 @@ ADD_SUBDIRECTORY("scripts")
 MESSAGE("Going into subdirectory qchem_tools...")
 ADD_SUBDIRECTORY("qchem_tools")
 
+
+MESSAGE("Going into subdirectory solvers...")
+ADD_SUBDIRECTORY("solvers")
 
 
 

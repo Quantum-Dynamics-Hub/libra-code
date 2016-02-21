@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+ \file DIIS.cpp
+ \brief The file implements the DIIS class and related functions 
+        
+*/
 
 #include "DIIS.h"
 
@@ -16,22 +21,25 @@
 #include <Eigen/Eigenvalues>
 #include <Eigen/Core>
 
+
 //#include <Eigen/SVD>
 using namespace Eigen;
 
 
-/**********************************************************************
+/// libsolvers namespace
+namespace libsolvers{
 
-  DIIS::DIIS(int _N_diis_max)
 
-  void DIIS::update_diis_coefficients()
-  void DIIS::add_diis_matrices(MATRIX* _X, MATRIX* _err)
-
-  void DIIS::extrapolate_matrix(MATRIX* X_ext)
-
-**********************************************************************/
 
 DIIS::DIIS(int _N_diis_max,int Norb){
+/**
+  The constructor of the DIIS handler 
+
+  \param[in] _N_diis_max The maximal length of DIIS history - how many matrixes to store 
+  \param[in] Norb The size of the DIIS matrices. Well the name is a bit misleading. This is because
+  I initially implemented it with the SCF convergence in mind, but in reality this is pretty general
+  algorithm, so Norb is just the size of the problem
+*/
 
   int n;
 
@@ -61,10 +69,11 @@ DIIS::DIIS(int _N_diis_max,int Norb){
 
 
 void DIIS::update_diis_coefficients(){
-
-    // General case - holds true for both N_diis<N_diis_max and for N_diis==N_diis_max (after preliminary corrections )
-    // Starting at this point we compute extrapolation coefficients:
-    // Solving Ax = b
+/**
+  General case - holds true for both N_diis<N_diis_max and for N_diis==N_diis_max (after preliminary corrections )
+  Starting at this point we compute the extrapolation coefficients:
+  Solving Ax = b, where b - are the errors, x - are the changes of the parameter space, A contain the extrapolation coefficients
+*/
 
   int N_diis_curr;
   int rank;
@@ -175,6 +184,16 @@ void DIIS::update_diis_coefficients(){
 
 
 void DIIS::add_diis_matrices(MATRIX* X, MATRIX* err){
+/**
+  This function adds information about new iteration, so it updates the DIIS input matrices
+
+  \param[in] X the matrix of parameters change
+  \param[in] err the matrix of the corresponding errors 
+
+  Note that this function will be only accumulating the matrices until the DIIS history is filled. Then, it will 
+  be rotating matrices, adding these matrices to the end and removing very first set of matrices (queue mechanism)
+
+*/
 
 //  cout<<"Starting add_diis_matrices\n  N_diis = "<<N_diis<<endl;
   int i,j;
@@ -232,14 +251,21 @@ void DIIS::add_diis_matrices(MATRIX* X, MATRIX* err){
 }// void DIIS::add_diis_matrices(MATRIX* _X, MATRIX* _err)
 
 
-void DIIS::extrapolate_matrix(MATRIX* X_ext){
+void DIIS::add_diis_matrices(MATRIX& X, MATRIX& err){ add_diis_matrices(&X, &err); }
 
-  // Extrapolate X matrix
-  // Note the Fock matrix constructed below (extrapolated) will only be used to obtain density
-  // It will not be stored in diis_Fao_... (timing/sequence of function calls in scf() procedure is very important!!! )
+
+void DIIS::extrapolate_matrix(MATRIX* X_ext){
+/**
+  Extrapolate X matrix
+  Note the Fock matrix constructed below (extrapolated) will only be used to obtain density
+  It will not be stored in diis_Fao_... (timing/sequence of function calls in scf() procedure is very important!!! )
 
   //!!!!!!!!!! Assume it is called just after add_diis_matrices !!!!!!!!!!!
-  // so we need to used decremented N_diis value!!!!!
+  so we need to used decremented N_diis value!!!!!
+
+  \param[out] X_ext The extrapolated input matrix (in context of SCF - this is an extrapolted Fock or density matrix)
+
+*/
 
   *X_ext = 0.0;
 
@@ -249,4 +275,47 @@ void DIIS::extrapolate_matrix(MATRIX* X_ext){
 
 }// void DIIS::extrapolate_matrix(MATRIX* X_ext)
 
+void DIIS::extrapolate_matrix(MATRIX& X_ext){ extrapolate_matrix(&X_ext); }
+
+
+boost::python::list DIIS::get_diis_X(){
+/**
+  Returns the list of presently stored objective matrices.
+  The returned objects are brand-new objects (constructed here), so don't worry about references
+*/
+
+  boost::python::list res;
+  for(int i=0;i<diis_X.size();i++){ res.append(*diis_X[i]); }
+  return res;
+
+}
+
+boost::python::list DIIS::get_diis_err(){
+/**
+  Returns the list of presently stored error matrices.
+  The returned objects are brand-new objects (constructed here), so don't worry about references
+*/
+
+  boost::python::list res;
+  for(int i=0;i<diis_err.size();i++){ res.append(*diis_err[i]); }
+  return res;
+
+}
+
+boost::python::list DIIS::get_diis_c(){
+/**
+  Returns the list of presently stored extrapolation coefficients
+  The returned objects are brand-new objects (constructed here), so don't worry about references
+*/
+
+  boost::python::list res;
+  for(int i=0;i<diis_c.size();i++){ res.append(diis_c[i]); }
+  return res;
+
+}
+
+
+
+
+}// libsolvers namespace
 
