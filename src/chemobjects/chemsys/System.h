@@ -302,6 +302,10 @@ public:
   void init_fragment_velocities(double Temp);
   void init_fragment_velocities(double Temp,VECTOR TOT_P,VECTOR TOT_L);
 
+  void init_atom_velocities(double Temp);
+  void init_atom_velocities(double Temp,VECTOR TOT_P);
+
+
 
   //---------------- Defined in System_methods7.cpp -----------------
   void print_ent(std::string);

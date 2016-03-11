@@ -59,6 +59,8 @@ int (System::*expt_Find_Angle_v2)(int,int,int) = &System::Find_Angle;
 void (System::*expt_init_fragment_velocities_v1)(double Temp) = &System::init_fragment_velocities;
 void (System::*expt_init_fragment_velocities_v2)(double Temp,VECTOR TOT_P,VECTOR TOT_L) = &System::init_fragment_velocities;
 
+void (System::*expt_init_atom_velocities_v1)(double Temp) = &System::init_atom_velocities;
+void (System::*expt_init_atom_velocities_v2)(double Temp,VECTOR TOT_P) = &System::init_atom_velocities;
 
 
   class_<System>("System",init<>())
@@ -274,6 +276,10 @@ void (System::*expt_init_fragment_velocities_v2)(double Temp,VECTOR TOT_P,VECTOR
 
       .def("init_fragment_velocities", expt_init_fragment_velocities_v1)
       .def("init_fragment_velocities", expt_init_fragment_velocities_v2)
+
+      .def("init_atom_velocities", expt_init_atom_velocities_v1)
+      .def("init_atom_velocities", expt_init_atom_velocities_v2)
+
 
 
   //---------------- Defined in System_methods7.cpp -----------------

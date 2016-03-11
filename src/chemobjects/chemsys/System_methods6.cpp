@@ -1060,6 +1060,96 @@ void System::init_fragment_velocities(double Temp,VECTOR TOT_P,VECTOR TOT_L){
 
 
 
+void System::init_atom_velocities(double Temp){
+/**
+  \param[in] Temp Target temperature, in K
+
+  Initializes atomic velocities (momenta) such that the total linear and angular moments are zeroes
+  and the total kinetic energy corresponds to the input temperature given by Temp.
+*/
+
+  VECTOR TOT_P; TOT_P = 0.0; 
+  init_atom_velocities(Temp,TOT_P);
+}
+
+void System::init_atom_velocities(double Temp,VECTOR TOT_P){
+/**
+  \param[in] Temp The target temperature, in K
+  \param[in] TOT_P The expected total linear momentum (or at least its direction) of the system after initialization
+
+  This method sets linear momenta and makes sure that the total linear and angular momenta are
+  proportional to corresponding arguments (or equal if this is consistent)
+  with the Temperature parameters
+  In any case, the temperature is enforced to be constrained, while the
+  amplitude of the total momenta may be scaled if needed
+*/
+
+  // Initialize random number generator
+  srand( (unsigned)time(NULL) );
+  int i;
+
+  VECTOR* temp_p;
+  temp_p = new VECTOR[Number_of_atoms];
+
+  VECTOR tot_p; tot_p = 0.0;
+
+  Random rnd;
+  for(i=0;i<Number_of_atoms;i++){
+    temp_p[i].x  = rnd.uniform(-0.5,0.5);
+    temp_p[i].y  = rnd.uniform(-0.5,0.5);
+    temp_p[i].z  = rnd.uniform(-0.5,0.5);
+    tot_p += temp_p[i];
+  }
+
+  double size = Number_of_atoms;
+  tot_p = (TOT_P - tot_p)/size;
+  for(i=0;i<Number_of_atoms;i++){   temp_p[i] +=  tot_p; }
+  cout<<"size = "<<size<<endl;
+  cout<<"tot_p = "<<tot_p<<endl;
+
+  // Required temperature value scaling
+  double temp_tr  = 0.0;
+  for(i=0;i<Number_of_atoms;i++){
+    RigidBody& top = Atoms[i].Atom_RB;
+    top.set_momentum(temp_p[i]);
+    temp_tr += top.ekin_tr();
+  }// for i
+  cout<<"temp_tr= "<<temp_tr<<endl;
+
+  // Rescale linear momenta to satisfy the translational kinetic energy
+  double target_ekin_tr = 0.5*((double)Nf_t)*(boltzmann*Temp)/hartree;  // in a.u. of energy
+  double scaling_factor_tr = (temp_tr==0.0)?0.0:sqrt(target_ekin_tr/temp_tr);
+  for(i=0;i<Number_of_atoms;i++){  temp_p[i] *= scaling_factor_tr; }
+
+  cout<<"target_ekin_tr= "<<target_ekin_tr<<endl;
+  cout<<"scaling_factor_tr = "<<scaling_factor_tr<<endl;
+
+
+  // Set corresponding variables
+  double E_kin = 0.0;
+  VECTOR P_tot; P_tot = 0.0;
+  for(i=0;i<Number_of_atoms;i++){
+    RigidBody& top = Atoms[i].Atom_RB; 
+    top.set_momentum(temp_p[i]);
+    E_kin += top.ekin_tr();
+
+//    VECTOR tmp; tmp.cross(top.rb_cm,top.rb_p);
+//    L_tot += top.rb_A_I_to_e_T * top.rb_l_e + tmp;
+    P_tot += top.rb_p;
+
+  }// for i - all fragments
+  
+  double curr_T =  2.0*(E_kin*hartree)/(((double)(Nf_t))*boltzmann);
+  cout<<"in init_velocities...\n";
+  cout<<"P_tot = "<<P_tot<<endl;
+//  cout<<"L_tot = "<<L_tot<<endl;
+  cout<<"cutt_T = "<<curr_T<<endl;
+  delete [] temp_p;
+
+}
+
+
+
 
 
 }// namespace libchemsys
