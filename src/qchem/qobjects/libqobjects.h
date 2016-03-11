@@ -19,6 +19,7 @@
 
 #include "PrimitiveG.h"
 #include "AO.h"
+#include "PW.h"
 
 /// libqchem namespace
 namespace libqchem{

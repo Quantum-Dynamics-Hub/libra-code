@@ -337,6 +337,47 @@ void export_qobjects_objects(){
   ;
 
 
+  //============ PW class =====================
+  class_<PW>("PW",init<int,int,int,int,int>())
+      .def(init<const PW&>())
+      .def("__copy__", &generic__copy__<PW>) 
+      .def("__deepcopy__", &generic__deepcopy__<PW>)
+
+      .def_readwrite("energy",&PW::energy)
+      .def_readwrite("gweight",&PW::gweight)
+      .def_readwrite("fweight",&PW::fweight)
+      .def_readwrite("iband",&PW::iband)
+      .def_readwrite("kx",&PW::kx)
+      .def_readwrite("ky",&PW::ky)
+      .def_readwrite("kz",&PW::kz)
+      .def_readwrite("k_point",&PW::k_point)
+      .def_readwrite("npw",&PW::npw)
+      .def_readwrite("coeff",&PW::coeff)
+
+      .def("conj",&PW::conj)
+      .def("normalize",&PW::normalize)
+      .def("complete",&PW::complete)
+
+      .def(self+self)
+      .def(self-self)
+      .def(self*self)
+      .def(self+=self)
+      .def(self-=self)
+      .def(self/double())
+      .def(self/complex<double>())
+      .def(self*double())
+      .def(double()*self)
+      .def(self*complex<double>())
+      .def(complex<double>()*self)
+
+  ;
+
+  class_< PWList >("PWList")
+      .def(vector_indexing_suite< PWList >())
+  ;
+
+
+
 
 }
 

@@ -324,7 +324,7 @@ double electron_repulsion_integral( AO* AOa, AO* AOb, AO* AOc, AO* AOd);
 
 
 
-typedef std::vector<AO> AOList; ///< This is the data type for representing vector of AP objects
+typedef std::vector<AO> AOList; ///< This is the data type for representing vector of AO objects
 
 
 
