@@ -21,6 +21,8 @@
 namespace libdyn{
 
 
+
+
 void compute_hopping_probabilities_fssh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,
                                         double dt, int use_boltz_factor,double T){
 /**

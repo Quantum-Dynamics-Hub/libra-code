@@ -38,14 +38,19 @@ class Hamiltonian_Extern : public Hamiltonian{
 
   int adiabatic_opt; ///< defines how to perform adiabatic calculations: either use bound adiabatic matrices (0, default), or to
                      ///< perform diabatic -> adiabatic transformation (1)
+  int vibronic_opt;  ///< defines how to perform vibronic Hamiltonian calculations: either use bound vibronic matrix (0, default), or to
+                     ///< perform honest computations using electronic Hamiltonian and derivative couplings (1)
+
 
   // Bind status (bs_)
   int bs_ham_dia;   ///< bind status of diabatic Hamiltonian
   int bs_d1ham_dia; ///< bind status of first-order derivatives of the diabatic Hamiltonian
   int bs_d2ham_dia; ///< bind status of second-order derivatives of the diabatic Hamiltonian
   int bs_ham_adi;   ///< bind status of adiabatic Hamiltonian                                
-  int bs_d1ham_adi; ///< bind status of first-order derivatives of the adiabatic Hamiltonian 
-                    
+  int bs_d1ham_adi; ///< bind status of first-order derivatives of the adiabatic Hamiltonian                     
+  int bs_ham_vib;   ///< bind status of the vibronic Hamiltonian
+
+  CMATRIX* ham_vib;  ///< Vibronic Hamiltonian 
   
    
 public:
@@ -58,18 +63,21 @@ public:
 
   /// Set parameters
   void set_adiabatic_opt(int);
+  void set_vibronic_opt(int vib_opt);
 
   void bind_ham_dia(MATRIX& _ham_dia);
   void bind_d1ham_dia(vector<MATRIX>& _d1ham_dia);
   void bind_d2ham_dia(vector<MATRIX>& _d2ham_dia);
   void bind_ham_adi(MATRIX& _ham_adi);
   void bind_d1ham_adi(vector<MATRIX>& _d1ham_adi);
+  void bind_ham_vib(CMATRIX& _ham_vib);
 
 
   // Perform actual computations - this will construct the internals of the object of this type
   void compute_diabatic();
   void compute_adiabatic();
 
+  std::complex<double> Hvib(int i,int j);
 
 };
 

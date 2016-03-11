@@ -40,13 +40,16 @@ void export_hamiltonian_extern_objects(){
       .def("__copy__", &generic__copy__<Hamiltonian_Extern>)
       .def("__deepcopy__", &generic__deepcopy__<Hamiltonian_Extern>)
       .def("set_adiabatic_opt", &Hamiltonian_Extern::set_adiabatic_opt)
+      .def("set_vibronic_opt", &Hamiltonian_Extern::set_vibronic_opt)
       .def("bind_ham_dia", &Hamiltonian_Extern::bind_ham_dia)
       .def("bind_d1ham_dia", &Hamiltonian_Extern::bind_d1ham_dia)
       .def("bind_d2ham_dia", &Hamiltonian_Extern::bind_d2ham_dia)
       .def("bind_ham_adi", &Hamiltonian_Extern::bind_ham_adi)
       .def("bind_d1ham_adi", &Hamiltonian_Extern::bind_d1ham_adi)
+      .def("bind_ham_vib", &Hamiltonian_Extern::bind_ham_vib)
       .def("compute_diabatic", &Hamiltonian_Extern::compute_diabatic)
       .def("compute_adiabatic",&Hamiltonian_Extern::compute_adiabatic)
+      .def("Hvib",&Hamiltonian_Extern::Hvib)
 
   ;
 

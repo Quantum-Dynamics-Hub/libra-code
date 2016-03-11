@@ -44,7 +44,7 @@ Hamiltonian_Extern::Hamiltonian_Extern(int _nelec, int _nnucl){
 */
 
   cout<<"Warning: Hamiltonian_Extern does not allocate any internal memory, so make sure \
-  you create external objects for all variables: ham_dia, ham_adi, d1ham_dia, d1ham_adi, d2ham_dia and bind them \
+  you create external objects for all variables: ham_dia, ham_adi, d1ham_dia, d1ham_adi, d2ham_dia, ham_vib, and bind them \
   to the internal variables\n";
 
   nelec = _nelec;
@@ -77,19 +77,20 @@ Hamiltonian_Extern::Hamiltonian_Extern(int _nelec, int _nnucl){
 
 
   adiabatic_opt = 0;
+  vibronic_opt = 0;
 
   bs_ham_dia = 0;
   bs_d1ham_dia = 0;
   bs_d2ham_dia = 0;
   bs_ham_adi = 0;
   bs_d1ham_adi = 0;
-
+  bs_ham_vib = 0;
 
 }
 
 void Hamiltonian_Extern::set_adiabatic_opt(int ad_opt){
 /**
-  \param[in] ad_opt The new adiabatic_opt value to set:
+  \param[in] ad_opt The new 'adiabatic_opt' value to set:
   0 - use provided adiabatic Hamiltonian and its derivatives directly (default)
   1 - use provided diabatic Hamiltonian and its derivatives, and the transformation from diabatic to adiabatic basis
 
@@ -105,6 +106,26 @@ void Hamiltonian_Extern::set_adiabatic_opt(int ad_opt){
   }
 
 }
+
+void Hamiltonian_Extern::set_vibronic_opt(int vib_opt){
+/**
+  \param[in] vib_opt The new 'vibronic_opt' value to set:
+  0 - use provided vibronic Hamiltonian (default)
+  1 - use provided diabatic and/or adiabatic Hamiltonian to compute vibronic Hamiltonian
+
+  Sets the vibronic_opt variable
+*/
+
+  if(vib_opt==0 || vib_opt==1){ vibronic_opt = vib_opt;  }
+  else{
+    cout<<"Error in Hamiltonian_Extern::set_vibronic_opt - allowed values are:\n";
+    cout<<"  0 - use provided vibronic Hamiltonian (default)\n";
+    cout<<"  1 - use provided diabatic and/or adiabatic Hamiltonian to compute vibronic Hamiltonian\n";
+    exit(0);
+  }
+
+}
+
 
 void Hamiltonian_Extern::bind_ham_dia(MATRIX& _ham_dia){
 /**
@@ -267,6 +288,31 @@ void Hamiltonian_Extern::bind_d1ham_adi(vector<MATRIX>& _d1ham_adi){
 }
 
 
+void Hamiltonian_Extern::bind_ham_vib(CMATRIX& _ham_vib){
+/**
+  \param[in] _ham_vib The external matrix containing the vibronic Hamiltonian
+
+  Makes the internal pointer (defined in the derived Hamiltonian_Extern class), ham_vib, to point to the external 
+  object containing the vibronic Hamiltonian matrix
+*/
+
+  if(_ham_vib.n_cols!=nelec){
+    cout<<"Error in Hamiltonian_Extern::bind_ham_vib\n";
+    cout<<"Expected number of electronic DOF = "<<nelec<<" the number of cols in the input matrix is = "<<_ham_vib.n_cols<<"\n";
+    exit(0);
+  }
+  if(_ham_vib.n_rows!=nelec){
+    cout<<"Error in Hamiltonian_Extern::bind_ham_vib\n";
+    cout<<"Expected number of electronic DOF = "<<nelec<<" the number of rows in the input matrix is = "<<_ham_vib.n_rows<<"\n";
+    exit(0);
+  }
+
+  // At this point, all is ok
+
+  ham_vib = &_ham_vib;
+  bs_ham_vib = 1;
+}
+
 
 
 Hamiltonian_Extern::~Hamiltonian_Extern(){
@@ -402,6 +448,40 @@ void Hamiltonian_Extern::compute_adiabatic(){
 
   }// adiabatic_opt == 1
   
+}
+
+std::complex<double> Hamiltonian_Extern::Hvib(int i,int j){
+/**
+  Return the vibronic Hamiltonian matrix element
+
+  The returned Hamiltonian depends on the settings of the Hamiltonian_Extern object 
+  This function does not invoke actual computation - it only returns whatever exists in the internal variables.
+
+  \param[in] i index of electronic state
+  \param[in] j index of electronic state
+*/
+
+  if(vibronic_opt == 0){ 
+    // Everything is done already - don't do anything special, other than check the bindings
+
+    // check regarding the status of bindings
+    if(bs_ham_vib == 0){  
+      cout<<"Error in Hamiltonian_Extern::Hvib (with option vibronic_opt == 0)\n";
+      cout<<"Vibronic Hamiltonian has not been bound to the Hamiltonian_Extern object\n";
+      cout<<"use \"bind_ham_vib\" function\n";
+      exit(0);
+    }
+
+    return ham_vib->get(i,j);
+
+  }// vibronic_opt == 0
+
+  else if(vibronic_opt == 1){
+
+    return Hamiltonian::Hvib(i,j);
+
+  }
+
 }
 
 
