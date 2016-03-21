@@ -1426,6 +1426,15 @@ void save(boost::property_tree::ptree& pt,std::string path,MATRIX& vt){
   }
 }
 
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, MATRIX& vt){
+  for(int i=0;i<vt.num_of_elems;i++){
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string rt; ss<<i; ss>>rt;
+    pt.put(boost::property_tree::ptree::path_type(path, path_separator),vt.M[i]);
+  }
+}
+
+
 void save(boost::property_tree::ptree& pt,std::string path,vector<MATRIX>& vt){
   int sz = vt.size();
   for(int i=0;i<sz;i++){
@@ -1435,9 +1444,21 @@ void save(boost::property_tree::ptree& pt,std::string path,vector<MATRIX>& vt){
   }
 }
 
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, vector<MATRIX>& vt){
+  int sz = vt.size();
+  for(int i=0;i<sz;i++){
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string rt; ss<<i; ss>>rt;
+    save(pt,path+std::string(path_separator)+rt, path_separator,vt[i]);
+  }
+}
+
+
 // ----------- Load --------------
 void load(boost::property_tree::ptree& pt,std::string path, MATRIX& vt, int& status){ std::cout<<"Sorry: load function for MATRIX object is not defined yet\n"; exit(0); }
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator, MATRIX& vt, int& status){ std::cout<<"Sorry: load function for MATRIX object is not defined yet\n"; exit(0); }
 void load(boost::property_tree::ptree& pt,std::string path,vector<MATRIX>& vt,int& status){ std::cout<<"Sorry: load function for vector<MATRIX> object is not defined yet\n"; exit(0); }
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator,vector<MATRIX>& vt,int& status){ std::cout<<"Sorry: load function for vector<MATRIX> object is not defined yet\n"; exit(0); }
 
 
 

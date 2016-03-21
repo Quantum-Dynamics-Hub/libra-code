@@ -26,52 +26,63 @@ namespace libcontext{
 class Context{
 
   std::string path;  // the top-most level of the property tree = the name of the variable of the "context" type
+  char path_separator; //
   boost::property_tree::ptree ctx_pt; // This is the internal representation of the data
 
   public:
 
  
   //------------------------------------------------
-  Context() { path = "glob_context"; } 
+  Context() { path = "glob_context"; path_separator = '.'; } 
   Context(std::string filename){ 
+    path_separator = '.';
     libio::load_xml(filename, ctx_pt);
     int i= 0; BOOST_FOREACH(ptree::value_type &v, ctx_pt){ if(i==0){ path = v.first; } i++;  }
   }
-  Context(const Context& c){  ctx_pt = c.ctx_pt; path = c.path; } 
+  Context(const Context& c){  ctx_pt = c.ctx_pt; path = c.path; path_separator = c.path_separator; } 
   virtual ~Context(){}
 
   // Manupulation of the "path": These functions are essentially for getting and setting the name of the context variable (path)
   void set_path(std::string new_path);
+  void set_path_separator(char _path_separator){ path_separator = _path_separator; }
   std::string get_path();
 
 
   // Add new variables to data-structure
-  void add(std::string varname, int varval);
-  void add(std::string varname, vector<int> varval);
+  template <typename X>
+  void add(std::string varname, X varval){   libio::save(ctx_pt, path+path_separator+varname, path_separator, varval);  }
 
-  void add(std::string varname, std::string varval);
-  void add(std::string varname, vector<std::string> varval);
-
-  void add(std::string varname, double varval);
-  void add(std::string varname, vector<double> varval);
-
-  void add(std::string varname, VECTOR varval);
-  void add(std::string varname, vector<VECTOR> varval);
-
-  void add(std::string varname, QUATERNION varval);
-  void add(std::string varname, vector<QUATERNION> varval);
-
-  void add(std::string varname, MATRIX3x3 varval);
-  void add(std::string varname, vector<MATRIX3x3> varval);
-
-  void add(std::string varname, MATRIX varval);
-  void add(std::string varname, vector<MATRIX> varval);
-
-  void add(Context ctxt);
+  void add_context(Context ctxt);
 
 
 
+  void show_children(std::string _path);
 
+
+  // Get value for given variable name, if exist in datastructure. Or return default value
+  template <typename X>
+  X get1(std::string varname, X default_val){   
+    int st;
+    X varval; 
+
+    libio::load(ctx_pt, path+path_separator+varname, path_separator, varval, st); 
+    if(st){ return varval; }else{ return default_val; }
+
+  }
+
+  template <typename X>
+  X get2(std::string varname, X& default_val){   
+    int st;
+    X varval; 
+
+    libmmath::liblinalg::load(ctx_pt, path+path_separator+varname, path_separator, varval, st); 
+    if(st){ return varval; }else{ return default_val; }
+
+  }
+
+
+
+/*
   // Get value for given variable name, if exist in datastructure. Or return default value
   int get(std::string varname,int default_val);
   vector<int> get(std::string varname,vector<int> default_val);
@@ -93,8 +104,9 @@ class Context{
 
   MATRIX get(std::string varname,MATRIX default_val);
   vector<MATRIX> get(std::string varname,vector<MATRIX> default_val);
+*/
 
-  Context get(std::string varname, Context default_val);
+  Context get_context(std::string varname, Context default_val);
 
 
   

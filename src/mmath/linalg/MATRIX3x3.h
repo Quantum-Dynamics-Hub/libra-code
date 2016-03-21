@@ -285,12 +285,18 @@ class MATRIX3x3{
 typedef std::vector<MATRIX3x3> MATRIX3x3List;
 typedef std::vector<vector<MATRIX3x3> > MATRIX3x3Map;
 
+
 //-------- IO functions --------
 void set_value(int& defined, MATRIX3x3& value, boost::python::object obj, std::string attrName);
 void save(boost::property_tree::ptree& pt,std::string path,MATRIX3x3& vt);
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, MATRIX3x3& vt);
 void save(boost::property_tree::ptree& pt,std::string path,vector<MATRIX3x3>& vt);
+void save(boost::property_tree::ptree& pt,std::string path, char path_separation, vector<MATRIX3x3>& vt);
+
 void load(boost::property_tree::ptree& pt,std::string path,MATRIX3x3& vt,int& status);
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator, MATRIX3x3& vt, int& status);
 void load(boost::property_tree::ptree& pt,std::string path,vector<MATRIX3x3>& vt,int& status);
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator, vector<MATRIX3x3>& vt,int& status);
 
 
 

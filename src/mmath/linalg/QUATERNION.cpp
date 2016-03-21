@@ -59,6 +59,15 @@ void save(boost::property_tree::ptree& pt,std::string path,QUATERNION& vt){
   pt.put(path+".Ly",vt.Ly);  pt.put(path+".Lz",vt.Lz);
 }
 
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, QUATERNION& vt){
+
+  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"Lt", path_separator),vt.Lt);
+  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"Lx", path_separator),vt.Lx);
+  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"Ly", path_separator),vt.Ly);
+  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"Lz", path_separator),vt.Lz);
+}
+
+
 void save(boost::property_tree::ptree& pt,std::string path,vector<QUATERNION>& vt){
   int sz = vt.size();
   for(int i=0;i<sz;i++){
@@ -67,6 +76,16 @@ void save(boost::property_tree::ptree& pt,std::string path,vector<QUATERNION>& v
     save(pt,path+"."+rt,vt[i]);
   }
 }
+
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, vector<QUATERNION>& vt){
+  int sz = vt.size();
+  for(int i=0;i<sz;i++){
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string rt; ss<<i; ss>>rt;
+    save(pt,path+string(path_separator)+rt, path_separator, vt[i]);
+  }
+}
+
 
 
 // ----------- Load --------------
@@ -78,6 +97,17 @@ void load(boost::property_tree::ptree& pt,std::string path, QUATERNION& vt, int&
   libio::load(pt,path+".Ly",vt.Ly, st); if(st==1) {status=1;}
   libio::load(pt,path+".Lz",vt.Lz, st); if(st==1) {status=1;}
 }
+
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator, QUATERNION& vt, int& status){
+  status = 0;
+  int st;
+  libio::load(pt,path+string(path_separator)+"Lt", path_separator, vt.Lt, st); if(st==1) {status=1;}
+  libio::load(pt,path+string(path_separator)+"Lx", path_separator, vt.Lx, st); if(st==1) {status=1;}
+  libio::load(pt,path+string(path_separator)+"Ly", path_separator, vt.Ly, st); if(st==1) {status=1;}
+  libio::load(pt,path+string(path_separator)+"Lz", path_separator, vt.Lz, st); if(st==1) {status=1;}
+}
+
+
 void load(boost::property_tree::ptree& pt,std::string path,vector<QUATERNION>& vt,int& status){
   QUATERNION x; int st;
   status = 0;
@@ -89,6 +119,19 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<QUATERNION>& v
   }catch(std::exception& e){ }
 
 }
+
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator, vector<QUATERNION>& vt,int& status){
+  QUATERNION x; int st;
+  status = 0;
+  try{
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(boost::property_tree::ptree::path_type(path,path_separator))){
+      load(pt,path+string(path_separator)+v.first, path_separator, x, st);
+      if(st==1){ vt.push_back(x); status = 1; }
+    }
+  }catch(std::exception& e){ }
+
+}
+
 
 
 }// namespace liblinalg

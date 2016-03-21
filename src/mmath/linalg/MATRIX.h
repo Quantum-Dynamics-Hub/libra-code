@@ -202,9 +202,14 @@ typedef std::vector<vector<MATRIX> > MATRIXMap;  ///< Data type for storing a ta
 //-------- IO functions --------
 void set_value(int& defined, MATRIX& value, boost::python::object obj, std::string attrName);
 void save(boost::property_tree::ptree& pt,std::string path,MATRIX& vt);
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, MATRIX& vt);
 void save(boost::property_tree::ptree& pt,std::string path,vector<MATRIX>& vt);
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, vector<MATRIX>& vt);
+
 void load(boost::property_tree::ptree& pt,std::string path,MATRIX& vt,int& status);
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator, MATRIX& vt, int& status);
 void load(boost::property_tree::ptree& pt,std::string path,vector<MATRIX>& vt,int& status);
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator,vector<MATRIX>& vt,int& status);
 
 
 

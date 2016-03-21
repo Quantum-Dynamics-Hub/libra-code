@@ -187,6 +187,7 @@ void MATRIX3x3::tensor_product(VECTOR v1,VECTOR v2){
 
 
 
+
 void set_value(int& is_defined, MATRIX3x3& value,boost::python::object obj, std::string attrName){
 
   int has_attr=0;
@@ -205,6 +206,22 @@ void save(boost::property_tree::ptree& pt,std::string path,MATRIX3x3& vt){
   pt.put(path+".zx",vt.zx);  pt.put(path+".zy",vt.zy);  pt.put(path+".zz",vt.zz);
 }
 
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, MATRIX3x3& vt){
+  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"xx", path_separator),vt.xx);
+  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"xy", path_separator),vt.xy);
+  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"xz", path_separator),vt.xz);
+
+  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"yx", path_separator),vt.yx);
+  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"yy", path_separator),vt.yy);
+  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"yz", path_separator),vt.yz);
+
+  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"zx", path_separator),vt.zx);
+  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"zy", path_separator),vt.zy);
+  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"zz", path_separator),vt.zz);
+
+}
+
+
 void save(boost::property_tree::ptree& pt,std::string path,vector<MATRIX3x3>& vt){
   int sz = vt.size();
   for(int i=0;i<sz;i++){
@@ -213,6 +230,16 @@ void save(boost::property_tree::ptree& pt,std::string path,vector<MATRIX3x3>& vt
     save(pt,path+"."+rt,vt[i]);
   }
 }
+
+void save(boost::property_tree::ptree& pt,std::string path, char path_separation, vector<MATRIX3x3>& vt){
+  int sz = vt.size();
+  for(int i=0;i<sz;i++){
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string rt; ss<<i; ss>>rt;
+    save(pt, path+string(path_separation)+rt, path_separation, vt[i]);
+  }
+}
+
 
 // ----------- Load --------------
 void load(boost::property_tree::ptree& pt,std::string path, MATRIX3x3& vt, int& status){
@@ -224,19 +251,49 @@ void load(boost::property_tree::ptree& pt,std::string path, MATRIX3x3& vt, int& 
 
   libio::load(pt,path+".yx",vt.yx, st); if(st==1) {status=1;}
   libio::load(pt,path+".yy",vt.yy, st); if(st==1) {status=1;}
-  libio::load(pt,path+".yz",vt.yz, st); if(st==1) {status=1;}
+  libio::load(pt,path+".yz",vt.yz, st); if(st==1) {status=1;}  
 
   libio::load(pt,path+".zx",vt.zx, st); if(st==1) {status=1;}
   libio::load(pt,path+".zy",vt.zy, st); if(st==1) {status=1;}
   libio::load(pt,path+".zz",vt.zz, st); if(st==1) {status=1;}
 
 }
+
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator, MATRIX3x3& vt, int& status){
+  status = 0;
+  int st;
+  libio::load(pt,path+string(path_separator)+"xx", path_separator, vt.xx, st); if(st==1) {status=1;}
+  libio::load(pt,path+string(path_separator)+"xy", path_separator, vt.xy, st); if(st==1) {status=1;}
+  libio::load(pt,path+string(path_separator)+"xz", path_separator, vt.xz, st); if(st==1) {status=1;}
+
+  libio::load(pt,path+string(path_separator)+"yx", path_separator, vt.yx, st); if(st==1) {status=1;}
+  libio::load(pt,path+string(path_separator)+"yy", path_separator, vt.yy, st); if(st==1) {status=1;}
+  libio::load(pt,path+string(path_separator)+"yz", path_separator, vt.yz, st); if(st==1) {status=1;}
+
+  libio::load(pt,path+string(path_separator)+"zx", path_separator, vt.zx, st); if(st==1) {status=1;}
+  libio::load(pt,path+string(path_separator)+"zy", path_separator, vt.zy, st); if(st==1) {status=1;}
+  libio::load(pt,path+string(path_separator)+"zz", path_separator, vt.zz, st); if(st==1) {status=1;}
+
+}
+
 void load(boost::property_tree::ptree& pt,std::string path,vector<MATRIX3x3>& vt,int& status){
   MATRIX3x3 x; int st;
   status = 0;
   try{
     BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(path)){
       load(pt,path+"."+v.first,x,st);
+      if(st==1){ vt.push_back(x); status = 1; }
+    }
+  }catch(std::exception& e){ }
+
+}
+
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator, vector<MATRIX3x3>& vt,int& status){
+  MATRIX3x3 x; int st;
+  status = 0;
+  try{
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(boost::property_tree::ptree::path_type(path,path_separator))){
+      load(pt,path+string(path_separator)+v.first, path_separator, x,st);
       if(st==1){ vt.push_back(x); status = 1; }
     }
   }catch(std::exception& e){ }

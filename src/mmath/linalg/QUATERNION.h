@@ -262,9 +262,14 @@ typedef std::vector<vector<QUATERNION> > QUATERNIONMap;
 //-------- IO functions --------
 void set_value(int& defined, QUATERNION& value,  boost::python::object obj, std::string attrName);
 void save(boost::property_tree::ptree& pt,std::string path,QUATERNION& vt);
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, QUATERNION& vt);
 void save(boost::property_tree::ptree& pt,std::string path,vector<QUATERNION>& vt);
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, vector<QUATERNION>& vt);
+
 void load(boost::property_tree::ptree& pt,std::string path,QUATERNION& vt,int& status);
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator, QUATERNION& vt, int& status);
 void load(boost::property_tree::ptree& pt,std::string path,vector<QUATERNION>& vt,int& status);
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator, vector<QUATERNION>& vt,int& status);
 
 
 

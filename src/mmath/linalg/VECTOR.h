@@ -352,10 +352,14 @@ typedef std::vector<vector<VECTOR> > VECTORMap;  ///< Data type that holds the t
 //-------- IO functions --------
 void set_value(int& is_defined, VECTOR& value, boost::python::object obj, std::string attrName);
 void save(boost::property_tree::ptree& pt,std::string path,VECTOR& vt);
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, VECTOR& vt);
 void save(boost::property_tree::ptree& pt,std::string path,vector<VECTOR>& vt);
-void load(boost::property_tree::ptree& pt,std::string path,VECTOR& vt,int& status);
-void load(boost::property_tree::ptree& pt,std::string path,vector<VECTOR>& vt,int& status);
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, vector<VECTOR>& vt);
 
+void load(boost::property_tree::ptree& pt,std::string path,VECTOR& vt,int& status);
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator, VECTOR& vt, int& status);
+void load(boost::property_tree::ptree& pt,std::string path,vector<VECTOR>& vt,int& status);
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator, vector<VECTOR>& vt,int& status);
 
 void export_VECTOR_objects();
 

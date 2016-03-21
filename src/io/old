@@ -1,0 +1,374 @@
+
+
+// Overload for basic types
+// double
+void save(boost::property_tree::ptree& pt,std::string path,double& vt ){
+/** 
+  \brief Saves double in the property tree
+
+  \param[in, out] pt Is the property tree to which we add the variable
+  \param[in] path Is the path of the added variable in the property tree. This is essentially an extended name of the added variable.
+  \param[in] vt The double value of the variable we are adding to the property tree.
+*/
+  pt.put(path,vt);
+}
+
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, double& vt ){
+/** 
+  \brief Saves double in the property tree
+
+  \param[in, out] pt Is the property tree to which we add the variable
+  \param[in] path Is the path of the added variable in the property tree. This is essentially an extended name of the added variable.
+  \param[in] path_separator The character used to denote different levels of organization, 
+  "." is default in versions without explicit path separator
+  \param[in] vt The double value of the variable we are adding to the property tree.
+*/
+  
+  pt.put(boost::property_tree::ptree::path_type(path, path_separator),vt);
+}
+
+
+// vector<double>
+void save(boost::property_tree::ptree& pt,std::string path,vector<double>& vt){
+/** 
+  \brief Saves vector of doubles in the property tree
+
+  \param[in, out] pt Is the property tree to which we add the variable
+  \param[in] path Is the path of the added variable in the property tree. This is essentially an extended name of the added variable.
+  \param[in] vt The vector of double values of the variable we are adding to the property tree.
+*/
+
+  int sz = vt.size();
+  for(int i=0;i<sz;i++){
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string rt; ss<<i; ss>>rt;
+    save(pt,path+"."+rt,vt[i]);
+  }
+}
+
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, vector<double>& vt){
+/** 
+  \brief Saves vector of doubles in the property tree
+
+  \param[in, out] pt Is the property tree to which we add the variable
+  \param[in] path Is the path of the added variable in the property tree. This is essentially an extended name of the added variable.
+  \param[in] path_separator The character used to denote different levels of organization, 
+  "." is default in versions without explicit path separator
+  \param[in] vt The vector of double values of the variable we are adding to the property tree.
+*/
+
+  int sz = vt.size();
+  for(int i=0;i<sz;i++){
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string rt; ss<<i; ss>>rt;
+    save(pt,path+std::string(path_separator)+rt, path_separator,vt[i]);
+  }
+}
+
+
+// int
+void save(boost::property_tree::ptree& pt,std::string path,int& vt ){
+/** 
+  \brief Saves integer in the property tree
+
+  \param[in, out] pt Is the property tree to which we add the variable
+  \param[in] path Is the path of the added variable in the property tree. This is essentially an extended name of the added variable.
+  \param[in] vt The double value of the variable we are adding to the property tree.
+*/
+
+  pt.put(path,vt);
+}
+
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, int& vt ){
+/** 
+  \brief Saves integer in the property tree
+
+  \param[in, out] pt Is the property tree to which we add the variable
+  \param[in] path Is the path of the added variable in the property tree. This is essentially an extended name of the added variable.
+  \param[in] path_separator The character used to denote different levels of organization, 
+  "." is default in versions without explicit path separator
+  \param[in] vt The double value of the variable we are adding to the property tree.
+*/
+
+  pt.put(boost::property_tree::ptree::path_type(path, path_separator),vt);
+}
+
+
+// vector<int>
+void save(boost::property_tree::ptree& pt,std::string path,vector<int>& vt){
+/** 
+  \brief Saves vector of integers in the property tree
+
+  \param[in, out] pt Is the property tree to which we add the variable
+  \param[in] path Is the path of the added variable in the property tree. This is essentially an extended name of the added variable.
+  \param[in] vt The vector of integers value of the variable we are adding to the property tree.
+*/
+
+  int sz = vt.size();
+  for(int i=0;i<sz;i++){
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string rt; ss<<i; ss>>rt;
+    save(pt,path+"."+rt,vt[i]);
+  }
+}
+
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, vector<int>& vt){
+/** 
+  \brief Saves vector of integers in the property tree
+
+  \param[in, out] pt Is the property tree to which we add the variable
+  \param[in] path Is the path of the added variable in the property tree. This is essentially an extended name of the added variable.
+  \param[in] path_separator The character used to denote different levels of organization, 
+  "." is default in versions without explicit path separator
+  \param[in] vt The vector of integers value of the variable we are adding to the property tree.
+*/
+
+  int sz = vt.size();
+  for(int i=0;i<sz;i++){
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string rt; ss<<i; ss>>rt;
+    save(pt,path+string(path_separator)+rt,path_separator,vt[i]);
+  }
+}
+
+
+// std::string
+void save(boost::property_tree::ptree& pt,std::string path,std::string& vt ){
+/** 
+  \brief Saves string in the property tree
+
+  \param[in, out] pt Is the property tree to which we add the variable
+  \param[in] path Is the path of the added variable in the property tree. This is essentially an extended name of the added variable.
+  \param[in] vt The string value of the variable we are adding to the property tree.
+*/
+
+  pt.put(path,vt);
+}
+
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, std::string& vt ){
+/** 
+  \brief Saves string in the property tree
+
+  \param[in, out] pt Is the property tree to which we add the variable
+  \param[in] path Is the path of the added variable in the property tree. This is essentially an extended name of the added variable.
+  \param[in] path_separator The character used to denote different levels of organization, 
+  "." is default in versions without explicit path separator
+  \param[in] vt The string value of the variable we are adding to the property tree.
+*/
+
+  pt.put(boost::property_tree::ptree::path_type(path, path_separator),vt);
+}
+
+
+// vector<std::string>
+void save(boost::property_tree::ptree& pt,std::string path,vector<std::string>& vt){
+/** 
+  \brief Saves vector of strings in the property tree
+
+  \param[in, out] pt Is the property tree to which we add the variable
+  \param[in] path Is the path of the added variable in the property tree. This is essentially an extended name of the added variable.
+  \param[in] vt The vector of strings value of the variable we are adding to the property tree.
+*/
+
+  int sz = vt.size();
+  for(int i=0;i<sz;i++){
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string rt; ss<<i; ss>>rt;
+    save(pt,path+"."+rt,vt[i]);
+  }
+}
+
+void save(boost::property_tree::ptree& pt,std::string path, char path_separator, vector<std::string>& vt){
+/** 
+  \brief Saves vector of strings in the property tree
+
+  \param[in, out] pt Is the property tree to which we add the variable
+  \param[in] path Is the path of the added variable in the property tree. This is essentially an extended name of the added variable.
+  \param[in] path_separator The character used to denote different levels of organization, 
+  "." is default in versions without explicit path separator
+  \param[in] vt The vector of strings value of the variable we are adding to the property tree.
+*/
+
+  int sz = vt.size();
+  for(int i=0;i<sz;i++){
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string rt; ss<<i; ss>>rt;
+    save(pt,path+string(path_separator)+rt, path_separator, vt[i]);
+  }
+}
+
+
+
+
+
+//--------------------------------------------------------
+// Overload for basic types
+// double
+void load(boost::property_tree::ptree& pt,std::string path,double& vt, int& status){
+/** 
+  \brief Extracts the double value from the property tree
+
+  \param[in] pt Is the property tree from which we want to extract the value
+  \param[in] path Is the path of the variable to extract from the property tree. 
+                  This is essentially an extended name of the variable to extract.
+  \param[out] vt The double value of the variable we are extrating from the property tree.
+  \param[out] status Is the flag showing the sucess of the extraction: 0 - is no such variable name was found, 
+           1 - if we have completed the extraction sucessfully.
+*/
+
+  status = 1;
+  try{ vt = pt.get<double>(path); } catch(std::exception& e){ status = 0; }
+}
+
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator, double& vt, int& status){
+/** 
+  \brief Extracts the double value from the property tree
+
+  \param[in] pt Is the property tree from which we want to extract the value
+  \param[in] path Is the path of the variable to extract from the property tree. 
+                  This is essentially an extended name of the variable to extract.
+  \param[in] path_separator The character used to denote different levels of organization, 
+  "." is default in versions without explicit path separator
+  \param[out] vt The double value of the variable we are extrating from the property tree.
+  \param[out] status Is the flag showing the sucess of the extraction: 0 - is no such variable name was found, 
+           1 - if we have completed the extraction sucessfully.
+*/
+
+  status = 1;
+  try{ vt = pt.get<double>(boost::property_tree::ptree::path_type(path, path_separator)); }
+  catch(std::exception& e){ status = 0; }
+}
+
+
+
+
+
+// vector<double>
+void load(boost::property_tree::ptree& pt,std::string path,vector<double>& vt,int& status){
+/** 
+  \brief Extracts the vector of double values from the property tree
+
+  \param[in] pt Is the property tree from which we want to extract the value
+  \param[in] path Is the path of the variable to extract from the property tree. 
+                  This is essentially an extended name of the variable to extract.
+  \param[out] vt The vector of double values of the variable we are extrating from the property tree.
+  \param[out] status Is the flag showing the sucess of the extraction: 0 - is no such variable name was found, 
+           1 - if we have completed the extraction sucessfully.
+*/
+
+  double x; int st;
+  status = 0;
+  try{
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(path)){
+      load(pt,path+"."+v.first,x,st);
+      if(st==1){ vt.push_back(x); status = 1; }
+    }
+  }catch(std::exception& e){ }
+}
+
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator, vector<double>& vt,int& status){
+/** 
+  \brief Extracts the vector of double values from the property tree
+
+  \param[in] pt Is the property tree from which we want to extract the value
+  \param[in] path Is the path of the variable to extract from the property tree. 
+                  This is essentially an extended name of the variable to extract.
+  \param[in] path_separator The character used to denote different levels of organization, 
+  "." is default in versions without explicit path separator
+  \param[out] vt The vector of double values of the variable we are extrating from the property tree.
+  \param[out] status Is the flag showing the sucess of the extraction: 0 - is no such variable name was found, 
+           1 - if we have completed the extraction sucessfully.
+*/
+
+  double x; int st;
+  status = 0;
+  try{
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(path)){
+      load(pt,path+string(path_separator)+v.first, path_separator,x,st);
+      if(st==1){ vt.push_back(x); status = 1; }
+    }
+  }catch(std::exception& e){ }
+}
+
+
+// int
+void load(boost::property_tree::ptree& pt,std::string path,int& vt, int& status){
+/** 
+  \brief Extracts the integer value from the property tree
+
+  \param[in] pt Is the property tree from which we want to extract the value
+  \param[in] path Is the path of the variable to extract from the property tree. 
+                  This is essentially an extended name of the variable to extract.
+  \param[out] vt The integer value of the variable we are extrating from the property tree.
+  \param[out] status Is the flag showing the sucess of the extraction: 0 - is no such variable name was found, 
+           1 - if we have completed the extraction sucessfully.
+*/
+
+  status = 1;
+  try{ vt = pt.get<int>(path); } catch(std::exception& e){ status = 0; }
+}
+
+// vector<int>
+void load(boost::property_tree::ptree& pt,std::string path,vector<int>& vt,int& status){
+/** 
+  \brief Extracts the vector of integer values from the property tree
+
+  \param[in] pt Is the property tree from which we want to extract the value
+  \param[in] path Is the path of the variable to extract from the property tree. 
+                  This is essentially an extended name of the variable to extract.
+  \param[out] vt The vector of integer values of the variable we are extrating from the property tree.
+  \param[out] status Is the flag showing the sucess of the extraction: 0 - is no such variable name was found, 
+           1 - if we have completed the extraction sucessfully.
+*/
+
+  int x; int st;
+  status = 0;
+  try{
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(path)){
+      load(pt,path+"."+v.first,x,st);
+      if(st==1){ vt.push_back(x); status = 1; }
+    }
+  }catch(std::exception& e){ }
+}
+
+
+// std::string
+void load(boost::property_tree::ptree& pt,std::string path,std::string& vt, int& status){
+/** 
+  \brief Extracts the string value from the property tree
+
+  \param[in] pt Is the property tree from which we want to extract the value
+  \param[in] path Is the path of the variable to extract from the property tree. 
+                  This is essentially an extended name of the variable to extract.
+  \param[out] vt The string value of the variable we are extrating from the property tree.
+  \param[out] status Is the flag showing the sucess of the extraction: 0 - is no such variable name was found, 
+           1 - if we have completed the extraction sucessfully.
+*/
+
+  status = 1;
+  try{ vt = pt.get<std::string>(path); } catch(std::exception& e){ status = 0; }
+}
+
+// vector<std::string>
+void load(boost::property_tree::ptree& pt,std::string path,vector<std::string>& vt,int& status){
+/** 
+  \brief Extracts the vector of string values from the property tree
+
+  \param[in] pt Is the property tree from which we want to extract the value
+  \param[in] path Is the path of the variable to extract from the property tree. 
+                  This is essentially an extended name of the variable to extract.
+  \param[out] vt The vector of string values of the variable we are extrating from the property tree.
+  \param[out] status Is the flag showing the sucess of the extraction: 0 - is no such variable name was found, 
+           1 - if we have completed the extraction sucessfully.
+*/
+
+  std::string x; int st;
+  status = 0;
+  try{
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(path)){
+      load(pt,path+"."+v.first,x,st);
+      if(st==1){ vt.push_back(x); status = 1; }
+    }
+  }catch(std::exception& e){ }
+}
+
