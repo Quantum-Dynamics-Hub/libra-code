@@ -24,36 +24,29 @@ print "from cygmmath import *"
 from cygmmath import *
 
 
-print "\nTest 2: Using timer"
-print "t = Timer()"
-print "t.start()"
-print "x = 0.0"
-print "for i in range(0,1000000):"
-print "    x = x + math.sin(i*math.pi)"
-print "t.stop()"
-print "t.show()"
-
+print "\nTest 2: Construct timer object"
 t = Timer()
-t.start()
-x = 0.0
-for i in range(0,1000000):
-    x = x + math.sin(i*math.pi)
-t.stop()
-print "Time to compute = ", t.show(), " sec"
+
+print "\nTest 3: Several cycles with same timer - return accumulated time"
+for a in xrange(3):
+    x = 0.0
+    t.start()
+    for i in range(0,1000000):
+        x = x + math.sin(i*math.pi)
+    t.stop()
+    print "Time to compute = ", t.show(), " sec"
 
 
-print "t = Timer()"
-print "t.start()"
-print "x = 0.0"
-print "for i in range(0,10000000):"
-print "    x = x + math.sin(i*math.pi)"
-print "t.stop()"
-print "t.show()"
-t = Timer()
-t.start()
-x = 0.0
-for i in range(0,10000000):
-    x = x + math.sin(i*math.pi)
-t.stop()
-print "Time to compute = ", t.show(), " sec"
+print "\nTest 4: Several cycles with the creation of a new Timer every time - return time for each cycle"
+for a in xrange(3):
+    t = Timer()
+    t.start()
+    x = 0.0
+    for i in range(0,1000000):
+        x = x + math.sin(i*math.pi)
+    t.stop()
+    print "Time to compute = ", t.show(), " sec"
+
+
+
 
