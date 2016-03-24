@@ -23,30 +23,39 @@ sys.path.insert(1,cwd+"/../../_build/src/mmath/linalg")
 
 print "\nTest 1: Importing the library and its content"
 from cygmmath import *
-from cygmeigen import *
-from cyglinalg import *
+#from cygmeigen import *
+#from cyglinalg import *
 
 
 print "\n Test2: Setting up "
 H = MATRIX(2,2)
 H.set(0,0, -0.001);  H.set(0,1, 0.001)
 H.set(1,0, 0.001);   H.set(1,1,  0.001)
+print "H = \n"; H.show_matrix()
 
+cH = CMATRIX(H); cH.show_matrix()
 
 S = MATRIX(2,2)
-S.set(0,0, 1.0);   S.set(0,1, 0.0)
-S.set(1,0, 0.0);   S.set(1,1, 1.0)
+S.set(0,0, 1.0);   S.set(0,1, 0.5)
+S.set(1,0, 0.5);   S.set(1,1, 1.0)
+print "S = \n"; S.show_matrix()
+
+cS = CMATRIX(S); cS.show_matrix()
+
 
 E = CMATRIX(2,2)
 C = CMATRIX(2,2)
 
 solve_eigen(2, H, S, E, C)
 
-C.show()
+print "E = \n"; E.show_matrix()
+print "C = \n"; C.show_matrix()
 
+print "H*C = \n"; (cH*C).show_matrix()
+print "S*C*E = \n"; (cS*C*E).show_matrix()
 
-print "H = \n"; H.show_matrix()
+print "C.H() * S * C\n"; (C.H() * cS * C).show_matrix()
 
-X = CMATRIX(H)
-print "X = \n"; X.show()
+#X = CMATRIX(H)
+#print "X = \n"; X.show_matrix()
 
