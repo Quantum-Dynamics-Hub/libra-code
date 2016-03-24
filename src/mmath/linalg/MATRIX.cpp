@@ -1365,8 +1365,18 @@ void pop_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset){
   X->num_of_cols = X->num_of_rows >= subset_size
 */
 
+  if(X->num_of_cols!=X->num_of_rows){ cout<<"Error in pop_submatrix: The source matrix, X, is not square!\nExiting...\n"; exit(0); }
+  if(x->num_of_cols!=x->num_of_rows){ cout<<"Error in pop_submatrix: The target matrix, x, is not square!\nExiting...\n"; exit(0); }
+
   int N = X->num_of_cols;
   int n = x->num_of_cols;
+
+  if(N<n){ cout<<"Error in pop_submatrix: The size of the source matrix, X, is smaller than that of the target matrix, x!\nExiting...\n"; exit(0); }
+  if(n!=subset.size()){
+    cout<<"Error in pop_submatrix: the target matrix size ("<<n<<") is not consistent with the stensil size (";
+    cout<<subset.size()<<")!\nExiting...\n"; exit(0); 
+  }
+
 
   int i,j,a,b;
 
@@ -1380,6 +1390,20 @@ void pop_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset){
 
 }// void pop_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset)
 
+void pop_submatrix(MATRIX& X,MATRIX& x,vector<int>& subset){  pop_submatrix(&X, &x, subset); }
+
+void pop_submatrix(MATRIX& X,MATRIX& x,boost::python::list subset){  
+
+  // Convert input list to vector
+  int sz = boost::python::len(subset);
+  vector<int> _subset(sz,0.0);
+  for(int i=0;i<sz;i++){ _subset[i] = boost::python::extract<int>(subset[i]);  }
+
+  pop_submatrix(&X, &x, _subset);
+
+}
+
+
 void push_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset){
 /**
   Pushes the smaller submatrix x back to the bigger matrix X, according to indices given in <subset>
@@ -1388,8 +1412,17 @@ void push_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset){
   X->num_of_cols = X->num_of_rows >= subset_size
 */
 
+  if(X->num_of_cols!=X->num_of_rows){ cout<<"Error in pop_submatrix: The target matrix, X, is not square!\nExiting...\n"; exit(0); }
+  if(x->num_of_cols!=x->num_of_rows){ cout<<"Error in pop_submatrix: The source matrix, x, is not square!\nExiting...\n"; exit(0); }
+
   int N = X->num_of_cols;
   int n = x->num_of_cols;
+
+  if(N<n){ cout<<"Error in pop_submatrix: The size of the target matrix, X, is smaller than that of the source matrix, x!\nExiting...\n"; exit(0); }
+  if(n!=subset.size()){
+    cout<<"Error in pop_submatrix: the source matrix size ("<<n<<") is not consistent with the stensil size (";
+    cout<<subset.size()<<")!\nExiting...\n"; exit(0); 
+  }
 
   int i,j,a,b;
 
@@ -1403,6 +1436,18 @@ void push_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset){
 
 }// void push_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset)
 
+void push_submatrix(MATRIX& X,MATRIX& x,vector<int>& subset){  push_submatrix(&X, &x, subset); }
+
+void push_submatrix(MATRIX& X,MATRIX& x,boost::python::list subset){  
+
+  // Convert input list to vector
+  int sz = boost::python::len(subset);
+  vector<int> _subset(sz,0.0);
+  for(int i=0;i<sz;i++){ _subset[i] = boost::python::extract<int>(subset[i]);  }
+
+  push_submatrix(&X, &x, _subset);
+
+}
 
 
 

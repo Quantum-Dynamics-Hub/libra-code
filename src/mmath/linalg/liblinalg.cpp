@@ -244,6 +244,18 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
   ;
 
 
+  void (*expt_push_submatrix_v1)(MATRIX& X,MATRIX& x,vector<int>& subset) = &push_submatrix;
+  void (*expt_push_submatrix_v2)(MATRIX& X,MATRIX& x,boost::python::list subset) = &push_submatrix;
+  void (*expt_pop_submatrix_v1)(MATRIX& X,MATRIX& x,vector<int>& subset) = &pop_submatrix;
+  void (*expt_pop_submatrix_v2)(MATRIX& X,MATRIX& x,boost::python::list subset) = &pop_submatrix;
+
+  def("push_submatrix", expt_push_submatrix_v1);
+  def("push_submatrix", expt_push_submatrix_v2);
+  def("pop_submatrix", expt_pop_submatrix_v1);
+  def("pop_submatrix", expt_pop_submatrix_v2);
+
+
+
 
   class_<MATRIX3x3>("MATRIX3x3",init<>())      
       .def(init<const VECTOR&, const VECTOR&, const VECTOR&>())

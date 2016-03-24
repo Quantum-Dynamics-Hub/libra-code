@@ -193,8 +193,15 @@ public:
 };
 
 
-void pop_submatrix(MATRIX*,MATRIX*,vector<int>&);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
-void push_submatrix(MATRIX*,MATRIX*,vector<int>&); ///< Push a smaller matrix into a bigger one according to the specified pattern
+void pop_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
+void push_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset); ///< Push a smaller matrix into a bigger one according to the specified pattern
+void pop_submatrix(MATRIX& X,MATRIX& x,vector<int>& subset);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
+void push_submatrix(MATRIX& X,MATRIX& x,vector<int>& subset); ///< Push a smaller matrix into a bigger one according to the specified pattern
+void pop_submatrix(MATRIX& X,MATRIX& x,boost::python::list subset);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
+void push_submatrix(MATRIX& X,MATRIX& x,boost::python::list subset); ///< Push a smaller matrix into a bigger one according to the specified pattern
+
+
+
 
 typedef std::vector<MATRIX> MATRIXList;  ///< Data type for storing a vector of MATRIX objects
 typedef std::vector<vector<MATRIX> > MATRIXMap;  ///< Data type for storing a table (grid) of MATRIX objects
