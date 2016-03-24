@@ -1,0 +1,71 @@
+#*********************************************************************************
+#* Copyright (C) 2015 Alexey V. Akimov
+#*
+#* This file is distributed under the terms of the GNU General Public License
+#* as published by the Free Software Foundation, either version 2 of
+#* the License, or (at your option) any later version.
+#* See the file LICENSE in the root directory of this distribution
+#* or <http://www.gnu.org/licenses/>.
+#*
+#*********************************************************************************/
+
+import os
+import sys
+import math
+
+# Fisrt, we add the location of the library to test to the PYTHON path
+cwd = os.getcwd()
+print "Current working directory", cwd
+sys.path.insert(1,cwd+"/../../_build/src/mmath")
+
+
+print "\nTest 1: Importing the library and its content"
+print "from cygmmath import *"
+from cygmmath import *
+
+N = 5
+A = MATRIX(N,N)
+B = MATRIX(N,N)
+for i in range(0,N):
+    for j in range(0,N):
+        A.set(i,j,-2.0*i+j*j )
+        B.set(i,j,0.0 )
+
+print "The original matrix A"
+A.show_matrix()
+
+print "The original matrix B"
+B.show_matrix()
+
+a2x2 = MATRIX(2,2)
+print "Extracting with stencil [0,1]"
+pop_submatrix(A,a2x2, [0,1]); a2x2.show_matrix()
+
+print "Extracting with stencil [3,4]"
+pop_submatrix(A,a2x2, [3,4]); a2x2.show_matrix()
+
+print "Extracting with stencil [1,3]"
+pop_submatrix(A,a2x2, [1,3]); a2x2.show_matrix()
+
+print "Pushing 2x2 matrix with stencil [0,1]"
+push_submatrix(B,a2x2, [0,1]); B.show_matrix()
+
+B = B*0.0
+
+a3x3 = MATRIX(3,3)
+print "Extracting 3x3 matrix with stencil [0,1,2]"
+pop_submatrix(A,a3x3, [0,1,2]); a3x3.show_matrix()
+print "Pushing 3x3 matrix into B with stencil [0,3,4]"
+push_submatrix(B,a3x3, [0,3,4]); B.show_matrix()
+print "Pushing another, a 2x2, matrix into B with stencil [0,1]"
+push_submatrix(B,a2x2, [0,1]); B.show_matrix()
+
+
+
+
+
+
+
+
+
+
