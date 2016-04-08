@@ -40,12 +40,12 @@ void export_converters_objects(){
   vector<MATRIX> (*expt_Py2Cpp_v5)(boost::python::list x) = &Py2Cpp;
   vector<CMATRIX> (*expt_Py2Cpp_v6)(boost::python::list x) = &Py2Cpp;
 
-  def("Py2Cpp", expt_Py2Cpp_v1);
-  def("Py2Cpp", expt_Py2Cpp_v2);
-  def("Py2Cpp", expt_Py2Cpp_v3);
-  def("Py2Cpp", expt_Py2Cpp_v4);
-  def("Py2Cpp", expt_Py2Cpp_v5);
-  def("Py2Cpp", expt_Py2Cpp_v6);
+  def("Py2Cpp_int", expt_Py2Cpp_v1);
+  def("Py2Cpp_double", expt_Py2Cpp_v2);
+  def("Py2Cpp_string", expt_Py2Cpp_v3);
+  def("Py2Cpp_VECTOR", expt_Py2Cpp_v4);
+  def("Py2Cpp_MATRIX", expt_Py2Cpp_v5);
+  def("Py2Cpp_CMATRIX", expt_Py2Cpp_v6);
 
   boost::python::list (*expt_Cpp2Py_v1)(vector<int>& x) = &Cpp2Py;
   boost::python::list (*expt_Cpp2Py_v2)(vector<double>& x) = &Cpp2Py;
