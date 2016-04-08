@@ -285,6 +285,18 @@ void save_xml(std::string filename, boost::property_tree::ptree& pt);
 void load_xml(std::string filename, boost::property_tree::ptree& pt);
 
 
+
+int read_file(std::string filename,int verbose,vector<std::string>& A);
+
+void file2matrix(std::string filename,vector< vector<double> >& m);
+void file2matrix(std::string filename,vector< vector<double> >& m,double scl);
+void file2matrix(std::string filename,vector< vector<int> >& m);
+
+void show_2D(vector< vector<double> >& in);
+
+
+
+
 }// libio
 
 #endif // IO_H
