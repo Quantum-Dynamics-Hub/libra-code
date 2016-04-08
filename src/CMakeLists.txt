@@ -61,6 +61,10 @@ ADD_SUBDIRECTORY("qchem_tools")
 MESSAGE("Going into subdirectory solvers...")
 ADD_SUBDIRECTORY("solvers")
 
+MESSAGE("Going into subdirectory util...")
+ADD_SUBDIRECTORY("util")
+
+
 
 
 
