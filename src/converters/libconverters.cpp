@@ -33,6 +33,35 @@ void export_converters_objects(){
   def("nuclear_to_system", expt_nuclear_to_system_v1);
 
 
+  vector<int> (*expt_Py2Cpp_v1)(boost::python::list x) = &Py2Cpp;
+  vector<double> (*expt_Py2Cpp_v2)(boost::python::list x) = &Py2Cpp;
+  vector<std::string> (*expt_Py2Cpp_v3)(boost::python::list x) = &Py2Cpp;
+  vector<VECTOR> (*expt_Py2Cpp_v4)(boost::python::list x) = &Py2Cpp;
+  vector<MATRIX> (*expt_Py2Cpp_v5)(boost::python::list x) = &Py2Cpp;
+  vector<CMATRIX> (*expt_Py2Cpp_v6)(boost::python::list x) = &Py2Cpp;
+
+  def("Py2Cpp", expt_Py2Cpp_v1);
+  def("Py2Cpp", expt_Py2Cpp_v2);
+  def("Py2Cpp", expt_Py2Cpp_v3);
+  def("Py2Cpp", expt_Py2Cpp_v4);
+  def("Py2Cpp", expt_Py2Cpp_v5);
+  def("Py2Cpp", expt_Py2Cpp_v6);
+
+  boost::python::list (*expt_Cpp2Py_v1)(vector<int>& x) = &Cpp2Py;
+  boost::python::list (*expt_Cpp2Py_v2)(vector<double>& x) = &Cpp2Py;
+  boost::python::list (*expt_Cpp2Py_v3)(vector<std::string>& x) = &Cpp2Py;
+  boost::python::list (*expt_Cpp2Py_v4)(vector<VECTOR>& x) = &Cpp2Py;
+  boost::python::list (*expt_Cpp2Py_v5)(vector<MATRIX>& x) = &Cpp2Py;
+  boost::python::list (*expt_Cpp2Py_v6)(vector<CMATRIX>& x) = &Cpp2Py;
+
+  def("Cpp2Py", expt_Cpp2Py_v1);
+  def("Cpp2Py", expt_Cpp2Py_v2);
+  def("Cpp2Py", expt_Cpp2Py_v3);
+  def("Cpp2Py", expt_Cpp2Py_v4);
+  def("Cpp2Py", expt_Cpp2Py_v5);
+  def("Cpp2Py", expt_Cpp2Py_v6);
+
+
   class_< StringList >("StringList")
     .def(vector_indexing_suite< StringList >())
 //    .def("__len__", &StringList::size)

@@ -44,6 +44,41 @@ typedef std::map<std::string, vector<double> > StringVDoubleMap;
 //boost::python::dict map_to_dict(std::map<std::string, double> map_);
 
 
+
+template<class T>
+vector<T> Py2Cpp(boost::python::list x){
+/** 
+  Converts the input Python list to vector<T> object
+*/
+
+  int sz = boost::python::len(x);
+  vector<T> res(sz);
+
+  for(int i=0;i<sz;i++){ 
+    res[i] = boost::python::extract<T>(x[i]);
+  }
+
+  return res;
+}
+
+template<class T>
+boost::python::list Cpp2Py(vector<T>& x){
+/**
+  Converts the vector<T> object into Python list
+*/
+
+  int sz = x.size();
+  boost::python::list res;
+
+  for(int i=0;i<sz;i++){ res.append(x[i]); }
+
+  return res;
+}
+
+
+
+
+
 /// from : https://wiki.python.org/moin/boost.python/StlContainers
 void IndexError();
 void KeyError();
