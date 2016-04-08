@@ -59,7 +59,30 @@ int is_in_vector(int a, vector<int>& A, int& pos){
   return res;
 }
 
-int is_in_vector2(int a, vector<int>& A, vector<int>& indx){
+boost::python::list is_in_vector2(int a, vector<int>& A){
+/**
+  This function checks whether the integer a is present in the vector of integers A
+  The function returns a list of results, X:
+  X[0] -  1 if the element is found, 0 otherwise
+  X[1] - the position of the element a in vector A, if present. It is set to -1 otherwise
+  If there are more occurences of a in A, the position of the last one will be returned into pos
+  \param[in] a the element we search for in vector of integers
+  \param[in] A the vector of integers in which we search for a specific integer
+*/
+
+  int pos = -1;
+  int res = 0;
+  int sz = A.size();
+  for(int i=0;i<sz;i++){ if(a==A[i]){ res=1; pos = i; } }
+
+  boost::python::list X;
+  X.append(res); X.append(pos);
+
+  return X;
+}
+
+
+int is_in_vector(int a, vector<int>& A, vector<int>& indx){
 /** 
   This function returns how many times integer-valued element a is found in the vector of integers A
   the argument indx will contain the positions at which a is found in A
@@ -92,6 +115,30 @@ int is_repeating(vector<int>& A,int& reap){
 
   return res;
 }
+
+boost::python::list is_repeating(vector<int>& A){
+/**
+  This function finds out if there are repeating elements in vector A
+  Returns the results in the list X:
+  X[0] - 1-if there are repeating elements, 0 - if there are no
+  X[1] - the first value that is present in the input vetor A more than 1 time
+  \param[in] A the original input vector of integers
+*/
+  int res = 0;
+  int sz = A.size();
+  int reap;
+
+  for(int i=0;i<sz-1;i++){
+    vector<int> tmp = std::vector<int>(A.begin()+i+1,A.end());
+    if(is_in_vector(A[i],tmp)){ res = 1; reap = A[i]; break; }
+  }
+
+  boost::python::list X;
+  X.append(res); X.append(reap);
+
+  return X;
+}
+
 
 
 int delta(vector<int>& A,vector<int>& B,int& a,int& b){
@@ -138,8 +185,8 @@ int delta(vector<int>& A,vector<int>& B,int& a,int& b){
   for(i=0;i<sz;i++){
     int n_in_a,n_in_b;
     vector<int> tmpa,tmpb;
-    n_in_a = is_in_vector2(aC[i],aA,tmpa);
-    n_in_b = is_in_vector2(aC[i],aB,tmpb);
+    n_in_a = is_in_vector(aC[i],aA,tmpa);
+    n_in_b = is_in_vector(aC[i],aB,tmpb);
     int d = n_in_a - n_in_b;
     if (d>0){ nexc += d;   }
     if(d==1){ a = aC[i]; }
@@ -155,7 +202,16 @@ int delta(vector<int>& A,vector<int>& B,int& a,int& b){
   return res;
 }
 
+boost::python::list delta(vector<int>& A,vector<int>& B){
 
+  int a, b, res;
+  res = delta(A,B,a,b);
+
+  boost::python::list X;
+  X.append(res); X.append(a); X.append(b);
+
+  return X;
+}
 
 
 //-------------------- Operations on strings ----------------------------

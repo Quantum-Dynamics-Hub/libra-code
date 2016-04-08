@@ -31,17 +31,20 @@ void export_util_objects(){
   def("show_vector", expt_show_vector_v1);
   
   int (*expt_is_in_vector_v1)(int a, vector<int>& A) = &is_in_vector;
-  int (*expt_is_in_vector_v2)(int a, vector<int>& A, int& pos) = &is_in_vector;
-  int (*expt_is_in_vector_v3)(int a, vector<int>& A, vector<int>& indx) = &is_in_vector2;
+  int (*expt_is_in_vector_v2)(int a, vector<int>& A, vector<int>& indx) = &is_in_vector;
+  boost::python::list (*expt_is_in_vector_v3)(int a, vector<int>& A) = &is_in_vector2;
   def("is_in_vector", expt_is_in_vector_v1);
   def("is_in_vector", expt_is_in_vector_v2);
   def("is_in_vector", expt_is_in_vector_v3);
 
-  int (*expt_is_repeating_v1)(vector<int>& A,int& reap) = &is_repeating;
+
+  boost::python::list (*expt_is_repeating_v1)(vector<int>& A) = &is_repeating;
   def("is_repeating", expt_is_repeating_v1);  
   
   int (*expt_delta_v1)(vector<int>& A,vector<int>& B,int& a,int& b) = &delta;
+  boost::python::list (*expt_delta_v2)(vector<int>& A,vector<int>& B) = &delta;
   def("delta", expt_delta_v1);  
+  def("delta", expt_delta_v2);  
 
   void (*expt_split_line_v1)(std::string line, vector<std::string>& arr) = &split_line;
   void (*expt_split_line_v2)(std::string line,vector<std::string>& arr,char delim) = &split_line;

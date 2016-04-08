@@ -34,11 +34,18 @@ namespace libutil{
 
 // Operations on the the vectors of integers
 void show_vector(vector<int>& A);
+
 int is_in_vector(int a, vector<int>& A);
 int is_in_vector(int a, vector<int>& A, int& pos);
-int is_in_vector2(int a, vector<int>& A, vector<int>& indx);
+int is_in_vector(int a, vector<int>& A, vector<int>& indx);
+boost::python::list is_in_vector2(int a, vector<int>& A);
+
+
 int is_repeating(vector<int>& A,int& reap);
+boost::python::list is_repeating(vector<int>& A);
+
 int delta(vector<int>& A,vector<int>& B,int& a,int& b);
+boost::python::list delta(vector<int>& A,vector<int>& B);
 
 // Operations on strings ("lines")
 void split_line(std::string line, vector<std::string>& arr);
