@@ -65,12 +65,25 @@ MESSAGE("Going into subdirectory util...")
 ADD_SUBDIRECTORY("util")
 
 
+#
+#  Source files and headers in this directory
+#
+file(GLOB LIBRA_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
+file(GLOB LIBRA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${LIBRA_HEADERS}) 
+
+ADD_LIBRARY(libra_core SHARED ${LIBRA_SRC})
+ADD_LIBRARY(libra_core_stat STATIC ${LIBRA_SRC})
+
+TARGET_LINK_LIBRARIES(libra_core      util_stat solvers_stat qchem_tools_stat scripts_stat converters_stat dyn_stat hamiltonian_stat pot_stat cell_stat qchem_stat chemobjects_stat mmath_stat context_stat io_stat calculators_stat ${ext_libs}  )
+TARGET_LINK_LIBRARIES(libra_core_stat util_stat solvers_stat qchem_tools_stat scripts_stat converters_stat dyn_stat hamiltonian_stat pot_stat cell_stat qchem_stat chemobjects_stat mmath_stat context_stat io_stat calculators_stat ${ext_libs}  )
 
 
+#
+#  Copy python files
+#
+add_custom_target(copy-libra-py ALL
+    COMMAND cmake -E copy_directory ${CMAKE_SOURCE_DIR}/src/libra_py ${CMAKE_BINARY_DIR}/src/libra_py
+)
 
-
-
-
-
-
+#    COMMAND cmake -E copy ${CMAKE_SOURCE_DIR}/src/__init__.py ${CMAKE_BINARY_DIR}/src/__init__.py
 
