@@ -7,5 +7,5 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 #***********************************************************/
 
-__all__ = ["init_system", "LoadPT"]
+__all__ = ["init_system", "init_ensembles", "LoadPT"]
 
