@@ -1,0 +1,95 @@
+FORCE_FIELD  GAFF
+
+SIGMA_COMB_RULE      SUM
+EPSILON_COMB_RULE    GEOMETRIC
+VDW_SCALE13          0.0
+VDW_SCALE14          0.5
+ELEC_SCALE13         0.0
+ELEC_SCALE14         0.833333
+
+
+
+Format:
+
+  type:     string            int         string       double       double         double          double
+  meaning:  keyword   Atom_ff_int_type  Atom_ff_type  Atom_sigma   Atom_epsilon   Atom_C_star   Atom_Z_star
+
+
+// Basic atom types
+TYPE    1    c     1.9080  0.0860   1.339    1.183               Sp2 C carbonyl group 
+TYPE    2    c1    1.9080  0.0860   1.339    1.183               Sp C
+TYPE    3    c2    1.9080  0.0860   1.339    1.183               Sp2 C  
+TYPE    4    c3    1.9080  0.1094   1.339    1.183               Sp3 C
+TYPE    5    ca    1.9080  0.0860   1.339    1.183               Sp2 C in pure aromatic systems
+TYPE    6    n     1.8240  0.1700   1.300    1.212               Sp2 nitrogen in amide groups
+TYPE    7    n1    1.8240  0.1700   1.300    1.212               Sp N  
+TYPE    8    n2    1.8240  0.1700   1.300    1.212               aliphatic Sp2 N with two connected atoms 
+TYPE    9    n3    1.8240  0.1700   1.300    1.212               Sp3 N with three connected atoms
+TYPE   10    n4    1.8240  0.1700   1.300    1.212               Sp3 N with four connected atoms 
+TYPE   11    na    1.8240  0.1700   1.300    1.212               Sp2 N with three connected atoms 
+TYPE   12    nh    1.8240  0.1700   1.300    1.212               Amine N connected one or more aromatic rings 
+TYPE   13    no    1.8240  0.1700   1.300    1.212               Nitro N  
+TYPE   14    o     1.6612  0.2100   1.249    1.219               Oxygen with one connected atom
+TYPE   15    oh    1.7210  0.2104   1.249    1.219               Oxygen in hydroxyl group
+TYPE   16    os    1.6837  0.1700   1.249    1.219               Ether and ester oxygen
+TYPE   17    s2    2.0000  0.2500   1.448    1.280               S with two connected atom, involved at least one double bond  
+TYPE   18    sh    2.0000  0.2500   1.448    1.280               Sp3 S connected with hydrogen 
+TYPE   19    ss    2.0000  0.2500   1.448    1.280               Sp3 S in thio-ester and thio-ether
+TYPE   20    s4    2.0000  0.2500   1.448    1.280               S with three connected atoms 
+TYPE   21    s6    2.0000  0.2500   1.448    1.280               S with four connected atoms 
+TYPE   22    p2    2.1000  0.2000   0.906    1.620               Phosphate with two connected atoms 
+TYPE   23    p3    2.1000  0.2000   0.906    1.620               Phosphate with three connected atoms, such as PH3
+TYPE   24    p4    2.1000  0.2000   0.906    1.620               Phosphate with three connected atoms, such as O=P(CH3)2
+TYPE   25    p5    2.1000  0.2000   0.906    1.620               Phosphate with four connected atoms, such as O=P(OH)3
+TYPE   26    hc    1.4870  0.0157   0.000    0.784               H bonded to aliphatic carbon without electrwd. group 
+TYPE   27    ha    1.4590  0.0150   0.000    0.784               H bonded to aromatic carbon  
+TYPE   28    hn    0.6000  0.0157   0.000    0.784               H bonded to nitrogen atoms
+TYPE   29    ho    0.0000  0.0000   0.000    0.784               Hydroxyl group
+TYPE   30    hs    0.6000  0.0157   0.000    0.784               Hydrogen bonded to sulphur 
+TYPE   31    hp    0.6000  0.0157   0.000    0.784               H bonded to phosphate 
+TYPE   32    f     1.75    0.0610   0.000    1.166               Fluorine
+TYPE   33    cl    1.948   0.2650   0.000    1.272               Chlorine 
+TYPE   34    br    2.22    0.3200   0.000    1.378               Bromine 
+TYPE   35    i     2.35    0.4000   0.000    1.398               Iodine 
+
+
+// Additional atom types
+TYPE   36    cc    1.9080  0.0860   1.339    1.183               Sp2 carbons in non-pure aromatic systems
+TYPE   37    ce    1.9080  0.0860   1.339    1.183               Inner Sp2 carbons in conjugated systems
+TYPE   38    cp    1.9080  0.0860   1.339    1.183               Head Sp2 C that connect two rings in biphenyl sys. 
+TYPE   39    cu    1.9080  0.0860   1.339    1.183               Sp2 carbons in triangle systems
+TYPE   40    cv    1.9080  0.0860   1.339    1.183               Sp2 carbons in square systems
+TYPE   41    cx    1.9080  0.0860   1.339    1.183               Sp3 carbons in triangle systems
+TYPE   42    cy    1.9080  0.0860   1.339    1.183               Sp3 carbons in square systems
+TYPE   43    nb    1.8240  0.1700   1.300    1.212               Sp2 N in pure aromatic systems 
+TYPE   44    nc    1.8240  0.1700   1.300    1.212               Sp2 N in non-pure aromatic systems
+TYPE   45    ne    1.8240  0.1700   1.300    1.212               Inner Sp2 N in conjugated systems
+TYPE   46    pb    2.1000  0.2000   0.906    1.620               Sp2 P in pure aromatic systems 
+TYPE   47    pc    2.1000  0.2000   0.906    1.620               Sp2 P in non-pure aromatic systems
+TYPE   48    pe    2.1000  0.2000   0.906    1.620               Inner Sp2 P in conjugated systems
+TYPE   49    px    2.1000  0.2000   0.906    1.620               Special p4 in conjugated systems
+TYPE   50    py    2.1000  0.2000   0.906    1.620               Special p5 in conjugated systems
+TYPE   51    sx    2.0000  0.2500   1.448    1.280               Special s4 in conjugated systems
+TYPE   52    sy    2.0000  0.2500   1.448    1.280               Special s6 in conjugated systems
+TYPE   53    h1    1.3870  0.0157   0.000    0.784               H bonded to aliphatic carbon with 1 electrwd. group  
+TYPE   54    h2    1.2870  0.0157   0.000    0.784               H bonded to aliphatic carbon with 2 electrwd. group 
+TYPE   55    h3    1.1870  0.0157   0.000    0.784               H bonded to aliphatic carbon with 3 electrwd. group 
+TYPE   56    h4    1.4090  0.0150   0.000    0.784               H bonded to non-sp3 carbon with 1 electrwd. group 
+TYPE   57    h5    1.3590  0.0150   0.000    0.784               H bonded to non-sp3 carbon with 2 electrwd. group 
+
+
+// Equivalent atom types (for double bonds)
+// exampe: cc-cc and cd-cd are the single bonds, cc-cd is a double bond and so on
+TYPE   58    cd    1.9080  0.0860   1.339    1.183               Sp2 carbons in non-pure aromatic systems,          identical to cc
+TYPE   59    cf    1.9080  0.0860   1.339    1.183               Inner Sp2 carbons in conjugated systems,           identical to ce
+TYPE   60    cq    1.9080  0.0860   1.339    1.183               Head Sp2 C that connect two rings in biphenyl sys. identical to cp 
+TYPE   61    nd    1.8240  0.1700   1.300    1.212               Sp2 N in non-pure aromatic systems,                identical to nc
+TYPE   62    nf    1.8240  0.1700   1.300    1.212               Inner Sp2 N in conjugated systems,                 identical to ne
+TYPE   63    pd    2.1000  0.2000   0.906    1.620               Sp2 P in non-pure aromatic systems,                identical to pc
+TYPE   64    pf    2.1000  0.2000   0.906    1.620               Inner Sp2 P in conjugated systems,                 identical to pe
+
+
+//TIP3P water
+TYPE   65    ow    1.7683  0.1520   1.249    1.219               Oxygen in water 
+TYPE   66    hw    0.0000  0.0000   0.000    0.784               Hydrogen in water 
+
