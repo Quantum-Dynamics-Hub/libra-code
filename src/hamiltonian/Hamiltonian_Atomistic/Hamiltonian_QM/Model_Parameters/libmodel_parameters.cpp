@@ -106,7 +106,7 @@ void export_Model_Parameters_objects(){
 
 
 
-  class_<Element>("Element",init<>())
+  class_<pElement>("pElement",init<>())
 //      .def(_s)
 //  void _set(std::string en,int z){ elt_name = en; Z = z;  }
 //  void _set(std::string en,int z,int nv){ elt_name = en; Z = z; Nval = nv; }
@@ -115,43 +115,43 @@ void export_Model_Parameters_objects(){
 //  void set_mass(double m_){ mass = m_; }
 
 
-      .def_readwrite("elt_name",   &Element::elt_name)
-      .def_readwrite("Z",   &Element::Z)
-      .def_readwrite("PQN",   &Element::PQN)
-      .def_readwrite("Nval",   &Element::Nval)
-      .def_readwrite("Zeff",   &Element::Zeff)
-      .def_readwrite("mass",   &Element::mass)
+      .def_readwrite("elt_name",   &pElement::elt_name)
+      .def_readwrite("Z",   &pElement::Z)
+      .def_readwrite("PQN",   &pElement::PQN)
+      .def_readwrite("Nval",   &pElement::Nval)
+      .def_readwrite("Zeff",   &pElement::Zeff)
+      .def_readwrite("mass",   &pElement::mass)
 
-      .def_readwrite("IP",   &Element::IP)
-      .def_readwrite("EA",   &Element::EA)
+      .def_readwrite("IP",   &pElement::IP)
+      .def_readwrite("EA",   &pElement::EA)
 
-      .def_readwrite("Nquant",   &Element::Nquant)
-      .def_readwrite("Nzeta",   &Element::Nzeta)
-      .def_readwrite("zetas",   &Element::zetas)
-      .def_readwrite("coeffs",   &Element::coeffs)
+      .def_readwrite("Nquant",   &pElement::Nquant)
+      .def_readwrite("Nzeta",   &pElement::Nzeta)
+      .def_readwrite("zetas",   &pElement::zetas)
+      .def_readwrite("coeffs",   &pElement::coeffs)
 
-      .def_readwrite("J_param1",   &Element::J_param1)
-      .def_readwrite("J_param2",   &Element::J_param2)
-      .def_readwrite("J_param3",   &Element::J_param3)
-      .def_readwrite("J_param4",   &Element::J_param4)
+      .def_readwrite("J_param1",   &pElement::J_param1)
+      .def_readwrite("J_param2",   &pElement::J_param2)
+      .def_readwrite("J_param3",   &pElement::J_param3)
+      .def_readwrite("J_param4",   &pElement::J_param4)
 
-      .def_readwrite("G1",   &Element::G1)
-      .def_readwrite("F2",   &Element::F2)
-      .def_readwrite("beta0",  &Element::beta0)
-      .def_readwrite("Zeta",   &Element::Zeta)
+      .def_readwrite("G1",   &pElement::G1)
+      .def_readwrite("F2",   &pElement::F2)
+      .def_readwrite("beta0",  &pElement::beta0)
+      .def_readwrite("Zeta",   &pElement::Zeta)
 
   ;
 
 
-  class_< ElementList >("ElementList")
-      .def(vector_indexing_suite< ElementList >())
+  class_< pElementList >("pElementList")
+      .def(vector_indexing_suite< pElementList >())
   ;
-  class_< ElementMap >("ElementMap")
-      .def(vector_indexing_suite< ElementMap >())
+  class_< pElementMap >("pElementMap")
+      .def(vector_indexing_suite< pElementMap >())
   ;
 
-  class_< map<std::string,Element> >("StringElementMap")
-      .def(map_indexing_suite<map<std::string,Element> >())
+  class_< map<std::string,pElement> >("StringpElementMap")
+      .def(map_indexing_suite<map<std::string,pElement> >())
   ;
 
 

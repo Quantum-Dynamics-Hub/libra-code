@@ -308,7 +308,7 @@ typedef std::vector<vector<mEHT_K> > mEHT_KMap;
 
 
 
-class Element{
+class pElement{
 /** 
   This class contains parameters for orbitals of given element 
 */
@@ -346,8 +346,8 @@ class Element{
   double Zeta;                      ///< exponent of the radial part of the STOs
 
   
-  Element(){}
-  Element(const Element& ob){
+  pElement(){}
+  pElement(const pElement& ob){
     elt_name = ob.elt_name;
     Z = ob.Z;
     PQN = ob.PQN;
@@ -366,9 +366,9 @@ class Element{
     J_param4 = ob.J_param4;
     G1 = ob.G1; F2 = ob.F2; beta0 = ob.beta0;    
   }
-  Element(std::string en,int z,int nv,map<std::string, double> ip){ elt_name = en; Z = z; Nval = nv; IP = ip; }
+  pElement(std::string en,int z,int nv,map<std::string, double> ip){ elt_name = en; Z = z; Nval = nv; IP = ip; }
 
-  ~Element(){ 
+  ~pElement(){ 
      if(IP.size()>0) { IP.clear();}
      if(EA.size()>0) { EA.clear();}
    }
@@ -382,7 +382,7 @@ class Element{
 
 
 
-  friend bool operator == (const Element& m1, const Element& m2){
+  friend bool operator == (const pElement& m1, const pElement& m2){
     // Equal
     int res = m1.elt_name==m2.elt_name;
 
@@ -413,15 +413,15 @@ class Element{
     return  res;  
   }
 
-  friend bool operator != (const Element& m1, const Element& m2){
+  friend bool operator != (const pElement& m1, const pElement& m2){
     return  (!(m1==m2));
   }
 
 
 };
 
-typedef std::vector<Element > ElementList;
-typedef std::vector<vector<Element> > ElementMap;
+typedef std::vector<pElement > pElementList;
+typedef std::vector<vector<pElement> > pElementMap;
 
 
 
@@ -509,7 +509,7 @@ typedef std::vector<vector<OrbParams> > OrbParamsMap;
 
 
 
-void set_default_elements(map<std::string,Element>&);
+void set_default_elements(map<std::string,pElement>&);
 
 
 class Model_Parameters{
@@ -523,7 +523,7 @@ public:
 
   // Parameters for semiempirical methods
   // Atomic parameters
-  map<std::string,Element> PT;    ///< General and specific (for a given method) atomic parameters
+  map<std::string,pElement> PT;    ///< General and specific (for a given method) atomic parameters
   vector<OrbParams> orb_params;   ///< properties all orbitals!
 
   // Pair parameters

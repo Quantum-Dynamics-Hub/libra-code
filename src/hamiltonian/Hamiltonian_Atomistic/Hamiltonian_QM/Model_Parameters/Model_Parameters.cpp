@@ -564,12 +564,12 @@ void mEHT_K::set_mapping1(EHT_K& k, int nat, vector<std::string>& mol_at_types){
 
 
 
-void set_default_elements(map<std::string,Element>& PT){
+void set_default_elements(map<std::string, pElement>& PT){
 
 //----------------------------------------------------------------
 // Initialize fundamental properties of the atoms - periodic table
 
-  Element elt;
+  pElement elt;
 
   elt._set("H",  1);      PT["H"]   = elt;      PT["H"].set_mass(1.008);  
   elt._set("He", 2);      PT["He"]  = elt;      PT["He"].set_mass(4.0026);
@@ -632,7 +632,7 @@ void Model_Parameters::set_PT_mapping(const vector<AO>& basis_ao){
     std::string elt = basis_ao[i].element;
     std::string sh  = basis_ao[i].ao_shell;
 
-    Element Elt = PT[elt];
+    pElement Elt = PT[elt];
     
 
     OrbParams op;
