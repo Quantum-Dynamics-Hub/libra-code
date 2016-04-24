@@ -78,36 +78,40 @@ def surface_hopping(mol, el, ham, rnd, params):
     nstates = el[0].nstates  # how many electronic DOF
 
 
-    #Compute hopping probabilities
+
+
     g = MATRIX(nstates,nstates) # initialize a matrix of hopping probability
 
-    if tsh_method == 1: # FSSH
-        compute_hopping_probabilities_fssh(mol, el, ham, g, dt_nucl, use_boltz_factor, Temperature)
-    elif tsh_method == 2: # GFSH
-        compute_hopping_probabilities_gfsh(mol, el, ham, g, dt_nucl, use_boltz_factor, Temperature)
-    elif tsh_method == 3: # MSSH
-        compute_hopping_probabilities_mssh(mol, el, ham, g, dt_nucl, use_boltz_factor, Temperature)
-    else:
-        print "Warning in surface_hopping: tsh_method can be 1, 2, or 3. Other values are not defined"
+    for i in xrange(ntraj):
+
+        #Compute hopping probabilities
+        if tsh_method == 1: # FSSH
+            compute_hopping_probabilities_fssh(mol[i], el[i], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
+        elif tsh_method == 2: # GFSH
+            compute_hopping_probabilities_gfsh(mol[i], el[i], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
+        elif tsh_method == 3: # MSSH
+            compute_hopping_probabilities_mssh(mol[i], el[i], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
+        else:
+            print "Warning in surface_hopping: tsh_method can be 1, 2, or 3. Other values are not defined"
 
 
-    # output hopping probability
-    if print_prob == 1:
-        print "hopping probability matrix is:"
-        print g.show_matrix()
+        # output hopping probability
+        if print_prob == 1:
+            print "hopping probability matrix is:"
+            print g.show_matrix()
 
-    # check elements of g matrix are less than 1 or not.
-    if check_prob == 1:
-        for st in xrange(nstates):
-            for st1 in xrange(nstates):
-                if g.get(st,st1) > 1:
-                    print "g(%d,%d) is %f, larger than 1; better to decrease dt_nucl" %(st,st1,g.get(st,st1))
+        # check elements of g matrix are less than 1 or not.
+        if check_prob == 1:
+            for st in xrange(nstates):
+                for st1 in xrange(nstates):
+                    if g.get(st,st1) > 1:
+                        print "g(%d,%d) is %f, larger than 1; better to decrease dt_nucl" %(st,st1,g.get(st,st1))
 
-    # Attempt to hop
-    ksi = rnd.uniform(0.0,1.0) # generate random number for every trajectory   
+        # Attempt to hop
+        ksi = rnd.uniform(0.0,1.0) # generate random number for every trajectory   
 
-    # Everything else - change of electronic state and velocities rescaling/reversal happens here     
-    el.istate = hop(el.istate, mol, ham, ksi, g, do_rescaling, rep, do_reverse)
+        # Everything else - change of electronic state and velocities rescaling/reversal happens here     
+        el[i].istate = hop(el[i].istate, mol[i], ham[i], ksi, g, do_rescaling, rep, do_reverse)
 
 
     # Nothing to return - mol, ham, and el objects are modified accordingly
