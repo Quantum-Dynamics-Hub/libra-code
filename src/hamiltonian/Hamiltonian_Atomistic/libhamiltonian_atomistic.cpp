@@ -112,6 +112,8 @@ void export_hamiltonian_atomistic_objects(){
  
   ;
 
+  export_Hamiltonian_QM_objects();
+
 
 }
 

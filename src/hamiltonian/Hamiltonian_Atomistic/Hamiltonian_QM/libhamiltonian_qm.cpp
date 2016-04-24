@@ -33,12 +33,22 @@ namespace libhamiltonian_atomistic{
 namespace libhamiltonian_qm{
 
 
+using namespace libbasis_setups;
+using namespace libcontrol_parameters;
+using namespace libmodel_parameters;
+
+
+
+
 void export_Hamiltonian_QM_objects(){
 /** 
   \brief Exporter of the libhamiltonian_qm classes and functions
 
 */
 
+  export_basis_setups_objects();
+  export_Control_Parameters_objects();
+  export_Model_Parameters_objects();
 
   //----------- Electronic_Structure ------------
   class_<Electronic_Structure>("Electronic_Structure",init<>())

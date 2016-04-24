@@ -17,7 +17,9 @@
 #ifndef LIB_HAMILTONIAN_QM_H
 #define LIB_HAMILTONIAN_QM_H
 
-
+#include "Basis_Setups/libbasis_setups.h"
+#include "Control_Parameters/libcontrol_parameters.h"
+#include "Model_Parameters/libmodel_parameters.h"
 #include "Hamiltonian_QM.h"
 #include "SCF.h"
 
