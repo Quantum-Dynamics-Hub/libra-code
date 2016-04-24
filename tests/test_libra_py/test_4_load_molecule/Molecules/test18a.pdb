@@ -1,0 +1,21 @@
+HETATM    1  P           0      -0.862   2.799   2.528                       P
+HETATM    2  O           0      -0.104   3.454   1.142                       O
+HETATM    3  C           0      -0.255   3.657   4.014                       C
+HETATM    4  H           0      -0.612   4.666   4.014                       H
+HETATM    5  H           0      -0.612   3.152   4.887                       H
+HETATM    6  H           0       0.815   3.657   4.014                       H
+HETATM    7  C           0      -0.473   1.025   2.650                       C
+HETATM    8  H           0      -0.955   0.612   3.511                       H
+HETATM    9  H           0      -0.819   0.523   1.771                       H
+HETATM   10  H           0       0.586   0.898   2.739                       H
+END
+CONECT    1    2    3    7
+CONECT    2    1
+CONECT    3    4    5    6    1
+CONECT    4    3
+CONECT    5    3
+CONECT    6    3
+CONECT    7    8    9   10    1
+CONECT    8    7
+CONECT    9    7
+CONECT   10    7

@@ -1,0 +1,13 @@
+HETATM    1  C           0       0.267   0.105  -0.459                       C
+HETATM    2  H           0       0.800  -0.823  -0.459                       H
+HETATM    3  C           0       0.942   1.280  -0.459                       C
+HETATM    4  H           0       0.409   2.208  -0.459                       H
+HETATM    5 Cl           0       2.702   1.280  -0.459                      Cl
+HETATM    6 Br           0      -1.643   0.105  -0.459                      Br
+END
+CONECT    1    2    3    6
+CONECT    2    1
+CONECT    3    4    1    5
+CONECT    4    3
+CONECT    5    3
+CONECT    6    1
