@@ -7,5 +7,13 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 #***********************************************************/
 
-__all__ = ["init_system", "init_ensembles", "tsh", "LoadPT", "LoadUFF", "LoadMolecule"]
+__all__ = ["init_system", 
+           "init_ensembles",
+           "tsh",
+           "LoadPT",
+           "LoadUFF",
+           "LoadTRIPOS",
+           "LoadGAFF",
+           "LoadMMFF94",
+           "LoadMolecule"]
 

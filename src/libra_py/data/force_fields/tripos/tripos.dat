@@ -1,0 +1,58 @@
+FORCE_FIELD  TRIPOS
+
+SIGMA_COMB_RULE      GEOMETRIC
+EPSILON_COMB_RULE    GEOMETRIC
+VDW_SCALE12          0.0
+VDW_SCALE13          0.0
+VDW_SCALE14          1.0
+
+ELEC_SCALE12          0.0
+ELEC_SCALE13          0.0
+ELEC_SCALE14          1.0
+
+
+
+
+TH - tetrahedral
+TG - trigonal planar
+L2 - linear
+L1 - singly bonded
+
+Symbol  Val      Geom      Hbd         Hba        LP     sigma      epsilon     Comment
+                                                                            
+Al      4         TH         0          0          0      1.2        0.042              
+Br      4         TH         0          0          3      1.85       0.434           
+C.1     2         L2         0          0          0      1.7        0.107      sp carbon
+C.2     3         TG         0          0          0      1.7        0.107      sp2 carbon
+C.3     4         TH         0          0          0      1.7        0.107      sp3 carbon
+C.ar    3         TG         0          0          0      1.7        0.107      aromatic
+Ca      2         L2         0          0          0      1.2        0.600          
+Cl      4         TH         0          0          3      1.75       0.314                  
+Du      0         f          0          0          0      0.0        0.000      dummy,ignored
+F       4         TH         1          1          3      1.47       0.109                  
+H       1         L1         0          0          0      1.5        0.042          
+I       4         TH         0          0          3      1.98       0.623           
+K       1         L1         0          0          0      1.2        0.400          
+Li      1         L1         0          0          0      1.2        0.400          
+LP      1         L1         0          0          0      0.0        0.0        lone pair
+N.1     2         L2         0          1          1      1.55       0.095      sp nitrogen
+N.2     3         TG         1          1          1      1.55       0.095      sp2 nitrogen
+N.3     4         TH         1          1          1      1.55       0.095      sp3 nitrogen
+N.4     4         TH         1          0          0      1.55       0.095      cationic
+N.am    3         TG         1          0          0      1.55       0.095      amide nitrogen
+N.ar    3         TG         0          1          1      1.55       0.095      aromatic
+N.pl3   3         TG         1          0          0      1.55       0.095      sp3 planar
+Na      1         L1         0          0          0      1.2        0.400         
+O.2     3         TG         0          1          2      1.52       0.116      sp2 oxygen
+O.3     4         TH         1          1          2      1.52       0.116      sp3 oxygen
+P.3     4         TH         0          0          0      1.8        0.314      sp3 phosphorus
+S.2     3         TG         0          0          2      1.8        0.314      sp2 sulfur
+S.3     4         TH         0          0          2      1.8        0.314      sp3 sulfur
+S.o     4         TH         0          0          1      1.7        0.314      sulfoxide
+S.o2    4         TH         0          0          0      1.7        0.314      sulfone
+Si      4         TH         0          0          0      1.2        0.042      sp3 silicon
+
+
+
+
+
