@@ -8,6 +8,12 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Potentials_mb_vdw.cpp
+  This file implements the many-body potentials (with few-body potentials as sepcial case) involving
+  vdW interactions. Something like the lattice sums, or just summing all the 2-body pairs without creating
+  large number of auxiliary data.
+*/
 
 #include "Potentials_mb_vdw.h"
 
@@ -732,16 +738,39 @@ double Vdw_LJ2_excl(VECTOR* r,                                               /* 
 }
 
 
-double LJ_Coulomb(VECTOR* r,                                               /* Inputs */
-                  VECTOR* g,
-                  VECTOR* m,
-                  VECTOR* f,
-                  MATRIX3x3& at_stress, MATRIX3x3& fr_stress, MATRIX3x3& ml_stress, /* Outputs*/
+double LJ_Coulomb(VECTOR* r, VECTOR* g, VECTOR* m, VECTOR* f,
+                  MATRIX3x3& at_stress, MATRIX3x3& fr_stress, MATRIX3x3& ml_stress,
                   int sz,double* epsilon, double* sigma,double* q,int is_cutoff, double R_on, double R_off,
-                  int nexcl, int* excl1, int* excl2, double* scale       /* Parameters */
-                 ){
+                  int nexcl, int* excl1, int* excl2, double* scale)
+{
+/** 
+  This function computes all electrostatic and vdW interactions in a collection of particles
 
- // So far this only works for cluster, no PBC
+  \param[in] r The pointer to the array containing the positions of all particles (atoms)
+  \param[in] g The pointer to the array containing the center of mass positions of all particles (groups)
+  \param[in] m The pointer to the array containing the center of mass positions of all particles (molecules)
+  \param[out] f The pointer to the array containing the forces acting on all atoms
+  \param[out] at_stress Atomic stress tensor
+  \param[out] fr_stress Fragmental stress tensor
+  \param[out] ml_stress Molecular stress tensor
+  \param[in] sz The number of particles in the system (size of the arrays r and f)
+  \param[in] epsilon The array of the vdW epsilon parameters (stength of interaction) for all atoms
+  \param[in] sigma The array of the vdW sigma parameters (atomic size) for all atoms
+  \param[in] q The array of the atomic charges
+  \param[in] is_cutoff The flag telling whether the cutoff for vdW is utilized. Note - no cutoffs to electrostatic potentials 
+  will be applied
+  \param[in] R_on The cutoff start distance (switching function is 1)
+  \param[in] R_off The cutoff stop distance (switching function is 0)
+  \param[in] nexcl The number of exclusions
+  \param[in] excl1 excl1[i] is the index of the first atom excuded in the pair i
+  \param[in] excl2 excl2[i] is the index of the second atom excuded in the pair i
+  \param[in] scale scale[i] is the scaling constant for the exclusion i
+
+  --- So far this function only works for cluster, no PBC ---
+
+  --- Atomic units of length, energy, parameters.etc. are assumed -----
+
+*/
 
   int excl = 0;  // for exclusions
   int i,j;

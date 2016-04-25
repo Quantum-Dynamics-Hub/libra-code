@@ -8,6 +8,13 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Potentials_mb_vdw.h
+  This file implements the many-body potentials (with few-body potentials as sepcial case) involving
+  vdW interactions. Something like the lattice sums, or just summing all the 2-body pairs without creating
+  large number of auxiliary data.
+*/
+
 
 #ifndef POTENTIALS_MB_VDW_H
 #define POTENTIALS_MB_VDW_H
@@ -93,14 +100,11 @@ double Vdw_LJ2_excl(VECTOR* r,                                               /* 
                    );
 
 
-double LJ_Coulomb(VECTOR* r,                                               /* Inputs */
-                  VECTOR* g,
-                  VECTOR* m,
-                  VECTOR* f,
-                  MATRIX3x3& at_stress, MATRIX3x3& fr_stress, MATRIX3x3& ml_stress, /* Outputs*/
-                  int sz,double* epsilon, double* sigma,double* charge,int is_cutoff, double R_on, double R_off,
-                  int nexcl, int* excl1, int* excl2, double* scale       /* Parameters */
-                 );
+double LJ_Coulomb(VECTOR* r, VECTOR* g, VECTOR* m, VECTOR* f,
+                  MATRIX3x3& at_stress, MATRIX3x3& fr_stress, MATRIX3x3& ml_stress,
+                  int sz,double* epsilon, double* sigma,double* q,int is_cutoff, double R_on, double R_off,
+                  int nexcl, int* excl1, int* excl2, double* scale);
+
 
 
 } // namespace libpot

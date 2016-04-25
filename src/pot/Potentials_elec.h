@@ -8,6 +8,12 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Potentials_elec.h
+  This file defines the interfaces to the electrostatic interaction potentials
+    
+*/
+
 
 #ifndef POTENTIALS_ELEC_H
 #define POTENTIALS_ELEC_H
