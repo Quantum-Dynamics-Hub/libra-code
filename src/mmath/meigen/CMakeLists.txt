@@ -3,7 +3,8 @@
 # In general, we need to call the find_Eigen module
 # but for now, I just set the include dir manually
 #
-set(EIGEN_INCLUDE /home/Alexey_2/Soft/eigen-eigen-2249f9c22fe8/)
+#set(EIGEN_INCLUDE /home/Alexey_2/Soft/eigen-eigen-2249f9c22fe8/)
+set(EIGEN_INCLUDE /home/Alexey_2/Soft/eigen-eigen-07105f7124f9/)
 
 #
 #  Source files and headers in this directory
