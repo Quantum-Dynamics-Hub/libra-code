@@ -83,7 +83,7 @@ void Hamiltonian_core_eht
         // This is old and slow version
         //K_const = modprms.eht_k.get_K_value(basis_ao[i].element,basis_ao[i].ao_shell,basis_ao[j].element,basis_ao[j].ao_shell);
         K_const = modprms.meht_k.get_K_value(0, i,j);
-        cout<<"i= "<<i<<" j= "<<j<<" K_const= "<<K_const<<endl;
+        //cout<<"i= "<<i<<" j= "<<j<<" K_const= "<<K_const<<endl;
 
         if(prms.eht_formula==0){  // Unweighted formula
 
