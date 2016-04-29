@@ -98,6 +98,8 @@ void System::print_ent(std::string filename,int fold,std::string pbc_type){
       r = Box * r + borig;
     }// fold && is_Box
 
+    r *= bohr; // convert from internal units (a.u.) to conventional units (Angstrom)
+
     fprintf(fp,"HETATM%5i %4s MOL C%4i    %8.3f%8.3f%8.3f%6.2f%6.2f    \n",at_ser_num,at_name.c_str(),grp_num,r.x,r.y,r.z,occup,b_fact);
   }
   fclose(fp);
@@ -191,6 +193,8 @@ void System::print_ent(std::string filename,boost::python::list atoms_list,int f
       r = Box * r + borig;
     }// fold && is_Box
 
+    r *= bohr; // convert from internal units (a.u.) to conventional units (Angstrom)
+
     fprintf(fp,"HETATM%5i %4s MOL C%4i    %8.3f%8.3f%8.3f%6.2f%6.2f    \n",at_ser_num,at_name.c_str(),grp_num,r.x,r.y,r.z,occup,b_fact);
   }
   fclose(fp);
@@ -283,6 +287,8 @@ void System::print_xyz(std::string filename,int fold,std::string pbc_type,int fr
       }
       r = Box * r + borig;
     }// fold && is_Box
+
+    r *= bohr; // convert from internal units (a.u.) to conventional units (Angstrom)
 
     fprintf(fp," %4s  %8.3f%8.3f%8.3f   \n",at_name.c_str(),r.x,r.y,r.z);
   }
