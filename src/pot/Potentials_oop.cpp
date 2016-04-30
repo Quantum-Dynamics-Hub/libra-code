@@ -17,13 +17,97 @@ using namespace libmmath::liblinalg;
 
 namespace libpot{
 
+
 double OOP_Fourier(VECTOR& r1,VECTOR& r2,VECTOR& r3,VECTOR& r4,        /*Inputs*/
                    VECTOR& f1,VECTOR& f2,VECTOR& f3,VECTOR& f4,        /*Outputs*/
                    double Kijkl,double C0,double C1,double C2,int opt  /*Parameters*/
-                   ){
+                  ){
 //******************** double FOURIER_OUT_OF_PLANE *******************************
 //*                                                                              *
-//*          u_i     = Kijkl*(C0 + C1*sin(gamma_ijkl) + C2*cos(2*gamma_ijkl))    *
+//*          u_i     = Kijkl*(C0 + C1*cos(gamma_ijkl) + C2*cos(2*gamma_ijkl))    *
+//*                                                                              *
+//*  Force fields: UFF                                                           *
+//*  In input the atom 2 (r2) is central atom, connected to all other 3 atoms !  *
+//*                                                                              *
+//********************************************************************************
+  // Derivatives are calculated using a method from: 
+  // adapted to the case of out-of-plane angle
+  // J. Comput. Chem. 1996, V. 17, P. 1132-1141
+
+  VECTOR ri,rj,rk,rl,fi,fj,fk,fl;
+  double energy = 0.0;
+  f1 = f2 = f3 = f4 = 0.0;
+
+  Kijkl /= 3.0; // because 3 inversions
+
+
+  for(int perm=0;perm<3;perm++){
+    if(perm==0)     { ri = r4; rj = r1; rk = r2; rl = r3; } // Angle LIJK
+    else if(perm==1){ ri = r2; rj = r1; rk = r3; rl = r4; } // Angle JIKL
+    else if(perm==2){ ri = r3; rj = r1; rk = r4; rl = r2; } // Angle KILJ
+
+    VECTOR F = ri - rj;
+    VECTOR G = rj - rk;
+    VECTOR H = rj - rl;
+
+    VECTOR A; A.cross(F,G); 
+    VECTOR B; B.cross(H,G);
+    //VECTOR B = rl - rj;
+
+    double mA = A.length();
+    double mB = B.length();
+    double mG = G.length();
+
+    fi = fj = fk = fl = 0.0;
+
+    if((mA>0.0) && (mB>0.0)){
+
+      // Calculate angle
+      double cos_phi = (A*B)/(mA*mB);    
+      VECTOR tmp; tmp.cross(B,A);
+      double sin_phi = (tmp*G)/(mA*mB*mG);
+      double phi = atan2(sin_phi,cos_phi);
+
+
+      // Energy and forces
+      double K1 = Kijkl*(C0 +C1*cos(phi) + C2*cos(2.0*phi));
+      double K2 = -Kijkl*(C1*sin(phi) + 2.0*C2*sin(2.0*phi));      // d(K1)/d(phi)) 
+      energy += K1;
+
+
+      VECTOR dphi_dF = -(mG/(mA*mA))*A;
+      VECTOR dphi_dG = ((G*F)/(mG*mA*mA))*A - ((H*G)/(mB*mB*mG))*B;
+      VECTOR dphi_dH = (mG/(mB*mB))*B;
+      //VECTOR dphi_dB; dphi_dB.cross(B,G); dphi_dB /=  (mB*mB*mG);
+      
+
+      //-----------------------------------------------------------
+      fi = -K2*dphi_dF;
+      fj = -K2*(-dphi_dF + dphi_dG + dphi_dH );
+      fk = -K2*(-dphi_dG);
+      fl = -K2*(-dphi_dH);
+
+    }//if modt!=0.0 && modu!=0.0
+
+  if(perm==0)     { f4 += fi; f1 += fj; f2 += fk; f3 += fl;}  // Angle LIJK
+  else if(perm==1){ f2 += fi; f1 += fj; f3 += fk; f4 += fl; } // Angle JIKL
+  else if(perm==2){ f3 += fi; f1 += fj; f4 += fk; f2 += fl; } // Angle KILJ
+ 
+  }// for all permutations
+
+  return energy;
+}
+
+
+
+
+double OOP_Fourier_old(VECTOR& r1,VECTOR& r2,VECTOR& r3,VECTOR& r4,        /*Inputs*/
+                       VECTOR& f1,VECTOR& f2,VECTOR& f3,VECTOR& f4,        /*Outputs*/
+                       double Kijkl,double C0,double C1,double C2,int opt  /*Parameters*/
+                      ){
+//******************** double FOURIER_OUT_OF_PLANE *******************************
+//*                                                                              *
+//*          u_i     = Kijkl*(C0 + C1*cos(gamma_ijkl) + C2*cos(2*gamma_ijkl))    *
 //*                                                                              *
 //*  Force fields: UFF                                                           *
 //*  In input the atom 2 (r2) is central atom, connected to all other 3 atoms !  *
@@ -40,7 +124,7 @@ double OOP_Fourier(VECTOR& r1,VECTOR& r2,VECTOR& r3,VECTOR& r4,        /*Inputs*
   if(opt==1){  direction =-1.0; } // This defines DIHEDRAL angle
 
   for(int perm=0;perm<3;perm++){
-    if(perm==0)     { ri = r4; rj = r1; rk = r2; rl = r3;}  // Angle LIJK
+    if(perm==0)     { ri = r4; rj = r1; rk = r2; rl = r3; } // Angle LIJK
     else if(perm==1){ ri = r2; rj = r1; rk = r3; rl = r4; } // Angle JIKL
     else if(perm==2){ ri = r3; rj = r1; rk = r4; rl = r2; } // Angle KILJ
 
@@ -62,8 +146,8 @@ double OOP_Fourier(VECTOR& r1,VECTOR& r2,VECTOR& r3,VECTOR& r4,        /*Inputs*
       phi = SIGN(rkj*rp)*acos(cos_phi);
 
       // Energy and forces
-      K1 = Kijkl*(C0 +C1*sin(phi) + C2*cos(2.0*phi));
-      K2 = Kijkl*(C1*cos(phi) - 2.0*C2*sin(2.0*phi));      // d(K1)/d(phi))
+      K1 = Kijkl*(C0 +C1*cos(phi) + C2*cos(2.0*phi));
+      K2 = -Kijkl*(C1*sin(phi) + 2.0*C2*sin(2.0*phi));      // d(K1)/d(phi))
       energy += K1;
 
       // Forces
