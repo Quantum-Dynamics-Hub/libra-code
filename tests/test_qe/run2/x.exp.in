@@ -1,0 +1,10 @@
+&inputpp
+  prefix = 'x',
+  outdir = './',
+  pseudo_dir = './',
+  psfile(1) = 'C.pbe-n-kjpaw_psl.0.1.UPF',
+  psfile(2) = 'H.pbe-kjpaw_psl.0.1.UPF',
+  single_file = .FALSE.,
+  ascii = .TRUE.,
+  uspp_spsi = .FALSE.,
+/
