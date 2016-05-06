@@ -581,9 +581,10 @@ public:
                       int& n,int& is_n);
 
    // Defined in ForceField_methods5.cpp
-   void oop_rule(std::string ff_type2, double& K, int& is_K, 
-                 double& C0, int& is_C0,  double& C1, int& is_C1,
+   void oop_rule(std::string ff_type1, std::string ff_type2, std::string ff_type3, std::string ff_type4,
+                 double& K, int& is_K, double& C0, int& is_C0,  double& C1, int& is_C1,
                  double& C2, int& is_C2);
+
 
 
 

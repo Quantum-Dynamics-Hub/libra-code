@@ -16,6 +16,7 @@ __all__ = ["init_system",
            "LoadGAFF",
            "LoadMMFF94",
            "LoadMolecule",
-           "nve_md"
+           "nve_md",
+           "proj_dos"
           ]
 

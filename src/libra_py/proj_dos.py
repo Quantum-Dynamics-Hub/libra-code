@@ -73,7 +73,7 @@ def fermi_energy(bnds, Nel, degen):
 
 
 
-def main(emin, emax, de, projections, prefix, outfile, Nel):
+def pdos(emin, emax, de, projections, prefix, outfile, Nel):
 # projections - groups of atoms and types of projections
 # e.g. projections = [["s",[1,2,3]], ["p",[1,2,3]], ... ]
 # prefix - points to the files containing projection information

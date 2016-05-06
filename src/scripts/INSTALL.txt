@@ -1,3 +1,0 @@
- Copy all .py files from here to the installation directory
-
- In future, we will probably need to include compiled modules into the __init__ file as well

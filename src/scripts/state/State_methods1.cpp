@@ -279,8 +279,8 @@ void State::run_md(Nuclear& mol, Electronic& el, Hamiltonian& ham){
 
 //!!!!!!!!!!!!!!!!1    E_pot = system->energy(); !!!!!!!!!!!!!!!!1
     syst->extract_atomic_q(mol.q); // syst -> mol
-    E_pot = compute_potential_energy(mol, el, ham, 1); //  # 1 - FSSH forces
-    compute_forces(mol, el, ham, 1); 
+//    E_pot = compute_potential_energy(mol, el, ham, 1); //  # 1 - FSSH forces
+    E_pot = compute_forces(mol, el, ham, 1); 
     syst->set_atomic_f(mol.f);    // mol -> syst
 
     // Update rigid-body variables

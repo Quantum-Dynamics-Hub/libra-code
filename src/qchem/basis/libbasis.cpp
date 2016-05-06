@@ -69,6 +69,10 @@ void export_basis_objects(){
   void (*expt_update_overlap_matrix_v1)(int,int,int,const VECTOR&,const VECTOR&,const VECTOR&,
   vector<AO>&,MATRIX&) = &update_overlap_matrix;
 
+  void (*expt_MO_overlap_v1)(MATRIX& Smo, vector<AO>& ao_i, vector<AO>& ao_j, MATRIX& Ci, MATRIX& Cj,
+  vector<int>& active_orb_i, vector<int>& active_orb_j, double max_d2) = &MO_overlap;
+
+
   // Basis_map.cpp
   void (*expt_show_mapping_v1)(const vector<vector<int> >&) = &show_mapping;
 
@@ -92,6 +96,7 @@ void export_basis_objects(){
   def("num_valence_elec", expt_num_valence_elec_v1);
 
   def("update_overlap_matrix", expt_update_overlap_matrix_v1);
+  def("MO_overlap", expt_MO_overlap_v1);
 
   def("show_mapping", expt_show_mapping_v1);
 
