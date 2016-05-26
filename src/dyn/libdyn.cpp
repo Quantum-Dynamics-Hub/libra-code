@@ -55,8 +55,17 @@ void export_Dyn_objects(){
   double (*expt_compute_forces_v2)(Ensemble& ens, int opt) = &compute_forces;
 
 
+  def("compute_kinetic_energy",expt_compute_kinetic_energy_v1);
+  def("compute_kinetic_energy",expt_compute_kinetic_energy_v2);
+  def("compute_potential_energy",expt_compute_potential_energy_v1);
+  def("compute_potential_energy",expt_compute_potential_energy_v2);
+  def("compute_forces",expt_compute_forces_v1);
+  def("compute_forces",expt_compute_forces_v2);
+
+
   void (*expt_propagate_ensemble_v1)(double dt,Ensemble& ens,int opt) = &propagate_ensemble;
   def("propagate_ensemble", expt_propagate_ensemble_v1);
+
 
 
   void (*expt_compute_hopping_probabilities_fssh_v1)
@@ -81,40 +90,11 @@ void export_Dyn_objects(){
   void (*expt_compute_hopping_probabilities_mssh_v2)
   (Ensemble& ens, int i, MATRIX& g,
    double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_mssh;
-
+  MATRIX (*expt_compute_hopping_probabilities_mssh_v3)(CMATRIX& Coeff)  = &compute_hopping_probabilities_mssh;
 
   void (*expt_compute_hopping_probabilities_esh_v1)
   (Ensemble& ens, MATRIX* g, double dt, int use_boltz_factor,double T) = compute_hopping_probabilities_esh;
 
-
-
-  int (*expt_hop_v1)
-  (int initstate, Nuclear& mol, Hamiltonian& ham, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse) = &hop;
-  int (*expt_hop_v2)
-  (int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse) = &hop;
-
-  vector<int> (*expt_hop_v3)
-  (int ntraj, vector<int> initstate, vector<Nuclear>& mol, vector<Hamiltonian>& ham, 
-   vector<double> ksi, vector<MATRIX>& g, int do_rescaling, int rep, int do_reverse) = &hop;
-
-
-
-
-  int (*expt_rescale_velocities_adiabatic_v1)
-  (Nuclear& mol, Hamiltonian& ham, int old_st, int do_reverse) = &rescale_velocities_adiabatic;
-
-  int (*expt_rescale_velocities_diabatic_v1)
-  (Nuclear& mol, Hamiltonian& ham, int old_st) = &rescale_velocities_diabatic;
-
-
-
-
-  def("compute_kinetic_energy",expt_compute_kinetic_energy_v1);
-  def("compute_kinetic_energy",expt_compute_kinetic_energy_v2);
-  def("compute_potential_energy",expt_compute_potential_energy_v1);
-  def("compute_potential_energy",expt_compute_potential_energy_v2);
-  def("compute_forces",expt_compute_forces_v1);
-  def("compute_forces",expt_compute_forces_v2);
 
   def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v1);
   def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v2);
@@ -122,15 +102,40 @@ void export_Dyn_objects(){
   def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v2);
   def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v1);
   def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v2);
+  def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v3);
   def("compute_hopping_probabilities_esh", expt_compute_hopping_probabilities_esh_v1);
+
+
+  int (*expt_hop_v1)
+  (int initstate, Nuclear& mol, Hamiltonian& ham, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse) = &hop;
+  int (*expt_hop_v2)
+  (int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse) = &hop;
+  vector<int> (*expt_hop_v3)
+  (int ntraj, vector<int> initstate, vector<Nuclear>& mol, vector<Hamiltonian>& ham, 
+   vector<double> ksi, vector<MATRIX>& g, int do_rescaling, int rep, int do_reverse) = &hop;
+  int (*expt_hop_v4)(int initstate, MATRIX& g, double ksi) = &hop;
 
   def("hop", expt_hop_v1);
   def("hop", expt_hop_v2);
   def("hop", expt_hop_v3);
+  def("hop", expt_hop_v4);
+
+
+
+  int (*expt_rescale_velocities_adiabatic_v1)
+  (Nuclear& mol, Hamiltonian& ham, int old_st, int do_reverse) = &rescale_velocities_adiabatic;
+  int (*expt_rescale_velocities_diabatic_v1)
+  (Nuclear& mol, Hamiltonian& ham, int old_st) = &rescale_velocities_diabatic;
 
   def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v1);
   def("rescale_velocities_diabatic", expt_rescale_velocities_diabatic_v1);
 
+
+
+
+  int (*expt_ida_v1)(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi) = &ida;
+
+  def("ida", expt_ida_v1);
 
 
 }// export_Dyn_objects()

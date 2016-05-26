@@ -56,12 +56,14 @@ void compute_hopping_probabilities_mssh(Nuclear* mol, Electronic* el, Hamiltonia
 void compute_hopping_probabilities_mssh(Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
                                         double dt, int use_boltz_factor,double T);
 void compute_hopping_probabilities_mssh(Ensemble& ens, int i, MATRIX& g, double dt, int use_boltz_factor,double T);
+MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff);
 
 
 
 void hop(int& initstate, Nuclear* mol, Hamiltonian* ham, double ksi, MATRIX* g, int do_rescaling, int rep, int do_reverse);
 int hop(int initstate, Nuclear& mol, Hamiltonian& ham, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse);
 int hop(int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse);
+int hop(int initstate, MATRIX& g, double ksi);
 
 
 void rescale_velocities_adiabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,int& old_st, int do_reverse);
@@ -70,6 +72,8 @@ int rescale_velocities_adiabatic(Nuclear& mol, Hamiltonian& ham, int old_st, int
 void rescale_velocities_diabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,int& old_st);
 int rescale_velocities_diabatic(Nuclear& mol, Hamiltonian& ham, int old_st);
 
+
+int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi);
 
 
 }// namespace libdyn

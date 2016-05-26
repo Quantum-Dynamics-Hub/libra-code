@@ -317,6 +317,45 @@ void compute_hopping_probabilities_gfsh(Ensemble& ens, int i, MATRIX& g, double 
 
 
 
+MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff){
+/**
+  \brief Compute the MSSH surface hopping probabilities for the trajectory described by the coefficients Coeff
+
+  This is the version taking the minimal amount of input information
+
+  \param[in] Coeff The amplitudes of different basis states in the coherent superposition. This matrix is assumed to be
+  a column-vector, so of the size N x 1, where N is the number of basis excited states
+
+  The function returns the matrix g with hopping probabilities
+
+  Abbreviation: MSSH - Markov state surface hopping
+  References: 
+  (1) Akimov, A. V.; Trivedi, D.; Wang, L.; Prezhdo, O. V. Analysis of the Trajectory Surface Hopping Method from the Markov State Model Perspective. J. Phys. Soc. Jpn. 2015, 84, 094002.
+
+*/
+
+
+
+  int nst = Coeff.n_elts;
+  MATRIX g(nst,nst);
+
+  double norm; norm = (Coeff.H() * Coeff).get(0,0).real();  // <- this is the norm <PSI|PSI>
+
+  // Calculate the hopping probabilities
+  for(int j=0;j<nst;j++){
+
+    double gjj = (std::conj(Coeff.get(j)) * Coeff.get(j)).real()/norm; // c_j^* * c_j
+      
+    for(int i=0;i<nst;i++){   g.set(i,j,gjj);  } // hopping from i to j
+
+
+  }// for j
+
+  return g;
+
+}
+
+
 
 void compute_hopping_probabilities_mssh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,
                                         double dt, int use_boltz_factor,double T){
@@ -412,6 +451,32 @@ void compute_hopping_probabilities_mssh(Ensemble& ens, int i, MATRIX& g, double 
   compute_hopping_probabilities_mssh(&ens.mol[i], &ens.el[i], ens.ham[i], &g, dt, use_boltz_factor, T);
 
 }
+
+
+int hop(int initstate, MATRIX& g, double ksi){
+/** 
+  \brief Attempts a stochastic hop from the initial state "initstate"
+  \param[in] initstate The index of the state from which we try to hop out 
+  \param[in] g The hopping probabilities matrix (type MATRIX)
+  \param[in] ksi A random number that determines the outcome of the "hop" procedure
+
+  Returned value: the index of the state to which we have hopped
+*/
+
+  int nstates = g.num_of_cols;
+  double left, right; left = right = 0.0;
+  int finstate = initstate;
+
+  for(int i=0;i<nstates;i++){
+    if(i==0){left = 0.0; right = g.get(initstate,i); }
+    else{  left = right; right = right + g.get(initstate,i); }
+ 
+    if((left<ksi) && (ksi<=right)){  finstate = i;  }
+  }
+
+  return finstate;
+
+}// hop
 
 
 
@@ -691,6 +756,57 @@ int rescale_velocities_diabatic(Nuclear& mol, Hamiltonian& ham, int old_st){
 }
 
 
+
+int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi){
+/**
+  \brief Instantaneous decoherence at attempted hops (ID-A)
+
+  \param[in,out] Coeff The matrix of coefficients (amplitudes of the basis excited states). This matrix is modified at every
+  decoherence event
+  \param[in] old_st The old state before an attempted hop
+  \param[in] new_st The new state after an attempted hop (no matter what the algorithm - FSSH, GFSH, MSSH, or something else)
+  \param[in] E_old The energy corresponding to the old state
+  \param[in] E_new The energy corresponding to the new state
+  \param[in] T is the temperature of the system
+  \param[in] ksi a random number from a uniform distribution of the [0,1] interval - needed to decide the hop acceptance/decoherence
+
+  The function returns the index of the new state after hop rejection/decoherence criteria
+  The function also modifies the amplitudes of the coherent superposition
+
+*/
+
+  const double kb = 3.166811429e-6;  // Boltzmann constant: Hartree/K
+  int istate = old_st;               // by default the resulting state is the old state
+  
+  if(new_st != old_st){  // attempted hop
+
+    // Now apply energy considerations
+    double dE = (E_new - E_old);
+    double boltz_f = 1.0;
+
+    if(dE>0.0){
+      double argg = dE/(kb*T);
+      if(argg > 50.0){ boltz_f = 0.0; }
+      else{            boltz_f = exp(-argg); }
+
+      if(ksi<boltz_f){
+        istate = new_st;  // accepted hop
+
+        // Collapse the wavefunction onto the new state
+        Coeff *= 0.0;
+        Coeff.set(new_st, 1.0, 0.0);
+      }
+      else{
+        // Unsuccessful hop - collapse wfc back to the original state
+        Coeff *= 0.0;
+        Coeff.set(old_st, 1.0, 0.0);
+      }
+    }// dE > 0
+  }// new_st != old_st
+
+  return istate;
+
+}
 
 
 }// namespace libdyn
