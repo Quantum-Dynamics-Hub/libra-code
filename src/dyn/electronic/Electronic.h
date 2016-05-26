@@ -112,12 +112,11 @@ typedef std::vector< Electronic > ElectronicList; ///< Type containing the vecto
 // In Electronic_Dynamics1.cpp
 void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham);
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib);
+void propagate_electronic(double dt,CMATRIX& Coeff, CMATRIX& Hvib);
+
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S);
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S);
-void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S, CMATRIX& Sdot);
-void propagate_electronic(double dt,CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S, CMATRIX& Sdot);
-
-void propagate_electronic_nonorth(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S);
+void propagate_electronic(double dt,CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S);
 
 
 }// namespace libelectronic

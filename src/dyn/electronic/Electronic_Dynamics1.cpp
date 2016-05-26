@@ -210,6 +210,66 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib){
 }// propagate_electronic
 
 
+void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
+/**
+  Solves the time-dependent Schrodinger equation:
+
+  i*hbar*dc/dt = Hvib*c 
+   
+  API: A free function that takes electronic DOF in the form of matrix-colomun and modifies it
+
+  \param[in] dt The integration time step (also the duration of propagation)
+  \param[in,out] Coeff The reference to the CMATRIX object containing the electronic DOF (coefficient)
+  \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) - the complex-valued matrix, CMATRIX
+             it is also assumed to Hermitian - pay attention to how it is constructed!
+  \param[in] S The reference to the overlap matrix (assumed to be a complex-valued time-dependent matrix, CMATRIX)
+
+  This integrator IS unitary
+  This is the Python-friendly function
+*/ 
+
+
+  int i,j;
+ 
+  // Let us first diagonalize the overlap matrix S
+  int sz = Hvib.n_cols;  
+
+  // Transform the Hamiltonian accordingly:
+  CMATRIX* I; I = new CMATRIX(sz, sz);  I->load_identity();
+  CMATRIX* C; C = new CMATRIX(sz, sz);  *C = complex<double>(0.0, 0.0); // eigenvectors
+  CMATRIX* Heig; Heig = new CMATRIX(sz, sz);  *Heig = complex<double>(0.0,0.0); // eigenvalues
+  CMATRIX* expH;   expH = new CMATRIX(sz, sz);    *expH = complex<double>(0.0,0.0);   
+
+
+  // Compute the exponential  exp(-i*Hvib*dt)  
+  libmmath::libmeigen::solve_eigen(sz, Hvib, *I, *Heig, *C);  // Hvib_eff * C = I * C * Heig  ==>  Hvib = C * Heig * C.H()
+
+
+  // Diagonal form expH
+  complex<double> one(0.0, 1.0);
+  for(i=0;i<sz;i++){
+    complex<double> val = std::exp(-one*Heig->get(i,i)*dt );
+    expH->set(i,i,val);
+  }
+
+  // Transform back to the original basis:
+  *expH = (*C) * (*expH) * ((*C).H());
+
+  // Propagation
+  Coeff = *expH * Coeff;
+
+  
+  // Clean temporary memory
+  delete expH;  delete Heig;  delete C;  delete I;
+
+
+
+}// propagate_electronic
+
+
+
+
+
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S){
 /**
   \brief Propagate electronic DOF in the MMTS variables
@@ -413,133 +473,24 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S){
 
 
 
-void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S, CMATRIX& Sdot){
+
+void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
 /**
-  \brief Propagate electronic DOF in the MMTS variables
+  Solves the generalized time-dependent Schrodinger equation:
 
-  Methodologically: solve i*hbar*S*dc/dt = Hvib*c directly, using Lowdin-type transformation and 
-  matrix exponentiation. This solver is good for general time-independent S matrix
+  i*hbar*S*dc/dt = Hvib*c 
 
-  API: A free function that takes Electronic object as the input and modifies it
-
-  \param[in] dt The integration time step (also the duration of propagation)
-  \param[in,out] el The reference to the Electronic object containing the electronic DOF
-  \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) - the complex-valued matrix, CMATRIX
-  \param[in] S The reference to the overlap matrix (assumed to be a complex-valued matrix, CMATRIX)
-  \param[in] Sdot The reference to the time-derivative of the overlap matrix (assumed to be a complex-valued matrix, CMATRIX)
-
-  This integrator IS unitary
-  This is the Python-friendly function
-*/ 
-
-
-  int i,j;
+  Although the vibronic Hamiltonian, Hvib_tilda, computed in the non-orthonormal basis is not Hermitian,
+  the theory eventually leads to a Hermitian version of the vibronic Hamiltonian, so we take the Hermitian one
+  as the input. See my paper on the details.
  
-  // Let us first diagonalize the overlap matrix S
-  int sz = S.n_cols;  
-  CMATRIX* I; I = new CMATRIX(sz, sz);  I->load_identity(); //->Init_Unit_Matrix(complex<double>(1.0,0.0));
-  CMATRIX* C; C = new CMATRIX(sz, sz);  *C = complex<double>(0.0, 0.0);
-  CMATRIX* Seig; Seig = new CMATRIX(sz, sz);  *Seig = complex<double>(0.0,0.0);
-
-
-  // Transformation to adiabatic basis
-  libmmath::libmeigen::solve_eigen(sz, S, *I, *Seig, *C);  // S * C = I * C * Seig  ==>  S = C * Seig * C.H()
-
-
-  // Diagonal form of S^{-1/2} and S^{1/2} matrices
-  CMATRIX* S_i_half; S_i_half = new CMATRIX(sz, sz);  *S_i_half = complex<double>(0.0,0.0);  // S^{-1/2}
-  CMATRIX* S_half;   S_half = new CMATRIX(sz, sz);    *S_half = complex<double>(0.0,0.0);    // S^{1/2}
-  for(i=0;i<sz;i++){
-    complex<double> val = std::sqrt(Seig->get(i,i));
-
-    S_i_half->M[i*sz+i] = 1.0/val;
-    S_half->M[i*sz+i] = val;
-  }
-
-
-  // Convert to original basis
-  *S_i_half = (*C) * (*S_i_half) * ((*C).H());
-  *S_half = (*C) * (*S_half) * ((*C).H());
-
-
-  // Transform the Hamiltonian accordingly:
-  CMATRIX* Hvib_eff;  Hvib_eff = new CMATRIX(sz,sz);
-  CMATRIX* coeff;     coeff = new CMATRIX(sz,1);
-  for(i=0;i<sz;i++){  coeff->M[i] = complex<double>(el.q[i], el.p[i]);  }
-
-
-  // Transform Hvib and coefficients
-  *Hvib_eff = Hvib + complex<double>(0.0, 0.5)*((*S_half) * Sdot * (*S_i_half) - Sdot); // contribution from the S matrix and its 
-                                                                                        // time-dependence
-  *Hvib_eff = (*S_i_half) * (*Hvib_eff) * (*S_i_half);  // Hermitian part
-
-  *coeff = (*S_half) * (*coeff);                        // now these are effective coefficients
-
-  
-  // Set up the object
-  Electronic el_eff; el_eff = el;
-  for(i=0; i<sz; i++){  el_eff.q[i] = coeff->get(i,0).real(); el_eff.p[i] = coeff->get(i,0).imag(); }
-
-
-  // Compute the exponential  exp(-i*Hvib*dt)  
-  libmmath::libmeigen::solve_eigen(sz, *Hvib_eff, *I, *Seig, *C);  // Hvib_eff * C = I * C * Seig  ==>  Hvib = C * Seig * C.H()
-
-
-  // Diagonal form expH
-  CMATRIX* expH;   expH = new CMATRIX(sz, sz);    *expH = complex<double>(0.0,0.0);    // 
-  complex<double> one(0.0, 1.0);
-  for(i=0;i<sz;i++){
-    complex<double> val = std::exp(-one*Seig->get(i,i)*dt );
-    expH->set(i,i,val);
-  }
-
-
-  // Transform back to the original basis:
-  *expH = (*C) * (*expH) * ((*C).H());
-
-
-  // Propagation
-   *coeff = *expH * *coeff;
-
-
-  // Transform the coefficients back to the original representation:
-  *coeff = (*S_i_half) * (*coeff); // * (*S_i_half);      // now these are effective coefficients
-
-  
-  // Update "normal" electronic variables
-  for(i=0; i<sz; i++){  el.q[i] = coeff->get(i,0).real(); el.p[i] = coeff->get(i,0).imag(); }  
-
-
-  // Clean temporary memory
-  delete expH;
-  delete coeff;
-  delete Hvib_eff;
-  delete S_i_half;
-  delete S_half;
-  delete Seig;
-  delete C;
-  delete I;
-
-
-
-}// propagate_electronic
-
-
-
-void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S, CMATRIX& Sdot){
-/**
-  \brief Propagate electronic DOF in the MMTS variables
-
-  Methodologically: solve i*hbar*S*dc/dt = Hvib*c directly, using Lowdin-type transformation and 
-  matrix exponentiation. This solver is good for general time-independent S matrix
-
-  API: A free function that takes electronic DOF in the form of matrix-colomun modifies it
+  API: A free function that takes electronic DOF in the form of matrix-colomun and modifies it
 
   \param[in] dt The integration time step (also the duration of propagation)
   \param[in,out] Coeff The reference to the CMATRIX object containing the electronic DOF (coefficient)
   \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) - the complex-valued matrix, CMATRIX
-  \param[in] S The reference to the overlap matrix (assumed to be a complex-valued matrix, CMATRIX)
-  \param[in] Sdot The reference to the time-derivative of the overlap matrix (assumed to be a complex-valued matrix, CMATRIX)
+             it is also assumed to Hermitian - pay attention to how it is constructed!
+  \param[in] S The reference to the overlap matrix (assumed to be a complex-valued time-dependent matrix, CMATRIX)
 
   This integrator IS unitary
   This is the Python-friendly function
@@ -578,122 +529,8 @@ void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S, 
   // Transform the Hamiltonian accordingly:
   CMATRIX* Hvib_eff;  Hvib_eff = new CMATRIX(sz,sz);
   CMATRIX* coeff;     coeff = new CMATRIX(sz,1);
-//  for(i=0;i<sz;i++){  coeff->M[i] = complex<double>(el.q[i], el.p[i]);  }
 
-
-  // Transform Hvib and coefficients
-  *Hvib_eff = Hvib + complex<double>(0.0, 0.5)*((*S_half) * Sdot * (*S_i_half) - Sdot); // contribution from the S matrix and its 
-                                                                                        // time-dependence
   *Hvib_eff = (*S_i_half) * (*Hvib_eff) * (*S_i_half);  // Hermitian part
-
-  *coeff = (*S_half) * Coeff;                           // now these are the effective coefficients
-
-  
-  // Compute the exponential  exp(-i*Hvib*dt)  
-  libmmath::libmeigen::solve_eigen(sz, *Hvib_eff, *I, *Seig, *C);  // Hvib_eff * C = I * C * Seig  ==>  Hvib = C * Seig * C.H()
-
-
-  // Diagonal form expH
-  CMATRIX* expH;   expH = new CMATRIX(sz, sz);    *expH = complex<double>(0.0,0.0);    // 
-  complex<double> one(0.0, 1.0);
-  for(i=0;i<sz;i++){
-    complex<double> val = std::exp(-one*Seig->get(i,i)*dt );
-    expH->set(i,i,val);
-  }
-
-  // Transform back to the original basis:
-  *expH = (*C) * (*expH) * ((*C).H());
-
-  // Propagation
-   *coeff = *expH * *coeff;
-
-  // Transform the coefficients back to the original representation:
-  Coeff = (*S_i_half) * (*coeff); // * (*S_i_half);      // convert the effective coefficients back to original representation
-
-  
-  // Clean temporary memory
-  delete expH;
-  delete coeff;
-  delete Hvib_eff;
-  delete S_i_half;
-  delete S_half;
-  delete Seig;
-  delete C;
-  delete I;
-
-
-
-}// propagate_electronic
-
-
-
-void propagate_electronic_nonorth(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
-/**
-  \brief Propagate electronic DOF in the MMTS variables
-
-  Methodologically: solve i*hbar*S*dc/dt = Hvib*c directly, using Lowdin-type transformation and 
-  matrix exponentiation. This solver is good for general time-independent S matrix - now we use 
-  a refined methodology!!!
-
-  API: A free function that takes electronic DOF in the form of matrix-colomun modifies it
-
-  \param[in] dt The integration time step (also the duration of propagation)
-  \param[in,out] Coeff The reference to the CMATRIX object containing the electronic DOF (coefficient)
-  \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) - the complex-valued matrix, CMATRIX
-  \param[in] S The reference to the overlap matrix (assumed to be a complex-valued matrix, CMATRIX)
-  \param[in] Sdot The reference to the time-derivative of the overlap matrix (assumed to be a complex-valued matrix, CMATRIX)
-
-  This integrator IS unitary
-  This is the Python-friendly function
-*/ 
-
-
-  int i,j;
- 
-  // Let us first diagonalize the overlap matrix S
-  int sz = S.n_cols;  
-  CMATRIX* I; I = new CMATRIX(sz, sz);  I->load_identity(); //->Init_Unit_Matrix(complex<double>(1.0,0.0));
-  CMATRIX* C; C = new CMATRIX(sz, sz);  *C = complex<double>(0.0, 0.0);
-  CMATRIX* Seig; Seig = new CMATRIX(sz, sz);  *Seig = complex<double>(0.0,0.0);
-
-
-  // Transformation to adiabatic basis
-  libmmath::libmeigen::solve_eigen(sz, S, *I, *Seig, *C);  // S * C = I * C * Seig  ==>  S = C * Seig * C.H()
-
-
-  // Diagonal form of S^{-1/2} and S^{1/2} matrices
-  CMATRIX* S_i_half; S_i_half = new CMATRIX(sz, sz);  *S_i_half = complex<double>(0.0,0.0);  // S^{-1/2}
-  CMATRIX* S_half;   S_half = new CMATRIX(sz, sz);    *S_half = complex<double>(0.0,0.0);    // S^{1/2}
-  for(i=0;i<sz;i++){
-    complex<double> val = std::sqrt(Seig->get(i,i));
-
-    S_i_half->M[i*sz+i] = 1.0/val;
-    S_half->M[i*sz+i] = val;
-  }
-
-
-  // Convert to original basis
-  *S_i_half = (*C) * (*S_i_half) * ((*C).H());
-  *S_half = (*C) * (*S_half) * ((*C).H());
-
-
-  // Transform the Hamiltonian accordingly:
-  CMATRIX* Hvib_eff;  Hvib_eff = new CMATRIX(sz,sz);
-  CMATRIX* coeff;     coeff = new CMATRIX(sz,1);
-//  for(i=0;i<sz;i++){  coeff->M[i] = complex<double>(el.q[i], el.p[i]);  }
-
-
-  // Transform Hvib and coefficients
-//!!! Coefficient must be 1 !!! This will lead to unitary dynamics !!!!
-//  for(i=0;i<sz*sz;i++){
-//    Hvib_eff->M[i] = complex<double>(Hvib.M[i].real(), 2.0*Hvib.M[i].imag()); 
-//  }
-
-
-//  *Hvib_eff = Hvib + complex<double>(0.0, 0.5)*((*S_half) * Sdot * (*S_i_half) - Sdot); // contribution from the S matrix and its 
-                                                                                        // time-dependence
-  *Hvib_eff = (*S_i_half) * (*Hvib_eff) * (*S_i_half);  // Hermitian part
-
   *coeff = (*S_half) * Coeff;                           // now these are the effective coefficients
 
   
