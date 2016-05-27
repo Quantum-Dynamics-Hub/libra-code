@@ -530,8 +530,8 @@ void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
   CMATRIX* Hvib_eff;  Hvib_eff = new CMATRIX(sz,sz);
   CMATRIX* coeff;     coeff = new CMATRIX(sz,1);
 
-  *Hvib_eff = (*S_i_half) * (*Hvib_eff) * (*S_i_half);  // Hermitian part
-  *coeff = (*S_half) * Coeff;                           // now these are the effective coefficients
+  *Hvib_eff = (*S_i_half) * Hvib * (*S_i_half);  // Hermitian part
+  *coeff = (*S_half) * Coeff;                    // now these are the effective coefficients
 
   
   // Compute the exponential  exp(-i*Hvib*dt)  
