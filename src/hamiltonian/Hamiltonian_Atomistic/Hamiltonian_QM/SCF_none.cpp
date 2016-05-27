@@ -122,6 +122,9 @@ double scf_none(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
     i = i + 1;
   }// while
 
+  delete P_alp_old;
+  delete P_bet_old;
+
   return E;
 }
 
