@@ -52,6 +52,11 @@ void export_hamiltonian_generic_objects(){
       .def("set_q", set_q)
       .def("set_v", set_v)
 
+      .def("get_ham_dia", &Hamiltonian::get_ham_dia)
+      .def("get_ham_adi", &Hamiltonian::get_ham_adi)
+      .def("get_d1ham_dia", &Hamiltonian::get_d1ham_dia)
+      .def("get_d1ham_adi", &Hamiltonian::get_d1ham_adi)
+
       .def("compute",          &Hamiltonian::compute)
 //      .def("compute_diabatic", &Hamiltonian_Model::compute_diabatic)
 //      .def("compute_adiabatic",&Hamiltonian_Model::compute_adiabatic)

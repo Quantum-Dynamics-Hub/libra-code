@@ -71,6 +71,7 @@ void export_hamiltonian_model_objects(){
 //      .def("set_rep", &Hamiltonian_Model::set_rep)
 //      .def("set_q", set_q)
 //      .def("set_v", set_v)
+      .def("get_basis_transform", &Hamiltonian_Model::get_basis_transform)
 
 //      .def("compute",          &Hamiltonian_Model::compute)
       .def("compute_diabatic", &Hamiltonian_Model::compute_diabatic)

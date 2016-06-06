@@ -83,6 +83,7 @@ Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
 
   ham_dia = new MATRIX(nelec,nelec); *ham_dia = 0.0;
   ham_adi = new MATRIX(nelec,nelec); *ham_adi = 0.0;
+  basis_transform = new MATRIX(nelec, nelec);  basis_transform->Init_Unit_Matrix(1.0); 
 
   d1ham_dia = vector<MATRIX*>(nnucl);
   d1ham_adi = vector<MATRIX*>(nnucl);
@@ -111,6 +112,7 @@ Hamiltonian_Model::~Hamiltonian_Model(){
  
   delete ham_dia;
   delete ham_adi;
+  delete basis_transform;
 
   for(i=0;i<nnucl;i++){  
     delete d1ham_dia[i];
@@ -244,21 +246,21 @@ void Hamiltonian_Model::compute_adiabatic(){
 
 
     MATRIX* S; S = new MATRIX(nelec, nelec);  S->Init_Unit_Matrix(1.0);
-    MATRIX* C; C = new MATRIX(nelec, nelec);  *C = 0.0;
+//    MATRIX* C; C = new MATRIX(nelec, nelec);  *C = 0.0;
 
     // Transformation to adiabatic basis
-    solve_eigen(nelec, ham_dia, S, ham_adi, C);  // H_dia * C = S * C * H_adi
+    solve_eigen(nelec, ham_dia, S, ham_adi, basis_transform);  // H_dia * C = S * C * H_adi, where C = basis_transform
 
 
     // Now compute the derivative couplings (off-diagonal, multiplied by energy difference) and adiabatic gradients (diagonal)
     for(int n=0;n<nnucl;n++){
 
-      *d1ham_adi[n] = (*C).T() * (*d1ham_dia[n]) * (*C);
+      *d1ham_adi[n] = (*basis_transform).T() * (*d1ham_dia[n]) * (*basis_transform);
 
     }// for n
 
     delete S;
-    delete C;
+//    delete C;
 
 
     // Set status flag

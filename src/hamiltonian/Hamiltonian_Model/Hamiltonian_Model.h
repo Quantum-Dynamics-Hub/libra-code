@@ -46,6 +46,8 @@ class Hamiltonian_Model : public Hamiltonian{
 
   /// General specification of the model: 0 - SAC, 1 - DAC, 2 - ECWR, 3 - Marcus, 4 - superexchange (SEXCH), 5 - Rabi2
   int ham_indx;    
+
+  MATRIX* basis_transform;
    
 public:
 
@@ -65,6 +67,8 @@ public:
 //  void set_q(boost::python::list q_);
 //  void set_v(vector<double>& v_);
 //  void set_v(boost::python::list v_);
+
+  MATRIX get_basis_transform(){ return *basis_transform; }
 
   // Perform actual computations - this will construct the internals of the object of this type
 //  void compute();

@@ -125,6 +125,12 @@ public:
   virtual void set_v(vector<double>& v_);
   virtual void set_v(boost::python::list v_);
 
+  // Access to actual data
+  virtual MATRIX get_ham_dia(){ return *ham_dia; }
+  virtual MATRIX get_ham_adi(){ return *ham_adi; }
+  virtual MATRIX get_d1ham_dia(int i){ return *d1ham_dia[i]; }
+  virtual MATRIX get_d1ham_adi(int i){ return *d1ham_adi[i]; }
+
 
   // This function performs actual computations
   virtual void compute();
