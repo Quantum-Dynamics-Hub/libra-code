@@ -28,6 +28,10 @@ ADD_SUBDIRECTORY("wfcgrid")
 MESSAGE("Going into subdirectory ensemble...")
 ADD_SUBDIRECTORY("ensemble")
 
+MESSAGE("Going into subdirectory gwp...")
+ADD_SUBDIRECTORY("gwp")
+
+
 #
 #  Source files and headers in this directory
 #
@@ -45,8 +49,8 @@ ADD_LIBRARY(dyn_stat STATIC ${DYN_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(dyn      ensemble_stat wfcgrid_stat barostat_stat thermostat_stat electronic_stat rigidbody_stat nuclear_stat mmath_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(dyn_stat ensemble_stat wfcgrid_stat barostat_stat thermostat_stat electronic_stat rigidbody_stat nuclear_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(dyn      gwp_stat ensemble_stat wfcgrid_stat barostat_stat thermostat_stat electronic_stat rigidbody_stat nuclear_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(dyn_stat gwp_stat ensemble_stat wfcgrid_stat barostat_stat thermostat_stat electronic_stat rigidbody_stat nuclear_stat mmath_stat ${ext_libs})
 
 
 

@@ -29,6 +29,7 @@ using namespace libthermostat;
 using namespace libbarostat;
 using namespace libwfcgrid;
 using namespace libensemble;
+using namespace libgwp;
 
 
 void export_Dyn_objects(){
@@ -45,6 +46,7 @@ void export_Dyn_objects(){
   export_Barostat_objects();
   export_Wfcgrid_objects();
   export_Ensemble_objects();
+  export_gwp_objects();
 
   double (*expt_compute_kinetic_energy_v1)(Nuclear& mol) = &compute_kinetic_energy;
   double (*expt_compute_kinetic_energy_v2)(Ensemble& ens) = &compute_kinetic_energy;

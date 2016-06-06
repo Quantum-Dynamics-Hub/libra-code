@@ -9,42 +9,31 @@
 *
 *********************************************************************************/
 /**
-  \file libdyn.h
+  \file libgwp.h
   \brief The file describes Python export function
     
 */
 
-#ifndef LIBDYN_H
-#define LIBDYN_H
+#ifndef LIB_GWP_H
+#define LIB_GWP_H
 
 
-// Dynamics classes
-#include "nuclear/libnuclear.h"
-#include "rigidbody/librigidbody.h"
-#include "electronic/libelectronic.h"
-#include "thermostat/libthermostat.h"
-#include "barostat/libbarostat.h"
-#include "wfcgrid/libwfcgrid.h"
-#include "ensemble/libensemble.h"
-#include "gwp/libgwp.h"
-
-// General dynamics
-#include "Energy_and_Forces.h"
-#include "Surface_Hopping.h"
-#include "Surface_Hopping_method1.h"
-#include "Dynamics_Nuclear.h"
-#include "Dynamics_Ensemble.h"
-
-
+#include "gwp.h"
 
 /// libdyn namespace
 namespace libdyn{
 
+/// libgwp namespace
+namespace libgwp{
 
-void export_Dyn_objects();
+
+void export_gwp_objects();
 
 
+}// namespace libgwp
 }// namespace libdyn
 
-#endif // LIBDYN_H
 
+
+
+#endif// LIB_GWP_H
