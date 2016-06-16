@@ -23,6 +23,9 @@ using namespace liblinalg;
 namespace libmeigen{
 
 
+double det(MATRIX&);
+complex<double> det(CMATRIX&);
+
 void solve_eigen(int, MATRIX*, MATRIX*, MATRIX*, MATRIX*);
 void solve_eigen(int, MATRIX&, MATRIX&, MATRIX&, MATRIX&);
 void solve_eigen_gen(int, MATRIX*, MATRIX*, MATRIX*, MATRIX*);

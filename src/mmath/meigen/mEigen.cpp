@@ -27,14 +27,55 @@ using namespace liblinalg;
 /// libmeigen namespace
 namespace libmeigen{
 
-/****************************************************************************
-  This file contains following functions:
 
-  void solve_eigen(int Norb, MATRIX* H, MATRIX* S, MATRIX* E, MATRIX* C)
-  void solve_eigen(int Norb, MATRIX* H, MATRIX* E, MATRIX* C)
-  int merge_sort(vector< pair<int,double> >& in, vector< pair<int,double> >& out)
+double det(MATRIX& A){
 
-****************************************************************************/
+  // Wrapper matrices for Eigen3
+
+  if(A.num_of_cols!=A.num_of_rows){
+    std::cout<<"Error in det(MATRIX): Can not compute a determinant of non-square matrix\n";
+    exit(0);
+  }
+
+  int N = A.num_of_cols;
+  int i,j;
+
+  MatrixXd a(N,N);
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      a(i,j) = A.M[i*N+j];
+    }// for j
+  }// for i
+
+  return a.determinant();
+
+
+}
+
+complex<double> det(CMATRIX& A){
+
+  // Wrapper matrices for Eigen3
+
+  if(A.n_cols!=A.n_rows){
+    std::cout<<"Error in det(MATRIX): Can not compute a determinant of non-square matrix\n";
+    exit(0);
+  }
+
+  int N = A.n_cols;
+  int i,j;
+
+  MatrixXcd a(N,N);
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      a(i,j) = A.M[i*N+j];
+    }// for j
+  }// for i
+
+  return a.determinant();
+
+}
+
+
 
 void solve_eigen(int Norb, MATRIX* H, MATRIX* S, MATRIX* E, MATRIX* C){
 // Solve H * C = S * C * E

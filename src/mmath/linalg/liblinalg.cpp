@@ -335,6 +335,10 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
       .def("dot", &CMATRIX::dot)     // dot product of two matrices
       .def("col", &CMATRIX::col)     // return given column of the matrix 
       .def("row", &CMATRIX::row)     // return given row of the matrix 
+      .def("real", &CMATRIX::real)
+      .def("imag", &CMATRIX::imag)
+      .def("get_components", &CMATRIX::get_components)
+
 
       .def("QR", &CMATRIX::QR)       // QR for general (Hermitian or symmetric) matrices
       .def("QR1",&CMATRIX::QR1)      // QR for tridiagonal matrices

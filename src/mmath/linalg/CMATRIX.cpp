@@ -461,6 +461,46 @@ CMATRIX CMATRIX::row(int i){
 }
 
 
+MATRIX CMATRIX::real(){
+  MATRIX res(n_rows, n_cols);
+  for(int i=0;i<n_elts;i++){ res.M[i] = M[i].real(); }
+  return res;
+}
+
+MATRIX CMATRIX::imag(){
+  MATRIX res(n_rows, n_cols);
+  for(int i=0;i<n_elts;i++){ res.M[i] = M[i].imag(); }
+  return res;
+}
+
+void CMATRIX::get_components(MATRIX& re_part,MATRIX& im_part){
+  if(re_part.num_of_cols != n_cols){
+    std::cout<<"Error in CMATRIX::get_components : The number of columns of the target real component matrix ("
+             <<re_part.num_of_cols<<") is not equal to the number of columns of the source complex matrix ("<<n_cols<<")\n";
+    exit(0);
+  }
+  if(im_part.num_of_cols != n_cols){
+    std::cout<<"Error in CMATRIX::get_components : The number of columns of the target imaginary component matrix ("
+             <<im_part.num_of_cols<<") is not equal to the number of columns of the source complex matrix ("<<n_cols<<")\n";
+    exit(0);
+  }
+  if(re_part.num_of_rows != n_rows){
+    std::cout<<"Error in CMATRIX::get_components : The number of rows of the target real component matrix ("
+             <<re_part.num_of_rows<<") is not equal to the number of rows of the source complex matrix ("<<n_rows<<")\n";
+    exit(0);
+  }
+  if(im_part.num_of_rows != n_rows){
+    std::cout<<"Error in CMATRIX::get_components : The number of rows of the target imaginary component matrix ("
+             <<im_part.num_of_rows<<") is not equal to the number of rows of the source complex matrix ("<<n_rows<<")\n";
+    exit(0);
+  }
+
+  for(int i=0;i<n_elts;i++){ re_part.M[i] = M[i].real();  im_part.M[i] = M[i].imag(); }
+
+}
+
+
+
 
 void CMATRIX::max_nondiagonal(int& row,int& col){
   double maxeps = norm(M[1]); row = 0; col = 1;

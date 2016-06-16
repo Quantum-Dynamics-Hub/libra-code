@@ -36,6 +36,7 @@ namespace libmmath{
 /// liblinalg namespace
 namespace liblinalg{
 
+
 class CMATRIX{
 /**
   The class representing an arbitrary-sized complex valued matrices
@@ -122,6 +123,12 @@ public:
   CMATRIX col(int); // takes given column and makes it n x 1 CMATRIX
   CMATRIX row(int); // takes given row and makes it 1 x n CMATRIX
 
+  MATRIX real();
+  MATRIX imag();
+  void get_components(MATRIX& re_part,MATRIX& im_part); ///< Split the matrix into real and imaginary components 
+
+                  
+
   // More advanced functions
   void QR(CMATRIX& w,CMATRIX& R);  ///< QR for general (Hermitian or symmetric) matrices
   void QR1(CMATRIX& w,CMATRIX& R); ///< QR for tridiagonal matrices
@@ -144,6 +151,8 @@ public:
   friend CMATRIX sin(CMATRIX& m1,complex<double> scl,double eps);
   friend CMATRIX cos(CMATRIX& m1,complex<double> scl,double eps);
   friend CMATRIX pow(CMATRIX& m1,double scl,double eps);
+
+
 
   // Binary output/input
   void bin_dump(std::string filename);

@@ -43,7 +43,7 @@ void export_SpecialFunctions_objects(){
 
 
   def("FACTORIAL",FACTORIAL); // n!
-  def("DRACTORIAL",DFACTORIAL);  // n!!
+  def("DFACTORIAL",DFACTORIAL);  // n!!
   def("BINOM",BINOM);  // C_n^i
   def("binomial_expansion", expt_binomial_expansion);
 
