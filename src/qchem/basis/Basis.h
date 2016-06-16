@@ -59,6 +59,17 @@ void update_overlap_matrix(int,int,int,const VECTOR&,const VECTOR&,const VECTOR&
 void MO_overlap(MATRIX& Smo, vector<AO>& ao_i, vector<AO>& ao_j, MATRIX& Ci, MATRIX& Cj,
  vector<int>& active_orb_i, vector<int>& active_orb_j, double max_d2);
 
+void MO_overlap(CMATRIX& Smo, vector<AO>& ao_i, vector<AO>& ao_j, CMATRIX& Ci, CMATRIX& Cj,
+ vector<int>& active_orb_i, vector<int>& active_orb_j, double max_d2);
+
+void MO_overlap(MATRIX& Smo, MATRIX& Ci, MATRIX& Cj, 
+ vector<int>& active_orb_i, vector<int>& active_orb_j, double max_d2);
+
+void MO_overlap(CMATRIX& Smo, CMATRIX& Ci, CMATRIX& Cj,
+ vector<int>& active_orb_i, vector<int>& active_orb_j, double max_d2);
+
+
+
 
 // Basis_map.cpp
 void show_mapping(const vector<vector<int> >&);

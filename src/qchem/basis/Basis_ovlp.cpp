@@ -153,6 +153,20 @@ void pop_cols(MATRIX& X, MATRIX& x, vector<int>& cols){
   }
 
 }
+void pop_cols(CMATRIX& X, CMATRIX& x, vector<int>& cols){
+// Copies selected columns from X to x 
+
+  int nrows = X.n_rows;
+  int sz = cols.size();
+
+  for(int i=0;i<sz;i++){
+    for(int n=0; n<nrows; n++){
+      x.set(n,i, X.get(n, cols[i]));
+    }
+  }
+
+}
+
 
 
 void MO_overlap(MATRIX& Smo, vector<AO>& ao_i, vector<AO>& ao_j, MATRIX& Ci, MATRIX& Cj,
@@ -243,6 +257,226 @@ void MO_overlap(MATRIX& Smo, vector<AO>& ao_i, vector<AO>& ao_j, MATRIX& Ci, MAT
 
 
 }
+
+
+void MO_overlap(CMATRIX& Smo, vector<AO>& ao_i, vector<AO>& ao_j, CMATRIX& Ci, CMATRIX& Cj,
+ vector<int>& active_orb_i, vector<int>& active_orb_j, double max_d2){
+/**
+  Finds the keywords and their patterns and extracts the parameters
+  \param[in] ao_i, ao_j : atomic orbital basis at different time step.
+  \param[in] Ci, Cj : molecular coefficients at different time step.
+  \param[in] active_orb_i, active_orb_j The lists of the active orbitals for each MO-AO data set
+  This function returns overlap matrix of atomic orbitals with different time step
+  like <MO(t)|MO(t+dt)>.
+
+*/
+
+  int Nbas_i = ao_i.size();
+  int Nbas_j = ao_j.size();
+
+  // Ci = Nbas_i x Norb_i 
+  // Cj = Nbas_j x Norb_j
+  int Norb_i = Ci.n_cols;
+  int Norb_j = Cj.n_cols;
+
+  int Norb_i_act = active_orb_i.size();  // the number of active orbitals in set i
+  int Norb_j_act = active_orb_j.size();  // the number of active orbitals in set j
+
+
+  // Smo = MATRIX(Norb_i_act, Norb_j_act) <- this is what expected
+  if(Smo.n_rows != Norb_i_act){
+    cout<<"Error in MO_overlap: The number of rows of the MO overlap matrix"<<Smo.n_rows
+        <<" is not consistent with the number of <i| orbitals "<<Norb_i_act<<endl;
+    cout<<"Exiting..."; 
+    exit(0);
+  }
+  if(Smo.n_cols != Norb_j_act){
+    cout<<"Error in MO_overlap: The number of cols of the MO overlap matrix"<<Smo.n_cols
+        <<" is not consistent with the number of |j> orbitals "<<Norb_j_act<<endl;
+    cout<<"Exiting..."; 
+    exit(0);
+  }
+
+
+
+  // Allocate working memory
+  int i,j;
+  int is_derivs = 0;
+  int is_normalize = 0;
+  VECTOR dIdA, dIdB;
+  int n_aux = 20;
+  vector<double*> auxd(10);
+  for(i=0;i<10;i++){ auxd[i] = new double[n_aux]; }
+
+    
+  CMATRIX* ci; ci = new CMATRIX(Nbas_i, Norb_i_act);
+  CMATRIX* cj; cj = new CMATRIX(Nbas_j, Norb_j_act);
+  CMATRIX* Sao; Sao = new CMATRIX(Nbas_i, Nbas_j);
+
+  pop_cols(Ci, *ci, active_orb_i);
+  pop_cols(Cj, *cj, active_orb_j);  
+
+
+  // overlap matrix of S
+  for(i=0;i<Nbas_i;i++){  // all orbitals
+    for(j=0;j<Nbas_j;j++){
+
+      double dist2 = (ao_i[i].primitives[0].R - ao_j[j].primitives[0].R).length2();       
+
+      if(dist2<max_d2) {  
+        double res = gaussian_overlap(ao_i[i], ao_j[j], is_normalize, is_derivs, dIdA, dIdB, auxd, n_aux);
+        Sao->set(i,j, res, 0.0); 
+      }
+      else{  Sao->set(i,j,0.0, 0.0);  }
+
+
+    }// for j
+  }// for i
+
+
+  Smo = (*ci).H() * (*Sao) * (*cj);   // ( Norb_i_act x Nbas_i ) x (Nbas_i x Nbas_j) x (Nbas_j x Norb_j_act) = Norb_i_act x Norb_j_act
+
+
+  // Clean working memory
+  for(i=0;i<10;i++){ delete [] auxd[i]; }  
+  auxd.clear();
+
+  delete Sao;
+  delete ci;
+  delete cj;
+
+
+}
+
+
+
+void MO_overlap(MATRIX& Smo, MATRIX& Ci, MATRIX& Cj,
+ vector<int>& active_orb_i, vector<int>& active_orb_j, double max_d2){
+/**
+  Finds the keywords and their patterns and extracts the parameters
+  \param[in] Ci, Cj : molecular coefficients at different time step.
+  \param[in] active_orb_i, active_orb_j The lists of the active orbitals for each MO-AO data set
+  This function returns overlap matrix of atomic orbitals with different time step
+  like <MO(t)|MO(t+dt)>.
+
+*/
+
+  // Ci = Nbas_i x Norb_i 
+  // Cj = Nbas_j x Norb_j
+  int Nbas_i = Ci.num_of_rows;
+  int Nbas_j = Cj.num_of_rows;
+
+  if(Nbas_i != Nbas_j){
+    cout<<"Error in MO_overlap: The number of rows of the MO-LCAO matrix Ci "<<Ci.num_of_rows
+        <<" is not equal to the number of rows of the MO-LCAO matrix Cj "<<Cj.num_of_rows<<endl;
+    cout<<"Exiting..."; 
+    exit(0);
+  }
+
+
+  int Norb_i = Ci.num_of_cols;
+  int Norb_j = Cj.num_of_cols;
+
+  int Norb_i_act = active_orb_i.size();  // the number of active orbitals in set i
+  int Norb_j_act = active_orb_j.size();  // the number of active orbitals in set j
+
+
+  // Smo = MATRIX(Norb_i_act, Norb_j_act) <- this is what expected
+  if(Smo.num_of_rows != Norb_i_act){
+    cout<<"Error in MO_overlap: The number of rows of the MO overlap matrix"<<Smo.num_of_rows
+        <<" is not consistent with the number of <i| orbitals "<<Norb_i_act<<endl;
+    cout<<"Exiting..."; 
+    exit(0);
+  }
+  if(Smo.num_of_cols != Norb_j_act){
+    cout<<"Error in MO_overlap: The number of cols of the MO overlap matrix"<<Smo.num_of_cols
+        <<" is not consistent with the number of |j> orbitals "<<Norb_j_act<<endl;
+    cout<<"Exiting..."; 
+    exit(0);
+  }
+
+
+  MATRIX* ci; ci = new MATRIX(Nbas_i, Norb_i_act);
+  MATRIX* cj; cj = new MATRIX(Nbas_j, Norb_j_act);
+
+  pop_cols(Ci, *ci, active_orb_i);
+  pop_cols(Cj, *cj, active_orb_j);  
+
+
+  Smo = (*ci).T() * (*cj);   // ( Norb_i_act x Nbas_i ) x (Nbas_j x Norb_j_act) = Norb_i_act x Norb_j_act
+
+
+  // Clean working memory
+  delete ci;
+  delete cj;
+
+
+}
+
+void MO_overlap(CMATRIX& Smo, CMATRIX& Ci, CMATRIX& Cj,
+ vector<int>& active_orb_i, vector<int>& active_orb_j, double max_d2){
+/**
+  Finds the keywords and their patterns and extracts the parameters
+  \param[in] Ci, Cj : molecular coefficients at different time step.
+  \param[in] active_orb_i, active_orb_j The lists of the active orbitals for each MO-AO data set
+  This function returns overlap matrix of atomic orbitals with different time step
+  like <MO(t)|MO(t+dt)>.
+
+*/
+
+  // Ci = Nbas_i x Norb_i 
+  // Cj = Nbas_j x Norb_j
+  int Nbas_i = Ci.n_rows;
+  int Nbas_j = Cj.n_rows;
+
+  if(Nbas_i != Nbas_j){
+    cout<<"Error in MO_overlap: The number of rows of the MO-LCAO matrix Ci "<<Ci.n_rows
+        <<" is not equal to the number of rows of the MO-LCAO matrix Cj "<<Cj.n_rows<<endl;
+    cout<<"Exiting..."; 
+    exit(0);
+  }
+
+
+  int Norb_i = Ci.n_cols;
+  int Norb_j = Cj.n_cols;
+
+  int Norb_i_act = active_orb_i.size();  // the number of active orbitals in set i
+  int Norb_j_act = active_orb_j.size();  // the number of active orbitals in set j
+
+
+  // Smo = MATRIX(Norb_i_act, Norb_j_act) <- this is what expected
+  if(Smo.n_rows != Norb_i_act){
+    cout<<"Error in MO_overlap: The number of rows of the MO overlap matrix"<<Smo.n_rows
+        <<" is not consistent with the number of <i| orbitals "<<Norb_i_act<<endl;
+    cout<<"Exiting..."; 
+    exit(0);
+  }
+  if(Smo.n_cols != Norb_j_act){
+    cout<<"Error in MO_overlap: The number of cols of the MO overlap matrix"<<Smo.n_cols
+        <<" is not consistent with the number of |j> orbitals "<<Norb_j_act<<endl;
+    cout<<"Exiting..."; 
+    exit(0);
+  }
+
+
+  CMATRIX* ci; ci = new CMATRIX(Nbas_i, Norb_i_act);
+  CMATRIX* cj; cj = new CMATRIX(Nbas_j, Norb_j_act);
+
+  pop_cols(Ci, *ci, active_orb_i);
+  pop_cols(Cj, *cj, active_orb_j);  
+
+
+  Smo = (*ci).H() * (*cj);   // ( Norb_i_act x Nbas_i ) x (Nbas_j x Norb_j_act) = Norb_i_act x Norb_j_act
+
+
+  // Clean working memory
+  delete ci;
+  delete cj;
+
+
+}
+
+
 
 
 

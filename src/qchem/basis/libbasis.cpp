@@ -72,6 +72,16 @@ void export_basis_objects(){
   void (*expt_MO_overlap_v1)(MATRIX& Smo, vector<AO>& ao_i, vector<AO>& ao_j, MATRIX& Ci, MATRIX& Cj,
   vector<int>& active_orb_i, vector<int>& active_orb_j, double max_d2) = &MO_overlap;
 
+  void (*expt_MO_overlap_v2)(CMATRIX& Smo, vector<AO>& ao_i, vector<AO>& ao_j, CMATRIX& Ci, CMATRIX& Cj,
+  vector<int>& active_orb_i, vector<int>& active_orb_j, double max_d2) = &MO_overlap;
+
+  void (*expt_MO_overlap_v3)(MATRIX& Smo, MATRIX& Ci, MATRIX& Cj, 
+  vector<int>& active_orb_i, vector<int>& active_orb_j, double max_d2) = &MO_overlap;
+
+  void (*expt_MO_overlap_v4)(CMATRIX& Smo, CMATRIX& Ci, CMATRIX& Cj,
+  vector<int>& active_orb_i, vector<int>& active_orb_j, double max_d2) = &MO_overlap;
+
+
 
   // Basis_map.cpp
   void (*expt_show_mapping_v1)(const vector<vector<int> >&) = &show_mapping;
@@ -97,6 +107,9 @@ void export_basis_objects(){
 
   def("update_overlap_matrix", expt_update_overlap_matrix_v1);
   def("MO_overlap", expt_MO_overlap_v1);
+  def("MO_overlap", expt_MO_overlap_v2);
+  def("MO_overlap", expt_MO_overlap_v3);
+  def("MO_overlap", expt_MO_overlap_v4);
 
   def("show_mapping", expt_show_mapping_v1);
 
