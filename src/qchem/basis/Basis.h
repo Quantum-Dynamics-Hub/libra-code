@@ -69,6 +69,12 @@ void MO_overlap(CMATRIX& Smo, CMATRIX& Ci, CMATRIX& Cj,
  vector<int>& active_orb_i, vector<int>& active_orb_j, double max_d2);
 
 
+complex<double> SD_overlap(SD& sd_i, SD& sd_j);
+
+CMATRIX SD_overlap(vector<SD>& sd_i, vector<SD>& sd_j);
+
+void SD_overlap(CMATRIX& SD_ovlp, vector<SD>& sd_i, vector<SD>& sd_j);
+
 
 
 // Basis_map.cpp

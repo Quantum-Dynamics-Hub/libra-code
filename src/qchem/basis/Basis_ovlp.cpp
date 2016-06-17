@@ -16,6 +16,9 @@
 
 #include "Basis.h"
 
+//#include "../../mmath/libmmath.h"
+//using namespace libmmath;
+
 
 /// libqchem namespace
 namespace libqchem{
@@ -475,6 +478,112 @@ void MO_overlap(CMATRIX& Smo, CMATRIX& Ci, CMATRIX& Cj,
 
 
 }
+
+
+complex<double> SD_overlap(SD& sd_i, SD& sd_j){
+/**
+  \brief This function computes the overlap of two Slater determinants sd_i and sd_j
+  \param[in] sd_i, sd_j : Slater Determinants at possibly different time steps (or at the same one)
+  The computed overlap value will be returned
+
+  <SD(t)|SD(t')>. =  det | <psi_i(t) | psi_j(t') > |  
+
+  This is based on the Lowdin formula. See, for instance:
+  (1) Ryabinkin, I. G.; Nagesh, J.; Izmaylov, A. F. Fast Numerical Evaluation of Time-Derivative Non-Adiabatic Couplings for Mixed Quantum-Classical Methods. J. Phys. Chem. Lett. 2015, 6, 4200–4203.
+
+
+*/
+
+  if(sd_i.N_bas != sd_j.N_bas){
+    cout<<"Error in SD_overlap: The number of basis functions in which MOs of the SD sd_i are expanded "<<sd_i.N_bas
+        <<" is not equal to the number of basis functions in which MOs of the SD sd_j are expanded "<<sd_j.N_bas<<endl;
+    cout<<"Exiting..."; 
+    exit(0);
+  }
+  if(sd_i.N!=sd_j.N){
+    cout<<"Error in SD_overlap: The number of MOs included in the SD sd_i "<<sd_i.N
+        <<" is not equal to the number of MOs included in the SD sd_j"<<sd_j.N<<endl;
+    cout<<"Exiting..."; 
+    exit(0);
+  }
+
+  // Compute the matrix of 1-el MO overlaps
+  CMATRIX* Smo; Smo = new CMATRIX(sd_i.N,sd_j.N); // square matrix
+  *Smo = sd_i.get().H() * sd_j.get();   // ( sd_i.N x sd_i.N_bas ) x (sd_j.N_bas x sd_j.N) = sd_i.N x sd_j.N
+
+  // Now, apply spin considerations
+  for(int i=0;i<sd_i.N;i++){
+    for(int j=0;j<sd_j.N;j++){
+      if(sd_i.spin[i]!=sd_j.spin[j]){ Smo->set(i,j, 0.0, 0.0);   }
+    }// for j
+  }// for i
+
+  // Compute the determinant
+  double nrm = sd_i.normalization_factor();
+  complex<double> res = libmmath::libmeigen::det(*Smo); 
+
+
+  // Clean working memory
+  delete Smo;
+
+  return res;
+
+}
+
+CMATRIX SD_overlap(vector<SD>& sd_i, vector<SD>& sd_j){
+/**
+  \brief This function computes the matrix of the SD overlaps from two data sets (e.g. fragments or timesteps)
+  \param[in] sd_i, sd_j : Are the lists of SDs belonging to each of the two data sets
+  The computed matrix of overlaps value will be returned
+*/
+
+  int Ni = sd_i.size();
+  int Nj = sd_j.size();
+
+  CMATRIX* SD_ovlp; SD_ovlp = new CMATRIX(Ni,Nj);
+
+  for(int i=0;i<Ni;i++){
+    for(int j=0;j<Nj;j++){
+      SD_ovlp->set(i,j, SD_overlap(sd_i[i], sd_j[j]) ); 
+    }// for j
+  }// for i
+
+  return *SD_ovlp;
+
+}
+
+void SD_overlap(CMATRIX& SD_ovlp, vector<SD>& sd_i, vector<SD>& sd_j){
+/**
+  \brief This function computes the matrix of the SD overlaps from two data sets (e.g. fragments or timesteps)
+  \param[out] SD_ovlp The matrix storing the results that is to be updated
+  \param[in] sd_i, sd_j : Are the lists of SDs belonging to each of the two data sets  
+*/
+
+  int Ni = sd_i.size();
+  int Nj = sd_j.size();
+
+  if(SD_ovlp.n_rows!=Ni){
+    std::cout<<"Error in SD_overlap : the # of rows of the output matrix, SD_ovlp ( "<<SD_ovlp.n_rows
+             <<" ) is not equal to the number of Slater Determinants in the first (left) set ( "<<Ni<<" )\n";
+    exit(0);
+  }
+  if(SD_ovlp.n_cols!=Nj){
+    std::cout<<"Error in SD_overlap : the # of cols of the output matrix, SD_ovlp ( "<<SD_ovlp.n_cols
+             <<" ) is not equal to the number of Slater Determinants in the second (right) set ( "<<Nj<<" )\n";
+    exit(0);
+  }
+
+
+  for(int i=0;i<Ni;i++){
+    for(int j=0;j<Nj;j++){
+      SD_ovlp.set(i,j, SD_overlap(sd_i[i], sd_j[j]) ); 
+    }// for j
+  }// for i
+
+
+}
+
+
 
 
 

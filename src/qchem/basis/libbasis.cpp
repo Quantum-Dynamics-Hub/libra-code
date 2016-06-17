@@ -82,6 +82,14 @@ void export_basis_objects(){
   vector<int>& active_orb_i, vector<int>& active_orb_j, double max_d2) = &MO_overlap;
 
 
+  complex<double> (*expt_SD_overlap_v1)(SD& sd_i, SD& sd_j) = &SD_overlap;
+
+  CMATRIX (*expt_SD_overlap_v2)(vector<SD>& sd_i, vector<SD>& sd_j) = &SD_overlap;
+
+  void (*expt_SD_overlap_v3)(CMATRIX& SD_ovlp, vector<SD>& sd_i, vector<SD>& sd_j) = &SD_overlap;
+
+
+
 
   // Basis_map.cpp
   void (*expt_show_mapping_v1)(const vector<vector<int> >&) = &show_mapping;
@@ -110,6 +118,11 @@ void export_basis_objects(){
   def("MO_overlap", expt_MO_overlap_v2);
   def("MO_overlap", expt_MO_overlap_v3);
   def("MO_overlap", expt_MO_overlap_v4);
+
+  def("SD_overlap", expt_SD_overlap_v1);
+  def("SD_overlap", expt_SD_overlap_v2);
+  def("SD_overlap", expt_SD_overlap_v3);
+
 
   def("show_mapping", expt_show_mapping_v1);
 
