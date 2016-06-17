@@ -300,6 +300,7 @@ void export_qobjects_objects(){
   ;
 
 
+  //============ AO class =====================
 
   class_<AO>("AO",init<>())
       .def(init<const AO&>())
@@ -375,6 +376,39 @@ void export_qobjects_objects(){
   class_< PWList >("PWList")
       .def(vector_indexing_suite< PWList >())
   ;
+
+
+  //============ SD class =====================
+  void (SD::*expt_set_v1)(CMATRIX& _mo) = &SD::set;
+  void (SD::*expt_set_v2)(CMATRIX& _mo_pool_alp, CMATRIX& _mo_pool_bet, vector<int>& _orb_indx_alp, vector<int>& _orb_indx_bet) = &SD::set;
+
+
+  class_<SD>("SD",init<>())
+      .def(init<int, int, int>())
+      .def(init<CMATRIX&, CMATRIX&, vector<int>&, vector<int>&>())
+      .def(init<const SD&>())
+      .def("__copy__", &generic__copy__<SD>) 
+      .def("__deepcopy__", &generic__deepcopy__<SD>)
+
+      .def_readwrite("N_bas",&SD::N_bas)
+      .def_readwrite("N",&SD::N)
+      .def_readwrite("N_alp",&SD::N_alp)
+      .def_readwrite("N_bet",&SD::N_bet)
+      .def_readwrite("orb_indx_alp",&SD::orb_indx_alp)
+      .def_readwrite("orb_indx_bet",&SD::orb_indx_bet)
+      .def_readwrite("spin",&SD::spin)
+
+      .def("get",&SD::get)
+      .def("set",expt_set_v1)
+      .def("set",expt_set_v2)
+      .def("normalization_factor",&SD::normalization_factor)
+
+  ;
+
+  class_< SDList >("SDList")
+      .def(vector_indexing_suite< SDList >())
+  ;
+
 
 
 
