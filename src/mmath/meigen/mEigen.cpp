@@ -541,5 +541,120 @@ void solve_eigen(int Norb, MATRIX* H, MATRIX* E, MATRIX* C){
 }// void solve_eigen(int Norb, MATRIX* H, MATRIX* E, MATRIX* C)
 
 
+
+void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half){
+/**
+  This function computes S^{1/2} and S^{-1/2} for given matrix S
+  \param[in] S Input matrix
+  \param[out] S_half Computed S^{1/2} matrix
+  \param[out] S_i_half Computed S^{-1/2} matrix
+
+*/
+
+  if(S.n_cols != S.n_rows){
+    cout<<"Error in libmeigen::sqrt_matrix : the input matrix is not square\n"; exit(0); 
+  }
+  if(S_half.n_cols != S_half.n_rows){
+    cout<<"Error in libmeigen::sqrt_matrix : the output S^{1/2} matrix is not square\n"; exit(0); 
+  }
+  if(S_i_half.n_cols != S_i_half.n_rows){
+    cout<<"Error in libmeigen::sqrt_matrix : the output S^{-1/2} matrix is not square\n"; exit(0); 
+  }
+  if(S.n_cols != S_half.n_cols){
+    cout<<"Error in libmeigen::sqrt_matrix : size of matrix S is not the same as that of matrix S^{1/2}\n"; exit(0); 
+  }
+  if(S.n_cols != S_i_half.n_cols){
+    cout<<"Error in libmeigen::sqrt_matrix : size of matrix S is not the same as that of matrix S^{-1/2}\n"; exit(0); 
+  }
+
+
+  int i,j;
+ 
+  // Let us first diagonalize the overlap matrix S
+  int sz = S.n_cols;  
+  CMATRIX* I; I = new CMATRIX(sz, sz);  I->load_identity(); //->Init_Unit_Matrix(complex<double>(1.0,0.0));
+  CMATRIX* C; C = new CMATRIX(sz, sz);  *C = complex<double>(0.0, 0.0);
+  CMATRIX* Seig; Seig = new CMATRIX(sz, sz);  *Seig = complex<double>(0.0,0.0);
+
+
+  // Find the eigenvalues of the the S matrix
+  libmmath::libmeigen::solve_eigen(sz, S, *I, *Seig, *C);  // S * C = I * C * Seig  ==>  S = C * Seig * C.H()
+
+  // Diagonal form of the S^{-1/2} and S^{1/2} matrices
+  S_i_half = complex<double>(0.0,0.0);  // S^{-1/2}
+  S_half = complex<double>(0.0,0.0);    // S^{1/2}
+
+  for(i=0;i<sz;i++){
+    complex<double> val = std::sqrt(Seig->get(i,i));
+
+    S_i_half.M[i*sz+i] = 1.0/val;
+    S_half.M[i*sz+i] = val;
+  }
+
+  // Convert to the original basis
+  S_i_half = (*C) * S_i_half * ((*C).H());
+  S_half = (*C) * S_half * ((*C).H());
+
+  delete C;
+  delete I;
+  delete Seig;
+
+
+}// sqrt_matrix
+
+
+void inv_matrix(CMATRIX& S, CMATRIX& S_inv){
+/**
+  This function computes S^{-1} of a given matrix S
+  \param[in] S Input matrix
+  \param[out] S_inv Computed S^{-1} matrix
+
+*/
+
+  if(S.n_cols != S.n_rows){
+    cout<<"Error in libmeigen::inv_matrix : the input matrix is not square\n"; exit(0); 
+  }
+  if(S_inv.n_cols != S_inv.n_rows){
+    cout<<"Error in libmeigen::inv_matrix : the output S^{-1} matrix is not square\n"; exit(0); 
+  }
+  if(S.n_cols != S_inv.n_cols){
+    cout<<"Error in libmeigen::inv_matrix : size of matrix S is not the same as that of matrix S^{-1}\n"; exit(0); 
+  }
+
+
+  int i,j;
+ 
+  // Let us first diagonalize the overlap matrix S
+  int sz = S.n_cols;  
+  CMATRIX* I; I = new CMATRIX(sz, sz);  I->load_identity(); //->Init_Unit_Matrix(complex<double>(1.0,0.0));
+  CMATRIX* C; C = new CMATRIX(sz, sz);  *C = complex<double>(0.0, 0.0);
+  CMATRIX* Seig; Seig = new CMATRIX(sz, sz);  *Seig = complex<double>(0.0,0.0);
+
+
+  // Find the eigenvalues of the the S matrix
+  libmmath::libmeigen::solve_eigen(sz, S, *I, *Seig, *C);  // S * C = I * C * Seig  ==>  S = C * Seig * C.H()
+
+  // Diagonal form of the S^{-1} matrix
+  S_inv = complex<double>(0.0,0.0);  // S^{-1}
+
+
+  for(i=0;i<sz;i++){
+    complex<double> val = Seig->get(i,i);
+    S_inv.M[i*sz+i] = 1.0/val;
+  }
+
+  // Convert to the original basis
+  S_inv = (*C) * S_inv * ((*C).H());
+
+
+  delete C;
+  delete I;
+  delete Seig;
+
+
+}// inv_matrix
+
+
+
 }// namespace libmeigen
 }// namespace libmmath

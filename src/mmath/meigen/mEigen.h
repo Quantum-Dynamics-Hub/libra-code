@@ -44,9 +44,11 @@ void solve_eigen_gen(int Norb, CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C);
 void solve_eigen_gen(int Norb, CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C);
 
 
-
-
 void solve_eigen(int, MATRIX*, MATRIX*, MATRIX*);
+
+
+void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half);
+void inv_matrix(CMATRIX& S, CMATRIX& S_inv);
 
 
 }// namespace libmeigen

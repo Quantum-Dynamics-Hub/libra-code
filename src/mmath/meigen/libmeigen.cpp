@@ -64,6 +64,14 @@ void export_mEigen_objects(){
   def("solve_eigen", expt_solve_eigen_v3);
   def("solve_eigen_gen", expt_solve_eigen_gen_v3);
 
+
+  void (*expt_sqrt_matrix_v1)(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half) = &sqrt_matrix;
+  void (*expt_inv_matrix_v1)(CMATRIX& S, CMATRIX& S_inv) = &inv_matrix;
+
+  def("sqrt_matrix", expt_sqrt_matrix_v1);
+  def("inv_matrix", expt_inv_matrix_v1);
+
+
 }
 
 
