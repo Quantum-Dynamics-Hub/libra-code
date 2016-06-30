@@ -75,6 +75,9 @@ void export_Electronic_objects(){
   def("propagate_electronic", expt_propagate_electronic_v4);
   def("propagate_electronic", expt_propagate_electronic_v5);
 
+  void (*expt_grid_propagator_v1)(double dt, CMATRIX& Hvib, CMATRIX& S, CMATRIX& U) = &grid_propagator;
+  def("grid_propagator", expt_grid_propagator_v1);
+
 
 }
 

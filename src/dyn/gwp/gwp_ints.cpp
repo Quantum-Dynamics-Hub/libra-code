@@ -50,6 +50,36 @@ int check_dimensions(std::string function_name, MATRIX& R1, MATRIX& P1, MATRIX& 
 
 }
 
+complex<double> gwp_value(MATRIX& r, MATRIX& R, MATRIX& P, double gamma,  double alp, double hbar){
+/**
+  This function computes the value of the Gaussian at a given point r
+
+  G_a(r; R_a, P_a, alp_a, gamma_a) = (2*alp_a/pi)^(Ndof/4) * exp(-alp_a*(r-R_a)^2 + i*(P_a/hbar)*(r-R_a) + i*gamma_a/hbar)
+
+  Look derivations at: https://github.com/alexvakimov/Derivatory/blob/master/Gaussian_wavepackets.pdf
+
+  \param[in] R Multidimensional vector containing the components of position of the multidimensional Gaussians in all dimensions. Assumed
+  to be Ndof x 1 vectors
+  \param[in] P Multidimensional vector containing the components of momentum of the multidimensional Gaussians. Assumed
+  to be Ndof x 1 vectors
+  \param[in] gamma The phase factors of the overall Gaussian
+  \param[in] alp The Gaussian width factor. Assumed to be the same for all components of both multidimensional Gaussians
+  \param[in] hbar The Planck constant in selected units
+
+  The function returns the value of the Gaussian function - a complex number
+*/
+
+  int Ndof = check_dimensions("libgwp::gwp_overlap", r, P, R, P);
+
+  double re = -alp* ((r-R).T() * (r-R)).M[0] ;
+  double im =  ( (P.T()*(r-R)).M[0] + gamma)/hbar; 
+  double nrm = pow((2.0*alp/M_PI), 0.25*Ndof); // normalization factor
+  
+  return nrm*exp(complex<double>(re, im));
+
+}
+
+
 complex<double> gwp_overlap(MATRIX& R1, MATRIX& P1, double gamma1, 
                             MATRIX& R2, MATRIX& P2, double gamma2, 
                             double alp, double hbar){
@@ -80,6 +110,46 @@ complex<double> gwp_overlap(MATRIX& R1, MATRIX& P1, double gamma1,
   return exp(complex<double>(re, im));
 
 }
+
+
+CMATRIX gwp_dipole(MATRIX& R1, MATRIX& P1, double gamma1, 
+                   MATRIX& R2, MATRIX& P2, double gamma2, 
+                   double alp, double hbar){
+/**
+  This function computes the expectation value of position operator (transition dipole moment)
+  between two moving Gaussians  <G_1|r|G_2>, where:
+
+  G_a(r; R_a, P_a, alp_a, gamma_a) = (2*alp_a/pi)^(Ndof/4) * exp(-alp_a*(r-R_a)^2 + i*(P_a/hbar)*(r-R_a) + i*gamma_a/hbar)
+
+  Look derivations at: https://github.com/alexvakimov/Derivatory/blob/master/Gaussian_wavepackets.pdf
+
+  \param[in] R1, R2 Multidimensional vectors containing the components of position of the multidimensional Gaussians. Assumed
+  to be Ndof x 1 vectors
+  \param[in] P1, P2 Multidimensional vectors containing the components of momenta of the multidimensional Gaussians. Assumed
+  to be Ndof x 1 vectors
+  \param[in] gamma1, gamma2 The phase factors of the overall Gaussians
+  \param[in] alp The Gaussian width factor. Assumed to be the same for all components of both multidimensional Gaussians
+  \param[in] hbar The Planck constant in selected units
+
+  The function returns the derivative coupling vector - a complex vector
+*/
+ 
+  int Ndof = check_dimensions("libgwp::gwp_dipole", R1, P1, R2, P2);
+
+  // Overlap part 
+  MATRIX* re; re = new MATRIX(Ndof,1);  *re = 0.5*(R1+R2);
+  MATRIX* im; im = new MATRIX(Ndof,1);  *im = (0.25/(alp*hbar))*(P2-P1);
+  CMATRIX* res; res = new CMATRIX(*re, *im);
+  
+  complex<double> ovlp  = gwp_overlap(R1, P1, gamma1, R2, P2, gamma2, alp, hbar);
+  *res *= ovlp;
+
+  delete re; delete im;
+  
+  return *res;
+
+}
+
 
 
 CMATRIX gwp_coupling(MATRIX& R1, MATRIX& P1, double gamma1, 

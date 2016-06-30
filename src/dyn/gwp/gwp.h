@@ -28,9 +28,15 @@ namespace libdyn{
 namespace libgwp{
 
 
+complex<double> gwp_value(MATRIX& r, MATRIX& R, MATRIX& P, double gamma,  double alp, double hbar);
+
 complex<double> gwp_overlap(MATRIX& R1, MATRIX& P1, double gamma1, 
                             MATRIX& R2, MATRIX& P2, double gamma2, 
                             double alp, double hbar);
+
+CMATRIX gwp_dipole(MATRIX& R1, MATRIX& P1, double gamma1, 
+                   MATRIX& R2, MATRIX& P2, double gamma2, 
+                   double alp, double hbar);
 
 CMATRIX gwp_coupling(MATRIX& R1, MATRIX& P1, double gamma1, 
                      MATRIX& R2, MATRIX& P2, double gamma2, 
