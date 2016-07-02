@@ -149,6 +149,10 @@ class Electronic_Structure{
   vector< pair<int,double> > bands_bet; ///< orbital indices and orbital energies, beta-channel
   vector< pair<int,double> > occ_alp;   ///< orbital indices and orbital occupation numbers, alpha-channel
   vector< pair<int,double> > occ_bet;   ///< orbital indices and orbital occupation numbers, beta-channel
+  double get_bands_alp(int indx){ return bands_alp[indx].second; }
+  double get_bands_bet(int indx){ return bands_bet[indx].second; }
+  double get_occ_alp(int indx){ return occ_alp[indx].second; }
+  double get_occ_bet(int indx){ return occ_bet[indx].second; }
   
 
   // Density matrices

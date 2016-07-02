@@ -69,6 +69,12 @@ void export_Hamiltonian_QM_objects(){
       .def_readwrite("Mull_orb_pop_net", &Electronic_Structure::Mull_orb_pop_net)
       .def_readwrite("Mull_orb_pop_gross", &Electronic_Structure::Mull_orb_pop_gross)
 
+      .def("get_bands_alp", &Electronic_Structure::get_bands_alp)
+      .def("get_bands_bet", &Electronic_Structure::get_bands_bet)
+      .def("get_occ_alp", &Electronic_Structure::get_occ_alp)
+      .def("get_occ_bet", &Electronic_Structure::get_occ_bet)
+
+
       .def("set_P_alp", &Electronic_Structure::set_P_alp)
       .def("set_P_bet", &Electronic_Structure::set_P_bet)
       .def("set_P", &Electronic_Structure::set_P)
