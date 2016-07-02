@@ -62,6 +62,9 @@ void (System::*expt_init_fragment_velocities_v2)(double Temp,VECTOR TOT_P,VECTOR
 void (System::*expt_init_atom_velocities_v1)(double Temp) = &System::init_atom_velocities;
 void (System::*expt_init_atom_velocities_v2)(double Temp,VECTOR TOT_P) = &System::init_atom_velocities;
 
+void (System::*expt_ROTATE_FRAGMENT_v1)(double, VECTOR, int)         = &System::ROTATE_FRAGMENT;
+void (System::*expt_ROTATE_FRAGMENT_v2)(double, VECTOR, int, VECTOR)         = &System::ROTATE_FRAGMENT;
+
 
   class_<System>("System",init<>())
       .def("__copy__", &generic__copy__<System>)
@@ -187,7 +190,8 @@ void (System::*expt_init_atom_velocities_v2)(double Temp,VECTOR TOT_P) = &System
       .def("TRANSLATE_ATOM", &System::TRANSLATE_ATOM)
       .def("TRANSLATE_FRAGMENT", &System::TRANSLATE_FRAGMENT)
       .def("TRANSLATE_MOLECULE", &System::TRANSLATE_MOLECULE)
-      .def("ROTATE_FRAGMENT", &System::ROTATE_FRAGMENT)
+      .def("ROTATE_FRAGMENT", expt_ROTATE_FRAGMENT_v1)
+      .def("ROTATE_FRAGMENT", expt_ROTATE_FRAGMENT_v2)
       .def("ROTATE_MOLECULE", &System::ROTATE_MOLECULE)
 
 
