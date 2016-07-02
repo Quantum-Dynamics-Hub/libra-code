@@ -69,6 +69,8 @@ def Load_Molecule(univ,syst,mol_file,format):
         Atom_Record = pAtom_keyword + pAtom_id + pAtom_element + pAtom_id1 + pAtom_x_coord + pAtom_y_coord + pAtom_z_coord + pAtom_chain
     elif format=="true_pdb":
         Atom_Record = pAtom_keyword + pAtom_id + pAtom_element + pAtom_mol + pAtom_chain + pAtom_id1 + pAtom_x_coord + pAtom_y_coord + pAtom_z_coord + pAtom_occ + pAtom_charge 
+    elif format=="xyz":
+        Atom_Record = pAtom_element + pAtom_x_coord + pAtom_y_coord + pAtom_z_coord
 
 
 
