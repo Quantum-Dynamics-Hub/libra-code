@@ -1217,6 +1217,25 @@ void listHamiltonian_QM::init(std::string ctrl_filename,System& syst){
 
 }
 
+
+void listHamiltonian_QM::compute_core_Hamiltonian(System& syst){
+/**
+  \param[in,out] syst The object containing structural information about system. 
+
+  Computes core Hamiltonian of the system (initialization must be performed first)
+
+  Use after listHamiltonian_QM::init() and add_excitation() !!!
+*/
+
+
+  int debug = 0;
+  Hamiltonian_core(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, *el->Hao,  *el->Sao, debug);
+
+
+}
+
+
+
 double listHamiltonian_QM::compute_scf(System& syst){
 /**
   \param[in,out] syst The object containing structural information about system. It also will contain the forces on active state

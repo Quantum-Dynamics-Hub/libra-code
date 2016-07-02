@@ -370,7 +370,9 @@ void export_Hamiltonian_QM_objects(){
       .def("init", &listHamiltonian_QM::init)
       .def("compute_scf", &listHamiltonian_QM::compute_scf)
       .def("get_parameters_from_file", &listHamiltonian_QM::get_parameters_from_file)
+      .def("get_electronic_structure", &listHamiltonian_QM::get_electronic_structure)
       .def("set_electronic_structure", &listHamiltonian_QM::set_electronic_structure)
+      .def("compute_core_Hamiltonian", &listHamiltonian_QM::compute_core_Hamiltonian)
       .def("energy_and_forces", &listHamiltonian_QM::energy_and_forces)
 
       .def("excite_alp", &listHamiltonian_QM::excite_alp)

@@ -150,8 +150,10 @@ public:
     double compute_scf(System& syst);
 
     void get_parameters_from_file(std::string filename){ libcontrol_parameters::get_parameters_from_file(filename, prms); }
+    Electronic_Structure get_electronic_structure(){ return *el; }
     void set_electronic_structure(Electronic_Structure& el_);
 
+    void compute_core_Hamiltonian(System& syst);
     double energy_and_forces(System& syst);
 
     void add_excitation(int f_o, int f_s, int t_o, int t_s);
