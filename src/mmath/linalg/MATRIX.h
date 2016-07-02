@@ -194,11 +194,19 @@ public:
 
 
 void pop_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
-void push_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset); ///< Push a smaller matrix into a bigger one according to the specified pattern
 void pop_submatrix(MATRIX& X,MATRIX& x,vector<int>& subset);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
-void push_submatrix(MATRIX& X,MATRIX& x,vector<int>& subset); ///< Push a smaller matrix into a bigger one according to the specified pattern
 void pop_submatrix(MATRIX& X,MATRIX& x,boost::python::list subset);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
+void pop_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset, vector<int>& subset2);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
+void pop_submatrix(MATRIX& X,MATRIX& x,vector<int>& subset, vector<int>& subset2);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
+void pop_submatrix(MATRIX& X,MATRIX& x,boost::python::list subset, boost::python::list subset2);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
+
+void push_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset); ///< Push a smaller matrix into a bigger one according to the specified pattern
+void push_submatrix(MATRIX& X,MATRIX& x,vector<int>& subset); ///< Push a smaller matrix into a bigger one according to the specified pattern
 void push_submatrix(MATRIX& X,MATRIX& x,boost::python::list subset); ///< Push a smaller matrix into a bigger one according to the specified pattern
+void push_submatrix(MATRIX* X,MATRIX* x,vector<int>& subset,vector<int>& subset2); ///< Push a smaller matrix into a bigger one according to the specified pattern
+void push_submatrix(MATRIX& X,MATRIX& x,vector<int>& subset,vector<int>& subset2); ///< Push a smaller matrix into a bigger one according to the specified pattern
+void push_submatrix(MATRIX& X,MATRIX& x,boost::python::list subset,boost::python::list subset2); ///< Push a smaller matrix into a bigger one according to the specified pattern
+
 
 
 
