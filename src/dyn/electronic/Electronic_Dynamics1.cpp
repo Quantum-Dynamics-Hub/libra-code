@@ -364,6 +364,28 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S){
 }// propagate_electronic
 
 
+void Electronic::propagate_electronic(double dt,Hamiltonian& ham, CMATRIX& S){
+/**
+  \brief Propagate electronic DOF 
+
+  Same as 
+  void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S)
+
+*/ 
+  CMATRIX* Hvib; Hvib = new CMATRIX(nstates, nstates);
+
+  for(int i=0;i<nstates;i++){
+    for(int j=0;j<nstates;j++){
+      Hvib->set(i,j, ham.Hvib(i,j) );
+    }
+  }
+  
+  libdyn::libelectronic::propagate_electronic(dt, *this, *Hvib, S);
+
+  delete Hvib;
+
+}
+
 
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S){
 /**

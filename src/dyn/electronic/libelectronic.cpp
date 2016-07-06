@@ -35,7 +35,8 @@ void export_Electronic_objects(){
 */
 
 
-  void (Electronic::*expt_propagate_electronic)(double,Hamiltonian&) = &Electronic::propagate_electronic;
+  void (Electronic::*expt_propagate_electronic_v_cl1)(double,Hamiltonian&) = &Electronic::propagate_electronic;
+  void (Electronic::*expt_propagate_electronic_v_cl2)(double,Hamiltonian&, CMATRIX& ) = &Electronic::propagate_electronic;
 
 
   class_<Electronic>("Electronic",init<>())
@@ -52,7 +53,8 @@ void export_Electronic_objects(){
       .def_readwrite("q", &Electronic::q)
       .def_readwrite("p", &Electronic::p)
 
-      .def("propagate_electronic", expt_propagate_electronic)
+      .def("propagate_electronic", expt_propagate_electronic_v_cl1)
+      .def("propagate_electronic", expt_propagate_electronic_v_cl2)
  
   ;
 

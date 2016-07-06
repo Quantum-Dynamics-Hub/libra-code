@@ -89,6 +89,7 @@ class Electronic{
   // In Electronic_Dynamics1.cpp
   void propagate_electronic(double dt,Hamiltonian* ham);
   void propagate_electronic(double dt,Hamiltonian& ham);
+  void propagate_electronic(double dt,Hamiltonian& ham, CMATRIX& S);
 
 
   friend bool operator == (const Electronic& e1, const Electronic& e2){
