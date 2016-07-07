@@ -44,24 +44,38 @@ void export_Mol_objects(){
 
       // Geometry
       .def_readwrite("Atom_RB",&Atom::Atom_RB)
+      .def_readwrite("is_Atom_RB",&Atom::is_Atom_RB)
       .def_readwrite("Atom_RB_old",&Atom::Atom_RB_old)
+      .def_readwrite("is_Atom_RB_old",&Atom::is_Atom_RB_old)
       .def_readwrite("Atom_displ2",&Atom::Atom_displ2)
+      .def_readwrite("is_Atom_displ2",&Atom::is_Atom_displ2)
 
       // Properties
       .def_readwrite("Atom_Z",&Atom::Atom_Z)
+      .def_readwrite("is_Atom_Z",&Atom::is_Atom_Z)
       .def_readwrite("Atom_element",&Atom::Atom_element)
+      .def_readwrite("is_Atom_element",&Atom::is_Atom_element)
       .def_readwrite("Atom_atomic_radius",&Atom::Atom_atomic_radius)
+      .def_readwrite("is_Atom_atomic_radius",&Atom::is_Atom_atomic_radius)
       .def_readwrite("Atom_charge",&Atom::Atom_charge)
+      .def_readwrite("is_Atom_charge",&Atom::is_Atom_charge)
       .def_readwrite("Atom_electronegativity",&Atom::Atom_electronegativity)
+      .def_readwrite("is_Atom_electronegativity",&Atom::is_Atom_electronegativity)
 
       .def_readwrite("Atom_formal_charge",&Atom::Atom_formal_charge)
+      .def_readwrite("is_Atom_formal_charge",&Atom::is_Atom_formal_charge)
       .def_readwrite("Atom_coordination",&Atom::Atom_coordination)
+      .def_readwrite("is_Atom_coordination",&Atom::is_Atom_coordination)
       .def_readwrite("Atom_functional_group",&Atom::Atom_functional_group)
+      .def_readwrite("is_Atom_functional_group",&Atom::is_Atom_functional_group)
       .def_readwrite("Atom_min_ring_size",&Atom::Atom_min_ring_size)
+      .def_readwrite("is_Atom_min_ring_size",&Atom::is_Atom_min_ring_size)
 
       // FF types
       .def_readwrite("Atom_ff_type",&Atom::Atom_ff_type)
+      .def_readwrite("is_Atom_ff_type",&Atom::is_Atom_ff_type)
       .def_readwrite("Atom_Zeff",&Atom::Atom_Zeff)
+      .def_readwrite("is_Atom_Zeff",&Atom::is_Atom_Zeff)
 //      .def_readwrite("Atom_ff_int_type",&Atom::Atom_ff_int_type)
 //      .def_readwrite("Atom_is_surface_atom",&Atom::Atom_is_surface_atom)
 //      .def_readwrite("Atom_surface_index",&Atom::Atom_surface_index)
@@ -98,13 +112,20 @@ void export_Mol_objects(){
       .def_readwrite("globMolecule_Index",&Group::globMolecule_Index)
 
       .def_readwrite("Group_name",&Group::Group_name)
+      .def_readwrite("is_Group_name",&Group::is_Group_name)
       .def_readwrite("Group_id",&Group::Group_id)
+      .def_readwrite("is_Group_id",&Group::is_Group_id)
       .def_readwrite("Group_radius",&Group::Group_radius)
+      .def_readwrite("is_Group_radius",&Group::is_Group_radius)
       .def_readwrite("Group_RB",&Group::Group_RB)
+      .def_readwrite("is_Group_RB",&Group::is_Group_RB)
       .def_readwrite("Group_ff_type",&Group::Group_ff_type)
+      .def_readwrite("is_Group_ff_type",&Group::is_Group_ff_type)
 
       .def_readwrite("Group_bond_order",&Group::Group_bond_order)
+      .def_readwrite("is_Group_bond_order",&Group::is_Group_bond_order)
       .def_readwrite("Group_bond_alpha",&Group::Group_bond_alpha)
+      .def_readwrite("is_Group_bond_alpha",&Group::is_Group_bond_alpha)
 
       .def("set",&Group::set)
       .def("show_inf",&Group::show_info)
@@ -135,8 +156,11 @@ void export_Mol_objects(){
       .def_readwrite("Molecule_Number_of_impropers",&Molecule::Molecule_Number_of_impropers)
 
       .def_readwrite("Molecule_name",&Molecule::Molecule_name)
+      .def_readwrite("is_Molecule_name",&Molecule::is_Molecule_name)
       .def_readwrite("Molecule_id",&Molecule::Molecule_id)
+      .def_readwrite("is_Molecule_id",&Molecule::is_Molecule_id)
       .def_readwrite("Molecule_RB",&Molecule::Molecule_RB)
+      .def_readwrite("is_Molecule_RB",&Molecule::is_Molecule_RB)
 
   ;
 
