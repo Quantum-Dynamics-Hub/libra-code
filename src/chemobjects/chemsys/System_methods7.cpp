@@ -63,7 +63,8 @@ void System::print_ent(std::string filename,int fold,std::string pbc_type){
     alp = acos(tv2*tv3)*radians_to_degrees;
     bet = acos(tv3*tv1)*radians_to_degrees;
     gam = acos(tv1*tv2)*radians_to_degrees;
-    fprintf(fp,"CRYST1%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f    \n",a,b,c,alp,bet,gam);
+    fprintf(fp,"CRYST1%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f    \n",a * bohr, b * bohr, c * bohr,alp,bet,gam); // convert from internal units
+     // (Bohrs) to Angstroms
   }
 
   for(int i=0;i<Number_of_atoms;i++){
@@ -147,7 +148,9 @@ void System::print_ent(std::string filename,boost::python::list atoms_list,int f
     alp = acos(tv2*tv3)*radians_to_degrees;
     bet = acos(tv3*tv1)*radians_to_degrees;
     gam = acos(tv1*tv2)*radians_to_degrees;
-    fprintf(fp,"CRYST1%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f    \n",a,b,c,alp,bet,gam);
+    fprintf(fp,"CRYST1%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f    \n",a * bohr, b * bohr, c * bohr, alp,bet,gam); // convert from internal units
+     // (Bohrs) to Angstroms
+
   }
 
 
@@ -250,7 +253,7 @@ void System::print_xyz(std::string filename,int fold,std::string pbc_type,int fr
     alp = acos(tv2*tv3)*radians_to_degrees;
     bet = acos(tv3*tv1)*radians_to_degrees;
     gam = acos(tv1*tv2)*radians_to_degrees;
-    fprintf(fp,"Molecule frame= %6d %9.3f%9.3f%9.3f%7.2f%7.2f%7.2f    \n",frame, a,b,c,alp,bet,gam);
+    fprintf(fp,"Molecule frame= %6d %9.3f%9.3f%9.3f%7.2f%7.2f%7.2f    \n",frame, a * bohr,b * bohr,c * bohr,alp,bet,gam);
   }
   else{
     fprintf(fp,"Molecule frame= %6d \n", frame);
