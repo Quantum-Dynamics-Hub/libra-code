@@ -10,20 +10,18 @@
 #*********************************************************************************/
 
 import os
-import sys
 import math
 
 # Fisrt, we add the location of the library to test to the PYTHON path
-cwd = os.getcwd()
-print "Current working directory", cwd
-sys.path.insert(1,cwd+"/../../_build/src/mmath")
-sys.path.insert(1,cwd+"/../../_build/src/rigidbody")
+import sys
 
+if sys.platform=="cygwin":
+    from cyglibra_core import *
+elif sys.platform=="linux" or sys.platform=="linux2":
+    from liblibra_core import *
 
-print "\nTest 1: Importing the library and its content"
-print "from cygann import *"
-from cygmmath import *
-from cygrigidbody import *
+from libra_py import *
+
 
 print "\nTest 2: Constructor"
 print "rb = RigidBody()"

@@ -10,21 +10,19 @@
 #*********************************************************************************/
 
 import os
-import sys
 import math
 
 # Fisrt, we add the location of the library to test to the PYTHON path
-cwd = os.getcwd()
-print "Current working directory", cwd
-sys.path.insert(1,cwd+"/../../_build/src/mmath")
-sys.path.insert(1,cwd+"/../../_build/src/converters")
-sys.path.insert(1,cwd+"/../../_build/src/util")
+import sys
+
+if sys.platform=="cygwin":
+    from cyglibra_core import *
+elif sys.platform=="linux" or sys.platform=="linux2":
+    from liblibra_core import *
+
+from libra_py import *
 
 
-print "\nTest 1: Importing the library and its content"
-from cygmmath import *
-from cygconverters import *
-from cygutil import *
 
 print "\nTest2: void show_vector(vector<int>& A)"
 A = [1,-2,3,4]
