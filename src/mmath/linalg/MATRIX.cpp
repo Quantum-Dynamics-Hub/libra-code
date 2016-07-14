@@ -804,14 +804,17 @@ MATRIX operator ^(VECTOR& v1,VECTOR& v2){
     return res;
 }
 MATRIX operator*(const double& f,  const MATRIX& m1){
-        MATRIX m(m1.num_of_cols,m1.num_of_rows);
-    for(int i=0;i<m1.num_of_elems;i++){  *(m.M+i)=*(m1.M+i)*f;  }
-        return m;
+  MATRIX m(m1.num_of_rows, m1.num_of_cols);
+
+  for(int i=0;i<m1.num_of_elems;i++){  m.M[i] = m1.M[i] * f;  }
+  return m;
 }
+
 MATRIX operator*(const MATRIX &m1, const double  &f){
-        MATRIX m(m1.num_of_cols,m1.num_of_rows);
-    for(int i=0;i<m1.num_of_elems;i++){  *(m.M+i)=*(m1.M+i)*f;  }
-        return m;
+  MATRIX m(m1.num_of_rows, m1.num_of_cols);
+
+  for(int i=0;i<m1.num_of_elems;i++){  m.M[i] = m1.M[i] * f;  }
+  return m;
 }
 
 // ------------------------------- Input & output functions ------------------------------

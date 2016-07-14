@@ -374,9 +374,9 @@ CMATRIX operator*(const CMATRIX &m1, const complex<double>  &f){
 
 
 int operator ==(const CMATRIX& m1,const CMATRIX& m2){
-        int res=1;
-        for(int i=0;i<m1.n_elts;i++) {if(m1.M[i]!=m2.M[i]) {res=0;} else;}
-        return res;
+  int res=1;
+  for(int i=0;i<m1.n_elts;i++) {if(m1.M[i]!=m2.M[i]) {res=0;} else;}
+  return res;
 }
 
 
