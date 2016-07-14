@@ -34,22 +34,37 @@ set ylabel "Probability density" offset 1.5, 0.0
 
 
 set output "uniform.png"
-plot "uniform.txt" using 1:2  w l  ls 11  lw 5  t "computed",\
-     "uniform.txt" using 1:3  w l  ls 21  lw 5  t "expected"
+plot "uniform.txt" using 1:2  w l  ls 11  lw 5  t "computed P(x)",\
+     "uniform.txt" using 1:3  w l  ls 21  lw 5  t "computed F(x)",\
+     "uniform.txt" using 1:4  w l  ls 31  lw 5  t "expected P(x)"
 
 set output "exponential.png"
-plot "exponential.txt" using 1:2  w l  ls 11  lw 5  t "computed",\
-     "exponential.txt" using 1:3  w l  ls 21  lw 5  t "expected"
-
+plot "exponential.txt" using 1:2  w l  ls 11  lw 5  t "computed P(x)",\
+     "exponential.txt" using 1:3  w l  ls 21  lw 5  t "computed F(x)",\
+     "exponential.txt" using 1:4  w l  ls 31  lw 5  t "expected P(x)"
 
 set output "normal.png"
-plot "normal.txt" using 1:2  w l  ls 11  lw 5  t "computed",\
-     "normal.txt" using 1:3  w l  ls 21  lw 5  t "expected"
+plot "normal.txt" using 1:2  w l  ls 11  lw 5  t "computed P(x)",\
+     "normal.txt" using 1:3  w l  ls 21  lw 5  t "computed F(x)",\
+     "normal.txt" using 1:4  w l  ls 31  lw 5  t "expected P(x)"
 
 
 set output "gamma.png"
-plot "gamma.txt" using 1:2  w l  ls 11  lw 5  t "computed",\
-     "gamma.txt" using 1:3  w l  ls 21  lw 5  t "expected"
+plot "gamma.txt" using 1:2  w l  ls 11  lw 5  t "computed P(x)",\
+     "gamma.txt" using 1:3  w l  ls 21  lw 5  t "computed F(x)",\
+     "gamma.txt" using 1:4  w l  ls 31  lw 5  t "expected P(x)"
+
+
+set output "poiss1.png"
+plot "poiss1.txt" using 1:2  w l  ls 11  lw 5  t "computed P(x)",\
+     "poiss1.txt" using 1:3  w l  ls 21  lw 5  t "computed F(x)",\
+     "poiss1.txt" using 1:4  w l  ls 31  lw 5  t "expected P(x)"
+
+
+set output "poiss2.png"
+plot "poiss2.txt" using 1:2  w l  ls 11  lw 5  t "computed P(x)",\
+     "poiss2.txt" using 1:3  w l  ls 21  lw 5  t "computed F(x)",\
+     "poiss2.txt" using 1:4  w l  ls 31  lw 5  t "expected P(x)"
 
 
 
