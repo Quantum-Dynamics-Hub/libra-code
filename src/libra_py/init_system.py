@@ -29,17 +29,17 @@ def init_system(label, R, g, rnd, T, sigma, df, data_file="elements.dat"):
 
     sz = len(label)
     for i in xrange(sz):
-        atom_dict = {}
-        atom_dict["Atom_element"] = label[i]
-        atom_dict["Atom_cm_x"] = R[i].x + sigma*rnd.normal()
-        atom_dict["Atom_cm_y"] = R[i].y + sigma*rnd.normal()
-        atom_dict["Atom_cm_z"] = R[i].z + sigma*rnd.normal()
+        atom_dict = {"Atom_element": label[i]}
 
         if df:
             print "CREATE_ATOM ",atom_dict["Atom_element"]
 
         at = Atom(U, atom_dict)
-        at.Atom_RB.rb_force = VECTOR(-g[i].x, -g[i].y, -g[i].z)
+        r = VECTOR( R[i].x + sigma*rnd.normal(), R[i].y + sigma*rnd.normal(), R[i].z + sigma*rnd.normal() )
+        print r, r.x, r.y, r.z
+        at.Atom_RB.set_position( r )
+        at.Atom_RB.set_force( VECTOR(-g[i].x, -g[i].y, -g[i].z) )
+        at.is_Atom_RB = 1
 
 
         syst.CREATE_ATOM(at)
@@ -50,7 +50,7 @@ def init_system(label, R, g, rnd, T, sigma, df, data_file="elements.dat"):
 
 
     # Initialize random velocity at T(K) using normal distribution
-    syst.init_atom_velocities(T)
+    syst.init_atom_velocities(T,rnd)
 
     return syst
 

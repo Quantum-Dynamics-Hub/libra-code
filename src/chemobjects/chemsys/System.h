@@ -20,6 +20,7 @@
 #include "../../mmath/libmmath.h"
 using namespace libmmath;
 using namespace libmmath::libgraph;
+using namespace libmmath::librandom;
 
 #include "../mol/libmol.h"
 
@@ -300,11 +301,11 @@ public:
   double volume();
   MATRIX3x3 pressure_tensor();
 
-  void init_fragment_velocities(double Temp);
-  void init_fragment_velocities(double Temp,VECTOR TOT_P,VECTOR TOT_L);
+  void init_fragment_velocities(double Temp, Random& rnd);
+  void init_fragment_velocities(double Temp,VECTOR TOT_P,VECTOR TOT_L, Random& rnd);
 
-  void init_atom_velocities(double Temp);
-  void init_atom_velocities(double Temp,VECTOR TOT_P);
+  void init_atom_velocities(double Temp, Random& rnd);
+  void init_atom_velocities(double Temp,VECTOR TOT_P, Random& rnd);
 
 
 

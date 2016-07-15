@@ -56,11 +56,11 @@ int (System::*expt_Find_Angle_v1)(int,int) = &System::Find_Angle;
 int (System::*expt_Find_Angle_v2)(int,int,int) = &System::Find_Angle;
 
 
-void (System::*expt_init_fragment_velocities_v1)(double Temp) = &System::init_fragment_velocities;
-void (System::*expt_init_fragment_velocities_v2)(double Temp,VECTOR TOT_P,VECTOR TOT_L) = &System::init_fragment_velocities;
+void (System::*expt_init_fragment_velocities_v1)(double Temp, Random& rnd) = &System::init_fragment_velocities;
+void (System::*expt_init_fragment_velocities_v2)(double Temp,VECTOR TOT_P,VECTOR TOT_L, Random& rnd) = &System::init_fragment_velocities;
 
-void (System::*expt_init_atom_velocities_v1)(double Temp) = &System::init_atom_velocities;
-void (System::*expt_init_atom_velocities_v2)(double Temp,VECTOR TOT_P) = &System::init_atom_velocities;
+void (System::*expt_init_atom_velocities_v1)(double Temp, Random& rnd) = &System::init_atom_velocities;
+void (System::*expt_init_atom_velocities_v2)(double Temp,VECTOR TOT_P, Random& rnd) = &System::init_atom_velocities;
 
 void (System::*expt_ROTATE_FRAGMENT_v1)(double, VECTOR, int)         = &System::ROTATE_FRAGMENT;
 void (System::*expt_ROTATE_FRAGMENT_v2)(double, VECTOR, int, VECTOR)         = &System::ROTATE_FRAGMENT;

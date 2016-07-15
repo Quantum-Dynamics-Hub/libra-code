@@ -928,7 +928,7 @@ MATRIX3x3 System::pressure_tensor(){
 }
 
 
-void System::init_fragment_velocities(double Temp){
+void System::init_fragment_velocities(double Temp, Random& rnd){
 /**
   \param[in] Temp Target temperature, in K
 
@@ -937,10 +937,10 @@ void System::init_fragment_velocities(double Temp){
 */
 
   VECTOR TOT_P,TOT_L; TOT_P = 0.0; TOT_L = 0.0;
-  init_fragment_velocities(Temp,TOT_P,TOT_L);
+  init_fragment_velocities(Temp,TOT_P,TOT_L,rnd);
 }
 
-void System::init_fragment_velocities(double Temp,VECTOR TOT_P,VECTOR TOT_L){
+void System::init_fragment_velocities(double Temp,VECTOR TOT_P,VECTOR TOT_L, Random& rnd){
 /**
   \param[in] Temp The target temperature, in K
   \param[in] TOT_P The expected total linear momentum (or at least its direction) of the system after initialization
@@ -955,7 +955,7 @@ void System::init_fragment_velocities(double Temp,VECTOR TOT_P,VECTOR TOT_L){
 */
 
   // Initialize random number generator
-  srand( (unsigned)time(NULL) );
+//  srand( (unsigned)time(NULL) );
   int i;
 
   VECTOR* temp_p;
@@ -966,7 +966,7 @@ void System::init_fragment_velocities(double Temp,VECTOR TOT_P,VECTOR TOT_L){
   VECTOR tot_p; tot_p = 0.0;
   VECTOR tot_l; tot_l = 0.0;
 
-  Random rnd;
+//  Random rnd;
   for(i=0;i<Number_of_fragments;i++){
     temp_p[i].x  = rnd.uniform(-0.5,0.5);
     temp_p[i].y  = rnd.uniform(-0.5,0.5);
@@ -1060,7 +1060,7 @@ void System::init_fragment_velocities(double Temp,VECTOR TOT_P,VECTOR TOT_L){
 
 
 
-void System::init_atom_velocities(double Temp){
+void System::init_atom_velocities(double Temp, Random& rnd){
 /**
   \param[in] Temp Target temperature, in K
 
@@ -1069,10 +1069,10 @@ void System::init_atom_velocities(double Temp){
 */
 
   VECTOR TOT_P; TOT_P = 0.0; 
-  init_atom_velocities(Temp,TOT_P);
+  init_atom_velocities(Temp,TOT_P,rnd);
 }
 
-void System::init_atom_velocities(double Temp,VECTOR TOT_P){
+void System::init_atom_velocities(double Temp,VECTOR TOT_P, Random& rnd){
 /**
   \param[in] Temp The target temperature, in K
   \param[in] TOT_P The expected total linear momentum (or at least its direction) of the system after initialization
@@ -1085,7 +1085,7 @@ void System::init_atom_velocities(double Temp,VECTOR TOT_P){
 */
 
   // Initialize random number generator
-  srand( (unsigned)time(NULL) );
+//  srand( (unsigned)time(NULL) );
   int i;
 
   VECTOR* temp_p;
@@ -1093,7 +1093,7 @@ void System::init_atom_velocities(double Temp,VECTOR TOT_P){
 
   VECTOR tot_p; tot_p = 0.0;
 
-  Random rnd;
+//  Random rnd;
   for(i=0;i<Number_of_atoms;i++){
     temp_p[i].x  = rnd.uniform(-0.5,0.5);
     temp_p[i].y  = rnd.uniform(-0.5,0.5);

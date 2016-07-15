@@ -22,6 +22,7 @@ using namespace libdyn::libbarostat;
 using namespace libchemobjects;
 using namespace libhamiltonian;
 using namespace libmmath;
+using namespace libmmath::librandom;
 
 namespace libscripts{
 namespace libstate{
@@ -132,7 +133,7 @@ public:
   void cool();
 
   // Defined in State_methods1.cpp
-  void init_md(Nuclear& mol, Electronic& el, Hamiltonian& ham);
+  void init_md(Nuclear& mol, Electronic& el, Hamiltonian& ham, Random& rnd);
   void run_md(Nuclear& mol, Electronic& el, Hamiltonian& ham);
 
   // Defined in State_methods2.cpp

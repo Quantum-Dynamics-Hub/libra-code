@@ -15,7 +15,7 @@ namespace libscripts{
 namespace libstate{
 
 
-void State::init_md(Nuclear& mol, Electronic& el, Hamiltonian& ham){
+void State::init_md(Nuclear& mol, Electronic& el, Hamiltonian& ham, Random& rnd){
 
   //----- Checking type of ensemble and the existence of required variables ------
   int is_thermostat, is_barostat, is_system;
@@ -55,7 +55,7 @@ void State::init_md(Nuclear& mol, Electronic& el, Hamiltonian& ham){
     thermostat->set_Nf_r(syst->Nf_r);
     if(is_barostat){  thermostat->set_Nf_b(Nf_b); }
     thermostat->init_nhc();
-    syst->init_fragment_velocities(thermostat->Temperature);
+    syst->init_fragment_velocities(thermostat->Temperature, rnd);
   }
   if(is_barostat){   
     barostat->set_Nf_t(syst->Nf_t);
