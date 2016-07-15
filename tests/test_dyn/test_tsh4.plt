@@ -31,9 +31,10 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 
 
 
+set ytics 0.2
 
 set xlabel "p, a.u." offset 0.0, 0.5
-set ylabel "SH pops" offset 1.5, 0.0
+set ylabel "Transmission SH probabilities" offset 1.5, 0.0
 set output "sh_pops_tr.png"
 plot "p_scatt_tr_fssh.txt" using 2:8   w lp  ls 31  lw 2  t "SH(0), FSSH",\
      "p_scatt_tr_fssh.txt" using 2:10  w lp  ls 32  lw 2  t "SH(1), FSSH"
@@ -41,7 +42,7 @@ plot "p_scatt_tr_fssh.txt" using 2:8   w lp  ls 31  lw 2  t "SH(0), FSSH",\
 
 
 set xlabel "p, a.u." offset 0.0, 0.5
-set ylabel "SH pops" offset 1.5, 0.0 
+set ylabel "Reflection SH probabilities" offset 1.5, 0.0 
 set output "sh_pops_re.png"
 plot "p_scatt_re_fssh.txt" using 2:8   w lp  ls 31  lw 2  t "SH(0), FSSH",\
      "p_scatt_re_fssh.txt" using 2:10  w lp  ls 32  lw 2  t "SH(1), FSSH"

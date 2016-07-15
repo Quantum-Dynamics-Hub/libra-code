@@ -13,6 +13,7 @@
 #
 # In this example, we extend our line search algorithm, to minimize debug info printing
 # and showcase actual working of the algorithm: finding the root of a function 
+# Now we apply it to a 2D problem - it is essential to run the algorithm along the gradient direction
 #
 ########################################################################################
 
@@ -32,8 +33,8 @@ from libra_py import *
 # Here we will demonstrate how to apply DIIS for efficient line search in 1D 
 # so we use 1x1 matrices
 
-def func(x):
-    return (x-0.456)**2
+def func(x,y):
+    return (x-0.456)**2 + (y+0.56)**2, 2.0*(x-0.456), 2.0*(y+0.56)
 
 # In our case, f^2 is essentialy the error function
 
@@ -44,34 +45,49 @@ def printout(diis):
     E = diis.get_diis_err()
     sz = len(X)
     for i in xrange(sz):
-        print i, X[i].get(0), E[i].get(0)
+        print i, X[i].get(0,0), X[i].get(1,1), E[i].get(0,0), E[i].get(1,1)
+
+
+def add_set(x,y):
+    #print "Adding one set"
+    X = MATRIX(2,2);   X.set(0,0, x);  X.set(1,1, y);  
+    E = MATRIX(2,2);   z = func(x,y);  E.set(0,0, z[0]); E.set(1,1, z[1]); 
+    diis.add_diis_matrices(X, E);
+    #printout(diis)
+    return z # function and its gradient
 
 
 
 # This is 3 element predictor for the matrices 1x1
-diis = DIIS(3,1)
+diis = DIIS(3,2)
 printout(diis)
 
-print "Adding one set"
-x = MATRIX(1,1); x.set(0, 0.0); f = MATRIX(1,1); f.set(0, func(0.0)); diis.add_diis_matrices(x, f);
+dt = 1.0
+#z0 = add_set( -1.0, -1.0)  # too good starting point
+z0 = add_set( 0.0, 0.0)     # less efficient starting point
+
+# add few steps along the direction of the negative gradient
+add_set( -1.0-dt*z0[1], -1.0-dt*z0[2])
 printout(diis)
 
-print "Adding the second set"
-x = MATRIX(1,1); x.set(0, 1.0); f = MATRIX(1,1); f.set(0, func(1.0)); diis.add_diis_matrices(x, f);
+add_set( -1.0-2.0*dt*z0[1], -1.0-2.0*dt*z0[2])
 printout(diis)
 
 
 print "The extrapolated objective matrix\n"
-x = MATRIX(1,1); diis.extrapolate_matrix(x); x.show_matrix()
+X = MATRIX(2,2); diis.extrapolate_matrix(X); X.show_matrix()
 
-rt = x.get(0)
+rt = [X.get(0,0), X.get(1,1)]
 
-for n in xrange(100):
-    x = MATRIX(1,1); x.set(0, rt); f = MATRIX(1,1); f.set(0, func(rt)); diis.add_diis_matrices(x, f);
-    x = MATRIX(1,1); diis.extrapolate_matrix(x); 
-    rt = x.get(0)
+# Line search along the negative gradient direction
+for n in xrange(25):
+ 
+    add_set(rt[0],rt[1])   
+    diis.extrapolate_matrix(X); 
+   
+    rt = [X.get(0,0), X.get(1,1)]
 
-    print n,rt, func(rt)
+    print n,rt, func(rt[0],rt[1])[0]
 
 
 

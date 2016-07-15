@@ -41,8 +41,8 @@ plot "p_scatt.txt" using 2:4  w l  ls 11  lw 5  t "SE(0)",\
 set xlabel "p, a.u." offset 0.0, 0.5
 set ylabel "SH pops" offset 1.5, 0.0 
 set output "sh_pops.png"
-plot "p_scatt.txt" using 2:8   w l  ls 11  lw 5  t "SE(0)",\
-     "p_scatt.txt" using 2:10  w l  ls 21  lw 5  t "SE(1)"
+plot "p_scatt.txt" using 2:8   w l  ls 11  lw 5  t "SH(0)",\
+     "p_scatt.txt" using 2:10  w l  ls 21  lw 5  t "SH(1)"
 
 
 
