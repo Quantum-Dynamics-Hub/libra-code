@@ -55,8 +55,7 @@ class Electronic{
 */
 
   
-  Random* rnd_obj;                           
-  void rnd_phase(double&, double&, double);
+  void rnd_phase(double&, double&, double, double);
 
   public:
 
@@ -68,12 +67,14 @@ class Electronic{
 
   //--------------- Class functions ---------------
 
-  void init(int,int);      ///< initialize object: 1-st parameter - the number of electronic DOF, 2-nd - the initial state index
-  void init(int);          ///< initialize object: parameter - the number of electronic DOF
+  void init(int,int,double);///< initialize object: 1-st parameter - the number of electronic DOF, 2-nd - the initial state index, 3-rd - the phase
+  void init(int,int);       ///< initialize object: 1-st parameter - the number of electronic DOF, 2-nd - the initial state index
+  void init(int);           ///< initialize object: parameter - the number of electronic DOF
 
   Electronic();
   Electronic(int);
   Electronic(int,int);
+  Electronic(int,int,double);
   Electronic(const Electronic&); 
 
   ~Electronic();

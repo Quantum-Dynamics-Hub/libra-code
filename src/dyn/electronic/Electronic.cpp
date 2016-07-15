@@ -31,7 +31,6 @@ Electronic& Electronic::operator=(const Electronic& ob){
 
 */
 
-  *rnd_obj = *ob.rnd_obj;
   nstates = ob.nstates;
   istate = ob.istate;
   q = ob.q;
@@ -41,22 +40,23 @@ Electronic& Electronic::operator=(const Electronic& ob){
 }
 
 
-void Electronic::rnd_phase(double& x, double& y, double nrm){ 
+void Electronic::rnd_phase(double& x, double& y, double nrm, double phi){ 
 /**
   \brief An auxiliary function to generate a random (uniform distribution) phase complex number
 
   \param[out] x The real component of the complex number generated
   \param[out] y The imaginary component of the complex number generated
   \param[in] nrm The norm of the generated random number
+  \param[in] phi The phase of the wavefunction
 
 */                                         
 
-  double phi = rnd_obj->uniform(0.0,1.0);
   x = std::sqrt(nrm) * std::cos(M_PI*phi); 
   y = std::sqrt(nrm) * std::sin(M_PI*phi); 
+
 }
 
-void Electronic::init(int n_,int st){
+void Electronic::init(int n_,int st, double phi){
 /**
   \brief An auxiliary function to initialize (or reinitialize the Electronic object)
 
@@ -67,9 +67,10 @@ void Electronic::init(int n_,int st){
 
   \param[in] n_ The number of electronic states to include: the dimensionality of the electronic problem
   \param[in] st The index of electronic state to which we initialize the system 
+  \param[in] phi The phase of the wavefunction
 
 */
-  rnd_obj = new Random();
+//  rnd_obj = new Random();
 
   if(st>=n_){ std::cout<<"Error in Electronic::init - st("<<st<<") must be smaller than n_("<<n_<<")\n"; exit(0); }
 
@@ -78,9 +79,30 @@ void Electronic::init(int n_,int st){
   p = std::vector<double>(n_,0.0); 
 
   istate = st;
-  rnd_phase(q[istate],p[istate],1.0);   // populate only istate-th state
+  rnd_phase(q[istate],p[istate],1.0, phi);    // populate only the istate-th state
 
 }
+
+//
+// Overloaded version
+//
+void Electronic::init(int n_, int st){ 
+/**
+  \brief An auxiliary function to initialize (or reinitialize the Electronic object)
+
+  This function allocates memory for time-dependent wfc with n_ stationary states
+  Then it initializes the overall multiconfigurational wfc
+  to be a 1-configurational, with the weight 1 set to basis state with index 0
+  and with a random phase
+
+  \param[in] n_ The number of electronic states to include: the dimensionality of the electronic problem
+  \param[in] st The index of electronic state to which we initialize the system 
+
+*/
+
+  init(n_,st, 0.0);
+}  
+
 
 //
 // Overloaded version
@@ -98,8 +120,21 @@ void Electronic::init(int n_){
 
 */
 
-  init(n_,0);
+  init(n_,0, 0.0);
 }  
+
+
+Electronic::Electronic(int n_,int st, double phi){ 
+/**
+  \brief Constructor
+
+  \param[in] n_ The number of electronic states to include: the dimensionality of the electronic problem
+  \param[in] st The index of electronic state to which we initialize the system 
+  \param[in] phi The phase of the wavefunction
+*/
+
+ init(n_,st, phi);
+}
 
 
 //
@@ -113,7 +148,7 @@ Electronic::Electronic(int n_,int st){
   \param[in] st The index of electronic state to which we initialize the system 
 */
 
- init(n_,st);
+ init(n_,st, 0.0);
 }
 
 Electronic::Electronic(int n_){ 
@@ -124,7 +159,7 @@ Electronic::Electronic(int n_){
   \param[in] n_ The number of electronic states to include: the dimensionality of the electronic problem
 */
 
- init(n_,0); 
+ init(n_,0, 0.0); 
 }
 
 Electronic::Electronic(){ 
@@ -135,7 +170,7 @@ Electronic::Electronic(){
   The system is initialized to be in the lowest (index 0) electronic state - the only one available
 */
 
- init(1,0);
+ init(1,0, 0.0);
 }
 
 
@@ -143,10 +178,6 @@ Electronic::Electronic(const Electronic& ob){ /// cctor
 /**
   \brief Copy constructor
 */
-
-
-  rnd_obj = new Random();
-  *rnd_obj = *ob.rnd_obj;
 
   nstates = ob.nstates;
   istate = ob.istate;
@@ -160,7 +191,6 @@ Electronic::~Electronic(){
 /**
   \brief Destructor
 */
-  if(rnd_obj!=NULL){ delete rnd_obj; rnd_obj = NULL; }
   if(q.size()>0){ q.clear(); }
   if(p.size()>0){ p.clear(); }
 }
