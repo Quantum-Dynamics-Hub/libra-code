@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<?iotk version="1.2.0"?>
+<?iotk file_version="1.0"?>
+<?iotk binary="F"?>
+<?iotk qe_syntax="F"?>
+<Root>
+  <Header>
+    <format name="QEXPT" version="1.1.0"/>
+    <creator name="Quantum ESPRESSO" version="5.2.0"/>
+  </Header>
+  <Dimensions>
+    <Kpoints nktot="3" nspin="1" nk1="4" nk2="1" nk3="1" s1="0" s2="0" s3="0"/>
+    <Bands nbnd="10"/>
+    <Gamma_tricks gamma_only="F"/>
+    <Main_grid npw="20479"/>
+    <Wfc_grid npwx="2594"/>
+    <Atoms natoms="6"/>
+    <Symmops nsym="1"/>
+  </Dimensions>
+  <Cell units="a.u.">
+    <Data alat="1.890000000000000E+000" omega="5.401015199999999E+004" tpiba="3.324436670465390E+000" tpiba2="1.105187917593501E+001"/>
+    <a1 xyz="3.780000000000000E+001 0.000000000000000E+000 0.000000000000000E+000"/>
+    <a2 xyz="0.000000000000000E+000 3.780000000000000E+001 0.000000000000000E+000"/>
+    <a3 xyz="0.000000000000000E+000 0.000000000000000E+000 3.780000000000000E+001"/>
+    <b1 xyz="1.662218335232695E-001 0.000000000000000E+000 0.000000000000000E+000"/>
+    <b2 xyz="0.000000000000000E+000 1.662218335232695E-001 0.000000000000000E+000"/>
+    <b3 xyz="0.000000000000000E+000 0.000000000000000E+000 1.662218335232695E-001"/>
+  </Cell>
+  <Atoms>
+    <Data natoms="6" nspecies="2"/>
+    <Positions units="alat">
+      <atom.1 type="C" xyz="-5.046720000000000E+000 2.317630000000000E+000 1.782000000000000E-002"/>
+      <atom.2 type="C" xyz="-3.715480000000000E+000 2.308940000000000E+000 -5.870000000000000E-003"/>
+      <atom.3 type="H" xyz="-5.606420000000001E+000 1.540730000000000E+000 -4.925500000000000E-001"/>
+      <atom.4 type="H" xyz="-5.577720000000000E+000 3.101640000000000E+000 5.476100000000000E-001"/>
+      <atom.5 type="H" xyz="-3.184480000000000E+000 1.524930000000000E+000 -5.356500000000001E-001"/>
+      <atom.6 type="H" xyz="-3.155790000000001E+000 3.085840000000000E+000 5.045100000000000E-001"/>
+    </Positions>
+    <Types>
+      <Data pseudo_dir="./"/>
+      <specie.1 type="C" pseudo_file="C.pbe-n-kjpaw_psl.0.1.UPF"/>
+      <specie.2 type="H" pseudo_file="H.pbe-kjpaw_psl.0.1.UPF"/>
+    </Types>
+  </Atoms>
+  <Symmetry>
+    <symmops nsym="1" invsym="F"/>
+    <info.1 name="identity"/>
+    <sym.1 type="integer" size="9" columns="3" units="crystal">
+         1          0          0 
+         0          1          0 
+         0          0          1
+    </sym.1>
+    <trasl.1 type="real" size="3" units="crystal">
+ 0.000000000000000E+000
+ 0.000000000000000E+000
+ 0.000000000000000E+000
+    </trasl.1>
+  </Symmetry>
+  <Kmesh nk="3">
+    <weights type="real" size="3">
+ 5.000000000000000E-001
+ 1.000000000000000E+000
+ 5.000000000000000E-001
+    </weights>
+    <k type="real" size="9" fmt="(3f15.9)">
+    0.000000000    0.000000000    0.000000000
+    0.012500000    0.000000000    0.000000000
+   -0.025000000    0.000000000    0.000000000
+    </k>
+  </Kmesh>
+  <Other_parameters>
+    <Cutoff wfc="2.000000000000000E+000" rho="8.000000000000000E+000" units="Rydberg"/>
+    <Space_grid nr1="36" nr2="36" nr3="36"/>
+    <Charge nelec="1.200000000000000E+001"/>
+  </Other_parameters>
+  <Main_grid iotk_link="mgrid">
+    <!--This is a link to the file indicated in the iotk_link attribute-->
+  </Main_grid>
+  <Wfc_grids npwx="2594">
+    <Kpoint.1 iotk_link="grid.1">
+      <!--This is a link to the file indicated in the iotk_link attribute-->
+    </Kpoint.1>
+    <Kpoint.2 iotk_link="grid.2">
+      <!--This is a link to the file indicated in the iotk_link attribute-->
+    </Kpoint.2>
+    <Kpoint.3 iotk_link="grid.3">
+      <!--This is a link to the file indicated in the iotk_link attribute-->
+    </Kpoint.3>
+  </Wfc_grids>
+  <Eigenvalues nspin="1" nk="3" nbnd="10" efermi="-4.916367925702920E-001" units="Rydberg">
+    <e.1 type="real" size="10">
+-2.982734840186616E+000
+-1.932752995751686E+000
+-1.169389433109982E+000
+-8.364354939318412E-001
+-6.558831965216823E-001
+-6.432000885044696E-001
+-2.334142501473528E-001
+-2.325337234403816E-001
+-1.652020148924376E-001
+-1.429477483457737E-001
+    </e.1>
+    <e.2 type="real" size="10">
+-2.982860062978096E+000
+-1.937882688153631E+000
+-1.168307650054115E+000
+-8.360621223794210E-001
+-6.586344029729712E-001
+-6.472734933964794E-001
+-2.337439271375098E-001
+-2.330253662608530E-001
+-1.665850641208421E-001
+-1.427159821916973E-001
+    </e.2>
+    <e.3 type="real" size="10">
+-2.994217237254494E+000
+-1.951604308014655E+000
+-1.175061343255805E+000
+-8.424276468477736E-001
+-6.615502651233692E-001
+-6.590325424790158E-001
+-2.395303068376048E-001
+-2.342074010459690E-001
+-1.677096974954729E-001
+-1.426967290439773E-001
+    </e.3>
+  </Eigenvalues>
+  <OCCUPATIONS nspin="1" nk="3" nbnd="10">
+    <wg.1 type="real" size="10">
+ 1.000000000000000E+000
+ 1.000000000000000E+000
+ 1.000000000000000E+000
+ 1.000000000000000E+000
+ 1.000000000000000E+000
+ 1.000000000000000E+000
+ 0.000000000000000E+000
+ 0.000000000000000E+000
+ 0.000000000000000E+000
+ 0.000000000000000E+000
+    </wg.1>
+    <wg.2 type="real" size="10">
+ 1.000000000000000E+000
+ 1.000000000000000E+000
+ 1.000000000000000E+000
+ 1.000000000000000E+000
+ 1.000000000000000E+000
+ 1.000000000000000E+000
+ 0.000000000000000E+000
+ 0.000000000000000E+000
+ 0.000000000000000E+000
+ 0.000000000000000E+000
+    </wg.2>
+    <wg.3 type="real" size="10">
+ 1.000000000000000E+000
+ 1.000000000000000E+000
+ 1.000000000000000E+000
+ 1.000000000000000E+000
+ 1.000000000000000E+000
+ 1.000000000000000E+000
+ 0.000000000000000E+000
+ 0.000000000000000E+000
+ 0.000000000000000E+000
+ 0.000000000000000E+000
+    </wg.3>
+  </OCCUPATIONS>
+  <Eigenvectors>
+    <Kpoint.1 iotk_link="wfc.1">
+      <!--This is a link to the file indicated in the iotk_link attribute-->
+    </Kpoint.1>
+    <Kpoint.2 iotk_link="wfc.2">
+      <!--This is a link to the file indicated in the iotk_link attribute-->
+    </Kpoint.2>
+    <Kpoint.3 iotk_link="wfc.3">
+      <!--This is a link to the file indicated in the iotk_link attribute-->
+    </Kpoint.3>
+  </Eigenvectors>
+</Root>
+
