@@ -1299,6 +1299,12 @@ double Hamiltonian_MM::calculate(int call_type,int& update_displ2){
     }
 
     else if(functional==3){
+
+      if(Box!=NULL){
+        cout<<"Error!: LJ_Coulomb potential can not be used for periodic systems!\n";
+        cout<<"Use \"mb_functional\":\"vdw_LJ1\",\"mb_excl_functional\":\"vdw_LJ1\" instead\n (only for vdW part)";
+        exit(0);
+      }
 // This gonna be a universal LJ+Coulomb potential
 //    cout<<"Going to compute LJ_Coulomb\n";
 //    exit(0);
