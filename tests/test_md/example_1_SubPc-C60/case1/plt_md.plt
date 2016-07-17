@@ -33,30 +33,21 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 
 
 set xlabel "time" offset 0.0, 0.5
-set ylabel "Population" offset 1.5, 0.0 
+set xtics 250
 
-# SAC, adiabatic Hamiltonian
-#set xrange [-10:10]
-#set xtics 2
-#set yrange [-0.2:1.5]
-#set ytics 0.4
+set ylabel "Energy, a.u." offset 1.5, 0.0 
+set output "_md_pot.png"
+plot "_en_md.txt" using 2:6   w l  ls 11  lw 5  t "E_{pot}"
 
 set output "_md_tot.png"
 plot "_en_md.txt" using 2:8   w l  ls 11  lw 5  t "E_{tot}"
-#     "ref/_en_md.txt" using 2:8   w l  ls 21  lw 5  t "E_{tot}"
 
-set output "_md_pot.png"
-plot "_en_md.txt" using 2:6   w l  ls 11  lw 5  t "E_{pot}"
-#     "ref/_en_md.txt" using 2:6   w l  ls 21  lw 5  t "E_{pot}"
+set output "_md_NP.png"
+plot "_en_md.txt" using 2:10   w l  ls 11  lw 5  t "H_{NP}"
 
-
-#set output "_md_T.png"
-#plot "_en_md.txt" using 2:12   w l  ls 21  lw 5  t "H_{NP}"
-
-
-
-#"_populations.txt" using 2:5   w l  ls 31  lw 5  t "Fr1, HOMO",\
-#     "_populations.txt" using 2:6   w l  ls 32  lw 5  t "Fr1, LUMO",\
+set ylabel "Temperature, K" offset 1.5, 0.0 
+set output "_md_T.png"
+plot "_en_md.txt" using 2:12   w l  ls 11  lw 5  t "T"
 
 
 

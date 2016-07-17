@@ -8,13 +8,14 @@
 #* or <http://www.gnu.org/licenses/>.
 #*
 #*********************************************************************************/
-
 ###################################################################
-# Starting with the file from the test_hamiltonian_mm/test_mm6a.py
-#
+# This is a classical all-atomic MD followed by the EHT calculations on each fragment
 ###################################################################
 
 import sys
+import cmath
+import math
+import os
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -23,29 +24,36 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 from libra_py import *
 
+    
 
 def main():
+
+    rnd = Random()
 
     #--------------------- Initialization ----------------------
 
     # Create Universe and populate it
-    U = Universe(); LoadPT.Load_PT(U, "elements.dat")
+    U = Universe(); LoadPT.Load_PT(U, os.getcwd()+"/elements.txt")
 
     # Create force field
-    uff = ForceField({"bond_functional":"Harmonic",
-                      "angle_functional":"Fourier",
-                      "dihedral_functional":"General0",
-                      "oop_functional":"Fourier",
-                      "mb_functional":"LJ_Coulomb","R_vdw_on":10.0,"R_vdw_off":15.0 })
+    uff = ForceField({"bond_functional":"Harmonic",        "angle_functional":"Fourier",
+                      "dihedral_functional":"General0",    "oop_functional":"Fourier",
+                      "mb_functional":"LJ_Coulomb","R_vdw_on":40.0,"R_vdw_off":55.0 })
     LoadUFF.Load_UFF(uff,"uff.dat")
 
 
     # Create molecular system and initialize the properties
     syst = System()
+
     LoadMolecule.Load_Molecule(U, syst, "Pc-C60.ent", "pdb")
+
     syst.determine_functional_groups(0)  # do not assign rings
     syst.init_fragments()
     print "Number of atoms in the system = ", syst.Number_of_atoms
+    print "Number of bonds in the system = ", syst.Number_of_bonds
+    print "Number of angles in the system = ", syst.Number_of_angles
+    print "Number of dihedrals in the system = ", syst.Number_of_dihedrals
+    print "Number of impropers in the system = ", syst.Number_of_impropers
     atlst1 = range(1,syst.Number_of_atoms+1)
 
     # Creating Hamiltonian and initialize it
@@ -54,11 +62,13 @@ def main():
     ham.set_interactions_for_atoms(syst, atlst1, atlst1, uff, 1, 0)  # 0 - verb, 0 - assign_rings
     ham.show_interactions_statistics()
 
+
     # Bind Hamiltonian and the system   
     ham.set_system(syst);   ham.compute();   print "Energy = ", ham.H(0,0), " a.u."
 
     # Electronic DOFs
     el = Electronic(1,0)
+
 
     # Nuclear DOFs
     mol = Nuclear(3*syst.Number_of_atoms)
@@ -66,46 +76,63 @@ def main():
     # Initialize MD variables
     nve_md.nve_md_init(syst, mol, el, ham)
 
-    #=================== Propagation ====================
-    integrator = "DLML"
 
+
+    #=================== Propagation ====================
+ 
     ########################## Cooling #################################
+
+    md = MD({"max_step":1,"ensemble":"NVE","integrator":"DLML","terec_exp_size":10,"dt":20.0,"n_medium":1,"n_fast":1,"n_outer":1})
+    md.show_info()
+    
+    # Thermostat
+    therm = Thermostat({"Temperature":278.0,"Q":100.0,"thermostat_type":"Nose-Hoover","nu_therm":0.01,"NHC_size":5})
+    therm.show_info()
+
+
+    ST = State() 
+    ST.set_system(syst);    #    ST.set_thermostat(therm)
+    ST.set_md(md)
+
+    ST.init_md(mol, el, ham, rnd)    
+
+
 
     f = open("_en_cooling.txt","w")
     f.close()
-    dt = 20.0
+
 
     for i in xrange(1):
         syst.set_atomic_q(mol.q)
         syst.print_xyz("_mol_cooling.xyz",i)
 
-        for j in xrange(1):
-            ekin, epot, etot = nve_md.nve_md_step(syst, mol, el, ham, dt, integrator)
-
-        syst.cool()
+        ST.run_md(mol, el, ham)
+        ekin = ST.E_kin;    epot = ST.E_pot
+        ST.cool()
 
         f = open("_en_cooling.txt","a")
-        f.write("i= %3i ekin= %8.5f  epot= %8.5f  etot= %8.5f\n" % (i, ekin, epot, etot))
+        f.write("i= %3i ekin= %8.5f  epot= %8.5f  etot= %8.5f  H_NP= %8.5f  curr_T= %8.5f\n" % (i, ekin, epot, ST.E_tot, ST.H_NP, ST.curr_T ))
         f.close()
 
 
     ########################## Production MD #################################
 
-    syst.init_atom_velocities(300.0)
+    syst.init_atom_velocities(300.0, rnd)  # must be this !!!
+#    syst.init_fragment_velocities(300.0, rnd)
 
     f = open("_en_md.txt","w")
     f.close()
-    dt = 40.0 
+    md.dt = 40.0 
+    md.max_step = 10
 
     for i in xrange(1000):
         syst.set_atomic_q(mol.q)
         syst.print_xyz("_mol_md.xyz",i)
 
-        for j in xrange(10):
-            ekin, epot, etot = nve_md.nve_md_step(syst, mol, el, ham, dt, integrator)
+        ST.run_md(mol, el, ham)
 
         f = open("_en_md.txt","a")
-        f.write("i= %3i ekin= %8.5f  epot= %8.5f  etot= %8.5f\n" % (i, ekin, epot, etot))
+        f.write("i= %3i ekin= %8.5f  epot= %8.5f  etot= %8.5f  H_NP= %8.5f  curr_T= %8.5f\n" % (i, ST.E_kin, ST.E_pot, ST.E_tot, ST.H_NP, ST.curr_T ))
         f.close()
 
 

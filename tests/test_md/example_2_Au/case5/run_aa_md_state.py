@@ -15,6 +15,7 @@
 import sys
 import cmath
 import math
+import os
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -32,21 +33,21 @@ def main():
     #--------------------- Initialization ----------------------
 
     # Create Universe and populate it
-    U = Universe(); LoadPT.Load_PT(U, "elements.dat")
+    U = Universe(); LoadPT.Load_PT(U, os.getcwd()+"/elements.txt")
 
     # Create force field
-    uff = ForceField({"bond_functional":"Harmonic",
-                      "angle_functional":"Fourier",
-                      "dihedral_functional":"General0",
-                      "oop_functional":"Fourier",
-                      "mb_functional":"LJ_Coulomb","R_vdw_on":40.0,"R_vdw_off":55.0 })
-
+#    uff = ForceField({"mb_functional":"LJ_Coulomb","R_vdw_on":40.0,"R_vdw_off":55.0 })  # this can not be used for PBC
+    uff = ForceField({"R_vdw_on":10.0,"R_vdw_off":12.0, "mb_functional":"vdw_LJ1","mb_excl_functional":"vdw_LJ1"})
 
     LoadUFF.Load_UFF(uff,"uff.dat")
+
+
     # Create molecular system and initialize the properties
     syst = System()
 
-    LoadMolecule.Load_Molecule(U, syst, "Pc-C60.ent", "pdb")
+    LoadMolecule.Load_Molecule(U, syst, "au.pdb", "true_pdb")
+
+
 
     syst.determine_functional_groups(0)  # do not assign rings
     syst.init_fragments()
@@ -55,8 +56,12 @@ def main():
     print "Number of angles in the system = ", syst.Number_of_angles
     print "Number of dihedrals in the system = ", syst.Number_of_dihedrals
     print "Number of impropers in the system = ", syst.Number_of_impropers
-
     atlst1 = range(1,syst.Number_of_atoms+1)
+
+    T1 =  VECTOR(32.6970772436, 0.0, 0.0)
+    T2 =  VECTOR(16.3485386218, 28.3164995224, 0.0)
+    T3 =  VECTOR(0.0, 0.0, 26.6970517757)
+    syst.init_box(T1, T2, T3)
 
     # Creating Hamiltonian and initialize it
     ham = Hamiltonian_Atomistic(1, 3*syst.Number_of_atoms)
@@ -84,19 +89,26 @@ def main():
  
     ########################## Cooling #################################
 
-    md = MD({"max_step":1,"ensemble":"NVE","integrator":"DLML","terec_exp_size":10,"dt":20.0,"n_medium":1,"n_fast":1,"n_outer":1})
+    md = MD({"max_step":10,"ensemble":"NPT","integrator":"DLML","terec_exp_size":10,"dt":20.0,"n_medium":1,"n_fast":1,"n_outer":1})
     md.show_info()
     
     # Thermostat
-    therm = Thermostat({"Temperature":278.0,"Q":100.0,"thermostat_type":"Nose-Hoover","nu_therm":0.01,"NHC_size":5})
+    therm = Thermostat({"Temperature":278.0,"Q":100.0,"thermostat_type":"Nose-Hoover","nu_therm":0.001,"NHC_size":1})
     therm.show_info()
+
+    # Barostat
+    baro = Barostat({"W":10000.0,"Pressure":1.0,"nu_baro":0.001})
+    baro.show_info()
+
 
 
     ST = State() 
-    ST.set_system(syst);    #    ST.set_thermostat(therm)
+    ST.set_system(syst)
+    ST.set_thermostat(therm)
+    ST.set_barostat(baro)
     ST.set_md(md)
 
-    ST.init_md(mol, el, ham)    
+    ST.init_md(mol, el, ham, rnd)    
 
 
 
@@ -104,7 +116,7 @@ def main():
     f.close()
 
 
-    for i in xrange(1):
+    for i in xrange(10):
         syst.set_atomic_q(mol.q)
         syst.print_xyz("_mol_cooling.xyz",i)
 
@@ -119,8 +131,8 @@ def main():
 
     ########################## Production MD #################################
 
-    syst.init_atom_velocities(300.0)  # must be this !!!
-#    syst.init_fragment_velocities(300.0)
+    syst.init_atom_velocities(300.0, rnd)  # must be this !!!
+#    syst.init_fragment_velocities(300.0, rnd)
 
     f = open("_en_md.txt","w")
     f.close()

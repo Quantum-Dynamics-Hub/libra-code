@@ -1,0 +1,3 @@
+  Here we want to run NPT simulations with PBC
+
+  but something goes wrong with the code... need to check it out later
