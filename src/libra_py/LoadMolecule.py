@@ -54,12 +54,14 @@ def Load_Molecule(univ,syst,mol_file,format):
     pAtom_keyword = '(?P<Atom_keyword>'+'HETATM'+')'+SP
     pAtom_id      = '(?P<Atom_id>'+DOUBLE+')'+SP    
     pAtom_element = '(?P<Atom_element>'+WORD+')'+SP
+    pAtom_mol     = '(?P<Atom_mol>'+'MOL'+')'+SP
     pAtom_chain   = '(?P<Atom_chain>'+WORD+')'+SP
     pAtom_id1     = '(?P<Atom_id1>'+DOUBLE+')'+SP
     pAtom_x_coord = '(?P<Atom_x_coord>'+DOUBLE+')'+SP
     pAtom_y_coord = '(?P<Atom_y_coord>'+DOUBLE+')'+SP
     pAtom_z_coord = '(?P<Atom_z_coord>'+DOUBLE+')'+SP
     pAtom_type    = '(?P<Atom_type>'+INT+')'+SP
+    pAtom_occ     = '(?P<Atom_occ>'+DOUBLE+')'+SP
     pAtom_charge  = '(?P<Atom_charge>'+DOUBLE+')'+SP
     pAtom_C60     = '(?P<Atom_C60>'+NINT+')'+SP
 
