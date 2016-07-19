@@ -361,6 +361,7 @@ void export_Hamiltonian_QM_objects(){
 
   class_<listHamiltonian_QM>("listHamiltonian_QM",init<>())
       .def(init<std::string, System&>())
+      .def(init<const listHamiltonian_QM&>())
       .def("__copy__", &generic__copy__<listHamiltonian_QM>)
       .def("__deepcopy__", &generic__deepcopy__<listHamiltonian_QM>)
 
@@ -378,6 +379,7 @@ void export_Hamiltonian_QM_objects(){
       .def("get_parameters_from_file", &listHamiltonian_QM::get_parameters_from_file)
       .def("get_electronic_structure", &listHamiltonian_QM::get_electronic_structure)
       .def("set_electronic_structure", &listHamiltonian_QM::set_electronic_structure)
+      .def("compute_overlap", &listHamiltonian_QM::compute_overlap)
       .def("compute_core_Hamiltonian", &listHamiltonian_QM::compute_core_Hamiltonian)
       .def("energy_and_forces", &listHamiltonian_QM::energy_and_forces)
 

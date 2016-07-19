@@ -1075,6 +1075,45 @@ double energy_and_forces
 
 
 
+listHamiltonian_QM::listHamiltonian_QM(const listHamiltonian_QM& ob){   ///< Copy constructor;
+
+  Nelec = ob.Nelec;     ///< The number of electrons in this sub-system
+  Norb = ob.Norb;       ///< The total number of orbitals in this sub-system
+  prms = ob.prms;       ///< Control parameters defining how to perform calculations for this sub-system
+                        ///< Note: different levels of treatment are possible for different sub-systems
+  modprms = ob.modprms; ///< Model parameters for this sub-system
+
+  //============= Ground state =================
+  basis_ao = ob.basis_ao;             ///< Basis for this sub-system
+  atom_to_ao_map = ob.atom_to_ao_map; ///< Nuclei --> AO mapping for this sub-system
+  ao_to_atom_map = ob.ao_to_atom_map; ///< AO --> Nuclei mapping for this sub-system
+  el = new Electronic_Structure(ob.el);
+
+  //============ Excited states ================
+  basis_ex = ob.basis_ex;  ///< Excitations for this sub-system -  may be the same as in prms, but may be different  
+
+}
+
+void listHamiltonian_QM::operator=(const listHamiltonian_QM& ob){   ///< Copying one listHamiltonian_QM into the other one
+
+  Nelec = ob.Nelec;     ///< The number of electrons in this sub-system
+  Norb = ob.Norb;       ///< The total number of orbitals in this sub-system
+  prms = ob.prms;       ///< Control parameters defining how to perform calculations for this sub-system
+                        ///< Note: different levels of treatment are possible for different sub-systems
+  modprms = ob.modprms; ///< Model parameters for this sub-system
+
+  //============= Ground state =================
+  basis_ao = ob.basis_ao;             ///< Basis for this sub-system
+  atom_to_ao_map = ob.atom_to_ao_map; ///< Nuclei --> AO mapping for this sub-system
+  ao_to_atom_map = ob.ao_to_atom_map; ///< AO --> Nuclei mapping for this sub-system
+  *el = *ob.el;
+
+  //============ Excited states ================
+  basis_ex = ob.basis_ex;  ///< Excitations for this sub-system -  may be the same as in prms, but may be different  
+
+}
+
+
 
 
 listHamiltonian_QM::listHamiltonian_QM(std::string ctrl_filename,System& syst){
@@ -1218,13 +1257,32 @@ void listHamiltonian_QM::init(std::string ctrl_filename,System& syst){
 }
 
 
+void listHamiltonian_QM::compute_overlap(System& syst){
+/**
+  \param[in,out] syst The object containing structural information about system. 
+
+  Computes AO basis overlap matrix
+
+  Use after listHamiltonian_QM::init() and add_excitation() or non-default constructor !!!
+*/
+
+  int x_period = 0;
+  int y_period = 0;
+  int z_period = 0;
+  VECTOR t1, t2, t3;
+
+  update_overlap_matrix(x_period, y_period, z_period, t1, t2, t3, basis_ao, *el->Sao); 
+
+}
+
+
 void listHamiltonian_QM::compute_core_Hamiltonian(System& syst){
 /**
   \param[in,out] syst The object containing structural information about system. 
 
   Computes core Hamiltonian of the system (initialization must be performed first)
 
-  Use after listHamiltonian_QM::init() and add_excitation() !!!
+  Use after listHamiltonian_QM::init() and add_excitation() or non-default constructor !!!
 */
 
 

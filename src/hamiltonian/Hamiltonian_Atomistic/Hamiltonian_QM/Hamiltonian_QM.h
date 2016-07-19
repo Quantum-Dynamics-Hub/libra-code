@@ -125,8 +125,13 @@ class listHamiltonian_QM{
 
 public:
 
+    // Constructors
     listHamiltonian_QM(){ add_excitation(0,1,0,1); }
     listHamiltonian_QM(std::string ctrl_filename,System& syst);
+    listHamiltonian_QM(const listHamiltonian_QM&);   ///< Copy constructor;
+
+    void operator=(const listHamiltonian_QM&);       ///< Copying one listHamiltonian_QM into the other one
+
 
     int Nelec;  ///< The number of electrons in this sub-system
     int Norb;   ///< The total number of orbitals in this sub-system
@@ -153,6 +158,7 @@ public:
     Electronic_Structure get_electronic_structure(){ return *el; }
     void set_electronic_structure(Electronic_Structure& el_);
 
+    void compute_overlap(System& syst);
     void compute_core_Hamiltonian(System& syst);
     double energy_and_forces(System& syst);
 
