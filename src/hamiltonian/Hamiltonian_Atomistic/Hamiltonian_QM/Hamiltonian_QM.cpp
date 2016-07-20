@@ -1114,6 +1114,16 @@ void listHamiltonian_QM::operator=(const listHamiltonian_QM& ob){   ///< Copying
 }
 
 
+listHamiltonian_QM::~listHamiltonian_QM(){
+
+  if(basis_ao.size()>0){  basis_ao.clear(); }
+  if(atom_to_ao_map.size()){  atom_to_ao_map.clear(); }
+  if(ao_to_atom_map.size()){  ao_to_atom_map.clear(); }
+  if(basis_ex.size()){ basis_ex.size(); }
+
+  delete el;
+
+}
 
 
 listHamiltonian_QM::listHamiltonian_QM(std::string ctrl_filename,System& syst){

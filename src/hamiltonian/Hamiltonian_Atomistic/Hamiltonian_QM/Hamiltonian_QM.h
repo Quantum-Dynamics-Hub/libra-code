@@ -129,6 +129,7 @@ public:
     listHamiltonian_QM(){ add_excitation(0,1,0,1); }
     listHamiltonian_QM(std::string ctrl_filename,System& syst);
     listHamiltonian_QM(const listHamiltonian_QM&);   ///< Copy constructor;
+    ~listHamiltonian_QM();
 
     void operator=(const listHamiltonian_QM&);       ///< Copying one listHamiltonian_QM into the other one
 
