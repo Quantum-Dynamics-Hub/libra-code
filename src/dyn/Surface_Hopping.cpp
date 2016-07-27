@@ -22,6 +22,64 @@ namespace libdyn{
 
 
 
+MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double dt){
+/**
+
+*/
+
+  int nstates = Coeff.n_elts;
+  MATRIX g(nstates,nstates);
+
+
+  const double kb = 3.166811429e-6; // Hartree/K
+  int i,j,k;
+  double sum,g_ij,argg;
+
+  CMATRIX* denmat; denmat = new CMATRIX(nstates, nstates); 
+  
+  *denmat = (Coeff * Coeff.H() ).conj();
+
+  // Now calculate the hopping probabilities
+  for(i=0;i<nstates;i++){
+    sum = 0.0;
+    double a_ii = denmat->get(i,i).real(); // c_i^* * c_i
+
+    for(j=0;j<nstates;j++){
+
+      if(i!=j){ // according to formula the diagonal probability P(i->i) should be zero
+        // Use very general expression:
+        // Note: the sign here is not very obvious! Keep in mind:
+        // Re(i*z) = -Im(z)  but  Im(i*z) = Re(z)
+        // My formula is: P(i->j) = (2*dt/(hbar*|c_i|^2)) * ( -Im(H_ij * c_i^* * c_j) )
+        double imHaij = ( Hvib.get(i,j) * denmat->get(i,j) ).imag(); // Im(H_ij * c_i^* * c_j)
+
+
+        if(a_ii<1e-8){ g_ij = 0.0; }  // avoid division by zero
+        else{
+          g_ij = -2.0*dt*imHaij/a_ii;  // This is a general case
+          if(g_ij<0.0){  g_ij = 0.0; }
+
+        }// else
+
+        g.set(i,j,g_ij);
+        sum = sum + g_ij;
+      }
+      else{ g.set(i,j,0.0); }
+
+    }// for j
+
+    g.set(i,i,1.0 - sum);
+
+  }// for i
+
+  delete denmat;
+
+  return g;
+
+}// fssh
+
+
+
 
 void compute_hopping_probabilities_fssh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,
                                         double dt, int use_boltz_factor,double T){
