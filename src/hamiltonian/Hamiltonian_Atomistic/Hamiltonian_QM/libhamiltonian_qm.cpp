@@ -386,8 +386,16 @@ void export_Hamiltonian_QM_objects(){
       .def("excite_alp", &listHamiltonian_QM::excite_alp)
       .def("excite_bet", &listHamiltonian_QM::excite_bet)
 
-
   ;
+
+//  class_< listHamiltonian_QM >("listHamiltonian_QM")
+//      .def(vector_indexing_suite< listHamiltonian_QM >())
+//  ;
+
+//  class_< listHamiltonian_QM >("listHamiltonian_QM")
+//      .def(vector_indexing_suite< listHamiltonian_QM >())
+//  ;
+
 
 
 }

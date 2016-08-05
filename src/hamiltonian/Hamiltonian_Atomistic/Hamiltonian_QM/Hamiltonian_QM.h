@@ -170,10 +170,20 @@ public:
     void excite_bet(int I,int J);
 
 
-
-
+/*
+    friend int operator != (const listHamiltonian_QM& v1, const listHamiltonian_QM& v2){
+      return (v1.Nelec!=v2.Nelec||v1.Norb!=v2.Norb);
+    }
+    friend int operator == (const listHamiltonian_QM& v1, const listHamiltonian_QM& v2){
+      return !(v1!=v2);
+    }
+*/
 
 };
+
+typedef std::vector<listHamiltonian_QM> listHamiltonian_QMList;  ///< Data type that holds a vector of listHamiltonian_QM objects
+typedef std::vector<vector<listHamiltonian_QM> > listHamiltonian_QMMap;  ///< Data type that holds the table (grid) of listHamiltonian_QM objects
+
 
 
 

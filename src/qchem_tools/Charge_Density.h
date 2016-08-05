@@ -38,12 +38,18 @@ using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::lib
 #include "../hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Electronic_Structure.h"
 using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm;
 
+#include "../hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Hamiltonian_QM.h"
+using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm;
+
+
 
 /// libqchem_tools namespace
 namespace libqchem_tools{
 
 
 void charge_density( Electronic_Structure& el, System& syst, vector<AO>& basis_ao, Control_Parameters& prms);
+void charge_density(MATRIX& C, vector<listHamiltonian_QM>& ham, System& syst, vector<vector<int> >& active_orb, Control_Parameters& prms);
+void charge_density(MATRIX& C, boost::python::list ham, System& syst, boost::python::list active_orb, Control_Parameters& prms);
 
 
 }// namespace libqchem_tools

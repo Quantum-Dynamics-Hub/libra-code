@@ -29,9 +29,18 @@ void export_qchem_tools_objects(){
 */
 
   void (*expt_charge_density_v1)
-  ( Electronic_Structure& el, System& syst, vector<AO>& basis_ao, Control_Parameters& prms) = & charge_density;
+  ( Electronic_Structure& el, System& syst, vector<AO>& basis_ao, Control_Parameters& prms) = &charge_density;
+
+  void (*expt_charge_density_v2)
+  (MATRIX& C, vector<listHamiltonian_QM>& ham, System& syst, vector<vector<int> >& active_orb, Control_Parameters& prms) = &charge_density;
+
+  void (*expt_charge_density_v3)
+  (MATRIX& C, boost::python::list ham, System& syst, boost::python::list active_orb, Control_Parameters& prms) = &charge_density;
+
 
   def("charge_density", expt_charge_density_v1);
+  def("charge_density", expt_charge_density_v2);
+  def("charge_density", expt_charge_density_v3);
 
 
 
