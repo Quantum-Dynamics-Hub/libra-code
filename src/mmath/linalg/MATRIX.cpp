@@ -718,7 +718,7 @@ MATRIX MATRIX::operator*(const MATRIX& ob){
 }
 
 MATRIX MATRIX::operator+(const MATRIX& ob){
-  MATRIX Temp(num_of_cols,num_of_rows);
+  MATRIX Temp(num_of_rows,num_of_cols);
   for(int i=0;i<num_of_elems;i++){ 
     Temp.M[i]=M[i]+ob.M[i];
   }
@@ -727,7 +727,7 @@ MATRIX MATRIX::operator+(const MATRIX& ob){
 }
 
 MATRIX MATRIX::operator-(const MATRIX& ob){
-  MATRIX Temp(num_of_cols,num_of_rows);
+  MATRIX Temp(num_of_rows,num_of_cols);
   for(int i=0;i<num_of_elems;i++){
     Temp.M[i]=M[i]-ob.M[i];
   }
