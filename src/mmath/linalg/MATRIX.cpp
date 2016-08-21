@@ -476,9 +476,7 @@ void MATRIX::Transpose()
 }
 MATRIX MATRIX::T()
 {
-
    MATRIX res(num_of_cols,num_of_rows);
-
 
    for(int row=0;row<num_of_rows;row++)
    {   for(int col=0;col<num_of_cols;col++)
@@ -687,9 +685,7 @@ double& MATRIX::operator[](const int indx){
 MATRIX MATRIX::operator-(){
   MATRIX tmp(num_of_rows,num_of_cols);
 
-  for(int i=0;i<num_of_elems;i++){
-    tmp.M[i] = -M[i];
-  }
+  for(int i=0;i<num_of_elems;i++){   tmp.M[i] = -M[i];  }
 
   return tmp;
 }
@@ -719,49 +715,40 @@ MATRIX MATRIX::operator*(const MATRIX& ob){
 
 MATRIX MATRIX::operator+(const MATRIX& ob){
   MATRIX Temp(num_of_rows,num_of_cols);
-  for(int i=0;i<num_of_elems;i++){ 
-    Temp.M[i]=M[i]+ob.M[i];
-  }
+
+  for(int i=0;i<num_of_elems;i++){    Temp.M[i]=M[i]+ob.M[i]; }
 
   return Temp;
 }
 
 MATRIX MATRIX::operator-(const MATRIX& ob){
   MATRIX Temp(num_of_rows,num_of_cols);
-  for(int i=0;i<num_of_elems;i++){
-    Temp.M[i]=M[i]-ob.M[i];
-  }
+
+  for(int i=0;i<num_of_elems;i++){   Temp.M[i]=M[i]-ob.M[i];  }
 
   return Temp;
 }
 
 MATRIX& MATRIX::operator+=(const MATRIX& ob){ 
-  for(int i=0;i<num_of_elems;i++) { 
-    M[i] += ob.M[i];
-  }
+  for(int i=0;i<num_of_elems;i++) {   M[i] += ob.M[i]; }
   return *this; // return reference to allow chaining: (((A += 5) += 6) += 7)  etc..
 }
                            
-MATRIX& MATRIX::operator-=(const MATRIX& ob){
- 
-  for(int i=0;i<num_of_elems;i++){ 
-    M[i] -= ob.M[i];
-  }
+MATRIX& MATRIX::operator-=(const MATRIX& ob){ 
+  for(int i=0;i<num_of_elems;i++){   M[i] -= ob.M[i];  }
   return *this; // return reference to allow chaining: (((A -= 5) -= 6) -= 7)  etc..
 }
 
 MATRIX& MATRIX::operator*=(double f){ 
-  for(int i=0;i<num_of_elems;i++) { 
-    M[i] *= f;
-  }
+  for(int i=0;i<num_of_elems;i++) {  M[i] *= f; }
   return *this; // return reference to allow chaining: (((A *= 5) *= 6) *= 7)  etc..
 }
 
 
-MATRIX MATRIX::operator /(double num)
-{   MATRIX m(num_of_cols,num_of_rows);
-    for(int i=0;i<num_of_elems;i++){  *(m.M+i)=*(M+i)/num;  }
-        return m;
+MATRIX MATRIX::operator /(double num){
+  MATRIX m(num_of_rows,num_of_cols);
+  for(int i=0;i<num_of_elems;i++){  m.M[i] = M[i]/num;  }
+  return m;
 }
 
 MATRIX MATRIX::operator=(const MATRIX& ob){  
@@ -772,9 +759,7 @@ MATRIX MATRIX::operator=(const MATRIX& ob){
 }
 
 MATRIX MATRIX::operator=(double num){
-  for(int i=0;i<num_of_elems;i++){
-    M[i] = num;
-  }
+  for(int i=0;i<num_of_elems;i++){   M[i] = num;  }
   return *this;  // return reference to allow chaining: A = B = C = 7!!! No: so crap doesn't happen in PYthon
 }
 
@@ -1232,9 +1217,9 @@ double MATRIX::tr(){
 // Trace
   double res =0.0;
   if(num_of_cols==num_of_rows){
-    for(int i=0;i<num_of_cols;i++){
-      res += M[i*num_of_cols+i];
-    }
+
+    for(int i=0;i<num_of_cols;i++){   res += M[i*num_of_cols+i];   }
+
   }
 
   return res;
