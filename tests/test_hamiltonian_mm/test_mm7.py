@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2015 Alexey V. Akimov
+#* Copyright (C) 2015-2016 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -19,27 +19,11 @@ import sys
 import math
 
 # Fisrt, we add the location of the library to test to the PYTHON path
-cwd = os.getcwd()
-print "Current working directory", cwd
-sys.path.insert(1,cwd+"/../../_build/src/mmath")
-sys.path.insert(1,cwd+"/../../_build/src/chemobjects")
-sys.path.insert(1,cwd+"/../../_build/src/hamiltonian")
-sys.path.insert(1,cwd+"/../../_build/src/dyn")
-#sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/hamiltonian_atomistic")
-
-
-print "\nTest 1: Importing the library and its content"
-from cygmmath import *
-from cygchemobjects import *
-from cyghamiltonian import *
-from cygdyn import *
-#from cyghamiltonian_atomistic import *
-
-
-from LoadPT import * # Load_PT
-from LoadMolecule import * # Load_Molecule
-from LoadUFF import*
-
+if sys.platform=="cygwin":
+    from cyglibra_core import *
+elif sys.platform=="linux" or sys.platform=="linux2":
+    from liblibra_core import *
+from libra_py import *
 
 
 ##############################################################
@@ -225,7 +209,7 @@ def md_step(syst, mol, el, ham, therm, dt, integrator, epot):
 # Create Universe and populate it
 U = Universe()
 verbose = 0
-Load_PT(U, "elements.dat", verbose)
+LoadPT.Load_PT(U, "elements.dat", verbose)
 
 
 # Create force field
@@ -237,7 +221,7 @@ uff = ForceField({"bond_functional":"Harmonic",
 
 
 
-Load_UFF(uff)
+LoadUFF.Load_UFF(uff)
 verb = 0
 assign_rings = 1
 
@@ -249,7 +233,7 @@ for i in [1]:
     print "=================== System ",i,"======================="
 
     syst = System()
-    Load_Molecule(U, syst, os.getcwd()+"/Clusters/23waters.ent", "pdb")
+    LoadMolecule.Load_Molecule(U, syst, os.getcwd()+"/Clusters/23waters.ent", "pdb")
     #Load_Molecule(U, syst, os.getcwd()+"/Clusters/23waters_noq.ent", "pdb")
 
     

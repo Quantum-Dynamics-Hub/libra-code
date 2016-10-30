@@ -21,6 +21,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 from libra_py import *
 
 
+
 N = 5
 A = MATRIX(N,N)
 B = MATRIX(N,N)

@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2015 Alexey V. Akimov
+#* Copyright (C) 2015-2016 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -20,24 +20,11 @@ import sys
 import math
 
 # Fisrt, we add the location of the library to test to the PYTHON path
-cwd = os.getcwd()
-print "Current working directory", cwd
-sys.path.insert(1,cwd+"/../../_build/src/mmath")
-sys.path.insert(1,cwd+"/../../_build/src/chemobjects")
-sys.path.insert(1,cwd+"/../../_build/src/hamiltonian")
-#sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/hamiltonian_atomistic")
-
-
-print "\nTest 1: Importing the library and its content"
-from cygmmath import *
-from cygchemobjects import *
-from cyghamiltonian import *
-#from cyghamiltonian_atomistic import *
-
-
-from LoadPT import * # Load_PT
-from LoadMolecule import * # Load_Molecule
-from LoadUFF import*
+if sys.platform=="cygwin":
+    from cyglibra_core import *
+elif sys.platform=="linux" or sys.platform=="linux2":
+    from liblibra_core import *
+from libra_py import *
 
 
 
@@ -46,13 +33,13 @@ from LoadUFF import*
 # Create Universe and populate it
 U = Universe()
 verbose = 0
-Load_PT(U, "elements.dat", verbose)
+LoadPT.Load_PT(U, "elements.dat", verbose)
 
 
 #======= System ==============
 syst = System()
 #Load_Molecule(U, syst, os.getcwd()+"/Clusters/2benz.ent", "pdb")
-Load_Molecule(U, syst, os.getcwd()+"/Molecules/test1a.pdb", "pdb_1")
+LoadMolecule.Load_Molecule(U, syst, os.getcwd()+"/Molecules/test1a.pdb", "pdb_1")
 syst.determine_functional_groups(0)  # 
 
 #sys1.show_atoms()
@@ -67,7 +54,7 @@ print "Number of atoms in the system = ", syst.Number_of_atoms
 uff = ForceField()
 
 # Load parameters
-Load_UFF(uff)
+LoadUFF.Load_UFF(uff)
 
 # Set up functional forms
 uff.set_functionals({"bond":"Harmonic","angle":"Harmonic","vdw":"LJ12_6"})
@@ -101,7 +88,7 @@ ham.show_interactions_statistics()
 print "\nTest 3: Note that now we add dihedral functional, so eventually we will have different interactions"
 
 uff = ForceField({"bond_functional":"Harmonic","angle_functional":"Fourier","vdw_functional":"LJ","dihedral_functional":"General0","R_vdw_on":6.0,"R_vdw_off":7.0})
-Load_UFF(uff)
+LoadUFF.Load_UFF(uff)
 
 # Reset Hamiltonian to comply with new Force Field
 ham = Hamiltonian_Atomistic(1, 3*syst.Number_of_atoms)  # Constructing new object, otherwise the interactions will be

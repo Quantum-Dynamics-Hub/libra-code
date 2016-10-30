@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2015 Alexey V. Akimov
+#* Copyright (C) 2015-2016 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -13,56 +13,30 @@
 # Compute derivatives of Sao, Hao, Fao, and also Dao in AO basis
 ###################################################################
 
+# Fisrt, we add the location of the library to test to the PYTHON path
 import os
 import sys
 import math
 
 # Fisrt, we add the location of the library to test to the PYTHON path
-cwd = os.getcwd()
-print "Current working directory", cwd
-sys.path.insert(1,cwd+"/../../_build/src/mmath")
-sys.path.insert(1,cwd+"/../../_build/src/chemobjects")
-sys.path.insert(1,cwd+"/../../_build/src/hamiltonian")
-sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/Hamiltonian_Atomistic")
-sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM")
-sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Control_Parameters")
-sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Model_Parameters")
-sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Basis_Setups")
-sys.path.insert(1,cwd+"/../../_build/src/dyn")
-sys.path.insert(1,cwd+"/../../_build/src/qchem/qobjects")
-sys.path.insert(1,cwd+"/../../_build/src/qchem/basis")
-sys.path.insert(1,cwd+"/../../_build/src/converters")
-sys.path.insert(1,cwd+"/../../_build/src/calculators")
-
-print "\nTest 1: Importing the library and its content"
-from cygmmath import *
-from cygchemobjects import *
-from cyghamiltonian import *
-from cyghamiltonian_qm import *
-from cygcontrol_parameters import *
-from cygmodel_parameters import *
-from cygbasis_setups import *
-from cygdyn import *
-from cygqobjects import *
-from cygbasis import *
-from cygconverters import *
-from cygcalculators import *
-
-from LoadPT import * # Load_PT
-from LoadMolecule import * # Load_Molecule
+if sys.platform=="cygwin":
+    from cyglibra_core import *
+elif sys.platform=="linux" or sys.platform=="linux2":
+    from liblibra_core import *
+from libra_py import *
 
 
 
 #=========== STEP 1:  Create Universe and populate it ================
 U = Universe()
-Load_PT(U, "elements.dat", 1)
+LoadPT.Load_PT(U, "elements.dat", 1)
 
 
 #=========== STEP 2:  Create system and load a molecule ================
 syst = System()
 #Load_Molecule(U, syst, os.getcwd()+"/c.pdb", "pdb_1")
 #Load_Molecule(U, syst, os.getcwd()+"/c2.pdb", "pdb_1")
-Load_Molecule(U, syst, os.getcwd()+"/bh.pdb", "pdb_1")
+LoadMolecule.Load_Molecule(U, syst, os.getcwd()+"/bh.pdb", "pdb_1")
 #Load_Molecule(U, syst, os.getcwd()+"/co.pdb", "pdb_1")
 #Load_Molecule(U, syst, os.getcwd()+"/ch4.pdb", "pdb_1")
 
@@ -221,7 +195,7 @@ etol = 0.0001
 pop_opt = 0  #  0 -  integer populations,  1 - Fermi distribution              
 
 res_alp = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_alp, degen, kT, etol, pop_opt)
-res_bet = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_bet, degen, kT, etol, pop_opt)
+res_bet = Fock_to_P(el.get_Fao_bet(), el.get_Sao(), Nelec_bet, degen, kT, etol, pop_opt)
 
 
 print "Bands(alp)    Occupations(alp)       Bands(bet)    Occupations(bet)"
@@ -248,51 +222,28 @@ dFao_bet_dz = MATRIX(Norb, Norb)
 
 
 DF = 0
-c = 0
-print "Starting core derivatives"
-Hamiltonian_core_deriv_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao, Sao, DF, c, dHao_dx, dHao_dy, dHao_dz, dSao_dx, dSao_dy, dSao_dz )
 
-print "dSao_dR[0]"
-dSao_dx.show_matrix()
-dSao_dy.show_matrix()
-dSao_dz.show_matrix()
+for c in [0,1]:
+    print "Starting core derivatives"
 
-print "dHao_dR[0]"
-dHao_dx.show_matrix()
-dHao_dy.show_matrix()
-dHao_dz.show_matrix()
+    if(prms.hamiltonian=="indo"):
+        Hamiltonian_core_deriv_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao, Sao, DF, c, dHao_dx, dHao_dy, dHao_dz, dSao_dx, dSao_dy, dSao_dz )
+    elif (prms.hamiltonian=="eht"):
+        print "Core matrix derivatives are not yet implemented for EHT..."
+        sys.exit(0)
 
-Hamiltonian_Fock_derivs_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, c, dHao_dx, dHao_dy, dHao_dz, dFao_alp_dx, dFao_alp_dy, dFao_alp_dz, dFao_bet_dx, dFao_bet_dy, dFao_bet_dz)
-
-print "dFao_alp_dR[0]"
-dFao_alp_dx.show_matrix()
-dFao_alp_dy.show_matrix()
-dFao_alp_dz.show_matrix()
+    print "dSao_dR["+str(c)+"]"; dSao_dx.show_matrix(); dSao_dy.show_matrix(); dSao_dz.show_matrix();
+    print "dHao_dR["+str(c)+"]"; dHao_dx.show_matrix(); dHao_dy.show_matrix(); dHao_dz.show_matrix();
 
 
+    if(prms.hamiltonian=="indo"):
+        Hamiltonian_Fock_derivs_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, c, dHao_dx, dHao_dy, dHao_dz, dFao_alp_dx, dFao_alp_dy, dFao_alp_dz, dFao_bet_dx, dFao_bet_dy, dFao_bet_dz)
+    elif (prms.hamiltonian=="eht"):
+        print "Fock matrix derivatives are not yet implemented for EHT..."
+        sys.exit(0)
 
+    print "dFao_alp_dR["+str(c)+"]"; dFao_alp_dx.show_matrix(); dFao_alp_dy.show_matrix(); dFao_alp_dz.show_matrix();
 
-c = 1
-print "Starting core derivatives"
-Hamiltonian_core_deriv_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao, Sao, DF, c, dHao_dx, dHao_dy, dHao_dz, dSao_dx, dSao_dy, dSao_dz )
-
-print "dSao_dR[1]"
-dSao_dx.show_matrix()
-dSao_dy.show_matrix()
-dSao_dz.show_matrix()
-
-print "dHao_dR[1]"
-dHao_dx.show_matrix()
-dHao_dy.show_matrix()
-dHao_dz.show_matrix()
-
-
-Hamiltonian_Fock_derivs_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, c, dHao_dx, dHao_dy, dHao_dz, dFao_alp_dx, dFao_alp_dy, dFao_alp_dz, dFao_bet_dx, dFao_bet_dy, dFao_bet_dz)
-
-print "dFao_alp_dR[1]"
-dFao_alp_dx.show_matrix()
-dFao_alp_dy.show_matrix()
-dFao_alp_dz.show_matrix()
 
 
 ###================================
@@ -302,22 +253,10 @@ Dao_x = MATRIX(Norb, Norb)
 Dao_y = MATRIX(Norb, Norb)
 Dao_z = MATRIX(Norb, Norb)
 
-c = 0
-update_derivative_coupling_matrix(x_period, y_period, z_period, t1, t2, t3, atom_to_ao_map, ao_to_atom_map, basis_ao, c, Dao_x, Dao_y, Dao_z);
+for c in [0,1]:
+    update_derivative_coupling_matrix(x_period, y_period, z_period, t1, t2, t3, atom_to_ao_map, ao_to_atom_map, basis_ao, c, Dao_x, Dao_y, Dao_z);
+    print "Dao["+str(c)+"] matrices"; Dao_x.show_matrix(); Dao_y.show_matrix(); Dao_z.show_matrix();
 
-print "Dao[0] matrices"
-Dao_x.show_matrix()
-Dao_y.show_matrix()
-Dao_z.show_matrix()
-
-
-c = 1
-update_derivative_coupling_matrix(x_period, y_period, z_period, t1, t2, t3, atom_to_ao_map, ao_to_atom_map, basis_ao, c, Dao_x, Dao_y, Dao_z);
-
-print "Dao[1] matrices"
-Dao_x.show_matrix()
-Dao_y.show_matrix()
-Dao_z.show_matrix()
 
 
 

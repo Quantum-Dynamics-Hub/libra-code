@@ -21,8 +21,8 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-
 from libra_py import *
+
 
 # Our pool of orbitals has 4 MOs in each spin channel: e.g. HOMO-1, HOMO, LUMO, LUMO+1
 mo_pool_alp = CMATRIX(4,4)

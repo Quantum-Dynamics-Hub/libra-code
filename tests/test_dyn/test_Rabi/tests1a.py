@@ -4,21 +4,12 @@ import math
 import cmath
 
 # Fisrt, we add the location of the library to test to the PYTHON path
-#cwd = "/user/alexeyak/Programming/libracode-code/tests/study2"  #os.getcwd()
-cwd = "/home/Alexey_2/Programming/Project_libra/tests/test_dyn"
+if sys.platform=="cygwin":
+    from cyglibra_core import *
+elif sys.platform=="linux" or sys.platform=="linux2":
+    from liblibra_core import *
+from libra_py import *
 
-print "Current working directory", cwd
-sys.path.insert(1,cwd+"/../../_build/src/mmath")
-sys.path.insert(1,cwd+"/../../_build/src/dyn")
-sys.path.insert(1,cwd+"/../../_build/src/hamiltonian")
-print "\nTest 1: Importing the library and its content"
-#from libmmath import *
-#from libdyn import *
-#from libhamiltonian import *
-
-from cygmmath import *
-from cygdyn import *
-from cyghamiltonian import *
 
 
 

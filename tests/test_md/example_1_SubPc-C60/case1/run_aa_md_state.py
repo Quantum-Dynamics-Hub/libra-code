@@ -93,7 +93,6 @@ def main():
     ST = State() 
     ST.set_system(syst);    #    ST.set_thermostat(therm)
     ST.set_md(md)
-
     ST.init_md(mol, el, ham, rnd)    
 
 

@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2015 Alexey V. Akimov
+#* Copyright (C) 2015-2016 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -14,56 +14,30 @@
 # Now, get step-by-step to the dE/dR, Dmo and forces (only for alpha component)
 ###################################################################
 
+# Fisrt, we add the location of the library to test to the PYTHON path
 import os
 import sys
 import math
 
 # Fisrt, we add the location of the library to test to the PYTHON path
-cwd = os.getcwd()
-print "Current working directory", cwd
-sys.path.insert(1,cwd+"/../../_build/src/mmath")
-sys.path.insert(1,cwd+"/../../_build/src/chemobjects")
-sys.path.insert(1,cwd+"/../../_build/src/hamiltonian")
-sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/Hamiltonian_Atomistic")
-sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM")
-sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Control_Parameters")
-sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Model_Parameters")
-sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Basis_Setups")
-sys.path.insert(1,cwd+"/../../_build/src/dyn")
-sys.path.insert(1,cwd+"/../../_build/src/qchem/qobjects")
-sys.path.insert(1,cwd+"/../../_build/src/qchem/basis")
-sys.path.insert(1,cwd+"/../../_build/src/converters")
-sys.path.insert(1,cwd+"/../../_build/src/calculators")
-
-print "\nTest 1: Importing the library and its content"
-from cygmmath import *
-from cygchemobjects import *
-from cyghamiltonian import *
-from cyghamiltonian_qm import *
-from cygcontrol_parameters import *
-from cygmodel_parameters import *
-from cygbasis_setups import *
-from cygdyn import *
-from cygqobjects import *
-from cygbasis import *
-from cygconverters import *
-from cygcalculators import *
-
-from LoadPT import * # Load_PT
-from LoadMolecule import * # Load_Molecule
+if sys.platform=="cygwin":
+    from cyglibra_core import *
+elif sys.platform=="linux" or sys.platform=="linux2":
+    from liblibra_core import *
+from libra_py import *
 
 
 
 #=========== STEP 1:  Create Universe and populate it ================
 U = Universe()
-Load_PT(U, "elements.dat", 1)
+LoadPT.Load_PT(U, "elements.dat", 1)
 
 
 #=========== STEP 2:  Create system and load a molecule ================
 syst = System()
 #Load_Molecule(U, syst, os.getcwd()+"/c.pdb", "pdb_1")
 #Load_Molecule(U, syst, os.getcwd()+"/c2.pdb", "pdb_1")
-Load_Molecule(U, syst, os.getcwd()+"/bh.pdb", "pdb_1")
+LoadMolecule.Load_Molecule(U, syst, os.getcwd()+"/bh.pdb", "pdb_1")
 #Load_Molecule(U, syst, os.getcwd()+"/co.pdb", "pdb_1")
 #Load_Molecule(U, syst, os.getcwd()+"/ch4.pdb", "pdb_1")
 
@@ -74,7 +48,8 @@ atlst1 = range(0,syst.Number_of_atoms)
 
 #=========== STEP 3: Create control parameters (setting computation options) ================
 prms = Control_Parameters()
-get_parameters_from_file("control_parameters.dat", prms)
+get_parameters_from_file("control_parameters_indo.dat", prms)
+#get_parameters_from_file("control_parameters_eht.dat", prms)
 print "guess type = ", prms.guess_type
 
 
@@ -83,14 +58,11 @@ modprms = Model_Parameters()
 
 # Initialize/read model parameters (need basis info)
 print "Setting parameters"
-if(prms.hamiltonian=="eht" or prms.hamiltonian=="geht"):
+if(prms.hamiltonian=="eht"):
     set_parameters_eht(prms, modprms)
 elif(prms.hamiltonian=="indo"):
-    set_parameters_indo(prms, modprms);
-elif(prms.hamiltonian=="geht1"):
-    set_parameters_geht1(prms, modprms); 
-elif(prms.hamiltonian=="geht2"):
-    set_parameters_geht2(prms, modprms); 
+    set_parameters_indo(prms, modprms)
+
 
 
 #=========== STEP 5: Set basis (STO-3G_DZ) ================
@@ -116,7 +88,7 @@ basis_ao, Nelec, Norb, atom_to_ao_map, ao_to_atom_map = set_basis_STO_3G_DZ(mol_
 
 #=========== STEP 6: Depending on hamiltonian to use, set internal parameters ================
 
-if(prms.hamiltonian=="eht" or prms.hamiltonian=="geht" or prms.hamiltonian=="geht1" or prms.hamiltonian=="geht2"):
+if(prms.hamiltonian=="eht"):
     set_parameters_eht_mapping(modprms, basis_ao)
     set_parameters_eht_mapping1(modprms,syst.Number_of_atoms,mol_at_types)
 
@@ -141,10 +113,11 @@ eri = doubleList()
 V_AB = doubleList()
 opt = 1  # 1 - for INDO, 0 - for CNDO/CNDO2
 
-     
+
 if(prms.hamiltonian=="indo"):
     Sao.Init_Unit_Matrix(1.0);  
     indo_core_parameters(syst, basis_ao, modprms, atom_to_ao_map, ao_to_atom_map, opt,1);
+
 
 
 Hao = MATRIX(Norb, Norb)
@@ -222,7 +195,7 @@ etol = 0.0001
 pop_opt = 0  #  0 -  integer populations,  1 - Fermi distribution              
 
 res_alp = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_alp, degen, kT, etol, pop_opt)
-res_bet = Fock_to_P(el.get_Fao_alp(), el.get_Sao(), Nelec_bet, degen, kT, etol, pop_opt)
+res_bet = Fock_to_P(el.get_Fao_bet(), el.get_Sao(), Nelec_bet, degen, kT, etol, pop_opt)
 
 
 print "Bands(alp)    Occupations(alp)       Bands(bet)    Occupations(bet)"
@@ -250,63 +223,66 @@ Dao_z = MATRIX(Norb, Norb)
 
 
 DF = 0
-c = 0
 
-Hamiltonian_core_deriv_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao, Sao, DF, c, dHao_dx, dHao_dy, dHao_dz, dSao_dx, dSao_dy, dSao_dz )
-Hamiltonian_Fock_derivs_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, c, dHao_dx, dHao_dy, dHao_dz, dFao_alp_dx, dFao_alp_dy, dFao_alp_dz, dFao_bet_dx, dFao_bet_dy, dFao_bet_dz)
-update_derivative_coupling_matrix(x_period, y_period, z_period, t1, t2, t3, atom_to_ao_map, ao_to_atom_map, basis_ao, c, Dao_x, Dao_y, Dao_z);
+for c in [0,1]:
+    print "Starting core derivatives"
 
-C_alp = MATRIX(Norb, Norb)
-C_alp = el.get_C_alp()
-T = MATRIX(Norb, Norb)
+    if(prms.hamiltonian=="indo"):
+        Hamiltonian_core_deriv_indo(syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, Hao, Sao, DF, c, dHao_dx, dHao_dy, dHao_dz, dSao_dx, dSao_dy, dSao_dz )
+        Hamiltonian_Fock_derivs_indo(el, syst, basis_ao, prms, modprms, atom_to_ao_map, ao_to_atom_map, c, dHao_dx, dHao_dy, dHao_dz, dFao_alp_dx, dFao_alp_dy, dFao_alp_dz, dFao_bet_dx, dFao_bet_dy, dFao_bet_dz)
+    elif (prms.hamiltonian=="eht"):
+        print "Core matrix derivatives are not yet implemented for EHT..."
+        sys.exit(0)
 
-E_alp = el.get_E_alp()
-T = E_alp * C_alp * Dao_x * C_alp.T()
-
-
-A = MATRIX(Norb,Norb)
-A = C_alp * dFao_alp_dx * C_alp.T() - (T + T.T())
-A.show_matrix()
-
-dE_dx = MATRIX(Norb,Norb)
-Dmo_x = MATRIX(Norb,Norb)
-#dE_dx = 0.0
-#Dmo_x = 0.0
-for i in xrange(Norb):
-    dE_dx.set(i,i,A.get(i,i))
-    for j in xrange(Norb):
-        if(i!=j):
-            Dmo_x.set(i,j,A.get(i,j)/(E_alp.get(j,j)-E_alp.get(i,i)))
-
-print "dE_dx"
-dE_dx.show_matrix()
-
-print "Dmo_x"
-Dmo_x.show_matrix()
+    update_derivative_coupling_matrix(x_period, y_period, z_period, t1, t2, t3, atom_to_ao_map, ao_to_atom_map, basis_ao, c, Dao_x, Dao_y, Dao_z);
 
 
-O = MATRIX(Norb,Norb)
-# P = C * O * C.T(), and C^T * S * C = O  =>  O = C^T * S * P * S * C
-O = C_alp.T() * Sao * el.get_P_alp() * Sao * C_alp
-O.show_matrix()
+    # Here goes the funny stuff
+    if(prms.hamiltonian=="indo"):
+        # Use a simplified version (orbitals are assumed to be orthonormal, the overlap is identity)
 
-T = C_alp * C_alp.T() * Dao_x * C_alp
-dP_alp_dx = C_alp * (Dmo_x * O - O * Dmo_x) * C_alp.T() - (T + T.T())
+        C_alp = el.get_C_alp();    E_alp = el.get_E_alp();
+        C_bet = el.get_C_bet();    E_bet = el.get_E_bet();
 
-print "dP_alp_dx ="
-dP_alp_dx.show_matrix()
+        # This is what we compute first
+        A = C_alp.T() * dFao_alp_dx * C_alp;    print "A"; A.show_matrix();
+        B = C_bet.T() * dFao_bet_dx * C_bet;    priB.show_matrix();
+
+        # The 
+        dE_dx = MATRIX(Norb,Norb);   Dmo_x = MATRIX(Norb,Norb);
+
+        for i in xrange(Norb):
+            dE_dx.set(i,i,A.get(i,i))
+            for j in xrange(Norb):
+                if(i!=j):
+                    Dmo_x.set(i,j,A.get(i,j)/(E_alp.get(j,j)-E_alp.get(i,i)))
+
+        print "dE_dx["+str(c)+"]";   dE_dx.show_matrix()
+        print "Dmo_x["+str(c)+"]";   Dmo_x.show_matrix()
 
 
-F_x = ( dP_alp_dx * (Hao + el.get_Fao_alp()) + el.get_P_alp() * (dHao_dx + dFao_alp_dx) ).tr()
+    O = MATRIX(Norb,Norb)
+    # P = C * O * C.T(), and C^T * S * C = I  =>  O = C^T * S * P * S * C
+    O = C_alp.T() * Sao * el.get_P_alp() * Sao * C_alp
+    O.show_matrix()
 
-print " Force = ", F_x
+    T = C_alp * C_alp.T() * Dao_x * C_alp
+    dP_alp_dx = C_alp * (Dmo_x * O - O * Dmo_x) * C_alp.T() - (T + T.T())
+
+    print "dP_alp_dx["+str(c)+"] =";  dP_alp_dx.show_matrix()
+
+    F_x = ( el.get_P_alp() * (dHao_dx + dFao_alp_dx) ).tr()   
+    F_x = F_x + ( el.get_P_bet() * (dHao_dx + dFao_bet_dx) ).tr() 
+    F_x = -0.5*F_x
+
+    print " Force["+str(c)+"] = ", F_x
 
 
-# checking:
-print "Checking properties of Dao vs. dSao"
-tmp = MATRIX(Norb, Norb)
-tmp = ( Dao_x + Dao_x.T() ) - dSao_dx
-tmp.show_matrix()
+    # checking:
+    print "Checking properties of Dao vs. dSao"
+    tmp = MATRIX(Norb, Norb)
+    tmp = ( Dao_x + Dao_x.T() ) - dSao_dx
+    tmp.show_matrix()
 
 
 

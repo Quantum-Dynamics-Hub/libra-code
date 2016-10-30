@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2015 Alexey V. Akimov
+#* Copyright (C) 2015-2016 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -31,12 +31,12 @@ from libra_py import *
 # Create Universe and populate it
 U = Universe()
 verbose = 0
-Load_PT(U, "elements.dat", verbose)
+LoadPT.Load_PT(U, "elements.dat", verbose)
 
 
 #======= System ==============
 syst = System()
-Load_Molecule(U, syst, os.getcwd()+"/Clusters/2benz.ent", "pdb")
+LoadMolecule.Load_Molecule(U, syst, os.getcwd()+"/Clusters/2benz.ent", "pdb")
 syst.determine_functional_groups(0)  # 
 
 #sys1.show_atoms()
@@ -49,7 +49,7 @@ syst.show_molecules()
 # Create force field objects
 uff = ForceField()
 # Load parameters
-Load_UFF(uff)
+LoadUFF.Load_UFF(uff)
 
 # Set up functional forms
 uff.set_functionals({"bond":"Harmonic","angle":"Harmonic","vdw":"LJ12_6"})
