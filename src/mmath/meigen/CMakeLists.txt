@@ -4,7 +4,8 @@
 # but for now, I just set the include dir manually
 #
 #set(EIGEN_INCLUDE /home/Alexey_2/Soft/eigen-eigen-2249f9c22fe8/)
-set(EIGEN_INCLUDE /home/Alexey_2/Soft/eigen-eigen-07105f7124f9/)
+#set(EIGEN_INCLUDE /home/Alexey_2/Soft/eigen-eigen-07105f7124f9/)
+set (EIGEN_INCLUDE ../../_Dependencies/Eigen/eigen-eigen-b9cd8366d4e8/ )
 
 #
 #  Source files and headers in this directory

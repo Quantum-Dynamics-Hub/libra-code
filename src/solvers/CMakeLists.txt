@@ -5,7 +5,8 @@ file(GLOB SOLVERS_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
 file(GLOB SOLVERS_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${SOLVERS_HEADERS}) 
 
 # 
-SET( EIGEN_INCLUDE /home/Alexey_2/Soft/eigen-eigen-2249f9c22fe8/ )
+#SET( EIGEN_INCLUDE /home/Alexey_2/Soft/eigen-eigen-2249f9c22fe8/ )
+set (EIGEN_INCLUDE ../_Dependencies/Eigen/eigen-eigen-b9cd8366d4e8/ )
 INCLUDE_DIRECTORIES(${EIGEN_INCLUDE})
 
 #
