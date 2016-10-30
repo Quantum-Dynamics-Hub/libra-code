@@ -50,7 +50,12 @@ ENDIF()
 MESSAGE("Looking for Python 2.6.8 libraries...")
 MESSAGE("Advice: If this search fails, try using -DPYTHON_LIBRARY=\${path_to_the_python_library} -PYTHON_INCLUDE_DIR=\${path_to_where_Python.h_is_found}")
 MESSAGE("Hint to self: -DPYTHON_INCLUDE_DIR=/home/Alexey_2/Soft/python2.6/include/python2.6 -DPYTHON_LIBRARY=/home/Alexey_2/Soft/python2.6/bin")
-FIND_PACKAGE(PythonLibs 2.6.8 EXACT REQUIRED)
+
+# For Linux
+FIND_PACKAGE(PythonLibs 2.7.0 REQUIRED)
+# For Cygwin
+#FIND_PACKAGE(PythonLibs 2.6.8 EXACT REQUIRED)
+
 IF(PYTHONLIBS_FOUND)
   MESSAGE("Success!")
   INCLUDE_DIRECTORIES("${PYTHON_INCLUDE_DIRS}")
@@ -65,7 +70,9 @@ ENDIF()
 # GNU compiler definitions
 #
 IF(CMAKE_COMPILER_IS_GNUCXX)
+# For Linux
 #  ADD_DEFINITIONS("-Wall")
+# For Cygwin
   ADD_DEFINITIONS("-Wall -DCYGWIN")
 ELSE()
   MESSAGE(FATAL_ERROR "CMakeLists.txt has not been tested/written for your compiler.")

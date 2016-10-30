@@ -1,8 +1,11 @@
 #
 # Set the libraries
 # 
-SET( ext_libs ${Boost_LIBRARIES} ${PYTHON_LIBRARIES}/libpython2.6.dll )
-#SET( EIGEN_INCLUDE /home/Alexey_2/Soft/eigen-eigen-2249f9c22fe8/ )
+# For Cygwin
+SET( ext_libs ${Boost_LIBRARIES} ${PYTHON_LIBRARIES}/libpython2.6.dll )   
+# For Linux
+#SET( ext_libs ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ) 
+
 
 
 #
