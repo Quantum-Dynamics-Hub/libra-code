@@ -52,6 +52,35 @@ double det(MATRIX& A){
 
 }
 
+double FullPivLU_det(MATRIX& A){
+
+
+  // Wrapper matrices for Eigen3
+
+  if(A.num_of_cols!=A.num_of_rows){
+    std::cout<<"Error in det(MATRIX): Can not compute a determinant of non-square matrix\n";
+    exit(0);
+  }
+
+  int N = A.num_of_cols;
+  int i,j;
+
+  MatrixXd a(N,N);
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      a(i,j) = A.M[i*N+j];
+    }// for j
+  }// for i
+
+  Eigen::FullPivLU<MatrixXd> lu(a);
+
+  return lu.determinant();
+
+
+}
+
+
+
 complex<double> det(CMATRIX& A){
 
   // Wrapper matrices for Eigen3
@@ -74,6 +103,34 @@ complex<double> det(CMATRIX& A){
   return a.determinant();
 
 }
+
+complex<double> FullPivLU_det(CMATRIX& A){
+
+  // Wrapper matrices for Eigen3
+
+  if(A.n_cols!=A.n_rows){
+    std::cout<<"Error in det(MATRIX): Can not compute a determinant of non-square matrix\n";
+    exit(0);
+  }
+
+  int N = A.n_cols;
+  int i,j;
+
+  MatrixXcd a(N,N);
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      a(i,j) = A.M[i*N+j];
+    }// for j
+  }// for i
+
+
+  Eigen::FullPivLU<MatrixXcd> lu(a);
+
+  return lu.determinant();
+
+
+}
+
 
 
 
@@ -542,12 +599,15 @@ void solve_eigen(int Norb, MATRIX* H, MATRIX* E, MATRIX* C){
 
 
 
-void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half){
+void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh){
 /**
   This function computes S^{1/2} and S^{-1/2} for given matrix S
   \param[in] S Input matrix
   \param[out] S_half Computed S^{1/2} matrix
   \param[out] S_i_half Computed S^{-1/2} matrix
+  \param[in] threshold - if an absolute value of any eigenvalue of S is below this level, we stop,
+   throwing an error message
+
 
 */
 
@@ -587,8 +647,18 @@ void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half){
   for(i=0;i<sz;i++){
     complex<double> val = std::sqrt(Seig->get(i,i));
 
-    S_i_half.M[i*sz+i] = 1.0/val;
-    S_half.M[i*sz+i] = val;
+    double nrm  = std::abs(val);
+    if(nrm<thresh){  
+      std::cout<<"\n Error in sqrt_matrix: One of the eigenvalues of the matrix S is "<< val
+               <<"\n this is below the used threshold of "<<thresh
+               <<"\n So... the matrix is likely singular or your threshold is too large"
+               <<"\n Exiting now...\n";
+      exit(0);
+    }
+    else{
+      S_i_half.M[i*sz+i] = 1.0/val;
+      S_half.M[i*sz+i] = val;
+    }
   }
 
   // Convert to the original basis
@@ -603,11 +673,20 @@ void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half){
 }// sqrt_matrix
 
 
-void inv_matrix(CMATRIX& S, CMATRIX& S_inv){
+void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half){
+
+  sqrt_matrix(S, S_half, S_i_half, -1.0);
+
+}
+
+
+void inv_matrix(CMATRIX& S, CMATRIX& S_inv, double thresh){
 /**
   This function computes S^{-1} of a given matrix S
   \param[in] S Input matrix
   \param[out] S_inv Computed S^{-1} matrix
+  \param[in] threshold - if an absolute value of any eigenvalue of S is below this level, we stop,
+   throwing an error message
 
 */
 
@@ -640,7 +719,15 @@ void inv_matrix(CMATRIX& S, CMATRIX& S_inv){
 
   for(i=0;i<sz;i++){
     complex<double> val = Seig->get(i,i);
-    S_inv.M[i*sz+i] = 1.0/val;
+    double nrm = std::abs(val);
+    if(nrm<thresh){  
+      std::cout<<"\n Error in inv_matrix: One of the eigenvalues of the matrix S is "<< val
+               <<"\n this is below the used threshold of "<<thresh
+               <<"\n So... the matrix is likely singular or your threshold is too large"
+               <<"\n Exiting now...\n";
+      exit(0);
+    }
+    else{    S_inv.M[i*sz+i] = 1.0/val; }
   }
 
   // Convert to the original basis
@@ -654,6 +741,235 @@ void inv_matrix(CMATRIX& S, CMATRIX& S_inv){
 
 }// inv_matrix
 
+
+void inv_matrix(CMATRIX& S, CMATRIX& S_inv){
+
+  inv_matrix(S, S_inv, -1.0);
+
+}
+
+
+void FullPivLU_rank_invertible(MATRIX& A, int& rank, int& is_inver){
+
+  int N = A.num_of_cols;
+  int i,j;
+
+  MatrixXd a(N,N);
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      a(i,j) = A.M[i*N+j];
+    }// for j
+  }// for i
+
+  Eigen::FullPivLU<MatrixXd> lu(a);
+
+  rank = lu.rank();
+
+  is_inver = (int)lu.isInvertible();
+
+  
+}
+
+
+void FullPivLU_rank_invertible(CMATRIX& A, int& rank, int& is_inver){
+
+  int N = A.n_cols;
+  int i,j;
+
+  MatrixXcd a(N,N);
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      a(i,j) = A.M[i*N+j];
+    }// for j
+  }// for i
+
+  Eigen::FullPivLU<MatrixXcd> lu(a);
+
+  rank = lu.rank();
+
+  is_inver = (int)lu.isInvertible();
+
+  
+}
+
+boost::python::list FullPivLU_rank_invertible(MATRIX& A){
+
+  int rank = -1;
+  int is_inver = -1;
+
+  FullPivLU_rank_invertible(A, rank, is_inver);
+
+  boost::python::list res;
+  res.append(rank);
+  res.append(is_inver);
+
+  return res;
+}
+
+boost::python::list FullPivLU_rank_invertible(CMATRIX& A){
+
+  int rank = -1;
+  int is_inver = -1;
+
+  FullPivLU_rank_invertible(A, rank, is_inver);
+
+  boost::python::list res;
+  res.append(rank);
+  res.append(is_inver);
+
+  return res;
+}
+
+
+
+
+
+void FullPivLU_decomposition(MATRIX& A, MATRIX& P, MATRIX& L, MATRIX& U, MATRIX& Q){
+
+  int N = A.num_of_cols;
+  int i,j;
+
+  MatrixXd a(N,N);
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      a(i,j) = A.M[i*N+j];
+    }// for j
+  }// for i
+
+  Eigen::FullPivLU<MatrixXd> lu(a);
+
+
+  MatrixXd l(N,N); 
+  l = lu.matrixLU().triangularView<StrictlyLower>();
+
+  MatrixXd u(N,N);
+  u = lu.matrixLU().triangularView<Upper>();
+
+  MatrixXd p(N,N);
+  p = lu.permutationP(); 
+
+  MatrixXd q(N,N);
+  q = lu.permutationQ(); 
+
+
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      P.M[i*N+j] = p(i,j);
+
+      L.M[i*N+j] = l(i,j);
+      if(i==j){   L.M[i*N+j] = 1.0;  }
+
+      U.M[i*N+j] = u(i,j);
+
+      Q.M[i*N+j] = q(i,j);
+
+    }// for j
+  }// for i
+  
+}
+
+void FullPivLU_decomposition(CMATRIX& A, CMATRIX& P, CMATRIX& L, CMATRIX& U, CMATRIX& Q){
+/**
+  Really, what happens is:
+
+  A = P * L * U * Q,  
+  P, Q - are the permutation matrices
+
+*/
+
+  int N = A.n_cols;
+  int i,j;
+
+  MatrixXcd a(N,N);
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      a(i,j) = A.M[i*N+j];
+    }// for j
+  }// for i
+
+  Eigen::FullPivLU<MatrixXcd> lu(a);
+
+
+  MatrixXcd l(N,N); 
+  l = lu.matrixLU().triangularView<StrictlyLower>();
+
+  MatrixXcd u(N,N);
+  u = lu.matrixLU().triangularView<Upper>();
+
+  MatrixXcd p(N,N);
+  p = lu.permutationP(); 
+
+  MatrixXcd q(N,N);
+  q = lu.permutationQ(); 
+
+
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      P.M[i*N+j] = p(i,j);
+
+      L.M[i*N+j] = l(i,j);
+      if(i==j){   L.M[i*N+j] = 1.0;  }
+
+      U.M[i*N+j] = u(i,j);
+
+      Q.M[i*N+j] = q(i,j);
+
+    }// for j
+  }// for i
+  
+}
+
+
+void FullPivLU_inverse(MATRIX& A, MATRIX& invA){
+
+  int N = A.num_of_cols;
+  int i,j;
+
+  MatrixXd a(N,N);
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      a(i,j) = A.M[i*N+j];
+    }// for j
+  }// for i
+
+  Eigen::FullPivLU<MatrixXd> lu(a);
+
+  MatrixXd inva; inva = lu.inverse();
+
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      invA.M[i*N+j] = inva(i,j);
+    }// for j
+  }// for i
+
+
+}
+
+
+void FullPivLU_inverse(CMATRIX& A, CMATRIX& invA){
+
+  int N = A.n_cols;
+  int i,j;
+
+  MatrixXcd a(N,N);
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      a(i,j) = A.M[i*N+j];
+    }// for j
+  }// for i
+
+  Eigen::FullPivLU<MatrixXcd> lu(a);
+
+  MatrixXcd inva; inva = lu.inverse();
+
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      invA.M[i*N+j] = inva(i,j);
+    }// for j
+  }// for i
+
+
+}
 
 
 }// namespace libmeigen

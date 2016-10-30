@@ -36,8 +36,15 @@ void export_mEigen_objects(){
   double (*expt_det_v1)(MATRIX&) = &det;
   complex<double> (*expt_det_v2)(CMATRIX&) = &det;
 
+  double (*expt_FullPivLU_det_v1)(MATRIX&) = &FullPivLU_det;
+  complex<double> (*expt_FullPivLU_det_v2)(CMATRIX&) = &FullPivLU_det;
+
   def("det", expt_det_v1);
   def("det", expt_det_v2);
+
+  def("FullPivLU_det", expt_FullPivLU_det_v1);
+  def("FullPivLU_det", expt_FullPivLU_det_v2);
+
 
 
   void (*expt_solve_eigen_v1)
@@ -65,11 +72,40 @@ void export_mEigen_objects(){
   def("solve_eigen_gen", expt_solve_eigen_gen_v3);
 
 
-  void (*expt_sqrt_matrix_v1)(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half) = &sqrt_matrix;
-  void (*expt_inv_matrix_v1)(CMATRIX& S, CMATRIX& S_inv) = &inv_matrix;
+  void (*expt_sqrt_matrix_v1)(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh) = &sqrt_matrix;
+  void (*expt_sqrt_matrix_v2)(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half) = &sqrt_matrix;
+  void (*expt_inv_matrix_v1)(CMATRIX& S, CMATRIX& S_inv, double thresh) = &inv_matrix;
+  void (*expt_inv_matrix_v2)(CMATRIX& S, CMATRIX& S_inv) = &inv_matrix;
 
   def("sqrt_matrix", expt_sqrt_matrix_v1);
+  def("sqrt_matrix", expt_sqrt_matrix_v2);
   def("inv_matrix", expt_inv_matrix_v1);
+  def("inv_matrix", expt_inv_matrix_v2);
+
+
+  void (*expt_FullPivLU_rank_invertible_v1)(MATRIX& A, int& rank, int& is_inver) = &FullPivLU_rank_invertible;
+  void (*expt_FullPivLU_rank_invertible_v2)(CMATRIX& A, int& rank, int& is_inver) = &FullPivLU_rank_invertible;
+  boost::python::list (*expt_FullPivLU_rank_invertible_v3)(MATRIX& A) = &FullPivLU_rank_invertible;
+  boost::python::list (*expt_FullPivLU_rank_invertible_v4)(CMATRIX& A) = &FullPivLU_rank_invertible;
+
+  def("FullPivLU_rank_invertible", expt_FullPivLU_rank_invertible_v1);
+  def("FullPivLU_rank_invertible", expt_FullPivLU_rank_invertible_v2);
+  def("FullPivLU_rank_invertible", expt_FullPivLU_rank_invertible_v3);
+  def("FullPivLU_rank_invertible", expt_FullPivLU_rank_invertible_v4);
+
+
+  void (*expt_FullPivLU_decomposition_v1)(MATRIX& A, MATRIX& P, MATRIX& L, MATRIX& U, MATRIX& Q) = &FullPivLU_decomposition;
+  void (*expt_FullPivLU_decomposition_v2)(CMATRIX& A, CMATRIX& P, CMATRIX& L, CMATRIX& U, CMATRIX& Q) = &FullPivLU_decomposition;
+
+  def("FullPivLU_decomposition", expt_FullPivLU_decomposition_v1);
+  def("FullPivLU_decomposition", expt_FullPivLU_decomposition_v2);
+
+
+  void (*expt_FullPivLU_inverse_v1)(MATRIX& A, MATRIX& invA) = &FullPivLU_inverse;
+  void (*expt_FullPivLU_inverse_v2)(CMATRIX& A, CMATRIX& invA) = &FullPivLU_inverse;
+
+  def("FullPivLU_inverse", expt_FullPivLU_inverse_v1);
+  def("FullPivLU_inverse", expt_FullPivLU_inverse_v2);
 
 
 }
