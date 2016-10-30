@@ -58,6 +58,35 @@ void export_SpecialFunctions_objects(){
   def("Km", Km);
   def("Ellint",Ellint);
 
+  def("randperm", randperm);
+
+  MATRIX (*expt_exp__v1)(MATRIX&, double) = &exp_;
+  MATRIX3x3 (*expt_exp__v2)(MATRIX3x3&, double) = &exp_;
+  MATRIX (*expt_exp1__v1)(MATRIX&, double) = &exp1_;
+  MATRIX3x3 (*expt_exp1__v2)(MATRIX3x3&, double) = &exp1_;
+
+  def("exp_", expt_exp__v1);
+  def("exp_", expt_exp__v2);
+  def("exp1_", expt_exp1__v1);
+  def("exp1_", expt_exp1__v2);
+
+
+  void (*expt_MATRIX_TO_QUATERNION_v1)(MATRIX&,QUATERNION&) = &MATRIX_TO_QUATERNION;
+  void (*expt_MATRIX_TO_QUATERNION_v2)(MATRIX3x3&,QUATERNION&) = &MATRIX_TO_QUATERNION;
+
+  void (*expt_QUATERNION_TO_MATRIX_v1)(QUATERNION&,MATRIX&) = &QUATERNION_TO_MATRIX;
+  void (*expt_QUATERNION_TO_MATRIX_v2)(QUATERNION&,MATRIX3x3&) = &QUATERNION_TO_MATRIX;
+
+  def("MATRIX_TO_QUATERNION", expt_MATRIX_TO_QUATERNION_v1);
+  def("MATRIX_TO_QUATERNION", expt_MATRIX_TO_QUATERNION_v2);
+  def("QUATERNION_TO_MATRIX", expt_QUATERNION_TO_MATRIX_v1);
+  def("QUATERNION_TO_MATRIX", expt_QUATERNION_TO_MATRIX_v2);
+
+  void (*expt_solve_linsys_v1)(MATRIX&,MATRIX&, MATRIX&,double,int) = &solve_linsys;
+
+  def("solve_linsys", expt_solve_linsys_v1); 
+
+
 
 }
 
