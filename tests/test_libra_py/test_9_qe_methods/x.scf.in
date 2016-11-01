@@ -1,0 +1,62 @@
+&CONTROL
+  calculation = 'scf',
+  dt = 20.67055,
+  nstep = 50,
+  pseudo_dir = './',
+  outdir = './',
+  prefix = 'x',
+  disk_io = 'low',
+/
+
+&SYSTEM
+  ibrav = 0,
+  celldm(1) = 1.89,
+  nat = 6,
+  ntyp = 2,
+  nspin = 2,
+  nbnd = 10,
+  ecutwfc = 2,
+  tot_charge = 0.0,
+  occupations = 'smearing',
+  smearing = 'gaussian',
+  degauss = 0.005,
+  starting_magnetization(1) = 0.01,
+  nosym = .true.,
+
+/
+
+&ELECTRONS
+  electron_maxstep = 300,
+  conv_thr = 1.D-5,
+  mixing_beta = 0.45,
+/
+
+&IONS
+  ion_dynamics = 'verlet',
+  ion_temperature = 'andersen',
+  tempw = 300.00 ,
+  nraise = 1,
+/
+
+
+ATOMIC_SPECIES
+ C  12.01  C.pbe-n-kjpaw_psl.0.1.UPF
+ H  1.008  H.pbe-kjpaw_psl.0.1.UPF
+
+
+K_POINTS automatic
+1 1 1  0 0 0
+                               
+CELL_PARAMETERS
+    20.0000000    0.0000000    0.0000000
+     0.0000000   20.0000000    0.0000000
+     0.0000000    0.0000000   20.0000000
+ 
+ATOMIC_POSITIONS (alat)
+C         -5.04672        2.31763        0.01782
+C         -3.71548        2.30894       -0.00587
+H         -5.60642        1.54073       -0.49255
+H         -5.57772        3.10164        0.54761
+H         -3.18448        1.52493       -0.53565
+H         -3.15579        3.08584        0.50451
+

@@ -1,0 +1,48 @@
+
+     Program PW_EXPORT v.5.2.0 starts on 14Jul2016 at 15:41:44 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Serial version
+
+     Reading data from directory:
+     ./x.save
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      =  SLA  PW   PBX  PBC ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+               file C.pbe-n-kjpaw_psl.0.1.UPF: wavefunction(s)  2P renormalized
+               file H.pbe-kjpaw_psl.0.1.UPF: wavefunction(s)  1S renormalized
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         901     901    225                20479    20479    2553
+
+     Generating pointlists ...
+     new r_m :   0.4125 (alat units)  0.7796 (a.u.) for type    1
+     new r_m :   0.4125 (alat units)  0.7796 (a.u.) for type    2
+
+     Check: negative/imaginary core charge=   -0.000116    0.000000
+
+     negative rho (up, down):  3.974E-01 3.974E-01
+
+     PW_EXPORT    :     2.87s CPU         3.04s WALL
+
+
+   This run was terminated on:  15:41:47  14Jul2016            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
