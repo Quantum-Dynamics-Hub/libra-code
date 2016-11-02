@@ -140,7 +140,7 @@ def read_qe_wfc(filename, upper_tag, orb_list):
 
             for i in xrange(1,ngw):
                 coeff2.set(i, o, coeff.get(i, o))
-                coeff2.set(i+ngw, o, coeff.get(i, o).conjugate() )
+                coeff2.set(i+ngw-1, o, coeff.get(i, o).conjugate() )
 
         ngw = 2*ngw - 1
 
