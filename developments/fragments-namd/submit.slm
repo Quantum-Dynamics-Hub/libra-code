@@ -1,0 +1,29 @@
+#!/bin/sh
+#SBATCH --partition=valhalla
+#SBATCH --clusters=chemistry
+#SBATCH --time=120:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --mem=600
+# Memory per node specification is in MB. It is optional. 
+# The default limit is 3000MB per core.
+##SBATCH --job-name="fssh_lang_no_rev"  - default is Job ID
+##SBATCH --output=test-srun.out   - default is Job ID
+#SBATCH --mail-user=alexeyak@buffalo.edu
+##SBATCH --requeue
+#Specifies that the job will be requeued after a node failure.
+#The default is that the job will not be requeued.
+
+
+echo "SLURM_JOBID="$SLURM_JOBID
+echo "SLURM_JOB_NODELIST"=$SLURM_JOB_NODELIST
+echo "SLURM_NNODES"=$SLURM_NNODES
+echo "SLURMTMPDIR="$SLURMTMPDIR
+echo "working directory = "$SLURM_SUBMIT_DIR
+
+
+# The initial srun will trigger the SLURM prologue on the compute nodes.
+python run_aa_md-eht_2.py > o
+
+#
+echo "All Done!"
