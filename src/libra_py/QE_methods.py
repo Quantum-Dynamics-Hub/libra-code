@@ -91,8 +91,9 @@ def read_qe_wfc(filename, upper_tag, orb_list):
 
     ngw = int(float(ctx.get("Info/<xmlattr>/ngw","n")))
     nbnd = int(float(ctx.get("Info/<xmlattr>/nbnd","n")))
+    nspin = int(float(ctx.get("Info/<xmlattr>/nspin","n")))
     gamma_only = ctx.get("Info/<xmlattr>/gamma_only","n")
-    print ngw, nbnd, gamma_only
+    print "ngw = ", ngw, " nbnd = ", nbnd, " nspin = ", nspin, "gamma_only = ", gamma_only
 
     wfc_preprocess = "normalize"
     if gamma_only=="T":
@@ -147,14 +148,29 @@ def read_qe_wfc(filename, upper_tag, orb_list):
 
     if wfc_preprocess=="normalize" or wfc_preprocess=="restore":
 
-        for i in xrange(norbs):
-            mo_i = coeff2.col(i)
-            nrm = (mo_i.H() * mo_i).get(0,0).real
-            nrm = (1.0/math.sqrt(nrm))
+        if nspin==1 or nspin==2:
 
-            for pw in xrange(ngw):
-                coeff2.set(pw,i,nrm*coeff2.get(pw,i))
+            for i in xrange(norbs):
+                mo_i = coeff2.col(i)            
+                nrm = (mo_i.H() * mo_i).get(0,0).real
+                nrm = (1.0/math.sqrt(nrm))
+        
+                for pw in xrange(ngw):
+                    coeff2.set(pw,i,nrm*coeff2.get(pw,i))
 
+        elif nspin==4:  # spinor case
+
+            for i in xrange(norbs/2):  # this will always be even
+                mo_i_a = coeff2.col(2*i)
+                mo_i_b = coeff2.col(2*i+1)
+
+                nrm = ( (mo_i_a.H() * mo_i_a).get(0,0).real + (mo_i_b.H() * mo_i_b).get(0,0).real )
+                nrm = (1.0/math.sqrt(nrm))
+        
+                for pw in xrange(ngw):
+                    coeff2.set(pw,2*i,nrm*coeff2.get(pw,2*i))
+                    coeff2.set(pw,2*i+1,nrm*coeff2.get(pw,2*i+1))
+        
 
     return coeff2
 
