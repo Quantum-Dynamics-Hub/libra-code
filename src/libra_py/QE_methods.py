@@ -95,6 +95,14 @@ def read_qe_wfc(filename, upper_tag, orb_list):
     gamma_only = ctx.get("Info/<xmlattr>/gamma_only","n")
     print "ngw = ", ngw, " nbnd = ", nbnd, " nspin = ", nspin, "gamma_only = ", gamma_only
 
+    if nspin==4:
+        if orb_list[0] % 2 ==0:
+            print "In SOC, the very first orbital index must be odd!\nExiting now..."
+            sys.exit(0)
+        if len(orb_list) % 2 == 1:
+            print "In SOC, an even number of orbitals must be utilized!\nExiting now..."
+            sys.exit(0)
+
     wfc_preprocess = "normalize"
     if gamma_only=="T":
         wfc_preprocess = "restore"
