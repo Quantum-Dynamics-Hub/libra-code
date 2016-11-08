@@ -71,6 +71,32 @@ def read_qe_index(filename, orb_list):
 
 
 
+def read_qe_wfc_info(filename, upper_tag):
+##
+#  This functions reads an ASCII/XML format file containing wavefunction
+#  and returns the some descriptors
+#
+#  \param[in] filename This is the name of the file we will be reading to construct a wavefunction
+#  \param[in] upper_tag This is the name of the upper-level tag
+#  
+   
+    ctx = Context(filename)  #("x.export/wfc.1")
+    ctx.set_path_separator("/")
+    print "path=", ctx.get_path()
+    ctx.show_children(upper_tag)  #("Kpoint.1")
+
+    ngw = int(float(ctx.get("Info/<xmlattr>/ngw","n")))
+    nbnd = int(float(ctx.get("Info/<xmlattr>/nbnd","n")))
+    nspin = int(float(ctx.get("Info/<xmlattr>/nspin","n")))
+    gamma_only = ctx.get("Info/<xmlattr>/gamma_only","n")
+
+    print "ngw = ", ngw, " nbnd = ", nbnd, " nspin = ", nspin, "gamma_only = ", gamma_only
+
+
+    return ngw, nbnd, nspin, gamma_only
+
+
+
 
 def read_qe_wfc(filename, upper_tag, orb_list):
 ##
@@ -180,6 +206,6 @@ def read_qe_wfc(filename, upper_tag, orb_list):
                     coeff2.set(pw,2*i+1,nrm*coeff2.get(pw,2*i+1))
         
 
-    return coeff2, ngw, nbnd, nspin, gamma_only
+    return coeff2
 
 
