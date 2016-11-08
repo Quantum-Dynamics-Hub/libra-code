@@ -180,6 +180,6 @@ def read_qe_wfc(filename, upper_tag, orb_list):
                     coeff2.set(pw,2*i+1,nrm*coeff2.get(pw,2*i+1))
         
 
-    return coeff2
+    return coeff2, ngw, nbnd, nspin, gamma_only
 
 
