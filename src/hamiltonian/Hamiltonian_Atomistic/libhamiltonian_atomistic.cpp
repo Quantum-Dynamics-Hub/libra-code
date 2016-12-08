@@ -75,6 +75,7 @@ void export_hamiltonian_atomistic_objects(){
 
 //      .def("is_new_interaction", &Hamiltonian_Atomistic::is_new_interaction)
       .def("show_interactions_statistics", &Hamiltonian_Atomistic::show_interactions_statistics)
+      .def("show_interactions", &Hamiltonian_Atomistic::show_interactions)
 
       .def("set_atom_types", &Hamiltonian_Atomistic::set_atom_types)
       .def("set_fragment_types", &Hamiltonian_Atomistic::set_fragment_types)

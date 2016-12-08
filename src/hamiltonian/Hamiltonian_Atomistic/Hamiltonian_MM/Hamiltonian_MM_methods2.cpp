@@ -58,15 +58,7 @@ int listHamiltonian_MM::is_new_interaction(Hamiltonian_MM& inter){
   This verification is time-consuming (~N^4) so for big systems we do not do this!
   So we always assume the interaction is new.
 */
-
   int res = 1; // Assume it is new
-
-/*
-  int sz = interactions.size();
-  for(int i=0;i<sz;i++){
-    if(inter==interactions[i]){ res = 0; }
-  }
-*/
 
   return res;
 }
@@ -117,21 +109,108 @@ void listHamiltonian_MM::show_interactions_statistics(){
 
 }
 
-void listHamiltonian_MM::set_atom_types(System& syst, vector<int>& lst,ForceField& ff){
+void listHamiltonian_MM::show_interactions(){
+/**
+  Print out a detailed information about all interactions present in the system
+*/
+
+  int sz = interactions.size();
+  cout<<"Total number of interactions is "<<sz<<endl;
+
+
+  for(int i=0;i<sz;i++){
+    cout<<"Interaction #"<<i<<"  \n";
+
+    int t = interactions[i].get_type();
+    int is_active = interactions[i].get_status();
+
+    interactions[i].show_info();
+
+/*
+
+    if(t==0){ 
+      cout<<"Type = bond, active = "<<is_active<<" id1 = "<<interactions[i].id1<<"  id2 = "<<interactions[i].id2<<"\n";
+      cout<<" K = "<<interactions[i].K<<" D = "<<interactions[i].D<<" r0 = "<<interactions[i].r0<<" alpha = "<<interactions[i].alpha<<"\n";
+    }
+
+    else if(t==1){
+      cout<<"Type = angle, active = "<<is_active<<" id1 = "<<interactions[i].id1<<"  id2 = "<<interactions[i].id2<<"  id3 = "<<interactions[i].id3<<"\n";
+      cout<<" k_theta = "<<interactions[i].k_theta<<" theta_0 = "<<interactions[i].theta_0<<" cos_theta_0 = "<<interactions[i].cos_theta_0
+          <<" C0 = "<<interactions[i].C0<<" C1 = "<<interactions[i].C1<<" C2 = "<<interactions[i].C2<<" coordination = "<<interactions[i].coordination<<"\n";
+    }
+
+    else if(t==2){  
+      cout<<"Type = dihedral, active = "<<is_active<<" id1 = "<<interactions[i].id1<<"  id2 = "
+          <<interactions[i].id2<<"  id3 = "<<interactions[i].id3<<"  id4 = "<<interactions[i].id4<<"\n";
+      cout<<" Vphi = "<<interactions[i].Vphi<<" phi0 = "<<interactions[i].phi0<<" Vphi1 = "<<interactions[i].Vphi1
+          <<" Vphi2 = "<<interactions[i].Vphi2<<" Vphi3 = "<<interactions[i].Vphi3
+          <<" opt = "<<interactions[i].opt<<" n = "<<interactions[i].n<<"\n";
+    }
+
+    else if(t==3){
+      cout<<"Type = oop, active = "<<is_active<<" id1 = "<<interactions[i].id1<<"  id2 = "
+          <<interactions[i].id2<<"  id3 = "<<interactions[i].id3<<"  id4 = "<<interactions[i].id4<<"\n";
+      cout<<" K = "<<interactions[i].K<<" C0 = "<<interactions[i].C0<<" C1 = "<<interactions[i].C1
+          <<" C2 = "<<interactions[i].C2<<" xi_0 = "<<interactions[i].xi_0<<" opt = "<<interactions[i].opt<<"\n";
+    }
+
+    else if(t==4){ 
+      cout<<"Type = vdw, active = "<<is_active<<" id1 = "<<interactions[i].id1<<"  id2 = "<<interactions[i].id2<<"\n";
+      cout<<" sigma = "<<interactions[i].sigma<<" epsilon = "<<interactions[i].epsilon
+          <<" D = "<<interactions[i].D<<" r0 = "<<interactions[i].r0<<" alpha = "<<interactions[i].alpha<<"\n";
+      cout<<" scale = "<<interactions[i].scale<<" is_cutoff = "<<interactions[i].is_cutoff
+          <<" R_on = "<<interactions[i].R_on<<" R_off = "<<interactions[i].R_off<<"\n";
+    }
+
+    else if(t==5){ 
+      cout<<"Type = elec, active = "<<is_active<<" id1 = "<<interactions[i].id1<<"  id2 = "<<interactions[i].id2<<"\n";
+      cout<<" q1 = "<<interactions[i].q1<<" q2 = "<<interactions[i].q2
+          <<" J = "<<interactions[i].J<<" xi1 = "<<interactions[i].xi1<<" xi2 = "<<interactions[i].xi2
+          <<" eps = "<<interactions[i].eps<<" delta = "<<interactions[i].delta<<"\n";
+      cout<<" scale = "<<interactions[i].scale<<" is_cutoff = "<<interactions[i].is_cutoff
+          <<" R_on = "<<interactions[i].R_on<<" R_off = "<<interactions[i].R_off<<"\n";
+    }
+
+    else if(t==6){ 
+      cout<<"Type = md, active = "<<is_active<<" sz = "<<interactions[i].sz<<"  nexcl = "<<interactions[i].nexcl<<"\n";
+      cout<<"Exclusions:\n";
+      for(int k=0;k<interactions[i].nexcl;k++){ 
+        cout<<k<<" excl1 = "<<interactions[i].excl1[k]<<" excl2 = "<<interactions[i].excl2[k]<<" scale = "<<interactions[i].scale[k]<<endl;
+      }
+      cout<<"Pairs:\n";
+      for(k=0;k<interactions[i].sz;k++){ 
+        for(int k1=0;k1<interactions[i].sz;k1++){ 
+          cout<<k<<" "<<k1<<" epsilon = "<<interactions[i].epsilon[k][k1]<<" sigma = "<<interactions[i].sigma[k][k1]
+              <<" q = "<<interactions[i].q[k][k1]<<"\n";
+        }// k1
+      }// k 
+
+    }// t == 6
+*/
+
+  }// for i
+
+}
+
+
+int listHamiltonian_MM::set_atom_types(System& syst, vector<int>& lst,ForceField& ff){
 /**
   \param[in,out]  syst The molecular system for which we perform the typization
   \param[in] lst The list of atom ID for the atoms which need to be classified (force field typization)
   \param[in] ff The ForceField object that defines the atom types and their properties
 
-  This function first checks if the atom type of the atoms in the list are
-  valid for a given force field.
+  This function first checks if the atom type of the atoms in the list are valid for a given force field.
   If they are valid and defined - no action is required, otherwise the
   typization will be performed according to the rules of the given
   force field
+
+  The function returns the status: 0 - atom types for some atoms could not be determined, 1 - everything went well
 */
 
-  cout<<"listHamiltonian_MM::set_atom_types\n";
+  cout<<"In listHamiltonian_MM::set_atom_types\n";
   cout<<"Setting up atom types for the force field "<< ff.ForceField_Name<<endl;
+
+  int res = 1;
 
   int sz = lst.size();
   for(int i=0;i<sz;i++){
@@ -140,7 +219,7 @@ void listHamiltonian_MM::set_atom_types(System& syst, vector<int>& lst,ForceFiel
       if(syst.Atoms[at].is_Atom_ff_type){ 
         _defined = ff.is_valid_atom_type(syst.Atoms[at].Atom_ff_type);  
 
-        cout<<"Atom i="<<i<<" type is defined manually: "<<syst.Atoms[at].Atom_ff_type<<endl;
+        cout<<"Atom i= "<<i<<" type is defined manually: "<<syst.Atoms[at].Atom_ff_type<<endl;
       }
       if(!_defined){
         string ff_type = ff.get_atom_type(syst.Atoms[at].Atom_element,
@@ -153,13 +232,20 @@ void listHamiltonian_MM::set_atom_types(System& syst, vector<int>& lst,ForceFiel
         if(ff_type!="none"){
           syst.Atoms[at].Atom_ff_type = ff_type;
           syst.Atoms[at].is_Atom_ff_type = 1;
+          cout<<"Atom i= "<<i<<" type is defined automatically: "<<syst.Atoms[at].Atom_ff_type<<endl;
         }
-        cout<<"Atom i="<<i<<" type is defined automatically: "<<syst.Atoms[at].Atom_ff_type<<endl;
+        else{ cout<<"Warning!!!: The FF type of atom i= "<<i<<" can not be defined\n";
+              cout<<"Automatic determination doesn't work, so better consider defining this atom type manually\n";
+              res = 0;
+        }
+
       }// if !defined
   }// for i
+
+  return res;
 }
 
-void listHamiltonian_MM::set_fragment_types(System& syst, vector<int>& lst,ForceField& ff){
+int listHamiltonian_MM::set_fragment_types(System& syst, vector<int>& lst,ForceField& ff){
 /**
   \param[in,out]  syst The molecular system for which we perform the fragment typization
   \param[in] lst The list of fragment IDs for the fragments which need to be classified (force field typization)
@@ -170,7 +256,11 @@ void listHamiltonian_MM::set_fragment_types(System& syst, vector<int>& lst,Force
   If they are valid and defined - no action is required, otherwise the
   typization will be performed according to the rules of the given
   force field
+
+  The function returns the status: 0 - fragment types for some fragment could not be determined, 1 - everything went well
 */
+
+  int res = 1;
 
   int sz = lst.size();
   for(int i=0;i<sz;i++){
@@ -179,22 +269,16 @@ void listHamiltonian_MM::set_fragment_types(System& syst, vector<int>& lst,Force
       int _defined = 0;
       if(syst.Fragments[fr].is_Group_ff_type){ _defined = ff.is_valid_fragment_type(syst.Fragments[fr].Group_ff_type);   }
       if(!_defined){
-/*
-        string ff_type = ff.get_atom_type(Atoms[at].Atom_element,
-                                          Atoms[at].globAtom_Adjacent_Atoms.size(),
-                                          Atoms[at].Atom_functional_group,
-                                          Atoms[at].Atom_min_ring_size,
-                                          Atoms[at].Atom_coordination);
-        // Since we have calculated some atomic properties we must declare that they are defined
-        Atoms[at].is_Atom_coordination = 1;
-        if(ff_type!="none"){
-          Atoms[at].Atom_ff_type = ff_type;
-          Atoms[at].is_Atom_ff_type = 1;
-        }
-*/
+
+        cout<<"Warning!!!: The fragment type of the fragment fr= "<<fr<<" is not be defined\n";
+        cout<<"At this point, you need to define it manually via Group_ff_type data member\n";
+        
+        res = 0;
       }// if !defined
 
   }// for i
+
+  return res;
 }
 
 

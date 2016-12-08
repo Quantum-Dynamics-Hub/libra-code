@@ -93,6 +93,10 @@ int ForceField::get_angle_parameters(string ff_type1, string ff_type2,string ff_
   1 - if the parameters were successfully obtained
   0 - otherwise
 ******************************************************************/
+
+  cout<<"In ForceField::get_angle_parameters()...\n";
+  cout<<"ff_type1 = "<<ff_type1<<"ff_type2 = "<<ff_type2<<"ff_type3 = "<<ff_type3<<endl;
+
   double k_theta,theta_0,cos_theta_0,C0,C1,C2;
   int is_k_theta,is_theta_0,is_cos_theta_0,is_C0,is_C1,is_C2;
   is_k_theta = is_theta_0 = is_cos_theta_0 = is_C0 = is_C1 = is_C2 = 0;
@@ -103,6 +107,7 @@ int ForceField::get_angle_parameters(string ff_type1, string ff_type2,string ff_
 
   //------------- If not found - apply rules  ------------------------------
   if(ff_angle_indx>-1){ // if the record has been found
+    cout<<"Angle record has been found in the Force Field used\n";
     // Equilibrium angle
     if(Angle_Records[ff_angle_indx].is_Angle_theta_eq){
       theta_0 = deg_to_rad*Angle_Records[ff_angle_indx].Angle_theta_eq; is_theta_0 = 1;
@@ -111,12 +116,23 @@ int ForceField::get_angle_parameters(string ff_type1, string ff_type2,string ff_
     if(Angle_Records[ff_angle_indx].is_Angle_k_angle){
       k_theta = Angle_Records[ff_angle_indx].Angle_k_angle; is_k_theta = 1;
     }
+//    // Angle coordination
+//    if(Angle_Records[ff_angle_indx].is_Angle_k_angle){
+//      k_theta = Angle_Records[ff_angle_indx].Angle_k_angle; is_k_theta = 1;
+//    }
+
 
   }
 
   //------------- Apply rules to calculate missing parameters --------------
-  if(!is_theta_0){  angle_theta_0_rule(ff_type1,ff_type2,ff_type3,bond_order12,bond_order23,coordination,theta_0,is_theta_0); } 
-  if(!is_k_theta){  angle_k_theta_rule(ff_type1,ff_type2,ff_type3,bond_order12,bond_order23,coordination,k_theta,is_k_theta); }
+  if(!is_theta_0){  
+    cout<<"Angle theta_0 is not defined, so using the rule\n";
+    angle_theta_0_rule(ff_type1,ff_type2,ff_type3,bond_order12,bond_order23,coordination,theta_0,is_theta_0); 
+  } 
+  if(!is_k_theta){
+    cout<<"Angle k_theta is not defined, so using the rule\n";
+    angle_k_theta_rule(ff_type1,ff_type2,ff_type3,bond_order12,bond_order23,coordination,k_theta,is_k_theta);
+  }
 
   //------------ Additional relations --------------------------------------
   if(!is_theta_0){  if(is_cos_theta_0) { theta_0 = acos(cos_theta_0); is_theta_0 = 1; } }
@@ -125,8 +141,12 @@ int ForceField::get_angle_parameters(string ff_type1, string ff_type2,string ff_
   if(!is_C1){  if(is_theta_0){   double cs,sn; cs = cos(theta_0); sn = sin(theta_0);  C1 = -cs/(sn*sn); is_C1 = 1;    }  }
   if(!is_C2){  if(is_theta_0){   double sn; sn = sin(theta_0);                        C2 = 1.0/(4.0*sn*sn); is_C2 = 1;  }  }
 
-//  cout<<"is_theta_0 = "<<is_theta_0<<"is_k_theta = "<<is_k_theta<<"is_cos_theta_0 = "<<is_cos_theta_0
-//      <<"is_C0 = "<<is_C0<<"is_C1 = "<<is_C1<<"is_C2 = "<<is_C2<<endl;
+  cout<<"Here is what we have so far (in conventional units)...\n";
+  cout<<" is_theta_0 = "<<is_theta_0<<" is_k_theta = "<<is_k_theta<<" is_cos_theta_0 = "<<is_cos_theta_0
+      <<" is_C0 = "<<is_C0<<" is_C1 = "<<is_C1<<" is_C2 = "<<is_C2<<endl;
+  cout<<" theta_0 = "<<theta_0<<" k_theta = "<<k_theta<<" is_cos_theta_0 = "<<cos_theta_0
+      <<" C0 = "<<C0<<" C1 = "<<C1<<" C2 = "<<C2<<endl;
+
 
   // Convert to atomic units
   k_theta *= (1.0/hartree);
@@ -134,6 +154,8 @@ int ForceField::get_angle_parameters(string ff_type1, string ff_type2,string ff_
 
   // Assign parameters according to the force field and the potential used 
   // Do necessary scaling of the pre-computed variables
+  cout<<"The parameters determined will be used with the angle bending functional = "<<angle_functional<<endl;
+  
   if(angle_functional=="Harmonic"){
     prms["k_theta"] = 0.5*k_theta;
     prms["theta_0"]= theta_0;
@@ -168,6 +190,10 @@ int ForceField::get_angle_parameters(string ff_type1, string ff_type2,string ff_
     status = is_k_theta * is_cos_theta_0;
     if(k_theta==0.0){ status = 0; }
   }
+  cout<<"The outcome is: the parameters are ";
+  if(status){ cout<<" sufficient\n"; }
+  else{ cout<<" insufficient (the interaction will not be added)\n"; }
+
   return status;
 
 }

@@ -121,6 +121,11 @@ void Hamiltonian_Atomistic::show_interactions_statistics(){
   mm_ham->show_interactions_statistics();
 }
 
+void Hamiltonian_Atomistic::show_interactions(){
+  mm_ham->show_interactions();
+}
+
+
 void Hamiltonian_Atomistic::set_atom_types(System& syst, vector<int>& lst, ForceField& ff){
   mm_ham->set_atom_types(syst, lst, ff);
 }

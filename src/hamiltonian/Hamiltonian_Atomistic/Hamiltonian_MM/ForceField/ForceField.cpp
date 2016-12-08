@@ -708,7 +708,7 @@ int Angle_Record::set(object at){
    set_value(is_Angle_k_ub,       Angle_k_ub,       at, "Angle_k_ub");
    set_value(is_Angle_kijk_sb,    Angle_kijk_sb,    at, "Angle_kijk_sb");
    set_value(is_Angle_kkji_sb,    Angle_kkji_sb,    at, "Angle_kkji_sb");
-
+   set_value(is_Angle_coordination, Angle_coordination, at, "Angle_coordination");
 
    return 1;
 
@@ -731,6 +731,7 @@ Angle_Record& Angle_Record::operator=(const Angle_Record& at){
    is_Angle_k_ub     = 0;
    is_Angle_kijk_sb  = 0;
    is_Angle_kkji_sb  = 0;
+   is_Angle_coordination = 0;
 
 
    if(at.is_Atom1_ff_type)     {Atom1_ff_type     = at.Atom1_ff_type;     is_Atom1_ff_type = 1;}
@@ -748,6 +749,7 @@ Angle_Record& Angle_Record::operator=(const Angle_Record& at){
    if(at.is_Angle_k_ub)        { Angle_k_ub         = at.Angle_k_ub;         is_Angle_k_ub = 1;} 
    if(at.is_Angle_kijk_sb)     { Angle_kijk_sb      = at.Angle_kijk_sb;      is_Angle_kijk_sb = 1;}
    if(at.is_Angle_kkji_sb)     { Angle_kkji_sb      = at.Angle_kkji_sb;      is_Angle_kkji_sb = 1;}
+   if(at.is_Angle_coordination){ Angle_coordination = at.Angle_coordination; is_Angle_coordination = 1;}
 
    return *this;
 }
@@ -769,6 +771,7 @@ void Angle_Record::merge(const Angle_Record& at){
    if(!is_Angle_k_ub && at.is_Angle_k_ub)           { Angle_k_ub         = at.Angle_k_ub;         is_Angle_k_ub = 1;}
    if(!is_Angle_kijk_sb && at.is_Angle_kijk_sb)     { Angle_kijk_sb      = at.Angle_kijk_sb;      is_Angle_kijk_sb = 1;}
    if(!is_Angle_kkji_sb && at.is_Angle_kkji_sb)     { Angle_kkji_sb      = at.Angle_kkji_sb;      is_Angle_kkji_sb = 1;}
+   if(!is_Angle_coordination && at.is_Angle_coordination) { Angle_coordination = at.Angle_coordination; is_Angle_coordination = 1;}
 
 }
 
@@ -790,6 +793,7 @@ int Angle_Record::show_info(){
    if(is_Angle_k_ub)           {std::cout<<"Angle_k_ub = "<<Angle_k_ub<<" kcal/(mol*Angstrom^2)"<<std::endl; }
    if(is_Angle_kijk_sb)        {std::cout<<"Angle_kijk_sb = "<<Angle_kijk_sb<<" some units"<<std::endl; }
    if(is_Angle_kkji_sb)        {std::cout<<"Angle_kkji_sb = "<<Angle_kkji_sb<<" some units"<<std::endl; }
+   if(is_Angle_coordination)   {std::cout<<"Angle_coordination = "<<Angle_coordination<<" some units"<<std::endl; }
 
 
    std::cout<<std::endl;
@@ -814,6 +818,7 @@ void Angle_Record::save(boost::property_tree::ptree& pt,std::string path){
   if(is_Angle_k_ub){  ::save(pt,path+".Angle_k_ub",Angle_k_ub);    }
   if(is_Angle_kijk_sb){  ::save(pt,path+".Angle_kijk_sb",Angle_kijk_sb);    }
   if(is_Angle_kkji_sb){  ::save(pt,path+".Angle_kkji_sb",Angle_kkji_sb);    }
+  if(is_Angle_coordination){  ::save(pt,path+".Angle_coordination",Angle_coordination);    }
 
 }
 
@@ -844,6 +849,7 @@ void Angle_Record::load(boost::property_tree::ptree& pt,std::string path,int& st
   ::load(pt,path+".Angle_k_ub",Angle_k_ub,is_Angle_k_ub); if(is_Angle_k_ub==1) { status=1;}
   ::load(pt,path+".Angle_kijk_sb",Angle_kijk_sb,is_Angle_kijk_sb); if(is_Angle_kijk_sb==1) { status=1;}
   ::load(pt,path+".Angle_kkji_sb",Angle_kkji_sb,is_Angle_kkji_sb); if(is_Angle_kkji_sb==1) { status=1;}
+  ::load(pt,path+".Angle_coordination",Angle_coordination,is_Angle_coordination); if(is_Angle_coordination==1) { status=1;}
 
 }
 
@@ -2321,6 +2327,8 @@ int ForceField::Angle_Record_Index(std::string Atom1_ff_type, std::string Atom2_
    the Angle_type_index properties if they are available
 *****************************************************************/
   int indx = -1;
+  cout<<"In ForceField::Angle_Record_Index\n";
+
   int sz   = Angle_Records.size();
   int cmpr11,cmpr13,cmpr31,cmpr33,cmpr,cmpr2;
   for(int i=0;i<sz;i++){
@@ -2328,6 +2336,7 @@ int ForceField::Angle_Record_Index(std::string Atom1_ff_type, std::string Atom2_
     if(Angle_Records[i].is_Atom2_ff_type){
       cmpr2 = (Angle_Records[i].Atom2_ff_type == Atom2_ff_type);
     }
+    cout<<"i = "<<i<<" cmpr2 = "<<cmpr2<<endl;
     if(cmpr2){
       cmpr11 = cmpr13 = cmpr31 = cmpr33 = 0;
       if(Angle_Records[i].is_Atom1_ff_type && Angle_Records[i].is_Atom3_ff_type){
@@ -2337,8 +2346,11 @@ int ForceField::Angle_Record_Index(std::string Atom1_ff_type, std::string Atom2_
         cmpr31 = (Angle_Records[i].Atom3_ff_type == Atom1_ff_type);
       }// if both Atom1_ff_int_type and Atom3_ff_int_type are defined
 
+      cout<<"cmpr11 = "<<cmpr11<<" cmpr33 = "<<cmpr33<<" cmpr13 = "<<cmpr13<<" cmpr31 = "<<cmpr31<<endl;
+
       // --------- Conclusions -------
-      if((cmpr11&&cmpr33&&cmpr)||(cmpr13&&cmpr31&&cmpr)){ indx = i;  }
+//      if((cmpr11&&cmpr33&&cmpr)||(cmpr13&&cmpr31&&cmpr)){ indx = i;  }
+      if((cmpr11&&cmpr33)||(cmpr13&&cmpr31)){ indx = i;  }
     }// if cmpr2==1
   }// for i
   return indx;

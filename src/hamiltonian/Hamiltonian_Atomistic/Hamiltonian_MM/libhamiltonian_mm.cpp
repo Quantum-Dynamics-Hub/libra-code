@@ -70,6 +70,7 @@ void export_Hamiltonian_MM_objects(){
 
       .def("is_new_interaction", &listHamiltonian_MM::is_new_interaction)
       .def("show_interactions_statistics", &listHamiltonian_MM::show_interactions_statistics)
+      .def("show_interactions", &listHamiltonian_MM::show_interactions)
 
       .def("set_atom_types", &listHamiltonian_MM::set_atom_types)
       .def("set_fragment_types", &listHamiltonian_MM::set_fragment_types)
@@ -86,7 +87,6 @@ void export_Hamiltonian_MM_objects(){
       .def("is_active", expt_is_active_v1)
       .def("is_active", expt_is_active_v2)
       .def("is_active", expt_is_active_v3)
-
 
   ;
 

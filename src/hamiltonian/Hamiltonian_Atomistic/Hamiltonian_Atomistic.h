@@ -67,6 +67,7 @@ public:
   // Interaction related functions:
   //int is_new_interaction(Hamiltonian_MM&);
   void show_interactions_statistics();
+  void show_interactions();
 
   void set_atom_types(System& syst,vector<int>& lst,ForceField& ff);
   void set_fragment_types(System& syst, vector<int>& lst,ForceField& ff);

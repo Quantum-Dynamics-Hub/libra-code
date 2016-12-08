@@ -24,7 +24,7 @@ int ForceField::is_valid_atom_type(std::string ff_type){
     int indx = Atom_Record_Index(ff_type);
     if(indx==-1){ cout<<"Error: Force field "<<ForceField_Name<<" does not have atom type "<<ff_type<<endl; res = 0; }
   }
-  else{  cout<<"Warning!: Force field name is not defined\n";  res = 1;  }
+  else{  cout<<"Warning!: Force field name is not defined. But this allows you to manually define any atom type!\n";  res = 1;  }
   return 1;
 }
 

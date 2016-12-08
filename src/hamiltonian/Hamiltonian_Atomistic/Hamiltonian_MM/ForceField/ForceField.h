@@ -270,6 +270,7 @@ public:
    double Angle_k_ub;               int is_Angle_k_ub;
    double Angle_kijk_sb;            int is_Angle_kijk_sb; // _sb = stretch-bend
    double Angle_kkji_sb;            int is_Angle_kkji_sb;
+   int Angle_coordination;          int is_Angle_coordination;
 
    Angle_Record(){
 
@@ -290,6 +291,7 @@ public:
    is_Angle_k_ub     = 0;
    is_Angle_kijk_sb  = 0;
    is_Angle_kkji_sb  = 0;
+   is_Angle_coordination = 0;
 
    }
 
