@@ -21,7 +21,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 
-def read_qe_index(filename, orb_list):
+def read_qe_index(filename, orb_list, verbose=0):
 ##
 #  This functions reads an ASCII/XML format file containing wavefunction
 #  and returns the coefficients of the plane waves that constitute the
@@ -43,35 +43,117 @@ def read_qe_index(filename, orb_list):
     print "path=", ctx.get_path()
     ctx.show_children("Root/Eigenvalues")  #("Kpoint.1")
 
+    info = {}
+    info["nspin"] = int(float(ctx.get("Eigenvalues/<xmlattr>/nspin","-1.0")))  # 1 - non-polarized, 2 - polarized, 4 - non-collinear
+    info["nk"] = int(float(ctx.get("Eigenvalues/<xmlattr>/nk","-1.0")))  # the number of k-points
+    info["nbnd"] = int(float(ctx.get("Eigenvalues/<xmlattr>/nbnd","-1.0")))  # the number of orbitals in each k-point
+    info["efermi"] = float(ctx.get("Eigenvalues/<xmlattr>/efermi","-1.0"))  # Fermi energy
 
-    e_str = ctx.get("Eigenvalues/e.1","n").split() 
-    nbnd = len(e_str)    
+    # Usially in atomic units!
+    info["alat"] = float(ctx.get("Cell/Data/<xmlattr>/alat","-1.0"))    # lattice constant (a)
+    info["omega"] = float(ctx.get("Cell/Data/<xmlattr>/omega","-1.0"))  # unit cell volume
+    info["tpiba"] = float(ctx.get("Cell/Data/<xmlattr>/tpiba","-1.0"))  # 2 pi / a
+    info["tpiba2"] = float(ctx.get("Cell/Data/<xmlattr>/tpiba2","-1.0"))  # ( 2 pi / a )**2
 
-    norbs = len(orb_list)
-    for o in orb_list:
-        if o > nbnd:
-            print "Orbital ", o, " is outside the range of allowed orbital indices. The maximal value is ", nbnd
-            sys.exit(0)
-        elif o < 1:
-            print "Orbital ", o, " is outside the range of allowed orbital indices. The minimal value is ", 1
-            sys.exit(0)
+    # Direct lattice vectors
+    tmp = ctx.get("Cell/a1/<xmlattr>/xyz","-1.0").split()
+    info["a1"] = VECTOR(float(tmp[0]), float(tmp[1]), float(tmp[2]))
 
+    tmp = ctx.get("Cell/a2/<xmlattr>/xyz","-1.0").split()
+    info["a2"] = VECTOR(float(tmp[0]), float(tmp[1]), float(tmp[2]))
 
-    e = CMATRIX(norbs,norbs)
-
-    for band in orb_list:    
-        mo_indx = orb_list.index(band) 
-
-        ei = float(e_str[band-1])  # band starts from 1, not 0!
-
-        e.set(mo_indx,mo_indx, ei * Ry2Ha, 0.0)
-
-
-    return e
+    tmp = ctx.get("Cell/a3/<xmlattr>/xyz","-1.0").split()
+    info["a3"] = VECTOR(float(tmp[0]), float(tmp[1]), float(tmp[2]))
 
 
+    # Reciprocal lattice vectors
+    tmp = ctx.get("Cell/b1/<xmlattr>/xyz","-1.0").split()
+    info["b1"] = VECTOR(float(tmp[0]), float(tmp[1]), float(tmp[2]))
 
-def read_qe_wfc_info(filename, upper_tag):
+    tmp = ctx.get("Cell/b2/<xmlattr>/xyz","-1.0").split()
+    info["b2"] = VECTOR(float(tmp[0]), float(tmp[1]), float(tmp[2]))
+
+    tmp = ctx.get("Cell/b3/<xmlattr>/xyz","-1.0").split()
+    info["b3"] = VECTOR(float(tmp[0]), float(tmp[1]), float(tmp[2]))
+
+
+    # K-points
+    # Weights of the k-points
+    tmp = ctx.get("Kmesh/weights","-1.0").split()
+    weights = []
+    for x in tmp:
+        weights.append( float(x) )
+    info["weights"] = weights
+
+    # K-point vectors
+    K = []
+    tmp = ctx.get("Kmesh/k","-1.0").split()
+    nk = len(tmp)/3 # the number of k-points
+    for ik in xrange(nk):
+        k = VECTOR(float(tmp[3*ik+0]), float(tmp[3*ik+1]), float(tmp[3*ik+2]))
+        K.append(k)
+    info["k"] = K       
+
+    
+    # All the bands
+    all_e = []  # all bands
+
+    for ik in range(1,info["nk"]+1):
+
+        e_str = ctx.get("Eigenvalues/e.%i" % ik,"n").split() 
+        nbnd = len(e_str)    
+
+        norbs = len(orb_list)
+        for o in orb_list:
+            if o > nbnd:
+                print "Orbital ", o, " is outside the range of allowed orbital indices. The maximal value is ", nbnd
+                sys.exit(0)
+            elif o < 1:
+                print "Orbital ", o, " is outside the range of allowed orbital indices. The minimal value is ", 1
+                sys.exit(0)
+
+
+        e = CMATRIX(norbs,norbs)
+        
+        for band in orb_list:    
+            mo_indx = orb_list.index(band) 
+        
+            ei = float(e_str[band-1])  # band starts from 1, not 0!
+        
+            e.set(mo_indx,mo_indx, ei * Ry2Ha, 0.0)
+
+        all_e.append(e)
+
+    if verbose==1:
+        print " nspin = ", info["nspin"], " nk = ", info["nk"], " nbnd = ", info["nbnd"], " efermi = ", info["efermi"], \
+        " alat = ", info["alat"], " omega = ", info["omega"], " tpiba = ", info["tpiba"], " tpiba2 = ", info["tpiba"]
+
+        print " Direct lattice vectors: "
+        print " a1 = ", info["a1"].x, info["a1"].y, info["a1"].z
+        print " a2 = ", info["a2"].x, info["a2"].y, info["a2"].z
+        print " a3 = ", info["a3"].x, info["a3"].y, info["a3"].z
+
+        print " Reciprocal lattice vectors: "
+        print " b1 = ", info["b1"].x, info["b1"].y, info["b1"].z
+        print " b2 = ", info["b2"].x, info["b2"].y, info["b2"].z
+        print " b3 = ", info["b3"].x, info["b3"].y, info["b3"].z
+
+        print " K points: "
+        for ik in xrange(info["nk"]):
+            print ik, " weight = ", info["weights"][ik], " k = ", info["k"][ik].x, info["k"][ik].y, info["k"][ik].z
+
+        print " Energies of the active orbitals for all k-points: "
+        for ik in xrange(info["nk"]):
+            print "ik = ", ik
+            all_e[ik].show_matrix()
+            print ""
+
+
+    return info, all_e
+
+
+
+def read_qe_wfc_info(filename, upper_tag, verbose=0):
 ##
 #  This functions reads an ASCII/XML format file containing wavefunction
 #  and returns the some descriptors
@@ -83,18 +165,59 @@ def read_qe_wfc_info(filename, upper_tag):
     ctx = Context(filename)  #("x.export/wfc.1")
     ctx.set_path_separator("/")
     print "path=", ctx.get_path()
-    ctx.show_children(upper_tag)  #("Kpoint.1")
+#    ctx.show_children(upper_tag)  #("Kpoint.1")
 
-    ngw = int(float(ctx.get("Info/<xmlattr>/ngw","n")))
-    nbnd = int(float(ctx.get("Info/<xmlattr>/nbnd","n")))
-    nspin = int(float(ctx.get("Info/<xmlattr>/nspin","n")))
-    gamma_only = ctx.get("Info/<xmlattr>/gamma_only","n")
+    res = {}
+    res["ngw"] = int(float(ctx.get("Info/<xmlattr>/ngw","-1.0")))     # the number of plane waves needed to represent the orbital
+    res["igwx"] = int(float(ctx.get("Info/<xmlattr>/igwx","-1.0")))   # the number of the G points = plane waves needed to
+                                                                      # represent the orbital for given k-point. Use this number 
+                                                                      # when working with multiple k-points
+    res["nbnd"] = int(float(ctx.get("Info/<xmlattr>/nbnd","-1.0")))   # the number of bands (orbitals)
+    res["nspin"] = int(float(ctx.get("Info/<xmlattr>/nspin","-1.0"))) # 1 - unpolarized, 2 - polarized, 4 - non-collinear 
+    res["gamma_only"] = ctx.get("Info/<xmlattr>/gamma_only","F")      # T - use the Gamma-point storae trick, T - do not use it
+    res["ik"] = int(float(ctx.get("Info/<xmlattr>/ik","-1.0")))       # index of the k point wfc
+    res["nk"] = int(float(ctx.get("Info/<xmlattr>/nk","-1.0")))       # the number of k-points in the wfc
 
-    print "ngw = ", ngw, " nbnd = ", nbnd, " nspin = ", nspin, "gamma_only = ", gamma_only
+
+    if verbose==1:
+        print " ngw = ", res["ngw"], " igwx = ", res["igwx"],\
+              " nbnd = ", res["nbnd"], " nspin = ", res["nspin"],\
+              " gamma_only = ", res["gamma_only"],\
+              " ik = ", res["ik"], " nk = ", res["nk"]
 
 
-    return ngw, nbnd, nspin, gamma_only
+#    return ngw, nbnd, nspin, gamma_only
+    return res
 
+
+
+
+def read_qe_wfc_grid(filename, upper_tag):
+##
+#  This functions reads an ASCII/XML format file containing grid of G-points for given k-point
+#  and returns a list of VECTOR objects
+
+#
+#  \param[in] filename This is the name of the file we will be reading to construct a wavefunction
+#  \param[in] upper_tag This is the name of the upper-level tag
+#     
+
+    ctx = Context(filename)  #("x.export/grid.1")
+    ctx.set_path_separator("/")
+    print "path=", ctx.get_path()
+    ctx.show_children(upper_tag)  #("grid")
+
+
+    # G-point vectors
+    G = []
+    tmp = ctx.get("grid","-1.0").split()
+    ng = len(tmp)/3 # the number of G-points
+
+    for ig in xrange(ng):
+        g = VECTOR(float(tmp[3*ig+0]), float(tmp[3*ig+1]), float(tmp[3*ig+2]))
+        G.append(g)
+
+    return G
 
 
 
@@ -108,18 +231,15 @@ def read_qe_wfc(filename, upper_tag, orb_list):
 #  \param[in] upper_tag This is the name of the upper-level tag
 #  \param[in] orb_list The list containing the indices of the orbitals which we want to consider
 #   (indexing is starting with 1, not 0!)
-#  
-   
+#     
+
     ctx = Context(filename)  #("x.export/wfc.1")
     ctx.set_path_separator("/")
     print "path=", ctx.get_path()
-    ctx.show_children(upper_tag)  #("Kpoint.1")
+#    ctx.show_children(upper_tag)  #("Kpoint.1")
 
-    ngw = int(float(ctx.get("Info/<xmlattr>/ngw","n")))
-    nbnd = int(float(ctx.get("Info/<xmlattr>/nbnd","n")))
-    nspin = int(float(ctx.get("Info/<xmlattr>/nspin","n")))
-    gamma_only = ctx.get("Info/<xmlattr>/gamma_only","n")
-    print "ngw = ", ngw, " nbnd = ", nbnd, " nspin = ", nspin, "gamma_only = ", gamma_only
+    res = read_qe_wfc_info(filename, upper_tag, 1)
+    ngw, nbnd, nspin, gamma_only = res["igwx"], res["nbnd"], res["nspin"], res["gamma_only"]
 
     if nspin==4:
         if orb_list[0] % 2 ==0:
