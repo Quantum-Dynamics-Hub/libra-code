@@ -153,19 +153,17 @@ def read_qe_index(filename, orb_list, verbose=0):
 
 
 
-def read_qe_wfc_info(filename, upper_tag, verbose=0):
+def read_qe_wfc_info(filename, verbose=0):
 ##
 #  This functions reads an ASCII/XML format file containing wavefunction
 #  and returns the some descriptors
 #
 #  \param[in] filename This is the name of the file we will be reading to construct a wavefunction
-#  \param[in] upper_tag This is the name of the upper-level tag
 #  
    
     ctx = Context(filename)  #("x.export/wfc.1")
     ctx.set_path_separator("/")
     print "path=", ctx.get_path()
-#    ctx.show_children(upper_tag)  #("Kpoint.1")
 
     res = {}
     res["ngw"] = int(float(ctx.get("Info/<xmlattr>/ngw","-1.0")))     # the number of plane waves needed to represent the orbital
@@ -185,27 +183,22 @@ def read_qe_wfc_info(filename, upper_tag, verbose=0):
               " gamma_only = ", res["gamma_only"],\
               " ik = ", res["ik"], " nk = ", res["nk"]
 
-
-#    return ngw, nbnd, nspin, gamma_only
     return res
 
 
 
 
-def read_qe_wfc_grid(filename, upper_tag):
+def read_qe_wfc_grid(filename, verbose=0):
 ##
 #  This functions reads an ASCII/XML format file containing grid of G-points for given k-point
 #  and returns a list of VECTOR objects
-
 #
 #  \param[in] filename This is the name of the file we will be reading to construct a wavefunction
-#  \param[in] upper_tag This is the name of the upper-level tag
 #     
 
     ctx = Context(filename)  #("x.export/grid.1")
     ctx.set_path_separator("/")
     print "path=", ctx.get_path()
-    ctx.show_children(upper_tag)  #("grid")
 
 
     # G-point vectors
@@ -217,18 +210,24 @@ def read_qe_wfc_grid(filename, upper_tag):
         g = VECTOR(float(tmp[3*ig+0]), float(tmp[3*ig+1]), float(tmp[3*ig+2]))
         G.append(g)
 
+    if verbose==1:
+        print "The number of G point on the grid for this k-point = ", ng
+        print " G points: "
+        for ig in xrange(ng):
+            print ig, " g = ", G[ig].x, G[ig].y, G[ig].z
+    
+
     return G
 
 
 
-def read_qe_wfc(filename, upper_tag, orb_list):
+def read_qe_wfc(filename, orb_list, verbose=0):
 ##
 #  This functions reads an ASCII/XML format file containing wavefunction
 #  and returns the coefficients of the plane waves that constitute the
 #  wavefunction
 #
 #  \param[in] filename This is the name of the file we will be reading to construct a wavefunction
-#  \param[in] upper_tag This is the name of the upper-level tag
 #  \param[in] orb_list The list containing the indices of the orbitals which we want to consider
 #   (indexing is starting with 1, not 0!)
 #     
@@ -236,9 +235,8 @@ def read_qe_wfc(filename, upper_tag, orb_list):
     ctx = Context(filename)  #("x.export/wfc.1")
     ctx.set_path_separator("/")
     print "path=", ctx.get_path()
-#    ctx.show_children(upper_tag)  #("Kpoint.1")
 
-    res = read_qe_wfc_info(filename, upper_tag, 1)
+    res = read_qe_wfc_info(filename, verbose)
     ngw, nbnd, nspin, gamma_only = res["igwx"], res["nbnd"], res["nspin"], res["gamma_only"]
 
     if nspin==4:
