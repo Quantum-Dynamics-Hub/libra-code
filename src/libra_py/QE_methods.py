@@ -202,7 +202,8 @@ def read_qe_wfc_grid(filename, verbose=0):
 
 
     # G-point vectors
-    G = []
+    G = VECTORList() #[]
+
     tmp = ctx.get("grid","-1.0").split()
     ng = len(tmp)/3 # the number of G-points
 
