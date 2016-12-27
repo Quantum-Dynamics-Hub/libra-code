@@ -161,6 +161,22 @@ public:
 
 };
 
+void pop_submatrix(CMATRIX* X,CMATRIX* x,vector<int>& subset);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
+void pop_submatrix(CMATRIX& X,CMATRIX& x,vector<int>& subset);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
+void pop_submatrix(CMATRIX& X,CMATRIX& x,boost::python::list subset);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
+void pop_submatrix(CMATRIX* X,CMATRIX* x,vector<int>& subset, vector<int>& subset2);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
+void pop_submatrix(CMATRIX& X,CMATRIX& x,vector<int>& subset, vector<int>& subset2);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
+void pop_submatrix(CMATRIX& X,CMATRIX& x,boost::python::list subset, boost::python::list subset2);  ///< Take a smaller sub-matrix from a bigger matrix according to the specified pattern
+
+void push_submatrix(CMATRIX* X,CMATRIX* x,vector<int>& subset); ///< Push a smaller matrix into a bigger one according to the specified pattern
+void push_submatrix(CMATRIX& X,CMATRIX& x,vector<int>& subset); ///< Push a smaller matrix into a bigger one according to the specified pattern
+void push_submatrix(CMATRIX& X,CMATRIX& x,boost::python::list subset); ///< Push a smaller matrix into a bigger one according to the specified pattern
+void push_submatrix(CMATRIX* X,CMATRIX* x,vector<int>& subset,vector<int>& subset2); ///< Push a smaller matrix into a bigger one according to the specified pattern
+void push_submatrix(CMATRIX& X,CMATRIX& x,vector<int>& subset,vector<int>& subset2); ///< Push a smaller matrix into a bigger one according to the specified pattern
+void push_submatrix(CMATRIX& X,CMATRIX& x,boost::python::list subset,boost::python::list subset2); ///< Push a smaller matrix into a bigger one according to the specified pattern
+
+
+
 void qr(double EPS,int n,CMATRIX& M,vector<double>& Eval); // Compute eigenvalues of M
 void qr(double EPS,int n,CMATRIX& M,vector<double>& Eval,CMATRIX& Evec);  // Computes eigenvalues and eigenvectors of M
 

@@ -386,6 +386,27 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
 */
   ;
 
+  void (*expt_pop_submatrix_v1c)(CMATRIX& X,CMATRIX& x,vector<int>& subset) = &pop_submatrix;
+  void (*expt_pop_submatrix_v2c)(CMATRIX& X,CMATRIX& x,boost::python::list subset) = &pop_submatrix;
+  void (*expt_pop_submatrix_v3c)(CMATRIX& X,CMATRIX& x,vector<int>& subset,vector<int>& subset2) = &pop_submatrix;
+  void (*expt_pop_submatrix_v4c)(CMATRIX& X,CMATRIX& x,boost::python::list subset,boost::python::list subset2) = &pop_submatrix;
+
+  void (*expt_push_submatrix_v1c)(CMATRIX& X,CMATRIX& x,vector<int>& subset) = &push_submatrix;
+  void (*expt_push_submatrix_v2c)(CMATRIX& X,CMATRIX& x,boost::python::list subset) = &push_submatrix;
+  void (*expt_push_submatrix_v3c)(CMATRIX& X,CMATRIX& x,vector<int>& subset,vector<int>& subset2) = &push_submatrix;
+  void (*expt_push_submatrix_v4c)(CMATRIX& X,CMATRIX& x,boost::python::list subset,boost::python::list subset2) = &push_submatrix;
+
+  def("pop_submatrix", expt_pop_submatrix_v1c);
+  def("pop_submatrix", expt_pop_submatrix_v2c);
+  def("pop_submatrix", expt_pop_submatrix_v3c);
+  def("pop_submatrix", expt_pop_submatrix_v4c);
+
+  def("push_submatrix", expt_push_submatrix_v1c);
+  def("push_submatrix", expt_push_submatrix_v2c);
+  def("push_submatrix", expt_push_submatrix_v3c);
+  def("push_submatrix", expt_push_submatrix_v4c);
+
+
   class_< CMATRIXList >("CMATRIXList")
       .def(vector_indexing_suite< CMATRIXList >())
   ;
