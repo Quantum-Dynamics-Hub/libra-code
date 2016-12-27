@@ -377,6 +377,22 @@ void export_qobjects_objects(){
       .def(vector_indexing_suite< PWList >())
   ;
 
+  complex<double> (*expt_I_1D_v1)
+  (double kx, double kxp, double gx, double gxp) = &I_1D;
+
+  complex<double> (*expt_I_3D_v1)
+  (VECTOR& k, VECTOR& kp, VECTOR& g, VECTOR& gp) = &I_3D;
+
+  CMATRIX (*expt_pw_overlap_v1)
+  (VECTOR& k1, VECTOR& k2, CMATRIX& coeff1, CMATRIX& coeff2, vector<VECTOR>& grid1, vector<VECTOR>& grid2) = &pw_overlap;
+
+
+  // ============ Now export functions =============
+  // Overlaps
+  def("I_1D", expt_I_1D_v1);
+  def("I_3D", expt_I_3D_v1);
+  def("pw_overlap", expt_pw_overlap_v1);
+
 
   //============ SD class =====================
   void (SD::*expt_set_v1)(CMATRIX& _mo) = &SD::set;

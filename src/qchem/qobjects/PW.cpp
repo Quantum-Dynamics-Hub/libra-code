@@ -204,6 +204,90 @@ complex<double> operator*(const PW& m1, const PW& m2){
 }
 
 
+
+
+
+complex<double> I_1D(double kx, double kxp, double gx, double gxp){
+/*
+    # All arguments are float
+    # kx,  gx  - refer to k-point 1 and its corresponding grid points
+    # kxp, gxp - refer to k-point 2 and its corresponding grid points
+*/
+
+    double zero = 1e-8;
+    complex<double> res(0.0, 0.0);
+    complex<double> one(0.0, 1.0);
+
+    double delt = kx + gx - kxp - gxp;
+
+    if(fabs(delt) <= zero){   res = complex<double>(1.0, 0.0); }
+    else{  res = -one * ( ( exp(2.0*one*M_PI*delt) - 1.0 ) / (2.0 * M_PI * delt) );  }
+
+    return res;
+}
+
+
+complex<double> I_3D(VECTOR& k, VECTOR& kp, VECTOR& g, VECTOR& gp){
+/*
+    # All arguments are VECTOR (float)
+    # k,  g  - refer to k-point 1 and its corresponding grid points
+    # kp, gp - refer to k-point 2 and its corresponding grid points
+*/
+
+    complex<double> res = I_1D(k.x, kp.x, g.x, gp.x) * I_1D(k.y, kp.y, g.y, gp.y) * I_1D(k.z, kp.z, g.z, gp.z);
+
+    return res;
+
+}
+
+
+CMATRIX pw_overlap(VECTOR& k1, VECTOR& k2, CMATRIX& coeff1, CMATRIX& coeff2, vector<VECTOR>& grid1, vector<VECTOR>& grid2){
+/*
+    # all k- and g-points are in units of 2*pi/a
+    # k1, k2 - are k-point vectors (VECTOR of float) 
+    # coeff1 - is a matrix (complex) of coefficeints for all states for given k-point (1), dimensions: npw1 x nbands1
+    # coeff2 - is a matrix (complex) of coefficeints for all states for given k-point (2), dimensions: npw2 x nbands2
+    # grid1 - a list of vectors for all G-points for given k-point (1): dimension npw1
+    # grid2 - a list of vectors for all G-points for given k-point (2): dimension npw2
+*/
+
+    int npw1 = coeff1.n_rows;
+    int nbands1 = coeff1.n_cols;
+
+    int npw2 = coeff2.n_rows;
+    int nbands2 = coeff2.n_cols;
+
+
+    CMATRIX* S;
+    S = new CMATRIX(nbands1, nbands2);  // all orbitals for given pair of k-points (a block of entire matrix)
+
+
+    // A double sum over the grid points (may be different for the two k-points)
+    for(int g1=0; g1<npw1; g1++){
+
+        for(int g2=0; g2<npw2; g2++){
+
+            complex<double> s = I_3D(k1, k2, grid1[g1], grid2[g2]);
+
+            for(int i1=0; i1<nbands1; i1++){
+                for(int i2=0; i2<nbands2; i2++){
+
+                    complex<double> tmp = std::conj(coeff1.get(g1,i1)) * s * coeff2.get(g2,i2);
+
+                    S->set(i1,i2, S->get(i1,i2) + tmp);
+
+                }// for i2
+            }// for i1
+        }// for g2
+    }// for g1
+
+    return *S;
+
+}
+
+    
+
+
 }// namespace libqobjects
 }// namespace libqchem
 

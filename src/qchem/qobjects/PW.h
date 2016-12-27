@@ -127,6 +127,11 @@ public:
 
 typedef std::vector<PW> PWList; ///< This is the data type for representing vector of PW objects
 
+
+complex<double> I_1D(double kx, double kxp, double gx, double gxp);
+complex<double> I_3D(VECTOR& k, VECTOR& kp, VECTOR& g, VECTOR& gp);
+CMATRIX pw_overlap(VECTOR& k1, VECTOR& k2, CMATRIX& coeff1, CMATRIX& coeff2, vector<VECTOR>& grid1, vector<VECTOR>& grid2);
+
 /*
 class wfc{
 
