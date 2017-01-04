@@ -1,8 +1,13 @@
+# Set the compiler as described here: https://cmake.org/Wiki/CMake_FAQ#How_do_I_use_a_different_compiler.3F
+#set(CMAKE_C_COMPILER "/home/Alexey_2/Soft/gcc-6.2.0/_install/bin/gcc-6.2.0")
+#set(CMAKE_CXX_COMPILER "/home/Alexey_2/Soft/gcc-6.2.0/_install/bin/g++-6.2.0")
+
 #
 #  Verify that Cmake is up to date
 #
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 SET(CMAKE_LEGACY_CYGWIN_WIN32 0)
+
 
 #
 #  Project name
@@ -32,14 +37,14 @@ LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 #  Boost library
 #
 MESSAGE("Looking for Boost libraries...")
-FIND_PACKAGE(Boost 1.50.0 REQUIRED)
+FIND_PACKAGE(Boost 1.60.0 REQUIRED)
 IF(Boost_FOUND)
   MESSAGE("Success!")
   INCLUDE_DIRECTORIES("${Boost_INCLUDE_DIRS}")
   SET(Boost_USE_STATIC_LIBS OFF)
   SET(Boost_USE_MULTITHREADED OFF)
   SET(Boost_USE_STATIC_RUNTIME OFF)
-  FIND_PACKAGE(Boost 1.50.0 COMPONENTS python regex) # it seems that it is important to find sub-packages too!!!
+  FIND_PACKAGE(Boost 1.60.0 COMPONENTS python regex) # it seems that it is important to find sub-packages too!!!
 ELSEIF(NOT Boost_FOUND)
   MESSAGE(FATAL_ERROR "Unable to find correct Boost version. Did you set BOOST_ROOT?")
 ENDIF()
@@ -47,14 +52,14 @@ ENDIF()
 #
 #  Python library
 #
-MESSAGE("Looking for Python 2.6.8 libraries...")
+MESSAGE("Looking for Python libraries...")
 MESSAGE("Advice: If this search fails, try using -DPYTHON_LIBRARY=\${path_to_the_python_library} -PYTHON_INCLUDE_DIR=\${path_to_where_Python.h_is_found}")
 MESSAGE("Hint to self: -DPYTHON_INCLUDE_DIR=/home/Alexey_2/Soft/python2.6/include/python2.6 -DPYTHON_LIBRARY=/home/Alexey_2/Soft/python2.6/bin")
 
 # For Linux
-#FIND_PACKAGE(PythonLibs 2.7.0 REQUIRED)
+FIND_PACKAGE(PythonLibs 2.7.0 REQUIRED)
 # For Cygwin
-FIND_PACKAGE(PythonLibs 2.6.8 EXACT REQUIRED)
+#FIND_PACKAGE(PythonLibs 2.6.8 EXACT REQUIRED)
 
 IF(PYTHONLIBS_FOUND)
   MESSAGE("Success!")
