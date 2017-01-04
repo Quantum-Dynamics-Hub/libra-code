@@ -42,7 +42,7 @@ VECTOR operator*(const MATRIX3x3& m,  const VECTOR& v){
 }
 
 
-QUATERNION operator*(QUATERNION& q,  const VECTOR& v){
+QUATERNION operator*(const QUATERNION& q,  const VECTOR& v){
   // Multiplication of vector and quaternion;
   QUATERNION tmp;
   QUATERNION V;
@@ -53,7 +53,7 @@ QUATERNION operator*(QUATERNION& q,  const VECTOR& v){
   tmp = q*V;
   return tmp;
 }
-QUATERNION operator*(const VECTOR& v,  QUATERNION& q){
+QUATERNION operator*(const VECTOR& v,  const QUATERNION& q){
   // Multiplication of vector and quaternion;
   QUATERNION tmp;
   QUATERNION V;
@@ -64,7 +64,7 @@ QUATERNION operator*(const VECTOR& v,  QUATERNION& q){
   tmp = V*q;
   return tmp;
 }
-QUATERNION operator*(const MATRIX& m,QUATERNION& q){
+QUATERNION operator*(const MATRIX& m, const QUATERNION& q){
   // Multiplication of Matrix(4x4) and quaternion
   // defined similar to multiplication of 4D vector
   QUATERNION tmp;
@@ -78,49 +78,6 @@ QUATERNION operator*(const MATRIX& m,QUATERNION& q){
   }
   return tmp;
 }
-QUATERNION operator*(MATRIX& m,QUATERNION& q){
-  // Multiplication of Matrix(4x4) and quaternion
-  // defined similar to multiplication of 4D vector
-  QUATERNION tmp;
-  if(m.num_of_cols==4 && m.num_of_rows==4){
-    tmp.Lt = m.M[0]*q.Lt  + m.M[1]*q.Lx  + m.M[2]*q.Ly  + m.M[3]*q.Lz;
-    tmp.Lx = m.M[4]*q.Lt  + m.M[5]*q.Lx  + m.M[6]*q.Ly  + m.M[7]*q.Lz;
-    tmp.Ly = m.M[8]*q.Lt  + m.M[9]*q.Lx  + m.M[10]*q.Ly + m.M[11]*q.Lz;
-    tmp.Lz = m.M[12]*q.Lt + m.M[13]*q.Lx + m.M[14]*q.Ly + m.M[15]*q.Lz;
-  }else{
-  cout<<"Can not multiply quaternion and matrix of dimention other than 4x4"<<endl;
-  }
-  return tmp;
-}
-QUATERNION operator*(MATRIX& m,const QUATERNION& q){
-  // Multiplication of Matrix(4x4) and quaternion
-  // defined similar to multiplication of 4D vector
-  QUATERNION tmp;
-  if(m.num_of_cols==4 && m.num_of_rows==4){
-    tmp.Lt = m.M[0]*q.Lt  + m.M[1]*q.Lx  + m.M[2]*q.Ly  + m.M[3]*q.Lz;
-    tmp.Lx = m.M[4]*q.Lt  + m.M[5]*q.Lx  + m.M[6]*q.Ly  + m.M[7]*q.Lz;
-    tmp.Ly = m.M[8]*q.Lt  + m.M[9]*q.Lx  + m.M[10]*q.Ly + m.M[11]*q.Lz;
-    tmp.Lz = m.M[12]*q.Lt + m.M[13]*q.Lx + m.M[14]*q.Ly + m.M[15]*q.Lz;
-  }else{
-  cout<<"Can not multiply quaternion and matrix of dimention other than 4x4"<<endl;
-  }
-  return tmp;
-}
-QUATERNION operator*(const MATRIX& m,const QUATERNION& q){
-  // Multiplication of Matrix(4x4) and quaternion
-  // defined similar to multiplication of 4D vector
-  QUATERNION tmp;
-  if(m.num_of_cols==4 && m.num_of_rows==4){
-    tmp.Lt = m.M[0]*q.Lt  + m.M[1]*q.Lx  + m.M[2]*q.Ly  + m.M[3]*q.Lz;
-    tmp.Lx = m.M[4]*q.Lt  + m.M[5]*q.Lx  + m.M[6]*q.Ly  + m.M[7]*q.Lz;
-    tmp.Ly = m.M[8]*q.Lt  + m.M[9]*q.Lx  + m.M[10]*q.Ly + m.M[11]*q.Lz;
-    tmp.Lz = m.M[12]*q.Lt + m.M[13]*q.Lx + m.M[14]*q.Ly + m.M[15]*q.Lz;
-  }else{
-  cout<<"Can not multiply quaternion and matrix of dimention other than 4x4"<<endl;
-  }
-  return tmp;
-}
-
 
 }// namespace liblinalg
 }// namespace libmmath

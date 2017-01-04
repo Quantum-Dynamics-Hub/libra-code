@@ -91,8 +91,9 @@ public:
 
 
   friend int operator == (const PrimitiveG& g1, const PrimitiveG& g2){
+    VECTOR diff; diff = g1.R - g2.R;
     return ((g1.x_exp==g2.x_exp) && (g1.y_exp==g2.y_exp) && (g1.z_exp==g2.z_exp)
-          &&(fabs(g1.alpha-g2.alpha)<1e-10) && ((g1.R-g2.R).length2()<1e-10));
+          &&(fabs(g1.alpha-g2.alpha)<1e-10) && (diff.length2()<1e-10));
   }
 
      

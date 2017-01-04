@@ -141,13 +141,13 @@ CMATRIX::CMATRIX(const CMATRIX& obj){
 //  cout<<"Copy constructor\n";
 }
 
-CMATRIX CMATRIX::operator-(){
+CMATRIX CMATRIX::operator-() const{
   CMATRIX tmp(n_rows,n_cols);
   for(int i=0;i<n_elts;i++){ tmp.M[i]=-M[i]; }
   return tmp;
 }
 
-CMATRIX CMATRIX::operator*(const CMATRIX& ob){
+CMATRIX CMATRIX::operator*(const CMATRIX& ob) const{
 // (n_rows x ob.n_cols) = (n_rows x n_cols) * (ob.n_rows * ob.n_cols)
 // n_cols must be equal to ob.n_rows
   if(n_cols!=ob.n_rows){ 
@@ -225,13 +225,13 @@ void CMATRIX::dot(const CMATRIX& ob1,const CMATRIX& ob2){
 }
 
 
-CMATRIX CMATRIX::operator+(const CMATRIX& ob){ 
+CMATRIX CMATRIX::operator+(const CMATRIX& ob) const{ 
   CMATRIX Temp(n_rows,n_cols);
   for(int i=0;i<n_elts;i++) {Temp.M[i]=M[i]+ob.M[i];}
   return Temp;
 }
 
-CMATRIX CMATRIX::operator-(const CMATRIX& ob){
+CMATRIX CMATRIX::operator-(const CMATRIX& ob) const{
   CMATRIX Temp(n_rows,n_cols);
   for(int i=0;i<n_elts;i++) {Temp.M[i]=M[i]-ob.M[i];}
   return Temp;
@@ -297,13 +297,13 @@ void CMATRIX::operator*=(const CMATRIX& ob){
 }
 
 
-CMATRIX CMATRIX::operator/(double num){ 
+CMATRIX CMATRIX::operator/(double num) const{ 
   CMATRIX m(n_rows,n_cols);
   for(int i=0;i<n_elts;i++){  m.M[i] = M[i]/num;  }
   return m;
 }
 
-CMATRIX CMATRIX::operator/(complex<double> num){
+CMATRIX CMATRIX::operator/(complex<double> num) const{
   CMATRIX m(n_rows,n_cols);
   for(int i=0;i<n_elts;i++){  m.M[i] = M[i]/num;  }
   return m;
@@ -441,7 +441,8 @@ CMATRIX CMATRIX::H(){
 }
 
 void CMATRIX::load_identity(){
-  for(int i=0;i<n_elts;i++){ M[i] = complex<double>(0.0,0.0); }
+  int i;
+  for(i=0;i<n_elts;i++){ M[i] = complex<double>(0.0,0.0); }
   for(i=0;i<n_rows;i++){ M[i*n_cols+i] = complex<double>(1.0,0.0); }
 }
 
@@ -862,6 +863,7 @@ void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval){
   \param[out] Eval - the output eigenvalues
 
 */
+  int i,j;
 
   CMATRIX Q(n,n);
   CMATRIX R(n,n);
@@ -880,7 +882,7 @@ void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval){
     /// eval = R * Q
     /// Fill out the main diagonal
 
-    for(int i=0;i<n;i++){ 
+    for(i=0;i<n;i++){ 
       if(i==n-1){  eval.M[i*n+i]  = R.M[i*n+i]*Q.M[i*n+i];   }          // only 1 term here
       else{        eval.M[i*n+i]  = R.M[i*n+i]*Q.M[i*n+i] + R.M[i*n+(i+1)]*Q.M[(i+1)*n+i];}  // in fact just only 2 terms here
       // Wilkinson shift:
@@ -939,7 +941,7 @@ void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval){
          else if(sz_up>1 && sz_dn==1){
            CMATRIX up(sz_up,sz_up); up = 0.0;
            // copy diagonal elements
-           for(int j=0;j<(n-1);j++){ up.M[j*sz_up + j] = eval.M[j*n+j]; }
+           for(j=0;j<(n-1);j++){ up.M[j*sz_up + j] = eval.M[j*n+j]; }
            // upper off-diagonal elements
            for(j=0;j<(n-2);j++){ up.M[j*sz_up + j+1] = eval.M[j*n+j+1]; }
            // lower off-diagonal elements
@@ -959,7 +961,7 @@ void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval){
          // General case - both matrices are at least 2x2
            CMATRIX dn(sz_dn,sz_dn); dn = 0.0;
            // copy diagonal elements
-           for(int j=i+1;j<n;j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))] = eval.M[j*n+j]; }
+           for(j=i+1;j<n;j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))] = eval.M[j*n+j]; }
            // upper off-diagonal elements
            for(j=i+1;j<(n-1);j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))+1] = eval.M[j*n+j+1]; }
            // lower off-diagonal elements
@@ -1014,7 +1016,7 @@ void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval,CMATRIX& Evec){
 */
 
   double mu,d,a1,b2;
-  int i1,i2;
+  int i, j, i1,i2;
   CMATRIX Q(n,n);
   CMATRIX R(n,n);
   CMATRIX Q_tmp(n,n);  Q_tmp.load_identity();
@@ -1028,7 +1030,7 @@ void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval,CMATRIX& Evec){
        
     // Perhaps they mean - minimal diagonal value
     a1 = eval.M[0].real(); i1 = 0;
-    for(int i=1;i<n;i++){  d = eval.M[i*n+i].real(); if(d<a1){ a1 = d; i1 = i;} }
+    for(i=1;i<n;i++){  d = eval.M[i*n+i].real(); if(d<a1){ a1 = d; i1 = i;} }
 
 /*
     // Wilkinson shifts
@@ -1094,7 +1096,7 @@ void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval,CMATRIX& Evec){
          else if(sz_up==1 && sz_dn>1){
            CMATRIX dn(sz_dn,sz_dn); dn = 0.0;
            // copy diagonal elements
-           for(int j=i+1;j<n;j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))] = eval.M[j*n+j]; }
+           for(j=i+1;j<n;j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))] = eval.M[j*n+j]; }
            // upper off-diagonal elements
            for(j=i+1;j<(n-1);j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))+1] = eval.M[j*n+j+1]; }
            // lower off-diagonal elements
@@ -1119,7 +1121,7 @@ void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval,CMATRIX& Evec){
          else if(sz_up>1 && sz_dn==1){
            CMATRIX up(sz_up,sz_up); up = 0.0;
            // copy diagonal elements
-           for(int j=0;j<(n-1);j++){ up.M[j*sz_up + j] = eval.M[j*n+j]; }
+           for(j=0;j<(n-1);j++){ up.M[j*sz_up + j] = eval.M[j*n+j]; }
            // upper off-diagonal elements
            for(j=0;j<(n-2);j++){ up.M[j*sz_up + j+1] = eval.M[j*n+j+1]; }
            // lower off-diagonal elements
@@ -1145,7 +1147,7 @@ void qr(double EPS,int n,CMATRIX& eval,vector<double>& Eval,CMATRIX& Evec){
          // General case - both matrices are at least 2x2
            CMATRIX dn(sz_dn,sz_dn); dn = 0.0;
            // copy diagonal elements
-           for(int j=i+1;j<n;j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))] = eval.M[j*n+j]; }
+           for(j=i+1;j<n;j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))] = eval.M[j*n+j]; }
            // upper off-diagonal elements
            for(j=i+1;j<(n-1);j++){ dn.M[(j-(i+1))*sz_dn + (j-(i+1))+1] = eval.M[j*n+j+1]; }
            // lower off-diagonal elements
@@ -1298,6 +1300,7 @@ void CMATRIX::eigen3(double EPS,vector<double>& Eval,CMATRIX& Evec){
   Eval = Evec.H() * this * Evec
 */
 
+  int i,j;
   int n = n_rows; // = n_cols
 
   CMATRIX X(n,1);
@@ -1308,10 +1311,10 @@ void CMATRIX::eigen3(double EPS,vector<double>& Eval,CMATRIX& Evec){
   m.eigen1(EPS,Eval); // compute all eigenvalues
 
 
-  for(int i=0;i<n;i++){
+  for(i=0;i<n;i++){
 
     // Instead of : A = m-Eval[i]*I;
-    for(int j=0;j<n;j++){ m.M[j*n+j] -= Eval[i]; }
+    for(j=0;j<n;j++){ m.M[j*n+j] -= Eval[i]; }
     // Initial guess
     for(j=0;j<n;j++){ X.M[j] = gs; }
 
@@ -1549,6 +1552,7 @@ void CMATRIX::inverse(double EPS,CMATRIX& INV,int opt){
 
 
 void CMATRIX::direct_inverse(double EPS,CMATRIX& INV){
+  int i,j,k;
   int num_of_rows = n_rows;
   int num_of_cols = n_cols;
 
@@ -1556,11 +1560,11 @@ void CMATRIX::direct_inverse(double EPS,CMATRIX& INV){
   complex<double> *R_time;   R_time=new complex<double>[num_of_rows*num_of_cols];
   complex<double> *L_time;   L_time=new complex<double>[num_of_rows*num_of_cols];
 
-  for(int k=0;k<num_of_rows*num_of_cols;k++){ R_time[k]=M[k]; }
+  for(k=0;k<num_of_rows*num_of_cols;k++){ R_time[k]=M[k]; }
 
   k=0;
-  for(int i=0;i<num_of_cols;i++){
-    for(int j=0;j<num_of_cols;j++){
+  for(i=0;i<num_of_cols;i++){
+    for(j=0;j<num_of_cols;j++){
       if(i==j) {L_time[k]=complex<double>(1.0,0.0);}
       else     {L_time[k]=complex<double>(0.0,0.0);}
       k++;
@@ -1611,7 +1615,7 @@ void CMATRIX::direct_inverse(double EPS,CMATRIX& INV){
     else{ cout<<"Error in direct_inverse: The leading element is smaller than "<<zero<<endl; exit(0); }
   }// for row1
 
-  for(row1=num_of_rows-1;row1>0;row1--){
+  for(int row1=num_of_rows-1;row1>0;row1--){
     alpha=R_time[row1*num_of_cols+row1];
     R_time[row1*num_of_cols+row1]=complex<double>(1.0,0.0);
 
@@ -1937,12 +1941,12 @@ void inv_dft(CMATRIX& in,CMATRIX& out){
 
 */
 
-
+  int k;
   int N = in.n_elts; // <in> and <out> are the vectors with n elements: n x 1
   complex<double> f,mul;
   double argg;
 
-  for(int k=0;k<N;k++){
+  for(k=0;k<N;k++){
 
     out.M[k] = 0.0;
     argg = 2.0*M_PI*k/((double)N);
@@ -2509,13 +2513,13 @@ void inv_cft(CMATRIX& in,CMATRIX& out,double xmin,double dx){
   \param[in] dx Spacing between points in the real space, along the X direction
 
 */
-
+  int n;
   int N = in.n_elts; // <in> and <out> are the vectors with n elements: n x 1
   complex<double> f,mul;
   double arg;
   double L = N*dx;
 
-  for(int n=0;n<N;n++){
+  for(n=0;n<N;n++){
 
     double r_n = xmin + dx*n;
 
@@ -2555,13 +2559,13 @@ void inv_cft1(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx){
   k  - double, continuous representation
 
 */
-
+  int n;
   int N = in.n_elts; // <in> and <out> are the vectors with n elements: n x 1
   complex<double> f,f1,mul;
   double argg;
   double L = N*dx;   // dk = 1/L,   kmin<= k < kmin + 1/dx
 
-  for(int n=0;n<N;n++){
+  for(n=0;n<N;n++){
 
     double r_n = xmin + dx*n;
     out.M[n] = 0.0;

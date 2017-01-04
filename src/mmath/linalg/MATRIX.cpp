@@ -682,14 +682,14 @@ double& MATRIX::operator[](const int indx){
 }
 
 
-MATRIX MATRIX::operator-(){
+MATRIX MATRIX::operator-() const{
   MATRIX tmp(num_of_rows,num_of_cols);
 
   for(int i=0;i<num_of_elems;i++){   tmp.M[i] = -M[i];  }
 
   return tmp;
 }
-MATRIX MATRIX::operator*(const MATRIX& ob){
+MATRIX MATRIX::operator*(const MATRIX& ob) const{
   
   int n=ob.num_of_cols; //show_num_of_cols();
 
@@ -713,7 +713,7 @@ MATRIX MATRIX::operator*(const MATRIX& ob){
   return Temp;
 }
 
-MATRIX MATRIX::operator+(const MATRIX& ob){
+MATRIX MATRIX::operator+(const MATRIX& ob) const{
   MATRIX Temp(num_of_rows,num_of_cols);
 
   for(int i=0;i<num_of_elems;i++){    Temp.M[i]=M[i]+ob.M[i]; }
@@ -721,7 +721,7 @@ MATRIX MATRIX::operator+(const MATRIX& ob){
   return Temp;
 }
 
-MATRIX MATRIX::operator-(const MATRIX& ob){
+MATRIX MATRIX::operator-(const MATRIX& ob) const{
   MATRIX Temp(num_of_rows,num_of_cols);
 
   for(int i=0;i<num_of_elems;i++){   Temp.M[i]=M[i]-ob.M[i];  }
@@ -745,7 +745,7 @@ MATRIX& MATRIX::operator*=(double f){
 }
 
 
-MATRIX MATRIX::operator /(double num){
+MATRIX MATRIX::operator /(double num) const{
   MATRIX m(num_of_rows,num_of_cols);
   for(int i=0;i<num_of_elems;i++){  m.M[i] = M[i]/num;  }
   return m;
@@ -1604,7 +1604,7 @@ void save(boost::property_tree::ptree& pt,std::string path, char path_separator,
   for(int i=0;i<sz;i++){
     stringstream ss(stringstream::in | stringstream::out);
     std::string rt; ss<<i; ss>>rt;
-    save(pt,path+std::string(path_separator)+rt, path_separator,vt[i]);
+    save(pt,path+std::string(1, path_separator)+rt, path_separator,vt[i]);
   }
 }
 

@@ -129,7 +129,7 @@ void System::print_ent(std::string filename,boost::python::list atoms_list,int f
 
   Print the state of the system into file in Brookhaven PDB format (ENT). Write only specified atoms which IDs are in the atomlist
 */
-
+  int i;
   FILE* fp;
   fp = fopen(filename.c_str(),"w");
 
@@ -156,7 +156,7 @@ void System::print_ent(std::string filename,boost::python::list atoms_list,int f
 
   vector<int> at_indexes;
   int sz = len(atoms_list);
-  for(int i=0;i<sz;i++){
+  for(i=0;i<sz;i++){
     int id = extract<int>(atoms_list[i]);
     int j = get_atom_index_by_atom_id(id);
     if(j!=-1){ at_indexes.push_back(j); }

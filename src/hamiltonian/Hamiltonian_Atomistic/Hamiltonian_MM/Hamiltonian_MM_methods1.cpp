@@ -1324,7 +1324,7 @@ double Hamiltonian_MM::calculate(int call_type,int& update_displ2){
     is_update = 1; // no Verlet list
     if(is_update){ update_displ2 = 1; }
 
-    for(i=0;i<sz;i++){   *(data_mb->f[i]) += f[i];   }
+    for(int i=0;i<sz;i++){   *(data_mb->f[i]) += f[i];   }
 
     delete [] r;
     delete [] g;
@@ -1399,7 +1399,7 @@ double Hamiltonian_MM::calculate(int call_type,int& update_displ2){
 
     if(is_update){ update_displ2 = 1; }
 
-    for(i=0;i<sz;i++){   *(data_mb->f[i]) += f[i];   }
+    for(int i=0;i<sz;i++){   *(data_mb->f[i]) += f[i];   }
 
     delete [] r;
     delete [] g;

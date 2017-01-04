@@ -188,14 +188,14 @@ void System::determine_functional_groups(int assign_rings){
   Carboxamide_H_on_N
   Carboxamide_H_on_C
 */
-
+  int i,j;
   cout<<"In System::determine_functional_groups()\n";
 
   if(assign_rings==1){    Assign_Rings();   }
 
   // Set the Atom_functional_group property for all atoms
   // as undefined
-  for(int i=0;i<Number_of_atoms;i++){
+  for(i=0;i<Number_of_atoms;i++){
     Atoms[i].is_Atom_functional_group = 0;
   }
       
@@ -207,7 +207,7 @@ void System::determine_functional_groups(int assign_rings){
     std::string func_grp;
     Atom** at; // adjacent atoms
     at = new Atom*[sz1];
-    for(int j=0;j<sz1;j++){ at[j] = &Atoms[Atoms[i].globAtom_Adjacent_Atoms[j]]; }
+    for(j=0;j<sz1;j++){ at[j] = &Atoms[Atoms[i].globAtom_Adjacent_Atoms[j]]; }
 
     //--------------- Carbon --------------------------
     if(Atoms[i].Atom_element=="C" && !Atoms[i].is_Atom_functional_group){
@@ -282,7 +282,7 @@ void System::determine_functional_groups(int assign_rings){
     std::string func_grp;
     Atom** at; // adjacent atoms
     at = new Atom*[sz1];
-    for(int j=0;j<sz1;j++){ at[j] = &Atoms[Atoms[i].globAtom_Adjacent_Atoms[j]]; }
+    for(j=0;j<sz1;j++){ at[j] = &Atoms[Atoms[i].globAtom_Adjacent_Atoms[j]]; }
 
     //--------------- Remaining nitrogens --------------------------
     if(Atoms[i].Atom_element=="N" && !Atoms[i].is_Atom_functional_group){
@@ -336,7 +336,7 @@ void System::determine_functional_groups(int assign_rings){
     std::string func_grp;
     Atom** at; // adjacent atoms
     at = new Atom*[sz1];
-    for(int j=0;j<sz1;j++){ at[j] = &Atoms[Atoms[i].globAtom_Adjacent_Atoms[j]]; }
+    for(j=0;j<sz1;j++){ at[j] = &Atoms[Atoms[i].globAtom_Adjacent_Atoms[j]]; }
 
     //--------------- Remaining sulfurs --------------------------
     if(Atoms[i].Atom_element=="S" && !Atoms[i].is_Atom_functional_group){
@@ -381,7 +381,7 @@ void System::determine_functional_groups(int assign_rings){
     std::string func_grp;
     Atom** at; // adjacent atoms
     at = new Atom*[sz1];
-    for(int j=0;j<sz1;j++){ at[j] = &Atoms[Atoms[i].globAtom_Adjacent_Atoms[j]]; }
+    for(j=0;j<sz1;j++){ at[j] = &Atoms[Atoms[i].globAtom_Adjacent_Atoms[j]]; }
 
     //--------------- Remaining phosphorus --------------------------
     if(Atoms[i].Atom_element=="P" && !Atoms[i].is_Atom_functional_group){
@@ -415,7 +415,7 @@ void System::determine_functional_groups(int assign_rings){
     std::string func_grp;
     Atom** at; // adjacent atoms
     at = new Atom*[sz1];
-    for(int j=0;j<sz1;j++){ at[j] = &Atoms[Atoms[i].globAtom_Adjacent_Atoms[j]]; }
+    for(j=0;j<sz1;j++){ at[j] = &Atoms[Atoms[i].globAtom_Adjacent_Atoms[j]]; }
 
     //--------------- Remaining oxygens --------------------------
     if(Atoms[i].Atom_element=="O" && !Atoms[i].is_Atom_functional_group){
@@ -449,7 +449,7 @@ void System::determine_functional_groups(int assign_rings){
     std::string func_grp;
     Atom** at; // adjacent atoms
     at = new Atom*[sz1];
-    for(int j=0;j<sz1;j++){ at[j] = &Atoms[Atoms[i].globAtom_Adjacent_Atoms[j]]; }
+    for(j=0;j<sz1;j++){ at[j] = &Atoms[Atoms[i].globAtom_Adjacent_Atoms[j]]; }
 
     //--------------- Hydrogen --------------------------
     if(Atoms[i].Atom_element=="H" /*&& !Atoms[i].is_Atom_functional_group*/){

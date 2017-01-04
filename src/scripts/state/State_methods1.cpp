@@ -98,7 +98,7 @@ void State::init_md(Nuclear& mol, Electronic& el, Hamiltonian& ham, Random& rnd)
 }
 
 void State::run_md(Nuclear& mol, Electronic& el, Hamiltonian& ham){
-
+  int i;
   if(md==NULL) { std::cout<<"Error: MD parameters have not been defined\n"; exit(1);}
   if(!is_md_initialized){    std::cout<<"Error: Need to call init_md() first. MD is not initialized\n"; exit(2);   }
 
@@ -173,7 +173,7 @@ void State::run_md(Nuclear& mol, Electronic& el, Hamiltonian& ham){
 
 
 
-    for(int i=0;i<syst->Number_of_fragments;i++){
+    for(i=0;i<syst->Number_of_fragments;i++){
       RigidBody& top = syst->Fragments[i].Group_RB;
       //-------------------- Linear momentum propagation --------------------
       top.scale_linear_(sc1);

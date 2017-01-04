@@ -63,9 +63,9 @@ void save(boost::property_tree::ptree& pt,std::string path, char path_separator,
   \param[in] vt The VECTOR object which we want to add to the property tree
 */
 
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"x", path_separator),vt.x);
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"y", path_separator),vt.y);
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"z", path_separator),vt.z);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"x", path_separator),vt.x);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"y", path_separator),vt.y);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"z", path_separator),vt.z);
 
 }
 
@@ -104,7 +104,7 @@ void save(boost::property_tree::ptree& pt,std::string path, char path_separator,
   for(int i=0;i<sz;i++){
     stringstream ss(stringstream::in | stringstream::out);
     std::string rt; ss<<i; ss>>rt;
-    save(pt,path+string(path_separator)+rt, path_separator,vt[i]);
+    save(pt,path+std::string(1,path_separator)+rt, path_separator,vt[i]);
   }
 }
 
@@ -146,9 +146,9 @@ void load(boost::property_tree::ptree& pt,std::string path, char path_separator,
 
   status = 0;
   int st;
-  libio::load(pt,path+string(path_separator)+"x", path_separator,vt.x, st); if(st==1) {status=1;}
-  libio::load(pt,path+string(path_separator)+"y", path_separator,vt.y, st); if(st==1) {status=1;}
-  libio::load(pt,path+string(path_separator)+"z", path_separator,vt.z, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"x", path_separator,vt.x, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"y", path_separator,vt.y, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"z", path_separator,vt.z, st); if(st==1) {status=1;}
 }
 
 
@@ -190,7 +190,7 @@ void load(boost::property_tree::ptree& pt,std::string path, char path_separator,
   status = 0;
   try{
     BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(boost::property_tree::ptree::path_type(path, path_separator))){
-      load(pt,path+string(path_separator)+v.first, path_separator, x,st);
+      load(pt,path+std::string(1,path_separator)+v.first, path_separator, x,st);
       if(st==1){ vt.push_back(x); status = 1; }
     }
   }catch(std::exception& e){ }

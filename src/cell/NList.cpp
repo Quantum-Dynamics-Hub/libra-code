@@ -368,7 +368,7 @@ void make_nlist(int Nat,VECTOR* r,MATRIX3x3& H,
   \param[in,out] nlist Indices of the neighboring sub-cells for all sub-cells
 
 */
-
+  int a,b,c,i;
   VECTOR t1,t2,t3,g1,g2,g3;
   VECTOR t;//,maxT;
 
@@ -396,10 +396,10 @@ void make_nlist(int Nat,VECTOR* r,MATRIX3x3& H,
   int indx = 0;
   vector<quartet> globqt;
   VECTOR minr,maxr; minr = maxr = r[0];
-  for(int a=-maxa;a<=maxa;a++){
-    for(int b=-maxb;b<=maxb;b++){
-      for(int c=-maxc;c<=maxc;c++){
-        for(int i=0;i<Nat;i++){
+  for(a=-maxa;a<=maxa;a++){
+    for(b=-maxb;b<=maxb;b++){
+      for(c=-maxc;c<=maxc;c++){
+        for(i=0;i<Nat;i++){
 
           t = tmp[i] + a*t1 + b*t2 + c*t3;  R.push_back(t);
           if(t.x<=minr.x){ minr.x = t.x; } if(t.x>=maxr.x){ maxr.x = t.x; }
@@ -438,7 +438,7 @@ void make_nlist(int Nat,VECTOR* r,MATRIX3x3& H,
   // Calculate neighbors of each cell (sub-cell)
   // we use serial indexes of both central cell and its neighbors
   vector< vector<int> > neibc;                // indexes of neighboring cells for given cell index
-  for(int c=0;c<Ncells;c++){
+  for(c=0;c<Ncells;c++){
     vector<int> neibc_c;
     form_neibc(c,neibc_c,Nx,Ny,Nz,cellx,celly,cellz,Roff);
     neibc.push_back(neibc_c);
@@ -450,7 +450,7 @@ void make_nlist(int Nat,VECTOR* r,MATRIX3x3& H,
 
 
   // Calculate mappings between atom indexes and cell (sub-cell) indexes
-  for(int i=0;i<sz;i++){
+  for(i=0;i<sz;i++){
     VECTOR diff = R[i] - minr;  // position of 
     triple trp;
     trp.n1 = floor(diff.x/cellx);
@@ -469,10 +469,10 @@ void make_nlist(int Nat,VECTOR* r,MATRIX3x3& H,
     int i1  = Nat*cc+at_indx1; //complex index of real atom at_indx1
     int ci1 = at2cell_indx[i1]; // complex index of cell to which atom i belongs
 
-    for(int c=0;c<neibc[ci1].size();c++){
+    for(c=0;c<neibc[ci1].size();c++){
       int ci2 = neibc[ci1][c]; // one of the neighboring cell of cell l
 
-      for(int a=0;a<cell2at[ci2].size();a++){ // iterations over atoms in cell ci2
+      for(a=0;a<cell2at[ci2].size();a++){ // iterations over atoms in cell ci2
         int i2 = cell2at[ci2][a];
         int at_indx2 = i2 % Nat;
         VECTOR dR; dR = R[i1] - R[i2];
@@ -558,14 +558,16 @@ void make_nlist_auto(int Nat,VECTOR* r,MATRIX3x3& H,
 //  cout<<"b in range ["<<minb.n2<<","<<maxb.n2<<"]\n";
 //  cout<<"c in range ["<<minb.n3<<","<<maxb.n3<<"]\n";
 
+  int a,b,c,i;
+
   // Bounding box is based on maximal atomic displacements
   int indx = 0;
   vector<quartet> globqt;
   VECTOR minr,maxr; minr = maxr = r[0];
-  for(int a=minb.n1;a<=maxb.n1;a++){
-    for(int b=minb.n2;b<=maxb.n2;b++){
-      for(int c=minb.n3;c<=maxb.n3;c++){
-        for(int i=0;i<Nat;i++){
+  for(a=minb.n1;a<=maxb.n1;a++){
+    for(b=minb.n2;b<=maxb.n2;b++){
+      for(c=minb.n3;c<=maxb.n3;c++){
+        for(i=0;i<Nat;i++){
 
           t = tmp[i] + a*t1 + b*t2 + c*t3;  R.push_back(t);
           if(t.x<=minr.x){ minr.x = t.x; } if(t.x>=maxr.x){ maxr.x = t.x; }
@@ -607,7 +609,7 @@ void make_nlist_auto(int Nat,VECTOR* r,MATRIX3x3& H,
   // Calculate neighbors of each cell (sub-cell)
   // we use serial indexes of both central cell and its neighbors
   vector< vector<int> > neibc(Ncells,dummy);     // indexes of neighboring cells for given cell index
-  for(int c=0;c<Ncells;c++){
+  for(c=0;c<Ncells;c++){
 //    vector<int> neibc_c;
     form_neibc(c,neibc[c],Nx,Ny,Nz,cellx,celly,cellz,Roff);
 //    neibc.push_back(neibc_c);
@@ -619,7 +621,7 @@ void make_nlist_auto(int Nat,VECTOR* r,MATRIX3x3& H,
 
 
   // Calculate mappings between atom indexes and cell (sub-cell) indexes
-  for(int i=0;i<sz;i++){
+  for(i=0;i<sz;i++){
     VECTOR diff = R[i] - minr;  // position of 
     triple trp;
     trp.n1 = floor(diff.x/cellx);
@@ -640,7 +642,7 @@ void make_nlist_auto(int Nat,VECTOR* r,MATRIX3x3& H,
     int sz1 = neibc[ci1].size();// number of neighbor cells of the cell with index ci1
 
     int newsize = 0;
-    for(int c=0;c<sz1;c++){
+    for(c=0;c<sz1;c++){
       int ci2 = neibc[ci1][c]; // one of the neighboring cell of cell l
       int sz2 = cell2at[ci2].size();// number of atoms in the cell with index ci2
       newsize += sz2; // total possible(max) number of neighbor complex atoms
@@ -652,7 +654,7 @@ void make_nlist_auto(int Nat,VECTOR* r,MATRIX3x3& H,
       int ci2 = neibc[ci1][c]; // one of the neighboring cell of cell l
       int sz2 = cell2at[ci2].size();// number of atoms in the cell with index ci2
      
-      for(int a=0;a<sz2;a++){ // iterations over atoms in cell ci2
+      for(a=0;a<sz2;a++){ // iterations over atoms in cell ci2
         int i2 = cell2at[ci2][a]; // complex intex of atom a of the cell ci2
         int at_indx2 = i2 % Nat;  // real index of atom, corresponding to the atom with complex index i2
         if(at_indx2>=at_indx1){

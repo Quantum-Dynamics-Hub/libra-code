@@ -84,18 +84,18 @@ public:
   // Important! For memory efficiency it is crucial to use
   // (const CMATRIX& ob) instead of (CMATRIX ob) in some of the below
   // operators  - this avoid creation of the copy of the CMATRIX object
-  CMATRIX operator-();                 ///< Negation. Changes the caller object
-  CMATRIX operator*(const CMATRIX& ob); ///< complex matrix * complex matrix multiplication
-  CMATRIX operator+(const CMATRIX& ob); ///< complex matrix + complex matrix addition
-  CMATRIX operator-(const CMATRIX& ob); ///< complex matrix - complex matrix subtraction
+  CMATRIX operator-() const;                 ///< Negation. Changes the caller object
+  CMATRIX operator*(const CMATRIX& ob) const; ///< complex matrix * complex matrix multiplication
+  CMATRIX operator+(const CMATRIX& ob) const; ///< complex matrix + complex matrix addition
+  CMATRIX operator-(const CMATRIX& ob) const; ///< complex matrix - complex matrix subtraction
   void operator*=(const double&);
   void operator*=(const complex<double>&);
   void operator*=(const CMATRIX& ob);
   void operator+=(const CMATRIX& ob);
   void operator-=(const CMATRIX& ob);
 
-  CMATRIX operator/(double num);
-  CMATRIX operator/(complex<double> num);
+  CMATRIX operator/(double num) const;
+  CMATRIX operator/(complex<double> num) const;
   CMATRIX& operator=(const CMATRIX& ob);
   CMATRIX operator=(double num);
   CMATRIX operator=(complex<double> num);

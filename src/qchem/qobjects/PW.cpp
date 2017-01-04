@@ -133,9 +133,9 @@ void PW::normalize(){
 /**
   Normalizes the PW object. Function modifies the coefficients of the original object
 */
-
+  int i;
   double norm = 0.0;
-  for(int i=0;i<npw;i++){ norm += (std::conj(coeff[i]) * coeff[i] ).real();  }
+  for(i=0;i<npw;i++){ norm += (std::conj(coeff[i]) * coeff[i] ).real();  }
   norm = sqrt(1.0/norm);
   for(i=0;i<npw;i++){ coeff[i] *= norm; }
 }
@@ -149,6 +149,7 @@ void PW::complete(){
   
   The function changes the original object
 */
+  int i;
   if(kx==0 && ky==0 && kz==0){
 
     // Increase storage
@@ -156,7 +157,7 @@ void PW::complete(){
 
     // Add new coefficients and compute norm of the 'completed' wavefunction
     double norm = (std::conj(coeff[0]) * coeff[0] ).real();
-    for(int i=1;i<npw;i++){
+    for(i=1;i<npw;i++){
       coeff[npw+i] = std::conj(coeff[i]); 
       norm += 2.0*(std::conj(coeff[i]) * coeff[i] ).real();
     }

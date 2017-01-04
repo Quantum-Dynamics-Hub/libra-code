@@ -93,7 +93,7 @@ class QUATERNION{
     Lz = -Lz;
     return *this;
   }
-  QUATERNION operator-(){
+  QUATERNION operator-() const{
     QUATERNION tmp;
     tmp.Lt = -Lt;
     tmp.Lx = -Lx;
@@ -101,7 +101,7 @@ class QUATERNION{
     tmp.Lz = -Lz;
     return tmp;
   }
-  QUATERNION operator+(QUATERNION& q){
+  QUATERNION operator+(const QUATERNION& q) const{
     QUATERNION tmp;
     tmp.Lt = Lt + q.Lt;
     tmp.Lx = Lx + q.Lx;
@@ -109,6 +109,7 @@ class QUATERNION{
     tmp.Lz = Lz + q.Lz;
     return tmp;
   }
+/*
   QUATERNION operator+(const QUATERNION& q){
     QUATERNION tmp;
     tmp.Lt = Lt + q.Lt;
@@ -117,7 +118,8 @@ class QUATERNION{
     tmp.Lz = Lz + q.Lz;
     return tmp;
   }
-  QUATERNION operator-(QUATERNION& q){
+*/
+  QUATERNION operator-(const QUATERNION& q) const{
     QUATERNION tmp;
     tmp.Lt = Lt - q.Lt;
     tmp.Lx = Lx - q.Lx;
@@ -125,6 +127,7 @@ class QUATERNION{
     tmp.Lz = Lz - q.Lz;
     return tmp;
   }
+/*
   QUATERNION operator-(const QUATERNION& q){
     QUATERNION tmp;
     tmp.Lt = Lt - q.Lt;
@@ -133,7 +136,8 @@ class QUATERNION{
     tmp.Lz = Lz - q.Lz;
     return tmp;
   }
-  QUATERNION operator*(QUATERNION& ob){
+*/
+  QUATERNION operator*(const QUATERNION& ob) const{
     QUATERNION tmp;
     tmp.Lt = Lt*ob.Lt - (Lx*ob.Lx+Ly*ob.Ly+Lz*ob.Lz);
     tmp.Lx = Lt*ob.Lx + ob.Lt*Lx + (Ly*ob.Lz-ob.Ly*Lz);
@@ -141,6 +145,7 @@ class QUATERNION{
     tmp.Lz = Lt*ob.Lz + ob.Lt*Lz + (Lx*ob.Ly-ob.Lx*Ly);
     return tmp;
   }
+/*
   QUATERNION operator*(const QUATERNION& ob){
     QUATERNION tmp;
     tmp.Lt = Lt*ob.Lt - (Lx*ob.Lx+Ly*ob.Ly+Lz*ob.Lz);
@@ -149,7 +154,8 @@ class QUATERNION{
     tmp.Lz = Lt*ob.Lz + ob.Lt*Lz + (Lx*ob.Ly-ob.Lx*Ly);
     return tmp;
   }
-  QUATERNION operator*(double f){
+*/
+  QUATERNION operator*(double f) const{
     QUATERNION tmp;
     tmp.Lt = f*Lt;
     tmp.Lx = f*Lx;
@@ -197,20 +203,20 @@ class QUATERNION{
   }
 
   //------------------ Friend functions -----------------------------     
-  friend QUATERNION operator*(QUATERNION& q,  const VECTOR& v);    // Multiplication of vector and quaternion;
-  friend QUATERNION operator*(const MATRIX& m,QUATERNION& q);      // Multiplication of Matrix(4x4) and quaternion
+  friend QUATERNION operator*(const QUATERNION& q,  const VECTOR& v);    // Multiplication of vector and quaternion;
+  friend QUATERNION operator*(const MATRIX& m, const QUATERNION& q);      // Multiplication of Matrix(4x4) and quaternion
                                                                    // defined similar to multiplication of 4D vector
-  friend QUATERNION operator*(MATRIX& m,QUATERNION& q);            // Multiplication of Matrix(4x4) and quaternion
+//  friend QUATERNION operator*(const MATRIX& m, const QUATERNION& q);            // Multiplication of Matrix(4x4) and quaternion
                                                                    // defined similar to multiplication of 4D vector
-  friend QUATERNION operator*(MATRIX& m,const QUATERNION& q);      // Multiplication of Matrix(4x4) and quaternion
+//  friend QUATERNION operator*(const MATRIX& m,const QUATERNION& q);      // Multiplication of Matrix(4x4) and quaternion
                                                                    // defined similar to multiplication of 4D vector
-  friend QUATERNION operator*(const MATRIX& m,const QUATERNION& q);// Multiplication of Matrix(4x4) and quaternion
+//  friend QUATERNION operator*(const MATRIX& m,const QUATERNION& q);// Multiplication of Matrix(4x4) and quaternion
                                                                    // defined similar to multiplication of 4D vector
 
-  friend QUATERNION operator*(const VECTOR& v, QUATERNION& q);    // Multiplication of vector and quaternion;
-  friend QUATERNION operator*(double f,QUATERNION& q);
-  friend double dot_prod(QUATERNION&, QUATERNION&);          // Normal dot product of 2 quaternions as 4D vectors
-  friend double dot_prod(const QUATERNION&, const QUATERNION&);
+  friend QUATERNION operator*(double f, const QUATERNION& q);
+  friend QUATERNION operator*(const VECTOR& v, const QUATERNION& q);    // Multiplication of vector and quaternion;
+  friend double dot_prod(const QUATERNION&, const QUATERNION&);          // Normal dot product of 2 quaternions as 4D vectors
+//  friend double dot_prod(const QUATERNION&, const QUATERNION&);
 
   friend bool operator == (const QUATERNION& q1, const QUATERNION& q2){
     // Are matrices equal

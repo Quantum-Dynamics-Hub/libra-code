@@ -16,6 +16,16 @@
 
 #include "Atom.h"
 
+// The signature of boost::property_tree::xml_parser::write_xml() changed in Boost 1.56
+// See https://github.com/PointCloudLibrary/pcl/issues/864
+#include <boost/version.hpp>
+#if (BOOST_VERSION >= 105600)
+  typedef boost::property_tree::xml_writer_settings<std::string> xml_writer_settings;
+#else
+  typedef boost::property_tree::xml_writer_settings<char> xml_writer_settings;
+#endif
+
+
 /// libchemobjects namespace
 namespace libchemobjects{
 
@@ -370,8 +380,9 @@ void Atom::save(std::string filename){
 
   save(pt,"Atom");
 
-  boost::property_tree::xml_writer_settings<char> settings(' ', 4);
-  write_xml(filename, pt, std::locale(), settings);
+//  boost::property_tree::xml_writer_settings<char> settings(' ', 4);
+//  write_xml(filename, pt, std::locale(), settings);
+  write_xml(filename, pt, std::locale(), xml_writer_settings('\t', 1));
 
 
 }

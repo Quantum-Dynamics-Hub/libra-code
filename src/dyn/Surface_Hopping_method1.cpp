@@ -166,12 +166,12 @@ void hop(int ntraj, vector<int>& initstate, vector<Nuclear*>& mol, vector<Hamilt
 // g   - hopping probabilities matrix
 // do_rescaling - flag to turn on/off CPA: 0 - no rescaling (CPA), 1 - do rescaling (back-reaction)
 // rep - representation:  0 - for diabatic, 1 - for adiabatic
-
+  int traj;
   int nstates = g[0]->num_of_cols;
   double left, right; 
   vector<int> finstate; finstate = initstate;
 
-  for(int traj=0;traj<ntraj;traj++){
+  for(traj=0;traj<ntraj;traj++){
 
     left = right = 0.0;
 
@@ -231,12 +231,12 @@ hop(int ntraj, vector<int> initstate, vector<Nuclear>& mol, vector<Hamiltonian>&
 
   return res;
 */
-
+  int traj;
   int nstates = g[0].num_of_cols;
   double left, right; 
   vector<int> finstate; finstate = initstate;
 
-  for(int traj=0;traj<ntraj;traj++){
+  for(traj=0;traj<ntraj;traj++){
 
     left = right = 0.0;
 

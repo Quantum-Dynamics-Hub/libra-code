@@ -407,6 +407,59 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
   def("push_submatrix", expt_push_submatrix_v4c);
 
 
+  void (*expt_dft_v1)(CMATRIX& in,CMATRIX& out) = &dft;
+  void (*expt_inv_dft_v1)(CMATRIX& in,CMATRIX& out) = &inv_dft;
+
+  def("dft", expt_dft_v1);
+  def("inv_dft", expt_inv_dft_v1);
+
+
+  void (*expt_cft_v1)(CMATRIX& in,CMATRIX& out,double xmin,double dx) = &cft;
+  void (*expt_inv_cft_v1)(CMATRIX& in,CMATRIX& out,double xmin,double dx) = &inv_cft;
+
+  void (*expt_cft1_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx) = &cft1;
+  void (*expt_inv_cft1_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx) = &inv_cft1;
+
+  void (*expt_cft2_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk) = &cft2;
+  void (*expt_inv_cft2_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk) = &inv_cft2;
+
+
+  def("cft", expt_cft_v1);
+  def("cft", expt_cft1_v1);
+  def("cft", expt_cft2_v1);
+  def("inv_cft", expt_inv_cft_v1);
+  def("inv_cft", expt_inv_cft1_v1);
+  def("inv_cft", expt_inv_cft2_v1);
+
+
+  void (*expt_cft1_2D_v1)(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy) = &cft1_2D;
+  void (*expt_inv_cft1_2D_v1)(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy) = &inv_cft1_2D;
+
+  def("cft_2D", expt_cft1_2D_v1);
+  def("inv_cft_2D", expt_inv_cft1_2D_v1);
+
+
+  void (*expt_convolve_v1)(CMATRIX& f,CMATRIX& g, CMATRIX& conv,double dx) = &convolve;
+  void (*expt_convolve_2D_v1)(CMATRIX& f,CMATRIX& g, CMATRIX& conv,double dx,double dy) = &convolve_2D;
+
+  def("convolve", expt_convolve_v1);
+  def("convolve_2D", expt_convolve_2D_v1);
+
+
+  //-------- Fast Fourier Transforms -------------
+  void (*expt_cfft1_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx) = &cfft1;  
+  void (*expt_inv_cfft1_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx) = &inv_cfft1;
+  def("cfft", expt_cfft1_v1);
+  def("inv_cfft", expt_inv_cfft1_v1);
+
+
+  void (*expt_cfft1_2D_v1)(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy) = &cfft1_2D;
+  void (*expt_inv_cfft1_2D_v1)(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy) = &inv_cfft1_2D;
+  def("cfft_2D", expt_cfft1_2D_v1);
+  def("inv_cfft_2D", expt_inv_cfft1_2D_v1);
+
+
+
   class_< CMATRIXList >("CMATRIXList")
       .def(vector_indexing_suite< CMATRIXList >())
   ;

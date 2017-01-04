@@ -352,6 +352,7 @@ void RigidBody::save(boost::property_tree::ptree& pt,std::string path){
   \param[in,out] pt The property tree to which the properties of the RigidBody are added
   \param[in] path The parameter controlling the level of the tree to which the RigidBody members will be added.
 */
+  int i;
 
   if(rb_centers_size>0){  ::save(pt,path+".rb_centers",rb_centers);    }
   if(is_rb_mass){  ::save(pt,path+".rb_mass",rb_mass);    }
@@ -386,7 +387,7 @@ void RigidBody::save(boost::property_tree::ptree& pt,std::string path){
   ::save(pt,path+".MAX_NO",MAX_NO);
   ::save(pt,path+".minDet",minDet);
 
-  for(int i=0;i<8;i++){
+  for(i=0;i<8;i++){
     stringstream ss(stringstream::in | stringstream::out);
     std::string rt; ss<<i; ss>>rt;
     ::save(pt,path+".U["+rt+"]",U[i]);

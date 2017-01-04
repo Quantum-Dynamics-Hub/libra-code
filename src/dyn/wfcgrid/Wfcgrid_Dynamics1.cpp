@@ -455,7 +455,7 @@ void Wfcgrid::absorb_1D(double dL,vector<double>& Pops_l,vector<double>& Pops_r)
   \param[out] Pops_l Population in the left trapping region (absorbing layer)
   \param[out] Pops_r Population in the right trapping region (absorbing layer)
 */
-
+  int i;
   int nL = dL/dx;  // how many points from each boundary to set to zero
 
   if(Pops_l.size()<nstates){ Pops_l = vector<double>(nstates,0.0);  } // Population in the left trapping region
@@ -464,7 +464,7 @@ void Wfcgrid::absorb_1D(double dL,vector<double>& Pops_l,vector<double>& Pops_r)
   for(int nst=0;nst<nstates;nst++){
 
     // On the left
-    for(int i=0;i<=nL;i++){
+    for(i=0;i<=nL;i++){
       Pops_l[nst] += dx*real(std::conj(PSI[nst].M[i])*PSI[nst].M[i]);
       PSI[nst].M[i] = 0.0;
     }

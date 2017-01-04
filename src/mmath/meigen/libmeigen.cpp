@@ -107,6 +107,9 @@ void export_mEigen_objects(){
   def("FullPivLU_inverse", expt_FullPivLU_inverse_v1);
   def("FullPivLU_inverse", expt_FullPivLU_inverse_v2);
 
+  bool (*expt_linsys_solver_v1)(const MATRIX& A, MATRIX& X, const MATRIX& B, const double NormThreshold) = &linsys_solver;
+  def("linsys_solver", expt_linsys_solver_v1);
+
 
 }
 

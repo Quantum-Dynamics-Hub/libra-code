@@ -70,6 +70,7 @@ double Elec_Ewald3D(VECTOR* r,                                               /* 
   double omega,erfc1,s1mod;
   double const1,const2;
   int xshift,yshift,zshift;
+  int i,j;
 
   etha_13 = (1.0/(etha*etha*etha));
   
@@ -86,7 +87,7 @@ double Elec_Ewald3D(VECTOR* r,                                               /* 
 
   //------------------ Initialize forces and stress -----------------
   energy = 0.0;
-  for(int i=0;i<sz;i++){ f[i] = 0.0; }
+  for(i=0;i<sz;i++){ f[i] = 0.0; }
   at_stress = 0.0;
   fr_stress = 0.0;
   ml_stress = 0.0;
@@ -169,7 +170,7 @@ double Elec_Ewald3D(VECTOR* r,                                               /* 
                    // use 2 if half i,j loops are used: (i in [1,sz]) and (j in [i,sz])
 
   for(i=0;i<sz;i++){
-    for(int j=i;j<sz;j++){
+    for(j=i;j<sz;j++){
 
       rij = r[i] - r[j];
 
@@ -307,8 +308,8 @@ double Elec_Ewald3D(VECTOR* r,                                               /* 
   E1 = 0.0;
   E2 = 0.0;
   for(int e=0;e<nexcl;e++){
-    int i = excl1[e]; 
-    int j = excl2[e];
+    i = excl1[e]; 
+    j = excl2[e];
 
 //    cout<<"e = "<<e<<" i = "<<i<<" j = "<<j<<" a = "<<a<<endl;
     if(i!=j){
@@ -401,7 +402,7 @@ double Elec_Ewald3D(VECTOR* r,                                               /* 
           VECTOR vsum1, vsum2; 
           vsum1 = 0.0;
           vsum2 = 0.0;
-          for(int i=0;i<sz;i++){
+          for(i=0;i<sz;i++){
             sum1 += q[i]*cos(h*r[i]);
             sum2 += q[i]*sin(h*r[i]);
           }// for i

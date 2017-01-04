@@ -216,8 +216,8 @@ NeuralNetwork& NeuralNetwork::operator=(const NeuralNetwork& ann){
 
 void NeuralNetwork::CreateANN(boost::python::list ann){
 
-
-   for(int i=0;i<len(ann);i++){
+   int i;
+   for(i=0;i<len(ann);i++){
      int tmp = extract<int>(ann[i]);
      Npe.push_back(tmp);
    }
@@ -283,13 +283,11 @@ void NeuralNetwork::CreateANN(boost::python::list ann){
         std::cout<<"Number of layers = "<<(W.size()-1)<<std::endl;
 
         std::cout<<"Initial weight matrices:"<<std::endl;
-        for(i=1;i<W.size();i++){              
-                std::cout<<W[i]<<std::endl;
-        }     
+        for(i=1;i<W.size();i++){  std::cout<<W[i]<<std::endl;  }     
+
         std::cout<<"Initial biases:"<<std::endl;
-        for(i=1;i<B.size();i++){
-                std::cout<<B[i]<<std::endl;
-        }
+        for(i=1;i<B.size();i++){  std::cout<<B[i]<<std::endl;  }
+
 //------------------------------------------------------
 
 }
@@ -297,219 +295,220 @@ void NeuralNetwork::CreateANN(boost::python::list ann){
 
 
 int NeuralNetwork::ShowANN(){
+  int L;
+  for(L=1;L<W.size();L++){ std::cout<<"W["<<L<<"] = "<<endl<<W[L]; }
+  for(L=1;L<B.size();L++){ std::cout<<"B["<<L<<"] = "<<endl<<B[L]; }
 
-// int NL= Nlayers-1;
-// for(int L=1;L<=NL;L++){
- for(int L=1;L<W.size();L++){
-     std::cout<<"W["<<L<<"] = "<<endl<<W[L];
- }
- for(L=1;L<B.size();L++){
-     std::cout<<"B["<<L<<"] = "<<endl<<B[L];
- }
-
- return 0;
-
+  return 0;
 }
 
 int NeuralNetwork::ImportANN(std::string filename){
  // Reads a 'filename' defining an ANN data
  // the 'filename' format is consistent with that of ExportANN format
 
- ifstream inp(filename.c_str());
- std::string str;
- std::string res;
+  int L,i,j,k;
+  ifstream inp(filename.c_str());
+  std::string str;
+  std::string res;
 
- boost::regex re_int("\\d+",boost::regex::perl);
- boost::regex re_double("[-+]?(\\d+\\.\\d+|\\d+)([eE][-+]\\d+)?");
- boost::regex reW("W\\[\\d+]",boost::regex::perl);
- boost::regex reB("B\\[\\d+]",boost::regex::perl);
+  boost::regex re_int("\\d+",boost::regex::perl);
+  boost::regex re_double("[-+]?(\\d+\\.\\d+|\\d+)([eE][-+]\\d+)?");
+  boost::regex reW("W\\[\\d+]",boost::regex::perl);
+  boost::regex reB("B\\[\\d+]",boost::regex::perl);
 
- smatch m;
+  smatch m;
 
-   // Clean all arrays if they are not clean
-   if(Npe.size()>0)     {Npe.clear();}
-   if(W.size()>0)       {W.clear();  }
-   if(dW.size()>0)      {dW.clear();  }
-   if(dWcurr.size()>0)  {dWcurr.clear();  }
-   if(dWold.size()>0)   {dWold.clear(); }
-   if(B.size()>0)       {B.clear();  }
-   if(dB.size()>0)      {dB.clear();  }
-   if(dBcurr.size()>0)  {dBcurr.clear();  }
-   if(dBold.size()>0)   {dBold.clear();}
-   if(D.size()>0)       {D.clear();  }
-   if(Delta.size()>0)   {Delta.clear();  }
+  // Clean all arrays if they are not clean
+  if(Npe.size()>0)     {Npe.clear();}
+  if(W.size()>0)       {W.clear();  }
+  if(dW.size()>0)      {dW.clear();  }
+  if(dWcurr.size()>0)  {dWcurr.clear();  }
+  if(dWold.size()>0)   {dWold.clear(); }
+  if(B.size()>0)       {B.clear();  }
+  if(dB.size()>0)      {dB.clear();  }
+  if(dBcurr.size()>0)  {dBcurr.clear();  }
+  if(dBold.size()>0)   {dBold.clear();}
+  if(D.size()>0)       {D.clear();  }
+  if(Delta.size()>0)   {Delta.clear();  }
    
+  while(!inp.eof()){
 
- while(!inp.eof()){
- 
- inp>>str;
+    inp>>str;
+    if(str=="Number_of_layers"){ inp>>str>>str; Nlayers = atoi(str.c_str());  }
+    else if(str=="NN_architecture") { 
+      inp>>str>>str; 
 
- if(str=="Number_of_layers"){ inp>>str>>str; Nlayers = atoi(str.c_str());  }
- else if(str=="NN_architecture") { inp>>str>>str; 
+      // Now decompose a string into integers
+      boost::sregex_token_iterator I(str.begin(), str.end(), re_int, 0);
+      boost::sregex_token_iterator J;
 
-   // Now decompose a string into integers
-   boost::sregex_token_iterator I(str.begin(), str.end(), re_int, 0);
-   boost::sregex_token_iterator J;
-   while(I != J){    
+      while(I != J){    
         res = *I;
-        int L = atoi(res.c_str());
-        Npe.push_back(L);   I++;  }
+        L = atoi(res.c_str());
+        Npe.push_back(L);   I++;  
+      }
 
-   // And initialize weights and biases 
-        srand((unsigned)time(0));
+      // And initialize weights and biases 
+      srand((unsigned)time(0));
 
-        MATRIX w; w.Init_Unit_Matrix(1.0);
-        MATRIX b(3,1); b = 0.0;
-        MATRIX d(3,1); d = 0.0;
-        // 0-th matrixes are just ballast
-        D.push_back(d);
-        Delta.push_back(d);
-        B.push_back(b);
-        dB.push_back(b);
-        dBcurr.push_back(b);
-        dBold.push_back(b);
-        W.push_back(w);
-        w = 0.0;
-        dW.push_back(w);
-        dWcurr.push_back(w);
-        dWold.push_back(w);
+      MATRIX w; w.Init_Unit_Matrix(1.0);
+      MATRIX b(3,1); b = 0.0;
+      MATRIX d(3,1); d = 0.0;
 
-        // Init weights and biases (additional edges)
-        for (int L=1;L<Nlayers;L++){
-                MATRIX w(Npe[L],Npe[L-1]);
-                MATRIX b(Npe[L],1);
-                MATRIX d1(Npe[L],1);
-                MATRIX d2(Npe[L],Npe[L]);
+      // 0-th matrixes are just ballast
+      D.push_back(d);
+      Delta.push_back(d);
+      B.push_back(b);
+      dB.push_back(b);
+      dBcurr.push_back(b);
+      dBold.push_back(b);
+      W.push_back(w);
+      w = 0.0;
+      dW.push_back(w);
+      dWcurr.push_back(w);
+      dWold.push_back(w);
 
-                        for(int i=0;i<Npe[L];i++){
+      // Init weights and biases (additional edges)
+      for(L=1;L<Nlayers;L++){
+         MATRIX w(Npe[L],Npe[L-1]);
+         MATRIX b(Npe[L],1);
+         MATRIX d1(Npe[L],1);
+         MATRIX d2(Npe[L],Npe[L]);
 
-                                for(int j=0;j<Npe[L-1];j++){
+         for(i=0;i<Npe[L];i++){
+           for(j=0;j<Npe[L-1];j++){
 
-                                        w.M[i*Npe[L-1]+j] = 0.1*((rand()/(double)(RAND_MAX + 1.0))-0.5);
+             w.M[i*Npe[L-1]+j] = 0.1*((rand()/(double)(RAND_MAX + 1.0))-0.5);
 
-                                }
-                                    b.M[i] = ((rand()/(double)(RAND_MAX + 1.0))-0.5);
-                        }
+           }// for j
 
-                W.push_back(w);
-                w = 0.0;
-                dW.push_back(w);
-                dWcurr.push_back(w);
-                dWold.push_back(w);
-                B.push_back(b);
-                b = 0.0;
-                dB.push_back(b);
-                dBcurr.push_back(b);
-                dBold.push_back(b);
-                Delta.push_back(d1);
-                D.push_back(d2);
+           b.M[i] = ((rand()/(double)(RAND_MAX + 1.0))-0.5);
 
+         }// for i
 
-        }// for L
+         W.push_back(w);
+         w = 0.0;
+         dW.push_back(w);
+         dWcurr.push_back(w);
+         dWold.push_back(w);
+         B.push_back(b);
+         b = 0.0;
+         dB.push_back(b);
+         dBcurr.push_back(b);
+         dBold.push_back(b);
+         Delta.push_back(d1);
+         D.push_back(d2);
 
-        // Also create Inputs, Outputs and perhaps Derivs data arrays 
-        // without actual data - with just scale and shift parameters
-        sz_x = Npe[0];
-        sz_y = Npe[Nlayers-1];
-        sz_d = sz_x * sz_y;
+       }// for L
 
-        DATA d0;  
-        if(Inputs.size()==0) {  for(L=0;L<sz_x;L++){ Inputs.push_back(d0);   }      }
-        if(Outputs.size()==0){  for(L=0;L<sz_y;L++){ Outputs.push_back(d0);  }      }
-        if(Derivs.size()==0) {  for(L=0;L<sz_d;L++){ Derivs.push_back(d0);   }      }
+       // Also create Inputs, Outputs and perhaps Derivs data arrays 
+       // without actual data - with just scale and shift parameters
+       sz_x = Npe[0];
+       sz_y = Npe[Nlayers-1];
+       sz_d = sz_x * sz_y;
+
+       DATA d0;  
+       if(Inputs.size()==0) {  for(L=0;L<sz_x;L++){ Inputs.push_back(d0);   }      }
+       if(Outputs.size()==0){  for(L=0;L<sz_y;L++){ Outputs.push_back(d0);  }      }
+       if(Derivs.size()==0) {  for(L=0;L<sz_d;L++){ Derivs.push_back(d0);   }      }
         
+    }// if NN_architecture
 
-  }// if NN_architecture
+    else if(regex_match(str,m,reW)){ // Look for W[1], W[2], etc.
+
+      boost::sregex_token_iterator it(str.begin(), str.end(), re_int, 0); // extract i from W[i]
+      res = *it;
+      L = atoi(res.c_str());
+      inp>>str;
+
+      for(k=0;k<(Npe[L]*Npe[L-1]);k++){ inp>>str; W[L].M[k]=atof(str.c_str());  }
+
+    }// if W
+
+    else if(regex_match(str,m,reB)){ // Look for B[1], B[2], etc.
+
+      boost::sregex_token_iterator it(str.begin(), str.end(), re_int, 0); // extract i from B[i]
+      res = *it;
+      L = atoi(res.c_str());
+      inp>>str;
+
+      for(k=0;k<(Npe[L]);k++){  inp>>str; B[L].M[k]=atof(str.c_str());  }
+
+    }// if B
  
- else if(regex_match(str,m,reW)){ // Look for W[1], W[2], etc.
+    else if(str=="x_scale"){ 
+      inp>>str>>str;
 
-   boost::sregex_token_iterator i(str.begin(), str.end(), re_int, 0); // extract i from W[i]
-   res = *i;
-   int L = atoi(res.c_str());
-   inp>>str;
-   for(int k=0;k<(Npe[L]*Npe[L-1]);k++){
-       inp>>str; W[L].M[k]=atof(str.c_str());
-   }
- }// if W
+      // Now decompose a string into doubles
+      boost::sregex_token_iterator I(str.begin(), str.end(), re_double, 0);
+      boost::sregex_token_iterator J;
 
- else if(regex_match(str,m,reB)){ // Look for B[1], B[2], etc.
-
-   boost::sregex_token_iterator i(str.begin(), str.end(), re_int, 0); // extract i from B[i]
-   res = *i;
-   int L = atoi(res.c_str());
-   inp>>str;
-   for(int k=0;k<(Npe[L]);k++){
-       inp>>str; B[L].M[k]=atof(str.c_str());
-   }
- }// if B
- 
- else if(str=="x_scale"){ inp>>str>>str;
-   // Now decompose a string into doubles
-   boost::sregex_token_iterator I(str.begin(), str.end(), re_double, 0);
-   boost::sregex_token_iterator J;
-   int indx = 0;
-   while(I != J){
-        res = *I;
-        double L = atof(res.c_str());
-        Inputs[indx].scale_factor = L;
+      int indx = 0;
+      while(I != J){
+        res = *I;        
+        Inputs[indx].scale_factor =  atof(res.c_str());
         Inputs[indx].is_scale_factor = 1;             
         indx++;
-        I++;  }
- }// if x_scale
+        I++;  
+      }
 
- else if(str=="x_shift"){ inp>>str>>str;
-   // Now decompose a string into doubles
-   boost::sregex_token_iterator I(str.begin(), str.end(), re_double, 0);
-   boost::sregex_token_iterator J;
-   int indx = 0;
-   while(I != J){
-        res = *I;
-        double L = atof(res.c_str());
-        Inputs[indx].shift_amount = L;
+    }// if x_scale
+
+    else if(str=="x_shift"){ 
+      inp>>str>>str;
+      // Now decompose a string into doubles
+      boost::sregex_token_iterator I(str.begin(), str.end(), re_double, 0);
+      boost::sregex_token_iterator J;
+      int indx = 0;
+      while(I != J){
+        res = *I;        
+        Inputs[indx].shift_amount =  atof(res.c_str());
         Inputs[indx].is_shift_amount = 1;
         indx++;
-        I++;  }
- }// if x_shift
+        I++;  
+      }
+    }// if x_shift
 
- else if(str=="y_scale"){ inp>>str>>str;
-   // Now decompose a string into doubles
-   boost::sregex_token_iterator I(str.begin(), str.end(), re_double, 0);
-   boost::sregex_token_iterator J;
-   int indx = 0;
-   while(I != J){
-        res = *I;
-        double L = atof(res.c_str());
-        Outputs[indx].scale_factor = L;
+    else if(str=="y_scale"){ 
+      inp>>str>>str;
+
+      // Now decompose a string into doubles
+      boost::sregex_token_iterator I(str.begin(), str.end(), re_double, 0);
+      boost::sregex_token_iterator J;
+      int indx = 0;
+      while(I != J){
+        res = *I;        
+        Outputs[indx].scale_factor =  atof(res.c_str());
         Outputs[indx].is_scale_factor = 1;
         indx++;
-        I++;  }
- }// if y_scale
+        I++;  
+      }
+    }// if y_scale
 
- else if(str=="y_shift"){ inp>>str>>str;
-   // Now decompose a string into doubles
-   boost::sregex_token_iterator I(str.begin(), str.end(), re_double, 0);
-   boost::sregex_token_iterator J;
-   int indx = 0;
-   while(I != J){
-        res = *I;
-        double L = atof(res.c_str());
-        Outputs[indx].shift_amount = L;
+    else if(str=="y_shift"){ 
+      inp>>str>>str;
+      // Now decompose a string into doubles
+      boost::sregex_token_iterator I(str.begin(), str.end(), re_double, 0);
+      boost::sregex_token_iterator J;
+      int indx = 0;
+      while(I != J){
+        res = *I;        
+        Outputs[indx].shift_amount = atof(res.c_str());
         Outputs[indx].is_shift_amount = 1;
         indx++;
-        I++;  }
- }// if y_shift
+        I++;  
+      }
+    }// if y_shift
 
- else if(str=="scale_method"){ inp>>str>>str;
-    scale_method = str;
- }
+    else if(str=="scale_method"){ 
+      inp>>str>>str;
+      scale_method = str;
+    }
 
+  }// while !inp.eof()
 
-
- }// while !inp.eof()
-
-//-------- Post-processing ---------------
-// Update scaling factor for derivatives
-  int i,j;
+  //-------- Post-processing ---------------
+  // Update scaling factor for derivatives
 
   for(i=0;i<sz_y;i++){
       for(j=0;j<sz_x;j++){
@@ -518,59 +517,37 @@ int NeuralNetwork::ImportANN(std::string filename){
       }// for j
   }// for i
 
- inp.close();
+  inp.close();
 
- return 0;
-
+  return 0;
 }
 
 
 int NeuralNetwork::ExportANN(std::string filename){
- // Writes the ANN internals to the 'filename'
+/** Writes the ANN internals to the 'filename'
+*/
+  int L,j;
+  ofstream out(filename.c_str()); 
 
- ofstream out(filename.c_str()); 
+  int NL= Nlayers-1;
+  out<<"Number_of_layers = "<<Nlayers<<"\n";
+  out<<"NN_architecture = ["; for(L=0;L<=NL;L++){ out<<Npe[L]<<","; }  out<<"]\n";
 
-
- int NL= Nlayers-1;
- out<<"Number_of_layers = "<<Nlayers<<"\n";
-
- out<<"NN_architecture = [";
- for (int L=0;L<=NL;L++){
- out<<Npe[L]<<",";
- }
- out<<"]\n";
-
- for( L=1;L<=NL;L++){
+  for( L=1;L<=NL;L++){
      out<<"W["<<L<<"] = "<<endl<<W[L];
      out<<"B["<<L<<"] = "<<endl<<B[L];
- }
+  }
 
- int j;
+  out<<"x_scale = [";  for(j=0;j<Inputs.size();j++) {  out<<Inputs[j].scale_factor<<",";}  out<<"]\n";
+  out<<"x_shift = [";  for(j=0;j<Inputs.size();j++) {  out<<Inputs[j].shift_amount<<",";}  out<<"]\n";
+  out<<"y_scale = [";  for(j=0;j<Outputs.size();j++){  out<<Outputs[j].scale_factor<<",";} out<<"]\n";
+  out<<"y_shift = [";  for(j=0;j<Outputs.size();j++){  out<<Outputs[j].shift_amount<<",";} out<<"]\n";
+  out<<"scale_method = "<<scale_method<<"\n";
 
- out<<"x_scale = [";
- for(j=0;j<Inputs.size();j++){  out<<Inputs[j].scale_factor<<",";}
- out<<"]\n";
+  out.close();
+  
+  return 0;
 
- out<<"x_shift = [";
- for(j=0;j<Inputs.size();j++){  out<<Inputs[j].shift_amount<<",";}
- out<<"]\n";
-
- out<<"y_scale = [";
- for(j=0;j<Outputs.size();j++){  out<<Outputs[j].scale_factor<<",";}
- out<<"]\n";
-
- out<<"y_shift = [";
- for(j=0;j<Outputs.size();j++){  out<<Outputs[j].shift_amount<<",";}
- out<<"]\n";
-
- out<<"scale_method = "<<scale_method<<"\n";
-
-
- out.close();
- 
- 
- 
- return 0;
 }
 
 

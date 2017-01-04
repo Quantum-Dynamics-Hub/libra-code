@@ -205,8 +205,9 @@ void save_xml(std::string filename, boost::property_tree::ptree& pt){
 */
 
 
-  boost::property_tree::xml_writer_settings<char> settings(' ', 4);
-  write_xml(filename, pt, std::locale(), settings);
+//  boost::property_tree::xml_writer_settings<char> settings(' ', 4);
+//  write_xml(filename, pt, std::locale(), settings);
+  write_xml(filename, pt, std::locale(), xml_writer_settings('\t', 1));
 
 }
 

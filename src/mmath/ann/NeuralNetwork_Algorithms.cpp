@@ -21,81 +21,79 @@ namespace libann{
 
 int NeuralNetwork::Propagate(boost::python::list input,boost::python::list& result){
 
- if(len(input)!=sz_x){
- std::cout<<"Error: Size of the input "<<len(input)<<" does not match the ANN architecture "<<sz_x<<std::endl;
- }else{
+  int i,j,L;
 
- int NL = Nlayers - 1;
- double tmp;
+  if(len(input)!=sz_x){
+    std::cout<<"Error: Size of the input "<<len(input)<<" does not match the ANN architecture "<<sz_x<<std::endl;
+  }
+  else{
+    int NL = Nlayers - 1;
+    double tmp;
+    vector<MATRIX> Y;
+    MATRIX x(sz_x,1);
 
- vector<MATRIX> Y;
- MATRIX x(sz_x,1);
+    //---------- Use the same linear transformation of input as during the training ----------
+    for(i=0;i<sz_x;i++){
+      tmp=extract<double>(input[i]);
+      tmp = Inputs[i].scale_factor * tmp + Inputs[i].shift_amount;
+      x.M[i] = tmp;
+    }// for i
 
+    //------- Forward propagation of the signal ------------
+    Y.clear();
+    Y.push_back(x);//0-th item;
 
- for(int i=0;i<sz_x;i++){
+    for(L=1;L<=NL;L++){
+      MATRIX NET(Npe[L],1);
+      MATRIX   y(Npe[L],1);
 
-//---------- Use the same linear transformation of input as during the training ----------
-    tmp=extract<double>(input[i]);
-    tmp = Inputs[i].scale_factor * tmp + Inputs[i].shift_amount;
-    x.M[i] = tmp;
+      NET=W[L]*Y[L-1];
+      NET = NET + B[L];
 
- }// for i
-//-----------------------------------------------------
+      for(j=0;j<Npe[L];j++){ y.M[j]=tanh(NET.M[j]);}   Y.push_back(y);
 
-//------- Forward propagation of the signal ------------
-     Y.clear();
-     Y.push_back(x);//0-th item;
+    }// for L
 
-     for (int L=1;L<=NL;L++){
-          MATRIX NET(Npe[L],1);
-          MATRIX   y(Npe[L],1);
+    //------- Linear transformation of the output ----------------
+    for(i=0;i<Npe[NL];i++){
+      tmp = Y[NL].M[i];
 
-          NET=W[L]*Y[L-1];
-          NET = NET + B[L];
+      // Inverse transform of output
+      if(scale_method=="normalize_and_transform"){
+      // Invert non-linear transformation
+      //   tmp = tanh(tmp) = (exp(tmp)-exp(-tmp))/(exp(tmp)+exp(-tmp))   =>
 
-          for(int j=0;j<Npe[L];j++){ y.M[j]=tanh(NET.M[j]);}
-          Y.push_back(y);
-    }
+        if(tmp>=0.99){ tmp = 0.99; }
+        else if(tmp<=-0.99) { tmp = -0.99; }
+        tmp = 0.5*log((1.0+tmp)/(1.0-tmp)); // <=
 
+      }// if
 
-//------- Linear transformation of the output ----------------
- for(i=0;i<Npe[NL];i++){
-    tmp = Y[NL].M[i];
+      // Invert linear transformation of the output
+      if(Outputs[i].scale_factor!=0.0){
+        tmp = (1.0/Outputs[i].scale_factor)*(tmp - Outputs[i].shift_amount);
+      }
 
-    // Inverse transform of output
-    if(scale_method=="normalize_and_transform"){
-    // Invert non-linear transformation
-    //   tmp = tanh(tmp) = (exp(tmp)-exp(-tmp))/(exp(tmp)+exp(-tmp))   =>
+      result.append(tmp);
 
-         if(tmp>=0.99){ tmp = 0.99; }
-         else if(tmp<=-0.99) { tmp = -0.99; }
+    }// for i
 
-         tmp = 0.5*log((1.0+tmp)/(1.0-tmp)); // <=
-    }
-
-    // Invert linear transformation of the output
-    if(Outputs[i].scale_factor!=0.0){
-         tmp = (1.0/Outputs[i].scale_factor)*(tmp - Outputs[i].shift_amount);
-    }
-
-    result.append(tmp);
-
- }// for i
-
- }// else if sizes match
+  }// else if sizes match
 
   return 0;
+
 }
 
 
 int NeuralNetwork::Propagate(MATRIX input,MATRIX& result){
+  int i;
+  // Clean result
+  result = 0.0;
 
-// Clean result
- result = 0.0;
-
- if(input.num_of_rows!=sz_x){
- std::cout<<"Error: Size of the input "<<input.num_of_rows<<" does not match the ANN architecture "<<sz_x<<std::endl;
- }else{
+  if(input.num_of_rows!=sz_x){
+    std::cout<<"Error: Size of the input "<<input.num_of_rows<<" does not match the ANN architecture "<<sz_x<<std::endl;
+  }
+  else{
 
  int NL = Nlayers - 1;
  double tmp;
@@ -103,7 +101,7 @@ int NeuralNetwork::Propagate(MATRIX input,MATRIX& result){
  vector<MATRIX> Y;
  MATRIX x(sz_x,1);
 
- for(int i=0;i<sz_x;i++){
+ for(i=0;i<sz_x;i++){
 
 //---------- Use the same linear transformation of input as during the training ----------
     tmp=input[i];
@@ -163,7 +161,7 @@ int NeuralNetwork::Propagate(MATRIX input,MATRIX& result){
 }
 
 int NeuralNetwork::Propagate(boost::python::list input,boost::python::list& result,boost::python::list& derivatives){
-
+  int i;
 // Clean result
  sz_x = Inputs.size();
  sz_y = Outputs.size();
@@ -196,7 +194,7 @@ int NeuralNetwork::Propagate(boost::python::list input,boost::python::list& resu
 
 
 
- for(int i=0;i<sz_x;i++){
+ for(i=0;i<sz_x;i++){
 
 //---------- Use the same linear transformation of input as during the training ----------
     tmp=extract<double>(input[i]);
@@ -308,7 +306,7 @@ int NeuralNetwork::Propagate(MATRIX input,MATRIX& result,MATRIX& derivs){
  }else{
 
  int NL = Nlayers - 1;
- int L;
+ int i,L;
  double tmp;
 
  vector<MATRIX> Y;
@@ -332,7 +330,7 @@ int NeuralNetwork::Propagate(MATRIX input,MATRIX& result,MATRIX& derivs){
 
 
 
- for(int i=0;i<sz_x;i++){
+ for(i=0;i<sz_x;i++){
 
 //---------- Use the same linear transformation of input as during the training ----------
     tmp=input.M[i];

@@ -29,6 +29,7 @@ double Random::Gamma(double a){
 
 void Random::bin(vector<double>& in,double minx,double maxx,double dx,vector< pair<double,double> >& out){
 
+  int i;
   if(out.size()>0){ out.clear(); }
   double x = minx;
   while(x<=maxx){
@@ -38,7 +39,7 @@ void Random::bin(vector<double>& in,double minx,double maxx,double dx,vector< pa
   }
 
   int sz = in.size();
-  for(int i=0;i<sz;i++){
+  for(i=0;i<sz;i++){
     if(in[i]<minx || in[i]>maxx){}
     else{
       int n = (in[i]-minx)/dx;

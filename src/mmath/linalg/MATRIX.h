@@ -140,14 +140,14 @@ public:
   }
 */
   double& operator[](const int indx); ///< This returns M[indx], where indx - the input argument
-  MATRIX operator-();                 ///< Negation of the caller matrix. This will change the caller matrix.
-  MATRIX operator*(const MATRIX&);    ///< Matrix multiplication
-  MATRIX operator+(const MATRIX&);    ///< Matrix addition
-  MATRIX operator-(const MATRIX&);    ///< Matrix subtraction
+  MATRIX operator-() const;                 ///< Negation of the caller matrix. This will change the caller matrix.
+  MATRIX operator*(const MATRIX&) const;    ///< Matrix multiplication
+  MATRIX operator+(const MATRIX&) const;    ///< Matrix addition
+  MATRIX operator-(const MATRIX&) const;    ///< Matrix subtraction
   MATRIX& operator+=(const MATRIX&);  ///< Matrix increment by a matrix
   MATRIX& operator-=(const MATRIX&);  ///< Matrix decrement by a matrix
   MATRIX& operator*=(double);         ///< Matrix scaling by a scalar
-  MATRIX operator/(double num);       ///< Matrix division by a scalar
+  MATRIX operator/(double num) const;       ///< Matrix division by a scalar
   MATRIX operator=(const MATRIX&);    ///< Copying one matrix into the other one
   MATRIX operator=(double num);       ///< Setting all matrix elements to a given scal
 

@@ -370,12 +370,12 @@ void mEHT_K::set_mapping(EHT_K& eht_k, const vector<AO>& basis_ao){
   \param[in] basis_ao The list of AOs of the particular system - the parameters for all pairs of these AOs will be precomputed and
                    stored internally in the mEHT_K object
 */
-
+  int k;
   cout<<"In mEHT_K::set_mapping...\n";
 
   size = basis_ao.size();
 
-  for(int k=0;k<5;k++){
+  for(k=0;k<5;k++){
     eht_K[k].reserve(size*size);   eht_K[k].resize(size*size,  0.0);
     eht_C[k].reserve(size*size);   eht_C[k].resize(size*size,  0.0);
   }
@@ -423,7 +423,7 @@ void mEHT_K::set_mapping(EHT_K& eht_k, const vector<AO>& basis_ao){
       std::string sh2 = it_type2->first.second;
       int i2 = it_type2->second; // index of this AO type
 
-      for(int k=0;k<5;k++){
+      for(k=0;k<5;k++){
         k_vals[k][i1][i2]  = eht_k.get_K_value(k,at1,sh1,at2,sh2);
         c_vals[k][i1][i2]  = eht_k.get_C_value(k,at1,sh1,at2,sh2);
       }

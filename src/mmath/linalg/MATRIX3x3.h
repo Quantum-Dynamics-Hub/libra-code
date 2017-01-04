@@ -147,28 +147,28 @@ class MATRIX3x3{
   //---------------------- Operators -----------------------------------
 
 
-  MATRIX3x3 operator-(){
+  MATRIX3x3 operator-() const{
     MATRIX3x3 m;
     m.xx = -xx;  m.xy = -xy;  m.xz = -xz;
     m.yx = -yx;  m.yy = -yy;  m.yz = -yz;
     m.zx = -zx;  m.zy = -zy;  m.zz = -zz;
     return m;
   }
-  MATRIX3x3 operator*(MATRIX3x3 ob){
+  MATRIX3x3 operator*(MATRIX3x3 ob) const{
     MATRIX3x3 m;
     m.xx = xx*ob.xx + xy*ob.yx + xz*ob.zx; m.xy = xx*ob.xy + xy*ob.yy + xz*ob.zy; m.xz = xx*ob.xz + xy*ob.yz + xz*ob.zz;
     m.yx = yx*ob.xx + yy*ob.yx + yz*ob.zx; m.yy = yx*ob.xy + yy*ob.yy + yz*ob.zy; m.yz = yx*ob.xz + yy*ob.yz + yz*ob.zz;
     m.zx = zx*ob.xx + zy*ob.yx + zz*ob.zx; m.zy = zx*ob.xy + zy*ob.yy + zz*ob.zy; m.zz = zx*ob.xz + zy*ob.yz + zz*ob.zz;
     return m;
   }
-  MATRIX3x3 operator+(MATRIX3x3 ob){
+  MATRIX3x3 operator+(MATRIX3x3 ob) const{
     MATRIX3x3 m;
     m.xx = xx + ob.xx; m.xy = xy + ob.xy; m.xz = xz + ob.xz;
     m.yx = yx + ob.yx; m.yy = yy + ob.yy; m.yz = yz + ob.yz;
     m.zx = zx + ob.zx; m.zy = zy + ob.zy; m.zz = zz + ob.zz;
     return m;
   }
-  MATRIX3x3 operator-(MATRIX3x3 ob){
+  MATRIX3x3 operator-(MATRIX3x3 ob) const{
     MATRIX3x3 m;
     m.xx = xx - ob.xx; m.xy = xy - ob.xy; m.xz = xz - ob.xz;
     m.yx = yx - ob.yx; m.yy = yy - ob.yy; m.yz = yz - ob.yz;
@@ -202,7 +202,7 @@ class MATRIX3x3{
   }
 
 
-  MATRIX3x3 operator/(double num){
+  MATRIX3x3 operator/(double num) const{
     MATRIX3x3 m;
     m.xx = xx/num; m.xy = xy/num; m.xz = xz/num;
     m.yx = yx/num; m.yy = yy/num; m.yz = yz/num;

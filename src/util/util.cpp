@@ -163,14 +163,14 @@ int delta(vector<int>& A,vector<int>& B,int& a,int& b){
   \param[out] a the integer from A which is not present in B
   \param[out] b the integer from B which is not present in A
 */
-
+  int i;
   int res = 1;
   int sz = A.size();
   int nA = 0; // number of elements in A which do not exist in B
   int nB = 0; // number of elements in B which do not exist in A
   std::vector<int> aA, aB, aC; // modules of A and B and overlap C
 
-  for(int i=0;i<sz;i++){ // the size of A and B is assumed to be the same
+  for(i=0;i<sz;i++){ // the size of A and B is assumed to be the same
     int mA = A[i];
     int mB = B[i];
     aA.push_back(mA);

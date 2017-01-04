@@ -30,7 +30,7 @@ double dot_prod(const QUATERNION& q1, const QUATERNION& q2){
   return (q1.Lt*q2.Lt + q1.Lx*q2.Lx + q1.Ly*q2.Ly + q1.Lz*q2.Lz);
 }
 
-QUATERNION operator*(double f,QUATERNION& q){
+QUATERNION operator*(double f,const QUATERNION& q){
   QUATERNION tmp;
   tmp.Lt = f*q.Lt;
   tmp.Lx = f*q.Lx;
@@ -61,10 +61,10 @@ void save(boost::property_tree::ptree& pt,std::string path,QUATERNION& vt){
 
 void save(boost::property_tree::ptree& pt,std::string path, char path_separator, QUATERNION& vt){
 
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"Lt", path_separator),vt.Lt);
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"Lx", path_separator),vt.Lx);
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"Ly", path_separator),vt.Ly);
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"Lz", path_separator),vt.Lz);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"Lt", path_separator),vt.Lt);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"Lx", path_separator),vt.Lx);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"Ly", path_separator),vt.Ly);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"Lz", path_separator),vt.Lz);
 }
 
 
@@ -82,7 +82,7 @@ void save(boost::property_tree::ptree& pt,std::string path, char path_separator,
   for(int i=0;i<sz;i++){
     stringstream ss(stringstream::in | stringstream::out);
     std::string rt; ss<<i; ss>>rt;
-    save(pt,path+string(path_separator)+rt, path_separator, vt[i]);
+    save(pt,path+std::string(1,path_separator)+rt, path_separator, vt[i]);
   }
 }
 
@@ -101,10 +101,10 @@ void load(boost::property_tree::ptree& pt,std::string path, QUATERNION& vt, int&
 void load(boost::property_tree::ptree& pt,std::string path, char path_separator, QUATERNION& vt, int& status){
   status = 0;
   int st;
-  libio::load(pt,path+string(path_separator)+"Lt", path_separator, vt.Lt, st); if(st==1) {status=1;}
-  libio::load(pt,path+string(path_separator)+"Lx", path_separator, vt.Lx, st); if(st==1) {status=1;}
-  libio::load(pt,path+string(path_separator)+"Ly", path_separator, vt.Ly, st); if(st==1) {status=1;}
-  libio::load(pt,path+string(path_separator)+"Lz", path_separator, vt.Lz, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"Lt", path_separator, vt.Lt, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"Lx", path_separator, vt.Lx, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"Ly", path_separator, vt.Ly, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"Lz", path_separator, vt.Lz, st); if(st==1) {status=1;}
 }
 
 
@@ -125,7 +125,7 @@ void load(boost::property_tree::ptree& pt,std::string path, char path_separator,
   status = 0;
   try{
     BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(boost::property_tree::ptree::path_type(path,path_separator))){
-      load(pt,path+string(path_separator)+v.first, path_separator, x, st);
+      load(pt,path+std::string(1,path_separator)+v.first, path_separator, x, st);
       if(st==1){ vt.push_back(x); status = 1; }
     }
   }catch(std::exception& e){ }

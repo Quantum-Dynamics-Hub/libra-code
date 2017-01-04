@@ -79,7 +79,7 @@ class VECTOR{
   //------------------- Special vectors --------------------------------
 
 
-  VECTOR unit(){
+  VECTOR unit() const{
   /**
     This function returns the normalized vector - same direction, only the magnitude is unity
   */
@@ -95,8 +95,8 @@ class VECTOR{
   //------------------ Small functions on vectors ----------------------
 
 
-  inline double length(void){  return sqrt(x*x+y*y+z*z); } ///< returns the magnitude of the vector
-  inline double length2(void){ return (x*x+y*y+z*z); }     ///< returns the square magnitude of the vector
+  inline double length(void) const{  return sqrt(x*x+y*y+z*z); } ///< returns the magnitude of the vector
+  inline double length2(void) const{ return (x*x+y*y+z*z); }     ///< returns the square magnitude of the vector
   void normalize(void){
   /**
     Normalize the given vector. This function changes the oribinal object
@@ -107,7 +107,7 @@ class VECTOR{
     if(res!=0.0){ x/=res; y/=res; z/=res; }
     else{ x = 0.0; y = 0.0; z = 0.0; }
   }
-  inline void cross(VECTOR &v1, VECTOR &v2) {
+  inline void cross(VECTOR &v1, VECTOR &v2){
   /**
     Compute the cross (vector) product of two vectors, v1 and v2 and store the result in the caller object
   */
@@ -122,42 +122,45 @@ class VECTOR{
   //---------------------- Operators -----------------------------------
 
 
-  VECTOR operator-(){  /** Negation operator. Returns the opposite vector */
+  VECTOR operator-() const{  /** Negation operator. Returns the opposite vector */
     VECTOR tmp;
       tmp.x = -x;
       tmp.y = -y;
       tmp.z = -z;
       return tmp;
   }            
-  VECTOR operator+(VECTOR& v){  /** Addition operator. Allows v1 + v2 */
+
+  VECTOR operator+(const VECTOR& v) const{  /** Addition operator. Allows v1 + v2 */
     VECTOR tmp;
     tmp.x=x+v.x;
     tmp.y=y+v.y;
     tmp.z=z+v.z;
     return tmp;
   }
-  VECTOR operator+(const VECTOR& v){  /** Another version of addition operator. Allows v1 + v2 */
+  VECTOR operator+(VECTOR& v) const{  /** Another version of addition operator. Allows v1 + v2 */
     VECTOR tmp;
     tmp.x=x+v.x;
     tmp.y=y+v.y;
     tmp.z=z+v.z;
     return tmp;
   }
-  VECTOR operator-(VECTOR& v){  /** Subtraction operator. Allows v1 - v2 */
+
+  VECTOR operator-(const VECTOR& v) const{  /** Subtraction operator. Allows v1 - v2 */
     VECTOR tmp;
     tmp.x=x-v.x;
     tmp.y=y-v.y;
     tmp.z=z-v.z;
     return tmp;
   }
-  VECTOR operator-(const VECTOR& v){  /** Another version of subtraction operator. Allows v1 - v2 */
+  VECTOR operator-(VECTOR& v) const{  /** Another version of subtraction operator. Allows v1 - v2 */
     VECTOR tmp;
     tmp.x=x-v.x;
     tmp.y=y-v.y;
     tmp.z=z-v.z;
     return tmp;
   }
-  VECTOR operator+(const double& v){
+
+  VECTOR operator+(const double& v) const{
     /** Addition of vector an scalar operator. Allows v1 + A. This will return a new object. The scalar is added to all components */
 
     VECTOR tmp;
@@ -166,7 +169,7 @@ class VECTOR{
     tmp.z=z+v;
     return tmp;
   }
-  VECTOR operator-(const double& v){    
+  VECTOR operator-(const double& v) const{    
     /** Subtraction of scalar from a vector operator. Allows v1 - A. This will return a new object. The scalar is subtracted from all components */
 
     VECTOR tmp;

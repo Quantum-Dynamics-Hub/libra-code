@@ -230,7 +230,7 @@ int DATA::GetData(vector<double>& inp){
   return 0;
 }
 int DATA::Calculate_Estimators(double& Ave, double& Var, double& Sd,double& Se, double& Mse, double& Mae,double& Rmse){
-
+  int i;
   ave = 0.0;
   var = 0.0;
   mse = 0.0;
@@ -241,48 +241,32 @@ int DATA::Calculate_Estimators(double& Ave, double& Var, double& Sd,double& Se, 
 
   if(sz>1){
 
+    for(i=0;i<sz;i++){  ave += Data[i]; }    
+    ave = ave/sz;
 
-  for(int i=0;i<sz;i++){
-     ave += Data[i];
-  }
-  ave = (ave/sz);
+    for(i=0;i<sz;i++){
+      tmp = (Data[i]-ave);
+      var += tmp*tmp;
+      mae += fabs(tmp);
+    }
 
-  for(i=0;i<sz;i++){
-     tmp = (Data[i]-ave);
-     var += tmp*tmp;
-     mae += fabs(tmp);
-  }
+    mse = var;
+    var = (var/(sz-1.0));
+    mse = (mse/sz);
+    mae = (mae/sz);
+    sd  = sqrt(var);
+    se  = sd/sqrt(sz);
+    rmse = sqrt(mse);
 
-  mse = var;
-  var = (var/(sz-1.0));
-  mse = (mse/sz);
-  mae = (mae/sz);
+    Ave  = ave;         is_ave = 1; 
+    Var  = var;         is_var = 1; 
+    Sd   = sd;          is_sd  = 1; 
+    Se   = se;          is_se  = 1; 
+    Mse  = mse;         is_mse = 1; 
+    Mae  = mae;         is_mae = 1; 
+    Rmse = rmse;        is_rmse= 1; 
 
-  sd  = sqrt(var);
-  se  = sd/sqrt(sz);
-
-  rmse = sqrt(mse);
-
-  Ave  = ave;
-  Var  = var;
-  Sd   = sd;
-  Se   = se;
-  Mse  = mse;
-  Mae  = mae;
-  Rmse = rmse;
-
-  is_ave = 1;
-  is_var = 1;
-  is_sd  = 1;
-  is_se  = 1;
-  is_mse = 1;
-  is_mae = 1;
-  is_rmse= 1;
-
-  }else{
-   std::cout<<"Warning: Data size is less than 2. Can not calculate statistics for such data\n";
-  }
-
+  }else{  std::cout<<"Warning: Data size is less than 2. Can not calculate statistics for such data\n";  }
 
   return 0;
 }
@@ -316,7 +300,7 @@ int DATA::Calculate_MiniMax(double& Min_Val,int& Min_Indx,double& Max_Val,int& M
 
 int DATA::Calculate_Distribution(vector<double>& Interval,vector<double>& Density,vector<double>& Cumulative){
 // Cumulative(x) - is the probability to find the point in the interval (Intrval[0], x)
-
+  int i,j;
   int sz = Data.size();
   int szi= Interval.size(); // Number of sub-intervals
   double nrm = (1.0/double(sz));
@@ -326,36 +310,25 @@ int DATA::Calculate_Distribution(vector<double>& Interval,vector<double>& Densit
   if(Cumulative.size()>0){ Cumulative.clear();}
 
   // Init results
-  for(int i=0;i<szi;i++){
-     Density.push_back(0.0);
-     Cumulative.push_back(0.0);
+  for(i=0;i<szi;i++){
+    Density.push_back(0.0);
+    Cumulative.push_back(0.0);
   }
 
   // Count
-  for(int j=0;j<szi;j++){
-
+  for(j=0;j<szi;j++){
     for(i=0;i<sz;i++){
       if(Data[i]<=Interval[j]){
         Cumulative[j] += nrm;
       }
     }// for i
-
   }// for j
 
   // Probability density
   Density[0] = 0.0;
-  for(int j=1;j<szi;j++){
-
+  for(j=1;j<szi;j++){
     Density[j] = (Cumulative[j] - Cumulative[j-1])/(Interval[j] - Interval[j-1]);
-
   }  
-
-
-//  for(int i=0;i<szi;i++){
-//     Density[i] *= nrm;
-//     Cumulative[i] *= nrm;
-//  }
-
 
   return 0;
 }

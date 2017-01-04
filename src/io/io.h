@@ -17,7 +17,6 @@
 #ifndef IO_H
 #define IO_H
 
-
 #include <string>
 #include <vector>
 #include <map>
@@ -36,6 +35,17 @@
 using namespace std;
 using namespace boost::python;
 using boost::property_tree::ptree;
+
+// The signature of boost::property_tree::xml_parser::write_xml() changed in Boost 1.56
+// See https://github.com/PointCloudLibrary/pcl/issues/864
+#include <boost/version.hpp>
+#if (BOOST_VERSION >= 105600)
+  typedef boost::property_tree::xml_writer_settings<std::string> xml_writer_settings;
+#else
+  typedef boost::property_tree::xml_writer_settings<char> xml_writer_settings;
+#endif
+
+
 
 //#include "../mmath/libmmath.h"
 //using namespace libmmath;
@@ -116,7 +126,7 @@ void save(boost::property_tree::ptree& pt,std::string path, char path_separator,
   for(int i=0;i<sz;i++){
     stringstream ss(stringstream::in | stringstream::out);
     std::string rt; ss<<i; ss>>rt;
-    save<X>(pt,path+std::string(path_separator)+rt, path_separator,vt[i]);
+    save<X>(pt,path+std::string(1,path_separator)+rt, path_separator,vt[i]);
   }
 
 }
@@ -222,7 +232,7 @@ void load(boost::property_tree::ptree& pt,std::string path, char path_separator,
   status = 0;
   try{
     BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(path)){
-      load<X>(pt,path+string(path_separator)+v.first, path_separator,x,st);
+      load<X>(pt,path+std::string(1,path_separator)+v.first, path_separator,x,st);
       if(st==1){ vt.push_back(x); status = 1; }
     }
   }catch(std::exception& e){ }

@@ -66,7 +66,7 @@ void RigidBody::propagate_terec(double t){
   A_I_to_e =  u1[0].y  u2[0].y  u3[0].y
               u1[0].z  u2[0].z  u3[0].z
 */
-
+  int n;
   VECTOR *u1,*u2,*u3,*deriv;
   double alpha,beta,gamma,dtn,bin;
   int indx;
@@ -115,10 +115,10 @@ void RigidBody::propagate_terec(double t){
   dtn = t;
 
   // Clear vectors
-  for(int n=2;n<SERIES_EXPANSION;n++){
+  for(n=2;n<SERIES_EXPANSION;n++){
     deriv[n] = 0.0; u1[n] = 0.0; u2[n] = 0.0; u3[n] = 0.0;
   }
-  for( n=2;n<SERIES_EXPANSION;n++){
+  for(n=2;n<SERIES_EXPANSION;n++){
     for(int k=0;k<n;k++){
     //bin = BINOM(k,n-1);
     //-----------------------------
@@ -190,7 +190,7 @@ void RigidBody::propagate_qterec(double t){
               u1[0].z  u2[0].z  u3[0].z
 */
 
-
+  int n;
   QUATERNION *derivq;
   VECTOR *deriv;
   double alpha,beta,gamma,dtn,bin;
@@ -225,10 +225,10 @@ void RigidBody::propagate_qterec(double t){
   dtn = t;
 
   // Clear vectors
-  for(int n=2;n<SERIES_EXPANSION;n++){
+  for(n=2;n<SERIES_EXPANSION;n++){
     deriv[n] = 0.0; derivq[n] = 0.0;
   }
-  for( n=2;n<SERIES_EXPANSION;n++){
+  for(n=2;n<SERIES_EXPANSION;n++){
     for(int k=0;k<n;k++){
     //bin = BINOM(k,n-1);
     //-----------------------------

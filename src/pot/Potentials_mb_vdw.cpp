@@ -421,7 +421,7 @@ double Vdw_LJ2_no_excl(VECTOR* r,                                               
 
 //  int count = 0; // for triples and central translations
   int excl = 0;  // for exclusions
-  int i,j,k;
+  int i,j,a,b,c,k;
   double SW,sig,eps,en;
   VECTOR dSW,fmod;
   double r2,energy;
@@ -467,10 +467,10 @@ double Vdw_LJ2_no_excl(VECTOR* r,                                               
   int indx = 0;
   vector<quartet> globqt;
   VECTOR minr,maxr; minr = maxr = r[0];
-  for(int a=minb.n1;a<=maxb.n1;a++){
-    for(int b=minb.n2;b<=maxb.n2;b++){
-      for(int c=minb.n3;c<=maxb.n3;c++){
-        for(int i=0;i<Nat;i++){
+  for(a=minb.n1;a<=maxb.n1;a++){
+    for(b=minb.n2;b<=maxb.n2;b++){
+      for(c=minb.n3;c<=maxb.n3;c++){
+        for(i=0;i<Nat;i++){
 
           VECTOR t = tmp[i] + a*t1 + b*t2 + c*t3;  R.push_back(t);
           if(t.x<=minr.x){ minr.x = t.x; } if(t.x>=maxr.x){ maxr.x = t.x; }
@@ -503,7 +503,7 @@ double Vdw_LJ2_no_excl(VECTOR* r,                                               
   // we use serial indexes of both central cell and its neighbors
   vector< vector<int> > neibc(Ncells,dummy);     // indexes of neighboring cells for given cell index
 
-  for(int c=0;c<Ncells;c++){
+  for(c=0;c<Ncells;c++){
     form_neibc(c,neibc[c],Nx,Ny,Nz,cellx,celly,cellz,R_off);
   }
 

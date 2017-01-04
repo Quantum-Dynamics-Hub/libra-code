@@ -346,12 +346,12 @@ void listHamiltonian_MM::set_atom_interactions_for_atoms
   \param[in] ff The ForceField object that defines the fragment types and their properties
   \param[in] verb Determines the verbosity level
 */
-
+  int i,j;
   int sz = top_elt.size();
   int* at; at = new int[sz];
   int* id; id = new int[sz];
   bool x = true;
-  for(int j=0;j<sz;j++){
+  for(j=0;j<sz;j++){
     at[j] = top_elt[j].globAtom_Index;
     id[j] = top_elt[j].Atom_id;
     x = (x && (is_in_vector(at[j],lst1)||is_in_vector(at[j],lst2)));
@@ -391,7 +391,7 @@ void listHamiltonian_MM::set_atom_interactions_for_atoms
 //      double*  displT_2; displT_2 = &dT_2;
       vector<std::string> types;
 
-      for(int i=0; i<sz; i++){
+      for(i=0; i<sz; i++){
         types.push_back(syst.Atoms[at[i]].Atom_ff_type);
         r[i] = &syst.Atoms[at[i]].Atom_RB.rb_cm;
         int g_indx = syst.Atoms[at[i]].globGroup_Index;
@@ -433,7 +433,7 @@ void listHamiltonian_MM::set_atom_interactions_for_atoms
       int num_excl = 0;
       for(i=0;i<sz;i++){
         vector<int> ve1,ve2,vs;
-        for(int j=i;j<sz;j++){ 
+        for(j=i;j<sz;j++){ 
           if(syst.is_group_pair(at[i],at[j])){ vexcl1.push_back(at[i]); vexcl2.push_back(at[j]); vscale.push_back(0.0); 
                                                ve1.push_back(at[i]); ve2.push_back(at[j]); vs.push_back(0.0);
                                         }

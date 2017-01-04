@@ -816,13 +816,13 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
           vector<double> Zeff;
           vector<VECTOR> G;
           vector<VECTOR> R;
-          for(n=0;n<_syst->Number_of_atoms;n++){
+          for(int n=0;n<_syst->Number_of_atoms;n++){
             R.push_back(_syst->Atoms[n].Atom_RB.rb_cm);
             Zeff.push_back(qm_ham->modprms.PT[_syst->Atoms[n].Atom_element].Zeff);
           }// for n
 
           double Enucl = energy_nucl(R, Zeff, G);
-          for(n=0;n<_syst->Number_of_atoms;n++){   _syst->Atoms[n].Atom_RB.rb_force -= G[n];   }
+          for(int n=0;n<_syst->Number_of_atoms;n++){   _syst->Atoms[n].Atom_RB.rb_force -= G[n];   }
 
           E_i += Enucl;
 

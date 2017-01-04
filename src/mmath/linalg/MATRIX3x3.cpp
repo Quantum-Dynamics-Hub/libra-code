@@ -207,17 +207,17 @@ void save(boost::property_tree::ptree& pt,std::string path,MATRIX3x3& vt){
 }
 
 void save(boost::property_tree::ptree& pt,std::string path, char path_separator, MATRIX3x3& vt){
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"xx", path_separator),vt.xx);
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"xy", path_separator),vt.xy);
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"xz", path_separator),vt.xz);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"xx", path_separator),vt.xx);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"xy", path_separator),vt.xy);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"xz", path_separator),vt.xz);
 
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"yx", path_separator),vt.yx);
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"yy", path_separator),vt.yy);
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"yz", path_separator),vt.yz);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"yx", path_separator),vt.yx);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"yy", path_separator),vt.yy);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"yz", path_separator),vt.yz);
 
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"zx", path_separator),vt.zx);
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"zy", path_separator),vt.zy);
-  pt.put(boost::property_tree::ptree::path_type(path+string(path_separator)+"zz", path_separator),vt.zz);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"zx", path_separator),vt.zx);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"zy", path_separator),vt.zy);
+  pt.put(boost::property_tree::ptree::path_type(path+std::string(1,path_separator)+"zz", path_separator),vt.zz);
 
 }
 
@@ -236,7 +236,7 @@ void save(boost::property_tree::ptree& pt,std::string path, char path_separation
   for(int i=0;i<sz;i++){
     stringstream ss(stringstream::in | stringstream::out);
     std::string rt; ss<<i; ss>>rt;
-    save(pt, path+string(path_separation)+rt, path_separation, vt[i]);
+    save(pt, path+std::string(1, path_separation)+rt, path_separation, vt[i]);
   }
 }
 
@@ -262,17 +262,17 @@ void load(boost::property_tree::ptree& pt,std::string path, MATRIX3x3& vt, int& 
 void load(boost::property_tree::ptree& pt,std::string path, char path_separator, MATRIX3x3& vt, int& status){
   status = 0;
   int st;
-  libio::load(pt,path+string(path_separator)+"xx", path_separator, vt.xx, st); if(st==1) {status=1;}
-  libio::load(pt,path+string(path_separator)+"xy", path_separator, vt.xy, st); if(st==1) {status=1;}
-  libio::load(pt,path+string(path_separator)+"xz", path_separator, vt.xz, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"xx", path_separator, vt.xx, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"xy", path_separator, vt.xy, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"xz", path_separator, vt.xz, st); if(st==1) {status=1;}
 
-  libio::load(pt,path+string(path_separator)+"yx", path_separator, vt.yx, st); if(st==1) {status=1;}
-  libio::load(pt,path+string(path_separator)+"yy", path_separator, vt.yy, st); if(st==1) {status=1;}
-  libio::load(pt,path+string(path_separator)+"yz", path_separator, vt.yz, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"yx", path_separator, vt.yx, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"yy", path_separator, vt.yy, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"yz", path_separator, vt.yz, st); if(st==1) {status=1;}
 
-  libio::load(pt,path+string(path_separator)+"zx", path_separator, vt.zx, st); if(st==1) {status=1;}
-  libio::load(pt,path+string(path_separator)+"zy", path_separator, vt.zy, st); if(st==1) {status=1;}
-  libio::load(pt,path+string(path_separator)+"zz", path_separator, vt.zz, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"zx", path_separator, vt.zx, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"zy", path_separator, vt.zy, st); if(st==1) {status=1;}
+  libio::load(pt,path+std::string(1,path_separator)+"zz", path_separator, vt.zz, st); if(st==1) {status=1;}
 
 }
 
@@ -293,7 +293,7 @@ void load(boost::property_tree::ptree& pt,std::string path, char path_separator,
   status = 0;
   try{
     BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(boost::property_tree::ptree::path_type(path,path_separator))){
-      load(pt,path+string(path_separator)+v.first, path_separator, x,st);
+      load(pt,path+std::string(1,path_separator)+v.first, path_separator, x,st);
       if(st==1){ vt.push_back(x); status = 1; }
     }
   }catch(std::exception& e){ }

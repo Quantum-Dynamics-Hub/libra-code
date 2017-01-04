@@ -71,6 +71,8 @@ void FullPivLU_decomposition(CMATRIX& A, CMATRIX& P, CMATRIX& L, CMATRIX& U, CMA
 void FullPivLU_inverse(MATRIX& A, MATRIX& invA);
 void FullPivLU_inverse(CMATRIX& A, CMATRIX& invA);
 
+bool linsys_solver(const MATRIX& A, MATRIX& X, const MATRIX& B, const double NormThreshold);
+
 
 }// namespace libmeigen
 }// namespace libmmath
