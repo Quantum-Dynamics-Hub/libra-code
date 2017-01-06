@@ -197,7 +197,7 @@ Electronic::~Electronic(){
 
 
 
-std::complex<double> Electronic::c(int i){
+std::complex<double> Electronic::c(int i) const{
 /**
   \brief Return the amplitude of a quantum state in the complex format: c_i = q_i + i*p_i
 
@@ -208,7 +208,7 @@ std::complex<double> Electronic::c(int i){
 
 }
 
-std::complex<double> Electronic::rho(int i, int j){
+std::complex<double> Electronic::rho(int i, int j) const{
 /**
   \brief Returns the density matrix element: rho_ij = c^*_i * c_j
 

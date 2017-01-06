@@ -23,7 +23,7 @@ namespace libdyn{
 namespace libbarostat{
 
 
-double Barostat::ekin_baro(){
+double Barostat::ekin_baro() const{
 /**
   \brief Kinetic energy of the Barostat veriables
 

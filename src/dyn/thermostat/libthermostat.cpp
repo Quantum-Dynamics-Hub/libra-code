@@ -49,6 +49,9 @@ void export_Thermostat_objects(){
 
 
   class_<Thermostat>("Thermostat",init<>())
+      .def(init<const Thermostat&>())
+      .def("__copy__", &generic__copy__<Thermostat>)
+      .def("__deepcopy__", &generic__deepcopy__<Thermostat>)
       .def(init<boost::python::dict>())
       .def_readwrite("s_var",&Thermostat::s_var)
       .def_readwrite("Ps",&Thermostat::Ps)

@@ -40,6 +40,7 @@ void export_Wfcgrid_objects(){
 
   class_<Wfcgrid>("Wfcgrid",init<double,double,double,int>())
       .def(init<double, double, double, double, double, double, int>())
+      .def(init<const Wfcgrid&>())
       .def("__copy__", &generic__copy__<Wfcgrid>)
       .def("__deepcopy__", &generic__deepcopy__<Wfcgrid>)
 

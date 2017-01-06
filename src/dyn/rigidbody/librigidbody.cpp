@@ -72,6 +72,7 @@ void export_RigidBody_objects(){
 
 
   class_<RigidBody>("RigidBody",init<>())
+      .def(init<const RigidBody&>())
       .def("__copy__", &generic__copy__<RigidBody>)
       .def("__deepcopy__", &generic__deepcopy__<RigidBody>)
        // Topology

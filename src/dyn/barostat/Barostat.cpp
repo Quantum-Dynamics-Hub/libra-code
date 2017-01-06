@@ -39,7 +39,7 @@ void Barostat::set(object at){
  set_value(is_barostat_type, barostat_type, at, "barostat_type");
 }
 
-void Barostat::show_info(){
+void Barostat::show_info() const {
 /** 
   \brief Show info about Barostat state and properties
 */

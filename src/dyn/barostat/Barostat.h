@@ -79,7 +79,7 @@ public:
  ~Barostat();                   ///< destructor
 
   Barostat& operator=(const Barostat&); ///< assignment operator
-  void show_info();                     ///< print out information about the class
+  void show_info() const;               ///< print out information about the class
   void set(object);                     ///< sets the object's variables from an instance of an arbitrary Python class
   void save(boost::property_tree::ptree& pt,std::string path);  ///< save the state as a property tree
   void load(boost::property_tree::ptree& pt,std::string path,int& status); ///< load the state from a property tree
@@ -94,11 +94,11 @@ public:
   void set_Nf_r(int nf_r){ Nf_r = nf_r; is_Nf_r = 1; }
   void set_Nf_b(int nf_b){ Nf_b = nf_b; is_Nf_b = 1; }
 
-  double get_Nf_t(){ if(is_Nf_t){ return Nf_t; } else{ std::cout<<"Error: Nf_t is not defined\n"; exit(1); } }
-  double get_Nf_r(){ if(is_Nf_r){ return Nf_r; } else{ std::cout<<"Error: Nf_r is not defined\n"; exit(1); } }
-  double get_Nf_b(){ if(is_Nf_b){ return Nf_b; } else{ std::cout<<"Error: Nf_b is not defined. Verify that either NPT or NPT_FLEX ensemble is used\n"; exit(1); } }
+  double get_Nf_t() const { if(is_Nf_t){ return Nf_t; } else{ std::cout<<"Error: Nf_t is not defined\n"; exit(1); } }
+  double get_Nf_r() const { if(is_Nf_r){ return Nf_r; } else{ std::cout<<"Error: Nf_r is not defined\n"; exit(1); } }
+  double get_Nf_b() const { if(is_Nf_b){ return Nf_b; } else{ std::cout<<"Error: Nf_b is not defined. Verify that either NPT or NPT_FLEX ensemble is used\n"; exit(1); } }
 
-  double ekin_baro();
+  double ekin_baro() const;
   void apply_barostat_force(double);
   void scale_velocity(double);
   void propagate_velocity(double dt,double ksi_b); ///< exp(iL*dt) = (G_eps/Wg - ksi_b * ksi_eps)d/dksi_eps

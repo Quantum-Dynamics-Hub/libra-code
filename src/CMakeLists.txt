@@ -77,12 +77,9 @@ file(GLOB LIBRA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${LIBRA_HEADERS})
 ADD_LIBRARY(libra_core SHARED ${LIBRA_SRC})
 ADD_LIBRARY(libra_core_stat STATIC ${LIBRA_SRC})
 
-# solvers_stat qchem_tools_stat scripts_stat converters_stat dyn_stat hamiltonian_stat pot_stat cell_stat qchem_stat chemobjects_stat 
-#TARGET_LINK_LIBRARIES(libra_core      util_stat mmath_stat context_stat io_stat calculators_stat ) # ${ext_libs}  )
 
 TARGET_LINK_LIBRARIES(libra_core      util_stat solvers_stat qchem_tools_stat scripts_stat converters_stat dyn_stat hamiltonian_stat pot_stat cell_stat qchem_stat chemobjects_stat mmath_stat context_stat io_stat calculators_stat ) # ${ext_libs}  )
-TARGET_LINK_LIBRARIES(libra_core_stat util_stat) # solvers_stat qchem_tools_stat scripts_stat converters_stat dyn_stat hamiltonian_stat pot_stat cell_stat qchem_stat chemobjects_stat mmath_stat context_stat io_stat calculators_stat ) # ${ext_libs}  )
-
+TARGET_LINK_LIBRARIES(libra_core_stat util_stat solvers_stat qchem_tools_stat scripts_stat converters_stat dyn_stat hamiltonian_stat pot_stat cell_stat qchem_stat chemobjects_stat mmath_stat context_stat io_stat calculators_stat ) # ${ext_libs}  )
 
 #
 #  Copy python files

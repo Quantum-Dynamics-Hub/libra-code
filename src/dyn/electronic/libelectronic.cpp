@@ -43,6 +43,7 @@ void export_Electronic_objects(){
       .def(init<int>())
       .def(init<int,int>())
       .def(init<int,int,double>())
+      .def(init<const Electronic&>())
       .def("__copy__", &generic__copy__<Electronic>)
       .def("__deepcopy__", &generic__deepcopy__<Electronic>)
 

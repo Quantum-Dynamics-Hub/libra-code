@@ -46,6 +46,9 @@ void export_Barostat_objects(){
 
   class_<Barostat>("Barostat",init<>())
       .def(init<boost::python::dict>())
+      .def(init<const Barostat&>())
+      .def("__copy__", &generic__copy__<Barostat>)
+      .def("__deepcopy__", &generic__deepcopy__<Barostat>)
 
       .def_readwrite("ksi_eps",&Barostat::ksi_eps)
       .def_readwrite("G_eps",&Barostat::G_eps)

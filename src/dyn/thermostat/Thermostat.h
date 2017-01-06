@@ -108,20 +108,20 @@ public:
   void set_Nf_r(int nf_r){ Nf_r = nf_r; is_Nf_r = 1; }    ///< Set the number of rotational DOF coupled to thermostat  
   void set_Nf_b(int nf_b){ Nf_b = nf_b; is_Nf_b = 1; }    ///< Set the number of barostat DOF coupled to thermostat    
 
-  double get_Nf_t(){ if(is_Nf_t){ return Nf_t; } else{ std::cout<<"Error: Nf_t is not defined\n"; exit(1); } } ///< Return the number of translaional DOF coupled to thermostat
-  double get_Nf_r(){ if(is_Nf_r){ return Nf_r; } else{ std::cout<<"Error: Nf_r is not defined\n"; exit(1); } } ///< Return the number of rotational DOF coupled to thermostat  
-  double get_Nf_b(){ if(is_Nf_b){ return Nf_b; } else{ std::cout<<"Error: Nf_b is not defined\n"; exit(1); } } ///< Return the number of barostat DOF coupled to thermostat    
+  double get_Nf_t() const { if(is_Nf_t){ return Nf_t; } else{ std::cout<<"Error: Nf_t is not defined\n"; exit(1); } } ///< Return the number of translaional DOF coupled to thermostat
+  double get_Nf_r() const { if(is_Nf_r){ return Nf_r; } else{ std::cout<<"Error: Nf_r is not defined\n"; exit(1); } } ///< Return the number of rotational DOF coupled to thermostat  
+  double get_Nf_b() const { if(is_Nf_b){ return Nf_b; } else{ std::cout<<"Error: Nf_b is not defined\n"; exit(1); } } ///< Return the number of barostat DOF coupled to thermostat    
 
-  double get_s_var(){ return s_var; }  ///< Return the time-scaling variable (in Nose and Nose-Poincare thermostats)
+  double get_s_var() const { return s_var; }  ///< Return the time-scaling variable (in Nose and Nose-Poincare thermostats)
 
   /// Return the thermostat variable coupled to translational DOF
-  double get_ksi_t(){ if(ksi_t_size>0) {return ksi_t[0];} else{ return 0.0; /*std::cout<<"Error: ksi_t vector is of zero size\n"; exit(1);*/ } } 
+  double get_ksi_t() const { if(ksi_t_size>0) {return ksi_t[0];} else{ return 0.0; /*std::cout<<"Error: ksi_t vector is of zero size\n"; exit(1);*/ } } 
 
   /// Return the thermostat variable coupled to rotational DOF
-  double get_ksi_r(){ if(ksi_r_size>0) {return ksi_r[0];} else{ return 0.0; /*std::cout<<"Error: ksi_r vector is of zero size\n"; exit(1);*/ } }
+  double get_ksi_r() const { if(ksi_r_size>0) {return ksi_r[0];} else{ return 0.0; /*std::cout<<"Error: ksi_r vector is of zero size\n"; exit(1);*/ } }
 
   /// Return the thermostat variable coupled to barostat DOF
-  double get_ksi_b(){ if(ksi_b_size>0) {return ksi_b[0];} else{ return 0.0; /*std::cout<<"Error: ksi_b vector is of zero size\n"; exit(1);*/ } }
+  double get_ksi_b() const { if(ksi_b_size>0) {return ksi_b[0];} else{ return 0.0; /*std::cout<<"Error: ksi_b vector is of zero size\n"; exit(1);*/ } }
 
   //------------------- Methods ---------------------------------
   // Defined in Thermostat_methods.cpp

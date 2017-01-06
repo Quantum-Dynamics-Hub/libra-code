@@ -82,8 +82,8 @@ class Electronic{
   Electronic& operator=(const Electronic& ob);
 
 
-  std::complex<double> c(int i);          ///< return amplitude in the complex format: c_i = q_i + i*p_i
-  std::complex<double> rho(int i, int j); ///< return the density matrix element: rho_ij = c^*_i * c_j
+  std::complex<double> c(int i) const;          ///< return amplitude in the complex format: c_i = q_i + i*p_i
+  std::complex<double> rho(int i, int j) const; ///< return the density matrix element: rho_ij = c^*_i * c_j
 
 
   //------ Methods ------------
