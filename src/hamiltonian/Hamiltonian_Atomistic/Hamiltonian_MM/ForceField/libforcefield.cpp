@@ -35,10 +35,13 @@ int (ForceField::*Add_Improper_Record1)(Dihedral_Record)       = &ForceField::Ad
 
 
 
-
 void export_forcefield_objects(){
 
     class_<Atom_Record>("Atom_Record",init<>())      
+        .def(init<const Atom_Record&>())
+        .def("__copy__", &generic__copy__<Atom_Record>)
+        .def("__deepcopy__", &generic__deepcopy__<Atom_Record>)
+
         .def_readwrite("Atom_ff_type",&Atom_Record::Atom_ff_type)
         .def_readwrite("Atom_ff_int_type",&Atom_Record::Atom_ff_int_type)
         .def_readwrite("Atom_ff_type_H",&Atom_Record::Atom_ff_type_H)
@@ -83,6 +86,11 @@ void export_forcefield_objects(){
         .def("show_info",&Atom_Record::show_info)
     ;
 
+    class_< Atom_RecordList >("Atom_RecordList")
+        .def(vector_indexing_suite< Atom_RecordList >())
+    ;
+
+
     class_<Bond_Record>("Bond_Record",init<>())
         .def_readwrite("Atom1_ff_type",&Bond_Record::Atom1_ff_type)
         .def_readwrite("Atom1_ff_int_type",&Bond_Record::Atom1_ff_int_type)
@@ -110,11 +118,14 @@ void export_forcefield_objects(){
         .def_readwrite("Bond_rij_1",&Bond_Record::Bond_rij_1)
         .def_readwrite("Bond_rij_2",&Bond_Record::Bond_rij_2)
 
-
-
         .def("set",&Bond_Record::set)
         .def("show_info",&Bond_Record::show_info)
     ;
+
+    class_< Bond_RecordList >("Bond_RecordList")
+        .def(vector_indexing_suite< Bond_RecordList >())
+    ;
+
         
     class_<Angle_Record>("Angle_Record",init<>())
         .def_readwrite("Atom1_ff_type",&Angle_Record::Atom1_ff_type)
@@ -131,6 +142,11 @@ void export_forcefield_objects(){
         .def("set",&Angle_Record::set)
         .def("show_info",&Angle_Record::show_info)
     ;
+
+    class_< Angle_RecordList >("Angle_RecordList")
+        .def(vector_indexing_suite< Angle_RecordList >())
+    ;
+
 
     class_<Dihedral_Record>("Dihedral_Record",init<>())
         .def_readwrite("Atom1_ff_type",&Dihedral_Record::Atom1_ff_type)
@@ -149,6 +165,11 @@ void export_forcefield_objects(){
         .def("show_info",&Dihedral_Record::show_info)
     ;
 
+    class_< Dihedral_RecordList >("Dihedral_RecordList")
+        .def(vector_indexing_suite< Dihedral_RecordList >())
+    ;
+
+
     class_<Fragment_Record>("Fragment_Record",init<>())
         .def_readwrite("Fragment_ff_type",&Fragment_Record::Fragment_ff_type)
         .def_readwrite("Fragment_ff_int_type",&Fragment_Record::Fragment_ff_int_type)
@@ -165,6 +186,10 @@ void export_forcefield_objects(){
 
     class_<ForceField>("ForceField",init<>())
         .def(init<boost::python::dict>())
+        .def(init<const ForceField&>())
+        .def("__copy__", &generic__copy__<ForceField>)
+        .def("__deepcopy__", &generic__deepcopy__<ForceField>)
+
         .def_readwrite("ForceField_Name",&ForceField::ForceField_Name)
         .def_readwrite("bond_functional",&ForceField::bond_functional)
         .def_readwrite("angle_functional",&ForceField::angle_functional)
@@ -175,7 +200,6 @@ void export_forcefield_objects(){
         .def_readwrite("mb_functional",&ForceField::mb_functional)
         .def_readwrite("cg_functional",&ForceField::cg_functional)
         .def_readwrite("mb_excl_functional",&ForceField::mb_excl_functional)
-//        .def_readwrite("stress_opt",&ForceField::stress_opt)
         .def_readwrite("sigma_comb_rule",&ForceField::sigma_comb_rule)
         .def_readwrite("epsilon_comb_rule",&ForceField::epsilon_comb_rule)
         .def_readwrite("vdw_scale12",&ForceField::vdw_scale12)
@@ -184,10 +208,12 @@ void export_forcefield_objects(){
         .def_readwrite("elec_scale12",&ForceField::elec_scale12)
         .def_readwrite("elec_scale13",&ForceField::elec_scale13)
         .def_readwrite("elec_scale14",&ForceField::elec_scale14)
+
         .def_readwrite("Atom_Records",&ForceField::Atom_Records)
         .def_readwrite("Bond_Records",&ForceField::Bond_Records)
         .def_readwrite("Angle_Records",&ForceField::Angle_Records)
         .def_readwrite("Dihedral_Records",&ForceField::Dihedral_Records)
+
         .def("Add_Atom_Record",&ForceField::Add_Atom_Record)
         .def("Add_Bond_Record",&ForceField::Add_Bond_Record)
         .def("Add_Angle_Record",Add_Angle_Record1)
@@ -195,7 +221,6 @@ void export_forcefield_objects(){
         .def("Add_Dihedral_Record",Add_Dihedral_Record1)
         .def("Add_Dihedral_Record",Add_Dihedral_Record2)
         .def("Add_Improper_Record",Add_Improper_Record1)
-//        .def("Add_Improper_Record",Add_Improper_Record2)
         .def("Add_Fragment_Record",&ForceField::Add_Fragment_Record)
         .def("show_atom_records",&ForceField::show_atom_records)
         .def("show_bond_records",&ForceField::show_bond_records)
@@ -206,7 +231,9 @@ void export_forcefield_objects(){
         .def("set",&ForceField::set)
         .def("show_info",&ForceField::show_info)
         .def("set_functionals",&ForceField::set_functionals)
+
     ;
+
 
 }// export_forcefield_objects
 

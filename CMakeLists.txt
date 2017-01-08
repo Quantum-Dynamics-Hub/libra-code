@@ -1,7 +1,4 @@
 # Set the compiler as described here: https://cmake.org/Wiki/CMake_FAQ#How_do_I_use_a_different_compiler.3F
-#set(CMAKE_C_COMPILER "/home/Alexey_2/Soft/gcc-6.2.0/_install/bin/gcc-6.2.0")
-#set(CMAKE_CXX_COMPILER "/home/Alexey_2/Soft/gcc-6.2.0/_install/bin/g++-6.2.0")
-
 #
 #  Verify that Cmake is up to date
 #
@@ -20,11 +17,11 @@ PROJECT("libra")
 #  Cmake configuration
 #
 IF(NOT CMAKE_BUILD_TYPE)
-  #SET(CMAKE_BUILD_TYPE "DEBUG")
-  SET(CMAKE_BUILD_TYPE "RELEASE")
+  SET(CMAKE_BUILD_TYPE "DEBUG")
+  #SET(CMAKE_BUILD_TYPE "RELEASE")
   #SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
   #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
-  SET(CMAKE_CXX_FLAGS "-fPIC -O2 -fpermissive -w")
+  SET(CMAKE_CXX_FLAGS "-fPIC -O2 -fpermissive -w -g")
 ENDIF()
 
 #
@@ -45,21 +42,26 @@ IF(Boost_FOUND)
   SET(Boost_USE_MULTITHREADED OFF)
   SET(Boost_USE_STATIC_RUNTIME OFF)
   FIND_PACKAGE(Boost 1.60.0 COMPONENTS python regex) # it seems that it is important to find sub-packages too!!!
+
 ELSEIF(NOT Boost_FOUND)
   MESSAGE(FATAL_ERROR "Unable to find correct Boost version. Did you set BOOST_ROOT?")
 ENDIF()
+
+MESSAGE("Found Boost libraries directory: ")
+MESSAGE(${Boost_LIBRARIES})
+MESSAGE("Found Boost include directory: ")
+MESSAGE(${Boost_INCLUDE_DIRS})
+
 
 #
 #  Python library
 #
 MESSAGE("Looking for Python libraries...")
-MESSAGE("Advice: If this search fails, try using -DPYTHON_LIBRARY=\${path_to_the_python_library} -PYTHON_INCLUDE_DIR=\${path_to_where_Python.h_is_found}")
-MESSAGE("Hint to self: -DPYTHON_INCLUDE_DIR=/home/Alexey_2/Soft/python2.6/include/python2.6 -DPYTHON_LIBRARY=/home/Alexey_2/Soft/python2.6/bin")
+MESSAGE("Advice: If this search fails, try setting cache variables: -DPYTHON_LIBRARY=\${path_to_the_python_library} -DPYTHON_INCLUDE_DIR=\${path_to_where_Python.h_is_found}")
+MESSAGE("Hint to self: -DPYTHON_INCLUDE_DIR=/home/Alexey_2/Soft/Python-2.6.7/bin/include/python2.6 -DPYTHON_LIBRARY=/home/Alexey_2/Soft/Python-2.6.7/bin/bin")
 
-# For Linux
+# For Linux and Cygwin
 FIND_PACKAGE(PythonLibs 2.7.0 REQUIRED)
-# For Cygwin
-#FIND_PACKAGE(PythonLibs 2.6.8 EXACT REQUIRED)
 
 IF(PYTHONLIBS_FOUND)
   MESSAGE("Success!")
@@ -69,6 +71,11 @@ ELSEIF(NOT PYTHONLIBS_FOUND)
   MESSAGE("Try using -DPYTHON_LIBRARY=\${path_to_the_python_library} -PYTHON_INCLUDE_DIR=\${path_to_where_Python.h_is_found}")
   MESSAGE(FATAL_ERROR)
 ENDIF()
+
+MESSAGE("Found  Python libraries directory: ")
+MESSAGE(${PYTHON_LIBRARIES})
+MESSAGE("Found Python include directory: ")
+MESSAGE(${PYTHON_INCLUDE_DIRS})
 
 
 #

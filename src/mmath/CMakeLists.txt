@@ -37,15 +37,14 @@ file(GLOB MMATH_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${MMATH_HEADERS})
 #
 #  Build both static and dynamic libraries
 #
-ADD_LIBRARY(mmath_stat STATIC ${MMATH_SRC})
 ADD_LIBRARY(mmath      SHARED ${MMATH_SRC})
+ADD_LIBRARY(mmath_stat STATIC ${MMATH_SRC})
 
 #
 #  Link to external libraries
 #
 # Because ann_stat alreay includes linalg_stat, specialfunctions_stat, and data_stat
-#TARGET_LINK_LIBRARIES(mmath_stat symmetry_stat meigen_stat ann_stat random_stat operators_stat graph_stat  ${ext_libs})
 
+TARGET_LINK_LIBRARIES(mmath      symmetry_stat meigen_stat ann_stat data_stat random_stat operators_stat graph_stat specialfunctions_stat linalg_stat ${ext_libs})
 TARGET_LINK_LIBRARIES(mmath_stat symmetry_stat meigen_stat ann_stat data_stat random_stat operators_stat graph_stat specialfunctions_stat linalg_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(mmath      mmath_stat)
                                                  

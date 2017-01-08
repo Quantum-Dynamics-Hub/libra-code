@@ -222,7 +222,7 @@ complex<double> I_1D(double kx, double kxp, double gx, double gxp){
     double delt = kx + gx - kxp - gxp;
 
     if(fabs(delt) <= zero){   res = complex<double>(1.0, 0.0); }
-    else{  res = -one * ( ( exp(2.0*one*M_PI*delt) - 1.0 ) / (2.0 * M_PI * delt) );  }
+    else{  res = -one * ( ( complex<double>( cos(2.0*M_PI*delt) - 1.0 ), sin(2.0*M_PI*delt)) / (2.0 * M_PI * delt) );  }
 
     return res;
 }

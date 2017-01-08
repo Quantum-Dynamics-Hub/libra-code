@@ -1,11 +1,7 @@
 #
 # Set the libraries
 # 
-# For Cygwin
-SET( ext_libs ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ) #/libpython2.6.dll )   
-# For Linux
-#SET( ext_libs ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ) 
-
+SET( ext_libs ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ) 
 
 
 #
@@ -78,8 +74,8 @@ ADD_LIBRARY(libra_core SHARED ${LIBRA_SRC})
 ADD_LIBRARY(libra_core_stat STATIC ${LIBRA_SRC})
 
 
-TARGET_LINK_LIBRARIES(libra_core      util_stat solvers_stat qchem_tools_stat scripts_stat converters_stat dyn_stat hamiltonian_stat pot_stat cell_stat qchem_stat chemobjects_stat mmath_stat context_stat io_stat calculators_stat ) # ${ext_libs}  )
-TARGET_LINK_LIBRARIES(libra_core_stat util_stat solvers_stat qchem_tools_stat scripts_stat converters_stat dyn_stat hamiltonian_stat pot_stat cell_stat qchem_stat chemobjects_stat mmath_stat context_stat io_stat calculators_stat ) # ${ext_libs}  )
+TARGET_LINK_LIBRARIES(libra_core      util_stat solvers_stat qchem_tools_stat scripts_stat converters_stat dyn_stat hamiltonian_stat pot_stat cell_stat qchem_stat chemobjects_stat mmath_stat context_stat io_stat calculators_stat ${ext_libs}  )
+TARGET_LINK_LIBRARIES(libra_core_stat util_stat solvers_stat qchem_tools_stat scripts_stat converters_stat dyn_stat hamiltonian_stat pot_stat cell_stat qchem_stat chemobjects_stat mmath_stat context_stat io_stat calculators_stat ${ext_libs}  )
 
 #
 #  Copy python files
