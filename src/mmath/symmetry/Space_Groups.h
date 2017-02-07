@@ -1452,7 +1452,49 @@ public:
       }
       else if(space_group_name == "Pm_m_n"){
 
-      std::cout<<"This space group is not programmed yet!"<<std::endl;
+         m = 0.0;
+         m.M[0] =  1.0;
+                         m.M[5] =  1.0;
+                                        m.M[10] =  1.0;    operators.push_back(m);  // x,  y,  z
+
+         m = 0.0;
+         m.M[0] = -1.0;
+                         m.M[5] =  1.0;
+                                        m.M[10] =  1.0;    operators.push_back(m);  // -x,  y,  z
+
+         m = 0.0;
+         m.M[0] =  1.0;
+                         m.M[5] = -1.0;
+                                        m.M[10] =  1.0;    operators.push_back(m);  // x,  -y,  z
+
+         m = 0.0;
+         m.M[0] =  1.0;                                 m.M[3] = 0.5;
+                         m.M[5] = 1.0;                  m.M[7] = 0.5;
+                                        m.M[10] =-1.0;  m.M[11]= 0.0;   operators.push_back(m);  // 1/2+x, 1/2+y,  -z
+
+         m = 0.0;
+         m.M[0] = -1.0;                                 m.M[3] = 0.5;
+                         m.M[5] =-1.0;                  m.M[7] = 0.5;
+                                        m.M[10] =-1.0;  m.M[11]= 0.0;   operators.push_back(m);  // 1/2-x, 1/2-y,  -z
+
+         m = 0.0;
+         m.M[0] =  1.0;                                 m.M[3] = 0.5;
+                         m.M[5] =-1.0;                  m.M[7] = 0.5;
+                                        m.M[10] =-1.0;  m.M[11]= 0.0;   operators.push_back(m);  // 1/2+x, 1/2-y,  -z
+
+         m = 0.0;
+         m.M[0] = -1.0;                                 m.M[3] = 0.5;
+                         m.M[5] = 1.0;                  m.M[7] = 0.5;
+                                        m.M[10] =-1.0;  m.M[11]= 0.0;   operators.push_back(m);  // 1/2-x, 1/2+y,  -z
+
+         m = 0.0;
+         m.M[0] = -1.0;
+                         m.M[5] = -1.0;
+                                        m.M[10] =  1.0;    operators.push_back(m);  // -x,  -y,  z
+
+
+
+      //std::cout<<"This space group is not programmed yet!"<<std::endl;
       // Two wariants
       }
       else if(space_group_name == "Pb_c_n"){
