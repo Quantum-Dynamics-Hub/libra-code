@@ -1,0 +1,36 @@
+!  STO-2G  EMSL  Basis Set Exchange Library   2/10/17 12:47 PM
+! Elements                             References
+! --------                             ----------
+!  H - He: W.J. Hehre, R.F. Stewart and J.A. Pople, J. Chem. Phys. 2657 (1969).
+! Li - Ne: 
+! Na - Ar: W.J. Hehre, R. Ditchfield, R.F. Stewart, J.A. Pople, J. Chem. Phys.
+!  K - Kr: 52, 2769 (1970).
+!   
+
+$DATA
+HYDROGEN
+S   2
+  1      1.309756377            0.430128498      
+  2      0.233135974            0.678913531      
+
+HELIUM
+S   2
+  1      2.4328790              0.4301280        
+  2      0.4330510              0.6789140        
+
+LITHIUM
+S   2
+  1      6.1638450              0.4301280        
+  2      1.0971610              0.6789140        
+L   2
+  1      0.2459160              0.0494720              0.5115410        
+  2      0.0623710              0.9637820              0.6128200        
+
+BERYLLIUM
+S   2
+  1     11.5356690              0.4301280        
+  2      2.0533430              0.6789140        
+L   2
+  1      0.5081630              0.0494720              0.5115410        
+  2      0.1288840              0.9637820              0.6128200        
+$END

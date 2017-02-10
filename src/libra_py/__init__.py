@@ -18,6 +18,7 @@ __all__ = ["init_system",
            "LoadMolecule",
            "nve_md",
            "proj_dos",
-           "QE_methods"
+           "QE_methods",
+           "parse_gamess"
           ]
 
