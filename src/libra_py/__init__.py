@@ -19,6 +19,7 @@ __all__ = ["init_system",
            "nve_md",
            "proj_dos",
            "QE_methods",
-           "parse_gamess"
+           "parse_gamess",
+           "fit"
           ]
 
