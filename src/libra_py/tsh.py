@@ -353,8 +353,8 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse):
 
     # In case the electronic DOF are given in the form of Electronic object
     elif type(Coeff).__name__ == "Electronic":
-
-       C = Electronic(Coeff)
+        
+        C = Electronic(Coeff)
                 
         if dE>0.0:
         
