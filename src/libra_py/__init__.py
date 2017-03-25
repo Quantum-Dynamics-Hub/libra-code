@@ -20,6 +20,7 @@ __all__ = ["init_system",
            "proj_dos",
            "QE_methods",
            "parse_gamess",
-           "fit"
+           "fit",
+           "acf"
           ]
 
