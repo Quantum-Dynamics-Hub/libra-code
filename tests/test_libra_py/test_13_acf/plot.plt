@@ -47,12 +47,12 @@ plot "acf.txt" using 1:2  w l  ls 11  lw 5  t "normalized",\
      "acf.txt" using 1:3  w l  ls 21  lw 5  t "unnormalized"
 
 
-set xlabel "Intensity " offset 0.0, 0.5
-set ylabel "Frequency, cm^{-1}" offset 1.5, 0.0 
+set ylabel "Intensity " offset 2.0, 0.0
+set xlabel "Frequency, cm^{-1}" offset 0, 0.5 
 
 set xrange [0:2000]
 set xtics 250
-#set yrange [-0.6:1.5]
+set yrange [-0.6:1.5]
 #set ytics 0.4
 
 set output "spectrum_.png"
