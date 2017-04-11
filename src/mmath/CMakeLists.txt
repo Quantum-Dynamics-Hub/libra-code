@@ -25,6 +25,9 @@ ADD_SUBDIRECTORY("meigen")
 MESSAGE("Going into subdirectory symmetry...")
 ADD_SUBDIRECTORY("symmetry")
 
+MESSAGE("Going into subdirectory ergomatrix...")
+ADD_SUBDIRECTORY("ergomatrix")
+
 
 
 #

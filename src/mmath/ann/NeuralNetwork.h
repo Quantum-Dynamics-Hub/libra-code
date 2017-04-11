@@ -39,14 +39,15 @@ namespace libann{
 class ANNData{
 
 public:
-// This is how the input data (training patterns) should
-// look like:
-// This is simgle input-output pair of vectors
-	vector<double> Input; 	 // may be of size n
-        vector<double> Output;   // may be of size m
-        vector<double> Derivs;   // must be of size n*k, k - integer
+  // This is how the input data (training patterns) should
+  // look like:
+  // This is single input-output pair of vectors
 
-        ANNData& operator=(const ANNData&);
+  vector<double> Input;    // may be of size n
+  vector<double> Output;   // may be of size m
+  vector<double> Derivs;   // must be of size n*m 
+
+  ANNData& operator=(const ANNData&);
 
 };
 //----------------------------------------------
@@ -133,41 +134,42 @@ public:
   // Copy constructor
   NeuralNetwork(const NeuralNetwork&); 
 
-        // Destructor
-        ~NeuralNetwork(); 
+  // Destructor
+  ~NeuralNetwork(); 
 
-        // Methods
-	void CreateANN(boost::python::list);
-        int ShowANN();
+  // Methods
+  void CreateANN(boost::python::list);
+  int ShowANN();
+  
+  void set(boost::python::object obj);
+  void set(boost::python::dict d);
 
+  int ExportANN(std::string filename);
+  int ImportANN(std::string filename);
 
-        void set(boost::python::object obj);
-        int ExportANN(std::string filename);
-        int ImportANN(std::string filename);
+  void save(boost::property_tree::ptree& pt,std::string path);
+  void load(boost::property_tree::ptree& pt,std::string path,int& status);
 
-        void save(boost::property_tree::ptree& pt,std::string path);
-        void load(boost::property_tree::ptree& pt,std::string path,int& status);
+  NeuralNetwork& operator=(const NeuralNetwork&);
 
-
-        NeuralNetwork& operator=(const NeuralNetwork&);
-
-
-        int SetTrainingData(object,int);
-        int ScaleTrainingData(int,int);
-        int ScaleTrainingData(int,int,boost::python::list,boost::python::list);
-        int NormalizeTrainingData(int,int);
-        int NormalizeAndScaleTrainingData(int,int,boost::python::list minlim,boost::python::list maxlim);
-        int NormalizeAndTransformTrainingData(int,int);
-        int CropTrainingData(boost::python::list,boost::python::list);
+  int ClearTrainingData();
+  int AddTrainingData(boost::python::list patterns);
 
 
-        void ANNTrain();
-        int Propagate(boost::python::list input,boost::python::list& result);
-        int Propagate(MATRIX input,MATRIX& result);
-        int Propagate(boost::python::list input,boost::python::list& result,boost::python::list& derivs);
-        int Propagate(MATRIX input,MATRIX& result,MATRIX& derivs);  
-        void LearningHistory(std::string filename,std::string data_flag);
+  int SetTrainingData(object,int);
+  int ScaleTrainingData(int,int);
+  int ScaleTrainingData(int,int,boost::python::list,boost::python::list);
+  int NormalizeTrainingData(int,int);
+  int NormalizeAndScaleTrainingData(int,int,boost::python::list minlim,boost::python::list maxlim);
+  int NormalizeAndTransformTrainingData(int,int);
+  int CropTrainingData(boost::python::list,boost::python::list);
 
+  void ANNTrain();
+  int Propagate(boost::python::list input, boost::python::list& result);
+  int Propagate(const MATRIX& input, MATRIX& result);
+  int Propagate(boost::python::list input, boost::python::list& result, boost::python::list& derivs);
+  int Propagate(const MATRIX& input, MATRIX& result, MATRIX& derivs);  
+  void LearningHistory(std::string filename,std::string data_flag);
 
 
 };

@@ -19,301 +19,154 @@ namespace libmmath{
 namespace libann{
 
 
-int NeuralNetwork::Propagate(boost::python::list input,boost::python::list& result){
+int NeuralNetwork::Propagate(boost::python::list input, boost::python::list& result){
 
-  int i,j,L;
-
+  int i;
   if(len(input)!=sz_x){
     std::cout<<"Error: Size of the input "<<len(input)<<" does not match the ANN architecture "<<sz_x<<std::endl;
   }
-  else{
-    int NL = Nlayers - 1;
-    double tmp;
-    vector<MATRIX> Y;
-    MATRIX x(sz_x,1);
 
-    //---------- Use the same linear transformation of input as during the training ----------
-    for(i=0;i<sz_x;i++){
-      tmp=extract<double>(input[i]);
-      tmp = Inputs[i].scale_factor * tmp + Inputs[i].shift_amount;
-      x.M[i] = tmp;
-    }// for i
+  MATRIX* x;  x = new MATRIX(sz_x, 1);
+  MATRIX* y;  y = new MATRIX(sz_y, 1);
 
-    //------- Forward propagation of the signal ------------
-    Y.clear();
-    Y.push_back(x);//0-th item;
+  for(i=0; i<sz_x; i++){  x->M[i] = extract<double>(input[i]);   }
 
-    for(L=1;L<=NL;L++){
-      MATRIX NET(Npe[L],1);
-      MATRIX   y(Npe[L],1);
+  this->Propagate(*x, *y);
 
-      NET=W[L]*Y[L-1];
-      NET = NET + B[L];
+  for(i=0; i<sz_y; i++){  result.append(y->M[i]); }
 
-      for(j=0;j<Npe[L];j++){ y.M[j]=tanh(NET.M[j]);}   Y.push_back(y);
 
-    }// for L
-
-    //------- Linear transformation of the output ----------------
-    for(i=0;i<Npe[NL];i++){
-      tmp = Y[NL].M[i];
-
-      // Inverse transform of output
-      if(scale_method=="normalize_and_transform"){
-      // Invert non-linear transformation
-      //   tmp = tanh(tmp) = (exp(tmp)-exp(-tmp))/(exp(tmp)+exp(-tmp))   =>
-
-        if(tmp>=0.99){ tmp = 0.99; }
-        else if(tmp<=-0.99) { tmp = -0.99; }
-        tmp = 0.5*log((1.0+tmp)/(1.0-tmp)); // <=
-
-      }// if
-
-      // Invert linear transformation of the output
-      if(Outputs[i].scale_factor!=0.0){
-        tmp = (1.0/Outputs[i].scale_factor)*(tmp - Outputs[i].shift_amount);
-      }
-
-      result.append(tmp);
-
-    }// for i
-
-  }// else if sizes match
-
-  return 0;
+  delete x;
+  delete y;
 
 }
 
 
-int NeuralNetwork::Propagate(MATRIX input,MATRIX& result){
+int NeuralNetwork::Propagate(const MATRIX& input, MATRIX& result){
+
   int i;
+
   // Clean result
   result = 0.0;
 
   if(input.num_of_rows!=sz_x){
     std::cout<<"Error: Size of the input "<<input.num_of_rows<<" does not match the ANN architecture "<<sz_x<<std::endl;
+    exit(0);
   }
-  else{
 
- int NL = Nlayers - 1;
- double tmp;
+  int NL = Nlayers - 1;
+  double tmp;
 
- vector<MATRIX> Y;
- MATRIX x(sz_x,1);
+  vector<MATRIX> Y;
+  MATRIX x(sz_x,1);
 
- for(i=0;i<sz_x;i++){
+  for(i=0;i<sz_x;i++){
 
-//---------- Use the same linear transformation of input as during the training ----------
+    //---------- Use the same linear transformation of input as during the training ----------
     tmp=input[i];
     tmp = Inputs[i].scale_factor * tmp + Inputs[i].shift_amount;
     x.M[i] = tmp;
 
- }// for i
-
-
-//-----------------------------------------------------
-//------- Forward propagation of the signal ------------
-     Y.clear();
-     Y.push_back(x);//0-th item;
-
-     for (int L=1;L<=NL;L++){
-          MATRIX NET(Npe[L],1);
-          MATRIX   y(Npe[L],1);
-
-          NET=W[L]*Y[L-1];
-          NET = NET + B[L];
-
-          for(int j=0;j<Npe[L];j++){ y.M[j]=tanh(NET.M[j]);}
-          Y.push_back(y);
-    }
-
-
-//------- Linear transformation of the output ----------------
- for(i=0;i<Npe[NL];i++){
-    tmp = Y[NL].M[i];
-
-    // Inverse transform of output
-    if(scale_method=="normalize_and_transform"){
-    // Invert non-linear transformation
-    //   tmp = tanh(tmp) = (exp(tmp)-exp(-tmp))/(exp(tmp)+exp(-tmp))   =>
-
-         if(tmp>=0.99){ tmp = 0.99; }
-         else if(tmp<=-0.99) { tmp = -0.99; }
-
-         tmp = 0.5*log((1.0+tmp)/(1.0-tmp)); // <=
-    }
-
-    // Invert linear transformation of the output
-    if(Outputs[i].scale_factor!=0.0){
-         tmp = (1.0/Outputs[i].scale_factor)*(tmp - Outputs[i].shift_amount);
-    }
-
-
-    result.M[i] = tmp;
-
- }// for i
-
-
-
- }// else if sizes match
-
-  return 0;
-}
-
-int NeuralNetwork::Propagate(boost::python::list input,boost::python::list& result,boost::python::list& derivatives){
-  int i;
-// Clean result
- sz_x = Inputs.size();
- sz_y = Outputs.size();
-
-
- if(len(input)!=sz_x){
- std::cout<<"Error: Size of the input "<<len(input)<<" does not match the ANN architecture "<<sz_x<<std::endl;
- }else{
-
- int NL = Nlayers - 1;
- int L;
- double tmp;
-
- vector<MATRIX> Y;
- MATRIX x(sz_x,1);
- MATRIX derivs(sz_y,sz_x);
-
-  vector<MATRIX> gamma,ksi; // "Conjugate" variables, ksi[L] - is basically dx[L]/dx[0]
-
-  MATRIX g(sz_x,sz_x); g.Init_Unit_Matrix(1.0);
-  gamma.push_back(g);
-  ksi.push_back(g); // thus ksi[0] = I - unity matrix of size sz_x - by - sz_x
-
-  for(L=1;L<=NL;L++){
-      MATRIX d1(Npe[L],sz_x); d1 = 0.0;
-
-      gamma.push_back(d1);
-      ksi.push_back(d1);
-  }// for L
-
-
-
- for(i=0;i<sz_x;i++){
-
-//---------- Use the same linear transformation of input as during the training ----------
-    tmp=extract<double>(input[i]);
-    tmp = Inputs[i].scale_factor * tmp + Inputs[i].shift_amount;
-    x.M[i] = tmp;
-
- }// for i
-
-
-
-//-----------------------------------------------------
-//------- Forward propagation of the signal ------------
-     vector<MATRIX> tmpF;
-     Y.clear();
-     Y.push_back(x);//0-th item;
-
-     for (L=1;L<=NL;L++){
-          MATRIX NET(Npe[L],1);
-          MATRIX   y(Npe[L],1);
-
-          NET=W[L]*Y[L-1];
-          NET = NET + B[L];
-
-          D[L] = 0.0;
-
-
-          for(int j=0;j<Npe[L];j++){
-                y.M[j]=tanh(NET.M[j]);
-                D[L].M[j*Npe[L]+j] = (1.0 - y.M[j]*y.M[j]);
-          }
-/*
-          MATRIX F(Npe[L],Npe[L-1]);
-
-          F = D[L]*W[L];
-
-          if(tmpF.size()==0){
-          tmpF.push_back(F);
-          }else{
-            MATRIX tmp_F(Npe[L],tmpF[0].num_of_cols);
-            tmp_F = F*tmpF[0];
-            tmpF.clear();
-            tmpF.push_back(tmp_F);
-          }
-*/
-          gamma[L] = W[L]*ksi[L-1];
-          ksi[L]   = D[L]*gamma[L];
-
-          Y.push_back(y);
-
-    }
-    derivs = ksi[NL]; //tmpF[0];
-//    tmpF.clear();
-
-
-//------- Linear transformation of the output ----------------
-
- for(i=0;i<Npe[NL];i++){
-    tmp = Y[NL].M[i];
-
-    // Inverse transform of output
-    if(scale_method=="normalize_and_transform"){
-    // Invert non-linear transformation
-    //   tmp = tanh(tmp) = (exp(tmp)-exp(-tmp))/(exp(tmp)+exp(-tmp))   =>
-
-         if(tmp>=0.99){ tmp = 0.99; }
-         else if(tmp<=-0.99) { tmp = -0.99; }
-
-         tmp = 0.5*log((1.0+tmp)/(1.0-tmp)); // <=
-    }
-
-    // Invert linear transformation of the output
-    if(Outputs[i].scale_factor!=0.0){
-         tmp = (1.0/Outputs[i].scale_factor)*(tmp - Outputs[i].shift_amount);
-    }
-
-    result.append(tmp);
-
- }// for i
-
-//--------- Linear transform of the derivatives ----------------
-
-  for(i=0;i<sz_y;i++){
-      for(int j=0;j<sz_x;j++){
-          // scale dYi/dXj
-          derivs.M[sz_x*i+j] = (1.0/Derivs[sz_x*i+j].scale_factor)*(derivs.M[sz_x*i+j]);
-          derivatives.append(derivs.M[sz_x*i+j]);
-      }// for j
   }// for i
 
+  //-----------------------------------------------------
+  //------- Forward propagation of the signal ------------
+  Y.clear();
+  Y.push_back(x); // 0-th item;
+
+  for(int L=1;L<=NL;L++){
+    MATRIX NET(Npe[L],1);
+    MATRIX   y(Npe[L],1);
+
+    NET=W[L]*Y[L-1] + B[L];
+
+    for(int j=0;j<Npe[L];j++){ y.M[j]=tanh(NET.M[j]);}
+    Y.push_back(y);
+  }
 
 
+  //------- Linear transformation of the output ----------------
+  for(i=0;i<Npe[NL];i++){
+    tmp = Y[NL].M[i];
 
- }// else if sizes match
+    // Inverse transform of output
+    if(scale_method=="normalize_and_transform"){
+      // Invert non-linear transformation
+      //   tmp = tanh(tmp) = (exp(tmp)-exp(-tmp))/(exp(tmp)+exp(-tmp))   =>
+
+      if(tmp>=0.99){ tmp = 0.99; }
+      else if(tmp<=-0.99) { tmp = -0.99; }
+
+      tmp = 0.5*log((1.0+tmp)/(1.0-tmp)); // <=
+    }
+
+    // Invert linear transformation of the output
+    if(Outputs[i].scale_factor!=0.0){
+      tmp = (1.0/Outputs[i].scale_factor)*(tmp - Outputs[i].shift_amount);
+    }
+
+    result.M[i] = tmp;
+  }// for i
 
   return 0;
 }
 
 
+int NeuralNetwork::Propagate(boost::python::list input, boost::python::list& result, boost::python::list& derivatives){
 
-int NeuralNetwork::Propagate(MATRIX input,MATRIX& result,MATRIX& derivs){
+  int i;
+  if(len(input)!=sz_x){
+    std::cout<<"Error: Size of the input "<<len(input)<<" does not match the ANN architecture "<<sz_x<<std::endl;
+  }
 
-// Clean result
- result = 0.0;
- sz_x = Inputs.size();
- sz_y = Outputs.size();
+  MATRIX* x;  x = new MATRIX(sz_x, 1);
+  MATRIX* y;  y = new MATRIX(sz_y, 1);
+  MATRIX* d;  d = new MATRIX(sz_d, 1);
 
- if(input.num_of_rows!=sz_x){
- std::cout<<"Error: Size of the input "<<input.num_of_rows<<" does not match the ANN architecture "<<sz_x<<std::endl;
- }else{
+  for(i=0; i<sz_x; i++){  x->M[i] = extract<double>(input[i]);  }
 
- int NL = Nlayers - 1;
- int i,L;
- double tmp;
+  this->Propagate(*x, *y, *d);
 
- vector<MATRIX> Y;
- MATRIX x(sz_x,1);
+  for(i=0; i<sz_y; i++){  result.append(y->M[i]); }
+  for(i=0; i<sz_d; i++){  derivatives.append(d->M[i]); }
 
 
+  delete x;
+  delete y;
+  delete d;
+
+}
+
+int NeuralNetwork::Propagate(const MATRIX& input, MATRIX& result, MATRIX& derivs){
+/**  This function propagates a given input through the ANN and also computes 
+   the derivaties of the outputs w.r.t. inputs
+
+   input - input matrix
+   result - the output of the ANN
+   derivs - the derivatives
+
+*/
+
+//  sz_x = Inputs.size();
+//  sz_y = Outputs.size();
+
+  // Input check
+  if(input.num_of_rows!=sz_x){
+    std::cout<<"Error: Size of the input "<<input.num_of_rows
+    <<" does not match the ANN architecture "<<Npe[0]<<std::endl;
+    exit(0);
+  }
+
+  // Define and setup some variables
+  int NL = Nlayers - 1;
+  int i,L;
+  double tmp;
+  MATRIX x(sz_x,1);
+  vector<MATRIX> Y;
   vector<MATRIX> gamma,ksi; // "Conjugate" variables, ksi[L] - is basically dx[L]/dx[0]
+
+  // Setup some variables
+  result = 0.0;
 
   MATRIX g(sz_x,sz_x); g.Init_Unit_Matrix(1.0);
   gamma.push_back(g);
@@ -327,41 +180,39 @@ int NeuralNetwork::Propagate(MATRIX input,MATRIX& result,MATRIX& derivs){
   }// for L
 
 
+  for(i=0;i<sz_x;i++){
 
-
-
- for(i=0;i<sz_x;i++){
-
-//---------- Use the same linear transformation of input as during the training ----------
+    //---------- Use the same linear transformation of input as during the training ----------
     tmp=input.M[i];
 
     tmp = Inputs[i].scale_factor * tmp + Inputs[i].shift_amount;
     x.M[i] = tmp;
 
- }// for i
+  }// for i
 
 
 
-//-----------------------------------------------------
-//------- Forward propagation of the signal ------------
-     vector<MATRIX> tmpF;
-     Y.clear();
-     Y.push_back(x);//0-th item;
+  //-----------------------------------------------------
+  //------- Forward propagation of the signal ------------
+  vector<MATRIX> tmpF;
+  Y.clear();
+  Y.push_back(x); //0-th item;
 
-     for (L=1;L<=NL;L++){
-          MATRIX NET(Npe[L],1);
-          MATRIX   y(Npe[L],1);
+  for (L=1;L<=NL;L++){
 
-          NET=W[L]*Y[L-1];
-          NET = NET + B[L];
+    MATRIX NET(Npe[L],1);
+    MATRIX   y(Npe[L],1);
 
-          D[L] = 0.0;
+    NET = W[L] * Y[L-1] + B[L];
+    D[L] = 0.0;
 
 
-          for(int j=0;j<Npe[L];j++){
-                y.M[j]=tanh(NET.M[j]);
-                D[L].M[j*Npe[L]+j] = (1.0 - y.M[j]*y.M[j]);
-          }
+    for(int j=0;j<Npe[L];j++){
+
+      y.M[j]=tanh(NET.M[j]);
+      D[L].M[j*Npe[L]+j] = (1.0 - y.M[j]*y.M[j]);
+
+    }
           /*
           MATRIX F(Npe[L],Npe[L-1]);
 
@@ -376,30 +227,31 @@ int NeuralNetwork::Propagate(MATRIX input,MATRIX& result,MATRIX& derivs){
             tmpF.push_back(tmp_F);
           }
           */
-          Y.push_back(y);
+    Y.push_back(y);
  
-          gamma[L] = W[L]*ksi[L-1];
-          ksi[L]   = D[L]*gamma[L];
+    gamma[L] = W[L]*ksi[L-1];
+    ksi[L]   = D[L]*gamma[L];
 
-    }
-    derivs = ksi[NL]; // tmpF[0];
-//    tmpF.clear();
+  }// for L
+
+  derivs = ksi[NL]; // tmpF[0];
+  //    tmpF.clear();
 
 
-//------- Linear transformation of the output ----------------
+  //------- Linear transformation of the output ----------------
 
- for(i=0;i<Npe[NL];i++){
+  for(i=0;i<Npe[NL];i++){
     tmp = Y[NL].M[i];
 
     // Inverse transform of output
     if(scale_method=="normalize_and_transform"){
-    // Invert non-linear transformation
-    //   tmp = tanh(tmp) = (exp(tmp)-exp(-tmp))/(exp(tmp)+exp(-tmp))   =>
+      // Invert non-linear transformation
+      //   tmp = tanh(tmp) = (exp(tmp)-exp(-tmp))/(exp(tmp)+exp(-tmp))   =>
 
-         if(tmp>=0.99){ tmp = 0.99; }
-         else if(tmp<=-0.99) { tmp = -0.99; }
+      if(tmp>=0.99){ tmp = 0.99; }
+      else if(tmp<=-0.99) { tmp = -0.99; }
 
-         tmp = 0.5*log((1.0+tmp)/(1.0-tmp)); // <=
+      tmp = 0.5*log((1.0+tmp)/(1.0-tmp)); // <=
     }
 
     // Invert linear transformation of the output
@@ -409,21 +261,16 @@ int NeuralNetwork::Propagate(MATRIX input,MATRIX& result,MATRIX& derivs){
 
     result.M[i] = tmp;
 
- }// for i
-
-//--------- Linear transform of the derivatives ----------------
-
-  for(i=0;i<sz_y;i++){
-      for(int j=0;j<sz_x;j++){
-          // scale dYi/dXj
-          derivs.M[sz_x*i+j] = (1.0/Derivs[sz_x*i+j].scale_factor)*(derivs.M[sz_x*i+j]);
-      }// for j
   }// for i
 
+  //--------- Linear transform of the derivatives ----------------
 
-
-
- }// else if sizes match
+  for(i=0;i<sz_y;i++){
+    for(int j=0;j<sz_x;j++){
+      // scale dYi/dXj
+      derivs.M[sz_x*i+j] = (1.0/Derivs[sz_x*i+j].scale_factor)*(derivs.M[sz_x*i+j]);
+    }// for j
+  }// for i
 
   return 0;
 }
@@ -432,8 +279,10 @@ int NeuralNetwork::Propagate(MATRIX input,MATRIX& result,MATRIX& derivs){
 
 
 void NeuralNetwork::ANNTrain(){
-  // This is a combination of different training methods
-  // controlled by corresponding parameters
+/**
+  This function will train the ANN using the parameters set up and the methods 
+  selected.
+*/
 
   //=====================================================================
   //========== Parameters and auxiliary valiables are here ==============
@@ -441,7 +290,7 @@ void NeuralNetwork::ANNTrain(){
 
 
 
-  //----------- Patameters --------------------------
+  //----------- Parameters --------------------------
 
   int NL= Nlayers-1;// Maximal index of matrixes and biases
 
@@ -467,7 +316,7 @@ void NeuralNetwork::ANNTrain(){
   //----------- Auxiliary variables ----------------
   int i,j,L;
 
-  vector<int> rperm;
+  vector<int> rperm;   // a random permutation
 
   MATRIX X(sz_x,1);
   MATRIX Target(sz_y,1);
@@ -488,25 +337,21 @@ void NeuralNetwork::ANNTrain(){
   ksi.push_back(g); // thus ksi[0] = I - unity matrix of size sz_x - by - sz_x
 
   for(L=1;L<=NL;L++){
-      MATRIX d1(Npe[L],sz_x); d1 = 0.0;
-      MATRIX d2(Npe[L],Npe[L]); d2 = 0.0;
+    MATRIX d1(Npe[L],sz_x); d1 = 0.0;
+    MATRIX d2(Npe[L],Npe[L]); d2 = 0.0;
  
-      Tau.push_back(d1);
-      D2.push_back(d2);
+    Tau.push_back(d1);
+    D2.push_back(d2);
  
-      gamma.push_back(d1);
-      ksi.push_back(d1);
+    gamma.push_back(d1);
+    ksi.push_back(d1);
   }// for L  
-
-
-
 
 
 
   //===============================================================================
   //============== Checking for appropriate settings is here ======================
   //===============================================================================
-
 
 
   //------------ First stage: Need to check all settings and to set up them if necessary --------------
@@ -600,119 +445,145 @@ void NeuralNetwork::ANNTrain(){
   //============================================================================
 
   // Initialize random number generator
-  srand((unsigned)time(0)); 
+//  srand((unsigned)time(0)); 
 
   while (Iteration<iterations_in_cycle){
 
-      // Clear container
-      if(rperm.size()>0){ rperm.clear(); }
+    // Clear container
+    if(rperm.size()>0){ rperm.clear(); }
 
-      // Choose a random sub-set of the training data set           
-      randperm(epoch_size,num_of_patterns,rperm);
+    // Choose a random sub-set of the training data set 
+    // after this operation, the variable rperm will contain epoch_size integers
+    // ranging from 0 to num_of_patterns
+    // Essentially, the rperm will contain a subset of the training patterns used 
+    // in this eapoch to train the ANN
+    randperm(epoch_size,num_of_patterns,rperm);
 
-      // Initialize total gradients (summ over epoch size)
-      for (L=1;L<=NL;L++){
-          dWcurr[L] = 0.0;
-          dBcurr[L] = 0.0;
+    // Initialize total gradients (summ over epoch size)
+    for (L=1;L<=NL;L++){
+      dWcurr[L] = 0.0;
+      dBcurr[L] = 0.0;
+    }
+
+    // Iterate over all subset patterns
+    for(int ep=0;ep<epoch_size;ep++){
+
+      // Pick a single pattern - inputs, outputs, and may be derivatives
+      int indx = rperm[ep];
+//      cout<<"Iteration = "<<Iteration<<" ep = "<<ep<<" indx = "<<indx<<endl;
+      
+      for(j=0;j<sz_x;j++){ X.M[j]       = Inputs[j].Data[indx];  }
+      for(j=0;j<sz_y;j++){ Target.M[j]  = Outputs[j].Data[indx]; }
+
+      if(derivs_flag){
+        for(j=0;j<sz_d;j++){ Tangent.M[j] = Derivs[j].Data[indx];  }
+      }else{
+        for(j=0;j<sz_d;j++){ Tangent.M[j] = 0.0;}
       }
 
+      //------------------------------------
+      // Propagate forward - compute the inputs to all intermediate layers
+      // and store them in the vector Y, layer by layer:
+      // Y[0] - input layer, Y[1] - input to the first hidden layer, etc.
+      // We will also compute the derivatives of these inputs w.r.t. to 
+      // previous inputs (actually, to the previous NETs)
+      vector<MATRIX> Y;  
 
-      // Iterate over all subset patterns
-      for(int ep=0;ep<epoch_size;ep++){
+      // 0-th item == input	
+      Y.push_back(X);
 
-          // Pick a single pattern - inputs, outputs, and may be derivatives
-          int indx = rperm[ep];
-          for(j=0;j<sz_x;j++){ X.M[j]       = Inputs[j].Data[indx];  }
-          for(j=0;j<sz_y;j++){ Target.M[j]  = Outputs[j].Data[indx]; }
-          if(derivs_flag){
-          for(j=0;j<sz_d;j++){ Tangent.M[j] = Derivs[j].Data[indx];  }
-          }else{
-          for(j=0;j<sz_d;j++){ Tangent.M[j] = 0.0;}
-          }
+      for(L=1;L<=NL;L++){
 
-          //------------------------------------
-          // Propagate forward
-          vector<MATRIX> Y;  
-          Y.push_back(X);//0-th item; == is input	
+        MATRIX NET(Npe[L],1);
+        MATRIX   y(Npe[L],1);
 
-          for (L=1;L<=NL;L++){
-
-              MATRIX NET(Npe[L],1);
-              MATRIX   y(Npe[L],1);
-		
-              NET=W[L]*Y[L-1];
-              NET = NET + B[L];
-              D[L] = 0.0;
-              D2[L]= 0.0;
-	
-    	      for(j=0;j<Npe[L];j++){
-	          y.M[j]=tanh(NET.M[j]);
- 		  D[L].M[j*Npe[L]+j] = (1.0 - y.M[j]*y.M[j]);               
-                  D2[L].M[j*Npe[L]+j] = -2.0*y.M[j]*D[L].M[j*Npe[L]+j];                   
-              }// for j
-        
-              Y.push_back(y);
-          
-              gamma[L] = W[L]*ksi[L-1];
-              ksi[L]   = D[L]*gamma[L];              
-		
-          }// for L
+        NET = W[L]*Y[L-1] + B[L];
     
-          // Calculate error
-          MATRIX e(Npe[NL],1);      e = 0.0;
-          MATRIX tau(Npe[NL],sz_x); tau = 0.0;
+        /**
+          Y[j] = tanh( NET[j] )    tanh(x) = ( exp(x) - exp(-x) ) / (exp(x) + exp(-x) )
 
- 	  // Error for last (output) layer
-          for (j=0;j<Npe[NL];j++){ 
-              e.M[j]=pow((Target.M[j]-Y[NL].M[j]),(2.0*norm_exp+1));
+          dY[j]/dNET[j] = ...
+        */
 
-              if(derivs_flag){
-              for(i=0;i<sz_x;i++){
-                  tau.M[j*sz_x+i] = grad_weight*pow((Tangent.M[j*sz_x+i]-ksi[NL].M[j*sz_x+i]),(2.0*norm_exp+1));
-              }//for i
-              }              
-          }// for j
+        D[L] = 0.0;   // first derivatives of the transfer function ( tanh(net) ) 
+        D2[L]= 0.0;   // second derivarives
+       
+        for(j=0;j<Npe[L];j++){
+
+	  y.M[j]=tanh(NET.M[j]);  
+          D[L].M[j*Npe[L]+j] = (1.0 - y.M[j]*y.M[j]); 
+          D2[L].M[j*Npe[L]+j] = -2.0*y.M[j]*D[L].M[j*Npe[L]+j]; 
+
+        }// for j
         
-	  Delta[NL] = D[NL] * e;
-          Tau[NL]   = D[NL] * tau;         
-          interm1 = (tau * (gamma[NL].T()));
-          for(i=0;i<Npe[NL];i++){Delta[NL].M[i] +=  interm1.M[i*Npe[NL]+i]*D2[NL].M[Npe[NL]*i+i]; }
+        Y.push_back(y);
+          
+        gamma[L] = W[L]*ksi[L-1];
+        ksi[L]   = D[L]*gamma[L];
+              
+    }// for L
+    
+    // Calculate the error - at the output layer
+    MATRIX e(Npe[NL],1);      e = 0.0;      // error in value
+    MATRIX tau(Npe[NL],sz_x); tau = 0.0;    // error in the derivatives
 
 
-          // Calculate deltas (derivatives)
-          for(L=NL-1;L>=1;L--){
+    // Error for last (output) layer
+    for (j=0;j<Npe[NL];j++){ 
+      e.M[j]=pow((Target.M[j]-Y[NL].M[j]),(2.0*norm_exp+1));
 
-              MATRIX dEdx(Npe[L],1);
-              MATRIX dEdksi(Npe[L],sz_x);
-              MATRIX interm(Npe[L],Npe[L]);
+      // Also, take the derivatives into account
+      if(derivs_flag){
+        for(i=0;i<sz_x;i++){
+          tau.M[j*sz_x+i] = grad_weight*pow((Tangent.M[j*sz_x+i]-ksi[NL].M[j*sz_x+i]),(2.0*norm_exp+1));
+        }//for i
+      }              
+    }// for j
 
-              dEdx = (W[L+1].T() * Delta[L+1]);
-              dEdksi = (W[L+1].T() * Tau[L+1]);
 
-              Tau[L]   = D[L] * dEdksi;
-              Delta[L] = D[L] * dEdx;
+        
+    Delta[NL] = D[NL] * e;
+    Tau[NL]   = D[NL] * tau;         
+    interm1 = (tau * (gamma[NL].T()));
+    for(i=0;i<Npe[NL];i++){Delta[NL].M[i] +=  interm1.M[i*Npe[NL]+i]*D2[NL].M[Npe[NL]*i+i]; }
 
-              interm = (dEdksi * (gamma[L].T()));
 
-  	      for(i=0;i<Npe[L];i++){Delta[L].M[i] +=  interm.M[i*Npe[L]+i]*D2[L].M[Npe[L]*i+i] ; }
+    // Calculate deltas (derivatives)
+    for(L=NL-1;L>=1;L--){
 
-          }// for L
+      MATRIX dEdx(Npe[L],1);
+      MATRIX dEdksi(Npe[L],sz_x);
+      MATRIX interm(Npe[L],Npe[L]);
 
-          // Calculate total gradient over all training patterns in epoch
-          for (L=1;L<=NL;L++){
+      dEdx = (W[L+1].T() * Delta[L+1]);
+      dEdksi = (W[L+1].T() * Tau[L+1]);
 
-              // These are the negative gradients
-              dWcurr[L] = dWcurr[L] + learning_rate*(Delta[L]*(Y[L-1].T()) + Tau[L]*(ksi[L-1].T()) - weight_decay[L]*W[L]);
-              dBcurr[L] = dBcurr[L] + learning_rate*Delta[L];
-          }
-      }// for ep - for all patterns in 1 epoch
+      Tau[L]   = D[L] * dEdksi;
+      Delta[L] = D[L] * dEdx;
+
+      interm = (dEdksi * (gamma[L].T()));
+
+      for(i=0;i<Npe[L];i++){Delta[L].M[i] +=  interm.M[i*Npe[L]+i]*D2[L].M[Npe[L]*i+i] ; }
+
+    }// for L
+
+    // Calculate total gradient over all training patterns in epoch
+    for (L=1;L<=NL;L++){
+
+      // These are the negative gradients
+      dWcurr[L] += learning_rate*(Delta[L]*(Y[L-1].T()) + Tau[L]*(ksi[L-1].T()) - weight_decay[L]*W[L]);
+      dBcurr[L] += learning_rate*Delta[L];
+
+    }
+
+  }// for ep - for all patterns in 1 epoch
 
   // Now add momentum term (if it is not zero)
   if(learning_method=="BackProp"){
 
-      for(L=1;L<=NL;L++){
-          dW[L] = dWcurr[L] + momentum_term*dW[L];
-          dB[L] = dBcurr[L] + momentum_term*dB[L];
+    for(L=1;L<=NL;L++){
+      dW[L] = dWcurr[L] + momentum_term*dW[L];
+      dB[L] = dBcurr[L] + momentum_term*dB[L];
     }
 
   }// if learning_method == BackProp
@@ -780,7 +651,7 @@ void NeuralNetwork::ANNTrain(){
 
           }else{
 
-               // These are dE/dw amd dE/db not -dE/dw and -dE/db, thus
+               // These are dE/dw and dE/db not -dE/dw and -dE/db, thus
 
               dWcurr[L] = -dWcurr[L]/learning_rate;
               dBcurr[L] = -dBcurr[L]/learning_rate;
@@ -871,7 +742,7 @@ void NeuralNetwork::ANNTrain(){
   // Update weights and biases
   for ( L=1;L<=NL;L++){
 
-      W[L] = W[L] + dW[L];
+      W[L] = W[L] + dW[L];  
       B[L] = B[L] + dB[L];
 
       dWold[L] = dWcurr[L];

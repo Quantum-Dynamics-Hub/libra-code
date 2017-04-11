@@ -38,21 +38,48 @@ ANNData& ANNData::operator=(const ANNData& pattern){
 
 void NeuralNetwork::set(object obj){
 
-   set_value(is_learning_method,learning_method, obj, "learning_method");
+  set_value(is_learning_method,learning_method, obj, "learning_method");
 
-   set_value(is_learning_rate, learning_rate, obj, "learning_rate");
-   set_value(is_momentum_term, momentum_term, obj, "momentum_term");
-   set_value(is_epoch_size,    epoch_size,    obj, "epoch_size");
-   set_value(is_iterations_in_cycle,iterations_in_cycle,obj, "iterations_in_cycle");
-   set_value(is_grad_weight,   grad_weight,   obj, "grad_weight");
-   set_value(is_norm_exp,      norm_exp,      obj, "norm_exp");
-   set_value(is_a_plus,        a_plus,        obj, "a_plus");
-   set_value(is_a_minus,       a_minus,       obj, "a_minus");
+  set_value(is_learning_rate, learning_rate, obj, "learning_rate");
+  set_value(is_momentum_term, momentum_term, obj, "momentum_term");
+  set_value(is_epoch_size,    epoch_size,    obj, "epoch_size");
+  set_value(is_iterations_in_cycle,iterations_in_cycle,obj, "iterations_in_cycle");
+  set_value(is_grad_weight,   grad_weight,   obj, "grad_weight");
+  set_value(is_norm_exp,      norm_exp,      obj, "norm_exp");
+  set_value(is_a_plus,        a_plus,        obj, "a_plus");
+  set_value(is_a_minus,       a_minus,       obj, "a_minus");
 
-   set_list(is_weight_decay,   weight_decay,  obj, "weight_decay");
-
+  set_list(is_weight_decay,   weight_decay,  obj, "weight_decay");
 
 }
+
+
+void NeuralNetwork::set(boost::python::dict d){
+  std::string key;
+  for(int i=0;i<len(d.values());i++){
+    key = extract<std::string>(d.keys()[i]);
+
+    if(key=="learning_method") { learning_method = extract<std::string>(d.values()[i]);  is_learning_method = 1; }
+
+    else if(key=="learning_rate") { learning_rate = extract<double>(d.values()[i]);  is_learning_rate = 1; }
+    else if(key=="momentum_term") { momentum_term = extract<double>(d.values()[i]);  is_momentum_term = 1; }
+    else if(key=="epoch_size") { epoch_size = extract<int>(d.values()[i]); is_epoch_size = 1; }
+
+    else if(key=="iterations_in_cycle") { iterations_in_cycle = extract<int>(d.values()[i]);  is_iterations_in_cycle = 1; }
+    else if(key=="grad_weight") { grad_weight = extract<double>(d.values()[i]);  is_grad_weight = 1; }
+    else if(key=="norm_exp") { norm_exp = extract<double>(d.values()[i]);  is_norm_exp = 1; }
+    else if(key=="a_plus") { a_plus = extract<double>(d.values()[i]);  is_a_plus = 1; }
+    else if(key=="a_minus") { a_minus = extract<double>(d.values()[i]);  is_a_minus = 1; }
+    else if(key=="weight_decay") { 
+      boost::python::list tmp = extract<boost::python::list>(d.values()[i]);
+      for(int j=0; j<len(tmp); j++){  weight_decay.push_back( extract<double>(tmp[j]) );  }
+      is_weight_decay = 1; 
+    }
+
+  }// for i
+
+}
+
 
 
 NeuralNetwork::NeuralNetwork(const NeuralNetwork& ann){

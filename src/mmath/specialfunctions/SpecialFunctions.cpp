@@ -1087,8 +1087,8 @@ void Ellint(double m,double sinphi,double tol,double& Km_,double& value){
 
 
 int randperm(int size,int of_size,vector<int>& result){
-// Makes a random permutation of 'of_size' numbers and place 'size'
-// of them into 'result' vector
+// Makes a random permutation of 'of_size' numbers and places 'size'
+// of them into the 'result' vector
 
   int* all_range;
 

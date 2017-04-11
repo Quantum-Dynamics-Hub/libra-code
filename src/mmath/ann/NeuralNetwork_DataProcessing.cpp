@@ -485,6 +485,134 @@ int NeuralNetwork::SetTrainingData(object obj,int der_flag){
 }
 
 
+int NeuralNetwork::ClearTrainingData(){
+
+  if(TrainData.size()>0) { TrainData.clear(); }
+  if(Inputs.size()>0){  Inputs.clear();  }
+  if(Outputs.size()>0){  Outputs.clear();  }
+  if(Derivs.size()>0) { Derivs.clear(); }
+
+}
+
+int NeuralNetwork::AddTrainingData(boost::python::list patterns){
+
+/*
+
+  This function adds a set of patterns to the total pool of training data
+  It does not check if the added data is already present in the total pool.
+  
+  patterns - is a list of patterns (type: Python list, size: the # of patterns)
+
+  each pattern is a list of type: pattern = [ input, output, derivs], where 
+   
+  input - is the input - a list of floats (size: N = the # of input neurons)
+  output - is the output - a list of floats (size: M = the # of output neurons)
+  derivs - are the derivatives of all inputs w.r.t. all outputs (size: N x M)
+  
+  Derivatives should be ordered as follows:
+  Derivs = [dy0/dx0, dy0/dx1, dy0/dx2, ..., dy0/dxN, 
+            dy1/dx0, dy1/dx1, dy1/dx2, ..., dy1/dxN,
+                       ...........
+            dyM/dx0, dyM/dx1, dyM/dx2, ..., dyM/dxN
+           ]
+
+  This is for the ANN architecture:
+
+ Input                              Output
+ layer                              layer
+
+    1                                  1
+    2                                  2
+   ...   --->   Hidden layers --->    ...
+
+    N                                  M
+
+*/
+
+
+  std::cout<<"Adding a data set...\n";
+  int i,j;
+
+  //--- Extract patterns from the object --------
+  int npatt = len(patterns); // how many patterns we have in this batch
+  int Ninp = Npe[0];         // the number of input neurons
+  int Nout = Npe[Nlayers-1]; // the number of output neurons
+  int Nder = Ninp * Nout;    // the number of derivatives we may have
+
+
+  for(i=0;i<npatt;i++){
+
+  //===== First, make sure the input pattern is properly formatted ========
+
+      if(len(patterns[i])!=3){
+        std::cout<<"Error in NeuralNetwork::SetTrainingData(boost::python::list patterns,int der_flag)\n";
+        std::cout<<"Each pattern must contain 3 elements: input, output, and derivatives\n";
+        std::cout<<"Exiting now...\n";
+        exit(0);
+      }
+
+      if(len(patterns[i][0])!=Ninp){
+        std::cout<<"Error in NeuralNetwork::SetTrainingData(boost::python::list patterns,int der_flag)\n";
+        std::cout<<"The pattern "<<i<<" has the number of inputs = "<<len(patterns[i][0])<<"\n";
+        std::cout<<"This is not consistent with the ANN architecture (the number of input neurons) = "<<Ninp<<endl;
+        std::cout<<"Exiting now...\n";
+        exit(0);
+      }
+
+      if(len(patterns[i][1])!=Nout){
+        std::cout<<"Error in NeuralNetwork::SetTrainingData(boost::python::list patterns,int der_flag)\n";
+        std::cout<<"The pattern "<<i<<" has the number of outputs = "<<len(patterns[i][1])<<"\n";
+        std::cout<<"This is not consistent with the ANN architecture (the number of output neurons) = "<<Nout<<endl;
+        std::cout<<"Exiting now...\n";
+        exit(0);
+      }
+
+      if(len(patterns[i][2])!=Nder){
+        std::cout<<"Error in NeuralNetwork::SetTrainingData(boost::python::list patterns,int der_flag)\n";
+        std::cout<<"The pattern "<<i<<" has the number of derivatives = "<<len(patterns[i][2])<<"\n";
+        std::cout<<"This is not consistent with the ANN architecture (the number of input neurons x the number of "
+                 <<"output neurons ) = "<<Nder<<endl;
+        std::cout<<"Exiting now...\n";
+        exit(0);
+      }
+
+  //===== Second, convert it into internal representation ========
+
+   ANNData pattern;
+   int is_input = 0;
+   int is_output = 0;
+   int is_derivs = 0;
+
+   for(j=0;j<Ninp;j++){  pattern.Input.push_back( boost::python::extract<double>(patterns[i][0][j]) ); } 
+   DATA d1(pattern.Input); Inputs.push_back(d1);
+   is_input = 1;
+
+   for(j=0;j<Nout;j++){  pattern.Output.push_back( boost::python::extract<double>(patterns[i][1][j]) ); }
+   DATA d2(pattern.Output); Outputs.push_back(d2);
+   is_output = 1;
+
+   for(j=0;j<Nder;j++){  pattern.Derivs.push_back( boost::python::extract<double>(patterns[i][2][j]) ); }
+   DATA d3(pattern.Derivs); Derivs.push_back(d3);
+   is_derivs = 1;
+
+   if(is_input && is_output && is_derivs){   TrainData.push_back(pattern);    }
+   
+
+  }// for i
+
+  
+
+  // Update the volumetric information:
+
+  num_of_patterns = TrainData.size(); //This is the total size of all data patterns
+  sz_x = Ninp;
+  sz_y = Nout;
+  sz_d = Nder; 
+
+  return num_of_patterns;
+}
+
+
 }// namespace libann
 }// namespace libmmath
 

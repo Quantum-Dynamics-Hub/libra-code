@@ -29,9 +29,9 @@ void export_NeuralNetwork_objects(){
 int (NeuralNetwork::*ScaleTrainingData1)(int,int)                                         = &NeuralNetwork::ScaleTrainingData;
 int (NeuralNetwork::*ScaleTrainingData2)(int,int,boost::python::list,boost::python::list) = &NeuralNetwork::ScaleTrainingData;
 
-int (NeuralNetwork::*Propagate1)(MATRIX,MATRIX&)                                  = &NeuralNetwork::Propagate;
+int (NeuralNetwork::*Propagate1)(const MATRIX&, MATRIX&)                                  = &NeuralNetwork::Propagate;
 int (NeuralNetwork::*Propagate2)(boost::python::list,boost::python::list&)        = &NeuralNetwork::Propagate;
-int (NeuralNetwork::*Propagate3)(MATRIX,MATRIX&,MATRIX&)                          = &NeuralNetwork::Propagate;
+int (NeuralNetwork::*Propagate3)(const MATRIX&, MATRIX&, MATRIX&)                          = &NeuralNetwork::Propagate;
 int (NeuralNetwork::*Propagate4)(boost::python::list,boost::python::list&,boost::python::list&)        = &NeuralNetwork::Propagate;
 
 
@@ -158,6 +158,9 @@ ExportANN_docstring += tmp;
 
 
 //---------------------------------------------------------------------
+  void (NeuralNetwork::*expt_set_v1)(boost::python::object) = &NeuralNetwork::set;
+  void (NeuralNetwork::*expt_set_v2)(boost::python::dict)   = &NeuralNetwork::set;
+
 
     class_<NeuralNetwork>("NeuralNetwork",init<>())
         .def("CreateANN",&NeuralNetwork::CreateANN)
@@ -166,8 +169,12 @@ ExportANN_docstring += tmp;
 
         .def("ExportANN",&NeuralNetwork::ExportANN,ExportANN_docstring.c_str())
         .def("ImportANN",&NeuralNetwork::ImportANN,ImportANN_docstring.c_str())
-        .def("set",&NeuralNetwork::set,set_docstring.c_str())
+        .def("set", expt_set_v1, set_docstring.c_str())
+        .def("set", expt_set_v2, set_docstring.c_str())
      
+        .def("ClearTrainingData",&NeuralNetwork::ClearTrainingData)      
+        .def("AddTrainingData",&NeuralNetwork::AddTrainingData)  
+
         .def("SetTrainingData",&NeuralNetwork::SetTrainingData,set_training_data_docstring.c_str())      
         .def("NormalizeTrainingData",&NeuralNetwork::NormalizeTrainingData,NormalizeTrainingData_docstring.c_str())
         .def("ScaleTrainingData",ScaleTrainingData1,ScaleTrainingData1_docstring.c_str())
