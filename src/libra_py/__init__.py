@@ -21,6 +21,7 @@ __all__ = ["init_system",
            "QE_methods",
            "parse_gamess",
            "fit",
-           "acf"
+           "acf",
+           "unavoided"
           ]
 
