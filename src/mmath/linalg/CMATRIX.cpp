@@ -462,6 +462,203 @@ CMATRIX CMATRIX::row(int i){
 }
 
 
+void CMATRIX::swap_cols(int I, int J){ ///< Swaps two columns
+
+  if(I>=n_cols){
+    cout<<"Error in CMATRIX::swap_cols\n";
+    cout<<"The index of one column ("<<I<<") is larger than the number of columns ("<<n_cols<<")\n";
+    exit(0);
+  }
+  if(J>=n_cols){
+    cout<<"Error in CMATRIX::swap_cols\n";
+    cout<<"The index of one column ("<<J<<") is larger than the number of columns ("<<n_cols<<")\n";
+    exit(0);
+  }
+
+
+  for(int row=0;row<n_rows;row++){ 
+    complex<double> tmp = M[row*n_cols+I];
+    M[row*n_cols+I] = M[row*n_cols+J];
+    M[row*n_cols+J] = tmp;
+  }
+
+}
+
+
+void CMATRIX::swap_rows(int I, int J){ ///< Swaps two rows
+
+  if(I>=n_rows){
+    cout<<"Error in CMATRIX::swap_rows\n";
+    cout<<"The index of one row ("<<I<<") is larger than the number of rows ("<<n_rows<<")\n";
+    exit(0);
+  }
+  if(J>=n_rows){
+    cout<<"Error in CMATRIX::swap_rows\n";
+    cout<<"The index of one row ("<<J<<") is larger than the number of row ("<<n_rows<<")\n";
+    exit(0);
+  }
+
+
+  for(int col=0;col<n_cols;col++){ 
+    complex<double> tmp = M[I*n_cols+col];
+    M[I*n_cols+col] = M[J*n_cols+col];
+    M[J*n_cols+col] = tmp;
+  }
+
+}
+
+
+void CMATRIX::max_col_elt(int I, complex<double>& val, int& max_elt_indx){
+ ///< Finds the maximal element (in abs. value) and its index in a given column
+
+  val = M[0*n_cols+I];
+  max_elt_indx = 0;
+  double max_norm = norm(val);
+  
+  for(int row=0; row<n_rows; row++){
+
+    double nrm = norm(M[row*n_cols+I]);
+    if(nrm>max_norm){  
+      max_norm = nrm;   
+      val = M[row*n_cols+I];
+      max_elt_indx = row;
+    }
+
+  }// for row
+
+}
+
+void CMATRIX::min_col_elt(int I, complex<double>& val, int& min_elt_indx){
+ ///< Finds the minimal element (in abs. value) and its index in a given column
+
+  val = M[0*n_cols+I];
+  min_elt_indx = 0;
+  double min_norm = norm(val);
+  
+  for(int row=0; row<n_rows; row++){
+
+    double nrm = norm(M[row*n_cols+I]);
+    if(nrm < min_norm){  
+      min_norm = nrm;   
+      val = M[row*n_cols+I];
+      min_elt_indx = row;
+    }
+
+  }// for row
+
+}
+
+
+
+void CMATRIX::max_row_elt(int I, complex<double>& val, int& max_elt_indx){
+ ///< Finds the maximal element (in abs. value) and its index in a given row
+
+  val = M[I*n_cols+0];
+  max_elt_indx = 0;
+  double max_norm = norm(val);
+  
+  for(int col=0; col<n_cols; col++){
+
+    double nrm = norm(M[I*n_cols+col]);
+    if(nrm>max_norm){  
+      max_norm = nrm;   
+      val = M[I*n_cols+col];
+      max_elt_indx = col;
+    }
+
+  }// for col
+
+}
+
+void CMATRIX::min_row_elt(int I, complex<double>& val, int& min_elt_indx){
+ ///< Finds the minimal element (in abs. value) and its index in a given row
+
+  val = M[I*n_cols+0];
+  min_elt_indx = 0;
+  double min_norm = norm(val);
+  
+  for(int col=0; col<n_cols; col++){
+
+    double nrm = norm(M[I*n_cols+col]);
+    if(nrm<min_norm){  
+      min_norm = nrm;   
+      val = M[I*n_cols+col];
+      min_elt_indx = col;
+    }
+
+  }// for col
+
+}
+
+
+boost::python::list CMATRIX::max_col_elt(int I){
+ ///< Finds the maximal element (in abs. value) and its index in a given column
+  complex<double> val;
+  int indx;
+
+  this->max_col_elt(I, val, indx);
+ 
+  boost::python::list res;
+
+  res.append(indx);
+  res.append(val);
+
+  return res;
+}
+
+boost::python::list CMATRIX::min_col_elt(int I){
+  ///< Finds the maximal element (in abs. value) and its index in a given column
+
+  complex<double> val;
+  int indx;
+
+  this->min_col_elt(I, val, indx);
+ 
+  boost::python::list res;
+
+  res.append(indx);
+  res.append(val);
+
+  return res;
+
+}
+
+boost::python::list CMATRIX::max_row_elt(int I){
+ ///< Finds the maximal element (in abs. value) and its index in a given row
+
+  complex<double> val;
+  int indx;
+
+  this->max_row_elt(I, val, indx);
+ 
+  boost::python::list res;
+
+  res.append(indx);
+  res.append(val);
+
+  return res;
+
+}
+
+boost::python::list CMATRIX::min_row_elt(int I){
+ ///< Finds the maximal element (in abs. value) and its index in a given row
+
+  complex<double> val;
+  int indx;
+
+  this->min_row_elt(I, val, indx);
+ 
+  boost::python::list res;
+
+  res.append(indx);
+  res.append(val);
+
+  return res;
+
+}
+
+
+
 MATRIX CMATRIX::real(){
   MATRIX res(n_rows, n_cols);
   for(int i=0;i<n_elts;i++){ res.M[i] = M[i].real(); }

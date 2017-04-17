@@ -1211,6 +1211,204 @@ MATRIX MATRIX::row(int i){
 }
 
 
+void MATRIX::swap_cols(int I, int J){ ///< Swaps two columns
+
+  if(I>=num_of_cols){
+    cout<<"Error in MATRIX::swap_cols\n";
+    cout<<"The index of one column ("<<I<<") is larger than the number of columns ("<<num_of_cols<<")\n";
+    exit(0);
+  }
+  if(J>=num_of_cols){
+    cout<<"Error in MATRIX::swap_cols\n";
+    cout<<"The index of one column ("<<J<<") is larger than the number of columns ("<<num_of_cols<<")\n";
+    exit(0);
+  }
+
+
+  for(int row=0;row<num_of_rows;row++){ 
+    double tmp = M[row*num_of_cols+I];
+    M[row*num_of_cols+I] = M[row*num_of_cols+J];
+    M[row*num_of_cols+J] = tmp;
+  }
+
+}
+
+
+
+void MATRIX::swap_rows(int I, int J){ ///< Swaps two rows
+
+  if(I>=num_of_rows){
+    cout<<"Error in MATRIX::swap_rows\n";
+    cout<<"The index of one row ("<<I<<") is larger than the number of rows ("<<num_of_rows<<")\n";
+    exit(0);
+  }
+  if(J>=num_of_rows){
+    cout<<"Error in MATRIX::swap_rows\n";
+    cout<<"The index of one row ("<<J<<") is larger than the number of row ("<<num_of_rows<<")\n";
+    exit(0);
+  }
+
+
+  for(int col=0;col<num_of_cols;col++){ 
+    double tmp = M[I*num_of_cols+col];
+    M[I*num_of_cols+col] = M[J*num_of_cols+col];
+    M[J*num_of_cols+col] = tmp;
+  }
+
+}
+
+
+void MATRIX::max_col_elt(int I, double& val, int& max_elt_indx){
+ ///< Finds the maximal element (in abs. value) and its index in a given column
+
+  val = M[0*num_of_cols+I];
+  max_elt_indx = 0;
+  double max_norm = fabs(val);
+  
+  for(int row=0; row<num_of_rows; row++){
+
+    double nrm = fabs(M[row*num_of_cols+I]);
+    if(nrm>max_norm){  
+      max_norm = nrm;   
+      val = M[row*num_of_cols+I];
+      max_elt_indx = row;
+    }
+
+  }// for row
+
+}
+
+
+void MATRIX::min_col_elt(int I, double& val, int& min_elt_indx){
+ ///< Finds the minimal element (in abs. value) and its index in a given column
+
+  val = M[0*num_of_cols+I];
+  min_elt_indx = 0;
+  double min_norm = fabs(val);
+  
+  for(int row=0; row<num_of_rows; row++){
+
+    double nrm = fabs(M[row*num_of_cols+I]);
+    if(nrm < min_norm){  
+      min_norm = nrm;   
+      val = M[row*num_of_cols+I];
+      min_elt_indx = row;
+    }
+
+  }// for row
+
+}
+
+void MATRIX::max_row_elt(int I, double& val, int& max_elt_indx){
+ ///< Finds the maximal element (in abs. value) and its index in a given row
+
+  val = M[I*num_of_cols+0];
+  max_elt_indx = 0;
+  double max_norm = fabs(val);
+  
+  for(int col=0; col<num_of_cols; col++){
+
+    double nrm = fabs(M[I*num_of_cols+col]);
+    if(nrm>max_norm){  
+      max_norm = nrm;   
+      val = M[I*num_of_cols+col];
+      max_elt_indx = col;
+    }
+
+  }// for col
+
+}
+
+
+void MATRIX::min_row_elt(int I, double& val, int& min_elt_indx){
+ ///< Finds the minimal element (in abs. value) and its index in a given row
+
+  val = M[I*num_of_cols+0];
+  min_elt_indx = 0;
+  double min_norm = fabs(val);
+  
+  for(int col=0; col<num_of_cols; col++){
+
+    double nrm = fabs(M[I*num_of_cols+col]);
+    if(nrm<min_norm){  
+      min_norm = nrm;   
+      val = M[I*num_of_cols+col];
+      min_elt_indx = col;
+    }
+
+  }// for col
+
+}
+
+
+boost::python::list MATRIX::max_col_elt(int I){
+ ///< Finds the maximal element (in abs. value) and its index in a given column
+  double val;
+  int indx;
+
+  this->max_col_elt(I, val, indx);
+ 
+  boost::python::list res;
+
+  res.append(indx);
+  res.append(val);
+
+  return res;
+}
+
+boost::python::list MATRIX::min_col_elt(int I){
+  ///< Finds the maximal element (in abs. value) and its index in a given column
+
+  double val;
+  int indx;
+
+  this->min_col_elt(I, val, indx);
+ 
+  boost::python::list res;
+
+  res.append(indx);
+  res.append(val);
+
+  return res;
+
+}
+
+boost::python::list MATRIX::max_row_elt(int I){
+ ///< Finds the maximal element (in abs. value) and its index in a given row
+
+  double val;
+  int indx;
+
+  this->max_row_elt(I, val, indx);
+ 
+  boost::python::list res;
+
+  res.append(indx);
+  res.append(val);
+
+  return res;
+
+}
+
+boost::python::list MATRIX::min_row_elt(int I){
+ ///< Finds the maximal element (in abs. value) and its index in a given row
+
+  double val;
+  int indx;
+
+  this->min_row_elt(I, val, indx);
+ 
+  boost::python::list res;
+
+  res.append(indx);
+  res.append(val);
+
+  return res;
+
+}
+
+
+
 
 
 double MATRIX::tr(){

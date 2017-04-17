@@ -160,6 +160,19 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
 
 
 
+  void (MATRIX::*expt_max_col_elt_v3)(int, double&, int&) = &MATRIX::max_col_elt;
+  boost::python::list (MATRIX::*expt_max_col_elt_v4)(int) = &MATRIX::max_col_elt;
+
+  void (MATRIX::*expt_min_col_elt_v3)(int, double&, int&) = &MATRIX::min_col_elt;
+  boost::python::list (MATRIX::*expt_min_col_elt_v4)(int) = &MATRIX::min_col_elt;
+
+  void (MATRIX::*expt_max_row_elt_v3)(int, double&, int&) = &MATRIX::max_row_elt;
+  boost::python::list (MATRIX::*expt_max_row_elt_v4)(int) = &MATRIX::max_row_elt;
+
+  void (MATRIX::*expt_min_row_elt_v3)(int, double&, int&) = &MATRIX::min_row_elt;
+  boost::python::list (MATRIX::*expt_min_row_elt_v4)(int) = &MATRIX::min_row_elt;
+
+
 
   class_<MATRIX>("MATRIX",init<>())      
       .def(init<int,int>())
@@ -209,7 +222,16 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
       .def("dot_product",expt_dot_product_v2)
       .def("col", &MATRIX::col)     // return given column of the matrix 
       .def("row", &MATRIX::row)     // return given row of the matrix 
-
+      .def("swap_cols", &MATRIX::swap_cols)
+      .def("swap_rows", &MATRIX::swap_rows)
+      .def("max_col_elt", expt_max_col_elt_v3)
+      .def("max_col_elt", expt_max_col_elt_v4)
+      .def("min_col_elt", expt_min_col_elt_v3)
+      .def("min_col_elt", expt_min_col_elt_v4)
+      .def("max_row_elt", expt_max_row_elt_v3)
+      .def("max_row_elt", expt_max_row_elt_v4)
+      .def("min_row_elt", expt_min_row_elt_v3)
+      .def("min_row_elt", expt_min_row_elt_v4)
       .def("show_matrix", expt_show_matrix_v1)
       .def("show_matrix", expt_show_matrix_v2)
 
@@ -308,6 +330,19 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
   ;
 
 
+  void (CMATRIX::*expt_max_col_elt_v1)(int, complex<double>&, int&) = &CMATRIX::max_col_elt;
+  boost::python::list (CMATRIX::*expt_max_col_elt_v2)(int) = &CMATRIX::max_col_elt;
+
+  void (CMATRIX::*expt_min_col_elt_v1)(int, complex<double>&, int&) = &CMATRIX::min_col_elt;
+  boost::python::list (CMATRIX::*expt_min_col_elt_v2)(int) = &CMATRIX::min_col_elt;
+
+  void (CMATRIX::*expt_max_row_elt_v1)(int, complex<double>&, int&) = &CMATRIX::max_row_elt;
+  boost::python::list (CMATRIX::*expt_max_row_elt_v2)(int) = &CMATRIX::max_row_elt;
+
+  void (CMATRIX::*expt_min_row_elt_v1)(int, complex<double>&, int&) = &CMATRIX::min_row_elt;
+  boost::python::list (CMATRIX::*expt_min_row_elt_v2)(int) = &CMATRIX::min_row_elt;
+
+
 
   class_<CMATRIX>("CMATRIX",init<>())      
       .def(init<int,int>())
@@ -346,6 +381,16 @@ void (CMATRIX::*tridiagonalize2)(CMATRIX& T,CMATRIX& H)   = &CMATRIX::tridiagona
       .def("dot", &CMATRIX::dot)     // dot product of two matrices
       .def("col", &CMATRIX::col)     // return given column of the matrix 
       .def("row", &CMATRIX::row)     // return given row of the matrix 
+      .def("swap_cols", &CMATRIX::swap_cols)
+      .def("swap_rows", &CMATRIX::swap_rows)
+      .def("max_col_elt", expt_max_col_elt_v1)
+      .def("max_col_elt", expt_max_col_elt_v2)
+      .def("min_col_elt", expt_min_col_elt_v1)
+      .def("min_col_elt", expt_min_col_elt_v2)
+      .def("max_row_elt", expt_max_row_elt_v1)
+      .def("max_row_elt", expt_max_row_elt_v2)
+      .def("min_row_elt", expt_min_row_elt_v1)
+      .def("min_row_elt", expt_min_row_elt_v2)
       .def("real", &CMATRIX::real)
       .def("imag", &CMATRIX::imag)
       .def("get_components", &CMATRIX::get_components)

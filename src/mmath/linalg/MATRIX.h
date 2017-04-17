@@ -28,6 +28,11 @@ using namespace std;
 #include "../../io/libio.h"
 using namespace libio;
 
+#include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+using namespace boost::python;
+
+
 /// libmmath namespace
 namespace libmmath{
 
@@ -131,6 +136,19 @@ public:
 
   MATRIX col(int); ///< takes given column and makes it n x 1 MATRIX
   MATRIX row(int); ///< takes given row and makes it 1 x n MATRIX
+
+  void swap_cols(int, int); ///< Swaps two columns
+  void swap_rows(int, int); ///< Swaps two rows
+  void max_col_elt(int, double&, int&); ///< Finds the maximal element (in abs. value) and its index in a given column
+  void min_col_elt(int, double&, int&); ///< Finds the maximal element (in abs. value) and its index in a given column
+  void max_row_elt(int, double&, int&); ///< Finds the maximal element (in abs. value) and its index in a given row
+  void min_row_elt(int, double&, int&); ///< Finds the maximal element (in abs. value) and its index in a given row
+  boost::python::list max_col_elt(int); ///< Finds the maximal element (in abs. value) and its index in a given column
+  boost::python::list min_col_elt(int); ///< Finds the maximal element (in abs. value) and its index in a given column
+  boost::python::list max_row_elt(int); ///< Finds the maximal element (in abs. value) and its index in a given row
+  boost::python::list min_row_elt(int); ///< Finds the maximal element (in abs. value) and its index in a given row
+
+
 
 /*
   inline void tensor_product(VECTOR& v1,VECTOR& v2){

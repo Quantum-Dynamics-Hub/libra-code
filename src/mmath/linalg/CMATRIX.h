@@ -28,6 +28,11 @@
 #include <iomanip>
 #include "MATRIX.h"
 
+#include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+using namespace boost::python;
+
+
 using namespace std;
 
 /// libmmath namespace
@@ -122,6 +127,18 @@ public:
 
   CMATRIX col(int); // takes given column and makes it n x 1 CMATRIX
   CMATRIX row(int); // takes given row and makes it 1 x n CMATRIX
+
+  void swap_cols(int, int); ///< Swaps two columns
+  void swap_rows(int, int); ///< Swaps two rows
+  void max_col_elt(int, complex<double>&, int&); ///< Finds the maximal element (in abs. value) and its index in a given column
+  void min_col_elt(int, complex<double>&, int&); ///< Finds the maximal element (in abs. value) and its index in a given column
+  void max_row_elt(int, complex<double>&, int&); ///< Finds the maximal element (in abs. value) and its index in a given row
+  void min_row_elt(int, complex<double>&, int&); ///< Finds the maximal element (in abs. value) and its index in a given row
+  boost::python::list max_col_elt(int); ///< Finds the maximal element (in abs. value) and its index in a given column
+  boost::python::list min_col_elt(int); ///< Finds the maximal element (in abs. value) and its index in a given column
+  boost::python::list max_row_elt(int); ///< Finds the maximal element (in abs. value) and its index in a given row
+  boost::python::list min_row_elt(int); ///< Finds the maximal element (in abs. value) and its index in a given row
+
 
   MATRIX real();
   MATRIX imag();
