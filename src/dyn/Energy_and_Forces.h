@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -20,14 +20,18 @@
 #ifndef ENERGY_AND_FORCES_H
 #define ENERGY_AND_FORCES_H
 
+
 // External dependencies
-#include "../mmath/libmmath.h"
+#include "../math_linalg/liblinalg.h"
 #include "../hamiltonian/libhamiltonian.h"
 
 // Dynamics classes
 #include "nuclear/libnuclear.h"
 #include "electronic/libelectronic.h"
 #include "ensemble/libensemble.h"
+
+/// liblibra namespace
+namespace liblibra{
 
 
 using namespace libhamiltonian;
@@ -56,5 +60,6 @@ void compute_energies(Ensemble* ens, double& Epot, double& Ekin, double& Etot,in
 
 
 }// namespace libdyn
+}// liblibra
 
 #endif // ENERGY_AND_FORCES_H

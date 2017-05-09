@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -14,6 +14,11 @@
 */
 
 #include "Hamiltonian_INDO.h"
+
+
+/// liblibra namespace
+namespace liblibra{
+
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -673,7 +678,7 @@ void Hamiltonian_core_indo
   //cout<<"in Hamiltonian_core_indo\n";
 
   int Norb = basis_ao.size(); // how many AOs are included in this fragment
-  if(Norb!=Hao->num_of_cols){  
+  if(Norb!=Hao->n_cols){  
     cout<<"Hao matrix is not allocated\n Must be allocated before Hamiltonian_core_indo is called\n";
     cout<<"In Hamiltonian_core_indo: Dimension of input/output matrix is not compatible whith the number of the fragment-localized orbitals\n";
     exit(0);
@@ -841,22 +846,22 @@ void Hamiltonian_core_deriv_indo
 //  cout<<"in Hamiltonian_core_deriv_indo\n";
 
   int Norb = basis_ao.size(); // how many AOs are included in this fragment
-  if(Norb!=Hao->num_of_cols){  
+  if(Norb!=Hao->n_cols){  
     cout<<"Hao matrix is not allocated\n Must be allocated before Hamiltonian_core_deriv_indo is called\n";
     cout<<"In Hamiltonian_core_deriv_indo: Dimension of input/output matrix is not compatible whith the number of the fragment-localized orbitals\n";
     exit(0);
   }
-  if(Norb!=dHao_dx->num_of_cols){  
+  if(Norb!=dHao_dx->n_cols){  
     cout<<"Hao matrix is not allocated\n Must be allocated before Hamiltonian_core_deriv_indo is called\n";
     cout<<"In Hamiltonian_core_deriv_indo: Dimension of input/output matrix is not compatible whith the number of the fragment-localized orbitals\n";
     exit(0);
   }
-  if(Norb!=dHao_dy->num_of_cols){  
+  if(Norb!=dHao_dy->n_cols){  
     cout<<"Hao matrix is not allocated\n Must be allocated before Hamiltonian_core_deriv_indo is called\n";
     cout<<"In Hamiltonian_core_deriv_indo: Dimension of input/output matrix is not compatible whith the number of the fragment-localized orbitals\n";
     exit(0);
   }
-  if(Norb!=dHao_dz->num_of_cols){  
+  if(Norb!=dHao_dz->n_cols){  
     cout<<"Hao matrix is not allocated\n Must be allocated before Hamiltonian_core_deriv_indo is called\n";
     cout<<"In Hamiltonian_core_deriv_indo: Dimension of input/output matrix is not compatible whith the number of the fragment-localized orbitals\n";
     exit(0);
@@ -1175,7 +1180,7 @@ void Hamiltonian_Fock_indo(Electronic_Structure* el, System& syst, vector<AO>& b
   int i,j,k,n,I,J,K,a,b,A,B;
 
   int Norb = basis_ao.size(); // how many AOs are included in this fragment
-  if(Norb!=el->Hao->num_of_cols){  
+  if(Norb!=el->Hao->n_cols){  
     cout<<"In Hamiltonian_Fock_indo: Dimension of input/output matrix is not compatible whith the number of the fragment-localized orbitals\n";
     exit(0);
   }
@@ -1380,7 +1385,7 @@ void Hamiltonian_Fock_derivs_indo
   Timer tim1;
 
   int Norb = basis_ao.size(); // how many AOs are included in this fragment
-  if(Norb!=el->Hao->num_of_cols){  
+  if(Norb!=el->Hao->n_cols){  
     cout<<"In Hamiltonian_Fock_indo: Dimension of input/output matrix is not compatible whith the number of the fragment-localized orbitals\n";
     exit(0);
   }
@@ -1681,4 +1686,4 @@ void Hamiltonian_Fock_derivs_indo
 }// namespace libhamiltonian_qm
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
-
+}// liblibra

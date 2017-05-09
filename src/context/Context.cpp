@@ -11,9 +11,10 @@
 
 #include "Context.h"
 
-#include "../mmath/libmmath.h"
-using namespace libmmath;
-using namespace libmmath::liblinalg;
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
 
 namespace libcontext{
 
@@ -414,4 +415,5 @@ void export_Context_objects(){
 
 
 }// namespace libcontext
+}// liblibra
 

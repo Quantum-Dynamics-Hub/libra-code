@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -18,11 +18,15 @@
 #ifndef WFCGRID_H
 #define WFCGRID_H
 
-
-#include "../../mmath/libmmath.h"
-#include "../../hamiltonian/libhamiltonian.h"
 #include "Grid_functions.h"
-using namespace libmmath;
+
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+using namespace librandom;
+using namespace libspecialfunctions;
 using namespace libhamiltonian;
 
 /// libdyn namespace
@@ -140,5 +144,6 @@ public:
 
 }// namespace libwfcgrid
 }// namespace libdyn
+}// liblibra
 
 #endif  // WFCGRID_H

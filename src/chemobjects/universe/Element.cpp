@@ -15,6 +15,11 @@
 
 #include "Element.h"
 
+/// liblibra namespace
+namespace liblibra{
+
+using namespace libio;
+
 /// libchemobjects namespace
 namespace libchemobjects{
 
@@ -147,19 +152,19 @@ void Element::save(boost::property_tree::ptree& pt,std::string path){
   \param[in] path The parameter controlling the level of the tree to which the Element members will be added.
 */
 
-  if(is_Elt_name){  ::save(pt,path+".Elt_name",Elt_name);    }
-  if(is_Elt_id){  ::save(pt,path+".Elt_id",Elt_id);    }
-  if(is_Elt_mass){  ::save(pt,path+".Elt_mass",Elt_mass);    }
-  if(is_Elt_number){  ::save(pt,path+".Elt_number",Elt_number);    }
-  if(is_Elt_nucleus_charge){  ::save(pt,path+".Elt_nucleus_charge",Elt_nucleus_charge);    }
-  if(is_Elt_period){  ::save(pt,path+".Elt_period",Elt_period);    }
-  if(is_Elt_group){  ::save(pt,path+".Elt_group",Elt_group);    }
-  if(is_Elt_block){  ::save(pt,path+".Elt_block",Elt_block);    }
-  if(is_Elt_red){  ::save(pt,path+".Elt_red",Elt_red);    }
-  if(is_Elt_green){  ::save(pt,path+".Elt_green",Elt_green);    }
-  if(is_Elt_blue){  ::save(pt,path+".Elt_blue",Elt_blue);    }
-  if(is_Elt_bond_length){  ::save(pt,path+".Elt_bond_length",Elt_bond_length);    }
-  if(is_Elt_radius){  ::save(pt,path+".Elt_radius",Elt_radius);    }
+  if(is_Elt_name){  libio::save(pt,path+".Elt_name",Elt_name);    }
+  if(is_Elt_id){  libio::save(pt,path+".Elt_id",Elt_id);    }
+  if(is_Elt_mass){  libio::save(pt,path+".Elt_mass",Elt_mass);    }
+  if(is_Elt_number){  libio::save(pt,path+".Elt_number",Elt_number);    }
+  if(is_Elt_nucleus_charge){  libio::save(pt,path+".Elt_nucleus_charge",Elt_nucleus_charge);    }
+  if(is_Elt_period){  libio::save(pt,path+".Elt_period",Elt_period);    }
+  if(is_Elt_group){  libio::save(pt,path+".Elt_group",Elt_group);    }
+  if(is_Elt_block){  libio::save(pt,path+".Elt_block",Elt_block);    }
+  if(is_Elt_red){  libio::save(pt,path+".Elt_red",Elt_red);    }
+  if(is_Elt_green){  libio::save(pt,path+".Elt_green",Elt_green);    }
+  if(is_Elt_blue){  libio::save(pt,path+".Elt_blue",Elt_blue);    }
+  if(is_Elt_bond_length){  libio::save(pt,path+".Elt_bond_length",Elt_bond_length);    }
+  if(is_Elt_radius){  libio::save(pt,path+".Elt_radius",Elt_radius);    }
 
 }
 
@@ -199,19 +204,19 @@ void Element::load(boost::property_tree::ptree& pt,std::string path,int& status)
   int st;
   status = 0;
 
-  ::load(pt,path+".Elt_name",Elt_name,is_Elt_name); if(is_Elt_name==1) { status=1;}
-  ::load(pt,path+".Elt_id",Elt_id,is_Elt_id); if(is_Elt_id==1) { status=1;}
-  ::load(pt,path+".Elt_mass",Elt_mass,is_Elt_mass); if(is_Elt_mass==1) { status=1;}
-  ::load(pt,path+".Elt_number",Elt_number,is_Elt_number); if(is_Elt_number==1) { status=1;}
-  ::load(pt,path+".Elt_nucleus_charge",Elt_nucleus_charge,is_Elt_nucleus_charge); if(is_Elt_nucleus_charge==1) { status=1;}
-  ::load(pt,path+".Elt_period",Elt_period,is_Elt_period); if(is_Elt_period==1) { status=1;}
-  ::load(pt,path+".Elt_group",Elt_group,is_Elt_group); if(is_Elt_group==1) { status=1;}
-  ::load(pt,path+".Elt_block",Elt_block,is_Elt_block); if(is_Elt_block==1) { status=1;}
-  ::load(pt,path+".Elt_red",Elt_red,is_Elt_red); if(is_Elt_red==1) { status=1;}
-  ::load(pt,path+".Elt_green",Elt_green,is_Elt_green); if(is_Elt_green==1) { status=1;}
-  ::load(pt,path+".Elt_blue",Elt_blue,is_Elt_blue); if(is_Elt_blue==1) { status=1;}
-  ::load(pt,path+".Elt_bond_length",Elt_bond_length,is_Elt_bond_length); if(is_Elt_bond_length==1) { status=1;}
-  ::load(pt,path+".Elt_radius",Elt_radius,is_Elt_radius); if(is_Elt_radius==1) { status=1;}
+  libio::load(pt,path+".Elt_name",Elt_name,is_Elt_name); if(is_Elt_name==1) { status=1;}
+  libio::load(pt,path+".Elt_id",Elt_id,is_Elt_id); if(is_Elt_id==1) { status=1;}
+  libio::load(pt,path+".Elt_mass",Elt_mass,is_Elt_mass); if(is_Elt_mass==1) { status=1;}
+  libio::load(pt,path+".Elt_number",Elt_number,is_Elt_number); if(is_Elt_number==1) { status=1;}
+  libio::load(pt,path+".Elt_nucleus_charge",Elt_nucleus_charge,is_Elt_nucleus_charge); if(is_Elt_nucleus_charge==1) { status=1;}
+  libio::load(pt,path+".Elt_period",Elt_period,is_Elt_period); if(is_Elt_period==1) { status=1;}
+  libio::load(pt,path+".Elt_group",Elt_group,is_Elt_group); if(is_Elt_group==1) { status=1;}
+  libio::load(pt,path+".Elt_block",Elt_block,is_Elt_block); if(is_Elt_block==1) { status=1;}
+  libio::load(pt,path+".Elt_red",Elt_red,is_Elt_red); if(is_Elt_red==1) { status=1;}
+  libio::load(pt,path+".Elt_green",Elt_green,is_Elt_green); if(is_Elt_green==1) { status=1;}
+  libio::load(pt,path+".Elt_blue",Elt_blue,is_Elt_blue); if(is_Elt_blue==1) { status=1;}
+  libio::load(pt,path+".Elt_bond_length",Elt_bond_length,is_Elt_bond_length); if(is_Elt_bond_length==1) { status=1;}
+  libio::load(pt,path+".Elt_radius",Elt_radius,is_Elt_radius); if(is_Elt_radius==1) { status=1;}
 
 }
 
@@ -239,4 +244,4 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<Element>& vt,i
 }// namespace libuniverse
 }// namespace libchemobjects
 
-
+}// liblibra

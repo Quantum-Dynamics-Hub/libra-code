@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -15,12 +15,15 @@
 */
 
 #include "Electronic.h"
-#include "../../mmath/libmmath.h"
 #include <cmath>
+#include "../../math_meigen/libmeigen.h"
+#include "../../math_operators/liboperators.h"
+
+/// liblibra namespace
+namespace liblibra{
 
 
-using namespace libmmath;
-using namespace libmmath::libmeigen;
+using namespace libmeigen;
 
 /// libdyn namespace 
 namespace libdyn{
@@ -29,7 +32,7 @@ namespace libdyn{
 namespace libelectronic{
 
 
-using libmmath::liboperators::rotate;
+using liboperators::rotate;
 
 
 void Electronic::propagate_electronic(double dt,Hamiltonian* ham){
@@ -242,7 +245,7 @@ void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
 
 
   // Compute the exponential  exp(-i*Hvib*dt)  
-  libmmath::libmeigen::solve_eigen(sz, Hvib, *I, *Heig, *C);  // Hvib_eff * C = I * C * Heig  ==>  Hvib = C * Heig * C.H()
+  libmeigen::solve_eigen(Hvib, *I, *Heig, *C, 0);  // Hvib_eff * C = I * C * Heig  ==>  Hvib = C * Heig * C.H()
 
 
   // Diagonal form expH
@@ -291,14 +294,14 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S){
   int i,j;
 
   // Let us first diagonalize the overlap matrix S
-  int sz = S.num_of_cols;
+  int sz = S.n_cols;
   
   MATRIX* I; I = new MATRIX(sz, sz);  I->Init_Unit_Matrix(1.0);
   CMATRIX* C; C = new CMATRIX(sz, sz);  *C = complex<double>(0.0, 0.0);
   CMATRIX* Seig; Seig = new CMATRIX(sz, sz);  *Seig = complex<double>(0.0,0.0);
 
   // Transformation to adiabatic basis
-  libmmath::libmeigen::solve_eigen(sz, S, *I, *Seig, *C);  // S * C = I * C * Seig  ==>  S = C * Seig * C.H()
+  libmeigen::solve_eigen(S, *I, *Seig, *C, 0);  // S * C = I * C * Seig  ==>  S = C * Seig * C.H()
 
 
   CMATRIX* S_i_half; S_i_half = new CMATRIX(sz, sz);  *S_i_half = complex<double>(0.0,0.0);  // S^{-1/2}
@@ -415,7 +418,7 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S){
 
 
   // Transformation to adiabatic basis
-  libmmath::libmeigen::solve_eigen(sz, S, *I, *Seig, *C);  // S * C = I * C * Seig  ==>  S = C * Seig * C.H()
+  libmeigen::solve_eigen(S, *I, *Seig, *C, 0);  // S * C = I * C * Seig  ==>  S = C * Seig * C.H()
 
 
   // Diagonal form of S^{-1/2} and S^{1/2} matrices
@@ -451,7 +454,7 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S){
 
 
   // Compute the exponential  exp(-i*Hvib*dt)  
-  libmmath::libmeigen::solve_eigen(sz, *Hvib_eff, *I, *Seig, *C);  // Hvib_eff * C = I * C * Seig  ==>  Hvib = C * Seig * C.H()
+  libmeigen::solve_eigen(*Hvib_eff, *I, *Seig, *C, 0);  // Hvib_eff * C = I * C * Seig  ==>  Hvib = C * Seig * C.H()
 
 
   // Diagonal form expH
@@ -529,7 +532,7 @@ void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
 
 
   // Transformation to adiabatic basis
-  libmmath::libmeigen::solve_eigen(sz, S, *I, *Seig, *C);  // S * C = I * C * Seig  ==>  S = C * Seig * C.H()
+  libmeigen::solve_eigen(S, *I, *Seig, *C, 0);  // S * C = I * C * Seig  ==>  S = C * Seig * C.H()
 
 
   // Diagonal form of S^{-1/2} and S^{1/2} matrices
@@ -557,7 +560,7 @@ void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
 
   
   // Compute the exponential  exp(-i*Hvib*dt)  
-  libmmath::libmeigen::solve_eigen(sz, *Hvib_eff, *I, *Seig, *C);  // Hvib_eff * C = I * C * Seig  ==>  Hvib = C * Seig * C.H()
+  libmeigen::solve_eigen(*Hvib_eff, *I, *Seig, *C, 0);  // Hvib_eff * C = I * C * Seig  ==>  Hvib = C * Seig * C.H()
 
 
   // Diagonal form expH
@@ -609,77 +612,37 @@ void grid_propagator(double dt, CMATRIX& Hvib, CMATRIX& S, CMATRIX& U){
  
   \param[in] dt The integration time step (also the duration of propagation)
   \param[in] Hvib The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) - the complex-valued matrix, CMATRIX
-             it is also assumed to Hermitian - pay attention to how it is constructed!
+             it is also assumed to be Hermitian - pay attention to how it is constructed!
   \param[in] S The reference to the overlap matrix (assumed to be a complex-valued time-dependent matrix, CMATRIX)
 
   This is the Python-friendly function
   This function returns a propagator
 */ 
 
-
-  int i,j;
- 
-  // Let us first diagonalize the overlap matrix S
   int sz = S.n_cols;  
-  CMATRIX* I; I = new CMATRIX(sz, sz);  I->load_identity(); //->Init_Unit_Matrix(complex<double>(1.0,0.0));
-  CMATRIX* C; C = new CMATRIX(sz, sz);  *C = complex<double>(0.0, 0.0);
-  CMATRIX* Seig; Seig = new CMATRIX(sz, sz);  *Seig = complex<double>(0.0,0.0);
-
-
-  // Transformation to adiabatic basis
-  libmmath::libmeigen::solve_eigen(sz, S, *I, *Seig, *C);  // S * C = I * C * Seig  ==>  S = C * Seig * C.H()
-
+  CMATRIX S_half(sz,sz);
+  CMATRIX S_i_half(sz,sz);
 
   // Diagonal form of S^{-1/2} and S^{1/2} matrices
-  CMATRIX* S_i_half; S_i_half = new CMATRIX(sz, sz);  *S_i_half = complex<double>(0.0,0.0);  // S^{-1/2}
-  CMATRIX* S_half;   S_half = new CMATRIX(sz, sz);    *S_half = complex<double>(0.0,0.0);    // S^{1/2}
-  for(i=0;i<sz;i++){
-    complex<double> val = std::sqrt(Seig->get(i,i));
-
-    S_i_half->M[i*sz+i] = 1.0/val;
-    S_half->M[i*sz+i] = val;
-  }
-
-
-  // Convert to original basis
-  *S_i_half = (*C) * (*S_i_half) * ((*C).H());
-  *S_half = (*C) * (*S_half) * ((*C).H());
-
+  sqrt_matrix(S, S_half, S_i_half);
 
   // Transform the Hamiltonian accordingly:
-  CMATRIX* Hvib_eff;  Hvib_eff = new CMATRIX(sz,sz);
-  CMATRIX* coeff;     coeff = new CMATRIX(sz,1);
+  CMATRIX Hvib_eff(sz,sz);  
+  Hvib_eff = S_i_half * Hvib * S_i_half;
 
-  *Hvib_eff = (*S_i_half) * Hvib * (*S_i_half);  // Hermitian part
-  
-  // Compute the exponential  exp(-i*Hvib*dt)  
-  libmmath::libmeigen::solve_eigen(sz, *Hvib_eff, *I, *Seig, *C);  // Hvib_eff * C = I * C * Seig  ==>  Hvib = C * Seig * C.H()
-
-
-  // Diagonal form expH
-  CMATRIX* expH;   expH = new CMATRIX(sz, sz);    *expH = complex<double>(0.0,0.0);    // 
-  complex<double> one(0.0, 1.0);
-  for(i=0;i<sz;i++){
-    complex<double> val = std::exp(-one*Seig->get(i,i)*dt );
-    expH->set(i,i,val);
-  }
-
-  // Transform back to the original basis:
-  *expH = (*C) * (*expH) * ((*C).H());
+  // Compute the exponential  exp(-i*Hvib_eff*dt)  
+  CMATRIX expH(sz,sz);  
+  exp_matrix(expH, Hvib_eff, complex<double>(0.0, -dt) );
 
   // Propagator
-  U = (*S_i_half) * (*expH) * (*S_half);
+  U = S_i_half * expH * S_half;
 
   
   // Clean temporary memory
-  delete expH;
-  delete coeff;
-  delete Hvib_eff;
-  delete S_i_half;
-  delete S_half;
-  delete Seig;
-  delete C;
-  delete I;
+  //delete expH;
+  //delete Hvib_eff;
+  //delete S_i_half;
+  //delete S_half;
 
 
 
@@ -687,9 +650,7 @@ void grid_propagator(double dt, CMATRIX& Hvib, CMATRIX& S, CMATRIX& U){
 
 
 
-
-
-
 }// namespace libelectronic
 }// namespace libdyn
+}// liblibra
 

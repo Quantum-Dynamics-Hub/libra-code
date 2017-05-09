@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,11 +17,12 @@
 #ifndef LIB_HAMILTONIAN_QM_H
 #define LIB_HAMILTONIAN_QM_H
 
-#include "Basis_Setups/libbasis_setups.h"
-#include "Control_Parameters/libcontrol_parameters.h"
-#include "Model_Parameters/libmodel_parameters.h"
+
 #include "Hamiltonian_QM.h"
 #include "SCF.h"
+
+/// liblibra namespace
+namespace liblibra{
 
 
 /// libhamiltonian namespace
@@ -41,6 +42,6 @@ void export_Hamiltonian_QM_objects();
 }// namespace libhamiltonian_qm
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
-
+}// liblibra
 
 #endif// LIB_HAMILTONIAN_QM_H

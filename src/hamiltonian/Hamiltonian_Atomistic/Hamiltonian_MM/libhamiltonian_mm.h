@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -20,6 +20,9 @@
 
 #include "Hamiltonian_MM.h"
 
+/// liblibra namespace
+namespace liblibra{
+
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -38,6 +41,6 @@ void export_Hamiltonian_MM_objects();
 }// namespace libhamiltonian_mm
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
-
+}// liblibra
 
 #endif// LIB_HAMILTONIAN_MM_H

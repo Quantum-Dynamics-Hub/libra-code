@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -18,6 +18,14 @@
 #include <complex>
 #include <cmath>
 #include "Hamiltonian_Atomistic.h"
+#include "../../math_linalg/liblinalg.h"
+#include "../../math_meigen/libmeigen.h"
+#include "../../calculators/libcalculators.h"
+
+
+/// liblibra namespace
+namespace liblibra{
+
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -25,14 +33,13 @@ namespace libhamiltonian{
 /// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
 
+using namespace libcalculators;
 using namespace libchemobjects;
 using namespace libchemobjects::libchemsys;
 using namespace libhamiltonian_mm;
 using namespace libhamiltonian_qm;
-
-
-using namespace libmmath;
-using namespace libmmath::libmeigen;
+using namespace liblinalg;
+using namespace libmeigen;
 using std::complex;
 using std::sin;
 using std::cos;
@@ -450,15 +457,17 @@ void Hamiltonian_Atomistic::compute_diabatic(){
         MATRIX* tmp; tmp = new MATRIX(nelec,nelec);
         *tmp = 0.0;
 
-        if(nelec < qm_ham->el->Fao_alp->num_of_cols){
+        if(nelec < qm_ham->el->Fao_alp->n_cols){
       
-          vector<int> subset(nelec); for(int i=0;i<nelec;i++){ subset[i] = i; }  
+          vector<int> subset(nelec);
+          for(int i=0;i<nelec;i++){ subset[i] = i; }  
           pop_submatrix(qm_ham->el->Fao_alp, tmp, subset);
 
         }
         else{
 
-          vector<int> subset(qm_ham->el->Fao_alp->num_of_cols); for(int i=0;i<qm_ham->el->Fao_alp->num_of_cols;i++){ subset[i] = i; }  
+          vector<int> subset(qm_ham->el->Fao_alp->n_cols);
+          for(int i=0;i<qm_ham->el->Fao_alp->n_cols;i++){ subset[i] = i; }  
           push_submatrix(tmp, qm_ham->el->Fao_alp, subset);
 
         }
@@ -550,15 +559,17 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
         MATRIX* S; S = new MATRIX(nelec, nelec);  *S = 0.0;
         MATRIX* C; C = new MATRIX(nelec, nelec);  *C = 0.0;
 
-        if(nelec < qm_ham->el->Sao->num_of_cols){      
-          vector<int> subset(nelec); for(int i=0;i<nelec;i++){ subset[i] = i; }  
+        if(nelec < qm_ham->el->Sao->n_cols){      
+          vector<int> subset(nelec); 
+          for(int i=0;i<nelec;i++){ subset[i] = i; }  
           pop_submatrix(qm_ham->el->Sao, S, subset);
         }
         else{
-          vector<int> subset(qm_ham->el->Sao->num_of_cols); for(int i=0;i<qm_ham->el->Sao->num_of_cols;i++){ subset[i] = i; }  
+          vector<int> subset(qm_ham->el->Sao->n_cols); 
+          for(int i=0;i<qm_ham->el->Sao->n_cols;i++){ subset[i] = i; }  
           push_submatrix(S, qm_ham->el->Sao, subset);
 
-          for(int i=qm_ham->el->Sao->num_of_cols;i<nelec;i++){
+          for(int i=qm_ham->el->Sao->n_cols;i<nelec;i++){
             S->set(i,i,1.0);
           }
         }
@@ -778,7 +789,7 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
           qm_ham->el->occ_alp = occ_alp_grnd;
           qm_ham->el->occ_bet = occ_bet_grnd;
 
-          excite(Norb, qm_ham->basis_ex[i], qm_ham->el->Nocc_alp, qm_ham->el->occ_alp, 
+          libcalculators::excite(Norb, qm_ham->basis_ex[i], qm_ham->el->Nocc_alp, qm_ham->el->occ_alp, 
                                             qm_ham->el->Nocc_bet, qm_ham->el->occ_bet); // ground state excitation
 
           // And recompute density matrix
@@ -858,7 +869,7 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
         qm_ham->el->occ_alp = occ_alp_grnd;
         qm_ham->el->occ_bet = occ_bet_grnd;
 
-        excite(Norb, qm_ham->basis_ex[i], qm_ham->el->Nocc_alp, qm_ham->el->occ_alp, 
+        libcalculators::excite(Norb, qm_ham->basis_ex[i], qm_ham->el->Nocc_alp, qm_ham->el->occ_alp, 
                                           qm_ham->el->Nocc_bet, qm_ham->el->occ_bet); // ground state excitation
 
         // And recompute density matrix
@@ -1011,7 +1022,7 @@ void Hamiltonian_Atomistic::excite_bet(int I, int J){
 
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
-
+}// liblibra
 
 
 

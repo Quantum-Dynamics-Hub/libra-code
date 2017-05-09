@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -18,14 +18,17 @@
 #include <cmath>
 #include "Hamiltonian_Extern.h"
 
+/// liblibra namespace
+namespace liblibra{
+
 /// libhamiltonian namespace
 namespace libhamiltonian{
 
 /// libhamiltonian_extern namespace
 namespace libhamiltonian_extern{
 
-using namespace libmmath;
-using namespace libmmath::libmeigen;
+using namespace liblinalg;
+using namespace libmeigen;
 using std::complex;
 using std::sin;
 using std::cos;
@@ -134,14 +137,14 @@ void Hamiltonian_Extern::bind_ham_dia(MATRIX& _ham_dia){
   Makes the internal pointer, ham_dia, to point to the external object containing diabatic Hamiltonian matrix
 */
 
-  if(_ham_dia.num_of_cols!=nelec){
+  if(_ham_dia.n_cols!=nelec){
     cout<<"Error in Hamiltonian_Extern::bind_ham_dia\n";
-    cout<<"Expected number of electronic DOF = "<<nelec<<" the number of cols in the input matrix is = "<<_ham_dia.num_of_cols<<"\n";
+    cout<<"Expected number of electronic DOF = "<<nelec<<" the number of cols in the input matrix is = "<<_ham_dia.n_cols<<"\n";
     exit(0);
   }
-  if(_ham_dia.num_of_rows!=nelec){
+  if(_ham_dia.n_rows!=nelec){
     cout<<"Error in Hamiltonian_Extern::bind_ham_dia\n";
-    cout<<"Expected number of electronic DOF = "<<nelec<<" the number of rows in the input matrix is = "<<_ham_dia.num_of_rows<<"\n";
+    cout<<"Expected number of electronic DOF = "<<nelec<<" the number of rows in the input matrix is = "<<_ham_dia.n_rows<<"\n";
     exit(0);
   }
 
@@ -169,14 +172,14 @@ void Hamiltonian_Extern::bind_d1ham_dia(vector<MATRIX>& _d1ham_dia){
   }
   if(sz>0){
 
-    if(_d1ham_dia[0].num_of_cols!=nelec){
+    if(_d1ham_dia[0].n_cols!=nelec){
       cout<<"Error in Hamiltonian_Extern::bind_d1ham_dia\n";
-      cout<<"Expected number of electronic DOF = "<<nelec<<" the number of cols in the input matrix is = "<<_d1ham_dia[0].num_of_cols<<"\n";
+      cout<<"Expected number of electronic DOF = "<<nelec<<" the number of cols in the input matrix is = "<<_d1ham_dia[0].n_cols<<"\n";
       exit(0);
     }
-    if(_d1ham_dia[0].num_of_rows!=nelec){
+    if(_d1ham_dia[0].n_rows!=nelec){
       cout<<"Error in Hamiltonian_Extern::bind_d1ham_dia\n";
-      cout<<"Expected number of electronic DOF = "<<nelec<<" the number of rows in the input matrix is = "<<_d1ham_dia[0].num_of_rows<<"\n";
+      cout<<"Expected number of electronic DOF = "<<nelec<<" the number of rows in the input matrix is = "<<_d1ham_dia[0].n_rows<<"\n";
       exit(0);
     }
   }
@@ -206,14 +209,14 @@ void Hamiltonian_Extern::bind_d2ham_dia(vector<MATRIX>& _d2ham_dia){
   }
   if(sz>0){
 
-    if(_d2ham_dia[0].num_of_cols!=nelec){
+    if(_d2ham_dia[0].n_cols!=nelec){
       cout<<"Error in Hamiltonian_Extern::bind_d2ham_dia\n";
-      cout<<"Expected number of electronic DOF = "<<nelec<<" the number of cols in the input matrix is = "<<_d2ham_dia[0].num_of_cols<<"\n";
+      cout<<"Expected number of electronic DOF = "<<nelec<<" the number of cols in the input matrix is = "<<_d2ham_dia[0].n_cols<<"\n";
       exit(0);
     }
-    if(_d2ham_dia[0].num_of_rows!=nelec){
+    if(_d2ham_dia[0].n_rows!=nelec){
       cout<<"Error in Hamiltonian_Extern::bind_d2ham_dia\n";
-      cout<<"Expected number of electronic DOF = "<<nelec<<" the number of rows in the input matrix is = "<<_d2ham_dia[0].num_of_rows<<"\n";
+      cout<<"Expected number of electronic DOF = "<<nelec<<" the number of rows in the input matrix is = "<<_d2ham_dia[0].n_rows<<"\n";
       exit(0);
     }
   }
@@ -233,14 +236,14 @@ void Hamiltonian_Extern::bind_ham_adi(MATRIX& _ham_adi){
   Makes the internal pointer, ham_adi, to point to the external object containing adiabatic Hamiltonian matrix
 */
 
-  if(_ham_adi.num_of_cols!=nelec){
+  if(_ham_adi.n_cols!=nelec){
     cout<<"Error in Hamiltonian_Extern::bind_ham_adi\n";
-    cout<<"Expected number of electronic DOF = "<<nelec<<" the number of cols in the input matrix is = "<<_ham_adi.num_of_cols<<"\n";
+    cout<<"Expected number of electronic DOF = "<<nelec<<" the number of cols in the input matrix is = "<<_ham_adi.n_cols<<"\n";
     exit(0);
   }
-  if(_ham_adi.num_of_rows!=nelec){
+  if(_ham_adi.n_rows!=nelec){
     cout<<"Error in Hamiltonian_Extern::bind_ham_adi\n";
-    cout<<"Expected number of electronic DOF = "<<nelec<<" the number of rows in the input matrix is = "<<_ham_adi.num_of_rows<<"\n";
+    cout<<"Expected number of electronic DOF = "<<nelec<<" the number of rows in the input matrix is = "<<_ham_adi.n_rows<<"\n";
     exit(0);
   }
 
@@ -268,14 +271,14 @@ void Hamiltonian_Extern::bind_d1ham_adi(vector<MATRIX>& _d1ham_adi){
   }
   if(sz>0){
 
-    if(_d1ham_adi[0].num_of_cols!=nelec){
+    if(_d1ham_adi[0].n_cols!=nelec){
       cout<<"Error in Hamiltonian_Extern::bind_d1ham_adi\n";
-      cout<<"Expected number of electronic DOF = "<<nelec<<" the number of cols in the input matrix is = "<<_d1ham_adi[0].num_of_cols<<"\n";
+      cout<<"Expected number of electronic DOF = "<<nelec<<" the number of cols in the input matrix is = "<<_d1ham_adi[0].n_cols<<"\n";
       exit(0);
     }
-    if(_d1ham_adi[0].num_of_rows!=nelec){
+    if(_d1ham_adi[0].n_rows!=nelec){
       cout<<"Error in Hamiltonian_Extern::bind_d1ham_adi\n";
-      cout<<"Expected number of electronic DOF = "<<nelec<<" the number of rows in the input matrix is = "<<_d1ham_adi[0].num_of_rows<<"\n";
+      cout<<"Expected number of electronic DOF = "<<nelec<<" the number of rows in the input matrix is = "<<_d1ham_adi[0].n_rows<<"\n";
       exit(0);
     }
   }
@@ -487,7 +490,7 @@ std::complex<double> Hamiltonian_Extern::Hvib(int i,int j){
 
 }// namespace libhamiltonian_extern
 }// namespace libhamiltonian
-
+}// liblibra
 
 
 

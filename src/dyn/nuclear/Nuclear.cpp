@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -15,6 +15,10 @@
 */
 
 #include "Nuclear.h"
+
+/// liblibra namespace
+namespace liblibra{
+
 
 /// libdyn namespace
 namespace libdyn{
@@ -224,5 +228,5 @@ void Nuclear::scale_q(double scl,vector<int>& active){
 
 }// namespace libnuclear
 }// namespace libdyn
-
+}// liblibra
 

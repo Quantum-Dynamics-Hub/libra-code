@@ -18,6 +18,10 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "libutil.h"
 
+/// liblibra namespace
+namespace liblibra{
+
+
 /// libutil namespace
 namespace libutil{
 
@@ -78,7 +82,7 @@ BOOST_PYTHON_MODULE(libutil){
 
 
 }// namespace libutil
-
+}// liblibra
 
 
 

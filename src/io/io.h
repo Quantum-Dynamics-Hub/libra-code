@@ -32,6 +32,12 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
 
+
+
+/// liblibra 
+namespace liblibra{
+
+
 using namespace std;
 using namespace boost::python;
 using boost::property_tree::ptree;
@@ -46,9 +52,6 @@ using boost::property_tree::ptree;
 #endif
 
 
-
-//#include "../mmath/libmmath.h"
-//using namespace libmmath;
 
 
 /// libio namespace
@@ -308,5 +311,6 @@ void show_2D(vector< vector<double> >& in);
 
 
 }// libio
+}// liblibra
 
 #endif // IO_H

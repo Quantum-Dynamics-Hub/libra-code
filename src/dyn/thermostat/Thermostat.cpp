@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -15,6 +15,10 @@
 */
 
 #include "Thermostat.h"
+#include "../../io/libio.h"
+
+/// liblibra namespace
+namespace liblibra{
 
 /// libdyn namespace
 namespace libdyn{
@@ -239,30 +243,30 @@ void Thermostat::save(boost::property_tree::ptree& pt,std::string path){
   \param[in] path The parameter controlling the level of the tree to which the Thermostat members will be added.
 */
 
-  if(s_t_size>0){  ::save(pt,path+".s_t",s_t);    }
-  if(s_r_size>0){  ::save(pt,path+".s_r",s_r);    }
-  if(s_b_size>0){  ::save(pt,path+".s_b",s_b);    }
-  if(ksi_t_size>0){  ::save(pt,path+".ksi_t",ksi_t);    }
-  if(ksi_r_size>0){  ::save(pt,path+".ksi_r",ksi_r);    }
-  if(ksi_b_size>0){  ::save(pt,path+".ksi_b",ksi_b);    }
-  if(G_t_size>0){  ::save(pt,path+".G_t",G_t);    }
-  if(G_r_size>0){  ::save(pt,path+".G_r",G_r);    }
-  if(G_b_size>0){  ::save(pt,path+".G_b",G_b);    }
-  if(Q_t_size>0){  ::save(pt,path+".Q_t",Q_t);    }
-  if(Q_r_size>0){  ::save(pt,path+".Q_r",Q_r);    }
-  if(Q_b_size>0){  ::save(pt,path+".Q_b",Q_b);    }
+  if(s_t_size>0){  libio::save(pt,path+".s_t",s_t);    }
+  if(s_r_size>0){  libio::save(pt,path+".s_r",s_r);    }
+  if(s_b_size>0){  libio::save(pt,path+".s_b",s_b);    }
+  if(ksi_t_size>0){  libio::save(pt,path+".ksi_t",ksi_t);    }
+  if(ksi_r_size>0){  libio::save(pt,path+".ksi_r",ksi_r);    }
+  if(ksi_b_size>0){  libio::save(pt,path+".ksi_b",ksi_b);    }
+  if(G_t_size>0){  libio::save(pt,path+".G_t",G_t);    }
+  if(G_r_size>0){  libio::save(pt,path+".G_r",G_r);    }
+  if(G_b_size>0){  libio::save(pt,path+".G_b",G_b);    }
+  if(Q_t_size>0){  libio::save(pt,path+".Q_t",Q_t);    }
+  if(Q_r_size>0){  libio::save(pt,path+".Q_r",Q_r);    }
+  if(Q_b_size>0){  libio::save(pt,path+".Q_b",Q_b);    }
 
 
-  if(is_Nf_t){  ::save(pt,path+".Nf_t",Nf_t);    }
-  if(is_Nf_r){  ::save(pt,path+".Nf_r",Nf_r);    }
-  if(is_Nf_b){  ::save(pt,path+".Nf_b",Nf_b);    }
-  if(is_s_var){  ::save(pt,path+".s_var",s_var);    }
-  if(is_Ps){  ::save(pt,path+".Ps",Ps);    }
-  if(is_Q){  ::save(pt,path+".Q",Q);    }
-  if(is_NHC_size){  ::save(pt,path+".NHC_size",NHC_size);    }
-  if(is_nu_therm){  ::save(pt,path+".nu_therm",nu_therm);    }
-  if(is_Temperature){  ::save(pt,path+".Temperature",Temperature);    }
-  if(is_thermostat_type){  ::save(pt,path+".thermostat_type",thermostat_type);    }
+  if(is_Nf_t){  libio::save(pt,path+".Nf_t",Nf_t);    }
+  if(is_Nf_r){  libio::save(pt,path+".Nf_r",Nf_r);    }
+  if(is_Nf_b){  libio::save(pt,path+".Nf_b",Nf_b);    }
+  if(is_s_var){  libio::save(pt,path+".s_var",s_var);    }
+  if(is_Ps){  libio::save(pt,path+".Ps",Ps);    }
+  if(is_Q){  libio::save(pt,path+".Q",Q);    }
+  if(is_NHC_size){  libio::save(pt,path+".NHC_size",NHC_size);    }
+  if(is_nu_therm){  libio::save(pt,path+".nu_therm",nu_therm);    }
+  if(is_Temperature){  libio::save(pt,path+".Temperature",Temperature);    }
+  if(is_thermostat_type){  libio::save(pt,path+".thermostat_type",thermostat_type);    }
 
 }
 
@@ -301,29 +305,29 @@ void Thermostat::load(boost::property_tree::ptree& pt,std::string path,int& stat
   int st;
   status = 0;
 
-  ::load(pt,path+".s_t",s_t,st); if(st==1) { status=1; s_t_size = s_t.size(); }
-  ::load(pt,path+".s_r",s_r,st); if(st==1) { status=1; s_r_size = s_r.size(); }
-  ::load(pt,path+".s_b",s_b,st); if(st==1) { status=1; s_b_size = s_b.size(); }
-  ::load(pt,path+".ksi_t",ksi_t,st); if(st==1) { status=1; ksi_t_size = ksi_t.size(); }
-  ::load(pt,path+".ksi_r",ksi_r,st); if(st==1) { status=1; ksi_r_size = ksi_r.size(); }
-  ::load(pt,path+".ksi_b",ksi_b,st); if(st==1) { status=1; ksi_b_size = ksi_b.size(); }
-  ::load(pt,path+".G_t",G_t,st); if(st==1) { status=1; G_t_size = G_t.size(); }
-  ::load(pt,path+".G_r",G_r,st); if(st==1) { status=1; G_r_size = G_r.size(); }
-  ::load(pt,path+".G_b",G_b,st); if(st==1) { status=1; G_b_size = G_b.size(); }
-  ::load(pt,path+".Q_t",Q_t,st); if(st==1) { status=1; Q_t_size = Q_t.size(); }
-  ::load(pt,path+".Q_r",Q_r,st); if(st==1) { status=1; Q_r_size = Q_r.size(); }
-  ::load(pt,path+".Q_b",Q_b,st); if(st==1) { status=1; Q_b_size = Q_b.size(); }
+  libio::load(pt,path+".s_t",s_t,st); if(st==1) { status=1; s_t_size = s_t.size(); }
+  libio::load(pt,path+".s_r",s_r,st); if(st==1) { status=1; s_r_size = s_r.size(); }
+  libio::load(pt,path+".s_b",s_b,st); if(st==1) { status=1; s_b_size = s_b.size(); }
+  libio::load(pt,path+".ksi_t",ksi_t,st); if(st==1) { status=1; ksi_t_size = ksi_t.size(); }
+  libio::load(pt,path+".ksi_r",ksi_r,st); if(st==1) { status=1; ksi_r_size = ksi_r.size(); }
+  libio::load(pt,path+".ksi_b",ksi_b,st); if(st==1) { status=1; ksi_b_size = ksi_b.size(); }
+  libio::load(pt,path+".G_t",G_t,st); if(st==1) { status=1; G_t_size = G_t.size(); }
+  libio::load(pt,path+".G_r",G_r,st); if(st==1) { status=1; G_r_size = G_r.size(); }
+  libio::load(pt,path+".G_b",G_b,st); if(st==1) { status=1; G_b_size = G_b.size(); }
+  libio::load(pt,path+".Q_t",Q_t,st); if(st==1) { status=1; Q_t_size = Q_t.size(); }
+  libio::load(pt,path+".Q_r",Q_r,st); if(st==1) { status=1; Q_r_size = Q_r.size(); }
+  libio::load(pt,path+".Q_b",Q_b,st); if(st==1) { status=1; Q_b_size = Q_b.size(); }
 
-  ::load(pt,path+".Nf_t",Nf_t,is_Nf_t); if(is_Nf_t==1) { status=1;}
-  ::load(pt,path+".Nf_r",Nf_r,is_Nf_r); if(is_Nf_r==1) { status=1;}
-  ::load(pt,path+".Nf_b",Nf_b,is_Nf_b); if(is_Nf_b==1) { status=1;}
-  ::load(pt,path+".s_var",s_var,is_s_var); if(is_s_var==1) { status=1;}
-  ::load(pt,path+".Ps",Ps,is_Ps); if(is_Ps==1) { status=1;}
-  ::load(pt,path+".Q",Q,is_Q); if(is_Q==1) { status=1;}
-  ::load(pt,path+".NHC_size",NHC_size,is_NHC_size); if(is_NHC_size==1) { status=1;}
-  ::load(pt,path+".nu_therm",nu_therm,is_nu_therm); if(is_nu_therm==1) { status=1;}
-  ::load(pt,path+".Temperature",Temperature,is_Temperature); if(is_Temperature==1) { status=1;}
-  ::load(pt,path+".thermostat_type",thermostat_type,is_thermostat_type); if(is_thermostat_type==1) { status=1;}
+  libio::load(pt,path+".Nf_t",Nf_t,is_Nf_t); if(is_Nf_t==1) { status=1;}
+  libio::load(pt,path+".Nf_r",Nf_r,is_Nf_r); if(is_Nf_r==1) { status=1;}
+  libio::load(pt,path+".Nf_b",Nf_b,is_Nf_b); if(is_Nf_b==1) { status=1;}
+  libio::load(pt,path+".s_var",s_var,is_s_var); if(is_s_var==1) { status=1;}
+  libio::load(pt,path+".Ps",Ps,is_Ps); if(is_Ps==1) { status=1;}
+  libio::load(pt,path+".Q",Q,is_Q); if(is_Q==1) { status=1;}
+  libio::load(pt,path+".NHC_size",NHC_size,is_NHC_size); if(is_NHC_size==1) { status=1;}
+  libio::load(pt,path+".nu_therm",nu_therm,is_nu_therm); if(is_nu_therm==1) { status=1;}
+  libio::load(pt,path+".Temperature",Temperature,is_Temperature); if(is_Temperature==1) { status=1;}
+  libio::load(pt,path+".thermostat_type",thermostat_type,is_thermostat_type); if(is_thermostat_type==1) { status=1;}
 
 }
 
@@ -353,7 +357,7 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<Thermostat>& v
 
 }// namespace libthermostat
 }// namespace libdyn
-
+}// liblibra
 
 
 

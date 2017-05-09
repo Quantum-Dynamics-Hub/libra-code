@@ -18,6 +18,8 @@
 /// Derived custom classes
 #include "ctx_Control_Parameters.h"
 
+/// liblibra namespace
+namespace liblibra{
 
 namespace libcontext{
 
@@ -26,6 +28,8 @@ void export_context_objects();
 
 
 }// namespace libcontext
+
+}// liblibra
 
 
 #endif// LIB_CONTEXT_H

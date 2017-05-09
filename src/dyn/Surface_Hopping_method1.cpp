@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -21,6 +21,8 @@
 #include "Surface_Hopping_method1.h"
 #include "Energy_and_Forces.h"
 
+/// liblibra namespace
+namespace liblibra{
 
 /// libdyn namespace
 namespace libdyn{
@@ -54,7 +56,7 @@ void compute_hopping_probabilities_esh(Ensemble& ens, MATRIX* g, double dt, int 
 
 
   // Verify if memory is allocated, if not generate
-  if(g->num_of_elems!=ens.nelec * ens.nelec){cout<<"Matrix g is not allocated\n"; exit(0);  }
+  if(g->n_elts!=ens.nelec * ens.nelec){cout<<"Matrix g is not allocated\n"; exit(0);  }
 
 
   // Now calculate the hopping probabilities
@@ -167,7 +169,7 @@ void hop(int ntraj, vector<int>& initstate, vector<Nuclear*>& mol, vector<Hamilt
 // do_rescaling - flag to turn on/off CPA: 0 - no rescaling (CPA), 1 - do rescaling (back-reaction)
 // rep - representation:  0 - for diabatic, 1 - for adiabatic
   int traj;
-  int nstates = g[0]->num_of_cols;
+  int nstates = g[0]->n_cols;
   double left, right; 
   vector<int> finstate; finstate = initstate;
 
@@ -232,7 +234,7 @@ hop(int ntraj, vector<int> initstate, vector<Nuclear>& mol, vector<Hamiltonian>&
   return res;
 */
   int traj;
-  int nstates = g[0].num_of_cols;
+  int nstates = g[0].n_cols;
   double left, right; 
   vector<int> finstate; finstate = initstate;
 
@@ -478,7 +480,6 @@ int rescale_velocities_adiabatic(Nuclear& mol, Hamiltonian& ham, int old_st, int
 */
 
 
-
-
 }// namespace libdyn
+}// liblibra
 

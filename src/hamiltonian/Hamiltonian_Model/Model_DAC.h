@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,7 +17,12 @@
 #ifndef MODEL_DAC_H
 #define MODEL_DAC_H
 
-#include "../../mmath/libmmath.h"
+#include "../../math_linalg/liblinalg.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -32,5 +37,6 @@ boost::python::list DAC_Ham(double x, boost::python::list params_);
 
 }// namespace libhamiltonian_model
 }// namespace libhamiltonian
+}// liblibra
 
 #endif // MODEL_DAC

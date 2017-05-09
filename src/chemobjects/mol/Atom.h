@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,12 +17,15 @@
 #ifndef ATOM_H
 #define ATOM_H
 
-#include "../../dyn/rigidbody/librigidbody.h"
+#include "../../dyn_rigidbody/librigidbody.h"
 #include "../universe/libuniverse.h"
-using namespace libdyn::librigidbody;
+#include "../../math_linalg/liblinalg.h"
 
-#include "../../mmath/libmmath.h"
-using namespace libmmath;
+/// liblibra namespace
+namespace liblibra{
+
+using namespace librigidbody;
+using namespace liblinalg;
 
 /// libchemobjects namespace
 namespace libchemobjects{
@@ -118,7 +121,7 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<Atom>& vt,Univ
 
 }// namespace libmol
 }// namespace libchemobjects
-
+}// liblibra
 
 
 #endif // ATOM_H

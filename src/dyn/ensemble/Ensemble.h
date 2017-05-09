@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -18,13 +18,22 @@
 #define ENSEMBLE_H
 
 
-#include "../../mmath/libmmath.h"
+#include "../../math_linalg/liblinalg.h"
+#include "../../math_random/librandom.h"
+#include "../../math_specialfunctions/libspecialfunctions.h"
+#include "../../Units.h"
+
 #include "../../hamiltonian/libhamiltonian.h"
 #include "../nuclear/libnuclear.h"
 #include "../electronic/libelectronic.h"
 
-using namespace libmmath;
-using namespace libmmath::librandom;
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+using namespace librandom;
+using namespace libspecialfunctions;
+
 using namespace libhamiltonian;
 using namespace libhamiltonian::libhamiltonian_generic;
 using namespace libhamiltonian::libhamiltonian_model;
@@ -169,6 +178,6 @@ class Ensemble{
 
 }// namespace libensemble
 }// namespace libdyn
-
+}// liblibra
 
 #endif // ENSEMBLE

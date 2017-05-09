@@ -18,9 +18,12 @@
 #include "Fermi.h"
 #include "Bands.h"
 
-#include "../mmath/libmmath.h"
-using namespace libmmath;
-using namespace libmmath::libmeigen;
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+using namespace libmeigen;
 
 
 /// libcalculators namespace
@@ -87,7 +90,7 @@ MATRIX compute_density_matrix(boost::python::list occ, MATRIX C){
 
 */
 
-  int Norb = C.num_of_cols;
+  int Norb = C.n_cols;
   vector< pair<int,double> > int_occ;
   MATRIX P(Norb,Norb);
 
@@ -205,7 +208,7 @@ void Fock_to_P(MATRIX* Fao, MATRIX* Sao, double Nel, double degen, double kT, do
 */
 
 
-  int Norb = Fao->num_of_cols;
+  int Norb = Fao->n_cols;
     
   // Get electronic structure (wfc and energies) from given Fock matrix
   if(BM){ bench_t[0].start(); }
@@ -301,7 +304,7 @@ boost::python::list Fock_to_P(MATRIX Fao, MATRIX Sao, double Nel, double degen, 
 */
 
 
-  int Norb = Fao.num_of_cols;
+  int Norb = Fao.n_cols;
   MATRIX E(Norb,Norb);
   MATRIX C(Norb,Norb);
   MATRIX P(Norb,Norb);
@@ -327,3 +330,5 @@ boost::python::list Fock_to_P(MATRIX Fao, MATRIX Sao, double Nel, double degen, 
  
 
 }//namespace libcalculators
+} /// liblibra
+

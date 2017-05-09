@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,12 +17,20 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
-#include "../../mmath/libmmath.h"
-using namespace libmmath;
-using namespace libmmath::libgraph;
-using namespace libmmath::librandom;
-
+#include "../../math_random/librandom.h"
+#include "../../math_graph/libgraph.h"
+#include "../../math_linalg/liblinalg.h"
 #include "../mol/libmol.h"
+
+
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace librandom;
+using namespace libgraph;
+using namespace liblinalg;
+
 
 
 /// libchemobjects namespace
@@ -327,6 +335,6 @@ public:
 
 }// namespace libchemsys
 }// namespace libchemobjects
-
+}// liblibra
 
 #endif // SYSTEM_H

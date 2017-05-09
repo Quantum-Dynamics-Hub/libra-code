@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,11 +17,25 @@
 #ifndef HAMILTONIAN_QM_H
 #define HAMILTONIAN_QM_H
 
+#include "../../../basis_setups/libbasis_setups.h"
+#include "../../../control_parameters/libcontrol_parameters.h"
+#include "../../../common_types/libcommon_types.h"
+#include "../../../model_parameters/libmodel_parameters.h"
+
 
 #include "Hamiltonian_EHT.h"
 #include "Hamiltonian_INDO.h"
 #include "Hamiltonian_HF.h"
 #include "Electronic_Structure.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace libbasis_setups;
+using namespace libcontrol_parameters;
+using namespace libmodel_parameters;
+using namespace libcommon_types;
+
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -192,6 +206,6 @@ typedef std::vector<vector<listHamiltonian_QM> > listHamiltonian_QMMap;  ///< Da
 }// namespace libhamiltonian_qm
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
-
+}// liblibra
 
 #endif // HAMILTONIAN_QM_H

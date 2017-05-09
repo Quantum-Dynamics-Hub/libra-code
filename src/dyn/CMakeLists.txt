@@ -1,17 +1,11 @@
 #
-# Set the libraries
-# 
-#SET( ext_libs ${Boost_LIBRARIES} ${PYTHON_LIBRARIES}/libpython2.6.dll )
-
-
-#
 #  Building sub-directories
 #
 MESSAGE("Going into subdirectory nuclear...")
 ADD_SUBDIRECTORY("nuclear")
 
-MESSAGE("Going into subdirectory rigidbody...")
-ADD_SUBDIRECTORY("rigidbody")
+#MESSAGE("Going into subdirectory rigidbody...")
+#ADD_SUBDIRECTORY("rigidbody")
 
 MESSAGE("Going into subdirectory electronic...")
 ADD_SUBDIRECTORY("electronic")
@@ -49,8 +43,20 @@ ADD_LIBRARY(dyn_stat STATIC ${DYN_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(dyn      gwp_stat ensemble_stat wfcgrid_stat barostat_stat thermostat_stat electronic_stat rigidbody_stat nuclear_stat mmath_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(dyn_stat gwp_stat ensemble_stat wfcgrid_stat barostat_stat thermostat_stat electronic_stat rigidbody_stat nuclear_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(dyn      gwp_stat ensemble_stat 
+                      wfcgrid_stat 
+                      barostat_stat thermostat_stat 
+                      electronic_stat 
+                      nuclear_stat 
+                      linalg_stat meigen_stat specialfunctions_stat ${ext_libs} )
+
+TARGET_LINK_LIBRARIES(dyn_stat      gwp_stat ensemble_stat 
+                      wfcgrid_stat 
+                      barostat_stat thermostat_stat 
+                      electronic_stat 
+                      nuclear_stat 
+                      linalg_stat meigen_stat specialfunctions_stat ${ext_libs} )
+
 
 
 

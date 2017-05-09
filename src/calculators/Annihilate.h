@@ -17,8 +17,12 @@
 #ifndef ANNIHILATE_H
 #define ANNIHILATE_H
 
-#include "../mmath/libmmath.h"
-using namespace libmmath;
+#include "../math_linalg/liblinalg.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
 
 /// libcalculators namespace
 namespace libcalculators{
@@ -28,5 +32,6 @@ void annihilate(int Na, int Nb, MATRIX* Pa, MATRIX* Pb);
 
 
 }// namespace libcalculators
+}// liblibra
 
 #endif // ANNIHILATE_H

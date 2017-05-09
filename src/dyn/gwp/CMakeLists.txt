@@ -15,7 +15,7 @@ ADD_LIBRARY(gwp_stat STATIC ${GWP_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(gwp      mmath_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(gwp_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(gwp      linalg_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(gwp_stat linalg_stat ${ext_libs})
 
 

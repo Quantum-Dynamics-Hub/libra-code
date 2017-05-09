@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -10,6 +10,9 @@
 *********************************************************************************/
 
 #include "State.h"
+
+/// liblibra namespace
+namespace liblibra{
 
 namespace libscripts{
 namespace libstate{
@@ -160,20 +163,20 @@ void MD::show_info(){
 
 void MD::save(boost::property_tree::ptree& pt,std::string path){
 
-  if(is_ensemble){  ::save(pt,path+".ensemble",ensemble);    }
-  if(is_integrator){  ::save(pt,path+".integrator",integrator);    }
-  if(is_dt){  ::save(pt,path+".dt",dt);    }
-  if(is_n_medium){  ::save(pt,path+".n_medium",n_medium);    }
-  if(is_n_fast){  ::save(pt,path+".n_fast",n_fast);    }
-  if(is_n_outer){ ::save(pt,path+".n_outer",n_outer); }
-  if(is_max_time){  ::save(pt,path+".max_time",max_time);    }
-  if(is_max_step){  ::save(pt,path+".max_step",max_step);    }
-  if(is_curr_time){  ::save(pt,path+".curr_time",curr_time);    }
-  if(is_curr_step){  ::save(pt,path+".curr_step",curr_step);    }
-  if(is_terec_exp_size){  ::save(pt,path+".terec_exp_size",terec_exp_size);    }
-  if(is_use_vlist){  ::save(pt,path+".use_vlist",use_vlist);    }
-  if(is_vlist_upd_freq){  ::save(pt,path+".vlist_upd_freq",vlist_upd_freq);    }
-  if(is_vlist_time){  ::save(pt,path+".vlist_time",vlist_time);    }
+  if(is_ensemble){  libio::save(pt,path+".ensemble",ensemble);    }
+  if(is_integrator){  libio::save(pt,path+".integrator",integrator);    }
+  if(is_dt){  libio::save(pt,path+".dt",dt);    }
+  if(is_n_medium){  libio::save(pt,path+".n_medium",n_medium);    }
+  if(is_n_fast){  libio::save(pt,path+".n_fast",n_fast);    }
+  if(is_n_outer){ libio::save(pt,path+".n_outer",n_outer); }
+  if(is_max_time){  libio::save(pt,path+".max_time",max_time);    }
+  if(is_max_step){  libio::save(pt,path+".max_step",max_step);    }
+  if(is_curr_time){  libio::save(pt,path+".curr_time",curr_time);    }
+  if(is_curr_step){  libio::save(pt,path+".curr_step",curr_step);    }
+  if(is_terec_exp_size){  libio::save(pt,path+".terec_exp_size",terec_exp_size);    }
+  if(is_use_vlist){  libio::save(pt,path+".use_vlist",use_vlist);    }
+  if(is_vlist_upd_freq){  libio::save(pt,path+".vlist_upd_freq",vlist_upd_freq);    }
+  if(is_vlist_time){  libio::save(pt,path+".vlist_time",vlist_time);    }
 
 
 }
@@ -191,20 +194,20 @@ void MD::load(boost::property_tree::ptree& pt,std::string path,int& status){
   int st;
   status = 0;
 
-  ::load(pt,path+".ensemble",ensemble,is_ensemble); if(is_ensemble==1) { status=1;}
-  ::load(pt,path+".integrator",integrator,is_integrator); if(is_integrator==1) { status=1;}
-  ::load(pt,path+".dt",dt,is_dt); if(is_dt==1) { status=1;}
-  ::load(pt,path+".n_medium",n_medium,is_n_medium); if(is_n_medium==1) { status=1;}
-  ::load(pt,path+".n_fast",n_fast,is_n_fast); if(is_n_fast==1) { status=1;}
-  ::load(pt,path+".n_outer",n_outer,is_n_outer); if(is_n_outer==1){ status = 1; }
-  ::load(pt,path+".max_time",max_time,is_max_time); if(is_max_time==1) { status=1;}
-  ::load(pt,path+".max_step",max_step,is_max_step); if(is_max_step==1) { status=1;}
-  ::load(pt,path+".curr_time",curr_time,is_curr_time); if(is_curr_time==1) { status=1;}
-  ::load(pt,path+".curr_step",curr_step,is_curr_step); if(is_curr_step==1) { status=1;}
-  ::load(pt,path+".terec_exp_size",terec_exp_size,is_terec_exp_size); if(is_terec_exp_size==1) { status=1;}
-  ::load(pt,path+".use_vlist",use_vlist,is_use_vlist); if(is_use_vlist==1) { status=1;}
-  ::load(pt,path+".vlist_upd_freq",vlist_upd_freq,is_vlist_upd_freq); if(is_vlist_upd_freq==1) { status=1;}
-  ::load(pt,path+".vlist_time",vlist_time,is_vlist_time); if(is_vlist_time==1) { status=1;}
+  libio::load(pt,path+".ensemble",ensemble,is_ensemble); if(is_ensemble==1) { status=1;}
+  libio::load(pt,path+".integrator",integrator,is_integrator); if(is_integrator==1) { status=1;}
+  libio::load(pt,path+".dt",dt,is_dt); if(is_dt==1) { status=1;}
+  libio::load(pt,path+".n_medium",n_medium,is_n_medium); if(is_n_medium==1) { status=1;}
+  libio::load(pt,path+".n_fast",n_fast,is_n_fast); if(is_n_fast==1) { status=1;}
+  libio::load(pt,path+".n_outer",n_outer,is_n_outer); if(is_n_outer==1){ status = 1; }
+  libio::load(pt,path+".max_time",max_time,is_max_time); if(is_max_time==1) { status=1;}
+  libio::load(pt,path+".max_step",max_step,is_max_step); if(is_max_step==1) { status=1;}
+  libio::load(pt,path+".curr_time",curr_time,is_curr_time); if(is_curr_time==1) { status=1;}
+  libio::load(pt,path+".curr_step",curr_step,is_curr_step); if(is_curr_step==1) { status=1;}
+  libio::load(pt,path+".terec_exp_size",terec_exp_size,is_terec_exp_size); if(is_terec_exp_size==1) { status=1;}
+  libio::load(pt,path+".use_vlist",use_vlist,is_use_vlist); if(is_use_vlist==1) { status=1;}
+  libio::load(pt,path+".vlist_upd_freq",vlist_upd_freq,is_vlist_upd_freq); if(is_vlist_upd_freq==1) { status=1;}
+  libio::load(pt,path+".vlist_time",vlist_time,is_vlist_time); if(is_vlist_time==1) { status=1;}
 
 }
 
@@ -324,7 +327,7 @@ State::~State(){  }
 
 }// namespace libstate
 }// namespace libscripts
-
+}// liblibra
 
 
 

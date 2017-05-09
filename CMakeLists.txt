@@ -93,6 +93,13 @@ ENDIF()
 
 
 #
+# Set the libraries
+# 
+SET( ext_libs ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ) 
+
+
+
+#
 # Now building the project
 #
 MESSAGE("Going into subdirectory src...")

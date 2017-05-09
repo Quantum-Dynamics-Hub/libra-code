@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,18 +17,12 @@
 #define HAMILTONIAN_MM_H
 
 #include "../../../cell/libcell.h"
-using namespace libcell;
-
 #include "../../../pot/libpot.h"
-using namespace libpot;
-
 #include "../../../chemobjects/libchemobjects.h"
-using namespace libchemobjects;
-using namespace libchemobjects::libchemsys;
+#include "../../../forcefield/libforcefield.h"
 
-#include "ForceField/libforcefield.h"
-
-
+/// liblibra namespace
+namespace liblibra{
 
 
 /// libhamiltonian namespace
@@ -40,6 +34,10 @@ namespace libhamiltonian_atomistic{
 /// libhamiltonian_mm namespace
 namespace libhamiltonian_mm{
 
+using namespace libchemobjects;
+using namespace libchemobjects::libchemsys;
+using namespace libpot;
+using namespace libcell;
 using namespace libforcefield;
 
 
@@ -314,7 +312,7 @@ public:
 }// namespace libhamiltonian_mm
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
-
+}// liblibra
 
 
 #endif // HAMILTONIAN_MM_H

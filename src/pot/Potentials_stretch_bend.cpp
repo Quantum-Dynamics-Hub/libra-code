@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -11,8 +11,11 @@
 
 #include "Potentials_stretch_bend.h"
 
-using namespace libmmath;
-using namespace libmmath::liblinalg;
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
 
 
 namespace libpot{
@@ -70,4 +73,5 @@ double Stretch_Bend_Harmonic(VECTOR& r1,VECTOR& r2,VECTOR& r3,         /* Inputs
 
 
 }//namespace libpot
+}// liblibra
 

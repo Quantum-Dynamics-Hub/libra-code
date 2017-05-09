@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -16,25 +16,27 @@
 #ifndef DENSITY_OF_STATES_H
 #define DENSITY_OF_STATES_H
 
-#include "../qchem/libqchem.h"
-using namespace libqchem;
-using namespace libqchem::libqobjects;
-
+#include "../qobjects/libqobjects.h"
 #include "../chemobjects/libchemobjects.h"
+#include "../basis_setups/libbasis_setups.h"
+#include "../control_parameters/libcontrol_parameters.h"
+#include "../model_parameters/libmodel_parameters.h"
+#include "../hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Electronic_Structure.h"
+#include "../hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Hamiltonian_QM.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace libqobjects;
 using namespace libchemobjects;
 using namespace libchemobjects::libchemsys;
-
-#include "../hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Basis_Setups/libbasis_setups.h"
-using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::libbasis_setups;
-
-#include "../hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Control_Parameters/libcontrol_parameters.h"
-using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::libcontrol_parameters;
-
-#include "../hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Model_Parameters/libmodel_parameters.h"
-using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::libmodel_parameters;
-
-#include "../hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Electronic_Structure.h"
+using namespace libbasis_setups;
+using namespace libcontrol_parameters;
+using namespace libmodel_parameters;
 using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm;
+using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm;
+
+
 
 
 /// libqchem_tools namespace
@@ -59,6 +61,6 @@ void compute_dos
 
 
 }// namespace libqchem_tools
-
+}// liblibra
 
 #endif // DENSITY_OF_STATES_H

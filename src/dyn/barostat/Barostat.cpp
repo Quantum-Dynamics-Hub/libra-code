@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -15,6 +15,11 @@
 */
 
 #include "Barostat.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+#include "../../io/libio.h"
 
 /// libdyn namespace
 namespace libdyn{
@@ -197,18 +202,18 @@ void Barostat::save(boost::property_tree::ptree& pt,std::string path){
 */
 
 
-  if(is_Nf_t){  ::save(pt,path+".Nf_t",Nf_t);    }
-  if(is_Nf_r){  ::save(pt,path+".Nf_r",Nf_r);    }
-  if(is_Nf_b){  ::save(pt,path+".Nf_b",Nf_b);    }
-  if(is_ksi_eps){  ::save(pt,path+".ksi_eps",ksi_eps);    }
-  if(is_G_eps){  ::save(pt,path+".G_eps",G_eps);    }
-  if(is_eps_iso){  ::save(pt,path+".eps_iso",eps_iso);    }
-  if(is_ksi_eps_iso){  ::save(pt,path+".ksi_eps_iso",ksi_eps_iso);    }
-  if(is_G_eps_iso){  ::save(pt,path+".G_eps_iso",G_eps_iso);    }
-  if(is_Wg){  ::save(pt,path+".Wg",Wg);    }
-  if(is_nu_baro){  ::save(pt,path+".nu_baro",nu_baro);    }
-  if(is_Pressure){  ::save(pt,path+".Pressure",Pressure);    }
-  if(is_barostat_type){  ::save(pt,path+".barostat_type",barostat_type);    }
+  if(is_Nf_t){  libio::save(pt,path+".Nf_t",Nf_t);    }
+  if(is_Nf_r){  libio::save(pt,path+".Nf_r",Nf_r);    }
+  if(is_Nf_b){  libio::save(pt,path+".Nf_b",Nf_b);    }
+  if(is_ksi_eps){  liblinalg::save(pt,path+".ksi_eps",ksi_eps);    }
+  if(is_G_eps){  liblinalg::save(pt,path+".G_eps",G_eps);    }
+  if(is_eps_iso){  libio::save(pt,path+".eps_iso",eps_iso);    }
+  if(is_ksi_eps_iso){  libio::save(pt,path+".ksi_eps_iso",ksi_eps_iso);    }
+  if(is_G_eps_iso){  libio::save(pt,path+".G_eps_iso",G_eps_iso);    }
+  if(is_Wg){  libio::save(pt,path+".Wg",Wg);    }
+  if(is_nu_baro){  libio::save(pt,path+".nu_baro",nu_baro);    }
+  if(is_Pressure){  libio::save(pt,path+".Pressure",Pressure);    }
+  if(is_barostat_type){  libio::save(pt,path+".barostat_type",barostat_type);    }
 
 
 }
@@ -250,18 +255,18 @@ void Barostat::load(boost::property_tree::ptree& pt,std::string path,int& status
   int st;
   status = 0;
 
-  ::load(pt,path+".Nf_t",Nf_t,is_Nf_t); if(is_Nf_t==1) { status=1;}
-  ::load(pt,path+".Nf_r",Nf_r,is_Nf_r); if(is_Nf_r==1) { status=1;}
-  ::load(pt,path+".Nf_b",Nf_b,is_Nf_b); if(is_Nf_b==1) { status=1;}
-  ::load(pt,path+".ksi_eps",ksi_eps,is_ksi_eps); if(is_ksi_eps==1) { status=1;}
-  ::load(pt,path+".G_eps",G_eps,is_G_eps); if(is_G_eps==1) { status=1;}
-  ::load(pt,path+".eps_iso",eps_iso,is_eps_iso); if(is_eps_iso==1) { status=1;}
-  ::load(pt,path+".ksi_eps_iso",ksi_eps_iso,is_ksi_eps_iso); if(is_ksi_eps_iso==1) { status=1;}
-  ::load(pt,path+".G_eps_iso",G_eps_iso,is_G_eps_iso); if(is_G_eps_iso==1) { status=1;}
-  ::load(pt,path+".Wg",Wg,is_Wg); if(is_Wg==1) { status=1;}
-  ::load(pt,path+".nu_baro",nu_baro,is_nu_baro); if(is_nu_baro==1) { status=1;}
-  ::load(pt,path+".Pressure",Pressure,is_Pressure); if(is_Pressure==1) { status=1;}
-  ::load(pt,path+".barostat_type",barostat_type,is_barostat_type); if(is_barostat_type==1) { status=1;}
+  libio::load(pt,path+".Nf_t",Nf_t,is_Nf_t); if(is_Nf_t==1) { status=1;}
+  libio::load(pt,path+".Nf_r",Nf_r,is_Nf_r); if(is_Nf_r==1) { status=1;}
+  libio::load(pt,path+".Nf_b",Nf_b,is_Nf_b); if(is_Nf_b==1) { status=1;}
+  liblinalg::load(pt,path+".ksi_eps",ksi_eps,is_ksi_eps); if(is_ksi_eps==1) { status=1;}
+  liblinalg::load(pt,path+".G_eps",G_eps,is_G_eps); if(is_G_eps==1) { status=1;}
+  libio::load(pt,path+".eps_iso",eps_iso,is_eps_iso); if(is_eps_iso==1) { status=1;}
+  libio::load(pt,path+".ksi_eps_iso",ksi_eps_iso,is_ksi_eps_iso); if(is_ksi_eps_iso==1) { status=1;}
+  libio::load(pt,path+".G_eps_iso",G_eps_iso,is_G_eps_iso); if(is_G_eps_iso==1) { status=1;}
+  libio::load(pt,path+".Wg",Wg,is_Wg); if(is_Wg==1) { status=1;}
+  libio::load(pt,path+".nu_baro",nu_baro,is_nu_baro); if(is_nu_baro==1) { status=1;}
+  libio::load(pt,path+".Pressure",Pressure,is_Pressure); if(is_Pressure==1) { status=1;}
+  libio::load(pt,path+".barostat_type",barostat_type,is_barostat_type); if(is_barostat_type==1) { status=1;}
 
 
 }
@@ -291,7 +296,7 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<Barostat>& vt,
 
 }// namespace libbarostat
 }// namespace libdyn
-
+}// liblibra
 
 
 

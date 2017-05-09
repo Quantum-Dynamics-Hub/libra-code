@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,8 +17,20 @@
 #ifndef GRID_FUNCTIONS_H
 #define GRID_FUNCTIONS_H
 
-#include "../../mmath/libmmath.h"
-using namespace libmmath;
+#include "../../math_linalg/liblinalg.h"
+#include "../../math_random/librandom.h"
+#include "../../math_specialfunctions/libspecialfunctions.h"
+#include "../../hamiltonian/libhamiltonian.h"
+#include "../../Units.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+using namespace librandom;
+using namespace libspecialfunctions;
+using namespace libhamiltonian;
+
 
 /// libdyn namespace
 namespace libdyn{
@@ -59,6 +71,7 @@ void ft_2D(vector<CMATRIX>& psi, vector<CMATRIX>& reci_psi,int opt,
 
 }// namespace libwfcgrid
 }// namespace libdyn
+}// liblibra
 
 #endif // GRID_FUNCTIONS_H
 

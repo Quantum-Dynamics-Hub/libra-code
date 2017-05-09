@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2014 Alexey V. Akimov
+* Copyright (C) 2014-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -18,23 +18,25 @@
 #ifndef ELECTRONIC_STRUCTURE_H
 #define ELECTRONIC_STRUCTURE_H
 
-
-#include "../../../qchem/libqchem.h"
-using namespace libqchem;
-using namespace libqchem::libqobjects;
-
+#include "../../../qobjects/libqobjects.h"
 #include "../../../chemobjects/libchemobjects.h"
+#include "../../../basis_setups/libbasis_setups.h"
+#include "../../../control_parameters/libcontrol_parameters.h"
+#include "../../../model_parameters/libmodel_parameters.h"
+#include "../../../calculators/libcalculators.h"
+
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace libqobjects;
 using namespace libchemobjects;
 using namespace libchemobjects::libchemsys;
+using namespace libbasis_setups;
+using namespace libcontrol_parameters;
+using namespace libmodel_parameters;
+using namespace libcalculators;
 
-#include "Basis_Setups/libbasis_setups.h"
-using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::libbasis_setups;
-
-#include "Control_Parameters/libcontrol_parameters.h"
-using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::libcontrol_parameters;
-
-#include "Model_Parameters/libmodel_parameters.h"
-using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::libmodel_parameters;
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -251,7 +253,7 @@ void collect_matrices(int, vector<MATRIX*>&, vector<int>&, vector<int>&,
 }// namespace libhamiltonian_qm
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
-
+}// liblibra
 
 
 #endif // ELECTRONIC_STRUCTURE_H

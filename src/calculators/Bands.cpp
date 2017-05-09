@@ -16,6 +16,15 @@
 
 #include "Bands.h"
 #include "Fermi.h"
+#include "../math_specialfunctions/libspecialfunctions.h"
+#include "../Units.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+using namespace libspecialfunctions;
+
 
 /// libcalculators namespace
 namespace libcalculators{
@@ -91,7 +100,7 @@ void order_bands(MATRIX* E, vector< pair<int,double> >& bands){
 */
 
 
-  int Norb = E->num_of_cols;
+  int Norb = E->n_cols;
 
   std::vector< pair<int,double> > in;
   std::pair<int,double> x;
@@ -107,7 +116,7 @@ void order_bands(MATRIX* E, vector< pair<int,double> >& bands){
     for(i=0;i<Norb;i++){  cout<<"i= "<<i<<" orb_indx = "<<in[i].first<<" E[i]= "<<in[i].second<<endl; }
   }
 
-  libmmath::libspecialfunctions::merge_sort(in,bands);  
+  libspecialfunctions::merge_sort(in,bands);  
 
   if(0){ // For debug
     cout<<"Ordered bands:\n";
@@ -279,3 +288,7 @@ void show_bands(int Norb, int Nocc, vector< pair<int,double> >& bands,vector< pa
 }// show_bands(...)
 
 }// namespace libcalculators
+
+}// liblibra
+
+

@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -10,6 +10,11 @@
 *********************************************************************************/
 
 #include "Group.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace libio;
 
 namespace libchemobjects{
 namespace libmol{
@@ -264,22 +269,22 @@ void Group::show_info(){
 
 void Group::save(boost::property_tree::ptree& pt,std::string path){
 
-  ::save(pt,path+".globGroup_Size",globGroup_Size);
-  ::save(pt,path+".locGroup_Size",locGroup_Size);
-  ::save(pt,path+".Group_Size",Group_Size);
-  ::save(pt,path+".globAtom_Index",globAtom_Index);
-  ::save(pt,path+".locAtom_Index",locAtom_Index);
-  ::save(pt,path+".globGroup_Index",globGroup_Index);
-  ::save(pt,path+".locGroup_Index",locGroup_Index);
-  ::save(pt,path+".globMolecule_Index",globMolecule_Index);
+  libio::save(pt,path+".globGroup_Size",globGroup_Size);
+  libio::save(pt,path+".locGroup_Size",locGroup_Size);
+  libio::save(pt,path+".Group_Size",Group_Size);
+  libio::save(pt,path+".globAtom_Index",globAtom_Index);
+  libio::save(pt,path+".locAtom_Index",locAtom_Index);
+  libio::save(pt,path+".globGroup_Index",globGroup_Index);
+  libio::save(pt,path+".locGroup_Index",locGroup_Index);
+  libio::save(pt,path+".globMolecule_Index",globMolecule_Index);
 
-  if(is_Group_name){  ::save(pt,path+".Group_name",Group_name);    }
-  if(is_Group_id){  ::save(pt,path+".Group_id",Group_id);    }
-  if(is_Group_radius){  ::save(pt,path+".Group_radius",Group_radius);    }
+  if(is_Group_name){  libio::save(pt,path+".Group_name",Group_name);    }
+  if(is_Group_id){  libio::save(pt,path+".Group_id",Group_id);    }
+  if(is_Group_radius){  libio::save(pt,path+".Group_radius",Group_radius);    }
   if(is_Group_RB){  Group_RB.save(pt,path+".Group_RB");    }
-  if(is_Group_ff_type){  ::save(pt,path+".Group_ff_type",Group_ff_type);    }
-  if(is_Group_bond_order){  ::save(pt,path+".Group_bond_order",Group_bond_order);    }
-  if(is_Group_bond_alpha){  ::save(pt,path+".Group_bond_alpha",Group_bond_alpha);    }
+  if(is_Group_ff_type){  libio::save(pt,path+".Group_ff_type",Group_ff_type);    }
+  if(is_Group_bond_order){  libio::save(pt,path+".Group_bond_order",Group_bond_order);    }
+  if(is_Group_bond_alpha){  libio::save(pt,path+".Group_bond_alpha",Group_bond_alpha);    }
 
 }
  
@@ -296,22 +301,22 @@ void Group::load(boost::property_tree::ptree& pt,std::string path,int& status){
   int st;
   status = 0;
 
-  ::load(pt,path+".globGroup_Size",globGroup_Size,st); if(st==1) { status=1;}
-  ::load(pt,path+".locGroup_Size",locGroup_Size,st); if(st==1) { status=1;}
-  ::load(pt,path+".Group_Size",Group_Size,st); if(st==1) { status=1;}
-  ::load(pt,path+".globAtom_Index",globAtom_Index,st); if(st==1) { status=1;}
-  ::load(pt,path+".locAtom_Index",locAtom_Index,st); if(st==1) { status=1;}
-  ::load(pt,path+".globGroup_Index",globGroup_Index,st); if(st==1) { status=1;}
-  ::load(pt,path+".locGroup_Index",locGroup_Index,st); if(st==1) { status=1;}
-  ::load(pt,path+".globMolecule_Index",globMolecule_Index,st); if(st==1) { status=1;}
+  libio::load(pt,path+".globGroup_Size",globGroup_Size,st); if(st==1) { status=1;}
+  libio::load(pt,path+".locGroup_Size",locGroup_Size,st); if(st==1) { status=1;}
+  libio::load(pt,path+".Group_Size",Group_Size,st); if(st==1) { status=1;}
+  libio::load(pt,path+".globAtom_Index",globAtom_Index,st); if(st==1) { status=1;}
+  libio::load(pt,path+".locAtom_Index",locAtom_Index,st); if(st==1) { status=1;}
+  libio::load(pt,path+".globGroup_Index",globGroup_Index,st); if(st==1) { status=1;}
+  libio::load(pt,path+".locGroup_Index",locGroup_Index,st); if(st==1) { status=1;}
+  libio::load(pt,path+".globMolecule_Index",globMolecule_Index,st); if(st==1) { status=1;}
 
-  ::load(pt,path+".Group_name",Group_name,is_Group_name); if(is_Group_name==1) { status=1;}
-  ::load(pt,path+".Group_id",Group_id,is_Group_id); if(is_Group_id==1) { status=1;}
-  ::load(pt,path+".Group_radius",Group_radius,is_Group_radius); if(is_Group_radius==1) { status=1;}
+  libio::load(pt,path+".Group_name",Group_name,is_Group_name); if(is_Group_name==1) { status=1;}
+  libio::load(pt,path+".Group_id",Group_id,is_Group_id); if(is_Group_id==1) { status=1;}
+  libio::load(pt,path+".Group_radius",Group_radius,is_Group_radius); if(is_Group_radius==1) { status=1;}
   Group_RB.load(pt,path+".Group_RB",is_Group_RB); if(is_Group_RB==1) { status=1;}
-  ::load(pt,path+".Group_ff_type",Group_ff_type,is_Group_ff_type); if(is_Group_ff_type==1) { status=1;}
-  ::load(pt,path+".Group_bond_order",Group_bond_order,is_Group_bond_order); if(is_Group_bond_order==1) { status=1;}
-  ::load(pt,path+".Group_bond_alpha",Group_bond_alpha,is_Group_bond_alpha); if(is_Group_bond_alpha==1) { status=1;}
+  libio::load(pt,path+".Group_ff_type",Group_ff_type,is_Group_ff_type); if(is_Group_ff_type==1) { status=1;}
+  libio::load(pt,path+".Group_bond_order",Group_bond_order,is_Group_bond_order); if(is_Group_bond_order==1) { status=1;}
+  libio::load(pt,path+".Group_bond_alpha",Group_bond_alpha,is_Group_bond_alpha); if(is_Group_bond_alpha==1) { status=1;}
 
 }
 
@@ -328,4 +333,4 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<Group>& vt,int
 
 }// namespace libmol
 }// namespace libchemobjects
-
+}// liblibra

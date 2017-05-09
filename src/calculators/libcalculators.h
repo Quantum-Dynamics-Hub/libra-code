@@ -27,6 +27,9 @@
 #include "Excitations.h"
 #include "Mulliken.h"
 
+/// liblibra namespace
+namespace liblibra{
+
 
 /// libcalculators namespace
 namespace libcalculators{
@@ -36,6 +39,7 @@ void export_calculators_objects();
 
 
 }// namespace libcalculators
+}// liblibra
 
 
 #endif// LIB_CALCULATORS_H

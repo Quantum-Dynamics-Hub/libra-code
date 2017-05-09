@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -19,19 +19,21 @@
 #ifndef POTENTIALS_MB_VDW_H
 #define POTENTIALS_MB_VDW_H
 
-#include "../mmath/libmmath.h"
+#include "../math_linalg/liblinalg.h"
 #include "../cell/libcell.h"
 #include "Switching_functions.h"
 #include "Potentials_vdw.h"
 #include "Potentials_elec.h"
 
-using namespace libmmath;
-using namespace libmmath::liblinalg;
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
 using namespace libcell;
 using libcell::triple;
 using libcell::quartet;
 using libcell::excl_scale;
-
 
 
 namespace libpot{
@@ -108,7 +110,7 @@ double LJ_Coulomb(VECTOR* r, VECTOR* g, VECTOR* m, VECTOR* f,
 
 
 } // namespace libpot
-
+} //liblibra
 
 #endif // POTENTIALS_MB_VDW_H
 

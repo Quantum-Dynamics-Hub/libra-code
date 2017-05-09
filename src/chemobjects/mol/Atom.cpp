@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -25,6 +25,10 @@
   typedef boost::property_tree::xml_writer_settings<char> xml_writer_settings;
 #endif
 
+/// liblibra namespace
+namespace liblibra{
+
+using namespace libio;
 
 /// libchemobjects namespace
 namespace libchemobjects{
@@ -335,36 +339,36 @@ void Atom::save(boost::property_tree::ptree& pt,std::string path){
 */
 
 
-  if(is_Atom_id){  ::save(pt,path+".Atom_id",Atom_id);    }
+  if(is_Atom_id){  libio::save(pt,path+".Atom_id",Atom_id);    }
 
-  ::save(pt,path+".globAtom_Index",globAtom_Index);
-  ::save(pt,path+".locAtom_Index",locAtom_Index);
-  ::save(pt,path+".globGroup_Index",globGroup_Index);
-  ::save(pt,path+".globMolecule_Index",globMolecule_Index);
-  ::save(pt,path+".globAtom_Adjacent_Atoms",globAtom_Adjacent_Atoms);
+  libio::save(pt,path+".globAtom_Index",globAtom_Index);
+  libio::save(pt,path+".locAtom_Index",locAtom_Index);
+  libio::save(pt,path+".globGroup_Index",globGroup_Index);
+  libio::save(pt,path+".globMolecule_Index",globMolecule_Index);
+  libio::save(pt,path+".globAtom_Adjacent_Atoms",globAtom_Adjacent_Atoms);
 
   if(is_Atom_RB){  Atom_RB.save(pt,path+".Atom_RB");    }
   if(is_Atom_RB_old){  Atom_RB_old.save(pt,path+".Atom_RB_old");    }
   //if(is_Atom_RB){  ::save(pt,path+".Atom_RB",Atom_RB);    }
   //if(is_Atom_RB_old){  ::save(pt,path+".Atom_RB_old",Atom_RB_old);    }
 
-  if(is_Atom_displ2) { ::save(pt,path+".Atom_displ2",Atom_displ2); }
+  if(is_Atom_displ2) { libio::save(pt,path+".Atom_displ2",Atom_displ2); }
 
-  if(is_Atom_Z){  ::save(pt,path+".Atom_Z",Atom_Z);    }
-  if(is_Atom_element){  ::save(pt,path+".Atom_element",Atom_element);    }
-  if(is_Atom_atomic_radius){  ::save(pt,path+".Atom_atomic_radius",Atom_atomic_radius);    }
-  if(is_Atom_charge){  ::save(pt,path+".Atom_charge",Atom_charge);    }
-  if(is_Atom_electronegativity){  ::save(pt,path+".Atom_electronegativity",Atom_electronegativity);    }
-  if(is_Atom_formal_charge){  ::save(pt,path+".Atom_formal_charge",Atom_formal_charge);    }
-  if(is_Atom_coordination){  ::save(pt,path+".Atom_coordination",Atom_coordination);    }
-  if(is_Atom_functional_group){  ::save(pt,path+".Atom_functional_group",Atom_functional_group);    }
-  if(is_Atom_ring_sizes){  ::save(pt,path+".Atom_ring_sizes",Atom_ring_sizes);    }
-  if(is_Atom_min_ring_size){  ::save(pt,path+".Atom_min_ring_size",Atom_min_ring_size);    }
-  if(is_Atom_ff_type){  ::save(pt,path+".Atom_ff_type",Atom_ff_type);    }
-  if(is_Atom_Zeff){  ::save(pt,path+".Atom_Zeff",Atom_Zeff);    }
+  if(is_Atom_Z){  libio::save(pt,path+".Atom_Z",Atom_Z);    }
+  if(is_Atom_element){  libio::save(pt,path+".Atom_element",Atom_element);    }
+  if(is_Atom_atomic_radius){  libio::save(pt,path+".Atom_atomic_radius",Atom_atomic_radius);    }
+  if(is_Atom_charge){  libio::save(pt,path+".Atom_charge",Atom_charge);    }
+  if(is_Atom_electronegativity){  libio::save(pt,path+".Atom_electronegativity",Atom_electronegativity);    }
+  if(is_Atom_formal_charge){  libio::save(pt,path+".Atom_formal_charge",Atom_formal_charge);    }
+  if(is_Atom_coordination){  libio::save(pt,path+".Atom_coordination",Atom_coordination);    }
+  if(is_Atom_functional_group){  libio::save(pt,path+".Atom_functional_group",Atom_functional_group);    }
+  if(is_Atom_ring_sizes){  libio::save(pt,path+".Atom_ring_sizes",Atom_ring_sizes);    }
+  if(is_Atom_min_ring_size){  libio::save(pt,path+".Atom_min_ring_size",Atom_min_ring_size);    }
+  if(is_Atom_ff_type){  libio::save(pt,path+".Atom_ff_type",Atom_ff_type);    }
+  if(is_Atom_Zeff){  libio::save(pt,path+".Atom_Zeff",Atom_Zeff);    }
 
-  if(is_Atom_mull_charge_gross){  ::save(pt,path+".Atom_mull_charge_gross",Atom_mull_charge_gross);    }
-  if(is_Atom_mull_charge_net){  ::save(pt,path+".Atom_mull_charge_net",Atom_mull_charge_net);    }
+  if(is_Atom_mull_charge_gross){  libio::save(pt,path+".Atom_mull_charge_gross",Atom_mull_charge_gross);    }
+  if(is_Atom_mull_charge_net){  libio::save(pt,path+".Atom_mull_charge_net",Atom_mull_charge_net);    }
 
 }
 
@@ -424,36 +428,36 @@ void Atom::load(boost::property_tree::ptree& pt,std::string path,int& status){
   int st;
   status = 0;
 
-  ::load(pt,path+".Atom_id",Atom_id,is_Atom_id); if(is_Atom_id==1) { status=1;}
+  libio::load(pt,path+".Atom_id",Atom_id,is_Atom_id); if(is_Atom_id==1) { status=1;}
 
-  ::load(pt,path+".globAtom_Index",globAtom_Index,st); if(st==1) { status=1;}
-  ::load(pt,path+".locAtom_Index",locAtom_Index,st); if(st==1) { status=1;}
-  ::load(pt,path+".globGroup_Index",globGroup_Index,st); if(st==1) { status=1;}
-  ::load(pt,path+".globMolecule_Index",globMolecule_Index,st); if(st==1) { status=1;}
-  ::load(pt,path+".globAtom_Adjacent_Atoms",globAtom_Adjacent_Atoms,st); if(st==1) { status=1;}
+  libio::load(pt,path+".globAtom_Index",globAtom_Index,st); if(st==1) { status=1;}
+  libio::load(pt,path+".locAtom_Index",locAtom_Index,st); if(st==1) { status=1;}
+  libio::load(pt,path+".globGroup_Index",globGroup_Index,st); if(st==1) { status=1;}
+  libio::load(pt,path+".globMolecule_Index",globMolecule_Index,st); if(st==1) { status=1;}
+  libio::load(pt,path+".globAtom_Adjacent_Atoms",globAtom_Adjacent_Atoms,st); if(st==1) { status=1;}
 
   Atom_RB.load(pt,path+".Atom_RB",is_Atom_RB); if(is_Atom_RB==1) { status=1;}
   Atom_RB_old.load(pt,path+".Atom_RB_old",is_Atom_RB_old); if(is_Atom_RB_old==1) { status=1;}
 //  ::load(pt,path+".Atom_RB",Atom_RB, is_Atom_RB); if(is_Atom_RB==1) { status=1;}
 //  ::load(pt,path+".Atom_RB_old",Atom_RB_old,is_Atom_RB_old); if(is_Atom_RB_old==1) { status=1;}
 
-  ::load(pt,path+".Atom_displ2",Atom_displ2,is_Atom_displ2); if(is_Atom_displ2==1) { status=1;}
+  libio::load(pt,path+".Atom_displ2",Atom_displ2,is_Atom_displ2); if(is_Atom_displ2==1) { status=1;}
 
-  ::load(pt,path+".Atom_Z",Atom_Z,is_Atom_Z); if(is_Atom_Z==1) { status=1;}
-  ::load(pt,path+".Atom_element",Atom_element,is_Atom_element); if(is_Atom_element==1) { status=1;}
-  ::load(pt,path+".Atom_atomic_radius",Atom_atomic_radius,is_Atom_atomic_radius); if(is_Atom_atomic_radius==1) { status=1;}
-  ::load(pt,path+".Atom_charge",Atom_charge,is_Atom_charge); if(is_Atom_charge==1) { status=1;}
-  ::load(pt,path+".Atom_electronegativity",Atom_electronegativity,is_Atom_electronegativity); if(is_Atom_electronegativity==1) { status=1;}
-  ::load(pt,path+".Atom_formal_charge",Atom_formal_charge,is_Atom_formal_charge); if(is_Atom_formal_charge==1) { status=1;}
-  ::load(pt,path+".Atom_coordination",Atom_coordination,is_Atom_coordination); if(is_Atom_coordination==1) { status=1;}
-  ::load(pt,path+".Atom_functional_group",Atom_functional_group,is_Atom_functional_group); if(is_Atom_functional_group==1) { status=1;}
-  ::load(pt,path+".Atom_ring_sizes",Atom_ring_sizes,is_Atom_ring_sizes); if(is_Atom_ring_sizes==1) { status=1;}
-  ::load(pt,path+".Atom_min_ring_size",Atom_min_ring_size,is_Atom_min_ring_size); if(is_Atom_min_ring_size==1) { status=1;}
-  ::load(pt,path+".Atom_ff_type",Atom_ff_type,is_Atom_ff_type); if(is_Atom_ff_type==1) { status=1;}
-  ::load(pt,path+".Atom_Zeff",Atom_Zeff,is_Atom_Zeff); if(is_Atom_Zeff==1) { status=1;}
+  libio::load(pt,path+".Atom_Z",Atom_Z,is_Atom_Z); if(is_Atom_Z==1) { status=1;}
+  libio::load(pt,path+".Atom_element",Atom_element,is_Atom_element); if(is_Atom_element==1) { status=1;}
+  libio::load(pt,path+".Atom_atomic_radius",Atom_atomic_radius,is_Atom_atomic_radius); if(is_Atom_atomic_radius==1) { status=1;}
+  libio::load(pt,path+".Atom_charge",Atom_charge,is_Atom_charge); if(is_Atom_charge==1) { status=1;}
+  libio::load(pt,path+".Atom_electronegativity",Atom_electronegativity,is_Atom_electronegativity); if(is_Atom_electronegativity==1) { status=1;}
+  libio::load(pt,path+".Atom_formal_charge",Atom_formal_charge,is_Atom_formal_charge); if(is_Atom_formal_charge==1) { status=1;}
+  libio::load(pt,path+".Atom_coordination",Atom_coordination,is_Atom_coordination); if(is_Atom_coordination==1) { status=1;}
+  libio::load(pt,path+".Atom_functional_group",Atom_functional_group,is_Atom_functional_group); if(is_Atom_functional_group==1) { status=1;}
+  libio::load(pt,path+".Atom_ring_sizes",Atom_ring_sizes,is_Atom_ring_sizes); if(is_Atom_ring_sizes==1) { status=1;}
+  libio::load(pt,path+".Atom_min_ring_size",Atom_min_ring_size,is_Atom_min_ring_size); if(is_Atom_min_ring_size==1) { status=1;}
+  libio::load(pt,path+".Atom_ff_type",Atom_ff_type,is_Atom_ff_type); if(is_Atom_ff_type==1) { status=1;}
+  libio::load(pt,path+".Atom_Zeff",Atom_Zeff,is_Atom_Zeff); if(is_Atom_Zeff==1) { status=1;}
 
-  ::load(pt,path+".Atom_mull_charge_gross",Atom_mull_charge_gross,is_Atom_mull_charge_gross); if(is_Atom_mull_charge_gross==1) { status=1;}
-  ::load(pt,path+".Atom_mull_charge_net",Atom_mull_charge_net,is_Atom_mull_charge_net); if(is_Atom_mull_charge_net==1) { status=1;}
+  libio::load(pt,path+".Atom_mull_charge_gross",Atom_mull_charge_gross,is_Atom_mull_charge_gross); if(is_Atom_mull_charge_gross==1) { status=1;}
+  libio::load(pt,path+".Atom_mull_charge_net",Atom_mull_charge_net,is_Atom_mull_charge_net); if(is_Atom_mull_charge_net==1) { status=1;}
 
 }
 
@@ -482,5 +486,5 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<Atom>& vt,Univ
 
 }// namespace libmol
 }// namespace libchemobjects
-
+}// liblibra
 

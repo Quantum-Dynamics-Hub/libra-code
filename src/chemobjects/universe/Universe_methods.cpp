@@ -15,6 +15,10 @@
 
 #include "Universe.h"
 
+/// liblibra namespace
+namespace liblibra{
+
+
 /// libchemobjects namespace
 namespace libchemobjects{
 
@@ -91,4 +95,6 @@ Element Universe::Get_Element(std::string elt){
 
 }// namespace libuniverse
 }// namespace libchemobjects
+
+}// liblibra
 

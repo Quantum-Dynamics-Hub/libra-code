@@ -18,6 +18,10 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "libio.h"
 
+
+/// liblibra 
+namespace liblibra{
+
 /// libio namespace
 namespace libio{
 
@@ -48,7 +52,7 @@ BOOST_PYTHON_MODULE(libio){
 
 
 }// namespace libio
-
+}// liblibra
 
 
 

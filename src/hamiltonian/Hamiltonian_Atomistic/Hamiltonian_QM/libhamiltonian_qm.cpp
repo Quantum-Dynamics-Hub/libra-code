@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -20,6 +20,11 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #include "libhamiltonian_qm.h"
+
+
+/// liblibra namespace
+namespace liblibra{
+
 
 using namespace boost::python;
 
@@ -46,9 +51,6 @@ void export_Hamiltonian_QM_objects(){
 
 */
 
-  export_basis_setups_objects();
-  export_Control_Parameters_objects();
-  export_Model_Parameters_objects();
 
   //----------- Electronic_Structure ------------
   class_<Electronic_Structure>("Electronic_Structure",init<>())
@@ -421,5 +423,5 @@ BOOST_PYTHON_MODULE(libhamiltonian_qm){
 }// namespace libhamiltonian_qm
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
-
+}// liblibra
 

@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -11,6 +11,12 @@
 
 #include "Model_ECWR.h"
 
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+
+
 namespace libhamiltonian{
 namespace libhamiltonian_model{
 
@@ -18,9 +24,9 @@ namespace libhamiltonian_model{
 void ECWR_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params){ 
 // ECWR hamiltonian in diabatic representation
 
-  if(H->num_of_elems!=4){ std::cout<<"Error in ECWR_Ham: H matrix must be allocated\n"; exit(0);}
-  if(dH->num_of_elems!=4){ std::cout<<"Error in ECWR_Ham: dH matrix must be allocated\n"; exit(0);}
-  if(d2H->num_of_elems!=4){ std::cout<<"Error in ECWR_Ham: d2H matrix must be allocated\n"; exit(0);}
+  if(H->n_elts!=4){ std::cout<<"Error in ECWR_Ham: H matrix must be allocated\n"; exit(0);}
+  if(dH->n_elts!=4){ std::cout<<"Error in ECWR_Ham: dH matrix must be allocated\n"; exit(0);}
+  if(d2H->n_elts!=4){ std::cout<<"Error in ECWR_Ham: d2H matrix must be allocated\n"; exit(0);}
 
   // Default parameters
   double A = 0.0006;  double B = 0.100;
@@ -84,4 +90,4 @@ boost::python::list ECWR_Ham(double x, boost::python::list params_){
 
 }// namespace libhamiltonian_model
 }// namespace libhamiltonian
-
+}// liblibra

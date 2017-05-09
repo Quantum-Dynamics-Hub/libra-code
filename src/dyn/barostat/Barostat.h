@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,7 +17,19 @@
 #ifndef BAROSTAT_H
 #define BAROSTAT_H
 
-#include "../../mmath/libmmath.h"
+#include "../../math_linalg/liblinalg.h"
+#include "../../math_random/librandom.h"
+#include "../../math_specialfunctions/libspecialfunctions.h"
+#include "../../Units.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+using namespace librandom;
+using namespace libspecialfunctions;
+
+
 
 /// libdyn namespace
 namespace libdyn{
@@ -124,7 +136,7 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<Barostat>& vt,
 
 }/// namespace libbarostat
 }/// namespace libdyn
-
+}/// liblibra
 
 
 #endif // BAROSTAT_H

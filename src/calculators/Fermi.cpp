@@ -16,8 +16,16 @@
 
 #include "Fermi.h"
 
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+
 /// libcalculators namespace
 namespace libcalculators{
+
+
 
 double fermi_population(double e,double ef,double degen, double kT){
 /** 
@@ -199,5 +207,133 @@ double fermi_energy(boost::python::list bnds,double Nel,double degen, double kT,
 }
 
 
+
+
+
+///========= The following functions are needed for 
+/// FOE: Fermi Operator Expansion - a linear-scaling electronic 
+/// structure methodology
+
+double p_up(double e, double e_up, double de){
+  double res = 0.0;
+  if(e<e_up){ res = 0.0; }
+  else{ 
+    double argg = (e-e_up)/de; 
+    if(argg<=100){ res = exp(argg); }
+    else{ res = exp(100.0); }
+  }
+  return res;
+}
+
+double p_dn(double e, double e_dn, double de){
+  double res = 0.0;
+  if(e>e_dn){ res = 0.0; }
+  else{ 
+    double argg = -(e-e_dn)/de; 
+    if(argg<=100){ res = exp(argg); }
+    else{ res = exp(100.0); }
+  }
+  return res;
+}
+
+double p_ef(double e, double ef, double de){
+  double res = 0.0;
+  double argg = (e - ef)/de;
+  if(argg<-100){ res = 1.0; }
+  else if(argg>100.0){ res = 0.0; }
+  else{ res = 1.0/(1.0+exp(argg)); }
+  return res;
+}
+
+
+void Chebyshev_coeff(vector<double>& C, double (*f)(double x, double y, double z), double ef, double de, int N){
+/** According to Numerical Recipes
+
+// Computes expansion coefficients of scalar Fermi function
+// C  - must be initialized and contains N elements: C[0]... C[N-1]
+// double (*f)(double x, double y, double z) -is a scalar function which we are approximating
+// ef - trial parameter (Fermi energy, upper or lower eigenvalue)
+// de - energy width parameter (smaller it is, the higher the accuracy, but is slower calculation)
+// np - degree of polynomial expansion
+
+*/
+
+  float np = N;
+
+  for(int j=0;j<N;j++){  C[j] = 0.0;   }// for k
+
+  for(int k=0;k<N;k++){                 // over all points
+
+    double x_k = cos((k+0.5)*M_PI/np);   // k-th zero of polynomial T_N
+
+    // Function (Fermi) at the x_k point
+    double f_k = f(x_k, ef, de) * (2.0/np);
+
+    double t_curr = 0.0;
+    double t_prev1, t_prev2;
+      
+    for(int j=0;j<N;j++){
+
+      if(j==0){  t_curr = 1.0; } // T_0
+      else if(j==1){  t_prev1 = t_curr; t_curr = x_k; } // T_1
+      else{                                             // T_j
+        t_prev2 = t_prev1; t_prev1 = t_curr;
+        t_curr = 2.0*x_k * t_prev1 - t_prev2; 
+      }
+
+      C[j] += f_k * t_curr;
+
+    }// for j all coefficients
+  }// for k all points
+
+
+//  cout<<"Chebyshev coefficients\n";
+//  for(int k=0;k<=np;k++){  cout<<"k= "<<k<<"  C["<<k<<"]= "<<C[k]<<endl;   }// for k
+
+}
+
+double Chebyshev_fit(MATRIX& H, MATRIX& P, double (*f)(double _x, double _y, double _z), double ef, double de, int np){
+/**
+// Compute density matrix using Chebyshev polynomials
+// Return trace of the density matrix, for it should be equal to the number of electrons
+*/
+
+  int N = H.n_cols; // assume square matrix
+
+  // Compute coefficients
+  vector<double> c_k(np+1,0.0);   Chebyshev_coeff(c_k, f, ef,de,np);
+
+
+  // Recursive definition of Chebyshev matrices
+  P = 0.0;
+  MATRIX T_k(N,N);     
+  MATRIX T_prev1(N,N); 
+  MATRIX T_prev2(N,N); 
+  
+  for(int k=0;k<=np;k++){
+
+    if(k==0){  T_k.Init_Unit_Matrix(1.0);}
+    else if(k==1){  T_prev1 = T_k; T_k = H; }
+    else{
+      T_prev2 = T_prev1;  T_prev1 = T_k;
+      T_k = 2.0*H*T_prev1 - T_prev2; 
+    }
+
+
+    P += c_k[k] * T_k; 
+    if(k==0){  P -= 0.5*c_k[0]*T_k; }    // T_k is simply unity matrix in this case
+
+  }// for k
+
+  return P.tr();    
+
+}
+
+
+
+
+
 }// namespace libcalculators
+}// liblibra
+
 

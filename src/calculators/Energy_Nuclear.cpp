@@ -16,6 +16,12 @@
 
 #include "Energy_Nuclear.h"
 
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+
+
 /// libcalculators namespace
 namespace libcalculators{
 
@@ -90,5 +96,7 @@ double energy_nucl(vector<VECTOR>& R, vector<double>& Zeff, vector<VECTOR>& G){
 }// energy_nucl
 
 
-
 }//namespace libcalculators
+}// liblibra
+
+

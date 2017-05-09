@@ -14,18 +14,22 @@
 
 #include "libpot.h"
 
+/// liblibra namespace
+namespace liblibra{
+
+
 using namespace boost::python;
 using namespace libcell;
-//using namespace libpot;
-using namespace libmmath;
+using namespace liblinalg;
 
 namespace libpot{
 
 
 void export_Pot_objects(){
 
+  double (*Vdw_LJ_1)(VECTOR&, VECTOR&, VECTOR&, VECTOR&, double, double) =  &Vdw_LJ;
 /*
-double (*Vdw_LJ_1)(VECTOR&, VECTOR&, VECTOR&, VECTOR&, double, double) =  &Vdw_LJ;
+
 double (*Vdw_LJ_2)(VECTOR* r,VECTOR* g,VECTOR* m,VECTOR* f,MATRIX3x3& at_stress, 
                   MATRIX3x3& fr_stress, MATRIX3x3& ml_stress,
                   int sz,double* epsilon, double* sigma,
@@ -68,7 +72,6 @@ boost::python::list (*expt_Angle_Cubic)(VECTOR,VECTOR,VECTOR,double,double) = &A
   def("Angle_Harmonic_Cos_General", expt_Angle_Harmonic_Cos_General);
   def("Angle_Cubic", expt_Angle_Cubic);
 
-/*
   def("Stretch_Bend_Harmonic", Stretch_Bend_Harmonic);
   def("Dihedral_General", Dihedral_General);
   def("Dihedral_Fourier", Dihedral_Fourier);
@@ -93,7 +96,6 @@ boost::python::list (*expt_Angle_Cubic)(VECTOR,VECTOR,VECTOR,double,double) = &A
 //  def("Vdw_LJ2_excl", Vdw_LJ2_excl);
 //  def("LJ_Coulomb", LJ_Coulomb);
 //  def("", );
-*/
 
 } // export_Pot_objects()
 
@@ -109,12 +111,12 @@ BOOST_PYTHON_MODULE(libpot){
   // See here: https://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters/
   //to_python_converter<std::vector<DATA>, VecToList<DATA> >();
 
-  export_Mathematics_objects();
-  export_Cell_objects();
+//  export_Mathematics_objects();
+//  export_Cell_objects();
   export_Pot_objects();
 
 }
 
 }// namespace libpot
-
+}// liblibra
 

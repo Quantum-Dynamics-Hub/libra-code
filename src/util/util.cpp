@@ -15,6 +15,9 @@
 #include "util.h"
 
 
+/// liblibra namespace
+namespace liblibra{
+
 /// libutil namespace
 namespace libutil{
 
@@ -346,4 +349,8 @@ void extract_1D(vector<double>& in, vector<double>& out, vector<int>& templ,int 
  
 
 }// libutil
+
+}// liblibra
+
+
 

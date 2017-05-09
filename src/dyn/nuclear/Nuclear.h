@@ -17,8 +17,12 @@
 #ifndef NUCLEAR_H
 #define NUCLEAR_H
 
-#include "../../mmath/libmmath.h"
-using namespace libmmath;
+#include "../../math_linalg/liblinalg.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
 
 
 /// libdyn namespace
@@ -93,6 +97,6 @@ typedef std::vector< Nuclear > NuclearList; ///< Type containing the vector of N
 
 } // libnuclear
 } // libdyn
-
+}// liblibra
 
 #endif // NUCLEAR_H

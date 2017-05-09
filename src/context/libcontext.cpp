@@ -13,6 +13,9 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "libcontext.h"
 
+/// liblibra namespace
+namespace liblibra{
+
 namespace libcontext{
 
 
@@ -38,7 +41,7 @@ BOOST_PYTHON_MODULE(libcontext){
 
 
 }// namespace libcontext
-
+}// liblibra
 
 
 

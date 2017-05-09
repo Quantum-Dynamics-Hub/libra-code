@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -12,9 +12,12 @@
 #ifndef POTENTIALS_BONDS_H
 #define POTENTIALS_BONDS_H
 
-#include "../mmath/libmmath.h"
-using namespace libmmath;
-using namespace libmmath::liblinalg;
+#include "../math_linalg/liblinalg.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
 
 
 namespace libpot{
@@ -44,5 +47,6 @@ boost::python::list Bond_Morse(VECTOR ri,VECTOR rj,              /*Inputs*/
 
 
 }// namespace libpot
+}// liblibra
 
 #endif // POTENTIALS_BONDS_H

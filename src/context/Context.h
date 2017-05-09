@@ -13,10 +13,13 @@
 #define CONTEXT_H
 
 #include "../io/libio.h"
-using namespace libio;
+#include "../math_linalg/liblinalg.h"
 
-#include "../mmath/libmmath.h"
-using namespace libmmath;
+/// liblibra namespace
+namespace liblibra{
+
+using namespace libio;
+using namespace liblinalg;
 
 
 namespace libcontext{
@@ -75,7 +78,7 @@ class Context{
     int st;
     X varval; 
 
-    libmmath::liblinalg::load(ctx_pt, path+path_separator+varname, path_separator, varval, st); 
+    liblinalg::load(ctx_pt, path+path_separator+varname, path_separator, varval, st); 
     if(st){ return varval; }else{ return default_val; }
 
   }
@@ -120,5 +123,6 @@ class Context{
 void export_Context_objects();
 
 }// namespace libcontext
+}// liblibra
 
 #endif // CONTEXT_H

@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -15,6 +15,10 @@
 */
 
 #include "Cell.h"
+
+/// liblibra namespace
+namespace liblibra{
+
 
 /// libcell namespace
 namespace libcell{
@@ -240,7 +244,7 @@ void Cell::update_vlist(int sz,VECTOR* r,vector< vector<quartet> >& at_neib, vec
 
 
 }//namespace libcell
-
+}// liblinalg
 
 
 

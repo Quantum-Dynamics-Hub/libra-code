@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,6 +17,9 @@
 */
 
 #include "SCF.h"
+
+/// liblibra namespace
+namespace liblibra{
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -161,7 +164,7 @@ double scf_none(Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
 }// namespace libhamiltonian_qm
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
-
+}// liblibra
 
     
 

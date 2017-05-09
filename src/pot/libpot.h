@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -26,11 +26,15 @@
 #include "Potentials_mb_vdw.h"
 #include "Potentials_mb_elec.h"
 
+/// liblibra namespace
+namespace liblibra{
 
 namespace libpot{
 
 void export_Pot_objects();
 
 }// namespace libpot
+
+}// liblibra
 
 #endif// LIBPOT_H

@@ -14,7 +14,7 @@ ADD_LIBRARY(cell_stat STATIC ${CELL_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(cell      mmath_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(cell_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(cell      linalg_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(cell_stat linalg_stat ${ext_libs})
 
 

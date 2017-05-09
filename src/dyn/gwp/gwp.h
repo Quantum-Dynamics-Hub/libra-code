@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2016 Alexey V. Akimov
+* Copyright (C) 2016-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -18,8 +18,13 @@
 #define GWP_H
 
 
-#include "../../mmath/libmmath.h"
-using namespace libmmath;
+#include "../../math_linalg/liblinalg.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+
 
 /// libdyn namespace
 namespace libdyn{
@@ -51,5 +56,6 @@ complex<double> gwp_kinetic(MATRIX& R1, MATRIX& P1, double gamma1,
 
 }// namespace libgwp
 }// namespace libdyn
+}// liblibra
 
 #endif  // GWP_H

@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -21,6 +21,9 @@
 #include <Eigen/Eigenvalues>
 #include <Eigen/Core>
 
+
+/// liblibra namespace
+namespace liblibra{
 
 //#include <Eigen/SVD>
 using namespace Eigen;
@@ -317,7 +320,6 @@ boost::python::list DIIS::get_diis_c(){
 }
 
 
-
-
 }// libsolvers namespace
+}// liblibra
 

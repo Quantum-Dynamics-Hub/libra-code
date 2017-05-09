@@ -17,8 +17,11 @@
 #ifndef LIB_UTIL_H
 #define LIB_UTIL_H
 
-
 #include "util.h"
+
+/// liblibra namespace
+namespace liblibra{
+
 
 /// libutil namespace
 namespace libutil{
@@ -28,6 +31,7 @@ void export_util_objects();
 
 
 }// namespace libutil
+}// liblibra
 
 
 #endif// LIB_UTIL_H

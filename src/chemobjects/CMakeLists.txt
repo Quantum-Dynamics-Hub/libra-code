@@ -36,8 +36,8 @@ ADD_LIBRARY(chemobjects_stat STATIC ${CHEMOBJECTS_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(chemobjects      chemsys_stat mol_stat universe_stat mmath_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(chemobjects_stat chemsys_stat mol_stat universe_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(chemobjects      chemsys_stat mol_stat universe_stat linalg_stat ${ext_libs})   
+TARGET_LINK_LIBRARIES(chemobjects_stat chemsys_stat mol_stat universe_stat linalg_stat ${ext_libs})  
 
 
 

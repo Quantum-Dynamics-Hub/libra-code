@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -18,8 +18,12 @@
 #ifndef MULLIKEN_H
 #define MULLIKEN_H
 
-#include "../mmath/libmmath.h"
-using namespace libmmath;
+#include "../math_linalg/liblinalg.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
 
 /// libcalculators namespace
 namespace libcalculators{
@@ -37,6 +41,7 @@ void update_Mull_charges(vector<int>& ao_to_atom_map, vector<double>& Zeff,
 
 
 }// namespace libcalculators
+}// liblibra
 
 #endif // MULLIKEN_H
 

@@ -17,6 +17,9 @@
 #include "Group.h"
 #include "Molecule.h"
 
+/// liblibra namespace
+namespace liblibra{
+
 namespace libchemobjects{
 namespace libmol{
 
@@ -26,7 +29,7 @@ void export_Mol_objects();
 
 }// namespace libmol
 }// namespace libchemobjects
-
+}// liblibra
 
 
 

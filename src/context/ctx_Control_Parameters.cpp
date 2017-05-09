@@ -10,10 +10,15 @@
 *********************************************************************************/
 
 #include <sstream>
-using namespace std;
-
 #include "ctx_Control_Parameters.h"
+#include "../Units.h"
 
+/// liblibra namespace
+namespace liblibra{
+
+using namespace std;
+using namespace libio;
+using namespace liblinalg;
 
 
 
@@ -174,3 +179,6 @@ void export_ctx_Control_Parameters_objects(){
 
 
 }// namespace libcontext
+}// liblibra
+
+

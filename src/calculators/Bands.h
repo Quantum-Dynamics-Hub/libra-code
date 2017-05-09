@@ -17,8 +17,13 @@
 #ifndef BANDS_H
 #define BANDS_H
 
-#include "../mmath/libmmath.h"
-using namespace libmmath;
+
+#include "../math_linalg/liblinalg.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
 
 /// libcalculators namespace
 namespace libcalculators{
@@ -40,5 +45,6 @@ void show_bands(int Norb, int Nocc, vector< pair<int,double> >& bands,vector< pa
 
 
 }// namespace libcalculators
+}// liblibra
 
 #endif // BANDS_H

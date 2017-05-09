@@ -20,6 +20,9 @@
 #include "Element.h"
 #include "Universe.h"
 
+/// liblibra namespace
+namespace liblibra{
+
 /// libchemobjects namespace
 namespace libchemobjects{
 
@@ -31,6 +34,6 @@ void export_Universe_objects();
 
 }// namespace libuniverse
 }// namespace libchemobjects
-
+}// liblibra
 
 #endif // LIB_UNIVERSE_H

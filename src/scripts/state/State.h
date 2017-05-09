@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -15,14 +15,20 @@
 #include "../../dyn/libdyn.h"
 #include "../../chemobjects/libchemobjects.h"
 #include "../../hamiltonian/libhamiltonian.h"
-#include "../../mmath/libmmath.h"
+#include "../../math_linalg/liblinalg.h"
+#include "../../math_random/librandom.h"
+#include "../../io/libio.h"
 
+/// liblibra namespace
+namespace liblibra{
+
+using namespace libio;
 using namespace libdyn;
 using namespace libdyn::libbarostat;
 using namespace libchemobjects;
 using namespace libhamiltonian;
-using namespace libmmath;
-using namespace libmmath::librandom;
+using namespace liblinalg;
+using namespace librandom;
 
 namespace libscripts{
 namespace libstate{
@@ -145,6 +151,6 @@ public:
 }// namespace libstate
 }// namespace libscripts
 
-
+}// liblbira
 
 #endif // STATE_H

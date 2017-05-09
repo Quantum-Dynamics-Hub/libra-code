@@ -20,6 +20,13 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "libcalculators.h"
 
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+
+
 /// libcalculators namespace
 namespace libcalculators{
 
@@ -122,6 +129,6 @@ BOOST_PYTHON_MODULE(libcalculators){
 
 }// namespace libcalculators
 
-
+}// liblibra
 
 

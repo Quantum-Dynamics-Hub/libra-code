@@ -19,11 +19,16 @@
 #define HAMILTONIAN_ATOMISTIC_H
 
 #include "../Hamiltonian_Generic/Hamiltonian.h"
+#include "../../chemobjects/libchemobjects.h"
+#include "../../calculators/libcalculators.h"
 #include "Hamiltonian_MM/libhamiltonian_mm.h"
 #include "Hamiltonian_QM/libhamiltonian_qm.h"
-#include "../../chemobjects/libchemobjects.h"
+
+/// liblibra namespace
+namespace liblibra{
 
 
+using namespace libcalculators;
 using namespace libchemobjects;
 using namespace libchemobjects::libchemsys;
 
@@ -33,7 +38,7 @@ namespace libhamiltonian{
 /// libhamiltonian_atomistic namespace
 namespace libhamiltonian_atomistic{
 
-using namespace libmmath;
+//using namespace liblinalg;
 using namespace libhamiltonian_generic;
 using namespace libhamiltonian_mm;
 using namespace libhamiltonian_qm;
@@ -133,5 +138,6 @@ typedef std::vector<Hamiltonian_Atomistic> Hamiltonian_AtomisticList; ///< data 
 
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
+}// liblibra
 
 #endif // HAMILTONIAN_ATOMISTIC_H

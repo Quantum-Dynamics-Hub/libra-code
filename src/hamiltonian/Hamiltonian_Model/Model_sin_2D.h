@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -12,8 +12,13 @@
 #ifndef MODEL_SIN_2D_H
 #define MODEL_SIN_2D_H
 
-#include "../../mmath/libmmath.h"
-using namespace libmmath;
+#include "../../math_linalg/liblinalg.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+
 
 namespace libhamiltonian{
 namespace libhamiltonian_model{
@@ -27,5 +32,6 @@ boost::python::list sin_2D_Ham(double x, double y, boost::python::list params_);
 
 }// namespace libhamiltonian_model
 }// namespace libhamiltonian
+}// liblibra
 
 #endif // MODEL_SIN_2D_H

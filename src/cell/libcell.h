@@ -20,12 +20,15 @@
 #include "Cell.h"
 #include "NList.h"
 
+/// liblibra namespace
+namespace liblibra{
+
 /// libcell namespace
 namespace libcell{
 
 void export_Cell_objects();
 
 }// namespace libcell
-
+}// liblibra
 
 #endif //

@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -15,6 +15,10 @@
 */
 
 #include "System.h"
+
+/// liblibra namespace
+namespace liblibra{
+
 
 /// libchemobjects namespace
 namespace libchemobjects{
@@ -175,8 +179,8 @@ void System::DIVIDE_GRAPH(int IndxStart,int IndxException, vector<int>& P){
   int g1 = IndxStart;
   int g2 = IndxException;
   P.push_back(g1);
-  for(int i=0;i<GroupConnMatrix->num_of_cols;i++){
-    if((GroupConnMatrix->M[g1*GroupConnMatrix->num_of_cols+i]==1.0)&&(i!=g2)){
+  for(int i=0;i<GroupConnMatrix->n_cols;i++){
+    if((GroupConnMatrix->M[g1*GroupConnMatrix->n_cols+i]==1.0)&&(i!=g2)){
       int sz = P.size();
       int st = 1;
       for(int j=0;j<sz;j++){ if(P[j]==i){ st=0;}   }
@@ -188,4 +192,4 @@ void System::DIVIDE_GRAPH(int IndxStart,int IndxException, vector<int>& P){
 
 }// namespace libchemsys
 }// namespace libchemobjects
-
+}// liblibra

@@ -14,6 +14,14 @@
 
 #include "Context.h"
 
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace libio;
+using namespace liblinalg;
+
+
 namespace libcontext{
 
 
@@ -177,6 +185,7 @@ void export_ctx_Control_Parameters_objects();
 
 
 }// namespace libcontext
+}// liblibra
 
 
 #endif // ctx_CONTROL_PARAMETERS_H

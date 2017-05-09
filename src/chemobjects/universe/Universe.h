@@ -18,10 +18,11 @@
 #ifndef UNIVERSE_H
 #define UNIVERSE_H
 
-#include "../../mmath/libmmath.h"
-using namespace libmmath;
-
 #include "Element.h"
+
+/// liblibra namespace
+namespace liblibra{
+
 
 /// libchemobject namespace
 namespace libchemobjects{
@@ -73,7 +74,7 @@ public:
 }// namespace libuniverse
 }// namespace libchemobjects
 
-
+}// liblibra
 
 #endif // UNIVERSE_H
 

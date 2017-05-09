@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -19,6 +19,9 @@
 #include <cmath>
 #include "Hamiltonian_Model.h"
 
+/// liblibra namespace
+namespace liblibra{
+
 /// libhamiltonian namespace
 namespace libhamiltonian{
 
@@ -26,8 +29,8 @@ namespace libhamiltonian{
 namespace libhamiltonian_model{
 
 using namespace libhamiltonian_generic;
-using namespace libmmath;
-using namespace libmmath::libmeigen;
+using namespace liblinalg;
+using namespace libmeigen;
 using std::complex;
 using std::sin;
 using std::cos;
@@ -273,7 +276,7 @@ void Hamiltonian_Model::compute_adiabatic(){
 
 }// namespace libhamiltonian_model
 }// namespace libhamiltonian
-
+}// liblibra
 
 
 

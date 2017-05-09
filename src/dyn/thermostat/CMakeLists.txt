@@ -15,7 +15,7 @@ ADD_LIBRARY(thermostat_stat STATIC ${THERMOSTAT_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(thermostat      mmath_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(thermostat_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(thermostat      linalg_stat random_stat specialfunctions_stat io_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(thermostat_stat linalg_stat random_stat specialfunctions_stat io_stat ${ext_libs})
 
 

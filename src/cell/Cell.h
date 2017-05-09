@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,9 +17,14 @@
 #ifndef CELL_H
 #define CELL_H
 
-#include "../mmath/libmmath.h"
 
-using namespace libmmath;
+#include "../math_linalg/liblinalg.h"
+
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
 
 /// libcell namespace
 namespace libcell{
@@ -159,5 +164,6 @@ public:
 
 
 }// namespace libcell
+}// liblibra
 
 #endif // CELL_H

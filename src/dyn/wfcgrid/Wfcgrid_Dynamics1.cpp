@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -15,6 +15,10 @@
 */
 
 #include "Wfcgrid.h"
+#include "../../math_meigen/libmeigen.h"
+
+/// liblibra namespace
+namespace liblibra{
 
 
 /// libdyn namespace
@@ -23,8 +27,7 @@ namespace libdyn{
 /// libwfcgrid namespace
 namespace libwfcgrid{
 
-using namespace libmmath;
-using namespace libmmath::libmeigen;
+using namespace libmeigen;
 
 
 void Wfcgrid::update_potential_1D(Hamiltonian& ham){
@@ -341,7 +344,7 @@ void Wfcgrid::propagate_exact_1D(int Nmts){
 
 
   // Propagate in reciprocal space
-  for(nst=0;nst<nstates;nst++){   psi.dot(reciPSI[nst],expK[nst]);  reciPSI[nst] = psi;   }// for nst
+  for(nst=0;nst<nstates;nst++){   psi.dot_product(reciPSI[nst],expK[nst]);  reciPSI[nst] = psi;   }// for nst
 
 
   // PSI(k)=reciPSI -> PSI(r)
@@ -416,7 +419,7 @@ void Wfcgrid::propagate_exact_2D(int Nmts){
 
 
   // Propagate in reciprocal space
-  for(nst=0;nst<nstates;nst++){   psi.dot(reciPSI[nst],expK[nst]);  reciPSI[nst] = psi;   }// for nst
+  for(nst=0;nst<nstates;nst++){   psi.dot_product(reciPSI[nst],expK[nst]);  reciPSI[nst] = psi;   }// for nst
 
 
   // PSI(k)=reciPSI -> PSI(r)
@@ -518,5 +521,5 @@ boost::python::list Wfcgrid::absorb_1D(double dL){
 
 }// namespace libwfcgrid
 }// namespace libdyn
-
+}// liblibra
 

@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,6 +17,11 @@
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "libdyn.h"
+
+
+/// liblibra namespace
+namespace liblibra{
+
 using namespace boost::python;
 
 /// libdyn namespace
@@ -24,7 +29,7 @@ namespace libdyn{
 
 using namespace libnuclear;
 using namespace libelectronic;
-using namespace librigidbody;
+//using namespace librigidbody;
 using namespace libthermostat;
 using namespace libbarostat;
 using namespace libwfcgrid;
@@ -40,7 +45,7 @@ void export_Dyn_objects(){
 
 
   export_Nuclear_objects();
-  export_RigidBody_objects();
+//  export_RigidBody_objects();
   export_Electronic_objects();
   export_Thermostat_objects();
   export_Barostat_objects();
@@ -164,4 +169,5 @@ BOOST_PYTHON_MODULE(libdyn){
 
 
 }// libdyn
+}// liblibra
 

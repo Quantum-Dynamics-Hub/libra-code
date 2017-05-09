@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -12,10 +12,12 @@
 #ifndef POTENTIALS_ANGLES_H
 #define POTENTIALS_ANGLES_H
 
-#include "../mmath/libmmath.h"
+#include "../math_linalg/liblinalg.h"
 
-using namespace libmmath;
-using namespace libmmath::liblinalg;
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
 
 
 namespace libpot{
@@ -85,7 +87,7 @@ boost::python::list Angle_Cubic(VECTOR r1,VECTOR r2,VECTOR r3, /* Inputs */
 
 
 }// namespace libpot
-
+}// liblibra
 
 #endif // POTENTIALS_ANGLES_H
 

@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -15,6 +15,11 @@
 */
 
 #include "Annihilate.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
 
 /// libcalculators namespace
 namespace libcalculators{
@@ -41,7 +46,7 @@ void annihilate(int Na, int Nb, MATRIX* Pa, MATRIX* Pb, MATRIX* Ra, MATRIX* Rb){
 
   if(DF){   cout<<"in annihilate...\n"; }
 
-  int Norb = Pa->num_of_cols;
+  int Norb = Pa->n_cols;
   MATRIX* Pab;   Pab   = new MATRIX(Norb,Norb);
   MATRIX* Pba;   Pba   = new MATRIX(Norb,Norb);
   MATRIX* Pabab; Pabab = new MATRIX(Norb,Norb);
@@ -133,7 +138,7 @@ void annihilate(int Na, int Nb, MATRIX* Pa, MATRIX* Pb){
 */
 
 
-  int Norb = Pa->num_of_cols;
+  int Norb = Pa->n_cols;
   MATRIX* Ra;   Ra   = new MATRIX(Norb,Norb);
   MATRIX* Rb;   Rb   = new MATRIX(Norb,Norb);
 
@@ -148,3 +153,6 @@ void annihilate(int Na, int Nb, MATRIX* Pa, MATRIX* Pb){
 }
 
 }// namespace libcalculators
+}// liblibra
+
+

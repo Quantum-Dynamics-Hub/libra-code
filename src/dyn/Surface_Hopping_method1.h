@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -19,13 +19,17 @@
 #define SURFACE_HOPPING_METHOD1_H
 
 // External dependencies
-#include "../mmath/libmmath.h"
+#include "../math_linalg/liblinalg.h"
 #include "../hamiltonian/libhamiltonian.h"
 
 // Dynamics classes
 #include "nuclear/libnuclear.h"
 #include "electronic/libelectronic.h"
 #include "ensemble/libensemble.h"
+
+/// liblibra namespace
+namespace liblibra{
+
 
 using namespace libhamiltonian;
 
@@ -56,7 +60,7 @@ void rescale_velocities_adiabatic(int ntraj, vector<Nuclear>& mol, vector<Hamilt
       vector<int>& new_st, vector<int>& old_st, int do_reverse);
 
 
-
 }// namespace libdyn
+}// liblibra
 
 #endif // SURFACE_HOPPING_METHOD1_H

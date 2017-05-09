@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -15,8 +15,12 @@
 */
 
 #include "System.h"
+#include "../../Units.h"
 
-using namespace libmmath::librandom;
+/// liblibra namespace
+namespace liblibra{
+
+using namespace librandom;
 
 /// libchemobjects namespace
 namespace libchemobjects{
@@ -1154,3 +1158,6 @@ void System::init_atom_velocities(double Temp,VECTOR TOT_P, Random& rnd){
 
 }// namespace libchemsys
 }// namespace libchemobjects
+}// liblibra
+
+

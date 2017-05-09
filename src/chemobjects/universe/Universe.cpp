@@ -15,6 +15,9 @@
 
 #include "Universe.h"
 
+/// liblibra namespace
+namespace liblibra{
+
 /// libchemobjects namespace
 namespace libchemobjects{
 
@@ -73,4 +76,4 @@ Universe::~Universe(){ ;; }
 }// namespace libuniverse
 }// namespace libchemobjects
 
-
+}// liblibra

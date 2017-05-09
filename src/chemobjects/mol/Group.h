@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -12,11 +12,15 @@
 #ifndef GROUP_H
 #define GROUP_H
 
-#include "../../dyn/rigidbody/librigidbody.h"
-using namespace libdyn::librigidbody;
+#include "../../dyn_rigidbody/librigidbody.h"
+#include "../universe/libuniverse.h"
+#include "../../math_linalg/liblinalg.h"
 
-#include "../../mmath/libmmath.h"
-using namespace libmmath;
+/// liblibra namespace
+namespace liblibra{
+
+using namespace librigidbody;
+using namespace liblinalg;
 
 
 namespace libchemobjects{
@@ -137,7 +141,7 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<Group>& vt,int
 
 }// namespace libmol
 }// namespace libchemobjects
-
+}// liblibra
 
 
 #endif // GROUP_H

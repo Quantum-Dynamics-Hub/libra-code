@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,8 +17,13 @@
 #ifndef MODEL_SAC_H
 #define MODEL_SAC_H
 
-#include "../../mmath/libmmath.h"
-using namespace libmmath;
+#include "../../math_linalg/liblinalg.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -33,5 +38,6 @@ boost::python::list SAC_Ham(double x, boost::python::list params_);
 
 }// namespace libhamiltonian_model
 }// namespace libhamiltonian
+}// liblibra
 
 #endif // MODEL_SAC

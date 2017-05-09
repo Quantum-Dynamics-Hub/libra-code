@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -16,6 +16,9 @@
 */
 
 #include "SCF.h"
+
+/// liblibra namespace
+namespace liblibra{
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -152,9 +155,9 @@ double scf_oda(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
 
 
   if(BM){ bench_t[0].start(); }
-  Eelec_prev = ::energy_elec(el->P_alp,el->P_bet, el->Hao, el->Hao, el->Fao_alp, el->Fao_bet,
-                 el->dFao_alp_dP_alp,el->dFao_alp_dP_bet,el->dFao_bet_dP_alp,el->dFao_bet_dP_bet,
-                 temp);
+  Eelec_prev = energy_elec(el->P_alp,el->P_bet, el->Hao, el->Hao, el->Fao_alp, el->Fao_bet,
+               el->dFao_alp_dP_alp,el->dFao_alp_dP_bet,el->dFao_bet_dP_alp,el->dFao_bet_dP_bet,
+               temp);
 
   if(BM){ bench_t[0].stop(); }
 
@@ -273,9 +276,9 @@ double scf_oda(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
         if(BM){ bench_t[1].stop(); }
 
         if(BM){ bench_t[0].start();}
-          double en1 = ::energy_elec(el_tmp->P_alp,el_tmp->P_bet, el_tmp->Hao, el_tmp->Hao, el_tmp->Fao_alp, el_tmp->Fao_bet,
-                         el_tmp->dFao_alp_dP_alp,el_tmp->dFao_alp_dP_bet,el_tmp->dFao_bet_dP_alp,el_tmp->dFao_bet_dP_bet,
-                         temp);
+          double en1 = energy_elec(el_tmp->P_alp,el_tmp->P_bet, el_tmp->Hao, el_tmp->Hao, el_tmp->Fao_alp, el_tmp->Fao_bet,
+                       el_tmp->dFao_alp_dP_alp,el_tmp->dFao_alp_dP_bet,el_tmp->dFao_bet_dP_alp,el_tmp->dFao_bet_dP_bet,
+                       temp);
         if(BM){ bench_t[0].stop();}
 
 
@@ -292,9 +295,9 @@ double scf_oda(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
         if(BM){ bench_t[1].stop(); }
 
         if(BM){ bench_t[0].start(); }
-          double en2 = ::energy_elec(el_tmp->P_alp,el_tmp->P_bet, el_tmp->Hao, el_tmp->Hao, el_tmp->Fao_alp, el_tmp->Fao_bet,
-                         el_tmp->dFao_alp_dP_alp,el_tmp->dFao_alp_dP_bet,el_tmp->dFao_bet_dP_alp,el_tmp->dFao_bet_dP_bet,
-                         temp);
+          double en2 = energy_elec(el_tmp->P_alp,el_tmp->P_bet, el_tmp->Hao, el_tmp->Hao, el_tmp->Fao_alp, el_tmp->Fao_bet,
+                       el_tmp->dFao_alp_dP_alp,el_tmp->dFao_alp_dP_bet,el_tmp->dFao_bet_dP_alp,el_tmp->dFao_bet_dP_bet,
+                       temp);
         if(BM){ bench_t[0].stop(); }
 
 
@@ -311,9 +314,9 @@ double scf_oda(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
         if(BM){ bench_t[1].stop(); }
 
         if(BM){ bench_t[0].start(); }
-          double en0 = ::energy_elec(el_tmp->P_alp,el_tmp->P_bet, el_tmp->Hao, el_tmp->Hao, el_tmp->Fao_alp, el_tmp->Fao_bet,
-                         el_tmp->dFao_alp_dP_alp,el_tmp->dFao_alp_dP_bet,el_tmp->dFao_bet_dP_alp,el_tmp->dFao_bet_dP_bet,
-                         temp);
+          double en0 = energy_elec(el_tmp->P_alp,el_tmp->P_bet, el_tmp->Hao, el_tmp->Hao, el_tmp->Fao_alp, el_tmp->Fao_bet,
+                       el_tmp->dFao_alp_dP_alp,el_tmp->dFao_alp_dP_bet,el_tmp->dFao_bet_dP_alp,el_tmp->dFao_bet_dP_bet,
+                       temp);
         if(BM){ bench_t[0].stop(); }
 
      
@@ -388,9 +391,9 @@ double scf_oda(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
     if(BM){ bench_t[1].stop(); }
 
     if(BM){ bench_t[0].start(); }
-      Eelec = ::energy_elec(el_tmp->P_alp,el_tmp->P_bet, el_tmp->Hao, el_tmp->Hao, el_tmp->Fao_alp, el_tmp->Fao_bet,
-                el_tmp->dFao_alp_dP_alp,el_tmp->dFao_alp_dP_bet,el_tmp->dFao_bet_dP_alp,el_tmp->dFao_bet_dP_bet,
-                temp);
+      Eelec = energy_elec(el_tmp->P_alp,el_tmp->P_bet, el_tmp->Hao, el_tmp->Hao, el_tmp->Fao_alp, el_tmp->Fao_bet,
+              el_tmp->dFao_alp_dP_alp,el_tmp->dFao_alp_dP_bet,el_tmp->dFao_bet_dP_alp,el_tmp->dFao_bet_dP_bet,
+              temp);
     if(BM){ bench_t[0].stop(); }
 
 
@@ -474,9 +477,9 @@ double scf_oda(Electronic_Structure* el, System& syst, vector<AO>& basis_ao,
 //    *temp = (*el->Fao_bet + *el->P_alp * *el->dFao_bet_dP_alp + *el->P_bet * *el->dFao_bet_dP_bet); - less efficient
     Eelec+= ::energy_elec(Norb,el->P_bet,el->Hao, temp);
 */
-    Eelec = ::energy_elec(el->P_alp,el->P_bet, el->Hao, el->Hao, el->Fao_alp, el->Fao_bet,
-              el->dFao_alp_dP_alp,el->dFao_alp_dP_bet,el->dFao_bet_dP_alp,el->dFao_bet_dP_bet,
-              temp);
+    Eelec = energy_elec(el->P_alp,el->P_bet, el->Hao, el->Hao, el->Fao_alp, el->Fao_bet,
+            el->dFao_alp_dP_alp,el->dFao_alp_dP_bet,el->dFao_bet_dP_alp,el->dFao_bet_dP_bet,
+            temp);
 
 
 
@@ -614,5 +617,5 @@ double scf_oda(Electronic_Structure& el, System& syst, vector<AO>& basis_ao,
 }// namespace libhamiltonian_qm
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
-
+}// liblibra
 

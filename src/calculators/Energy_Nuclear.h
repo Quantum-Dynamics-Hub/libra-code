@@ -17,8 +17,12 @@
 #ifndef ENERGY_NUCLEAR_H
 #define ENERGY_NUCLEAR_H
 
-#include "../mmath/libmmath.h"
-using namespace libmmath;
+#include "../math_linalg/liblinalg.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
 
 /// libcalculators namespace
 namespace libcalculators{
@@ -28,5 +32,7 @@ double energy_nucl(vector<VECTOR>& R, vector<double>& Zeff, vector<VECTOR>& G);
 
 
 }// namespace libcalculators
+
+}// liblibra
 
 #endif // ENERGY_NUCLEAR_H

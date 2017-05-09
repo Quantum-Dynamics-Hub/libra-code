@@ -17,8 +17,16 @@
 #ifndef DENSITY_MATRIX_H
 #define DENSITY_MATRIX_H
 
-#include "../mmath/libmmath.h"
-using namespace libmmath;
+#include "../math_linalg/liblinalg.h"
+#include "../math_meigen/libmeigen.h"
+#include "../timer/libtimer.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+using namespace libmeigen;
+
 
 /// libcalculators namespace
 namespace libcalculators{
@@ -45,5 +53,6 @@ boost::python::list Fock_to_P(MATRIX Fao, MATRIX Sao, double Nel, double degen, 
 
 
 }// namespace libcalculators
+}// liblibra
 
 #endif // DENSITY_MATRIX_H

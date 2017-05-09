@@ -20,6 +20,9 @@
 
 #include "Thermostat.h"
 
+/// liblibra namespace
+namespace liblibra{
+
 /// libdyn namespace
 namespace libdyn{
 
@@ -32,7 +35,7 @@ void export_Thermostat_objects();
 
 }// namespace libdyn
 }// namespace libthermostat
-
+}// liblibra
 
 
 #endif// LIB_THERMOSTAT_H

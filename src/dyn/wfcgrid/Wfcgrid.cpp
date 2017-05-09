@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -15,6 +15,9 @@
 */
 
 #include "Wfcgrid.h"
+
+/// liblibra namespace
+namespace liblibra{
 
 /// libdyn namespace
 namespace libdyn{
@@ -687,3 +690,5 @@ double Wfcgrid::e_tot_1D(double m0){
 
 }// namespace libwfcgrid
 }// namespace libdyn
+}// liblibra
+

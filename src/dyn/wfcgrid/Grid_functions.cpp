@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -16,6 +16,10 @@
 
 #include <sstream>
 #include "Grid_functions.h"
+
+/// liblibra namespace
+namespace liblibra{
+
 
 using namespace std;
 
@@ -359,4 +363,4 @@ void ft_2D(vector<CMATRIX>& psi,vector<CMATRIX>& reci_psi,int opt,
 
 } // namespace libwfcgrid
 } // namespace libdyn
-
+}// liblibra

@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -18,7 +18,11 @@
 #define HAMILTONIAN_H
 
 #include <complex>
-#include "../../mmath/libmmath.h"
+#include "../../math_linalg/liblinalg.h"
+
+/// liblibra namespace
+namespace liblibra{
+
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -27,7 +31,7 @@ namespace libhamiltonian{
 namespace libhamiltonian_generic{
 
 
-using namespace libmmath;
+using namespace liblinalg;
 
 class Hamiltonian{
 /**
@@ -162,5 +166,6 @@ typedef std::vector<Hamiltonian> HamiltonianList;  ///< data type for keeping a 
 
 }// namespace libhamiltonian_generic
 }// namespace libhamiltonian
+}// liblibra
 
 #endif // HAMILTONIAN_H

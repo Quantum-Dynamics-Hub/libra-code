@@ -21,11 +21,13 @@
 #include <string>
 #include <sstream>
 #include <vector>
-using namespace std;
-
 #include <boost/python.hpp>
-using namespace boost::python;
 
+/// liblibra namespace
+namespace liblibra{
+
+using namespace std;
+using namespace boost::python;
 
 
 /// liutil namespace
@@ -62,6 +64,8 @@ void extract_2D(vector< vector<double> >& in, vector< vector<double> >& out, vec
 
 
 }// libutil
+
+}// liblibra
 
 #endif // UTIL_H
 

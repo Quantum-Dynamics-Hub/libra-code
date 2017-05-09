@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2014 Alexey V. Akimov
+* Copyright (C) 2014-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -16,10 +16,12 @@
 */
 
 #include "Electronic_Structure.h"
-
 #include "../../../calculators/libcalculators.h"
-using namespace libcalculators;
 
+/// liblibra namespace
+namespace liblibra{
+
+using namespace libcalculators;
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -103,12 +105,12 @@ Electronic_Structure::Electronic_Structure(Electronic_Structure* obj){
 
 
 void Electronic_Structure::check_matrix_dimensionas(MATRIX* A, MATRIX& B, std::string A_name, std::string B_name, std::string func_name){
-  if(B.num_of_cols != A->num_of_cols){
+  if(B.n_cols != A->n_cols){
     cout<<"In "<<func_name<<"\n";
     cout<<"Number of cols of matrix "<<A_name<<" is not equal to the number of cols of matrix "<<B_name<<"\n";
     exit(0);
   }
-  if(B.num_of_rows != A->num_of_rows){
+  if(B.n_rows != A->n_rows){
     cout<<"In "<<func_name<<"\n";
     cout<<"Number of rows of matrix "<<A_name<<" is not equal to the number of rows of matrix "<<B_name<<"\n";
     exit(0);
@@ -362,6 +364,6 @@ int init_electronic_subsystems(System& syst,
 }// namespace libhamiltonian_qm
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
-
+}// liblibra
 
 

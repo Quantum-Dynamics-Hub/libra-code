@@ -21,6 +21,9 @@
 
 #include "Barostat.h"
 
+/// liblibra namespace
+namespace liblibra{
+
 /// libdyn namespace
 namespace libdyn{
 
@@ -33,7 +36,7 @@ void export_Barostat_objects();
 
 }// namespace libdyn
 }// namespace libbarostat
-
+}// liblibra
 
 
 #endif// LIB_BAROSTAT_H

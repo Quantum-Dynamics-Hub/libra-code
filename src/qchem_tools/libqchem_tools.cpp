@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,6 +17,10 @@
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "libqchem_tools.h"
+
+/// liblibra namespace
+namespace liblibra{
+
 using namespace boost::python;
 
 /// libqchem_tools namespace
@@ -87,4 +91,5 @@ BOOST_PYTHON_MODULE(libqchem_tools){
 
 
 }// libqchem_tools
+}// liblibra
 

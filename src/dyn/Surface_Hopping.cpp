@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -16,6 +16,9 @@
 
 #include "Surface_Hopping.h"
 #include "Energy_and_Forces.h"
+
+/// liblibra namespace
+namespace liblibra{
 
 /// libdyn namespace
 namespace libdyn{
@@ -113,7 +116,7 @@ void compute_hopping_probabilities_fssh(Nuclear* mol, Electronic* el, Hamiltonia
 
 
   // Verify if memory is allocated, if not generate
-  if(g->num_of_elems!=el->nstates*el->nstates){cout<<"Matrix g is not allocated\n"; exit(0);  }
+  if(g->n_elts!=el->nstates*el->nstates){cout<<"Matrix g is not allocated\n"; exit(0);  }
 
 
   // Now calculate the hopping probabilities
@@ -254,7 +257,7 @@ void compute_hopping_probabilities_gfsh(Nuclear* mol, Electronic* el, Hamiltonia
   double sum,g_ij,argg;
 
   // Verify if memory is allocated, if not generate
-  if(g->num_of_elems!=el->nstates*el->nstates){cout<<"Matrix g is not allocated\n"; exit(0);  }
+  if(g->n_elts!=el->nstates*el->nstates){cout<<"Matrix g is not allocated\n"; exit(0);  }
 
 
   // compute a_kk and a_dot_kk
@@ -445,7 +448,7 @@ void compute_hopping_probabilities_mssh(Nuclear* mol, Electronic* el, Hamiltonia
 
 
   // Verify if memory is allocated, if not generate
-  if(g->num_of_elems!=el->nstates*el->nstates){cout<<"Matrix g is not allocated\n"; exit(0);  }
+  if(g->n_elts!=el->nstates*el->nstates){cout<<"Matrix g is not allocated\n"; exit(0);  }
 
 
   // Now calculate the hopping probabilities
@@ -521,7 +524,7 @@ int hop(int initstate, MATRIX& g, double ksi){
   Returned value: the index of the state to which we have hopped
 */
 
-  int nstates = g.num_of_cols;
+  int nstates = g.n_cols;
   double left, right; left = right = 0.0;
   int finstate = initstate;
 
@@ -555,7 +558,7 @@ void hop(int& initstate, Nuclear* mol, Hamiltonian* ham, double ksi, MATRIX* g, 
   are inverted.
 */
 
-  int nstates = g->num_of_cols;
+  int nstates = g->n_cols;
   double left, right; left = right = 0.0;
   int finstate = initstate;
 
@@ -868,5 +871,5 @@ int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, doub
 
 
 }// namespace libdyn
-
+}// liblibra
 

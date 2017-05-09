@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -20,7 +20,7 @@
 
 // Dynamics classes
 #include "nuclear/libnuclear.h"
-#include "rigidbody/librigidbody.h"
+//#include "../dyn_rigidbody/librigidbody.h"
 #include "electronic/libelectronic.h"
 #include "thermostat/libthermostat.h"
 #include "barostat/libbarostat.h"
@@ -36,6 +36,9 @@
 #include "Dynamics_Ensemble.h"
 
 
+/// liblibra namespace
+namespace liblibra{
+
 
 /// libdyn namespace
 namespace libdyn{
@@ -45,6 +48,7 @@ void export_Dyn_objects();
 
 
 }// namespace libdyn
+}// liblibra
 
 #endif // LIBDYN_H
 

@@ -16,6 +16,12 @@
 
 #include "Energy_Electronic.h"
 
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+
+
 /// libcalculators namespace
 namespace libcalculators{
 
@@ -32,7 +38,7 @@ double energy_elec(MATRIX* Pao,MATRIX* Hao,MATRIX* Fao){
 */
 
 
-  int Norb = Pao->num_of_cols;
+  int Norb = Pao->n_cols;
   
   int i,ii,j;
   double Eelec = 0.0;
@@ -103,7 +109,7 @@ double energy_elec(MATRIX* P_alp, MATRIX* P_bet,
 
 
 
-  int Norb = P_alp->num_of_cols;
+  int Norb = P_alp->n_cols;
   
   int i,ii,j;
   double Eelec_alp = 0.0;
@@ -183,4 +189,8 @@ double energy_elec(MATRIX P_alp, MATRIX P_bet,
 
 
 }// namespace libcalculators
+
+}// liblibra
+
+
 

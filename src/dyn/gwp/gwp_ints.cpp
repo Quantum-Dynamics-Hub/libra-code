@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -16,6 +16,11 @@
 
 #include "gwp.h"
 
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+
 /// libdyn namespace
 namespace libdyn{
 
@@ -25,28 +30,28 @@ namespace libgwp{
 
 int check_dimensions(std::string function_name, MATRIX& R1, MATRIX& P1, MATRIX& R2, MATRIX& P2){
 
-  if(R1.num_of_cols!=1){  cout<<"Error in "<<function_name<<": R1 should have only 1 colomn\n"; exit(0);  }
-  if(R2.num_of_cols!=1){  cout<<"Error in "<<function_name<<": R2 should have only 1 colomn\n"; exit(0);  }
-  if(P1.num_of_cols!=1){  cout<<"Error in "<<function_name<<": P1 should have only 1 colomn\n"; exit(0);  }
-  if(P2.num_of_cols!=1){  cout<<"Error in "<<function_name<<": P2 should have only 1 colomn\n"; exit(0);  }
+  if(R1.n_cols!=1){  cout<<"Error in "<<function_name<<": R1 should have only 1 colomn\n"; exit(0);  }
+  if(R2.n_cols!=1){  cout<<"Error in "<<function_name<<": R2 should have only 1 colomn\n"; exit(0);  }
+  if(P1.n_cols!=1){  cout<<"Error in "<<function_name<<": P1 should have only 1 colomn\n"; exit(0);  }
+  if(P2.n_cols!=1){  cout<<"Error in "<<function_name<<": P2 should have only 1 colomn\n"; exit(0);  }
 
-  if(R1.num_of_rows!=P1.num_of_rows){ 
-    cout<<"Error in "<<function_name<<": The dimensions of vectors R1 (given "<<R1.num_of_rows<<" ) "
-        <<"and P1 (given "<<P1.num_of_rows<<" ) do not match\n"; exit(0);     
+  if(R1.n_rows!=P1.n_rows){ 
+    cout<<"Error in "<<function_name<<": The dimensions of vectors R1 (given "<<R1.n_rows<<" ) "
+        <<"and P1 (given "<<P1.n_rows<<" ) do not match\n"; exit(0);     
   }
-  if(R1.num_of_rows!=R2.num_of_rows){ 
-    cout<<"Error in "<<function_name<<": The dimensions of vectors R1 (given "<<R1.num_of_rows<<" ) "
-        <<"and R2 (given "<<R2.num_of_rows<<" ) do not match\n"; exit(0);     
+  if(R1.n_rows!=R2.n_rows){ 
+    cout<<"Error in "<<function_name<<": The dimensions of vectors R1 (given "<<R1.n_rows<<" ) "
+        <<"and R2 (given "<<R2.n_rows<<" ) do not match\n"; exit(0);     
   }
-  if(P1.num_of_rows!=P2.num_of_rows){ 
-    cout<<"Error in "<<function_name<<": The dimensions of vectors P1 (given "<<P1.num_of_rows<<" ) "
-        <<"and P2 (given "<<P2.num_of_rows<<" ) do not match\n"; exit(0);     
+  if(P1.n_rows!=P2.n_rows){ 
+    cout<<"Error in "<<function_name<<": The dimensions of vectors P1 (given "<<P1.n_rows<<" ) "
+        <<"and P2 (given "<<P2.n_rows<<" ) do not match\n"; exit(0);     
   }
 
   // At this point, we are sure that the dimensions of all input vectors are correct
   // so we can return this dimension
 
-  return R1.num_of_rows;
+  return R1.n_rows;
 
 }
 
@@ -232,3 +237,6 @@ complex<double> gwp_kinetic(MATRIX& R1, MATRIX& P1, double gamma1,
 
 }// namespace libgwp
 }// namespace libdyn
+}// liblibra
+
+

@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -18,13 +18,20 @@
 #define HAMILTONIAN_EXTERN_H
 
 #include "../Hamiltonian_Generic/Hamiltonian.h"
+#include "../../math_linalg/liblinalg.h"
+#include "../../math_meigen/libmeigen.h"
+
+
+/// liblibra namespace
+namespace liblibra{
 
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
 
 using namespace libhamiltonian_generic;
-using namespace libmmath;
+using namespace liblinalg;
+using namespace libmeigen;
 
 /// libhamiltonian_extern namespace
 namespace libhamiltonian_extern{
@@ -86,5 +93,6 @@ typedef std::vector<Hamiltonian_Extern> Hamiltonian_ExternList;  /// data type f
 
 }// namespace libhamiltonian_extern
 }// namespace libmodel
+}// liblibra
 
 #endif // HAMILTONIAN_EXTERN_H

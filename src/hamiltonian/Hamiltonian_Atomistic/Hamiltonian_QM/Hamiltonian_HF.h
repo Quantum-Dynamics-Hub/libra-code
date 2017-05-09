@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -16,25 +16,12 @@
 #ifndef HAMILTONIAN_HF_H
 #define HAMILTONIAN_HF_H
 
-#include "../../../calculators/libcalculators.h"
-using namespace libcalculators;
-
-#include "../../../qchem/libqchem.h"
-using namespace libqchem;
-using namespace libqchem::libqobjects;
-
-#include "../../../chemobjects/libchemobjects.h"
-using namespace libchemobjects;
-using namespace libchemobjects::libchemsys;
-
-#include "Control_Parameters/libcontrol_parameters.h"
-using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::libcontrol_parameters;
-
-#include "Model_Parameters/libmodel_parameters.h"
-using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm::libmodel_parameters;
 
 #include "Electronic_Structure.h"
 
+
+/// liblibra namespace
+namespace liblibra{
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -80,5 +67,6 @@ void Hamiltonian_Fock_hf(Electronic_Structure& el, System& syst, vector<AO>& bas
 }// namespace libhamiltonian_qm
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
+}// liblibra
 
 #endif // HAMILTONIAN_HF_H

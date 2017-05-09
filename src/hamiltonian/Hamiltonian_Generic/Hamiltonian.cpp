@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -16,6 +16,10 @@
 
 #include "Hamiltonian.h"
 #include <stdlib.h>
+
+
+/// liblibra namespace
+namespace liblibra{
 
 /// libhamiltonian namespace 
 namespace libhamiltonian{
@@ -302,3 +306,5 @@ std::complex<double> Hamiltonian::Hvib(int i,int j){
 
 }// namespace libhamiltonian_generic
 }// namespace libhamiltonian
+}// liblibra
+

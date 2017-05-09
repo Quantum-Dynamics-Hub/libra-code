@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,6 +17,9 @@
 */
 
 #include "Model_cubic.h"
+
+/// liblibra namespace
+namespace liblibra{
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -46,9 +49,9 @@ void cubic_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& par
 */
 
 
-  if(H->num_of_elems!=1){ std::cout<<"Error in cubic_Ham: H matrix must be allocated\n"; exit(0);}
-  if(dH->num_of_elems!=1){ std::cout<<"Error in cubic_Ham: dH matrix must be allocated\n"; exit(0);}
-  if(d2H->num_of_elems!=1){ std::cout<<"Error in cubic_Ham: d2H matrix must be allocated\n"; exit(0);}
+  if(H->n_elts!=1){ std::cout<<"Error in cubic_Ham: H matrix must be allocated\n"; exit(0);}
+  if(dH->n_elts!=1){ std::cout<<"Error in cubic_Ham: dH matrix must be allocated\n"; exit(0);}
+  if(d2H->n_elts!=1){ std::cout<<"Error in cubic_Ham: d2H matrix must be allocated\n"; exit(0);}
 
   double e;
 
@@ -126,4 +129,4 @@ boost::python::list cubic_Ham(double x, boost::python::list params_){
 
 }// namespace libhamiltonian_model
 }// namespace libhamiltonian
-
+}// liblibra

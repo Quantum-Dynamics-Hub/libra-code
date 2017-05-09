@@ -11,8 +11,11 @@
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-
 #include "libmol.h"
+
+/// liblibra namespace
+namespace liblibra{
+
 
 using namespace boost::python;
 
@@ -193,6 +196,6 @@ BOOST_PYTHON_MODULE(libmol){
 
 }// namespace libmol
 }// namespace libchemobjects
-
+}// liblibra
 
 

@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -15,6 +15,13 @@
 */
 
 #include "Model_SAC.h"
+#include "../../math_linalg/liblinalg.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -46,9 +53,9 @@ void SAC_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& param
 */
 
 
-  if(H->num_of_elems!=4){ std::cout<<"Error in SAC_Ham: H matrix must be allocated\n"; exit(0);}
-  if(dH->num_of_elems!=4){ std::cout<<"Error in SAC_Ham: dH matrix must be allocated\n"; exit(0);}
-  if(d2H->num_of_elems!=4){ std::cout<<"Error in SAC_Ham: d2H matrix must be allocated\n"; exit(0);}
+  if(H->n_elts!=4){ std::cout<<"Error in SAC_Ham: H matrix must be allocated\n"; exit(0);}
+  if(dH->n_elts!=4){ std::cout<<"Error in SAC_Ham: dH matrix must be allocated\n"; exit(0);}
+  if(d2H->n_elts!=4){ std::cout<<"Error in SAC_Ham: d2H matrix must be allocated\n"; exit(0);}
 
 
   double e;
@@ -137,4 +144,4 @@ boost::python::list SAC_Ham(double x, boost::python::list params_){
 
 }// namespace libhamiltonian_model
 }// namespace libhamiltonian
-
+}// liblibra

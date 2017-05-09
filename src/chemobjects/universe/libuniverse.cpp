@@ -20,8 +20,11 @@
 
 #include "libuniverse.h"
 
+
+/// liblibra namespace
+namespace liblibra{
+
 using namespace boost::python;
-using namespace libmmath;
 
 /// libchemobjects namespace
 namespace libchemobjects{
@@ -85,7 +88,7 @@ BOOST_PYTHON_MODULE(libuniverse){
 
 }// namespace libuniverse
 }// namespace libchemobjects
-
+}// liblibra
 
 
 

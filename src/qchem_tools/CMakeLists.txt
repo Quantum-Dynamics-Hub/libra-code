@@ -21,8 +21,17 @@ ADD_LIBRARY(qchem_tools_stat STATIC ${QCHEM_TOOLS_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(qchem_tools      chemobjects_stat hamiltonian_stat qchem_stat mmath_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(qchem_tools_stat chemobjects_stat hamiltonian_stat qchem_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(qchem_tools      chemobjects_stat 
+                      hamiltonian_stat qobjects_stat
+                      basis_setups_stat control_parameters_stat
+                      model_parameters_stat
+                      linalg_stat ${ext_libs} )
+
+TARGET_LINK_LIBRARIES(qchem_tools_stat      chemobjects_stat 
+                      hamiltonian_stat qobjects_stat
+                      basis_setups_stat control_parameters_stat
+                      model_parameters_stat
+                      linalg_stat ${ext_libs} )
 
 
 

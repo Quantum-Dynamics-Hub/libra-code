@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,6 +17,9 @@
 #ifndef HAMILTONIAN_MODEL_H
 #define HAMILTONIAN_MODEL_H
 
+#include "../../math_linalg/liblinalg.h"
+#include "../../math_meigen/libmeigen.h"
+
 #include "../Hamiltonian_Generic/Hamiltonian.h"
 #include "Model_SAC.h"
 #include "Model_DAC.h"
@@ -29,11 +32,15 @@
 #include "Model_cubic.h"
 
 
+/// liblibra namespace
+namespace liblibra{
+
+
 /// libhamiltonian namespace
 namespace libhamiltonian{
 
 using namespace libhamiltonian_generic;
-using namespace libmmath;
+using namespace liblinalg;
 
 /// libhamiltonian_model namespace
 namespace libhamiltonian_model{
@@ -91,5 +98,6 @@ typedef std::vector<Hamiltonian_Model> Hamiltonian_ModelList;  /// data type for
 
 }// namespace libhamiltonian_model
 }// namespace libmodel
+}// liblibra
 
 #endif // HAMILTONIAN_MODEL_H

@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -16,6 +16,10 @@
 
 #include "Dynamics_Nuclear.h"
 #include "Energy_and_Forces.h"
+
+
+/// liblibra namespace
+namespace liblibra{
 
 /// libdyn namespace 
 namespace libdyn{
@@ -118,7 +122,7 @@ void propagate_nuclear(double dt,Nuclear* mol,Electronic* el,Hamiltonian* ham,Th
 }// propagate_nuclear
 
 
-
-
-
 }// namespace libdyn
+}// liblibra
+
+

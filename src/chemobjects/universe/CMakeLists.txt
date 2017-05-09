@@ -15,7 +15,7 @@ ADD_LIBRARY(universe_stat STATIC ${UNIVERSE_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(universe      mmath_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(universe_stat mmath_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(universe      io_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(universe_stat io_stat ${ext_libs})
 
 

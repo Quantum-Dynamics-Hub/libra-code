@@ -15,9 +15,10 @@
 
 #ifndef ELEMENT_H
 #define ELEMENT_H
+#include "../../io/libio.h"
 
-#include "../../mmath/libmmath.h"
-using namespace libmmath;
+/// liblibra namespace
+namespace liblibra{
 
 
 /// libchemobjects namespace
@@ -72,6 +73,7 @@ void load(boost::property_tree::ptree& pt,std::string path,vector<Element>& vt,i
 }// namespace libuniverse
 }// namespace libchemobjects
 
+}// liblibra
 
 #endif // ELEMENT_H
 

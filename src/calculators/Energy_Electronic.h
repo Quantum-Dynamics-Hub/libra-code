@@ -18,8 +18,12 @@
 #ifndef ENERGY_ELECTRONIC_H
 #define ENERGY_ELECTRONIC_H
 
-#include "../mmath/libmmath.h"
-using namespace libmmath;
+#include "../math_linalg/liblinalg.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
 
 /// libcalculators namespace
 namespace libcalculators{
@@ -46,5 +50,6 @@ double energy_elec(MATRIX P_alp, MATRIX P_bet,
 
 
 }// namespace libcalculators
+}// liblibra
 
 #endif // ENERGY_ELECTRONIC_H

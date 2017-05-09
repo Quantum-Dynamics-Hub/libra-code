@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,14 +17,18 @@
 #ifndef SURFACE_HOPPING_H
 #define SURFACE_HOPPING_H
 
+
 // External dependencies
-#include "../mmath/libmmath.h"
+#include "../math_linalg/liblinalg.h"
 #include "../hamiltonian/libhamiltonian.h"
 
 // Dynamics classes
 #include "nuclear/libnuclear.h"
 #include "electronic/libelectronic.h"
 #include "ensemble/libensemble.h"
+
+/// liblibra namespace
+namespace liblibra{
 
 using namespace libhamiltonian;
 
@@ -78,5 +82,6 @@ int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, doub
 
 
 }// namespace libdyn
+}// liblibra
 
 #endif // SURFACE_HOPPING_H

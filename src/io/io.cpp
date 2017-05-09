@@ -16,6 +16,10 @@
 
 #include "io.h"
 
+
+/// liblibra 
+namespace liblibra{
+
 /// libio namespace
 namespace libio{
 
@@ -347,3 +351,5 @@ void show_2D(vector< vector<double> >& in){
 
 
 }// libio
+}// liblibra
+

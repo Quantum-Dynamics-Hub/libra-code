@@ -15,7 +15,7 @@ ADD_LIBRARY(context_stat STATIC ${CONTEXT_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(context      mmath_stat io_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(context_stat mmath_stat io_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(context      linalg_stat io_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(context_stat linalg_stat io_stat ${ext_libs})
 
                                                  

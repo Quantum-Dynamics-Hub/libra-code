@@ -21,6 +21,10 @@
 #include "mol/libmol.h"
 #include "chemsys/libchemsys.h"
 
+/// liblibra namespace
+namespace liblibra{
+
+
 /// libchemobjects namespace
 namespace libchemobjects{
 
@@ -29,6 +33,7 @@ void export_chemobjects_objects();
 
 
 }// namespace libchemobjects
+}// liblibra
 
 #endif // LIBCHEMOBJECTS_H
 

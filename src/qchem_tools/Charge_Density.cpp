@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2016 Alexey V. Akimov
+* Copyright (C) 2016-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,9 +17,12 @@
 #include "Charge_Density.h"
 
 #include <sstream>
-using namespace std;
-
 #include "../converters/libconverters.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+using namespace std;
 using namespace libconverters;
 
 
@@ -187,7 +190,7 @@ void charge_density(MATRIX& C, vector<listHamiltonian_QM>& ham, System& syst, ve
 
 
   int nfrags = active_orb.size();  // this is the total number of fragments
-  int nfmo = C.num_of_rows;        // total number of FMOs
+  int nfmo = C.n_rows;        // total number of FMOs
 
   int summ = 0;
   for(i=0;i<nfrags;i++){
@@ -368,4 +371,4 @@ void charge_density(MATRIX& C, boost::python::list ham, System& syst, boost::pyt
 
 
 }// namespace libqchem_tools
-
+}// liblibra

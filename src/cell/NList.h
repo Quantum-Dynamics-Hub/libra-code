@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -18,6 +18,10 @@
 #define NList_H
 
 #include "Cell.h"
+
+/// liblibra namespace
+namespace liblibra{
+
 
 /// libcell namespace
 namespace libcell{
@@ -44,5 +48,6 @@ double energy(int Nat,VECTOR* r,MATRIX3x3& H,vector< vector<quartet> >& nlist);
 
 
 }//namespace libcell
+}// liblibra
 
 #endif // NList_H

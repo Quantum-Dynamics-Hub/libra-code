@@ -20,6 +20,9 @@
 
 #include "io.h"
 
+/// liblibra 
+namespace liblibra{
+
 /// libio namespace
 namespace libio{
 
@@ -28,6 +31,7 @@ void export_io_objects();
 
 
 }// namespace libio
+} // liblibra
 
 
 #endif// LIB_IO_H

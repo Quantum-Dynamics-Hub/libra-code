@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -14,6 +14,10 @@
 */
 
 #include "Hamiltonian_HF.h"
+
+/// liblibra namespace
+namespace liblibra{
+
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -50,7 +54,7 @@ void Hamiltonian_core_hf
   
   int Norb = basis_ao.size(); // how many AOs
 
-  if(Norb!=Hao->num_of_cols){  
+  if(Norb!=Hao->n_cols){  
     cout<<"In Hamiltonian_core_hf: Dimension of input/output matrix is not compatible whith the number of the fragment-localized orbitals\n";
     exit(0);
   }
@@ -116,7 +120,7 @@ void Hamiltonian_Fock_hf(Electronic_Structure* el, System& syst, vector<AO>& bas
   int a,b,c,d,A,B,C,D;
 
   int Norb = basis_ao.size(); // how many AOs 
-  if(Norb!=el->Hao->num_of_cols){  
+  if(Norb!=el->Hao->n_cols){  
     cout<<"In Hamiltonian_Fock_hf: Dimension of input/output matrix is not compatible whith the number of the fragment-localized orbitals\n";
     exit(0);
   }
@@ -202,5 +206,5 @@ void Hamiltonian_Fock_hf(Electronic_Structure& el, System& syst, vector<AO>& bas
 }// namespace libhamiltonian_qm
 }// namespace libhamiltonian_atomistic
 }// namespace libhamiltonian
-
+}// liblibra
 

@@ -17,6 +17,12 @@
 
 #include "Mulliken.h"
 
+/// liblibra namespace
+namespace liblibra{
+
+using namespace liblinalg;
+
+
 /// libcalculators namespace
 namespace libcalculators{
 
@@ -160,3 +166,6 @@ void update_Mull_charges(vector<int>& ao_to_atom_map, vector<double>& Zeff,
 
 
 }// namespace libcalculators
+
+}// liblibra
+
