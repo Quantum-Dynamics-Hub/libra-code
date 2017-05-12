@@ -18,6 +18,7 @@
 #define LIB_BASIS_H
 
 #include "Basis.h"
+#include "basisset.h"
 
 /// liblibra namespace
 namespace liblibra{

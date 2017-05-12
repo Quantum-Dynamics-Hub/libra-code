@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2015-2016 Alexey V. Akimov
+#* Copyright (C) 2015-2017 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -51,4 +51,48 @@ for a in xrange(3):
 
 
 
+print "\n==============Test 2: Construct timer object==============="
+
+print "\nTest 3: Several cycles with same timer - return accumulated time"
+for a in xrange(3):
+    x = 0.0
+    t = TimeMeter()
+    print "start_time_wall = ", t.get_start_time_wall_seconds()
+
+    print "start Wall time = ", t.startTimeWall
+    print "start sys CPU time = ", t.startTimeCPU_sys
+    print "start usr CPU time = ", t.startTimeCPU_usr
+
+    print "end_time_wall = ", t.endTimeWall
+    print "end sys CPU time = ", t.endTimeCPU_sys
+    print "end usr CPU time = ", t.endTimeCPU_usr
+
+    print "secondsTakenWall = ", t.secondsTakenWall
+    print "secondsTaken sys = ", t.secondsTakenCPU_sys
+    print "secondsTakenCPU_usr = ", t.secondsTakenCPU_usr
+
+
+
+    for i in range(0,1000000):
+        x = x + math.sin(i*math.pi)
+
+    t.show(1, '')
+
+    print "start Wall time = ", t.startTimeWall
+    print "start sys CPU time = ", t.startTimeCPU_sys
+    print "start usr CPU time = ", t.startTimeCPU_usr
+
+    print "end_time_wall = ", t.endTimeWall
+    print "end sys CPU time = ", t.endTimeCPU_sys
+    print "end usr CPU time = ", t.endTimeCPU_usr
+
+    print "secondsTakenWall = ", t.secondsTakenWall
+    print "secondsTaken sys = ", t.secondsTakenCPU_sys
+    print "secondsTakenCPU_usr = ", t.secondsTakenCPU_usr
+
+
+
+#    seconds_usr, seconds_sys = 0.0, 0.0
+#    t.get_current_cpu_times(seconds_usr, seconds_sys)
+#    print "get_wall_seconds = ", t.get_wall_seconds()
 

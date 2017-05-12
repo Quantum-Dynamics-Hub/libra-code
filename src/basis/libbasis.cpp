@@ -31,7 +31,8 @@ using namespace liblinalg;
 /// libbasis namespace
 namespace libbasis{
 
-
+using namespace libergoscf;
+//using libergoscf::basisset_shell_struct;
 
 
 void export_basis_objects(){
@@ -132,6 +133,69 @@ void export_basis_objects(){
 
 
 
+  class_<basisset_shell_struct>("basisset_shell_struct",init<int>())
+
+      .def_readwrite("shell_type", &basisset_shell_struct::type)
+      .def_readwrite("contrCount", &basisset_shell_struct::contrCount)
+      .def_readwrite("shell_ID", &basisset_shell_struct::shell_ID)
+      .def_readwrite("exponentList", &basisset_shell_struct::exponentList)
+      .def_readwrite("coeffList", &basisset_shell_struct::coeffList)
+
+  ;
+
+  class_< basisset_shell_structList >("basisset_shell_structList")
+      .def(vector_indexing_suite< basisset_shell_structList >())
+  ;
+
+  class_< basisset_shell_structMap >("basisset_shell_structMap")
+      .def(vector_indexing_suite< basisset_shell_structMap >())
+  ;
+
+
+
+  class_<basisset_atom_struct>("basisset_atom_struct",init<int, int>())
+
+      .def_readwrite("noOfShells", &basisset_atom_struct::noOfShells)
+      .def_readwrite("shells", &basisset_atom_struct::shells)
+
+  ;
+
+  class_< basisset_atom_structList >("basisset_atom_structList")
+      .def(vector_indexing_suite< basisset_atom_structList >())
+  ;
+
+  class_< basisset_atom_structMap >("basisset_atom_structMap")
+      .def(vector_indexing_suite< basisset_atom_structMap >())
+  ;
+
+
+
+  class_<basisset_struct>("basisset_struct",init<int, int, int>())
+      .def_readwrite("atoms", &basisset_struct::atoms)
+      .def("read_basisset_file", &basisset_struct::read_basisset_file);
+
+  ;
+
+/*
+  class_< basisset_structList >("basisset_structList")
+      .def(vector_indexing_suite< basisset_structList >())
+  ;
+
+  class_< basisset_structMap >("basisset_structMap")
+      .def(vector_indexing_suite< basisset_structMap >())
+  ;
+*/
+
+
+//  int (*expt_read_basisset_file_v1)(basisset_struct* result, const char* fileName, int dirc, const char *dirv[], int print_raw) = &read_basisset_file;
+//  def("read_basisset_file", expt_read_basisset_file_v1);
+
+/*
+  int (*expt_read_basisset_file_v1)(basisset_struct* result, string fileName, int print_raw) = &read_basisset_file;
+
+  basisset_struct (*expt_read_basisset_file_v2)(std::string fileName,int print_raw) = &read_basisset_file;
+  def("read_basisset_file", expt_read_basisset_file_v2);
+*/
 
 }
 

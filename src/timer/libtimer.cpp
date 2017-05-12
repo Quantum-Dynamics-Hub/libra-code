@@ -43,6 +43,31 @@ void export_timer_objects(){
   ;
 
 
+  class_<TimeMeter>("TimeMeter",init<>())
+//      .def("__copy__", &generic__copy__<Timer>)
+//      .def("__deepcopy__", &generic__deepcopy__<Timer>)
+
+      .def_readwrite("startTimeCPU_sys", &TimeMeter::startTimeCPU_sys)
+      .def_readwrite("startTimeCPU_usr", &TimeMeter::startTimeCPU_usr)
+      .def_readwrite("startTimeWall", &TimeMeter::startTimeWall)
+
+      .def_readwrite("endTimeCPU_sys", &TimeMeter::endTimeCPU_sys)
+      .def_readwrite("endTimeCPU_usr", &TimeMeter::endTimeCPU_usr)
+      .def_readwrite("endTimeWall", &TimeMeter::endTimeWall)
+
+      .def_readwrite("secondsTakenCPU_sys", &TimeMeter::secondsTakenCPU_sys)
+      .def_readwrite("secondsTakenCPU_usr", &TimeMeter::secondsTakenCPU_usr)
+      .def_readwrite("secondsTakenWall", &TimeMeter::secondsTakenWall)
+
+
+
+      .def("get_start_time_wall_seconds", &TimeMeter::get_start_time_wall_seconds)
+      .def("get_wall_seconds", &TimeMeter::get_wall_seconds)
+      .def("get_current_cpu_times", &TimeMeter::get_current_cpu_times)
+      .def("show", &TimeMeter::print)
+
+  ;
+
 
 
 }// export_timer_objects()

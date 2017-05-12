@@ -60,6 +60,9 @@
 #include "qchem_tools/libqchem_tools.h"
 #include "solvers/libsolvers.h"
 
+/// ErgoSCF numeric types
+#include "realtype.h"
+
 /// liblibra namespace
 namespace liblibra{
 
