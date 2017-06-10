@@ -90,21 +90,32 @@ class EHT_K{
   for reading in the parameters from the input file
 */
 
-  double K_default[5] = {1.75, 0.00, 0.00, 0.00, 0.00};
-  double C_default[5] = {0.00, 0.00, 0.00, 0.00, 1.00};
+  std::vector<double> K_default;
+  std::vector<double> C_default;
 
-  struct data_element{
+  class data_element{
+    public:
     // Example:   H  1s   Si  3s   1.34   K1_value
     std::string elt1;
     std::string orb_type1;
     std::string elt2;
     std::string orb_type2;
 
-    double K_value[5];
-    int is_K_value[5] = {0, 0, 0, 0, 0};
+    std::vector<double> K_value;
+    std::vector<int> is_K_value;
 
-    double C_value[5];
-    int is_C_value[5] = {0, 0, 0, 0, 0};
+    std::vector<double> C_value;
+    std::vector<int> is_C_value;
+
+
+    data_element(){
+      K_value = std::vector<double>(5, 0.0);
+      is_K_value = std::vector<int>(5, 0);
+
+      C_value = std::vector<double>(5, 0.0);
+      is_C_value = std::vector<int>(5, 0);
+
+    }
 
   };
 
@@ -140,8 +151,22 @@ public:
   vector<psps_data_element> psps_data;
 
 
-  EHT_K(){ ;; }
+  EHT_K(){ 
+
+    K_default = std::vector<double>(5, 0.0);
+    K_default[0] = 1.75;
+
+    C_default = std::vector<double>(5, 0.0);
+    C_default[4] = 1.00;
+
+  }
   EHT_K(const EHT_K& ob){
+    K_default = std::vector<double>(5, 0.0);
+    K_default[0] = 1.75;
+
+    C_default = std::vector<double>(5, 0.0);
+    C_default[4] = 1.00;
+
     data = ob.data;  pp_data = ob.pp_data; psps_data = ob.psps_data;
   }
 
