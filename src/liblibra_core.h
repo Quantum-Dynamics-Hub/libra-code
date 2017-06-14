@@ -36,6 +36,7 @@
 #include "molint/libmolint.h"
 #include "qobjects/libqobjects.h"
 #include "basis/libbasis.h"
+#include "basis_setups/libbasis_setups.h"
 
 #include "calculators/libcalculators.h"
 

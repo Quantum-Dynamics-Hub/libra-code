@@ -137,8 +137,8 @@ E_bet = MATRIX(Norb, Norb)
 C_bet = MATRIX(Norb, Norb)
 
 
-solve_eigen(Norb, Hao, Sao, E_alp, C_alp)
-solve_eigen(Norb, Hao, Sao, E_bet, C_bet)
+solve_eigen(Hao, Sao, E_alp, C_alp, 0)
+solve_eigen(Hao, Sao, E_bet, C_bet, 0)
 
 
 

@@ -132,9 +132,11 @@ kT = 0.025
 etol = 0.0001
 pop_opt = 0  #  0 -  integer populations,  1 - Fermi distribution              
 
+
 res_alp = Fock_to_P(Hao, Sao, Nelec_alp, degen, kT, etol, pop_opt)
 res_bet = Fock_to_P(Hao, Sao, Nelec_bet, degen, kT, etol, pop_opt)
 
+#sys.exit(0)
 
 print "Eigenvalues (alp):\n"
 res_alp[0].show_matrix()

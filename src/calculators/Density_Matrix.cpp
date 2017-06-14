@@ -144,10 +144,14 @@ void Fock_to_P(int Norb,int Nocc, int degen, double Nel, std::string eigen_metho
     
   // Get electronic structure (wfc and energies) from given Fock matrix
   if(BM){ bench_t[0].start(); }
-  if(eigen_method=="generalized"){    solve_eigen(Norb, Fao, Sao, E,C);    }// generalized
+  if(eigen_method=="generalized"){   
+ //   solve_eigen(Norb, Fao, Sao, E,C);   
+   solve_eigen(Fao, Sao, E, C, 0);   
+  }// generalized
   else if(eigen_method=="standard"){  
     MATRIX* I; I = new MATRIX(Norb,Norb); *I = 0.0; for(int i=0;i<Norb;i++){ I->M[i*Norb+i] = 1.0; }
-    solve_eigen(Norb, Fao, I, E,C);       // generalized, but with unit overlap
+//    solve_eigen(Norb, Fao, I, E,C);       // generalized, but with unit overlap
+    solve_eigen(Fao, E, C, 0);       // generalized, but with unit overlap
     delete I;
   }// standard
   if(BM){ bench_t[0].stop(); }
@@ -206,13 +210,14 @@ void Fock_to_P(MATRIX* Fao, MATRIX* Sao, double Nel, double degen, double kT, do
   \param[in,out] bench_t The benchmarking information: bench_t[0] - eigenvalue solvers, bench_t[1] - ordering bands,
                  bench_t[2] - populate bands, bench_t[3] - density matrix computations
 */
-
+                                                                     
 
   int Norb = Fao->n_cols;
     
   // Get electronic structure (wfc and energies) from given Fock matrix
   if(BM){ bench_t[0].start(); }
-  solve_eigen(Norb, Fao, Sao, E,C); 
+//  solve_eigen(Norb, Fao, Sao, E,C); 
+  solve_eigen(Fao, Sao, E,C, 0); 
   if(BM){ bench_t[0].stop(); }
 
   // Generate and order bands in compressed form from the matrices
