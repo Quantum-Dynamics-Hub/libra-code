@@ -879,7 +879,7 @@ int System::foe(Control_Parameters& prms,int do_guess){
   MATRIX* lambd; lambd = new MATRIX(Norb,Norb);
   MATRIX* coeff; coeff = new MATRIX(Norb,Norb);
 
-  solve_eigen(Norb, Sao, &Id, lambd, coeff);
+  solve_eigen(Sao, &Id, lambd, coeff, 0);
 
   cout<<"Overlap eigenvalues = \n"<<*lambd<<endl;
 

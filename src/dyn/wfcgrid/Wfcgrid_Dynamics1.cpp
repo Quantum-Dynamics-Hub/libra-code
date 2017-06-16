@@ -137,7 +137,7 @@ void Wfcgrid::update_propagator_1D(double dt,double m0){
     }
 
     // Transformation to adiabatic basis
-    solve_eigen(nstates, diaH, S, adiH, C);  // diaH * C = S * C * adiH
+    solve_eigen(diaH, S, adiH, C, 0);  // diaH * C = S * C * adiH
 
     *cs = 0.0;   *si = 0.0;
     for(int nst=0;nst<nstates;nst++){  
@@ -205,7 +205,7 @@ void Wfcgrid::update_propagator_2D(double dt,double m0){
       }
 
       // Transformation to adiabatic basis
-      solve_eigen(nstates, diaH, S, adiH, C);  // diaH * C = S * C * adiH
+      solve_eigen(diaH, S, adiH, C, 0);  // diaH * C = S * C * adiH
 
 
       // Now compute sin and cos matrixes: diagonal

@@ -580,7 +580,7 @@ void Hamiltonian_Atomistic::compute_adiabatic(){
         //cout<<"internal MO = \n"<<*qm_ham->el->C_alp<<endl;
 
         // Transformation to adiabatic basis
-        solve_eigen(nelec, ham_dia, S, ham_adi, C);  // H_dia * C = S * C * H_adi
+        solve_eigen(ham_dia, S, ham_adi, C, 0);  // H_dia * C = S * C * H_adi
 
         // Debug:
         //cout<<"new C =\n"<<*C<<endl;

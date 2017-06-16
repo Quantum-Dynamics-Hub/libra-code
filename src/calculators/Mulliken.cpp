@@ -12,6 +12,8 @@
 /**
   \file Mulliken.cpp
   \brief The file implement functions for Mulliken population analysis    
+
+  See more here: https://en.wikipedia.org/wiki/Mulliken_population_analysis
     
 */
 
@@ -40,7 +42,20 @@ void update_Mull_orb_pop(MATRIX* P, MATRIX* S, vector<double>& Mull_orb_pop_gros
   \param[in,out] Mull_orb_pop_net The vector which will collect orbital-resolved Mulliken net populations
 */
 
+  int Norb = P->n_cols;
 
+  MATRIX* PS; PS = new MATRIX(Norb,Norb);  // charge density matrix
+
+  PS->dot_product(*P, *S);
+
+  for(int a=0;a<Norb;a++){
+    Mull_orb_pop_gross[a] = PS->col(a).sum();
+    Mull_orb_pop_net[a]  = PS->col(a).get(a);
+  }
+
+  delete PS;
+
+/*
   int a,b;
   double tmp_a, tmp_ab;
 
@@ -66,9 +81,25 @@ void update_Mull_orb_pop(MATRIX* P, MATRIX* S, vector<double>& Mull_orb_pop_gros
     Mull_orb_pop_gross[a] = tmp_a;  
 
   }// a
-
+*/
 
 }// void update_Mull_orb_pop(MATRIX* P, MATRIX* S, vector<double>& Mull_orb_pop_gross,vector<double>& Mull_orb_pop_net)
+
+
+boost::python::list update_Mull_orb_pop(MATRIX P, MATRIX S){
+
+  vector<double> Mull_orb_pop_gross(P.n_cols, 0.0);
+  vector<double> Mull_orb_pop_net(P.n_cols, 0.0);
+
+  update_Mull_orb_pop(&P, &S, Mull_orb_pop_gross, Mull_orb_pop_net);
+
+  boost::python::list res; 
+  res.append(Mull_orb_pop_gross);
+  res.append(Mull_orb_pop_net);
+
+  return res;  
+
+}
 
 
 void update_Mull_charges(vector<int>& fragment, vector<int>& basis_fo, vector<vector<int> >& at_orbitals,vector<double>& Zeff,
@@ -86,8 +117,8 @@ void update_Mull_charges(vector<int>& fragment, vector<int>& basis_fo, vector<ve
                         basis functions. For instance at_orbitals[n][i] is the global index of the i-th basis fucntion of n-th
                         atoms.
   \param[in] Zeff Effective charges of all nuclei
-  \param[out] Mull_orb_pop_gross Mulliken gross populations on all orbitals
-  \param[out] Mull_orb_pop_net Mulliken net populations on all orbitals
+  \param[in] Mull_orb_pop_gross Mulliken gross populations on all orbitals
+  \param[in] Mull_orb_pop_net Mulliken net populations on all orbitals
   \param[out] Mull_charges_gross Mulliken gross charges on all atoms 
   \param[out] Mull_charges_net Mulliken net charges on all atoms 
 
@@ -130,8 +161,8 @@ void update_Mull_charges(vector<int>& ao_to_atom_map, vector<double>& Zeff,
   \param[in] ao_to_atom_map Mapping from the grobal indices of orbitals to the global indices nuclei:
                          ao_to_atom_map[i] - is the index of the atom on which i-th AO is localized.
   \param[in] Zeff Effective charges of all nuclei
-  \param[out] Mull_orb_pop_gross Mulliken gross populations on all orbitals
-  \param[out] Mull_orb_pop_net Mulliken net populations on all orbitals
+  \param[in] Mull_orb_pop_gross Mulliken gross populations on all orbitals
+  \param[in] Mull_orb_pop_net Mulliken net populations on all orbitals
   \param[out] Mull_charges_gross Mulliken gross charges on all atoms 
   \param[out] Mull_charges_net Mulliken net charges on all atoms 
 
@@ -141,6 +172,16 @@ void update_Mull_charges(vector<int>& ao_to_atom_map, vector<double>& Zeff,
 
   int i, a;
   int Nat = Zeff.size();  // number of atoms
+
+  if(Mull_charges_gross.size() != Nat ){
+    cout<<"Error in update_Mull_charges: The size of Mull_charges_gross is inconsistent with the size of Zeff\n";
+    exit(0);
+  }
+  if(Mull_charges_net.size() != Nat ){
+    cout<<"Error in update_Mull_charges: The size of Mull_charges_gross is inconsistent with the size of Zeff\n";
+    exit(0);
+  }
+
 
   for(a=0;a<Nat;a++){  // all atoms 
 
@@ -163,6 +204,25 @@ void update_Mull_charges(vector<int>& ao_to_atom_map, vector<double>& Zeff,
 }// void update_Mull_charges(vector<double>& Mull_orb_pop_gross, vector<double>& Mull_orb_pop_net, ...
 
 
+boost::python::list update_Mull_charges
+(vector<int>& ao_to_atom_map, vector<double>& Zeff,
+ vector<double>& Mull_orb_pop_gross, vector<double>& Mull_orb_pop_net
+){
+
+  int Nat = Zeff.size();
+  vector<double> Mull_charges_gross(Nat, 0.0);
+  vector<double> Mull_charges_net(Nat, 0.0);
+
+  update_Mull_charges(ao_to_atom_map, Zeff, Mull_orb_pop_gross, Mull_orb_pop_net, Mull_charges_gross, Mull_charges_net);
+
+  boost::python::list res; 
+  res.append(Mull_charges_gross);
+  res.append(Mull_charges_net);
+
+  return res;  
+
+
+}
 
 
 }// namespace libcalculators

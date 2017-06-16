@@ -38,6 +38,12 @@ void update_Mull_charges(vector<int>& ao_to_atom_map, vector<double>& Zeff,
                          vector<double>& Mull_orb_pop_gross, vector<double>& Mull_orb_pop_net,
                          vector<double>& Mull_charges_gross, vector<double>& Mull_charges_net);
 
+boost::python::list update_Mull_orb_pop(MATRIX P, MATRIX S);
+
+boost::python::list update_Mull_charges(
+ vector<int>& ao_to_atom_map, vector<double>& Zeff,
+ vector<double>& Mull_orb_pop_gross, vector<double>& Mull_orb_pop_net
+);
 
 
 }// namespace libcalculators

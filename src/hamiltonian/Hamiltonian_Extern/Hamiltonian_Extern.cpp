@@ -432,7 +432,7 @@ void Hamiltonian_Extern::compute_adiabatic(){
       MATRIX* C; C = new MATRIX(nelec, nelec);  *C = 0.0;
 
       // Transformation to adiabatic basis
-      solve_eigen(nelec, ham_dia, S, ham_adi, C);  // H_dia * C = S * C * H_adi
+      solve_eigen(ham_dia, S, ham_adi, C, 0);  // H_dia * C = S * C * H_adi
 
       // Now compute the derivative couplings (off-diagonal, multiplied by energy difference) and adiabatic gradients (diagonal)
       for(int n=0;n<nnucl;n++){

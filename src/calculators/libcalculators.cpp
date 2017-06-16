@@ -88,6 +88,14 @@ void export_calculators_objects(){
   double (*expt_energy_nucl_v2)(vector<VECTOR>& R, vector<double>& Zeff, vector<VECTOR>& G) = &energy_nucl;
 
 
+  //----------------- Mulliken.cpp ---------------------------------
+  boost::python::list (*expt_update_Mull_orb_pop_v1)(MATRIX P, MATRIX S) = &update_Mull_orb_pop;
+
+  boost::python::list (*expt_update_Mull_charges_v1)(
+    vector<int>& ao_to_atom_map, vector<double>& Zeff,
+    vector<double>& Mull_orb_pop_gross, vector<double>& Mull_orb_pop_net
+  ) = &update_Mull_charges;
+
 
  
   def("fermi_population", expt_fermi_population_v1);
@@ -109,6 +117,9 @@ void export_calculators_objects(){
 
   def("energy_nucl",expt_energy_nucl_v1);
   def("energy_nucl",expt_energy_nucl_v2);
+
+  def("update_Mull_orb_pop", expt_update_Mull_orb_pop_v1);
+  def("update_Mull_charges", expt_update_Mull_charges_v1);
 
 
 
