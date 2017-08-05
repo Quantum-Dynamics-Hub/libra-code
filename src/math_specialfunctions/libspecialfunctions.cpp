@@ -70,7 +70,8 @@ void export_SpecialFunctions_objects(){
   def("exp1_", expt_exp1__v1);
   def("exp1_", expt_exp1__v2);
 
-
+  boost::python::list (*expt_merge_sort_v1)(boost::python::list) = &merge_sort;
+  def("merge_sort", expt_merge_sort_v1); 
 
 }
 

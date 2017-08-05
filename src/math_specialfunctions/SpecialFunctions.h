@@ -86,7 +86,7 @@ MATRIX3x3 exp1_(MATRIX3x3&,double);
 
 
 int merge_sort(vector< pair<int,double> >&, vector< pair<int,double> >&);
-
+boost::python::list merge_sort(boost::python::list inp);
 
 }// namespace libspecialfunctions
 }// namespace liblibra

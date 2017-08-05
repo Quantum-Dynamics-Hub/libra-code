@@ -1299,6 +1299,38 @@ int merge_sort(vector< pair<int,double> >& in, vector< pair<int,double> >& out){
 }// int merge_sort(vector< pair<int,double> >& in, vector< pair<int,double> >& out)
 
 
+boost::python::list merge_sort(boost::python::list inp){
+  int i;
+  int sz = len(inp);
+  vector< pair<int,double> > inp1, out;
+
+  for(i=0;i<sz;i++){
+     int indx = boost::python::extract<int>(inp[i][0]);
+     double val = boost::python::extract<double>(inp[i][1]);
+
+     inp1.push_back(pair<int, double>(indx, val));
+  }
+
+
+  merge_sort(inp1, out);
+
+
+  boost::python::list res;
+
+  for(i=0;i<sz;i++){
+    boost::python::list ri;
+    ri.append(out[i].first);
+    ri.append(out[i].second);
+  
+    res.append(ri);
+  }
+ 
+  return res;
+
+
+}
+
+
 
 }// namespace libspecialfunctions
 }// namespace liblibra

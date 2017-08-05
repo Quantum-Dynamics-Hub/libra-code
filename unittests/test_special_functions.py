@@ -12,6 +12,8 @@
 import os
 import sys
 import math
+import unittest
+
 
 cwd = os.getcwd()
 print "Current working directory", cwd
@@ -50,3 +52,33 @@ for i in range(0,20):
     su = ef + efc
     print "ERF(%8.5f) = %8.5e  ERFC(%8.5f) = %8.5e  sum = %8.5e" % (x, ef, x, efc, su)
 
+#print
+
+
+
+
+
+class TestSpecialFunctions(unittest.TestCase):
+
+    def test_1(self):
+        """Test merge_sort"""
+
+        print "Testing the merge_sort function"
+
+        inp = [[0, 0.0], [1, 4.0], [2, -0.2], [3, 2.0], [4, 1.0] ]
+        out = merge_sort(inp)
+        print out
+
+
+        # Should be: 
+        out_ref = [[2,-0.2], [0, 0.0], [4, 1.0], [3,2.0], [1, 4.0] ]
+        
+        sz = len(inp)
+        for i in xrange(sz):
+            self.assertEqual(out[i][0], out_ref[i][0])
+            self.assertAlmostEqual(out[i][1], out_ref[i][1])
+
+
+
+if __name__=='__main__':
+    unittest.main()
