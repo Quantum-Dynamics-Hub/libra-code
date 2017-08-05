@@ -368,7 +368,7 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse):
                 # Unsuccessful hop - collapse wfc back to the original state^M                                                                                         
                 for st in xrange(C.nstates):
                     C.q[st], C.p[st] = 0.0, 0.0
-                C.q[old_st], C.q[old_st] = 1.0, 0.0
+                C.q[old_st], C.p[old_st] = 1.0, 0.0
         else:
             res = new_st
         
