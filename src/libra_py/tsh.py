@@ -387,7 +387,7 @@ def update_sh_pop( states , nstates):
     #
     # Returns the SH-based population of all states
 
-    pops = [0.0] * max_state_indxe
+    pops = [0.0] * nstates
     ntraj = len(states)
 
     incr = 1.0/float(ntraj)
