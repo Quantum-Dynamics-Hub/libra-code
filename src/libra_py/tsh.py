@@ -377,4 +377,24 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse):
         return res, C
 
 
+def update_sh_pop( states , nstates):
+
+    ##
+    # states - is a vector of state index of each trajectory
+    #  so len(states) - the number of trajectories 
+    #  and states[j] - the state of the trajectory j
+    # nstates - the number of the states possible
+    #
+    # Returns the SH-based population of all states
+
+    pops = [0.0] * max_state_indxe
+    ntraj = len(states)
+
+    incr = 1.0/float(ntraj)
+
+    for j in xrange(ntraj): # for all trajectories
+        pops[ states[j] ] += incr
+
+    return pops
+
 
