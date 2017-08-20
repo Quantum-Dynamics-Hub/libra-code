@@ -219,14 +219,17 @@ complex<double> I_1D(double kx, double kxp, double gx, double gxp){
     # kxp, gxp - refer to k-point 2 and its corresponding grid points
 */
 
-    double zero = 1e-8;
+    double zero = 1e-12;
     complex<double> res(0.0, 0.0);
     complex<double> one(0.0, 1.0);
 
     double delt = kx + gx - kxp - gxp;
 
     if(fabs(delt) <= zero){   res = complex<double>(1.0, 0.0); }
-    else{  res = -one * ( ( complex<double>( cos(2.0*M_PI*delt) - 1.0 ), sin(2.0*M_PI*delt)) / (2.0 * M_PI * delt) );  }
+    else{  
+      double argg = 2.0*M_PI*delt;
+      res =  -one *  complex<double>( cos(argg) - 1.0 , sin(argg) ) / argg; 
+    }
 
     return res;
 }
@@ -272,7 +275,47 @@ CMATRIX pw_overlap(VECTOR& k1, VECTOR& k2, CMATRIX& coeff1, CMATRIX& coeff2, vec
 
         for(int g2=0; g2<npw2; g2++){
 
-            complex<double> s = I_3D(k1, k2, grid1[g1], grid2[g2]);
+// Original version - neat, but not very efficient
+//            complex<double> s = I_3D(k1, k2, grid1[g1], grid2[g2]);
+
+// More efficient version:
+            double zero = 1e-12;
+            complex<double> one(0.0, 1.0);
+            complex<double> s(0.0, 0.0);  // final result
+
+            //======= Work on I_1D (x) ==========
+            complex<double> ix(0.0, 0.0);  
+            
+            double delt = k1.x + grid1[g1].x - k2.x - grid2[g2].x;
+            if(fabs(delt) <= zero){   ix = complex<double>(1.0, 0.0); }
+            else{  
+                double argg = 2.0*M_PI*delt;
+                ix =  -one *  complex<double>( cos(argg) - 1.0 , sin(argg) ) / argg; 
+            }
+
+            //======= Work on I_1D (y) ==========
+            complex<double> iy(0.0, 0.0);  
+            
+            delt = k1.y + grid1[g1].y - k2.y - grid2[g2].y;
+            if(fabs(delt) <= zero){   iy = complex<double>(1.0, 0.0); }
+            else{  
+                double argg = 2.0*M_PI*delt;
+                iy =  -one *  complex<double>( cos(argg) - 1.0 , sin(argg) ) / argg; 
+            }
+
+            //======= Work on I_1D (z) ==========
+            complex<double> iz(0.0, 0.0);  
+            
+            delt = k1.z + grid1[g1].z - k2.z - grid2[g2].z;
+            if(fabs(delt) <= zero){   iz = complex<double>(1.0, 0.0); }
+            else{  
+                double argg = 2.0*M_PI*delt;
+                iz =  -one *  complex<double>( cos(argg) - 1.0 , sin(argg) ) / argg; 
+            }
+
+
+            s = ix * iy * iz;
+
 
             for(int i1=0; i1<nbands1; i1++){
                 for(int i2=0; i2<nbands2; i2++){
