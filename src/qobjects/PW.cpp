@@ -227,7 +227,7 @@ complex<double> I_1D(double kx, double kxp, double gx, double gxp){
 
     if(fabs(delt) <= zero){   res = complex<double>(1.0, 0.0); }
     else{  
-      double argg = 2.0*M_PI*delt;
+      double argg = -2.0*M_PI*delt;
       res =  -one *  complex<double>( cos(argg) - 1.0 , sin(argg) ) / argg; 
     }
 
@@ -289,7 +289,7 @@ CMATRIX pw_overlap(VECTOR& k1, VECTOR& k2, CMATRIX& coeff1, CMATRIX& coeff2, vec
             double delt = k1.x + grid1[g1].x - k2.x - grid2[g2].x;
             if(fabs(delt) <= zero){   ix = complex<double>(1.0, 0.0); }
             else{  
-                double argg = 2.0*M_PI*delt;
+                double argg = -2.0*M_PI*delt;
                 ix =  -one *  complex<double>( cos(argg) - 1.0 , sin(argg) ) / argg; 
             }
 
@@ -299,7 +299,7 @@ CMATRIX pw_overlap(VECTOR& k1, VECTOR& k2, CMATRIX& coeff1, CMATRIX& coeff2, vec
             delt = k1.y + grid1[g1].y - k2.y - grid2[g2].y;
             if(fabs(delt) <= zero){   iy = complex<double>(1.0, 0.0); }
             else{  
-                double argg = 2.0*M_PI*delt;
+                double argg = -2.0*M_PI*delt;
                 iy =  -one *  complex<double>( cos(argg) - 1.0 , sin(argg) ) / argg; 
             }
 
@@ -309,7 +309,7 @@ CMATRIX pw_overlap(VECTOR& k1, VECTOR& k2, CMATRIX& coeff1, CMATRIX& coeff2, vec
             delt = k1.z + grid1[g1].z - k2.z - grid2[g2].z;
             if(fabs(delt) <= zero){   iz = complex<double>(1.0, 0.0); }
             else{  
-                double argg = 2.0*M_PI*delt;
+                double argg = -2.0*M_PI*delt;
                 iz =  -one *  complex<double>( cos(argg) - 1.0 , sin(argg) ) / argg; 
             }
 
