@@ -1,0 +1,37 @@
+# This will run on Travis' 'new' container-based infrastructure
+#sudo: false
+
+# Blacklist
+#branches:
+#  only:
+#    - master
+
+# Environment variables
+env:
+  global:
+    - GH_REPO_REF: github.com/Quantum-Dynamics-Hub/libra-code.git
+
+# Install dependencies
+addons:
+  apt:
+    packages:
+      - doxygen
+      - doxygen-doc
+      - doxygen-latex
+      - doxygen-gui
+      - graphviz
+
+# Build your code e.g. by calling make
+script:
+  - cd docs
+  - doxygen Doxyfile
+
+
+# Deploy using travis builtin GitHub Pages support
+deploy:
+  provider: pages
+  skip_cleanup: true
+  local_dir: $TRAVIS_BUILD_DIR/docs/html
+  github_token: $GITHUB_TOKEN # Set in travis-ci.org dashboard
+  on:
+    branch: master
