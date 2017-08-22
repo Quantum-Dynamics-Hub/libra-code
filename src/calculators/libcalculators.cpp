@@ -104,6 +104,15 @@ void export_calculators_objects(){
   def("fermi_energy", expt_fermi_energy_v1);
   def("fermi_energy", expt_fermi_energy_v2);
 
+  double (*expt_p_up_v1)(double e, double e_up, double de) = &p_up;
+  double (*expt_p_dn_v1)(double e, double e_dn, double de) = &p_dn;
+  double (*expt_p_ef_v1)(double e, double ef, double de) = &p_ef;
+
+  def("fermi_p_up", expt_p_up_v1);
+  def("fermi_p_dp", expt_p_dp_v1);
+  def("fermi_p_ef", expt_p_ef_v1);
+
+
   def("order_bands", expt_order_bands_v1);
   def("populate_bands", expt_populate_bands_v1);
 
