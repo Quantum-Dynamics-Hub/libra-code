@@ -24,7 +24,7 @@ addons:
 # Build your code e.g. by calling make
 script:
   - cd docs
-  - doxygen Doxyfile
+  - travis_wait 30 doxygen Doxyfile
 
 
 # Deploy using travis builtin GitHub Pages support
