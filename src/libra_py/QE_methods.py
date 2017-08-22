@@ -47,7 +47,7 @@ def read_qe_index(filename, orb_list, verbose=0):
     info["nspin"] = int(float(ctx.get("Eigenvalues/<xmlattr>/nspin","-1.0")))  # 1 - non-polarized, 2 - polarized, 4 - non-collinear
     info["nk"] = int(float(ctx.get("Eigenvalues/<xmlattr>/nk","-1.0")))  # the number of k-points
     info["nbnd"] = int(float(ctx.get("Eigenvalues/<xmlattr>/nbnd","-1.0")))  # the number of orbitals in each k-point
-    info["efermi"] = float(ctx.get("Eigenvalues/<xmlattr>/efermi","-1.0"))  # Fermi energy
+    info["efermi"] = Ry2Ha * float(ctx.get("Eigenvalues/<xmlattr>/efermi","-1.0"))  # Fermi energy
 
     # Usially in atomic units!
     info["alat"] = float(ctx.get("Cell/Data/<xmlattr>/alat","-1.0"))    # lattice constant (a)
