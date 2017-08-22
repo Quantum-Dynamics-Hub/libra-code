@@ -109,7 +109,7 @@ void export_calculators_objects(){
   double (*expt_p_ef_v1)(double e, double ef, double de) = &p_ef;
 
   def("fermi_p_up", expt_p_up_v1);
-  def("fermi_p_dp", expt_p_dp_v1);
+  def("fermi_p_dn", expt_p_dn_v1);
   def("fermi_p_ef", expt_p_ef_v1);
 
 
