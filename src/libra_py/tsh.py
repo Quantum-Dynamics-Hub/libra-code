@@ -377,6 +377,65 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse):
         return res, C
 
 
+def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
+
+    ##
+    # This function implements the simplified decay of mixing algorithm for decoherence correction
+    # Reference: Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114
+    #
+    # \param[in]       Coeff [ CMATRIX or Electronic ] An object containig electronic DOFs. 
+    # \param[in]          dt [ float ] The integration timestep. Units = a.u. of time
+    # \param[in]      act_st [ integer ] The active state index
+    # \param[in]       En    [ list of floats ] Energies of the states. Units = Ha
+    # \param[in]        Ekin [ float ] The classical kinetic energy of nuclei. Units = Ha
+    # \param[in]     C_param [ float ] The method parameter, typically set to 1.0 Ha
+    # \param[in]   eps_param [ float ] The method parameter, typically set to 0.1 Ha
+
+    # The function returns:
+    # C [CMATRIX or Electronic] - the updated state of the electronic DOF, in the same data type as the input
+
+    kb = 3.166811429e-6  # Hartree/K
+   
+
+    # In case the electronic DOF are given in the form of CMATRIX
+    if type(Coeff).__name__ == "CMATRIX":
+
+        # The results will be stored here
+        C = CMATRIX(Coeff)
+
+
+        # First - update all the coefficients for the non-active states        
+        N = Coeff.num_of_elts 
+        for i in xrange(N):
+            if i != act_st:    
+                itau = ( En[i] - En[act_st] ) / ( C_param + (eps_param/Ekin) )
+                sclf = math.exp(-dt*itau)
+                C.scale(i, 0, sclf)
+
+        # Population of the active state
+        p_aa_old = (C.get(act_st,act_st).conjugate * C.get(act_st,act_st)).real 
+
+        new_norm = (C.H() * C).get(0,0).real - p_aa_old  # total population of all inactive states
+                                                         # after rescaling
+        p_aa_new = 1.0 - new_norm
+
+        sclf = 1.0
+        if p_aa_old > 0.0:
+            sclf = math.sqrt( p_aa_new / p_aa_old )  # scaling factor for the active state
+        
+
+        # Rescale the active state
+        C.scale(act_st, 0, sclf)
+        
+        return C
+
+    else:
+        print "SDM is not yet implemented for the Electronic objects"
+        sys.exit(0)
+        
+
+
+
 def update_sh_pop( states , nstates):
 
     ##
