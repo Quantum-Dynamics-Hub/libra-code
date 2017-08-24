@@ -59,7 +59,8 @@ MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double 
 
         if(a_ii<1e-8){ g_ij = 0.0; }  // avoid division by zero
         else{
-          g_ij = -2.0*dt*imHaij/a_ii;  // This is a general case
+//          g_ij = -2.0*dt*imHaij/a_ii;  // This is a general case - wrong sign (opposite of the one in JCC)
+            g_ij = 2.0*dt*imHaij/a_ii;  // This is a general case -
           if(g_ij<0.0){  g_ij = 0.0; }
 
         }// else
@@ -140,7 +141,8 @@ void compute_hopping_probabilities_fssh(Nuclear* mol, Electronic* el, Hamiltonia
         if(a_ii<1e-8){ g_ij = 0.0; }  // avoid division by zero
         else{
 
-          g_ij = -2.0*dt*imHaij/a_ii;  // This is a general case
+//          g_ij = -2.0*dt*imHaij/a_ii;  // This is a general case - wrong sign!
+          g_ij = 2.0*dt*imHaij/a_ii;  // This is a general case
 
 
           if(use_boltz_factor){
