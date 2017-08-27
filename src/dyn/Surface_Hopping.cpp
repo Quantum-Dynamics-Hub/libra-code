@@ -133,9 +133,11 @@ void compute_hopping_probabilities_fssh(Nuclear* mol, Electronic* el, Hamiltonia
         // Note: the sign here is not very obvious! Keep in mind:
         // Re(i*z) = -Im(z)  but  Im(i*z) = Re(z)
         // My formula is: P(i->j) = (2*dt/(hbar*|c_i|^2)) * ( -Im(H_ij * c_i^* * c_j) )
-        double cij_re = el->q[i]*el->q[j] + el->p[i]*el->p[j];
-        double cij_im = el->q[i]*el->p[j] - el->p[i]*el->q[j];
-        double imHaij = cij_re * ham->Hvib(i,j).imag() + cij_im * ham->Hvib(i,j).real(); // Im(H_ij * c_i^* * c_j)
+
+//        double cij_re = el->q[i]*el->q[j] + el->p[i]*el->p[j];
+//        double cij_im = el->q[i]*el->p[j] - el->p[i]*el->q[j];
+//        double imHaij = cij_re * ham->Hvib(i,j).imag() + cij_im * ham->Hvib(i,j).real(); // Im(H_ij * c_i^* * c_j)
+        double imHaij = (ham->Hvib(i,j) * el->rho(i,j) ).imag();
 
 
         if(a_ii<1e-8){ g_ij = 0.0; }  // avoid division by zero

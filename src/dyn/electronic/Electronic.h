@@ -87,10 +87,18 @@ class Electronic{
 
   std::complex<double> c(int i) const;          ///< return amplitude in the complex format: c_i = q_i + i*p_i
   std::complex<double> rho(int i, int j) const; ///< return the density matrix element: rho_ij = c^*_i * c_j
+  CMATRIX C() const;   ///< return the amplitutes in a vector format
+  CMATRIX RHO() const; ///< Return the density matrix in a matrix format
+
 
 
   //------ Methods ------------
   // In Electronic_Dynamics1.cpp
+  void project_out(int i);
+  void project_out(int i, int renorm_flag);
+  void collapse(int i);
+  void collapse(int i, int phase_flag);
+
   void propagate_electronic(double dt,Hamiltonian* ham);
   void propagate_electronic(double dt,Hamiltonian& ham);
   void propagate_electronic(double dt,Hamiltonian& ham, CMATRIX& S);

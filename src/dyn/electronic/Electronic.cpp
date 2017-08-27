@@ -224,6 +224,41 @@ std::complex<double> Electronic::rho(int i, int j) const{
 
 }
 
+CMATRIX Electronic::C() const{
+/**
+  \brief Return the amplitudes of all quantum states in the vector format:
+        ( c_0 )
+   C =  ( ... )
+        ( c_N )
+   with  c_i = q_i + i*p_i
+
+*/
+  CMATRIX res(nstates,1);
+  for(int i=0; i<nstates; i++){  res.set(i, q[i], p[i]);  }
+  return res;
+}
+
+
+CMATRIX Electronic::RHO() const{
+/**
+  \brief Return the density matrix computed for all quantum states:
+
+   P = C * C^+
+
+  The density matrix elements are: P_ij = rho_ij = c^*_i * c_j
+
+*/
+  CMATRIX res(nstates,nstates);
+  for(int i=0; i<nstates; i++){
+    for(int j=0; j<nstates; j++){
+
+      res.set(i, j, (q[i]*q[j] + p[i]*p[j]),  (q[i]*p[j]-p[i]*q[j]) );  
+    }
+  }
+  return res;
+}
+
+
 
 
 }//namespace libelectronic
