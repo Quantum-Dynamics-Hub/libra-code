@@ -22,6 +22,7 @@ __all__ = ["init_system",
            "parse_gamess",
            "fit",
            "acf",
-           "unavoided"
+           "unavoided",
+           "datautils"
           ]
 
