@@ -429,9 +429,35 @@ def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
         
         return C
 
-    else:
-        print "SDM is not yet implemented for the Electronic objects"
-        sys.exit(0)
+    # In case the electronic DOF are given in the form of Electronic object
+    elif type(Coeff).__name__ == "Electronic":
+        
+        C = Electronic(Coeff)
+
+        # First - update all the coefficients for the non-active states        
+        N = C.nstates 
+        new_norm = 0.0
+        for i in xrange(N):
+            if i != act_st:    
+                itau = ( En[i] - En[act_st] ) / ( C_param + (eps_param/Ekin) )
+                sclf = math.exp(-dt*itau)
+                C.c(i) = C.c(i) * sclf
+
+                new_norm += C.rho(i, i).real 
+
+        # new_norm now contains the total population of all inactive states after rescaling
+        # How much of population is left for the new active state
+        p_aa_new = 1.0 - new_norm
+
+        sclf = 1.0
+        if p_aa_old > 0.0:
+            sclf = math.sqrt( p_aa_new / p_aa_old )  # scaling factor for the active state
+
+        # Rescale the active state
+        C.c(act_st) = C.c(act_st) * sclf
+
+        return C
+
         
 
 
