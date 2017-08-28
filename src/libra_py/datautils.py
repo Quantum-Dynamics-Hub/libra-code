@@ -27,6 +27,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+import acf
 
 
 def find_maxima(s, verbose=0, logfile="run.log"):
@@ -212,7 +213,7 @@ def matrix_freqs(X, a, b, dt, prefix, Nfreqs, verbose = [1,1,1], dw = 1.0, wspan
 
     # Print the FT spectrum
     if verbose[1]:
-        f = open(filename+"_spectrum_"+str(a)+"_"+str(b)+".txt","w")
+        f = open(prefix+"_spectrum_"+str(a)+"_"+str(b)+".txt","w")
         for iw in xrange(jsz):
             f.write("%8.5f  %8.5f  \n" % (W[iw]*au2wavn, J[iw] ) )
         f.close()
@@ -246,7 +247,7 @@ def matrix_freqs(X, a, b, dt, prefix, Nfreqs, verbose = [1,1,1], dw = 1.0, wspan
 
     # Print out this info:
     if verbose[2]:
-        f = open(filename+"_maximal_frequencies_"+str(a)+"_"+str(b)+".txt","w")
+        f = open(prefix+"_maximal_frequencies_"+str(a)+"_"+str(b)+".txt","w")
         f.write("Maximal peaks from the file "+filename+"_spectrum_"+str(a)+"_"+str(b)+".txt\n")
        
         for i in xrange(Nfreqs):
