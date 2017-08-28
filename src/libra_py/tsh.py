@@ -441,7 +441,8 @@ def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
             if i != act_st:    
                 itau = ( En[i] - En[act_st] ) / ( C_param + (eps_param/Ekin) )
                 sclf = math.exp(-dt*itau)
-                C.c(i) = C.c(i) * sclf
+                C.q[i] = C.q[i] * sclf
+                C.p[i] = C.p[i] * sclf
 
                 new_norm += C.rho(i, i).real 
 
@@ -454,7 +455,9 @@ def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
             sclf = math.sqrt( p_aa_new / p_aa_old )  # scaling factor for the active state
 
         # Rescale the active state
-        C.c(act_st) = C.c(act_st) * sclf
+        C.q[act_st] = C.q[act_st] * sclf
+        C.p[act_st] = C.p[act_st] * sclf
+
 
         return C
 
