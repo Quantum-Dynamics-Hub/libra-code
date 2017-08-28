@@ -176,6 +176,10 @@ def matrix_freqs(X, a, b, dt, prefix, Nfreqs, verbose = [1,1,1], dw = 1.0, wspan
     au2fs = 0.02419 # 40 a.u. is 1 fs 
     inv_cm2ev = (1.0/8065.54468111324)
     au2wavn = 27.211 * 8065.54468111324
+    ev2Ha = (1.0/27.211)    # 27.2 ev is 1 Ha 
+    inv_cm2Ha = inv_cm2ev * ev2Ha
+    au2wavn = 27.211 * 8065.54468111324
+
 
     dw = dw * inv_cm2Ha            # convert to Ha (atomic units)
     wspan = wspan * inv_cm2Ha      # convert to Ha (atomic units)
