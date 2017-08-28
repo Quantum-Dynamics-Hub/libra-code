@@ -248,7 +248,7 @@ def matrix_freqs(X, a, b, dt, prefix, Nfreqs, verbose = [1,1,1], dw = 1.0, wspan
     # Print out this info:
     if verbose[2]:
         f = open(prefix+"_maximal_frequencies_"+str(a)+"_"+str(b)+".txt","w")
-        f.write("Maximal peaks from the file "+filename+"_spectrum_"+str(a)+"_"+str(b)+".txt\n")
+        f.write("Maximal peaks from the file "+prefix+"_spectrum_"+str(a)+"_"+str(b)+".txt\n")
        
         for i in xrange(Nfreqs):
             indx = out[szo-i][0]
@@ -260,7 +260,7 @@ def matrix_freqs(X, a, b, dt, prefix, Nfreqs, verbose = [1,1,1], dw = 1.0, wspan
     if logfile != None:
     
         lgfile = open(logfile, "a")
-        print "max frequency for ", filename, " = ", freqs
+        print "max frequency for ", prefix, " = ", freqs
 
         for a in freqs:
             print " Timescale is = ", a[0]/au2wavn, " Ha", " omega = E/hbar ", a[0]/au2wavn, " 2 pi*a.u. of time^-1",\
