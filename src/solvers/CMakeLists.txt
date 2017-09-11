@@ -5,9 +5,10 @@ file(GLOB SOLVERS_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
 file(GLOB SOLVERS_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${SOLVERS_HEADERS}) 
 
 # 
+set(EIGEN_INCLUDE /home/e1667/install/eigen3/)
 #SET( EIGEN_INCLUDE /home/Alexey_2/Soft/eigen-eigen-2249f9c22fe8/ )
+#set (EIGEN_INCLUDE ../math_meigen/ )
 
-set (EIGEN_INCLUDE ../math_meigen/ )
 INCLUDE_DIRECTORIES(${EIGEN_INCLUDE})
 
 #
