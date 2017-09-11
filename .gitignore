@@ -4,3 +4,6 @@ tmp
 *.png
 *.bin
 _build
+*.xyz
+*.out
+*.cube

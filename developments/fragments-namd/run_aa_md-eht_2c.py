@@ -449,12 +449,14 @@ def update_Hvib_A(opt, sub_ham_old, sub_ham_cur, ham_old, ham_cur, active_orb, d
     # at time "t-dt"
     sz = Hel_old.num_of_cols;
     C_old = MATRIX(sz, sz);  E_old = MATRIX(sz, sz) 
-    solve_eigen_gen(sz, Hel_old, Smo_old, E_old, C_old)  # H * C = S * C * E  
+    #solve_eigen_gen(sz, Hel_old, Smo_old, E_old, C_old)  # H * C = S * C * E  
+    symm = 1 # symmetrize Hel_old and Smo_old
+    solve_eigen(Hel_old, Smo_old, E_old, C_old, symm) # H * C = S * C * E
 
     # at time "t"
     C_cur = MATRIX(sz, sz);  E_cur = MATRIX(sz, sz) 
-    solve_eigen_gen(sz, Hel_cur, Smo_cur, E_cur, C_cur)  # H * C = S * C * E  
-
+    #solve_eigen_gen(sz, Hel_cur, Smo_cur, E_cur, C_cur)  # H * C = S * C * E  
+    solve_eigen(Hel_cur, Smo_cur, E_cur, C_cur, symm) # H * C = S * C * E
     
     Smo = Smo_cur # 0.5*(Smo_cur + Smo_old)   # overlap is the identity matrix
     Hel = E_cur #0.5*(E_cur + E_old)   # adiabatic Hamiltonian
