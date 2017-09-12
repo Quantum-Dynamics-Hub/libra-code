@@ -18,11 +18,10 @@ potential users who may found that information useful;
 b) so that the users/developers who have had some experience with the code would be able to share their
 knowledge and skills with others;
 
-Among different platforms I found that the Chemistry StackExchange is perhaps the best option.
-https://chemistry.stackexchange.com/
+Among different platforms I found that the Google Group Forum is perhaps the best option.
+https://groups.google.com/forum/#!forum/quantum-dynamics-hub
 
-So, since Aug. 27, 2017, please post you questions about Libra, Libra-X, Pyxaid, or Pyxaid2 there,
-using the tags (#libra, #libra-x, #pyxaid, #pyxaid2) and perhaps some general tags like (#computational-chemistry).
+So, since Aug. 31, 2017, please post your questions about Libra, Libra-X, Pyxaid, or Pyxaid2 there.
 
 This is only a test practice, I don't know how well it'll go, but lets try it. If you have ideas and suggestions for 
 a better forum platform, please email me. 
