@@ -785,7 +785,7 @@ def init_coeffs(system, ist, bastyp, num_sh_traj, S_half, S_i_half, U_cur, S_mo_
 def main():
 
     opt_ham = 2      # 0 - neglect electronic couplings, 1 - MO-EHT formula, 2 - transformation formula
-    do_collapse = 1  # 0 - no decoherence, 1 - decoherence
+    do_collapse = 0  # 0 - no decoherence, 1 - decoherence
     compute_adi = 1  # 0 - do not compute (no related info will be available), 1 - do compute
                      # this is needed for computing projections (even if the fragmentation is sed)
     sh_method = 0    # 0 - MSSH,  1 - FSSH
