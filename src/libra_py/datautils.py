@@ -30,6 +30,32 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 import acf
 
 
+def show_matrix_splot(X, filename):
+    """
+    This function prints the matrix in a file in the format
+    recognized by the gnuplot's splot function (2D surfaces and maps)
+
+    X  (MATRIX) object containing the data to be output
+    filename (string) the name of the file to where the data will be printed
+    """
+
+    ncol, nrow = X.num_of_cols, X.num_of_rows
+
+    line = ""
+    for i in xrange(nrow):
+        for j in xrange(ncol):
+            val = X.get(i,j)
+            if i==j:
+                val = 0.0
+            line = line + "%4i %4i %8.5f \n" % (i, j, val)
+        line = line + "\n"
+
+    f = open(filename, "w")
+    f.write(line)
+    f.close()
+ 
+
+
 def find_maxima(s, verbose=0, logfile="run.log"):
 # This function finds all the maxima of the data set and sorts them according to the data
 # The maxima are defined as s[i-1] < s[i] > s[i+1]

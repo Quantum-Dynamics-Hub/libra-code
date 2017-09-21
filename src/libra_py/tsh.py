@@ -115,6 +115,29 @@ def compute_sh_statistics(nstates, istate):
         coeff_sh.set(st, coeff_sh.get(st) + f)
  
     return coeff_sh
+
+
+def update_sh_pop( states , nstates):
+    ##
+    # states - is a vector of state index of each trajectory
+    #  so len(states) - the number of trajectories 
+    #  and states[j] - the state of the trajectory j
+    # nstates - the number of the states possible
+    #
+    # Returns the SH-based population of all states
+
+    pops = [0.0] * nstates
+    ntraj = len(states)
+
+    incr = 1.0/float(ntraj)
+
+    for j in xrange(ntraj): # for all trajectories
+        pops[ states[j] ] += incr
+
+    return pops
+
+
+
     
 
 def avarage_populations(el):
@@ -151,6 +174,57 @@ def avarage_populations(el):
                 rho.set(st1, st2, rho.get(st1,st2) + f * el[traj].rho(st1,st2) )
 
     return sh_pops, se_pops, rho
+
+
+def ave_pop(denmat_sh, denmat_se):
+# 
+# \param[in] denmat_sh (list of CMATRIX(nst_in, nst_in)) Vector with the density matrix (diagonal in SH) for each trajectory
+# \param[in] denmat_se (list of CMATRIX(nst_in,nst_in)) Vector with the SE density matrix for each trajectory 
+#
+#  Returns: Ensemble averaged SH and SE density matrices (CMATRIX(nst_out, nst_out) each) 
+#  
+
+    ntraj = len(denmat_sh)
+    nst_out = denmat_sh[0].num_of_cols
+
+    ave_pop_sh = CMATRIX(nst_out, nst_out)
+    ave_pop_se = CMATRIX(nst_out, nst_out)
+    den = 1.0/float(ntraj)
+
+    for i in xrange(ntraj):
+        ave_pop_se = ave_pop_se + den * denmat_se[i]   # SE
+        ave_pop_sh = ave_pop_sh + den * denmat_sh[i]   # SH
+
+
+    return ave_pop_sh, ave_pop_se
+
+
+
+
+def amplitudes2denmat(coeffs):
+# \param[in] coeffs (list of CMATRIX(nstates, 1)) wavefunction amplitudes for all trajectories
+
+    ntraj = len(coeffs)
+    denmat = []
+
+    for tr in xrange(ntraj):
+        denmat.append( coeffs[tr] * coeffs[tr].H() )
+
+    return denmat
+
+
+def denmat2prob(P):
+# \param[in] P (CMATRIX) Density matrix
+#
+    nst = P.num_of_cols
+    prob = [0.0] * nst
+
+    for i in xrange(nst):
+        prob[i] = P.get(i,i).real
+
+    return prob
+
+
 
 
 
@@ -292,6 +366,45 @@ def surface_hopping_cpa2(mol, el, ham, rnd, params):
 
     # Call actual calculations 
     surface_hopping(mol, el, ham, rnd, params)
+
+
+
+def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T):
+    """
+    A simplified version for the CPA-like hopping
+
+    Coeff (CMATRIX(nstates, 1) ) object with the amplitudes of all states
+    Hvib (CMATRIX(nstates, nstates) )  object containing the vibronic Hamiltonian 
+    istate (int) the index of the initial state
+    sh_method (int) selector of the TSH method: 0 - MSSH, 1 - FSSH
+    do_collapse (int) flag to turn on the decoherence via ID-A: 0 - no decoherence, 1 - decoherence via ID-A
+    ksi, ksi2 (float in [0, 1]) random numbers cotrolling the execution of SH
+    dt (float) time interval for the surface hopping (in a.u.)
+    T (float) temperature in K
+
+    Returns: the index (int) of a new state 
+
+    """
+    g = 0.0
+    if sh_method==0:
+        g = compute_hopping_probabilities_mssh(Coeff)
+    elif sh_method==1:
+        g = compute_hopping_probabilities_fssh(Coeff, Hvib, dt)
+
+    old_st = istate
+    new_st = hop(istate, g, ksi)
+
+    if new_st != old_st:
+        E_old = Hvib.get(old_st,old_st).real
+        E_new = Hvib.get(new_st,new_st).real
+
+        # ID-A decoherence                
+        istate, Coeff1 = tsh.ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi2, do_collapse)
+
+
+    return istate #, Coeff1
+    
+
 
 
 
@@ -462,27 +575,4 @@ def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
         return C
 
         
-
-
-
-def update_sh_pop( states , nstates):
-
-    ##
-    # states - is a vector of state index of each trajectory
-    #  so len(states) - the number of trajectories 
-    #  and states[j] - the state of the trajectory j
-    # nstates - the number of the states possible
-    #
-    # Returns the SH-based population of all states
-
-    pops = [0.0] * nstates
-    ntraj = len(states)
-
-    incr = 1.0/float(ntraj)
-
-    for j in xrange(ntraj): # for all trajectories
-        pops[ states[j] ] += incr
-
-    return pops
-
 
