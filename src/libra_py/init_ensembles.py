@@ -20,6 +20,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+import LoadMolecule
+import LoadPT
 
 def init_ext_hamiltonians(ntraj, nnucl, nel, verbose=0):
     ##
@@ -84,6 +86,117 @@ def init_ext_hamiltonians(ntraj, nnucl, nel, verbose=0):
     # d1ham_adi - list of the lists containing derivative matrices
     # ham_vib - list of matrices containing vibronic Hamiltonians 
     return ham, ham_adi, d1ham_adi, ham_vib
+
+
+def init_systems(ntraj, U, filename, format, verbose=0):
+    ##
+    # This function creates a list of System objects and loads the content into them
+    # 
+    # \param[in] ntraj The number of trajectories in the ensemble
+    # \param[in] U Is the Universe object 
+    # \param[in] filename The name of the file containing molecular structure
+    # \param[in] A string defining the file format (see LoadMolecule for more details)
+    # \param[in] verbose The parameter controlling the amount of debug printing: 0 (default)
+    # - no printing, 1 - print info
+
+    syst = []
+    for tr in xrange(ntraj):
+        syst.append( System() )
+        LoadMolecule.Load_Molecule(U, syst[tr], filename, format)
+        syst[tr].determine_functional_groups(0)  # do not assign rings
+        syst[tr].init_fragments()
+
+        if tr==0 and verbose==1:
+            print "Number of atoms in the system = ", syst[tr].Number_of_atoms
+            print "Number of bonds in the system = ", syst[tr].Number_of_bonds
+            print "Number of angles in the system = ", syst[tr].Number_of_angles
+            print "Number of dihedrals in the system = ", syst[tr].Number_of_dihedrals
+            print "Number of impropers in the system = ", syst[tr].Number_of_impropers
+
+    return syst
+
+
+def init_systems2(ntraj, filename, format, rnd, T, sigma, data_file="elements.dat", verbose=0):
+    ##
+    # This function creates a list of System objects and loads the content into them, it also randomizes
+    # the original input from the coordinate file (by adding coordinate displacements and setting velocities)
+    # 
+    # \param[in] ntraj The number of trajectories in the ensemble
+    # \param[in] filename The name of the file containing molecular structure
+    # \param[in] format A string defining the file format (see LoadMolecule for more details)
+    # \param[in] rnd   Random number generator object
+    # \param[in] T     Target temperature used to initialize momenta of atoms. units: K
+    # \param[in] sigma The magnitude of a random displacement of each atom from its center, units: Bohr
+    # \param[in] data_file The file containing information about elements.
+    # \param[in] verbose The parameter controlling the amount of debug printing: 0 (default)
+    # - no printing, 1 - print info
+
+
+    # Create Universe and populate it
+    U = Universe();   LoadPT.Load_PT(U, data_file, 0)
+    syst = []
+
+    for tr in xrange(ntraj):
+        syst.append( System() )
+        LoadMolecule.Load_Molecule(U, syst[tr], filename, format)
+
+        for at in xrange(syst[tr].Number_of_atoms):
+            # Random shift
+            shift = VECTOR(sigma*rnd.normal(), sigma*rnd.normal(), sigma*rnd.normal() )
+
+            # Apply it
+            syst[tr].Atoms[at].Atom_RB.shift_position(shift)
+
+
+        # Initialize random velocity at T(K) using normal distribution
+        syst[tr].init_atom_velocities(T,rnd)
+
+
+        syst[tr].determine_functional_groups(0)  # do not assign rings
+        syst[tr].init_fragments()
+
+        if tr==0 and verbose==1:
+            print "Number of atoms in the system = ", syst[tr].Number_of_atoms
+            print "Number of bonds in the system = ", syst[tr].Number_of_bonds
+            print "Number of angles in the system = ", syst[tr].Number_of_angles
+            print "Number of dihedrals in the system = ", syst[tr].Number_of_dihedrals
+            print "Number of impropers in the system = ", syst[tr].Number_of_impropers
+
+    return syst
+
+
+                      
+def init_mm_Hamiltonians(syst, ff, verbose=0):
+    ##
+    # This function creates a list of MM Hamiltonians and bind them to the corresponding systems
+    # 
+    # \param[in] syst The list of System objects 
+    # \param[in] ff The Force Field object
+    # \param[in] verbose The parameter controlling the amount of debug printing: 0 (default)
+    # - no printing, 1 - print info
+
+    ntraj = len(syst)
+    ham = []
+
+    # Creating Hamiltonian and initialize it
+    for tr in xrange(ntraj):
+        ham.append( Hamiltonian_Atomistic(1, 3*syst[tr].Number_of_atoms) )
+        ham[tr].set_Hamiltonian_type("MM")
+
+
+        atlst1 = range(1,syst[tr].Number_of_atoms+1)
+        ham[tr].set_interactions_for_atoms(syst[tr], atlst1, atlst1, ff, 1, 0)  # 0 - verb, 0 - assign_rings
+           
+        # Bind MM-Hamiltonian and the system   
+        ham[tr].set_system(syst[tr]);
+        ham[tr].compute(); 
+
+        if tr==0 and verbose==1:
+            print "Printing the Hamiltonian info for the first trajectory"
+            ham[tr].show_interactions_statistics()
+            print "Energy = ", ham.H(0,0), " a.u."
+
+    return ham
 
 
 
