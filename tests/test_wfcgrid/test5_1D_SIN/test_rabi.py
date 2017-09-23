@@ -57,6 +57,8 @@ ham.set_v([v])
 print "\nTest 5: Update potential"
 wfc.update_potential_1D(ham)
 
+sys.exit(0)
+
 dt = 0.1
 print "\nTest 6: Update propagator"
 wfc.update_propagator_1D(0.5*dt, 1.0)  # this is important because we are using exp(-0.5*dt*H_loc)...
