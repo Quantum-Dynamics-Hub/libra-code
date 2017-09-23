@@ -30,7 +30,7 @@
 #include "Model_sin.h"
 #include "Model_sin_2D.h"
 #include "Model_cubic.h"
-
+#include "Model_double_well.h"
 
 /// liblibra namespace
 namespace liblibra{
