@@ -35,7 +35,7 @@ wfc.print_wfc_1D("res/wfc",0, 1)
 wfc.print_reci_wfc_1D("res/reci_wfc",0, 0)
 wfc.print_reci_wfc_1D("res/reci_wfc",0, 1)
 
-
+sys.exit(0)
 
 # Initialize Hamiltonian: ECWR in adiabatic representation
 x = 0.0
