@@ -54,6 +54,7 @@ Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
     6             --
     7             1D sin        
     8             cubic
+    9             double_well
    200            2D sin        
 
 */
@@ -64,7 +65,7 @@ Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
   ham_indx = ham_indx_;
 
   // 2-level models
-  if(ham_indx==8){  // cubic
+  if(ham_indx==8 || ham_indx==9){  // cubic, double_well
     nelec = 1;
     nnucl = 1;
   }
@@ -146,6 +147,7 @@ void Hamiltonian_Model::set_params(vector<double>& params_){
     6               --               --
     7             1D sin              5
     8             cubic               3
+    9             double_well         9
    200            2D sin              6
 
   Setting parameters of the model Hamiltonian.
@@ -166,6 +168,10 @@ void Hamiltonian_Model::set_params(vector<double>& params_){
   }
   else if(ham_indx==4){  // SEXCH
     num_params = 12;
+  }
+
+  else if(ham_indx==9) { //double_well
+    num_params = 1;
   }
 
   else if(ham_indx==200){  // SEXCH
@@ -220,7 +226,7 @@ void Hamiltonian_Model::compute_diabatic(){
     else if(ham_indx==6){ ;; }// Nothing here
     else if(ham_indx==7){ sin_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);  } // sin potential
     else if(ham_indx==8){ cubic_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);  } // cubic potential
-
+    else if(ham_indx==9){ double_well_Ham(x, ham_dia,d1ham_dia[0],d2ham_dia[0], params);  } // double_well potential
 
     //=============== 2D models ========================
     else if(ham_indx==200){  sin_2D_Ham(x, y, ham_dia, d1ham_dia[0], d1ham_dia[1], d2ham_dia[0], d2ham_dia[3], params);     }    // sin potetnial
