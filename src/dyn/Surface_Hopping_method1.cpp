@@ -135,7 +135,8 @@ void compute_hopping_probabilities_esh(Ensemble& ens, MATRIX* g, double dt, int 
         if(a_ii[i]<1e-8){ g_ij = 0.0; }  // avoid division by zero
         else{
 
-          g_ij += -2.0*dt*imHaij/a_ii[i];  // This is a general case
+//          g_ij += -2.0*dt*imHaij/a_ii[i];  // This is a general case - wrong sign
+          g_ij += 2.0*dt*imHaij/a_ii[i];  // This is a general case
           if(g_ij<0.0){  g_ij = 0.0; }
 
         }// else

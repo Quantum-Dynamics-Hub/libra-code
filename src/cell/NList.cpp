@@ -55,6 +55,13 @@ void max_vector(VECTOR& t1,VECTOR& t2,VECTOR& t3,VECTOR& T){
 
 }
 
+VECTOR max_vector(VECTOR t1,VECTOR t2,VECTOR t3){
+
+  VECTOR T;
+  max_vector(t1,t2,t3, T);
+  return T;
+}
+
 void apply_pbc(MATRIX3x3& H,int sz, VECTOR* in, VECTOR* out,vector<quartet>& T){
 /**
   \brief Apply the periodic boundary conditions to the array of vectors
@@ -90,6 +97,41 @@ void apply_pbc(MATRIX3x3& H,int sz, VECTOR* in, VECTOR* out,vector<quartet>& T){
   }
 
 }
+
+boost::python::list apply_pbc(MATRIX3x3 H, boost::python::list in, boost::python::list t){
+
+  vector<quartet> T;
+  int sz1 = boost::python::len(t);
+  for(int i=0;i<sz1;i++){
+    quartet tx;
+    tx.is_central = boost::python::extract<int>(t[i][0]);
+    tx.j = boost::python::extract<int>(t[i][1]);
+    tx.n1 = boost::python::extract<int>(t[i][2]);
+    tx.n2 = boost::python::extract<int>(t[i][3]);
+    tx.n3 = boost::python::extract<int>(t[i][4]);
+
+    T.push_back(tx);
+  }
+
+  int sz2 = boost::python::len(in);
+  VECTOR* r; r = new VECTOR[sz2];
+  VECTOR* rp; rp = new VECTOR[sz2];
+
+  for(i=0;i<sz2;i++){  r[i] = boost::python::extract<VECTOR>(in[i]);  }
+
+  apply_pbc(H, sz2, r, rp, T);
+
+  boost::python::list res;
+  for(i=0;i<sz2;i++){  res.append(rp[i]); }
+
+
+  delete [] r;  
+  delete [] rp;
+
+  return res;
+
+}
+
 
 void serial_to_vector(int c,int Nx,int Ny,int Nz,int& nx,int& ny,int& nz){
 /**
@@ -133,6 +175,19 @@ void serial_to_vector(int c,int Nx,int Ny,int Nz,int& nx,int& ny,int& nz){
 
 }
 
+boost::python::list serial_to_vector(int c,int Nx,int Ny,int Nz){
+
+  int nx,ny,nz;
+  serial_to_vector(c,Nx,Ny,Nz,nx,ny,nz);
+
+  boost::python::list res;
+  res.append(nx);
+  res.append(ny);
+  res.append(nz);
+
+  return res;
+}
+
 void serial_to_vector_symm(int c,int Nx,int Ny,int Nz,int& nx,int& ny,int& nz){
 /**
   \brief Mapping of a single integer index (serial) into 3 integers (vector)
@@ -171,6 +226,20 @@ void serial_to_vector_symm(int c,int Nx,int Ny,int Nz,int& nx,int& ny,int& nz){
   ny -= Ny;
   nz -= Nz;
 
+}
+
+
+boost::python::list serial_to_vector_symm(int c,int Nx,int Ny,int Nz){
+
+  int nx,ny,nz;
+  serial_to_vector_symm(c,Nx,Ny,Nz,nx,ny,nz);
+
+  boost::python::list res;
+  res.append(nx);
+  res.append(ny);
+  res.append(nz);
+
+  return res;
 }
 
 
@@ -244,8 +313,19 @@ void form_neibc(int c,vector<int>& neibc,int Nx,int Ny,int Nz,double cellx,doubl
     }// iy
   }// ix
 
-
 }
+
+boost::python::list form_neibc(int c,int Nx,int Ny,int Nz,double cellx,double celly,double cellz,double Roff){  
+
+  vector<int> neibc;
+  form_neibc(c, neibc, Nx, Ny, Nz, cellx, celly, cellz, Roff);
+  boost::python::list res;
+
+  for(int i=0;i<neibc.size();i++){ res.append(neibc[i]);  }
+
+  return res;
+}
+
 
 void find_min_shell(VECTOR& t1,VECTOR& t2,VECTOR& t3,
                     VECTOR& g1,VECTOR& g2,VECTOR& g3,double Roff,

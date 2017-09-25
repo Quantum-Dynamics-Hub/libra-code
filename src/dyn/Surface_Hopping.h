@@ -54,6 +54,7 @@ void compute_hopping_probabilities_gfsh(Nuclear* mol, Electronic* el, Hamiltonia
 void compute_hopping_probabilities_gfsh(Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
                                         double dt, int use_boltz_factor,double T);
 void compute_hopping_probabilities_gfsh(Ensemble& ens, int i, MATRIX& g, double dt, int use_boltz_factor,double T);
+MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX& Hvib, double dt);
 
 
 void compute_hopping_probabilities_mssh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,
@@ -79,6 +80,14 @@ int rescale_velocities_diabatic(Nuclear& mol, Hamiltonian& ham, int old_st);
 
 
 int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi);
+
+
+
+MATRIX coherence_intervals(const CMATRIX& Coeff, const MATRIX& rates);
+int dish(Electronic& el, MATRIX& t_m, const MATRIX& tau_m, const CMATRIX& Hvib,
+          int use_boltz_flag, double Ekin, double T, double ksi1, double ksi2);
+int dish(Electronic& el, Nuclear& mol, Hamiltonian& ham, 
+          MATRIX& t_m, const MATRIX& tau_m, int use_boltz_flag, double T, double ksi1, double ksi2);
 
 
 }// namespace libdyn

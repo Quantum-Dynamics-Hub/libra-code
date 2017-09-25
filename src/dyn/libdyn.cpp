@@ -88,9 +88,13 @@ void export_Dyn_objects(){
   void (*expt_compute_hopping_probabilities_gfsh_v1)
   (Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
    double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_gfsh;
+
   void (*expt_compute_hopping_probabilities_gfsh_v2)
   (Ensemble& ens, int i, MATRIX& g,
    double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_gfsh;
+
+  MATRIX (*expt_compute_hopping_probabilities_gfsh_v3)
+  (CMATRIX& Coeff, CMATRIX& Hvib, double dt) = &compute_hopping_probabilities_gfsh;
 
 
   void (*expt_compute_hopping_probabilities_mssh_v1)
@@ -110,6 +114,8 @@ void export_Dyn_objects(){
   def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v3);
   def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v1);
   def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v2);
+  def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v3);
+
   def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v1);
   def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v2);
   def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v3);
@@ -146,6 +152,20 @@ void export_Dyn_objects(){
   int (*expt_ida_v1)(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi) = &ida;
 
   def("ida", expt_ida_v1);
+
+
+  MATRIX (*expt_coherence_intervals_v1)(const CMATRIX& Coeff, const MATRIX& rates) = &coherence_intervals;
+
+  int (*expt_dish_v1)(Electronic& el, MATRIX& t_m, const MATRIX& tau_m, const CMATRIX& Hvib,
+          int use_boltz_flag, double Ekin, double T, double ksi1, double ksi2) = &dish;
+
+  int (*expt_dish_v2)(Electronic& el, Nuclear& mol, Hamiltonian& ham, 
+          MATRIX& t_m, const MATRIX& tau_m, int use_boltz_flag, double T, double ksi1, double ksi2) = &dish;
+
+  def("coherence_intervals", expt_coherence_intervals_v1);
+  def("dish", expt_dish_v1);
+  def("dish", expt_dish_v2);
+
 
 
 }// export_Dyn_objects()

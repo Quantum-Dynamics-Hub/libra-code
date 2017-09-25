@@ -41,6 +41,13 @@ void export_Electronic_objects(){
   void (Electronic::*expt_propagate_electronic_v_cl1)(double,Hamiltonian&) = &Electronic::propagate_electronic;
   void (Electronic::*expt_propagate_electronic_v_cl2)(double,Hamiltonian&, CMATRIX& ) = &Electronic::propagate_electronic;
 
+  void (Electronic::*expt_project_out_v1)(int, int) = &Electronic::project_out;
+  void (Electronic::*expt_project_out_v2)(int) = &Electronic::project_out;
+
+  void (Electronic::*expt_collapse_v1)(int, int) = &Electronic::collapse;
+  void (Electronic::*expt_collapse_v2)(int) = &Electronic::collapse;
+
+
 
   class_<Electronic>("Electronic",init<>())
       .def(init<int>())
@@ -52,12 +59,19 @@ void export_Electronic_objects(){
 
       .def("c", &Electronic::c, "electronic amplitudes")
       .def("rho", &Electronic::rho, "density matrix")
+      .def("C", &Electronic::C, "electronic amplitudes")
+      .def("RHO", &Electronic::RHO, "density matrix")
+
 
       .def_readwrite("nstates", &Electronic::nstates)
       .def_readwrite("istate", &Electronic::istate)
       .def_readwrite("q", &Electronic::q)
       .def_readwrite("p", &Electronic::p)
 
+      .def("project_out", expt_project_out_v1)
+      .def("project_out", expt_project_out_v2)
+      .def("collapse", expt_collapse_v1)
+      .def("collapse", expt_collapse_v2)
       .def("propagate_electronic", expt_propagate_electronic_v_cl1)
       .def("propagate_electronic", expt_propagate_electronic_v_cl2)
  

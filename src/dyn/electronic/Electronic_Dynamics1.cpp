@@ -35,6 +35,93 @@ namespace libelectronic{
 using liboperators::rotate;
 
 
+void Electronic::project_out(int i, int renorm_flag){
+/**
+  \brief Projects the state i out and (optionally) renormalize the wavefunction
+
+  \param[in] i  The index of the state to be projected out
+  \param[in] renorm_flag  The parameter to control wavefunction renormalization: 1 - yes, 0 - no
+
+  Warning: "istate" variable is not changed
+*/ 
+
+  int j;
+
+  // Project out (annihilate the population of) state i
+  q[i] = 0.0;  p[i] = 0.0;
+
+  // Compute the norm after the state projection
+  double nrm = 0.0;
+  for(j=0;j<nstates;j++){ 
+    nrm += (q[j]*q[j] + p[j]*p[j]); 
+  } nrm = sqrt(nrm);
+
+  // Optionally, re-normalize the rest of the wavefunction 
+  if(renorm_flag==1){
+    for(j=0;j<nstates;j++){  q[j] /= nrm; p[j] /= nrm; }
+  }
+   
+}
+
+void Electronic::project_out(int i){
+/**
+  \brief Projects the state i out and renormalize the wavefunction
+
+  \param[in] i  The index of the state to be projected out
+
+  Warning: "istate" variable is not changed
+*/ 
+
+  this->project_out(i,1);
+}
+
+
+void Electronic::collapse(int i, int phase_flag){
+/**
+  \brief Collapses the wavefunction onto the state i 
+
+  \param[in] i  The index of the state onto which the wfc is collapsed
+  \param[in] phase_flag Controls how the phase is to be treated:
+   phase_flag = 0 - do not care about phase - destroy it
+   phase_flag = 1 - preserve the phase
+
+  This also affects the "istate" variable - it is changed
+*/ 
+
+  // Change the state identity
+  istate = i;
+
+  // Take care of the amplitudes:
+  for(int j=0;j<nstates;j++){
+    if(j==i){
+      if(phase_flag==0){  q[i] = 1.0; p[i] = 0.0;   }
+      else if(phase_flag==1){
+        double popi = q[i]*q[i] + p[i]*p[i];  // original population of state i
+        double nrm = sqrt(popi);
+
+        if(popi>0.0){ q[i] /= nrm; p[i] /= nrm; }
+        else{ q[i] = 1.0; p[i] = 0.0; }
+       
+      }// phase_flag==1
+    }// j==i
+    else{  q[j] = p[j] = 0.0; }
+  }// for j
+
+}
+
+void Electronic::collapse(int i){
+/**
+  \brief Collapses the wavefunction onto the state i and preserves the phase
+
+  \param[in] i  The index of the state onto which the wfc is collapsed
+
+  This also affects the "istate" variable - it is changed
+*/ 
+  this->collapse(i, 1);
+}
+
+
+
 void Electronic::propagate_electronic(double dt,Hamiltonian* ham){
 /**
   \brief Propagate electronic DOF using sequential rotations in the MMTS variables

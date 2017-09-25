@@ -59,7 +59,8 @@ MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double 
 
         if(a_ii<1e-8){ g_ij = 0.0; }  // avoid division by zero
         else{
-          g_ij = -2.0*dt*imHaij/a_ii;  // This is a general case
+//          g_ij = -2.0*dt*imHaij/a_ii;  // This is a general case - wrong sign (opposite of the one in JCC)
+            g_ij = 2.0*dt*imHaij/a_ii;  // This is a general case -
           if(g_ij<0.0){  g_ij = 0.0; }
 
         }// else
@@ -132,15 +133,18 @@ void compute_hopping_probabilities_fssh(Nuclear* mol, Electronic* el, Hamiltonia
         // Note: the sign here is not very obvious! Keep in mind:
         // Re(i*z) = -Im(z)  but  Im(i*z) = Re(z)
         // My formula is: P(i->j) = (2*dt/(hbar*|c_i|^2)) * ( -Im(H_ij * c_i^* * c_j) )
-        double cij_re = el->q[i]*el->q[j] + el->p[i]*el->p[j];
-        double cij_im = el->q[i]*el->p[j] - el->p[i]*el->q[j];
-        double imHaij = cij_re * ham->Hvib(i,j).imag() + cij_im * ham->Hvib(i,j).real(); // Im(H_ij * c_i^* * c_j)
+
+//        double cij_re = el->q[i]*el->q[j] + el->p[i]*el->p[j];
+//        double cij_im = el->q[i]*el->p[j] - el->p[i]*el->q[j];
+//        double imHaij = cij_re * ham->Hvib(i,j).imag() + cij_im * ham->Hvib(i,j).real(); // Im(H_ij * c_i^* * c_j)
+        double imHaij = (ham->Hvib(i,j) * el->rho(i,j) ).imag();
 
 
         if(a_ii<1e-8){ g_ij = 0.0; }  // avoid division by zero
         else{
 
-          g_ij = -2.0*dt*imHaij/a_ii;  // This is a general case
+//          g_ij = -2.0*dt*imHaij/a_ii;  // This is a general case - wrong sign!
+          g_ij = 2.0*dt*imHaij/a_ii;  // This is a general case
 
 
           if(use_boltz_factor){
@@ -225,6 +229,93 @@ void compute_hopping_probabilities_fssh(Ensemble& ens, int i, MATRIX& g, double 
 
 }
 
+
+
+
+
+
+
+
+MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX& Hvib, double dt){
+
+/**
+  \brief Compute the GFSH surface hopping probabilities for the trajectory described by mol, el, and ham
+  \param[in] Coeff Wavefunction amplitudes
+  \param[in] Hvib vibronic Hamiltonian matrix
+  \param[in] dt Time duration of nuclear propagation step
+
+  Abbreviation: GFSH - global flux surface hopping
+  References: 
+  (1) Wang, L.; Trivedi, D.; Prezhdo, O. V. Global Flux Surface Hopping Approach for Mixed Quantum-Classical Dynamics. J. Chem. Theory Comput. 2014, 10, 3598–3605.
+
+*/
+
+  int nstates = Coeff.n_elts;
+  MATRIX g(nstates,nstates);
+
+  CMATRIX* denmat; denmat = new CMATRIX(nstates, nstates);   
+  *denmat = (Coeff * Coeff.H() ).conj();
+
+  CMATRIX* denmat_dot; denmat_dot = new CMATRIX(nstates, nstates);   
+  *denmat_dot = ((*denmat) *  Hvib.conj() - Hvib * (*denmat)) * complex<double>(0.0, 1.0);
+
+
+  const double kb = 3.166811429e-6; // Hartree/K
+  int i,j,k;
+  double sum,g_ij,argg;
+
+
+  // compute a_kk and a_dot_kk
+  vector<double> a(nstates,0.0);
+  vector<double> a_dot(nstates,0.0);
+  double norm = 0.0; // normalization factor
+
+  for(i=0;i<nstates;i++){
+    a[i] = denmat->get(i,i).real();
+    a_dot[i] = denmat_dot->get(i,i).real();
+
+    if(a_dot[i]<0.0){ norm += a_dot[i]; } // total rate of population decrease in all decaying states
+
+  }// for i
+
+
+  // Now calculate the hopping probabilities
+  for(i=0;i<nstates;i++){       
+    double sumg = 0.0;
+
+    for(j=0;j<nstates;j++){
+
+      if(j!=i){  // off-diagonal = probabilities to hop to other states
+
+        if(a[i]<1e-12){  g.set(i,j,0.0); }  // since the initial population is almost zero, so no need for hops
+        else{
+
+          g.set(i,j,  dt*(a_dot[j]/a[i]) * a_dot[i] / norm);  
+ 
+          if(g.get(i,j)<0.0){  // since norm is negative, than this condition means that a_dot[i] and a_dot[j] have same signs
+                                // which is bad - so no transitions are assigned
+            g.set(i,j,0.0);
+          }
+          else{  // here we have opposite signs of a_dot[i] and a_dot[j], but this is not enough yet
+            if(a_dot[i]<0.0 & a_dot[j]>0.0){ ;; } // this is out transition probability, but it is already computed
+            else{  g.set(i,j,0.0); } // wrong transition
+          }
+
+        }// a[i]>1e-12
+
+        sumg += g.get(i,j);
+
+      }
+    }// for j
+
+    g.set(i,i, 1.0 - sumg);  // probability to stay in state i
+
+  }// for i
+
+  delete denmat;
+  delete denmat_dot;
+
+}// fssh
 
 
 
@@ -868,6 +959,240 @@ int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, doub
   return istate;
 
 }
+
+
+MATRIX coherence_intervals(const CMATRIX& Coeff, const MATRIX& rates ){
+/**
+  This function computes the time-dependent (and population-dependent) coherence intervals
+  (the time after which different states should experience a decoherence event)
+  as described by Eq. 11 in:
+  Jaeger, H. M.; Fischer, S.; Prezhdo, O. V. Decoherence-Induced Surface Hopping. J. Chem. Phys. 2012, 137, 22A545.
+
+  1/tau_i  (t) =  sum_(j!=i)^nstates {  rho_ii(t) * rate_ij }
+
+
+  \param[in] Coeff Amplitudes of the electronic states
+  \param[in] rates A matrix containing the decoherence rates (inverse of the
+  decoherence time for each given pair of states)
+
+  Returns: A matrix of the coherence intervals for each state
+
+*/
+  int nstates = Coeff.n_rows; 
+
+  CMATRIX* denmat; denmat = new CMATRIX(nstates, nstates);   
+  *denmat = (Coeff * Coeff.H() ).conj();
+
+  MATRIX tau_m(nstates, 1); tau_m *= 0.0;
+  
+
+  for(int i=0;i<nstates;i++){
+
+    double summ = 0.0;
+    for(int j=0;j<nstates;j++){
+
+      if(j!=i){
+        summ += denmat->get(j,j).real() * rates.get(i,j); 
+      }// if
+
+    }// for j
+
+    if(summ>0.0){   tau_m.set(i, 1.0/summ); }
+    else        {   tau_m.set(i, 1.0e+100); } // infinite coherence interval
+    
+     
+  }// for i
+
+  delete denmat;
+
+  return tau_m;
+}
+
+
+
+int dish(Electronic& el, MATRIX& t_m, const MATRIX& tau_m, const CMATRIX& Hvib, int use_boltz_flag, double Ekin, double T, double ksi1, double ksi2){
+/**
+  \brief Decoherence-induced surface hopping (DISH)
+
+  Reference: Jaeger, H. M.; Fischer, S.; Prezhdo, O. V. Decoherence-Induced Surface Hopping. J. Chem. Phys. 2012, 137, 22A545.
+
+  \param[in,out] el Electronic object, containing the info about electronic amplitudes
+  \param[in,out] t_m A matrix N x 1 of the times each state resides in a coherence interval
+   (since the last decoherence event)
+  \param[in] tau_m A matrix N x 1 of the coherence intervals for each electronic state
+  \param[in] Hvib The matrix of vibronic Hamiltonian - we need the energies
+  \param[in] use_boltz_flag  if set to 1, the hopping probabilities will be re-scaled by the 
+  Boltzmann factor. This is need in neglect of back-reaction approximation (NBRA) calculations, 
+  when no 
+  \param[in] Ekin Kinetic energy of nuclei
+  \param[in] T is the temperature of the system
+  \param[in] ksi1 a is random number from a uniform distribution on the [0,1] interval
+  \param[in] ksi2 a is random number from a uniform distribution on the [0,1] interval
+
+  The function modifies  el and t_m variables
+  Returns: the index of the electronic state after potential hop
+*/
+
+  const double kb = 3.166811429e-6; // Hartree/K   
+  int i,j; 
+  int has_decoherence = 0; /// set to 1 if we have already encountered a decoherence event
+
+  for(i=0;i<el.nstates && !has_decoherence;i++){
+
+    /// The state i has evolved coherently for longer than the coherence interval
+    /// so it has to experience a decoherence event 
+    if(t_m.get(i) >= tau_m.get(i) ) { 
+
+      /// There are essentially two outcomes when the decoherence takes place:
+      /// One: we collapse the wavefunction onto the state i with the probability 
+      /// given by the population of that state
+
+      if(ksi1 < el.rho(i,i).real()){ 
+
+        /// Now, lets determine if the hop is possible based on the energy conservation
+        /// considerations 
+
+
+
+        int can_hop = 0;
+
+        double E_i = Hvib.get(el.istate, el.istate).real();/// initial potential energy
+        double E_f = Hvib.get(i,i).real();                 /// proposed potential energy
+        double dE = E_f - E_i;
+
+        /// In leu of hop rejection use Boltzmann factors: for NBRA simulations
+        if(use_boltz_flag==1){
+          double bf = 1.0;
+          if(dE>0){  bf = exp(-dE/(kb*T)); }  /// hop to higher energy state is difficult
+          if(ksi2<bf){ can_hop = 1; }  /// hop is allowed thermally
+
+        }
+        /// Regular energy-conservation based criterion
+        else{   
+          /// Predicted final kinetic energy is positive - hop is possible
+          if(Ekin - dE > 0.0){  can_hop = 1; }
+        }
+          
+        /// Now, decide about decoherence         
+        if(can_hop){     el.collapse(i, 1);  } /// Here is the actuall collapse
+        else{ el.project_out(i); }
+
+      }
+
+      /// Second: project the system out of that state otherwise
+      else{  el.project_out(i);   }
+
+
+      /// Reset the time axis for state i (only for this state)
+      /// other states still reside in a coherent superposition
+      t_m.set(i, 0.0);
+
+      /// Set the flag that we have attempted a decoherence event
+      /// so we done with DISH at this point in time
+      has_decoherence = 1;
+
+
+    }// t_m[i]>=1.0/tau_m
+      
+  }// for i
+
+  return el.istate;
+
+} // dish
+
+
+int dish(Electronic& el, Nuclear& mol, Hamiltonian& ham, MATRIX& t_m, const MATRIX& tau_m, int use_boltz_flag, double T, double ksi1, double ksi2){
+/**
+  \brief Decoherence-induced surface hopping (DISH) - overloaded version
+
+  Reference: Jaeger, H. M.; Fischer, S.; Prezhdo, O. V. Decoherence-Induced Surface Hopping. J. Chem. Phys. 2012, 137, 22A545.
+
+  \param[in,out] el Electronic object, containing the info about electronic amplitudes
+  \param[in,out] t_m A matrix N x 1 of the times each state resides in a coherence interval
+   (since the last decoherence event)
+  \param[in] tau_m A matrix N x 1 of the coherence intervals for each electronic state
+  \param[in] Hvib The matrix of vibronic Hamiltonian - we need the energies
+  \param[in] use_boltz_flag  if set to 1, the hopping probabilities will be re-scaled by the 
+  Boltzmann factor. This is need in neglect of back-reaction approximation (NBRA) calculations, 
+  when no 
+  \param[in] Ekin Kinetic energy of nuclei
+  \param[in] T is the temperature of the system
+  \param[in] ksi1 a is random number from a uniform distribution on the [0,1] interval
+  \param[in] ksi2 a is random number from a uniform distribution on the [0,1] interval
+
+  The function modifies  el and t_m variables
+  Returns: the index of the electronic state after potential hop
+*/
+
+  const double kb = 3.166811429e-6; // Hartree/K   
+  int i,j; 
+  int has_decoherence = 0; /// set to 1 if we have already encountered a decoherence event
+
+  for(i=0;i<el.nstates && !has_decoherence;i++){
+
+    /// The state i has evolved coherently for longer than the coherence interval
+    /// so it has to experience a decoherence event 
+    if(t_m.get(i) >= tau_m.get(i) ) { 
+
+      /// There are essentially two outcomes when the decoherence takes place:
+      /// One: we collapse the wavefunction onto the state i with the probability 
+      /// given by the population of that state
+
+      if(ksi1 < el.rho(i,i).real()){ 
+
+        /// Now, lets determine if the hop is possible based on the energy conservation
+        /// considerations 
+
+
+
+        int can_hop = 0;
+
+        double E_i = ham.Hvib(el.istate, el.istate).real();/// initial potential energy
+        double E_f = ham.Hvib(i,i).real();                 /// proposed potential energy
+        double dE = E_f - E_i;
+
+        /// In leu of hop rejection use Boltzmann factors: for NBRA simulations
+        if(use_boltz_flag==1){
+          double bf = 1.0;
+          if(dE>0){  bf = exp(-dE/(kb*T)); }  /// hop to higher energy state is difficult
+          if(ksi2<bf){ can_hop = 1; }  /// hop is allowed thermally
+
+        }
+        /// Regular energy-conservation based criterion
+        else{   
+          /// Predicted final kinetic energy is positive - hop is possible
+          double Ekin = compute_kinetic_energy(mol); // initial kinetic energy
+          if(Ekin - dE > 0.0){  can_hop = 1; }
+        }
+          
+        /// Now, decide about decoherence         
+        if(can_hop){     el.collapse(i, 1);  } /// Here is the actuall collapse
+        else{ el.project_out(i); }
+
+      }
+
+      /// Second: project the system out of that state otherwise
+      else{  el.project_out(i);   }
+
+
+      /// Reset the time axis for state i (only for this state)
+      /// other states still reside in a coherent superposition
+      t_m.set(i, 0.0);
+
+      /// Set the flag that we have attempted a decoherence event
+      /// so we done with DISH at this point in time
+      has_decoherence = 1;
+
+
+    }// t_m[i]>=1.0/tau_m
+      
+  }// for i
+
+  return el.istate;
+
+} // dish
+
+
 
 
 }// namespace libdyn
