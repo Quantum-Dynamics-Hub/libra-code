@@ -23,6 +23,7 @@ __all__ = ["init_system",
            "fit",
            "acf",
            "unavoided",
-           "datautils"
+           "datautils",
+           "build"
           ]
 
