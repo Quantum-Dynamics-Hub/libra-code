@@ -49,11 +49,18 @@ void export_Cell_objects(){
             
   ;
 
-  def("max_vector", max_vector);
-  def("apply_pbc", apply_pbc);
-  def("serial_to_vector",serial_to_vector);
-  def("serial_to_vector_symm",serial_to_vector_symm);
-  def("form_neibc",form_neibc);
+  VECTOR (*expt_max_vector_v1)(VECTOR t1,VECTOR t2,VECTOR t3) = &max_vector2;
+  boost::python::list (*expt_apply_pbc_v2_v1)(MATRIX3x3 H, boost::python::list in, boost::python::list t) = &apply_pbc_v2;
+  boost::python::list (*expt_serial_to_vector2_v1)(int c,int Nx,int Ny,int Nz) = &serial_to_vector2;
+  boost::python::list (*expt_serial_to_vector_symm2_v1)(int c,int Nx,int Ny,int Nz) = &serial_to_vector_symm2;
+  boost::python::list (*expt_form_neibc2_v1)(int c,int Nx,int Ny,int Nz,double cellx,double celly,double cellz,double Roff) = &form_neibc2;
+
+  def("max_vector", expt_max_vector_v1);
+  def("apply_pbc", expt_apply_pbc_v2_v1);
+  def("serial_to_vector",expt_serial_to_vector2_v1);
+  def("serial_to_vector_symm",expt_serial_to_vector_symm2_v1);
+  def("form_neibc",expt_form_neibc2_v1);
+
   def("find_min_shell",find_min_shell);
 
   def("make_nlist",make_nlist);
