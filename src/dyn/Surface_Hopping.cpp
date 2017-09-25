@@ -233,6 +233,93 @@ void compute_hopping_probabilities_fssh(Ensemble& ens, int i, MATRIX& g, double 
 
 
 
+
+
+
+MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX& Hvib, double dt){
+
+/**
+  \brief Compute the GFSH surface hopping probabilities for the trajectory described by mol, el, and ham
+  \param[in] Coeff Wavefunction amplitudes
+  \param[in] Hvib vibronic Hamiltonian matrix
+  \param[in] dt Time duration of nuclear propagation step
+
+  Abbreviation: GFSH - global flux surface hopping
+  References: 
+  (1) Wang, L.; Trivedi, D.; Prezhdo, O. V. Global Flux Surface Hopping Approach for Mixed Quantum-Classical Dynamics. J. Chem. Theory Comput. 2014, 10, 3598–3605.
+
+*/
+
+  int nstates = Coeff.n_elts;
+  MATRIX g(nstates,nstates);
+
+  CMATRIX* denmat; denmat = new CMATRIX(nstates, nstates);   
+  *denmat = (Coeff * Coeff.H() ).conj();
+
+  CMATRIX* denmat_dot; denmat_dot = new CMATRIX(nstates, nstates);   
+  *denmat_dot = ((*denmat) *  Hvib.conj() - Hvib * (*denmat)) * complex<double>(0.0, 1.0);
+
+
+  const double kb = 3.166811429e-6; // Hartree/K
+  int i,j,k;
+  double sum,g_ij,argg;
+
+
+  // compute a_kk and a_dot_kk
+  vector<double> a(nstates,0.0);
+  vector<double> a_dot(nstates,0.0);
+  double norm = 0.0; // normalization factor
+
+  for(i=0;i<nstates;i++){
+    a[i] = denmat->get(i,i).real();
+    a_dot[i] = denmat_dot->get(i,i).real();
+
+    if(a_dot[i]<0.0){ norm += a_dot[i]; } // total rate of population decrease in all decaying states
+
+  }// for i
+
+
+  // Now calculate the hopping probabilities
+  for(i=0;i<nstates;i++){       
+    double sumg = 0.0;
+
+    for(j=0;j<nstates;j++){
+
+      if(j!=i){  // off-diagonal = probabilities to hop to other states
+
+        if(a[i]<1e-12){  g.set(i,j,0.0); }  // since the initial population is almost zero, so no need for hops
+        else{
+
+          g.set(i,j,  dt*(a_dot[j]/a[i]) * a_dot[i] / norm);  
+ 
+          if(g.get(i,j)<0.0){  // since norm is negative, than this condition means that a_dot[i] and a_dot[j] have same signs
+                                // which is bad - so no transitions are assigned
+            g.set(i,j,0.0);
+          }
+          else{  // here we have opposite signs of a_dot[i] and a_dot[j], but this is not enough yet
+            if(a_dot[i]<0.0 & a_dot[j]>0.0){ ;; } // this is out transition probability, but it is already computed
+            else{  g.set(i,j,0.0); } // wrong transition
+          }
+
+        }// a[i]>1e-12
+
+        sumg += g.get(i,j);
+
+      }
+    }// for j
+
+    g.set(i,i, 1.0 - sumg);  // probability to stay in state i
+
+  }// for i
+
+  delete denmat;
+  delete denmat_dot;
+
+}// fssh
+
+
+
+
 void compute_hopping_probabilities_gfsh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,
                                         double dt, int use_boltz_factor,double T){
 /**
