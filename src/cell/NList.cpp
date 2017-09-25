@@ -55,7 +55,7 @@ void max_vector(VECTOR& t1,VECTOR& t2,VECTOR& t3,VECTOR& T){
 
 }
 
-VECTOR max_vector2(VECTOR t1,VECTOR t2,VECTOR t3){
+VECTOR max_vector(VECTOR t1,VECTOR t2,VECTOR t3){
 
   VECTOR T;
   max_vector(t1,t2,t3, T);
@@ -98,7 +98,7 @@ void apply_pbc(MATRIX3x3& H,int sz, VECTOR* in, VECTOR* out,vector<quartet>& T){
 
 }
 
-boost::python::list apply_pbc_v2(MATRIX3x3 H, boost::python::list in, boost::python::list t){
+boost::python::list apply_pbc(MATRIX3x3 H, boost::python::list in, boost::python::list t){
 
   vector<quartet> T;
   int sz1 = boost::python::len(t);
@@ -175,7 +175,7 @@ void serial_to_vector(int c,int Nx,int Ny,int Nz,int& nx,int& ny,int& nz){
 
 }
 
-boost::python::list serial_to_vector2(int c,int Nx,int Ny,int Nz){
+boost::python::list serial_to_vector(int c,int Nx,int Ny,int Nz){
 
   int nx,ny,nz;
   serial_to_vector(c,Nx,Ny,Nz,nx,ny,nz);
@@ -229,7 +229,7 @@ void serial_to_vector_symm(int c,int Nx,int Ny,int Nz,int& nx,int& ny,int& nz){
 }
 
 
-boost::python::list serial_to_vector_symm2(int c,int Nx,int Ny,int Nz){
+boost::python::list serial_to_vector_symm(int c,int Nx,int Ny,int Nz){
 
   int nx,ny,nz;
   serial_to_vector_symm(c,Nx,Ny,Nz,nx,ny,nz);
@@ -315,7 +315,7 @@ void form_neibc(int c,vector<int>& neibc,int Nx,int Ny,int Nz,double cellx,doubl
 
 }
 
-boost::python::list form_neibc2(int c,int Nx,int Ny,int Nz,double cellx,double celly,double cellz,double Roff){  
+boost::python::list form_neibc(int c,int Nx,int Ny,int Nz,double cellx,double celly,double cellz,double Roff){  
 
   vector<int> neibc;
   form_neibc(c, neibc, Nx, Ny, Nz, cellx, celly, cellz, Roff);
