@@ -788,7 +788,7 @@ def main():
     do_collapse = 0  # 0 - no decoherence, 1 - decoherence
     compute_adi = 1  # 0 - do not compute (no related info will be available), 1 - do compute
                      # this is needed for computing projections (even if the fragmentation is sed)
-    sh_method = 0    # 0 - MSSH,  1 - FSSH
+    sh_method = 2    # 0 - MSSH,  1 - FSSH,  2 - GFSH
 
 
 #    print_initial_mo = False
@@ -1346,6 +1346,8 @@ def main():
                 g = compute_hopping_probabilities_mssh(Coeff[tr][prop_bastyp])
             elif sh_method==1:
                 g = compute_hopping_probabilities_fssh(Coeff[tr][prop_bastyp], Hvib, md.dt)
+            elif sh_method==2:
+                g = compute_hopping_probabilities_gfsh(Coeff[tr][prop_bastyp], Hvib, md.dt)
 
             #if tr==0:
             #    print "Hopping matrix for the first trajectory is: "; g.show_matrix()
