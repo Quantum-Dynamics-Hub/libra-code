@@ -316,7 +316,7 @@ MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX& Hvib, double 
   delete denmat_dot;
   return g;
 
-}// compute probabilities gfsh
+}// compute probabilities_gfsh
 
 
 
