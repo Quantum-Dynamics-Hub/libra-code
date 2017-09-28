@@ -254,10 +254,12 @@ MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX& Hvib, double 
   MATRIX g(nstates,nstates);
 
   CMATRIX* denmat; denmat = new CMATRIX(nstates, nstates);   
-  *denmat = (Coeff * Coeff.H() ).conj();
+  //*denmat = (Coeff * Coeff.H() ).conj();
+  *denmat = Coeff * Coeff.H() ;
 
   CMATRIX* denmat_dot; denmat_dot = new CMATRIX(nstates, nstates);   
-  *denmat_dot = ((*denmat) *  Hvib.conj() - Hvib * (*denmat)) * complex<double>(0.0, 1.0);
+  //*denmat_dot = ((*denmat) *  Hvib.conj() - Hvib * (*denmat)) * complex<double>(0.0, 1.0);
+  *denmat_dot = ((*denmat) *  Hvib - Hvib * (*denmat)) * complex<double>(0.0, 1.0);
 
 
   const double kb = 3.166811429e-6; // Hartree/K
