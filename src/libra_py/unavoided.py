@@ -22,6 +22,7 @@ import sys
 import math
 import copy
 import unittest
+import itertools
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -41,36 +42,72 @@ def get_reordering(time_overlap):
 
     \param[in] time_overlap ( MATRIX ) the time overlap matrix, <phi_i(t)|phi_j(t+dt)>.
     Returns:
-    perm - list of integers that describe the permutation. That is:
-    perm[i] - is the index identifying the "older" state "i". Now, it may be labeled
-    by some other index, j. 
-    iperm[j] - if we were looking at a specific state labeled "j", iperm[j] this will be
-    the index of that state in the present list of states (e.g. energies, etc.)
+    perm - list of integers that describe permutation. That is:
+    j = perm[i] - this means older state i is coressponding to newer state j.
+    If i=j is satisfied with all (i,j) pairs, state mismatching doesn't occured,
+    otherwise, it occurs. we need to repair the mismatching in another function.
 
     """
 
-    # extract the indices where <phi_i(t)|phi_i(t+dt)> is not close to 1. 
+    # define variables
     S = CMATRIX(time_overlap)   # just a temporary working object
     sz = time_overlap.num_of_rows
     perm = range(sz)  # original permutation
-    
 
+    # extract the indices of states related to trivial crossings or degeneration.
+    s_col_indx = set() 
     for col in xrange(sz):
-
-        indx = -1
         val = 0.0+0.0j
-        while indx!=col:
+        # Find the max element in the given column "col"                                                                   
+        [indx, val] = S.max_col_elt(col)
+        if col != indx:
+            s_col_indx.add(col); s_col_indx.add(indx)
 
-            # Find the max element in the given column "col"
-            [indx, val] = S.max_col_elt(col)
-            
-            # Apply permutation (col, indx) to the present "perm" list
-            tmp = perm[col]
-            perm[col] = perm[indx]
-            perm[indx] = tmp
+    s_col_indx = list(s_col_indx) # we need to use the indices: set object can't use it.
+    sz_indx = len(s_col_indx)
 
-            # Do the corresponding swap of the columns in the S matrix
-            S.swap_cols(col,indx)
+    if sz_indx > 0: # trivial crossings occured!
+
+        # define another matrix whose elements are absolute values of S elements. 
+        SS = MATRIX(sz,sz) # stores the absolute values of S elements.
+        for i in xrange(sz):
+            for j in xrange(sz):
+                SS.set(i,j, abs(S.get(i,j)))
+
+        # define a matrix storing the columns.
+        A = MATRIX(sz,sz_indx)
+        for i in xrange(sz):
+            for j in xrange(sz_indx):
+                A.set(i,j,SS.get(i,s_col_indx[j]))
+
+        # generate all possible permutations
+        perm_cand = list(itertools.permutations(s_col_indx))
+        cand_sz = len(perm_cand)
+
+        # detect the pemutation corresponding to the largest trace of all reordering patterns 
+        imax=-1; max_tr = 0;
+        for i in xrange(cand_sz):
+            for j in xrange(sz):
+                for k in xrange(sz_indx):
+                    SS.set(j,perm_cand[i][k],A.get(j,k))
+            if max_tr < SS.tr():
+                imax = i
+                max_tr = SS.tr()
+
+        # make out how indices of newer states are corresponding to those of older ones. 
+        perm_res = s_col_indx[:]
+        for i in xrange(sz_indx):
+            ix = s_col_indx[i]
+            for j in xrange(sz_indx):
+              jx = perm_cand[imax][j]  
+              if ix == jx:
+                perm_res[i] = s_col_indx[j] 
+
+        # now define the returned permutation
+        for i in xrange(sz_indx):
+            ix = s_col_indx[i]
+            iy = perm_res[i]
+            perm[ix] = iy
 
     return perm
 
@@ -99,7 +136,6 @@ def _test_setup():
     b.set(2,3,1.0+0j);  b.set(3,1,1.0+0j);
     #print "b = ";  b.show_matrix()
 
-
     # non-identical (4x4) matrix
     # | 0 1 0 0 |
     # | 0 0 1 0 |
@@ -109,7 +145,6 @@ def _test_setup():
     c.set(0,1,1.0+0j);  c.set(1,2,1.0+0j); 
     c.set(2,0,1.0+0j);  c.set(3,3,1.0+0j);
     #print "b = ";  b.show_matrix()
-
 
     # non-identical (8x8) matrix
     # | 1 0 0 0 0 0 0 0 |
@@ -127,15 +162,85 @@ def _test_setup():
     d.set(4,4,1.0+0j);  d.set(5,7,1.0+0j);
     d.set(6,5,1.0+0j);  d.set(7,6,1.0+0j);
 
-    #print "c = ";   c.show_matrix()
+    # non-identical matrix (corresponding to doubly mixed states)
+    # | 1    0    0 0 |
+    # | 0 0.76 0.79 0 |
+    # | 0 0.79 0.80 0 |
+    # | 0    0    0 1 |
 
-    return a, b, c
+    e = CMATRIX(4,4)
+    e.set(0,0,1.0+0j);
+    e.set(1,1,0.76+0j); e.set(1,2,0.79+0j);
+    e.set(2,1,0.79+0j); e.set(2,2,0.80+0j);
+    e.set(3,3,1.0+0j);
+
+    # non-identical matrix (corresponding to triply mixed states)
+    # | 1    0    0    0 0 |
+    # | 0 0.71 0.75 0.77 0 |
+    # | 0 0.72 0.75 0.78 0 |
+    # | 0 0.73 0.76 0.80 0 |
+    # | 0    0    0    0 1 |
+
+    f = CMATRIX(5,5)
+    f.set(0,0,1.0+0j);
+    f.set(1,1,0.71+0j); f.set(1,2,0.75+0j); f.set(1,3,0.77+0j);
+    f.set(2,1,0.72+0j); f.set(2,2,0.75+0j); f.set(2,3,0.78+0j);
+    f.set(3,1,0.73+0j); f.set(3,2,0.76+0j); f.set(3,3,0.80+0j);
+    f.set(4,4,1.0+0j);
+
+    # non-identical matrix (corresponding to 3 groups of doubly mixed states)
+    # | 1    0    0    0    0    0    0|
+    # | 0 0.73 0.75    0    0    0    0|
+    # | 0 0.76 0.76    0    0    0    0|
+    # | 0    0    0 0.71 0.72    0    0|
+    # | 0    0    0 0.74 0.78    0    0|
+    # | 0    0    0    0    0 0.77 0.78|
+    # | 0    0    0    0    0 0.79 0.81|
+    
+    g = CMATRIX(7,7)
+    g.set(0,0,1.0+0j);
+    g.set(1,1,0.73+0j); g.set(1,2,0.75+0j);
+    g.set(2,1,0.76+0j); g.set(2,2,0.76+0j);
+    g.set(3,3,0.71+0j); g.set(3,4,0.72+0j);
+    g.set(4,3,0.74+0j); g.set(4,4,0.78+0j);
+    g.set(5,5,0.77+0j); g.set(5,6,0.78+0j);
+    g.set(6,5,0.79+0j); g.set(6,6,0.81+0j);
+
+    # non-identical matrix (corresponding to triply mixed states)
+    # | 1    0    0    0 0 |
+    # | 0 0.77 0.78 0.78 0 |
+    # | 0 0.76 0.75 0.89 0 |
+    # | 0 0.75 0.73 0.77 0 |
+    # | 0    0    0    0 1 | 
+
+    h = CMATRIX(5,5)
+    h.set(0,0,1.0+0j);
+    h.set(1,1,0.77+0j); h.set(1,2,0.78+0j); h.set(1,3,0.78+0j);
+    h.set(2,1,0.76+0j); h.set(2,2,0.75+0j); h.set(2,3,0.89+0j);
+    h.set(3,1,0.75+0j); h.set(3,2,0.73+0j); h.set(3,3,0.77+0j);
+    h.set(4,4,1.00+0j);
+
+    # non-identical matrix (corresponding to triply mixed states)
+    # | 1    0    0    0 0 | 
+    # | 0 0.65 0.78 0.77 0 |
+    # | 0 0.89 0.75 0.76 0 |
+    # | 0 0.77 0.54 0.65 0 |
+    # | 0    0    0    0 1 |
+
+    h1 = CMATRIX(5,5)
+    h1.set(0,0,1.0+0j);
+    h1.set(1,3,0.77+0j); h1.set(1,2,0.78+0j); h1.set(1,1,0.65+0j);
+    h1.set(2,3,0.76+0j); h1.set(2,2,0.75+0j); h1.set(2,1,0.89+0j);
+    h1.set(3,3,0.65+0j); h1.set(3,2,0.54+0j); h1.set(3,1,0.77+0j);
+    h1.set(4,4,1.00+0j);
+
+    return a, b, c, d, e, f, g, h, h1
 
 
 class TestUnavoided(unittest.TestCase):
     def test_reordering(self):
         """Tests the reordering algorithm"""
-        a,b,c = _test_setup()
+        a,b,c,d,e,f,g,h, h1 = _test_setup()
 
         perm_a = get_reordering(a)
         print "Input matrix "; a.show_matrix()
@@ -152,6 +257,34 @@ class TestUnavoided(unittest.TestCase):
         print "Permutation = ", perm_c
         self.assertEqual(perm_c, [1,2,0,3])
 
+        perm_e = get_reordering(e)
+        print "Input matrix "; e.show_matrix()
+        print "Permutation = ", perm_e
+        self.assertEqual(perm_e, [0,2,1,3])
+
+        perm_f = get_reordering(f)
+        print "Input matrix "; f.show_matrix()
+        print "Permutation = ", perm_f
+        perm_f_eq = [0, 2, 1, 3, 4]
+        self.assertEqual(perm_f, perm_f_eq)
+
+        perm_g = get_reordering(g)
+        print "Input matrix "; g.show_matrix()
+        print "Permutation = ", perm_g
+        perm_g_eq = [0, 2, 1, 3, 4, 5, 6]
+        self.assertEqual(perm_g, perm_g_eq)
+
+        perm_h = get_reordering(h)
+        print "Input matrix "; h.show_matrix()
+        print "Permutation = ", perm_h
+        perm_h_eq = [0, 2, 3, 1, 4]
+        self.assertEqual(perm_h, perm_h_eq)
+
+        perm_h1 = get_reordering(h1)
+        print "Input matrix "; h1.show_matrix()
+        print "Permutation = ", perm_h1
+        perm_h1_eq = [0, 2, 1, 3, 4]
+        self.assertEqual(perm_h1, perm_h1_eq)
 
 if __name__=='__main__':
     unittest.main()
