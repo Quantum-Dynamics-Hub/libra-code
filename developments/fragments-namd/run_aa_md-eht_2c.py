@@ -788,7 +788,7 @@ def main():
     do_collapse = 0  # 0 - no decoherence, 1 - decoherence
     compute_adi = 1  # 0 - do not compute (no related info will be available), 1 - do compute
                      # this is needed for computing projections (even if the fragmentation is sed)
-    sh_method = 2    # 0 - MSSH,  1 - FSSH,  2 - GFSH
+    sh_method = 0    # 0 - MSSH,  1 - FSSH,  2 - GFSH
 
 
 #    print_initial_mo = False
@@ -798,6 +798,7 @@ def main():
     print_initial_mo = True   # flag controlling whether we want to compute and print MOs (cube files) in the starting configuration
     print_starting_mo = True  # -- for the very first step of NA-MD (so after cooling and thermalization)
     print_basis_mo = True     # -- for the actual basis states that will be used (Lowdin orbitals, adiabatic-FMO or full MO)
+    print_sd_ham = True
 
     num_sh_traj = 1000;
 
@@ -820,9 +821,15 @@ def main():
     if prop_bastyp==0:
         print "prop_bastyp must be any of the orthogonal bases [1,2,3], not 0"    
 
-        
+    # printing SD-based Hamiltonian
+    if print_sd_ham: 
+        sd_ham = os.getcwd() + "/sd_ham"; print sd_ham
+        if os.path.isdir(sd_ham):
+            os.system("rm %s/*" % sd_ham)
+        else:
+            os.mkdir(sd_ham)
 
-
+    #sys.exit(0) # debug
 
     rnd = Random()
     #--------------------- Initialization ----------------------
@@ -1333,7 +1340,10 @@ def main():
         f_ham.write(line)
         f_ham.close()
 
-
+        #============== sd_ham is printed out  ======================
+        if print_sd_ham:
+            Hvib.real().show_matrix(sd_ham + "/Ham_vib_re_" + str(i))
+            Hvib.imag().show_matrix(sd_ham + "/Ham_vib_im_" + str(i))
 
         #============== TD-SE solution and surface hopping =================
         for tr in xrange(num_sh_traj):
