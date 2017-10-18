@@ -466,6 +466,17 @@ def update_Hvib_A(opt, sub_ham_old, sub_ham_cur, ham_old, ham_cur, active_orb, d
     Dmo = compute_NAC(sub_ham_old, sub_ham_cur, active_orb)
     Dmo_adi = MATRIX(sz,sz)
     Dmo_adi = C_old.T() * Dmo * C_cur
+
+    p0 = range(sz)
+    perm = unavoided.get_reordering(Dmo_adi)
+    if p0 != perm:
+        print "trivial crossings occured!"
+        print "perm is", perm
+        print "Dmo_adi is"; Dmo_adi.show_matrix()
+
+        reorder_matrices.reorder(perm,Dmo_adi,E_cur)
+    
+    Hel = 0.5*(E_old + E_cur)
     Dmo_adi = (0.5/dt)*(Dmo_adi - Dmo_adi.T()) # the Smo_dot term will cancel out during solution of TD-SE !!! 
         
     Hvib = CMATRIX(Hel, -1.0*Dmo_adi)  # so Hvib is now Hermitian
