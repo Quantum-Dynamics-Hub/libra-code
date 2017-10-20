@@ -286,7 +286,7 @@ def surface_hopping(mol, el, ham, rnd, params):
     nstates = el[0].nstates  # how many electronic DOF
 
 
-
+    g_ave = MATRIX(nstates,nstates)
 
     g = MATRIX(nstates,nstates) # initialize a matrix of hopping probability
 
@@ -310,12 +310,7 @@ def surface_hopping(mol, el, ham, rnd, params):
                     compute_hopping_probabilities_mssh(mol[cnt], el[cnt_inc_el], ham[cnt], g, dt_nucl, use_boltz_factor, Temperature)
                 else:
                     print "Warning in surface_hopping: tsh_method can be 1, 2, or 3. Other values are not defined"
-
-                # output hopping probability
-                if print_prob == 1:
-                    #print "hopping probability matrix is:"
-                    #print g.show_matrix()
-                    g.show_matrix(params["hop_probs"] + "g_" + str(params["time_step"]))
+                g_ave += g
 
                 # check elements of g matrix are less than 1 or not.
                 if check_prob == 1:
@@ -330,6 +325,12 @@ def surface_hopping(mol, el, ham, rnd, params):
                 # Everything else - change of electronic state and velocities rescaling/reversal happens here     
                 el[cnt_inc_el].istate = hop(el[cnt_inc_el].istate, mol[cnt], ham[cnt], ksi, g, do_rescaling, rep, do_reverse)
 
+            # output hopping probability
+            if print_prob == 1:
+                g_ave = g_ave / float(num_SH_traj)
+                #print "hopping probability matrix is:"
+                #print g.show_matrix()
+                g_ave.show_matrix(params["hop_probs"] + "g_" + str(params["time_step"]))
 
     # Nothing to return - mol, ham, and el objects are modified accordingly
 
