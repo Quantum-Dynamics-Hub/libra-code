@@ -295,7 +295,7 @@ def surface_hopping(mol, el, ham, rnd, params):
         for i_ex in xrange(nstates_init):  # consider initial excitations to be on all the basis
                                                    # states - this may be unnecessary for all cases, 
                                                    # so we may want to make this part customizable
-            cnt = iconf*nstates_init + i_ex # cnt doesn't include the number of TSH trajectory
+            cnt = iconf*nstates_init + i_ex # cnt doesn't include the suffix of TSH trajectory
 
             for itraj in xrange(num_SH_traj): # all stochastic SH realizations
                 cnt_inc_el = iconf*nstates_init*num_SH_traj + i_ex*num_SH_traj + itraj
@@ -313,8 +313,9 @@ def surface_hopping(mol, el, ham, rnd, params):
 
                 # output hopping probability
                 if print_prob == 1:
-                    print "hopping probability matrix is:"
-                    print g.show_matrix()
+                    #print "hopping probability matrix is:"
+                    #print g.show_matrix()
+                    g.show_matrix(params["hop_probs"] + "g_" + str(params["time_step"]))
 
                 # check elements of g matrix are less than 1 or not.
                 if check_prob == 1:

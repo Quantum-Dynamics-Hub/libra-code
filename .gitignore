@@ -7,3 +7,5 @@ _build
 *.xyz
 *.out
 *.cube
+Ham_vib_*
+g_*

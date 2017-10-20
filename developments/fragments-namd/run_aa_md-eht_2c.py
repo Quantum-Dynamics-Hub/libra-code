@@ -810,6 +810,7 @@ def main():
     print_starting_mo = True  # -- for the very first step of NA-MD (so after cooling and thermalization)
     print_basis_mo = True     # -- for the actual basis states that will be used (Lowdin orbitals, adiabatic-FMO or full MO)
     print_sd_ham = True
+    print_hop_probs = True
 
     num_sh_traj = 1000;
 
@@ -834,11 +835,21 @@ def main():
 
     # printing SD-based Hamiltonian
     if print_sd_ham: 
-        sd_ham = os.getcwd() + "/sd_ham"; print sd_ham
+        sd_ham = os.getcwd() + "/sd_ham"
+        print "sd_ham directory is in ", sd_ham
         if os.path.isdir(sd_ham):
             os.system("rm %s/*" % sd_ham)
         else:
             os.mkdir(sd_ham)
+
+    # printing hop probabilities
+    if print_hop_probs:
+        hop_probs = os.getcwd() + "/hop_probs"
+        print "hop_probs directory is in ", hop_probs
+        if os.path.isdir(hop_probs):
+            os.system("rm %s/*" % hop_probs)
+        else:
+            os.mkdir(hop_probs)
 
     #sys.exit(0) # debug
 
@@ -1375,6 +1386,10 @@ def main():
 
             #if tr==0:
             #    print "Hopping matrix for the first trajectory is: "; g.show_matrix()
+
+            #============== sd_ham is printed out  ======================
+            if print_hop_probs:
+                g.show_matrix(hop_probs + "/g_" + str(i))
 
             ksi = rnd.uniform(0.0, 1.0)
             ksi2 = rnd.uniform(0.0, 1.0)
