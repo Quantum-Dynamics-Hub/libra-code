@@ -1371,6 +1371,11 @@ def main():
             Hvib.imag().show_matrix(sd_ham + "/Ham_vib_im_" + str(i))
 
         #============== TD-SE solution and surface hopping =================
+        if prop_bastyp == 3: # using adiabatic basis
+            g_ave = MATRIX(nstates_adi, nstates_adi)
+        else: # using fragment (diabatic) basis
+            g_ave = MATRIX(nstates, nstates)
+
         for tr in xrange(num_sh_traj):
             # Coherent dynamics
             propagate_electronic(md.dt, Coeff[tr][prop_bastyp], Hvib)  # propagate only in the basis selected
@@ -1387,12 +1392,9 @@ def main():
                 print "Illegal sh_method value is selected; it must be 0, 1, or 2. "
                 print "Exitting..."; sys.exit(0)
 
+            g_ave += g
             #if tr==0:
             #    print "Hopping matrix for the first trajectory is: "; g.show_matrix()
-
-            #============== sd_ham is printed out  ======================
-            if print_hop_probs:
-                g.show_matrix(hop_probs + "/g_" + str(i))
 
             ksi = rnd.uniform(0.0, 1.0)
             ksi2 = rnd.uniform(0.0, 1.0)
@@ -1414,7 +1416,10 @@ def main():
 
         ave_Pop_sh, ave_Pop_se = ave_Pop(nstates, nstates_adi, num_sh_traj, Pop_se, istate)
 
-
+        #============== hopping probabilities are printed out  ======================
+        if print_hop_probs:
+            g_ave = g_ave/float(num_sh_traj)
+            g_ave.show_matrix(hop_probs + "/g_" + str(i))
 
 
         #===================== Start printing out ==============================
