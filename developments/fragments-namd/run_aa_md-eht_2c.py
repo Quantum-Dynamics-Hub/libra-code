@@ -1177,13 +1177,13 @@ def main():
 
     md.max_step = 1;  md.ensemble = "NVE";  md.dt = 20.0;
 
+    syst.init_atom_velocities(300.0, rnd)
+
     # move atoms using uniform random number
     mag_disp = 0.01 # The magnitude of a random displacement of each atom from its center, units: Bohr
     for i in xrange(mol.nnucl):
         ksi = rnd.normal(); mol.q[i] += mag_disp*ksi
         #print "No. %i random number is %f" % (i,ksi)
-
-    syst.extract_atomic_q(mol.q)
 
     nstates, nstates_adi, Coeff, Pop_se, istate, ave_Pop_se, ave_Pop_sh = None, None, None, None, None, None, None
 
