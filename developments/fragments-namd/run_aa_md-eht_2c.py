@@ -1183,6 +1183,8 @@ def main():
         ksi = rnd.normal(); mol.q[i] += mag_disp*ksi
         #print "No. %i random number is %f" % (i,ksi)
 
+    syst.extract_atomic_q(mol.q)
+
     nstates, nstates_adi, Coeff, Pop_se, istate, ave_Pop_se, ave_Pop_sh = None, None, None, None, None, None, None
 
     for i in xrange(10000):
