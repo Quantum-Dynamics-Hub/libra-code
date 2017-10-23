@@ -77,20 +77,20 @@ MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double 
 
 	    }// if use_boltz_factor
 
-          if(g_ij<0.0){  g_ij = 0.0; }
+            if(g_ij<0.0){  g_ij = 0.0; }
 
-        }// else
+	      }// else
 
         g.set(i,j,g_ij);
         sum = sum + g_ij;
-      }
+	  }
       else{ g.set(i,j,0.0); }
 
-    }// for j
+	}// for j
 
     g.set(i,i,1.0 - sum);
 
-  }// for i
+      }// for i
 
   delete denmat;
 
@@ -418,7 +418,14 @@ void compute_hopping_probabilities_gfsh(Nuclear* mol, Electronic* el, Hamiltonia
         else{
 
           g->set(i,j,  dt*(a_dot[j]/a[i]) * a_dot[i] / norm);  
- 
+
+	    if(use_boltz_factor){
+		if(ham->H(j,j).real()>ham->H(i,i).real()){
+		    argg = -(ham->H(j,j).real() - ham->H(i,i).real())/(kb*T);    
+		    if(argg<500.0){ g->set(i,j, g->get(i,j) * std::exp(argg)); }
+		}
+	    }// if use_boltz_factor
+
           if(g->get(i,j)<0.0){  // since norm is negative, than this condition means that a_dot[i] and a_dot[j] have same signs
                                 // which is bad - so no transitions are assigned
             g->set(i,j,0.0);
@@ -594,6 +601,17 @@ void compute_hopping_probabilities_mssh(Nuclear* mol, Electronic* el, Hamiltonia
 
   }// for j
 
+
+  if(use_boltz_factor){
+    for(i=0;i<el->nstates;i++){
+      for(j=0;j<el->nstates;j++){
+	if(ham->H(j,j).real()>ham->H(i,i).real()){
+	  argg = -(ham->H(j,j).real() - ham->H(i,i).real())/(kb*T);
+	  if(argg<500.0){ g->set(i,j, g->get(i,j) * std::exp(argg)); }
+	  }
+      } // for j
+    } // for i
+  }// if use_boltz_factor
 
 }// compute probabilities mssh
 
