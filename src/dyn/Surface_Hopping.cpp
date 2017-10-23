@@ -25,8 +25,15 @@ namespace libdyn{
 
 
 
-MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double dt){
-/**
+MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double dt, int use_boltz_factor, double T){
+/*
+  \brief Compute the FSSH surface hopping probabilities for the trajectory described by the coefficients Coeff 
+  \param[in] Coeff The amplitudes of different basis states in the coherent superposition. This matrix is assumed to be
+  a column-vector, so of the size N x 1, where N is the number of basis excited states
+  \param[in] Hvib vibronic Hamiltonian matrix
+  \param[in] dt Time duration of nuclear propagation step
+  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
+  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
 
 */
 
@@ -61,6 +68,15 @@ MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double 
         else{
 //          g_ij = -2.0*dt*imHaij/a_ii;  // This is a general case - wrong sign (opposite of the one in JCC)
             g_ij = 2.0*dt*imHaij/a_ii;  // This is a general case -
+	    if(use_boltz_factor){
+
+	      if(Hvib.get(j,j).real() > Hvib.get(i,i).real()){
+		argg = -(Hvib.get(j,j).real() - Hvib.get(i,i).real())/(kb*T);
+		if(argg<500.0){ g_ij = g_ij * std::exp(argg); }
+	      }
+
+	    }// if use_boltz_factor
+
           if(g_ij<0.0){  g_ij = 0.0; }
 
         }// else
@@ -236,13 +252,15 @@ void compute_hopping_probabilities_fssh(Ensemble& ens, int i, MATRIX& g, double 
 
 
 
-MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX& Hvib, double dt){
+MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX& Hvib, double dt, int use_boltz_factor, double T){
 
 /**
-  \brief Compute the GFSH surface hopping probabilities for the trajectory described by mol, el, and ham
+  \brief Compute the GFSH surface hopping probabilities for the trajectory described by the coefficients Coeff
   \param[in] Coeff Wavefunction amplitudes
   \param[in] Hvib vibronic Hamiltonian matrix
   \param[in] dt Time duration of nuclear propagation step
+  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
+  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
 
   Abbreviation: GFSH - global flux surface hopping
   References: 
@@ -294,6 +312,14 @@ MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX& Hvib, double 
 
           g.set(i,j,  dt*(a_dot[j]/a[i]) * a_dot[i] / norm);  
  
+            if(use_boltz_factor){
+
+              if(Hvib.get(j,j).real() > Hvib.get(i,i).real()){
+                argg = -(Hvib.get(j,j).real() - Hvib.get(i,i).real())/(kb*T);
+                if(argg<500.0){ g.set(i, j, g.get(i,j)*std::exp(argg)); }
+              }
+            }// if use_boltz_factor 
+
           if(g.get(i,j)<0.0){  // since norm is negative, than this condition means that a_dot[i] and a_dot[j] have same signs
                                 // which is bad - so no transitions are assigned
             g.set(i,j,0.0);
@@ -472,7 +498,7 @@ void compute_hopping_probabilities_gfsh(Ensemble& ens, int i, MATRIX& g, double 
 
 
 
-MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff){
+  MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff, CMATRIX& Hvib, int use_boltz_factor,double T){
 /**
   \brief Compute the MSSH surface hopping probabilities for the trajectory described by the coefficients Coeff
 
@@ -480,6 +506,9 @@ MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff){
 
   \param[in] Coeff The amplitudes of different basis states in the coherent superposition. This matrix is assumed to be
   a column-vector, so of the size N x 1, where N is the number of basis excited states
+  \param[in] Hvib vibronic Hamiltonian matrix
+  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
+  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
 
   The function returns the matrix g with hopping probabilities
 
@@ -496,6 +525,7 @@ MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff){
 
   double norm; norm = (Coeff.H() * Coeff).get(0,0).real();  // <- this is the norm <PSI|PSI>
 
+  const double kb = 3.166811429e-6; // Hartree/K^M
   // Calculate the hopping probabilities
   for(int j=0;j<nst;j++){
 
@@ -505,6 +535,17 @@ MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff){
 
 
   }// for j
+
+  if(use_boltz_factor){
+    for(int i=0;i<nst;i++){
+      for(int j=0;j<nst;j++){
+        if(Hvib.get(j,j).real() > Hvib.get(i,i).real()){
+          double argg = -(Hvib.get(j,j).real() - Hvib.get(i,i).real())/(kb*T);
+	  if(argg<500.0){ g.set(i,j, g.get(i,j) * std::exp(argg)); }
+	}
+      }
+    }
+  }// if use_boltz_factor
 
   return g;
 
