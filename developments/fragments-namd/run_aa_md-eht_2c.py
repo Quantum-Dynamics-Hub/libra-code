@@ -1383,11 +1383,11 @@ def main():
 
             g = None
             if sh_method==0:
-                g = compute_hopping_probabilities_mssh(Coeff[tr][prop_bastyp])
+                g = compute_hopping_probabilities_mssh(Coeff[tr][prop_bastyp], Hvib, 1, therm.Temperature)
             elif sh_method==1:
-                g = compute_hopping_probabilities_fssh(Coeff[tr][prop_bastyp], Hvib, md.dt)
+                g = compute_hopping_probabilities_fssh(Coeff[tr][prop_bastyp], Hvib, md.dt, 1, therm.Temperature)
             elif sh_method==2:
-                g = compute_hopping_probabilities_gfsh(Coeff[tr][prop_bastyp], Hvib, md.dt)
+                g = compute_hopping_probabilities_gfsh(Coeff[tr][prop_bastyp], Hvib, md.dt, 1, therm.Temperature)
             else:
                 print "Illegal sh_method value is selected; it must be 0, 1, or 2. "
                 print "Exitting..."; sys.exit(0)
