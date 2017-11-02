@@ -24,6 +24,7 @@ __all__ = ["init_system",
            "acf",
            "unavoided",
            "datautils",
-           "build"
+           "build",
+           "autoconnect"
           ]
 
