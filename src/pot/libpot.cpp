@@ -57,6 +57,13 @@ boost::python::list (*expt_Angle_Harmonic_Cos_General)(VECTOR,VECTOR,VECTOR,doub
 boost::python::list (*expt_Angle_Cubic)(VECTOR,VECTOR,VECTOR,double,double) = &Angle_Cubic;
 
 
+double (*expt_Elec_Ewald3D_v1)(vector<VECTOR>& r, vector<double>& q, MATRIX3x3& box, double epsilon,
+                    vector<VECTOR>& f, MATRIX3x3& at_stress,
+                    int rec_deg,int pbc_deg, double etha, double R_on, double R_off   
+                   ) = &Elec_Ewald3D;
+
+
+
   def("SWITCH", expt_SWITCH);
   def("DOUBLE_SWITCH", expt_DOUBLE_SWITCH);
 
@@ -89,7 +96,8 @@ boost::python::list (*expt_Angle_Cubic)(VECTOR,VECTOR,VECTOR,double,double) = &A
 //  def("Gay_Berne", Gay_Berne);
   def("Girifalco12_6", Girifalco12_6);
 
-//  def("Elec_Ewald3D", Elec_Ewald3D);
+  def("Elec_Ewald3D", expt_Elec_Ewald3D_v1);
+
 //  def("Vdw_LJ", Vdw_LJ_2);
 //  def("Vdw_LJ1", Vdw_LJ1);
 //  def("Vdw_LJ2_no_excl", Vdw_LJ2_no_excl);
