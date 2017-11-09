@@ -53,6 +53,32 @@ def center_data(data):
     return data_new
 
 
+def center_data2(data):
+## data - list of list of VECTOR
+## this function centers data on zero, by subtracting the average 
+# value from each element
+# data - is a list of VECTOR objects
+
+
+    # Compute the average for each series and overall
+    ave = VECTOR(0.0, 0.0, 0.0)    
+    N = len(data)
+    for d in data:
+        ave = ave + average(d) 
+    ave = ave / float(N)
+
+    data_new = []    
+
+    for i in xrange(N):
+        tmp = []
+        for d in data[i]:
+            tmp.append(d - ave)
+        data_new.append(tmp)
+
+    return data_new
+
+
+
 def acf(data,dt):
 ## data - is a list of VECTOR objects
 
@@ -132,6 +158,69 @@ def recipe1(data, dt, wspan, dw):
     # ACFs
     T, norm_acf, row_acf = acf( center_data(data) , dt)
     sz = len(T)
+
+    f = open("acf.txt","w")
+    for it in xrange(sz):
+        f.write("%8.5f  %8.5f  %8.5f  \n" % (T[it]/fs2au , norm_acf[it], row_acf[it]))
+    f.close()
+
+    # FT
+    W, J = ft(norm_acf, wspan, dw, dt)
+    sz = len(W)
+    f = open("spectrum_.txt","w")
+    for iw in xrange(sz):
+        f.write("%8.5f  %8.5f  \n" % (W[iw]/inv_cm2Ha, J[iw] ) )
+    f.close()
+
+
+
+def recipe2(data, dt, wspan, dw):
+# data - list of lists of VECTOR
+# data[i] - i-th timeseries
+# dt in fs
+# dspan in cm^-1
+# dw in cm^-1
+
+
+    # Parameters
+    inv_cm2ev = (1.0/8065.54468111324)
+    ev2Ha = (1.0/27.211)    # 27.2 ev is 1 Ha 
+    inv_cm2Ha = inv_cm2ev * ev2Ha
+    fs2au = (1.0/0.02419)   # 40 a.u. is 1 fs 
+
+        
+    wspan = wspan * inv_cm2Ha  # convert to Ha (atomic units)
+    dw = dw * inv_cm2Ha        # convert to Ha (atomic units)
+    dt = dt * fs2au            # convert to  atomic units of time
+
+    
+    # ACFs
+    N = len(data)
+    T, tnorm_acf, trow_acf = [], [], []
+    centered = center_data2(data)
+    for n in xrange(N):
+        t, nacf, racf = acf( centered[n] , dt)
+
+        if n==0:
+            T.append(t)
+             
+        tnorm_acf.append(nacf)
+        trow_acf.append(racf)
+
+    sz = len(T)
+
+
+    # Compute the particle-averaged acfs:
+    norm_acf, row_acf = [0.0]*sz, [0.0]*sz
+    for i in xrange(sz):
+        for n in xrange(N):
+            norm_acf[i] = norm_acf[i] + tnorm_acf[n][i]
+            row_acf[i] = row_acf[i] + trow_acf[n][i]
+         
+        norm_acf[i] = norm_acf[i] / float(N)
+        row_acf[i] = row_acf[i] / float(N)
+
+
 
     f = open("acf.txt","w")
     for it in xrange(sz):
