@@ -196,35 +196,34 @@ def recipe2(data, dt, wspan, dw):
     
     # ACFs
     N = len(data)
-    T, tnorm_acf, trow_acf = [], [], []
-    centered = center_data2(data)
+    T, tnorm_acf, traw_acf = [], [], []
     for n in xrange(N):
-        t, nacf, racf = acf( centered[n] , dt)
+        t, nacf, racf = acf( data[n] , dt)
 
         if n==0:
-            T.append(t)
+            T = t
              
         tnorm_acf.append(nacf)
-        trow_acf.append(racf)
+        traw_acf.append(racf)
 
     sz = len(T)
 
 
     # Compute the particle-averaged acfs:
-    norm_acf, row_acf = [0.0]*sz, [0.0]*sz
+    norm_acf, raw_acf = [0.0]*sz, [0.0]*sz
     for i in xrange(sz):
         for n in xrange(N):
             norm_acf[i] = norm_acf[i] + tnorm_acf[n][i]
-            row_acf[i] = row_acf[i] + trow_acf[n][i]
+            raw_acf[i] = raw_acf[i] + traw_acf[n][i]
          
         norm_acf[i] = norm_acf[i] / float(N)
-        row_acf[i] = row_acf[i] / float(N)
+        raw_acf[i] = raw_acf[i] / float(N)
 
 
 
     f = open("acf.txt","w")
     for it in xrange(sz):
-        f.write("%8.5f  %8.5f  %8.5f  \n" % (T[it]/fs2au , norm_acf[it], row_acf[it]))
+        f.write("%8.5f  %8.5f  %8.5f  \n" % (T[it]/fs2au , norm_acf[it], raw_acf[it]))
     f.close()
 
     # FT
