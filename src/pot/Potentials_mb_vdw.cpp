@@ -26,6 +26,433 @@ using namespace liblinalg;
 namespace libpot{
 
 
+
+double VdW_Ewald3D(vector<VECTOR>& r, vector<int>& types, int max_type, vector<double>& Bij, MATRIX3x3& box, /* Inputs */ 
+                   vector<VECTOR>& f, MATRIX3x3& at_stress,  /* Outputs*/
+                   int rec_deg,int pbc_deg, double etha, double R_on, double R_off    /* Parameters */                   
+                   ){
+/**
+  Simplest, Python-friendly Ewald sum function - no exclusions
+
+  This function takes coordinates in a.u. (Bohrs) and returns the energy in a.u. (Hatree)
+
+  Here we use the following convention:
+  Bij[a] contains the parameter for the pair indexed a = map(type_i,type_j), with the
+  maping:
+  a = type_i * max_type + type_j, that is the size of the vector Bij must be max_type**2
+   
+*/
+
+//********************* double dispersion ********************************
+//* 3D Ewald summation given by:                                         *
+//*  Karasawa, N.; Goddard III,W. A. "Acceleration of Convergence for    *
+//*  Lattice Sums" J.Phys.Chem. 1989, 93,7320-7327  (/Theory/Ewald1.pdf) *
+//* Exclusions and formula clarification are given by:                   *
+//* 1) Procacci, P.; Marchi, M. "Taming the Ewald sum in molecular       *
+//*  dynamics simulations of solvated proteins via a multiple time step  *
+//*  algorithm" J.Chem.Phys. 1996, 104, 3003-3012 (/Theory/Ewald2.pdf)   *
+//*                                                                      *
+//*  E = -1/2   sum    {  B_ij / |R_i - R_j -L|^6 }                      *
+//*            i,j, L                                                    *
+//*                                                                      *
+//*     This is a general function, with any Bij (not necessarily with ) *
+//*     the geometric mean rule                                          *
+//*                                                                      *
+//************************************************************************
+
+  MATRIX3x3 tp;
+  MATRIX3x3 I;  I.identity();
+  int i,j;
+  int sz = r.size();
+
+
+  // Reciprocal vectors
+  VECTOR tv1,tv2,tv3; // unit cell vectors
+  VECTOR g1,g2,g3, t; // auxiliary vectors
+  VECTOR h1,h2,h3;    // reciprocal space vectors
+
+  box.get_vectors(tv1,tv2,tv3);
+  box.inverse().T().get_vectors(g1,g2,g3);
+  t.cross(tv2,tv3);    h1 = 2.0*M_PI*t/(tv1*t);
+  t.cross(tv3,tv1);    h2 = 2.0*M_PI*t/(tv2*t);
+  t.cross(tv1,tv2);    h3 = 2.0*M_PI*t/(tv3*t);
+
+  double omega = box.Determinant(); 
+  double sqrt_M_PI = sqrt(M_PI);
+  double etha3 = etha * etha * etha;
+  double etha6 = etha3 * etha3;
+  double const1 = 0.5/etha6;
+  double const2 = M_PI*sqrt_M_PI/(24.0*omega);
+
+  //------------------ Initialize forces and stress -----------------
+  double energy = 0.0;
+  for(i=0;i<sz;i++){ f[i] = 0.0; }
+  at_stress = 0.0;
+
+
+  // =============== S1 (exclude i==j pairs for central cell)=========
+  // This is original version
+  double E1 = 0.0;
+  double SW;  // switching function
+  VECTOR dSW; // and its derivative
+  VECTOR tv;  // lattice translation vectors
+  VECTOR derfc1_dri, dEdri, rj;
+  VECTOR rij; // distance between particles, including lattice translation
+
+
+  for(int na=-pbc_deg;na<=pbc_deg;na++){
+    for(int nb=-pbc_deg;nb<=pbc_deg;nb++){
+      for(int nc=-pbc_deg;nc<=pbc_deg;nc++){
+  
+        //  Note: It is very important that the translation vectors are symmetric, leading to:
+        //  summ (over tv)  is equivalent to summ (over -tv)
+ 
+        tv = (na*tv1 + nb*tv2 + nc*tv3);
+
+        for(int i=0;i<sz;i++){
+          for(int j=0;j<sz;j++){
+             
+            rij = r[i] - r[j] - tv;
+            double rijt = rij.length2();
+ 
+            if(na==0 && nb==0 && nc==0 && i==j){ } // skip this
+            else{
+
+              SW = 1.0; dSW = 0.0;
+              rj = r[j]; rj += tv;
+              SWITCH(r[i],rj,R_on,R_off,SW,dSW); 
+
+              if(SW>0.0){
+
+                double a = sqrt(rijt)/etha;
+                double a_minus2 = 1.0/(a*a);
+                double a_minus4 = a_minus2*a_minus2;
+                double a_minus6 = a_minus4*a_minus2;
+                double Qij = Bij[ types[i] * max_type + types[j] ]; // q[i]*q[j];
+
+                double pref = Qij*(a_minus6 + a_minus4 + 0.5*a_minus2);
+                double expa2 = exp(-a*a);
+                VECTOR dpref = -(Qij*(6.0*a_minus6 + 4.0*a_minus4 + a_minus2) /(a* a * etha*etha))  *  rij;
+                VECTOR dexpa2 = -(2.0*expa2/(etha*etha)) *  rij;
+                
+                double en = pref*expa2;
+                VECTOR den_dri = (pref * dexpa2 + dpref * expa2);
+
+                E1 -= en*SW;
+                VECTOR dEdri = const1 * ( den_dri * SW + en * dSW);  // -dE1/dr[i]
+
+                f[i] += dEdri;
+                f[j] -= dEdri;
+
+                tp.tensor_product(rij,dEdri);   at_stress += tp;
+
+              }// if SW>0.0
+            }//else
+              
+          }// for j
+        }// for i
+
+      }// for nc
+    }// for nb
+  }// for na
+
+  energy += const1*E1;
+
+
+  // ================== S2 =======================
+  // Reciprocal sum contribution
+  double E2 = 0.0;
+  double sum1 = 0.0;
+  double sum2 = 0.0;
+  double fact;
+  VECTOR h;  // reciprocal space lattice translation vectors
+  VECTOR f_mod; // force
+
+  for(int Lx=-rec_deg;Lx<=rec_deg;Lx++){
+    for(int Ly=-rec_deg;Ly<=rec_deg;Ly++){
+      for(int Lz=-rec_deg;Lz<=rec_deg;Lz++){
+  
+        //  Note: It is very important that the translation vectors are symmetric, leading to:
+        //  summ (over h)  is equivalent to summ (over -h)
+  
+        h = Lx*h1 + Ly*h2 + Lz*h3;
+        double hmod = h.length();
+        double b = 0.5*hmod*etha;
+
+        if((Lx==0)&&(Ly==0)&&(Lz==0)){    }
+        else{
+          fact =  ( (exp(-b*b))*(0.5/(b*b) - 1.0)/b  + sqrt_M_PI*ERFC(b) ) /(hmod*hmod*hmod);
+
+          sum1 = 0.0;  
+         
+          for(i=0;i<sz;i++){
+            for(j=0;j<sz;j++){
+
+              sum1 += Bij[ types[i] * max_type + types[j] ]*cos(h*(r[i]-r[j]));
+
+            }// for j
+          }// for i
+
+          E2 -= fact*sum1;
+
+
+          //----------- Forces ---------------------
+          for(i=0;i<sz;i++){
+            for(j=0;j<sz;j++){
+
+              f_mod = h;
+              f_mod *= -const2 * Bij[ types[i] * max_type + types[j] ] * sin(h*(r[i]-r[j])); // -dE2/dr_i 
+              f[i] += f_mod;  
+              f[j] -= f_mod;  
+
+          // Tensors
+          // This is an all-atomic pressure tensor due to Ewald sum
+//          tp.tensor_product(h,h); tp = sum3*const1*(I - 2.0*((1.0 + b*b)/(h*h))*tp );  
+//          at_stress += tp;
+
+            }
+          }
+
+
+        }// else
+      }// for Lz
+    }// for Ly
+  }// for Lx
+
+  energy += const2*E2;
+  //==============================================
+
+  //=============== Additive constant to energy (self-interactions) ===========
+  // it does not contribute to forces
+  double E3 = 0.0;
+  for(i=0;i<sz;i++){  E3 += Bij[ types[i] * max_type + types[i] ];  }
+  energy += (const1/6.0)*E3;
+
+  E3 = 0.0;
+  for(i=0;i<sz;i++){
+    for(j=0;j<sz;j++){
+      E3 += Bij[ types[i] * max_type + types[j] ];;
+    }
+  }
+  E3 *= (4.0*const2/etha3);
+  energy -= E3; 
+
+
+  return energy;
+
+}
+
+
+
+
+double VdW_Ewald3D(vector<VECTOR>& r, vector<double>& q, MATRIX3x3& box, /* Inputs */ 
+                   vector<VECTOR>& f, MATRIX3x3& at_stress,  /* Outputs*/
+                   int rec_deg,int pbc_deg, double etha, double R_on, double R_off    /* Parameters */
+                   ){
+/**
+  Simplest, Python-friendly Ewald sum function - no exclusions
+
+  This function takes coordinates in a.u. (Bohrs) and returns the energy in a.u. (Hatree)
+
+   
+*/
+
+
+//********************* double dispersion ********************************
+//* 3D Ewald summation given by:                                         *
+//*  Karasawa, N.; Goddard III,W. A. "Acceleration of Convergence for    *
+//*  Lattice Sums" J.Phys.Chem. 1989, 93,7320-7327  (/Theory/Ewald1.pdf) *
+//* Exclusions and formula clarification are given by:                   *
+//* 1) Procacci, P.; Marchi, M. "Taming the Ewald sum in molecular       *
+//*  dynamics simulations of solvated proteins via a multiple time step  *
+//*  algorithm" J.Chem.Phys. 1996, 104, 3003-3012 (/Theory/Ewald2.pdf)   *
+//*                                                                      *
+//*  E = -1/2   sum    {  B_ij / |R_i - R_j -L|^6 }                      *
+//*            i,j, L                                                    *
+//*                                                                      *
+//*     We assume the geometric rule: B_ij = sqrt(B_ii * B_jj)           *
+//*     The meaning of the "charges" is : q[i] = sqrt(B_ii)              *
+//*                                                                      *
+//************************************************************************
+
+  MATRIX3x3 tp;
+  MATRIX3x3 I;  I.identity();
+  int i,j;
+  int sz = r.size();
+
+
+  // Reciprocal vectors
+  VECTOR tv1,tv2,tv3; // unit cell vectors
+  VECTOR g1,g2,g3, t; // auxiliary vectors
+  VECTOR h1,h2,h3;    // reciprocal space vectors
+
+  box.get_vectors(tv1,tv2,tv3);
+  box.inverse().T().get_vectors(g1,g2,g3);
+  t.cross(tv2,tv3);    h1 = 2.0*M_PI*t/(tv1*t);
+  t.cross(tv3,tv1);    h2 = 2.0*M_PI*t/(tv2*t);
+  t.cross(tv1,tv2);    h3 = 2.0*M_PI*t/(tv3*t);
+
+  double omega = box.Determinant(); 
+  double sqrt_M_PI = sqrt(M_PI);
+  double etha3 = etha * etha * etha;
+  double etha6 = etha3 * etha3;
+  double const1 = 0.5/etha6;
+  double const2 = M_PI*sqrt_M_PI/(24.0*omega);
+
+  //------------------ Initialize forces and stress -----------------
+  double energy = 0.0;
+  for(i=0;i<sz;i++){ f[i] = 0.0; }
+  at_stress = 0.0;
+
+
+  // =============== S1 (exclude i==j pairs for central cell)=========
+  // This is original version
+  double E1 = 0.0;
+  double SW;  // switching function
+  VECTOR dSW; // and its derivative
+  VECTOR tv;  // lattice translation vectors
+  VECTOR derfc1_dri, dEdri, rj;
+  VECTOR rij; // distance between particles, including lattice translation
+
+
+  for(int na=-pbc_deg;na<=pbc_deg;na++){
+    for(int nb=-pbc_deg;nb<=pbc_deg;nb++){
+      for(int nc=-pbc_deg;nc<=pbc_deg;nc++){
+  
+        //  Note: It is very important that the translation vectors are symmetric, leading to:
+        //  summ (over tv)  is equivalent to summ (over -tv)
+ 
+        tv = (na*tv1 + nb*tv2 + nc*tv3);
+
+        for(int i=0;i<sz;i++){
+          for(int j=0;j<sz;j++){
+             
+            rij = r[i] - r[j] - tv;
+            double rijt = rij.length2();
+ 
+            if(na==0 && nb==0 && nc==0 && i==j){ } // skip this
+            else{
+
+              SW = 1.0; dSW = 0.0;
+              rj = r[j]; rj += tv;
+              SWITCH(r[i],rj,R_on,R_off,SW,dSW); 
+
+              if(SW>0.0){
+
+                double a = sqrt(rijt)/etha;
+                double a_minus2 = 1.0/(a*a);
+                double a_minus4 = a_minus2*a_minus2;
+                double a_minus6 = a_minus4*a_minus2;
+                double Qij = q[i]*q[j];
+
+                double pref = Qij*(a_minus6 + a_minus4 + 0.5*a_minus2);
+                double expa2 = exp(-a*a);
+                VECTOR dpref = -(Qij*(6.0*a_minus6 + 4.0*a_minus4 + a_minus2) /(a* a * etha*etha))  *  rij;
+                VECTOR dexpa2 = -(2.0*expa2/(etha*etha)) *  rij;
+                
+                double en = pref*expa2;
+                VECTOR den_dri = (pref * dexpa2 + dpref * expa2);
+
+                E1 -= en*SW;
+                VECTOR dEdri  = const1 * ( den_dri * SW + en * dSW);  // -dE1/dr[i]
+
+                f[i] += dEdri;
+                f[j] -= dEdri;
+
+                tp.tensor_product(rij,dEdri);   at_stress += tp;
+
+              }// if SW>0.0
+            }//else
+              
+          }// for j
+        }// for i
+
+      }// for nc
+    }// for nb
+  }// for na
+
+  energy += const1*E1;
+
+
+  // ================== S2 =======================
+  // Reciprocal sum contribution
+  double E2 = 0.0;
+  double sum1 = 0.0;
+  double sum2 = 0.0;
+  double fact;
+  VECTOR h;  // reciprocal space lattice translation vectors
+  VECTOR f_mod; // force
+
+  for(int Lx=-rec_deg;Lx<=rec_deg;Lx++){
+    for(int Ly=-rec_deg;Ly<=rec_deg;Ly++){
+      for(int Lz=-rec_deg;Lz<=rec_deg;Lz++){
+  
+        //  Note: It is very important that the translation vectors are symmetric, leading to:
+        //  summ (over h)  is equivalent to summ (over -h)
+  
+        h = Lx*h1 + Ly*h2 + Lz*h3;
+        double hmod = h.length();
+        double b = 0.5*hmod*etha;
+
+        if((Lx==0)&&(Ly==0)&&(Lz==0)){    }
+        else{
+          fact =  ( (exp(-b*b))*(0.5/(b*b) - 1.0)/b  + sqrt_M_PI*ERFC(b) ) /(hmod*hmod*hmod);
+
+          sum1 = 0.0;   sum2 = 0.0; 
+          for(i=0;i<sz;i++){
+
+              sum1 += q[i]*cos(h*r[i]);
+              sum2 += q[i]*sin(h*r[i]);
+
+          }// for i
+
+          E2 -= fact*(sum1*sum1 + sum2*sum2);
+
+
+          //----------- Forces ---------------------
+          for(i=0;i<sz;i++){
+
+              f_mod = h;
+              f_mod *= const2 * (2.0)*fact*q[i]*(sin(h* r[i])*sum1 - cos(h* r[i])*sum2); // -dsum3/dr_i 
+              f[i] += f_mod;  
+          }
+
+          // Tensors
+          // This is an all-atomic pressure tensor due to Ewald sum
+//          tp.tensor_product(h,h); tp = sum3*const1*(I - 2.0*((1.0 + b*b)/(h*h))*tp );  
+//          at_stress += tp;
+
+        }// else
+      }// for Lz
+    }// for Ly
+  }// for Lx
+
+  energy += const2*E2;
+  //==============================================
+
+  //=============== Additive constant to energy (self-interactions) ===========
+  // it does not contribute to forces
+  double E3 = 0.0;
+  for(i=0;i<sz;i++){  E3 += (q[i]*q[i]);  }
+  energy += (const1/6.0)*E3;
+
+  E3 = 0.0;
+  for(i=0;i<sz;i++){
+    for(j=0;j<sz;j++){
+      E3 += q[i]*q[j];
+    }
+  }
+  E3 *= (4.0*const2/etha3);
+  energy -= E3; 
+
+
+  return energy;
+
+}
+
+
+
+
 double Vdw_LJ(VECTOR* r,                                               /* Inputs */
               VECTOR* g,
               VECTOR* m,
