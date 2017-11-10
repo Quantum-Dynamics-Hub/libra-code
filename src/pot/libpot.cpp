@@ -44,7 +44,9 @@ double (*Vdw_LJ_2)(VECTOR* r,VECTOR* g,VECTOR* m,VECTOR* f,MATRIX3x3& at_stress,
 boost::python::list (*expt_SWITCH)(VECTOR, VECTOR, double, double) = &SWITCH;
 boost::python::list (*expt_DOUBLE_SWITCH)(double,double,double) = &DOUBLE_SWITCH;
 
-boost::python::list (*expt_Bond_Harmonic)(VECTOR,VECTOR,double,double) = &Bond_Harmonic; 
+boost::python::list (*expt_Bond_Harmonic_v1)(VECTOR,VECTOR,double,double) = &Bond_Harmonic; 
+boost::python::list (*expt_Bond_Harmonic_v2)(VECTOR,VECTOR,double,double,int) = &Bond_Harmonic; 
+
 boost::python::list (*expt_Bond_Quartic)(VECTOR,VECTOR,double,double) = &Bond_Quartic; 
 boost::python::list (*expt_Bond_Morse)(VECTOR,VECTOR,double,double,double) = &Bond_Morse; 
 
@@ -63,11 +65,24 @@ double (*expt_Elec_Ewald3D_v1)(vector<VECTOR>& r, vector<double>& q, MATRIX3x3& 
                    ) = &Elec_Ewald3D;
 
 
+double (*expt_VdW_Ewald3D_v1)(vector<VECTOR>& r, vector<int>& types, int max_type, vector<double>& Bij, MATRIX3x3& box, /* Inputs */ 
+                   vector<VECTOR>& f, MATRIX3x3& at_stress,  /* Outputs*/
+                   int rec_deg,int pbc_deg, double etha, double R_on, double R_off    /* Parameters */                   
+                   ) = &VdW_Ewald3D;
+
+double (*expt_VdW_Ewald3D_v2)(vector<VECTOR>& r, vector<double>& q, MATRIX3x3& box, 
+                   vector<VECTOR>& f, MATRIX3x3& at_stress,  
+                   int rec_deg,int pbc_deg, double etha, double R_on, double R_off   
+                   ) = &VdW_Ewald3D;
+
+
+
 
   def("SWITCH", expt_SWITCH);
   def("DOUBLE_SWITCH", expt_DOUBLE_SWITCH);
 
-  def("Bond_Harmonic", expt_Bond_Harmonic);
+  def("Bond_Harmonic", expt_Bond_Harmonic_v1);
+  def("Bond_Harmonic", expt_Bond_Harmonic_v2);
   def("Bond_Quartic", expt_Bond_Quartic);
   def("Bond_Morse", expt_Bond_Morse);
 
@@ -97,6 +112,9 @@ double (*expt_Elec_Ewald3D_v1)(vector<VECTOR>& r, vector<double>& q, MATRIX3x3& 
   def("Girifalco12_6", Girifalco12_6);
 
   def("Elec_Ewald3D", expt_Elec_Ewald3D_v1);
+  def("VdW_Ewald3D", expt_VdW_Ewald3D_v1);
+  def("VdW_Ewald3D", expt_VdW_Ewald3D_v2);
+
 
 //  def("Vdw_LJ", Vdw_LJ_2);
 //  def("Vdw_LJ1", Vdw_LJ1);
