@@ -14,7 +14,10 @@
 # The module contain the following functions:
 # average(data)
 # center_data(data)
+# center_data2(data)
 # acf(data)
+# recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectr_filename="spectrum_.txt", do_center=1)
+# recipe2(data, dt, wspan, dw)
 
 import os
 import sys
@@ -28,8 +31,10 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 
 def average(data):
-## This function computes the average value of the data
-# data - is a list of VECTOR objects
+    """
+    This function computes the average value of the data
+    # data - (list of VECTOR objects)
+    """
     ave = VECTOR()
     sz = len(data)
 
@@ -41,9 +46,11 @@ def average(data):
 
 
 def center_data(data):
-## this function centers data on zero, by subtracting the average 
-# value from each element
-# data - is a list of VECTOR objects
+    """
+    This function centers data on zero, by subtracting the average 
+    value from each element
+    data - (list of VECTOR objects) - The data
+    """
 
     data_new = []    
     ave = average(data)
@@ -80,7 +87,12 @@ def center_data2(data):
 
 
 def acf(data,dt):
-## data - is a list of VECTOR objects
+    """
+    Compute the autocorrelation function of the given data set
+
+    data - (list of VECTOR objects) - Data to analize
+    dt - (float) - time distance between the adjacent data points
+    """
 
     sz = len(data)/2  # how many elements we have in the time series
                       # we use only a half of the point, because of the 
@@ -108,13 +120,15 @@ def acf(data,dt):
 
 
 def ft(acf_data, wspan, dw, dt):  
-# we do have a number of FT and FFT functions in the Libra core, but
-# this one may be also convenient to have
-# acf_data - list of floats: C(0), C(dt), C(2*dt), etc. where C - is an ACF
-# span - is the range of the frequencies we want to compute
-# dw - is the distance between the nearby points on the frequency scale
-# dt - is the time step
+    """
+    We do have a number of FT and FFT functions in the Libra core, but
+    this one may be also convenient to have
 
+    acf_data - (list of floats): C(0), C(dt), C(2*dt), etc. where C - is an ACF
+    wspan (float) - is the range of the frequencies we want to compute
+    dw (float) - is the distance between the nearby points on the frequency scale
+    dt (float) - is the time step
+    """
 
     ############### based on the code from Pyxaid ###################
     sz=len(acf_data)    # the # of input points
@@ -137,10 +151,17 @@ def ft(acf_data, wspan, dw, dt):
     return W, J
 
 
-def recipe1(data, dt, wspan, dw):
-# dt in fs
-# dspan in cm^-1
-# dw in cm^-1
+def recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spectrum.txt", do_center=1):
+    """
+    dt (float) [ fs ] - timestep between adjacent data points
+    dspan (float) [ cm^-1 ] - window of frequencies for the Fourier transform
+    dw (float) [ cm^-1 ] - grid points spacing in the frequency domain
+    acf_filename (string) - the name of the file where to print the ACF
+    spectrum_filename (string) - the name of the file where to print the spectrum
+    do_center (int) - a flag controlling whether to center data (=1) or not (=0)
+    Centering means we subtract the average value (over all the data points) from all
+    the data points - this way, we convert values into their fluctuations.
+    """
 
 
     # Parameters
@@ -159,7 +180,7 @@ def recipe1(data, dt, wspan, dw):
     T, norm_acf, row_acf = acf( center_data(data) , dt)
     sz = len(T)
 
-    f = open("acf.txt","w")
+    f = open(acf_filename,"w")
     for it in xrange(sz):
         f.write("%8.5f  %8.5f  %8.5f  \n" % (T[it]/fs2au , norm_acf[it], row_acf[it]))
     f.close()
@@ -167,7 +188,7 @@ def recipe1(data, dt, wspan, dw):
     # FT
     W, J = ft(norm_acf, wspan, dw, dt)
     sz = len(W)
-    f = open("spectrum_.txt","w")
+    f = open(spectrum_filename,"w")
     for iw in xrange(sz):
         f.write("%8.5f  %8.5f  \n" % (W[iw]/inv_cm2Ha, J[iw] ) )
     f.close()
