@@ -107,8 +107,9 @@ void Bond_Interaction::compute(){
         }
 
         VECTOR f1, f2; 
+        MATRIX hess(6,6);
 
-        if(functional==0){ energy += Bond_Harmonic(r1,r2,f1,f2,K,r0);}
+        if(functional==0){ energy += Bond_Harmonic(r1,r2,f1,f2,hess,K,r0,2); }
         else if(functional==1){ energy += Bond_Quartic(r1,r2,f1,f2,K,r0); }
         else if(functional==2){ energy += Bond_Morse(r1,r2,f1,f2,D,r0,alpha); }
 
@@ -124,6 +125,12 @@ void Bond_Interaction::compute(){
             MATRIX3x3 tmp;
             tmp.tensor_product(r1 - r2 , f1); 
             stress_at += tmp;
+        }
+
+        if(Hess==NULL){
+        }
+        else{
+            add_submatrix(Hess, &hess, Hess_stenc, 1.0);
         }
 
     }// if is_active

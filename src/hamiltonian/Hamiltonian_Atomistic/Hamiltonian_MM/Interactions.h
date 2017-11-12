@@ -156,6 +156,8 @@ public:
     vector<VECTOR*> t;   ///< list of the pointers to the vectors representing periodic translations of the actoms
     vector<VECTOR*> f;   ///< list of the pointers to the forces acting on atoms
     vector<double*> q;   ///< list of the pointers to the atomic charges
+    MATRIX* Hess;        ///< Hessian
+    vector<int> Hess_stenc; ///<stencil for the Hessian due to given interaction
 
     int is_active;        ///< Flag showing if this interaction is active
     int int_type;         ///< Type of interaction
@@ -210,7 +212,6 @@ public:
 */
 
     double energy;        ///< Energy for the given Hamiltonian and the status flag
-    MATRIX3x3 hessian;    ///< Hessian for the given Hamiltonian and the status flag
     MATRIX3x3 stress_at;  ///< atomic stress tensor and status
 
 
@@ -231,6 +232,8 @@ public:
 
     void set_charges(vector<double*>& q_, vector<int>& indxs_);
     void set_charges(vector<double>& q_, vector<int>& indxs_);
+
+    void set_hessian(MATRIX& Hess_, vector<int>& Hess_stenc_);
 
 
     void set_functional(std::string f);

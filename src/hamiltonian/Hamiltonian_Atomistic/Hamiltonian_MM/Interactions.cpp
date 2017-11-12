@@ -62,9 +62,9 @@ Interaction_N_Body::Interaction_N_Body(){
     functional = -1;  // Undefined 
 
     energy = 0.0;     // Energy 
-    hessian = 0.0;    // Hessian
     stress_at = 0.0;  // stress tensor
 
+    Hess = NULL;      // Hessian
 
 }
 
@@ -86,8 +86,9 @@ Interaction_N_Body::Interaction_N_Body(int Nbody_){
     functional = -1;  // Undefined 
 
     energy = 0.0;     // Energy 
-    hessian = 0.0;    // Hessian
     stress_at = 0.0;  // stress tensor
+
+    Hess = NULL;      // Hessian
 
 }
 
@@ -142,6 +143,14 @@ void Interaction_N_Body::set_charges(vector<double>& q_, vector<int>& indxs){
     address_subset<double>(q, q_, indxs);
 
 }// set_charges
+
+void Interaction_N_Body::set_hessian(MATRIX& Hess_, vector<int>& Hess_stenc_){
+
+    Hess = &Hess_;
+
+    Hess_stenc = Hess_stenc_;
+
+}// set Hessian
 
 
 void Interaction_N_Body::set_functional(std::string f){

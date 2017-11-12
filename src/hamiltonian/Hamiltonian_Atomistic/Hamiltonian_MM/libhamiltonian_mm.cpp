@@ -52,6 +52,7 @@ void export_Hamiltonian_MM_objects(){
   void (Interaction_N_Body::*expt_set_transl_v1)(vector<VECTOR>& t_, vector<int>& indxs_) = &Interaction_N_Body::set_transl;
   void (Interaction_N_Body::*expt_set_forces_v1)(vector<VECTOR>& r_, vector<int>& indxs_) = &Interaction_N_Body::set_forces;
   void (Interaction_N_Body::*expt_set_charges_v1)(vector<double>& q_, vector<int>& indxs_) = &Interaction_N_Body::set_charges;
+  void (Interaction_N_Body::*expt_set_hessian_v1)(MATRIX& hess_, vector<int>& hess_stenc_) = &Interaction_N_Body::set_hessian;
   void (Interaction_N_Body::*expt_set_functional_v1)(std::string f) = &Interaction_N_Body::set_functional;
 
 
@@ -68,6 +69,7 @@ void export_Hamiltonian_MM_objects(){
       .def("set_transl", expt_set_transl_v1)
       .def("set_forces", expt_set_forces_v1)
       .def("set_charges", expt_set_charges_v1)
+      .def("set_hessian", expt_set_hessian_v1)
       .def("set_functional", expt_set_functional_v1)
 
   ;
@@ -87,6 +89,7 @@ void export_Hamiltonian_MM_objects(){
       .def("set_transl", expt_set_transl_v1)
       .def("set_forces", expt_set_forces_v1)
       .def("set_charges", expt_set_charges_v1)
+      .def("set_hessian", expt_set_hessian_v1)
       .def("set_functional", expt_set_functional_v1)
 
       .def("set_coords", expt_set_coords_v2_2b)
@@ -172,6 +175,7 @@ void export_Hamiltonian_MM_objects(){
       .def("set_transl", expt_set_transl_v1)
       .def("set_forces", expt_set_forces_v1)
       .def("set_charges", expt_set_charges_v1)
+      .def("set_hessian", expt_set_hessian_v1)
       .def("set_functional", expt_set_functional_v1)
 
       .def("set_coords", expt_set_coords_v1_3b)
@@ -218,6 +222,7 @@ void export_Hamiltonian_MM_objects(){
       .def("set_transl", expt_set_transl_v1)
       .def("set_forces", expt_set_forces_v1)
       .def("set_charges", expt_set_charges_v1)
+      .def("set_hessian", expt_set_hessian_v1)
       .def("set_functional", expt_set_functional_v1)
 
       .def("set_coords", expt_set_coords_v1_4b)
