@@ -801,6 +801,7 @@ double System::energy_respa(std::string s_respa_type){
 
 */
 
+
 double System::ekin_tr(){
 /**
   Returns the translational kinetic energy of the COMs of all fragments in the system
@@ -812,6 +813,20 @@ double System::ekin_tr(){
   }
   return res;
 }
+
+double System::ekin_tr_atom(){
+/**
+  Returns the translational kinetic energy of the Atoms of the system
+*/
+
+  double res = 0.0;
+  for(int i=0;i<Number_of_atoms;i++){
+    res += Atoms[i].Atom_RB.ekin_tr();
+  }
+  return res;
+}
+
+
 
 double System::ekin_tr_int(){
 /**
