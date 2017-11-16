@@ -93,6 +93,13 @@ Interaction_N_Body::Interaction_N_Body(int Nbody_){
 }
 
 
+void Interaction_N_Body::set_coords(VECTOR& r_, int indx){
+
+    r[indx] = &r_; 
+
+}// set_coords
+
+
 void Interaction_N_Body::set_coords(vector<VECTOR*>& r_, vector<int>& indxs){
 
     address_subset<VECTOR>(r, r_, indxs);
@@ -105,6 +112,13 @@ void Interaction_N_Body::set_coords(vector<VECTOR>& r_, vector<int>& indxs){
 
 }// set_coords
 
+
+
+void Interaction_N_Body::set_transl(VECTOR& t_, int indx){
+
+    t[indx] = &t_; 
+
+}// set_transl
 
 void Interaction_N_Body::set_transl(vector<VECTOR*>& t_, vector<int>& indxs){
 
@@ -119,6 +133,13 @@ void Interaction_N_Body::set_transl(vector<VECTOR>& t_, vector<int>& indxs){
 }// set_transl
 
 
+
+void Interaction_N_Body::set_forces(VECTOR& f_, int indx){
+
+    f[indx] = &f_; 
+
+}// set_forces
+
 void Interaction_N_Body::set_forces(vector<VECTOR*>& f_, vector<int>& indxs){
 
     address_subset<VECTOR>(f, f_, indxs);
@@ -130,6 +151,13 @@ void Interaction_N_Body::set_forces(vector<VECTOR>& f_, vector<int>& indxs){
     address_subset<VECTOR>(f, f_, indxs);
 
 }// set_forces
+
+
+void Interaction_N_Body::set_charges(double& q_, int indx){
+
+    q[indx] = &q_; 
+
+}// set_charges
 
 
 void Interaction_N_Body::set_charges(vector<double*>& q_, vector<int>& indxs){

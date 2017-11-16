@@ -221,15 +221,19 @@ public:
     Interaction_N_Body(int Nbody_);
 
     // Methods
+    void set_coords(VECTOR& r_, int indx_);
     void set_coords(vector<VECTOR*>& r_, vector<int>& indxs_);
     void set_coords(vector<VECTOR>& r_, vector<int>& indxs_);
 
+    void set_transl(VECTOR& t_, int indx_);
     void set_transl(vector<VECTOR*>& t_, vector<int>& indxs_);
     void set_transl(vector<VECTOR>& t_, vector<int>& indxs_);
 
+    void set_forces(VECTOR& f_, int indx_);
     void set_forces(vector<VECTOR*>& f_, vector<int>& indxs_);
     void set_forces(vector<VECTOR>& f_, vector<int>& indxs_);
 
+    void set_charges(double& q_, int indx_);
     void set_charges(vector<double*>& q_, vector<int>& indxs_);
     void set_charges(vector<double>& q_, vector<int>& indxs_);
 

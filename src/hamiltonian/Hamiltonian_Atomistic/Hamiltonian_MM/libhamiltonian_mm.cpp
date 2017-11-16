@@ -48,10 +48,18 @@ void export_Hamiltonian_MM_objects(){
   export_forcefield_objects();
 
 
-  void (Interaction_N_Body::*expt_set_coords_v1)(vector<VECTOR>& r_, vector<int>& indxs_) = &Interaction_N_Body::set_coords;
-  void (Interaction_N_Body::*expt_set_transl_v1)(vector<VECTOR>& t_, vector<int>& indxs_) = &Interaction_N_Body::set_transl;
-  void (Interaction_N_Body::*expt_set_forces_v1)(vector<VECTOR>& r_, vector<int>& indxs_) = &Interaction_N_Body::set_forces;
-  void (Interaction_N_Body::*expt_set_charges_v1)(vector<double>& q_, vector<int>& indxs_) = &Interaction_N_Body::set_charges;
+  void (Interaction_N_Body::*expt_set_coords_v1)(VECTOR& r_, int indx) = &Interaction_N_Body::set_coords;
+  void (Interaction_N_Body::*expt_set_coords_v2)(vector<VECTOR>& r_, vector<int>& indxs_) = &Interaction_N_Body::set_coords;
+
+  void (Interaction_N_Body::*expt_set_transl_v1)(VECTOR& r_, int indx) = &Interaction_N_Body::set_transl;
+  void (Interaction_N_Body::*expt_set_transl_v2)(vector<VECTOR>& t_, vector<int>& indxs_) = &Interaction_N_Body::set_transl;
+
+  void (Interaction_N_Body::*expt_set_forces_v1)(VECTOR& r_, int indx) = &Interaction_N_Body::set_forces;
+  void (Interaction_N_Body::*expt_set_forces_v2)(vector<VECTOR>& r_, vector<int>& indxs_) = &Interaction_N_Body::set_forces;
+
+  void (Interaction_N_Body::*expt_set_charges_v1)(double& q_, int indx) = &Interaction_N_Body::set_charges;
+  void (Interaction_N_Body::*expt_set_charges_v2)(vector<double>& q_, vector<int>& indxs_) = &Interaction_N_Body::set_charges;
+
   void (Interaction_N_Body::*expt_set_hessian_v1)(MATRIX& hess_, vector<int>& hess_stenc_) = &Interaction_N_Body::set_hessian;
   void (Interaction_N_Body::*expt_set_functional_v1)(std::string f) = &Interaction_N_Body::set_functional;
 
@@ -66,9 +74,13 @@ void export_Hamiltonian_MM_objects(){
       .def_readwrite("int_type", &Interaction_N_Body::int_type)
       .def_readwrite("functional", &Interaction_N_Body::functional)
       .def("set_coords", expt_set_coords_v1)
+      .def("set_coords", expt_set_coords_v2)
       .def("set_transl", expt_set_transl_v1)
+      .def("set_transl", expt_set_transl_v2)
       .def("set_forces", expt_set_forces_v1)
+      .def("set_forces", expt_set_forces_v2)
       .def("set_charges", expt_set_charges_v1)
+      .def("set_charges", expt_set_charges_v2)
       .def("set_hessian", expt_set_hessian_v1)
       .def("set_functional", expt_set_functional_v1)
 
@@ -86,9 +98,13 @@ void export_Hamiltonian_MM_objects(){
       .def_readwrite("stress_at", &Interaction_N_Body::stress_at)
 
       .def("set_coords", expt_set_coords_v1)
+      .def("set_coords", expt_set_coords_v2)
       .def("set_transl", expt_set_transl_v1)
+      .def("set_transl", expt_set_transl_v2)
       .def("set_forces", expt_set_forces_v1)
+      .def("set_forces", expt_set_forces_v2)
       .def("set_charges", expt_set_charges_v1)
+      .def("set_charges", expt_set_charges_v2)
       .def("set_hessian", expt_set_hessian_v1)
       .def("set_functional", expt_set_functional_v1)
 
@@ -172,9 +188,13 @@ void export_Hamiltonian_MM_objects(){
       .def_readwrite("stress_at", &Interaction_N_Body::stress_at)
 
       .def("set_coords", expt_set_coords_v1)
+      .def("set_coords", expt_set_coords_v2)
       .def("set_transl", expt_set_transl_v1)
+      .def("set_transl", expt_set_transl_v2)
       .def("set_forces", expt_set_forces_v1)
+      .def("set_forces", expt_set_forces_v2)
       .def("set_charges", expt_set_charges_v1)
+      .def("set_charges", expt_set_charges_v2)
       .def("set_hessian", expt_set_hessian_v1)
       .def("set_functional", expt_set_functional_v1)
 
@@ -219,9 +239,13 @@ void export_Hamiltonian_MM_objects(){
       .def_readwrite("stress_at", &Interaction_N_Body::stress_at)
 
       .def("set_coords", expt_set_coords_v1)
+      .def("set_coords", expt_set_coords_v2)
       .def("set_transl", expt_set_transl_v1)
+      .def("set_transl", expt_set_transl_v2)
       .def("set_forces", expt_set_forces_v1)
+      .def("set_forces", expt_set_forces_v2)
       .def("set_charges", expt_set_charges_v1)
+      .def("set_charges", expt_set_charges_v2)
       .def("set_hessian", expt_set_hessian_v1)
       .def("set_functional", expt_set_functional_v1)
 
