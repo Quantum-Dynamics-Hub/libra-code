@@ -29,6 +29,7 @@
 #include "gwp/libgwp.h"
 
 // General dynamics
+#include "Ehrenfest.h"
 #include "Energy_and_Forces.h"
 #include "Surface_Hopping.h"
 #include "Surface_Hopping_method1.h"
