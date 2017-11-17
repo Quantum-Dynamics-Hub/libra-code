@@ -54,7 +54,10 @@ class Hamiltonian_Model : public Hamiltonian{
   /// General specification of the model: 0 - SAC, 1 - DAC, 2 - ECWR, 3 - Marcus, 4 - superexchange (SEXCH), 5 - Rabi2
   int ham_indx;    
 
-  MATRIX* basis_transform;
+  MATRIX* basis_transform;  /// These are the eigenvalues of the Hamiltonian, C, in H * C = S * C * E
+  MATRIX* basis_overlap;    /// Matrix of the basis functions overlaps , S, in H * C  = S * C * E
+
+  vector<MATRIX*> d1basis_overlap; ///< derivatives of the basis_overlap w.r.t. all atomic DOFs: q0, q1, .. qN-1
    
 public:
 
@@ -69,6 +72,11 @@ public:
 
   // Set parameters
   void set_params(vector<double>& params_);
+  void set_basis_overlap_by_ref(MATRIX& basis_overlap_);
+  void set_basis_overlap_by_val(MATRIX& basis_overlap_);
+  void set_basis_overlap_derivs_by_ref(vector<MATRIX>& basis_overlap_derivs_, vector<int>& indxs_);
+  void set_basis_overlap_derivs_by_val(vector<MATRIX>& basis_overlap_derivs_, vector<int>& indxs_);
+
 //  void set_params(boost::python::list params_);
 //  void set_q(vector<double>& q_);
 //  void set_q(boost::python::list q_);
