@@ -56,8 +56,8 @@ void export_Dyn_objects(){
 
   double (*expt_Ehrenfest_dia_v1)(CMATRIX& C, CMATRIX& H, vector<CMATRIX>& dHdR, vector<double>& f, int opt) = &Ehrenfest_dia;
   double (*expt_Ehrenfest_adi_v1)(CMATRIX& C, CMATRIX& E, vector<CMATRIX>& dEdR, vector<CMATRIX>& D, vector<double>& f, int opt) = &Ehrenfest_adi;
-  def("Ehrenfest_dia_v1",expt_Ehrenfest_dia_v1);
-  def("Ehrenfest_adi_v1",expt_Ehrenfest_adi_v1);
+  def("Ehrenfest_dia",expt_Ehrenfest_dia_v1);
+  def("Ehrenfest_adi",expt_Ehrenfest_adi_v1);
 
 
 
