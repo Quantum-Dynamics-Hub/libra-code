@@ -1,0 +1,158 @@
+
+void Hamiltonian::compute(){
+/**
+  Peform actual Hamiltonian computations (is not up to date)
+
+  The computations of either diabatiatic or adiabatic or both Hamiltonians are invoked, depending
+  on the representation set up for this Hamiltonian and on the state of the computations of such 
+  Hamiltonians (so, if no change of position/velocity has been made since the last computation of 
+  given Hamiltonian, no actually computations will be carryied out, not to do usefull work). Also,
+  computations of adiabatic Hamiltonians (if adiabatic representation is set up) may call computation
+  of the diabatic Hamiltonians, since they may be required. On the contrary, if the diabatic Hamiltonian
+  is selected, the adiabatic Hamiltonian is not updated.
+
+  Note, that just updating momenta and positions will not lead to automatic recomputation of the 
+  Hamiltonians and derivatives
+
+*/
+
+  if(rep==0){  compute_diabatic();   }
+  else if(rep==1){  compute_adiabatic();  }
+
+}
+
+
+
+std::complex<double> Hamiltonian::H(int i,int j){
+/**
+  Return electronic Hamiltonian matrix element
+
+  The returned Hamiltonian depends on the selected representation - can be either diabatic or adiabatic.
+  This function does not invoke actual computation - it only returns whatever exists in the internal variables.
+
+  \param[in] i index of electronic state
+  \param[in] j index of electronic state
+
+*/
+
+
+  std::complex<double> res(0.0,0.0);
+
+  if(rep==0){    // Diabatic Hamiltonian - real, symmetric => Hermitian
+    res = std::complex<double>( ham_dia->get(i,j), 0.0 );
+  }
+  else if(rep==1){    // Adiabatic Hamiltonian - real, symmetric => Hermitian
+    res = std::complex<double>( ham_adi->get(i,j), 0.0 );
+  }
+
+  return res;
+}
+
+std::complex<double> Hamiltonian::dHdq(int i,int j,int n){
+/**
+  Return the derivative of electronic Hamiltonian matrix element w.r.t. nuclear DOF
+
+  The returned Hamiltonian depends on the selected representation - can be either diabatic or adiabatic.
+  This function does not invoke actual computation - it only returns whatever exists in the internal variables.
+
+  \param[in] i index of electronic state
+  \param[in] j index of electronic state
+  \param[in] n index of nuclear DOF w.r.t. which the differentiation is performed
+
+*/
+
+
+  std::complex<double> res(0.0,0.0);
+
+  if(rep==0){    // Diabatic Hamiltonian - real, symmetric => Hermitian
+    res = std::complex<double>( d1ham_dia[n]->get(i,j), 0.0 );
+  }
+  else if(rep==1){    // Adiabatic Hamiltonian - real, symmetric => Hermitian
+    res = std::complex<double>( d1ham_adi[n]->get(i,j), 0.0 );
+  }
+
+  return res;
+}
+
+
+std::complex<double> Hamiltonian::D(int i,int j,int n){
+/**
+  Return the derivative coupling matrix element w.r.t. nuclear DOF
+
+  The returned coupling depends on the selected representation - can be either diabatic or adiabatic.
+  This function does not invoke actual computation - it only returns whatever exists in the internal variables.
+
+  D = <i|d/dR_n|j> 
+
+  \param[in] i index of electronic state
+  \param[in] j index of electronic state
+  \param[in] n index of nuclear DOF w.r.t. which the coupling is computed
+
+*/
+
+  std::complex<double> res(0.0,0.0);
+
+  if(rep==0){    // Diabatic Hamiltonian - real, symmetric => Hermitian
+    res = std::complex<double>(0.0,0.0);
+  }
+  else if(rep==1){    // Adiabatic Hamiltonian - real, symmetric => Hermitian
+    if(i!=j){  
+
+//      cout<<"in Hamiltonian::D  ... ham_adi = \n"<<*ham_adi<<endl;
+
+      double dE = (ham_adi->get(j,j) - ham_adi->get(i,i) );
+      if(fabs(dE)<1e-10){ dE = 1e-10 * (dE>0.0 ? 1.0 : -1.0); }
+
+      res = std::complex<double>( d1ham_adi[n]->get(i,j)/dE, 0.0 );
+
+    }
+  }
+
+  return res;
+}
+
+std::complex<double> Hamiltonian::nac(int i,int j){
+/**
+  Return the nonadiabatic coupling matrix element
+
+  The returned coupling depends on the selected representation - can be either diabatic or adiabatic.
+  This function does not invoke actual computation - it only returns whatever exists in the internal variables.
+
+  nac = sum_n { dR_n/dt * <i|d/dR_n|j> }
+
+  \param[in] traj Index of the trajectory
+  \param[in] i index of electronic state
+  \param[in] j index of electronic state
+
+*/
+
+
+  std::complex<double> res(0.0,0.0);
+
+  for(int n=0;n<nnucl;n++){
+    res += D(i,j,n) * v[n]; 
+  }
+  return res;
+}
+
+std::complex<double> Hamiltonian::Hvib(int i,int j){
+/**
+  Return the vibronic Hamiltonian matrix element
+
+  The returned Hamiltonian depends on the selected representation - can be either diabatic or adiabatic.
+  This function does not invoke actual computation - it only returns whatever exists in the internal variables.
+
+  \param[in] i index of electronic state
+  \param[in] j index of electronic state
+*/
+ 
+  const double hbar = 1.0;  // in atomic units
+
+  std::complex<double> ham_ = H(i,j);
+  std::complex<double> nac_ = nac(i,j);
+
+  std::complex<double> res(ham_.real(), ham_.imag() - hbar* nac_.real() );
+
+  return res;
+}
+
