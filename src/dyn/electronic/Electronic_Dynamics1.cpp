@@ -358,6 +358,80 @@ void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
 
 
 
+void propagate_electronic_nonHermitian(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
+/**
+  Solves the time-dependent Schrodinger equation:
+
+  i*hbar*dc/dt = Hvib*c  with Hvib being non-Hermitian
+   
+  API: A free function that takes electronic DOF in the form of matrix-colomun and modifies it
+
+  \param[in] dt The integration time step (also the duration of propagation)
+  \param[in,out] Coeff The reference to the CMATRIX object containing the electronic DOF (coefficient)
+  \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) - the complex-valued matrix, CMATRIX
+             it is also assumed to Hermitian - pay attention to how it is constructed!
+  \param[in] S The reference to the overlap matrix (assumed to be a complex-valued time-dependent matrix, CMATRIX)
+
+  This is the Python-friendly function
+
+  http://www.pha.jhu.edu/~neufeld/numerical/lecturenotes10.pdf
+
+  A * R = R * D                               
+  L * A  = D * L <=> A.H() * L.H() = L.H() * D
+
+  Then  L.H() * R = I 
+
+  So:  D = L.H() * A * R  and   A = R * D * L
+
+*/ 
+
+
+  int i,j;
+ 
+  // Let us first diagonalize the overlap matrix S
+  int sz = Hvib.n_cols;  
+
+  // Transform the Hamiltonian accordingly:
+  CMATRIX* I; I = new CMATRIX(sz, sz);  I->load_identity();
+  CMATRIX* R; R = new CMATRIX(sz, sz);  *R = complex<double>(0.0, 0.0); // right eigenvectors:  A * R = R * D
+  CMATRIX* L; L = new CMATRIX(sz, sz);  *L = complex<double>(0.0, 0.0); // left eigenvectors:   L * A  = D * L <=> A.H() * L.H() = L.H() * D
+  CMATRIX* Heig; Heig = new CMATRIX(sz, sz);  *Heig = complex<double>(0.0,0.0); // eigenvalues
+  CMATRIX* HvibH; HvibH = new CMATRIX(sz,sz); *HvibH = Hvib.H();
+  CMATRIX* expH;   expH = new CMATRIX(sz, sz);    *expH = complex<double>(0.0,0.0);   
+
+
+  // Solve the right eigenvalue problem
+  libmeigen::solve_eigen(Hvib, *I, *Heig, *R, 0);  // Hvib * R = R * Heig  
+
+  // Solve the left eigenvalue problem
+  libmeigen::solve_eigen(*HvibH, *I, *Heig, *L, 0);  // Hvib.H() * L.H() = L.H() * Heig  
+  *L = (*L).H();
+
+
+  // Diagonal form expH
+  complex<double> one(0.0, 1.0);
+  for(i=0;i<sz;i++){
+    complex<double> val = std::exp(-one*Heig->get(i,i)*dt );
+    expH->set(i,i,val);
+  }
+
+  // Transform back to the original basis:
+  *expH = (*R) * (*expH) * (*L);
+
+  // Propagation
+  Coeff = (*expH) * Coeff;
+
+  
+  // Clean temporary memory
+  delete expH;  delete Heig; delete HvibH; delete R; delete L;  delete I;
+
+
+
+}// propagate_electronic
+
+
+
+
 
 
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S){

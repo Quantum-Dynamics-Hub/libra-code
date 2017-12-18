@@ -121,6 +121,7 @@ void export_base_matrix(){
       .def("bin_load", &base_matrix<T1>::bin_load )
       .def("show_matrix", expt_show_matrix_v1)
       .def("show_matrix", expt_show_matrix_v2)
+      .def("show_matrix_address", &base_matrix<T1>::show_matrix_address)
       .def("Load_Matrix_From_File", &base_matrix<T1>::Load_Matrix_From_File)
 
       /// Generic operator overloads

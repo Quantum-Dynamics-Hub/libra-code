@@ -114,7 +114,7 @@ double Ehrenfest_dia(CMATRIX& C, Hamiltonian& ham, vector<double>& f, int opt){
   \param[in] opt An option that controls whether to compute Ehrenfest forces (1) or not (0)
 */
 
-  double energy = (C.H() * CMATRIX(ham.get_ham_dia()) * C).get(0,0).real();
+  double energy = 0.0; // (C.H() * CMATRIX(ham.get_ham_dia()) * C).get(0,0).real();
 
   if(opt>=1){
 
@@ -127,7 +127,7 @@ double Ehrenfest_dia(CMATRIX& C, Hamiltonian& ham, vector<double>& f, int opt){
 
     // Do the forces
     for(int i=0;i<sz;i++){
-      f[i] = -(C.H() * CMATRIX(ham.get_d1ham_dia(i)) * C).get(0,0).real();
+      f[i] = 0.0; //-(C.H() * CMATRIX(ham.get_d1ham_dia(i)) * C).get(0,0).real();
     }
 
   }// opt >=1 
@@ -231,7 +231,7 @@ double Ehrenfest_adi(CMATRIX& C, Hamiltonian& ham, vector<double>& f, int opt){
   \param[in] opt An option that controls whether to compute Ehrenfest forces (1) or not (0)
 */
 
-  double energy = (C.H() * CMATRIX(ham.get_ham_adi()) * C).get(0,0).real();
+  double energy = 0.0; //(C.H() * CMATRIX(ham.get_ham_adi()) * C).get(0,0).real();
 /*
   if(opt>=1){
 

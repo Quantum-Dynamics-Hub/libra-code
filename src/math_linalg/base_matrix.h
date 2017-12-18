@@ -503,7 +503,10 @@ public:
 
 
   ///< Print the matrix out in a formatted way
-  void show_matrix(){    std::cout<<*this;   } 
+  void show_matrix_address(){    std::cout<<this<<endl;   } 
+
+  ///< Print the matrix out in a formatted way
+  void show_matrix(){    std::cout<<*this<<endl;   } 
 
   void show_matrix(char * Output_File){
   /** This function prints the matrix elements into a file
