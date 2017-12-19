@@ -66,6 +66,10 @@ void export_base_matrix(){
   void (*expt_push_submatrix_v3)(base_matrix<T1>& X, base_matrix<T1>& x, vector<int>& subset,vector<int>& subset2) = &push_submatrix;
   void (*expt_push_submatrix_v4)(base_matrix<T1>& X, base_matrix<T1>& x, boost::python::list subset,boost::python::list subset2) = &push_submatrix;
 
+  void (*expt_add_submatrix_v1)(base_matrix<T1>& X, base_matrix<T1>& x, vector<int>& subset, T1 alpha) = &add_submatrix;
+  void (*expt_add_submatrix_v2)(base_matrix<T1>& X, base_matrix<T1>& x, boost::python::list subset, T1 alpha) = &add_submatrix;
+  void (*expt_add_submatrix_v3)(base_matrix<T1>& X, base_matrix<T1>& x, vector<int>& subset,vector<int>& subset2, T1 alpha) = &add_submatrix;
+  void (*expt_add_submatrix_v4)(base_matrix<T1>& X, base_matrix<T1>& x, boost::python::list subset,boost::python::list subset2, T1 alpha) = &add_submatrix;
 
 
   class_<   base_matrix<T1> >("base_matrix_general",init<>())
@@ -148,6 +152,12 @@ void export_base_matrix(){
   def("push_submatrix", expt_push_submatrix_v2);
   def("push_submatrix", expt_push_submatrix_v3);
   def("push_submatrix", expt_push_submatrix_v4);
+
+  def("add_submatrix", expt_add_submatrix_v1);
+  def("add_submatrix", expt_add_submatrix_v2);
+  def("add_submatrix", expt_add_submatrix_v3);
+  def("add_submatrix", expt_add_submatrix_v4);
+
 
 }
 

@@ -41,6 +41,9 @@ using namespace libcell;
 using namespace libforcefield;
 
 
+
+
+
 class Hamiltonian_MM{
 /**
   This class represents the classical interaction: bond (2-body), angle (3-body), etc... up to many-body interactions like
@@ -59,6 +62,7 @@ class Hamiltonian_MM{
     VECTOR* g1;  VECTOR* g2;
     VECTOR* m1;  VECTOR* m2;
     VECTOR* f1;  VECTOR* f2;
+    VECTOR* t1;  VECTOR* t2;  // periodic translations of each atoms
     double K,D,r0,alpha;
   };
   struct angle_interaction{
@@ -67,6 +71,7 @@ class Hamiltonian_MM{
     VECTOR* g1;  VECTOR* g2; VECTOR* g3;
     VECTOR* m1;  VECTOR* m2; VECTOR* m3;
     VECTOR* f1;  VECTOR* f2; VECTOR* f3;
+    VECTOR* t1;  VECTOR* t2; VECTOR* t3; // periodic translations of each atoms
     double k_theta, theta_0, cos_theta_0, C0,C1,C2;
     int coordination;
   }; 

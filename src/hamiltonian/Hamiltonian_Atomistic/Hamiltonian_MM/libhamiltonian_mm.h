@@ -19,6 +19,10 @@
 #define LIB_HAMILTONIAN_MM_H
 
 #include "Hamiltonian_MM.h"
+#include "Interactions.h"
+#include "Interactions_2_Body.h"
+#include "Interactions_3_Body.h"
+#include "Interactions_4_Body.h"
 
 /// liblibra namespace
 namespace liblibra{

@@ -14,7 +14,10 @@
 # The module contain the following functions:
 # average(data)
 # center_data(data)
+# center_data2(data)
 # acf(data)
+# recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectr_filename="spectrum_.txt", do_center=1)
+# recipe2(data, dt, wspan, dw)
 
 import os
 import sys
@@ -28,8 +31,10 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 
 def average(data):
-## This function computes the average value of the data
-# data - is a list of VECTOR objects
+    """
+    This function computes the average value of the data
+    # data - (list of VECTOR objects)
+    """
     ave = VECTOR()
     sz = len(data)
 
@@ -41,9 +46,11 @@ def average(data):
 
 
 def center_data(data):
-## this function centers data on zero, by subtracting the average 
-# value from each element
-# data - is a list of VECTOR objects
+    """
+    This function centers data on zero, by subtracting the average 
+    value from each element
+    data - (list of VECTOR objects) - The data
+    """
 
     data_new = []    
     ave = average(data)
@@ -53,8 +60,39 @@ def center_data(data):
     return data_new
 
 
+def center_data2(data):
+## data - list of list of VECTOR
+## this function centers data on zero, by subtracting the average 
+# value from each element
+# data - is a list of VECTOR objects
+
+
+    # Compute the average for each series and overall
+    ave = VECTOR(0.0, 0.0, 0.0)    
+    N = len(data)
+    for d in data:
+        ave = ave + average(d) 
+    ave = ave / float(N)
+
+    data_new = []    
+
+    for i in xrange(N):
+        tmp = []
+        for d in data[i]:
+            tmp.append(d - ave)
+        data_new.append(tmp)
+
+    return data_new
+
+
+
 def acf(data,dt):
-## data - is a list of VECTOR objects
+    """
+    Compute the autocorrelation function of the given data set
+
+    data - (list of VECTOR objects) - Data to analize
+    dt - (float) - time distance between the adjacent data points
+    """
 
     sz = len(data)/2  # how many elements we have in the time series
                       # we use only a half of the point, because of the 
@@ -82,13 +120,15 @@ def acf(data,dt):
 
 
 def ft(acf_data, wspan, dw, dt):  
-# we do have a number of FT and FFT functions in the Libra core, but
-# this one may be also convenient to have
-# acf_data - list of floats: C(0), C(dt), C(2*dt), etc. where C - is an ACF
-# span - is the range of the frequencies we want to compute
-# dw - is the distance between the nearby points on the frequency scale
-# dt - is the time step
+    """
+    We do have a number of FT and FFT functions in the Libra core, but
+    this one may be also convenient to have
 
+    acf_data - (list of floats): C(0), C(dt), C(2*dt), etc. where C - is an ACF
+    wspan (float) - is the range of the frequencies we want to compute
+    dw (float) - is the distance between the nearby points on the frequency scale
+    dt (float) - is the time step
+    """
 
     ############### based on the code from Pyxaid ###################
     sz=len(acf_data)    # the # of input points
@@ -111,10 +151,17 @@ def ft(acf_data, wspan, dw, dt):
     return W, J
 
 
-def recipe1(data, dt, wspan, dw):
-# dt in fs
-# dspan in cm^-1
-# dw in cm^-1
+def recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spectrum.txt", do_center=1):
+    """
+    dt (float) [ fs ] - timestep between adjacent data points
+    dspan (float) [ cm^-1 ] - window of frequencies for the Fourier transform
+    dw (float) [ cm^-1 ] - grid points spacing in the frequency domain
+    acf_filename (string) - the name of the file where to print the ACF
+    spectrum_filename (string) - the name of the file where to print the spectrum
+    do_center (int) - a flag controlling whether to center data (=1) or not (=0)
+    Centering means we subtract the average value (over all the data points) from all
+    the data points - this way, we convert values into their fluctuations.
+    """
 
 
     # Parameters
@@ -133,9 +180,71 @@ def recipe1(data, dt, wspan, dw):
     T, norm_acf, row_acf = acf( center_data(data) , dt)
     sz = len(T)
 
-    f = open("acf.txt","w")
+    f = open(acf_filename,"w")
     for it in xrange(sz):
         f.write("%8.5f  %8.5f  %8.5f  \n" % (T[it]/fs2au , norm_acf[it], row_acf[it]))
+    f.close()
+
+    # FT
+    W, J = ft(norm_acf, wspan, dw, dt)
+    sz = len(W)
+    f = open(spectrum_filename,"w")
+    for iw in xrange(sz):
+        f.write("%8.5f  %8.5f  \n" % (W[iw]/inv_cm2Ha, J[iw] ) )
+    f.close()
+
+
+
+def recipe2(data, dt, wspan, dw):
+# data - list of lists of VECTOR
+# data[i] - i-th timeseries
+# dt in fs
+# dspan in cm^-1
+# dw in cm^-1
+
+
+    # Parameters
+    inv_cm2ev = (1.0/8065.54468111324)
+    ev2Ha = (1.0/27.211)    # 27.2 ev is 1 Ha 
+    inv_cm2Ha = inv_cm2ev * ev2Ha
+    fs2au = (1.0/0.02419)   # 40 a.u. is 1 fs 
+
+        
+    wspan = wspan * inv_cm2Ha  # convert to Ha (atomic units)
+    dw = dw * inv_cm2Ha        # convert to Ha (atomic units)
+    dt = dt * fs2au            # convert to  atomic units of time
+
+    
+    # ACFs
+    N = len(data)
+    T, tnorm_acf, traw_acf = [], [], []
+    for n in xrange(N):
+        t, nacf, racf = acf( data[n] , dt)
+
+        if n==0:
+            T = t
+             
+        tnorm_acf.append(nacf)
+        traw_acf.append(racf)
+
+    sz = len(T)
+
+
+    # Compute the particle-averaged acfs:
+    norm_acf, raw_acf = [0.0]*sz, [0.0]*sz
+    for i in xrange(sz):
+        for n in xrange(N):
+            norm_acf[i] = norm_acf[i] + tnorm_acf[n][i]
+            raw_acf[i] = raw_acf[i] + traw_acf[n][i]
+         
+        norm_acf[i] = norm_acf[i] / float(N)
+        raw_acf[i] = raw_acf[i] / float(N)
+
+
+
+    f = open("acf.txt","w")
+    for it in xrange(sz):
+        f.write("%8.5f  %8.5f  %8.5f  \n" % (T[it]/fs2au , norm_acf[it], raw_acf[it]))
     f.close()
 
     # FT

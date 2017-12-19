@@ -26,5 +26,6 @@ __all__ = ["init_system",
            "datautils",
            "build",
            "reorder_matrices"
+           "autoconnect"
           ]
 

@@ -29,6 +29,21 @@ using namespace libspecialfunctions;
 
 namespace libpot{
 
+
+double Elec_Ewald3D(vector<VECTOR*>& r, vector<double>& q, MATRIX3x3& box,    /* Inputs */ 
+                    vector<VECTOR*>& f, MATRIX3x3& at_stress,  /* Outputs*/
+                    vector< std::pair<int, int> >& exclusions, 
+                    vector< VECTOR* >& excl_vector1,
+                    vector< VECTOR* >& excl_vector2,
+                    vector<double>& excl_scales,
+                    int rec_deg,int pbc_deg, double etha, double R_on, double R_off    /* Parameters */
+                   );
+
+double Elec_Ewald3D(vector<VECTOR>& r, vector<double>& q, MATRIX3x3& box, double epsilon,   /* Inputs */ 
+                    vector<VECTOR>& f, MATRIX3x3& at_stress,  /* Outputs*/
+                    int rec_deg,int pbc_deg, double etha, double R_on, double R_off    /* Parameters */
+                   );
+
 double Elec_Ewald3D(VECTOR* r,         /* Inputs */
                     VECTOR* g,
                     VECTOR* m,

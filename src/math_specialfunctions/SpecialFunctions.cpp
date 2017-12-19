@@ -220,8 +220,15 @@ double Fn(int n,double t){
 double gaussian_int(int n, double alp){
 /****************************************************************************
  This function computes the elementary integral
+
    +inf
-  int   {   x^2n * exp(-alp*x^2) dx }   = ( (2n-1)! /( a^(n/2) * 2^(n/2) ) ) * sqrt(pi/a)
+  int   {   x^n * exp(-alp*x^2) dx }   = 0 , if n is odd,  !=0, if n is even:
+   -inf
+
+ if n is even, we use:  n = 2k
+
+   +inf
+  int   {   x^2k * exp(-alp*x^2) dx }   = ( (2k-1)!! /( (2a)^k ) ) * sqrt(pi/a)
    -inf
 
   http://en.wikipedia.org/wiki/Gaussian_integral
@@ -232,7 +239,7 @@ double gaussian_int(int n, double alp){
   if(n%2==0){  // even    
     if(n==0){  res = sqrt(M_PI/alp); }
     else{ 
-      res = (FACTORIAL(n-1)/pow(2.0*alp, n/2))*sqrt(M_PI/alp);
+      res = (DFACTORIAL(n-1)/pow(2.0*alp, n/2))*sqrt(M_PI/alp);
     }
   }
   else{        // odd
@@ -675,7 +682,7 @@ void binomial_expansion(int n1,int n2,double x1,double x2,double* f,double* dfdx
       double x11 = x1*x1;
       double x22 = x2*x2;
       double x12 = x1*x2;
-      f[0] = x11*x22;           f[1] = 2.0*x1*x22 + 2.0*x11*x2;   f[2] = x11 + x22 + 4.0*x12; f[3] = 2.0*(x1 + x2); f[4] = 1.0;     
+      f[0] = x11*x22;           f[1] = 2.0*(x1*x22 + x11*x2);   f[2] = x11 + x22 + 4.0*x12; f[3] = 2.0*(x1 + x2); f[4] = 1.0;     
 
       if(is_derivs){ 
       dfdx1[0] = 2.0*x1*x22;    dfdx1[1] = 2.0*x22 + 4.0*x12; dfdx1[2] = 2.0*x1 + 4.0*x2; dfdx1[3] = 2.0;       dfdx1[4] = 0.0; 

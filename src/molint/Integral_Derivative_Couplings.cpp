@@ -53,18 +53,30 @@ double derivative_coupling_integral(
 
 
   w = 2.0*alp_b;
-  Ix += w * gaussian_overlap(nxa, alp_a, Xa, nxb+1, alp_b, Xb, is_normalize, is_derivs, dIx_dXa, dIx_dXb, aux, n_aux);
+  Ix += w * gaussian_overlap(nxa, alp_a, Xa, nxb+1, alp_b, Xb, 0, is_derivs, dIx_dXa, dIx_dXb, aux, n_aux);
   dI_dXa += w * dIx_dXa;
   dI_dXb += w * dIx_dXb;
 
 
   if(nxb>=1){ 
     w = -nxb;
-    Ix += w * gaussian_overlap(nxa, alp_a, Xa, nxb-1, alp_b, Xb, is_normalize, is_derivs, dIx_dXa, dIx_dXb, aux, n_aux);
+    Ix += w * gaussian_overlap(nxa, alp_a, Xa, nxb-1, alp_b, Xb, 0, is_derivs, dIx_dXa, dIx_dXb, aux, n_aux);
     dI_dXa += w * dIx_dXa;
     dI_dXb += w * dIx_dXb;
 
   }
+
+  // In case we need to normalize initial Gaussians
+  if(is_normalize){
+
+    double nrm = gaussian_normalization_factor(nxa,alp_a) * gaussian_normalization_factor(nxb,alp_b);
+    Ix *= nrm;
+    dI_dXa *= nrm; 
+    dI_dXb *= nrm; 
+
+  }
+
+
 
   return Ix;
 

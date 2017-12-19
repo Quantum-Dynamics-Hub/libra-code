@@ -21,6 +21,7 @@
 
 #include "../math_linalg/liblinalg.h"
 #include "../cell/libcell.h"
+#include "../math_specialfunctions/libspecialfunctions.h"
 #include "Switching_functions.h"
 #include "Potentials_vdw.h"
 #include "Potentials_elec.h"
@@ -31,6 +32,7 @@ namespace liblibra{
 
 using namespace liblinalg;
 using namespace libcell;
+using namespace libspecialfunctions;
 using libcell::triple;
 using libcell::quartet;
 using libcell::excl_scale;
@@ -39,6 +41,18 @@ using libcell::excl_scale;
 namespace libpot{
 
 //--------------------- Many-body potentials ----------------------------------
+
+double VdW_Ewald3D(vector<VECTOR>& r, vector<int>& types, int max_type, vector<double>& Bij, MATRIX3x3& box, /* Inputs */ 
+                   vector<VECTOR>& f, MATRIX3x3& at_stress,  /* Outputs*/
+                   int rec_deg,int pbc_deg, double etha, double R_on, double R_off    /* Parameters */                   
+                   );
+
+double VdW_Ewald3D(vector<VECTOR>& r, vector<double>& q, MATRIX3x3& box, /* Inputs */ 
+                   vector<VECTOR>& f, MATRIX3x3& at_stress,  /* Outputs*/
+                   int rec_deg,int pbc_deg, double etha, double R_on, double R_off    /* Parameters */
+                   );
+
+
 double Elec_Ewald3D(VECTOR* r,         /* Inputs */
                     VECTOR* g,
                     VECTOR* m,
