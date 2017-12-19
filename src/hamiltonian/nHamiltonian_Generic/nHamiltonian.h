@@ -274,18 +274,32 @@ public:
   **/
 
   void compute_adiabatic(int lvl);
+  void ampl_dia2adi();
+  void ampl_adi2dia();
+
 
   complex<double> Ehrenfest_energy_adi();
   complex<double> Ehrenfest_energy_dia();
 
-  vector<CMATRIX> forces_adi(); // variational forces in adiabatic basis
-  vector<CMATRIX> forces_dia(); // variational forces in diabatic basis
+
+  CMATRIX forces_adi();  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
+  CMATRIX forces_dia();  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
+
+  vector<CMATRIX> forces_tens_adi(); // 
+  vector<CMATRIX> forces_tens_dia(); // 
+
+
+//  CMATRIX forces_adi();  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
+//  CMATRIX forces_dia();  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
+
 
   CMATRIX Ehrenfest_forces_adi();  // Ehrenfest forces in adiabatic basis
   CMATRIX Ehrenfest_forces_dia();  // Ehrenfest forces in diabatic basis
 
-  void ampl_dia2adi();
-  void ampl_adi2dia();
+  vector<CMATRIX> Ehrenfest_forces_tens_adi();  // Force tensor in adiabatic basis, assuming Cadi = Cadi(t)
+  vector<CMATRIX> Ehrenfest_forces_tens_dia();  // Force tensor in diabatic basis, assuming Cdia = Cdia(t)
+
+
 
 /*
 

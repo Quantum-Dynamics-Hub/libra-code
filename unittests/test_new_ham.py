@@ -597,8 +597,8 @@ class Test_New_Hamiltonian(unittest.TestCase):
         print "Eadi1 = ", Eadi1
 
         
-        f_dia1 = ham.forces_dia()
-        f_adi1 = ham.forces_adi()
+        f_dia1 = ham.forces_tens_dia()
+        f_adi1 = ham.forces_tens_adi()
 
         nrm_dia = (Cdia.H() * Sdia * Cdia).get(0)
         nrm_adi = (Cadi.H() * Cadi).get(0)

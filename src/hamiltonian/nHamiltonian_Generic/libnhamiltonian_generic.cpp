@@ -120,17 +120,27 @@ void export_nhamiltonian_generic_objects(){
 
 
       .def("compute_adiabatic", &nHamiltonian::compute_adiabatic)
+      .def("ampl_adi2dia", &nHamiltonian::ampl_adi2dia)
+      .def("ampl_dia2adi", &nHamiltonian::ampl_dia2adi)
+
+
       .def("Ehrenfest_energy_adi", &nHamiltonian::Ehrenfest_energy_adi)
       .def("Ehrenfest_energy_dia", &nHamiltonian::Ehrenfest_energy_dia)
+
+      .def("forces_tens_adi", &nHamiltonian::forces_tens_adi)
+      .def("forces_tens_dia", &nHamiltonian::forces_tens_dia)
 
       .def("forces_adi", &nHamiltonian::forces_adi)
       .def("forces_dia", &nHamiltonian::forces_dia)
 
+      .def("Ehrenfest_forces_tens_adi", &nHamiltonian::Ehrenfest_forces_tens_adi)
+      .def("Ehrenfest_forces_tens_dia", &nHamiltonian::Ehrenfest_forces_tens_dia)
+
       .def("Ehrenfest_forces_adi", &nHamiltonian::Ehrenfest_forces_adi)
       .def("Ehrenfest_forces_dia", &nHamiltonian::Ehrenfest_forces_dia)
 
-      .def("ampl_adi2dia", &nHamiltonian::ampl_adi2dia)
-      .def("ampl_dia2adi", &nHamiltonian::ampl_dia2adi)
+
+
 
 
 

@@ -269,7 +269,7 @@ def run_test_dia(model):
 
 
     # Do the propagation
-    for i in xrange(250000):
+    for i in xrange(25000):
 
 #        propagate_electronic_nonHermitian(0.5*dt, Cdia, Hvib)        
         propagate_electronic(0.5*dt, Cdia, Hvib)
@@ -320,6 +320,6 @@ def run_test_dia(model):
 
 model = 3
 
-#run_test_adi(model)
-run_test_dia(model)
+run_test_adi(model)
+#run_test_dia(model)
         
