@@ -46,6 +46,8 @@ void export_Hamiltonian_objects(){
   export_hamiltonian_atomistic_objects();
   export_hamiltonian_extern_objects();
 
+  export_nhamiltonian_generic_objects();
+
 }
 
 

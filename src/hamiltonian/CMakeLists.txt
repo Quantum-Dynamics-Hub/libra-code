@@ -12,7 +12,6 @@ ADD_SUBDIRECTORY("Hamiltonian_Generic")
 MESSAGE("Going into subdirectory nHamiltonian_Generic...")
 ADD_SUBDIRECTORY("nHamiltonian_Generic")
 
-
 MESSAGE("Going into subdirectory Hamiltonian_Model...")
 ADD_SUBDIRECTORY("Hamiltonian_Model")
 
