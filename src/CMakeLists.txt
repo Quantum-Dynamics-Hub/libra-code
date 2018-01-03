@@ -103,6 +103,10 @@ MESSAGE("Going into subdirectory hamiltonian...")
 ADD_SUBDIRECTORY("hamiltonian")
 
 
+MESSAGE("Going into subdirectory ivr...")
+ADD_SUBDIRECTORY("ivr")
+
+
 MESSAGE("Going into subdirectory dyn...")
 ADD_SUBDIRECTORY("dyn")
 

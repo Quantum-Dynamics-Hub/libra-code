@@ -107,6 +107,8 @@ void export_libra_core_objects(){
 
   export_Hamiltonian_objects();
 
+  export_ivr_objects();
+
   export_Dyn_objects();
 
   export_converters_objects();
