@@ -9,9 +9,8 @@
 *
 *********************************************************************************/
 /**
-  \file ivr.cpp
-  \brief The file implements varios types of Initial Value Representation (IVR) sampling 
-         These are the C++ re-implementation of the Fortran codes from the Ananth group.
+  \file ivr_sampling.cpp
+  \brief These are the C++ re-implementation of the Fortran codes from the Ananth group.
          The original codes can be found here:
          https://github.com/AnanthGroup/SC-IVR-Code-Package    
 

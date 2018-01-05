@@ -56,6 +56,7 @@ using namespace libforcefield;
 using namespace libcontrol_parameters;
 using namespace libhamiltonian;
 
+using namespace libivr;
 using namespace libdyn;
 
 using namespace libconverters;
