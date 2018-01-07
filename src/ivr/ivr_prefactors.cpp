@@ -41,10 +41,7 @@ namespace libivr{
 
 
 complex<double> MQC_prefactor_FB_G
-(vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, 
- CMATRIX& Width0,  CMATRIX& invWidth0,  CMATRIX& WidthT,  CMATRIX& invWidthT,
- CMATRIX& TuningQ, CMATRIX& invTuningQ, CMATRIX& TuningP, CMATRIX& invTuningP
-){
+(vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, ivr_params& prms){
 
 /**
   \brief Multi-dimensional  FB-MQC-IVR Prefactor with general B
@@ -53,25 +50,24 @@ complex<double> MQC_prefactor_FB_G
              each element of the array is a Ndof x Ndof matrix
   \param[i]n Mbck - Monodromy matrix array (backward) defined as Mbck = (MqqB,MqpB,MpqB,MppB)
              each element of the array is a Ndof x Ndof matrix
-  \param[in] Width0 - a Ndof x Ndof matrix with the width parameters of CS at t = 0
-  \param[in] invWidth0 - a Ndof x Ndof matrix  inverse of Width0
-  \param[in] WidthT - a Ndof x Ndof matrix with the width parameters of CS at t = T
-  \param[in] invWidthT - a Ndof x Ndof matrix  inverse of WidthT
-  \param[in] TuningQ - a Ndof x Ndof matrix , cq,  see theory
-  \param[in] invTuningQ - a Ndof x Ndof matrix , inverse of TuningQ
-  \param[in] TuningP - a Ndof x Ndof matrix , cp, see theory
-  \param[in] invTuningP - a Ndof x Ndof matrix , inverse of TuningP
-
-      
+  \param[in] prms - parameters of CSs            
 
 */
+
+  CMATRIX cWidth0(*prms.Width0);  
+  CMATRIX cWidthT(*prms.WidthT);  
+  CMATRIX cinvWidth0(*prms.invWidth0);  
+  CMATRIX cinvWidthT(*prms.invWidthT);  
+  CMATRIX cTuningQ(*prms.TuningQ);
+  CMATRIX cTuningP(*prms.TuningP);
+
 
   int Ndof = Mfwd[0].n_rows;
   complex<double> one(0.0, 1.0);
 
 
   CMATRIX Id(Ndof, Ndof), G(Ndof, Ndof), invG(Ndof, Ndof);
-  G = (TuningQ + WidthT) * TuningP + TuningQ * (TuningP + invWidthT);
+  G = (cTuningQ + cWidthT) * cTuningP + cTuningQ * (cTuningP + cinvWidthT);
 
   for(int i=0;i<Ndof;i++){
     Id.set(i,i, 1.0, 0.0);
@@ -80,20 +76,20 @@ complex<double> MQC_prefactor_FB_G
 
 
   CMATRIX A(Ndof, Ndof), B(Ndof, Ndof), C(Ndof, Ndof), D(Ndof, Ndof);
-  A = Mbck[3] - one * Width0 * Mbck[1];
-  B = Mfwd[3] * Width0 + one * Mfwd[2];
-  C = Width0 * Mbck[0] + one * Mbck[2];
-  D = Mfwd[0] - one * Mfwd[1] * Width0;
+  A = Mbck[3] - one * cWidth0 * Mbck[1];
+  B = Mfwd[3] * cWidth0 + one * Mfwd[2];
+  C = cWidth0 * Mbck[0] + one * Mbck[2];
+  D = Mfwd[0] - one * Mfwd[1] * cWidth0;
 
 
   CMATRIX G1(Ndof,Ndof), Gp(Ndof,Ndof), Gq(Ndof,Ndof);  
   G1   = invG + Id;
-  Gq = (0.5 * Width0 + TuningQ) * invG;
-  Gp = (0.5 * invWidthT + TuningP) * invG; 
+  Gq = (0.5 * cWidth0 + cTuningQ) * invG;
+  Gp = (0.5 * cinvWidthT + cTuningP) * invG; 
 
 
   CMATRIX coeff(Ndof, Ndof);
-  coeff = 0.5* invWidth0 * G * ( A * (0.5 * G1 * B + Gq * D) + C * (0.5 * G1 * D + Gp * B));
+  coeff = 0.5* cinvWidth0 * G * ( A * (0.5 * G1 * B + Gq * D) + C * (0.5 * G1 * D + Gp * B));
 
 
   return det(coeff);
@@ -104,10 +100,7 @@ complex<double> MQC_prefactor_FB_G
 
 
 complex<double> MQC_prefactor_FF_G
-(vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, 
- CMATRIX& Width0,  CMATRIX& invWidth0,  CMATRIX& WidthT,  CMATRIX& invWidthT,
- CMATRIX& TuningQ, CMATRIX& invTuningQ, CMATRIX& TuningP, CMATRIX& invTuningP
-){
+(vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, ivr_params& prms){
 
 /**
   \brief Multi-dimensional  FF-MQC-IVR Prefactor with general B
@@ -116,16 +109,7 @@ complex<double> MQC_prefactor_FF_G
              each element of the array is a Ndof x Ndof matrix
   \param[i]n Mbck - Monodromy matrix array (backward) defined as Mbck = (MqqB,MqpB,MpqB,MppB)
              each element of the array is a Ndof x Ndof matrix
-  \param[in] Width0 - a Ndof x Ndof matrix with the width parameters of CS at t = 0
-  \param[in] invWidth0 - a Ndof x Ndof matrix  inverse of Width0
-  \param[in] WidthT - a Ndof x Ndof matrix with the width parameters of CS at t = T
-  \param[in] invWidthT - a Ndof x Ndof matrix  inverse of WidthT
-  \param[in] TuningQ - a Ndof x Ndof matrix , cq,  see theory
-  \param[in] invTuningQ - a Ndof x Ndof matrix , inverse of TuningQ
-  \param[in] TuningP - a Ndof x Ndof matrix , cp, see theory
-  \param[in] invTuningP - a Ndof x Ndof matrix , inverse of TuningP
-
-      
+  \param[in] prms - parameters of CSs            
 
 */
 
@@ -134,13 +118,20 @@ complex<double> MQC_prefactor_FF_G
 
   CMATRIX A(Ndof, Ndof), B(Ndof, Ndof), C(Ndof, Ndof), D(Ndof, Ndof);
 
-  A = Mfwd[3] - one * WidthT * Mfwd[1];
-  B = Mbck[3] * WidthT + one * Mbck[2];
-  C = WidthT * Mfwd[0] + one * Mfwd[2];
-  D = Mbck[0] - one * Mbck[1] * WidthT;
+  CMATRIX cWidth0(*prms.Width0);  
+  CMATRIX cWidthT(*prms.WidthT);  
+  CMATRIX cinvWidth0(*prms.invWidth0);  
+  CMATRIX cinvWidthT(*prms.invWidthT);  
+  CMATRIX cTuningQ(*prms.TuningQ);
+  CMATRIX cTuningP(*prms.TuningP);
+
+  A = Mfwd[3] - one * cWidthT * Mfwd[1];
+  B = Mbck[3] * cWidthT + one * Mbck[2];
+  C = cWidthT * Mfwd[0] + one * Mfwd[2];
+  D = Mbck[0] - one * Mbck[1] * cWidthT;
 
   CMATRIX G(Ndof, Ndof), invG(Ndof, Ndof), Id(Ndof, Ndof);
-  G = TuningP * (TuningQ + Width0) + TuningQ * (TuningP + invWidth0);
+  G = cTuningP * (cTuningQ + cWidth0) + cTuningQ * (cTuningP + cinvWidth0);
 
   for(int i=0;i<Ndof;i++){
     Id.set(i,i, 1.0, 0.0);
@@ -148,12 +139,12 @@ complex<double> MQC_prefactor_FF_G
   }
 
   CMATRIX Gq(Ndof, Ndof), Gp(Ndof, Ndof);
-  Gq = (0.5 * Width0+TuningQ) * invG;
-  Gp = (0.5 * invWidth0+TuningP) * invG; 
+  Gq = 0.5 * cWidth0+cTuningQ * invG;
+  Gp = 0.5 * cinvWidth0+cTuningP * invG; 
 
 
   CMATRIX coeff(Ndof, Ndof);
-  coeff = 0.5 * invWidthT * G * (0.5 * A * (invG + Id) * B + C * Gp * B + 0.5 * C * (invG + Id) * D + A * Gq * D);
+  coeff = 0.5 * cinvWidthT * G * (0.5 * A * (invG + Id) * B + C * Gp * B + 0.5 * C * (invG + Id) * D + A * Gq * D);
 
 
   return det(coeff);
@@ -165,30 +156,19 @@ complex<double> MQC_prefactor_FF_G
 
 
 vector<complex<double> > DHK_prefactor
-(vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, 
- CMATRIX& Width0,  CMATRIX& invWidth0,  CMATRIX& WidthT,  CMATRIX& invWidthT,
- CMATRIX& TuningQ, CMATRIX& invTuningQ, CMATRIX& TuningP, CMATRIX& invTuningP
-){
+(vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, ivr_params& prms){
 
 /**
   \brief Multi-dimensional  Herman-Kluk Prefactors for DHK TCF
   
-  \param[i]n Mfwd - Monodromy matrix array (forward) defined as Mfwd = (MqqF,MqpF,MpqF,MppF)
+  \param[in] Mfwd - Monodromy matrix array (forward) defined as Mfwd = (MqqF,MqpF,MpqF,MppF)
              each element of the array is a Ndof x Ndof matrix
-  \param[i]n Mbck - Monodromy matrix array (backward) defined as Mbck = (MqqB,MqpB,MpqB,MppB)
+  \param[in] Mbck - Monodromy matrix array (backward) defined as Mbck = (MqqB,MqpB,MpqB,MppB)
              each element of the array is a Ndof x Ndof matrix
-  \param[in] Width0 - a Ndof x Ndof matrix with the width parameters of CS at t = 0
-  \param[in] invWidth0 - a Ndof x Ndof matrix  inverse of Width0
-  \param[in] WidthT - a Ndof x Ndof matrix with the width parameters of CS at t = T
-  \param[in] invWidthT - a Ndof x Ndof matrix  inverse of WidthT
-  \param[in] TuningQ - a Ndof x Ndof matrix , cq,  see theory
-  \param[in] invTuningQ - a Ndof x Ndof matrix , inverse of TuningQ
-  \param[in] TuningP - a Ndof x Ndof matrix , cp, see theory
-  \param[in] invTuningP - a Ndof x Ndof matrix , inverse of TuningP
-
-      
+  \param[in] prms - parameters of CSs      
 
 */
+
 
   int Ndof = Mfwd[0].n_rows;
   complex<double> one(0.0, 1.0);
@@ -197,10 +177,10 @@ vector<complex<double> > DHK_prefactor
   CMATRIX sqrt_WidthT(Ndof, Ndof), sqrt_invWidthT(Ndof, Ndof);
 
   for(int i=0;i<Ndof;i++){
-    sqrt_Width0.set(i,i, std::sqrt(Width0.get(i,i)));
-    sqrt_invWidth0.set(i,i, std::sqrt(invWidth0.get(i,i)));
-    sqrt_WidthT.set(i,i, std::sqrt(WidthT.get(i,i)));
-    sqrt_invWidthT.set(i,i, std::sqrt(invWidthT.get(i,i)));
+    sqrt_Width0.set(i,i, std::sqrt(prms.Width0->get(i,i)), 0.0 );
+    sqrt_invWidth0.set(i,i, std::sqrt(prms.invWidth0->get(i,i)), 0.0 );
+    sqrt_WidthT.set(i,i, std::sqrt(prms.WidthT->get(i,i)), 0.0 );
+    sqrt_invWidthT.set(i,i, std::sqrt(prms.invWidthT->get(i,i)), 0.0 );
   }
 
 

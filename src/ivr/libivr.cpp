@@ -14,6 +14,9 @@
 
 #include "libivr.h"
 
+//#define BOOST_PYTHON_MAX_ARITY 30
+
+
 /// liblibra namespace
 namespace liblibra{
 
@@ -27,6 +30,43 @@ namespace libivr{
 
 
 void export_ivr_objects(){
+
+
+  class_<ivr_params>("ivr_params",init<int>())
+    .def(init<const ivr_params&>()) 
+
+    .def("set_qIn",&ivr_params::set_qIn)
+    .def("set_pIn",&ivr_params::set_pIn)
+    .def("set_Width0",&ivr_params::set_Width0)
+    .def("set_WidthT",&ivr_params::set_WidthT)
+    .def("set_TuningQ",&ivr_params::set_TuningQ)
+    .def("set_TuningP",&ivr_params::set_TuningP)
+
+    .def("get_qIn",&ivr_params::get_qIn)
+    .def("get_pIn",&ivr_params::get_pIn)
+    .def("get_Width0",&ivr_params::get_Width0)
+    .def("get_WidthT",&ivr_params::get_WidthT)
+    .def("get_invWidth0",&ivr_params::get_invWidth0)
+    .def("get_invWidthT",&ivr_params::get_invWidthT)
+    .def("get_TuningQ",&ivr_params::get_TuningQ)
+    .def("get_TuningP",&ivr_params::get_TuningP)
+    .def("get_invTuningQ",&ivr_params::get_invTuningQ)
+    .def("get_invTuningP",&ivr_params::get_invTuningP)
+
+    .def_readwrite("Ndof",&ivr_params::Ndof)
+         
+  ;
+
+
+  class_<ivr_observable>("ivr_observables",init<>())
+    .def(init<int, int>()) 
+
+    .def_readwrite("observable_type",&ivr_observable::observable_type)
+    .def_readwrite("observable_label",&ivr_observable::observable_label)
+
+  ;
+
+
 
   ///============ Sampling Initial Distributions ===========================
   ///  In ivr_sampling.cpp
@@ -72,7 +112,10 @@ void export_ivr_objects(){
   ///  In ivr_matrix_elements.cpp
 
 
-  complex<double> (*expt_CS_overlap_v1)(MATRIX& q, MATRIX& p, MATRIX& qIn, MATRIX& pIn, MATRIX& Width0, MATRIX& invWidth0) = &CS_overlap;
+  complex<double> (*expt_CS_overlap_v1)
+  (MATRIX& q, MATRIX& p, MATRIX& qIn, MATRIX& pIn, 
+  MATRIX& Width0, MATRIX& invWidth0) = &CS_overlap;
+
   def("CS_overlap", expt_CS_overlap_v1);
 
 
@@ -80,43 +123,39 @@ void export_ivr_objects(){
   def("mat_elt_FB_B", expt_mat_elt_FB_B_v1);
 
 
-  complex<double> (*expt_mat_elt_FF_B_v1)(MATRIX& q, MATRIX& p, MATRIX& qp, MATRIX& pp, MATRIX& WidthT, MATRIX& invWidthT, int opt, int lab) = &mat_elt_FF_B;
+  complex<double> (*expt_mat_elt_FF_B_v1)
+  (MATRIX& q, MATRIX& p, MATRIX& qp, MATRIX& pp, 
+  MATRIX& WidthT, MATRIX& invWidthT, int opt, int lab) = &mat_elt_FF_B;
+
   def("mat_elt_FF_B", expt_mat_elt_FF_B_v1);
 
 
   complex<double> (*expt_mat_elt_HUS_B_v1)(MATRIX& q, MATRIX& p, int opt, int lab) = &mat_elt_HUS_B;
+
   def("mat_elt_HUS_B", expt_mat_elt_HUS_B_v1);
 
 
   complex<double> (*expt_mat_elt_LSC_B_v1)(MATRIX& q, MATRIX& p, int opt, int lab) = &mat_elt_LSC_B;
+
   def("mat_elt_LSC_B", expt_mat_elt_LSC_B_v1);
 
 
   ///============ SC Prefactors  ===========================
   ///  In ivr_prefactors.cpp
   complex<double> (*expt_MQC_prefactor_FB_G_v1)
-  (vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, 
-   CMATRIX& Width0,  CMATRIX& invWidth0,  CMATRIX& WidthT,  CMATRIX& invWidthT,
-   CMATRIX& TuningQ, CMATRIX& invTuningQ, CMATRIX& TuningP, CMATRIX& invTuningP
-  ) = &MQC_prefactor_FB_G;
+  (vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, ivr_params& prms) = &MQC_prefactor_FB_G;
 
   def("MQC_prefactor_FB_G", expt_MQC_prefactor_FB_G_v1);
 
 
   complex<double> (*expt_MQC_prefactor_FF_G_v1)
-  (vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, 
-   CMATRIX& Width0,  CMATRIX& invWidth0,  CMATRIX& WidthT,  CMATRIX& invWidthT,
-   CMATRIX& TuningQ, CMATRIX& invTuningQ, CMATRIX& TuningP, CMATRIX& invTuningP
-  ) = &MQC_prefactor_FF_G;
+  (vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, ivr_params& prms) = &MQC_prefactor_FF_G;
 
   def("MQC_prefactor_FF_G", expt_MQC_prefactor_FF_G_v1);
 
 
   vector<complex<double> > (*expt_DHK_prefactor_v1)
-  (vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, 
-   CMATRIX& Width0,  CMATRIX& invWidth0,  CMATRIX& WidthT,  CMATRIX& invWidthT,
-   CMATRIX& TuningQ, CMATRIX& invTuningQ, CMATRIX& TuningP, CMATRIX& invTuningP
-  ) = &DHK_prefactor;
+  (vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, ivr_params& prms) = &DHK_prefactor;
 
   def("DHK_prefactor", expt_DHK_prefactor_v1);
 
@@ -125,6 +164,29 @@ void export_ivr_objects(){
   ///  In ivr_propagators.cpp
   void (*expt_Integrator_v1)(MATRIX& q, MATRIX& p, vector<MATRIX>& M, double& action, MATRIX& mass, double dt) = &Integrator;
   def("Integrator", expt_Integrator_v1);
+
+
+
+  ///============ TCF calculators  ===========================
+  ///  In ivr_timecorr.cpp
+  void (*expt_compute_tcf_v1)(vector< complex<double> >& TCF, vector<int>& MCnum,
+                   vector<MATRIX>& q, vector<MATRIX>& p, vector<int>& status,
+                   int ivr_opt, int observable_type, int observable_label) = &compute_tcf;
+/*
+  void (*expt_compute_tcf_v2)(vector< complex<double> >& TCF, vector<int>& MCnum,
+                 MATRIX& qIn, MATRIX& pIn,
+                 MATRIX& Width0, MATRIX& invWidth0, MATRIX& WidthT, MATRIX& invWidthT,
+                 MATRIX& TuningQ, MATRIX& invTuningQ, MATRIX& TuningP, MATRIX& invTuningP,
+                 vector<MATRIX>& q,  vector<MATRIX>& p,  vector<int>& status, vector<double>& action,vector< vector<MATRIX> >& Mono,
+                 vector<MATRIX>& qp, vector<MATRIX>& pp, vector<int>& statusp,vector<double>& actionp,vector< vector<MATRIX> >& Monop,
+                 int ivr_opt, int observable_type, int observable_label) = &compute_tcf;
+*/
+  def("compute_tcf", expt_compute_tcf_v1);
+//  def("compute_tcf", expt_compute_tcf_v2);
+
+  void (*expt_normalize_tcf_v1)(vector< complex<double> >& TCF, vector<int>& MCnum) = &normalize_tcf;
+  def("normalize_tcf", expt_normalize_tcf_v1);
+
 
 
 } // export_ivr_objects()

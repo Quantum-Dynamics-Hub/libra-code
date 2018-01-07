@@ -26,6 +26,68 @@ using namespace libmeigen;
 
 namespace libivr{
 
+
+class ivr_params{
+
+public:
+
+  int Ndof;             ///< The number of DOFs
+
+  MATRIX* qIn;          ///<  Ndof x 1 matrix of center of the distributions
+  MATRIX* pIn;          ///<  Ndof x 1 matrix of center of the distributions
+
+  MATRIX* Width0;       ///<  Ndof x Ndof matrix of width parameters at t = 0
+  MATRIX* WidthT;       ///<  Ndof x Ndof matrix of width parameters at t = T
+  MATRIX* invWidth0;    ///<  Ndof x Ndof matrix of inverse width parameters at t = 0
+  MATRIX* invWidthT;    ///<  Ndof x Ndof matrix of inverse width parameters at t = T
+                       
+
+  MATRIX* TuningQ;      ///<  Ndof x Ndof matrix of coordinate tuning parameters
+  MATRIX* TuningP;      ///<  Ndof x Ndof matrix of momentum tuning parameters
+  MATRIX* invTuningQ;   ///<  Ndof x Ndof inverse matrix of coordinate tuning parameters
+  MATRIX* invTuningP;   ///<  Ndof x Ndof inverse matrix of momentum tuning parameters
+
+  ivr_params(int ndof_);               ///< Constructor
+  ivr_params(const ivr_params& par_);  ///< copy Constructor
+  ~ivr_params();                       ///< destructor
+
+  void set_qIn(MATRIX& qIn_);
+  void set_pIn(MATRIX& pIn_);
+  void set_Width0(double w);
+  void set_WidthT(double w);
+  void set_TuningQ(double cq);
+  void set_TuningP(double cp);
+
+  MATRIX get_qIn(){ return *qIn; }
+  MATRIX get_pIn(){ return *pIn; }
+  MATRIX get_Width0(){ return *Width0; }
+  MATRIX get_WidthT(){ return *WidthT; }
+  MATRIX get_invWidth0(){ return *invWidth0; }
+  MATRIX get_invWidthT(){ return *invWidthT; }
+  MATRIX get_TuningQ(){ return *TuningQ; }
+  MATRIX get_TuningP(){ return *TuningP; }
+  MATRIX get_invTuningQ(){ return *invTuningQ; }
+  MATRIX get_invTuningP(){ return *invTuningP; }
+
+
+
+
+};
+
+
+
+class ivr_observable{
+
+public:
+  int observable_type;    // 0 - for q, 1 - for p
+  int observable_label;   // index of the DOF
+
+  ivr_observable(){ observable_type = 0; observable_label = 0; }
+  ivr_observable(int obs_typ_, int obs_lab_){ observable_type = obs_typ_; observable_label = obs_lab_; }
+
+};
+
+
 ///============ Sampling Initial Distributions ===========================
 ///  In ivr_sampling.cpp
 
@@ -59,29 +121,38 @@ complex<double> mat_elt_LSC_B(MATRIX& q, MATRIX& p, int opt, int lab);
 ///  In ivr_prefactors.cpp
 
 complex<double> MQC_prefactor_FB_G
-(vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, 
- CMATRIX& Width0,  CMATRIX& invWidth0,  CMATRIX& WidthT,  CMATRIX& invWidthT,
- CMATRIX& TuningQ, CMATRIX& invTuningQ, CMATRIX& TuningP, CMATRIX& invTuningP
-);
+(vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, ivr_params& prms);
 
 complex<double> MQC_prefactor_FF_G
-(vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, 
- CMATRIX& Width0,  CMATRIX& invWidth0,  CMATRIX& WidthT,  CMATRIX& invWidthT,
- CMATRIX& TuningQ, CMATRIX& invTuningQ, CMATRIX& TuningP, CMATRIX& invTuningP
-);
+(vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, ivr_params& prms);
+
 
 vector<complex<double> > DHK_prefactor
-(vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, 
- CMATRIX& Width0,  CMATRIX& invWidth0,  CMATRIX& WidthT,  CMATRIX& invWidthT,
- CMATRIX& TuningQ, CMATRIX& invTuningQ, CMATRIX& TuningP, CMATRIX& invTuningP
-);
+(vector<CMATRIX>& Mfwd, vector<CMATRIX>& Mbck, ivr_params& prms);
 
 
 ///============ Propagators  ===========================
 ///  In ivr_propagators.cpp
+void Integrator(MATRIX& q, MATRIX& p, vector<MATRIX>& M, double& action, MATRIX& mass, double dt);
 
-void Integrator(MATRIX& q, MATRIX& p, vector<CMATRIX>& M, double& action, MATRIX& mass, double dt);
 
+
+///============ TCF calculators  ===========================
+///  In ivr_timecorr.cpp
+
+void compute_tcf(vector< complex<double> >& TCF, vector<int>& MCnum,
+                 vector<MATRIX>& q, vector<MATRIX>& p, vector<int>& status,
+                 int ivr_opt, int observable_type, int observable_label);
+
+
+void compute_tcf(vector< complex<double> >& TCF, vector<int>& MCnum,
+                 ivr_params& prms,
+                 vector<MATRIX>& q,  vector<MATRIX>& p,  vector<int>& status, vector<double>& action,vector< vector<MATRIX> >& Mono,
+                 vector<MATRIX>& qp, vector<MATRIX>& pp, vector<int>& statusp,vector<double>& actionp,vector< vector<MATRIX> >& Monop,
+                 int ivr_opt, int observable_type, int observable_label);
+
+
+void normalize_tcf(vector< complex<double> >& TCF, vector<int>& MCnum);
 
 }// namespace libivr
 }// liblibra
