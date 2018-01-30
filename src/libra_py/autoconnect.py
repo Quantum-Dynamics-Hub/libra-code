@@ -152,7 +152,7 @@ def autoconnect(R, MaxCoord, Rcut, opt=0, verbosity=0):
 
 
 
-def autoconnect_pbc(R, MaxCoord, Rcut, tv1, tv2, tv3, opt=0, verbosity=0):
+def autoconnect_pbc(R, MaxCoord, Rcut, tv1, tv2, tv3, pbc_opt, opt=0, verbosity=0):
     """
     \param[in] R (list of VECTORs) The atomic coordinates of the system
     \param[in] MaxCoord (list of ints) The list of maxima coorination numbers
@@ -160,6 +160,7 @@ def autoconnect_pbc(R, MaxCoord, Rcut, tv1, tv2, tv3, opt=0, verbosity=0):
     \param[in] tv1 (VECTOR) - unit cell translation vector a
     \param[in] tv2 (VECTOR) - unit cell translation vector b
     \param[in] tv3 (VECTOR) - unit cell translation vector c
+    \param[in] pbc_opt (string) - "a", "b", "c", "ab", "ac", "bc", "abc"
     \param[in] opt (int) Option to obey maximal coordination number: 
                0 - (default) the connected atoms in a pair have to obey both coordination numbers
                    Some of the atoms may stay undercoordinated. This is the consistent scheme in
@@ -181,20 +182,36 @@ def autoconnect_pbc(R, MaxCoord, Rcut, tv1, tv2, tv3, opt=0, verbosity=0):
         print "Exiting now..."
         sys.exit(0)
 
-
-
  
     unsorted_pairs = []
     mapping = []
     periodicity = []    
 
+
+    if pbc_opt not in ["a", "b", "c", "ab", "ac", "bc", "abc"]:
+        print "Error: pbc_opt ", pbc_opt, " is not recognized"
+        sys.exit(0)
+    
+    transl_a = [0.0]
+    transl_b = [0.0]
+    transl_c = [0.0]
+
+    if pbc_opt in ["a", "ab", "ac", "abc"]:
+        transl_a = [-1.0, 0.0, 1.0]
+    if pbc_opt in ["b", "ab", "bc", "abc"]:
+        transl_b = [-1.0, 0.0, 1.0]
+    if pbc_opt in ["c", "ac", "bc", "abc"]:
+        transl_c = [-1.0, 0.0, 1.0]
+
+
+ 
     # Distances between all the pairs
     count = 0
     for i in range(0,N):    
         for j in range(i+1,N):        
-            for n1 in [-1.0, 0.0, 1.0]:
-                for n2 in [-1.0, 0.0, 1.0]:
-                    for n3 in [-1.0, 0.0, 1.0]:
+            for n1 in transl_a:
+                for n2 in transl_b:
+                    for n3 in transl_c:
 
                         T = n1 * tv1 + n2 * tv2 + n3 * tv3
                         r = (R[i]-R[j]-T).length()
@@ -209,6 +226,13 @@ def autoconnect_pbc(R, MaxCoord, Rcut, tv1, tv2, tv3, opt=0, verbosity=0):
     sorted_pairs = merge_sort(unsorted_pairs) 
 
 
+    unsorted_pairs_out = []
+    for it in unsorted_pairs:
+        unsorted_pairs_out.append( [ mapping[it[0]][0], mapping[it[0]][1],
+                                   VECTOR(0.0, 0.0, 0.0),
+                                   VECTOR( periodicity[it[0]][0] * tv1 + periodicity[it[0]][1] * tv2 + periodicity[it[0]][2] * tv3 ) ] 
+                                  )
+    
     if verbosity==1:
         print "Pairs of atoms separated no more than by Rcut"
         print unsorted_pairs
@@ -281,7 +305,7 @@ def autoconnect_pbc(R, MaxCoord, Rcut, tv1, tv2, tv3, opt=0, verbosity=0):
         print line
 
  
-    return res, line
+    return res, line, unsorted_pairs_out
 
 
 
