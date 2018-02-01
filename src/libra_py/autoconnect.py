@@ -160,7 +160,7 @@ def autoconnect_pbc(R, MaxCoord, Rcut, tv1, tv2, tv3, pbc_opt, opt=0, verbosity=
     \param[in] tv1 (VECTOR) - unit cell translation vector a
     \param[in] tv2 (VECTOR) - unit cell translation vector b
     \param[in] tv3 (VECTOR) - unit cell translation vector c
-    \param[in] pbc_opt (string) - "a", "b", "c", "ab", "ac", "bc", "abc"
+    \param[in] pbc_opt (string) - "a", "b", "c", "ab", "ac", "bc", "abc", "none"
     \param[in] opt (int) Option to obey maximal coordination number: 
                0 - (default) the connected atoms in a pair have to obey both coordination numbers
                    Some of the atoms may stay undercoordinated. This is the consistent scheme in
@@ -188,7 +188,7 @@ def autoconnect_pbc(R, MaxCoord, Rcut, tv1, tv2, tv3, pbc_opt, opt=0, verbosity=
     periodicity = []    
 
 
-    if pbc_opt not in ["a", "b", "c", "ab", "ac", "bc", "abc"]:
+    if pbc_opt not in ["a", "b", "c", "ab", "ac", "bc", "abc","none"]:
         print "Error: pbc_opt ", pbc_opt, " is not recognized"
         sys.exit(0)
     
