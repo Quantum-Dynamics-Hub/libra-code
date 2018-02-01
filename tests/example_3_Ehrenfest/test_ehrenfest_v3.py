@@ -272,7 +272,7 @@ def run_test(model, rep, outname):
     # Do the propagation
     for i in xrange(500):
 
-        propagate_el(Cdia, Hvib, Sdia, Cadi, dt, rep)
+        propagate_el(Cdia, Hvib, Sdia, Cadi, 0.5*dt, rep)
     
         p = p + 0.5*f*dt
         q = q + dt*p/m
@@ -284,16 +284,11 @@ def run_test(model, rep, outname):
 
         Etot = compute_etot(ham, p, m, rep)
         f = compute_frc(ham, rep)
-        Hvib = compute_Hvib(Hdia, Hadi, dc1_dia, dc1_adi, p, m, rep)
             
         p = p + 0.5*f*dt
 
-        if rep==0:
-            Hvib = (Hdia - 1.0j*(p/m)*dc1_dia[0])        
-        elif rep==1:
-            Hvib = Hadi - 1.0j*(p/m)*dc1_adi[0]
-
-        propagate_el(Cdia, Hvib, Sdia, Cadi, dt, rep)
+        Hvib = compute_Hvib(Hdia, Hadi, dc1_dia, dc1_adi, p, m, rep)
+        propagate_el(Cdia, Hvib, Sdia, Cadi, 0.5*dt, rep)
      
 
         #=========== Properties ==========
@@ -316,12 +311,12 @@ def run_test(model, rep, outname):
               )
         out.write("%8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n" %  ret )
         out.close()
+                                                                    
 
 
-
-model = 4
+model = 3
 
 run_test(model, 0, "0.txt")
-#run_test(model, 1, "1.txt")
+run_test(model, 1, "1.txt")
 
         
