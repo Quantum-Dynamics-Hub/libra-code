@@ -200,6 +200,31 @@ def ave_pop(denmat_sh, denmat_se):
 
 
 
+def ave_en(denmat_sh, denmat_se, Hvib):
+# 
+# \param[in] denmat_sh (list of CMATRIX(nst_in, nst_in)) Vector with the density matrix (diagonal in SH) for each trajectory
+# \param[in] denmat_se (list of CMATRIX(nst_in,nst_in)) Vector with the SE density matrix for each trajectory 
+# \param[in] Hvib (list of CMATRIX(nst_in,nst_in)) Hvib for each trajectory
+#
+#  Returns: Ensemble averaged SH and SE energies (double, for each)
+#  
+
+    ntraj = len(denmat_sh)
+    nst_out = denmat_sh[0].num_of_cols
+
+    ave_en_sh = 0.0
+    ave_en_se = 0.0
+    den = 1.0/float(ntraj)
+
+    for i in xrange(ntraj):
+        ave_en_se =  den * (denmat_se[i].real() * Hvib[i].real() ).tr()  # SE
+        ave_en_sh =  den * (denmat_sh[i].real() * Hvib[i].real() ).tr()  # SH
+
+    return ave_en_sh, ave_en_se
+
+
+
+
 
 def amplitudes2denmat(coeffs):
 # \param[in] coeffs (list of CMATRIX(nstates, 1)) wavefunction amplitudes for all trajectories
