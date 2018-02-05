@@ -25,15 +25,8 @@ namespace libdyn{
 
 
 
-MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double dt, int use_boltz_factor, double T){
-/*
-  \brief Compute the FSSH surface hopping probabilities for the trajectory described by the coefficients Coeff 
-  \param[in] Coeff The amplitudes of different basis states in the coherent superposition. This matrix is assumed to be
-  a column-vector, so of the size N x 1, where N is the number of basis excited states
-  \param[in] Hvib vibronic Hamiltonian matrix
-  \param[in] dt Time duration of nuclear propagation step
-  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
-  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
+MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double dt){
+/**
 
 */
 
@@ -68,29 +61,20 @@ MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double 
         else{
 //          g_ij = -2.0*dt*imHaij/a_ii;  // This is a general case - wrong sign (opposite of the one in JCC)
             g_ij = 2.0*dt*imHaij/a_ii;  // This is a general case -
-	    if(use_boltz_factor){
+          if(g_ij<0.0){  g_ij = 0.0; }
 
-	      if(Hvib.get(j,j).real() > Hvib.get(i,i).real()){
-		argg = -(Hvib.get(j,j).real() - Hvib.get(i,i).real())/(kb*T);
-		if(argg<500.0){ g_ij = g_ij * std::exp(argg); }
-	      }
-
-	    }// if use_boltz_factor
-
-            if(g_ij<0.0){  g_ij = 0.0; }
-
-	      }// else
+        }// else
 
         g.set(i,j,g_ij);
         sum = sum + g_ij;
-	  }
+      }
       else{ g.set(i,j,0.0); }
 
-	}// for j
+    }// for j
 
     g.set(i,i,1.0 - sum);
 
-      }// for i
+  }// for i
 
   delete denmat;
 
@@ -252,15 +236,13 @@ void compute_hopping_probabilities_fssh(Ensemble& ens, int i, MATRIX& g, double 
 
 
 
-MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX& Hvib, double dt, int use_boltz_factor, double T){
+MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX& Hvib, double dt){
 
 /**
-  \brief Compute the GFSH surface hopping probabilities for the trajectory described by the coefficients Coeff
+  \brief Compute the GFSH surface hopping probabilities for the trajectory described by mol, el, and ham
   \param[in] Coeff Wavefunction amplitudes
   \param[in] Hvib vibronic Hamiltonian matrix
   \param[in] dt Time duration of nuclear propagation step
-  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
-  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
 
   Abbreviation: GFSH - global flux surface hopping
   References: 
@@ -272,12 +254,10 @@ MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX& Hvib, double 
   MATRIX g(nstates,nstates);
 
   CMATRIX* denmat; denmat = new CMATRIX(nstates, nstates);   
-  //*denmat = (Coeff * Coeff.H() ).conj();
-  *denmat = Coeff * Coeff.H() ;
+  *denmat = (Coeff * Coeff.H() ).conj();
 
   CMATRIX* denmat_dot; denmat_dot = new CMATRIX(nstates, nstates);   
-  //*denmat_dot = ((*denmat) *  Hvib.conj() - Hvib * (*denmat)) * complex<double>(0.0, 1.0);
-  *denmat_dot = ((*denmat) *  Hvib - Hvib * (*denmat)) * complex<double>(0.0, 1.0);
+  *denmat_dot = ((*denmat) *  Hvib.conj() - Hvib * (*denmat)) * complex<double>(0.0, 1.0);
 
 
   const double kb = 3.166811429e-6; // Hartree/K
@@ -312,14 +292,6 @@ MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX& Hvib, double 
 
           g.set(i,j,  dt*(a_dot[j]/a[i]) * a_dot[i] / norm);  
  
-            if(use_boltz_factor){
-
-              if(Hvib.get(j,j).real() > Hvib.get(i,i).real()){
-                argg = -(Hvib.get(j,j).real() - Hvib.get(i,i).real())/(kb*T);
-                if(argg<500.0){ g.set(i, j, g.get(i,j)*std::exp(argg)); }
-              }
-            }// if use_boltz_factor 
-
           if(g.get(i,j)<0.0){  // since norm is negative, than this condition means that a_dot[i] and a_dot[j] have same signs
                                 // which is bad - so no transitions are assigned
             g.set(i,j,0.0);
@@ -342,9 +314,8 @@ MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX& Hvib, double 
 
   delete denmat;
   delete denmat_dot;
-  return g;
 
-}// compute probabilities_gfsh
+}// fssh
 
 
 
@@ -418,14 +389,7 @@ void compute_hopping_probabilities_gfsh(Nuclear* mol, Electronic* el, Hamiltonia
         else{
 
           g->set(i,j,  dt*(a_dot[j]/a[i]) * a_dot[i] / norm);  
-
-	    if(use_boltz_factor){
-		if(ham->H(j,j).real()>ham->H(i,i).real()){
-		    argg = -(ham->H(j,j).real() - ham->H(i,i).real())/(kb*T);    
-		    if(argg<500.0){ g->set(i,j, g->get(i,j) * std::exp(argg)); }
-		}
-	    }// if use_boltz_factor
-
+ 
           if(g->get(i,j)<0.0){  // since norm is negative, than this condition means that a_dot[i] and a_dot[j] have same signs
                                 // which is bad - so no transitions are assigned
             g->set(i,j,0.0);
@@ -505,7 +469,7 @@ void compute_hopping_probabilities_gfsh(Ensemble& ens, int i, MATRIX& g, double 
 
 
 
-  MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff, CMATRIX& Hvib, int use_boltz_factor,double T){
+MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff){
 /**
   \brief Compute the MSSH surface hopping probabilities for the trajectory described by the coefficients Coeff
 
@@ -513,9 +477,6 @@ void compute_hopping_probabilities_gfsh(Ensemble& ens, int i, MATRIX& g, double 
 
   \param[in] Coeff The amplitudes of different basis states in the coherent superposition. This matrix is assumed to be
   a column-vector, so of the size N x 1, where N is the number of basis excited states
-  \param[in] Hvib vibronic Hamiltonian matrix
-  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
-  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
 
   The function returns the matrix g with hopping probabilities
 
@@ -532,7 +493,6 @@ void compute_hopping_probabilities_gfsh(Ensemble& ens, int i, MATRIX& g, double 
 
   double norm; norm = (Coeff.H() * Coeff).get(0,0).real();  // <- this is the norm <PSI|PSI>
 
-  const double kb = 3.166811429e-6; // Hartree/K^M
   // Calculate the hopping probabilities
   for(int j=0;j<nst;j++){
 
@@ -543,22 +503,40 @@ void compute_hopping_probabilities_gfsh(Ensemble& ens, int i, MATRIX& g, double 
 
   }// for j
 
-  if(use_boltz_factor){
-    for(int i=0;i<nst;i++){
-      for(int j=0;j<nst;j++){
-        if(Hvib.get(j,j).real() > Hvib.get(i,i).real()){
-          double argg = -(Hvib.get(j,j).real() - Hvib.get(i,i).real())/(kb*T);
-	  if(argg<500.0){ g.set(i,j, g.get(i,j) * std::exp(argg)); }
-	}
-      }
-    }
-  }// if use_boltz_factor
-
   return g;
 
 }
 
 
+
+
+MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff, CMATRIX& Hvib, int use_boltz_factor,double T){
+
+  const double kb = 3.166811429e-6; // Hartree/K
+  int nst = Coeff.n_elts;
+  MATRIX g(nst,nst);
+  double norm; norm = (Coeff.H() * Coeff).get(0,0).real();  // <- this is the norm <PSI|PSI>
+  double argg;
+
+   // Calculate the hopping probabilities^M
+   for(int j=0;j<nst;j++){
+       double gjj = (std::conj(Coeff.get(j)) * Coeff.get(j)).real()/norm; // c_j^* * c_j
+	 for(int i=0;i<nst;i++){   g.set(i,j,gjj);  } // hopping from i to j
+   }
+
+   if(use_boltz_factor){
+     for(int i=0;i<nst;i++){
+       for(int j=0;j<nst;j++){ 
+	 if(Hvib.get(j,j).real()>Hvib.get(i,i).real()){
+	   argg = -(Hvib.get(j,j).real() - Hvib.get(i,i).real())/(kb*T);
+	   if(argg<500.0){ g.set(i,j, g.get(i,j) * std::exp(argg)); }
+	 }
+       }
+     }
+   }// if use_boltz_factor
+
+   return g;
+}
 
 void compute_hopping_probabilities_mssh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,
                                         double dt, int use_boltz_factor,double T){
@@ -601,17 +579,6 @@ void compute_hopping_probabilities_mssh(Nuclear* mol, Electronic* el, Hamiltonia
 
   }// for j
 
-
-  if(use_boltz_factor){
-    for(i=0;i<el->nstates;i++){
-      for(j=0;j<el->nstates;j++){
-	if(ham->H(j,j).real()>ham->H(i,i).real()){
-	  argg = -(ham->H(j,j).real() - ham->H(i,i).real())/(kb*T);
-	  if(argg<500.0){ g->set(i,j, g->get(i,j) * std::exp(argg)); }
-	  }
-      } // for j
-    } // for i
-  }// if use_boltz_factor
 
 }// compute probabilities mssh
 
