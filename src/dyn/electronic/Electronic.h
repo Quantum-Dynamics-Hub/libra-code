@@ -131,6 +131,9 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S);
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S);
 void propagate_electronic(double dt,CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S);
 
+void propagate_electronic_nonHermitian(double dt, CMATRIX& Coeff, CMATRIX& Hvib);
+
+
 void grid_propagator(double dt, CMATRIX& Hvib, CMATRIX& S, CMATRIX& U);
 
 

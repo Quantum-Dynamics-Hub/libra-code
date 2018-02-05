@@ -53,6 +53,14 @@ void export_Dyn_objects(){
   export_Ensemble_objects();
   export_gwp_objects();
 
+
+  double (*expt_Ehrenfest_dia_v1)(CMATRIX& C, CMATRIX& H, vector<CMATRIX>& dHdR, vector<double>& f, int opt) = &Ehrenfest_dia;
+  double (*expt_Ehrenfest_adi_v1)(CMATRIX& C, CMATRIX& E, vector<CMATRIX>& dEdR, vector<CMATRIX>& D, vector<double>& f, int opt) = &Ehrenfest_adi;
+  def("Ehrenfest_dia",expt_Ehrenfest_dia_v1);
+  def("Ehrenfest_adi",expt_Ehrenfest_adi_v1);
+
+
+
   double (*expt_compute_kinetic_energy_v1)(Nuclear& mol) = &compute_kinetic_energy;
   double (*expt_compute_kinetic_energy_v2)(Ensemble& ens) = &compute_kinetic_energy;
   double (*expt_compute_potential_energy_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt) = &compute_potential_energy;

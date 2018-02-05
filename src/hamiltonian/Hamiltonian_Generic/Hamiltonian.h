@@ -63,7 +63,8 @@ class Hamiltonian{
   in efficient classes, they will simply not be used
 */
 
-protected:
+//protected:
+public:
 
   int rep;                   ///< representation = 0 - for diabatic, 1 - for adiabatic
   int nelec;                 ///< number of electronic degrees of freedom (energy levels)
@@ -90,7 +91,7 @@ protected:
                      ///< object of this calss - needed to avoid unnecessary computations                                
                      ///< if 0 - computations are outdated; 1 - computations are up to date                              
 
-public:
+//public:
 
   // Constructors
   Hamiltonian(); 

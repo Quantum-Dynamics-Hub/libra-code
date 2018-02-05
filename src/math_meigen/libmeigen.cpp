@@ -72,6 +72,9 @@ void export_mEigen_objects(){
   void (*expt_sqrt_matrix_v2)(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half) = &sqrt_matrix;
   void (*expt_inv_matrix_v1)(CMATRIX& S, CMATRIX& S_inv, double thresh) = &inv_matrix;
   void (*expt_inv_matrix_v2)(CMATRIX& S, CMATRIX& S_inv) = &inv_matrix;
+  void (*expt_inv_matrix_v3)(MATRIX& S, MATRIX& S_inv, double thresh) = &inv_matrix;
+  void (*expt_inv_matrix_v4)(MATRIX& S, MATRIX& S_inv) = &inv_matrix;
+
 
   void (*expt_exp_matrix_v1)(CMATRIX& res, CMATRIX& S, complex<double> dt) = &exp_matrix;
 
@@ -79,6 +82,8 @@ void export_mEigen_objects(){
   def("sqrt_matrix", expt_sqrt_matrix_v2);
   def("inv_matrix", expt_inv_matrix_v1);
   def("inv_matrix", expt_inv_matrix_v2);
+  def("inv_matrix", expt_inv_matrix_v3);
+  def("inv_matrix", expt_inv_matrix_v4);
   def("exp_matrix", expt_exp_matrix_v1);
 
 

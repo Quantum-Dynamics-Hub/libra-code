@@ -68,6 +68,7 @@ void (System::*expt_ROTATE_FRAGMENT_v1)(double, VECTOR, int)         = &System::
 void (System::*expt_ROTATE_FRAGMENT_v2)(double, VECTOR, int, VECTOR)         = &System::ROTATE_FRAGMENT;
 
 
+
   class_<System>("System",init<>())
       .def("__copy__", &generic__copy__<System>)
       .def("__deepcopy__", &generic__deepcopy__<System>)
@@ -275,6 +276,7 @@ void (System::*expt_ROTATE_FRAGMENT_v2)(double, VECTOR, int, VECTOR)         = &
       .def("fix_fragment", &System::fix_fragment)
 
       .def("ekin_tr",&System::ekin_tr)
+      .def("ekin_tr_atom",&System::ekin_tr_atom)
       .def("ekin_tr_int",&System::ekin_tr_int)
       .def("ekin_rot",&System::ekin_rot)
       .def("volume",&System::volume)

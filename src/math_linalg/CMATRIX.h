@@ -154,6 +154,7 @@ public:
   using base_matrix<complex<double> >::bin_load;
   using base_matrix<complex<double> >::show_matrix;
   using base_matrix<complex<double> >::Load_Matrix_From_File;
+  using base_matrix<complex<double> >::show_matrix_address;
 
 
   ///================ Operator overloads =====================

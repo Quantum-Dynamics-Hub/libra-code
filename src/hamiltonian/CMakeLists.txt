@@ -5,12 +5,12 @@ file(GLOB HAMILTONIAN_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
 file(GLOB HAMILTONIAN_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${HAMILTONIAN_HEADERS}) 
 
 
-#set (EIGEN_INCLUDE ../_Dependencies/Eigen/eigen-eigen-b9cd8366d4e8/ )
-#INCLUDE_DIRECTORIES(${EIGEN_INCLUDE})
-
 
 MESSAGE("Going into subdirectory Hamiltonian_Generic...")
 ADD_SUBDIRECTORY("Hamiltonian_Generic")
+
+MESSAGE("Going into subdirectory nHamiltonian_Generic...")
+ADD_SUBDIRECTORY("nHamiltonian_Generic")
 
 
 MESSAGE("Going into subdirectory Hamiltonian_Model...")
@@ -43,7 +43,9 @@ ADD_LIBRARY(hamiltonian_stat STATIC ${HAMILTONIAN_SRC})
 TARGET_LINK_LIBRARIES(hamiltonian      
                       hamiltonian_atomistic_stat
                       hamiltonian_extern_stat 
-                      hamiltonian_model_stat hamiltonian_generic_stat 
+                      hamiltonian_model_stat
+                      hamiltonian_generic_stat 
+                      nhamiltonian_generic_stat 
                       linalg_stat ${ext_libs}
                      )
 
@@ -52,7 +54,9 @@ TARGET_LINK_LIBRARIES(hamiltonian
 TARGET_LINK_LIBRARIES(hamiltonian_stat
                       hamiltonian_atomistic_stat
                       hamiltonian_extern_stat 
-                      hamiltonian_model_stat hamiltonian_generic_stat
+                      hamiltonian_model_stat
+                      hamiltonian_generic_stat
+                      nhamiltonian_generic_stat
                       linalg_stat ${ext_libs}
                      )
 

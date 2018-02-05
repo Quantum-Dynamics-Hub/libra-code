@@ -27,8 +27,16 @@ namespace libpot{
 double Bond_Harmonic(VECTOR& ri,VECTOR& rj,  /*Inputs*/
                      VECTOR& fi,VECTOR& fj,  /*Outputs*/
                       double K, double r0);  /*Parameters*/
+double Bond_Harmonic(VECTOR& ri,VECTOR& rj,  /*Inputs*/
+                     VECTOR& fi,VECTOR& fj,  /*Outputs*/
+                     MATRIX& Hess,
+                      double K, double r0, int opt);  /*Parameters*/
+
 boost::python::list Bond_Harmonic(VECTOR ri,VECTOR rj,    /*Inputs*/
                                   double K, double r0);   /*Parameters*/
+boost::python::list Bond_Harmonic(VECTOR ri,VECTOR rj,    /*Inputs*/
+                                  double K, double r0, int opt);  /*Parameters*/
+
 
 
 double Bond_Quartic(VECTOR& ri,VECTOR& rj,  /*Inputs*/

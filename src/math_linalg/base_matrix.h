@@ -503,7 +503,10 @@ public:
 
 
   ///< Print the matrix out in a formatted way
-  void show_matrix(){    std::cout<<*this;   } 
+  void show_matrix_address(){    std::cout<<this<<endl;   } 
+
+  ///< Print the matrix out in a formatted way
+  void show_matrix(){    std::cout<<*this<<endl;   } 
 
   void show_matrix(char * Output_File){
   /** This function prints the matrix elements into a file
@@ -911,6 +914,151 @@ void push_submatrix(base_matrix<T1>& X, base_matrix<T1>& x, boost::python::list 
   push_submatrix(&X, &x, _subset, _subset2);
 
 }
+
+
+
+
+//=========== Add submatrix ==============
+
+template <typename T1>
+void add_submatrix(base_matrix<T1>* X, base_matrix<T1>* x, vector<int>& subset, T1 alpha){ 
+
+/**
+  Adds a smaller matrix into a bigger one according to the specified pattern
+
+  The smaller matrix is multiplied by a coefficient alpha
+
+  Pushes the smaller submatrix x back to the bigger matrix X, according to indices given in <subset>
+  Assume that memory for x is already allocated and its dimensions are consistent with the map dimensions:
+  subset_size == x->num_of_cols = x->num_of_rows = subset.size()
+  X->num_of_cols = X->num_of_rows >= subset_size
+*/
+
+  if(X->n_cols!=X->n_rows){ cout<<"Error in push_submatrix: The target matrix, X, is not square!\nExiting...\n"; exit(0); }
+  if(x->n_cols!=x->n_rows){ cout<<"Error in push_submatrix: The source matrix, x, is not square!\nExiting...\n"; exit(0); }
+
+  int N = X->n_cols;
+  int n = x->n_cols;
+
+  if(N<n){ cout<<"Error in push_submatrix: The size of the target matrix, X, is smaller than that of the source matrix, x!\nExiting...\n"; exit(0); }
+  if(n!=subset.size()){
+    cout<<"Error in pop_submatrix: the source matrix size ("<<n<<") is not consistent with the stensil size (";
+    cout<<subset.size()<<")!\nExiting...\n"; exit(0); 
+  }
+
+  int i,j,a,b;
+
+  for(i=0;i<n;i++){
+    a = subset[i];
+    for(j=0;j<n;j++){      
+      b = subset[j];
+      X->M[a*N+b] += alpha * x->M[i*n+j];
+    }// j
+  }// i
+
+}// void add_submatrix(CMATRIX* X,CMATRIX* x,vector<int>& subset, double)
+
+template <typename T1>
+void add_submatrix(base_matrix<T1>& X, base_matrix<T1>& x, vector<int>& subset, T1 alpha){
+ ///< Adds a smaller matrix into a bigger one according to the specified pattern.
+  add_submatrix(&X, &x, subset, alpha); 
+}
+
+
+template <typename T1> 
+void add_submatrix(base_matrix<T1>& X, base_matrix<T1>& x, boost::python::list subset, T1 alpha){ 
+///< Adds a smaller matrix into a bigger one according to the specified pattern. The smaller matrix is 
+///  multiplied by a coefficient
+ 
+  // Convert input list to vector
+  int sz = boost::python::len(subset);
+  vector<int> _subset(sz,0.0);
+  for(int i=0;i<sz;i++){ _subset[i] = boost::python::extract<int>(subset[i]);  }
+
+  add_submatrix(&X, &x, _subset, alpha);
+
+}
+
+
+template <typename T1> 
+void add_submatrix(base_matrix<T1>* X, base_matrix<T1>* x, vector<int>& subset,vector<int>& subset2, T1 alpha){
+/**
+  Adds a smaller matrix into a bigger one according to the specified pattern.    The smaller matrix is 
+  multiplied by a coefficient
+
+  Pushes the smaller submatrix x back to the bigger matrix X, according to indices given in <subset>(for rows) and <subset2> (for cols)
+  Assume that memory for x is already allocated and its dimensions are consistent with the map dimensions:
+  subset_size == x->num_of_rows
+  subset2_size == x->num_of_cols = 
+
+  X->num_of_rows >= subset_size
+  X->num_of_cols >= subset2_size
+*/
+
+  if(X->n_cols < x->n_cols){
+    cout<<"Error in push_submatrix: The # of cols of the target matrix, X, is smaller than that of the source matrix, x!\nExiting...\n"; 
+    exit(0); 
+  }
+  if(X->n_rows < x->n_rows){
+    cout<<"Error in push_submatrix: The # of rows of the target matrix, X, is smaller than that of the source matrix, x!\nExiting...\n"; 
+    exit(0); 
+  }
+  if(x->n_rows != subset.size()){
+    cout<<"Error in push_submatrix: # of rows in the source matrix ("<<x->n_rows<<") is not consistent with the stensil size (";
+    cout<<subset.size()<<")!\nExiting...\n"; exit(0); 
+  }
+  if(x->n_cols != subset2.size()){
+    cout<<"Error in push_submatrix: # of cols in the source matrix ("<<x->n_cols<<") is not consistent with the stensil size (";
+    cout<<subset2.size()<<")!\nExiting...\n"; exit(0); 
+  }
+
+
+
+  int i,j,a,b;
+
+  for(i=0;i<x->n_rows;i++){
+    a = subset[i];
+    for(j=0;j<x->n_cols;j++){      
+      b = subset2[j];
+      X->M[a*X->n_cols+b] += alpha * x->M[i*x->n_cols+j];
+    }// j
+  }// i
+
+}// void add_submatrix(CMATRIX* X,CMATRIX* x,vector<int>& subset,vector<int>& subset2, double alpha)
+
+
+template <typename T1> 
+void add_submatrix(base_matrix<T1>& X, base_matrix<T1>& x, vector<int>& subset,vector<int>& subset2, T1 alpha){
+  ///< Adds a smaller matrix into a bigger one according to the specified pattern. The smaller matrix is 
+  ///  multiplied by a coefficient
+
+  add_submatrix(&X, &x, subset, subset2, alpha); 
+}
+
+
+
+
+template <typename T1> 
+void add_submatrix(base_matrix<T1>& X, base_matrix<T1>& x, boost::python::list subset,boost::python::list subset2, T1 alpha){
+  ///< Adds a smaller matrix into a bigger one according to the specified pattern. The smaller matrix is 
+  ///  multiplied by a coefficient
+
+  // Convert input list to vector
+  int sz = boost::python::len(subset);
+  vector<int> _subset(sz,0.0);
+  for(int i=0;i<sz;i++){ _subset[i] = boost::python::extract<int>(subset[i]);  }
+
+  sz = boost::python::len(subset2);
+  vector<int> _subset2(sz,0.0);
+  for(int i=0;i<sz;i++){ _subset2[i] = boost::python::extract<int>(subset2[i]);  }
+
+  add_submatrix(&X, &x, _subset, _subset2, alpha);
+
+}
+
+
+
+//========================================
 
 
 

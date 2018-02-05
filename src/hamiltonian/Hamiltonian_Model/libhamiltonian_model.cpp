@@ -78,6 +78,11 @@ void export_hamiltonian_model_objects(){
 //      .def("set_q", set_q)
 //      .def("set_v", set_v)
       .def("get_basis_transform", &Hamiltonian_Model::get_basis_transform)
+      .def("set_basis_overlap_by_ref", &Hamiltonian_Model::set_basis_overlap_by_ref)
+      .def("set_basis_overlap_by_val", &Hamiltonian_Model::set_basis_overlap_by_val)
+      .def("set_basis_overlap_derivs_by_ref", &Hamiltonian_Model::set_basis_overlap_by_ref)
+      .def("set_basis_overlap_derivs_by_val", &Hamiltonian_Model::set_basis_overlap_by_val)
+
 
 //      .def("compute",          &Hamiltonian_Model::compute)
       .def("compute_diabatic", &Hamiltonian_Model::compute_diabatic)

@@ -304,6 +304,7 @@ public:
 //  double energy();
 //  double energy_respa(std::string respa_type);
   double ekin_tr();
+  double ekin_tr_atom();// kinetic energy of the atoms
   double ekin_tr_int(); // internal translational kinetic energy
   double ekin_rot();
   double volume();

@@ -59,8 +59,6 @@ Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
 
 */
 
-//cout<<"Derived Ham_mod. constructor\n";
-
   int i;
   ham_indx = ham_indx_;
 
@@ -87,13 +85,18 @@ Hamiltonian_Model::Hamiltonian_Model(int ham_indx_){
 
   ham_dia = new MATRIX(nelec,nelec); *ham_dia = 0.0;
   ham_adi = new MATRIX(nelec,nelec); *ham_adi = 0.0;
-  basis_transform = new MATRIX(nelec, nelec);  basis_transform->Init_Unit_Matrix(1.0); 
+  basis_transform = new MATRIX(nelec, nelec);  basis_transform->Init_Unit_Matrix(1.0);  // trivial basis
+  basis_overlap = new MATRIX(nelec, nelec); basis_overlap->Init_Unit_Matrix(1.0); // identity matrix
+  
 
   d1ham_dia = vector<MATRIX*>(nnucl);
   d1ham_adi = vector<MATRIX*>(nnucl);
+  d1basis_overlap = vector<MATRIX*>(nnucl);
+
   for(i=0;i<nnucl;i++){  
     d1ham_dia[i] = new MATRIX(nelec,nelec); *d1ham_dia[i] = 0.0; 
     d1ham_adi[i] = new MATRIX(nelec,nelec); *d1ham_adi[i] = 0.0; 
+    d1basis_overlap[i] = new MATRIX(nelec,nelec); *d1basis_overlap[i] = 0.0;
   }
 
   d2ham_dia = vector<MATRIX*>(nnucl*nnucl);
@@ -117,16 +120,19 @@ Hamiltonian_Model::~Hamiltonian_Model(){
   delete ham_dia;
   delete ham_adi;
   delete basis_transform;
+  delete basis_overlap;
 
   for(i=0;i<nnucl;i++){  
     delete d1ham_dia[i];
     delete d1ham_adi[i];
+    delete d1basis_overlap[i];
   }
   for(i=0;i<nnucl*nnucl;i++){  delete d2ham_dia[i]; }
 
   if(d1ham_dia.size()>0) { d1ham_dia.clear(); }
   if(d2ham_dia.size()>0) { d2ham_dia.clear(); }
   if(d1ham_adi.size()>0) { d1ham_adi.clear(); }
+  if(d1basis_overlap.size()>0) { d1basis_overlap.clear(); }
 
 
 }
@@ -195,6 +201,77 @@ void Hamiltonian_Model::set_params(vector<double>& params_){
 
 }
 
+void Hamiltonian_Model::set_basis_overlap_by_ref(MATRIX& basis_overlap_){
+/**
+  Sets the internal basis_overlap matrix to the externally-defined value
+  This is a setting by reference, so it works in Python. 
+  The input object should exist for the entire duratiton of the simulation
+  that need using the basis_overlap matrix in the calculations.
+  Moreover, if one changes the external object, this will affect the calculations
+  since the internal pointer points to the external object.
+*/
+  if( basis_overlap_.n_cols!=nelec ){
+    cout<<"Error in Hamiltonian_Model::set_basis_overlap_by_ref: the number of \
+    columns in the input matrix ( "<<basis_overlap_.n_cols<<" ) does not match\
+    the number of electronic states used in the present model ( "<<nelec<<") \nExiting now...\n";
+    exit(0); 
+  }
+  if( basis_overlap_.n_rows!=nelec ){
+    cout<<"Error in Hamiltonian_Model::set_basis_overlap_by_ref: the number of \
+    rows in the input matrix ( "<<basis_overlap_.n_rows<<" ) does not match\
+    the number of electronic states used in the present model ( "<<nelec<<") \nExiting now...\n";
+    exit(0); 
+  }
+  
+  basis_overlap = &basis_overlap_;
+
+}
+
+void Hamiltonian_Model::set_basis_overlap_by_val(MATRIX& basis_overlap_){
+/**
+  Sets the internal basis_overlap matrix to the externally-defined value
+  This is a setting by value, the input object doesn't have to exist 
+  for the entire duratiton of the simulation. 
+  Moreover, if one changes the external object, this does not affect the calculations
+  unless this value is fed back to the Hamiltonian using this function.
+*/
+
+  if( basis_overlap_.n_cols!=nelec ){
+    cout<<"Error in Hamiltonian_Model::set_basis_overlap_by_ref: the number of \
+    columns in the input matrix ( "<<basis_overlap_.n_cols<<" ) does not match\
+    the number of electronic states used in the present model ( "<<nelec<<") \nExiting now...\n";
+    exit(0); 
+  }
+  if( basis_overlap_.n_rows!=nelec ){
+    cout<<"Error in Hamiltonian_Model::set_basis_overlap_by_ref: the number of \
+    rows in the input matrix ( "<<basis_overlap_.n_rows<<" ) does not match\
+    the number of electronic states used in the present model ( "<<nelec<<") \nExiting now...\n";
+    exit(0); 
+  }
+  
+  *basis_overlap = basis_overlap_;
+
+}
+
+
+
+
+void Hamiltonian_Model::set_basis_overlap_derivs_by_ref(vector<MATRIX>& basis_overlap_derivs_, vector<int>& indxs_){
+/**
+*/
+
+}
+
+void Hamiltonian_Model::set_basis_overlap_derivs_by_val(vector<MATRIX>& basis_overlap_derivs_, vector<int>& indxs_){
+/**
+*/
+
+}
+
+
+
+
+
 //void Hamiltonian_Model::set_q(vector<double>& q_){ Hamiltonian::set_q(q_); }
 //void Hamiltonian_Model::set_q(boost::python::list q_){ Hamiltonian::set_q(q_); }
 //void Hamiltonian_Model::set_v(vector<double>& v_){ Hamiltonian::set_v(v_); }
@@ -253,24 +330,18 @@ void Hamiltonian_Model::compute_adiabatic(){
 
   if(status_adi == 0){
 
-
-    MATRIX* S; S = new MATRIX(nelec, nelec);  S->Init_Unit_Matrix(1.0);
-//    MATRIX* C; C = new MATRIX(nelec, nelec);  *C = 0.0;
-
-    // Transformation to adiabatic basis
-    solve_eigen(ham_dia, S, ham_adi, basis_transform, 0);  // H_dia * C = S * C * H_adi, where C = basis_transform
+    // Transformation to adiabatic basis by solving the generalized eigenvalue problem
+    // H_dia * C = S * C * H_adi, where C = basis_transform, S = basis_overlap
+    // Here, of course, we assume that H_dia does not depend on C!
+    solve_eigen(ham_dia, basis_overlap, ham_adi, basis_transform, 0);  
 
 
     // Now compute the derivative couplings (off-diagonal, multiplied by energy difference) and adiabatic gradients (diagonal)
     for(int n=0;n<nnucl;n++){
 
-      *d1ham_adi[n] = (*basis_transform).T() * (*d1ham_dia[n]) * (*basis_transform);
+      *d1ham_adi[n] = (*basis_transform).T() * (*d1ham_dia[n] - *ham_adi * *basis_overlap ) * (*basis_transform);
 
     }// for n
-
-    delete S;
-//    delete C;
-
 
     // Set status flag
     status_adi = 1;

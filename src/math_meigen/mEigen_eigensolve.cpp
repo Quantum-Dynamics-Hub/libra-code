@@ -334,9 +334,6 @@ void solve_eigen(CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C, int symm){
   int N_mo  = C->n_cols;
 
 
-  *E = 0.0;
-  *C = 0.0;
-
   // Wrapper matrices for Eigen3
   MatrixXcd A(N_bas,N_bas), B(N_bas,N_bas);
 
