@@ -466,17 +466,6 @@ def update_Hvib_A(opt, sub_ham_old, sub_ham_cur, ham_old, ham_cur, active_orb, d
     Dmo = compute_NAC(sub_ham_old, sub_ham_cur, active_orb)
     Dmo_adi = MATRIX(sz,sz)
     Dmo_adi = C_old.T() * Dmo * C_cur
-
-    p0 = range(sz)
-    perm = unavoided.get_reordering(Dmo_adi)
-    if p0 != perm:
-        print "trivial crossings occured!"
-        print "perm is", perm
-        print "Dmo_adi is"; Dmo_adi.show_matrix()
-
-        reorder_matrices.reorder(perm,Dmo_adi,E_cur)
-    
-    Hel = 0.5*(E_old + E_cur)
     Dmo_adi = (0.5/dt)*(Dmo_adi - Dmo_adi.T()) # the Smo_dot term will cancel out during solution of TD-SE !!! 
         
     Hvib = CMATRIX(Hel, -1.0*Dmo_adi)  # so Hvib is now Hermitian
@@ -799,7 +788,7 @@ def main():
     do_collapse = 0  # 0 - no decoherence, 1 - decoherence
     compute_adi = 1  # 0 - do not compute (no related info will be available), 1 - do compute
                      # this is needed for computing projections (even if the fragmentation is sed)
-    sh_method = 0    # 0 - MSSH,  1 - FSSH,  2 - GFSH
+    sh_method = 0    # 0 - MSSH,  1 - FSSH
 
 
 #    print_initial_mo = False
@@ -809,8 +798,6 @@ def main():
     print_initial_mo = True   # flag controlling whether we want to compute and print MOs (cube files) in the starting configuration
     print_starting_mo = True  # -- for the very first step of NA-MD (so after cooling and thermalization)
     print_basis_mo = True     # -- for the actual basis states that will be used (Lowdin orbitals, adiabatic-FMO or full MO)
-    print_sd_ham = True
-    print_hop_probs = True
 
     num_sh_traj = 1000;
 
@@ -833,25 +820,9 @@ def main():
     if prop_bastyp==0:
         print "prop_bastyp must be any of the orthogonal bases [1,2,3], not 0"    
 
-    # printing SD-based Hamiltonian
-    if print_sd_ham: 
-        sd_ham = os.getcwd() + "/sd_ham"
-        print "sd_ham directory is in ", sd_ham
-        if os.path.isdir(sd_ham):
-            os.system("rm %s/*" % sd_ham)
-        else:
-            os.mkdir(sd_ham)
+        
 
-    # printing hop probabilities
-    if print_hop_probs:
-        hop_probs = os.getcwd() + "/hop_probs"
-        print "hop_probs directory is in ", hop_probs
-        if os.path.isdir(hop_probs):
-            os.system("rm %s/*" % hop_probs)
-        else:
-            os.mkdir(hop_probs)
 
-    #sys.exit(0) # debug
 
     rnd = Random()
     #--------------------- Initialization ----------------------
@@ -1177,13 +1148,8 @@ def main():
 
     md.max_step = 1;  md.ensemble = "NVE";  md.dt = 20.0;
 
-    syst.init_atom_velocities(300.0, rnd)
 
-    # move atoms using uniform random number
-    mag_disp = 0.01 # The magnitude of a random displacement of each atom from its center, units: Bohr
-    for i in xrange(mol.nnucl):
-        ksi = rnd.normal(); mol.q[i] += mag_disp*ksi
-        #print "No. %i random number is %f" % (i,ksi)
+
 
     nstates, nstates_adi, Coeff, Pop_se, istate, ave_Pop_se, ave_Pop_sh = None, None, None, None, None, None, None
 
@@ -1367,17 +1333,9 @@ def main():
         f_ham.write(line)
         f_ham.close()
 
-        #============== sd_ham is printed out  ======================
-        if print_sd_ham:
-            Hvib.real().show_matrix(sd_ham + "/Ham_vib_re_" + str(i))
-            Hvib.imag().show_matrix(sd_ham + "/Ham_vib_im_" + str(i))
+
 
         #============== TD-SE solution and surface hopping =================
-        if prop_bastyp == 3: # using adiabatic basis
-            g_ave = MATRIX(nstates_adi, nstates_adi)
-        else: # using fragment (diabatic) basis
-            g_ave = MATRIX(nstates, nstates)
-
         for tr in xrange(num_sh_traj):
             # Coherent dynamics
             propagate_electronic(md.dt, Coeff[tr][prop_bastyp], Hvib)  # propagate only in the basis selected
@@ -1385,16 +1343,10 @@ def main():
 
             g = None
             if sh_method==0:
-                g = compute_hopping_probabilities_mssh(Coeff[tr][prop_bastyp], Hvib, 1, therm.Temperature)
+                g = compute_hopping_probabilities_mssh(Coeff[tr][prop_bastyp])
             elif sh_method==1:
-                g = compute_hopping_probabilities_fssh(Coeff[tr][prop_bastyp], Hvib, md.dt, 1, therm.Temperature)
-            elif sh_method==2:
-                g = compute_hopping_probabilities_gfsh(Coeff[tr][prop_bastyp], Hvib, md.dt, 1, therm.Temperature)
-            else:
-                print "Illegal sh_method value is selected; it must be 0, 1, or 2. "
-                print "Exitting..."; sys.exit(0)
+                g = compute_hopping_probabilities_fssh(Coeff[tr][prop_bastyp], Hvib, md.dt)
 
-            g_ave += g
             #if tr==0:
             #    print "Hopping matrix for the first trajectory is: "; g.show_matrix()
 
@@ -1418,10 +1370,7 @@ def main():
 
         ave_Pop_sh, ave_Pop_se = ave_Pop(nstates, nstates_adi, num_sh_traj, Pop_se, istate)
 
-        #============== hopping probabilities are printed out  ======================
-        if print_hop_probs:
-            g_ave = g_ave/float(num_sh_traj)
-            g_ave.show_matrix(hop_probs + "/g_" + str(i))
+
 
 
         #===================== Start printing out ==============================
