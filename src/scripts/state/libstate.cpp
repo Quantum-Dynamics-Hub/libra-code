@@ -47,6 +47,13 @@ void export_state_objects(){
   ;
 
 
+  void (State::*expt_init_md_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, Random& rnd) = &State::init_md;
+  void (State::*expt_init_md_v2)(              Electronic& el, Hamiltonian& ham, Random& rnd) = &State::init_md;
+
+  void (State::*expt_run_md_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham) = &State::run_md;
+  void (State::*expt_run_md_v2)(Electronic& el, Hamiltonian& ham) = &State::run_md;
+
+
   class_<State>("State",init<>())
       .def_readwrite("E_kin",&State::E_kin)
       .def_readwrite("E_kin_tr",&State::E_kin_tr)
@@ -71,8 +78,11 @@ void export_state_objects(){
       .def("update",&State::update)
       .def("cool",&State::cool)
 
-      .def("init_md",&State::init_md)
-      .def("run_md",&State::run_md)
+      .def("init_md",expt_init_md_v1)
+      .def("init_md",expt_init_md_v2)
+
+      .def("run_md",expt_run_md_v1)
+      .def("run_md",expt_run_md_v2)
 //      .def("run_md_respa",&State::run_md_respa)
   ;
 

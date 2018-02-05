@@ -84,7 +84,9 @@ string ForceField::uff_type(string elt,int geometry,string func_grp,int min_ring
   else if((type=="Ag"))     {type += "1+1"; coordination = 1;}
   else if((type=="Hg"))     {type += "1+2"; coordination = 1;}
 
+
   //---------------------- 3 -----------------------------
+  else if((type=="Cd"))  {type += "3+2"; }
   else if((type=="Al")||(type=="Si")||(type=="Ge")||(type=="Sn")||(type=="Pb")) {type += "3";}
   else if((type=="Cu")) {type += "3+1";}
   else if((type=="Be")||(type=="Mg")||(type=="Zn")||(type=="Se")||(type=="Te")||(type=="Po")) {type += "3+2";}

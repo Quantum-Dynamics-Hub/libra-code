@@ -54,6 +54,8 @@
 
 #include "hamiltonian/libhamiltonian.h"
 
+#include "ivr/libivr.h"
+
 #include "dyn/libdyn.h"
 
 #include "converters/libconverters.h"

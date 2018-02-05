@@ -69,6 +69,18 @@ Electronic_Structure::Electronic_Structure(const Electronic_Structure& obj){
 
 }
 
+Electronic_Structure& Electronic_Structure::operator=(const Electronic_Structure& ob){
+
+  if(this == &ob){  return *this;    }
+  else{
+    *this = Electronic_Structure(ob);
+    return *this;
+  }
+
+}
+
+
+
 /// Implementation of the constructor from the address pointing to an existing object of class Electronic
 Electronic_Structure::Electronic_Structure(Electronic_Structure* obj){
 

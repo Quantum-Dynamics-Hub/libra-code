@@ -1,5 +1,5 @@
 #***********************************************************
-# * Copyright (C) 2016 Alexey V. Akimov
+# * Copyright (C) 2016-2018 Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
@@ -25,6 +25,7 @@ __all__ = ["init_system",
            "unavoided",
            "datautils",
            "build",
-           "autoconnect"
+           "autoconnect",
+           "vesta2qe"
           ]
 

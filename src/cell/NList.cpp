@@ -99,10 +99,10 @@ void apply_pbc(MATRIX3x3& H,int sz, VECTOR* in, VECTOR* out,vector<quartet>& T){
 }
 
 boost::python::list apply_pbc(MATRIX3x3 H, boost::python::list in, boost::python::list t){
-
+  int i;
   vector<quartet> T;
   int sz1 = boost::python::len(t);
-  for(int i=0;i<sz1;i++){
+  for(i=0;i<sz1;i++){
     quartet tx;
     tx.is_central = boost::python::extract<int>(t[i][0]);
     tx.j = boost::python::extract<int>(t[i][1]);

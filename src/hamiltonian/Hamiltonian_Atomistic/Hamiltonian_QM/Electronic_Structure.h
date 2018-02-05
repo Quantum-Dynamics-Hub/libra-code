@@ -106,6 +106,10 @@ class Electronic_Structure{
 
   Electronic_Structure(const Electronic_Structure&);   ///< Copy constructor;
   Electronic_Structure(Electronic_Structure*);         ///< Constructor from the address of the other existing object
+
+  Electronic_Structure& operator=(const Electronic_Structure&);
+
+
   
   ~Electronic_Structure(){
   /** The destructor - frees the memory for all matrices, vectors, sets them to NULL-pointer, sets the numbers to zero
