@@ -112,6 +112,7 @@ void export_Dyn_objects(){
   (Ensemble& ens, int i, MATRIX& g,
    double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_mssh;
   MATRIX (*expt_compute_hopping_probabilities_mssh_v3)(CMATRIX& Coeff)  = &compute_hopping_probabilities_mssh;
+  MATRIX (*expt_compute_hopping_probabilities_mssh_v4)(CMATRIX& Coeff, CMATRIX& Hvib, int use_boltz_factor,double T)  = &compute_hopping_probabilities_mssh;
 
   void (*expt_compute_hopping_probabilities_esh_v1)
   (Ensemble& ens, MATRIX* g, double dt, int use_boltz_factor,double T) = compute_hopping_probabilities_esh;
@@ -127,6 +128,7 @@ void export_Dyn_objects(){
   def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v1);
   def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v2);
   def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v3);
+  def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v4);
   def("compute_hopping_probabilities_esh", expt_compute_hopping_probabilities_esh_v1);
 
 

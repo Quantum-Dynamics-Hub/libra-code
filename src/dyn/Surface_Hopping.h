@@ -63,7 +63,7 @@ void compute_hopping_probabilities_mssh(Nuclear& mol, Electronic& el, Hamiltonia
                                         double dt, int use_boltz_factor,double T);
 void compute_hopping_probabilities_mssh(Ensemble& ens, int i, MATRIX& g, double dt, int use_boltz_factor,double T);
 MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff);
-MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff, CMATRIX& Hvib, double dt, int use_boltz_factor,double T);
+MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff, CMATRIX& Hvib, int use_boltz_factor,double T);
 
 
 void hop(int& initstate, Nuclear* mol, Hamiltonian* ham, double ksi, MATRIX* g, int do_rescaling, int rep, int do_reverse);

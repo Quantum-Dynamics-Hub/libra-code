@@ -510,7 +510,7 @@ MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff){
 
 
 
-MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff, CMATRIX& Hvib, int use_boltz_factor,double T){
+MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff, CMATRIX& Hvib, int use_boltz_factor, double T){
 
   const double kb = 3.166811429e-6; // Hartree/K
   int nst = Coeff.n_elts;
