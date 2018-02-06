@@ -62,6 +62,12 @@ void export_hamiltonian_model_objects(){
   def("cubic_Ham", expt_cubic_Ham1);
   def("double_well_Ham", expt_double_well_Ham1);
 
+  void (*expt_model_SAC_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+               vector<double> q, vector<double>& params) = &model_SAC;
+
+  def("model_SAC", expt_model_SAC_v1);
+
+
 
 //  void (Hamiltonian_Model::*expt_set_params_v1)(boost::python::list) = &Hamiltonian_Model::set_params;
 //  void (Hamiltonian_Model::*set_q)(boost::python::list) = &Hamiltonian_Model::set_q;

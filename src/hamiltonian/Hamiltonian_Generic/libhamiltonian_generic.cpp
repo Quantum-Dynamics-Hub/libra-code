@@ -65,6 +65,9 @@ void export_hamiltonian_generic_objects(){
 //      .def("compute_diabatic", &Hamiltonian_Model::compute_diabatic)
 //      .def("compute_adiabatic",&Hamiltonian_Model::compute_adiabatic)
 
+      .def_readwrite("status_adi", &Hamiltonian::status_adi)
+      .def_readwrite("status_dia", &Hamiltonian::status_dia)
+
       .def("H", &Hamiltonian::H)
       .def("dHdq", &Hamiltonian::dHdq)
       .def("Hvib", &Hamiltonian::Hvib)

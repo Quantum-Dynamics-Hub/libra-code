@@ -22,6 +22,147 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+import LoadPT
+
+
+Angst_to_Bohr = 1.889725989  
+
+def read_xyz(filename):
+    """
+    And convert to Bohrs
+    """
+
+    f = open(filename,"r")
+    A = f.readlines()
+    f.close()
+
+    tmp = A[0].split()
+    Natoms = int(float(tmp[0]))
+
+    L = [] 
+    coords = []
+
+    for a in A[2:]:
+        tmp = a.split()
+        if len(tmp)==4:
+            x = float(tmp[1]) 
+            y = float(tmp[2])
+            z = float(tmp[3])
+             
+            # Now apply PBC
+            R = VECTOR(x,y,z) * Angst_to_Bohr
+
+            L.append(tmp[0])
+            coords.append(R)
+
+    return L, coords
+
+
+
+def generate_replicas_xyz2(L, R, tv1, tv2, tv3, Nx, Ny, Nz):
+    """
+    L - initial labels (list of strings)
+    R - initial coords (list of VECTOR objects) in Bohrs
+    tv1, tv2, tv3 - translation vectors (VECTOR objects), in Bohrs
+    Nx, Ny, Nz - the number of replications along each vector
+    """
+
+    nat = len(R)
+
+    lab, newR = [], []
+
+    for i in xrange(nat):
+
+        for nx in range(Nx):
+            for ny in range(Ny):
+                for nz in range(Nz):
+                 
+                    # Now apply PBC
+                    r = VECTOR(R[i] + nx * tv1 + ny * tv2 + nz * tv3)
+
+                    lab.append(L[i])
+                    newR.append(r)
+
+    return lab, newR
+
+
+
+
+def crop_sphere_xyz2(L, R, Rcut):
+    """
+    L - list of element names
+    R - list of VECTOR objects with the coordinates of the particles, in Bohrs
+    Rcut - the radius of the sphere from the center of the QD, in Bohrs
+
+    Output:
+    new lists of L and R after cropping
+
+    """
+
+
+    # Compute COM
+    Rcom = VECTOR(0.0, 0.0, 0.0)
+
+    for r in R:
+        Rcom = Rcom + r
+
+    # Geometric center
+    Natoms = len(R)
+    Rcom = Rcom / Natoms
+
+ 
+    # Compute remaining number of atoms
+    Nat = 0
+    indx = []
+    for i in range(0,Natoms):
+        r = (R[i] - Rcom).length()
+        if(r<=Rcut):
+            Nat = Nat + 1
+            indx.append(i)
+            
+
+    # Prepare the coordinates and labels of the remaining atoms
+    coords = []
+    lab = []     
+    for i in indx:
+        coords.append(R[i])
+        lab.append(L[i])
+
+    return lab, coords
+
+
+
+
+def add_atoms_to_system(syst, L, R, scl, mass, univ_file):
+    """
+    syst - the System object, initially may be empty
+    L - list of element names
+    R - list of VECTOR objects with the coordinates of the particles - in Bohrs
+    scl - a VECTOR - scaling coefficients for sampling the initial momenta
+    mass - list of atomic masses (floats)
+    univ_file - name of the file that contains the Universe properties
+    """
+
+    rnd = Random()
+
+    nat = syst.Number_of_atoms
+
+    # Associate the coordinates with a molecular system
+    U = Universe() 
+    LoadPT.Load_PT(U, univ_file, 0)
+
+    sz = len(R)
+    for i in xrange(sz):
+
+        syst.CREATE_ATOM( Atom(U,  {"Atom_element":L[i],"Atom_cm_x":R[i].x,"Atom_cm_y":R[i].y,"Atom_cm_z":R[i].z})  )
+
+        # Masses
+        syst.Atoms[nat+i].Atom_RB.set_mass(mass[i])
+
+        # Momenta
+        p = VECTOR(scl.x*rnd.normal(), scl.y*rnd.normal(), scl.z*rnd.normal())
+        syst.Atoms[nat+i].Atom_RB.set_momentum(p);
+
 
 
 

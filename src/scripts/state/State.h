@@ -143,6 +143,11 @@ public:
   void run_md(Nuclear& mol, Electronic& el, Hamiltonian& ham);
 
   // Defined in State_methods2.cpp
+  void init_md(Electronic& el, Hamiltonian& ham, Random& rnd);
+  void run_md(Electronic& el, Hamiltonian& ham);
+
+
+  // Defined in State_methods2.cpp
 //  void run_md_respa();
 
 };

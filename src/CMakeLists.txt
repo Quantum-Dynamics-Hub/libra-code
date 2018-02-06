@@ -103,6 +103,10 @@ MESSAGE("Going into subdirectory hamiltonian...")
 ADD_SUBDIRECTORY("hamiltonian")
 
 
+MESSAGE("Going into subdirectory ivr...")
+ADD_SUBDIRECTORY("ivr")
+
+
 MESSAGE("Going into subdirectory dyn...")
 ADD_SUBDIRECTORY("dyn")
 
@@ -139,6 +143,7 @@ TARGET_LINK_LIBRARIES(libra_core
                       qchem_tools_stat
                       scripts_stat
                       converters_stat
+                      ivr_stat
                       dyn_stat
                       common_types_stat                    
                       basis_setups_stat
@@ -163,6 +168,7 @@ TARGET_LINK_LIBRARIES(libra_core_stat
                       qchem_tools_stat
                       scripts_stat
                       converters_stat
+                      ivr_stat
                       dyn_stat
                       common_types_stat
                       basis_setups_stat

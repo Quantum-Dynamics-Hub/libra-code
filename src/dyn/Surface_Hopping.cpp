@@ -961,7 +961,7 @@ int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, doub
 }
 
 
-MATRIX coherence_intervals(const CMATRIX& Coeff, const MATRIX& rates ){
+MATRIX coherence_intervals(CMATRIX& Coeff, MATRIX& rates ){
 /**
   This function computes the time-dependent (and population-dependent) coherence intervals
   (the time after which different states should experience a decoherence event)

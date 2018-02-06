@@ -87,6 +87,7 @@ public:
 
 
   friend int operator == (const AO& g1, const AO& g2){
+   /*
     int res = ((g1.x_exp==g2.x_exp) && (g1.y_exp==g2.y_exp) && (g1.z_exp==g2.z_exp)
               && (g1.expansion_size==g2.expansion_size) && (g1.ao_name==g2.ao_name)
               && (g1.ao_shell == g2.ao_shell) && (g1.ao_shell_type == g2.ao_shell_type) 
@@ -99,6 +100,8 @@ public:
       for(int i=0;i<g1.expansion_size;i++){  res *= (g1.primitives[i]==g2.primitives[i]); }
     }
     return res;
+   */
+   return (&g1 == &g2);
   }
 
 
