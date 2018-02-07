@@ -16,9 +16,12 @@
 */
 
 #include "Model_double_well.h"
+#include "../../math_linalg/liblinalg.h"
 
 /// liblibra namespace
 namespace liblibra{
+
+using namespace liblinalg;
 
 /// libhamiltonian namespace
 namespace libhamiltonian{
@@ -79,7 +82,6 @@ void model_double_well(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia,
     dc1_dia[0].set(0,0, 0.0, 0.0);
 
 }
-
 
 void double_well_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params){ 
 /** The symmetric double well potential. Two local minima are located at x = -1.0 and 1.0. A local maximum is located at x = 0.
