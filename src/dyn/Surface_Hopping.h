@@ -72,6 +72,9 @@ int hop(int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_resca
 int hop(int initstate, MATRIX& g, double ksi);
 
 
+int rescale_velocities_adiabatic(vector<double>& p, vector<double>& masses, 
+                                  CMATRIX& ham_adi, vector<CMATRIX>& dc1_adi,
+                                  int new_st,int old_st, int do_reverse);
 void rescale_velocities_adiabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,int& old_st, int do_reverse);
 int rescale_velocities_adiabatic(Nuclear& mol, Hamiltonian& ham, int old_st, int do_reverse);
 
