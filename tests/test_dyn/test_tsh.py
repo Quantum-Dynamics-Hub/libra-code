@@ -97,6 +97,10 @@ for i in xrange(2500):
     # Now, incorporate surface hop
     g = MATRIX(2,2)
 
+    ham.status_adi = 0
+    ham.status_dia = 0
+
+
     # Just choose the TSH scheme below
 #    compute_hopping_probabilities_mssh(mol, el, ham, g, dt, use_boltz_factor, T)
     compute_hopping_probabilities_fssh(mol, el, ham, g, dt, use_boltz_factor, T)
@@ -104,7 +108,7 @@ for i in xrange(2500):
 
  
     do_rescaling = 1
-    do_reverse = 1
+    do_reverse = 0
     rep = 1 # adiabatic
     ksi = rnd.uniform(0.0, 1.0)
 
@@ -112,12 +116,19 @@ for i in xrange(2500):
     state_old = el.istate
     p_old = mol.p[0]
     f_old = mol.f[0]
+
+#    ham.status_adi = 0
+#    ham.status_dia = 0
     
     el.istate = hop(el.istate, mol, ham, ksi, g, do_rescaling, rep, do_reverse)  # this operation will also rescale velocities, if necessary
+
+#    ham.status_adi = 0
+#    ham.status_dia = 0
 
     ekin = compute_kinetic_energy(mol)
     epot = compute_forces(mol, el, ham, 1)  
 #    epot = compute_potential_energy(mol, el, ham, 1)
+
 
 
     if el.istate is not state_old:
@@ -127,7 +138,7 @@ for i in xrange(2500):
         print "f_old = ", f_old, "f_new = ", mol.f[0], " dHdR = ", ham.dHdq(el.istate,el.istate, 0)
 
 
-    print i, ekin, epot, ekin+epot
+    print i, ekin, epot, ekin+epot, el.istate, mol.f[0], -ham.dHdq(0,0, 0).real, -ham.dHdq(1,1, 0).real
 
     f.write("i= %3i q[0]= %8.5f p[0]= %8.5f  ekin= %8.5f  epot= %8.5f  etot= %8.5f  |c0|^2= %8.5f  |c1|^2= %8.5f  Re|c01|= %8.5f istate= %8.5f\n" % (i, mol.q[0], mol.p[0], ekin, epot, ekin+epot, el.rho(0,0).real, el.rho(1,1).real, el.rho(0,1).real, el.istate))
 

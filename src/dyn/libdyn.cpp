@@ -147,11 +147,15 @@ void export_Dyn_objects(){
 
 
   int (*expt_rescale_velocities_adiabatic_v1)
+  (vector<double>& p, vector<double>& masses, CMATRIX& ham_adi,
+   vector<CMATRIX>& dc1_adi, int new_st,int old_st, int do_reverse) = &rescale_velocities_adiabatic;
+  int (*expt_rescale_velocities_adiabatic_v2)
   (Nuclear& mol, Hamiltonian& ham, int old_st, int do_reverse) = &rescale_velocities_adiabatic;
   int (*expt_rescale_velocities_diabatic_v1)
   (Nuclear& mol, Hamiltonian& ham, int old_st) = &rescale_velocities_diabatic;
 
   def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v1);
+  def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v2);
   def("rescale_velocities_diabatic", expt_rescale_velocities_diabatic_v1);
 
 

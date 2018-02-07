@@ -738,6 +738,76 @@ int hop(int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_resca
 
 
 
+int rescale_velocities_adiabatic(vector<double>& p, vector<double>& masses, 
+                                 CMATRIX& ham_adi, vector<CMATRIX>& dc1_adi,
+                                 int new_st,int old_st, int do_reverse){
+/**
+  \brief Determine whether we need to do velocity rescaling/reversal when going from one state to another
+  \param[in,out] p Momenta of nuclear DOFs
+  \param[in,out] masses Masses of nuclear DOFs
+  \param[in,out] ham_adi Energies of all adiabatic states
+  \param[in,out] dc1_adi Derivative coupling matrices
+
+  \param[in] new_st The proposed new state
+  \param[in] old_st The original state
+  \param[in] do_reverse The option that determines what to do if the hop was rejected because of the energy conservation
+  (frustrated hop): do_reverse = 0 - nuclear momenta(velocities) stay unchanged; do_reverse = 1 - nuclear momenta(velocities)
+  are inverted.
+
+  This verions implies that the adiabatic representation is used
+*/
+  int nnucl = p.size();
+
+  int st;
+
+  if(new_st!=old_st){
+
+    // According to Fabiano
+    double a_ij = 0.0;
+    double b_ij = 0.0;
+
+    for(int k=0;k<nnucl;k++){
+
+      double D = dc1_adi[k].get(old_st,old_st).real(); // derivative coupling w.r.t. nuclear DOF k
+
+      a_ij += 0.5*(D*D / masses[k]); 
+      b_ij += (D*p[k])/masses[k];
+    }
+    double det = b_ij*b_ij + 4.0*a_ij*(ham_adi.get(old_st,old_st).real() - ham_adi.get(new_st,new_st).real());
+
+    // Calculate the scaling factor and new state
+    double gamma_ij = 0.0;
+
+    if(det<0.0){
+
+      if(do_reverse){     gamma_ij = b_ij / a_ij;}
+      else{ gamma_ij = 0.0;  }
+
+      st = old_st; // # hop does not occur - frustrated hop
+
+    }
+    else{
+      if(b_ij<0){ gamma_ij = 0.5*(b_ij + sqrt(det))/a_ij; }
+      else{       gamma_ij = 0.5*(b_ij - sqrt(det))/a_ij; }
+      st = new_st;
+    }
+
+    //Rescale velocities and do the hop
+    for(int k=0;k<nnucl;k++){ 
+      double D = dc1_adi[k].get(old_st,new_st).real(); 
+      p[k] = p[k] - gamma_ij * D; 
+    }
+
+  }
+  else{ st = old_st; }
+
+  return st;
+
+} // rescale velocities adiabatic
+
+
+
+
 void rescale_velocities_adiabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,int& old_st, int do_reverse){
 /**
   \brief Determine whether we need to do velocity rescaling/reversal when going from one state to another
