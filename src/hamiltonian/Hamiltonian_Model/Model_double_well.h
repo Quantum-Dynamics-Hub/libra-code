@@ -43,4 +43,4 @@ boost::python::list double_well_Ham(double x, boost::python::list params_);
 }// namespace libhamiltonian
 }// liblibra
 
-#endif // MODEL_DOUBLE_WELL
+#endif // MODEL_DOUBLE_WELL_H
