@@ -131,6 +131,72 @@ def crop_sphere_xyz2(L, R, Rcut):
     return lab, coords
 
 
+def crop_sphere_xyz3(L, R, Rcut, pairs, new_L):
+    """
+    L - list of element names
+    R - list of VECTOR objects with the coordinates of the particles, in Bohrs
+    Rcut - the radius of the sphere from the center of the QD, in Bohrs
+    pairs - list [int, int, VECTOR, VECTOR] - integers describe the indices for the connected atoms
+    new_L - is a map containing pairs (string:string), where the key string corresponds to the label of 
+          the atom that is inside the cropped sphere, and the value string corresponds to the label of 
+          the atom which will turn out to be connected to this atom, but is outside the sphere
+
+    Output:
+    new lists of L and R after cropping
+
+    """
+
+
+    # Compute COM
+    Rcom = VECTOR(0.0, 0.0, 0.0)
+
+    for r in R:
+        Rcom = Rcom + r
+
+    # Geometric center
+    Natoms = len(R)
+    Rcom = Rcom / Natoms
+
+ 
+    # Compute remaining number of atoms
+    Nat = 0
+    indx = []
+    for i in range(0,Natoms):
+        r = (R[i] - Rcom).length()
+        if(r<=Rcut):
+            Nat = Nat + 1
+            indx.append(i)
+            
+
+    # Prepare the coordinates and labels of the remaining atoms
+    coords = []
+    lab = []     
+    for i in indx:
+        coords.append(R[i])
+        lab.append(L[i])
+
+
+    # Now add a number of atoms that are ourside the sphere
+    for it in pairs:
+        if it[0] in indx:
+            if it[1] in indx:
+                pass
+            else:
+               coords.append(R[it[1]])
+               lab.append(new_L[ L[it[0]] ])
+
+        if it[1] in indx:
+            if it[0] in indx:
+                pass
+            else:
+               coords.append(R[it[0]])
+               lab.append(new_L[ L[it[1]] ])
+
+
+    return lab, coords
+
+
+
 
 
 def add_atoms_to_system(syst, L, R, scl, mass, univ_file):
