@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015-2017 Brendan A. Smith , Alexey V. Akimov 
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -8,6 +8,11 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
+/**
+  \file Model_SAC.h
+  \brief The file describes the functions for computing SAC (single avoided crossing) Hamiltonian and its derivatives
+    
+*/
 
 #ifndef MODEL_DOUBLE_WELL_H
 #define MODEL_DOUBLE_WELL_H
@@ -26,10 +31,11 @@ namespace libhamiltonian{
 /// libhamiltonian_model namespace
 namespace libhamiltonian_model{
 
-void model_double_well(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
-               vector<double> q, vector<double>& params);
 
-void double_well_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params);
+void model_double_well(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia, vector<double> q, vector<double>& params);
+
+
+void double_well_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params_);
 boost::python::list double_well_Ham(double x, boost::python::list params_);
 
 
@@ -37,4 +43,4 @@ boost::python::list double_well_Ham(double x, boost::python::list params_);
 }// namespace libhamiltonian
 }// liblibra
 
-#endif // MODEL_DOUBLE_WELL_H
+#endif // MODEL_DOUBLE_WELL

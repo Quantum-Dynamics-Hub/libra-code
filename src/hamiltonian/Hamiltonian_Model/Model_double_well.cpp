@@ -29,8 +29,7 @@ namespace libhamiltonian{
 /// libhamiltonian_model namespace
 namespace libhamiltonian_model{
 
-void model_double_well(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
-               vector<double> q, vector<double>& params){ 
+void model_double_well(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia, vector<double> q, vector<double>& params){ 
 /*** 
     To use with the nHamiltonian class
 
@@ -54,32 +53,34 @@ void model_double_well(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia,
     // symmetric_double_well potetnial
     // Default parameters
     double A = 1.0;
-    double x = 0.0, x2 = 0.0, x3 = 0.0, x4 = 0.0;
 
     if(params.size()>=1){
       A = params[0];
-      x = q[0];
-      x2 = x*x;
-      x3 = x*x2;
-      x4 = x*x3;
     }
 
-    double H00;
-    double dH00;
+    double H00, H01;
+    double dH00, dH01;
 
-    // H00;  H11 = -H00
-    if(q[0]>=0){  H00 = A*(0.25*x4 - 0.5*x2);  dH00 = A*(x - x3);  } 
+    // H00;  H11 = 0.0 (single PES)
+    H00 = A*(0.25*q[0]*q[0]*q[0]*q[0] - 0.5*q[0]*q[0]);  dH00 = A*(q[0]*q[0]*q[0] - q[0]);
+    double H11 = 0.0; double dH11 = 0.0;
 
+    // H01 = H10
+    H01 = 0.0;   dH01 = 0.0;
 
-    Sdia.set(0,0, 1.0, 0.0);
+    Sdia.set(0,0, 1.0, 0.0);  Sdia.set(0,1, 0.0, 0.0);
+    Sdia.set(1,0, 0.0, 0.0);  Sdia.set(1,1, 1.0, 0.0);
 
-    Hdia.set(0,0, H00, 0.0);
+    Hdia.set(0,0, H00, 0.0);  Hdia.set(0,1,  H01, 0.0);
+    Hdia.set(1,0, H01, 0.0);  Hdia.set(1,1,  H11, 0.0);
 
     //  d Hdia / dq_0
-    d1ham_dia[0].set(0,0, dH00, 0.0);
+    d1ham_dia[0].set(0,0, dH00, 0.0);   d1ham_dia[0].set(0,1, dH01, 0.0);
+    d1ham_dia[0].set(1,0, dH01, 0.0);   d1ham_dia[0].set(1,1, dH11, 0.0);
 
     //  <dia| d/dq_0| dia >
-    dc1_dia[0].set(0,0, 0.0, 0.0);
+    dc1_dia[0].set(0,0, 0.0, 0.0);   dc1_dia[0].set(0,1, 0.0, 0.0);
+    dc1_dia[0].set(1,0, 0.0, 0.0);   dc1_dia[0].set(1,1, 0.0, 0.0);
 
 }
 
