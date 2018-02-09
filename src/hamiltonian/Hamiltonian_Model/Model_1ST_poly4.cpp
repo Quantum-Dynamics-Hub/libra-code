@@ -9,8 +9,9 @@
 *
 *********************************************************************************/
 /**
-  \file Model_1ST_anharmonic.cpp
-  \brief The file implements the 1-state anharmonic potentials (different nuclear dimensions)
+  \file Model_1ST_poly4.cpp
+  \brief The file implements the 1-state anharmonic potentials (different nuclear dimensions) = 
+  = 4-th order-polynomials
 */
 
 #include "Models_1_state.h"
@@ -28,8 +29,8 @@ namespace libhamiltonian{
 namespace libhamiltonian_model{
 
 
-void model_anharmonic_1S_1D(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
-                          vector<double>& q, vector<double>& params){ 
+void model_1S_1D_poly4(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+                       vector<double>& q, vector<double>& params){ 
 /*** 
     To use with the nHamiltonian class
 
@@ -44,21 +45,41 @@ void model_anharmonic_1S_1D(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham
   Internal parameter        Input        Default value
    k                       params[0]         1.0
    q0                      params[1]         0.0
+   a                       params[2]         0.0
+   b                       params[3]         0.0
+
+  For the metastable state potential of Donoso and Martens 
+  [Donoso, A.; Martens, C. Quantum Tunneling Using Entangled Classical Trajectories. Phys. Rev. Lett. 2001, 87, 223202]
+  set:
+  These parameters will yield 2 bound state, so the system is highly quantum-mechanical
+   k                       params[0]         0.2
+   q0                      params[1]         0.0
+   a                       params[2]        -0.09936667
+   b                       params[3]         0.0
+
+
+  For the anharmonic potential of Ananth
+  [??]
+  set:
+  These parameters will yield 2 bound state, so the system is highly quantum-mechanical
+   k                       params[0]         1.0
+   q0                      params[1]         0.0
    a                       params[2]        -0.1
    b                       params[3]         0.1
-
-  double_well hamiltonian and its derivatives in diabatic representation:
+   
+  Hamiltonian and its derivatives in diabatic representation:
 
    H_00 = 0.5*k*(q-q0)^2 + a * (q-q0)^3 + b * (q-q0)^4
   dH_00 = k*(q - q0) + 3*a * (q-q0)^2 + 4*b * (q-q0)^3
+
 */
 
 
     // Default parameters
-    double k = 1.0;  // harmonic constant
-    double q0 = 0.0; // center of the potential
-    double a = -0.1; // cubic correction
-    double b = 0.1;  // quartic correction
+    double k = 1.0; // harmonic constant
+    double q0= 0.0; // center of the potential
+    double a = 0.0; // cubic correction
+    double b = 0.0; // quartic correction
 
     if(params.size()>=1){    k = params[0];    }
     if(params.size()>=2){   q0 = params[1];    }

@@ -44,7 +44,7 @@ void model_double_well_1S_1D(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ha
   Internal parameter        Input        Default value
    A                       params[0]         1.0
 
-  double_well hamiltonian and its derivatives in diabatic representation:
+  Hamiltonian and its derivatives in diabatic representation:
 
    H_00 = A*(0.25x^4 - 0.5x^2)  
   dH_00 = A*(x - x^3)
