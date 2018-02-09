@@ -9,8 +9,9 @@
 *
 *********************************************************************************/
 /**
-  \file Model_1ST_harmonic.cpp
-  \brief The file implements the 1-state harmonic potentials (different nuclear dimensions)
+  \file Model_1ST_poly2.cpp
+  \brief The file implements the 1-state harmonic potentials (different nuclear dimensions) = 
+  = 2-nd order polynomials
 */
 
 #include "Models_1_state.h"
@@ -28,8 +29,8 @@ namespace libhamiltonian{
 namespace libhamiltonian_model{
 
 
-void model_harmonic_1S_1D(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
-                          vector<double>& q, vector<double>& params){ 
+void model_1S_1D_poly2(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+                       vector<double>& q, vector<double>& params){ 
 /*** 
     To use with the nHamiltonian class
 
@@ -45,7 +46,7 @@ void model_harmonic_1S_1D(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_d
    k                       params[0]         1.0
    q0                      params[1]         0.0
 
-  double_well hamiltonian and its derivatives in diabatic representation:
+  Hamiltonian and its derivatives in diabatic representation:
 
    H_00 = 0.5*k*(q-q0)^2
   dH_00 = k*(q - q0)

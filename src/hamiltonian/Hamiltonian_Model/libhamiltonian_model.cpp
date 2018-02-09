@@ -68,18 +68,20 @@ void export_hamiltonian_model_objects(){
 
 
 
-  void (*expt_model_anharmonic_1S_1D_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
-                          vector<double>& q, vector<double>& params) = &model_anharmonic_1S_1D;
-
   void (*expt_model_double_well_1S_1D_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia,
                           vector<CMATRIX>& dc1_dia, vector<double>& q, vector<double>& params) = &model_double_well_1S_1D;
 
-  void (*expt_model_harmonic_1S_1D_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
-                          vector<double>& q, vector<double>& params) = &model_harmonic_1S_1D;
+
+  void (*expt_model_1S_1D_poly2_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+                          vector<double>& q, vector<double>& params) = &model_1S_1D_poly2;
+
+  void (*expt_model_1S_1D_poly4_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+                          vector<double>& q, vector<double>& params) = &model_1S_1D_poly4;
 
 
   def("model_double_well_1S_1D", expt_model_double_well_1S_1D_v1);
-  def("model_harmonic_1S_1D", expt_model_harmonic_1S_1D_v1);
+  def("model_1S_1D_poly2", expt_model_1S_1D_poly2_v1);
+  def("model_1S_1D_poly4", expt_model_1S_1D_poly4_v1);
 
 
 

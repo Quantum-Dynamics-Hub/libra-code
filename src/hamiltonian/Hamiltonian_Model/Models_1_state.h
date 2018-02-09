@@ -33,14 +33,16 @@ namespace libhamiltonian{
 namespace libhamiltonian_model{
 
 
-void model_anharmonic_1S_1D(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
-                          vector<double>& q, vector<double>& params);
 
 void model_double_well_1S_1D(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia,
                              vector<CMATRIX>& dc1_dia, vector<double>& q, vector<double>& params);
 
-void model_harmonic_1S_1D(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
-                          vector<double>& q, vector<double>& params);
+void model_1S_1D_poly2(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+                        vector<double>& q, vector<double>& params);
+
+void model_1S_1D_poly4(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+                        vector<double>& q, vector<double>& params);
+
 
 
 
