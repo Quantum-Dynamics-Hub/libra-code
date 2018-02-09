@@ -68,9 +68,8 @@ void export_hamiltonian_model_objects(){
 
 
 
-  void (*expt_model_double_well_1S_1D_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia,
-                          vector<CMATRIX>& dc1_dia, vector<double>& q, vector<double>& params) = &model_double_well_1S_1D;
 
+  vector<double> (*expt_set_params_1S_1D_poly4_v1)(std::string model) = &set_params_1S_1D_poly4;
 
   void (*expt_model_1S_1D_poly2_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
                           vector<double>& q, vector<double>& params) = &model_1S_1D_poly2;
@@ -78,11 +77,19 @@ void export_hamiltonian_model_objects(){
   void (*expt_model_1S_1D_poly4_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
                           vector<double>& q, vector<double>& params) = &model_1S_1D_poly4;
 
-
-  def("model_double_well_1S_1D", expt_model_double_well_1S_1D_v1);
+  def("set_params_1S_1D_poly4", expt_set_params_1S_1D_poly4_v1);
   def("model_1S_1D_poly2", expt_model_1S_1D_poly2_v1);
   def("model_1S_1D_poly4", expt_model_1S_1D_poly4_v1);
 
+
+
+  vector<double> (*expt_set_params_2S_1D_sin_v1)(std::string model) = &set_params_2S_1D_sin;
+
+  void (*expt_model_2S_1D_sin_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+                     vector<double>& q, vector<double>& params) = &model_2S_1D_sin;
+
+  def("set_params_2S_1D_sin", expt_set_params_2S_1D_sin_v1);
+  def("model_2S_1D_sin", expt_model_2S_1D_sin_v1);
 
 
 //  void (Hamiltonian_Model::*expt_set_params_v1)(boost::python::list) = &Hamiltonian_Model::set_params;

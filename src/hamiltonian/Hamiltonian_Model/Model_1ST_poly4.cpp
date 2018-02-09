@@ -29,6 +29,79 @@ namespace libhamiltonian{
 namespace libhamiltonian_model{
 
 
+vector<double> set_params_1S_1D_poly4(std::string model){
+/**
+  A helper function to setup the parameters used in the published works
+
+*/
+
+  vector<double> params(4, 0.0);   
+
+  if(model=="Cubic:PRL:2001:87:223202"){
+    /**
+    The metastable state potential of Donoso and Martens
+    [Donoso, A.; Martens, C. Quantum Tunneling Using Entangled Classical Trajectories. Phys. Rev. Lett. 2001, 87, 223202]
+    These parameters will yield 2 bound state, so the system is highly quantum-mechanical
+    */
+  
+    params[0] = 0.2; 
+    params[1] = 0.0;
+    params[2] = -0.09936667;
+    params[3] = 0.0;
+  }
+
+  else if(model=="Cubic:JCP:2000:113:6557"){
+    /**
+    The metastable state potential of Prezhdo and Pereverzev
+    [Prezhdo, O. V.; Pereverzev, Y. V. Quantized Hamilton Dynamics. J. Chem. Phys. 2000, 113, 6557–6565]
+    */
+    params[0] = 1.0; 
+    params[1] = 0.0;
+    params[2] = 0.1;
+    params[3] = 0.0;
+
+  }
+
+  else if(model=="DoubleWell:JCP:2002:117:2995"){
+    /**
+    The double well potential of Prezhdo
+    [Prezhdo, O. V. Classical Mapping for Second-Order Quantized Hamiltonian Dynamics. J. Chem. Phys. 2002, 117, 2995–3002]
+    */
+    params[0] =-5.0; 
+    params[1] = 0.0;
+    params[2] = 0.0;
+    params[3] = 1.0;
+
+  }
+
+  else if(model=="AHO:"){
+    /**
+    The anharmonic oscillator of Ananth [??]
+    */
+
+    params[0] = 1.0; 
+    params[1] = 0.0;
+    params[2] = -0.1;
+    params[3] = 0.1;
+
+  }
+
+  else if(model=="DW:"){ 
+    /**
+    For the double well potential of Smith [under review]
+    */
+
+    params[0] = -0.5; 
+    params[1] = 0.0;
+    params[2] = 0.0;
+    params[3] = 0.25;
+
+  }
+
+
+}
+
+
 void model_1S_1D_poly4(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
                        vector<double>& q, vector<double>& params){ 
 /*** 
@@ -39,7 +112,7 @@ void model_1S_1D_poly4(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia,
   \param[out] d1ham_dia  The 1-st order derivatives of the diabatic Hamiltonian w.r.t. all nuclear DOFs
   \param[out] dc1_dia  The 1-st order derivative couplings in the diabatic basis w.r.t. all nuclear DOFs
   \param[in] q The nuclear DOFs
-  \param[in] params The model parameters: up to 2 parameters (see the chart below) will be used. If not defined,
+  \param[in] params The model parameters: up to 4 parameters (see the chart below) will be used. If not defined,
             the default values will be used:
 
   Internal parameter        Input        Default value
@@ -47,25 +120,6 @@ void model_1S_1D_poly4(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia,
    q0                      params[1]         0.0
    a                       params[2]         0.0
    b                       params[3]         0.0
-
-  For the metastable state potential of Donoso and Martens 
-  [Donoso, A.; Martens, C. Quantum Tunneling Using Entangled Classical Trajectories. Phys. Rev. Lett. 2001, 87, 223202]
-  set:
-  These parameters will yield 2 bound state, so the system is highly quantum-mechanical
-   k                       params[0]         0.2
-   q0                      params[1]         0.0
-   a                       params[2]        -0.09936667
-   b                       params[3]         0.0
-
-
-  For the anharmonic potential of Ananth
-  [??]
-  set:
-  These parameters will yield 2 bound state, so the system is highly quantum-mechanical
-   k                       params[0]         1.0
-   q0                      params[1]         0.0
-   a                       params[2]        -0.1
-   b                       params[3]         0.1
    
   Hamiltonian and its derivatives in diabatic representation:
 
