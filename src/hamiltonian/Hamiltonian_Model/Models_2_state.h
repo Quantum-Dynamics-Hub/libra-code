@@ -39,6 +39,10 @@ void model_2S_1D_sin(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, v
                      vector<double>& q, vector<double>& params);
 
 
+vector<double> set_params_2S_1D_tanh(std::string model);
+
+void model_2S_1D_tanh(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+                      vector<double>& q, vector<double>& params);
 
 }// namespace libhamiltonian_model
 }// namespace libhamiltonian

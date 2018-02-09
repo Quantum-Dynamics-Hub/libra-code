@@ -92,6 +92,17 @@ void export_hamiltonian_model_objects(){
   def("model_2S_1D_sin", expt_model_2S_1D_sin_v1);
 
 
+
+  vector<double> (*expt_set_params_2S_1D_tanh_v1)(std::string model) = &set_params_2S_1D_tanh;
+
+  void (*expt_model_2S_1D_tanh_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+                     vector<double>& q, vector<double>& params) = &model_2S_1D_tanh;
+
+  def("set_params_2S_1D_tanh", expt_set_params_2S_1D_tanh_v1);
+  def("model_2S_1D_tanh", expt_model_2S_1D_tanh_v1);
+
+
+
 //  void (Hamiltonian_Model::*expt_set_params_v1)(boost::python::list) = &Hamiltonian_Model::set_params;
 //  void (Hamiltonian_Model::*set_q)(boost::python::list) = &Hamiltonian_Model::set_q;
 //  void (Hamiltonian_Model::*set_v)(boost::python::list) = &Hamiltonian_Model::set_v;
