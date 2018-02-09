@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015-2017 Alexey V. Akimov
+* Copyright (C) 2018 Brendan A. Smith, Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -9,13 +9,14 @@
 *
 *********************************************************************************/
 /**
-  \file Model_SAC.h
-  \brief The file describes the functions for computing SAC (single avoided crossing) Hamiltonian and its derivatives
+  \file Models_1_state.h
+  \brief The file describes the 1 electronic state model potentials. They can depend on multiple 
+  nuclear DOFs though
     
 */
 
-#ifndef MODEL_SAC_H
-#define MODEL_SAC_H
+#ifndef MODELS_1_STATE_H
+#define MODELS_1_STATE_H
 
 #include "../../math_linalg/liblinalg.h"
 
@@ -32,16 +33,19 @@ namespace libhamiltonian{
 namespace libhamiltonian_model{
 
 
-void model_SAC(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
-               vector<double>& q, vector<double>& params);
+void model_anharmonic_1S_1D(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+                          vector<double>& q, vector<double>& params);
 
+void model_double_well_1S_1D(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia,
+                             vector<CMATRIX>& dc1_dia, vector<double>& q, vector<double>& params);
 
-void SAC_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params_);
-boost::python::list SAC_Ham(double x, boost::python::list params_);
+void model_harmonic_1S_1D(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+                          vector<double>& q, vector<double>& params);
+
 
 
 }// namespace libhamiltonian_model
 }// namespace libhamiltonian
 }// liblibra
 
-#endif // MODEL_SAC
+#endif // MODEL_1_STATE_H
