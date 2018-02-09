@@ -63,12 +63,24 @@ void export_hamiltonian_model_objects(){
   def("double_well_Ham", expt_double_well_Ham1);
 
   void (*expt_model_SAC_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
-               vector<double> q, vector<double>& params) = &model_SAC;
-  void (*expt_model_double_well_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
-               vector<double> q, vector<double>& params) = &model_double_well;
-
+               vector<double>& q, vector<double>& params) = &model_SAC;
   def("model_SAC", expt_model_SAC_v1);
-  def("model_double_well", expt_model_double_well_v1);
+
+
+
+  void (*expt_model_anharmonic_1S_1D_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+                          vector<double>& q, vector<double>& params) = &model_anharmonic_1S_1D;
+
+  void (*expt_model_double_well_1S_1D_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia,
+                          vector<CMATRIX>& dc1_dia, vector<double>& q, vector<double>& params) = &model_double_well_1S_1D;
+
+  void (*expt_model_harmonic_1S_1D_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+                          vector<double>& q, vector<double>& params) = &model_harmonic_1S_1D;
+
+
+  def("model_double_well_1S_1D", expt_model_double_well_1S_1D_v1);
+  def("model_harmonic_1S_1D", expt_model_harmonic_1S_1D_v1);
+
 
 
 //  void (Hamiltonian_Model::*expt_set_params_v1)(boost::python::list) = &Hamiltonian_Model::set_params;
