@@ -22,6 +22,7 @@
 
 #include "../Hamiltonian_Generic/Hamiltonian.h"
 #include "Models_1_state.h"
+#include "Models_2_state.h"
 #include "Model_SAC.h"
 #include "Model_DAC.h"
 #include "Model_ECWR.h"
