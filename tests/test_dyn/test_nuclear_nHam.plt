@@ -34,9 +34,9 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 
 set xlabel "t" offset 0.0, 0.5
 set ylabel "Energy" offset 1.5, 0.0 
-set xrange [0:5000]
+set xrange [0:1000]
 set xtics 1000
-set yrange [-1:1]
+#set yrange [-1:1]
 set ytics 0.2
 set output "_nucl_2.1_en.png"
 plot "_nucl_nHam_2.1.txt" using 2:8   w l  ls 11  lw 5  t "Ekin",\
@@ -46,10 +46,10 @@ plot "_nucl_nHam_2.1.txt" using 2:8   w l  ls 11  lw 5  t "Ekin",\
 
 set xlabel "q" offset 0.0, 0.5
 set ylabel "p" offset 1.5, 0.0 
-set xrange [-10:10]
-set xtics 3
-set yrange [-10:10]
-set ytics 3
+set xrange [-3:3]
+set xtics 1
+set yrange [-25:25]
+set ytics 10
 
 set output "_nucl_nHam_2.1_phase.png"
 plot "_nucl_nHam_2.1.txt" using 4:6  w l  ls 11  lw 5  notitle "Phase space"
