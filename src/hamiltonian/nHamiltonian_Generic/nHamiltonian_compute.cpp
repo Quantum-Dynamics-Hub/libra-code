@@ -72,8 +72,12 @@ void nHamiltonian::compute_adiabatic(int lvl){
     if(basis_transform_mem_status==0){ cout<<"Error in compute_adiabatic(): the basis_transform (eigenvector) matrix is\
     not allocated but it is used to collect the results of the calculations\n"; exit(0); }
 
-   
-    solve_eigen(ham_dia, ovlp_dia, ham_adi, basis_transform, 0);  
+
+    if(nadi==1 && ndia==1){
+      *ham_adi = *ham_dia;
+      basis_transform->set(0,0, 1.0, 0.0);
+    }
+    else{   solve_eigen(ham_dia, ovlp_dia, ham_adi, basis_transform, 0);   }
 
     if(lvl>=1){
 
