@@ -98,6 +98,7 @@ vector<double> set_params_1S_1D_poly4(std::string model){
 
   }
 
+  return params;
 
 }
 
