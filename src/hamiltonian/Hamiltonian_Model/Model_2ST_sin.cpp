@@ -95,7 +95,7 @@ vector<double> set_params_2S_1D_sin(std::string model){
 
   }
 
-
+  return params;
 
 }
 
@@ -215,6 +215,8 @@ vector<double> set_params_2S_2D_sin(std::string model){
     params[12] = 0.001;  params[13] = 0.0019; params[14] = 0.0;  params[15] = 1.0;  params[16] = 0.0;  params[17] = 1.0; // H11
 
   }
+
+  return params;
 
 }
 

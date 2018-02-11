@@ -68,7 +68,7 @@ vector<double> set_params_2S_1D_tanh(std::string model){
 
   }
 
-
+  return params;
 
 }
 
