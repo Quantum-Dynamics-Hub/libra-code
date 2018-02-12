@@ -91,7 +91,8 @@ void export_Dyn_objects(){
    double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_fssh;
   MATRIX (*expt_compute_hopping_probabilities_fssh_v3)
   (CMATRIX& Coeff, CMATRIX& Hvib, double dt) = &compute_hopping_probabilities_fssh;
-
+  MATRIX (*expt_compute_hopping_probabilities_fssh_v4)
+  (CMATRIX& Coeff, CMATRIX& Hvib, double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_fssh;
 
   void (*expt_compute_hopping_probabilities_gfsh_v1)
   (Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
@@ -121,6 +122,7 @@ void export_Dyn_objects(){
   def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v1);
   def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v2);
   def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v3);
+  def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v4);
   def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v1);
   def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v2);
   def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v3);

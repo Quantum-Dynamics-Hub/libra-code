@@ -83,6 +83,52 @@ MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double 
 }// fssh
 
 
+MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double dt, int use_boltz_factor,double T){
+    /**
+    */
+    int nstates = Coeff.n_elts;
+    MATRIX g(nstates,nstates);
+    const double kb = 3.166811429e-6; // Hartree/K^M
+    int i,j,k;
+    double sum,g_ij,argg;
+    CMATRIX* denmat; denmat = new CMATRIX(nstates, nstates);
+    *denmat = (Coeff * Coeff.H() ).conj();
+ 
+   // Now calculate the hopping probabilities^M
+    for(i=0;i<nstates;i++){
+	sum = 0.0;
+	double a_ii = denmat->get(i,i).real(); // c_i^* * c_i
+	for(j=0;j<nstates;j++){
+	  if(i!=j){ // according to formula the diagonal probability P(i->i) should be zero^M
+	    // Use very general expression:^M
+	    // Note: the sign here is not very obvious! Keep in mind:^M
+	    // Re(i*z) = -Im(z)  but  Im(i*z) = Re(z)^M
+	    // My formula is: P(i->j) = (2*dt/(hbar*|c_i|^2)) * ( -Im(H_ij * c_i^* * c_j) )^M
+	    double imHaij = ( Hvib.get(i,j) * denmat->get(i,j) ).imag(); // Im(H_ij * c_i^* * c_j)^M
+	    if(a_ii<1e-8){ g_ij = 0.0; }  // avoid division by zero^M
+	    else{
+	      // g_ij = -2.0*dt*imHaij/a_ii;  // This is a general case - wrong sign (opposite of the one in JCC)^M
+	      g_ij = 2.0*dt*imHaij/a_ii;  // This is a general case -^M
+	      if(g_ij<0.0){  g_ij = 0.0; }
+	    }// else
+
+	    if(use_boltz_factor){
+	      if(Hvib.get(j,j).real()>Hvib.get(i,i).real()){
+		argg = -(Hvib.get(j,j).real() - Hvib.get(i,i).real())/(kb*T);
+		if(argg<500.0){ g_ij *= std::exp(argg); }
+	      }
+	    }// if use_boltz_factor
+
+	    g.set(i,j,g_ij);
+	    sum = sum + g_ij;
+	  }// i!=j
+	  else{ g.set(i,j,0.0); }
+	}// for j
+	g.set(i,i,1.0 - sum);
+    }// for i
+    delete denmat;
+    return g;
+}//fssh
 
 
 void compute_hopping_probabilities_fssh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,
@@ -575,9 +621,22 @@ void compute_hopping_probabilities_mssh(Nuclear* mol, Electronic* el, Hamiltonia
   for(j=0;j<el->nstates;j++){
     double gjj = (el->q[j]*el->q[j] + el->p[j]*el->p[j]); // c_j^* * c_j 
 
+      if(use_boltz_factor){
+	for (i=0;i<el->nstates;i++){
+	  if(ham->H(j,j).real()>ham->H(i,i).real()){
+	    argg = -(ham->H(j,j).real() - ham->H(i,i).real())/(kb*T);
+	    if(argg<500.0){ g_ij = g_ij * std::exp(argg); }
+	  }
+	}
+      }
+
     for(i=0;i<el->nstates;i++){   g->set(i,j,gjj);   }// for i
 
+
   }// for j
+
+
+
 
 
 }// compute probabilities mssh

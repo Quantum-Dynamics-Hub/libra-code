@@ -47,7 +47,7 @@ void compute_hopping_probabilities_fssh(Nuclear& mol, Electronic& el, Hamiltonia
                                         double dt, int use_boltz_factor,double T);
 void compute_hopping_probabilities_fssh(Ensemble& ens, int i, MATRIX& g, double dt, int use_boltz_factor,double T);
 MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double dt);
-
+MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double dt, int use_boltz_factor,double T);
 
 void compute_hopping_probabilities_gfsh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,
                                         double dt, int use_boltz_factor,double T);
