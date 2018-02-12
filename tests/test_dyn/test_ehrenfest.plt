@@ -31,42 +31,20 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 
 
 
-
-
 set xlabel "t" offset 0.0, 0.5
 set ylabel "Energy" offset 1.5, 0.0 
-set xrange [0:5000]
-set xtics 1000
-set yrange [-0.06:0.16]
-set ytics 0.04
+#set xrange [0:5000]
+#set xtics 1000
+#set yrange [-0.06:0.16]
+#set ytics 0.04
 
-set output "_ehrenfest_en.png"
-plot "_ehrenfest.txt" using 2:8   w l  ls 11  lw 5  t "Ekin",\
-     "_ehrenfest.txt" using 2:10  w l  ls 21  lw 5  t "Epot",\
-     "_ehrenfest.txt" using 2:12  w l  ls 32  lw 5  t "Etot"
+set output "o.png"
+plot "o" using 1:2   w l  ls 11  lw 5  t "Etot",\
+     "o" using 1:3   w l  ls 21  lw 5  t "Ekin",\
+     "o" using 1:4   w l  ls 31  lw 5  t "Epot"
 
+set output "o_1.png"
+plot "o" using 1:5   w l  ls 11  lw 5  t "P(0,0)"
 
-set xlabel "q" offset 0.0, 0.5
-set ylabel "p" offset 1.5, 0.0 
-set xrange [-10:35]
-set xtics 5
-set yrange [16:24]
-set ytics 2
-
-set output "_ehrenfest_phase.png"
-plot "_ehrenfest.txt" using 4:6  w l  ls 11  lw 5  t "Phase space"
-
-
-set xlabel "t" offset 0.0, 0.5
-set ylabel "Density matrix" offset 1.5, 0.0 
-set xrange [0:5000]
-set xtics 1000
-set yrange [-0.6:1.0]
-set ytics 0.4
-
-set output "_ehrenfest_pop.png"
-plot "_ehrenfest.txt" using 2:14  w l  ls 11  lw 5  t "|c0|^2",\
-     "_ehrenfest.txt" using 2:16  w l  ls 21  lw 5  t "|c1|^2",\
-     "_ehrenfest.txt" using 2:18  w l  ls 32  lw 5  t "Re(c01)"
 
 
