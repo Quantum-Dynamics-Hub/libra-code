@@ -768,7 +768,7 @@ int rescale_velocities_adiabatic(vector<double>& p, vector<double>& masses,
 
     for(int k=0;k<nnucl;k++){
 
-      double D = dc1_adi[k].get(old_st,old_st).real(); // derivative coupling w.r.t. nuclear DOF k
+      double D = dc1_adi[k].get(old_st,new_st).real(); // derivative coupling w.r.t. nuclear DOF k
 
       a_ij += 0.5*(D*D / masses[k]); 
       b_ij += (D*p[k])/masses[k];
@@ -780,16 +780,28 @@ int rescale_velocities_adiabatic(vector<double>& p, vector<double>& masses,
 
     if(det<0.0){
 
-      if(do_reverse){     gamma_ij = b_ij / a_ij;}
-      else{ gamma_ij = 0.0;  }
+      if(fabs(a_ij)>1e-100){  // only consider reversals, if the couplings are sizable
+        if(do_reverse){     gamma_ij = b_ij / a_ij;}
+         else{ gamma_ij = 0.0;  }
+      }
+      else{  gamma_ij = 0.0;    } // don't consider reversal, if the couplings are too small
 
       st = old_st; // # hop does not occur - frustrated hop
 
     }
     else{
-      if(b_ij<0){ gamma_ij = 0.5*(b_ij + sqrt(det))/a_ij; }
-      else{       gamma_ij = 0.5*(b_ij - sqrt(det))/a_ij; }
-      st = new_st;
+      if(fabs(a_ij)>1e-100){ // only compute the rescaling factor and do the hop, if the couplings are sizable
+
+        if(b_ij<0){ gamma_ij = 0.5*(b_ij + sqrt(det))/a_ij; }
+        else{       gamma_ij = 0.5*(b_ij - sqrt(det))/a_ij; }
+
+        st = new_st;
+      } 
+      else{   // otherwise - don't 
+        gamma_ij = 0.0; 
+        st = old_st;
+      } 
+
     }
 
     //Rescale velocities and do the hop
