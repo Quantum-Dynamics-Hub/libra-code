@@ -184,15 +184,24 @@ def crop_sphere_xyz3(L, R, Rcut, pairs, new_L):
             pass
         elif (it[0] in indx and it[1] not in indx):  # it[0] is inside, it[1] is outside
             if it[1] not in added:
-                coords.append(R[it[1]])
-                lab.append(new_L[ L[it[0]] ])            
-                added.append(it[1])
+
+                new_lab = new_L[ L[it[0]] ]  # new label
+                if new_lab == "none":
+                    pass
+                else:
+                    coords.append(R[it[1]])
+                    lab.append(new_lab)            
+                    added.append(it[1])
 
         elif (it[1] in indx and it[0] not in indx):  # it[1] is inside, it[0] is outside
             if it[0] not in added:
-                coords.append(R[it[0]])
-                lab.append(new_L[ L[it[1]] ])
-                added.append(it[0])
+                new_lab = new_L[ L[it[1]] ]  # new label
+                if new_lab == "none":
+                    pass
+                else:
+                    coords.append(R[it[0]])
+                    lab.append(new_lab)
+                    added.append(it[0])
 
 
     return lab, coords
