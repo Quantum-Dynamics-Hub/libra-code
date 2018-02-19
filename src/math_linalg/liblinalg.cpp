@@ -589,6 +589,27 @@ void export_linalg_objects(){
   ;
 
 
+
+
+  class_< intList2 >("intList2")
+      .def(vector_indexing_suite< intList2 >())
+  ;
+
+  class_< floatList2 >("floatList2")
+      .def(vector_indexing_suite< floatList2 >())
+  ;
+
+  class_< doubleList2 >("doubleList2")
+      .def(vector_indexing_suite< doubleList2 >())
+  ;
+
+  class_< complexList >("complexList2")
+      .def(vector_indexing_suite< complexList2 >())
+  ;
+
+
+
+
   class_< intMap >("intMap")
       .def(vector_indexing_suite< intMap >())
   ;
