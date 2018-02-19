@@ -18,12 +18,14 @@
 #define SD_H
 
 #include "../math_linalg/liblinalg.h"
+#include "../math_meigen/libmeigen.h"
 #include "../math_specialfunctions/libspecialfunctions.h"
 
 /// liblibra namespace
 namespace liblibra{
 
 using namespace liblinalg;
+using namespace libmeigen;
 using namespace libspecialfunctions;
 
 namespace libqobjects{
@@ -97,6 +99,9 @@ public:
 
 };
 
+
+complex<double> overlap_sd(CMATRIX& Smo, vector<int>& SD1, vector<int>& SD2);
+CMATRIX overlap_sd(CMATRIX& Smo, vector< vector<int> >& SD_basis);
 
 typedef std::vector<SD> SDList; ///< This is the data type for representing vector of SD objects
 
