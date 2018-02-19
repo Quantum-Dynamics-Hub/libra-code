@@ -194,5 +194,10 @@ add_custom_target(copy-libra-py ALL
     COMMAND cmake -E copy_directory ${CMAKE_SOURCE_DIR}/src/libra_py ${CMAKE_BINARY_DIR}/src/libra_py
 )
 
-#    COMMAND cmake -E copy ${CMAKE_SOURCE_DIR}/src/__init__.py ${CMAKE_BINARY_DIR}/src/__init__.py
+add_custom_target(copy-libra-params ALL
+    COMMAND cmake -E copy_directory ${CMAKE_SOURCE_DIR}/src/libra_params ${CMAKE_BINARY_DIR}/src/libra_params
+)
+
+
+
 

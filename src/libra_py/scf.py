@@ -23,7 +23,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import datautils
-
+import proj_dos
 
 def takeSecond(elem):
     return elem[1]
@@ -107,6 +107,28 @@ def print_orbitals(ham, syst, orbs, prefix = "", grid = [40, 40, 40]):
 
     es = ham.get_electronic_structure()
     charge_density( es, syst, ham.basis_ao, prms)
+
+
+
+def print_pdos(ham, syst, projections, prefix = "pdos", emin = -35.0, emax = 35.0, de = 0.1, outfile="pdos.txt"):
+    """
+    ham - listHamiltonian object that contains info about atom2ao mapping, AO basis, and MOs
+    syst - contains the atomic coordinates
+    projections - which types of DOS projections to compute. Format like in [["tot",range(0,syst.Number_of_atoms)]]
+    prefix - the directory name (to be created if not present) where all the files will go
+
+    """
+
+    prms = Control_Parameters()
+    prms.dos_prefix = prefix+"/"
+
+    os.system("mkdir " + prefix)
+
+    es = ham.get_electronic_structure()
+    compute_dos( es, syst, ham.basis_ao, prms, ham.atom_to_ao_map)
+    proj_dos.pdos(emin, emax, de, projections, prefix+"/_alpha_wfc_atom", outfile, es.Nelec)
+
+
 
 
 

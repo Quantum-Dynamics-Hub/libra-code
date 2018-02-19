@@ -27,6 +27,7 @@ __all__ = ["init_system",
            "build",
            "autoconnect",
            "vesta2qe",
-           "scf"
+           "scf",
+           "namd"
           ]
 
