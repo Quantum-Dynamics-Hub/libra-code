@@ -94,7 +94,7 @@ def run_scf(syst, min_, max_):
     for j in xrange(es.Norb):
         print "%5i  %12.8f   %12.8f  %12.8f   %12.8f" %(j, es.get_bands_alp(j), es.get_occ_alp(j), es.get_bands_bet(j), es.get_occ_bet(j) )
 
-    orb_adi = xrange(homo+_min, homo+max_+1)
+    orb_adi = range(homo+min_, homo+max_+1)
     
     scf.spectrum(ham, "T_mo.dat", "spectrum.txt")
     scf.print_orbitals(ham, syst, orb_adi, "init", [40,40,40])
@@ -278,6 +278,10 @@ def run_namd(act_space, SD_basis, init_st):
 
 
     #=======================================================================    
+    print "The SCF calculations at the thermalized structure!"
+    min_ = min(act_space)
+    max_ = max(act_space)
+    run_scf(syst[0], min_, max_)  
 
     for i in xrange(1000):        
 
