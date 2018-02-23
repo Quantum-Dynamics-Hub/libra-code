@@ -57,6 +57,42 @@ def read_xyz(filename):
 
     return L, coords
 
+def read_xyz_crystal(filename, a,b,c):
+    """
+    a,b,c - unit cell vectors (in Bohrs)
+    """
+
+    M = MATRIX(3,3)
+    M.init(a,b,c)
+    M = M.T()
+
+    f = open(filename,"r")
+    A = f.readlines()
+    f.close()
+
+    tmp = A[0].split()
+    Natoms = int(float(tmp[0]))
+
+    L = [] 
+    coords = []
+
+    for a in A[2:]:
+        tmp = a.split()
+        if len(tmp)==4:
+            x = float(tmp[1]) 
+            y = float(tmp[2])
+            z = float(tmp[3])
+             
+            # Now apply PBC
+            R = M * VECTOR(x,y,z) # * Angst_to_Bohr
+
+            L.append(tmp[0])
+            coords.append(R)
+
+    return L, coords
+
+
+
 
 
 def generate_replicas_xyz2(L, R, tv1, tv2, tv3, Nx, Ny, Nz):
