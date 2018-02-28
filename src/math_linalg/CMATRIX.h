@@ -46,14 +46,16 @@ public:
   CMATRIX(int i, int j) : base_matrix< complex<double> >(i,j) { }
 /*
   CMATRIX(const CMATRIX& ob) : base_matrix< complex<double> >(ob) {   }
-  CMATRIX(const base_matrix<complex<double> >& ob) {
+
+*/
+  CMATRIX(const CMATRIX& ob) {
     n_rows = ob.n_rows;  ///< The number of rows
     n_cols = ob.n_cols;  ///< The number of colomns
     n_elts = ob.n_elts;  ///< The number of elements
     M = new complex<double>[n_elts];
     memcpy(M, ob.M, sizeof(complex<double>)*n_elts);    
   }
-*/
+
 
   /// Type-specific Constructors
   ///< Create the complex-valued matrix from two tables: one for real, one for imaginary components
