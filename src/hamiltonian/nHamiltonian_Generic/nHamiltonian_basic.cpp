@@ -9,8 +9,8 @@
 *
 *********************************************************************************/
 /**
-  \file nHamiltonian.cpp
-  \brief The file implements the generic Hamiltonian class
+  \file nHamiltonian_basic.cpp
+  \brief The file implements the generic methods of the nHamiltonian class: getters and setters
     
 */
 

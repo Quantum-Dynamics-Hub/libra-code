@@ -183,11 +183,13 @@ public:
   int basis_transform_mem_status;
 
 
-  /**========= in Hamiltonian.cpp ==================
+  /**
      
      All the basic methods: constructor, destructor, getters, setters, etc.
 
   **/
+  ///< In nHamiltonian_basic.cpp
+
   ///< Constructors
   nHamiltonian(int ndia_, int nadi_, int nnucl_); 
 
@@ -267,20 +269,22 @@ public:
   CMATRIX get_basis_transform();
 
 
-  /**========= in Hamiltonian1.cpp ==================
 
-             Computational methods
+  ///< In nHamiltonian_compute_diabatic.cpp
 
-  **/
+  void compute_diabatic(int model, vector<double>& q, vector<double>& params); // for internal model types
+  void compute_diabatic(bp::object py_funct, bp::object q, bp::object params); // for models defined in Python
+
+
+  ///< In nHamiltonian_compute_adiabatic.cpp
 
   void compute_adiabatic(int lvl);
+
+
+  ///< In nHamiltonian_compute.cpp
+
   void ampl_dia2adi();
   void ampl_adi2dia();
-
-
-  complex<double> Ehrenfest_energy_adi();
-  complex<double> Ehrenfest_energy_dia();
-
 
   CMATRIX forces_adi();  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
   CMATRIX forces_dia();  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
@@ -289,9 +293,10 @@ public:
   vector<CMATRIX> forces_tens_dia(); // 
 
 
-//  CMATRIX forces_adi();  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
-//  CMATRIX forces_dia();  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
+  ///< In nHamiltonian_compute_Ehrenfest.cpp
 
+  complex<double> Ehrenfest_energy_adi();
+  complex<double> Ehrenfest_energy_dia();
 
   CMATRIX Ehrenfest_forces_adi();  // Ehrenfest forces in adiabatic basis
   CMATRIX Ehrenfest_forces_dia();  // Ehrenfest forces in diabatic basis
@@ -301,21 +306,6 @@ public:
 
 
 
-/*
-
-  // This function performs actual computations
-  virtual void compute();
-  virtual void compute_diabatic(){ ;; }  
-  virtual void compute_adiabatic(){ ;; }  
-
-
-  // Calculation methods
-  virtual std::complex<double> H(int, int);             ///< Hamiltonian
-  virtual std::complex<double> dHdq(int i,int j,int n); ///< Hamiltonian first-order derivative  
-  virtual std::complex<double> D(int i,int j,int n);    ///< derivative coupling                 <i|d/dR_n|j>
-  virtual std::complex<double> nac(int i,int j);        ///< non-adiabatic coupling              <i|d/dt|j>
-  virtual std::complex<double> Hvib(int i,int j);       ///< vibronic Hamiltonian (for TD-SE)    H - i*hbar*nac
-*/
 
   friend bool operator == (const nHamiltonian& h1, const nHamiltonian& h2){
     return &h1 == &h2;

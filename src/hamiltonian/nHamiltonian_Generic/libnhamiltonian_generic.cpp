@@ -49,6 +49,16 @@ void export_nhamiltonian_generic_objects(){
   CMATRIX (nHamiltonian::*expt_get_d2ham_adi_v2)(int i, int j) = &nHamiltonian::get_d2ham_adi;
 
 
+  // for internal model types
+  void (nHamiltonian::*expt_compute_diabatic_v1)(int model, vector<double>& q, vector<double>& params)
+  = &nHamiltonian::compute_diabatic; 
+
+  // for models defined in Python
+  void (nHamiltonian::*expt_compute_diabatic_v2)(bp::object py_funct, bp::object q, bp::object params)
+  = &nHamiltonian::compute_diabatic;
+
+
+
 
   class_<nHamiltonian>("nHamiltonian",init<int,int,int>())
 //      .def("__copy__", &generic__copy__<Hamiltonian>)
@@ -118,6 +128,9 @@ void export_nhamiltonian_generic_objects(){
 
       .def("get_basis_transform", &nHamiltonian::get_basis_transform)
 
+
+      .def("compute_diabatic", expt_compute_diabatic_v1)
+      .def("compute_diabatic", expt_compute_diabatic_v2)
 
       .def("compute_adiabatic", &nHamiltonian::compute_adiabatic)
       .def("ampl_adi2dia", &nHamiltonian::ampl_adi2dia)
