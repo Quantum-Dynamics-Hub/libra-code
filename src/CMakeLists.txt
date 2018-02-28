@@ -78,6 +78,11 @@ ADD_SUBDIRECTORY("chemobjects")
 MESSAGE("Going into subdirectory cell...")
 ADD_SUBDIRECTORY("cell")
 
+
+MESSAGE("Going into subdirectory opt...")
+ADD_SUBDIRECTORY("opt")
+
+
 MESSAGE("Going into subdirectory pot...")
 ADD_SUBDIRECTORY("pot")
 
@@ -152,6 +157,7 @@ TARGET_LINK_LIBRARIES(libra_core
                       hamiltonian_stat
                       util_stat
                       forcefield_stat
+                      opt_stat
                       pot_stat
                       cell_stat
                       chemobjects_stat
@@ -177,6 +183,7 @@ TARGET_LINK_LIBRARIES(libra_core_stat
                       hamiltonian_stat
                       util_stat
                       forcefield_stat
+                      opt_stat
                       pot_stat
                       cell_stat
                       chemobjects_stat
