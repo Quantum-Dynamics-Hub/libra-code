@@ -188,7 +188,7 @@ def main():
     L0, R0 = build.read_xyz(prefix+".xyz")  
 
 
-    Nx, Ny, Nz = 20, 20, 1
+    Nx, Ny, Nz = 30, 30, 1
     a = VECTOR(1.0,   0.0,   0.0) * Angst # convert to a.u.
     b = VECTOR(0.0,   1.0,   0.0) * Angst # convert to a.u.
     c = VECTOR(0.0,   0.0,   1.0) * Angst # convert to a.u.
@@ -206,7 +206,7 @@ def main():
     tv1 = a * Nx
     tv2 = b * Ny
     tv3 = c * Ny
-    pbc_opt = "a"
+    pbc_opt = "ab"
     connect, line, unsorted_pairs_out = autoconnect.autoconnect_pbc(R1, MaxCoord, Rcut, tv1, tv2, tv3, pbc_opt)
     
     
@@ -222,7 +222,7 @@ def main():
     # Simulation parameters
     nat = syst.Number_of_atoms
     nsnaps = 100
-    nsteps = 100
+    nsteps = 500
     kT = 0.01
     rnd = Random()
     fract = 0.2
@@ -246,9 +246,19 @@ def main():
     en = energy(connect, sites, H1, H2)
     print "initial energy = ", en
 
+    snap = 0
+    for i in xrange(nat):
+        syst.Atoms[i].Atom_element = mapping[ sites[i] ] 
+    syst.print_ent("2D/step%i" % snap)
+
 
     # Continue the MC moves and print out the lattices after every nsteps
-    for snap in xrange(nsnaps):
+    f = open("2D/energy.txt", "w")
+    f.write("%5i  %8.5f \n" % (snap, en))
+    f.close()
+
+
+    for snap in xrange(1,nsnaps):
         for step in xrange(nsteps):
 
             sites, en = mc_move(connect, sites, dopant_indx, n_move_at, H1, H2, en, kT, rnd)
@@ -256,8 +266,13 @@ def main():
         for i in xrange(nat):
             syst.Atoms[i].Atom_element = mapping[ sites[i] ] 
         
-        syst.print_ent("mc_run/step%i" % snap)
+        syst.print_ent("2D/step%i" % snap)
+
         print "step= ", snap, " energy= ", en
+        f = open("2D/energy.txt", "a")
+        f.write("%5i  %8.5f \n" % (snap, en))
+        f.close()
+
 
 
 main()    
