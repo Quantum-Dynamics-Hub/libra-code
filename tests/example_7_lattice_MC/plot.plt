@@ -35,5 +35,5 @@ set key top horizontal
 
 
 set output "energy.png"
-plot "enery.txt" using 1:2 w l ls 11 lw 5 t "Energy"
+plot "energy.txt" using 1:2 w l ls 11 lw 5 t "Energy"
 
