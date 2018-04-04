@@ -40,6 +40,7 @@ using namespace libnuclear;
 using namespace libelectronic;
 using namespace libensemble;
 
+
 double Ehrenfest_dia(CMATRIX& C, CMATRIX& H, vector<CMATRIX>& dHdR, vector<double>& f, int opt);
 double Ehrenfest_dia(CMATRIX* C, CMATRIX* H, vector<CMATRIX*>& dHdR, vector<double*>& f, int opt);
 double Ehrenfest_dia(CMATRIX& C, Hamiltonian& ham, vector<double>& f, int opt);

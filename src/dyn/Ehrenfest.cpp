@@ -15,6 +15,7 @@
 */
 
 #include "Ehrenfest.h"
+#include "Dynamics.h"
 
 /// liblibra namespace
 namespace liblibra{
@@ -22,6 +23,87 @@ namespace liblibra{
 /// libdyn namespace 
 namespace libdyn{
 
+
+//    propagate_electronic(0.5*dt, C, *hvib, ham.get_ovlp_dia() );   
+
+/*
+CMATRIX compute_Hvib(nHamiltonian& ham, MATRIX& p, MATRIX& invM, int rep){
+
+
+  complex<double> ihbar(0.0, 1.0);  
+
+  if(rep==0){ // diabatic
+
+      CMATRIX d(ham.ndia, ham.ndia); 
+
+      for(int i=0;i<ham.nnucl;i++){  Hvib = Hvib + p.get(i) * invM.get(i,i) * ham.get_dc1_dia(i); }
+    *Hvib = ham.get_ham_dia() - ihbar * (*d);
+
+    propagate_electronic(0.5*dt, C, *hvib, ham.get_ovlp_dia() );   
+  }
+
+
+  else if(rep==1){ // adiabatic
+    for(i=0;i<ham.nnucl;i++){  *d = *d + p.get(i) * invM.get(i,i) * ham.get_dc1_adi(i); }
+    *Hvib = ham.get_ham_adi() - ihbar * (*d);
+
+    propagate_electronic(0.5*dt, C, *Hvib);   
+  }
+
+
+}
+*/
+
+void Ehrenfest(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params){
+ 
+  int rep = -1;
+  int has_attr=0;
+  has_attr = (int)hasattr(params,"rep");        
+  if(has_attr){    rep = extract<int>(params.attr("rep"));    }
+
+  //============== Electronic propagation ===================
+  if(rep==0){  
+    ham.compute_nac_dia(p, invM);
+    ham.compute_hvib_dia();
+  }
+  else if(rep==1){  
+    ham.compute_nac_adi(p, invM); 
+    ham.compute_hvib_adi();
+  }
+
+  propagate_electronic(0.5*dt, ham, rep);   
+
+
+  //============== Nuclear propagation ===================
+    
+       if(rep==0){  p = p + ham.Ehrenfest_forces_dia().real() * 0.5*dt;  }
+  else if(rep==1){  p = p + ham.Ehrenfest_forces_adi().real() * 0.5*dt;  }
+
+
+  q = q + invM*p*dt;
+  ham.compute_diabatic(py_funct, bp::object(q), params);
+  ham.compute_adiabatic(1);
+
+
+       if(rep==0){  p = p + ham.Ehrenfest_forces_dia().real() * 0.5*dt;  }
+  else if(rep==1){  p = p + ham.Ehrenfest_forces_adi().real() * 0.5*dt;  }
+
+
+  //============== Electronic propagation ===================
+  if(rep==0){  
+    ham.compute_nac_dia(p, invM);
+    ham.compute_hvib_dia();
+  }
+  else if(rep==1){  
+    ham.compute_nac_adi(p, invM); 
+    ham.compute_hvib_adi();
+  }
+
+  propagate_electronic(0.5*dt, ham, rep);   
+
+
+
+}
 
 double Ehrenfest_dia(CMATRIX& C, CMATRIX& H, vector<CMATRIX>& dHdR, vector<double>& f, int opt){
 /**

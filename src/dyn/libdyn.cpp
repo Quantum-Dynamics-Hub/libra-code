@@ -54,8 +54,10 @@ void export_Dyn_objects(){
   export_gwp_objects();
 
   void (*expt_Verlet_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params) = &Verlet;
-
   def("Verlet", expt_Verlet_v1);
+
+  void (*expt_Ehrenfest_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params) = &Ehrenfest;
+  def("Ehrenfest", expt_Ehrenfest_v1);
 
 
   double (*expt_Ehrenfest_dia_v1)(CMATRIX& C, CMATRIX& H, vector<CMATRIX>& dHdR, vector<double>& f, int opt) = &Ehrenfest_dia;

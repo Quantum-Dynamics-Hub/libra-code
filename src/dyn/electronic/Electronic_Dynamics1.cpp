@@ -759,6 +759,59 @@ void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
 }// propagate_electronic
 
 
+void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep){
+
+  if(rep==0){  // diabatic
+
+    CMATRIX Hvib(ham.ndia, ham.ndia);  Hvib = ham.get_ham_dia();
+    CMATRIX Sdia(ham.ndia, ham.ndia);  Sdia = ham.get_ovlp_dia();
+
+    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+
+  }
+
+  else if(rep==1){  // adiabatic
+
+    CMATRIX Hvib(ham.nadi, ham.nadi);  Hvib = ham.get_ham_adi(); 
+
+    propagate_electronic(dt, C, Hvib);  // in this case C - adiabatic coeffs
+  }
+
+}
+
+
+void propagate_electronic(double dt, nHamiltonian& ham, int rep){
+
+
+  if(rep==0){  // diabatic
+
+    CMATRIX Hvib(ham.ndia, ham.ndia);  Hvib = ham.get_ham_dia();
+    CMATRIX Sdia(ham.ndia, ham.ndia);  Sdia = ham.get_ovlp_dia();
+    CMATRIX C(ham.ndia, ham.ndia);     C = ham.get_ampl_dia();
+   
+    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+
+    // Return the updated coefficients back the ham - but via reference!
+    for(int i=0; i<C.n_elts;i++){  ham.ampl_dia->set(i, C.get(i));  }
+    
+  }
+
+  else if(rep==1){  // adiabatic
+
+    CMATRIX Hvib(ham.nadi, ham.nadi);  Hvib = ham.get_ham_adi(); 
+    CMATRIX C(ham.nadi, ham.nadi);     C = ham.get_ampl_adi();
+
+    propagate_electronic(dt, C, Hvib);  // in this case C - adiabatic coeffs
+
+    // Return the updated coefficients back the ham - but via reference!
+    for(int i=0; i<C.n_elts;i++){  ham.ampl_adi->set(i, C.get(i)); }
+
+  }
+
+}
+
+
+
 
 
 void grid_propagator(double dt, CMATRIX& Hvib, CMATRIX& S, CMATRIX& U){
