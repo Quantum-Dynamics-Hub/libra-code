@@ -243,7 +243,7 @@ void nHamiltonian::compute_nac_dia(MATRIX& p, MATRIX& invM){
   This is going to be <i|d/dt|j> = sum_n { p[n]/mass[n] * dc1_adi[n] }
 */
 
-  nac_dia->set(-1,-1, 0.0);
+  nac_dia->set(-1, 0.0);
   for(int n=0;n<nnucl;n++){ 
 
     double v_n = p.get(n) * invM.get(n,n);
@@ -266,7 +266,7 @@ void nHamiltonian::compute_nac_adi(MATRIX& p, MATRIX& invM){
   This is going to be <i|d/dt|j> = sum_n { p[n]/mass[n] * dc1_adi[n] }
 */
 
-  nac_adi->set(-1,-1, 0.0);
+  nac_adi->set(-1, 0.0);
   for(int n=0;n<nnucl;n++){ 
 
     double v_n = p.get(n) * invM.get(n,n);
