@@ -76,6 +76,12 @@ void export_nhamiltonian_generic_objects(){
       .def("set_ham_dia_by_ref", &nHamiltonian::set_ham_dia_by_ref)
       .def("set_ham_dia_by_val", &nHamiltonian::set_ham_dia_by_val)
 
+      .def("set_nac_dia_by_ref", &nHamiltonian::set_nac_dia_by_ref)
+      .def("set_nac_dia_by_val", &nHamiltonian::set_nac_dia_by_val)
+
+      .def("set_hvib_dia_by_ref", &nHamiltonian::set_hvib_dia_by_ref)
+      .def("set_hvib_dia_by_val", &nHamiltonian::set_hvib_dia_by_val)
+
       .def("set_d1ham_dia_by_ref", &nHamiltonian::set_d1ham_dia_by_ref)
       .def("set_d1ham_dia_by_val", &nHamiltonian::set_d1ham_dia_by_val)
 
@@ -96,6 +102,12 @@ void export_nhamiltonian_generic_objects(){
       .def("set_ham_adi_by_ref", &nHamiltonian::set_ham_adi_by_ref)
       .def("set_ham_adi_by_val", &nHamiltonian::set_ham_adi_by_val)
 
+      .def("set_nac_adi_by_ref", &nHamiltonian::set_nac_adi_by_ref)
+      .def("set_nac_adi_by_val", &nHamiltonian::set_nac_adi_by_val)
+
+      .def("set_hvib_adi_by_ref", &nHamiltonian::set_hvib_adi_by_ref)
+      .def("set_hvib_adi_by_val", &nHamiltonian::set_hvib_adi_by_val)
+
       .def("set_d1ham_adi_by_ref", &nHamiltonian::set_d1ham_adi_by_ref)
       .def("set_d1ham_adi_by_val", &nHamiltonian::set_d1ham_adi_by_val)
 
@@ -113,6 +125,8 @@ void export_nhamiltonian_generic_objects(){
       .def("get_ampl_dia", &nHamiltonian::get_ampl_dia)
       .def("get_dc1_dia", &nHamiltonian::get_dc1_dia)
       .def("get_ham_dia", &nHamiltonian::get_ham_dia)
+      .def("get_nac_dia", &nHamiltonian::get_nac_dia)
+      .def("get_hvib_dia", &nHamiltonian::get_hvib_dia)
       .def("get_d1ham_dia", &nHamiltonian::get_d1ham_dia)
       .def("get_d2ham_dia", expt_get_d2ham_dia_v1)
       .def("get_d2ham_dia", expt_get_d2ham_dia_v2)
@@ -121,6 +135,8 @@ void export_nhamiltonian_generic_objects(){
       .def("get_ampl_adi", &nHamiltonian::get_ampl_adi)
       .def("get_dc1_adi", &nHamiltonian::get_dc1_adi)
       .def("get_ham_adi", &nHamiltonian::get_ham_adi)
+      .def("get_nac_adi", &nHamiltonian::get_nac_adi)
+      .def("get_hvib_adi", &nHamiltonian::get_hvib_adi)
       .def("get_d1ham_adi", &nHamiltonian::get_d1ham_dia)
       .def("get_d2ham_adi", expt_get_d2ham_adi_v1)
       .def("get_d2ham_adi", expt_get_d2ham_adi_v2)
@@ -151,6 +167,12 @@ void export_nhamiltonian_generic_objects(){
 
       .def("Ehrenfest_forces_adi", &nHamiltonian::Ehrenfest_forces_adi)
       .def("Ehrenfest_forces_dia", &nHamiltonian::Ehrenfest_forces_dia)
+
+      .def("compute_nac_dia", &nHamiltonian::compute_nac_dia)
+      .def("compute_nac_adi", &nHamiltonian::compute_nac_adi)
+
+      .def("compute_hvib_dia", &nHamiltonian::compute_hvib_dia)
+      .def("compute_hvib_adi", &nHamiltonian::compute_hvib_adi)
 
 
 

@@ -235,6 +235,93 @@ CMATRIX nHamiltonian::forces_dia(){
 
 
 
+void nHamiltonian::compute_nac_dia(MATRIX& p, MATRIX& invM){
+/**  
+  Function to compute nonadiabatic coupling (nac) in the diabatic representation
+  This coupiling is also known as the time-derivative coupling and it is a scalar
+
+  This is going to be <i|d/dt|j> = sum_n { p[n]/mass[n] * dc1_adi[n] }
+*/
+
+  nac_dia->set(-1, 0.0);
+  for(int n=0;n<nnucl;n++){ 
+
+    double v_n = p.get(n) * invM.get(n,n);
+
+    for(int i=0;i<ndia;i++){
+      for(int j=0;j<ndia;j++){
+        nac_dia->add(i,j, v_n * dc1_dia[n]->get(i,j));
+      }// for j
+    }// for i
+
+  }// for n
+
+}
+
+void nHamiltonian::compute_nac_adi(MATRIX& p, MATRIX& invM){
+/**  
+  Function to compute nonadiabatic coupling (nac) in the adiabatic representation
+  This coupiling is also known as the time-derivative coupling and it is a scalar
+
+  This is going to be <i|d/dt|j> = sum_n { p[n]/mass[n] * dc1_adi[n] }
+*/
+
+  nac_adi->set(-1, 0.0);
+  for(int n=0;n<nnucl;n++){ 
+
+    double v_n = p.get(n) * invM.get(n,n);
+
+    for(int i=0;i<nadi;i++){
+      for(int j=0;j<nadi;j++){
+        nac_adi->add(i,j, v_n * dc1_adi[n]->get(i,j));
+      }// for j
+    }// for i
+
+  }// for n
+
+
+}
+
+
+
+void nHamiltonian::compute_hvib_dia(){
+/**  
+  Function to compute vibronic Hamiltonian in the diabatic representation
+  Assume the NAC is updated!
+
+  This is going to be Hvib = H_el - i*hbar * NAC
+*/
+  complex<double> ihbar(0.0, 1.0); // working in atomic units
+
+  for(int i=0;i<ndia;i++){
+    for(int j=0;j<ndia;j++){
+      hvib_dia->set(i,j, ham_dia->get(i,j) - ihbar*nac_dia->get(i,j) );
+    }// for j
+  }// for i
+
+}
+
+
+void nHamiltonian::compute_hvib_adi(){
+/**  
+  Function to compute vibronic Hamiltonian in the adiabatic representation
+  Assume the NAC is updated!
+
+  This is going to be Hvib = H_el - i*hbar * NAC
+*/
+  complex<double> ihbar(0.0, 1.0); // working in atomic units
+
+  for(int i=0;i<nadi;i++){
+    for(int j=0;j<nadi;j++){
+      hvib_adi->set(i,j, ham_adi->get(i,j) - ihbar*nac_adi->get(i,j) );
+    }// for j
+  }// for i
+
+}
+
+
+
+
 
 
 }// namespace libhamiltonian_generic

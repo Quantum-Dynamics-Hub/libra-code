@@ -310,6 +310,84 @@ void nHamiltonian::set_ham_dia_by_val(CMATRIX& ham_dia_){
 
 }
 
+
+/************************ NAC *****************************/
+
+void nHamiltonian::set_nac_dia_by_ref(CMATRIX& nac_dia_){
+/**
+  Setup of the nonadiabatic (time-derivative) coupling matrix in the diabatic basis
+*/
+
+  check_mat_dimensions(&nac_dia_, ndia, ndia);
+
+  if(nac_dia_mem_status==0){ nac_dia = &nac_dia_; } /// Not allocated - not a problem
+  else if(nac_dia_mem_status==1){ delete nac_dia; nac_dia = &nac_dia_;   }
+  else if(nac_dia_mem_status==2){ nac_dia = &nac_dia_; }
+
+  nac_dia_mem_status = 2; // Allocated externally
+
+
+}
+
+void nHamiltonian::set_nac_dia_by_val(CMATRIX& nac_dia_){
+/**
+  Setup of the nonadiabatic (time-derivative) coupling matrix in the diabatic basis
+*/
+
+//  set_X1_by_val(ham_dia, ham_dia_, ham_dia_mem_status, ndia, ndia);
+
+  check_mat_dimensions(&nac_dia_,ndia,ndia);
+
+  if(nac_dia_mem_status==0){  nac_dia = new CMATRIX(ndia,ndia);  } 
+  else if(nac_dia_mem_status==1){ check_mat_dimensions(nac_dia,ndia,ndia);  }
+  else if(nac_dia_mem_status==2){  nac_dia = new CMATRIX(ndia,ndia);    }
+
+  *nac_dia = nac_dia_;
+  nac_dia_mem_status = 1; // Allocated internally
+
+
+}
+
+/************************ Vibronic Hamiltonian *****************************/
+
+void nHamiltonian::set_hvib_dia_by_ref(CMATRIX& hvib_dia_){
+/**
+  Setup of the vibronic Hamiltonian matrix in the diabatic basis
+*/
+
+  check_mat_dimensions(&hvib_dia_, ndia, ndia);
+
+  if(hvib_dia_mem_status==0){ hvib_dia = &hvib_dia_; } /// Not allocated - not a problem
+  else if(hvib_dia_mem_status==1){ delete hvib_dia; hvib_dia = &hvib_dia_;   }
+  else if(hvib_dia_mem_status==2){ hvib_dia = &hvib_dia_; }
+
+  hvib_dia_mem_status = 2; // Allocated externally
+
+
+}
+
+void nHamiltonian::set_hvib_dia_by_val(CMATRIX& hvib_dia_){
+/**
+  Setup of the vibronic Hamiltonian matrix in the diabatic basis
+*/
+
+//  set_X1_by_val(ham_dia, ham_dia_, ham_dia_mem_status, ndia, ndia);
+
+  check_mat_dimensions(&hvib_dia_,ndia,ndia);
+
+  if(hvib_dia_mem_status==0){  hvib_dia = new CMATRIX(ndia,ndia);  } 
+  else if(hvib_dia_mem_status==1){ check_mat_dimensions(hvib_dia,ndia,ndia);  }
+  else if(hvib_dia_mem_status==2){  hvib_dia = new CMATRIX(ndia,ndia);    }
+
+  *hvib_dia = hvib_dia_;
+  hvib_dia_mem_status = 1; // Allocated internally
+
+
+}
+
+
+
+
 /************************ 1-ST DERIVATIVES OF HAMILTONIAN *****************************/
 
 void nHamiltonian::set_d1ham_dia_by_ref(vector<CMATRIX>& d1ham_dia_){
@@ -579,6 +657,77 @@ void nHamiltonian::set_ham_adi_by_val(CMATRIX& ham_adi_){
 }
 
 
+/************************ NAC *****************************/
+
+void nHamiltonian::set_nac_adi_by_ref(CMATRIX& nac_adi_){
+/**
+  Setup of the nonadiabatic (time-derivative) coupling matrix in the adiabatic basis
+*/
+
+  check_mat_dimensions(&nac_adi_, nadi, nadi);
+
+  if(nac_adi_mem_status==0){ nac_adi = &nac_adi_; } /// Not allocated - not a problem
+  else if(nac_adi_mem_status==1){ delete nac_adi; nac_adi = &nac_adi_;   }
+  else if(nac_adi_mem_status==2){ nac_adi = &nac_adi_; }
+
+  nac_adi_mem_status = 2; // Allocated externally
+
+
+}
+
+void nHamiltonian::set_nac_adi_by_val(CMATRIX& nac_adi_){
+/**
+  Setup of the nonadiabatic (time-derivative) coupling matrix in the adiabatic basis
+*/
+
+  check_mat_dimensions(&nac_adi_,nadi,nadi);
+
+  if(nac_adi_mem_status==0){  nac_adi = new CMATRIX(nadi,nadi);  } 
+  else if(nac_adi_mem_status==1){ check_mat_dimensions(nac_adi,nadi,nadi);  }
+  else if(nac_adi_mem_status==2){  nac_adi = new CMATRIX(nadi,nadi);    }
+
+  *nac_adi = nac_adi_;
+  nac_adi_mem_status = 1; // Allocated internally
+
+
+}
+
+/************************ Vibronic Hamiltonian *****************************/
+
+void nHamiltonian::set_hvib_adi_by_ref(CMATRIX& hvib_adi_){
+/**
+  Setup of the vibronic Hamiltonian matrix in the adiabatic basis
+*/
+
+  check_mat_dimensions(&hvib_adi_, nadi, nadi);
+
+  if(hvib_adi_mem_status==0){ hvib_adi = &hvib_adi_; } /// Not allocated - not a problem
+  else if(hvib_adi_mem_status==1){ delete hvib_adi; hvib_adi = &hvib_adi_;   }
+  else if(hvib_adi_mem_status==2){ hvib_adi = &hvib_adi_; }
+
+  hvib_adi_mem_status = 2; // Allocated externally
+
+
+}
+
+void nHamiltonian::set_hvib_adi_by_val(CMATRIX& hvib_adi_){
+/**
+  Setup of the vibronic Hamiltonian matrix in the adiabatic basis
+*/
+
+  check_mat_dimensions(&hvib_adi_,nadi,nadi);
+
+  if(hvib_adi_mem_status==0){  hvib_adi = new CMATRIX(nadi,nadi);  } 
+  else if(hvib_adi_mem_status==1){ check_mat_dimensions(hvib_adi,nadi,nadi);  }
+  else if(hvib_adi_mem_status==2){  hvib_adi = new CMATRIX(nadi,nadi);    }
+
+  *hvib_adi = hvib_adi_;
+  hvib_adi_mem_status = 1; // Allocated internally
+
+
+}
+
+
 
 
 void nHamiltonian::set_d1ham_adi_by_ref(vector<CMATRIX>& d1ham_adi_){
@@ -807,6 +956,32 @@ CMATRIX nHamiltonian::get_ham_dia(){
   return *ham_dia; 
 }
 
+CMATRIX nHamiltonian::get_nac_dia(){ 
+/**
+  Return the nonadiabatic (time-derivative) coupling matrix in the diabatic basis
+*/
+  if(nac_dia_mem_status==0){
+    cout<<"Error in get_nac_dia: The matrix is not allocated anywhere\nExiting...\n";
+    exit(0);
+  }
+
+  return *nac_dia; 
+}
+
+CMATRIX nHamiltonian::get_hvib_dia(){ 
+/**
+  Return the vibronic Hamiltonian matrix in the diabatic basis
+*/
+  if(hvib_dia_mem_status==0){
+    cout<<"Error in get_hvib_dia: The matrix is not allocated anywhere\nExiting...\n";
+    exit(0);
+  }
+
+  return *hvib_dia; 
+}
+
+
+
 CMATRIX nHamiltonian::get_d1ham_dia(int i){ 
 /**
   Return the 1-st derivative of the Hamiltonian matrix in the diabatic basis w.r.t. nuclear DOFs
@@ -898,6 +1073,32 @@ CMATRIX nHamiltonian::get_ham_adi(){
 
   return *ham_adi; 
 }
+
+CMATRIX nHamiltonian::get_nac_adi(){ 
+/**
+  Return the nonadiabatic (time-derivative) coupling matrix in the adiabatic basis
+*/
+  if(nac_adi_mem_status==0){
+    cout<<"Error in get_nac_adi: The matrix is not allocated anywhere\nExiting...\n";
+    exit(0);
+  }
+
+  return *nac_adi; 
+}
+
+CMATRIX nHamiltonian::get_hvib_adi(){ 
+/**
+  Return the vibronic Hamiltonian matrix in the adiabatic basis
+*/
+  if(hvib_adi_mem_status==0){
+    cout<<"Error in get_hvib_adi: The matrix is not allocated anywhere\nExiting...\n";
+    exit(0);
+  }
+
+  return *hvib_adi; 
+}
+
+
 
 CMATRIX nHamiltonian::get_d1ham_adi(int i){ 
 /**

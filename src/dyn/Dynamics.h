@@ -37,6 +37,9 @@ namespace libdyn{
 // Verlet.cpp
 void Verlet(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params);
 
+// Ehrenfest.cpp
+void Ehrenfest(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, int rep);
+
 
 }// namespace libdyn
 }// liblibra

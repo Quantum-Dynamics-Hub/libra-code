@@ -22,10 +22,11 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 from libra_py import *
 
+class tmp:
+    pass    
 
 
-
-def model1(Hdia, Sdia, d1ham_dia, dc1_dia, x, params):
+def model1(q, params):
     """
               k*x^2         V
     Hdia =       V        k*(x-x0)^2 + D
@@ -36,6 +37,13 @@ def model1(Hdia, Sdia, d1ham_dia, dc1_dia, x, params):
 
     """
 
+    Hdia = CMATRIX(2,2)
+    Sdia = CMATRIX(2,2)
+    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(2,2))
+    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(2,2))
+  
+
+    x = q.get(0)
     x0,k,D,V = params["x0"], params["k"], params["D"], params["V"]
 
     Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
@@ -54,9 +62,18 @@ def model1(Hdia, Sdia, d1ham_dia, dc1_dia, x, params):
         dc1_dia[i].set(0,0, 0.0+0.0j);   dc1_dia[i].set(0,1, 0.0+0.0j);
         dc1_dia[i].set(1,0, 0.0+0.0j);   dc1_dia[i].set(1,1, 0.0+0.0j);
 
+
+    obj = tmp()
+    obj.ham_dia = Hdia
+    obj.ovlp_dia = Sdia
+    obj.d1ham_dia = d1ham_dia
+    obj.dc1_dia = dc1_dia
+
+    return obj
+
     
 
-def model2(Hdia, Sdia, d1ham_dia, dc1_dia, x, params):
+def model2(q, params):
     """
               k*x^2         V
     Hdia =       V        k*(x-x0)^2 + D
@@ -67,6 +84,13 @@ def model2(Hdia, Sdia, d1ham_dia, dc1_dia, x, params):
 
     """
 
+    Hdia = CMATRIX(2,2)
+    Sdia = CMATRIX(2,2)
+    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(2,2))
+    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(2,2))
+  
+
+    x = q.get(0)
     x0,k,D,V = params["x0"], params["k"], params["D"], params["V"]
 
     Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
@@ -86,8 +110,17 @@ def model2(Hdia, Sdia, d1ham_dia, dc1_dia, x, params):
         dc1_dia[i].set(1,0, 0.1+0.0j);   dc1_dia[i].set(1,1, 0.0+0.0j);
 
 
+    obj = tmp()
+    obj.ham_dia = Hdia
+    obj.ovlp_dia = Sdia
+    obj.d1ham_dia = d1ham_dia
+    obj.dc1_dia = dc1_dia
 
-def model3(Hdia, Sdia, d1ham_dia, dc1_dia, x, params):
+    return obj
+
+
+
+def model3(q, params):
     """
               k*x^2         V
     Hdia =       V        k*(x-x0)^2 + D
@@ -99,6 +132,13 @@ def model3(Hdia, Sdia, d1ham_dia, dc1_dia, x, params):
 
     """
 
+    Hdia = CMATRIX(2,2)
+    Sdia = CMATRIX(2,2)
+    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(2,2))
+    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(2,2))
+  
+
+    x = q.get(0)
     x0,k,D,V = params["x0"], params["k"], params["D"], params["V"]
 
     ex = math.exp(-(x-0.5*x0)**2)*(0.05+0.0j)
@@ -120,9 +160,17 @@ def model3(Hdia, Sdia, d1ham_dia, dc1_dia, x, params):
         dc1_dia[i].set(0,0, 0.0+0.0j);  dc1_dia[i].set(0,1, d);
         dc1_dia[i].set(1,0, d);         dc1_dia[i].set(1,1, 0.0+0.0j);
 
+
+    obj = tmp()
+    obj.ham_dia = Hdia
+    obj.ovlp_dia = Sdia
+    obj.d1ham_dia = d1ham_dia
+    obj.dc1_dia = dc1_dia
+
+    return obj
     
 
-def model4(Hdia, Sdia, d1ham_dia, dc1_dia, x, params):
+def model4(q, params):
     """
               k*cos(w*x)         V
     Hdia =       V        k*sin(w*x) + D
@@ -133,6 +181,13 @@ def model4(Hdia, Sdia, d1ham_dia, dc1_dia, x, params):
 
     """
 
+    Hdia = CMATRIX(2,2)
+    Sdia = CMATRIX(2,2)
+    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(2,2))
+    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(2,2))
+  
+
+    x = q.get(0)
     k, w, V = params["k"], params["omega"], params["V"]
 
     Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
@@ -152,61 +207,48 @@ def model4(Hdia, Sdia, d1ham_dia, dc1_dia, x, params):
         dc1_dia[i].set(1,0, 0.0+0.0j);   dc1_dia[i].set(1,1, 0.0+0.0j);
 
 
+    obj = tmp()
+    obj.ham_dia = Hdia
+    obj.ovlp_dia = Sdia
+    obj.d1ham_dia = d1ham_dia
+    obj.dc1_dia = dc1_dia
 
-
-def compute_model(model, Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
-
-   if model==1:
-       model1(Hdia, Sdia, d1ham_dia, dc1_dia, q, params)
-   elif model==2:
-       model2(Hdia, Sdia, d1ham_dia, dc1_dia, q, params)
-   elif model==3:
-       model3(Hdia, Sdia, d1ham_dia, dc1_dia, q, params)
-   elif model==4:
-       model4(Hdia, Sdia, d1ham_dia, dc1_dia, q, params)
+    return obj
 
 
 
-def propagate_el(Cdia, Hvib, Sdia, Cadi, dt, rep):
 
-    if rep==0:
-        propagate_electronic(0.5*dt, Cdia, Hvib, Sdia)        
-    elif rep==1:
-        propagate_electronic(0.5*dt, Cadi, Hvib)        
+def compute_model(q, params):
+
+    model = params["model"]
+    res = None
+
+    if model==1:
+        res = model1(q, params)
+    elif model==2:
+        res = model2(q, params)
+    elif model==3:
+        res = model3(q, params)
+    elif model==4:
+        res = model4(q, params)
+
+    res.rep = params["rep"]
+    return res
+    
 
 
-def compute_etot(ham, p, m, rep):
+def compute_etot(ham, p, iM, rep):
     Etot = 0.0
     if rep==0:
-        Etot = 0.5*p*p/m + ham.Ehrenfest_energy_dia().real 
+        Etot = 0.5*(p.T()*iM*p).get(0) + ham.Ehrenfest_energy_dia().real 
     
     elif rep==1:
-        Etot = 0.5*p*p/m + ham.Ehrenfest_energy_adi().real        
+        Etot = 0.5*(p.T()*iM*p).get(0) + ham.Ehrenfest_energy_adi().real        
 
     return Etot
 
 
-def compute_frc(ham, rep):
-    f = None
-    if rep==0:
-        f = ham.Ehrenfest_forces_dia().get(0).real
-    
-    elif rep==1:
-        f = ham.Ehrenfest_forces_adi().get(0).real
 
-    return f
-
-
-def compute_Hvib(Hdia, Hadi, dc1_dia, dc1_adi, p, m, rep):
-    Hvib = None
-
-    if rep==0:
-        Hvib = (Hdia - 1.0j*(p/m)*dc1_dia[0])
-        
-    elif rep==1:
-        Hvib = Hadi - 1.0j*(p/m)*dc1_adi[0]
-
-    return Hvib
 
 
 def run_test(model, rep, outname):
@@ -220,6 +262,8 @@ def run_test(model, rep, outname):
 
     # Allocate memory
     Hdia = CMATRIX(2,2);   Sdia = CMATRIX(2,2);    ham.set_ham_dia_by_ref(Hdia);    ham.set_ovlp_dia_by_ref(Sdia); 
+    NACdia = CMATRIX(2,2); NACadi = CMATRIX(2,2);  ham.set_nac_dia_by_ref(NACdia);  ham.set_nac_adi_by_ref(NACadi);
+    Hvibdia = CMATRIX(2,2); Hvibadi = CMATRIX(2,2);  ham.set_hvib_dia_by_ref(Hvibdia);  ham.set_hvib_adi_by_ref(Hvibadi);
     invSdia = CMATRIX(2,2);
     Hadi = CMATRIX(2,2);   ham.set_ham_adi_by_ref(Hadi);  
     U = CMATRIX(2,2);      ham.set_basis_transform_by_ref(U); 
@@ -242,27 +286,36 @@ def run_test(model, rep, outname):
     params = {}
     params["x0"], params["k"], params["D"], params["V"] = 1.0, 0.1, -0.1, 0.05
     params["omega"] = 0.25
+    params["model"] = model
+    params["rep"] = rep
+
 
     # Simulation parameters
     dt = 1.0
 
     # Dynamical variables and system-specific properties
     Cadi.set(0, 1.0+0.0j); Cadi.set(1, 1.0+0.0j);   Cadi *= (1.0/math.sqrt(2.0))  
-    q, p, m = 0.1, 0.0, 100.0
+
+    q = MATRIX(1,1); q.set(0, 0.1)
+    p = MATRIX(1,1); p.set(0, 0.0)
+    iM = MATRIX(1,1); iM.set(0, 1.0/100.0)
 
 
     # Initial calculations
-    compute_model(model, Hdia, Sdia, d1ham_dia, dc1_dia, q, params)        
+    ham.compute_diabatic(compute_model, q, params)
     ham.compute_adiabatic(1); 
     ham.ampl_adi2dia()
+    if rep==0:
+        ham.compute_nac_dia(p, iM);  
+        ham.compute_hvib_dia(); 
+    elif rep==1:
+        ham.compute_nac_adi(p, iM);
+        ham.compute_hvib_adi(); 
 
 
+
+    Etot = compute_etot(ham, p, iM, rep)
     dm_dia, dm_adi = None, None
-
-
-    Etot = compute_etot(ham, p, m, rep)
-    f = compute_frc(ham, rep)
-    Hvib = compute_Hvib(Hdia, Hadi, dc1_dia, dc1_adi, p, m, rep)
 
 
     out = open(outname, "w")
@@ -272,27 +325,22 @@ def run_test(model, rep, outname):
     # Do the propagation
     for i in xrange(500):
 
-        propagate_el(Cdia, Hvib, Sdia, Cadi, 0.5*dt, rep)
-    
-        p = p + 0.5*f*dt
-        q = q + dt*p/m
-    
-    
-        compute_model(model, Hdia, Sdia, d1ham_dia, dc1_dia, q, params)        
-        ham.compute_adiabatic(1); 
-        
+        Ehrenfest(dt, q, p, iM, ham, compute_model, params, rep)
 
-        Etot = compute_etot(ham, p, m, rep)
-        f = compute_frc(ham, rep)
-            
-        p = p + 0.5*f*dt
+        """
+        print q.get(0), p.get(0)
+        print "Hdia = "; Hdia.show_matrix()
+        print "Hadi = "; Hadi.show_matrix()
+        print "Sdia = "; Sdia.show_matrix()
+        print "NACdia = "; NACdia.show_matrix()
+        print "NACadi = "; NACadi.show_matrix()
+        print "Hvibdia = "; Hvibdia.show_matrix()
+        print "Hvibadi = "; Hvibadi.show_matrix()
+        """
 
-        Hvib = compute_Hvib(Hdia, Hadi, dc1_dia, dc1_adi, p, m, rep)
-        propagate_el(Cdia, Hvib, Sdia, Cadi, 0.5*dt, rep)
+        #sys.exit(0)
      
-
         #=========== Properties ==========
-
         if rep==0:
             dm_dia = Sdia * Cdia * Cdia.H() * Sdia
             dm_adi = U.H() * dm_dia * U
@@ -302,21 +350,20 @@ def run_test(model, rep, outname):
             su = Sdia * U
             dm_dia = su * dm_adi * su.H()
 
-        Etot = compute_etot(ham, p, m, rep)
+        Etot = compute_etot(ham, p, iM, rep)
 
 
         out = open(outname, "a")
-        ret = (i*dt, q, p, Etot, 0.5*p*p/m, dm_adi.get(0,0).real, dm_adi.get(1,1).real, dm_dia.get(0,0).real, dm_dia.get(1,1).real,
+        ret = (i*dt, q.get(0), p.get(0), Etot, 0.5*(p.T()*iM*p).get(0), dm_adi.get(0,0).real, dm_adi.get(1,1).real, dm_dia.get(0,0).real, dm_dia.get(1,1).real,
                Hdia.get(0,0).real, Hdia.get(1,1).real, Hadi.get(0,0).real, Hadi.get(1,1).real, dc1_adi[0].get(0,1).real
               )
         out.write("%8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n" %  ret )
         out.close()
                                                                     
 
-
 model = 1
 
-run_test(model, 0, "_0.txt")
-run_test(model, 1, "_1.txt")
+run_test(model, 0, "_0_new.txt")
+run_test(model, 1, "_1_new.txt")
 
         
