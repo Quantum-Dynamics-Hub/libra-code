@@ -83,9 +83,9 @@ MESSAGE(${PYTHON_INCLUDE_DIRS})
 #
 IF(CMAKE_COMPILER_IS_GNUCXX)
 # For Linux
-  ADD_DEFINITIONS("-Wall")
+#  ADD_DEFINITIONS("-Wall")
 # For Cygwin
-#  ADD_DEFINITIONS("-Wall -DCYGWIN")
+  ADD_DEFINITIONS("-Wall -DCYGWIN")
 ELSE()
   MESSAGE(FATAL_ERROR "CMakeLists.txt has not been tested/written for your compiler.")
 ENDIF()
