@@ -15,10 +15,36 @@ import math
 import os
 import sys
 
+
 if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
+
+
+"""
+cwd = os.getcwd()
+print "Current working directory", cwd
+sys.path.insert(1,cwd+"/../../_build/src/hamiltonian/nHamiltonian_Generic")
+sys.path.insert(1,cwd+"/../../_build/src/dyn")
+sys.path.insert(1,cwd+"/../../_build/src/converters")
+sys.path.insert(1,cwd+"/../../_build/src/math_linalg")
+
+# Fisrt, we add the location of the library to test to the PYTHON path
+if sys.platform=="cygwin":
+    #from cyglibra_core import *
+    from cygdyn import *
+    from cygconverters import *
+    from cygnhamiltonian_generic import *
+    from cyglinalg import *
+
+elif sys.platform=="linux" or sys.platform=="linux2":
+    #from liblibra_core import *
+    from libdyn import *
+    from libconverters import *
+    from libnhamiltonian_generic import *
+    from liblinalg import *
+"""
 
 from libra_py import *
 
@@ -39,12 +65,14 @@ def model1(q, params):
 
     Hdia = CMATRIX(2,2)
     Sdia = CMATRIX(2,2)
-    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(2,2))
-    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(2,2))
+    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(2,2) )
+    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(2,2) )
   
 
     x = q.get(0)
     x0,k,D,V = params["x0"], params["k"], params["D"], params["V"]
+
+
 
     Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
     Sdia.set(1,0, 0.0+0.0j);  Sdia.set(1,1, 1.0+0.0j);
@@ -58,9 +86,13 @@ def model1(q, params):
         d1ham_dia[i].set(0,0, 2.0*k*x*(1.0+0.0j) );   d1ham_dia[i].set(0,1, 0.0+0.0j);
         d1ham_dia[i].set(1,0, 0.0+0.0j);   d1ham_dia[i].set(1,1,2.0*k*(x-x0)*(1.0+0.0j));
 
+#        sys.exit(0)
+
         #  <dia| d/dR_0| dia >
         dc1_dia[i].set(0,0, 0.0+0.0j);   dc1_dia[i].set(0,1, 0.0+0.0j);
         dc1_dia[i].set(1,0, 0.0+0.0j);   dc1_dia[i].set(1,1, 0.0+0.0j);
+
+
 
 
     obj = tmp()
@@ -232,18 +264,18 @@ def compute_model(q, params):
     elif model==4:
         res = model4(q, params)
 
-    res.rep = params["rep"]
+    res.rep = params["rep"]    
     return res
     
 
 
-def compute_etot(ham, p, iM, rep):
+def compute_etot(ham, p, Cdia, Cadi, iM, rep):
     Etot = 0.0
     if rep==0:
-        Etot = 0.5*(p.T()*iM*p).get(0) + ham.Ehrenfest_energy_dia().real 
+        Etot = 0.5*(p.T()*iM*p).get(0) + ham.Ehrenfest_energy_dia(Cdia).real 
     
     elif rep==1:
-        Etot = 0.5*(p.T()*iM*p).get(0) + ham.Ehrenfest_energy_adi().real        
+        Etot = 0.5*(p.T()*iM*p).get(0) + ham.Ehrenfest_energy_adi(Cadi).real        
 
     return Etot
 
@@ -267,8 +299,6 @@ def run_test(model, rep, outname):
     invSdia = CMATRIX(2,2);
     Hadi = CMATRIX(2,2);   ham.set_ham_adi_by_ref(Hadi);  
     U = CMATRIX(2,2);      ham.set_basis_transform_by_ref(U); 
-    Cdia = CMATRIX(2,1);   ham.set_ampl_dia_by_ref(Cdia)
-    Cadi = CMATRIX(2,1);   ham.set_ampl_adi_by_ref(Cadi)
 
     d1ham_dia = CMATRIXList(); d1ham_adi = CMATRIXList()
     dc1_dia = CMATRIXList();   dc1_adi = CMATRIXList()
@@ -294,6 +324,8 @@ def run_test(model, rep, outname):
     dt = 1.0
 
     # Dynamical variables and system-specific properties
+    Cdia = CMATRIX(2,1);  
+    Cadi = CMATRIX(2,1);  
     Cadi.set(0, 1.0+0.0j); Cadi.set(1, 1.0+0.0j);   Cadi *= (1.0/math.sqrt(2.0))  
 
     q = MATRIX(1,1); q.set(0, 0.1)
@@ -304,7 +336,10 @@ def run_test(model, rep, outname):
     # Initial calculations
     ham.compute_diabatic(compute_model, q, params)
     ham.compute_adiabatic(1); 
-    ham.ampl_adi2dia()
+    ham.ampl_adi2dia(Cdia, Cadi)
+
+
+
     if rep==0:
         ham.compute_nac_dia(p, iM);  
         ham.compute_hvib_dia(); 
@@ -312,11 +347,11 @@ def run_test(model, rep, outname):
         ham.compute_nac_adi(p, iM);
         ham.compute_hvib_adi(); 
 
-
-
-    Etot = compute_etot(ham, p, iM, rep)
+    
+    Etot = compute_etot(ham, p, Cdia, Cadi, iM, rep)
     dm_dia, dm_adi = None, None
 
+#    sys.exit(0)
 
     out = open(outname, "w")
     out.close()
@@ -325,20 +360,15 @@ def run_test(model, rep, outname):
     # Do the propagation
     for i in xrange(500):
 
-        Ehrenfest(dt, q, p, iM, ham, compute_model, params, rep)
+        if rep==0:
+            Ehrenfest(dt, q, p, iM, Cdia, ham, compute_model, params, 0)
+            ham.ampl_dia2adi(Cdia, Cadi)
+        elif rep==1:
+            Ehrenfest(dt, q, p, iM, Cadi, ham, compute_model, params, 1)
+            ham.ampl_adi2dia(Cdia, Cadi)
 
-        """
-        print q.get(0), p.get(0)
-        print "Hdia = "; Hdia.show_matrix()
-        print "Hadi = "; Hadi.show_matrix()
-        print "Sdia = "; Sdia.show_matrix()
-        print "NACdia = "; NACdia.show_matrix()
-        print "NACadi = "; NACadi.show_matrix()
-        print "Hvibdia = "; Hvibdia.show_matrix()
-        print "Hvibadi = "; Hvibadi.show_matrix()
-        """
 
-        #sys.exit(0)
+
      
         #=========== Properties ==========
         if rep==0:
@@ -350,7 +380,7 @@ def run_test(model, rep, outname):
             su = Sdia * U
             dm_dia = su * dm_adi * su.H()
 
-        Etot = compute_etot(ham, p, iM, rep)
+        Etot = compute_etot(ham, p, Cdia, Cadi, iM, rep)
 
 
         out = open(outname, "a")
