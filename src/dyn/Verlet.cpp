@@ -44,13 +44,15 @@ void Verlet(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp
 
 */
 
-  p = p + ham.forces_adi().real() * 0.5*dt;
+  CMATRIX coeff(1,1);  coeff.set(0,0,1.0,0.0);
+
+  p = p + ham.forces_adi(coeff).real() * 0.5*dt;
   q = q + invM*p*dt;
 
   ham.compute_diabatic(py_funct, bp::object(q), params);
   ham.compute_adiabatic(1);
 
-  p = p + ham.forces_adi().real() * 0.5*dt;
+  p = p + ham.forces_adi(coeff).real() * 0.5*dt;
 
 
 }// Verlet
