@@ -96,8 +96,8 @@ public:
   */
   int ndia;                   ///< the number of electronic DOFs in the diabatic basis
 
-  CMATRIX* ampl_dia;          ///< Amplitudes of the diabatic states in the overal wavefunction
-  int ampl_dia_mem_status;
+//  CMATRIX* ampl_dia;          ///< Amplitudes of the diabatic states in the overal wavefunction
+//  int ampl_dia_mem_status;
 
   CMATRIX* ovlp_dia;          ///< the overlap of the diabatic basis 
   int ovlp_dia_mem_status;       
@@ -124,8 +124,8 @@ public:
   vector<CMATRIX*> d2ham_dia; ///< second order derivatives of the Hamiltonian in the diabatic basis
   vector<int> d2ham_dia_mem_status;
 
-  CMATRIX* den_mat_dia;       ///< Density matrix in the diabatic basis
-  int den_mat_dia_mem_status;
+//  CMATRIX* den_mat_dia;       ///< Density matrix in the diabatic basis
+//  int den_mat_dia_mem_status;
 
 
   /** Adiabatic representation: by definition, the states are orthonormal in this representation
@@ -152,8 +152,8 @@ public:
   */
   int nadi;                   ///< the number of electronic DOFs in the adiabatic basis
 
-  CMATRIX* ampl_adi;          ///< Amplitudes of the adiabatic states in the overal wavefunction
-  int ampl_adi_mem_status;
+//  CMATRIX* ampl_adi;          ///< Amplitudes of the adiabatic states in the overal wavefunction
+//  int ampl_adi_mem_status;
 
   vector<CMATRIX*> dc1_adi;   ///< first-order derivative coupling matrices in the adiabatic basis 
   vector<int> dc1_adi_mem_status;
@@ -174,8 +174,8 @@ public:
   vector<CMATRIX*> d2ham_adi; ///< second order derivatives of the Hamiltonian matrix in the adiabatic basis
   vector<int> d2ham_adi_mem_status;
 
-  CMATRIX* den_mat_adi;       ///< Density matrix in the adiabatic basis
-  int den_mat_adi_mem_status;
+//  CMATRIX* den_mat_adi;       ///< Density matrix in the adiabatic basis
+//  int den_mat_adi_mem_status;
 
 
   /** Transformations
@@ -222,8 +222,8 @@ public:
 
   ///< Setters:
   // Diabatic
-  void set_ampl_dia_by_ref(CMATRIX& ampl_dia_);
-  void set_ampl_dia_by_val(CMATRIX& ampl_dia_);
+//  void set_ampl_dia_by_ref(CMATRIX& ampl_dia_);
+//  void set_ampl_dia_by_val(CMATRIX& ampl_dia_);
 
   void set_ovlp_dia_by_ref(CMATRIX& ovlp_dia_);
   void set_ovlp_dia_by_val(CMATRIX& ovlp_dia_);
@@ -247,14 +247,14 @@ public:
   void set_d2ham_dia_by_ref(vector<CMATRIX>& d2ham_dia_);
   void set_d2ham_dia_by_val(vector<CMATRIX>& d2ham_dia_);
 
-  void set_den_mat_dia_by_ref(CMATRIX& den_mat_dia_);
-  void set_den_mat_dia_by_val(CMATRIX& den_mat_dia_);
+//  void set_den_mat_dia_by_ref(CMATRIX& den_mat_dia_);
+//  void set_den_mat_dia_by_val(CMATRIX& den_mat_dia_);
 
 
 
   // Adiabatic
-  void set_ampl_adi_by_ref(CMATRIX& ampl_adi_);
-  void set_ampl_adi_by_val(CMATRIX& ampl_adi_);
+//  void set_ampl_adi_by_ref(CMATRIX& ampl_adi_);
+//  void set_ampl_adi_by_val(CMATRIX& ampl_adi_);
 
   void set_dc1_adi_by_ref(vector<CMATRIX>& dc1_adi_);
   void set_dc1_adi_by_val(vector<CMATRIX>& dc1_adi_);
@@ -275,8 +275,8 @@ public:
   void set_d2ham_adi_by_ref(vector<CMATRIX>& d2ham_adi_);
   void set_d2ham_adi_by_val(vector<CMATRIX>& d2ham_adi_);
 
-  void set_den_mat_adi_by_ref(CMATRIX& den_mat_adi_);
-  void set_den_mat_adi_by_val(CMATRIX& den_mat_adi_);
+//  void set_den_mat_adi_by_ref(CMATRIX& den_mat_adi_);
+//  void set_den_mat_adi_by_val(CMATRIX& den_mat_adi_);
 
   // Transforms
   void set_basis_transform_by_ref(CMATRIX& basis_transform_);
@@ -287,7 +287,7 @@ public:
   // Diabatic
   CMATRIX get_ovlp_dia();
 
-  CMATRIX get_ampl_dia();
+//  CMATRIX get_ampl_dia();
   CMATRIX get_dc1_dia(int i);
   CMATRIX get_ham_dia();
   CMATRIX get_nac_dia();
@@ -295,10 +295,10 @@ public:
   CMATRIX get_d1ham_dia(int i);
   CMATRIX get_d2ham_dia(int i);
   CMATRIX get_d2ham_dia(int i,int j);
-  CMATRIX get_den_mat_dia();
+//  CMATRIX get_den_mat_dia();
 
   // Adiabatic
-  CMATRIX get_ampl_adi();
+//  CMATRIX get_ampl_adi();
   CMATRIX get_dc1_adi(int i);
   CMATRIX get_ham_adi();
   CMATRIX get_nac_adi();
@@ -306,7 +306,7 @@ public:
   CMATRIX get_d1ham_adi(int i);
   CMATRIX get_d2ham_adi(int i);
   CMATRIX get_d2ham_adi(int i,int j);
-  CMATRIX get_den_mat_adi();
+//  CMATRIX get_den_mat_adi();
 
   // Transforms
   CMATRIX get_basis_transform();
@@ -326,14 +326,14 @@ public:
 
   ///< In nHamiltonian_compute.cpp
 
-  void ampl_dia2adi();
-  void ampl_adi2dia();
+  void ampl_dia2adi(CMATRIX& ampl_dia, CMATRIX& ampl_adi);
+  void ampl_adi2dia(CMATRIX& ampl_dia, CMATRIX& ampl_adi);
 
-  CMATRIX forces_adi();  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
-  CMATRIX forces_dia();  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
+  CMATRIX forces_adi(CMATRIX& ampl_adi);  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
+  CMATRIX forces_dia(CMATRIX& ampl_dia);  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
 
-  vector<CMATRIX> forces_tens_adi(); // 
-  vector<CMATRIX> forces_tens_dia(); // 
+  vector<CMATRIX> forces_tens_adi(CMATRIX& ampl_adi); // 
+  vector<CMATRIX> forces_tens_dia(CMATRIX& ampl_dia); // 
 
   void compute_nac_dia(MATRIX& p, MATRIX& invM);
   void compute_nac_adi(MATRIX& p, MATRIX& invM);
@@ -344,14 +344,14 @@ public:
 
   ///< In nHamiltonian_compute_Ehrenfest.cpp
 
-  complex<double> Ehrenfest_energy_adi();
-  complex<double> Ehrenfest_energy_dia();
+  complex<double> Ehrenfest_energy_adi(CMATRIX& ampl_adi);
+  complex<double> Ehrenfest_energy_dia(CMATRIX& ampl_dia);
 
-  CMATRIX Ehrenfest_forces_adi();  // Ehrenfest forces in adiabatic basis
-  CMATRIX Ehrenfest_forces_dia();  // Ehrenfest forces in diabatic basis
+  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi);  // Ehrenfest forces in adiabatic basis
+  CMATRIX Ehrenfest_forces_dia(CMATRIX& ampl_dia);  // Ehrenfest forces in diabatic basis
 
-  vector<CMATRIX> Ehrenfest_forces_tens_adi();  // Force tensor in adiabatic basis, assuming Cadi = Cadi(t)
-  vector<CMATRIX> Ehrenfest_forces_tens_dia();  // Force tensor in diabatic basis, assuming Cdia = Cdia(t)
+  vector<CMATRIX> Ehrenfest_forces_tens_adi(CMATRIX& ampl_adi);  // Force tensor in adiabatic basis, assuming Cadi = Cadi(t)
+  vector<CMATRIX> Ehrenfest_forces_tens_dia(CMATRIX& ampl_dia);  // Force tensor in diabatic basis, assuming Cdia = Cdia(t)
 
 
 
