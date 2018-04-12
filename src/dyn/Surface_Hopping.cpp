@@ -24,6 +24,52 @@ namespace liblibra{
 namespace libdyn{
 
 
+void tsh(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, MATRIX& states,
+         nHamiltonian& ham, bp::object py_funct, bp::object params, int rep){
+ 
+  //============== Electronic propagation ===================
+  if(rep==0){  
+    ham.compute_nac_dia(p, invM);
+    ham.compute_hvib_dia();
+  }
+  else if(rep==1){  
+    ham.compute_nac_adi(p, invM); 
+    ham.compute_hvib_adi();
+  }
+
+  propagate_electronic(0.5*dt, C, ham, rep);   
+
+  //============== Nuclear propagation ===================
+    
+       if(rep==0){  p = p + ham.Ehrenfest_forces_dia(C).real() * 0.5*dt;  }
+  else if(rep==1){  p = p + ham.Ehrenfest_forces_adi(C).real() * 0.5*dt;  }
+
+
+  q = q + invM*p*dt;
+  ham.compute_diabatic(py_funct, bp::object(q), params);
+  ham.compute_adiabatic(1);
+
+
+       if(rep==0){  p = p + ham.Ehrenfest_forces_dia(C).real() * 0.5*dt;  }
+  else if(rep==1){  p = p + ham.Ehrenfest_forces_adi(C).real() * 0.5*dt;  }
+
+  //============== Electronic propagation ===================
+  if(rep==0){  
+    ham.compute_nac_dia(p, invM);
+    ham.compute_hvib_dia();
+  }
+  else if(rep==1){  
+    ham.compute_nac_adi(p, invM); 
+    ham.compute_hvib_adi();
+  }
+
+  propagate_electronic(0.5*dt, C, ham, rep);   
+
+
+}
+
+
+
 
 MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double dt){
 /**

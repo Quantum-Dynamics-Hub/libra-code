@@ -37,7 +37,7 @@ using namespace libmeigen;
 
 
 
-void nHamiltonian::ampl_dia2adi(){
+void nHamiltonian::ampl_dia2adi(CMATRIX& ampl_dia, CMATRIX& ampl_adi){
 /**
 
   |PSI> = |psi_dia> * C_dia
@@ -54,19 +54,19 @@ void nHamiltonian::ampl_dia2adi(){
   if(basis_transform_mem_status==0){ cout<<"Error in ampl_dia2adi(): the transformation basis matrix is not allocated \
   but it is needed for the calculations\n"; exit(0); }
 
-  if(ampl_dia_mem_status==0){ cout<<"Error in ampl_dia2adi(): the amplitudes of the diabatic states are\
-  not allocated, but they are needed for the calculations\n"; exit(0); }
+//  if(ampl_dia_mem_status==0){ cout<<"Error in ampl_dia2adi(): the amplitudes of the diabatic states are\
+//  not allocated, but they are needed for the calculations\n"; exit(0); }
 
-  if(ampl_adi_mem_status==0){ cout<<"Error in ampl_dia2adi(): the amplitudes of the adiabatic states are\
-  not allocated, but they are needed for the calculations\n"; exit(0); }
+//  if(ampl_adi_mem_status==0){ cout<<"Error in ampl_dia2adi(): the amplitudes of the adiabatic states are\
+//  not allocated, but they are needed for the calculations\n"; exit(0); }
 
 
 
-  (*ampl_adi) = (*basis_transform).H() * (*ovlp_dia) * (*ampl_dia); 
+  ampl_adi = (*basis_transform).H() * (*ovlp_dia) * ampl_dia; 
 
 }
 
-void nHamiltonian::ampl_adi2dia(){
+void nHamiltonian::ampl_adi2dia(CMATRIX& ampl_dia, CMATRIX& ampl_adi){
 /**
 
   |PSI> = |psi_dia> * C_dia
@@ -79,15 +79,15 @@ void nHamiltonian::ampl_adi2dia(){
   if(basis_transform_mem_status==0){ cout<<"Error in ampl_dia2adi(): the transformation basis matrix is not allocated \
   but it is needed for the calculations\n"; exit(0); }
 
-  if(ampl_dia_mem_status==0){ cout<<"Error in ampl_dia2adi(): the amplitudes of the diabatic states are\
-  not allocated, but they are needed for the calculations\n"; exit(0); }
+//  if(ampl_dia_mem_status==0){ cout<<"Error in ampl_dia2adi(): the amplitudes of the diabatic states are\
+//  not allocated, but they are needed for the calculations\n"; exit(0); }
 
-  if(ampl_adi_mem_status==0){ cout<<"Error in ampl_dia2adi(): the amplitudes of the adiabatic states are\
-  not allocated, but they are needed for the calculations\n"; exit(0); }
+//  if(ampl_adi_mem_status==0){ cout<<"Error in ampl_dia2adi(): the amplitudes of the adiabatic states are\
+//  not allocated, but they are needed for the calculations\n"; exit(0); }
 
 
 
-  (*ampl_dia) = (*basis_transform) * (*ampl_adi); 
+  ampl_dia = (*basis_transform) * ampl_adi; 
 
 }
 
@@ -96,7 +96,7 @@ void nHamiltonian::ampl_adi2dia(){
 
 
 
-vector<CMATRIX> nHamiltonian::forces_tens_adi(){
+vector<CMATRIX> nHamiltonian::forces_tens_adi(CMATRIX& ampl_adi){
 /**
 
   The dependence of U on R is neglected
@@ -112,10 +112,10 @@ vector<CMATRIX> nHamiltonian::forces_tens_adi(){
 
   vector<CMATRIX> res; res = vector<CMATRIX>(nnucl, CMATRIX(nadi,nadi));
 
-  if(ampl_adi_mem_status==0){ cout<<"Error in forces_tens_adi(): the amplitudes of the adiabatic states are\
-  not allocated, but they are needed for the calculations\n"; exit(0); }
+//  if(ampl_adi_mem_status==0){ cout<<"Error in forces_tens_adi(): the amplitudes of the adiabatic states are\
+//  not allocated, but they are needed for the calculations\n"; exit(0); }
 
-  complex<double> norm = ((*ampl_adi).H() * (*ampl_adi)).M[0]; 
+  complex<double> norm = (ampl_adi.H() * ampl_adi).M[0]; 
 
 
   for(int n=0;n<nnucl;n++){
@@ -132,7 +132,7 @@ vector<CMATRIX> nHamiltonian::forces_tens_adi(){
 }
 
 
-CMATRIX nHamiltonian::forces_adi(){
+CMATRIX nHamiltonian::forces_adi(CMATRIX& ampl_adi){
 /**
 
   The dependence of U on R is neglected
@@ -147,12 +147,12 @@ CMATRIX nHamiltonian::forces_adi(){
 
 
   CMATRIX res(nnucl, 1);
-  vector<CMATRIX> dEdR;   dEdR = forces_tens_adi();
+  vector<CMATRIX> dEdR;   dEdR = forces_tens_adi(ampl_adi);
 
-  if(ampl_adi_mem_status==0){ cout<<"Error in forces_adi(): the amplitudes of the adiabatic states are\
-  not allocated, but they are needed for the calculations\n"; exit(0); }
+//  if(ampl_adi_mem_status==0){ cout<<"Error in forces_adi(): the amplitudes of the adiabatic states are\
+//  not allocated, but they are needed for the calculations\n"; exit(0); }
 
-  for(int n=0;n<nnucl;n++){  res.M[n] = ((*ampl_adi).H() * dEdR[n] * (*ampl_adi)).M[0];   }
+  for(int n=0;n<nnucl;n++){  res.M[n] = (ampl_adi.H() * dEdR[n] * ampl_adi).M[0];   }
 
   return res;
 }
@@ -160,7 +160,7 @@ CMATRIX nHamiltonian::forces_adi(){
 
 
 
-vector<CMATRIX> nHamiltonian::forces_tens_dia(){
+vector<CMATRIX> nHamiltonian::forces_tens_dia(CMATRIX& ampl_dia){
 /**
 
   The elements of the returned list are the matrixes F_dia that, when multiplied
@@ -181,13 +181,13 @@ vector<CMATRIX> nHamiltonian::forces_tens_dia(){
   if(basis_transform_mem_status==0){ cout<<"Error in forces_tens_dia(): the transformation basis matrix is not allocated \
   but it is needed for the calculations\n"; exit(0); }
 
-  if(ampl_dia_mem_status==0){ cout<<"Error in forces_dia(): the amplitudes of the diabatic states are\
-  not allocated, but they are needed for the calculations\n"; exit(0); }
+//  if(ampl_dia_mem_status==0){ cout<<"Error in forces_dia(): the amplitudes of the diabatic states are\
+//  not allocated, but they are needed for the calculations\n"; exit(0); }
 
 
-  complex<double> norm = ((*ampl_dia).H() * (*ovlp_dia) * (*ampl_dia)).M[0]; 
+  complex<double> norm = ( ampl_dia.H() * (*ovlp_dia) * ampl_dia).M[0]; 
 
-  complex<double> Etot = ((*ampl_dia).H() * (*ham_dia) * (*ampl_dia)).M[0]/norm;
+  complex<double> Etot = (ampl_dia.H() * (*ham_dia) * ampl_dia).M[0]/norm;
 
 
 
@@ -209,7 +209,7 @@ vector<CMATRIX> nHamiltonian::forces_tens_dia(){
 }
 
 
-CMATRIX nHamiltonian::forces_dia(){
+CMATRIX nHamiltonian::forces_dia(CMATRIX& ampl_dia){
 /**
 
   The dependence of U on R is neglected
@@ -223,12 +223,12 @@ CMATRIX nHamiltonian::forces_dia(){
 
 
   CMATRIX res(nnucl, 1);
-  vector<CMATRIX> dEdR;   dEdR = forces_tens_dia();
+  vector<CMATRIX> dEdR;   dEdR = forces_tens_dia(ampl_dia);
 
-  if(ampl_dia_mem_status==0){ cout<<"Error in forces_dia(): the amplitudes of the diabatic states are\
-  not allocated, but they are needed for the calculations\n"; exit(0); }
+//  if(ampl_dia_mem_status==0){ cout<<"Error in forces_dia(): the amplitudes of the diabatic states are\
+//  not allocated, but they are needed for the calculations\n"; exit(0); }
 
-  for(int n=0;n<nnucl;n++){  res.M[n] = ((*ampl_dia).H() * dEdR[n] * (*ampl_dia)).M[0];   }
+  for(int n=0;n<nnucl;n++){  res.M[n] = ( ampl_dia.H() * dEdR[n] *  ampl_dia).M[0];   }
 
   return res;
 }
@@ -243,10 +243,21 @@ void nHamiltonian::compute_nac_dia(MATRIX& p, MATRIX& invM){
   This is going to be <i|d/dt|j> = sum_n { p[n]/mass[n] * dc1_adi[n] }
 */
 
-  nac_dia->set(-1, 0.0);
+  if(nac_dia_mem_status==0){ cout<<"Error in compute_nac_dia(): the memory is not allocated for \
+  nac_dia but is needed for the calculations \n"; exit(0); }
+
+  nac_dia->set(-1, std::complex<double>(0.0, 0.0));
+//  nac_dia->show_matrix();
+
+//  exit(0);
+
   for(int n=0;n<nnucl;n++){ 
 
     double v_n = p.get(n) * invM.get(n,n);
+
+    if(dc1_dia_mem_status[n]==0){ cout<<"Error in compute_nac_dia(): the derivatives couplings matrix in the adiabatic \
+    basis w.r.t. the nuclear DOF "<<n<<" is not allocated but is needed for the calculations \n"; exit(0); }
+
 
     for(int i=0;i<ndia;i++){
       for(int j=0;j<ndia;j++){
@@ -266,8 +277,15 @@ void nHamiltonian::compute_nac_adi(MATRIX& p, MATRIX& invM){
   This is going to be <i|d/dt|j> = sum_n { p[n]/mass[n] * dc1_adi[n] }
 */
 
-  nac_adi->set(-1, 0.0);
+  if(nac_adi_mem_status==0){ cout<<"Error in compute_nac_adi(): the memory is not allocated for \
+  nac_adi but is needed for the calculations \n"; exit(0); }
+
+  nac_adi->set(-1, std::complex<double>(0.0, 0.0));
+
   for(int n=0;n<nnucl;n++){ 
+
+    if(dc1_adi_mem_status[n]==0){ cout<<"Error in compute_nac_dia(): the derivatives couplings matrix in the adiabatic \
+    basis w.r.t. the nuclear DOF "<<n<<" is not allocated but is needed for the calculations \n"; exit(0); }
 
     double v_n = p.get(n) * invM.get(n,n);
 
@@ -293,6 +311,16 @@ void nHamiltonian::compute_hvib_dia(){
 */
   complex<double> ihbar(0.0, 1.0); // working in atomic units
 
+  if(nac_dia_mem_status==0){ cout<<"Error in compute_hvib_dia(): the memory is not allocated for \
+  nac_dia but is needed for the calculations \n"; exit(0); }
+
+  if(ham_dia_mem_status==0){ cout<<"Error in compute_hvib_dia(): the memory is not allocated for \
+  ham_dia but is needed for the calculations \n"; exit(0); }
+
+  if(hvib_dia_mem_status==0){ cout<<"Error in compute_hvib_dia(): the memory is not allocated for \
+  hvib_dia but is needed for the calculations \n"; exit(0); }
+
+
   for(int i=0;i<ndia;i++){
     for(int j=0;j<ndia;j++){
       hvib_dia->set(i,j, ham_dia->get(i,j) - ihbar*nac_dia->get(i,j) );
@@ -310,6 +338,16 @@ void nHamiltonian::compute_hvib_adi(){
   This is going to be Hvib = H_el - i*hbar * NAC
 */
   complex<double> ihbar(0.0, 1.0); // working in atomic units
+
+  if(nac_adi_mem_status==0){ cout<<"Error in compute_hvib_adi(): the memory is not allocated for \
+  nac_adi but is needed for the calculations \n"; exit(0); }
+
+  if(ham_adi_mem_status==0){ cout<<"Error in compute_hvib_adi(): the memory is not allocated for \
+  ham_adi but is needed for the calculations \n"; exit(0); }
+
+  if(hvib_adi_mem_status==0){ cout<<"Error in compute_hvib_adi(): the memory is not allocated for \
+  hvib_adi but is needed for the calculations \n"; exit(0); }
+
 
   for(int i=0;i<nadi;i++){
     for(int j=0;j<nadi;j++){

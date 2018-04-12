@@ -167,7 +167,7 @@ def compute_model(model, Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
 
 
 
-def propagate_el(Cdia, Hvib, Sdia, Cadi, dt, rep):
+def propagate_el(Cdia, Cadi, Hvib, Sdia, dt, rep):
 
     if rep==0:
         propagate_electronic(0.5*dt, Cdia, Hvib, Sdia)        
@@ -175,24 +175,28 @@ def propagate_el(Cdia, Hvib, Sdia, Cadi, dt, rep):
         propagate_electronic(0.5*dt, Cadi, Hvib)        
 
 
-def compute_etot(ham, p, m, rep):
+
+def compute_etot(ham, p, Cdia, Cadi, m, rep):
     Etot = 0.0
     if rep==0:
-        Etot = 0.5*p*p/m + ham.Ehrenfest_energy_dia().real 
+        Etot = 0.5*m*p*p + ham.Ehrenfest_energy_dia(Cdia).real 
     
     elif rep==1:
-        Etot = 0.5*p*p/m + ham.Ehrenfest_energy_adi().real        
+        Etot = 0.5*m*p*p + ham.Ehrenfest_energy_adi(Cadi).real        
 
     return Etot
 
 
-def compute_frc(ham, rep):
+
+
+
+def compute_frc(ham, Cdia, Cadi, rep):
     f = None
     if rep==0:
-        f = ham.Ehrenfest_forces_dia().get(0).real
+        f = ham.Ehrenfest_forces_dia(Cdia).get(0).real
     
     elif rep==1:
-        f = ham.Ehrenfest_forces_adi().get(0).real
+        f = ham.Ehrenfest_forces_adi(Cadi).get(0).real
 
     return f
 
@@ -223,8 +227,6 @@ def run_test(model, rep, outname):
     invSdia = CMATRIX(2,2);
     Hadi = CMATRIX(2,2);   ham.set_ham_adi_by_ref(Hadi);  
     U = CMATRIX(2,2);      ham.set_basis_transform_by_ref(U); 
-    Cdia = CMATRIX(2,1);   ham.set_ampl_dia_by_ref(Cdia)
-    Cadi = CMATRIX(2,1);   ham.set_ampl_adi_by_ref(Cadi)
 
     d1ham_dia = CMATRIXList(); d1ham_adi = CMATRIXList()
     dc1_dia = CMATRIXList();   dc1_adi = CMATRIXList()
@@ -247,6 +249,9 @@ def run_test(model, rep, outname):
     dt = 1.0
 
     # Dynamical variables and system-specific properties
+    Cdia = CMATRIX(2,1);   
+    Cadi = CMATRIX(2,1);   
+
     Cadi.set(0, 1.0+0.0j); Cadi.set(1, 1.0+0.0j);   Cadi *= (1.0/math.sqrt(2.0))  
     q, p, m = 0.1, 0.0, 100.0
 
@@ -254,14 +259,14 @@ def run_test(model, rep, outname):
     # Initial calculations
     compute_model(model, Hdia, Sdia, d1ham_dia, dc1_dia, q, params)        
     ham.compute_adiabatic(1); 
-    ham.ampl_adi2dia()
+    ham.ampl_adi2dia(Cdia, Cadi)
 
 
     dm_dia, dm_adi = None, None
 
 
-    Etot = compute_etot(ham, p, m, rep)
-    f = compute_frc(ham, rep)
+    Etot = compute_etot(ham, p, Cdia, Cadi, m, rep)
+    f = compute_frc(ham, Cdia, Cadi, rep)
     Hvib = compute_Hvib(Hdia, Hadi, dc1_dia, dc1_adi, p, m, rep)
 
 
@@ -272,7 +277,7 @@ def run_test(model, rep, outname):
     # Do the propagation
     for i in xrange(500):
 
-        propagate_el(Cdia, Hvib, Sdia, Cadi, 0.5*dt, rep)
+        propagate_el(Cdia, Cadi, Hvib, Sdia, 0.5*dt, rep)
     
         p = p + 0.5*f*dt
         q = q + dt*p/m
@@ -282,13 +287,13 @@ def run_test(model, rep, outname):
         ham.compute_adiabatic(1); 
         
 
-        Etot = compute_etot(ham, p, m, rep)
-        f = compute_frc(ham, rep)
+        Etot = compute_etot(ham, p, Cdia, Cadi, m, rep)
+        f = compute_frc(ham, Cdia, Cadi, rep)
             
         p = p + 0.5*f*dt
 
         Hvib = compute_Hvib(Hdia, Hadi, dc1_dia, dc1_adi, p, m, rep)
-        propagate_el(Cdia, Hvib, Sdia, Cadi, 0.5*dt, rep)
+        propagate_el(Cdia, Cadi, Hvib, Sdia, 0.5*dt, rep)
      
 
         #=========== Properties ==========
@@ -296,13 +301,16 @@ def run_test(model, rep, outname):
         if rep==0:
             dm_dia = Sdia * Cdia * Cdia.H() * Sdia
             dm_adi = U.H() * dm_dia * U
+            ham.ampl_dia2adi(Cdia, Cadi)
            
         elif rep==1:
             dm_adi = Cadi * Cadi.H()
             su = Sdia * U
             dm_dia = su * dm_adi * su.H()
+            ham.ampl_adi2dia(Cdia, Cadi)
 
-        Etot = compute_etot(ham, p, m, rep)
+
+        Etot = compute_etot(ham, p, Cdia, Cadi, m, rep)
 
 
         out = open(outname, "a")

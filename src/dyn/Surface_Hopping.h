@@ -41,6 +41,10 @@ using namespace libelectronic;
 using namespace libensemble;
 
 
+void tsh(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, MATRIX& states,
+         nHamiltonian& ham, bp::object py_funct, bp::object params, int rep);
+
+
 void compute_hopping_probabilities_fssh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,
                                         double dt, int use_boltz_factor,double T);
 void compute_hopping_probabilities_fssh(Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,

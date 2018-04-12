@@ -38,7 +38,7 @@ using namespace libmeigen;
 
 
 
-complex<double> nHamiltonian::Ehrenfest_energy_adi(){
+complex<double> nHamiltonian::Ehrenfest_energy_adi(CMATRIX& ampl_adi){
 /**
   Compute the expectation value of the Hamiltonian in the adiabatic basis:
 
@@ -55,19 +55,19 @@ complex<double> nHamiltonian::Ehrenfest_energy_adi(){
   if(ham_adi_mem_status==0){ cout<<"Error in Ehrenfest_energy_adi(): the adiabatic Hamiltonian matrix is not allocated \
   but it is needed for the calculations\n"; exit(0); }
 
-  if(ampl_adi_mem_status==0){ cout<<"Error in Ehrenfest_energy_adi(): the amplitudes of the adiabatic states are\
-  not allocated, but they are needed for the calculations\n"; exit(0); }
+//  if(ampl_adi_mem_status==0){ cout<<"Error in Ehrenfest_energy_adi(): the amplitudes of the adiabatic states are\
+//  not allocated, but they are needed for the calculations\n"; exit(0); }
 
 
-  complex<double> norm = ((*ampl_adi).H() * (*ampl_adi)).M[0]; 
+  complex<double> norm = (ampl_adi.H() * ampl_adi).M[0]; 
   
-  return ((*ampl_adi).H() * (*ham_adi) * (*ampl_adi)).M[0] / norm;
+  return (ampl_adi.H() * (*ham_adi) * ampl_adi).M[0] / norm;
 
 }
 
 
 
-complex<double> nHamiltonian::Ehrenfest_energy_dia(){
+complex<double> nHamiltonian::Ehrenfest_energy_dia(CMATRIX& ampl_dia){
 /**
   Compute the expectation value of the Hamiltonian in the diabatic basis:
 
@@ -87,19 +87,19 @@ complex<double> nHamiltonian::Ehrenfest_energy_dia(){
   if(ham_dia_mem_status==0){ cout<<"Error in Ehrenfest_energy_dia(): the diabatic Hamiltonian matrix is not allocated \
   but it is needed for the calculations\n"; exit(0); }
 
-  if(ampl_dia_mem_status==0){ cout<<"Error in Ehrenfest_energy_dia(): the amplitudes of the diabatic states are\
-  not allocated, but they are needed for the calculations\n"; exit(0); }
+//  if(ampl_dia_mem_status==0){ cout<<"Error in Ehrenfest_energy_dia(): the amplitudes of the diabatic states are\
+//  not allocated, but they are needed for the calculations\n"; exit(0); }
 
 
-  complex<double> norm = ((*ampl_dia).H() * (*ovlp_dia) * (*ampl_dia)).M[0]; 
+  complex<double> norm = (ampl_dia.H() * (*ovlp_dia) * ampl_dia).M[0]; 
 
-  return ((*ampl_dia).H() * (*ham_dia) * (*ampl_dia)).M[0]/norm;
+  return (ampl_dia.H() * (*ham_dia) * ampl_dia).M[0]/norm;
 
 }
 
 
 
-CMATRIX nHamiltonian::Ehrenfest_forces_adi(){
+CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi){
 /**
 
   These are the Ehrenfest forces derived such the EOMs derived from the
@@ -127,12 +127,12 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi(){
   if(ham_adi_mem_status==0){ cout<<"Error in Ehrenfest_forces_adi(): the adiabatic Hamiltonian matrix is not allocated \
   but it is needed for the calculations\n"; exit(0); }
 
-  if(ampl_adi_mem_status==0){ cout<<"Error in Ehrenfest_forces_adi(): the amplitudes of the adiabatic states are\
-  not allocated, but they are needed for the calculations\n"; exit(0); }
+//  if(ampl_adi_mem_status==0){ cout<<"Error in Ehrenfest_forces_adi(): the amplitudes of the adiabatic states are\
+//  not allocated, but they are needed for the calculations\n"; exit(0); }
 
 
 
-  complex<double> norm = ((*ampl_adi).H() * (*ampl_adi)).M[0]; 
+  complex<double> norm = (ampl_adi.H() * ampl_adi).M[0]; 
 
   CMATRIX res(nnucl,1);
 
@@ -151,7 +151,7 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi(){
     *tmp = (*dc1_adi[n]).H() * (*ham_adi);
     *tmp = (*tmp + (*tmp).H() );
 
-    res.M[n] = -((*ampl_adi).H() * (*d1ham_adi[n] - *tmp ) * (*ampl_adi) ).M[0];
+    res.M[n] = -( ampl_adi.H() * (*d1ham_adi[n] - *tmp ) * ampl_adi ).M[0];
 
   }// for n
 
@@ -163,7 +163,7 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi(){
 
 
 
-CMATRIX nHamiltonian::Ehrenfest_forces_dia(){
+CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia){
 /**
 
   These are the Ehrenfest forces derived such the EOMs derived from the
@@ -190,8 +190,8 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia(){
   if(ham_dia_mem_status==0){ cout<<"Error in Ehrenfest_forces_dia(): the diabatic Hamiltonian matrix is not allocated \
   but it is needed for the calculations\n"; exit(0); }
 
-  if(ampl_dia_mem_status==0){ cout<<"Error in Ehrenfest_forces_dia(): the amplitudes of the diabatic states are\
-  not allocated, but they are needed for the calculations\n"; exit(0); }
+//  if(ampl_dia_mem_status==0){ cout<<"Error in Ehrenfest_forces_dia(): the amplitudes of the diabatic states are\
+//  not allocated, but they are needed for the calculations\n"; exit(0); }
 
 
   CMATRIX res(nnucl,1);
@@ -200,7 +200,7 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia(){
 
   FullPivLU_inverse(*ovlp_dia, *invS);
 
-  complex<double> norm = ((*ampl_dia).H() * (*ovlp_dia) * (*ampl_dia)).M[0]; 
+  complex<double> norm = ( ampl_dia.H() * (*ovlp_dia) * ampl_dia ).M[0]; 
 
   
   for(int n=0;n<nnucl;n++){
@@ -215,7 +215,7 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia(){
       *dtilda = (*dc1_dia[n]).H() * (*invS) * (*ham_dia);
       *dtilda = (*dtilda + (*dtilda).H() ) ;
 
-      res.M[n] = -( (*ampl_dia).H() * (*d1ham_dia[n] - *dtilda ) * (*ampl_dia) ).M[0];
+      res.M[n] = -( ampl_dia.H() * (*d1ham_dia[n] - *dtilda ) * ampl_dia ).M[0];
 
   }// for n
 
@@ -232,7 +232,7 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia(){
 
 
 
-vector<CMATRIX> nHamiltonian::Ehrenfest_forces_tens_adi(){
+vector<CMATRIX> nHamiltonian::Ehrenfest_forces_tens_adi(CMATRIX& ampl_adi){
 /**
   The elements of the returned list are the matrixes F_adi^MF that, when multiplied
   by the adiabatic amplitudes give the Ehrenfest forces in the adiabatic basis
@@ -248,12 +248,12 @@ vector<CMATRIX> nHamiltonian::Ehrenfest_forces_tens_adi(){
   if(ham_adi_mem_status==0){ cout<<"Error in Ehrenfest_forces_tens_adi(): the adiabatic Hamiltonian matrix is not allocated \
   but it is needed for the calculations\n"; exit(0); }
 
-  if(ampl_adi_mem_status==0){ cout<<"Error in Ehrenfest_forces_tens_adi(): the amplitudes of the adiabatic states are\
-  not allocated, but they are needed for the calculations\n"; exit(0); }
+//  if(ampl_adi_mem_status==0){ cout<<"Error in Ehrenfest_forces_tens_adi(): the amplitudes of the adiabatic states are\
+//  not allocated, but they are needed for the calculations\n"; exit(0); }
 
 
 
-  complex<double> norm = ((*ampl_adi).H() * (*ampl_adi)).M[0]; 
+  complex<double> norm = (ampl_adi.H() * ampl_adi).M[0]; 
 
   CMATRIX* tmp; tmp = new CMATRIX(nadi, nadi);
 
@@ -280,7 +280,7 @@ vector<CMATRIX> nHamiltonian::Ehrenfest_forces_tens_adi(){
 }
 
 
-vector<CMATRIX> nHamiltonian::Ehrenfest_forces_tens_dia(){
+vector<CMATRIX> nHamiltonian::Ehrenfest_forces_tens_dia(CMATRIX& ampl_dia){
 /**
   The elements of the returned list are the matrixes F_dia^MF that, when multiplied
   by the diabatic amplitudes give the Ehrenfest forces in the diabatic basis
@@ -299,15 +299,15 @@ vector<CMATRIX> nHamiltonian::Ehrenfest_forces_tens_dia(){
   if(ham_dia_mem_status==0){ cout<<"Error in Ehrenfest_forces_tens_dia(): the diabatic Hamiltonian matrix is not allocated \
   but it is needed for the calculations\n"; exit(0); }
 
-  if(ampl_dia_mem_status==0){ cout<<"Error in Ehrenfest_forces_tens_dia(): the amplitudes of the diabatic states are\
-  not allocated, but they are needed for the calculations\n"; exit(0); }
+//  if(ampl_dia_mem_status==0){ cout<<"Error in Ehrenfest_forces_tens_dia(): the amplitudes of the diabatic states are\
+//  not allocated, but they are needed for the calculations\n"; exit(0); }
 
 
   CMATRIX* dtilda; dtilda = new CMATRIX(nadi,nadi);
   CMATRIX* invS; invS = new CMATRIX(nadi, nadi); 
 
   FullPivLU_inverse(*ovlp_dia, *invS);
-  complex<double> norm = ((*ampl_dia).H() * (*ovlp_dia) * (*ampl_dia)).M[0]; 
+  complex<double> norm = (ampl_dia.H() * (*ovlp_dia) * ampl_dia).M[0]; 
 
   
   for(int n=0;n<nnucl;n++){
