@@ -24,6 +24,52 @@ namespace liblibra{
 namespace libdyn{
 
 
+void tsh(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, MATRIX& states,
+         nHamiltonian& ham, bp::object py_funct, bp::object params, int rep){
+ 
+  //============== Electronic propagation ===================
+  if(rep==0){  
+    ham.compute_nac_dia(p, invM);
+    ham.compute_hvib_dia();
+  }
+  else if(rep==1){  
+    ham.compute_nac_adi(p, invM); 
+    ham.compute_hvib_adi();
+  }
+
+  propagate_electronic(0.5*dt, C, ham, rep);   
+
+  //============== Nuclear propagation ===================
+    
+       if(rep==0){  p = p + ham.Ehrenfest_forces_dia(C).real() * 0.5*dt;  }
+  else if(rep==1){  p = p + ham.Ehrenfest_forces_adi(C).real() * 0.5*dt;  }
+
+
+  q = q + invM*p*dt;
+  ham.compute_diabatic(py_funct, bp::object(q), params);
+  ham.compute_adiabatic(1);
+
+
+       if(rep==0){  p = p + ham.Ehrenfest_forces_dia(C).real() * 0.5*dt;  }
+  else if(rep==1){  p = p + ham.Ehrenfest_forces_adi(C).real() * 0.5*dt;  }
+
+  //============== Electronic propagation ===================
+  if(rep==0){  
+    ham.compute_nac_dia(p, invM);
+    ham.compute_hvib_dia();
+  }
+  else if(rep==1){  
+    ham.compute_nac_adi(p, invM); 
+    ham.compute_hvib_adi();
+  }
+
+  propagate_electronic(0.5*dt, C, ham, rep);   
+
+
+}
+
+
+
 
 MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double dt){
 /**
@@ -768,7 +814,7 @@ int rescale_velocities_adiabatic(vector<double>& p, vector<double>& masses,
 
     for(int k=0;k<nnucl;k++){
 
-      double D = dc1_adi[k].get(old_st,old_st).real(); // derivative coupling w.r.t. nuclear DOF k
+      double D = dc1_adi[k].get(old_st,new_st).real(); // derivative coupling w.r.t. nuclear DOF k
 
       a_ij += 0.5*(D*D / masses[k]); 
       b_ij += (D*p[k])/masses[k];
@@ -780,16 +826,28 @@ int rescale_velocities_adiabatic(vector<double>& p, vector<double>& masses,
 
     if(det<0.0){
 
-      if(do_reverse){     gamma_ij = b_ij / a_ij;}
-      else{ gamma_ij = 0.0;  }
+      if(fabs(a_ij)>1e-100){  // only consider reversals, if the couplings are sizable
+        if(do_reverse){     gamma_ij = b_ij / a_ij;}
+         else{ gamma_ij = 0.0;  }
+      }
+      else{  gamma_ij = 0.0;    } // don't consider reversal, if the couplings are too small
 
       st = old_st; // # hop does not occur - frustrated hop
 
     }
     else{
-      if(b_ij<0){ gamma_ij = 0.5*(b_ij + sqrt(det))/a_ij; }
-      else{       gamma_ij = 0.5*(b_ij - sqrt(det))/a_ij; }
-      st = new_st;
+      if(fabs(a_ij)>1e-100){ // only compute the rescaling factor and do the hop, if the couplings are sizable
+
+        if(b_ij<0){ gamma_ij = 0.5*(b_ij + sqrt(det))/a_ij; }
+        else{       gamma_ij = 0.5*(b_ij - sqrt(det))/a_ij; }
+
+        st = new_st;
+      } 
+      else{   // otherwise - don't 
+        gamma_ij = 0.0; 
+        st = old_st;
+      } 
+
     }
 
     //Rescale velocities and do the hop

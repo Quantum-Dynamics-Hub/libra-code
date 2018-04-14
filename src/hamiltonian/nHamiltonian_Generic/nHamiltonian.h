@@ -81,6 +81,10 @@ public:
 
   ham_dia = <psi_dia|H|psi_dia>     - non-diagonal matrix
 
+  nac_dia = <psi_dia|d/dt|psi_dia>
+
+  hvib_dia = ham_dia - ihbar * nac_dia
+
   d1ham_dia[n] = d/dq_n [<psi_dia|H|psi_dia>]
 
   d2ham_dia[n*nnucl+k] = d^2/(dq_n dq_k)[ <psi_dia|H|psi_dia>]
@@ -92,8 +96,8 @@ public:
   */
   int ndia;                   ///< the number of electronic DOFs in the diabatic basis
 
-  CMATRIX* ampl_dia;          ///< Amplitudes of the diabatic states in the overal wavefunction
-  int ampl_dia_mem_status;
+//  CMATRIX* ampl_dia;          ///< Amplitudes of the diabatic states in the overal wavefunction
+//  int ampl_dia_mem_status;
 
   CMATRIX* ovlp_dia;          ///< the overlap of the diabatic basis 
   int ovlp_dia_mem_status;       
@@ -105,6 +109,14 @@ public:
   CMATRIX* ham_dia;           ///< Hamiltonian in diabatic representation
   int ham_dia_mem_status;
 
+  CMATRIX* nac_dia;           ///< Nonadiabatic couplings (time-derivative couplings) in diabatic representation
+  int nac_dia_mem_status;
+
+  CMATRIX* hvib_dia;          ///< Vibronic Hamiltonian in diabatic representation
+  int hvib_dia_mem_status;
+
+
+
 
   vector<CMATRIX*> d1ham_dia; ///< first order derivatives of the Hamiltonian matrix in the diabatic basis
   vector<int> d1ham_dia_mem_status;
@@ -112,8 +124,8 @@ public:
   vector<CMATRIX*> d2ham_dia; ///< second order derivatives of the Hamiltonian in the diabatic basis
   vector<int> d2ham_dia_mem_status;
 
-  CMATRIX* den_mat_dia;       ///< Density matrix in the diabatic basis
-  int den_mat_dia_mem_status;
+//  CMATRIX* den_mat_dia;       ///< Density matrix in the diabatic basis
+//  int den_mat_dia_mem_status;
 
 
   /** Adiabatic representation: by definition, the states are orthonormal in this representation
@@ -126,6 +138,10 @@ public:
 
   ham_adi = <psi_adi|H|psi_adi>   - diagonal matrix
 
+  nac_adi = <psi_adi|d/dt|psi_adi>
+
+  hvib_adi = ham_adi - ihbar * nac_adi
+
   d1ham_adi[n] = d/dq_n [<psi_adi|H|psi_adi>]
 
   d2ham_adi[n*nnucl+k] =d^2/(dq_n dq_k)[ <psia_adi|H|psi_adi> ]
@@ -136,8 +152,8 @@ public:
   */
   int nadi;                   ///< the number of electronic DOFs in the adiabatic basis
 
-  CMATRIX* ampl_adi;          ///< Amplitudes of the adiabatic states in the overal wavefunction
-  int ampl_adi_mem_status;
+//  CMATRIX* ampl_adi;          ///< Amplitudes of the adiabatic states in the overal wavefunction
+//  int ampl_adi_mem_status;
 
   vector<CMATRIX*> dc1_adi;   ///< first-order derivative coupling matrices in the adiabatic basis 
   vector<int> dc1_adi_mem_status;
@@ -145,14 +161,21 @@ public:
   CMATRIX* ham_adi;           ///< Hamiltonian in adiabatic representation (diagonal)
   int ham_adi_mem_status;
 
+  CMATRIX* nac_adi;           ///< Nonadiabatic couplings (time-derivative couplings) in adiabatic representation
+  int nac_adi_mem_status;
+
+  CMATRIX* hvib_adi;          ///< Vibronic Hamiltonian in adiabatic representation
+  int hvib_adi_mem_status;
+
+
   vector<CMATRIX*> d1ham_adi; ///< first order derivatives of the Hamiltonian matrix in the adiabatic basis (diagonal)
   vector<int> d1ham_adi_mem_status;
 
   vector<CMATRIX*> d2ham_adi; ///< second order derivatives of the Hamiltonian matrix in the adiabatic basis
   vector<int> d2ham_adi_mem_status;
 
-  CMATRIX* den_mat_adi;       ///< Density matrix in the adiabatic basis
-  int den_mat_adi_mem_status;
+//  CMATRIX* den_mat_adi;       ///< Density matrix in the adiabatic basis
+//  int den_mat_adi_mem_status;
 
 
   /** Transformations
@@ -183,11 +206,13 @@ public:
   int basis_transform_mem_status;
 
 
-  /**========= in Hamiltonian.cpp ==================
+  /**
      
      All the basic methods: constructor, destructor, getters, setters, etc.
 
   **/
+  ///< In nHamiltonian_basic.cpp
+
   ///< Constructors
   nHamiltonian(int ndia_, int nadi_, int nnucl_); 
 
@@ -197,8 +222,8 @@ public:
 
   ///< Setters:
   // Diabatic
-  void set_ampl_dia_by_ref(CMATRIX& ampl_dia_);
-  void set_ampl_dia_by_val(CMATRIX& ampl_dia_);
+//  void set_ampl_dia_by_ref(CMATRIX& ampl_dia_);
+//  void set_ampl_dia_by_val(CMATRIX& ampl_dia_);
 
   void set_ovlp_dia_by_ref(CMATRIX& ovlp_dia_);
   void set_ovlp_dia_by_val(CMATRIX& ovlp_dia_);
@@ -209,18 +234,27 @@ public:
   void set_ham_dia_by_ref(CMATRIX& ham_dia_);
   void set_ham_dia_by_val(CMATRIX& ham_dia_);
 
+  void set_nac_dia_by_ref(CMATRIX& nac_dia_);
+  void set_nac_dia_by_val(CMATRIX& nac_dia_);
+
+  void set_hvib_dia_by_ref(CMATRIX& hvib_dia_);
+  void set_hvib_dia_by_val(CMATRIX& hvib_dia_);
+
+
   void set_d1ham_dia_by_ref(vector<CMATRIX>& d1ham_dia_);
   void set_d1ham_dia_by_val(vector<CMATRIX>& d1ham_dia_);
 
   void set_d2ham_dia_by_ref(vector<CMATRIX>& d2ham_dia_);
   void set_d2ham_dia_by_val(vector<CMATRIX>& d2ham_dia_);
 
-  void set_den_mat_dia_by_ref(CMATRIX& den_mat_dia_);
-  void set_den_mat_dia_by_val(CMATRIX& den_mat_dia_);
+//  void set_den_mat_dia_by_ref(CMATRIX& den_mat_dia_);
+//  void set_den_mat_dia_by_val(CMATRIX& den_mat_dia_);
+
+
 
   // Adiabatic
-  void set_ampl_adi_by_ref(CMATRIX& ampl_adi_);
-  void set_ampl_adi_by_val(CMATRIX& ampl_adi_);
+//  void set_ampl_adi_by_ref(CMATRIX& ampl_adi_);
+//  void set_ampl_adi_by_val(CMATRIX& ampl_adi_);
 
   void set_dc1_adi_by_ref(vector<CMATRIX>& dc1_adi_);
   void set_dc1_adi_by_val(vector<CMATRIX>& dc1_adi_);
@@ -228,14 +262,21 @@ public:
   void set_ham_adi_by_ref(CMATRIX& ham_adi_);
   void set_ham_adi_by_val(CMATRIX& ham_adi_);
 
+  void set_nac_adi_by_ref(CMATRIX& nac_adi_);
+  void set_nac_adi_by_val(CMATRIX& nac_adi_);
+
+  void set_hvib_adi_by_ref(CMATRIX& hvib_adi_);
+  void set_hvib_adi_by_val(CMATRIX& hvib_adi_);
+
+
   void set_d1ham_adi_by_ref(vector<CMATRIX>& d1ham_adi_);
   void set_d1ham_adi_by_val(vector<CMATRIX>& d1ham_adi_);
 
   void set_d2ham_adi_by_ref(vector<CMATRIX>& d2ham_adi_);
   void set_d2ham_adi_by_val(vector<CMATRIX>& d2ham_adi_);
 
-  void set_den_mat_adi_by_ref(CMATRIX& den_mat_adi_);
-  void set_den_mat_adi_by_val(CMATRIX& den_mat_adi_);
+//  void set_den_mat_adi_by_ref(CMATRIX& den_mat_adi_);
+//  void set_den_mat_adi_by_val(CMATRIX& den_mat_adi_);
 
   // Transforms
   void set_basis_transform_by_ref(CMATRIX& basis_transform_);
@@ -246,76 +287,74 @@ public:
   // Diabatic
   CMATRIX get_ovlp_dia();
 
-  CMATRIX get_ampl_dia();
+//  CMATRIX get_ampl_dia();
   CMATRIX get_dc1_dia(int i);
   CMATRIX get_ham_dia();
+  CMATRIX get_nac_dia();
+  CMATRIX get_hvib_dia();
   CMATRIX get_d1ham_dia(int i);
   CMATRIX get_d2ham_dia(int i);
   CMATRIX get_d2ham_dia(int i,int j);
-  CMATRIX get_den_mat_dia();
+//  CMATRIX get_den_mat_dia();
 
   // Adiabatic
-  CMATRIX get_ampl_adi();
+//  CMATRIX get_ampl_adi();
   CMATRIX get_dc1_adi(int i);
   CMATRIX get_ham_adi();
+  CMATRIX get_nac_adi();
+  CMATRIX get_hvib_adi();
   CMATRIX get_d1ham_adi(int i);
   CMATRIX get_d2ham_adi(int i);
   CMATRIX get_d2ham_adi(int i,int j);
-  CMATRIX get_den_mat_adi();
+//  CMATRIX get_den_mat_adi();
 
   // Transforms
   CMATRIX get_basis_transform();
 
 
-  /**========= in Hamiltonian1.cpp ==================
 
-             Computational methods
+  ///< In nHamiltonian_compute_diabatic.cpp
 
-  **/
+  void compute_diabatic(int model, vector<double>& q, vector<double>& params); // for internal model types
+  void compute_diabatic(bp::object py_funct, bp::object q, bp::object params); // for models defined in Python
+
+
+  ///< In nHamiltonian_compute_adiabatic.cpp
 
   void compute_adiabatic(int lvl);
-  void ampl_dia2adi();
-  void ampl_adi2dia();
 
 
-  complex<double> Ehrenfest_energy_adi();
-  complex<double> Ehrenfest_energy_dia();
+  ///< In nHamiltonian_compute.cpp
+
+  void ampl_dia2adi(CMATRIX& ampl_dia, CMATRIX& ampl_adi);
+  void ampl_adi2dia(CMATRIX& ampl_dia, CMATRIX& ampl_adi);
+
+  CMATRIX forces_adi(CMATRIX& ampl_adi);  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
+  CMATRIX forces_dia(CMATRIX& ampl_dia);  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
+
+  vector<CMATRIX> forces_tens_adi(CMATRIX& ampl_adi); // 
+  vector<CMATRIX> forces_tens_dia(CMATRIX& ampl_dia); // 
+
+  void compute_nac_dia(MATRIX& p, MATRIX& invM);
+  void compute_nac_adi(MATRIX& p, MATRIX& invM);
+
+  void compute_hvib_dia();
+  void compute_hvib_adi();
 
 
-  CMATRIX forces_adi();  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
-  CMATRIX forces_dia();  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
+  ///< In nHamiltonian_compute_Ehrenfest.cpp
 
-  vector<CMATRIX> forces_tens_adi(); // 
-  vector<CMATRIX> forces_tens_dia(); // 
+  complex<double> Ehrenfest_energy_adi(CMATRIX& ampl_adi);
+  complex<double> Ehrenfest_energy_dia(CMATRIX& ampl_dia);
 
+  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi);  // Ehrenfest forces in adiabatic basis
+  CMATRIX Ehrenfest_forces_dia(CMATRIX& ampl_dia);  // Ehrenfest forces in diabatic basis
 
-//  CMATRIX forces_adi();  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
-//  CMATRIX forces_dia();  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
-
-
-  CMATRIX Ehrenfest_forces_adi();  // Ehrenfest forces in adiabatic basis
-  CMATRIX Ehrenfest_forces_dia();  // Ehrenfest forces in diabatic basis
-
-  vector<CMATRIX> Ehrenfest_forces_tens_adi();  // Force tensor in adiabatic basis, assuming Cadi = Cadi(t)
-  vector<CMATRIX> Ehrenfest_forces_tens_dia();  // Force tensor in diabatic basis, assuming Cdia = Cdia(t)
+  vector<CMATRIX> Ehrenfest_forces_tens_adi(CMATRIX& ampl_adi);  // Force tensor in adiabatic basis, assuming Cadi = Cadi(t)
+  vector<CMATRIX> Ehrenfest_forces_tens_dia(CMATRIX& ampl_dia);  // Force tensor in diabatic basis, assuming Cdia = Cdia(t)
 
 
 
-/*
-
-  // This function performs actual computations
-  virtual void compute();
-  virtual void compute_diabatic(){ ;; }  
-  virtual void compute_adiabatic(){ ;; }  
-
-
-  // Calculation methods
-  virtual std::complex<double> H(int, int);             ///< Hamiltonian
-  virtual std::complex<double> dHdq(int i,int j,int n); ///< Hamiltonian first-order derivative  
-  virtual std::complex<double> D(int i,int j,int n);    ///< derivative coupling                 <i|d/dR_n|j>
-  virtual std::complex<double> nac(int i,int j);        ///< non-adiabatic coupling              <i|d/dt|j>
-  virtual std::complex<double> Hvib(int i,int j);       ///< vibronic Hamiltonian (for TD-SE)    H - i*hbar*nac
-*/
 
   friend bool operator == (const nHamiltonian& h1, const nHamiltonian& h2){
     return &h1 == &h2;

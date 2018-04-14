@@ -1,0 +1,36 @@
+package:
+  name: libra
+  version: "0.0.1"
+
+source:
+  path: ../
+
+build:
+  number: 0
+  string: 0
+
+requirements:
+  build:
+    - cmake
+    - {{ compiler("cxx") }}
+    - {{ compiler("c") }}
+    - boost 
+    - python=2.7
+  run:
+    - boost
+    - python=2.7
+test:
+  commands:
+    - test -f $PREFIX/lib/liblibra_core$SHLIB_EXT
+    - ldd -v $PREFIX/lib/liblibra_core$SHLIB_EXT
+    - conda-inspect linkages liblibra_core --show-files
+
+about:
+  description:  An open-source Methodology Discovery Library 
+  home: http://www.acsu.buffalo.edu/~alexeyak/libra/index.html
+  license: GPL3
+  license_file: LICENSE
+  summary: QCGrids is a numerical integration library for quantum chemistry.
+
+extra:
+  recipe-maintainers: Alexey V. Akimov <alexvakimov@gmail.com>, Matt Chan <talcite@gmail.com>

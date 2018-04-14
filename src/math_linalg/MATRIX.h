@@ -57,15 +57,16 @@ class MATRIX : public base_matrix<double>{
     cout<<"In MATRIX cctor\n";
   }
 */
-/*
-  MATRIX(const base_matrix<double>& ob){
+
+  MATRIX(const MATRIX& ob){
     n_rows = ob.n_rows;  ///< The number of rows
     n_cols = ob.n_cols;  ///< The number of colomns
     n_elts = ob.n_elts;  ///< The number of elements
     M = new double[n_elts];
     memcpy(M, ob.M, sizeof(double)*n_elts);    
   }
-*/
+
+
   MATRIX(const VECTOR& u1, const VECTOR& u2, const VECTOR& u3);
 
   ~MATRIX(){  /* cout<<"In MATRIX destructor\n";*/ }

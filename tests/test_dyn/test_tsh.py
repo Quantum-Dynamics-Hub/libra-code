@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2015-2016 Alexey V. Akimov
+#* Copyright (C) 2018 Brendan A. Smith, Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -9,10 +9,16 @@
 #*
 #*********************************************************************************/
 
+"""
+   This file replaces the test_tsh.py  and we use the nHamiltonian object
+
+"""
+
 import os
 import sys
 import math
 
+"""
 cwd = os.getcwd()
 print "Current working directory", cwd
 sys.path.insert(1,cwd+"/../../_build/src/hamiltonian")
@@ -26,27 +32,41 @@ if sys.platform=="cygwin":
     from cygdyn import *
     from cyghamiltonian import *
     from cyglinalg import *
-
+"""
 
 # Fisrt, we add the location of the library to test to the PYTHON path
-#if sys.platform=="cygwin":
-#    from cyglibra_core import *
-#elif sys.platform=="linux" or sys.platform=="linux2":
-#    from liblibra_core import *
-#from libra_py import *
+if sys.platform=="cygwin":
+    from cyglibra_core import *
+elif sys.platform=="linux" or sys.platform=="linux2":
+    from liblibra_core import *
+from libra_py import *
 
 
-
-
-
-print "\nTest 2: Now we will be using model Hamiltonian"
 # First, create the Hamiltonian
-ham = Hamiltonian_Model(1)  # DAC
-ham.set_rep(1)  # adiabatic
+ham = nHamiltonian(2,2,1)  
 
+# Allocate memory and connect the allocated objects to the ham object
+Hdia = CMATRIX(2,2);   Sdia = CMATRIX(2,2);    ham.set_ham_dia_by_ref(Hdia);    ham.set_ovlp_dia_by_ref(Sdia); 
+invSdia = CMATRIX(2,2);
+Hadi = CMATRIX(2,2);   ham.set_ham_adi_by_ref(Hadi);  
+U = CMATRIX(2,2);      ham.set_basis_transform_by_ref(U); 
+Cdia = CMATRIX(2,1);   ham.set_ampl_dia_by_ref(Cdia)
+Cadi = CMATRIX(2,1);   ham.set_ampl_adi_by_ref(Cadi)
 
-# Electronic - 2 levels, starting at 0-th state
-el = Electronic(2,0)
+d1ham_dia = CMATRIXList(); d1ham_adi = CMATRIXList()
+dc1_dia = CMATRIXList();   dc1_adi = CMATRIXList()
+for i in [0]:
+    d1ham_dia.append( CMATRIX(2,2) ); d1ham_adi.append( CMATRIX(2,2) )
+    dc1_dia.append( CMATRIX(2,2) );   dc1_adi.append( CMATRIX(2,2) )
+
+ham.set_d1ham_dia_by_ref(d1ham_dia);  ham.set_d1ham_adi_by_ref(d1ham_adi)
+ham.set_dc1_dia_by_ref(dc1_dia);      ham.set_dc1_adi_by_ref(dc1_adi)
+
+# Electronic - 2 levels, starting at 1-st state
+istate = 1
+Coeff = CMATRIX(2,1)
+Coeff.set(0, 0.0+0.0j)
+Coeff.set(1, 1.0+0.0j)
 
 # Nuclear DOFs
 mol = Nuclear(1)
@@ -54,93 +74,71 @@ mol.mass[0] = 2000.0
 mol.q[0] = -10.0
 mol.p[0] = 20.0
 
-
 f = open("_tsh.txt","w")
-dt = 1.0
+dt = 10.0
+
 
 # Initialization
-ham.set_v([ mol.p[0]/mol.mass[0] ])
-#epot = compute_potential_energy(mol, el, ham, 1)  # 0 - MF forces, 1 - FSSH (state-resolved) forces
-#compute_forces(mol, el, ham, 1) # 0 - MF, 1 - FSSH
+params = set_params_2S_1D_sin("SIN:Case3:JCC:2016:37:1626")
+print Cpp2Py(params)
 
-epot = compute_forces(mol, el, ham, 1)  # 0 - MF forces, 1 - FSSH (state-resolved) forces
+model_2S_1D_sin(Hdia, Sdia, d1ham_dia, dc1_dia, mol.q, params)
+ham.compute_adiabatic(1)
+
+epot = Hadi.get(istate, istate).real
+mol.f[0] = -d1ham_adi[0].get(istate, istate).real
+Hvib = Hadi - 1.0j * dc1_adi[0] * mol.p[0]/mol.mass[0]
 
 
 use_boltz_factor = 0
 T = 300.0
 rnd = Random()
 
-for i in xrange(2500):
 
-    # el-dyn
-    el.propagate_electronic(0.5*dt, ham)
+for i in xrange(5000):
+
+    # el-dyn    
+    propagate_electronic(0.5*dt, Coeff, Hvib)
 
     # Nuclear dynamics
     mol.propagate_p(0.5*dt)
     mol.propagate_q(dt)
 
-    ham.set_v([ mol.p[0]/mol.mass[0] ])
-    epot = compute_forces(mol, el, ham, 1) 
-    #epot = compute_potential_energy(mol, el, ham, 1)  # 0 - MF forces, 1 - FSSH
-    #compute_forces(mol, el, ham, 1)
+    model_2S_1D_sin(Hdia, Sdia, d1ham_dia, dc1_dia, mol.q, params)
+    ham.compute_adiabatic(1)
+
+    epot = Hadi.get(istate, istate).real
+    mol.f[0] = -d1ham_adi[0].get(istate, istate).real
 
     mol.propagate_p(0.5*dt)
+    # End Nuclear dynamics
 
     # el-dyn
-#    ham.set_v([ mol.p[0]/mol.mass[0] ])
-    el.propagate_electronic(0.5*dt, ham)    
-#    ham.set_v([ mol.p[0]/mol.mass[0] ])
+    Hvib = Hadi - 1.0j * dc1_adi[0] * mol.p[0]/mol.mass[0]
+    propagate_electronic(0.5*dt, Coeff, Hvib)
 
-#    ekin = compute_kinetic_energy(mol)
+    ekin = compute_kinetic_energy(mol)
+
 
 
     # Now, incorporate surface hop
-    g = MATRIX(2,2)
-
-    ham.status_adi = 0
-    ham.status_dia = 0
-
-
     # Just choose the TSH scheme below
-#    compute_hopping_probabilities_mssh(mol, el, ham, g, dt, use_boltz_factor, T)
-    compute_hopping_probabilities_fssh(mol, el, ham, g, dt, use_boltz_factor, T)
-#    compute_hopping_probabilities_gfsh(mol, el, ham, g, dt, use_boltz_factor, T)
+    g = compute_hopping_probabilities_fssh(Coeff, Hvib, dt)
 
- 
-    do_rescaling = 1
-    do_reverse = 0
-    rep = 1 # adiabatic
+    do_reverse = 1
     ksi = rnd.uniform(0.0, 1.0)
 
-    #print i, ksi
-    state_old = el.istate
-    p_old = mol.p[0]
-    f_old = mol.f[0]
+    istate_old = istate                   # the current state
+    istate_new = hop(istate_old, g, ksi)  # proposed state
+    istate = rescale_velocities_adiabatic(mol.p, mol.mass, Hadi, dc1_adi, istate_new, istate_old, do_reverse)
 
-#    ham.status_adi = 0
-#    ham.status_dia = 0
-    
-    el.istate = hop(el.istate, mol, ham, ksi, g, do_rescaling, rep, do_reverse)  # this operation will also rescale velocities, if necessary
-
-#    ham.status_adi = 0
-#    ham.status_dia = 0
 
     ekin = compute_kinetic_energy(mol)
-    epot = compute_forces(mol, el, ham, 1)  
-#    epot = compute_potential_energy(mol, el, ham, 1)
+    epot = Hadi.get(istate, istate).real
+    mol.f[0] = -d1ham_adi[0].get(istate, istate).real    
+    Denmat = Coeff * Coeff.H()
 
-
-
-    if el.istate is not state_old:
-        print "old p = ", p_old, "Ekin_old = ", 0.5 *p_old**2 / mol.mass[0]  , "Epot_old = ", ham.H(state_old,state_old).real, "etot_old = ", 0.5 *p_old**2 / mol.mass[0] + ham.H(state_old,state_old).real
-        print "new p = ",mol.p[0], "Ekin_new = ", 0.5 *mol.p[0]**2 / mol.mass[0], "Epot_new = ", ham.H(el.istate,el.istate).real, "etot_new = ", 0.5 *mol.p[0]**2 / mol.mass[0] + ham.H(el.istate,el.istate).real
-        print "ekin = ", ekin, " epot = ", epot
-        print "f_old = ", f_old, "f_new = ", mol.f[0], " dHdR = ", ham.dHdq(el.istate,el.istate, 0)
-
-
-    print i, ekin, epot, ekin+epot, el.istate, mol.f[0], -ham.dHdq(0,0, 0).real, -ham.dHdq(1,1, 0).real
-
-    f.write("i= %3i q[0]= %8.5f p[0]= %8.5f  ekin= %8.5f  epot= %8.5f  etot= %8.5f  |c0|^2= %8.5f  |c1|^2= %8.5f  Re|c01|= %8.5f istate= %8.5f\n" % (i, mol.q[0], mol.p[0], ekin, epot, ekin+epot, el.rho(0,0).real, el.rho(1,1).real, el.rho(0,1).real, el.istate))
+    f.write("i= %3i q[0]= %8.5f p[0]= %8.5f  ekin= %8.5f  epot= %8.5f  etot= %8.5f  |c0|^2= %8.5f  |c1|^2= %8.5f  Re|c01|= %8.5f istate= %8.5f\n" % (i, mol.q[0], mol.p[0], ekin, epot, ekin+epot, Denmat.get(0,0).real, Denmat.get(1,1).real, Denmat.get(0,1).real, istate))
 
       
 f.close()

@@ -9,8 +9,8 @@
 *
 *********************************************************************************/
 /**
-  \file nHamiltonian.cpp
-  \brief The file implements the generic Hamiltonian class
+  \file nHamiltonian_basic.cpp
+  \brief The file implements the generic methods of the nHamiltonian class: getters and setters
     
 */
 
@@ -40,12 +40,14 @@ nHamiltonian::nHamiltonian(int ndia_, int nadi_, int nnucl_){
 
   ovlp_dia = NULL;             ovlp_dia_mem_status = 0; 
 
-  ampl_dia = NULL;             ampl_dia_mem_status = 0; 
+//  ampl_dia = NULL;             ampl_dia_mem_status = 0; 
 
   dc1_dia = vector<CMATRIX*>(nnucl, NULL); 
   dc1_dia_mem_status = vector<int>(nnucl, 0);
 
   ham_dia = NULL;              ham_dia_mem_status = 0;
+  nac_dia = NULL;              nac_dia_mem_status = 0;
+  hvib_dia = NULL;             hvib_dia_mem_status = 0;
 
   d1ham_dia = vector<CMATRIX*>(nnucl, NULL);
   d1ham_dia_mem_status = vector<int>(nnucl, 0);
@@ -53,7 +55,7 @@ nHamiltonian::nHamiltonian(int ndia_, int nadi_, int nnucl_){
   d2ham_dia = vector<CMATRIX*>(nnucl*nnucl, NULL);
   d2ham_dia_mem_status = vector<int>(nnucl*nnucl, 0);
 
-  den_mat_dia = NULL;          den_mat_dia_mem_status = 0;
+//  den_mat_dia = NULL;          den_mat_dia_mem_status = 0;
 
 
 
@@ -61,9 +63,12 @@ nHamiltonian::nHamiltonian(int ndia_, int nadi_, int nnucl_){
   dc1_adi = vector<CMATRIX*>(nnucl, NULL);
   dc1_adi_mem_status = vector<int>(nnucl, 0);
 
-  ampl_adi = NULL;             ampl_adi_mem_status = 0; 
+//  ampl_adi = NULL;             ampl_adi_mem_status = 0; 
 
   ham_adi = NULL;              ham_adi_mem_status = 0;
+  nac_adi = NULL;              nac_adi_mem_status = 0;
+  hvib_adi = NULL;             hvib_adi_mem_status = 0;
+
 
   d1ham_adi = vector<CMATRIX*>(nnucl, NULL);
   d1ham_adi_mem_status = vector<int>(nnucl, 0);
@@ -71,7 +76,7 @@ nHamiltonian::nHamiltonian(int ndia_, int nadi_, int nnucl_){
   d2ham_adi = vector<CMATRIX*>(nnucl*nnucl, NULL);
   d2ham_adi_mem_status = vector<int>(nnucl*nnucl, 0);
 
-  den_mat_adi = NULL;          den_mat_adi_mem_status = 0;
+//  den_mat_adi = NULL;          den_mat_adi_mem_status = 0;
 
   basis_transform = NULL;      basis_transform_mem_status = 0;
 }
@@ -85,7 +90,7 @@ nHamiltonian::~nHamiltonian(){
  
   if(ovlp_dia_mem_status == 1){ delete ovlp_dia;  ovlp_dia = NULL; ovlp_dia_mem_status = 0;}
 
-  if(ampl_dia_mem_status == 1){ delete ampl_dia; ampl_dia = NULL; ampl_dia_mem_status = 0;}
+//  if(ampl_dia_mem_status == 1){ delete ampl_dia; ampl_dia = NULL; ampl_dia_mem_status = 0;}
 
   for(n;n<dc1_dia.size();n++){
     if(dc1_dia_mem_status[n] == 1){ delete dc1_dia[n];  dc1_dia[n] = NULL; dc1_dia_mem_status[n] = 0;}
@@ -94,6 +99,8 @@ nHamiltonian::~nHamiltonian(){
   dc1_dia_mem_status.clear();
 
   if(ham_dia_mem_status == 1){ delete ham_dia; ham_dia = NULL; ham_dia_mem_status = 0;}
+  if(nac_dia_mem_status == 1){ delete nac_dia; nac_dia = NULL; nac_dia_mem_status = 0;}
+  if(hvib_dia_mem_status == 1){ delete hvib_dia; hvib_dia = NULL; hvib_dia_mem_status = 0;}
 
   for(n;n<d1ham_dia.size();n++){
     if(d1ham_dia_mem_status[n] == 1){ delete d1ham_dia[n];  d1ham_dia[n] = NULL; d1ham_dia_mem_status[n] = 0;}
@@ -107,11 +114,11 @@ nHamiltonian::~nHamiltonian(){
   d2ham_dia.clear();
   d2ham_dia_mem_status.clear();
 
-  if(den_mat_dia_mem_status == 1){ delete den_mat_dia; den_mat_dia = NULL; den_mat_dia_mem_status = 0;}
+//  if(den_mat_dia_mem_status == 1){ delete den_mat_dia; den_mat_dia = NULL; den_mat_dia_mem_status = 0;}
 
 
 
-  if(ampl_adi_mem_status == 1){ delete ampl_adi; ampl_adi = NULL; ampl_adi_mem_status = 0;}
+//  if(ampl_adi_mem_status == 1){ delete ampl_adi; ampl_adi = NULL; ampl_adi_mem_status = 0;}
 
   for(n;n<dc1_adi.size();n++){
     if(dc1_adi_mem_status[n] == 1){ delete dc1_adi[n];  dc1_adi[n] = NULL; dc1_adi_mem_status[n] = 0;}
@@ -121,6 +128,9 @@ nHamiltonian::~nHamiltonian(){
 
 
   if(ham_adi_mem_status == 1){ delete ham_adi; ham_adi = NULL; ham_adi_mem_status = 0; }
+  if(nac_adi_mem_status == 1){ delete nac_adi; nac_adi = NULL; nac_adi_mem_status = 0;}
+  if(hvib_adi_mem_status == 1){ delete hvib_adi; hvib_adi = NULL; hvib_adi_mem_status = 0;}
+
 
   for(n;n<d1ham_adi.size();n++){
     if(d1ham_adi_mem_status[n] == 1){ delete d1ham_adi[n];  d1ham_adi[n] = NULL; d1ham_adi_mem_status[n] = 0;}
@@ -134,7 +144,7 @@ nHamiltonian::~nHamiltonian(){
   d2ham_adi.clear();
   d2ham_adi_mem_status.clear();
 
-  if(den_mat_adi_mem_status == 1){ delete den_mat_adi; den_mat_adi = NULL; den_mat_adi_mem_status = 0;}
+//  if(den_mat_adi_mem_status == 1){ delete den_mat_adi; den_mat_adi = NULL; den_mat_adi_mem_status = 0;}
 
   if(basis_transform_mem_status == 1){ delete basis_transform; basis_transform = NULL; basis_transform_mem_status = 0;}
 
@@ -150,11 +160,11 @@ nHamiltonian::~nHamiltonian(){
 **************************************************************************/
 
 /************************ AMPLITUDES *****************************/
-
+/*
 void nHamiltonian::set_ampl_dia_by_ref(CMATRIX& ampl_dia_){
-/**
-  Setup of the amplitudes of the diabatic states
-*/
+//
+//  Setup of the amplitudes of the diabatic states
+//
 
 //  set_X1_by_ref(ampl_dia, ampl_dia_, ampl_dia_mem_status, ndia, 1);
 
@@ -170,9 +180,9 @@ void nHamiltonian::set_ampl_dia_by_ref(CMATRIX& ampl_dia_){
 }
 
 void nHamiltonian::set_ampl_dia_by_val(CMATRIX& ampl_dia_){
-/**
-  Setup of the amplitudes of the diabatic states
-*/
+//
+//  Setup of the amplitudes of the diabatic states
+//
 
 //  set_X1_by_val(ampl_dia, ampl_dia_, ampl_dia_mem_status, ndia, 1);
 
@@ -186,7 +196,7 @@ void nHamiltonian::set_ampl_dia_by_val(CMATRIX& ampl_dia_){
   ampl_dia_mem_status = 1; // Allocated internally
 
 }
-
+*/
 
 /************************ OVERLAPS *****************************/
 
@@ -310,6 +320,84 @@ void nHamiltonian::set_ham_dia_by_val(CMATRIX& ham_dia_){
 
 }
 
+
+/************************ NAC *****************************/
+
+void nHamiltonian::set_nac_dia_by_ref(CMATRIX& nac_dia_){
+/**
+  Setup of the nonadiabatic (time-derivative) coupling matrix in the diabatic basis
+*/
+
+  check_mat_dimensions(&nac_dia_, ndia, ndia);
+
+  if(nac_dia_mem_status==0){ nac_dia = &nac_dia_; } /// Not allocated - not a problem
+  else if(nac_dia_mem_status==1){ delete nac_dia; nac_dia = &nac_dia_;   }
+  else if(nac_dia_mem_status==2){ nac_dia = &nac_dia_; }
+
+  nac_dia_mem_status = 2; // Allocated externally
+
+
+}
+
+void nHamiltonian::set_nac_dia_by_val(CMATRIX& nac_dia_){
+/**
+  Setup of the nonadiabatic (time-derivative) coupling matrix in the diabatic basis
+*/
+
+//  set_X1_by_val(ham_dia, ham_dia_, ham_dia_mem_status, ndia, ndia);
+
+  check_mat_dimensions(&nac_dia_,ndia,ndia);
+
+  if(nac_dia_mem_status==0){  nac_dia = new CMATRIX(ndia,ndia);  } 
+  else if(nac_dia_mem_status==1){ check_mat_dimensions(nac_dia,ndia,ndia);  }
+  else if(nac_dia_mem_status==2){  nac_dia = new CMATRIX(ndia,ndia);    }
+
+  *nac_dia = nac_dia_;
+  nac_dia_mem_status = 1; // Allocated internally
+
+
+}
+
+/************************ Vibronic Hamiltonian *****************************/
+
+void nHamiltonian::set_hvib_dia_by_ref(CMATRIX& hvib_dia_){
+/**
+  Setup of the vibronic Hamiltonian matrix in the diabatic basis
+*/
+
+  check_mat_dimensions(&hvib_dia_, ndia, ndia);
+
+  if(hvib_dia_mem_status==0){ hvib_dia = &hvib_dia_; } /// Not allocated - not a problem
+  else if(hvib_dia_mem_status==1){ delete hvib_dia; hvib_dia = &hvib_dia_;   }
+  else if(hvib_dia_mem_status==2){ hvib_dia = &hvib_dia_; }
+
+  hvib_dia_mem_status = 2; // Allocated externally
+
+
+}
+
+void nHamiltonian::set_hvib_dia_by_val(CMATRIX& hvib_dia_){
+/**
+  Setup of the vibronic Hamiltonian matrix in the diabatic basis
+*/
+
+//  set_X1_by_val(ham_dia, ham_dia_, ham_dia_mem_status, ndia, ndia);
+
+  check_mat_dimensions(&hvib_dia_,ndia,ndia);
+
+  if(hvib_dia_mem_status==0){  hvib_dia = new CMATRIX(ndia,ndia);  } 
+  else if(hvib_dia_mem_status==1){ check_mat_dimensions(hvib_dia,ndia,ndia);  }
+  else if(hvib_dia_mem_status==2){  hvib_dia = new CMATRIX(ndia,ndia);    }
+
+  *hvib_dia = hvib_dia_;
+  hvib_dia_mem_status = 1; // Allocated internally
+
+
+}
+
+
+
+
 /************************ 1-ST DERIVATIVES OF HAMILTONIAN *****************************/
 
 void nHamiltonian::set_d1ham_dia_by_ref(vector<CMATRIX>& d1ham_dia_){
@@ -409,11 +497,11 @@ void nHamiltonian::set_d2ham_dia_by_val(vector<CMATRIX>& d2ham_dia_){
 }
 
 /************************ DENSITY MATRIX *****************************/
-
+/*
 void nHamiltonian::set_den_mat_dia_by_ref(CMATRIX& den_mat_dia_){
-/**
-  Setup of the density matrix in the diabatic basis
-*/
+//
+//  Setup of the density matrix in the diabatic basis
+//
 
 //  set_X1_by_ref(den_mat_dia, den_mat_dia_, den_mat_dia_mem_status, ndia, ndia);
 
@@ -430,9 +518,9 @@ void nHamiltonian::set_den_mat_dia_by_ref(CMATRIX& den_mat_dia_){
 }
 
 void nHamiltonian::set_den_mat_dia_by_val(CMATRIX& den_mat_dia_){
-/**
-  Setup of the density matrix in the diabatic basis
-*/
+//
+//  Setup of the density matrix in the diabatic basis
+//
 
 //  set_X1_by_val(den_mat_dia, den_mat_dia_, den_mat_dia_mem_status, ndia, ndia);
   check_mat_dimensions(&den_mat_dia_,ndia,ndia);
@@ -445,7 +533,7 @@ void nHamiltonian::set_den_mat_dia_by_val(CMATRIX& den_mat_dia_){
   den_mat_dia_mem_status = 1; // Allocated internally
 
 }
-
+*/
 
 
 /*************************************************************************
@@ -455,11 +543,11 @@ void nHamiltonian::set_den_mat_dia_by_val(CMATRIX& den_mat_dia_){
 **************************************************************************/
 
 /************************ AMPLITUDES *****************************/
-
+/*
 void nHamiltonian::set_ampl_adi_by_ref(CMATRIX& ampl_adi_){
-/**
-  Setup of the amplitudes of the adiabatic states
-*/
+//
+//  Setup of the amplitudes of the adiabatic states
+//
 
 //  set_X1_by_ref(ampl_adi, ampl_adi_, ampl_adi_mem_status, nadi, 1);
 
@@ -475,9 +563,9 @@ void nHamiltonian::set_ampl_adi_by_ref(CMATRIX& ampl_adi_){
 }
 
 void nHamiltonian::set_ampl_adi_by_val(CMATRIX& ampl_adi_){
-/**
-  Setup of the amplitudes of the adiabatic states
-*/
+//
+//  Setup of the amplitudes of the adiabatic states
+//
 
 //  set_X1_by_val(ampl_adi, ampl_adi_, ampl_adi_mem_status, nadi, 1);
 
@@ -491,7 +579,7 @@ void nHamiltonian::set_ampl_adi_by_val(CMATRIX& ampl_adi_){
   ampl_adi_mem_status = 1; // Allocated internally
 
 }
-
+*/
 
 
 void nHamiltonian::set_dc1_adi_by_ref(vector<CMATRIX>& dc1_adi_){
@@ -575,6 +663,77 @@ void nHamiltonian::set_ham_adi_by_val(CMATRIX& ham_adi_){
 
   *ham_adi = ham_adi_;
   ham_adi_mem_status = 1; // Allocated internally
+
+}
+
+
+/************************ NAC *****************************/
+
+void nHamiltonian::set_nac_adi_by_ref(CMATRIX& nac_adi_){
+/**
+  Setup of the nonadiabatic (time-derivative) coupling matrix in the adiabatic basis
+*/
+
+  check_mat_dimensions(&nac_adi_, nadi, nadi);
+
+  if(nac_adi_mem_status==0){ nac_adi = &nac_adi_; } /// Not allocated - not a problem
+  else if(nac_adi_mem_status==1){ delete nac_adi; nac_adi = &nac_adi_;   }
+  else if(nac_adi_mem_status==2){ nac_adi = &nac_adi_; }
+
+  nac_adi_mem_status = 2; // Allocated externally
+
+
+}
+
+void nHamiltonian::set_nac_adi_by_val(CMATRIX& nac_adi_){
+/**
+  Setup of the nonadiabatic (time-derivative) coupling matrix in the adiabatic basis
+*/
+
+  check_mat_dimensions(&nac_adi_,nadi,nadi);
+
+  if(nac_adi_mem_status==0){  nac_adi = new CMATRIX(nadi,nadi);  } 
+  else if(nac_adi_mem_status==1){ check_mat_dimensions(nac_adi,nadi,nadi);  }
+  else if(nac_adi_mem_status==2){  nac_adi = new CMATRIX(nadi,nadi);    }
+
+  *nac_adi = nac_adi_;
+  nac_adi_mem_status = 1; // Allocated internally
+
+
+}
+
+/************************ Vibronic Hamiltonian *****************************/
+
+void nHamiltonian::set_hvib_adi_by_ref(CMATRIX& hvib_adi_){
+/**
+  Setup of the vibronic Hamiltonian matrix in the adiabatic basis
+*/
+
+  check_mat_dimensions(&hvib_adi_, nadi, nadi);
+
+  if(hvib_adi_mem_status==0){ hvib_adi = &hvib_adi_; } /// Not allocated - not a problem
+  else if(hvib_adi_mem_status==1){ delete hvib_adi; hvib_adi = &hvib_adi_;   }
+  else if(hvib_adi_mem_status==2){ hvib_adi = &hvib_adi_; }
+
+  hvib_adi_mem_status = 2; // Allocated externally
+
+
+}
+
+void nHamiltonian::set_hvib_adi_by_val(CMATRIX& hvib_adi_){
+/**
+  Setup of the vibronic Hamiltonian matrix in the adiabatic basis
+*/
+
+  check_mat_dimensions(&hvib_adi_,nadi,nadi);
+
+  if(hvib_adi_mem_status==0){  hvib_adi = new CMATRIX(nadi,nadi);  } 
+  else if(hvib_adi_mem_status==1){ check_mat_dimensions(hvib_adi,nadi,nadi);  }
+  else if(hvib_adi_mem_status==2){  hvib_adi = new CMATRIX(nadi,nadi);    }
+
+  *hvib_adi = hvib_adi_;
+  hvib_adi_mem_status = 1; // Allocated internally
+
 
 }
 
@@ -680,11 +839,11 @@ void nHamiltonian::set_d2ham_adi_by_val(vector<CMATRIX>& d2ham_adi_){
 }
 
 
-
+/*
 void nHamiltonian::set_den_mat_adi_by_ref(CMATRIX& den_mat_adi_){
-/**
-  Setup of the density matrix in the adiabatic basis
-*/
+//
+//  Setup of the density matrix in the adiabatic basis
+//
 
   //set_X1_by_ref(den_mat_adi, den_mat_adi_, den_mat_adi_mem_status, nadi, nadi);
   check_mat_dimensions(&den_mat_adi_,nadi,nadi);
@@ -698,9 +857,9 @@ void nHamiltonian::set_den_mat_adi_by_ref(CMATRIX& den_mat_adi_){
 }
 
 void nHamiltonian::set_den_mat_adi_by_val(CMATRIX& den_mat_adi_){
-/**
-  Setup of the density matrix in the adiabatic basis
-*/
+//
+//  Setup of the density matrix in the adiabatic basis
+//
 
 //  set_X1_by_val(den_mat_adi, den_mat_adi_, den_mat_adi_mem_status, nadi, nadi);
   check_mat_dimensions(&den_mat_adi_,nadi,nadi);
@@ -714,7 +873,7 @@ void nHamiltonian::set_den_mat_adi_by_val(CMATRIX& den_mat_adi_){
 
 }
 
-
+*/
 
 void nHamiltonian::set_basis_transform_by_ref(CMATRIX& basis_transform_){
 /**
@@ -757,11 +916,11 @@ void nHamiltonian::set_basis_transform_by_val(CMATRIX& basis_transform_){
           GETTERS  :         DIABATIC PARAMETERS
 
 **************************************************************************/
-
+/*
 CMATRIX nHamiltonian::get_ampl_dia(){ 
-/**
-  Return the amplitudes of the diabatic basis functions in the overall wavefunction
-*/
+//
+//  Return the amplitudes of the diabatic basis functions in the overall wavefunction
+//
   if(ampl_dia_mem_status==0){
     cout<<"Error in get_ampl_dia: The matrix is not allocated anywhere\nExiting...\n";
     exit(0);
@@ -769,7 +928,7 @@ CMATRIX nHamiltonian::get_ampl_dia(){
 
   return *ampl_dia; 
 }
-
+*/
 
 CMATRIX nHamiltonian::get_ovlp_dia(){ 
 /**
@@ -807,6 +966,32 @@ CMATRIX nHamiltonian::get_ham_dia(){
   return *ham_dia; 
 }
 
+CMATRIX nHamiltonian::get_nac_dia(){ 
+/**
+  Return the nonadiabatic (time-derivative) coupling matrix in the diabatic basis
+*/
+  if(nac_dia_mem_status==0){
+    cout<<"Error in get_nac_dia: The matrix is not allocated anywhere\nExiting...\n";
+    exit(0);
+  }
+
+  return *nac_dia; 
+}
+
+CMATRIX nHamiltonian::get_hvib_dia(){ 
+/**
+  Return the vibronic Hamiltonian matrix in the diabatic basis
+*/
+  if(hvib_dia_mem_status==0){
+    cout<<"Error in get_hvib_dia: The matrix is not allocated anywhere\nExiting...\n";
+    exit(0);
+  }
+
+  return *hvib_dia; 
+}
+
+
+
 CMATRIX nHamiltonian::get_d1ham_dia(int i){ 
 /**
   Return the 1-st derivative of the Hamiltonian matrix in the diabatic basis w.r.t. nuclear DOFs
@@ -843,10 +1028,11 @@ CMATRIX nHamiltonian::get_d2ham_dia(int i,int j){
   return *d2ham_dia[i*nnucl+j]; 
 }
 
+/*
 CMATRIX nHamiltonian::get_den_mat_dia(){ 
-/**
-  Return the density matrix in the diabatic basis 
-*/
+//
+//  Return the density matrix in the diabatic basis 
+//
   if(den_mat_dia_mem_status==0){
     cout<<"Error in get_den_mat_dia: The matrix is not allocated anywhere\nExiting...\n";
     exit(0);
@@ -854,18 +1040,18 @@ CMATRIX nHamiltonian::get_den_mat_dia(){
 
   return *den_mat_dia; 
 }
-
+*/
 
 /*************************************************************************
 
           GETTERS  :         ADIABATIC PARAMETERS
 
 **************************************************************************/
-
+/*
 CMATRIX nHamiltonian::get_ampl_adi(){ 
-/**
-  Return the amplitudes of the adiabatic basis functions in the overall wavefunction
-*/
+//
+//  Return the amplitudes of the adiabatic basis functions in the overall wavefunction
+//
   if(ampl_adi_mem_status==0){
     cout<<"Error in get_ampl_adi: The matrix is not allocated anywhere\nExiting...\n";
     exit(0);
@@ -873,7 +1059,7 @@ CMATRIX nHamiltonian::get_ampl_adi(){
 
   return *ampl_adi; 
 }
-
+*/
 
 CMATRIX nHamiltonian::get_dc1_adi(int i){ 
 /**
@@ -898,6 +1084,32 @@ CMATRIX nHamiltonian::get_ham_adi(){
 
   return *ham_adi; 
 }
+
+CMATRIX nHamiltonian::get_nac_adi(){ 
+/**
+  Return the nonadiabatic (time-derivative) coupling matrix in the adiabatic basis
+*/
+  if(nac_adi_mem_status==0){
+    cout<<"Error in get_nac_adi: The matrix is not allocated anywhere\nExiting...\n";
+    exit(0);
+  }
+
+  return *nac_adi; 
+}
+
+CMATRIX nHamiltonian::get_hvib_adi(){ 
+/**
+  Return the vibronic Hamiltonian matrix in the adiabatic basis
+*/
+  if(hvib_adi_mem_status==0){
+    cout<<"Error in get_hvib_adi: The matrix is not allocated anywhere\nExiting...\n";
+    exit(0);
+  }
+
+  return *hvib_adi; 
+}
+
+
 
 CMATRIX nHamiltonian::get_d1ham_adi(int i){ 
 /**
@@ -935,10 +1147,11 @@ CMATRIX nHamiltonian::get_d2ham_adi(int i,int j){
   return *d2ham_adi[i*nnucl+j]; 
 }
 
+/*
 CMATRIX nHamiltonian::get_den_mat_adi(){ 
-/**
-  Return the density matrix in the adiabatic basis 
-*/
+//
+//  Return the density matrix in the adiabatic basis 
+//
   if(den_mat_adi_mem_status==0){
     cout<<"Error in get_den_mat_adi: The matrix is not allocated anywhere\nExiting...\n";
     exit(0);
@@ -946,6 +1159,7 @@ CMATRIX nHamiltonian::get_den_mat_adi(){
 
   return *den_mat_adi; 
 }
+*/
 
 CMATRIX nHamiltonian::get_basis_transform(){ 
 /**

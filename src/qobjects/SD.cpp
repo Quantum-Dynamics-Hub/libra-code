@@ -20,6 +20,7 @@
 namespace liblibra{
 
 using namespace liblinalg;
+using namespace libmeigen;
 using namespace libspecialfunctions;
 
 
@@ -203,6 +204,61 @@ SD::~SD(){
 
 
 }
+
+
+
+
+complex<double> overlap_sd(CMATRIX& Smo, vector<int>& SD1, vector<int>& SD2){
+/**
+##
+# \brief Compute the overlap of the normalized determinants SD1 and SD2
+#
+# \param[in] Smo A matrix of spin-orbital overlaps: Smo_ij = <psi_i(t)|psi_j(t')> 
+# \param[in] SD1 represents a determinant SD1 = 1/sqrt(N!) * |psi_i1(1) psi_i2(2) psi_i3(3) ... psi_iN(N)| - at time t
+# \param[in] SD2 represents a determinant SD2 = 1/sqrt(N!) * |psi_i1(1) psi_i2(2) psi_i3(3) ... psi_iN(N)| - at time t'
+# 
+#  Note #1: the psi_ functions in the two sets are not orthogonal to each other, so
+#  Smo_ij is not delta_ij  !!!
+#
+#  Note #2: the psi_ functions are the spin-orbitals, not just the spatial components
+#  they are enumerated by integers [0, 1, 2, etc.] the meaning of these numbers are to be 
+#  defined by the one computing the Smo matrix, but the indices should be consistent with
+#  the one used in Smo
+#
+*/
+
+    if(SD1.size() != SD2.size()){
+      std::cout<<"Can not compute an overlap of Slater determinants of different size\n";
+      exit(0);
+    }
+
+    int sz = SD1.size();
+
+    CMATRIX smo(sz, sz);
+    pop_submatrix(Smo, smo, SD1, SD2);
+    
+    complex<double> ovlp = det(smo); 
+
+    return ovlp;  // this is a complex number, in general
+
+}
+
+CMATRIX overlap_sd(CMATRIX& Smo, vector< vector<int> >& SD_basis){
+
+    int bas_sz = SD_basis.size();
+
+    CMATRIX res(bas_sz, bas_sz);
+    for(int i=0;i<bas_sz;i++){
+      for(int j=0;j<bas_sz;j++){
+
+        res.set(i,j, overlap_sd(Smo, SD_basis[i], SD_basis[j]));
+
+      }// for j
+    }// for i
+
+    return res;
+}
+
 
 
 }/// libqobjects

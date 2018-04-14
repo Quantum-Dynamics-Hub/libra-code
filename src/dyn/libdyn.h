@@ -20,6 +20,7 @@
 
 // Dynamics classes
 #include "nuclear/libnuclear.h"
+#include "Dynamics.h"
 //#include "../dyn_rigidbody/librigidbody.h"
 #include "electronic/libelectronic.h"
 #include "thermostat/libthermostat.h"

@@ -423,6 +423,13 @@ void export_qobjects_objects(){
 
   ;
 
+  complex<double> (*expt_overlap_sd_v1)(CMATRIX& Smo, vector<int>& SD1, vector<int>& SD2) = &overlap_sd;
+  CMATRIX (*expt_overlap_sd_v2)(CMATRIX& Smo, vector< vector<int> >& SD_basis) = &overlap_sd;
+
+  def("overlap_sd", expt_overlap_sd_v1);
+  def("overlap_sd", expt_overlap_sd_v2);
+ 
+
   class_< SDList >("SDList")
       .def(vector_indexing_suite< SDList >())
   ;

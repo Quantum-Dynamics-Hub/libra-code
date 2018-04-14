@@ -30,7 +30,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 import acf
 
 
-def show_matrix_splot(X, filename):
+def show_matrix_splot(X, filename, set_diag_to_zero=0):
     """
     This function prints the matrix in a file in the format
     recognized by the gnuplot's splot function (2D surfaces and maps)
@@ -45,8 +45,9 @@ def show_matrix_splot(X, filename):
     for i in xrange(nrow):
         for j in xrange(ncol):
             val = X.get(i,j)
-            if i==j:
-                val = 0.0
+            if set_diag_to_zero==1:
+                if i==j:
+                    val = 0.0
             line = line + "%4i %4i %8.5f \n" % (i, j, val)
         line = line + "\n"
 

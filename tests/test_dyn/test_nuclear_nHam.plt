@@ -32,41 +32,28 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 
 
 
-
 set xlabel "t" offset 0.0, 0.5
 set ylabel "Energy" offset 1.5, 0.0 
-set xrange [0:5000]
+set xrange [0:1000]
 set xtics 1000
-set yrange [-0.06:0.16]
-set ytics 0.04
-
-set output "_ehrenfest_en.png"
-plot "_ehrenfest_extern.txt" using 2:8   w l  ls 11  lw 5  t "Ekin",\
-     "_ehrenfest_extern.txt" using 2:10  w l  ls 21  lw 5  t "Epot",\
-     "_ehrenfest_extern.txt" using 2:12  w l  ls 32  lw 5  t "Etot"
+#set yrange [-1:1]
+set ytics 0.2
+set output "_nucl_2.1_en.png"
+plot "_nucl_nHam_2.1.txt" using 2:8   w l  ls 11  lw 5  t "Ekin",\
+     "_nucl_nHam_2.1.txt" using 2:10  w l  ls 21  lw 5  t "Epot",\
+     "_nucl_nHam_2.1.txt" using 2:12  w l  ls 32  lw 5  t "Etot"
 
 
 set xlabel "q" offset 0.0, 0.5
 set ylabel "p" offset 1.5, 0.0 
-set xrange [-10:35]
-set xtics 5
-set yrange [16:24]
-set ytics 2
+set xrange [-3:3]
+set xtics 1
+set yrange [-25:25]
+set ytics 10
 
-set output "_ehrenfest_phase.png"
-plot "_ehrenfest_extern.txt" using 4:6  w l  ls 11  lw 5  t "Phase space"
+set output "_nucl_nHam_2.1_phase.png"
+plot "_nucl_nHam_2.1.txt" using 4:6  w l  ls 11  lw 5  notitle "Phase space"
 
 
-set xlabel "t" offset 0.0, 0.5
-set ylabel "Density matrix" offset 1.5, 0.0 
-set xrange [0:5000]
-set xtics 1000
-set yrange [-0.6:1.0]
-set ytics 0.4
-
-set output "_ehrenfest_pop.png"
-plot "_ehrenfest_extern.txt" using 2:14  w l  ls 11  lw 5  t "|c0|^2",\
-     "_ehrenfest_extern.txt" using 2:16  w l  ls 21  lw 5  t "|c1|^2",\
-     "_ehrenfest_extern.txt" using 2:18  w l  ls 32  lw 5  t "Re(c01)"
 
 

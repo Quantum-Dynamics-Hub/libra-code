@@ -35,14 +35,14 @@ LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 #
 
 MESSAGE("Looking for Boost libraries...")
-FIND_PACKAGE(Boost 1.60.0 REQUIRED)
+FIND_PACKAGE(Boost REQUIRED)
 IF(Boost_FOUND)
   MESSAGE("Success!")
   INCLUDE_DIRECTORIES("${Boost_INCLUDE_DIRS}")
   SET(Boost_USE_STATIC_LIBS OFF)
   SET(Boost_USE_MULTITHREADED OFF)
   SET(Boost_USE_STATIC_RUNTIME OFF)
-  FIND_PACKAGE(Boost 1.60.0 COMPONENTS python regex) # it seems that it is important to find sub-packages too!!!
+  FIND_PACKAGE(Boost COMPONENTS python regex) # it seems that it is important to find sub-packages too!!!
 ELSEIF(NOT Boost_FOUND)
   MESSAGE(FATAL_ERROR "Unable to find correct Boost version. Did you set BOOST_ROOT?")
 ENDIF()

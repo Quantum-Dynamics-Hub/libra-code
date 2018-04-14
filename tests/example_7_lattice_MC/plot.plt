@@ -6,11 +6,6 @@ set rmargin at screen 0.95
 set bmargin at screen 0.15
 set tmargin at screen 0.95
 
-#set xtics 1000.0
-#set xrange [0.0:4.5]
-#set yrange [-40:40]
-#set key spacing 1.0 font ",24"
-#set key top horizontal
 
 # color definitions
 set style line 11 lc rgb '#8b1a0e' pt 1 ps 1 lt 1 lw 5 # --- red
@@ -30,30 +25,15 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 
 
 
+set xlabel "Time step" offset 0.0, 0.5
+set ylabel "Energy, a.u." offset 0.0, 0.0
+set xtics 10.0
+set xrange [0.0:100]
+#set yrange [-40:40]
+set key spacing 1.0 font ",24"
+set key top horizontal
 
 
-set xlabel "t" offset 0.0, 0.5
-set ylabel "Energy" offset 1.5, 0.0 
-set xrange [0:5000]
-set xtics 1000
-set yrange [-0.06:0.08]
-set ytics 0.02
-set output "_nucl_2.1_en.png"
-plot "_nucl_2.1.txt" using 2:8   w l  ls 11  lw 5  t "Ekin",\
-     "_nucl_2.1.txt" using 2:10  w l  ls 21  lw 5  t "Epot",\
-     "_nucl_2.1.txt" using 2:12  w l  ls 32  lw 5  t "Etot"
-
-
-set xlabel "q" offset 0.0, 0.5
-set ylabel "p" offset 1.5, 0.0 
-set xrange [-10:20]
-set xtics 5
-set yrange [9:18]
-set ytics 3
-
-set output "_nucl_2.1_phase.png"
-plot "_nucl_2.1.txt" using 4:6  w l  ls 11  lw 5  notitle "Phase space"
-
-
-
+set output "energy.png"
+plot "energy.txt" using 1:2 w l ls 11 lw 5 t "Energy"
 

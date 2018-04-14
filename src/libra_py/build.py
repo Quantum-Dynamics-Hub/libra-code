@@ -57,6 +57,42 @@ def read_xyz(filename):
 
     return L, coords
 
+def read_xyz_crystal(filename, a,b,c):
+    """
+    a,b,c - unit cell vectors (in Bohrs)
+    """
+
+    M = MATRIX(3,3)
+    M.init(a,b,c)
+    M = M.T()
+
+    f = open(filename,"r")
+    A = f.readlines()
+    f.close()
+
+    tmp = A[0].split()
+    Natoms = int(float(tmp[0]))
+
+    L = [] 
+    coords = []
+
+    for a in A[2:]:
+        tmp = a.split()
+        if len(tmp)==4:
+            x = float(tmp[1]) 
+            y = float(tmp[2])
+            z = float(tmp[3])
+             
+            # Now apply PBC
+            R = M * VECTOR(x,y,z) # * Angst_to_Bohr
+
+            L.append(tmp[0])
+            coords.append(R)
+
+    return L, coords
+
+
+
 
 
 def generate_replicas_xyz2(L, R, tv1, tv2, tv3, Nx, Ny, Nz):
@@ -177,20 +213,31 @@ def crop_sphere_xyz3(L, R, Rcut, pairs, new_L):
 
 
     # Now add a number of atoms that are ourside the sphere
+    added = [] # indices of the added atoms - we need them to avoid a multiple placing
     for it in pairs:
-        if it[0] in indx:
-            if it[1] in indx:
-                pass
-            else:
-               coords.append(R[it[1]])
-               lab.append(new_L[ L[it[0]] ])
+           
+        if (it[0] in indx and it[1] in indx):  # both atoms are within the sphere
+            pass
+        elif (it[0] in indx and it[1] not in indx):  # it[0] is inside, it[1] is outside
+            if it[1] not in added:
 
-        if it[1] in indx:
-            if it[0] in indx:
-                pass
-            else:
-               coords.append(R[it[0]])
-               lab.append(new_L[ L[it[1]] ])
+                new_lab = new_L[ L[it[0]] ]  # new label
+                if new_lab == "none":
+                    pass
+                else:
+                    coords.append(R[it[1]])
+                    lab.append(new_lab)            
+                    added.append(it[1])
+
+        elif (it[1] in indx and it[0] not in indx):  # it[1] is inside, it[0] is outside
+            if it[0] not in added:
+                new_lab = new_L[ L[it[1]] ]  # new label
+                if new_lab == "none":
+                    pass
+                else:
+                    coords.append(R[it[0]])
+                    lab.append(new_lab)
+                    added.append(it[0])
 
 
     return lab, coords

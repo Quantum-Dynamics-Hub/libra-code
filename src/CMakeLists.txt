@@ -78,6 +78,11 @@ ADD_SUBDIRECTORY("chemobjects")
 MESSAGE("Going into subdirectory cell...")
 ADD_SUBDIRECTORY("cell")
 
+
+MESSAGE("Going into subdirectory opt...")
+ADD_SUBDIRECTORY("opt")
+
+
 MESSAGE("Going into subdirectory pot...")
 ADD_SUBDIRECTORY("pot")
 
@@ -101,6 +106,10 @@ ADD_SUBDIRECTORY("basis_setups")
 
 MESSAGE("Going into subdirectory hamiltonian...")
 ADD_SUBDIRECTORY("hamiltonian")
+
+
+MESSAGE("Going into subdirectory montecarlo...")
+ADD_SUBDIRECTORY("montecarlo")
 
 
 MESSAGE("Going into subdirectory ivr...")
@@ -143,6 +152,7 @@ TARGET_LINK_LIBRARIES(libra_core
                       qchem_tools_stat
                       scripts_stat
                       converters_stat
+                      montecarlo_stat
                       ivr_stat
                       dyn_stat
                       common_types_stat                    
@@ -152,6 +162,7 @@ TARGET_LINK_LIBRARIES(libra_core
                       hamiltonian_stat
                       util_stat
                       forcefield_stat
+                      opt_stat
                       pot_stat
                       cell_stat
                       chemobjects_stat
@@ -168,6 +179,7 @@ TARGET_LINK_LIBRARIES(libra_core_stat
                       qchem_tools_stat
                       scripts_stat
                       converters_stat
+                      montecarlo_stat
                       ivr_stat
                       dyn_stat
                       common_types_stat
@@ -177,6 +189,7 @@ TARGET_LINK_LIBRARIES(libra_core_stat
                       hamiltonian_stat
                       util_stat
                       forcefield_stat
+                      opt_stat
                       pot_stat
                       cell_stat
                       chemobjects_stat
@@ -194,5 +207,10 @@ add_custom_target(copy-libra-py ALL
     COMMAND cmake -E copy_directory ${CMAKE_SOURCE_DIR}/src/libra_py ${CMAKE_BINARY_DIR}/src/libra_py
 )
 
-#    COMMAND cmake -E copy ${CMAKE_SOURCE_DIR}/src/__init__.py ${CMAKE_BINARY_DIR}/src/__init__.py
+add_custom_target(copy-libra-params ALL
+    COMMAND cmake -E copy_directory ${CMAKE_SOURCE_DIR}/src/libra_params ${CMAKE_BINARY_DIR}/src/libra_params
+)
+
+
+
 

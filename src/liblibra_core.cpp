@@ -64,6 +64,9 @@ using namespace libscripts;
 using namespace libqchem_tools;
 using namespace libsolvers;
 
+using namespace libmontecarlo;
+using namespace libopt;
+
 
 void export_libra_core_objects(){
 /** 
@@ -117,6 +120,10 @@ void export_libra_core_objects(){
   export_qchem_tools_objects();
 
   export_solvers_objects();
+
+
+  export_montecarlo_objects();
+  export_opt_objects();
 
 
 }// export_libra_core_objects()
