@@ -257,12 +257,12 @@ void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr){
 
 }
 
-void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, VECTOR center){
+void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, int center){
 /**
   \param[in] degree_amount The magnitude of rotation, in degrees
   \param[in] direction The vector definining the axis of rotation. The magnitude of this vector does not matter.
   \param[in] Gr The ID (not index!) of the group/fragment to be rotated
-  \param[in] center The vector defining the center of the rotating coordinate system
+  \param[in] center The atom in fragment you wish to rotate around
 
   Simplest manipulation
   Rotates the fragment with the fragment ID "int Gr" on amount of "double amount"
@@ -271,7 +271,7 @@ void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, VECT
 
   int v = get_fragment_index_by_fragment_id(Gr);
 
-  VECTOR dir; dir = center - Fragments[v].Group_RB.rb_cm;
+  VECTOR dir;   dir = Atoms[center].Atom_RB.rb_cm - Fragments[v].Group_RB.rb_cm;
   double amount = dir.length();
 
   // Translate the fragment's center of mass to the "center" point
@@ -279,6 +279,10 @@ void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, VECT
 
   // Rotate the fragment around new center of mass
   ROTATE_FRAGMENT(degree_amount, direction, Gr);
+
+  // Update the direction of the vecotr connecting the center of mass and the
+  // fixed atom
+  dir = Atoms[center].Atom_RB.rb_cm - Fragments[v].Group_RB.rb_cm;
 
   // Translate the fragment's center of mass back to the original position
   TRANSLATE_FRAGMENT(-amount, dir,Gr);
