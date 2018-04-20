@@ -229,7 +229,8 @@ void System::TRANSLATE_MOLECULE(double amount,VECTOR direction,int Mol){
 void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr){
 /**
   \param[in] degree_amount The magnitude of rotation, in degrees
-  \param[in] direction The vector definining the axis of rotation. The magnitude of this vector does not matter.
+  \param[in] direction The vector definining the axis of rotation. in the external coordinate system
+             (moving or lab frame). The magnitude of this vector does not matter.
   \param[in] Gr The ID (not index!) of the group/fragment to be rotated
 
   Simplest manipulation
@@ -248,8 +249,8 @@ void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr){
 
   int v = get_fragment_index_by_fragment_id(Gr);
   if(v!=-1){
-    Fragments[v].Group_RB.Rotate(R);
-    rotate_atoms_of_fragment(v,R);
+    Fragments[v].Group_RB.Rotate_I(degree_amount, direction);
+//    rotate_atoms_of_fragment(v,R);
     update_atoms_for_fragment(v);
   }
   // Molecule orientation does not change because the center of mass of the
@@ -260,13 +261,14 @@ void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr){
 void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, VECTOR center){
 /**
   \param[in] degree_amount The magnitude of rotation, in degrees
-  \param[in] direction The vector definining the axis of rotation. The magnitude of this vector does not matter.
+  \param[in] direction The vector definining the axis of rotation in the external coordinate system
+             (moving or lab frame).The magnitude of this vector does not matter.
   \param[in] Gr The ID (not index!) of the group/fragment to be rotated
   \param[in] center The vector defining the center of the rotating coordinate system
 
   Simplest manipulation
   Rotates the fragment with the fragment ID "int Gr" on amount of "double amount"
-  around the axis given by "VECTOR direction" around the given center
+  around the axis given by "VECTOR direction" around the center given by "center"
 */
 
   int v = get_fragment_index_by_fragment_id(Gr);
@@ -284,6 +286,38 @@ void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, VECT
   TRANSLATE_FRAGMENT(-amount, dir,Gr);
 
 }
+
+void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, int center_indx){
+/**
+  \param[in] degree_amount The magnitude of rotation, in degrees
+  \param[in] direction The vector definining the axis of rotation. The magnitude of this vector does not matter.
+  \param[in] Gr The ID (not index!) of the group/fragment to be rotated
+  \param[in] center The index of the atom around which the rotation occurs 
+
+  Simplest manipulation
+  Rotates the fragment with the fragment ID "int Gr" on amount of "double amount"
+  around the axis given by "VECTOR direction" around the given center
+*/
+
+  int v = get_fragment_index_by_fragment_id(Gr);
+
+  VECTOR dir; dir = Atoms[center_indx].Atom_RB.rb_cm - Fragments[v].Group_RB.rb_cm;
+  double amount = dir.length();
+
+  // Translate the fragment's center of mass to the "center" point
+  TRANSLATE_FRAGMENT(amount, dir,Gr);
+
+  // Rotate the fragment around new center of mass
+  ROTATE_FRAGMENT(degree_amount, direction, Gr);
+
+  dir = Atoms[center_indx].Atom_RB.rb_cm - Fragments[v].Group_RB.rb_cm;
+
+  // Translate the fragment's center of mass back to the original position
+  TRANSLATE_FRAGMENT(-amount, dir,Gr);
+
+}
+
+
 
 
 void System::ROTATE_MOLECULE(double degree_amount, VECTOR direction,int Mol){
@@ -308,7 +342,12 @@ void System::ROTATE_MOLECULE(double degree_amount, VECTOR direction,int Mol){
 
   int v = get_molecule_index_by_molecule_id(Mol);
   if(v!=-1){
-    Molecules[v].Molecule_RB.Rotate(R);
+    Molecules[v].Molecule_RB.Rotate_I(degree_amount, direction);
+
+    cout<<"We also need to update the positions of the fragments' positions and orientations. \
+           Since this is not yet implemented, we just exit for now. Don't use this function yet. \n";
+    exit(0);
+
     rotate_atoms_of_molecule(v,R);
   }
 

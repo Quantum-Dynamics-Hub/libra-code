@@ -61,12 +61,13 @@ void export_RigidBody_objects(){
 
   void (RigidBody::*Rotate1)(MATRIX3x3&)       = &RigidBody::Rotate;
   void (RigidBody::*Rotate2)(QUATERNION&)      = &RigidBody::Rotate;
-  void (RigidBody::*Rotate3)(double,VECTOR&)   = &RigidBody::Rotate;
+
+  void (RigidBody::*expt_Rotate_I_v1)(double,VECTOR&)   = &RigidBody::Rotate_I;
+  void (RigidBody::*expt_Rotate_e_v1)(double,VECTOR&)   = &RigidBody::Rotate_e;
+
 
   void (RigidBody::*expt_propagate_dlml_v1)(double t,double&) = &RigidBody::propagate_dlml;
   double (RigidBody::*expt_propagate_dlml_v2)(double t) = &RigidBody::propagate_dlml;
-
-
 
 
 
@@ -167,7 +168,17 @@ void export_RigidBody_objects(){
       .def("Rotate_e_z",&RigidBody::Rotate_e_z,"rotate arond z axis in rigid body coordinate system")
       .def("Rotate",Rotate1,"arbitrary rotation of RB, rotation is defined by the transformation matrix")
       .def("Rotate",Rotate2,"arbitrary rotation of RB, rotation is defined by the quaternion")
-      .def("Rotate",Rotate3,"arbitrary rotation of RB, rotation is defined by the vector along which the rotation to occur and the magnitude of the rotation")
+
+
+
+      .def("Rotate_I",expt_Rotate_I_v1, 
+           "rotate the RB around the specified vector in the external (moving) frame \
+            for a magnitude defined by the provided argument (in radians)"
+          )
+      .def("Rotate_e",expt_Rotate_e_v1,
+           "rotate the RB around the specified vector in the internal (body) frame \
+            for a magnitude defined by the provided argument (in radians)"
+          )
 
 
       .def("initialize_exact_rb",&RigidBody::initialize_exact_rb,"initialization of the R van Zon integrator")

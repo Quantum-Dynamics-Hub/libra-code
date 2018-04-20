@@ -39,8 +39,8 @@ class RigidBody{
   See reference  "Rigid_Body_Mechancs"
   Defenitions of coordinate system names.   
    i - laboratory coordinate system          
-   I - movable    coordinate system          
-   e - internal   coordinate system          
+   I - movable    coordinate system (parallel to i)
+   e - internal   coordinate system (rigidly connected with the body)
 
 */
 
@@ -246,12 +246,17 @@ public:
   void Rotate_I_x(double);
   void Rotate_I_y(double);
   void Rotate_I_z(double);
+
   void Rotate_e_x(double);
   void Rotate_e_y(double);
   void Rotate_e_z(double);
+
   void Rotate(MATRIX3x3&);
   void Rotate(QUATERNION&);
-  void Rotate(double,VECTOR&);
+
+  void Rotate_e(double,VECTOR&);
+  void Rotate_I(double,VECTOR&);
+
 
   // Integrators
   // Defined in RigidBody_methods5_*.cpp
