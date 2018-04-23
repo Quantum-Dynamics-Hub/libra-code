@@ -52,7 +52,7 @@ class tmp:
     pass    
 
 
-def model1(q, params):
+def model1(q, params, full_id):
     """
               k*x^2         V
     Hdia =       V        k*(x-x0)^2 + D
@@ -62,6 +62,7 @@ def model1(q, params):
     Ddia  = 0.0
 
     """
+
 
     Hdia = CMATRIX(2,2)
     Sdia = CMATRIX(2,2)
@@ -105,7 +106,7 @@ def model1(q, params):
 
     
 
-def model2(q, params):
+def model2(q, params, full_id):
     """
               k*x^2         V
     Hdia =       V        k*(x-x0)^2 + D
@@ -152,7 +153,7 @@ def model2(q, params):
 
 
 
-def model3(q, params):
+def model3(q, params, full_id):
     """
               k*x^2         V
     Hdia =       V        k*(x-x0)^2 + D
@@ -202,7 +203,7 @@ def model3(q, params):
     return obj
     
 
-def model4(q, params):
+def model4(q, params, full_id):
     """
               k*cos(w*x)         V
     Hdia =       V        k*sin(w*x) + D
@@ -250,19 +251,19 @@ def model4(q, params):
 
 
 
-def compute_model(q, params):
+def compute_model(q, params, full_id):
 
     model = params["model"]
     res = None
 
     if model==1:
-        res = model1(q, params)
+        res = model1(q, params, full_id)
     elif model==2:
-        res = model2(q, params)
+        res = model2(q, params, full_id)
     elif model==3:
-        res = model3(q, params)
+        res = model3(q, params, full_id)
     elif model==4:
-        res = model4(q, params)
+        res = model4(q, params, full_id)
 
     res.rep = params["rep"]    
     return res
@@ -361,10 +362,10 @@ def run_test(model, rep, outname):
     for i in xrange(500):
 
         if rep==0:
-            Ehrenfest(dt, q, p, iM, Cdia, ham, compute_model, params, 0)
+            Ehrenfest0(dt, q, p, iM, Cdia, ham, compute_model, params, 0)
             ham.ampl_dia2adi(Cdia, Cadi)
         elif rep==1:
-            Ehrenfest(dt, q, p, iM, Cadi, ham, compute_model, params, 1)
+            Ehrenfest0(dt, q, p, iM, Cadi, ham, compute_model, params, 1)
             ham.ampl_adi2dia(Cdia, Cadi)
 
 
