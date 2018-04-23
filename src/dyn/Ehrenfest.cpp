@@ -14,7 +14,7 @@
     
 */
 
-#include "Ehrenfest.h"
+#include "electronic/libelectronic.h"
 #include "Dynamics.h"
 
 /// liblibra namespace
@@ -23,8 +23,27 @@ namespace liblibra{
 /// libdyn namespace 
 namespace libdyn{
 
+using namespace libelectronic;
 
-void Ehrenfest(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham, bp::object py_funct, bp::object params, int rep){
+
+void Ehrenfest0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham, bp::object py_funct, bp::object params, int rep){
+/**
+  \brief One step of the Ehrenfest algorithm for electron-nuclear DOFs for one trajectory
+
+  \param[in] Integration time step
+  \param[in,out] q [Ndof x Ntraj] nuclear coordinates. Change during the integration.
+  \param[in,out] p [Ndof x Ntraj] nuclear momenta. Change during the integration.
+  \param[in] invM [Ndof  x 1] inverse nuclear DOF masses. 
+  \param[in,out] nadi x nadi or ndia x ndia matrix containing the electronic coordinates
+  \param[in] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) - its internal variables
+  (well, actually the variables it points to) are changed during the compuations
+  \param[in] py_funct Python function object that is called when this algorithm is executed. The called Python function does the necessary 
+  computations to update the diabatic Hamiltonian matrix (and derivatives), stored externally.
+  \param[in] params The Python object containing any necessary parameters passed to the "py_funct" function when it is executed.
+  \param[in] rep The representation to run the calculations: 0 - diabatic, 1 - adiabatic
+
+*/
+
  
   //============== Electronic propagation ===================
   if(rep==0){  
@@ -67,235 +86,73 @@ void Ehrenfest(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamil
 
 }
 
-double Ehrenfest_dia(CMATRIX& C, CMATRIX& H, vector<CMATRIX>& dHdR, vector<double>& f, int opt){
+
+
+void Ehrenfest1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham, bp::object py_funct, bp::object params, int rep){
 /**
-  \brief Compute Ehrenfest energy and forces of the coherent superposition:
+  \brief One step of the Ehrenfest algorithm for electron-nuclear DOFs for an ensemble of trajectories
 
-  \Psi(t) = sum_i { C_i(t) * |i> }, where |i> - are the diabatic states
+  \param[in] Integration time step
+  \param[in,out] q [Ndof x Ntraj] nuclear coordinates. Change during the integration.
+  \param[in,out] p [Ndof x Ntraj] nuclear momenta. Change during the integration.
+  \param[in] invM [Ndof  x 1] inverse nuclear DOF masses. 
+  \param[in,out] nadi x nadi or ndia x ndia matrix containing the electronic coordinates
+  \param[in] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) - its internal variables
+  (well, actually the variables it points to) are changed during the compuations
+  \param[in] py_funct Python function object that is called when this algorithm is executed. The called Python function does the necessary 
+  computations to update the diabatic Hamiltonian matrix (and derivatives), stored externally.
+  \param[in] params The Python object containing any necessary parameters passed to the "py_funct" function when it is executed.
+  \param[in] rep The representation to run the calculations: 0 - diabatic, 1 - adiabatic
 
-  E = <Psi|H_el|Psi> = C.H() * H * C
-
-  \param[in] C Time-dependent amplitudes of the basis functions
-  \param[in] H Electronic Hamiltonian in the diabatic basis H = <i|H_el|j>
-  \param[in] dHdR A vector of derivatives of the Hamiltonian in the diabatic basis w.r.t. all the DOFs:
-             dHdR[n].get(i,j) = <i|dH/dR_n|j>
-  \param[out] f A vector of Ehrenfest forces:  f[i] = -dE/dR[i], where E is defined above
-  \param[in] opt An option that controls whether to compute Ehrenfest forces (1) or not (0)
 */
 
-  double energy = (C.H() * H * C).get(0,0).real();
+  cout<<"ERROR: the implementation is in process. Exiting...\n";
+  exit(0);
+ 
+  //============== Electronic propagation ===================
+  if(rep==0){  
+    ham.compute_nac_dia(p, invM);
+    ham.compute_hvib_dia();
+  }
+  else if(rep==1){  
+    ham.compute_nac_adi(p, invM); 
+    ham.compute_hvib_adi();
+  }
 
-  if(opt>=1){
+  propagate_electronic(0.5*dt, C, ham, rep);   
 
-    int sz = dHdR.size();  /// The number of nuclear DOFs
-    if(f.size()!=sz){
-      cout<<"Error in Ehrenfest_dia: The size of the output array for forces is not consistent \
-      with the size of the input array of the Hamiltonian derivatives\nExiting...";
-      exit(0);
-    }
-
-    // Do the forces
-    for(int i=0;i<sz;i++){
-      f[i] = -(C.H() * dHdR[i] * C).get(0,0).real();
-    }
-
-  }// opt >=1 
-
-  return energy;
-}
-
-double Ehrenfest_dia(CMATRIX* C, CMATRIX* H, vector<CMATRIX*>& dHdR, vector<double*>& f, int opt){
-/**
-  \brief Compute Ehrenfest energy and forces of the coherent superposition:
-
-  \Psi(t) = sum_i { C_i(t) * |i> }, where |i> - are the diabatic states
-
-  E = <Psi|H_el|Psi> = C.H() * H * C
-
-  \param[in] C Time-dependent amplitudes of the basis functions
-  \param[in] H Electronic Hamiltonian in the diabatic basis H = <i|H_el|j>
-  \param[in] dHdR A vector of derivatives of the Hamiltonian in the diabatic basis w.r.t. all the DOFs:
-             dHdR[n].get(i,j) = <i|dH/dR_n|j>
-  \param[out] f A vector of Ehrenfest forces:  f[i] = -dE/dR[i], where E is defined above
-  \param[in] opt An option that controls whether to compute Ehrenfest forces (1) or not (0)
-*/
-
-  double energy = ((*C).H() * (*H) * (*C)).get(0,0).real();
-
-  if(opt>=1){
-
-    int sz = dHdR.size();  /// The number of nuclear DOFs
-    if(f.size()!=sz){
-      cout<<"Error in Ehrenfest_dia: The size of the output array for forces is not consistent \
-      with the size of the input array of the Hamiltonian derivatives\nExiting...";
-      exit(0);
-    }
-
-    // Do the forces
-    for(int i=0;i<sz;i++){
-      *f[i] = -((*C).H() * (*dHdR[i]) * (*C)).get(0,0).real();
-    }
-
-  }// opt >=1 
-
-  return energy;
-}
+  //============== Nuclear propagation ===================
+    
+       if(rep==0){  p = p + ham.Ehrenfest_forces_dia(C).real() * 0.5*dt;  }
+  else if(rep==1){  p = p + ham.Ehrenfest_forces_adi(C).real() * 0.5*dt;  }
 
 
-double Ehrenfest_dia(CMATRIX& C, Hamiltonian& ham, vector<double>& f, int opt){
-/**
-  \brief Compute Ehrenfest energy and forces of the coherent superposition:
+  q = q + invM*p*dt;
+  ham.compute_diabatic(py_funct, bp::object(q), params);
+  ham.compute_adiabatic(1);
 
-  \Psi(t) = sum_i { C_i(t) * |i> }, where |i> - are the diabatic states
 
-  E = <Psi|H_el|Psi> = C.H() * H * C
+       if(rep==0){  p = p + ham.Ehrenfest_forces_dia(C).real() * 0.5*dt;  }
+  else if(rep==1){  p = p + ham.Ehrenfest_forces_adi(C).real() * 0.5*dt;  }
 
-  \param[in] C Time-dependent amplitudes of the basis functions
-  \param[in] H Electronic Hamiltonian in the diabatic basis H = <i|H_el|j>
-  \param[in] dHdR A vector of derivatives of the Hamiltonian in the diabatic basis w.r.t. all the DOFs:
-             dHdR[n].get(i,j) = <i|dH/dR_n|j>
-  \param[out] f A vector of Ehrenfest forces:  f[i] = -dE/dR[i], where E is defined above
-  \param[in] opt An option that controls whether to compute Ehrenfest forces (1) or not (0)
-*/
+  //============== Electronic propagation ===================
+  if(rep==0){  
+    ham.compute_nac_dia(p, invM);
+    ham.compute_hvib_dia();
+  }
+  else if(rep==1){  
+    ham.compute_nac_adi(p, invM); 
+    ham.compute_hvib_adi();
+  }
 
-  double energy = 0.0; // (C.H() * CMATRIX(ham.get_ham_dia()) * C).get(0,0).real();
+  propagate_electronic(0.5*dt, C, ham, rep);   
 
-  if(opt>=1){
 
-    int sz = ham.nnucl;  /// The number of nuclear DOFs
-    if(f.size()!=sz){
-      cout<<"Error in Ehrenfest_dia: The size of the output array for forces is not consistent \
-      with the number of nuclear DOFs in the input Hamiltonian\nExiting...";
-      exit(0);
-    }
-
-    // Do the forces
-    for(int i=0;i<sz;i++){
-      f[i] = 0.0; //-(C.H() * CMATRIX(ham.get_d1ham_dia(i)) * C).get(0,0).real();
-    }
-
-  }// opt >=1 
-
-  return energy;
 }
 
 
 
-double Ehrenfest_adi(CMATRIX& C, CMATRIX& E, vector<CMATRIX>& dEdR, vector<CMATRIX>& D, vector<double>& f, int opt){
-/**
-  \brief Compute Ehrenfest energy and forces of the coherent superposition:
 
-  \Psi(t) = sum_i { C_i(t) * |i> }, where |i> - are the adiabatic states
-
-  E = <Psi|H_el|Psi> = C.H() * E * C
-
-  \param[in] C Time-dependent amplitudes of the basis functions
-  \param[in] E Electronic Hamiltonian in the adiabatic basis
-  \param[in] dEdR Derivatives of the adiabatic energies w.r.t. all the DOFs:
-             dEdR[n].get(i,i) =  d/dR_n <i|H_el|i>
-  \param[in] D A vector of the derivative couplings the Hamiltonian w.r.t. all the DOFs <i|d/dR_alp|j>
-  \param[out] f A vector of Ehrenfest forces:  f[i] = -dE/dR[i], where E is defined above
-  \param[in] opt An option that controls whether to compute Ehrenfest forces (1) or not (0)
-*/
-
-  double energy = (C.H() * E * C).get(0,0).real();
-
-  if(opt>=1){
-
-    int sz = D.size();  /// The number of nuclear DOFs
-    if(f.size()!=sz){
-      cout<<"Error in Ehrenfest_adi: The size of the output array for forces is not consistent \
-      with the size of the input array of the derivative couplings\nExiting...";
-      exit(0);
-    }
-
-    // Do the forces
-    for(int i=0;i<sz;i++){
-      f[i] = -(C.H() * (dEdR[i] + (D[i]*E-E*D[i])) * C).get(0,0).real();
-    }
-
-  }// opt>=1
-
-  return energy;
-}
-
-
-double Ehrenfest_adi(CMATRIX* C, CMATRIX* E, vector<CMATRIX*>& dEdR, vector<CMATRIX*>& D, vector<double*>& f, int opt){
-/**
-  \brief Compute Ehrenfest energy and forces of the coherent superposition:
-
-  \Psi(t) = sum_i { C_i(t) * |i> }, where |i> - are the adiabatic states
-
-  E = <Psi|H_el|Psi> = C.H() * E * C
-
-  \param[in] C Time-dependent amplitudes of the basis functions
-  \param[in] E Electronic Hamiltonian in the adiabatic basis
-  \param[in] dEdR Derivatives of the adiabatic energies w.r.t. all the DOFs:
-             dEdR[n].get(i,i) =  d/dR_n <i|H_el|i>
-  \param[in] D A vector of the derivative couplings the Hamiltonian w.r.t. all the DOFs <i|d/dR_alp|j>
-  \param[out] f A vector of Ehrenfest forces:  f[i] = -dE/dR[i], where E is defined above
-  \param[in] opt An option that controls whether to compute Ehrenfest forces (1) or not (0)
-*/
-
-  double energy = ((*C).H() * (*E) * (*C)).get(0,0).real();
-
-  if(opt>=1){
-
-    int sz = D.size();  /// The number of nuclear DOFs
-    if(f.size()!=sz){
-      cout<<"Error in Ehrenfest_adi: The size of the output array for forces is not consistent \
-      with the size of the input array of the derivative couplings\nExiting...";
-      exit(0);
-    }
-
-    // Do the forces
-    for(int i=0;i<sz;i++){
-      *f[i] = -( (*C).H() * (*dEdR[i] + ((*D[i]) * (*E) - (*E) * (*D[i]))) * (*C)).get(0,0).real();
-    }
-
-  }// opt>=1
-
-  return energy;
-}
-
-double Ehrenfest_adi(CMATRIX& C, Hamiltonian& ham, vector<double>& f, int opt){
-/**
-  \brief Compute Ehrenfest energy and forces of the coherent superposition:
-
-  \Psi(t) = sum_i { C_i(t) * |i> }, where |i> - are the adiabatic states
-
-  E = <Psi|H_el|Psi> = C.H() * E * C
-
-  \param[in] C Time-dependent amplitudes of the basis functions
-  \param[in] E Electronic Hamiltonian in the adiabatic basis
-  \param[in] dEdR Derivatives of the adiabatic energies w.r.t. all the DOFs:
-             dEdR[n].get(i,i) =  d/dR_n <i|H_el|i>
-  \param[in] D A vector of the derivative couplings the Hamiltonian w.r.t. all the DOFs <i|d/dR_alp|j>
-  \param[out] f A vector of Ehrenfest forces:  f[i] = -dE/dR[i], where E is defined above
-  \param[in] opt An option that controls whether to compute Ehrenfest forces (1) or not (0)
-*/
-
-  double energy = 0.0; //(C.H() * CMATRIX(ham.get_ham_adi()) * C).get(0,0).real();
-/*
-  if(opt>=1){
-
-    int sz = D.size();  /// The number of nuclear DOFs
-    if(f.size()!=sz){
-      cout<<"Error in Ehrenfest_adi: The size of the output array for forces is not consistent \
-      with the size of the input array of the derivative couplings\nExiting...";
-      exit(0);
-    }
-
-    // Do the forces
-    for(int i=0;i<sz;i++){
-
-      f[i] = -(C.H() * (dEdR[i] + (D[i]*E-E*D[i])) * C).get(0,0).real();
-    }
-
-  }// opt>=1
-*/
-  return energy;
-}
 
 
 

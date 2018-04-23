@@ -31,31 +31,108 @@ namespace libdyn{
 
 
 
-void Verlet(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params){
+void Verlet0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params){
 /**
-  \brief One step of Velocity verlet algorithm for nuclear DOF
+  \brief One step of velocity Verlet algorithm for nuclear DOF
+
   \param[in] Integration time step
-  \param[in,out] mol Describes the nuclear DOF. Changes during the integration.
-  \param[in] el Describes electronic DOF. Does not change during the integration.
-  \param[in,out] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) -its internal variables
-  are changed during the compuations
-  \param[in] opt Option for selecting the way to describe the electron-nuclear interaction: = 0 - Ehrenfest (mean-field, MF), =1 -
-  (fewest switched surface hopping, FSSH)
+  \param[in,out] q [Ndof x Ntraj] nuclear coordinates. Change during the integration.
+  \param[in,out] p [Ndof x Ntraj] nuclear momenta. Change during the integration.
+  \param[in,out] invM [Ndof  x 1] inverse nuclear DOF masses. 
+  \param[in,out] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) - its internal variables
+  (well, actually the variables it points to) are changed during the compuations
+  \param[in] py_funct Python function object that is called when this algorithm is executed. The called Python function does the necessary 
+  computations to update the diabatic Hamiltonian matrix (and derivatives), stored externally.
+  \param[in] params The Python object containing any necessary parameters passed to the "py_funct" function when it is executed.
+  \param[in] lvl The level of Hamiltonians to do the evaluation at
 
 */
 
-  CMATRIX coeff(1,1);  coeff.set(0,0,1.0,0.0);
-
-  p = p + ham.forces_adi(coeff).real() * 0.5*dt;
-  q = q + invM*p*dt;
-
-  ham.compute_diabatic(py_funct, bp::object(q), params);
-  ham.compute_adiabatic(1);
-
-  p = p + ham.forces_adi(coeff).real() * 0.5*dt;
+  int ndof = q.n_rows;
+  int dof;
 
 
-}// Verlet
+  CMATRIX Cadi(1,1); Cadi.set(0,0,1.0,0.0);
+  
+  p = p + ham.forces_adi(Cadi).real() * 0.5*dt;
+
+  // For efficiency, switch to the element-wise multiplication
+  for(dof=0; dof<ndof; dof++){  
+    q.add(dof, 0,  invM.get(dof,0) * p.get(dof,0) * dt ); 
+  }
+
+  ham.compute_diabatic(py_funct, bp::object(q), params, 0);
+  ham.compute_adiabatic(1, 0);
+
+  p = p + ham.forces_adi(Cadi).real() * 0.5*dt;
+
+}// Verlet0
+
+
+
+void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params){
+/**
+  \brief One step of velocity Verlet algorithm for nuclear DOF
+
+  \param[in] Integration time step
+  \param[in,out] q [Ndof x Ntraj] nuclear coordinates. Change during the integration.
+  \param[in,out] p [Ndof x Ntraj] nuclear momenta. Change during the integration.
+  \param[in,out] invM [Ndof  x 1] inverse nuclear DOF masses. 
+  \param[in,out] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) - its internal variables
+  (well, actually the variables it points to) are changed during the compuations
+  \param[in] py_funct Python function object that is called when this algorithm is executed. The called Python function does the necessary 
+  computations to update the diabatic Hamiltonian matrix (and derivatives), stored externally.
+  \param[in] params The Python object containing any necessary parameters passed to the "py_funct" function when it is executed.
+  \param[in] lvl The level of Hamiltonians to do the evaluation at
+
+*/
+
+  int ndof = q.n_rows;
+  int ntraj = q.n_cols;
+  int traj, dof;
+
+
+  vector<int> t1(ndof, 0); for(int i=0;i<ndof;i++){  t1[i] = i; }
+  vector<int> t2(1,0);
+  vector<int> t3(2,0);
+
+  CMATRIX Cadi(1,1); Cadi.set(0,0,1.0,0.0);
+  MATRIX F(ndof, ntraj);
+  MATRIX f(ndof, 1);
+  
+  for(traj=0; traj<ntraj; traj++){
+    t2[0] = traj;  t3[1] = traj;
+    f = ham.forces_adi(Cadi, t3).real();
+    push_submatrix(F, f, t1, t2);
+  }
+
+
+  p = p + F * 0.5*dt;
+
+  // For efficiency, switch to the element-wise multiplication
+  for(traj=0; traj<ntraj; traj++){
+    for(dof=0; dof<ndof; dof++){  
+
+      q.add(dof, traj,  invM.get(dof,0) * p.get(dof,traj) * dt ); 
+
+    }
+  }
+
+  ham.compute_diabatic(py_funct, bp::object(q), params, 1);
+  ham.compute_adiabatic(1, 1);
+
+
+  for(traj=0; traj<ntraj; traj++){
+    t2[0] = traj;  t3[1] = traj;
+    f = ham.forces_adi(Cadi, t3).real();
+    push_submatrix(F, f, t1, t2);
+  }
+
+  p = p + F * 0.5*dt;
+
+
+
+}// Verlet1
 
 
 

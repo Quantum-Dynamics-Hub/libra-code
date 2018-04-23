@@ -46,8 +46,8 @@ void set_X2_by_val(vector<CMATRIX*> ptx, vector<CMATRIX>& x_, vector<int>& x_mem
 void init_X2(vector<CMATRIX*> ptx, vector<int>& x_mem_status, int nrows, int ncols, int nnucl);
 
 
-
-
+// Forward declaration
+//class nHamiltonian; 
 
 
 class nHamiltonian{
@@ -66,6 +66,12 @@ class nHamiltonian{
 
 
 public:
+
+  int level;                        ///< level in the tree hierarchy
+  int id;                           ///< index of this Hamiltonian in this level of hierarchy
+  nHamiltonian* parent;             ///< the Hamiltonian of a higher level
+  vector<nHamiltonian*> children;   ///< the Hamiltonians of the lower level
+
 
   int nnucl;                 ///< number of nuclear degrees of freedom - expected
 
@@ -152,9 +158,6 @@ public:
   */
   int nadi;                   ///< the number of electronic DOFs in the adiabatic basis
 
-//  CMATRIX* ampl_adi;          ///< Amplitudes of the adiabatic states in the overal wavefunction
-//  int ampl_adi_mem_status;
-
   vector<CMATRIX*> dc1_adi;   ///< first-order derivative coupling matrices in the adiabatic basis 
   vector<int> dc1_adi_mem_status;
 
@@ -174,8 +177,6 @@ public:
   vector<CMATRIX*> d2ham_adi; ///< second order derivatives of the Hamiltonian matrix in the adiabatic basis
   vector<int> d2ham_adi_mem_status;
 
-//  CMATRIX* den_mat_adi;       ///< Density matrix in the adiabatic basis
-//  int den_mat_adi_mem_status;
 
 
   /** Transformations
@@ -214,71 +215,82 @@ public:
   ///< In nHamiltonian_basic.cpp
 
   ///< Constructors
+//  nHamiltonian(); 
   nHamiltonian(int ndia_, int nadi_, int nnucl_); 
-
+ 
   ///< Destructor
   ~nHamiltonian();    
 
+  ///< Tree management utilities
+
+  void set_levels(int lvl_);            ///< Updates node levels downstream
+  void add_child(nHamiltonian& child);  ///< Associate an existing Hamiltonian with the present one
+                                        ///< to become its child
+  vector<int> get_full_id();            ///< Entire path of the note in the tree
+
+
+  void init_all(int lvl);
 
   ///< Setters:
   // Diabatic
-//  void set_ampl_dia_by_ref(CMATRIX& ampl_dia_);
-//  void set_ampl_dia_by_val(CMATRIX& ampl_dia_);
-
+  void init_ovlp_dia();
   void set_ovlp_dia_by_ref(CMATRIX& ovlp_dia_);
   void set_ovlp_dia_by_val(CMATRIX& ovlp_dia_);
 
+  void init_dc1_dia();
   void set_dc1_dia_by_ref(vector<CMATRIX>& dc1_dia_);
   void set_dc1_dia_by_val(vector<CMATRIX>& dc1_dia_);
 
+  void init_ham_dia();
   void set_ham_dia_by_ref(CMATRIX& ham_dia_);
   void set_ham_dia_by_val(CMATRIX& ham_dia_);
 
+  void init_nac_dia();
   void set_nac_dia_by_ref(CMATRIX& nac_dia_);
   void set_nac_dia_by_val(CMATRIX& nac_dia_);
 
+  void init_hvib_dia();
   void set_hvib_dia_by_ref(CMATRIX& hvib_dia_);
   void set_hvib_dia_by_val(CMATRIX& hvib_dia_);
 
-
+  void init_d1ham_dia();
   void set_d1ham_dia_by_ref(vector<CMATRIX>& d1ham_dia_);
   void set_d1ham_dia_by_val(vector<CMATRIX>& d1ham_dia_);
 
+  void init_d2ham_dia();
   void set_d2ham_dia_by_ref(vector<CMATRIX>& d2ham_dia_);
   void set_d2ham_dia_by_val(vector<CMATRIX>& d2ham_dia_);
 
-//  void set_den_mat_dia_by_ref(CMATRIX& den_mat_dia_);
-//  void set_den_mat_dia_by_val(CMATRIX& den_mat_dia_);
 
 
 
   // Adiabatic
-//  void set_ampl_adi_by_ref(CMATRIX& ampl_adi_);
-//  void set_ampl_adi_by_val(CMATRIX& ampl_adi_);
-
+  void init_dc1_adi();
   void set_dc1_adi_by_ref(vector<CMATRIX>& dc1_adi_);
   void set_dc1_adi_by_val(vector<CMATRIX>& dc1_adi_);
 
+  void init_ham_adi();
   void set_ham_adi_by_ref(CMATRIX& ham_adi_);
   void set_ham_adi_by_val(CMATRIX& ham_adi_);
 
+  void init_nac_adi();
   void set_nac_adi_by_ref(CMATRIX& nac_adi_);
   void set_nac_adi_by_val(CMATRIX& nac_adi_);
 
+  void init_hvib_adi();
   void set_hvib_adi_by_ref(CMATRIX& hvib_adi_);
   void set_hvib_adi_by_val(CMATRIX& hvib_adi_);
 
-
+  void init_d1ham_adi();
   void set_d1ham_adi_by_ref(vector<CMATRIX>& d1ham_adi_);
   void set_d1ham_adi_by_val(vector<CMATRIX>& d1ham_adi_);
 
+  void init_d2ham_adi();
   void set_d2ham_adi_by_ref(vector<CMATRIX>& d2ham_adi_);
   void set_d2ham_adi_by_val(vector<CMATRIX>& d2ham_adi_);
 
-//  void set_den_mat_adi_by_ref(CMATRIX& den_mat_adi_);
-//  void set_den_mat_adi_by_val(CMATRIX& den_mat_adi_);
-
   // Transforms
+  void init_basis_transform();
   void set_basis_transform_by_ref(CMATRIX& basis_transform_);
   void set_basis_transform_by_val(CMATRIX& basis_transform_);
 
@@ -286,54 +298,72 @@ public:
   /// Getters
   // Diabatic
   CMATRIX get_ovlp_dia();
-
-//  CMATRIX get_ampl_dia();
+  CMATRIX get_ovlp_dia(vector<int>& id_);
   CMATRIX get_dc1_dia(int i);
+  CMATRIX get_dc1_dia(int i, vector<int>& id_);
   CMATRIX get_ham_dia();
+  CMATRIX get_ham_dia(vector<int>& id_);
   CMATRIX get_nac_dia();
+  CMATRIX get_nac_dia(vector<int>& id_);
   CMATRIX get_hvib_dia();
+  CMATRIX get_hvib_dia(vector<int>& id_);
   CMATRIX get_d1ham_dia(int i);
+  CMATRIX get_d1ham_dia(int i, vector<int>& id_);
   CMATRIX get_d2ham_dia(int i);
+  CMATRIX get_d2ham_dia(int i, vector<int>& id_);
   CMATRIX get_d2ham_dia(int i,int j);
-//  CMATRIX get_den_mat_dia();
+  CMATRIX get_d2ham_dia(int i, int j, vector<int>& id_);
 
   // Adiabatic
-//  CMATRIX get_ampl_adi();
   CMATRIX get_dc1_adi(int i);
+  CMATRIX get_dc1_adi(int i, vector<int>& id_);
   CMATRIX get_ham_adi();
+  CMATRIX get_ham_adi(vector<int>& id_);
   CMATRIX get_nac_adi();
+  CMATRIX get_nac_adi(vector<int>& id_);
   CMATRIX get_hvib_adi();
+  CMATRIX get_hvib_adi(vector<int>& id_);
   CMATRIX get_d1ham_adi(int i);
+  CMATRIX get_d1ham_adi(int i, vector<int>& id_);
   CMATRIX get_d2ham_adi(int i);
+  CMATRIX get_d2ham_adi(int i, vector<int>& id_);
   CMATRIX get_d2ham_adi(int i,int j);
-//  CMATRIX get_den_mat_adi();
+  CMATRIX get_d2ham_adi(int i, int j, vector<int>& id_);
 
   // Transforms
   CMATRIX get_basis_transform();
-
+  CMATRIX get_basis_transform(vector<int>& id_);
 
 
   ///< In nHamiltonian_compute_diabatic.cpp
-
+  void compute_diabatic(int model, vector<double>& q, vector<double>& params, int lvl); // for internal model types
   void compute_diabatic(int model, vector<double>& q, vector<double>& params); // for internal model types
+
+  void compute_diabatic(bp::object py_funct, bp::object q, bp::object params, int lvl); // for models defined in Python
   void compute_diabatic(bp::object py_funct, bp::object q, bp::object params); // for models defined in Python
 
 
   ///< In nHamiltonian_compute_adiabatic.cpp
-
-  void compute_adiabatic(int lvl);
+  void compute_adiabatic(int der_lvl, int lvl);
+  void compute_adiabatic(int der_lvl);
+  void compute_adiabatic(bp::object py_funct, bp::object q, bp::object params, int lvl); // for models defined in Python
+  void compute_adiabatic(bp::object py_funct, bp::object q, bp::object params); // for models defined in Python
 
 
   ///< In nHamiltonian_compute.cpp
-
   void ampl_dia2adi(CMATRIX& ampl_dia, CMATRIX& ampl_adi);
   void ampl_adi2dia(CMATRIX& ampl_dia, CMATRIX& ampl_adi);
 
+
   CMATRIX forces_adi(CMATRIX& ampl_adi);  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
+  CMATRIX forces_adi(CMATRIX& ampl_adi, vector<int>& id_);  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
   CMATRIX forces_dia(CMATRIX& ampl_dia);  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
+  CMATRIX forces_dia(CMATRIX& ampl_dia, vector<int>& id_);  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
 
   vector<CMATRIX> forces_tens_adi(CMATRIX& ampl_adi); // 
+  vector<CMATRIX> forces_tens_adi(CMATRIX& ampl_adi, vector<int>& id_); // 
   vector<CMATRIX> forces_tens_dia(CMATRIX& ampl_dia); // 
+  vector<CMATRIX> forces_tens_dia(CMATRIX& ampl_dia, vector<int>& id_); // 
 
   void compute_nac_dia(MATRIX& p, MATRIX& invM);
   void compute_nac_adi(MATRIX& p, MATRIX& invM);

@@ -51,61 +51,134 @@ bp::object import_py_funct(const std::string& module, const std::string& path, b
 }
 
 
-
 void nHamiltonian::compute_diabatic(int model, vector<double>& q, vector<double>& params){
 
-  
+  compute_diabatic(model, q, params, 0);
 
-  if(model==100){   model_1S_1D_poly2(ham_dia, ovlp_dia, d1ham_dia, dc1_dia, q, params);  }
-  if(model==100){   model_1S_1D_poly4(ham_dia, ovlp_dia, d1ham_dia, dc1_dia, q, params);  }
+}
+
+void nHamiltonian::compute_diabatic(int model, vector<double>& q, vector<double>& params, int lvl){
+
+  if(level==lvl){
+ 
+    if(model==100){   model_1S_1D_poly2(ham_dia, ovlp_dia, d1ham_dia, dc1_dia, q, params);  }
+    if(model==100){   model_1S_1D_poly4(ham_dia, ovlp_dia, d1ham_dia, dc1_dia, q, params);  }
+
+  }
+  else if(lvl>level){
+  
+    for(int i=0;i<children.size();i++){
+      children[i]->compute_diabatic(model, q, params, lvl);
+    }
+
+  }
+
+  else{
+    cout<<"WARNING in nHamiltonian::compute_diabatic\n"; 
+    cout<<"Can not run evaluation of function in the parent Hamiltonian from the\
+     child node\n";    
+  }
+
+
 
 }
 
 
-
 void nHamiltonian::compute_diabatic(bp::object py_funct, bp::object q, bp::object params){
 /**
-  The Python function should correspond to the following C++ signature:
+  Performs the diabatic properties calculation at the top-most level of the Hamiltonians 
+  hierarchy. See the description of the more general function prototype for more info.
+*/ 
 
-  py_funct(CMATRIX& _Hdia, CMATRIX& _Sdia, vector<CMATRIX>& _d1ham_dia, 
-           vector<CMATRIX>& _dc1_dia, vector<double>& q, bp::object params);
+  compute_diabatic(py_funct, q, params, 0);
+
+}
+
+
+void nHamiltonian::compute_diabatic(bp::object py_funct, bp::object q, bp::object params, int lvl){
+/**
+  This function will call the <py_funct> function defined in Python and taking the signature:
+
+  def py_funct(q, params, full_id)
+      return obj
+
+  The object <obj> returned by the function should contain variables named:
+  "ham_dia" (CMATRIX), "ovld_dia" (CMATRIX), "d1ham_dia" (list of CMATRIX), "dc1_dia" (list of CMATRIX)
+  of the specified types
+
+  q - is the object containing coordinates of nuclei. Since almost any C++ type exposed to Python is seen 
+  by Python as a Python object, you can use any convenient Libra type to store the coordinates, for instance
+  a MATRIX object. 
+
+  params - is an object containing any parameters needed by the <py_funct> Python function to perform
+  the specified calculations. Again, there are many options to pass the parameters on the Python side, but 
+  it may be convenient to use Python dictionary, since the parameters will be mostly used at the 
+  Python level of calculations.
+
+  full_id - is vector<int> object containing the "path" of the calling node in the hierarchy of Hamiltonians
+  this information may be needed by the py_funct function in order to do the proper calculations
+
+  lvl - is the level of the Hamiltonians in the hierarchy of Hamiltonians to be executed by this call 
+  You can only request to perform computations at the same of higher (children) levels that the level of 
+  the Hamiltonian from which you call this function. 
+
+  Contentwise, this function computes the diabatic properties and populates the corresponding
+  storage.
 
 */
 
-  // Temporary storage
-  CMATRIX _Hdia(ndia,ndia);
-  CMATRIX _Sdia(ndia,ndia); 
-  vector<CMATRIX> _d1ham_dia(nnucl, CMATRIX(ndia,ndia));
-  vector<CMATRIX> _dc1_dia(nnucl, CMATRIX(ndia,ndia));
+  if(level==lvl){
 
-  // Call the Python function with such arguments
-  bp::object obj = py_funct(q, params);  
-
-  // Extract all the computed properties
-  int has_attr=0;
-  has_attr = (int)hasattr(obj,"ham_dia");        
-  if(has_attr){    _Hdia = extract<CMATRIX>(obj.attr("ham_dia"));    }
-
-  has_attr=0;
-  has_attr = (int)hasattr(obj,"ovlp_dia");        
-  if(has_attr){    _Sdia = extract<CMATRIX>(obj.attr("ovlp_dia"));    }
-
-  has_attr=0;
-  has_attr = (int)hasattr(obj,"d1ham_dia");        
-  if(has_attr){    _d1ham_dia = extract<CMATRIXList>(obj.attr("d1ham_dia"));    }
-
-  has_attr=0;
-  has_attr = (int)hasattr(obj,"dc1_dia");        
-  if(has_attr){    _dc1_dia = extract<CMATRIXList>(obj.attr("dc1_dia"));    }
-
-
-  // Copy the temporary results into the Hamiltonian-bound memory
-  *ham_dia = _Hdia;
-  *ovlp_dia = _Sdia;
+    // Temporary storage
+    CMATRIX _Hdia(ndia,ndia);
+    CMATRIX _Sdia(ndia,ndia); 
+    vector<CMATRIX> _d1ham_dia(nnucl, CMATRIX(ndia,ndia));
+    vector<CMATRIX> _dc1_dia(nnucl, CMATRIX(ndia,ndia));
   
-  for(int i=0;i<nnucl;i++){
-    *d1ham_dia[i] = _d1ham_dia[i];
-    *dc1_dia[i]   = _dc1_dia[i];
+    // Call the Python function with such arguments
+    bp::object obj = py_funct(q, params, get_full_id() );  
+  
+    // Extract all the computed properties
+    int has_attr=0;
+    has_attr = (int)hasattr(obj,"ham_dia");        
+    if(has_attr){    _Hdia = extract<CMATRIX>(obj.attr("ham_dia"));    }
+  
+    has_attr=0;
+    has_attr = (int)hasattr(obj,"ovlp_dia");        
+    if(has_attr){    _Sdia = extract<CMATRIX>(obj.attr("ovlp_dia"));    }
+  
+    has_attr=0;
+    has_attr = (int)hasattr(obj,"d1ham_dia");        
+    if(has_attr){    _d1ham_dia = extract<CMATRIXList>(obj.attr("d1ham_dia"));    }
+  
+    has_attr=0;
+    has_attr = (int)hasattr(obj,"dc1_dia");        
+    if(has_attr){    _dc1_dia = extract<CMATRIXList>(obj.attr("dc1_dia"));    }
+  
+  
+    // Copy the temporary results into the Hamiltonian-bound memory
+    *ham_dia = _Hdia;
+    *ovlp_dia = _Sdia;
+    
+    for(int i=0;i<nnucl;i++){
+      *d1ham_dia[i] = _d1ham_dia[i];
+      *dc1_dia[i]   = _dc1_dia[i];
+    }
+  
+  }// if lvl == level
+
+  else if(lvl>level){
+  
+    for(int i=0;i<children.size();i++){
+      children[i]->compute_diabatic(py_funct,q,params,lvl);
+    }
+
+  }
+
+  else{
+    cout<<"WARNING in nHamiltonian::compute_diabatic\n"; 
+    cout<<"Can not run evaluation of function in the parent Hamiltonian from the\
+     child node\n";    
   }
 
 

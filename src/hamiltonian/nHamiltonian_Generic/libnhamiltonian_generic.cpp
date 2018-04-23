@@ -42,20 +42,108 @@ void export_nhamiltonian_generic_objects(){
 
 //  void (Hamiltonian::*set_params)(boost::python::list) = &Hamiltonian::set_params;
 
-  CMATRIX (nHamiltonian::*expt_get_d2ham_dia_v1)(int i) = &nHamiltonian::get_d2ham_dia;
-  CMATRIX (nHamiltonian::*expt_get_d2ham_dia_v2)(int i, int j) = &nHamiltonian::get_d2ham_dia;
+  CMATRIX (nHamiltonian::*expt_get_ovlp_dia_v1)() = &nHamiltonian::get_ovlp_dia;
+  CMATRIX (nHamiltonian::*expt_get_ovlp_dia_v2)(vector<int>&) = &nHamiltonian::get_ovlp_dia;
 
-  CMATRIX (nHamiltonian::*expt_get_d2ham_adi_v1)(int i) = &nHamiltonian::get_d2ham_adi;
-  CMATRIX (nHamiltonian::*expt_get_d2ham_adi_v2)(int i, int j) = &nHamiltonian::get_d2ham_adi;
+  CMATRIX (nHamiltonian::*expt_get_dc1_dia_v1)(int i) = &nHamiltonian::get_dc1_dia;
+  CMATRIX (nHamiltonian::*expt_get_dc1_dia_v2)(int i, vector<int>&) = &nHamiltonian::get_dc1_dia;
+
+  CMATRIX (nHamiltonian::*expt_get_ham_dia_v1)() = &nHamiltonian::get_ham_dia;
+  CMATRIX (nHamiltonian::*expt_get_ham_dia_v2)(vector<int>&) = &nHamiltonian::get_ham_dia;
+
+  CMATRIX (nHamiltonian::*expt_get_nac_dia_v1)() = &nHamiltonian::get_nac_dia;
+  CMATRIX (nHamiltonian::*expt_get_nac_dia_v2)(vector<int>&) = &nHamiltonian::get_nac_dia;
+
+  CMATRIX (nHamiltonian::*expt_get_hvib_dia_v1)() = &nHamiltonian::get_hvib_dia;
+  CMATRIX (nHamiltonian::*expt_get_hvib_dia_v2)(vector<int>&) = &nHamiltonian::get_hvib_dia;
+
+  CMATRIX (nHamiltonian::*expt_get_d1ham_dia_v1)(int i) = &nHamiltonian::get_d1ham_dia;
+  CMATRIX (nHamiltonian::*expt_get_d1ham_dia_v2)(int i, vector<int>&) = &nHamiltonian::get_d1ham_dia;
+
+  CMATRIX (nHamiltonian::*expt_get_d2ham_dia_v11)(int i) = &nHamiltonian::get_d2ham_dia;
+  CMATRIX (nHamiltonian::*expt_get_d2ham_dia_v12)(int i, vector<int>&) = &nHamiltonian::get_d2ham_dia;
+
+  CMATRIX (nHamiltonian::*expt_get_d2ham_dia_v21)(int i, int j) = &nHamiltonian::get_d2ham_dia;
+  CMATRIX (nHamiltonian::*expt_get_d2ham_dia_v22)(int i, int j, vector<int>&) = &nHamiltonian::get_d2ham_dia;
+
+
+
+  CMATRIX (nHamiltonian::*expt_get_dc1_adi_v1)(int i) = &nHamiltonian::get_dc1_adi;
+  CMATRIX (nHamiltonian::*expt_get_dc1_adi_v2)(int i, vector<int>&) = &nHamiltonian::get_dc1_adi;
+
+  CMATRIX (nHamiltonian::*expt_get_ham_adi_v1)() = &nHamiltonian::get_ham_adi;
+  CMATRIX (nHamiltonian::*expt_get_ham_adi_v2)(vector<int>&) = &nHamiltonian::get_ham_adi;
+
+  CMATRIX (nHamiltonian::*expt_get_nac_adi_v1)() = &nHamiltonian::get_nac_adi;
+  CMATRIX (nHamiltonian::*expt_get_nac_adi_v2)(vector<int>&) = &nHamiltonian::get_nac_adi;
+
+  CMATRIX (nHamiltonian::*expt_get_hvib_adi_v1)() = &nHamiltonian::get_hvib_adi;
+  CMATRIX (nHamiltonian::*expt_get_hvib_adi_v2)(vector<int>&) = &nHamiltonian::get_hvib_adi;
+
+  CMATRIX (nHamiltonian::*expt_get_d1ham_adi_v1)(int i) = &nHamiltonian::get_d1ham_adi;
+  CMATRIX (nHamiltonian::*expt_get_d1ham_adi_v2)(int i, vector<int>&) = &nHamiltonian::get_d1ham_adi;
+
+  CMATRIX (nHamiltonian::*expt_get_d2ham_adi_v11)(int i) = &nHamiltonian::get_d2ham_adi;
+  CMATRIX (nHamiltonian::*expt_get_d2ham_adi_v12)(int i, vector<int>&) = &nHamiltonian::get_d2ham_adi;
+
+  CMATRIX (nHamiltonian::*expt_get_d2ham_adi_v21)(int i, int j) = &nHamiltonian::get_d2ham_adi;
+  CMATRIX (nHamiltonian::*expt_get_d2ham_adi_v22)(int i, int j, vector<int>&) = &nHamiltonian::get_d2ham_adi;
+
+
+  CMATRIX (nHamiltonian::*expt_get_basis_transform_v1)() = &nHamiltonian::get_basis_transform;
+  CMATRIX (nHamiltonian::*expt_get_basis_transform_v2)(vector<int>&) = &nHamiltonian::get_basis_transform;
+
 
 
   // for internal model types
-  void (nHamiltonian::*expt_compute_diabatic_v1)(int model, vector<double>& q, vector<double>& params)
+  void (nHamiltonian::*expt_compute_diabatic_v1)(int model, vector<double>& q, vector<double>& params, int lvl)
   = &nHamiltonian::compute_diabatic; 
 
+  void (nHamiltonian::*expt_compute_diabatic_v2)(int model, vector<double>& q, vector<double>& params)
+  = &nHamiltonian::compute_diabatic; 
+
+
   // for models defined in Python
-  void (nHamiltonian::*expt_compute_diabatic_v2)(bp::object py_funct, bp::object q, bp::object params)
+  void (nHamiltonian::*expt_compute_diabatic_v3)(bp::object py_funct, bp::object q, bp::object params, int lvl)
   = &nHamiltonian::compute_diabatic;
+
+  void (nHamiltonian::*expt_compute_diabatic_v4)(bp::object py_funct, bp::object q, bp::object params)
+  = &nHamiltonian::compute_diabatic;
+
+
+
+  void (nHamiltonian::*expt_compute_adiabatic_v1)(int der_lvl, int lvl)
+  = &nHamiltonian::compute_adiabatic;
+
+  void (nHamiltonian::*expt_compute_adiabatic_v2)(int der_lvl)
+  = &nHamiltonian::compute_adiabatic;
+
+  void (nHamiltonian::*expt_compute_adiabatic_v3)(bp::object py_funct, bp::object q, bp::object params, int lvl)
+  = &nHamiltonian::compute_adiabatic;
+
+  void (nHamiltonian::*expt_compute_adiabatic_v4)(bp::object py_funct, bp::object q, bp::object params)
+  = &nHamiltonian::compute_adiabatic;
+
+
+
+  CMATRIX (nHamiltonian::*expt_forces_adi_v1)(CMATRIX& ampl_adi) 
+  = &nHamiltonian::forces_adi;
+  CMATRIX (nHamiltonian::*expt_forces_adi_v2)(CMATRIX& ampl_adi, vector<int>& id_)
+  = &nHamiltonian::forces_adi;  
+  CMATRIX (nHamiltonian::*expt_forces_dia_v1)(CMATRIX& ampl_dia)
+  = &nHamiltonian::forces_dia;  
+  CMATRIX (nHamiltonian::*expt_forces_dia_v2)(CMATRIX& ampl_dia, vector<int>& id_)
+  = &nHamiltonian::forces_dia;
+
+  vector<CMATRIX> (nHamiltonian::*expt_forces_tens_adi_v1)(CMATRIX& ampl_adi)
+  = &nHamiltonian::forces_tens_adi; 
+  vector<CMATRIX> (nHamiltonian::*expt_forces_tens_adi_v2)(CMATRIX& ampl_adi, vector<int>& id_)
+  = &nHamiltonian::forces_tens_adi; 
+  vector<CMATRIX> (nHamiltonian::*expt_forces_tens_dia_v1)(CMATRIX& ampl_dia)
+  = &nHamiltonian::forces_tens_dia; 
+  vector<CMATRIX> (nHamiltonian::*expt_forces_tens_dia_v2)(CMATRIX& ampl_dia, vector<int>& id_) 
+  = &nHamiltonian::forces_tens_dia; 
+
 
 
 
@@ -63,110 +151,137 @@ void export_nhamiltonian_generic_objects(){
   class_<nHamiltonian>("nHamiltonian",init<int,int,int>())
 //      .def("__copy__", &generic__copy__<Hamiltonian>)
 //      .def("__deepcopy__", &generic__deepcopy__<Hamiltonian>)
+      .def_readwrite("id", &nHamiltonian::id)
+      .def_readwrite("level", &nHamiltonian::level)
+      .def_readwrite("ndia", &nHamiltonian::ndia)
+      .def_readwrite("nadi", &nHamiltonian::nadi)
+      .def_readwrite("nnucl", &nHamiltonian::nnucl)
 
+      .def("set_levels", &nHamiltonian::set_levels)
+      .def("add_child", &nHamiltonian::add_child)
+      .def("get_full_id", &nHamiltonian::get_full_id)
+
+      .def("init_all", &nHamiltonian::init_all)
+
+      .def("init_ovlp_dia", &nHamiltonian::init_ovlp_dia)
       .def("set_ovlp_dia_by_ref", &nHamiltonian::set_ovlp_dia_by_ref)
       .def("set_ovlp_dia_by_val", &nHamiltonian::set_ovlp_dia_by_val)
 
-//      .def("set_ampl_dia_by_ref", &nHamiltonian::set_ampl_dia_by_ref)
-//      .def("set_ampl_dia_by_val", &nHamiltonian::set_ampl_dia_by_val)
-
+      .def("init_dc1_dia", &nHamiltonian::init_dc1_dia)
       .def("set_dc1_dia_by_ref", &nHamiltonian::set_dc1_dia_by_ref)
       .def("set_dc1_dia_by_val", &nHamiltonian::set_dc1_dia_by_val)
 
+      .def("init_ham_dia", &nHamiltonian::init_ham_dia)
       .def("set_ham_dia_by_ref", &nHamiltonian::set_ham_dia_by_ref)
       .def("set_ham_dia_by_val", &nHamiltonian::set_ham_dia_by_val)
 
+      .def("init_nac_dia", &nHamiltonian::init_nac_dia)
       .def("set_nac_dia_by_ref", &nHamiltonian::set_nac_dia_by_ref)
       .def("set_nac_dia_by_val", &nHamiltonian::set_nac_dia_by_val)
 
+      .def("init_hvib_dia", &nHamiltonian::init_hvib_dia)
       .def("set_hvib_dia_by_ref", &nHamiltonian::set_hvib_dia_by_ref)
       .def("set_hvib_dia_by_val", &nHamiltonian::set_hvib_dia_by_val)
 
+      .def("init_d1ham_dia", &nHamiltonian::init_d1ham_dia)
       .def("set_d1ham_dia_by_ref", &nHamiltonian::set_d1ham_dia_by_ref)
       .def("set_d1ham_dia_by_val", &nHamiltonian::set_d1ham_dia_by_val)
 
+      .def("init_d2ham_dia", &nHamiltonian::init_d2ham_dia)
       .def("set_d2ham_dia_by_ref", &nHamiltonian::set_d2ham_dia_by_ref)
       .def("set_d2ham_dia_by_val", &nHamiltonian::set_d2ham_dia_by_val)
 
-//      .def("set_den_mat_dia_by_ref", &nHamiltonian::set_den_mat_dia_by_ref)
-//      .def("set_den_mat_dia_by_val", &nHamiltonian::set_den_mat_dia_by_val)
 
-
-
-//      .def("set_ampl_adi_by_ref", &nHamiltonian::set_ampl_adi_by_ref)
-//      .def("set_ampl_adi_by_val", &nHamiltonian::set_ampl_adi_by_val)
-
+      .def("init_dc1_adi", &nHamiltonian::init_dc1_adi)
       .def("set_dc1_adi_by_ref", &nHamiltonian::set_dc1_adi_by_ref)
       .def("set_dc1_adi_by_val", &nHamiltonian::set_dc1_adi_by_val)
 
+      .def("init_ham_adi", &nHamiltonian::init_ham_adi)
       .def("set_ham_adi_by_ref", &nHamiltonian::set_ham_adi_by_ref)
       .def("set_ham_adi_by_val", &nHamiltonian::set_ham_adi_by_val)
 
+      .def("init_nac_adi", &nHamiltonian::init_nac_adi)
       .def("set_nac_adi_by_ref", &nHamiltonian::set_nac_adi_by_ref)
       .def("set_nac_adi_by_val", &nHamiltonian::set_nac_adi_by_val)
 
+      .def("init_hvib_adi", &nHamiltonian::init_hvib_adi)
       .def("set_hvib_adi_by_ref", &nHamiltonian::set_hvib_adi_by_ref)
       .def("set_hvib_adi_by_val", &nHamiltonian::set_hvib_adi_by_val)
 
+      .def("init_d1ham_adi", &nHamiltonian::init_d1ham_adi)
       .def("set_d1ham_adi_by_ref", &nHamiltonian::set_d1ham_adi_by_ref)
       .def("set_d1ham_adi_by_val", &nHamiltonian::set_d1ham_adi_by_val)
 
+      .def("init_d2ham_adi", &nHamiltonian::init_d2ham_adi)
       .def("set_d2ham_adi_by_ref", &nHamiltonian::set_d2ham_adi_by_ref)
       .def("set_d2ham_adi_by_val", &nHamiltonian::set_d2ham_adi_by_val)
 
-//      .def("set_den_mat_adi_by_ref", &nHamiltonian::set_den_mat_adi_by_ref)
-//      .def("set_den_mat_adi_by_val", &nHamiltonian::set_den_mat_adi_by_val)
-
+      .def("init_basis_transform", &nHamiltonian::init_basis_transform)
       .def("set_basis_transform_by_ref", &nHamiltonian::set_basis_transform_by_ref)
       .def("set_basis_transform_by_val", &nHamiltonian::set_basis_transform_by_val)
 
 
-      .def("get_ovlp_dia", &nHamiltonian::get_ovlp_dia)
-//      .def("get_ampl_dia", &nHamiltonian::get_ampl_dia)
-      .def("get_dc1_dia", &nHamiltonian::get_dc1_dia)
-      .def("get_ham_dia", &nHamiltonian::get_ham_dia)
-      .def("get_nac_dia", &nHamiltonian::get_nac_dia)
-      .def("get_hvib_dia", &nHamiltonian::get_hvib_dia)
-      .def("get_d1ham_dia", &nHamiltonian::get_d1ham_dia)
-      .def("get_d2ham_dia", expt_get_d2ham_dia_v1)
-      .def("get_d2ham_dia", expt_get_d2ham_dia_v2)
-//      .def("get_den_mat_dia", &nHamiltonian::get_den_mat_dia)
+      .def("get_ovlp_dia", expt_get_ovlp_dia_v1)
+      .def("get_ovlp_dia", expt_get_ovlp_dia_v2)
+      .def("get_dc1_dia", expt_get_dc1_dia_v1)
+      .def("get_dc1_dia", expt_get_dc1_dia_v2)
+      .def("get_ham_dia", expt_get_ham_dia_v1)
+      .def("get_ham_dia", expt_get_ham_dia_v2)
+      .def("get_nac_dia", expt_get_nac_dia_v1)
+      .def("get_ham_dia", expt_get_ham_dia_v2)
+      .def("get_hvib_dia", expt_get_hvib_dia_v1)
+      .def("get_hvib_dia", expt_get_hvib_dia_v2)
+      .def("get_d1ham_dia", expt_get_d1ham_dia_v1)
+      .def("get_d1ham_dia", expt_get_d1ham_dia_v2)
+      .def("get_d2ham_dia", expt_get_d2ham_dia_v11)
+      .def("get_d2ham_dia", expt_get_d2ham_dia_v12)
+      .def("get_d2ham_dia", expt_get_d2ham_dia_v21)
+      .def("get_d2ham_dia", expt_get_d2ham_dia_v22)
 
-//      .def("get_ampl_adi", &nHamiltonian::get_ampl_adi)
-      .def("get_dc1_adi", &nHamiltonian::get_dc1_adi)
-      .def("get_ham_adi", &nHamiltonian::get_ham_adi)
-      .def("get_nac_adi", &nHamiltonian::get_nac_adi)
-      .def("get_hvib_adi", &nHamiltonian::get_hvib_adi)
-      .def("get_d1ham_adi", &nHamiltonian::get_d1ham_dia)
-      .def("get_d2ham_adi", expt_get_d2ham_adi_v1)
-      .def("get_d2ham_adi", expt_get_d2ham_adi_v2)
-//      .def("get_den_mat_adi", &nHamiltonian::get_den_mat_adi)
+      .def("get_dc1_adi", expt_get_dc1_adi_v1)
+      .def("get_dc1_adi", expt_get_dc1_adi_v2)
+      .def("get_ham_adi", expt_get_ham_adi_v1)
+      .def("get_ham_adi", expt_get_ham_adi_v2)
+      .def("get_nac_adi", expt_get_nac_adi_v1)
+      .def("get_ham_adi", expt_get_ham_adi_v2)
+      .def("get_hvib_adi", expt_get_hvib_adi_v1)
+      .def("get_hvib_adi", expt_get_hvib_adi_v2)
+      .def("get_d1ham_adi", expt_get_d1ham_adi_v1)
+      .def("get_d1ham_adi", expt_get_d1ham_adi_v2)
+      .def("get_d2ham_adi", expt_get_d2ham_adi_v11)
+      .def("get_d2ham_adi", expt_get_d2ham_adi_v12)
+      .def("get_d2ham_adi", expt_get_d2ham_adi_v21)
+      .def("get_d2ham_adi", expt_get_d2ham_adi_v22)
 
-      .def("get_basis_transform", &nHamiltonian::get_basis_transform)
+      .def("get_basis_transform", expt_get_basis_transform_v1)
+      .def("get_basis_transform", expt_get_basis_transform_v2)
 
 
       .def("compute_diabatic", expt_compute_diabatic_v1)
       .def("compute_diabatic", expt_compute_diabatic_v2)
+      .def("compute_diabatic", expt_compute_diabatic_v3)
+      .def("compute_diabatic", expt_compute_diabatic_v4)
 
-      .def("compute_adiabatic", &nHamiltonian::compute_adiabatic)
+      .def("compute_adiabatic", expt_compute_adiabatic_v1)
+      .def("compute_adiabatic", expt_compute_adiabatic_v2)
+      .def("compute_adiabatic", expt_compute_adiabatic_v3)
+      .def("compute_adiabatic", expt_compute_adiabatic_v4)
+
+
       .def("ampl_adi2dia", &nHamiltonian::ampl_adi2dia)
       .def("ampl_dia2adi", &nHamiltonian::ampl_dia2adi)
 
 
-      .def("Ehrenfest_energy_adi", &nHamiltonian::Ehrenfest_energy_adi)
-      .def("Ehrenfest_energy_dia", &nHamiltonian::Ehrenfest_energy_dia)
+      .def("forces_tens_adi", expt_forces_tens_adi_v1)
+      .def("forces_tens_adi", expt_forces_tens_adi_v2)
+      .def("forces_tens_dia", expt_forces_tens_dia_v1)
+      .def("forces_tens_dia", expt_forces_tens_dia_v2)
 
-      .def("forces_tens_adi", &nHamiltonian::forces_tens_adi)
-      .def("forces_tens_dia", &nHamiltonian::forces_tens_dia)
+      .def("forces_adi", expt_forces_adi_v1)
+      .def("forces_adi", expt_forces_adi_v2)
+      .def("forces_dia", expt_forces_dia_v1)
+      .def("forces_dia", expt_forces_dia_v2)
 
-      .def("forces_adi", &nHamiltonian::forces_adi)
-      .def("forces_dia", &nHamiltonian::forces_dia)
-
-      .def("Ehrenfest_forces_tens_adi", &nHamiltonian::Ehrenfest_forces_tens_adi)
-      .def("Ehrenfest_forces_tens_dia", &nHamiltonian::Ehrenfest_forces_tens_dia)
-
-      .def("Ehrenfest_forces_adi", &nHamiltonian::Ehrenfest_forces_adi)
-      .def("Ehrenfest_forces_dia", &nHamiltonian::Ehrenfest_forces_dia)
 
       .def("compute_nac_dia", &nHamiltonian::compute_nac_dia)
       .def("compute_nac_adi", &nHamiltonian::compute_nac_adi)
@@ -174,6 +289,16 @@ void export_nhamiltonian_generic_objects(){
       .def("compute_hvib_dia", &nHamiltonian::compute_hvib_dia)
       .def("compute_hvib_adi", &nHamiltonian::compute_hvib_adi)
 
+
+
+      .def("Ehrenfest_energy_adi", &nHamiltonian::Ehrenfest_energy_adi)
+      .def("Ehrenfest_energy_dia", &nHamiltonian::Ehrenfest_energy_dia)
+
+      .def("Ehrenfest_forces_tens_adi", &nHamiltonian::Ehrenfest_forces_tens_adi)
+      .def("Ehrenfest_forces_tens_dia", &nHamiltonian::Ehrenfest_forces_tens_dia)
+
+      .def("Ehrenfest_forces_adi", &nHamiltonian::Ehrenfest_forces_adi)
+      .def("Ehrenfest_forces_dia", &nHamiltonian::Ehrenfest_forces_dia)
 
 
 

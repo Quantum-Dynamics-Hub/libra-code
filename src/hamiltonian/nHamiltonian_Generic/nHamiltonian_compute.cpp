@@ -131,10 +131,25 @@ vector<CMATRIX> nHamiltonian::forces_tens_adi(CMATRIX& ampl_adi){
 
 }
 
+vector<CMATRIX> nHamiltonian::forces_tens_adi(CMATRIX& ampl_adi, vector<int>& id_){
+/**
+  See the description of the forces_tens_adi(CMATRIX& ampl_adi) function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return forces_tens_adi(ampl_adi);    }
+    else{ cout<<"ERROR in forces_tens_adi: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->forces_tens_adi(ampl_adi, next);
+  }
+}
+
+
+
 
 CMATRIX nHamiltonian::forces_adi(CMATRIX& ampl_adi){
 /**
-
   The dependence of U on R is neglected
 
   The elements of the returned matrix f_adi are the components 
@@ -142,10 +157,7 @@ CMATRIX nHamiltonian::forces_adi(CMATRIX& ampl_adi){
 
   Return : f_adi.M[n] = Cadi.H() * (F_adi[n]) * Cadi   = -dE/dR
 
-
 */
-
-
   CMATRIX res(nnucl, 1);
   vector<CMATRIX> dEdR;   dEdR = forces_tens_adi(ampl_adi);
 
@@ -157,6 +169,19 @@ CMATRIX nHamiltonian::forces_adi(CMATRIX& ampl_adi){
   return res;
 }
 
+CMATRIX nHamiltonian::forces_adi(CMATRIX& ampl_adi, vector<int>& id_){
+/**
+  See the description of the forces_adi(CMATRIX& ampl_adi) function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return forces_adi(ampl_adi);    }
+    else{ cout<<"ERROR in forces_adi: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->forces_adi(ampl_adi, next);
+  }
+}
 
 
 
@@ -208,6 +233,22 @@ vector<CMATRIX> nHamiltonian::forces_tens_dia(CMATRIX& ampl_dia){
   return res;
 }
 
+vector<CMATRIX> nHamiltonian::forces_tens_dia(CMATRIX& ampl_dia, vector<int>& id_){
+/**
+  See the description of the forces_tens_dia(CMATRIX& ampl_dia) function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return forces_tens_dia(ampl_dia);    }
+    else{ cout<<"ERROR in force_tens_dia: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->forces_tens_dia(ampl_dia, next);
+  }
+}
+
+
+
 
 CMATRIX nHamiltonian::forces_dia(CMATRIX& ampl_dia){
 /**
@@ -232,6 +273,23 @@ CMATRIX nHamiltonian::forces_dia(CMATRIX& ampl_dia){
 
   return res;
 }
+
+
+CMATRIX nHamiltonian::forces_dia(CMATRIX& ampl_dia, vector<int>& id_){
+/**
+  See the description of the forces_dia(CMATRIX& ampl_dia) function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return forces_dia(ampl_dia);    }
+    else{ cout<<"ERROR in force_dia: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->forces_dia(ampl_dia, next);
+  }
+}
+
+
 
 
 
