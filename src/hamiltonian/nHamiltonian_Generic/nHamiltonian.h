@@ -415,6 +415,11 @@ public:
 typedef std::vector<nHamiltonian> nHamiltonianList;  ///< data type for keeping a list of generic Hamiltonians of their derived classes
 
 
+///< In nHamiltonian_compute_ETHD.cpp
+double ETHD_energy(const MATRIX& q, const MATRIX& invM);
+MATRIX ETHD_forces(const MATRIX& q, const MATRIX& invM);
+
+
 }// namespace libhamiltonian_generic
 }// namespace libhamiltonian
 }// liblibra

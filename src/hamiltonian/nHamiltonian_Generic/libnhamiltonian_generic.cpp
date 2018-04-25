@@ -375,6 +375,13 @@ void export_nhamiltonian_generic_objects(){
   ;
 
 
+
+  double (*expt_ETHD_energy_v1)(const MATRIX& q, const MATRIX& invM) = &ETHD_energy;
+  MATRIX (*expt_ETHD_forces_v1)(const MATRIX& q, const MATRIX& invM) = &ETHD_forces;
+
+  def("ETHD_energy", expt_ETHD_energy_v1);
+  def("ETHD_forces", expt_ETHD_forces_v1);
+
 }
 
 
