@@ -202,6 +202,9 @@ void export_nhamiltonian_generic_objects(){
   = &nHamiltonian::Ehrenfest_forces_tens_dia;
 
 
+  void (nHamiltonian::*expt_add_ethd_dia_v1)(const MATRIX& q, const MATRIX& invM, int der_lvl) = &nHamiltonian::add_ethd_dia;
+  void (nHamiltonian::*expt_add_ethd_adi_v1)(const MATRIX& q, const MATRIX& invM, int der_lvl) = &nHamiltonian::add_ethd_adi;
+
 
 
   class_<nHamiltonian>("nHamiltonian",init<int,int,int>())
@@ -350,6 +353,10 @@ void export_nhamiltonian_generic_objects(){
       .def("compute_hvib_dia", expt_compute_hvib_dia_v2)
       .def("compute_hvib_adi", expt_compute_hvib_adi_v1)
       .def("compute_hvib_adi", expt_compute_hvib_adi_v2)
+
+      .def("add_ethd_dia", expt_add_ethd_dia_v1)
+      .def("add_ethd_adi", expt_add_ethd_adi_v1)
+
 
 
       .def("Ehrenfest_energy_adi", expt_Ehrenfest_energy_adi_v1)

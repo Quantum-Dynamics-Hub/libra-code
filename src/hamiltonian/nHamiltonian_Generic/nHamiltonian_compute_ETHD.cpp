@@ -147,6 +147,81 @@ MATRIX ETHD_forces(const MATRIX& q, const MATRIX& invM){
 
 
 
+void nHamiltonian::add_ethd_dia(const MATRIX& q, const MATRIX& invM, int der_lvl){
+/**
+  Add ETHD energies and (optionally) forces to all the children Hamiltonians in the diabatic representation
+*/
+
+  complex<double> one(1.0, 0.0);
+
+  if(der_lvl>=0){
+    CMATRIX ethd_en(ndia, ndia);
+    ethd_en.identity();
+    ethd_en *= ETHD_energy(q, invM);
+
+    *ham_dia += ethd_en; 
+
+
+    if(der_lvl>=1){
+      MATRIX ethd_frcs(q.n_rows, q.n_cols);
+      ethd_frcs = ETHD_forces(q, invM);
+
+      for(int traj=0; traj<children.size(); traj++){
+
+        for(int dof=0; dof<nnucl; dof++){
+
+          for(int st=0; st<ndia; st++){
+
+            children[traj]->d1ham_dia[dof]->add(st,st, ethd_frcs.get(st, 0)*one);
+
+          }// for st
+        }// dof
+      }// traj
+
+    }// der_lvl >=1
+
+  }// der_lvl >=0
+
+}
+
+
+void nHamiltonian::add_ethd_adi(const MATRIX& q, const MATRIX& invM, int der_lvl){
+/**
+  Add ETHD energies and (optionally) forces to all the children Hamiltonians in the adiabatic representation
+*/
+
+  complex<double> one(1.0, 0.0);
+
+  if(der_lvl>=0){
+    CMATRIX ethd_en(nadi, nadi);
+    ethd_en.identity();
+    ethd_en *= ETHD_energy(q, invM);
+
+    *ham_adi += ethd_en; 
+
+
+    if(der_lvl>=1){
+      MATRIX ethd_frcs(q.n_rows, q.n_cols);
+      ethd_frcs = ETHD_forces(q, invM);
+
+      for(int traj=0; traj<children.size(); traj++){
+
+        for(int dof=0; dof<nnucl; dof++){
+
+          for(int st=0; st<nadi; st++){
+
+            children[traj]->d1ham_adi[dof]->add(st,st, ethd_frcs.get(st, 0)*one);
+
+          }// for st
+        }// dof
+      }// traj
+
+    }// der_lvl >=1
+
+  }// der_lvl >=0
+
+}
+
 
 
 

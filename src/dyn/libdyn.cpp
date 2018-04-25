@@ -55,9 +55,11 @@ void export_Dyn_objects(){
 
   void (*expt_Verlet0_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params) = &Verlet0;
   void (*expt_Verlet1_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params) = &Verlet1;
+  void (*expt_Verlet1_v2)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, int ent_opt) = &Verlet1;
 
   def("Verlet0", expt_Verlet0_v1);
   def("Verlet1", expt_Verlet1_v1);
+  def("Verlet1", expt_Verlet1_v2);
 
 
 

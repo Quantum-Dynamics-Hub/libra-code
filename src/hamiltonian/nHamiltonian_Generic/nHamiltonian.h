@@ -344,6 +344,10 @@ public:
   void compute_diabatic(bp::object py_funct, bp::object q, bp::object params, int lvl); // for models defined in Python
   void compute_diabatic(bp::object py_funct, bp::object q, bp::object params); // for models defined in Python
 
+  ///< In nHamiltonian_compute_ETHD.cpp
+  void add_ethd_dia(const MATRIX& q, const MATRIX& invM, int der_lvl);
+  void add_ethd_adi(const MATRIX& q, const MATRIX& invM, int der_lvl);
+
 
   ///< In nHamiltonian_compute_adiabatic.cpp
   void compute_adiabatic(int der_lvl, int lvl);

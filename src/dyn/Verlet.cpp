@@ -70,7 +70,7 @@ void Verlet0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, b
 
 
 
-void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params){
+void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, int entanglement_opt){
 /**
   \brief One step of velocity Verlet algorithm for nuclear DOF
 
@@ -84,6 +84,8 @@ void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, b
   computations to update the diabatic Hamiltonian matrix (and derivatives), stored externally.
   \param[in] params The Python object containing any necessary parameters passed to the "py_funct" function when it is executed.
   \param[in] lvl The level of Hamiltonians to do the evaluation at
+  \param[in] entanglement_opt - a selector of a method to couple the trajectories in this ensemble:
+             0 - no coupling, 1 - ETHD, 2 - RPMD
 
 */
 
@@ -119,6 +121,13 @@ void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, b
   }
 
   ham.compute_diabatic(py_funct, bp::object(q), params, 1);
+  if(entanglement_opt==0){    /* Nothing to do */   }
+  else if(entanglement_opt==1){   ham.add_ethd_dia(q, invM, 1);  }
+  else{
+    cout<<"ERROR in Verlet1: The entanglement option = "<<entanglement_opt<<" is not avaialable\n";
+    exit(0);
+  }
+
   ham.compute_adiabatic(1, 1);
 
 
@@ -133,6 +142,19 @@ void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, b
 
 
 }// Verlet1
+
+
+void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params){
+/**
+  \brief Regular velocity Verlet for an ensemble of (uncoupled trajectories)
+*/
+
+  Verlet1(dt, q, p, invM, ham, py_funct, params, 0);
+
+
+}// Verlet1
+
+
 
 
 
