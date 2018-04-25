@@ -217,35 +217,77 @@ void nHamiltonian::compute_adiabatic(bp::object py_funct, bp::object q, bp::obje
 
   if(level==lvl){
 
-    // Temporary storage
-    CMATRIX _Hadi(nadi,nadi);
-    vector<CMATRIX> _d1ham_adi(nnucl, CMATRIX(nadi,nadi));
-    vector<CMATRIX> _dc1_adi(nnucl, CMATRIX(nadi,nadi));
-  
     // Call the Python function with such arguments
     bp::object obj = py_funct(q, params, get_full_id() );  
-  
+
+
+ 
     // Extract all the computed properties
     int has_attr=0;
     has_attr = (int)hasattr(obj,"ham_adi");        
-    if(has_attr){    _Hadi = extract<CMATRIX>(obj.attr("ham_adi"));    }
+    if(has_attr){    
+
+      check_cmatrix(obj, "ham_adi", nadi, nadi);
+      *ham_adi = extract<CMATRIX>(obj.attr("ham_adi"));    
+    }
+
+    has_attr=0;
+    has_attr = (int)hasattr(obj,"nac_adi");        
+    if(has_attr){    
+
+      check_cmatrix(obj, "nac_adi", nadi, nadi);
+      *nac_adi = extract<CMATRIX>(obj.attr("nac_adi"));    
+    }
+
+    has_attr=0;
+    has_attr = (int)hasattr(obj,"hvib_adi");        
+    if(has_attr){    
+
+      check_cmatrix(obj, "hvib_adi", nadi, nadi);
+      *hvib_adi = extract<CMATRIX>(obj.attr("hvib_adi"));    
+    }
+
+
+    has_attr=0;
+    has_attr = (int)hasattr(obj,"dc1_adi");        
+    if(has_attr){
+
+      check_cmatrix_list(obj, "dc1_adi", nadi, nadi, nnucl);
+
+      vector<CMATRIX> _dc1_adi(nnucl, CMATRIX(nadi,nadi));
+      _dc1_adi = extract<CMATRIXList>(obj.attr("dc1_adi"));    
+
+      for(int i=0;i<nnucl;i++){   *dc1_adi[i]   = _dc1_adi[i];     }
+    }
+
   
     has_attr=0;
     has_attr = (int)hasattr(obj,"d1ham_adi");        
-    if(has_attr){    _d1ham_adi = extract<CMATRIXList>(obj.attr("d1ham_adi"));    }
-  
-    has_attr=0;
-    has_attr = (int)hasattr(obj,"dc1_adi");        
-    if(has_attr){    _dc1_adi = extract<CMATRIXList>(obj.attr("dc1_adi"));    }
-  
-  
-    // Copy the temporary results into the Hamiltonian-bound memory
-    *ham_adi = _Hadi;
-    
-    for(int i=0;i<nnucl;i++){
-      *d1ham_adi[i] = _d1ham_adi[i];
-      *dc1_adi[i]   = _dc1_adi[i];
+    if(has_attr){
+
+      check_cmatrix_list(obj, "d1ham_adi", nadi, nadi, nnucl);
+
+      vector<CMATRIX> _d1ham_adi(nnucl, CMATRIX(nadi,nadi));
+      _d1ham_adi = extract<CMATRIXList>(obj.attr("d1ham_adi"));    
+
+      for(int i=0;i<nnucl;i++){   *d1ham_adi[i] = _d1ham_adi[i];   }
     }
+
+
+    has_attr=0;
+    has_attr = (int)hasattr(obj,"d2ham_adi");        
+    if(has_attr){
+
+      check_cmatrix_list(obj, "d2ham_adi", nadi, nadi, nnucl*nnucl);
+
+      vector<CMATRIX> _d2ham_adi(nnucl*nnucl, CMATRIX(nadi,nadi));
+      _d2ham_adi = extract<CMATRIXList>(obj.attr("d2ham_adi"));    
+
+      for(int i=0;i<nnucl*nnucl;i++){   *d2ham_adi[i] = _d2ham_adi[i];   }
+    }
+  
+  
+  
   
   }// if lvl == level
 

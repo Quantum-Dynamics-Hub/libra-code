@@ -95,6 +95,7 @@ void nHamiltonian::compute_diabatic(bp::object py_funct, bp::object q, bp::objec
 }
 
 
+
 void nHamiltonian::compute_diabatic(bp::object py_funct, bp::object q, bp::object params, int lvl){
 /**
   This function will call the <py_funct> function defined in Python and taking the signature:
@@ -127,13 +128,12 @@ void nHamiltonian::compute_diabatic(bp::object py_funct, bp::object q, bp::objec
 
 */
 
+
   if(level==lvl){
 
     // Temporary storage
-    CMATRIX _Hdia(ndia,ndia);
-    CMATRIX _Sdia(ndia,ndia); 
-    vector<CMATRIX> _d1ham_dia(nnucl, CMATRIX(ndia,ndia));
-    vector<CMATRIX> _dc1_dia(nnucl, CMATRIX(ndia,ndia));
+
+
   
     // Call the Python function with such arguments
     bp::object obj = py_funct(q, params, get_full_id() );  
@@ -141,30 +141,60 @@ void nHamiltonian::compute_diabatic(bp::object py_funct, bp::object q, bp::objec
     // Extract all the computed properties
     int has_attr=0;
     has_attr = (int)hasattr(obj,"ham_dia");        
-    if(has_attr){    _Hdia = extract<CMATRIX>(obj.attr("ham_dia"));    }
+    if(has_attr){  
+
+      check_cmatrix(obj, "ham_dia", ndia, ndia);
+      *ham_dia = extract<CMATRIX>(obj.attr("ham_dia")); 
+    }
   
     has_attr=0;
     has_attr = (int)hasattr(obj,"ovlp_dia");        
-    if(has_attr){    _Sdia = extract<CMATRIX>(obj.attr("ovlp_dia"));    }
-  
-    has_attr=0;
-    has_attr = (int)hasattr(obj,"d1ham_dia");        
-    if(has_attr){    _d1ham_dia = extract<CMATRIXList>(obj.attr("d1ham_dia"));    }
-  
+    if(has_attr){ 
+
+      check_cmatrix(obj, "ovlp_dia", ndia, ndia);
+      *ovlp_dia = extract<CMATRIX>(obj.attr("ovlp_dia"));   
+    }
+    
     has_attr=0;
     has_attr = (int)hasattr(obj,"dc1_dia");        
-    if(has_attr){    _dc1_dia = extract<CMATRIXList>(obj.attr("dc1_dia"));    }
-  
-  
-    // Copy the temporary results into the Hamiltonian-bound memory
-    *ham_dia = _Hdia;
-    *ovlp_dia = _Sdia;
-    
-    for(int i=0;i<nnucl;i++){
-      *d1ham_dia[i] = _d1ham_dia[i];
-      *dc1_dia[i]   = _dc1_dia[i];
+    if(has_attr){  
+
+      check_cmatrix_list(obj, "dc1_dia", ndia, ndia, nnucl);
+
+      vector<CMATRIX> _dc1_dia(nnucl, CMATRIX(ndia,ndia));
+      _dc1_dia = extract<CMATRIXList>(obj.attr("dc1_dia"));   
+
+      for(int i=0;i<nnucl;i++){   *dc1_dia[i]   = _dc1_dia[i];    }
     }
+
+
+    has_attr=0;
+    has_attr = (int)hasattr(obj,"d1ham_dia");        
+    if(has_attr){  
+
+      check_cmatrix_list(obj, "d1ham_dia", ndia, ndia, nnucl);
+
+      vector<CMATRIX> _d1ham_dia(nnucl, CMATRIX(ndia,ndia));
+      _d1ham_dia = extract<CMATRIXList>(obj.attr("d1ham_dia"));   
+
+      for(int i=0;i<nnucl;i++){    *d1ham_dia[i] = _d1ham_dia[i];  }
+    }
+
+
+    has_attr=0;
+    has_attr = (int)hasattr(obj,"d2ham_dia");        
+    if(has_attr){  
+
+      check_cmatrix_list(obj, "d2ham_dia", ndia, ndia, nnucl*nnucl);
+
+      vector<CMATRIX> _d2ham_dia(nnucl*nnucl, CMATRIX(ndia,ndia));
+      _d2ham_dia = extract<CMATRIXList>(obj.attr("d2ham_dia"));   
+
+      for(int i=0;i<nnucl;i++){    *d2ham_dia[i] = _d2ham_dia[i];  }
+    }
+
   
+    
   }// if lvl == level
 
   else if(lvl>level){
@@ -180,6 +210,7 @@ void nHamiltonian::compute_diabatic(bp::object py_funct, bp::object q, bp::objec
     cout<<"Can not run evaluation of function in the parent Hamiltonian from the\
      child node\n";    
   }
+
 
 
 }

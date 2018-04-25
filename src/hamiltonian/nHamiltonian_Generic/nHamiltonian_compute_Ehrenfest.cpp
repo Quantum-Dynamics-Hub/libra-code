@@ -66,6 +66,22 @@ complex<double> nHamiltonian::Ehrenfest_energy_adi(CMATRIX& ampl_adi){
 }
 
 
+complex<double> nHamiltonian::Ehrenfest_energy_dia(CMATRIX& ampl_dia, vector<int>& id_){
+/**
+  See the description of the Ehrenfest_energy_dia(CMATRIX& ampl_dia) function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return Ehrenfest_energy_dia(ampl_dia);    }
+    else{ cout<<"ERROR in force_dia: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->Ehrenfest_energy_dia(ampl_dia, next);
+  }
+}
+
+
+
 
 complex<double> nHamiltonian::Ehrenfest_energy_dia(CMATRIX& ampl_dia){
 /**
@@ -96,6 +112,22 @@ complex<double> nHamiltonian::Ehrenfest_energy_dia(CMATRIX& ampl_dia){
   return (ampl_dia.H() * (*ham_dia) * ampl_dia).M[0]/norm;
 
 }
+
+complex<double> nHamiltonian::Ehrenfest_energy_adi(CMATRIX& ampl_adi, vector<int>& id_){
+/**
+  See the description of the Ehrenfest_energy_adi(CMATRIX& ampl_adi) function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return Ehrenfest_energy_adi(ampl_adi);    }
+    else{ cout<<"ERROR in force_dia: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->Ehrenfest_energy_adi(ampl_adi, next);
+  }
+}
+
+
 
 
 
@@ -160,6 +192,22 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi){
 
   return res;
 }
+
+
+CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, vector<int>& id_){
+/**
+  See the description of the Ehrenfest_forces_adi(CMATRIX& ampl_adi) function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return Ehrenfest_forces_adi(ampl_adi);    }
+    else{ cout<<"ERROR in Ehrenfest_forces_adi: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->Ehrenfest_forces_adi(ampl_adi, next);
+  }
+}
+
 
 
 
@@ -229,6 +277,21 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia){
  
 }
 
+CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia, vector<int>& id_){
+/**
+  See the description of the Ehrenfest_forces_dia(CMATRIX& ampl_dia) function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return Ehrenfest_forces_dia(ampl_dia);    }
+    else{ cout<<"ERROR in Ehrenfest_forces_dia: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->Ehrenfest_forces_dia(ampl_dia, next);
+  }
+}
+
+
 
 
 
@@ -278,6 +341,22 @@ vector<CMATRIX> nHamiltonian::Ehrenfest_forces_tens_adi(CMATRIX& ampl_adi){
   return res;
 
 }
+
+vector<CMATRIX> nHamiltonian::Ehrenfest_forces_tens_adi(CMATRIX& ampl_adi, vector<int>& id_){
+/**
+  See the description of the Ehrenfest_forces_tens_adi(CMATRIX& ampl_adi) function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return Ehrenfest_forces_tens_adi(ampl_adi);    }
+    else{ cout<<"ERROR in Ehrenfest_forces_adi: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->Ehrenfest_forces_tens_adi(ampl_adi, next);
+  }
+}
+
+
 
 
 vector<CMATRIX> nHamiltonian::Ehrenfest_forces_tens_dia(CMATRIX& ampl_dia){
@@ -333,6 +412,21 @@ vector<CMATRIX> nHamiltonian::Ehrenfest_forces_tens_dia(CMATRIX& ampl_dia){
   return res;
  
 }
+
+vector<CMATRIX> nHamiltonian::Ehrenfest_forces_tens_dia(CMATRIX& ampl_dia, vector<int>& id_){
+/**
+  See the description of the Ehrenfest_forces_tens_dia(CMATRIX& ampl_dia) function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return Ehrenfest_forces_tens_dia(ampl_dia);    }
+    else{ cout<<"ERROR in Ehrenfest_forces_dia: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->Ehrenfest_forces_tens_dia(ampl_dia, next);
+  }
+}
+
 
 
 

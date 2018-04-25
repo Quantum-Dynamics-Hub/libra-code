@@ -66,6 +66,22 @@ void nHamiltonian::ampl_dia2adi(CMATRIX& ampl_dia, CMATRIX& ampl_adi){
 
 }
 
+void nHamiltonian::ampl_dia2adi(CMATRIX& ampl_dia, CMATRIX& ampl_adi, vector<int>& id_){
+/**
+  See the description of the ampl_dia2adi(CMATRIX& ampl_dia, CMATRIX& ampl_adi) function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return ampl_dia2adi(ampl_dia, ampl_adi);    }
+    else{ cout<<"ERROR in ampl_dia2adi: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->ampl_dia2adi(ampl_dia, ampl_adi, next);
+  }
+}
+
+
+
 void nHamiltonian::ampl_adi2dia(CMATRIX& ampl_dia, CMATRIX& ampl_adi){
 /**
 
@@ -89,6 +105,20 @@ void nHamiltonian::ampl_adi2dia(CMATRIX& ampl_dia, CMATRIX& ampl_adi){
 
   ampl_dia = (*basis_transform) * ampl_adi; 
 
+}
+
+void nHamiltonian::ampl_adi2dia(CMATRIX& ampl_dia, CMATRIX& ampl_adi, vector<int>& id_){
+/**
+  See the description of the ampl_adi2dia(CMATRIX& ampl_dia, CMATRIX& ampl_adi) function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return ampl_adi2dia(ampl_dia, ampl_adi);    }
+    else{ cout<<"ERROR in ampl_adi2dia: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->ampl_adi2dia(ampl_dia, ampl_adi, next);
+  }
 }
 
 
@@ -293,10 +323,14 @@ CMATRIX nHamiltonian::forces_dia(CMATRIX& ampl_dia, vector<int>& id_){
 
 
 
-void nHamiltonian::compute_nac_dia(MATRIX& p, MATRIX& invM){
+void nHamiltonian::compute_nac_dia(const MATRIX& p, const MATRIX& invM){
 /**  
   Function to compute nonadiabatic coupling (nac) in the diabatic representation
   This coupiling is also known as the time-derivative coupling and it is a scalar
+
+  Assumed dimensions: 
+  p - Ndof x 1 matrix of nuclear momenta
+  invM - Ndof x 1 matrix of inverse masses for all the nuclear DOFs
 
   This is going to be <i|d/dt|j> = sum_n { p[n]/mass[n] * dc1_adi[n] }
 */
@@ -311,7 +345,7 @@ void nHamiltonian::compute_nac_dia(MATRIX& p, MATRIX& invM){
 
   for(int n=0;n<nnucl;n++){ 
 
-    double v_n = p.get(n) * invM.get(n,n);
+    double v_n = p.get(n,0) * invM.get(n,0);
 
     if(dc1_dia_mem_status[n]==0){ cout<<"Error in compute_nac_dia(): the derivatives couplings matrix in the adiabatic \
     basis w.r.t. the nuclear DOF "<<n<<" is not allocated but is needed for the calculations \n"; exit(0); }
@@ -327,7 +361,26 @@ void nHamiltonian::compute_nac_dia(MATRIX& p, MATRIX& invM){
 
 }
 
-void nHamiltonian::compute_nac_adi(MATRIX& p, MATRIX& invM){
+
+void nHamiltonian::compute_nac_dia(const MATRIX& p, const MATRIX& invM, vector<int>& id_){
+/**
+  See the description of the compute_nac_dia(MATRIX& p, MATRIX& invM) function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   compute_nac_dia(p, invM);    }
+    else{ cout<<"ERROR in compute_nac_dia: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    children[id_[1]]->compute_nac_dia(p, invM, next);
+  }
+}
+
+
+
+
+
+void nHamiltonian::compute_nac_adi(const MATRIX& p, const MATRIX& invM){
 /**  
   Function to compute nonadiabatic coupling (nac) in the adiabatic representation
   This coupiling is also known as the time-derivative coupling and it is a scalar
@@ -345,7 +398,7 @@ void nHamiltonian::compute_nac_adi(MATRIX& p, MATRIX& invM){
     if(dc1_adi_mem_status[n]==0){ cout<<"Error in compute_nac_dia(): the derivatives couplings matrix in the adiabatic \
     basis w.r.t. the nuclear DOF "<<n<<" is not allocated but is needed for the calculations \n"; exit(0); }
 
-    double v_n = p.get(n) * invM.get(n,n);
+    double v_n = p.get(n,0) * invM.get(n,0);
 
     for(int i=0;i<nadi;i++){
       for(int j=0;j<nadi;j++){
@@ -356,6 +409,21 @@ void nHamiltonian::compute_nac_adi(MATRIX& p, MATRIX& invM){
   }// for n
 
 
+}
+
+
+void nHamiltonian::compute_nac_adi(const MATRIX& p, const MATRIX& invM, vector<int>& id_){
+/**
+  See the description of the compute_nac_adi(MATRIX& p, MATRIX& invM) function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   compute_nac_adi(p, invM);    }
+    else{ cout<<"ERROR in compute_nac_adi: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    children[id_[1]]->compute_nac_adi(p, invM, next);
+  }
 }
 
 
@@ -387,6 +455,22 @@ void nHamiltonian::compute_hvib_dia(){
 
 }
 
+void nHamiltonian::compute_hvib_dia(vector<int>& id_){
+/**
+  See the description of the compute_hvib_dia() function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   compute_hvib_dia();    }
+    else{ cout<<"ERROR in compute_hvib_dia: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    children[id_[1]]->compute_hvib_dia(next);
+  }
+}
+
+
+
 
 void nHamiltonian::compute_hvib_adi(){
 /**  
@@ -413,6 +497,20 @@ void nHamiltonian::compute_hvib_adi(){
     }// for j
   }// for i
 
+}
+
+void nHamiltonian::compute_hvib_adi(vector<int>& id_){
+/**
+  See the description of the compute_hvib_adi() function
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   compute_hvib_adi();    }
+    else{ cout<<"ERROR in compute_hvib_adi: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    children[id_[1]]->compute_hvib_adi(next);
+  }
 }
 
 

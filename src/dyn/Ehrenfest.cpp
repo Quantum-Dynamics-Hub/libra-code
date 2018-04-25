@@ -43,7 +43,8 @@ void Ehrenfest0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHami
   \param[in] rep The representation to run the calculations: 0 - diabatic, 1 - adiabatic
 
 */
-
+  int ndof = q.n_rows;
+  int dof;
  
   //============== Electronic propagation ===================
   if(rep==0){  
@@ -63,7 +64,11 @@ void Ehrenfest0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHami
   else if(rep==1){  p = p + ham.Ehrenfest_forces_adi(C).real() * 0.5*dt;  }
 
 
-  q = q + invM*p*dt;
+  for(dof=0; dof<ndof; dof++){  
+    q.add(dof, 0,  invM.get(dof,0) * p.get(dof,0) * dt ); 
+  }
+
+
   ham.compute_diabatic(py_funct, bp::object(q), params);
   ham.compute_adiabatic(1);
 
@@ -88,7 +93,7 @@ void Ehrenfest0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHami
 
 
 
-void Ehrenfest1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham, bp::object py_funct, bp::object params, int rep){
+void Ehrenfest1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, vector<CMATRIX>& C, nHamiltonian& ham, bp::object py_funct, bp::object params, int rep){
 /**
   \brief One step of the Ehrenfest algorithm for electron-nuclear DOFs for an ensemble of trajectories
 
@@ -106,47 +111,102 @@ void Ehrenfest1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHami
 
 */
 
-  cout<<"ERROR: the implementation is in process. Exiting...\n";
-  exit(0);
+//  cout<<"ERROR: the implementation is in process. Exiting...\n";
+//  exit(0);
+
+  int ndof = q.n_rows;
+  int ntraj = q.n_cols;
+  int traj, dof;
+
+  vector<int> t1(ndof, 0); for(int i=0;i<ndof;i++){  t1[i] = i; }
+  vector<int> t2(1,0);
+  vector<int> t3(2,0);
+
+  MATRIX F(ndof, ntraj);
+  MATRIX f(ndof, 1);
+
+
  
   //============== Electronic propagation ===================
-  if(rep==0){  
-    ham.compute_nac_dia(p, invM);
-    ham.compute_hvib_dia();
-  }
-  else if(rep==1){  
-    ham.compute_nac_adi(p, invM); 
-    ham.compute_hvib_adi();
-  }
+  // Update NACs and Hvib for all trajectories
+  for(traj=0; traj<ntraj; traj++){
+    t3[1] = traj;
 
-  propagate_electronic(0.5*dt, C, ham, rep);   
+    if(rep==0){  
+      ham.compute_nac_dia(p.col(traj), invM, t3);
+      ham.compute_hvib_dia(t3);
+    }
+    else if(rep==1){  
+      ham.compute_nac_adi(p.col(traj), invM, t3); 
+      ham.compute_hvib_adi(t3);
+    }
+  }// for traj
+
+  // Evolve electronic DOFs for all trajectories
+  for(traj=0; traj<ntraj; traj++){
+    propagate_electronic(0.5*dt, C[traj], ham.children[traj], rep);   
+  }
 
   //============== Nuclear propagation ===================
+
+  // Update the Ehrenfest forces for all trajectories
+  for(traj=0; traj<ntraj; traj++){
+    t2[0] = traj;  t3[1] = traj;
     
-       if(rep==0){  p = p + ham.Ehrenfest_forces_dia(C).real() * 0.5*dt;  }
-  else if(rep==1){  p = p + ham.Ehrenfest_forces_adi(C).real() * 0.5*dt;  }
+    if(rep==0){  f = ham.Ehrenfest_forces_dia(C[traj], t3).real();  }
+    else if(rep==1){  f = ham.Ehrenfest_forces_adi(C[traj], t3).real();  }
+ 
+    push_submatrix(F, f, t1, t2);   
+  }
+
+  // Update momenta of nuclei for all trajectories
+  p = p + F * 0.5*dt;
 
 
-  q = q + invM*p*dt;
-  ham.compute_diabatic(py_funct, bp::object(q), params);
-  ham.compute_adiabatic(1);
+  // Update coordinates of nuclei for all trajectories
+  for(traj=0; traj<ntraj; traj++){
+    for(dof=0; dof<ndof; dof++){  
+      q.add(dof, traj,  invM.get(dof,0) * p.get(dof,traj) * dt ); 
+    }
+  }
+
+  ham.compute_diabatic(py_funct, bp::object(q), params, 1);
+  ham.compute_adiabatic(1, 1);
 
 
-       if(rep==0){  p = p + ham.Ehrenfest_forces_dia(C).real() * 0.5*dt;  }
-  else if(rep==1){  p = p + ham.Ehrenfest_forces_adi(C).real() * 0.5*dt;  }
+  // Update the Ehrenfest forces for all trajectories
+  for(traj=0; traj<ntraj; traj++){
+    t2[0] = traj;  t3[1] = traj;
+    
+    if(rep==0){  f = ham.Ehrenfest_forces_dia(C[traj], t3).real();  }
+    else if(rep==1){  f = ham.Ehrenfest_forces_adi(C[traj], t3).real();  }
+ 
+    push_submatrix(F, f, t1, t2);   
+  }
+
+  // Update momenta of nuclei for all trajectories
+  p = p + F * 0.5*dt;
+
 
   //============== Electronic propagation ===================
-  if(rep==0){  
-    ham.compute_nac_dia(p, invM);
-    ham.compute_hvib_dia();
-  }
-  else if(rep==1){  
-    ham.compute_nac_adi(p, invM); 
-    ham.compute_hvib_adi();
-  }
+  // Update NACs and Hvib for all trajectories
+  for(traj=0; traj<ntraj; traj++){
+    t3[1] = traj;
 
-  propagate_electronic(0.5*dt, C, ham, rep);   
+    if(rep==0){  
+      ham.compute_nac_dia(p.col(traj), invM, t3);
+      ham.compute_hvib_dia(t3);
+    }
+    else if(rep==1){  
+      ham.compute_nac_adi(p.col(traj), invM, t3); 
+      ham.compute_hvib_adi(t3);
+    }
+  }// for traj
 
+  // Evolve electronic DOFs for all trajectories
+  for(traj=0; traj<ntraj; traj++){
+    propagate_electronic(0.5*dt, C[traj], ham.children[traj], rep);   
+  }  
 
 }
 

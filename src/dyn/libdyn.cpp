@@ -63,7 +63,7 @@ void export_Dyn_objects(){
 
   void (*expt_Ehrenfest0_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham,
   bp::object py_funct, bp::object params, int rep) = &Ehrenfest0;
-  void (*expt_Ehrenfest1_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham,
+  void (*expt_Ehrenfest1_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, vector<CMATRIX>& C, nHamiltonian& ham,
   bp::object py_funct, bp::object params, int rep) = &Ehrenfest1;
 
   def("Ehrenfest0", expt_Ehrenfest0_v1);
