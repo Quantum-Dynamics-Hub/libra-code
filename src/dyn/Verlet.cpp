@@ -101,6 +101,7 @@ void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, b
   CMATRIX Cadi(1,1); Cadi.set(0,0,1.0,0.0);
   MATRIX F(ndof, ntraj);
   MATRIX f(ndof, 1);
+
   
   for(traj=0; traj<ntraj; traj++){
     t2[0] = traj;  t3[1] = traj;
@@ -121,14 +122,16 @@ void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, b
   }
 
   ham.compute_diabatic(py_funct, bp::object(q), params, 1);
+  ham.compute_adiabatic(1, 1);
+
   if(entanglement_opt==0){    /* Nothing to do */   }
-  else if(entanglement_opt==1){   ham.add_ethd_dia(q, invM, 1);  }
+  else if(entanglement_opt==1){   ham.add_ethd_adi(q, invM, 1);  }
   else{
     cout<<"ERROR in Verlet1: The entanglement option = "<<entanglement_opt<<" is not avaialable\n";
     exit(0);
   }
 
-  ham.compute_adiabatic(1, 1);
+
 
 
   for(traj=0; traj<ntraj; traj++){
