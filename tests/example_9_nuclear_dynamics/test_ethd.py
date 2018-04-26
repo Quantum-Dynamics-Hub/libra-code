@@ -114,7 +114,7 @@ def run_test(model, outname):
     outname - the name of the output file
     """
 
-    ndia, nadi, nnucl, ntraj = 1, 1, 1, 10
+    ndia, nadi, nnucl, ntraj = 1, 1, 1, 100
 
     # ======= Hierarchy of Hamiltonians =======
     ham = nHamiltonian(ndia, nadi, nnucl)
@@ -142,7 +142,7 @@ def run_test(model, outname):
 
 
     # Simulation parameters
-    dt = 0.01
+    dt = 0.1
 
     # Dynamical variables and system-specific properties
     mean_q = MATRIX(nnucl,1);   mean_q.set(0,0, 0.1)
@@ -153,7 +153,7 @@ def run_test(model, outname):
     rnd = Random()
     q = MATRIX(nnucl,ntraj);  sample(q, mean_q, sigma_q, rnd)
     p = MATRIX(nnucl,ntraj);  sample(p, mean_p, sigma_p, rnd)
-    iM = MATRIX(nnucl,1);     iM.set(0,0, 1.0/100.0)
+    iM = MATRIX(nnucl,1);     iM.set(0,0, 1.0/2000.0)
 
 
     # Initial calculations
@@ -190,7 +190,7 @@ def run_test(model, outname):
 
 
     # Do the propagation
-    for i in xrange(500):
+    for i in xrange(5000):
 
         Verlet1(dt, q, p, iM, ham, compute_model, params, 1)
      

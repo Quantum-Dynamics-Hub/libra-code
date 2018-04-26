@@ -162,7 +162,7 @@ void nHamiltonian::add_ethd_dia(const MATRIX& q, const MATRIX& invM, int der_lvl
   Add ETHD energies and (optionally) forces to all the children Hamiltonians in the diabatic representation
 */
 
-  complex<double> one(1.0, 0.0);
+  complex<double> minus_one(-1.0, 0.0);
 
   if(der_lvl>=0){
     double en = ETHD_energy(q, invM);
@@ -182,7 +182,7 @@ void nHamiltonian::add_ethd_dia(const MATRIX& q, const MATRIX& invM, int der_lvl
 
           for(int st=0; st<ndia; st++){
 
-            children[traj]->d1ham_dia[dof]->add(st,st, ethd_frcs.get(dof, traj)*one);
+            children[traj]->d1ham_dia[dof]->add(st,st, ethd_frcs.get(dof, traj)*minus_one);
 
           }// for st
         }// dof
@@ -200,7 +200,7 @@ void nHamiltonian::add_ethd_adi(const MATRIX& q, const MATRIX& invM, int der_lvl
   Add ETHD energies and (optionally) forces to all the children Hamiltonians in the adiabatic representation
 */
 
-  complex<double> one(1.0, 0.0);
+  complex<double> minus_one(-1.0, 0.0);
 
   if(der_lvl>=0){
     CMATRIX ethd_en(nadi, nadi);
@@ -220,7 +220,7 @@ void nHamiltonian::add_ethd_adi(const MATRIX& q, const MATRIX& invM, int der_lvl
 
           for(int st=0; st<nadi; st++){
 
-            children[traj]->d1ham_adi[dof]->add(st,st, ethd_frcs.get(dof, traj)*one);
+            children[traj]->d1ham_adi[dof]->add(st,st, ethd_frcs.get(dof, traj)*minus_one);
 
           }// for st
         }// dof
