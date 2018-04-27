@@ -311,11 +311,6 @@ def run_test1(model, outname):
 
     Ekin, Epot, Etot = compute_etot(ham, p, iM)
 
-    os.system("mkdir energy")
-    os.system("mkdir phase_space")
-    os.system("mkdir pos_space")
-    os.system("mkdir tunnel")
-
     e = open("energy/energy.txt", "w")
     r = open("phase_space/phase_space.txt", "w")
     g = open("pos_space/pos_space.txt", "w")
