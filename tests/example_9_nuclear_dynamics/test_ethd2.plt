@@ -30,35 +30,40 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 set style line 42 lc rgb '#C0C0C0' pt 6 ps 1 lt 1 lw 5 # --- silver
 set style line 43 lc rgb '#D2691E' pt 6 ps 1 lt 1 lw 5 # --- chocolate
 
-set output "tunnel.png"
+set output "_tunnel.png"
 set xlabel "Time (a.u)"  offset 0.0, 0.5
 set ylabel "Population on initial State" offset 1.3, 0.0
-plot  "tunnel.txt" u ($1):2 w l ls 22 lw 10 t "ETHD",\
+plot  "_output.txt" u ($1):5 w l ls 22 lw 10 t "ETHD"
 
-set output "Energy_vs_Time.png"
+
+set output "_energy.png"
 set xlabel "Time (a.u)" offset 0.0, 0.5
 set ylabel "Energy (a.u)" offset 1.7, 0.0
 set ytics 0.1
-plot  "energy.txt" u ($1):3 w l lt 7 lw 5 t "Potential",\
-      "energy.txt" u ($1):2 w l lt 6 lw 5 t "Kinetic",\
-      "energy.txt" u ($1):4 w l lt 8 lw 5 t "Total",\
+plot  "_output.txt" u ($1):3 w l lt 7 lw 5 t "Potential",\
+      "_output.txt" u ($1):2 w l lt 6 lw 5 t "Kinetic",\
+      "_output.txt" u ($1):4 w l lt 8 lw 5 t "Total"
 
-set output "q[i]_vs_t.png"
+
+set output "_t-q.png"
 set xlabel "Time (a.u)" offset 0.0, 0.5
 set ylabel "Position (a.u)" offset 1.3, 0.0
 set yrange[-2.0:2.0]
 set ytics 1.0
-fName = 'pos_space.txt'
+fName = '_pos_space.txt'
 stat fName nooutput
 N = STATS_columns #number of columns found in file
 plot for [i=2:N] fName u ($1):i w l lt 8 lw 1 t "",\
 
-set output "phase_space.png"
+
+set output "_q-p.png"
 set xlabel "Position (a.u)" offset 0.0, 0.5
 set ylabel "Momentum (a.u)" offset 1.3, 0.0
+set xtics 0.1
 set xrange[-2.0:2.0]
+set ytics 10.0
 set yrange[-50.0:50.0]
-fName = 'phase_space.txt'
+fName = '_phase_space.txt'
 stat fName nooutput
 N = STATS_columns #number of columns found in file
 plot for [i=2:N/2] fName u 2*i-1:2*i w l lt 8 lw 1 t "",\
