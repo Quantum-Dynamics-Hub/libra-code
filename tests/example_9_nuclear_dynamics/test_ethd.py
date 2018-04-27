@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2017-2018 Alexey V. Akimov
+#* Copyright (C) 2017-2018  Brendan A. Smith, Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -271,7 +271,9 @@ def run_test1(model, outname):
     #params["rep"] = rep
 
     # Simulation parameters
-    dt = 1.0
+    dt = 2.0
+    # If using model2, the symmetric double well model, we must define the q corrdiate where the barrier lies. We will use this later when counting trajectories
+    # that cross this point.
     if model == 2:
         barrier = 0.0
 
@@ -282,11 +284,15 @@ def run_test1(model, outname):
     sigma_p = MATRIX(nnucl,1);  sigma_p.set(0,0, 0.0)
 
     rnd = Random()
+    # We only set up the position matrix here, becuase we are  going to manually assign trajectories based on the distributions used in the original ETHD paper.
     q = MATRIX(nnucl,ntraj);  #sample(q, mean_q, sigma_q, rnd)
     p = MATRIX(nnucl,ntraj);  sample(p, mean_p, sigma_p, rnd)
-
+    
+    # The following coordinates are used in the original ETHD paper in the symmetric double well model for ntraj = 100:
+    # Smith, B. & Akimov, A. V. Entangled trajectories Hamiltonian dynamics for treating quantum nuclear effects. J. Chem. Phys. 148, 144106 (2018)
     qq = [-1.09854, -1.12192, -1.09621, -1.05124, -1.16032, -1.06631, -1.13264, -1.08911, -1.13068, -1.12903, -1.16492, -1.13773, -1.06396, -1.11805, -1.09131, -1.16439, -1.19177, -1.08141, -1.17604, -1.09649, -1.12952, -1.11991, -1.11633, -1.14776, -1.12007, -1.0591, -1.13377, -1.10087, -1.08388, -1.13641, -1.15817, -1.085, -1.07592, -1.08342, -1.04719, -1.0848, -1.12494, -1.15889, -1.08761, -1.13408, -1.06406, -1.08297, -1.1232, -1.09591, -1.08338, -1.05569, -1.03208, -1.13144, -1.13133, -1.10966, -1.07806, -1.1481, -1.04755, -1.13187, -1.07395, -1.06856, -1.18011, -1.15939, -1.13139, -1.05896, -1.17767, -1.08951, -1.03073, -1.05692, -1.122, -1.17254, -1.14556, -1.08375, -1.11523, -1.08684, -1.13929, -1.07307, -1.11072, -1.06146, -1.09339, -1.10263, -1.04003, -1.15927, -1.07781, -1.11834, -1.10949, -0.99579, -1.07997, -1.0763, -1.16783, -1.11118, -1.18549, -1.09557, -1.09824, -1.09558, -1.11735, -1.113, -1.17004, -1.09844, -1.14848, -1.10039, -1.11218, -1.01426, -1.10208, -1.03295]
 
+    # For each trajectory in qq, we will assign it to the position matrix q. Recall here we are doing 1D ETHD, so we populate only row 0.
     for i in xrange(len(qq)):
         q.set(0,i,qq[i])
     iM = MATRIX(nnucl,1);     iM.set(0,0, 1.0/2000.0)
@@ -311,13 +317,13 @@ def run_test1(model, outname):
 
     Ekin, Epot, Etot = compute_etot(ham, p, iM)
 
-    e = open("energy/energy.txt", "w")
-    r = open("phase_space/phase_space.txt", "w")
-    g = open("pos_space/pos_space.txt", "w")
-    hh = open("tunnel/tunnel.txt", "w")
+    e = open("energy.txt", "w")
+    r = open("phase_space.txt", "w")
+    g = open("pos_space.txt", "w")
+    hh = open("tunnel.txt", "w")
 
     # Do the propagation
-    for i in xrange(4300):
+    for i in xrange(2000):
 
         Verlet1(dt, q, p, iM, ham, compute_model, params, 1)
 
@@ -325,17 +331,21 @@ def run_test1(model, outname):
 
         Ekin, Epot, Etot = compute_etot(ham, p, iM)
 
+        # Print the ensemble average - kinetic, potential, and total energies
         e.write( " %8.5f  %8.5f  %8.5f  %8.5f\n" % ( i*dt, Ekin, Epot, Etot ) )
 
+        # Print the phase space information
         for j in range(ntraj):
             r.write(" %8.5f  %8.5f" % ( q.get(0,j), p.get(0,j) ) ),
         r.write( "\n" )
 
+        # Print the position versus time infromation
         g.write( " %8.5f" % (i*dt) ),
         for j in range(ntraj):
             g.write( " %8.5f" % ( q.get(0,j) ) )
         g.write( "\n" )
 
+        # Print the tunneling information. Here, we count each trajectory across the barrier.
         count = 0.0
         for j in range(ntraj):
             if q.get(0,j) > barrier:
