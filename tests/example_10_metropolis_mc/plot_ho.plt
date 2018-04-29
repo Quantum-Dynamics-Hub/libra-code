@@ -25,17 +25,47 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 
 
 
-set xlabel "time, fs" offset 0.0, 0.5
-set ylabel "Energy, eV" offset 1.5, 0.0
-#set xtics 1000.0
-set xrange [-0.5:1.5]
-#set yrange [-40:40]
+set xlabel "x" offset 0.0, 0.5
+set ylabel "Probability density" offset 1.5, 0.0
+
+
+set xrange [-1.5:1.5]
+set yrange [0:0.05]
+
+set xtics 0.5
+set ytics 0.01
+
 set key spacing 1.0 font ",24"
 set key top horizontal
 
+set output "distrib-1.png"
+plot "_distrib-1.txt" using 1:2 w l ls 11 lw 5 t "Case 1"
+
+set output "distrib-2.png"
+plot "_distrib-2.txt" using 1:2 w l ls 11 lw 5 t "Case 2"
+
+set output "distrib-3.png"
+plot "_distrib-3.txt" using 1:2 w l ls 11 lw 5 t "Case 3"
+
+set output "distrib-4.png"
+plot "_distrib-4.txt" using 1:2 w l ls 11 lw 5 t "Case 4"
+
+set output "distrib-5.png"
+plot "_distrib-5.txt" using 1:2 w l ls 11 lw 5 t "Case 5"
+
+set output "distrib-6.png"
+plot "_distrib-6.txt" using 1:2 w l ls 11 lw 5 t "Case 6"
+
+set output "distrib-7.png"
+plot "_distrib-7.txt" using 1:2 w l ls 11 lw 5 t "Case 7"
+
+set output "distrib-8.png"
+plot "_distrib-8.txt" using 1:2 w l ls 11 lw 5 t "Case 8"
+
+set output "distrib-9.png"
+plot "_distrib-9.txt" using 1:2 w l ls 11 lw 5 t "Case 9"
 
 
-set output "_distrib.png"
-plot "_distrib.txt" using 1:2 w l ls 11 lw 5 t "Population density"
+
 
 
