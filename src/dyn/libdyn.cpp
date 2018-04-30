@@ -37,6 +37,163 @@ using namespace libensemble;
 using namespace libgwp;
 
 
+void export_Verlet_objects(){
+
+  void (*expt_Verlet0_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params) = &Verlet0;
+  void (*expt_Verlet1_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params) = &Verlet1;
+  void (*expt_Verlet1_v2)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, int ent_opt) = &Verlet1;
+
+  def("Verlet0", expt_Verlet0_v1);
+  def("Verlet1", expt_Verlet1_v1);
+  def("Verlet1", expt_Verlet1_v2);
+
+
+}
+
+void export_Ehrenfest_objects(){
+
+
+  void (*expt_Ehrenfest0_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham,
+  bp::object py_funct, bp::object params, int rep) = &Ehrenfest0;
+  void (*expt_Ehrenfest1_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, vector<CMATRIX>& C, nHamiltonian& ham,
+  bp::object py_funct, bp::object params, int rep) = &Ehrenfest1;
+
+  def("Ehrenfest0", expt_Ehrenfest0_v1);
+  def("Ehrenfest1", expt_Ehrenfest1_v1);
+
+}
+
+
+void export_FSSH_hopping_probabilities_objects(){
+
+
+  MATRIX (*expt_compute_hopping_probabilities_fssh_v1)
+  (CMATRIX& Coeff, CMATRIX& Hvib, double dt, int use_boltz_factor, double T) = &compute_hopping_probabilities_fssh;
+
+  MATRIX (*expt_compute_hopping_probabilities_fssh_v2)
+  (CMATRIX& Coeff, CMATRIX& Hvib, double dt) = &compute_hopping_probabilities_fssh;
+
+  MATRIX (*expt_compute_hopping_probabilities_fssh_v3)
+  (CMATRIX& Coeff, nHamiltonian& ham, double dt, int use_boltz_factor, double T) = &compute_hopping_probabilities_fssh;
+
+  MATRIX (*expt_compute_hopping_probabilities_fssh_v4)
+  (CMATRIX& Coeff, nHamiltonian& ham, double dt) = &compute_hopping_probabilities_fssh;
+
+  void (*expt_compute_hopping_probabilities_fssh_v5)
+  (Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
+   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_fssh;
+
+  void (*expt_compute_hopping_probabilities_fssh_v6)
+  (Ensemble& ens, int i, MATRIX& g,
+   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_fssh;
+
+  def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v1);
+  def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v2);
+  def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v3);
+  def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v4);
+  def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v5);
+  def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v6);
+
+
+}
+
+
+void export_GFSH_hopping_probabilities_objects(){
+
+  MATRIX (*expt_compute_hopping_probabilities_gfsh_v1)
+  (CMATRIX& Coeff, CMATRIX& Hvib, double dt, int use_boltz_factor, double T) = &compute_hopping_probabilities_gfsh;
+
+  MATRIX (*expt_compute_hopping_probabilities_gfsh_v2)
+  (CMATRIX& Coeff, CMATRIX& Hvib, double dt) = &compute_hopping_probabilities_gfsh;
+
+  MATRIX (*expt_compute_hopping_probabilities_gfsh_v3)
+  (CMATRIX& Coeff, nHamiltonian& ham, double dt, int use_boltz_factor, double T) = &compute_hopping_probabilities_gfsh;
+
+  MATRIX (*expt_compute_hopping_probabilities_gfsh_v4)
+  (CMATRIX& Coeff, nHamiltonian& ham, double dt) = &compute_hopping_probabilities_gfsh;
+
+  void (*expt_compute_hopping_probabilities_gfsh_v5)
+  (Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
+   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_gfsh;
+
+  void (*expt_compute_hopping_probabilities_gfsh_v6)
+  (Ensemble& ens, int i, MATRIX& g,
+   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_gfsh;
+
+  def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v1);
+  def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v2);
+  def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v3);
+  def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v4);
+  def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v5);
+  def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v6);
+
+}
+
+
+void export_MSSH_hopping_probabilities_objects(){
+
+  MATRIX (*expt_compute_hopping_probabilities_mssh_v1)
+  (CMATRIX& Coeff)  = &compute_hopping_probabilities_mssh;
+
+  void (*expt_compute_hopping_probabilities_mssh_v2)
+  (Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
+   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_mssh;
+
+  void (*expt_compute_hopping_probabilities_mssh_v3)
+  (Ensemble& ens, int i, MATRIX& g,
+   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_mssh;
+
+
+  def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v1);
+  def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v2);
+  def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v3);
+
+
+}
+
+
+void export_tsh_rescaling_objects(){
+
+
+  int (*expt_rescale_velocities_adiabatic_v1)
+  (MATRIX& p, MATRIX& invM, CMATRIX& ham_adi, vector<CMATRIX>& dc1_adi, 
+  int new_st,int old_st, int do_reverse) = &rescale_velocities_adiabatic;
+
+  int (*expt_rescale_velocities_adiabatic_v2)
+  (MATRIX& p, MATRIX& invM, nHamiltonian& ham, int new_st,int old_st,
+  int do_reverse) = &rescale_velocities_adiabatic;
+
+  int (*expt_rescale_velocities_adiabatic_v3)
+  (vector<double>& p, vector<double>& masses, CMATRIX& ham_adi,
+   vector<CMATRIX>& dc1_adi, int new_st,int old_st, int do_reverse) = &rescale_velocities_adiabatic;
+
+  int (*expt_rescale_velocities_adiabatic_v4)
+  (Nuclear& mol, Hamiltonian& ham, int old_st, int do_reverse) = &rescale_velocities_adiabatic;
+
+  def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v1);
+  def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v2);
+  def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v3);
+  def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v4);
+
+
+
+  int (*expt_rescale_velocities_diabatic_v1)
+  (MATRIX& p, MATRIX& invM, CMATRIX& ham_adi, int new_st,int old_st) = &rescale_velocities_diabatic;
+
+  int (*expt_rescale_velocities_diabatic_v2)
+  (MATRIX& p, MATRIX& invM, nHamiltonian& ham, int new_st,int old_st) = &rescale_velocities_diabatic;
+
+  int (*expt_rescale_velocities_diabatic_v3)
+  (Nuclear& mol, Hamiltonian& ham, int old_st) = &rescale_velocities_diabatic;
+
+  def("rescale_velocities_diabatic", expt_rescale_velocities_diabatic_v1);
+  def("rescale_velocities_diabatic", expt_rescale_velocities_diabatic_v2);
+  def("rescale_velocities_diabatic", expt_rescale_velocities_diabatic_v3);
+
+
+}
+
+
 void export_Dyn_objects(){
 /** 
   \brief Exporter of libdyn classes and functions
@@ -53,24 +210,14 @@ void export_Dyn_objects(){
   export_Ensemble_objects();
   export_gwp_objects();
 
-  void (*expt_Verlet0_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params) = &Verlet0;
-  void (*expt_Verlet1_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params) = &Verlet1;
-  void (*expt_Verlet1_v2)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, int ent_opt) = &Verlet1;
+  
+  export_Verlet_objects();
+  export_Ehrenfest_objects();
 
-  def("Verlet0", expt_Verlet0_v1);
-  def("Verlet1", expt_Verlet1_v1);
-  def("Verlet1", expt_Verlet1_v2);
-
-
-
-  void (*expt_Ehrenfest0_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham,
-  bp::object py_funct, bp::object params, int rep) = &Ehrenfest0;
-  void (*expt_Ehrenfest1_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, vector<CMATRIX>& C, nHamiltonian& ham,
-  bp::object py_funct, bp::object params, int rep) = &Ehrenfest1;
-
-  def("Ehrenfest0", expt_Ehrenfest0_v1);
-  def("Ehrenfest1", expt_Ehrenfest1_v1);
-
+  export_FSSH_hopping_probabilities_objects();
+  export_GFSH_hopping_probabilities_objects();
+  export_MSSH_hopping_probabilities_objects();
+  export_tsh_rescaling_objects();
 
 
   void (*expt_tsh_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, MATRIX& states,
@@ -79,18 +226,21 @@ void export_Dyn_objects(){
 
 
 
-
-  double (*expt_compute_kinetic_energy_v1)(Nuclear& mol) = &compute_kinetic_energy;
-  double (*expt_compute_kinetic_energy_v2)(Ensemble& ens) = &compute_kinetic_energy;
-  double (*expt_compute_potential_energy_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt) = &compute_potential_energy;
-  double (*expt_compute_potential_energy_v2)(Ensemble& ens, int opt) = &compute_potential_energy;
-
-  double (*expt_compute_forces_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt) = &compute_forces;
-  double (*expt_compute_forces_v2)(Ensemble& ens, int opt) = &compute_forces;
-
+  double (*expt_compute_kinetic_energy_v1)(MATRIX& p, MATRIX& invM) = &compute_kinetic_energy;
+  double (*expt_compute_kinetic_energy_v2)(Nuclear& mol) = &compute_kinetic_energy;
+  double (*expt_compute_kinetic_energy_v3)(Ensemble& ens) = &compute_kinetic_energy;
 
   def("compute_kinetic_energy",expt_compute_kinetic_energy_v1);
   def("compute_kinetic_energy",expt_compute_kinetic_energy_v2);
+  def("compute_kinetic_energy",expt_compute_kinetic_energy_v3);
+
+
+
+  double (*expt_compute_potential_energy_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt) = &compute_potential_energy;
+  double (*expt_compute_potential_energy_v2)(Ensemble& ens, int opt) = &compute_potential_energy;
+  double (*expt_compute_forces_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt) = &compute_forces;
+  double (*expt_compute_forces_v2)(Ensemble& ens, int opt) = &compute_forces;
+
   def("compute_potential_energy",expt_compute_potential_energy_v1);
   def("compute_potential_energy",expt_compute_potential_energy_v2);
   def("compute_forces",expt_compute_forces_v1);
@@ -102,51 +252,14 @@ void export_Dyn_objects(){
 
 
 
-  void (*expt_compute_hopping_probabilities_fssh_v1)
-  (Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
-   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_fssh;
-  void (*expt_compute_hopping_probabilities_fssh_v2)
-  (Ensemble& ens, int i, MATRIX& g,
-   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_fssh;
-  MATRIX (*expt_compute_hopping_probabilities_fssh_v3)
-  (CMATRIX& Coeff, CMATRIX& Hvib, double dt) = &compute_hopping_probabilities_fssh;
 
-
-  void (*expt_compute_hopping_probabilities_gfsh_v1)
-  (Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
-   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_gfsh;
-
-  void (*expt_compute_hopping_probabilities_gfsh_v2)
-  (Ensemble& ens, int i, MATRIX& g,
-   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_gfsh;
-
-  MATRIX (*expt_compute_hopping_probabilities_gfsh_v3)
-  (CMATRIX& Coeff, CMATRIX& Hvib, double dt) = &compute_hopping_probabilities_gfsh;
-
-
-  void (*expt_compute_hopping_probabilities_mssh_v1)
-  (Nuclear& mol, Electronic& el, Hamiltonian& ham, MATRIX& g,
-   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_mssh;
-  void (*expt_compute_hopping_probabilities_mssh_v2)
-  (Ensemble& ens, int i, MATRIX& g,
-   double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_mssh;
-  MATRIX (*expt_compute_hopping_probabilities_mssh_v3)(CMATRIX& Coeff)  = &compute_hopping_probabilities_mssh;
 
   void (*expt_compute_hopping_probabilities_esh_v1)
   (Ensemble& ens, MATRIX* g, double dt, int use_boltz_factor,double T) = compute_hopping_probabilities_esh;
 
-
-  def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v1);
-  def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v2);
-  def("compute_hopping_probabilities_fssh",expt_compute_hopping_probabilities_fssh_v3);
-  def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v1);
-  def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v2);
-  def("compute_hopping_probabilities_gfsh",expt_compute_hopping_probabilities_gfsh_v3);
-
-  def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v1);
-  def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v2);
-  def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v3);
   def("compute_hopping_probabilities_esh", expt_compute_hopping_probabilities_esh_v1);
+
+
 
 
   int (*expt_hop_v1)
@@ -164,18 +277,6 @@ void export_Dyn_objects(){
   def("hop", expt_hop_v4);
 
 
-
-  int (*expt_rescale_velocities_adiabatic_v1)
-  (vector<double>& p, vector<double>& masses, CMATRIX& ham_adi,
-   vector<CMATRIX>& dc1_adi, int new_st,int old_st, int do_reverse) = &rescale_velocities_adiabatic;
-  int (*expt_rescale_velocities_adiabatic_v2)
-  (Nuclear& mol, Hamiltonian& ham, int old_st, int do_reverse) = &rescale_velocities_adiabatic;
-  int (*expt_rescale_velocities_diabatic_v1)
-  (Nuclear& mol, Hamiltonian& ham, int old_st) = &rescale_velocities_diabatic;
-
-  def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v1);
-  def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v2);
-  def("rescale_velocities_diabatic", expt_rescale_velocities_diabatic_v1);
 
 
 
