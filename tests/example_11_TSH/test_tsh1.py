@@ -30,6 +30,62 @@ class tmp:
     pass    
 
 
+def Tully1(q, params):
+    """
+ 
+ 
+    """
+
+
+    Hdia = CMATRIX(2,2)
+    Sdia = CMATRIX(2,2)
+    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(2,2) )
+    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(2,2) )
+  
+
+    x = q.get(0)
+    A = 0.01
+    B = 1.6
+    C = 0.005
+    D = 1.0
+
+    Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
+    Sdia.set(1,0, 0.0+0.0j);  Sdia.set(1,1, 1.0+0.0j);
+
+    V11,dV11 = 0.0, 0.0
+    if x>0:
+        V11 = A*(1.0 - math.exp(-B*x))
+        dV11 =  A*B*math.exp(-B*x)
+    else:
+        V11 = -A*(1.0 - math.exp(B*x))
+        dV11 =  A*B*math.exp(B*x)
+    
+    V = C * math.exp(-D*x*x)
+    dV = -2.0*x*C*D*math.exp(-D*x*x)
+
+    Hdia.set(0,0, V11*(1.0+0.0j) );   Hdia.set(0,1, V*(1.0+0.0j));
+    Hdia.set(1,0, V*(1.0+0.0j));      Hdia.set(1,1, V11*(-1.0+0.0j));
+
+
+    for i in [0]:
+        #  d Hdia / dR_0
+        d1ham_dia[i].set(0,0, dV11*(1.0+0.0j) );  d1ham_dia[i].set(0,1, dV*(1.0+0.0j));
+        d1ham_dia[i].set(1,0, dV*(1.0+0.0j));     d1ham_dia[i].set(1,1, dV11*(-1.0+0.0j));
+
+        #  <dia| d/dR_0| dia >
+        dc1_dia[i].set(0,0, 0.0+0.0j);   dc1_dia[i].set(0,1, 0.0+0.0j);
+        dc1_dia[i].set(1,0, 0.0+0.0j);   dc1_dia[i].set(1,1, 0.0+0.0j);
+
+    obj = tmp()
+    obj.ham_dia = Hdia
+    obj.ovlp_dia = Sdia
+    obj.d1ham_dia = d1ham_dia
+    obj.dc1_dia = dc1_dia
+
+    return obj
+
+
+
 def model1(q, params):
     """
               k*x^2         V
@@ -70,9 +126,6 @@ def model1(q, params):
         #  <dia| d/dR_0| dia >
         dc1_dia[i].set(0,0, 0.0+0.0j);   dc1_dia[i].set(0,1, 0.0+0.0j);
         dc1_dia[i].set(1,0, 0.0+0.0j);   dc1_dia[i].set(1,1, 0.0+0.0j);
-
-
-
 
     obj = tmp()
     obj.ham_dia = Hdia
@@ -238,7 +291,8 @@ def compute_model(q, params, full_id):
     indx = Id[-1]
 
     if model==1:
-        res = model1(q.col(indx), params)
+#        res = model1(q.col(indx), params)
+        res = Tully1(q.col(indx), params)
     elif model==2:
         res = model2(q.col(indx), params)
     elif model==3:
@@ -252,7 +306,7 @@ def compute_model(q, params, full_id):
     
 
 
-def compute_etot(ham, p, Cdia, Cadi, iM, rep):
+def compute_etot(ham, p, iM, rep, nst, st):
 
 
     ntraj = p.num_of_cols
@@ -261,22 +315,18 @@ def compute_etot(ham, p, Cdia, Cadi, iM, rep):
     epot, ekin = [], []    
     Epot, Ekin = 0.0, 0.0
 
+    C = CMATRIX(nst, 1)
+    C.set(st, 0, 1.0+0.0j)
+
     if rep==0:
-        epot.append( ham.Ehrenfest_energy_dia(Cdia).real )
-        Epot = Epot + epot[0]
+        Epot = ham.Ehrenfest_energy_dia(C).real 
     elif rep==1:
-        epot.append( ham.Ehrenfest_energy_adi(Cdia).real )
-        Epot = Epot + epot[0]
+        Epot = ham.Ehrenfest_energy_adi(C).real 
 
-
-    tmp = 0.0
+    Ekin = 0.0
     for dof in xrange(ndof):
-        tmp = tmp + 0.5 * iM.get(dof, 0) * (p.get(dof, 0) ** 2)
-    ekin.append(tmp)
-    Ekin = Ekin + ekin[0]
+        Ekin = Ekin + 0.5 * iM.get(dof, 0) * (p.get(dof, 0) ** 2)
 
-    Ekin = Ekin 
-    Epot = Epot 
     Etot = Ekin + Epot
 
     # Variances:
@@ -298,7 +348,7 @@ def sample(x, mean_x, sigma_x, rnd):
 
 
 
-def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, outname, params1, rnd, st):
+def run_test(_q, _p, _Cadi, _iM, model, rep, outname, params1, rnd, st):
     """
     model - setup the Hamiltonian
     rep - 0 - diabatic, 1 - adiabatic
@@ -309,38 +359,35 @@ def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, ou
     # functions with the same input variables without worries that they will be altered
     # inside of run_test
 
+    nel = _Cadi.num_of_rows;
+
     q = MATRIX(_q)
     p = MATRIX(_p)
     iM = MATRIX(_iM)
 
-    Cdia = CMATRIX(_Cdia[0])
-    Cadi = CMATRIX(_Cadi[0])
+    Cadi = CMATRIX(_Cadi)
+    Cdia = CMATRIX(nel, nel)
 
 
     # ======= Hierarchy of Hamiltonians =======
-    ham = nHamiltonian(ndia, nadi, nnucl)
+    ham = nHamiltonian(nel, nel, 1)
     ham.init_all(2)
 
 
     #  Set up the models and compute internal variables
     # Initialization
     # Model parameters 
-    params = {}
-    params["x0"], params["k"], params["D"], params["V"] = 1.0, 0.1, -0.1, 0.05
-    params["omega"] = 0.25
-    params["model"] = model
-    params["rep"] = rep
-
+    params = {"model":model, "rep":rep}
 
     # Simulation parameters
     dt = 1.0
 
-
     # Initial calculations
-    ham.compute_diabatic(compute_model, q, params, 0)
-    ham.compute_adiabatic(1, 0); 
+    ham.compute_diabatic(compute_model, q, params)
+    ham.compute_adiabatic(1); 
 
     ham.ampl_adi2dia(Cdia, Cadi)
+
 
     if rep==0:
         ham.compute_nac_dia(p, iM);  
@@ -349,8 +396,10 @@ def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, ou
         ham.compute_nac_adi(p, iM);
         ham.compute_hvib_adi(); 
 
+ 
 
-    Ekin, Epot, Etot, dEkin, dEpot, dEtot = compute_etot(ham, p, Cdia, Cadi, iM, rep)
+
+    Ekin, Epot, Etot, dEkin, dEpot, dEtot = compute_etot(ham, p, iM, rep, nel, st)
     dm_dia, dm_adi = None, None
 
 
@@ -359,8 +408,9 @@ def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, ou
 
 
     # Do the propagation
-    for i in xrange(500):
+    for i in xrange(1000):
 
+#        sys.exit(0)
         if rep==0:
             st = tsh0(dt, q, p, iM,  Cdia, st, ham, compute_model, params, params1, rnd)
         elif rep==1:
@@ -382,7 +432,7 @@ def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, ou
             dm_dia = su * dm_adi * su.H()
 
 
-        Ekin, Epot, Etot, dEkin, dEpot, dEtot = compute_etot(ham, p, Cdia, Cadi, iM, rep)
+        Ekin, Epot, Etot, dEkin, dEpot, dEtot = compute_etot(ham, p, iM, rep, nel, st)
 
 
         out = open(outname, "a")
@@ -407,30 +457,23 @@ def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, ou
 
 
 model = 1
-ndia, nadi, nnucl, ntraj = 2, 2, 1, 1
-
 rnd = Random()
 
-# Dynamical variables and system-specific properties
-mean_q = MATRIX(nnucl,1);   mean_q.set(0,0, 0.1)
-sigma_q = MATRIX(nnucl,1);  sigma_q.set(0,0, 0.05)
-mean_p = MATRIX(nnucl,1);   mean_p.set(0,0, 0.0)
-sigma_p = MATRIX(nnucl,1);  sigma_p.set(0,0, 0.01)
+q = MATRIX(1,1);   q.set(0, 0, -5.0) 
+p = MATRIX(1,1);   p.set(0, 0, 20.0) 
+iM = MATRIX(1,1);  iM.set(0,0, 1.0/2000.0)
 
-q = MATRIX(nnucl,ntraj);  sample(q, mean_q, sigma_q, rnd)
-p = MATRIX(nnucl,ntraj);  sample(p, mean_p, sigma_p, rnd)
-iM = MATRIX(nnucl,1);     iM.set(0,0, 1.0/100.0)
+Cdia, Cadi = CMATRIX(2,1), CMATRIX(2,1)
 
-Cdia, Cadi = CMATRIXList(), CMATRIXList()
-for traj in xrange(ntraj):
-    Cdia.append( CMATRIX(ndia,1) );    Cadi.append( CMATRIX(nadi,1) )                    
-    Cadi[traj].set(0, 1.0+0.0j);    Cadi[traj].set(1, 1.0+0.0j);    Cadi[traj] *= (1.0/math.sqrt(2.0))  
+rep = 1  # representation for nuclear dynamics
+istate = 0;  Cadi.set(istate, 0, 1.0+0.0j);
 
 
 
-params1 = {"rep":0, "rep_sh":1, "tsh_method":0, "use_boltz_factor":0, "Temperature":300.0, "do_reverse":1, "vel_rescale_opt":0 }
 
-run_test(ndia, nadi, nnucl, ntraj, q, p, Cdia, Cadi, iM, model, 0, "_0_new.txt", params1, rnd, 1)
-#run_test(ndia, nadi, nnucl, ntraj, q, p, Cdia, Cadi, iM, model, 1, "_1_new.txt", params1, rnd)
+params1 = {"rep":1, "rep_sh":1, "tsh_method":0, "use_boltz_factor":0, 
+           "Temperature":300.0, "do_reverse":1, "vel_rescale_opt":0 }
+
+run_test(q, p, Cadi, iM, model, rep, "_0_new.txt", params1, rnd, istate)
 
         

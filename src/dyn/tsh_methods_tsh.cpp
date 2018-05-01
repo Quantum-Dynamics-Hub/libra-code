@@ -139,7 +139,6 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
   propagate_electronic(0.5*dt, C, ham, rep);   
 
 
-
   //============== Begin the TSH part ===================
 
   MATRIX g(nst,nst); /// the matrix of hopping probability
@@ -172,7 +171,6 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
     cout<<"Exiting...\n";
     exit(0);
   }
-  
 
   /// Attempt to hop
   double ksi = rnd.uniform(0.0,1.0);  /// generate random number 
@@ -191,6 +189,7 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
    ;;  /// Don't do anything extra
   }
 
+  return new_state;
 
 
 }

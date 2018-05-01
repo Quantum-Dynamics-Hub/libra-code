@@ -61,28 +61,48 @@ MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX* Hvib, double 
   int nstates = Coeff.n_rows;
   MATRIX g(nstates,nstates);
 
-  CMATRIX* denmat; denmat = new CMATRIX(nstates, nstates); 
+  CMATRIX denmat(nstates, nstates);   
   
-  *denmat = (Coeff * Coeff.H() ).conj();
+  denmat = Coeff * Coeff.H();
 
   // Now calculate the hopping probabilities
   for(i=0;i<nstates;i++){
     sum = 0.0;
-    double a_ii = denmat->get(i,i).real(); // c_i^* * c_i
+    double a_ii = denmat.get(i,i).real(); 
 
     for(j=0;j<nstates;j++){
 
-      if(i!=j){ // according to formula the diagonal probability P(i->i) should be zero
-        // Use very general expression:
-        // Note: the sign here is not very obvious! Keep in mind:
-        // Re(i*z) = -Im(z)  but  Im(i*z) = Re(z)
-        // My formula is: P(i->j) = (2*dt/(hbar*|c_i|^2)) * ( -Im(H_ij * c_i^* * c_j) )
-        double imHaij = ( Hvib->get(i,j) * denmat->get(i,j) ).imag(); // Im(H_ij * c_i^* * c_j)
+      if(i!=j){ 
+        /**
+          dc/dt = -(i/hbar) * Hvib * c
+          (dc/dt)^+ = i/hbar * c^+ * Hvib^+
 
+          rho = c * c^+
+
+          Then
+          drho/dt = i/hbar * (rho*Hvib - Hvib*rho)
+
+          The diagonal element:
+           
+          drho_ii/dt = (i/hbar) *sum_a { rho_ia * Hvib_ai - Hvib_ia * rho_ai}
+
+          Then:  P(i->*) = -(drho_ii / rho_ii ) * dt  - probability of leaving state i
+
+          Then:  P(i->a) = - (dt/rho_ii) * Re[ (i/hbar) *sum_a { rho_ia * Hvib_ai - Hvib_ia * rho_ai} ] 
+
+          = (dt/(hbar*rho_ii)) * Im[ rho_ia * Hvib_ai - Hvib_ia * rho_ai ] 
+
+          Or:
+
+          P(i->j) = (dt/(hbar*rho_ii)) * Im[ rho_ij * Hvib_ji - Hvib_ij * rho_ji ] 
+
+        */
+
+        double imHaij = ( denmat.get(i,j) * Hvib->get(j,i) - Hvib->get(i,j) * denmat.get(j,i) ).imag(); 
 
         if(a_ii<1e-8){ g_ij = 0.0; }  // avoid division by zero
         else{
-          g_ij = 2.0*dt*imHaij/a_ii;  // This is a general case -
+          g_ij = dt*imHaij/a_ii;  // This is a general case -
 
           if(use_boltz_factor){
 
@@ -108,8 +128,6 @@ MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX* Hvib, double 
     g.set(i,i,1.0 - sum);
 
   }// for i
-
-  delete denmat;
 
   return g;
 

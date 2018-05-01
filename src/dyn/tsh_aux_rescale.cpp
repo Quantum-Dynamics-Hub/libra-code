@@ -57,6 +57,8 @@ int rescale_velocities_adiabatic
 
   if(new_st!=old_st){
 
+//    cout<<"old_st = "<<old_st<<"  new_st = "<<new_st<<endl;
+
     // According to Fabiano
     double a_ij = 0.0;
     double b_ij = 0.0;
@@ -98,6 +100,8 @@ int rescale_velocities_adiabatic
       } 
 
     }
+//    cout<<"Velocity rescaling: factor = "<<gamma_ij<<endl;
+//    cout<<"old_st = "<<old_st<<"  new_st = "<<new_st<<endl;
 
     //Rescale velocities and do the hop
     for(int k=0;k<ndof;k++){ 
