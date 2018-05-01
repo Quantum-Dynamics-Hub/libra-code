@@ -9,7 +9,7 @@
 *
 *********************************************************************************/
 /**
-  \file tsh_fssh.cpp
+  \file tsh_prob_fssh.cpp
   \brief The file implements the Fewest Switches Surface Hopping  (FSSH) - related algorithms
     
 */
@@ -199,6 +199,17 @@ MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, nHamiltonian* ham, int
 
 }
 
+
+MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, nHamiltonian* ham, int rep, double dt){
+/**
+  \brief See the description of 
+  MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, nHamiltonian* ham, int rep, double dt, int use_boltz_factor,double T)
+  function
+*/
+
+  return compute_hopping_probabilities_fssh(Coeff, ham, rep, dt, 0, 300.0);
+}
+
 MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, nHamiltonian& ham, int rep, double dt, int use_boltz_factor,double T){
 /**
   \brief See the description of the
@@ -220,6 +231,16 @@ MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, nHamiltonian& ham, int
 
 }
 
+
+MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, nHamiltonian& ham, int rep, double dt){
+/**
+  \brief See the description of 
+  MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, nHamiltonian& ham, int rep, double dt, int use_boltz_factor,double T)
+  function
+*/
+
+  return compute_hopping_probabilities_fssh(Coeff, &ham, rep, dt, 0, 300.0);
+}
 
 
 

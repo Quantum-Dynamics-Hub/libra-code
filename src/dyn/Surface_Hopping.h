@@ -43,21 +43,17 @@ using namespace libelectronic;
 using namespace libensemble;
 
 
-void tsh(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, MATRIX& states,
-         nHamiltonian& ham, bp::object py_funct, bp::object params, int rep);
-
-
-///================  In tsh_fssh.cpp  ===================================
+///================  In tsh_prob_fssh.cpp  ===================================
 
 MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX* Hvib, double dt, int use_boltz_factor, double T);
 MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX* Hvib, double dt);
 MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double dt, int use_boltz_factor, double T);
 MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX& Hvib, double dt);
 
-MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, nHamiltonian* ham, double dt, int use_boltz_factor, double T);
-MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, nHamiltonian* ham, double dt);
-MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, nHamiltonian& ham, double dt, int use_boltz_factor, double T);
-MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, nHamiltonian& ham, double dt);
+MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, nHamiltonian* ham, int rep, double dt, int use_boltz_factor, double T);
+MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, nHamiltonian* ham, int rep, double dt);
+MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, nHamiltonian& ham, int rep, double dt, int use_boltz_factor, double T);
+MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, nHamiltonian& ham, int rep, double dt);
 
 /// Backward-compatibility
 void compute_hopping_probabilities_fssh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,
@@ -67,17 +63,17 @@ void compute_hopping_probabilities_fssh(Nuclear& mol, Electronic& el, Hamiltonia
 void compute_hopping_probabilities_fssh(Ensemble& ens, int i, MATRIX& g, double dt, int use_boltz_factor,double T);
 
 
-///================  In tsh_gfsh.cpp  ===================================
+///================  In tsh_prob_gfsh.cpp  ===================================
 
 MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX* Hvib, double dt, int use_boltz_factor, double T);
 MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX* Hvib, double dt);
 MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX& Hvib, double dt, int use_boltz_factor, double T);
 MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX& Hvib, double dt);
 
-MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, nHamiltonian* ham, double dt, int use_boltz_factor, double T);
-MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, nHamiltonian* ham, double dt);
-MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, nHamiltonian& ham, double dt, int use_boltz_factor, double T);
-MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, nHamiltonian& ham, double dt);
+MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, nHamiltonian* ham, int rep, double dt, int use_boltz_factor, double T);
+MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, nHamiltonian* ham, int rep, double dt);
+MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, nHamiltonian& ham, int rep, double dt, int use_boltz_factor, double T);
+MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, nHamiltonian& ham, int rep, double dt);
 
 /// Backward-compatibility
 void compute_hopping_probabilities_gfsh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,
@@ -88,7 +84,7 @@ void compute_hopping_probabilities_gfsh(Ensemble& ens, int i, MATRIX& g, double 
 
 
 
-///================  In tsh_mssh.cpp  ===================================
+///================  In tsh_prob_mssh.cpp  ===================================
 
 MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff);
 
@@ -100,9 +96,13 @@ void compute_hopping_probabilities_mssh(Nuclear& mol, Electronic& el, Hamiltonia
 void compute_hopping_probabilities_mssh(Ensemble& ens, int i, MATRIX& g, double dt, int use_boltz_factor,double T);
 
 
+///================  In tsh_prob_esh.cpp  ===================================
+
+void compute_hopping_probabilities_esh(Ensemble& ens, MATRIX* g, double dt, int use_boltz_factor,double T);
 
 
-///================  In tsh_rescale.cpp  ===================================
+
+///================  In tsh_aux_rescale.cpp  ===================================
 
 int rescale_velocities_adiabatic
 (MATRIX& p, MATRIX& invM, CMATRIX* ham_adi, vector<CMATRIX*>& dc1_adi, int new_st,int old_st, int do_reverse);
@@ -129,18 +129,50 @@ void rescale_velocities_diabatic(Nuclear* mol, Hamiltonian* ham, int& new_st,int
 int rescale_velocities_diabatic(Nuclear& mol, Hamiltonian& ham, int old_st);
 
 
+/// Backward-compatibility - Entangled trajectories
+void rescale_velocities_adiabatic(int ntraj, vector<Nuclear*>& mol, vector<Hamiltonian*>& ham,
+      vector<int>& new_st, vector<int>& old_st, int do_reverse);
+void rescale_velocities_adiabatic(int ntraj, vector<Nuclear>& mol, vector<Hamiltonian>& ham,
+      vector<int>& new_st, vector<int>& old_st, int do_reverse);
 
 
+
+
+///================  In tsh_aux_hop.cpp  ===================================
+
+int hop(int initstate, MATRIX& g, double ksi);
+
+/// Backward-compatibility
 void hop(int& initstate, Nuclear* mol, Hamiltonian* ham, double ksi, MATRIX* g, int do_rescaling, int rep, int do_reverse);
 int hop(int initstate, Nuclear& mol, Hamiltonian& ham, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse);
 int hop(int initstate, Ensemble& ens, int i, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse);
-int hop(int initstate, MATRIX& g, double ksi);
 
 
+/// Backward-compatibility - entangled trajectories
+void hop(int ntraj, vector<int>& initstate, vector<Nuclear*>& mol, vector<Hamiltonian*>& ham, 
+         vector<double> ksi, vector<MATRIX*>& g, int do_rescaling, int rep, int do_reverse);
+
+vector<int>hop(int ntraj, vector<int> initstate, vector<Nuclear>& mol, vector<Hamiltonian>& ham, 
+           vector<double> ksi, vector<MATRIX>& g, int do_rescaling, int rep, int do_reverse);
+
+boost::python::list hop(int ntraj, boost::python::list initstate, boost::python::list mol, boost::python::list ham, 
+    boost::python::list ksi, boost::python::list g, int do_rescaling, int rep, int do_reverse);
+
+
+
+
+///================  In tsh_methods_tsh.cpp  ===================================
+
+int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
+         nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd);
+
+
+///================  In tsh_methods_ida.cpp  ===================================
 
 int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi);
 
 
+///================  In tsh_methods_dish.cpp  ===================================
 
 MATRIX coherence_intervals(CMATRIX& Coeff, MATRIX& rates);
 int dish(Electronic& el, MATRIX& t_m, const MATRIX& tau_m, const CMATRIX& Hvib,

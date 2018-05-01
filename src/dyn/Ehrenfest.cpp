@@ -34,7 +34,7 @@ void Ehrenfest0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHami
   \param[in,out] q [Ndof x Ntraj] nuclear coordinates. Change during the integration.
   \param[in,out] p [Ndof x Ntraj] nuclear momenta. Change during the integration.
   \param[in] invM [Ndof  x 1] inverse nuclear DOF masses. 
-  \param[in,out] nadi x nadi or ndia x ndia matrix containing the electronic coordinates
+  \param[in,out] C nadi x nadi or ndia x ndia matrix containing the electronic coordinates
   \param[in] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) - its internal variables
   (well, actually the variables it points to) are changed during the compuations
   \param[in] py_funct Python function object that is called when this algorithm is executed. The called Python function does the necessary 
@@ -101,7 +101,7 @@ void Ehrenfest1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, vector<CMATRIX>& 
   \param[in,out] q [Ndof x Ntraj] nuclear coordinates. Change during the integration.
   \param[in,out] p [Ndof x Ntraj] nuclear momenta. Change during the integration.
   \param[in] invM [Ndof  x 1] inverse nuclear DOF masses. 
-  \param[in,out] nadi x nadi or ndia x ndia matrix containing the electronic coordinates
+  \param[in,out] C nadi x nadi or ndia x ndia matrix containing the electronic coordinates
   \param[in] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) - its internal variables
   (well, actually the variables it points to) are changed during the compuations
   \param[in] py_funct Python function object that is called when this algorithm is executed. The called Python function does the necessary 

@@ -9,7 +9,7 @@
 *
 *********************************************************************************/
 /**
-  \file tsh_rescale.cpp
+  \file tsh_aux_rescale.cpp
   \brief The file implements the momenta rescaling procedures used in the TSH algorithms
     
 */
@@ -599,6 +599,178 @@ int rescale_velocities_diabatic(Nuclear& mol, Hamiltonian& ham, int old_st){
 }
 
 
+
+
+
+void rescale_velocities_adiabatic(int ntraj, vector<Nuclear*>& mol, vector<Hamiltonian*>& ham,
+      vector<int>& new_st, vector<int>& old_st, int do_reverse){
+
+  // Calculate auxiliary variables to determine the case
+  // Here i - old state, j - new state
+  vector<int> st;
+
+  int status = 1; // new_st == old_st
+  for(int traj=0; traj<ntraj; traj++){
+    if(new_st[traj]!=old_st[traj]){ status=0; }
+  }
+
+  if(status==0){  // different states
+
+    vector<int> final_st; final_st = old_st;  // no hopping by default
+
+    // According to Fabiano
+    double a_ij = 0.0;
+    double b_ij = 0.0;
+    double E_old = 0.0;
+    double E_new = 0.0;
+    
+    for(int traj=0;traj<ntraj;traj++){
+      for(int k=0;k<mol[traj]->nnucl;k++){
+
+        double D = ham[traj]->D(old_st[traj],new_st[traj],k).real(); // derivative coupling w.r.t. nuclear DOF k
+
+        a_ij += 0.5*(D*D / mol[traj]->mass[k]); 
+        b_ij += (D*mol[traj]->p[k])/mol[traj]->mass[k];
+
+      }// for k
+
+      E_old += ham[traj]->Hvib(old_st[traj],old_st[traj]).real();
+      E_new += ham[traj]->Hvib(new_st[traj],new_st[traj]).real();
+
+    }
+
+
+    double det = b_ij*b_ij + 4.0*a_ij*(E_old - E_new);
+
+
+    // Calculate the scaling factor and new state
+    double gamma_ij = 0.0;
+
+    if(det<0.0){
+
+      if(do_reverse){     gamma_ij = b_ij / a_ij;}
+      else{ gamma_ij = 0.0;  }
+
+      final_st = old_st; // # multi-particle hop does not occur - frustrated hop
+
+    }
+    else{
+      if(b_ij<0){ gamma_ij = 0.5*(b_ij + sqrt(det))/a_ij; }
+      else{       gamma_ij = 0.5*(b_ij - sqrt(det))/a_ij; }
+      final_st = new_st;
+    }
+
+    //Rescale velocities and do the hop
+    for(int traj=0; traj<ntraj; traj++){
+      for(int k=0;k<mol[traj]->nnucl;k++){ 
+
+        double D = ham[traj]->D(old_st[traj],new_st[traj],k).real(); 
+        mol[traj]->p[k] = mol[traj]->p[k] - gamma_ij * D; 
+
+      }// for k
+    }// for traj
+
+    st = final_st;
+
+  }
+  else{ st = old_st; }
+
+  new_st = st;
+
+
+} // rescale velocities adiabatic
+
+
+
+void rescale_velocities_adiabatic(int ntraj, vector<Nuclear>& mol, vector<Hamiltonian>& ham,
+      vector<int>& new_st, vector<int>& old_st, int do_reverse){
+
+  // Calculate auxiliary variables to determine the case
+  // Here i - old state, j - new state
+  vector<int> st;
+
+  int status = 1; // new_st == old_st
+  for(int traj=0; traj<ntraj; traj++){
+    if(new_st[traj]!=old_st[traj]){ status=0; }
+  }
+
+  if(status==0){  // different states
+
+    vector<int> final_st; final_st = old_st;  // no hopping by default
+
+    // According to Fabiano
+    double a_ij = 0.0;
+    double b_ij = 0.0;
+    double E_old = 0.0;
+    double E_new = 0.0;
+    
+    for(int traj=0;traj<ntraj;traj++){
+      for(int k=0;k<mol[traj].nnucl;k++){
+
+        double D = ham[traj].D(old_st[traj],new_st[traj],k).real(); // derivative coupling w.r.t. nuclear DOF k
+
+        a_ij += 0.5*(D*D / mol[traj].mass[k]); 
+        b_ij += (D*mol[traj].p[k])/mol[traj].mass[k];
+
+      }// for k
+
+      E_old += ham[traj].Hvib(old_st[traj],old_st[traj]).real();
+      E_new += ham[traj].Hvib(new_st[traj],new_st[traj]).real();
+
+    }
+
+
+    double det = b_ij*b_ij + 4.0*a_ij*(E_old - E_new);
+
+
+    // Calculate the scaling factor and new state
+    double gamma_ij = 0.0;
+
+    if(det<0.0){
+
+      if(do_reverse){     gamma_ij = b_ij / a_ij;}
+      else{ gamma_ij = 0.0;  }
+
+      final_st = old_st; // # multi-particle hop does not occur - frustrated hop
+
+    }
+    else{
+      if(b_ij<0){ gamma_ij = 0.5*(b_ij + sqrt(det))/a_ij; }
+      else{       gamma_ij = 0.5*(b_ij - sqrt(det))/a_ij; }
+      final_st = new_st;
+    }
+
+    //Rescale velocities and do the hop
+    for(int traj=0; traj<ntraj; traj++){
+      for(int k=0;k<mol[traj].nnucl;k++){ 
+
+        double D = ham[traj].D(old_st[traj],new_st[traj],k).real(); 
+        mol[traj].p[k] = mol[traj].p[k] - gamma_ij * D; 
+
+      }// for k
+    }// for traj
+
+    st = final_st;
+
+  }
+  else{ st = old_st; }
+
+  new_st = st;
+
+
+} // rescale velocities adiabatic
+
+
+
+/*
+int rescale_velocities_adiabatic(Nuclear& mol, Hamiltonian& ham, int old_st, int do_reverse){
+
+  int new_st = old_st;
+  rescale_velocities_adiabatic(&mol, &ham, new_st, old_st, do_reverse);
+  return new_st;
+
+}
+*/
 
 
 

@@ -9,7 +9,7 @@
 *
 *********************************************************************************/
 /**
-  \file tsh_gfsh.cpp
+  \file tsh_prob_gfsh.cpp
   \brief The file implements the Global Flux Surface Hopping  (GFSH) - related algorithms
     
 */
@@ -216,6 +216,17 @@ MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, nHamiltonian* ham, int
 
 }
 
+MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, nHamiltonian* ham, int rep, double dt){
+/**
+  \brief Seee the description of the 
+  MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, nHamiltonian* ham, int rep, double dt, int use_boltz_factor,double T)
+  function
+*/
+
+  return compute_hopping_probabilities_gfsh(Coeff, ham, rep, dt, 0, 300.0);
+
+}
+
 MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, nHamiltonian& ham, int rep, double dt, int use_boltz_factor,double T){
 /**
   \brief See the description of the
@@ -237,6 +248,17 @@ MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, nHamiltonian& ham, int
 
 }
 
+
+MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, nHamiltonian &ham, int rep, double dt){
+/**
+  \brief Seee the description of the 
+  MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, nHamiltonian& ham, int rep, double dt, int use_boltz_factor,double T)
+  function
+*/
+
+  return compute_hopping_probabilities_gfsh(Coeff, &ham, rep, dt, 0, 300.0);
+
+}
 
 
 

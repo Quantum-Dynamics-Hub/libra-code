@@ -9,7 +9,7 @@
 *
 *********************************************************************************/
 /**
-  \file tsh_mssh.cpp
+  \file tsh_prob_mssh.cpp
   \brief The file implements the Markov State Surface Hopping  (MSSH) - related algorithms
     
 */
