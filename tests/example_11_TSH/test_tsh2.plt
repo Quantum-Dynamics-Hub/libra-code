@@ -39,63 +39,43 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 set xlabel "q" offset 0.0, 0.5
 set ylabel "p" offset 1.5, 0.0 
 set output "_q-p.png"
-plot "_0_new.txt" using 2:3   w lp  ls 11  lw 5  t "q-p, dia rep",\
-     "_1_new.txt" using 2:3   w l   ls 21  lw 5  t "q-p, adi rep"
+plot "_0_new.txt" using 2:3   w lp  ls 11  lw 5  t "q-p, dia rep"
+
 
 set xlabel "t" offset 0.0, 0.5
 set ylabel "q" offset 1.5, 0.0 
 set output "_t-q.png"
-plot "_0_new.txt" using 1:2   w l   ls 11  lw 5  t "t-q, dia rep",\
-     "_1_new.txt" using 1:2   w l   ls 21  lw 5  t "t-q, adi rep"
+plot "_0_new.txt" using 1:2   w l   ls 11  lw 5  t "t-q, dia rep"
 
 set xlabel "t" offset 0.0, 0.5
 set ylabel "p" offset 1.5, 0.0 
 set output "_t-p.png"
-plot "_0_new.txt" using 1:3   w l   ls 11  lw 5  t "t-p, dia rep",\
-     "_1_new.txt" using 1:3   w l   ls 21  lw 5  t "t-p, adi rep"
+plot "_0_new.txt" using 1:3   w l   ls 11  lw 5  t "t-p, dia rep"
 
 
 
 set xlabel "t" offset 0.0, 0.5
 set ylabel "Energy" offset 1.5, 0.0 
 
-set output "_Ekin.png"
-plot "_0_new.txt" using 1:4         w l  ls 11  lw 5  t "Ekin, dia rep",\
-     "_0_new.txt" using 1:($4+$7)   w l  ls 11  lw 1  notitle,\
-     "_0_new.txt" using 1:($4-$7)   w l  ls 11  lw 1  notitle,\
-     "_1_new.txt" using 1:4         w l  ls 21  lw 5  t "Ekin, adi rep",\
-     "_1_new.txt" using 1:($4+$7)   w l  ls 21  lw 1  notitle,\
-     "_1_new.txt" using 1:($4-$7)   w l  ls 21  lw 1  notitle
-
-set output "_Epot.png"
-plot "_0_new.txt" using 1:5         w l  ls 11  lw 5  t "Epot, dia rep",\
-     "_0_new.txt" using 1:($5+$8)   w l  ls 11  lw 1  notitle,\
-     "_0_new.txt" using 1:($5-$8)   w l  ls 11  lw 1  notitle,\
-     "_1_new.txt" using 1:5         w l  ls 21  lw 5  t "Epot, adi rep",\
-     "_1_new.txt" using 1:($5+$8)   w l  ls 21  lw 1  notitle,\
-     "_1_new.txt" using 1:($5-$8)   w l  ls 21  lw 1  notitle
-
-set output "_Etot.png"
-plot "_0_new.txt" using 1:6         w l  ls 11  lw 5  t "Etot, dia rep",\
-     "_0_new.txt" using 1:($6+$9)   w l  ls 11  lw 1  notitle,\
-     "_0_new.txt" using 1:($6-$9)   w l  ls 11  lw 1  notitle,\
-     "_1_new.txt" using 1:6         w l  ls 21  lw 5  t "Etot, adi rep",\
-     "_1_new.txt" using 1:($6+$9)   w l  ls 21  lw 1  notitle,\
-     "_1_new.txt" using 1:($6-$9)   w l  ls 21  lw 1  notitle
-
-
+set output "_energy.png"
+plot "_0_new.txt" using 1:4   w l  ls 11  lw 5  t "Ekin",\
+     "_0_new.txt" using 1:5   w l  ls 21  lw 5  t "Epot",\
+     "_0_new.txt" using 1:6   w l  ls 31  lw 5  t "Etot"
 
 
 set xlabel "t" offset 0.0, 0.5
 set ylabel "Population" offset 1.5, 0.0 
 
 set output "_pop_adi.png"
-plot "_0_new.txt" using 1:10   w l  ls 11  lw 5  t "P(0, adi), dia rep",\
-     "_1_new.txt" using 1:10   w l  ls 21  lw 5  t "P(0, adi), adi rep"
+plot "_0_new.txt" using 1:10   w l  ls 11  lw 5  t "P(0, adi)"
 
-set output "_pop_dia.png"
-plot "_0_new.txt" using 1:11   w l  ls 11  lw 5  t "P(0, dia), dia rep",\
-     "_1_new.txt" using 1:11   w l  ls 21  lw 5  t "P(0, dia), adi rep"
+
+set output "_pop_sh.png"
+plot "_0_new.txt" using 1:14   w l  ls 11  lw 5  t "SH, P(0)",\
+     "_0_new.txt" using 1:15   w l  ls 21  lw 5  t "SH, P(1)",\
+     "_0_new.txt" using 1:12   w l  ls 31  lw 5  t "SE, P(0)",\
+     "_0_new.txt" using 1:13   w l  ls 41  lw 5  t "SE, P(1)"
+
 
 
 

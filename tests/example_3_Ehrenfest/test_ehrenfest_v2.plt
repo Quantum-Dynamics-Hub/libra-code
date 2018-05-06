@@ -69,7 +69,7 @@ plot "_0_new.txt" using 1:12   w l  ls 11  lw 5  t "Hadi_0, dia rep",\
 
 set output "_en_nac_new.png"
 plot "_0_new.txt" using 1:14   w l  ls 11  lw 5  t "NAC_01, dia rep",\
-     "_1_new.txt" using 1:14   w l  ls 21  lw 5  t "NAC_01, adi rep",\
+     "_1_new.txt" using 1:14   w l  ls 21  lw 5  t "NAC_01, adi rep"
 
 
 

@@ -147,7 +147,7 @@ def sample(x, mean_x, sigma_x, rnd):
 
 
 
-def run_test(model, outname):
+def run_test1(model, outname):
     """
     model - setup the Hamiltonian
     outname - the name of the output file
@@ -241,7 +241,7 @@ def run_test(model, outname):
         out.close()
 
 
-def run_test1():
+def run_test2():
     """
     This example runs the exactly the same calculations as in :
     Smith, B.; Akimov, A. V. "Entangled trajectories Hamiltonian dynamics for 
@@ -377,7 +377,7 @@ def run_test1():
 
 
 
-#model = 1
-#run_test(model, "_0_new.txt")
+model = 1
+#run_test1(model, "_0_new.txt")
 
-run_test1()
+run_test2()

@@ -9,13 +9,6 @@
 #*
 #*********************************************************************************/
 
-"""
-  This file demonstrates how to run an ensemble of Ehrenfest trajectories
-  using the hierarchy of Hamiltonians approach and the built in Ehrenfest1
-  function
- 
-"""
-
 
 import cmath
 import math
@@ -23,12 +16,19 @@ import os
 import sys
 
 
+"""
+  This file demonstrates how to run an ensemble of TSH using many Hamiltonians 
+  focus is on the Tully's models
+"""
+
 if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from libra_py import *
 
+class tmp:
+    pass    
 
 
 
@@ -41,13 +41,11 @@ def compute_model(q, params, full_id):
     indx = Id[-1]
 
     if model==1:
-        res = models_Libra.model1(q.col(indx), params)
+        res = models_Tully.Tully1(q.col(indx), params)
     elif model==2:
-        res = models_Libra.model2(q.col(indx), params)
+        pass
     elif model==3:
-        res = models_Libra.model3(q.col(indx), params)
-    elif model==4:
-        res = models_Libra.model4(q.col(indx), params)
+        pass
 
     res.rep = params["rep"]    
 
@@ -57,7 +55,26 @@ def compute_model(q, params, full_id):
 
 
 
-def run_Ehrenfest(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, outname):
+def get_probabilities(states):
+    """
+    states = [nst x ntraj] matrix with states
+    """
+
+    nst = states.num_of_rows
+    ntraj = states.num_of_cols
+
+    res = CMATRIX(nst, 1)
+
+    for traj in xrange(ntraj):
+        res = res + states.col(traj)
+
+    res = res * (1.0/float(ntraj))
+
+    return res.real()
+
+
+
+def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, outname, params1, rnd, states):
     """
     model - setup the Hamiltonian
     rep - 0 - diabatic, 1 - adiabatic
@@ -90,25 +107,24 @@ def run_Ehrenfest(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, re
         print Cpp2Py(ham1[tr].get_full_id())
 
 
+
     #  Set up the models and compute internal variables
     # Initialization
     # Model parameters 
-    params = {}
-    params["x0"], params["k"], params["D"], params["V"] = 1.0, 0.1, -0.1, 0.05
-    params["omega"] = 0.25
-    params["model"] = model
-    params["rep"] = rep
+    params = {"model":model, "rep":rep}
 
     # Simulation parameters
     dt = 1.0
 
+
     # Initial calculations
     ham.compute_diabatic(compute_model, q, params, 1)
     ham.compute_adiabatic(1, 1); 
+
+
     ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
 
-    Cdia.show_matrix()
-    Cadi.show_matrix()
+
 
     if rep==0:
         ham.compute_nac_dia(p, iM, 0, 1);  
@@ -118,67 +134,79 @@ def run_Ehrenfest(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, re
         ham.compute_hvib_adi(1); 
 
 
-    ham1[0].get_nac_adi().show_matrix()
-    ham1[0].get_ham_adi().show_matrix()
-    ham1[0].get_ham_dia().show_matrix()
-
-    Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh.compute_etot(ham, p, Cdia, Cadi, iM, rep)
+    Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh.compute_etot_tsh(ham, p, Cdia, Cadi, states, iM, rep) 
+    print Ekin, Epot, Etot, dEkin, dEpot, dEtot
 
 
     out = open(outname, "w")
     out.close()
 
+
     # Do the propagation
-    for i in xrange(500):
+    for i in xrange(1000):
 
         if rep==0:
-            Ehrenfest1(dt, q, p, iM, Cdia, ham, compute_model, params, rep)
+            tsh1(dt, q, p, iM,  Cdia, states, ham, compute_model, params, params1, rnd)
         elif rep==1:
-            Ehrenfest1(dt, q, p, iM, Cadi, ham, compute_model, params, rep)
-
+            tsh1(dt, q, p, iM,  Cadi, states, ham, compute_model, params, params1, rnd)
+ 
 
         #=========== Properties ==========
+        if rep==0:
+            ham.ampl_dia2adi(Cdia, Cadi, 0, 1)
+        elif rep==1:
+            ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
+
+
         dm_dia, dm_adi = tsh.compute_dm(ham, Cdia, Cadi, rep, 1)
-
-        Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh.compute_etot(ham, p, Cdia, Cadi, iM, rep)
-
-
+        Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh.compute_etot_tsh(ham, p, Cdia, Cadi, states, iM, rep)
+        pops = get_probabilities(states)
 
         out = open(outname, "a")
+
+
         ret = (i*dt, q.get(0), p.get(0), 
                Ekin, Epot, Etot, dEkin, dEpot, dEtot,
-               dm_adi.get(0,0).real, dm_adi.get(1,1).real, dm_dia.get(0,0).real, dm_dia.get(1,1).real
+               dm_adi.get(0,0).real, dm_adi.get(1,1).real, dm_dia.get(0,0).real, dm_dia.get(1,1).real, pops.get(0,0), pops.get(1,0)
               )
-        out.write("%8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n" %  ret )
+        out.write("%8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n" %  ret )
+
         out.close()
 
 
+                                                                    
 
-def run_test():                                                                    
 
-    model = 1
-    ndia, nadi, nnucl, ntraj = 2, 2, 1, 1
+model = 1
+ndia, nadi, nnucl, ntraj = 2, 2, 1, 10
 
-    rnd = Random()
+rnd = Random()
 
-    # Dynamical variables and system-specific properties
-    mean_q = MATRIX(nnucl,1);   mean_q.set(0,0, 0.1)
-    sigma_q = MATRIX(nnucl,1);  sigma_q.set(0,0, 0.05)
-    mean_p = MATRIX(nnucl,1);   mean_p.set(0,0, 0.0)
-    sigma_p = MATRIX(nnucl,1);  sigma_p.set(0,0, 0.01)
+# Dynamical variables and system-specific properties
+mean_q = MATRIX(nnucl,1);   mean_q.set(0,0, -5)
+sigma_q = MATRIX(nnucl,1);  sigma_q.set(0,0, 0.0)
+mean_p = MATRIX(nnucl,1);   mean_p.set(0,0, 50.0)
+sigma_p = MATRIX(nnucl,1);  sigma_p.set(0,0, 0.0)
 
-    q = MATRIX(nnucl,ntraj);  tsh.sample(q, mean_q, sigma_q, rnd)
-    p = MATRIX(nnucl,ntraj);  tsh.sample(p, mean_p, sigma_p, rnd)
-    iM = MATRIX(nnucl,1);     iM.set(0,0, 1.0/100.0)
+q = MATRIX(nnucl,ntraj);  tsh.sample(q, mean_q, sigma_q, rnd)
+p = MATRIX(nnucl,ntraj);  tsh.sample(p, mean_p, sigma_p, rnd)
+iM = MATRIX(nnucl,1);     iM.set(0,0, 1.0/2000.0)
 
-    Cdia, Cadi = CMATRIX(ndia, ntraj), CMATRIX(nadi, ntraj)
-    for traj in xrange(ntraj):
-        Cadi.set(0, traj, 1.0+0.0j);
-        Cadi.set(1, traj, 1.0+0.0j);
-        Cadi *= (1.0/math.sqrt(2.0))  
+rep = 1
+istate = 0
+Cdia, Cadi = CMATRIX(ndia, ntraj), CMATRIX(nadi, ntraj)
+states = CMATRIX(ndia, ntraj)
 
-    run_Ehrenfest(ndia, nadi, nnucl, ntraj, q, p, Cdia, Cadi, iM, model, 0, "_0_new.txt")
-    run_Ehrenfest(ndia, nadi, nnucl, ntraj, q, p, Cdia, Cadi, iM, model, 1, "_1_new.txt")
+
+for traj in xrange(ntraj):
+    Cadi.set(istate, traj, 1.0+0.0j);  
+    states.set(istate, traj, 1.0+0.0j)
+
+
+params1 = {"rep":rep, "rep_sh":1, "tsh_method":0, "use_boltz_factor":0,
+           "Temperature":300.0, "do_reverse":1, "vel_rescale_opt":0 }
+
+run_test(ndia, nadi, nnucl, ntraj, q, p, Cdia, Cadi, iM, model, rep, "_0_new.txt", params1, rnd, states)
+
 
         
-run_test()
