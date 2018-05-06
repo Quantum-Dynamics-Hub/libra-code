@@ -58,22 +58,22 @@ def check_potential(q, params, minx_, maxx_, dx, miny_, maxy_, dy, filename):
             x2 = x*x
             y2 = y*y
 
+            # z = sech(2x)
+            # z2 = sech^2(2x)    
+            z = (2.0 * math.cosh(2.0*x))/(1.0 + math.cosh(4.0*x))
+            z2 = z*z
+
             if model == 1:
                 pot = 0.25*(x2*x2 + y2*y2) - 0.5*(x2 + y2)
             if model == 2: 
-                pot = Va*sech(2.0*x)*sech(2.0*x) + 0.5*Vb*(y+Vc*(x2 - 1.0))**2
+                pot = Va*z2 + 0.5*Vb*y2
             if model == 3:
-                pot = Va*sech(2.0*x)*sech(2.0*x) + 0.5*Vb*y2
+                pot = Va*z2 + 0.5*Vb*(y+Vc*(x2 - 1.0))**2
 
             pes.add(i,j,pot)
 
     datautils.show_matrix_splot(pes,filename)    
 
-def sech(x):
-
-    res = 1.0/math.cosh(x)
-
-    return res
 
 def compute_etot(ham, p, iM):
 
@@ -96,32 +96,12 @@ def compute_etot(ham, p, iM):
     
     return Ekin, Epot, Etot
 
-def sample(x, mean_x, sigma_x, rnd, sample_opt):  
+def sample(x, mean_x, sigma_x, rnd):  
+
     nr, nc = x.num_of_rows, x.num_of_cols
-
-    if sample_opt == 0:
-        for i in range(nr):
-            for j in range(nc):    
-                x.set(i,j, mean_x.get(i,0) + sigma_x.get(i,0) * rnd.normal() )
-
-    elif sample_opt == 1:
-        params = {"k":0.032, "m":2000.0, "states":[0], "coeffs":[1.0]}
-        sampling = metropolis_gau(rnd, HO_sup, x, params, 1000, 500, 0.25)
-
-        for i in range(nr):
-            for j in range(nc):
-                    x.set(i,j, sampling[j].get(0,i) + mean_x.get(i,0))
-
-    elif sample_opt == 2:
-        params = {"k":0.032, "m":2000.0, "states":[0], "coeffs":[1.0]}
-        sampling = metropolis_gau(rnd, HO_sup, x, params, 1000, 500, 2.0)
-
-        for i in range(nr):
-            for j in range(nc):
-                    x.set(i,j, sampling[j].get(0,i) + mean_x.get(i,0))
-
-
-
+    for i in range(nr):
+        for j in range(nc):    
+            x.set(i,j, mean_x.get(i,0) + sigma_x.get(i,0) * rnd.normal() )
 
 def bin(sample, min_, max_, dx, filename):
     """
@@ -281,57 +261,4 @@ def traj_counter(q, barrier, dof):
  
     return count
 
-def hermite(n, x):
-
-    r,s,t = 0.0, 0.0, 0.0
-    p,q = 1.0, 0.0
-
-    for m in xrange(n):
-        r,s = p,q
-        p = 2.0*x*r - 2.0*m*t
-        q = 2.0*(m+1)*r
-        t = r
-
-    return p
-
-
-def ket_n(q, n, k, m):
-    """
-    HO state |n>
-    """
-
-    hbar = 1.0  # atomic units
-    omega = math.sqrt(k/m)  
-    alp = m*omega/hbar
-
-    N_n =  math.pow(alp/math.pi, 0.25) / math.sqrt(math.pow(2.0, n) * FACTORIAL(n))
-    ksi = math.sqrt(alp)*q    
-    H_n = hermite(n, ksi)
- 
-    res = N_n * H_n * math.exp(-0.5*ksi*ksi)
-
-    return res      
-
-
-def HO_sup(q, params):
-    """
-    The probability density function: superposition of HO eigenstates
-
-    """
-
-    k = params["k"]
-    m = params["m"]
-    states = params["states"]
-    coeffs = params["coeffs"]
-
-    x = q.get(0)
-
-    sz = len(states)
-    p = 0.0
-    for n in xrange(sz):
-        p = p + coeffs[n] * ket_n(x, states[n], k, m)
-
-    p = p * p 
-
-    return p
 

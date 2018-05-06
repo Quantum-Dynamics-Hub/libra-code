@@ -26,200 +26,25 @@ import aux_functs
 class tmp:
     pass    
 
-def model1(q, params, full_id):
-    """
-    Symmetric Double Well Potential in 2D
-    Hdia = 0.25*(q1^4 + q2^4) - 0.5*(q1^2 + q2^2)   
-    Sdia = 1.0
-    Ddia = 0.0
-    """
-
-    Id = Cpp2Py(full_id)
-    indx = Id[-1]
-
-    # Hdia and Sdia are ndia x ndia in dimension
-    Hdia = CMATRIX(1,1)
-    Sdia = CMATRIX(1,1)
-
-    # d1ham and dc1_dia are ndia x ndia in dimension, but we have nnucl of them
-    d1ham_dia = CMATRIXList();
-    dc1_dia = CMATRIXList();
-
-    for i in xrange(2):
-        d1ham_dia.append( CMATRIX(1,1) )
-        dc1_dia.append( CMATRIX(1,1) )
-
-    x = q.col(indx).get(0)
-    y = q.col(indx).get(1)
-    x2 = x*x
-    y2 = y*y
-
-    Hdia.set(0,0, (0.25*(x2*x2 + y2*y2) - 0.5*(x2 + y2))*(1.0+0.0j) )
-    Sdia.set(0,0, 1.0+0.0j)
-
-    #  d Hdia / dR_0
-    d1ham_dia[0].set(0,0, x*(x2 - 1.0)*(1.0+0.0j) )
-    d1ham_dia[1].set(0,0, y*(y2 - 1.0)*(1.0+0.0j) )
-
-    #  <dia| d/dR_0| dia >
-    dc1_dia[0].set(0,0, 0.0+0.0j)
-    dc1_dia[1].set(0,0, 0.0+0.0j)
-
-    obj = tmp()
-    obj.ham_dia = Hdia
-    obj.ovlp_dia = Sdia
-    obj.d1ham_dia = d1ham_dia
-    obj.dc1_dia = dc1_dia
-
-    return obj
-
-def model2(q, params, full_id):
-    """
-    The second of the two model potential described by L. Wang, C.C. Martens, 
-    and Y. Zheng, "Entangled trajectory molecular dynamics in 
-    multidimensional systems: Two-dimensional quantum tunneling through 
-    the Eckart barrier" J. Chem. Phys. 137, 34113 (2012)
-
-    Specifically, this potential is Model II 
-
-    Hdia = Va*sech^2*(2q1) + 0.5*Vb*[q2 - Vc(q1^2 - 1)]^2
-
-    Va = barrier height     = 0.00625    
-    Vb = harmonic potential = 0.0106
-    Vc = coupling constant  = 0.4  
-
-    Sdia = 1.0
-    Ddia = 0.0
-    """
-
-    # Define potential specific constants
-    Va = 0.00625    
-    Vb = 0.0106
-    Vc = 0.4    
-
-    Id = Cpp2Py(full_id)
-    indx = Id[-1]
-
-    # Hdia and Sdia are ndia x ndia in dimension
-    Hdia = CMATRIX(1,1)
-    Sdia = CMATRIX(1,1)
-
-    # d1ham and dc1_dia are ndia x ndia in dimension, but we have nnucl of them
-    d1ham_dia = CMATRIXList();
-    dc1_dia = CMATRIXList();
-
-    for i in xrange(2):
-        d1ham_dia.append( CMATRIX(1,1) )
-        dc1_dia.append( CMATRIX(1,1) )
-
-    x = q.col(indx).get(0)
-    y = q.col(indx).get(1)
-    x2 = x*x
-    y2 = y*y
-
-    Hdia.set(0,0,(Va*sech(2.0*x)*sech(2.0*x)+0.5*Vb*(y+Vc*(x*x-1.0))**2)*(1.0+0.0j))
-    Sdia.set(0,0,1.0+0.0j)
-
-    #  d Hdia / dR_0
-    d1ham_dia[0].set(0,0, ( ( -4.0*Va*math.tanh(2.0*x)*sech(2.0*x)**2 ) + ( 2.0*Vb*Vc*x*(y + Vc*x*x - Vc) ) )*(1.0+0.0j))
-    d1ham_dia[1].set(0,0, ( Vb * ( y + Vc*(x*x-1.0) ) ) * (1.0+0.0j))
-
-    #  <dia| d/dR_0| dia >
-    dc1_dia[0].set(0,0, 0.0+0.0j)
-    dc1_dia[1].set(0,0, 0.0+0.0j)
-
-    obj = tmp()
-    obj.ham_dia = Hdia
-    obj.ovlp_dia = Sdia
-    obj.d1ham_dia = d1ham_dia
-    obj.dc1_dia = dc1_dia
-
-    return obj
-
-
-def model3(q, params, full_id):
-    """
-    The first of the two model potential described by L. Wang, C.C. Martens, 
-    and Y. Zheng, "Entangled trajectory molecular dynamics in 
-    multidimensional systems: Two-dimensional quantum tunneling through 
-    the Eckart barrier" J. Chem. Phys. 137, 34113 (2012)
-
-    This potential has seperable dof
-
-    # Define system specific parameters 
-    Va = barrier height     = 0.00625    
-    Vb = harmonic potential = 0.0106
-
-    Sdia = 1.0
-    Ddia = 0.0
-    """
-
-    # Define potential specific constants
-    Va = 0.00625
-    Vb = 0.0106
-
-    Id = Cpp2Py(full_id)
-    indx = Id[-1]
-
-    # Hdia and Sdia are ndia x ndia in dimension
-    Hdia = CMATRIX(1,1)
-    Sdia = CMATRIX(1,1)
-
-    # d1ham and dc1_dia are ndia x ndia in dimension, but we have nnucl of them
-    d1ham_dia = CMATRIXList();
-    dc1_dia = CMATRIXList();
-
-    for i in xrange(2):
-        d1ham_dia.append( CMATRIX(1,1) )
-        dc1_dia.append( CMATRIX(1,1) )
-
-    x = q.col(indx).get(0)
-    y = q.col(indx).get(1)
-    x2 = x*x
-    y2 = y*y
-
-    Hdia.set(0,0,( Va*sech(2.0*x)*sech(2.0*x) + 0.5*Vb*y*y )*(1.0+0.0j))
-    Sdia.set(0,0,1.0+0.0j)
-
-    #  d Hdia / dR_0
-    d1ham_dia[0].set(0,0, ( ( -4.0*Va*math.tanh(2.0*x)*sech(2.0*x)**2 ) )*(1.0+0.0j))
-    d1ham_dia[1].set(0,0, ( Vb*y )*(1.0+0.0j))
-
-    #  <dia| d/dR_0| dia >
-    dc1_dia[0].set(0,0, 0.0+0.0j)
-    dc1_dia[1].set(0,0, 0.0+0.0j)
-
-    obj = tmp()
-    obj.ham_dia = Hdia
-    obj.ovlp_dia = Sdia
-    obj.d1ham_dia = d1ham_dia
-    obj.dc1_dia = dc1_dia
-
-    return obj
-
-def sech(x):
-
-    res = 1.0/math.cosh(x)
-
-    return res
-
 def compute_model(q, params, full_id):
 
     model = params["model"]
     res = None
 
+    Id = Cpp2Py(full_id)
+    indx = Id[-1]
+
     if model==1:
-        res = model1(q, params, full_id)
+        res = models_Libra.model5(q.col(indx), params)
     if model==2:
-        res = model2(q, params, full_id)
+        res = models_Martens.Martens1(q.col(indx), params)
     if model==3:
-        res = model3(q, params, full_id)
+        res = models_Martens.Martens2(q.col(indx), params)
 
 #    res.rep = params["rep"]    
     return res  
 
 def run_test0():
-
     """
     This example runs ETHD dyanimcs in the 2D symmetrical double well potential 
     It also has the added functionality of being able to print ensemble distirbutions
@@ -309,7 +134,7 @@ def run_test1(Nsnaps,Nsteps):
     distirbutions
     """
     
-    ndia, nadi, nnucl, ntraj = 1, 1, 2, 100
+    ndia, nadi, nnucl, ntraj = 1, 1, 2, 10
 
     # ======= Hierarchy of Hamiltonians =======
     ham = nHamiltonian(ndia, nadi, nnucl)
@@ -327,7 +152,7 @@ def run_test1(Nsnaps,Nsteps):
     # Set up the models and compute internal variables
     # Initialization
     # Model parameters 
-    params = { "model":3, "ndof":nnucl, "ntraj":ntraj }
+    params = { "model":2, "ndof":nnucl, "ntraj":ntraj }
 
     # Simulation parameters
     dt = 1.0
@@ -368,8 +193,8 @@ def run_test1(Nsnaps,Nsteps):
     sigma_p.set(1,0,0.5/sigma_q.get(1,0))
   
     rnd = Random()
-    q = MATRIX(nnucl,ntraj);  aux_functs.sample(q, mean_q, sigma_q, rnd, 0)
-    p = MATRIX(nnucl,ntraj);  aux_functs.sample(p, mean_p, sigma_p, rnd, 0)   
+    q = MATRIX(nnucl,ntraj);  aux_functs.sample(q, mean_q, sigma_q, rnd)
+    p = MATRIX(nnucl,ntraj);  aux_functs.sample(p, mean_p, sigma_p, rnd)   
 
     # Make lists containing the positions and momenta for each trajectory,
     # to be used in later simulations, when extra trajecotry ensemble
@@ -422,7 +247,7 @@ def run_test1(Nsnaps,Nsteps):
         for j in xrange(Nsteps):
             Verlet1(dt, q, p, iM, ham, compute_model, params, 1)
 
-run_test1(100, 10)
+run_test1(100, 1)
 
 
 
