@@ -57,11 +57,11 @@ set yrange[-5:3]
 set zrange[0.000005:]
 unset ztics
 ### Enter bsed on your specific simulation ###
-Nsteps = 20
+Nsteps = 1
 dt = 1
 
-do for [i=0:149]{
-    set output "_2D_dist_output/Disttribution_".i.".png"
+do for [i=0:100]{
+    set output "_2D_dist/Disttribution_".i.".png"
    
     set xlabel "DOF 1 (a.u), t = ".i*(dt*Nsteps)." (a.u) "  offset 0.0, -0.5
     splot "_pes_scan.txt" u ($1-70)*0.1:($2-50)*0.1:($3) w pm3d,\

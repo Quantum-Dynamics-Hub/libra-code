@@ -30,6 +30,9 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 set style line 42 lc rgb '#C0C0C0' pt 6 ps 1 lt 1 lw 5 # --- silver
 set style line 43 lc rgb '#D2691E' pt 6 ps 1 lt 1 lw 5 # --- chocolate
 
+
+
+
 set output "_energy_ETHD.png"
 set xlabel "Time (a.u)" offset 0.0, 0.5
 set ylabel "Energy (a.u)" offset 1.7, 0.0
@@ -42,12 +45,68 @@ set xlabel "Time (fs)" offset 0.0, 0.5
 set ylabel "Reaction Probability" offset 1.7, 0.0
 set xrange [0:30]
 set yrange [0:0.6]
-plot  "_output_.txt" u ($1/41.3410):5 w l ls 32 lw 8  t "ETHD - ensemble 2",\
- #     "_output_Classical.txt" u ($1/41.3410):5 w l ls 23 lw 8 t "Classical - ensemble 2",\
+plot  "_output.txt" u ($1/41.3410):5 w l ls 32 lw 8  t "ETHD - ensemble 2"
 
-#set output "_energy_Classical.png"
-#set xlabel "Time (a.u)" offset 0.0, 0.5
-#set ylabel "Energy (a.u)" offset 1.7, 0.0
-#plot  "_output_Classical.txt" u ($1):3 w l lt 7 lw 5 t "Potential",\
-#      "_output_Classical.txt" u ($1):2 w l lt 6 lw 5 t "Kinetic",\
-#      "_output_Classical.txt" u ($1):4 w l lt 8 lw 5 t "Total"
+
+set output "_2D_PES_surface.png"
+set nokey
+set palette model CMY rgbformulae 7,5,15
+# 2D pictures, colored by z-value
+set contour
+set pm3d map
+set pm3d interpolate 0,0  # first - y axis, second - x axis
+set pm3d explicit at b
+set palette positive nops_allcF maxcolors 0 gamma 1.5 color model CMY 
+set cbrange [0:0.01]  
+set colorbox user origin 0.05,0.25
+
+set xlabel "DOF 1 (a.u)" offset 0.0, 0.0
+set ylabel "DOF 2 (a.u)" offset 1.0, 0.0
+set view 0, 0, 1, 1
+set xrange[-2:4]
+set yrange[-2:2]
+unset ztics
+splot  "_pes_scan.txt" u ($1-70)*0.1:($2-50)*0.1:($3) 
+
+
+
+
+
+
+do for [i=0:1]    {
+    set output "_initial dist_".i.".png"
+    set xlabel "DOF #".i." axis" offset 0.0, 0.5
+    set ylabel "Probabilitiy" offset 1.7, 0.0
+    set xrange [-4.0:4.0]
+    plot  "_q_distrib_dof_".i.".txt" w l ls 32 lw 5 t "q - DOF #".i."",\
+          "_p_distrib_dof_".i.".txt" w l ls 12 lw 5 t "p - DOF #".i."",\
+}
+
+set nokey
+set palette model CMY rgbformulae 7,5,15
+# 2D pictures, colored by z-value
+set contour
+set pm3d map
+set pm3d interpolate 0,0  # first - y axis, second - x axis
+set pm3d explicit at b
+set palette positive nops_allcF maxcolors 0 gamma 1.5 color model CMY 
+set cbrange [0:0.1]  
+set colorbox user origin 0.05,0.25
+set ylabel "DOF 2 (a.u)" offset -1.75, 5.5
+set view 0, 0, 1, 1
+set xrange[-4:4]
+set yrange[-5:3]
+set zrange[0.000005:]
+unset ztics
+### Enter bsed on your specific simulation ###
+Nsteps = 1
+dt = 1
+
+do for [i=0:100]{
+    set output "_2D_dist/Disttribution_".i.".png"
+   
+    set xlabel "DOF 1 (a.u), t = ".i*(dt*Nsteps)." (a.u) "  offset 0.0, -0.5
+    splot "_pes_scan.txt" u ($1-70)*0.1:($2-50)*0.1:($3) w pm3d,\
+          "_2D_dist/_2D_distrib_".i."_.txt" u ($1-70)*0.1:($2-50)*0.1:($3) w p nocontour pt 7 ps 1 lc "black",\
+}
+
