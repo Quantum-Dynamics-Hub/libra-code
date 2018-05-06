@@ -96,12 +96,6 @@ def compute_etot(ham, p, iM):
     
     return Ekin, Epot, Etot
 
-def sample(x, mean_x, sigma_x, rnd):  
-
-    nr, nc = x.num_of_rows, x.num_of_cols
-    for i in range(nr):
-        for j in range(nc):    
-            x.set(i,j, mean_x.get(i,0) + sigma_x.get(i,0) * rnd.normal() )
 
 def bin(sample, min_, max_, dx, filename):
     """
@@ -260,5 +254,3 @@ def traj_counter(q, barrier, dof):
     count /= ntraj
  
     return count
-
-

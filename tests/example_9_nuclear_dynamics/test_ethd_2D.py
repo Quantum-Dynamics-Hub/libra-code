@@ -134,7 +134,7 @@ def run_test1(Nsnaps,Nsteps):
     distirbutions
     """
     
-    ndia, nadi, nnucl, ntraj = 1, 1, 2, 10
+    ndia, nadi, nnucl, ntraj = 1, 1, 2, 500
 
     # ======= Hierarchy of Hamiltonians =======
     ham = nHamiltonian(ndia, nadi, nnucl)
@@ -193,8 +193,8 @@ def run_test1(Nsnaps,Nsteps):
     sigma_p.set(1,0,0.5/sigma_q.get(1,0))
   
     rnd = Random()
-    q = MATRIX(nnucl,ntraj);  aux_functs.sample(q, mean_q, sigma_q, rnd)
-    p = MATRIX(nnucl,ntraj);  aux_functs.sample(p, mean_p, sigma_p, rnd)   
+    q = MATRIX(nnucl,ntraj);  tsh.sample(q, mean_q, sigma_q, rnd)
+    p = MATRIX(nnucl,ntraj);  tsh.sample(p, mean_p, sigma_p, rnd)   
 
     # Make lists containing the positions and momenta for each trajectory,
     # to be used in later simulations, when extra trajecotry ensemble
