@@ -30,6 +30,7 @@ __all__ = ["init_system",
            "scf",
            "namd",
            "models_Libra",
-           "models_Tully"
+           "models_Tully",
+           "models_Martens"
           ]
 

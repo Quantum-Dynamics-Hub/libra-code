@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2018 Alexey V. Akimov                                                   
+#* Copyright (C) 2018 Brendan A. Smith, Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -350,4 +350,48 @@ def model4a(Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
         dc1_dia[i].set(0,0, 0.0+0.0j);   dc1_dia[i].set(0,1, 0.0+0.0j);
         dc1_dia[i].set(1,0, 0.0+0.0j);   dc1_dia[i].set(1,1, 0.0+0.0j);
 
+
+def model5(q, params):
+    """
+    Symmetric Double Well Potential in 2D
+    Hdia = 0.25*(q1^4 + q2^4) - 0.5*(q1^2 + q2^2)   
+    Sdia = 1.0
+    Ddia = 0.0
+    """
+
+    # Hdia and Sdia are ndia x ndia in dimension
+    Hdia = CMATRIX(1,1)
+    Sdia = CMATRIX(1,1)
+
+    # d1ham and dc1_dia are ndia x ndia in dimension, but we have nnucl of them
+    d1ham_dia = CMATRIXList();
+    dc1_dia = CMATRIXList();
+
+    for i in xrange(2):
+        d1ham_dia.append( CMATRIX(1,1) )
+        dc1_dia.append( CMATRIX(1,1) )
+
+    x = q.get(0)
+    y = q.get(1)
+    x2 = x*x
+    y2 = y*y
+
+    Hdia.set(0,0, (0.25*(x2*x2 + y2*y2) - 0.5*(x2 + y2))*(1.0+0.0j) )
+    Sdia.set(0,0, 1.0+0.0j)
+
+    #  d Hdia / dR_0
+    d1ham_dia[0].set(0,0, x*(x2 - 1.0)*(1.0+0.0j) )
+    d1ham_dia[1].set(0,0, y*(y2 - 1.0)*(1.0+0.0j) )
+
+    #  <dia| d/dR_0| dia >
+    dc1_dia[0].set(0,0, 0.0+0.0j)
+    dc1_dia[1].set(0,0, 0.0+0.0j)
+
+    obj = tmp()
+    obj.ham_dia = Hdia
+    obj.ovlp_dia = Sdia
+    obj.d1ham_dia = d1ham_dia
+    obj.dc1_dia = dc1_dia
+
+    return obj
 
