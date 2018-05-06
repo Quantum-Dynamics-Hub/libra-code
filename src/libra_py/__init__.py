@@ -28,6 +28,8 @@ __all__ = ["init_system",
            "autoconnect",
            "vesta2qe",
            "scf",
-           "namd"
+           "namd",
+           "models_Libra",
+           "models_Tully"
           ]
 

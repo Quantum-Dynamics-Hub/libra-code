@@ -166,6 +166,9 @@ boost::python::list hop(int ntraj, boost::python::list initstate, boost::python:
 int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
          nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd);
 
+void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& states,
+         nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd);
+
 
 ///================  In tsh_methods_ida.cpp  ===================================
 

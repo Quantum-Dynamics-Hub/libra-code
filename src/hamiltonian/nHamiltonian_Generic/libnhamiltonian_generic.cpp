@@ -127,30 +127,45 @@ void export_nhamiltonian_generic_objects(){
   = &nHamiltonian::ampl_dia2adi;
   void (nHamiltonian::*expt_ampl_dia2adi_v2)(CMATRIX& ampl_dia, CMATRIX& ampl_adi, vector<int>& id_)
   = &nHamiltonian::ampl_dia2adi;
+  void (nHamiltonian::*expt_ampl_dia2adi_v3)(CMATRIX& ampl_dia, CMATRIX& ampl_adi, int lvl, int split)
+  = &nHamiltonian::ampl_dia2adi;
   void (nHamiltonian::*expt_ampl_adi2dia_v1)(CMATRIX& ampl_dia, CMATRIX& ampl_adi)
   = &nHamiltonian::ampl_adi2dia;
   void (nHamiltonian::*expt_ampl_adi2dia_v2)(CMATRIX& ampl_dia, CMATRIX& ampl_adi, vector<int>& id_)
   = &nHamiltonian::ampl_adi2dia;
+  void (nHamiltonian::*expt_ampl_adi2dia_v3)(CMATRIX& ampl_dia, CMATRIX& ampl_adi, int lvl, int split)
+  = &nHamiltonian::ampl_adi2dia;
 
 
 
-  void (nHamiltonian::*expt_compute_nac_dia_v1)(const MATRIX& p, const MATRIX& invM)
+
+  void (nHamiltonian::*expt_compute_nac_dia_v1)(MATRIX& p, const MATRIX& invM)
   = &nHamiltonian::compute_nac_dia;
-  void (nHamiltonian::*expt_compute_nac_dia_v2)(const MATRIX& p, const MATRIX& invM, vector<int>& id_)
+  void (nHamiltonian::*expt_compute_nac_dia_v2)(MATRIX& p, const MATRIX& invM, vector<int>& id_)
   = &nHamiltonian::compute_nac_dia;
-  void (nHamiltonian::*expt_compute_nac_adi_v1)(const MATRIX& p, const MATRIX& invM)
+  void (nHamiltonian::*expt_compute_nac_dia_v3)(MATRIX& p, const MATRIX& invM, int lvl, int split)
+  = &nHamiltonian::compute_nac_dia;
+  void (nHamiltonian::*expt_compute_nac_adi_v1)(MATRIX& p, const MATRIX& invM)
   = &nHamiltonian::compute_nac_adi;
-  void (nHamiltonian::*expt_compute_nac_adi_v2)(const MATRIX& p, const MATRIX& invM, vector<int>& id_)
+  void (nHamiltonian::*expt_compute_nac_adi_v2)(MATRIX& p, const MATRIX& invM, vector<int>& id_)
   = &nHamiltonian::compute_nac_adi;
+  void (nHamiltonian::*expt_compute_nac_adi_v3)(MATRIX& p, const MATRIX& invM, int lvl, int split)
+  = &nHamiltonian::compute_nac_adi;
+
 
   void (nHamiltonian::*expt_compute_hvib_dia_v1)()
   = &nHamiltonian::compute_hvib_dia;
   void (nHamiltonian::*expt_compute_hvib_dia_v2)(vector<int>& id_)
   = &nHamiltonian::compute_hvib_dia;
+  void (nHamiltonian::*expt_compute_hvib_dia_v3)(int lvl)
+  = &nHamiltonian::compute_hvib_dia;
   void (nHamiltonian::*expt_compute_hvib_adi_v1)()
   = &nHamiltonian::compute_hvib_adi;
   void (nHamiltonian::*expt_compute_hvib_adi_v2)(vector<int>& id_)
   = &nHamiltonian::compute_hvib_adi;
+  void (nHamiltonian::*expt_compute_hvib_adi_v3)(int lvl)
+  = &nHamiltonian::compute_hvib_adi;
+
 
 
 
@@ -183,14 +198,14 @@ void export_nhamiltonian_generic_objects(){
   complex<double> (nHamiltonian::*expt_Ehrenfest_energy_dia_v2)(CMATRIX& ampl_dia, vector<int>& id_)
   = &nHamiltonian::Ehrenfest_energy_dia;
 
-  CMATRIX (nHamiltonian::*expt_Ehrenfest_forces_adi_v1)(CMATRIX& ampl_adi)
+  CMATRIX (nHamiltonian::*expt_Ehrenfest_forces_adi_v1)(CMATRIX& ampl_adi, int lvl)
   = &nHamiltonian::Ehrenfest_forces_adi;
-  CMATRIX (nHamiltonian::*expt_Ehrenfest_forces_adi_v2)(CMATRIX& ampl_adi, vector<int>& id_)
-  = &nHamiltonian::Ehrenfest_forces_adi;
-  CMATRIX (nHamiltonian::*expt_Ehrenfest_forces_dia_v1)(CMATRIX& ampl_dia)
+//  CMATRIX (nHamiltonian::*expt_Ehrenfest_forces_adi_v2)(CMATRIX& ampl_adi, vector<int>& id_)
+//  = &nHamiltonian::Ehrenfest_forces_adi;
+  CMATRIX (nHamiltonian::*expt_Ehrenfest_forces_dia_v1)(CMATRIX& ampl_dia, int lvl)
   = &nHamiltonian::Ehrenfest_forces_dia;
-  CMATRIX (nHamiltonian::*expt_Ehrenfest_forces_dia_v2)(CMATRIX& ampl_dia, vector<int>& id_)
-  = &nHamiltonian::Ehrenfest_forces_dia;
+//  CMATRIX (nHamiltonian::*expt_Ehrenfest_forces_dia_v2)(CMATRIX& ampl_dia, vector<int>& id_)
+//  = &nHamiltonian::Ehrenfest_forces_dia;
 
   vector<CMATRIX> (nHamiltonian::*expt_Ehrenfest_forces_tens_adi_v1)(CMATRIX& ampl_adi)
   = &nHamiltonian::Ehrenfest_forces_tens_adi; 
@@ -329,8 +344,10 @@ void export_nhamiltonian_generic_objects(){
 
       .def("ampl_adi2dia", expt_ampl_adi2dia_v1)
       .def("ampl_adi2dia", expt_ampl_adi2dia_v2)
+      .def("ampl_adi2dia", expt_ampl_adi2dia_v3)
       .def("ampl_dia2adi", expt_ampl_dia2adi_v1)
       .def("ampl_dia2adi", expt_ampl_dia2adi_v2)
+      .def("ampl_dia2adi", expt_ampl_dia2adi_v3)
 
 
       .def("forces_tens_adi", expt_forces_tens_adi_v1)
@@ -346,13 +363,17 @@ void export_nhamiltonian_generic_objects(){
 
       .def("compute_nac_dia", expt_compute_nac_dia_v1)
       .def("compute_nac_dia", expt_compute_nac_dia_v2)
+      .def("compute_nac_dia", expt_compute_nac_dia_v3)
       .def("compute_nac_adi", expt_compute_nac_adi_v1)
       .def("compute_nac_adi", expt_compute_nac_adi_v2)
+      .def("compute_nac_adi", expt_compute_nac_adi_v3)
 
       .def("compute_hvib_dia", expt_compute_hvib_dia_v1)
       .def("compute_hvib_dia", expt_compute_hvib_dia_v2)
+      .def("compute_hvib_dia", expt_compute_hvib_dia_v3)
       .def("compute_hvib_adi", expt_compute_hvib_adi_v1)
       .def("compute_hvib_adi", expt_compute_hvib_adi_v2)
+      .def("compute_hvib_adi", expt_compute_hvib_adi_v3)
 
       .def("add_ethd_dia", expt_add_ethd_dia_v1)
       .def("add_ethd_adi", expt_add_ethd_adi_v1)
@@ -370,9 +391,9 @@ void export_nhamiltonian_generic_objects(){
       .def("Ehrenfest_forces_tens_dia", expt_Ehrenfest_forces_tens_dia_v2)
 
       .def("Ehrenfest_forces_adi", expt_Ehrenfest_forces_adi_v1)
-      .def("Ehrenfest_forces_adi", expt_Ehrenfest_forces_adi_v2)
+//      .def("Ehrenfest_forces_adi", expt_Ehrenfest_forces_adi_v2)
       .def("Ehrenfest_forces_dia", expt_Ehrenfest_forces_dia_v1)
-      .def("Ehrenfest_forces_dia", expt_Ehrenfest_forces_dia_v2)
+//      .def("Ehrenfest_forces_dia", expt_Ehrenfest_forces_dia_v2)
 
 
   ;

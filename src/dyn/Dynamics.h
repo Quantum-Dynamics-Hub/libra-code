@@ -41,7 +41,7 @@ void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, b
 
 // Ehrenfest.cpp
 void Ehrenfest0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham, bp::object py_funct, bp::object params, int rep);
-void Ehrenfest1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, vector<CMATRIX>& C, nHamiltonian& ham, bp::object py_funct, bp::object params, int rep);
+void Ehrenfest1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham, bp::object py_funct, bp::object params, int rep);
 
 
 }// namespace libdyn

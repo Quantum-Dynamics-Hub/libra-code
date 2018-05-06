@@ -337,32 +337,44 @@ public:
   CMATRIX get_basis_transform(vector<int>& id_);
 
 
+
   ///< In nHamiltonian_compute_diabatic.cpp
+
   void compute_diabatic(int model, vector<double>& q, vector<double>& params, int lvl); // for internal model types
   void compute_diabatic(int model, vector<double>& q, vector<double>& params); // for internal model types
 
   void compute_diabatic(bp::object py_funct, bp::object q, bp::object params, int lvl); // for models defined in Python
   void compute_diabatic(bp::object py_funct, bp::object q, bp::object params); // for models defined in Python
 
+
   ///< In nHamiltonian_compute_ETHD.cpp
+
   void add_ethd_dia(const MATRIX& q, const MATRIX& invM, int der_lvl);
   void add_ethd_adi(const MATRIX& q, const MATRIX& invM, int der_lvl);
 
 
+
   ///< In nHamiltonian_compute_adiabatic.cpp
+
   void compute_adiabatic(int der_lvl, int lvl);
   void compute_adiabatic(int der_lvl);
   void compute_adiabatic(bp::object py_funct, bp::object q, bp::object params, int lvl); // for models defined in Python
   void compute_adiabatic(bp::object py_funct, bp::object q, bp::object params); // for models defined in Python
 
 
-  ///< In nHamiltonian_compute.cpp
+
+  ///< In nHamiltonian_compute_basis_transform.cpp
+
   void ampl_dia2adi(CMATRIX& ampl_dia, CMATRIX& ampl_adi);
   void ampl_dia2adi(CMATRIX& ampl_dia, CMATRIX& ampl_adi, vector<int>& id_);
+  void ampl_dia2adi(CMATRIX& ampl_dia, CMATRIX& ampl_adi, int lvl, int split);
   void ampl_adi2dia(CMATRIX& ampl_dia, CMATRIX& ampl_adi);
   void ampl_adi2dia(CMATRIX& ampl_dia, CMATRIX& ampl_adi, vector<int>& id_);
+  void ampl_adi2dia(CMATRIX& ampl_dia, CMATRIX& ampl_adi, int lvl, int split);
 
 
+
+  ///< In nHamiltonian_compute_forces.cpp
 
   CMATRIX forces_adi(CMATRIX& ampl_adi);  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
   CMATRIX forces_adi(CMATRIX& ampl_adi, vector<int>& id_);  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
@@ -374,28 +386,38 @@ public:
   vector<CMATRIX> forces_tens_dia(CMATRIX& ampl_dia); // 
   vector<CMATRIX> forces_tens_dia(CMATRIX& ampl_dia, vector<int>& id_); // 
 
-  void compute_nac_dia(const MATRIX& p, const MATRIX& invM);
-  void compute_nac_dia(const MATRIX& p, const MATRIX& invM, vector<int>& id_);
-  void compute_nac_adi(const MATRIX& p, const MATRIX& invM);
-  void compute_nac_adi(const MATRIX& p, const MATRIX& invM, vector<int>& id_);
+
+  ///< In nHamiltonian_compute_nac.cpp
+
+  void compute_nac_dia(MATRIX& p, const MATRIX& invM);
+  void compute_nac_dia(MATRIX& p, const MATRIX& invM, vector<int>& id_);
+  void compute_nac_dia(MATRIX& p, const MATRIX& invM, int lvl, int split);
+  void compute_nac_adi(MATRIX& p, const MATRIX& invM);
+  void compute_nac_adi(MATRIX& p, const MATRIX& invM, vector<int>& id_);
+  void compute_nac_adi(MATRIX& p, const MATRIX& invM, int lvl, int split);
 
   void compute_hvib_dia();
   void compute_hvib_dia(vector<int>& id_);
+  void compute_hvib_dia(int lvl);
   void compute_hvib_adi();
   void compute_hvib_adi(vector<int>& id_);
+  void compute_hvib_adi(int lvl);
+
 
 
   ///< In nHamiltonian_compute_Ehrenfest.cpp
-
-  complex<double> Ehrenfest_energy_adi(CMATRIX& ampl_adi);
-  complex<double> Ehrenfest_energy_adi(CMATRIX& ampl_adi, vector<int>& id_);
   complex<double> Ehrenfest_energy_dia(CMATRIX& ampl_dia);
   complex<double> Ehrenfest_energy_dia(CMATRIX& ampl_dia, vector<int>& id_);
+  complex<double> Ehrenfest_energy_adi(CMATRIX& ampl_adi);
+  complex<double> Ehrenfest_energy_adi(CMATRIX& ampl_adi, vector<int>& id_);
 
-  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi);                    ///< Ehrenfest forces in adiabatic basis
-  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, vector<int>& id_);  ///< Ehrenfest forces in adiabatic basis
-  CMATRIX Ehrenfest_forces_dia(CMATRIX& ampl_dia);                    ///< Ehrenfest forces in diabatic basis
-  CMATRIX Ehrenfest_forces_dia(CMATRIX& ampl_dia, vector<int>& id_);  ///< Ehrenfest forces in diabatic basis
+  CMATRIX Ehrenfest_forces_dia_unit(CMATRIX& ampl_dia);               ///< Ehrenfest forces in diabatic basis
+  CMATRIX Ehrenfest_forces_dia(CMATRIX& ampl_dia, int lvl);           ///< Ehrenfest forces in diabatic basis
+//  CMATRIX Ehrenfest_forces_dia(CMATRIX& ampl_dia, vector<int>& id_);  ///< Ehrenfest forces in diabatic basis
+  CMATRIX Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi);               ///< Ehrenfest forces in adiabatic basis
+  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl);           ///< Ehrenfest forces in adiabatic basis
+//  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, vector<int>& id_);  ///< Ehrenfest forces in adiabatic basis
+
 
   vector<CMATRIX> Ehrenfest_forces_tens_adi(CMATRIX& ampl_adi);  // Force tensor in adiabatic basis, assuming Cadi = Cadi(t)
   vector<CMATRIX> Ehrenfest_forces_tens_adi(CMATRIX& ampl_adi, vector<int>& id_);  // Force tensor in adiabatic basis, assuming Cadi = Cadi(t)

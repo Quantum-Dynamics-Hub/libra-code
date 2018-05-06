@@ -55,7 +55,7 @@ void export_Ehrenfest_objects(){
 
   void (*expt_Ehrenfest0_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham,
   bp::object py_funct, bp::object params, int rep) = &Ehrenfest0;
-  void (*expt_Ehrenfest1_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, vector<CMATRIX>& C, nHamiltonian& ham,
+  void (*expt_Ehrenfest1_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham,
   bp::object py_funct, bp::object params, int rep) = &Ehrenfest1;
 
   def("Ehrenfest0", expt_Ehrenfest0_v1);
@@ -282,8 +282,11 @@ void export_Dyn_objects(){
 
   int (*expt_tsh0_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
          nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd) = &tsh0;
-
   def("tsh0", expt_tsh0_v1);
+  int (*expt_tsh1_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& states,
+         nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd) = &tsh1;
+  def("tsh1", expt_tsh1_v1);
+
 
 
   int (*expt_ida_v1)(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi) = &ida;

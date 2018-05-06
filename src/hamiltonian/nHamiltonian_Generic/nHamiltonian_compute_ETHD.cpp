@@ -82,7 +82,7 @@ double ETHD_energy(const MATRIX& q, const MATRIX& invM){
 
   } 
 
-  cout<<"ETHD energy = "<<en<<endl;
+//  cout<<"ETHD energy = "<<en<<endl;
   
   return en;
 
@@ -131,10 +131,10 @@ MATRIX ETHD_forces(const MATRIX& q, const MATRIX& invM){
 
 
   //============ Compute the energy =========  
-  q.show_matrix();
-  q_ave.show_matrix();
+//  q.show_matrix();
+//  q_ave.show_matrix();
 
-  cout<<"ndof = "<<ndof<<" ntraj = "<<ntraj<<endl;
+//  cout<<"ndof = "<<ndof<<" ntraj = "<<ntraj<<endl;
 
   for(dof=0; dof<ndof; dof++){    
 
@@ -143,13 +143,13 @@ MATRIX ETHD_forces(const MATRIX& q, const MATRIX& invM){
 
     for(traj=0; traj<ntraj; traj++){
       
-      cout<<"dof = "<<dof<<" traj = "<<traj<<pref * (q.get(dof, traj) - q_ave.get(dof, 0) )<<endl;
+//      cout<<"dof = "<<dof<<" traj = "<<traj<<pref * (q.get(dof, traj) - q_ave.get(dof, 0) )<<endl;
       f.set(dof, traj,  pref * (q.get(dof, traj) - q_ave.get(dof, 0) ) );
 
     }// for traj
   }//dof
 
-  cout<<"ETHD forces = "; f.show_matrix();
+//  cout<<"ETHD forces = "; f.show_matrix();
 
   return f;
 
