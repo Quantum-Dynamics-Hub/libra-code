@@ -107,7 +107,7 @@ def run_test(model, outname):
     outname - the name of the output file
     """
 
-    ndia, nadi, nnucl, ntraj = 1, 1, 1, 5
+    ndia, nadi, nnucl, ntraj = 1, 1, 1, 1
 
     # ======= Hierarchy of Hamiltonians =======
     ham = nHamiltonian(ndia, nadi, nnucl)
@@ -121,7 +121,6 @@ def run_test(model, outname):
     params["omega"] = 0.25
     params["model"] = model
 #    params["rep"] = rep
-
 
     # Simulation parameters
     dt = 1.0

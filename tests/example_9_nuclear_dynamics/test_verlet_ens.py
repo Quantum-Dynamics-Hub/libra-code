@@ -114,7 +114,7 @@ def run_test(model, outname):
     outname - the name of the output file
     """
 
-    ndia, nadi, nnucl, ntraj = 1, 1, 1, 5
+    ndia, nadi, nnucl, ntraj = 1, 1, 1, 50
 
     # ======= Hierarchy of Hamiltonians =======
     ham = nHamiltonian(ndia, nadi, nnucl)
@@ -178,24 +178,40 @@ def run_test(model, outname):
     Ekin, Epot, Etot = compute_etot(ham, p, iM)
     print Ekin, Epot, Etot
 
-    out = open(outname, "w")
-    out.close()
-
+    out1 = open("_output.txt", "w"); out1.close()   
+    out2 = open("_phase_space.txt", "w"); out2.close()  
+    out3 = open("_pos_space.txt", "w"); out3.close()  
 
     # Do the propagation
     for i in xrange(250):
 
-        Verlet1(dt, q, p, iM, ham, compute_model, params)
+        Verlet1(dt, q, p, iM, ham, compute_model, params, 0)
      
         #=========== Properties ==========
 
         Ekin, Epot, Etot = compute_etot(ham, p, iM)
 
-        out = open(outname, "a")
-        ret = (i*dt, q.get(0,1), p.get(0,1), Ekin, Epot, Etot )
-        out.write("%8.5f %8.5f %8.5f %8.5f %8.5f %8.5f \n" %  ret )
-        out.close()
-                                                                    
+        # Print the ensemble average - kinetic, potential, and total energies
+        # Print the tunneling information. Here, we count each trajectory across the barrier.
+        out1 = open("_output.txt", "a")
+        out1.write( " %8.5f  %8.5f  %8.5f  %8.5f\n" % ( i*dt, Ekin, Epot, Etot ) )
+        out1.close()
+
+        # Print the phase space information
+        out2 = open("_phase_space.txt", "a") 
+        for j in range(ntraj):
+            out2.write(" %8.5f  %8.5f" % ( q.get(0,j), p.get(0,j) ) ),
+        out2.write( "\n" )
+        out2.close()  
+
+        # Print the position versus time infromation
+        out3 = open("_pos_space.txt", "a")
+        out3.write( " %8.5f" % (i*dt) ),
+        for j in range(ntraj):
+            out3.write( " %8.5f" % ( q.get(0,j) ) )
+        out3.write( "\n" )
+        out3.close()  
+
 
 model = 1
 
