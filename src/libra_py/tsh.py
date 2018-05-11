@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2016-2017 Kosuke Sato, Alexey V. Akimov                                                   
+#* Copyright (C) 2016-2018 Kosuke Sato, Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -34,6 +34,15 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+
+__author__ = "Alexey V. Akimov, Kosuke Sato"
+__copyright__ = "Copyright 2016-2018 Kosuke Sato, Alexey V. Akimov"
+__credits__ = ["Alexey V. Akimov", "Kosuke Sato"]
+__license__ = "GNU-3"
+__version__ = "1.0"
+__maintainer__ = "Alexey V. Akimov"
+__email__ = "alexvakimov@gmail.com"
+__url__ = "https://quantum-dynamics-hub.github.io/libra/index.html"
 
 
 def sample(x, mean_x, sigma_x, rnd):  
@@ -168,7 +177,8 @@ def compute_etot_tsh(ham, p, Cdia, Cadi, states, iM, rep):
 
     for traj in xrange(ntraj):
 
-        pop_submatrix(states, C, Py2Cpp_int(range(0,nst)), Py2Cpp_int([traj]))        
+        pop_submatrix(states, C, Py2Cpp_int(range(0,nst)), Py2Cpp_int([traj]))      
+        C.permute_rows(ham.get_ordering_adi(Py2Cpp_int([0, traj])) )
 
         if rep==0:
             epot.append( ham.Ehrenfest_energy_dia(C, Py2Cpp_int([0,traj])).real )
@@ -241,7 +251,8 @@ def compute_dm(ham, Cdia, Cadi, rep, lvl):
     
         if rep==0:
             S = ham.get_ovlp_dia(indx)
-            U = ham.get_basis_transform(indx)
+            U = ham.get_basis_transform(indx) 
+            correct_phase(U)
     
             dm_tmp = S * Cdia.col(traj) * Cdia.col(traj).H() * S
             dm_dia = dm_dia + dm_tmp
@@ -249,10 +260,15 @@ def compute_dm(ham, Cdia, Cadi, rep, lvl):
        
     
         elif rep==1:
-            dm_tmp = Cadi.col(traj) * Cadi.col(traj).H()
+            c = Cadi.col(traj)
+            c.permute_rows(ham.get_ordering_adi(Py2Cpp_int([0, traj])) )
+            dm_tmp = c * c.H()
             dm_adi = dm_adi + dm_tmp
-    
-            su = ham.get_ovlp_dia(indx) * ham.get_basis_transform(indx)
+
+            S = ham.get_ovlp_dia(indx)
+            U = ham.get_basis_transform(indx)     
+            correct_phase(U)
+            su = S * U
             dm_dia = dm_dia + su * dm_tmp * su.H()
     
     dm_dia = dm_dia / float(ntraj)        
