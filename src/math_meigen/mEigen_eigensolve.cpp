@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015-2017 Alexey V. Akimov
+* Copyright (C) 2015-2018 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -25,6 +25,7 @@ using namespace liblinalg;
 
 /// libmeigen namespace
 namespace libmeigen{
+
 
 
 
@@ -290,7 +291,7 @@ void solve_eigen(MATRIX& H, MATRIX& S, CMATRIX& E, CMATRIX& C, int symm){
 
 
 
-void solve_eigen(CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C, int symm){
+void solve_eigen_raw(CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C, int symm){
 /** Solve the generalized eigenvalue problem: H * C = S * C * E
   i-th column of C contains i-th MO (coefficients of expansion in terms of AOs)
   C[i][j] - is the weight of j-th AO in i-th MO
@@ -391,6 +392,93 @@ void solve_eigen(CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C, int symm){
 }//void solve_eigen(CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C, int symm)
 
 
+void solve_eigen(CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C, int symm, int reorder){
+
+  int i;
+  complex<double> dx(0.01, 0.0);
+
+  solve_eigen_raw(H, S, E, C, symm);
+
+  if(reorder){
+    //=========== Perturb one of the matrices ==========
+    CMATRIX* h; h = new CMATRIX(H->n_rows, H->n_cols);  *h = *H;
+    CMATRIX* e; e = new CMATRIX(E->n_rows, E->n_cols);  *e = *E;
+    CMATRIX* c; c = new CMATRIX(C->n_rows, C->n_cols);  *c = *C;
+
+    complex<double> shft(0.0, 0.0);
+
+//    for(i=0;i<H->n_cols-1;i++){
+
+//      double gap = abs(H->get(i+1,i+1) - H->get(i,i));
+//      shft = shft + dx * gap * ((i+1)/double(H->n_cols));
+      h->add(0, 0, -0.01*dx);
+
+//    }//for i
+
+    //==================================================
+
+    // Solve the perturbed problem:
+    solve_eigen_raw(h, S, e, c, symm);
+
+    CMATRIX ovlp(C->n_cols, c->n_cols);
+    ovlp = (*C).H() * (*c);
+
+    // Compute the ordering
+    vector<int> perm;
+    perm = get_reordering(ovlp);
+
+    cout<<"Reordering gives:\n";
+    for(i=0;i<C->n_cols;i++){    
+      cout<<"i = "<<i<<"  perm[i] = "<<perm[i]<<endl;
+    } 
+
+    // Place the eigenvectors accordingly:
+    for(i=0;i<C->n_cols;i++){    
+      for(int j=0;j<C->n_rows;j++){
+        C->set(j,i, c->get(j, perm[i]) );
+      }
+    }    
+
+    delete c;
+    delete h;
+    delete e;
+
+  }// if reorder
+
+}
+
+void solve_eigen(CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C, int symm){
+
+  // This version re-orders the eigenvectors
+  solve_eigen(H, S, E, C, symm, 0);
+
+}
+
+
+void solve_eigen(CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C, int symm, int reorder){
+/** Solve the generalized eigenvalue problem: H * C = S * C * E
+  i-th column of C contains i-th MO (coefficients of expansion in terms of AOs)
+  C[i][j] - is the weight of j-th AO in i-th MO
+  More, generally C.col(i) is the eigenvector corresponding the eigenstate E_i
+
+  int symm - is the flag for H and S matrices symmetrization:
+   symm = 0 - don't symmetrize (use the input matrices as they are)  
+   symm = 1 - do symmetrize them
+
+  H * C = (N_bas x N_bas)   x  ( N_bas x N_mo ) = N_mo x N_mo
+
+  S * C * E = (N_bas x N_bas) x (N_bas x N_mo ) x (N_mo x N_mo) = N_bas x N_mo
+ 
+
+*/
+
+  solve_eigen(&H, &S, &E, &C, symm, reorder);
+
+}
+
+
+
+
 
 void solve_eigen(CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C, int symm){
 /** Solve the generalized eigenvalue problem: H * C = S * C * E
@@ -409,7 +497,7 @@ void solve_eigen(CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C, int symm){
 
 */
 
-  solve_eigen(&H, &S, &E, &C, symm);
+  solve_eigen(&H, &S, &E, &C, symm, 0);
 
 }
 

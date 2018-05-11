@@ -31,7 +31,7 @@ namespace libmeigen{
 
 
 
-void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh){
+void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh, int do_phase_correction){
 /**
   This function computes S^{1/2} and S^{-1/2} for given matrix S
   \param[in] S Input matrix
@@ -71,6 +71,8 @@ void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh){
   // Find the eigenvalues of the the S matrix
   solve_eigen(S, *Seig, *C, 0);  // S * C = C * Seig  ==>  S = C * Seig * C.H()
 
+  if(do_phase_correction){   correct_phase(C);  }
+
   // Diagonal form of the S^{-1/2} and S^{1/2} matrices
   S_i_half = complex<double>(0.0,0.0);  // S^{-1/2}
   S_half = complex<double>(0.0,0.0);    // S^{1/2}
@@ -103,15 +105,21 @@ void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh){
 }// sqrt_matrix
 
 
+void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh){
+
+  sqrt_matrix(S, S_half, S_i_half, thresh, 1);
+
+}
+
 void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half){
 
-  sqrt_matrix(S, S_half, S_i_half, -1.0);
+  sqrt_matrix(S, S_half, S_i_half, -1.0, 1);
 
 }
 
 
 
-void exp_matrix(CMATRIX& res, CMATRIX& S, complex<double> dt){
+void exp_matrix(CMATRIX& res, CMATRIX& S, complex<double> dt, int do_phase_correction){
 /**
   This function computes exp(S*dt) for a given matrix S
   \param[in] S input matrix
@@ -135,6 +143,8 @@ void exp_matrix(CMATRIX& res, CMATRIX& S, complex<double> dt){
   // Find the eigenvalues of the the S matrix
   solve_eigen(S, *Seig, *C, 0);  // S * C = C * Seig  ==>  S = C * Seig * C.H()
 
+  if(do_phase_correction){   correct_phase(C);  }
+
   
   for(i=0;i<sz;i++){ res.M[i*sz+i]= exp(dt * Seig->get(i,i)); }
 
@@ -147,6 +157,9 @@ void exp_matrix(CMATRIX& res, CMATRIX& S, complex<double> dt){
 }// exp_matrix
 
 
+void exp_matrix(CMATRIX& res, CMATRIX& S, complex<double> dt){
+  exp_matrix(res,S, dt, 1);
+}
 
 
 

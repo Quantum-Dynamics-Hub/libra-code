@@ -17,6 +17,7 @@
 #ifndef LIB_LINALG_H
 #define LIB_LINALG_H
 
+#include "permutations.h"
 #include "base_matrix.h"  
 #include "CMATRIX.h"
 #include "MATRIX.h"                               

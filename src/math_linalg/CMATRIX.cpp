@@ -517,6 +517,219 @@ CMATRIX CMATRIX::operator/(complex<double> f){
 
 
 
+vector<int> get_reordering(CMATRIX& time_overlap){
+    /**
+    """ This function identifies which states have changed their identities during some
+    calculations (usually the eigenvalue problem) in comparison to what they might have been.
+
+    In the dynamics, this situation occurs when the system passes the conical intersection region
+    and the identity of the states may change. The states' energies become non-descriptive for this
+    purpose and one needs to look at the changes of the orbitals (e.g. eigenvectors). In particular,
+    we can look at the overlap of the sates at adjacent times: <phi_i(t)|phi_i(t+dt)> 
+    If no spurious state changes happens, the diagonal elements should be close to 1.0. 
+    If they are not - we locate to which state the transitions might have happened.
+
+    In general context, the "time_overlap" matrix is compused of the overlaps of the eigenvectors
+    for two problems - the original one and a perturbed one.
+
+    \param[in] time_overlap ( CMATRIX ) the time overlap matrix, <phi_i(t)|phi_j(t+dt)>.
+
+    Returns:
+    perm - list of integers that describe the permutation. That is:
+    perm[i] - is the index identifying the "older" state "i". Now, it may be labeled
+    by some other index, j = perm[i]. 
+
+    """
+    */
+
+    // extract the indices where <phi_i(t)|phi_i(t+dt)> is not close to 1. 
+    CMATRIX S(time_overlap);  // just a temporary working object
+    int sz = time_overlap.n_rows;
+
+    // Original permutation
+    vector<int> perm(sz, 0);  
+    for(int i=0;i<sz;i++){ perm[i] = i; } 
+    
+    for(int col=0; col<sz; col++){
+
+      int indx = -1;
+      complex<double> val(0.0, 0.0);
+      
+      while(indx!=col){
+
+        // Find the max element in the given column "col"
+        S.max_col_elt(col, val, indx);
+            
+        // Apply the permutation (col, indx) to the present "perm" list
+        int tmp = perm[col];
+        perm[col] = perm[indx];
+        perm[indx] = tmp;
+
+        // Do the corresponding swap of the columns in the S matrix
+        S.swap_cols(col,indx);
+
+      }// while indx!=col
+    }// for col
+
+    return perm;
+}
+
+
+vector<int> compute_signature(CMATRIX& Ref, CMATRIX& X){
+/**
+  Compute signature of one matrix with respect to a given reference matrix
+  This is essentially determining whether the system of vectors given by
+  the columns of the matrix X forms a "right" or "left" system in multi-
+  dimensional space of vectors. What is "right" and what is "left" is
+  given by the matrix Ref.
+
+  Essentially, we compute a projection of each column of X onto each of the columns 
+  of Ref and define the sign on that projection. Positive sign is a signature +1 for that
+  dimension, whereas negative sign gives -1 signature. A (hopefully) rare case of the projection
+  equal 0 is not yet handled, but if this will happen, we will need to simply rotate the 
+  reference system of vectors by a random (small) angle in a random direction to make a non-zero 
+  projection onto each of the directions.
+*/
+
+  // Check that the dimensions of the two matrices are equal
+  if(Ref.n_cols!=X.n_cols){
+    cout<<"ERROR in vector<int> compute_signature(CMATRIX& Ref, CMATRIX& X):\
+          The number of columns of the reference matrix ("<<Ref.n_cols<<") \
+          should be equal to the number of columns of the matrix of interest \
+          ("<<X.n_cols<<")\nExiting...\n";
+    exit(0);
+  }
+
+  if(Ref.n_rows!=X.n_rows){
+    cout<<"ERROR in vector<int> compute_signature(CMATRIX& Ref, CMATRIX& X):\
+          The number of rows of the reference matrix ("<<Ref.n_rows<<") \
+          should be equal to the number of rows of the matrix of interest \
+          ("<<X.n_rows<<")\nExiting...\n";
+    exit(0);
+  }
+
+  vector<int> res(X.n_cols, 1);
+
+  CMATRIX tmp(X.n_cols, X.n_cols);
+  tmp = Ref.H() * X;
+
+  for(int n=0; n<X.n_cols; n++){
+
+    int val = tmp.get(n,n).real();
+
+
+    if(fabs(val)<1e-50){   
+/*
+      cout<<"ERROR in vector<int> compute_signature(CMATRIX& Ref, CMATRIX& X):\
+            One of the projections of the X matrix onto one of the \
+            reference vectors is zero (less thant 1e-50)\nExiting...\n";
+      exit(0);
+*/
+    }
+    else{
+      if(val<0.0){ res[n] = -1; }
+    }  
+  }// for n
+
+  return res;
+
+}
+
+vector<int> compute_signature(CMATRIX& X){
+
+  if(X.n_cols != X.n_rows){
+    cout<<"ERROR in vector<int> compute_signature(CMATRIX& X): The number of columns (currently = \
+    "<<X.n_cols<<") of matrix X should be equal to the number of rows (currently = "<<X.n_rows<<")\
+    Exiting...\n";
+    exit(0);
+  }
+  CMATRIX ref(X.n_cols, X.n_cols); 
+  ref.identity();
+
+  return compute_signature(ref, X);
+
+}
+
+
+
+
+void correct_phase(CMATRIX& Ref, CMATRIX& X){
+/**
+  This function checks that the phases of all vectors in matrix X are consistent with the
+  phases of the same vectors in the reference set of vectors Ref.
+  Correct the phases of vectors in X if needed.
+*/
+
+  vector<int> res(1, X.n_cols);
+  res = compute_signature(Ref, X);
+
+  for(int c=0; c<X.n_cols; c++){
+    for(int r=0; r<X.n_rows; r++){
+        X.scale(r,c, res[c]); 
+    }
+  }
+}
+
+
+void correct_phase(CMATRIX& X){
+/**
+  This function checks that the phases of all vectors in matrix X are consistent with the
+  phases of the same vectors in the reference set of vectors Ref.
+  Correct the phases of vectors in X if needed.
+*/
+
+  vector<int> res(1, X.n_cols);
+  res = compute_signature(X);
+
+  for(int c=0; c<X.n_cols; c++){
+    for(int r=0; r<X.n_rows; r++){
+        X.scale(r,c, res[c]); 
+    }
+  }
+}
+
+
+
+void correct_phase(CMATRIX& Ref, CMATRIX* X){
+/**
+  This function checks that the phases of all vectors in matrix X are consistent with the
+  phases of the same vectors in the reference set of vectors Ref.
+  Correct the phases of vectors in X if needed.
+*/
+
+  vector<int> res(1, X->n_cols);
+  res = compute_signature(Ref, *X);
+
+  for(int c=0; c<X->n_cols; c++){
+    for(int r=0; r<X->n_rows; r++){
+        X->scale(r,c, res[c]); 
+    }
+  }
+}
+
+void correct_phase(CMATRIX* X){
+/**
+  This function checks that the phases of all vectors in matrix X are consistent with the
+  phases of the same vectors in the reference set of vectors Ref.
+  Correct the phases of vectors in X if needed.
+*/
+
+  vector<int> res(1, X->n_cols);
+  res = compute_signature(*X);
+
+  for(int c=0; c<X->n_cols; c++){
+    for(int r=0; r<X->n_rows; r++){
+        X->scale(r,c, res[c]); 
+    }
+  }
+}
+
+
+
+
+
+
+
 
 }// namespace liblinalg
 }// liblibra
