@@ -73,12 +73,15 @@ def get_probabilities(q, states, params, ndia, nadi, rep, ham, Cdia, Cadi):
     ntransm, nrefl = 0.0, 0.0
     for traj in xrange(ntraj):
 
+        c = states.col(traj)
+        c.permute_rows(ham.get_ordering_adi(Py2Cpp_int([0, traj])) )
+
         if q.get(act_dof, traj) < left_boundary:
-            pop_refl = pop_refl + states.col(traj)
+            pop_refl = pop_refl + c
             nrefl += 1.0
 
         if q.get(act_dof, traj) > right_boundary:
-            pop_transm = pop_transm + states.col(traj)
+            pop_transm = pop_transm + c
             ntransm += 1.0            
  
 
@@ -108,7 +111,10 @@ def get_probabilities(q, states, params, ndia, nadi, rep, ham, Cdia, Cadi):
 
        
         elif rep==1:
-            dm_tmp = Cadi.col(traj) * Cadi.col(traj).H()
+            c = Cadi.col(traj)
+            c.permute_rows(ham.get_ordering_adi(indx))
+
+            dm_tmp = c * c.H()
             su = ham.get_ovlp_dia(indx) * ham.get_basis_transform(indx)
 
             if q.get(act_dof, traj) < left_boundary:
@@ -191,7 +197,7 @@ def run_test(dt, md_run, ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, mo
         if rep==0:
             tsh1(dt, q, p, iM,  Cdia, states, ham, compute_model, params, params1, rnd)
         elif rep==1:
-            tsh1(dt, q, p, iM,  Cadi, states, ham, compute_model, params, params1, rnd)
+            tsh1(dt, q, p, iM,  Cadi, states, ham, compute_model, params, params1, rnd, 1)
  
 
         #=========== Properties ==========
@@ -202,7 +208,7 @@ def run_test(dt, md_run, ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, mo
 
 
     Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh.compute_etot_tsh(ham, p, Cdia, Cadi, states, iM, rep) 
-    params_observ = {"act_dof":0, "left_boundary": -5.0, "right_boundary": 5.0 }
+    params_observ = {"act_dof":0, "left_boundary": -10.0, "right_boundary": 5.0 }
 
     return get_probabilities(q, states, params_observ, ndia, nadi, rep, ham, Cdia, Cadi)
                                                                     
@@ -242,13 +248,13 @@ def run_scattering():
     out.close()
 
     p0 = 1.0
-    while p0<60.0:
+    while p0<20.0:
 
         mean_p.set(0, 0, p0)
         p = MATRIX(nnucl,ntraj);  tsh.sample(p, mean_p, sigma_p, rnd)
 
-        dt = 20.0 / p0
-        md_run = 2000
+        dt = 5.0 / p0
+        md_run = 5000
 
         pops = run_test(dt, md_run, ndia, nadi, nnucl, ntraj, q, p, Cdia, Cadi, iM, model, rep, params1, rnd, states)
  
@@ -261,7 +267,7 @@ def run_scattering():
                          Trans_adi(0)= %8.5f Trans_adi(1)= %8.5f  Trans_dia(0)= %8.5f Trans_dia(1)= %8.5f\n" %  rec)
         out.close()
 
-        p0 = p0 + 2.5
+        p0 = p0 + 1.0
         
 
 run_scattering()

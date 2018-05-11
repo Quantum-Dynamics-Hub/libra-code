@@ -55,7 +55,7 @@ def compute_model(q, params, full_id):
 
 
 
-def get_probabilities(states):
+def get_probabilities(ham, states):
     """
     states = [nst x ntraj] matrix with states
     """
@@ -66,7 +66,9 @@ def get_probabilities(states):
     res = CMATRIX(nst, 1)
 
     for traj in xrange(ntraj):
-        res = res + states.col(traj)
+        c = states.col(traj)
+        c.permute_rows(ham.get_ordering_adi(Py2Cpp_int([0, traj])) )
+        res = res + c
 
     res = res * (1.0/float(ntraj))
 
@@ -120,10 +122,7 @@ def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, ou
     # Initial calculations
     ham.compute_diabatic(compute_model, q, params, 1)
     ham.compute_adiabatic(1, 1); 
-
-
     ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
-
 
 
     if rep==0:
@@ -143,13 +142,12 @@ def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, ou
 
 
     # Do the propagation
-    for i in xrange(1000):
+    for i in xrange(5000):
 
         if rep==0:
             tsh1(dt, q, p, iM,  Cdia, states, ham, compute_model, params, params1, rnd)
         elif rep==1:
-            tsh1(dt, q, p, iM,  Cadi, states, ham, compute_model, params, params1, rnd)
- 
+            tsh1(dt, q, p, iM,  Cadi, states, ham, compute_model, params, params1, rnd, 1)
 
         #=========== Properties ==========
         if rep==0:
@@ -160,16 +158,21 @@ def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, ou
 
         dm_dia, dm_adi = tsh.compute_dm(ham, Cdia, Cadi, rep, 1)
         Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh.compute_etot_tsh(ham, p, Cdia, Cadi, states, iM, rep)
-        pops = get_probabilities(states)
+        pops = get_probabilities(ham, states)
 
         out = open(outname, "a")
 
 
+        ind = 0.0
+        for tr in xrange(ntraj):
+            ind = ind + ham1[tr].get_ordering_adi()[0]
+        ind = ind/float(ntraj)
+
         ret = (i*dt, q.get(0), p.get(0), 
                Ekin, Epot, Etot, dEkin, dEpot, dEtot,
-               dm_adi.get(0,0).real, dm_adi.get(1,1).real, dm_dia.get(0,0).real, dm_dia.get(1,1).real, pops.get(0,0), pops.get(1,0)
+               dm_adi.get(0,0).real, dm_adi.get(1,1).real, dm_dia.get(0,0).real, dm_dia.get(1,1).real, pops.get(0,0), pops.get(1,0), ind
               )
-        out.write("%8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n" %  ret )
+        out.write("%8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n" %  ret )
 
         out.close()
 
@@ -178,35 +181,40 @@ def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, ou
 
 
 model = 1
-ndia, nadi, nnucl, ntraj = 2, 2, 1, 10
+ndia, nadi, nnucl, ntraj = 2, 2, 1, 25
 
 rnd = Random()
 
 # Dynamical variables and system-specific properties
-mean_q = MATRIX(nnucl,1);   mean_q.set(0,0, -5)
+mean_q = MATRIX(nnucl,1);   mean_q.set(0,0, -2)
 sigma_q = MATRIX(nnucl,1);  sigma_q.set(0,0, 0.0)
-mean_p = MATRIX(nnucl,1);   mean_p.set(0,0, 50.0)
+mean_p = MATRIX(nnucl,1);   mean_p.set(0,0, 5.0)
 sigma_p = MATRIX(nnucl,1);  sigma_p.set(0,0, 0.0)
 
 q = MATRIX(nnucl,ntraj);  tsh.sample(q, mean_q, sigma_q, rnd)
 p = MATRIX(nnucl,ntraj);  tsh.sample(p, mean_p, sigma_p, rnd)
 iM = MATRIX(nnucl,1);     iM.set(0,0, 1.0/2000.0)
 
-rep = 1
 istate = 0
 Cdia, Cadi = CMATRIX(ndia, ntraj), CMATRIX(nadi, ntraj)
 states = CMATRIX(ndia, ntraj)
-
 
 for traj in xrange(ntraj):
     Cadi.set(istate, traj, 1.0+0.0j);  
     states.set(istate, traj, 1.0+0.0j)
 
 
+rep = 1
 params1 = {"rep":rep, "rep_sh":1, "tsh_method":0, "use_boltz_factor":0,
            "Temperature":300.0, "do_reverse":1, "vel_rescale_opt":0 }
-
 run_test(ndia, nadi, nnucl, ntraj, q, p, Cdia, Cadi, iM, model, rep, "_0_new.txt", params1, rnd, states)
+
+
+
+#rep = 0
+#params1 = {"rep":rep, "rep_sh":0, "tsh_method":0, "use_boltz_factor":0,
+#           "Temperature":300.0, "do_reverse":1, "vel_rescale_opt":0 }
+#run_test(ndia, nadi, nnucl, ntraj, q, p, Cdia, Cadi, iM, model, rep, "_0_new.txt", params1, rnd, states)
 
 
         

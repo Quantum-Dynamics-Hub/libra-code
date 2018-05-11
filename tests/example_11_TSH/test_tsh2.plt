@@ -71,10 +71,13 @@ plot "_0_new.txt" using 1:10   w l  ls 11  lw 5  t "P(0, adi)"
 
 
 set output "_pop_sh.png"
-plot "_0_new.txt" using 1:14   w l  ls 11  lw 5  t "SH, P(0)",\
-     "_0_new.txt" using 1:15   w l  ls 21  lw 5  t "SH, P(1)",\
-     "_0_new.txt" using 1:12   w l  ls 31  lw 5  t "SE, P(0)",\
-     "_0_new.txt" using 1:13   w l  ls 41  lw 5  t "SE, P(1)"
+plot "_0_new.txt" using 1:14   w p  ls 11  lw 5  t "SH, P(0)",\
+     "_0_new.txt" using 1:15   w p  ls 21  lw 5  t "SH, P(1)",\
+     "_0_new.txt" using 1:10   w p  ls 31  lw 5  t "SE, P(0)",\
+     "_0_new.txt" using 1:11   w p  ls 41  lw 5  t "SE, P(1)"
+
+set output "_ordering.png"
+plot "_0_new.txt" using 1:16   w p  ls 11  lw 5  t "SH, P(0)"
 
 
 
