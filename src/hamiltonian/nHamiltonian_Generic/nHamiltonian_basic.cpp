@@ -84,6 +84,9 @@ nHamiltonian::nHamiltonian(int ndia_, int nadi_, int nnucl_){
   nadi = nadi_;
   nnucl = nnucl_;
 
+  ordering_adi = new vector<int>(nadi, 0);
+  for(n=0;n<nadi;n++){ ordering_adi[0][n] = n; }
+
   dc1_dia = vector<CMATRIX*>(nnucl, NULL); 
   dc1_dia_mem_status = vector<int>(nnucl, 0);
 
@@ -117,6 +120,8 @@ nHamiltonian::~nHamiltonian(){
 //  id = 0;
 //  level = 0;
   int n;
+ 
+  delete ordering_adi;  ordering_adi = NULL;
  
   if(ovlp_dia_mem_status == 1){ delete ovlp_dia;  ovlp_dia = NULL; ovlp_dia_mem_status = 0;}
 
@@ -683,6 +688,40 @@ void nHamiltonian::set_d2ham_dia_by_val(vector<CMATRIX>& d2ham_dia_){
           SETTERS  :         ADIABATIC PARAMETERS
 
 **************************************************************************/
+
+void nHamiltonian::set_ordering_adi_by_ref(vector<int>& ordering_adi_){
+/**
+  Setup of the variable that takes care of the ordering of the adiabatic states 
+*/
+
+  if(ordering_adi_.size()!=nadi){
+    cout<<"ERROR in void nHamiltonian::set_ordering_adi_by_ref(vector<int>& ordering_adi_): \
+          The external variable must be allocated and its size should be = "<<nadi<<". The \
+          current size is = "<<ordering_adi_.size()<<"\nExiting...\n";
+    exit(0);
+  }
+  
+  ordering_adi = &ordering_adi_;
+
+}
+
+void nHamiltonian::set_ordering_adi_by_val(vector<int>& ordering_adi_){
+/**
+  Setup of the variable that takes care of the ordering of the adiabatic states 
+*/
+
+  if(ordering_adi_.size()!=nadi){
+    cout<<"ERROR in void nHamiltonian::set_ordering_adi_by_ref(vector<int>& ordering_adi_): \
+          The external variable must be allocated and its size should be = "<<nadi<<". The \
+          current size is = "<<ordering_adi_.size()<<"\nExiting...\n";
+    exit(0);
+  }
+  
+  *ordering_adi = ordering_adi_;
+
+}
+
+
 
 /************************ DERIVATIVE COUPLING *****************************/
 
@@ -1342,6 +1381,32 @@ CMATRIX nHamiltonian::get_d2ham_dia(int i, int j, vector<int>& id_){
           GETTERS  :         ADIABATIC PARAMETERS
 
 **************************************************************************/
+
+vector<int> nHamiltonian::get_ordering_adi(){ 
+/**
+  Return the permutation describing the ordering of the adiabatic states
+*/
+  return *ordering_adi; 
+}
+
+vector<int> nHamiltonian::get_ordering_adi(vector<int>& id_){ 
+/**
+  Return the permutation describing the ordering of the adiabatic states
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return get_ordering_adi();    }
+    else{ cout<<"ERROR in vector<int> nHamiltonian::get_ordering_adi(vector<int>& id_): \
+                No Hamiltonian matching the requested id\nExiting...\n";
+          exit(0);   }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->get_ordering_adi(next);
+  }
+
+}
+
+
 
 CMATRIX nHamiltonian::get_dc1_adi(int i){ 
 /**

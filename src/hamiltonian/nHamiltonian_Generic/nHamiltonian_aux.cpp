@@ -280,9 +280,6 @@ void nHamiltonian::check_cmatrix_list(bp::object obj, std::string matrix_name, i
 
 
 
-
-
-
 }// namespace libhamiltonian_generic
 }// namespace libhamiltonian
 }// liblibra

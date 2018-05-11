@@ -68,6 +68,9 @@ void export_nhamiltonian_generic_objects(){
 
 
 
+  vector<int> (nHamiltonian::*expt_get_ordering_adi_v1)() = &nHamiltonian::get_ordering_adi; 
+  vector<int> (nHamiltonian::*expt_get_ordering_adi_v2)(vector<int>&) = &nHamiltonian::get_ordering_adi; 
+
   CMATRIX (nHamiltonian::*expt_get_dc1_adi_v1)(int i) = &nHamiltonian::get_dc1_adi;
   CMATRIX (nHamiltonian::*expt_get_dc1_adi_v2)(int i, vector<int>&) = &nHamiltonian::get_dc1_adi;
 
@@ -110,6 +113,10 @@ void export_nhamiltonian_generic_objects(){
   void (nHamiltonian::*expt_compute_diabatic_v4)(bp::object py_funct, bp::object q, bp::object params)
   = &nHamiltonian::compute_diabatic;
 
+
+
+  void (nHamiltonian::*expt_update_ordering_v1)(vector<int>& perm_t, int lvl) = &nHamiltonian::update_ordering;
+  void (nHamiltonian::*expt_update_ordering_v2)(vector<int>& perm_t) = &nHamiltonian::update_ordering;
 
 
   void (nHamiltonian::*expt_compute_adiabatic_v1)(int der_lvl, int lvl)
@@ -266,6 +273,9 @@ void export_nhamiltonian_generic_objects(){
       .def("set_d2ham_dia_by_val", &nHamiltonian::set_d2ham_dia_by_val)
 
 
+      .def("set_ordering_adi_by_ref", &nHamiltonian::set_ordering_adi_by_ref)
+      .def("set_ordering_adi_by_val", &nHamiltonian::set_ordering_adi_by_val)
+
       .def("init_dc1_adi", &nHamiltonian::init_dc1_adi)
       .def("set_dc1_adi_by_ref", &nHamiltonian::set_dc1_adi_by_ref)
       .def("set_dc1_adi_by_val", &nHamiltonian::set_dc1_adi_by_val)
@@ -312,6 +322,8 @@ void export_nhamiltonian_generic_objects(){
       .def("get_d2ham_dia", expt_get_d2ham_dia_v21)
       .def("get_d2ham_dia", expt_get_d2ham_dia_v22)
 
+      .def("get_ordering_adi", expt_get_ordering_adi_v1)
+      .def("get_ordering_adi", expt_get_ordering_adi_v2)
       .def("get_dc1_adi", expt_get_dc1_adi_v1)
       .def("get_dc1_adi", expt_get_dc1_adi_v2)
       .def("get_ham_adi", expt_get_ham_adi_v1)
@@ -335,6 +347,10 @@ void export_nhamiltonian_generic_objects(){
       .def("compute_diabatic", expt_compute_diabatic_v2)
       .def("compute_diabatic", expt_compute_diabatic_v3)
       .def("compute_diabatic", expt_compute_diabatic_v4)
+
+
+      .def("update_ordering", expt_update_ordering_v1)
+      .def("update_ordering", expt_update_ordering_v2)
 
       .def("compute_adiabatic", expt_compute_adiabatic_v1)
       .def("compute_adiabatic", expt_compute_adiabatic_v2)
