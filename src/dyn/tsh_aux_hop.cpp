@@ -31,6 +31,41 @@ namespace bp = boost::python;
 namespace libdyn{
 
 
+vector<int> tsh_vec2indx(CMATRIX& states){
+/**
+  Convert a set of vectors <states> into the corresponding indices  
+  res[i] - is the index of the row which contains maximal value in the i-th column
+*/
+
+  vector<int> res(states.n_cols);
+
+  int istate;
+  complex<double> tmp;
+
+  for(int i=0; i<states.n_cols; i++){
+    states.max_col_elt(i, tmp, istate);
+    res[i] = istate;
+  }
+
+  return res;
+
+}
+
+void tsh_indx2vec(CMATRIX& states, vector<int>& res){
+/**
+  Sets occupies the trajectories according to the scheme res
+*/
+  states *= 0.0;
+
+  for(int i=0; i<states.n_cols; i++){
+    states.set(res[i], i, complex<double>(1.0, 0.0));
+  }
+
+}
+
+
+
+
 int hop(int initstate, MATRIX& g, double ksi){
 /** 
   \brief Attempts a stochastic hop from the initial state "initstate"

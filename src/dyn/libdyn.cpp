@@ -153,6 +153,13 @@ void export_MSSH_hopping_probabilities_objects(){
 
 void export_ESH_hopping_probabilities_objects(){
 
+
+  vector<int> (*expt_tsh_vec2indx_v1)(CMATRIX& states) = &tsh_vec2indx;
+  def("tsh_vec2indx", expt_tsh_vec2indx_v1);
+
+  void (*expt_tsh_indx2vec_v1)(CMATRIX& states, vector<int>& res) = &tsh_indx2vec;
+  def("tsh_indx2vec", expt_tsh_indx2vec_v1);
+
   void (*expt_compute_hopping_probabilities_esh_v1)
   (Ensemble& ens, MATRIX* g, double dt, int use_boltz_factor,double T) = compute_hopping_probabilities_esh;
 
@@ -164,40 +171,82 @@ void export_ESH_hopping_probabilities_objects(){
 void export_tsh_aux_rescale_objects(){
 
 
+  int (*expt_apply_transition0_v1)
+  (MATRIX& p, MATRIX& invM, nHamiltonian& ham, int istate, int fstate, 
+  int vel_rescale_opt, int do_reverse,int do_rescale) = &apply_transition0;
+
+  def("apply_transition0", expt_apply_transition0_v1);
+
+  vector<int> (*expt_apply_transition1_v1)
+  (MATRIX& p, MATRIX& invM, nHamiltonian& ham, vector<int>& istate, 
+  vector<int>& fstate, int vel_rescale_opt, int do_reverse, int do_rescale) = &apply_transition1;
+
+  def("apply_transition1", expt_apply_transition1_v1);
+
+
+
+
   int (*expt_rescale_velocities_adiabatic_v1)
+  (MATRIX& p, MATRIX& invM, CMATRIX& ham_adi, vector<CMATRIX>& dc1_adi, 
+  int new_st,int old_st, int do_reverse, int do_rescale) = &rescale_velocities_adiabatic;
+
+  int (*expt_rescale_velocities_adiabatic_v2)
   (MATRIX& p, MATRIX& invM, CMATRIX& ham_adi, vector<CMATRIX>& dc1_adi, 
   int new_st,int old_st, int do_reverse) = &rescale_velocities_adiabatic;
 
-  int (*expt_rescale_velocities_adiabatic_v2)
+
+  int (*expt_rescale_velocities_adiabatic_v3)
+  (MATRIX& p, MATRIX& invM, nHamiltonian& ham, int new_st,int old_st,
+  int do_reverse, int do_rescale) = &rescale_velocities_adiabatic;
+
+  int (*expt_rescale_velocities_adiabatic_v4)
   (MATRIX& p, MATRIX& invM, nHamiltonian& ham, int new_st,int old_st,
   int do_reverse) = &rescale_velocities_adiabatic;
 
-  int (*expt_rescale_velocities_adiabatic_v3)
+
+  int (*expt_rescale_velocities_adiabatic_v5)
   (vector<double>& p, vector<double>& masses, CMATRIX& ham_adi,
    vector<CMATRIX>& dc1_adi, int new_st,int old_st, int do_reverse) = &rescale_velocities_adiabatic;
 
-  int (*expt_rescale_velocities_adiabatic_v4)
+  int (*expt_rescale_velocities_adiabatic_v6)
+  (vector<double>& p, vector<double>& masses, CMATRIX& ham_adi,
+   vector<CMATRIX>& dc1_adi, int new_st,int old_st, int do_reverse) = &rescale_velocities_adiabatic;
+
+  int (*expt_rescale_velocities_adiabatic_v7)
   (Nuclear& mol, Hamiltonian& ham, int old_st, int do_reverse) = &rescale_velocities_adiabatic;
 
   def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v1);
   def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v2);
   def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v3);
   def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v4);
+  def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v5);
+  def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v6);
+  def("rescale_velocities_adiabatic", expt_rescale_velocities_adiabatic_v7);
+
 
 
 
   int (*expt_rescale_velocities_diabatic_v1)
-  (MATRIX& p, MATRIX& invM, CMATRIX& ham_adi, int new_st,int old_st) = &rescale_velocities_diabatic;
+  (MATRIX& p, MATRIX& invM, CMATRIX& ham_adi, int new_st,int old_st, int do_rescale) = &rescale_velocities_diabatic;
 
   int (*expt_rescale_velocities_diabatic_v2)
-  (MATRIX& p, MATRIX& invM, nHamiltonian& ham, int new_st,int old_st) = &rescale_velocities_diabatic;
+  (MATRIX& p, MATRIX& invM, CMATRIX& ham_adi, int new_st,int old_st) = &rescale_velocities_diabatic;
 
   int (*expt_rescale_velocities_diabatic_v3)
+  (MATRIX& p, MATRIX& invM, nHamiltonian& ham, int new_st,int old_st, int do_rescale) = &rescale_velocities_diabatic;
+
+  int (*expt_rescale_velocities_diabatic_v4)
+  (MATRIX& p, MATRIX& invM, nHamiltonian& ham, int new_st,int old_st) = &rescale_velocities_diabatic;
+
+  int (*expt_rescale_velocities_diabatic_v5)
   (Nuclear& mol, Hamiltonian& ham, int old_st) = &rescale_velocities_diabatic;
 
   def("rescale_velocities_diabatic", expt_rescale_velocities_diabatic_v1);
   def("rescale_velocities_diabatic", expt_rescale_velocities_diabatic_v2);
   def("rescale_velocities_diabatic", expt_rescale_velocities_diabatic_v3);
+  def("rescale_velocities_diabatic", expt_rescale_velocities_diabatic_v4);
+  def("rescale_velocities_diabatic", expt_rescale_velocities_diabatic_v5);
+
 
 
 }
@@ -280,12 +329,23 @@ void export_Dyn_objects(){
   def("propagate_ensemble", expt_propagate_ensemble_v1);
 
 
-  int (*expt_tsh0_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
-         nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd) = &tsh0;
+  int (*expt_tsh0_v1)
+  (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state, nHamiltonian& ham, 
+   bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd, int do_reordering) = &tsh0;
+  int (*expt_tsh0_v2)
+  (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state, nHamiltonian& ham,
+   bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd) = &tsh0;
   def("tsh0", expt_tsh0_v1);
-  int (*expt_tsh1_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& states,
-         nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd) = &tsh1;
+  def("tsh0", expt_tsh0_v2);
+
+  void (*expt_tsh1_v1)
+  (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& states, nHamiltonian& ham,
+   bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd, int do_reordering) = &tsh1;
+  void (*expt_tsh1_v2)
+  (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& states, nHamiltonian& ham,
+   bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd) = &tsh1;
   def("tsh1", expt_tsh1_v1);
+  def("tsh1", expt_tsh1_v2);
 
 
 

@@ -300,7 +300,7 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib){
 }// propagate_electronic
 
 
-void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
+void propagate_electronic_eig(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
 /**
   Solves the time-dependent Schrodinger equation:
 
@@ -355,6 +355,32 @@ void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
 
 
 }// propagate_electronic
+
+void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
+
+  int i,j;
+  // Faster and more robust solver:
+  int ntraj = Coeff.n_cols;
+  int nel = Coeff.n_rows;  
+  Electronic el(nel);
+
+  for(j=0; j<ntraj; j++){
+
+    for(i=0; i<nel; i++){ 
+      el.q[i] = Coeff.get(i,j).real(); 
+      el.p[i] = Coeff.get(i,j).imag();       
+    }
+    propagate_electronic(dt, el, Hvib);
+
+    for(i=0; i<nel; i++){   
+      Coeff.set(i,j, complex<double>(el.q[i], el.p[i]));    
+    }
+
+  }
+
+  // Older Default 
+  //propagate_electronic_eig(dt, Coeff, Hvib);
+}
 
 
 
