@@ -545,10 +545,12 @@ vector<int> get_reordering(CMATRIX& time_overlap){
     // extract the indices where <phi_i(t)|phi_i(t+dt)> is not close to 1. 
     CMATRIX S(time_overlap);  // just a temporary working object
     int sz = time_overlap.n_rows;
+    int i;
 
     // Original permutation
     vector<int> perm(sz, 0);  
-    for(int i=0;i<sz;i++){ perm[i] = i; } 
+    vector<int> perm_cum(sz, 0);  
+    for(i=0;i<sz;i++){ perm_cum[i] = i; } 
     
     for(int col=0; col<sz; col++){
 
@@ -561,6 +563,8 @@ vector<int> get_reordering(CMATRIX& time_overlap){
         S.max_col_elt(col, val, indx);
             
         // Apply the permutation (col, indx) to the present "perm" list
+        for(i=0;i<sz;i++){ perm[i] = i; } 
+
         int tmp = perm[col];
         perm[col] = perm[indx];
         perm[indx] = tmp;
@@ -568,10 +572,13 @@ vector<int> get_reordering(CMATRIX& time_overlap){
         // Do the corresponding swap of the columns in the S matrix
         S.swap_cols(col,indx);
 
+        update_permutation(perm, perm_cum);
+
+
       }// while indx!=col
     }// for col
 
-    return perm;
+    return perm_cum;
 }
 
 

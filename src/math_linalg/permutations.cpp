@@ -24,6 +24,12 @@ namespace liblibra{
 namespace liblinalg{
 
 
+vector<int> id_permutation(int sz){
+  vector<int> res(sz,0);
+  for(int i=0;i<sz;i++){ res[i] = i; }
+  return res;
+}
+
 vector<int> composite_permutation(vector<int>& perm_t, vector<int>& perm_cum){
     /**
     \param[in] perm_cum - Cumulative permutation

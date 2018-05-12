@@ -585,6 +585,10 @@ void export_FT(){
 
 void export_permutations(){
 
+
+  vector<int> (*expt_id_permutation_v1)(int sz) = &id_permutation;
+  def("id_permutation", expt_id_permutation_v1);
+
   vector<int> (*expt_composite_permutation_v1)(vector<int>& perm_t, vector<int>& perm_cum) = &composite_permutation;
   def("composite_permutation", expt_composite_permutation_v1);
 
