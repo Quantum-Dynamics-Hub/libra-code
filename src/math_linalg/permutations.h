@@ -43,6 +43,7 @@ using namespace std;
 namespace liblinalg{
 
 vector<int> id_permutation(int sz);
+vector<int> inverse_permutation(vector<int>& perm);
 vector<int> composite_permutation(vector<int>& perm_t, vector<int>& perm_cum);
 void update_permutation(vector<int>& perm_t, vector<int>& perm_cum);
 void update_permutation(vector<int>& perm_t, vector<int>* perm_cum);

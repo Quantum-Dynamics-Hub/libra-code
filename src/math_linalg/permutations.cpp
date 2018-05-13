@@ -30,6 +30,23 @@ vector<int> id_permutation(int sz){
   return res;
 }
 
+vector<int> inverse_permutation(vector<int>& perm){
+/**
+  Compute the inverse of the permutation <perm>
+
+  Forward permutation:  i -> perm[i]
+  
+  this  inv_perm[ perm[i] ] = i
+*/
+
+  int sz = perm.size();
+  vector<int> res(sz,0);
+
+  for(int i=0;i<sz;i++){    res[ perm[i] ] = i;   }
+
+  return res;
+}
+
 vector<int> composite_permutation(vector<int>& perm_t, vector<int>& perm_cum){
     /**
     \param[in] perm_cum - Cumulative permutation
