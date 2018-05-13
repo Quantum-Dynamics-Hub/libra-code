@@ -172,7 +172,7 @@ void nHamiltonian::compute_adiabatic(int der_lvl, int lvl){
     }
     else{   
       solve_eigen(ham_dia, ovlp_dia, ham_adi, basis_transform, 0);  
-      if(ndia == nadi){      correct_phase(basis_transform);    }
+//      if(ndia == nadi){      correct_phase(basis_transform);    }
     }
 
     if(der_lvl>=1){

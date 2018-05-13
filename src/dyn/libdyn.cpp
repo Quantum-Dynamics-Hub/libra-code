@@ -157,8 +157,17 @@ void export_ESH_hopping_probabilities_objects(){
   vector<int> (*expt_tsh_vec2indx_v1)(CMATRIX& states) = &tsh_vec2indx;
   def("tsh_vec2indx", expt_tsh_vec2indx_v1);
 
-  void (*expt_tsh_indx2vec_v1)(CMATRIX& states, vector<int>& res) = &tsh_indx2vec;
+  void (*expt_tsh_indx2vec_v1)(nHamiltonian& ham, CMATRIX& states, vector<int>& res) = &tsh_indx2vec;
   def("tsh_indx2vec", expt_tsh_indx2vec_v1);
+
+  void (*expt_tsh_internal2physical_v1)
+  (nHamiltonian& ham, vector<int>& internal, vector<int>& physical) = &tsh_internal2physical;
+  def("tsh_internal2physical", expt_tsh_internal2physical_v1);
+
+  void (*expt_tsh_physical2internal_v1)
+  (nHamiltonian& ham, vector<int>& internal, vector<int>& physical) = &tsh_physical2internal;
+  def("tsh_physical2internal", expt_tsh_physical2internal_v1);
+
 
   void (*expt_compute_hopping_probabilities_esh_v1)
   (Ensemble& ens, MATRIX* g, double dt, int use_boltz_factor,double T) = compute_hopping_probabilities_esh;
@@ -339,10 +348,10 @@ void export_Dyn_objects(){
   def("tsh0", expt_tsh0_v2);
 
   void (*expt_tsh1_v1)
-  (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& states, nHamiltonian& ham,
+  (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& states, nHamiltonian& ham,
    bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd, int do_reordering) = &tsh1;
   void (*expt_tsh1_v2)
-  (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& states, nHamiltonian& ham,
+  (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& states, nHamiltonian& ham,
    bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd) = &tsh1;
   def("tsh1", expt_tsh1_v1);
   def("tsh1", expt_tsh1_v2);

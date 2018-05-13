@@ -175,7 +175,9 @@ void rescale_velocities_adiabatic(int ntraj, vector<Nuclear>& mol, vector<Hamilt
 
 ///================  In tsh_aux_hop.cpp  ===================================
 vector<int> tsh_vec2indx(CMATRIX& states);
-void tsh_indx2vec(CMATRIX& states, vector<int>& res);
+void tsh_indx2vec(nHamiltonian& ham, CMATRIX& states, vector<int>& res);
+void tsh_internal2physical(nHamiltonian& ham, vector<int>& internal, vector<int>& physical);
+void tsh_physical2internal(nHamiltonian& ham, vector<int>& internal, vector<int>& physical);
 
 int hop(int initstate, MATRIX& g, double ksi);
 
@@ -205,9 +207,9 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
 int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
          nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd);
 
-void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& states,
+void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
          nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd, int do_reordering);
-void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& states,
+void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
          nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd);
 
 

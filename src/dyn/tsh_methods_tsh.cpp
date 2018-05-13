@@ -225,7 +225,7 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
 
 
 
-void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& states,
+void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
           nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd,
           int do_reordering){
 
@@ -237,9 +237,8 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
   \param[in,out] p [Ndof x Ntraj] nuclear momenta. Change during the integration.
   \param[in] invM [Ndof  x 1] inverse nuclear DOF masses. 
   \param[in,out] C [nadi x ntraj]  or [ndia x ntraj] matrix containing the electronic coordinates
-  \param[in,out] states - [nadi x ntraj] or [ndia x ntraj] matrix containing the indices of the states 
-  currently occupied by each of the trajectories (active states). Each column of the matrix corresponds to a
-  trajectory and contains only 0 in all elements but one (the active state). In that place, it contains 1.
+  \param[in,out] act_states - vector of ntraj indices of the physical states in which each of the trajectories
+  initially is (active states). 
   \param[in] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) 
   - its internal variables (well, actually the variables it points to) are changed during the compuations
   \param[in] py_funct Python function object that is called when this algorithm is executed. The called Python function does the necessary 
@@ -296,7 +295,7 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
   CMATRIX** Uprev; 
   CMATRIX* X;
   vector<int> perm_t; 
-
+  CMATRIX states(nst, ntraj); // CMATRIX version of "act_states"
 
   vector<int> nucl_stenc_x(ndof, 0); for(i=0;i<ndof;i++){  nucl_stenc_x[i] = i; }
   vector<int> nucl_stenc_y(1, 0); 
@@ -309,7 +308,7 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
   MATRIX p_traj(ndof, 1);
   CMATRIX coeff(nst, 1);
 
-  vector<int> istates; 
+  vector<int> istates(ntraj,0); 
   vector<int> fstates(ntraj,0); 
 
  
@@ -330,6 +329,7 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
   //============== Nuclear propagation ===================
 
   // Update the Ehrenfest forces for all trajectories
+  tsh_indx2vec(ham, states, act_states);
   if(rep==0){  p = p + ham.Ehrenfest_forces_dia(states, 1).real() * 0.5*dt;  }
   else if(rep==1){  p = p + ham.Ehrenfest_forces_adi(states, 1).real() * 0.5*dt;  }
 
@@ -359,12 +359,12 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
 
 
   // Reordering, if needed
-  istates = tsh_vec2indx(states);  /// starting states
+  //istates = tsh_vec2indx(states);  /// starting states
   if(do_reordering){
 
     if(rep==1){
       for(traj=0; traj<ntraj; traj++){
-        *X = *Uprev[traj] * ham.children[traj]->get_basis_transform().H();
+        *X = (*Uprev[traj]).H() * ham.children[traj]->get_basis_transform();
         perm_t = get_reordering(*X);
 
         /// Go there if the permutation is non-trivial (non-identity)
@@ -382,12 +382,12 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
           if(fstates[traj]==prop_state){
 */
             ham.children[traj]->update_ordering(perm_t, 1);
+            el_stenc_y[0] = traj;
 
-            CMATRIX x(ham.nadi, 1);      el_stenc_y[0] = traj;
-
-            x = states.col(traj);
-            x.permute_rows(perm_t);
-            push_submatrix(states, x, el_stenc_x, el_stenc_y);
+            CMATRIX x(ham.nadi, 1);      
+//            x = states.col(traj);
+//            x.permute_rows(perm_t);
+//            push_submatrix(states, x, el_stenc_x, el_stenc_y);
 
             x = C.col(traj);
             x.permute_rows(perm_t);
@@ -410,6 +410,7 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
 
 
   // Update the Ehrenfest forces for all trajectories
+  tsh_indx2vec(ham, states, act_states);
   if(rep==0){  p = p + ham.Ehrenfest_forces_dia(states, 1).real() * 0.5*dt;  }
   else if(rep==1){  p = p + ham.Ehrenfest_forces_adi(states, 1).real() * 0.5*dt;  }
 
@@ -447,7 +448,8 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
 
 
   /// Compute the proposed multi-trajectory states
-  istates = tsh_vec2indx(states);  /// starting states
+  //istates = tsh_vec2indx(states);  /// starting (non-phisical!) states
+  tsh_physical2internal(ham, istates, act_states);
 
 
   for(traj=0; traj<ntraj; traj++){
@@ -479,17 +481,19 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
 
 
   // Hop acceptance/rejection - velocity rescaling
-  istates = apply_transition1(p, invM, ham, istates, fstates, vel_rescale_opt, do_reverse, 1);
-  tsh_indx2vec(states, istates);
+  istates = apply_transition1(p, invM, ham, istates, fstates, vel_rescale_opt, do_reverse, 1); // non-physical states
+
+  // Convert from the internal indexing to the physical
+  tsh_internal2physical(ham, istates, act_states);
 
 
 }
 
 
-void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& states,
+void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
           nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd){
 
-    tsh1(dt, q, p, invM, C, states, ham, py_funct, params, params1, rnd);
+    tsh1(dt, q, p, invM, C, act_states, ham, py_funct, params, params1, rnd);
 }
 
 
