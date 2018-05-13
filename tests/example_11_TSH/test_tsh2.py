@@ -27,6 +27,8 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from libra_py import *
 
+import energy
+
 class tmp:
     pass    
 
@@ -60,15 +62,13 @@ def get_probabilities(ham, states):
     states = [nst x ntraj] matrix with states
     """
 
-    nst = states.num_of_rows
-    ntraj = states.num_of_cols
+    nst = ham.nadi
+    ntraj = len(states)
 
     res = CMATRIX(nst, 1)
 
-    for traj in xrange(ntraj):
-        c = states.col(traj)
-        c.permute_rows(ham.get_ordering_adi(Py2Cpp_int([0, traj])) )
-        res = res + c
+    for traj in xrange(ntraj):        
+        res.add(states[traj], 0, 1.0+0.0j)
 
     res = res * (1.0/float(ntraj))
 
@@ -116,7 +116,7 @@ def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, ou
     params = {"model":model, "rep":rep}
 
     # Simulation parameters
-    dt = 1.0
+    dt = 0.1
 
 
     # Initial calculations
@@ -133,8 +133,10 @@ def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, ou
         ham.compute_hvib_adi(1); 
 
 
+#    sys.exit(0)
     Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh.compute_etot_tsh(ham, p, Cdia, Cadi, states, iM, rep) 
     print Ekin, Epot, Etot, dEkin, dEpot, dEtot
+
 
 
     out = open(outname, "w")
@@ -148,6 +150,8 @@ def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, ou
             tsh1(dt, q, p, iM,  Cdia, states, ham, compute_model, params, params1, rnd)
         elif rep==1:
             tsh1(dt, q, p, iM,  Cadi, states, ham, compute_model, params, params1, rnd, 1)
+
+
 
         #=========== Properties ==========
         if rep==0:
@@ -188,7 +192,7 @@ rnd = Random()
 # Dynamical variables and system-specific properties
 mean_q = MATRIX(nnucl,1);   mean_q.set(0,0, -2)
 sigma_q = MATRIX(nnucl,1);  sigma_q.set(0,0, 0.0)
-mean_p = MATRIX(nnucl,1);   mean_p.set(0,0, 5.0)
+mean_p = MATRIX(nnucl,1);   mean_p.set(0,0, 20.0)
 sigma_p = MATRIX(nnucl,1);  sigma_p.set(0,0, 0.0)
 
 q = MATRIX(nnucl,ntraj);  tsh.sample(q, mean_q, sigma_q, rnd)
@@ -197,11 +201,11 @@ iM = MATRIX(nnucl,1);     iM.set(0,0, 1.0/2000.0)
 
 istate = 0
 Cdia, Cadi = CMATRIX(ndia, ntraj), CMATRIX(nadi, ntraj)
-states = CMATRIX(ndia, ntraj)
+states = intList() #CMATRIX(ndia, ntraj)
 
 for traj in xrange(ntraj):
     Cadi.set(istate, traj, 1.0+0.0j);  
-    states.set(istate, traj, 1.0+0.0j)
+    states.append(istate) #set(istate, traj, 1.0+0.0j)
 
 
 rep = 1
