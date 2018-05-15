@@ -31,6 +31,110 @@ namespace bp = boost::python;
 namespace libdyn{
 
 
+vector<int> tsh_vec2indx(CMATRIX& states){
+/**
+  Convert a set of vectors <states> into the corresponding indices  
+  res[i] - is the index of the row which contains maximal value in the i-th column
+*/
+
+  vector<int> res(states.n_cols);
+
+  int istate;
+  complex<double> tmp;
+
+  for(int i=0; i<states.n_cols; i++){
+    states.max_col_elt(i, tmp, istate);
+    res[i] = istate;
+  }
+
+  return res;
+
+}
+
+void tsh_indx2vec(nHamiltonian& ham, CMATRIX& states, vector<int>& res){
+/**
+  Convert the active state index (physical states) to the vector with occupation numbers
+  The reordering accumulated up until now is taken into accout. This is done for
+  1 or many trajectories
+*/
+  states *= 0.0;
+
+  vector<int> tx; tx = id_permutation(states.n_rows);
+  vector<int> ty(1,0); 
+
+  if(states.n_cols!=ham.children.size()){
+    cout<<"ERROR in void tsh_indx2vec(nHamiltonian& ham, CMATRIX& states, vector<int>& res)\
+          The size of the input matrix ("<<states.n_cols<<") and the number of children \
+          Hamiltonians ("<<ham.children.size()<<") are not equal\n";
+    exit(0);
+  }
+  if(states.n_cols!=res.size()){
+    cout<<"ERROR in void tsh_indx2vec(nHamiltonian& ham, CMATRIX& states, vector<int>& res)\
+          The size of the input matrix ("<<states.n_cols<<") and the number of items in \
+          the resul permutation ("<<res.size()<<") are not equal\n";
+    exit(0);
+  }
+  
+
+  for(int i=0; i<states.n_cols; i++){
+
+    // For a given trajectory
+    CMATRIX state(states.n_rows,1);         
+
+    // Set the active state to where it would have been without the reordering
+    state.set(res[i], 0, complex<double>(1.0, 0.0));
+
+    // Apply the cumulative reordering 
+    vector<int> M = ham.children[i]->get_ordering_adi();
+    state.permute_rows(M);
+
+    // Insert the vector to the corresponding column
+    ty[0] = i;
+    push_submatrix(states, state, tx, ty);
+    
+  }
+
+}
+
+
+void tsh_physical2internal(nHamiltonian& ham, vector<int>& internal, vector<int>& physical){
+/**
+  Map the indices of the active states from the physical notation to 
+  the internal notation (eigenvector ordering), using the permutations accumulated so far.
+*/
+
+  int ntraj = ham.children.size();
+
+  for(int i=0; i<ntraj; i++){
+ 
+    vector<int> M = ham.children[i]->get_ordering_adi();
+    internal[i] = M[ physical[i] ]; 
+
+//    cout<<"i = "<<i<<" physical[i]= "<<physical[i]<<" internal[i]= "<<internal[i]<<endl;
+  }
+
+}
+
+void tsh_internal2physical(nHamiltonian& ham, vector<int>& internal, vector<int>& physical){
+/**
+  Map the indices of the active states from the internal notation (eigenvector ordering) to the
+  physical, using the permutations accumulated so far.
+*/
+
+  int ntraj = ham.children.size();
+
+  for(int i=0; i<ntraj; i++){
+ 
+    vector<int> M = ham.children[i]->get_ordering_adi();
+    vector<int> iM = inverse_permutation( M );
+
+    physical[i] = iM[ internal[i] ]; 
+  }
+
+}
+
+
+
 int hop(int initstate, MATRIX& g, double ksi){
 /** 
   \brief Attempts a stochastic hop from the initial state "initstate"

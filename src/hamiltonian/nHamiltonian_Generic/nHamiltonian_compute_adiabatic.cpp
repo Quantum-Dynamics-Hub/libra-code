@@ -34,6 +34,89 @@ using namespace liblinalg;
 using namespace libmeigen;
 
 
+
+void nHamiltonian::update_ordering(vector<int>& perm_t, int lvl){
+
+  int i;
+
+  if(level==lvl){
+
+    update_permutation(perm_t, ordering_adi);
+    //ordering_adi[0] = perm_t;
+
+
+    
+    // Apply the re-ordering to all the underlying properties:
+    if(basis_transform_mem_status){
+      basis_transform->permute_cols(perm_t);
+    }
+    
+    if(ham_adi_mem_status){
+      ham_adi->permute_cols(perm_t);
+      ham_adi->permute_rows(perm_t);
+    }
+    
+    if(nac_adi_mem_status){
+      nac_adi->permute_cols(perm_t);
+      nac_adi->permute_rows(perm_t);
+    }
+    
+    if(hvib_adi_mem_status){
+      hvib_adi->permute_cols(perm_t);
+      hvib_adi->permute_rows(perm_t);
+    }
+    
+    
+    for(i=0; i<dc1_adi.size(); i++){
+      if(dc1_adi_mem_status[i]){
+        dc1_adi[i]->permute_cols(perm_t);
+        dc1_adi[i]->permute_rows(perm_t);
+      }
+    }
+    
+    for(i=0; i<d1ham_adi.size(); i++){
+      if(d1ham_adi_mem_status[i]){
+        d1ham_adi[i]->permute_cols(perm_t);
+        d1ham_adi[i]->permute_rows(perm_t);
+      }
+    }
+    
+    for(i=0; i<d2ham_adi.size(); i++){
+      if(d2ham_adi_mem_status[i]){
+        d2ham_adi[i]->permute_cols(perm_t);
+        d2ham_adi[i]->permute_rows(perm_t);
+      }
+    }
+
+
+
+  }// level==lvl
+
+  else if(lvl>level){
+  
+    for(int i=0;i<children.size();i++){
+      children[i]->update_ordering(perm_t, lvl);
+    }
+
+  }// lvl >level
+
+  else{
+    cout<<"WARNING in void nHamiltonian::update_order(vector<int>& perm_t, int lvl):\n"; 
+    cout<<"Can not run the function in the parent Hamiltonian from the\
+     child node\n";    
+  }
+ 
+
+}
+
+void nHamiltonian::update_ordering(vector<int>& perm_t){
+
+  update_ordering(perm_t, 0);
+
+}
+
+
+
 void nHamiltonian::compute_adiabatic(int der_lvl){
 
   compute_adiabatic(der_lvl, 0);
@@ -87,7 +170,10 @@ void nHamiltonian::compute_adiabatic(int der_lvl, int lvl){
       *ham_adi = *ham_dia;
       basis_transform->set(0,0, 1.0, 0.0);
     }
-    else{   solve_eigen(ham_dia, ovlp_dia, ham_adi, basis_transform, 0);   }
+    else{   
+      solve_eigen(ham_dia, ovlp_dia, ham_adi, basis_transform, 0);  
+//      if(ndia == nadi){      correct_phase(basis_transform);    }
+    }
 
     if(der_lvl>=1){
 
@@ -133,7 +219,7 @@ void nHamiltonian::compute_adiabatic(int der_lvl, int lvl){
             else{
  
               double dE = (ham_adi->get(j,j) - ham_adi->get(i,i) ).real();
-              if(fabs(dE)<1e-10){ 
+              if(fabs(dE)<1e-100){ 
                 //dE = 1e-10 * (dE>0.0 ? 1.0 : -1.0); 
                 dc1_adi[n]->set(i,j, 0.0, 0.0 );
               }else{

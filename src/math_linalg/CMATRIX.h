@@ -111,6 +111,8 @@ public:
   using base_matrix<complex<double> >::Transpose;
   using base_matrix<complex<double> >::swap_cols;
   using base_matrix<complex<double> >::swap_rows;
+  using base_matrix<complex<double> >::permute_cols;
+  using base_matrix<complex<double> >::permute_rows;
   using base_matrix<complex<double> >::RightRotation;
   using base_matrix<complex<double> >::LeftRotation;
  
@@ -198,6 +200,16 @@ public:
 
                  
 };
+
+vector<int> get_reordering(CMATRIX& X);
+vector<int> compute_signature(CMATRIX& Ref, CMATRIX& X);
+vector<int> compute_signature(CMATRIX& X);
+void correct_phase(CMATRIX& Ref, CMATRIX& X);
+void correct_phase(CMATRIX& Ref, CMATRIX* X);
+void correct_phase(CMATRIX& X);
+void correct_phase(CMATRIX* X);
+
+
 
 
 typedef std::vector<CMATRIX> CMATRIXList;  ///< Data type holding a list of arbitrary-size complex-valued matrices

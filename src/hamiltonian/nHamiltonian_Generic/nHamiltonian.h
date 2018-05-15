@@ -46,6 +46,7 @@ void set_X2_by_val(vector<CMATRIX*> ptx, vector<CMATRIX>& x_, vector<int>& x_mem
 void init_X2(vector<CMATRIX*> ptx, vector<int>& x_mem_status, int nrows, int ncols, int nnucl);
 
 
+
 // Forward declaration
 //class nHamiltonian; 
 
@@ -160,11 +161,16 @@ public:
   */
   int nadi;                   ///< the number of electronic DOFs in the adiabatic basis
 
+  vector<int>* ordering_adi;  ///< the permutation describing how the indices of the internally-stored
+                              /// properties like ham_adi or nac_adi relate to the indices of the 
+                              /// actual "physical" states.
+
   vector<CMATRIX*> dc1_adi;   ///< first-order derivative coupling matrices in the adiabatic basis 
   vector<int> dc1_adi_mem_status;
 
   CMATRIX* ham_adi;           ///< Hamiltonian in adiabatic representation (diagonal)
   int ham_adi_mem_status;
+
 
   CMATRIX* nac_adi;           ///< Nonadiabatic couplings (time-derivative couplings) in adiabatic representation
   int nac_adi_mem_status;
@@ -267,6 +273,9 @@ public:
 
 
   // Adiabatic
+  void set_ordering_adi_by_ref(vector<int>& ordering_adi_);
+  void set_ordering_adi_by_val(vector<int>& ordering_adi_);
+
   void init_dc1_adi();
   void set_dc1_adi_by_ref(vector<CMATRIX>& dc1_adi_);
   void set_dc1_adi_by_val(vector<CMATRIX>& dc1_adi_);
@@ -317,6 +326,8 @@ public:
   CMATRIX get_d2ham_dia(int i, int j, vector<int>& id_);
 
   // Adiabatic
+  vector<int> get_ordering_adi(); 
+  vector<int> get_ordering_adi(vector<int>& id_); 
   CMATRIX get_dc1_adi(int i);
   CMATRIX get_dc1_adi(int i, vector<int>& id_);
   CMATRIX get_ham_adi();
@@ -355,6 +366,8 @@ public:
 
 
   ///< In nHamiltonian_compute_adiabatic.cpp
+  void update_ordering(vector<int>& perm_t, int lvl);
+  void update_ordering(vector<int>& perm_t);
 
   void compute_adiabatic(int der_lvl, int lvl);
   void compute_adiabatic(int der_lvl);

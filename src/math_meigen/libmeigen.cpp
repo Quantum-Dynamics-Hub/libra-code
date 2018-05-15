@@ -48,14 +48,15 @@ void export_mEigen_objects(){
   def("FullPivLU_det", expt_FullPivLU_det_v2);
 
 
-
   void (*expt_solve_eigen_v1)(MATRIX& H, MATRIX& S, MATRIX& E, MATRIX& C, int symm) = &solve_eigen;
   void (*expt_solve_eigen_v2)(MATRIX& H, MATRIX& S, CMATRIX& E, CMATRIX& C, int symm) = &solve_eigen;
-  void (*expt_solve_eigen_v3)(CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C, int symm) = &solve_eigen;
+  void (*expt_solve_eigen_v3)(CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C, int symm, int reorder) = &solve_eigen;
+  void (*expt_solve_eigen_v4)(CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C, int symm) = &solve_eigen;
 
   def("solve_eigen", expt_solve_eigen_v1);
   def("solve_eigen", expt_solve_eigen_v2);
   def("solve_eigen", expt_solve_eigen_v3);
+  def("solve_eigen", expt_solve_eigen_v4);
 
   void (*expt_solve_eigen_v1a)(MATRIX& H, MATRIX& E, MATRIX& C, int symm) = &solve_eigen;
   void (*expt_solve_eigen_v2a)(MATRIX& H, CMATRIX& E, CMATRIX& C, int symm) = &solve_eigen;
@@ -68,23 +69,30 @@ void export_mEigen_objects(){
 
 
 
-  void (*expt_sqrt_matrix_v1)(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh) = &sqrt_matrix;
-  void (*expt_sqrt_matrix_v2)(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half) = &sqrt_matrix;
-  void (*expt_inv_matrix_v1)(CMATRIX& S, CMATRIX& S_inv, double thresh) = &inv_matrix;
-  void (*expt_inv_matrix_v2)(CMATRIX& S, CMATRIX& S_inv) = &inv_matrix;
-  void (*expt_inv_matrix_v3)(MATRIX& S, MATRIX& S_inv, double thresh) = &inv_matrix;
-  void (*expt_inv_matrix_v4)(MATRIX& S, MATRIX& S_inv) = &inv_matrix;
+  void (*expt_sqrt_matrix_v1)(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh, int do_phase_correction) = &sqrt_matrix;
+  void (*expt_sqrt_matrix_v2)(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh) = &sqrt_matrix;
+  void (*expt_sqrt_matrix_v3)(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half) = &sqrt_matrix;
 
+  void (*expt_inv_matrix_v1)(CMATRIX& S, CMATRIX& S_inv, double thresh, int do_phase_correction) = &inv_matrix;
+  void (*expt_inv_matrix_v2)(CMATRIX& S, CMATRIX& S_inv, double thresh) = &inv_matrix;
+  void (*expt_inv_matrix_v3)(CMATRIX& S, CMATRIX& S_inv) = &inv_matrix;
+  void (*expt_inv_matrix_v4)(MATRIX& S, MATRIX& S_inv, double thresh, int do_phase_correction) = &inv_matrix;
+  void (*expt_inv_matrix_v5)(MATRIX& S, MATRIX& S_inv, double thresh) = &inv_matrix;
+  void (*expt_inv_matrix_v6)(MATRIX& S, MATRIX& S_inv) = &inv_matrix;
 
-  void (*expt_exp_matrix_v1)(CMATRIX& res, CMATRIX& S, complex<double> dt) = &exp_matrix;
+  void (*expt_exp_matrix_v1)(CMATRIX& res, CMATRIX& S, complex<double> dt, int do_phase_correction) = &exp_matrix;
+  void (*expt_exp_matrix_v2)(CMATRIX& res, CMATRIX& S, complex<double> dt) = &exp_matrix;
 
   def("sqrt_matrix", expt_sqrt_matrix_v1);
   def("sqrt_matrix", expt_sqrt_matrix_v2);
+  def("sqrt_matrix", expt_sqrt_matrix_v3);
+
   def("inv_matrix", expt_inv_matrix_v1);
   def("inv_matrix", expt_inv_matrix_v2);
   def("inv_matrix", expt_inv_matrix_v3);
   def("inv_matrix", expt_inv_matrix_v4);
   def("exp_matrix", expt_exp_matrix_v1);
+  def("exp_matrix", expt_exp_matrix_v2);
 
 
   void (*expt_FullPivLU_rank_invertible_v1)(MATRIX& A, int& rank, int& is_inver) = &FullPivLU_rank_invertible;

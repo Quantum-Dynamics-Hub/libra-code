@@ -171,7 +171,7 @@ void FullPivLU_inverse(CMATRIX& A, CMATRIX& invA){
 
 
 
-void inv_matrix(MATRIX& S, MATRIX& S_inv, double thresh){
+void inv_matrix(MATRIX& S, MATRIX& S_inv, double thresh, int do_phase_correction){
 /**
   This function computes S^{-1} of a given matrix S
   \param[in] S Input matrix
@@ -204,6 +204,8 @@ void inv_matrix(MATRIX& S, MATRIX& S_inv, double thresh){
   // Find the eigenvalues of the the S matrix
   libmeigen::solve_eigen(S, *Seig, *C, 0);  // S * C = C * Seig  ==>  S = C * Seig * C.H()
 
+  if(do_phase_correction){   correct_phase(C);  }
+
 
   for(i=0;i<sz;i++){
     complex<double> val = Seig->get(i,i);
@@ -229,15 +231,28 @@ void inv_matrix(MATRIX& S, MATRIX& S_inv, double thresh){
 }// inv_matrix
 
 
+void inv_matrix(MATRIX& S, MATRIX& S_inv, double thresh){
+/**
+  This function computes S^{-1} of a given matrix S
+  \param[in] S Input matrix
+  \param[out] S_inv Computed S^{-1} matrix
+  \param[in] threshold - if an absolute value of any eigenvalue of S is below this level, we stop,
+   throwing an error message
+
+*/
+  inv_matrix(S, S_inv, thresh, 1);
+
+}
+
 void inv_matrix(MATRIX& S, MATRIX& S_inv){
 
-  inv_matrix(S, S_inv, -1.0);
+  inv_matrix(S, S_inv, -1.0, 1);
 
 }
 
 
 
-void inv_matrix(CMATRIX& S, CMATRIX& S_inv, double thresh){
+void inv_matrix(CMATRIX& S, CMATRIX& S_inv, double thresh, int do_phase_correction){
 /**
   This function computes S^{-1} of a given matrix S
   \param[in] S Input matrix
@@ -269,6 +284,8 @@ void inv_matrix(CMATRIX& S, CMATRIX& S_inv, double thresh){
   // Find the eigenvalues of the the S matrix
   libmeigen::solve_eigen(S, *Seig, *C, 0);  // S * C = C * Seig  ==>  S = C * Seig * C.H()
 
+  if(do_phase_correction){   correct_phase(C);  }
+
   // Diagonal form of the S^{-1} matrix
   S_inv = complex<double>(0.0,0.0);  // S^{-1}
 
@@ -295,10 +312,15 @@ void inv_matrix(CMATRIX& S, CMATRIX& S_inv, double thresh){
 
 }// inv_matrix
 
+void inv_matrix(CMATRIX& S, CMATRIX& S_inv, double thresh){
+
+  inv_matrix(S, S_inv, thresh, 1);
+
+}
 
 void inv_matrix(CMATRIX& S, CMATRIX& S_inv){
 
-  inv_matrix(S, S_inv, -1.0);
+  inv_matrix(S, S_inv, -1.0, 1);
 
 }
 

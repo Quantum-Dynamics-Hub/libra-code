@@ -32,8 +32,93 @@ namespace libdyn{
 
 
 
+int apply_transition0(MATRIX& p, MATRIX& invM, nHamiltonian& ham, 
+                      int istate, int fstate, int vel_rescale_opt, 
+                      int do_reverse, int do_rescale){
+/**
+  Check whether a transition between two "states": istate->fstate is possible based on energy conservation 
+  condition. The states are not necessarily the physical states - these are merely the indices of 
+  the two sets of variables (energies, couplings, etc.) 
+
+  \param[in] istate The index of the initial "state"
+  \param[in] fstate The index of the final "state"
+  \param[in] vel_rescale_opt Option on whether to rescale the momenta or not, and if yes - how to rescale
+
+*/
+  int new_state = istate;
+
+  if(vel_rescale_opt==0){
+    new_state = rescale_velocities_adiabatic(p, invM, ham, fstate, istate, do_reverse, do_rescale);
+  }
+  else if(vel_rescale_opt==1){
+    new_state = rescale_velocities_diabatic(p, invM, ham, fstate, istate, do_rescale);
+  }
+
+  return new_state;
+
+}
+
+int apply_transition0(MATRIX& p, MATRIX& invM, nHamiltonian* ham, 
+                      int istate, int fstate, int vel_rescale_opt, 
+                      int do_reverse, int do_rescale){
+/**
+  Check whether a transition between two "states": istate->fstate is possible based on energy conservation 
+  condition. The states are not necessarily the physical states - these are merely the indices of 
+  the two sets of variables (energies, couplings, etc.) 
+
+  \param[in] istate The index of the initial "state"
+  \param[in] fstate The index of the final "state"
+  \param[in] vel_rescale_opt Option on whether to rescale the momenta or not, and if yes - how to rescale
+
+*/
+  int new_state = istate;
+
+  if(vel_rescale_opt==0){
+    new_state = rescale_velocities_adiabatic(p, invM, ham, fstate, istate, do_reverse, do_rescale);
+  }
+  else if(vel_rescale_opt==1){
+    new_state = rescale_velocities_diabatic(p, invM, ham, fstate, istate, do_rescale);
+  }
+
+  return new_state;
+
+}
+
+
+
+vector<int> apply_transition1(MATRIX& p, MATRIX& invM, nHamiltonian& ham, 
+                              vector<int>& istate, vector<int>& fstate,
+                              int vel_rescale_opt, int do_reverse, int do_rescale){
+
+  int ndof = p.n_rows;
+  int ntraj = p.n_cols;
+  int i, traj;
+
+  vector<int> nucl_stenc_x(ndof, 0); for(i=0;i<ndof;i++){  nucl_stenc_x[i] = i; }
+  vector<int> nucl_stenc_y(1, 0); 
+
+  MATRIX p_traj(ndof, 1);
+
+  vector<int> res(ntraj, 0);
+ 
+  for(traj=0; traj<ntraj; traj++){
+
+    nucl_stenc_y[0] = traj;
+    pop_submatrix(p, p_traj, nucl_stenc_x, nucl_stenc_y);
+
+    res[traj] = apply_transition0(p_traj, invM, ham.children[traj], istate[traj], fstate[traj], 
+                                  vel_rescale_opt, do_reverse, do_rescale);
+
+    push_submatrix(p, p_traj, nucl_stenc_x, nucl_stenc_y);
+  }// for traj
+
+  return res;
+}
+
+
+
 int rescale_velocities_adiabatic
-(MATRIX& p, MATRIX& invM, CMATRIX* ham_adi, vector<CMATRIX*>& dc1_adi, int new_st,int old_st, int do_reverse){
+(MATRIX& p, MATRIX& invM, CMATRIX* ham_adi, vector<CMATRIX*>& dc1_adi, int new_st,int old_st, int do_reverse, int do_rescale){
 /**
   \brief Determine whether we need to do velocity rescaling/reversal when going from one state to another
   \param[in,out] p [ndof x 1] matrix of nuclear DOF momenta
@@ -45,6 +130,7 @@ int rescale_velocities_adiabatic
   \param[in] do_reverse The option that determines what to do if the hop was rejected because of the energy conservation
   (frustrated hop): do_reverse = 0 - nuclear momenta(velocities) stay unchanged; do_reverse = 1 - nuclear momenta(velocities)
   are inverted.
+  \param[in] do_rescale If = 1, the momenta are rescaled, otherwise - we only check whether the proposed transition is allowed or not
 
   Return: the function return the final state: the proposed if the velocity rescaling is successfull, or the initial, if not.
 
@@ -56,8 +142,6 @@ int rescale_velocities_adiabatic
   int st;
 
   if(new_st!=old_st){
-
-//    cout<<"old_st = "<<old_st<<"  new_st = "<<new_st<<endl;
 
     // According to Fabiano
     double a_ij = 0.0;
@@ -78,8 +162,9 @@ int rescale_velocities_adiabatic
     if(det<0.0){
 
       if(fabs(a_ij)>1e-100){  // only consider reversals, if the couplings are sizable
+
         if(do_reverse){     gamma_ij = b_ij / a_ij;}
-         else{ gamma_ij = 0.0;  }
+        else{ gamma_ij = 0.0;  }
       }
       else{  gamma_ij = 0.0;    } // don't consider reversal, if the couplings are too small
 
@@ -100,13 +185,13 @@ int rescale_velocities_adiabatic
       } 
 
     }
-//    cout<<"Velocity rescaling: factor = "<<gamma_ij<<endl;
-//    cout<<"old_st = "<<old_st<<"  new_st = "<<new_st<<endl;
 
-    //Rescale velocities and do the hop
-    for(int k=0;k<ndof;k++){ 
-      double D = dc1_adi[k]->get(old_st,new_st).real(); 
-      p.add(k, 0, - gamma_ij * D); 
+    if(do_rescale){
+      //Rescale velocities and do the hop
+      for(int k=0;k<ndof;k++){ 
+        double D = dc1_adi[k]->get(old_st,new_st).real(); 
+        p.add(k, 0, - gamma_ij * D); 
+      }
     }
 
   }
@@ -118,7 +203,16 @@ int rescale_velocities_adiabatic
 
 
 int rescale_velocities_adiabatic
-(MATRIX& p, MATRIX& invM, CMATRIX& ham_adi, vector<CMATRIX>& dc1_adi, int new_st,int old_st, int do_reverse){
+(MATRIX& p, MATRIX& invM, CMATRIX* ham_adi, vector<CMATRIX*>& dc1_adi, int new_st,int old_st, int do_reverse){
+
+  int do_rescale = 1;
+  return rescale_velocities_adiabatic(p, invM, ham_adi, dc1_adi, new_st, old_st, do_reverse, do_rescale);
+
+}
+
+
+int rescale_velocities_adiabatic
+(MATRIX& p, MATRIX& invM, CMATRIX& ham_adi, vector<CMATRIX>& dc1_adi, int new_st,int old_st, int do_reverse, int do_rescale){
 /**
   \brief Determine whether we need to do velocity rescaling/reversal when going from one state to another
   \param[in,out] p [ndof x 1] matrix of nuclear DOF momenta
@@ -130,6 +224,7 @@ int rescale_velocities_adiabatic
   \param[in] do_reverse The option that determines what to do if the hop was rejected because of the energy conservation
   (frustrated hop): do_reverse = 0 - nuclear momenta(velocities) stay unchanged; do_reverse = 1 - nuclear momenta(velocities)
   are inverted.
+  \param[in] do_rescale If = 1, the momenta are rescaled, otherwise - we only check whether the proposed transition is allowed or not
 
   Return: the function return the final state: the proposed if the velocity rescaling is successfull, or the initial, if not.
 
@@ -184,10 +279,12 @@ int rescale_velocities_adiabatic
 
     }
 
-    //Rescale velocities and do the hop
-    for(int k=0;k<ndof;k++){ 
-      double D = dc1_adi[k].get(old_st,new_st).real(); 
-      p.add(k, 0, - gamma_ij * D); 
+    if(do_rescale){
+      //Rescale velocities and do the hop
+      for(int k=0;k<ndof;k++){ 
+        double D = dc1_adi[k].get(old_st,new_st).real(); 
+        p.add(k, 0, - gamma_ij * D); 
+      }
     }
 
   }
@@ -197,11 +294,19 @@ int rescale_velocities_adiabatic
 
 } // rescale velocities adiabatic
 
+int rescale_velocities_adiabatic
+(MATRIX& p, MATRIX& invM, CMATRIX& ham_adi, vector<CMATRIX>& dc1_adi, int new_st, int old_st, int do_reverse){
+
+  int do_rescale = 1;
+  return rescale_velocities_adiabatic(p, invM, ham_adi, dc1_adi, new_st, old_st, do_reverse, do_rescale);
+
+}
+
 
 
 
 int rescale_velocities_adiabatic
-(MATRIX& p, MATRIX& invM, nHamiltonian* ham, int new_st,int old_st, int do_reverse){
+(MATRIX& p, MATRIX& invM, nHamiltonian* ham, int new_st,int old_st, int do_reverse, int do_rescale){
 /**
   \brief Determine whether we need to do velocity rescaling/reversal when going from one state to another and do the
   rescaling if the hop is allowed
@@ -214,6 +319,7 @@ int rescale_velocities_adiabatic
   \param[in] do_reverse The option that determines what to do if the hop was rejected because of the energy conservation
   (frustrated hop): do_reverse = 0 - nuclear momenta(velocities) stay unchanged; do_reverse = 1 - nuclear momenta(velocities)
   are inverted.
+  \param[in] do_rescale If = 1, the momenta are rescaled, otherwise - we only check whether the proposed transition is allowed or not
 
   Return: the function return the final state: the proposed if the velocity rescaling is successfull, or the initial, if not.
 
@@ -221,12 +327,21 @@ int rescale_velocities_adiabatic
 */
 
 
-  return rescale_velocities_adiabatic(p, invM, ham->ham_adi, ham->dc1_adi, new_st, old_st, do_reverse);
+  return rescale_velocities_adiabatic(p, invM, ham->ham_adi, ham->dc1_adi, new_st, old_st, do_reverse, do_rescale);
 
 }
 
 int rescale_velocities_adiabatic
-(MATRIX& p, MATRIX& invM, nHamiltonian& ham, int new_st,int old_st, int do_reverse){
+(MATRIX& p, MATRIX& invM, nHamiltonian* ham, int new_st,int old_st, int do_reverse){
+
+  int do_rescale = 1;
+  return rescale_velocities_adiabatic(p, invM, ham->ham_adi, ham->dc1_adi, new_st, old_st, do_reverse, do_rescale);
+
+}
+
+
+int rescale_velocities_adiabatic
+(MATRIX& p, MATRIX& invM, nHamiltonian& ham, int new_st,int old_st, int do_reverse, int do_rescale){
 /**
   \brief See the description of the
   int rescale_velocities_adiabatic
@@ -234,7 +349,15 @@ int rescale_velocities_adiabatic
 */
 
 
-  return rescale_velocities_adiabatic(p, invM, ham.ham_adi, ham.dc1_adi, new_st, old_st, do_reverse);
+  return rescale_velocities_adiabatic(p, invM, ham.ham_adi, ham.dc1_adi, new_st, old_st, do_reverse, do_rescale);
+
+}
+
+int rescale_velocities_adiabatic
+(MATRIX& p, MATRIX& invM, nHamiltonian& ham, int new_st,int old_st, int do_reverse){
+
+  int do_rescale = 1;
+  return rescale_velocities_adiabatic(p, invM, ham.ham_adi, ham.dc1_adi, new_st, old_st, do_reverse, do_rescale);
 
 }
 
@@ -428,7 +551,7 @@ int rescale_velocities_adiabatic(Nuclear& mol, Hamiltonian& ham, int old_st, int
 
 
 
-int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, CMATRIX* ham_adi, int new_st,int old_st){
+int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, CMATRIX* ham_adi, int new_st,int old_st, int do_rescale){
 /**
   \brief Determine whether we need to do velocity rescaling/reversal when going from one state to another and do the
   momenta rescaling if the transition is allowed.
@@ -438,6 +561,7 @@ int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, CMATRIX* ham_adi, int n
   \param[in] ham_adi [nadi x nadi]  matrix of adiabatic Hamiltonian 
   \param[in] new_st The index of the proposed state
   \param[in] old_st The index of the old state (from which we try to hop)
+  \param[in] do_rescale If = 1, the momenta are rescaled, otherwise - we only check whether the proposed transition is allowed or not
 
   This versions implies that the diabatic representation is used
 
@@ -467,7 +591,9 @@ int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, CMATRIX* ham_adi, int n
     else{ scl = 0.0; }
 
     // Rescale velocities
-    p *= scl;
+    if(do_rescale){
+      p *= scl;
+    }
 
     // state stays the same
     st = new_st;
@@ -481,6 +607,24 @@ int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, CMATRIX* ham_adi, int n
 
 } // rescale velocities diabatic
 
+int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, CMATRIX* ham_adi, int new_st,int old_st){
+
+  int do_rescale = 1;
+  return rescale_velocities_diabatic(p, invM, ham_adi, new_st, old_st, do_rescale);
+
+}
+
+
+
+int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, CMATRIX& ham_adi, int new_st,int old_st, int do_rescale){
+/**
+  \brief See the documentation of the 
+  int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, CMATRIX* ham_adi, int new_st,int old_st)
+  function
+*/
+
+  return rescale_velocities_diabatic(p, invM, &ham_adi, new_st, old_st, do_rescale);
+}
 
 
 int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, CMATRIX& ham_adi, int new_st,int old_st){
@@ -489,12 +633,14 @@ int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, CMATRIX& ham_adi, int n
   int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, CMATRIX* ham_adi, int new_st,int old_st)
   function
 */
-
-  return rescale_velocities_diabatic(p, invM, &ham_adi, new_st, old_st);
+  int do_rescale = 1;
+  return rescale_velocities_diabatic(p, invM, &ham_adi, new_st, old_st, do_rescale);
 }
 
 
-int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, nHamiltonian* ham, int new_st,int old_st){
+
+
+int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, nHamiltonian* ham, int new_st,int old_st, int do_rescale){
 /**
   \brief Determine whether we need to do velocity rescaling/reversal when going from one state to another and do the
   momenta rescaling if the transition is allowed.
@@ -504,6 +650,7 @@ int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, nHamiltonian* ham, int 
   \param[in] ham Is a nHamiltonian object that takes care of all energy-related transformations
   \param[in] new_st The index of the proposed state
   \param[in] old_st The index of the old state (from which we try to hop)
+  \param[in] do_rescale If = 1, the momenta are rescaled, otherwise - we only check whether the proposed transition is allowed or not
 
   This version implies that the diabatic representation is used
 
@@ -516,18 +663,32 @@ int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, nHamiltonian* ham, int 
 
 */
 
-  return rescale_velocities_diabatic(p, invM, ham->ham_adi, new_st, old_st);
+  return rescale_velocities_diabatic(p, invM, ham->ham_adi, new_st, old_st, do_rescale);
 }
 
-int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, nHamiltonian& ham, int new_st,int old_st){
+int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, nHamiltonian* ham, int new_st,int old_st){
+
+  int do_rescale = 1;
+  return rescale_velocities_diabatic(p, invM, ham->ham_adi, new_st, old_st, do_rescale);
+
+}
+
+
+int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, nHamiltonian& ham, int new_st,int old_st, int do_rescale){
 /**
   \brief See the documentation of the 
   int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, nHamiltonian* ham, int new_st,int old_st)
   function
 */
 
-  return rescale_velocities_diabatic(p, invM, ham.ham_adi, new_st, old_st);
+  return rescale_velocities_diabatic(p, invM, ham.ham_adi, new_st, old_st, do_rescale);
 
+}
+
+int rescale_velocities_diabatic(MATRIX& p, MATRIX& invM, nHamiltonian& ham, int new_st,int old_st){
+
+  int do_rescale = 1;
+  return rescale_velocities_diabatic(p, invM, ham.ham_adi, new_st, old_st, do_rescale);
 }
 
 

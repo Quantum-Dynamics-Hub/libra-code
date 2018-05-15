@@ -100,6 +100,8 @@ class MATRIX : public base_matrix<double>{
   using base_matrix<double>::Transpose;
   using base_matrix<double>::swap_cols;
   using base_matrix<double>::swap_rows;
+  using base_matrix<double>::permute_cols;
+  using base_matrix<double>::permute_rows;
   using base_matrix<double>::RightRotation;
   using base_matrix<double>::LeftRotation;
  

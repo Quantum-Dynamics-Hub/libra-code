@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2016-2017 Kosuke Sato, Alexey V. Akimov                                                   
+#* Copyright (C) 2016-2018 Kosuke Sato, Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -34,6 +34,15 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+
+__author__ = "Alexey V. Akimov, Kosuke Sato"
+__copyright__ = "Copyright 2016-2018 Kosuke Sato, Alexey V. Akimov"
+__credits__ = ["Alexey V. Akimov", "Kosuke Sato"]
+__license__ = "GNU-3"
+__version__ = "1.0"
+__maintainer__ = "Alexey V. Akimov"
+__email__ = "alexvakimov@gmail.com"
+__url__ = "https://quantum-dynamics-hub.github.io/libra/index.html"
 
 
 def sample(x, mean_x, sigma_x, rnd):  
@@ -129,7 +138,7 @@ def compute_etot(ham, p, Cdia, Cadi, iM, rep):
 
 
 
-def compute_etot_tsh(ham, p, Cdia, Cadi, states, iM, rep):
+def compute_etot_tsh(ham, p, Cdia, Cadi, act_states, iM, rep):
     """
     Adiabatic potential energy
 
@@ -140,9 +149,7 @@ def compute_etot_tsh(ham, p, Cdia, Cadi, states, iM, rep):
     \param[in] p [ndof x ntraj, MATRIX] nuclear momenta 
     \param[in] Cdia [ndia x ntraj, CMATRIX] electronic DOFs in diabatic basis
     \param[in] Cadi [nadi x ntraj, CMATRIX] electronic DOFs in adiabatic basis
-    \param[in] states [ndia x ntraj or nadi x ntraj, CMATRIX] the 0 or 1 amplitudes of 
-    the electronic states in a chosen basis. This variable stores the surface hopping state
-    of the many-trajectory ensemble
+    \param[in] act_states vector<int> of the length ntraj
     \param[in] iM [ndof x 1, MATRIX] inverse masses for all nuclear DOFs
     \param[in] rep  The selector of the representation that is of current interest.
     Options: 0 - diabatic, 1 - adiabatic
@@ -165,10 +172,13 @@ def compute_etot_tsh(ham, p, Cdia, Cadi, states, iM, rep):
 
 
     C = CMATRIX(nst, 1)
+    states = CMATRIX(nst, ntraj)
+
+    tsh_indx2vec(ham, states, act_states)
 
     for traj in xrange(ntraj):
 
-        pop_submatrix(states, C, Py2Cpp_int(range(0,nst)), Py2Cpp_int([traj]))        
+        pop_submatrix(states, C, Py2Cpp_int(range(0,nst)), Py2Cpp_int([traj]))      
 
         if rep==0:
             epot.append( ham.Ehrenfest_energy_dia(C, Py2Cpp_int([0,traj])).real )
@@ -241,7 +251,8 @@ def compute_dm(ham, Cdia, Cadi, rep, lvl):
     
         if rep==0:
             S = ham.get_ovlp_dia(indx)
-            U = ham.get_basis_transform(indx)
+            U = ham.get_basis_transform(indx) 
+            #correct_phase(U)
     
             dm_tmp = S * Cdia.col(traj) * Cdia.col(traj).H() * S
             dm_dia = dm_dia + dm_tmp
@@ -249,10 +260,18 @@ def compute_dm(ham, Cdia, Cadi, rep, lvl):
        
     
         elif rep==1:
-            dm_tmp = Cadi.col(traj) * Cadi.col(traj).H()
+            c = Cadi.col(traj)
+            M = ham.get_ordering_adi(Py2Cpp_int([0, traj]))
+            iM = inverse_permutation(M)
+
+            c.permute_rows(iM)
+            dm_tmp = c * c.H()
             dm_adi = dm_adi + dm_tmp
-    
-            su = ham.get_ovlp_dia(indx) * ham.get_basis_transform(indx)
+
+            S = ham.get_ovlp_dia(indx)
+            U = ham.get_basis_transform(indx)     
+            correct_phase(U)
+            su = S * U
             dm_dia = dm_dia + su * dm_tmp * su.H()
     
     dm_dia = dm_dia / float(ntraj)        

@@ -38,10 +38,16 @@ complex<double> FullPivLU_det(CMATRIX& A);
 ///< Solving the generalized eigenvalue problem: H * C = S * C * E
 void solve_eigen(MATRIX* H, MATRIX* S, MATRIX* E, MATRIX* C, int symm);
 void solve_eigen(MATRIX& H, MATRIX& S, MATRIX& E, MATRIX& C, int symm);
+
+void solve_eigen_raw(CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C, int symm);
+void solve_eigen(CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C, int symm, int reorder);
+void solve_eigen(CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C, int symm);
+void solve_eigen(CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C, int symm, int reorder);
+void solve_eigen(CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C, int symm);
+
 void solve_eigen(MATRIX* H, MATRIX* S, CMATRIX* E, CMATRIX* C, int symm);
 void solve_eigen(MATRIX& H, MATRIX& S, CMATRIX& E, CMATRIX& C, int symm);
-void solve_eigen(CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C, int symm);
-void solve_eigen(CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C, int symm);
+
 
 ///< Solving the eigenvalue problem: H * C = C * E
 void solve_eigen(MATRIX* H, MATRIX* E, MATRIX* C, int symm);
@@ -64,17 +70,21 @@ void FullPivLU_inverse(MATRIX& A, MATRIX& invA);
 void FullPivLU_inverse(CMATRIX& A, CMATRIX& invA);
 
 ///< Matrix inversion via solving the eigenvalue problem
+void inv_matrix(MATRIX& S, MATRIX& S_inv, double thresh, int do_phase_correction);
 void inv_matrix(MATRIX& S, MATRIX& S_inv, double thresh);
 void inv_matrix(MATRIX& S, MATRIX& S_inv);
 
+void inv_matrix(CMATRIX& S, CMATRIX& S_inv, double thresh, int do_phase_correction);
 void inv_matrix(CMATRIX& S, CMATRIX& S_inv, double thresh);
 void inv_matrix(CMATRIX& S, CMATRIX& S_inv);
 
 
 ///=========== Look in: mEigen_matrix_functions.cpp ==================
 ///< Square root and inverse of a matrix
+void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh, int do_phase_correction);
 void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh);
 void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half);
+void exp_matrix(CMATRIX& res, CMATRIX& S, complex<double> dt, int do_phase_correction);
 void exp_matrix(CMATRIX& res, CMATRIX& S, complex<double> dt);
 
 

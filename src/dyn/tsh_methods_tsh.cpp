@@ -25,7 +25,8 @@ namespace libdyn{
 
 
 int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
-         nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd){
+         nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd,
+         int do_reordering){
 
 /**
   \brief One step of the TSH algorithm for electron-nuclear DOFs for one trajectory
@@ -84,10 +85,13 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
   }
 
 
-
+  CMATRIX* Uprev; 
+  CMATRIX* X;
+  vector<int> perm_t; 
 
   int ndof = q.n_rows;
   int dof;
+  
 
   int nst = 0;
   if(rep==0){  nst = ham.ndia;  }
@@ -119,8 +123,34 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
     q.add(dof, 0,  invM.get(dof,0) * p.get(dof,0) * dt ); 
   }
 
+
+  if(do_reordering){
+    if(rep==1){
+      Uprev = new CMATRIX(ham.nadi, ham.nadi);
+      X = new CMATRIX(ham.nadi, ham.nadi);
+      *Uprev = ham.get_basis_transform();  
+    }
+  }
+
   ham.compute_diabatic(py_funct, bp::object(q), params);
   ham.compute_adiabatic(1);
+
+  // Reordering, if needed
+  if(do_reordering){
+
+    if(rep==1){
+      *X = (*Uprev) * ham.get_basis_transform().H();
+      perm_t = get_reordering(*X);
+      ham.update_ordering(perm_t);
+      delete Uprev;
+      delete X;
+    }
+
+    cstate.permute_rows(perm_t);
+    state = perm_t[state];
+
+  }
+
 
 
        if(rep==0){  p = p + ham.forces_dia(cstate).real() * 0.5*dt;  }
@@ -178,29 +208,26 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
 
   /// Check whether the proposed hop should be accepted.
   /// If this it is: the nuclear momenta will be re-scaled
-
-  if(vel_rescale_opt==0){
-    new_state = rescale_velocities_adiabatic(p, invM, ham, new_state, state, do_reverse);
-  }
-  else if(vel_rescale_opt==1){
-    new_state = rescale_velocities_diabatic(p, invM, ham, new_state, state);
-  }
-  else if(vel_rescale_opt==2){
-   ;;  /// Don't do anything extra
-  }
+  state = apply_transition0(p, invM, ham, state, new_state, vel_rescale_opt, do_reverse, 1);
 
   return new_state;
 
+}
+
+
+int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
+         nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd){
+
+  return tsh0(dt, q, p, invM, C, state, ham, py_funct, params, params1, rnd, 0);
 
 }
 
 
 
 
-
-
-void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& states,
-         nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd){
+void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
+          nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd,
+          int do_reordering){
 
 /**
   \brief One step of the TSH algorithm for electron-nuclear DOFs for one trajectory
@@ -210,9 +237,8 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
   \param[in,out] p [Ndof x Ntraj] nuclear momenta. Change during the integration.
   \param[in] invM [Ndof  x 1] inverse nuclear DOF masses. 
   \param[in,out] C [nadi x ntraj]  or [ndia x ntraj] matrix containing the electronic coordinates
-  \param[in,out] states - [nadi x ntraj] or [ndia x ntraj] matrix containing the indices of the states 
-  currently occupied by each of the trajectories (active states). Each column of the matrix corresponds to a
-  trajectory and contains only 0 in all elements but one (the active state). In that place, it contains 1.
+  \param[in,out] act_states - vector of ntraj indices of the physical states in which each of the trajectories
+  initially is (active states). 
   \param[in] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) 
   - its internal variables (well, actually the variables it points to) are changed during the compuations
   \param[in] py_funct Python function object that is called when this algorithm is executed. The called Python function does the necessary 
@@ -266,6 +292,10 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
   int nst = C.n_rows;    
   int traj, dof, i;
 
+  CMATRIX** Uprev; 
+  CMATRIX* X;
+  vector<int> perm_t; 
+  CMATRIX states(nst, ntraj); // CMATRIX version of "act_states"
 
   vector<int> nucl_stenc_x(ndof, 0); for(i=0;i<ndof;i++){  nucl_stenc_x[i] = i; }
   vector<int> nucl_stenc_y(1, 0); 
@@ -273,6 +303,13 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
   vector<int> el_stenc_y(1, 0); 
   vector<int> full_id(2,0);
   complex<double> one(1.0, 0.0);
+
+  MATRIX g(nst,nst); /// the matrix of hopping probability
+  MATRIX p_traj(ndof, 1);
+  CMATRIX coeff(nst, 1);
+
+  vector<int> istates(ntraj,0); 
+  vector<int> fstates(ntraj,0); 
 
  
   //============== Electronic propagation ===================
@@ -292,6 +329,7 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
   //============== Nuclear propagation ===================
 
   // Update the Ehrenfest forces for all trajectories
+  tsh_indx2vec(ham, states, act_states);
   if(rep==0){  p = p + ham.Ehrenfest_forces_dia(states, 1).real() * 0.5*dt;  }
   else if(rep==1){  p = p + ham.Ehrenfest_forces_adi(states, 1).real() * 0.5*dt;  }
 
@@ -303,13 +341,78 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
     }
   }
 
+
+  if(do_reordering){
+    if(rep==1){      
+      Uprev = new CMATRIX*[ntraj];
+      X = new CMATRIX(ham.nadi, ham.nadi);
+      for(traj=0; traj<ntraj; traj++){
+        Uprev[traj] = new CMATRIX(ham.nadi, ham.nadi);
+        *Uprev[traj] = ham.children[traj]->get_basis_transform();  
+      }
+    }
+  }
+
+
   ham.compute_diabatic(py_funct, bp::object(q), params, 1);
   ham.compute_adiabatic(1, 1);
 
 
+  // Reordering, if needed
+  //istates = tsh_vec2indx(states);  /// starting states
+  if(do_reordering){
+
+    if(rep==1){
+      for(traj=0; traj<ntraj; traj++){
+        *X = (*Uprev[traj]).H() * ham.children[traj]->get_basis_transform();
+        perm_t = get_reordering(*X);
+
+        /// Go there if the permutation is non-trivial (non-identity)
+//        int prop_state = perm_t[ istates[traj] ];
+//        if(prop_state != istates[traj]){
+
+/*
+          /// Rescale velocities           
+          nucl_stenc_y[0] = traj;
+          pop_submatrix(p, p_traj, nucl_stenc_x, nucl_stenc_y);          
+          fstates[traj] = apply_transition0(p_traj, invM, ham.children[traj], istates[traj], prop_state, 0, 0, 1);
+          push_submatrix(p, p_traj, nucl_stenc_x, nucl_stenc_y);
+
+
+          if(fstates[traj]==prop_state){
+*/
+            ham.children[traj]->update_ordering(perm_t, 1);
+            el_stenc_y[0] = traj;
+
+            CMATRIX x(ham.nadi, 1);      
+//            x = states.col(traj);
+//            x.permute_rows(perm_t);
+//            push_submatrix(states, x, el_stenc_x, el_stenc_y);
+
+            x = C.col(traj);
+            x.permute_rows(perm_t);
+            push_submatrix(C, x, el_stenc_x, el_stenc_y);
+
+//          }
+//        }// prop_state != istate
+        
+        delete Uprev[traj];
+      }// for trajectories
+
+//      tsh_indx2vec(states, fstates);
+
+      delete X;
+      delete Uprev;
+    }// rep == 1
+
+  }
+
+
+
   // Update the Ehrenfest forces for all trajectories
-  if(rep==0){  p = p + ham.Ehrenfest_forces_dia(C, 1).real() * 0.5*dt;  }
-  else if(rep==1){  p = p + ham.Ehrenfest_forces_adi(C, 1).real() * 0.5*dt;  }
+  tsh_indx2vec(ham, states, act_states);
+  if(rep==0){  p = p + ham.Ehrenfest_forces_dia(states, 1).real() * 0.5*dt;  }
+  else if(rep==1){  p = p + ham.Ehrenfest_forces_adi(states, 1).real() * 0.5*dt;  }
 
 
   //============== Electronic propagation ===================
@@ -325,9 +428,6 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
 
   // Evolve electronic DOFs for all trajectories
   propagate_electronic(0.5*dt, C, ham.children, rep);   
-
-
-//  exit(0);
 
   //============== Begin the TSH part ===================
 
@@ -346,18 +446,18 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
     else if(rep_sh==1){ Coeff = C;  } // SH in the adiabatic basis (Coeff - adiabatic)
   }
 
-  MATRIX g(nst,nst); /// the matrix of hopping probability
-  MATRIX p_traj(ndof, 1);
-  CMATRIX coeff(nst, 1);
 
-  /// Compute hopping probabilities and exectue the hops
+  /// Compute the proposed multi-trajectory states
+  //istates = tsh_vec2indx(states);  /// starting (non-phisical!) states
+  tsh_physical2internal(ham, istates, act_states);
+
+
   for(traj=0; traj<ntraj; traj++){
     nucl_stenc_y[0] = traj;
     el_stenc_y[0] = traj;
     full_id[1] = traj;
 
     pop_submatrix(Coeff, coeff, el_stenc_x, el_stenc_y);
-
 
     if(tsh_method == 0){ // FSSH
       g = compute_hopping_probabilities_fssh(coeff, ham.children[traj], rep_sh, dt, use_boltz_factor, Temperature);
@@ -376,36 +476,25 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, CMATRIX& st
 
     /// Attempt to hop
     double ksi = rnd.uniform(0.0,1.0);  /// generate random number 
-    int istate;
-    complex<double> tmp;
-    states.max_col_elt(traj, tmp, istate);
-    int new_state = hop(istate, g, ksi); /// Proposed hop
-
-    /// Check whether the proposed hop should be accepted.
-    /// If this it is: the nuclear momenta will be re-scaled
-
-    pop_submatrix(p, p_traj, nucl_stenc_x, nucl_stenc_y);
-
-    if(vel_rescale_opt==0){
-      new_state = rescale_velocities_adiabatic(p_traj, invM, ham.children[traj], new_state, istate, do_reverse);
-    }
-    else if(vel_rescale_opt==1){
-      new_state = rescale_velocities_diabatic(p_traj, invM, ham.children[traj], new_state, istate);
-    }
-    else if(vel_rescale_opt==2){
-     ;;  /// Don't do anything extra 
-    }
-
-    states.set(istate, traj, complex<double>(0.0, 0.0));
-    states.set(new_state, traj, complex<double>(1.0, 0.0));
-
-    push_submatrix(p, p_traj, nucl_stenc_x, nucl_stenc_y);
-
+    fstates[traj] = hop(istates[traj], g, ksi); /// Proposed hop
   }// for traj
+
+
+  // Hop acceptance/rejection - velocity rescaling
+  istates = apply_transition1(p, invM, ham, istates, fstates, vel_rescale_opt, do_reverse, 1); // non-physical states
+
+  // Convert from the internal indexing to the physical
+  tsh_internal2physical(ham, istates, act_states);
 
 
 }
 
+
+void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
+          nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd){
+
+    tsh1(dt, q, p, invM, C, act_states, ham, py_funct, params, params1, rnd);
+}
 
 
 }// namespace libdyn

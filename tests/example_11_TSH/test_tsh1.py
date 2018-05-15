@@ -155,7 +155,7 @@ def run_test(_q, _p, _Cadi, _iM, model, rep, outname, params1, rnd, st):
         if rep==0:
             st = tsh0(dt, q, p, iM,  Cdia, st, ham, compute_model, params, params1, rnd)
         elif rep==1:
-            st = tsh0(dt, q, p, iM,  Cadi, st, ham, compute_model, params, params1, rnd)
+            st = tsh0(dt, q, p, iM,  Cadi, st, ham, compute_model, params, params1, rnd, 1)
 
 
         #=========== Properties ==========
