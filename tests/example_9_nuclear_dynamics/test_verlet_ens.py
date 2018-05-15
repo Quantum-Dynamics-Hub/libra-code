@@ -108,7 +108,7 @@ def sample(x, mean_x, sigma_x, rnd):
 
 
 
-def run_test(model, outname):
+def run_test(model, outname, output_1, output_2, output_3):
     """
     model - setup the Hamiltonian
     outname - the name of the output file
@@ -193,19 +193,19 @@ def run_test(model, outname):
 
         # Print the ensemble average - kinetic, potential, and total energies
         # Print the tunneling information. Here, we count each trajectory across the barrier.
-        out1 = open("_output.txt", "a")
+        out1 = open(output_1, "a")
         out1.write( " %8.5f  %8.5f  %8.5f  %8.5f\n" % ( i*dt, Ekin, Epot, Etot ) )
         out1.close()
 
         # Print the phase space information
-        out2 = open("_phase_space.txt", "a") 
+        out2 = open(output_2, "a") 
         for j in range(ntraj):
             out2.write(" %8.5f  %8.5f" % ( q.get(0,j), p.get(0,j) ) ),
         out2.write( "\n" )
         out2.close()  
 
         # Print the position versus time infromation
-        out3 = open("_pos_space.txt", "a")
+        out3 = open(output_3, "a")
         out3.write( " %8.5f" % (i*dt) ),
         for j in range(ntraj):
             out3.write( " %8.5f" % ( q.get(0,j) ) )
@@ -215,6 +215,6 @@ def run_test(model, outname):
 
 model = 1
 
-run_test(model, "_0_new.txt")
+run_test(model, "_0_new.txt", "_output.txt", "_phase_space.txt", "_pos_space.txt")
 
         
