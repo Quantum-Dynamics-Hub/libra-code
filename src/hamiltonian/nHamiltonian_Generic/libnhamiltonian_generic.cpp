@@ -68,9 +68,6 @@ void export_nhamiltonian_generic_objects(){
 
 
 
-  vector<int> (nHamiltonian::*expt_get_ordering_adi_v1)() = &nHamiltonian::get_ordering_adi; 
-  vector<int> (nHamiltonian::*expt_get_ordering_adi_v2)(vector<int>&) = &nHamiltonian::get_ordering_adi; 
-
   CMATRIX (nHamiltonian::*expt_get_dc1_adi_v1)(int i) = &nHamiltonian::get_dc1_adi;
   CMATRIX (nHamiltonian::*expt_get_dc1_adi_v2)(int i, vector<int>&) = &nHamiltonian::get_dc1_adi;
 
@@ -93,8 +90,15 @@ void export_nhamiltonian_generic_objects(){
   CMATRIX (nHamiltonian::*expt_get_d2ham_adi_v22)(int i, int j, vector<int>&) = &nHamiltonian::get_d2ham_adi;
 
 
+
   CMATRIX (nHamiltonian::*expt_get_basis_transform_v1)() = &nHamiltonian::get_basis_transform;
   CMATRIX (nHamiltonian::*expt_get_basis_transform_v2)(vector<int>&) = &nHamiltonian::get_basis_transform;
+
+  vector<int> (nHamiltonian::*expt_get_ordering_adi_v1)() = &nHamiltonian::get_ordering_adi; 
+  vector<int> (nHamiltonian::*expt_get_ordering_adi_v2)(vector<int>&) = &nHamiltonian::get_ordering_adi; 
+
+  CMATRIX (nHamiltonian::*expt_get_cum_phase_corr_v1)() = &nHamiltonian::get_cum_phase_corr;
+  CMATRIX (nHamiltonian::*expt_get_cum_phase_corr_v2)(vector<int>&) = &nHamiltonian::get_cum_phase_corr;
 
 
 
@@ -117,6 +121,15 @@ void export_nhamiltonian_generic_objects(){
 
   void (nHamiltonian::*expt_update_ordering_v1)(vector<int>& perm_t, int lvl) = &nHamiltonian::update_ordering;
   void (nHamiltonian::*expt_update_ordering_v2)(vector<int>& perm_t) = &nHamiltonian::update_ordering;
+
+  void (nHamiltonian::*expt_apply_phase_corrections_v1)(CMATRIX& phase_corr, int lvl) = &nHamiltonian::apply_phase_corrections;
+  void (nHamiltonian::*expt_apply_phase_corrections_v2)(CMATRIX& phase_corr) = &nHamiltonian::apply_phase_corrections;
+
+  CMATRIX (nHamiltonian::*expt_update_phases_v1)(CMATRIX& phases, int lvl) = &nHamiltonian::update_phases;
+  CMATRIX (nHamiltonian::*expt_update_phases_v2)(CMATRIX& phases) = &nHamiltonian::update_phases;
+
+
+
 
 
   void (nHamiltonian::*expt_compute_adiabatic_v1)(int der_lvl, int lvl)
@@ -273,9 +286,6 @@ void export_nhamiltonian_generic_objects(){
       .def("set_d2ham_dia_by_val", &nHamiltonian::set_d2ham_dia_by_val)
 
 
-      .def("set_ordering_adi_by_ref", &nHamiltonian::set_ordering_adi_by_ref)
-      .def("set_ordering_adi_by_val", &nHamiltonian::set_ordering_adi_by_val)
-
       .def("init_dc1_adi", &nHamiltonian::init_dc1_adi)
       .def("set_dc1_adi_by_ref", &nHamiltonian::set_dc1_adi_by_ref)
       .def("set_dc1_adi_by_val", &nHamiltonian::set_dc1_adi_by_val)
@@ -304,6 +314,14 @@ void export_nhamiltonian_generic_objects(){
       .def("set_basis_transform_by_ref", &nHamiltonian::set_basis_transform_by_ref)
       .def("set_basis_transform_by_val", &nHamiltonian::set_basis_transform_by_val)
 
+      .def("set_ordering_adi_by_ref", &nHamiltonian::set_ordering_adi_by_ref)
+      .def("set_ordering_adi_by_val", &nHamiltonian::set_ordering_adi_by_val)
+
+      .def("init_cum_phase_corr", &nHamiltonian::init_cum_phase_corr)
+      .def("set_cum_phase_corr_by_ref", &nHamiltonian::set_cum_phase_corr_by_ref)
+      .def("set_cum_phase_corr_by_val", &nHamiltonian::set_cum_phase_corr_by_val)
+
+
 
       .def("get_ovlp_dia", expt_get_ovlp_dia_v1)
       .def("get_ovlp_dia", expt_get_ovlp_dia_v2)
@@ -322,8 +340,6 @@ void export_nhamiltonian_generic_objects(){
       .def("get_d2ham_dia", expt_get_d2ham_dia_v21)
       .def("get_d2ham_dia", expt_get_d2ham_dia_v22)
 
-      .def("get_ordering_adi", expt_get_ordering_adi_v1)
-      .def("get_ordering_adi", expt_get_ordering_adi_v2)
       .def("get_dc1_adi", expt_get_dc1_adi_v1)
       .def("get_dc1_adi", expt_get_dc1_adi_v2)
       .def("get_ham_adi", expt_get_ham_adi_v1)
@@ -341,6 +357,11 @@ void export_nhamiltonian_generic_objects(){
 
       .def("get_basis_transform", expt_get_basis_transform_v1)
       .def("get_basis_transform", expt_get_basis_transform_v2)
+      .def("get_ordering_adi", expt_get_ordering_adi_v1)
+      .def("get_ordering_adi", expt_get_ordering_adi_v2)
+      .def("get_cum_phase_corr", expt_get_cum_phase_corr_v1)
+      .def("get_cum_phase_corr", expt_get_cum_phase_corr_v2)
+
 
 
       .def("compute_diabatic", expt_compute_diabatic_v1)
@@ -351,6 +372,11 @@ void export_nhamiltonian_generic_objects(){
 
       .def("update_ordering", expt_update_ordering_v1)
       .def("update_ordering", expt_update_ordering_v2)
+      .def("apply_phase_corrections", expt_apply_phase_corrections_v1)
+      .def("apply_phase_corrections", expt_apply_phase_corrections_v2)
+      .def("update_phases", expt_update_phases_v1)
+      .def("update_phases", expt_update_phases_v2)
+
 
       .def("compute_adiabatic", expt_compute_adiabatic_v1)
       .def("compute_adiabatic", expt_compute_adiabatic_v2)
@@ -419,6 +445,10 @@ void export_nhamiltonian_generic_objects(){
   ;
 
 
+
+  CMATRIX (*expt_compute_phase_corrections_v1)
+  (CMATRIX& U, CMATRIX& U_prev) = &compute_phase_corrections;
+  def("compute_phase_corrections", expt_compute_phase_corrections_v1);
 
   double (*expt_ETHD_energy_v1)(const MATRIX& q, const MATRIX& invM) = &ETHD_energy;
   MATRIX (*expt_ETHD_forces_v1)(const MATRIX& q, const MATRIX& invM) = &ETHD_forces;

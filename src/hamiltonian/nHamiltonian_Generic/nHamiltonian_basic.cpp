@@ -79,6 +79,8 @@ nHamiltonian::nHamiltonian(int ndia_, int nadi_, int nnucl_){
 
   basis_transform = NULL;      basis_transform_mem_status = 0;
 
+  cum_phase_corr = NULL;       cum_phase_corr_mem_status = 0;
+
 
   ndia = ndia_;                   
   nadi = nadi_;
@@ -174,6 +176,8 @@ nHamiltonian::~nHamiltonian(){
 
   if(basis_transform_mem_status == 1){ delete basis_transform; basis_transform = NULL; basis_transform_mem_status = 0;}
 
+  if(cum_phase_corr_mem_status == 1){ delete cum_phase_corr; cum_phase_corr = NULL; cum_phase_corr_mem_status = 0;}
+
 //  if(next!=NULL){
 //    for(n=0;n<next.size();n++){  next[n]->~nHamiltonian(); }
 //  }
@@ -200,6 +204,7 @@ void nHamiltonian::init_all(int lvl){
     init_hvib_adi();
 
     init_basis_transform();
+    init_cum_phase_corr();
   }
 
   if(lvl>=1){
@@ -689,38 +694,6 @@ void nHamiltonian::set_d2ham_dia_by_val(vector<CMATRIX>& d2ham_dia_){
 
 **************************************************************************/
 
-void nHamiltonian::set_ordering_adi_by_ref(vector<int>& ordering_adi_){
-/**
-  Setup of the variable that takes care of the ordering of the adiabatic states 
-*/
-
-  if(ordering_adi_.size()!=nadi){
-    cout<<"ERROR in void nHamiltonian::set_ordering_adi_by_ref(vector<int>& ordering_adi_): \
-          The external variable must be allocated and its size should be = "<<nadi<<". The \
-          current size is = "<<ordering_adi_.size()<<"\nExiting...\n";
-    exit(0);
-  }
-  
-  ordering_adi = &ordering_adi_;
-
-}
-
-void nHamiltonian::set_ordering_adi_by_val(vector<int>& ordering_adi_){
-/**
-  Setup of the variable that takes care of the ordering of the adiabatic states 
-*/
-
-  if(ordering_adi_.size()!=nadi){
-    cout<<"ERROR in void nHamiltonian::set_ordering_adi_by_ref(vector<int>& ordering_adi_): \
-          The external variable must be allocated and its size should be = "<<nadi<<". The \
-          current size is = "<<ordering_adi_.size()<<"\nExiting...\n";
-    exit(0);
-  }
-  
-  *ordering_adi = ordering_adi_;
-
-}
-
 
 
 /************************ DERIVATIVE COUPLING *****************************/
@@ -1139,6 +1112,88 @@ void nHamiltonian::set_basis_transform_by_val(CMATRIX& basis_transform_){
 }
 
 
+void nHamiltonian::set_ordering_adi_by_ref(vector<int>& ordering_adi_){
+/**
+  Setup of the variable that takes care of the ordering of the adiabatic states 
+*/
+
+  if(ordering_adi_.size()!=nadi){
+    cout<<"ERROR in void nHamiltonian::set_ordering_adi_by_ref(vector<int>& ordering_adi_): \
+          The external variable must be allocated and its size should be = "<<nadi<<". The \
+          current size is = "<<ordering_adi_.size()<<"\nExiting...\n";
+    exit(0);
+  }
+  
+  ordering_adi = &ordering_adi_;
+
+}
+
+void nHamiltonian::set_ordering_adi_by_val(vector<int>& ordering_adi_){
+/**
+  Setup of the variable that takes care of the ordering of the adiabatic states 
+*/
+
+  if(ordering_adi_.size()!=nadi){
+    cout<<"ERROR in void nHamiltonian::set_ordering_adi_by_ref(vector<int>& ordering_adi_): \
+          The external variable must be allocated and its size should be = "<<nadi<<". The \
+          current size is = "<<ordering_adi_.size()<<"\nExiting...\n";
+    exit(0);
+  }
+  
+  *ordering_adi = ordering_adi_;
+
+}
+
+
+void nHamiltonian::init_cum_phase_corr(){
+/**
+  Allocate memory for the 
+*/
+
+  if(cum_phase_corr_mem_status==0){
+    cum_phase_corr = new CMATRIX(nadi, 1);
+    cum_phase_corr_mem_status = 1;
+  }
+  else{ 
+    cout<<"WARNING in void nHamiltonian::init_cum_phase_corr(): memory is already allocated\n";
+  }
+
+}
+
+void nHamiltonian::set_cum_phase_corr_by_ref(CMATRIX& cum_phase_corr_){
+/**
+  Setup of the cumulative phase corrections 
+*/
+
+//  set_X1_by_ref(basis_transform, basis_transform_, basis_transform_mem_status, ndia, nadi);
+  check_mat_dimensions(&cum_phase_corr_,nadi,1);
+
+  if(cum_phase_corr_mem_status==0){  cum_phase_corr = &cum_phase_corr_;  } 
+  else if(cum_phase_corr_mem_status==1){ delete cum_phase_corr; cum_phase_corr = &cum_phase_corr_;  }
+  else if(cum_phase_corr_mem_status==2){ cum_phase_corr = &cum_phase_corr_;    }
+
+  cum_phase_corr_mem_status = 2; // Allocated externally
+
+}
+
+void nHamiltonian::set_cum_phase_corr_by_val(CMATRIX& cum_phase_corr_){
+/**
+  Setup of the basis transform matrix
+*/
+
+//  set_X1_by_val(basis_transform, basis_transform_, basis_transform_mem_status, ndia, nadi);
+  check_mat_dimensions(&cum_phase_corr_,nadi,1);
+
+  if(cum_phase_corr_mem_status==0){  cum_phase_corr = new CMATRIX(nadi,1);  } 
+  else if(cum_phase_corr_mem_status==1){ check_mat_dimensions(cum_phase_corr,nadi,1);  }
+  else if(cum_phase_corr_mem_status==2){  cum_phase_corr = new CMATRIX(nadi,1);    }
+
+  *cum_phase_corr = cum_phase_corr_;
+  cum_phase_corr_mem_status = 1; // Allocated internally
+
+}
+
+
 
 /*************************************************************************
 
@@ -1382,32 +1437,6 @@ CMATRIX nHamiltonian::get_d2ham_dia(int i, int j, vector<int>& id_){
 
 **************************************************************************/
 
-vector<int> nHamiltonian::get_ordering_adi(){ 
-/**
-  Return the permutation describing the ordering of the adiabatic states
-*/
-  return *ordering_adi; 
-}
-
-vector<int> nHamiltonian::get_ordering_adi(vector<int>& id_){ 
-/**
-  Return the permutation describing the ordering of the adiabatic states
-*/
-  if(id_.size()==1){
-    if(id_[0]==id){   return get_ordering_adi();    }
-    else{ cout<<"ERROR in vector<int> nHamiltonian::get_ordering_adi(vector<int>& id_): \
-                No Hamiltonian matching the requested id\nExiting...\n";
-          exit(0);   }
-  }
-  else{
-    vector<int> next(id_.begin()+1,id_.end());
-    return children[id_[1]]->get_ordering_adi(next);
-  }
-
-}
-
-
-
 CMATRIX nHamiltonian::get_dc1_adi(int i){ 
 /**
   Return the derivative matrix in the adiabatic basis
@@ -1626,6 +1655,64 @@ CMATRIX nHamiltonian::get_basis_transform(vector<int>& id_){
     return children[id_[1]]->get_basis_transform(next);
   }
 }
+
+
+vector<int> nHamiltonian::get_ordering_adi(){ 
+/**
+  Return the permutation describing the ordering of the adiabatic states
+*/
+  return *ordering_adi; 
+}
+
+vector<int> nHamiltonian::get_ordering_adi(vector<int>& id_){ 
+/**
+  Return the permutation describing the ordering of the adiabatic states
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return get_ordering_adi();    }
+    else{ cout<<"ERROR in vector<int> nHamiltonian::get_ordering_adi(vector<int>& id_): \
+                No Hamiltonian matching the requested id\nExiting...\n";
+          exit(0);   }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->get_ordering_adi(next);
+  }
+
+}
+
+
+
+
+CMATRIX nHamiltonian::get_cum_phase_corr(){ 
+/**
+  Return the cumulative phase corrections for all eigenvectors
+*/
+  if(cum_phase_corr_mem_status==0){
+    cout<<"ERROR in CMATRIX nHamiltonian::get_cum_phase_corr(): The matrix is not allocated anywhere\nExiting...\n";
+    exit(0);
+  }
+
+  return *basis_transform; 
+}
+
+
+CMATRIX nHamiltonian::get_cum_phase_corr(vector<int>& id_){ 
+/**
+  Return the cumulative phase corrections for all eigenvectors
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return get_cum_phase_corr();    }
+    else{ cout<<"ERROR in CMATRIX nHamiltonian::get_cum_phase_corr(vector<int>& id_):\
+                 No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->get_cum_phase_corr(next);
+  }
+}
+
+
 
 
 

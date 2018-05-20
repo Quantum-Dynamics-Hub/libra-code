@@ -179,6 +179,11 @@ void tsh_indx2vec(nHamiltonian& ham, CMATRIX& states, vector<int>& res);
 void tsh_internal2physical(nHamiltonian& ham, vector<int>& internal, vector<int>& physical);
 void tsh_physical2internal(nHamiltonian& ham, vector<int>& internal, vector<int>& physical);
 
+CMATRIX compute_phases(CMATRIX& U, CMATRIX& U_prev);
+void phase_correct_ampl(CMATRIX& C, CMATRIX& cum_phases, CMATRIX& cum_phases_prev);
+void phase_correct_ampl(CMATRIX* C, CMATRIX* phases);
+void phase_correct_ampl(CMATRIX& C, CMATRIX& phases);
+
 int hop(int initstate, MATRIX& g, double ksi);
 
 /// Backward-compatibility
@@ -203,7 +208,8 @@ boost::python::list hop(int ntraj, boost::python::list initstate, boost::python:
 ///================  In tsh_methods_tsh.cpp  ===================================
 
 int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
-         nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd, int do_reordering);
+         nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd,
+         int do_reordering, int do_phase_correction);
 int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
          nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd);
 

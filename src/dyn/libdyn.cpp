@@ -154,21 +154,6 @@ void export_MSSH_hopping_probabilities_objects(){
 void export_ESH_hopping_probabilities_objects(){
 
 
-  vector<int> (*expt_tsh_vec2indx_v1)(CMATRIX& states) = &tsh_vec2indx;
-  def("tsh_vec2indx", expt_tsh_vec2indx_v1);
-
-  void (*expt_tsh_indx2vec_v1)(nHamiltonian& ham, CMATRIX& states, vector<int>& res) = &tsh_indx2vec;
-  def("tsh_indx2vec", expt_tsh_indx2vec_v1);
-
-  void (*expt_tsh_internal2physical_v1)
-  (nHamiltonian& ham, vector<int>& internal, vector<int>& physical) = &tsh_internal2physical;
-  def("tsh_internal2physical", expt_tsh_internal2physical_v1);
-
-  void (*expt_tsh_physical2internal_v1)
-  (nHamiltonian& ham, vector<int>& internal, vector<int>& physical) = &tsh_physical2internal;
-  def("tsh_physical2internal", expt_tsh_physical2internal_v1);
-
-
   void (*expt_compute_hopping_probabilities_esh_v1)
   (Ensemble& ens, MATRIX* g, double dt, int use_boltz_factor,double T) = compute_hopping_probabilities_esh;
 
@@ -264,6 +249,34 @@ void export_tsh_aux_rescale_objects(){
 
 void export_tsh_aux_hop_objects(){
 
+  vector<int> (*expt_tsh_vec2indx_v1)(CMATRIX& states) = &tsh_vec2indx;
+  def("tsh_vec2indx", expt_tsh_vec2indx_v1);
+
+  void (*expt_tsh_indx2vec_v1)(nHamiltonian& ham, CMATRIX& states, vector<int>& res) = &tsh_indx2vec;
+  def("tsh_indx2vec", expt_tsh_indx2vec_v1);
+
+  void (*expt_tsh_internal2physical_v1)
+  (nHamiltonian& ham, vector<int>& internal, vector<int>& physical) = &tsh_internal2physical;
+  def("tsh_internal2physical", expt_tsh_internal2physical_v1);
+
+  void (*expt_tsh_physical2internal_v1)
+  (nHamiltonian& ham, vector<int>& internal, vector<int>& physical) = &tsh_physical2internal;
+  def("tsh_physical2internal", expt_tsh_physical2internal_v1);
+
+
+
+  CMATRIX (*expt_compute_phases_v1)(CMATRIX& U, CMATRIX& U_prev) = &compute_phases;
+  def("compute_phases", expt_compute_phases_v1);
+
+  void (*expt_phase_correct_ampl_v1)
+  (CMATRIX& C, CMATRIX& cum_phases, CMATRIX& cum_phases_prev) = &phase_correct_ampl;
+  void (*expt_phase_correct_ampl_v2)
+  (CMATRIX& C, CMATRIX& phase) = &phase_correct_ampl;
+
+  def("phase_correct_ampl", expt_phase_correct_ampl_v1);
+  def("phase_correct_ampl", expt_phase_correct_ampl_v2);
+  
+
   int (*expt_hop_v1)
   (int initstate, Nuclear& mol, Hamiltonian& ham, double ksi, MATRIX& g, int do_rescaling, int rep, int do_reverse) = &hop;
   int (*expt_hop_v2)
@@ -340,7 +353,8 @@ void export_Dyn_objects(){
 
   int (*expt_tsh0_v1)
   (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state, nHamiltonian& ham, 
-   bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd, int do_reordering) = &tsh0;
+   bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd, 
+   int do_reordering, int do_phase_correction) = &tsh0;
   int (*expt_tsh0_v2)
   (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state, nHamiltonian& ham,
    bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd) = &tsh0;

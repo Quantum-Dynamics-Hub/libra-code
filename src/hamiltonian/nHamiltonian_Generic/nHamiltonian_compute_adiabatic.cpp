@@ -109,11 +109,199 @@ void nHamiltonian::update_ordering(vector<int>& perm_t, int lvl){
 
 }
 
+
+
 void nHamiltonian::update_ordering(vector<int>& perm_t){
 
   update_ordering(perm_t, 0);
 
 }
+
+
+
+
+void nHamiltonian::apply_phase_corrections(CMATRIX* phase_corr, int lvl){
+/**
+  phase_corr - CMATRIX(nadi, 1) - the changes of cumulative phases of all eigenvectors. 
+  
+*/
+
+  int i, j;
+  complex<double> fji;
+
+  if(level==lvl){
+
+    if(basis_transform_mem_status){
+      if(phase_corr->n_rows!=basis_transform->n_cols){
+        cout<<"ERROR in void nHamiltonian::update_phases(vector<double>& phases, int lvl): \
+        the number of elements in the <phases> input should be equal to the number of columns of \
+        the basis transformation matrix\nExiting...\n";
+        exit(0);
+      }
+
+      for(i=0; i<basis_transform->n_cols; i++){
+        for(j=0; j<basis_transform->n_rows; j++){
+          basis_transform->scale(j,i, std::conj(phase_corr->get(i,0)) );
+        }
+      }
+
+    }// basis_transform
+
+
+    if(nac_adi_mem_status){
+      if(phase_corr->n_rows!=nac_adi->n_cols){
+        cout<<"ERROR in void nHamiltonian::update_phases(vector<double>& phases, int lvl): \
+        the number of elements in the <phases> input should be equal to the number of columns of \
+        the nac_adi matrix\nExiting...\n";
+        exit(0);
+      }
+
+      for(i=0; i<nac_adi->n_cols; i++){
+        for(j=0; j<nac_adi->n_rows; j++){          
+          fji = phase_corr->get(j,0) * std::conj(phase_corr->get(i,0));
+          nac_adi->scale(j,i, fji);
+        }
+      }
+    }// nac_adi
+
+
+    if(hvib_adi_mem_status){
+      if(phase_corr->n_rows!=hvib_adi->n_cols){
+        cout<<"ERROR in void nHamiltonian::update_phases(vector<double>& phases, int lvl): \
+        the number of elements in the <phases> input should be equal to the number of columns of \
+        the hvib_adi matrix\nExiting...\n";
+        exit(0);
+      }
+
+      for(i=0; i<hvib_adi->n_cols; i++){
+        for(j=0; j<hvib_adi->n_rows; j++){          
+          fji = phase_corr->get(j,0) * std::conj(phase_corr->get(i,0));
+          hvib_adi->scale(j,i, fji);
+        }
+      }
+    }// nac_adi
+
+  }// level==lvl
+
+  else if(lvl>level){
+  
+    for(int i=0;i<children.size();i++){
+      children[i]->apply_phase_corrections(phase_corr, lvl);
+    }
+
+  }// lvl >level
+
+  else{
+    cout<<"WARNING in void nHamiltonian::update_phases(vector<double>& phases, int lvl) :\n"; 
+    cout<<"Can not run the function in the parent Hamiltonian from the\
+     child node\n";    
+  }
+
+}
+
+void nHamiltonian::apply_phase_corrections(CMATRIX& phase_corr, int lvl){
+
+  apply_phase_corrections(&phase_corr, lvl);
+}
+
+
+void nHamiltonian::apply_phase_corrections(CMATRIX* phase_corr){
+
+  apply_phase_corrections(phase_corr, 0);
+}
+
+void nHamiltonian::apply_phase_corrections(CMATRIX& phase_corr){
+
+  apply_phase_corrections(&phase_corr, 0);
+}
+
+
+
+CMATRIX compute_phase_corrections(CMATRIX& U, CMATRIX& U_prev){
+/**
+  Compute the cumulative phase correction of one set of eigenvectors with respect to 
+  the previous one (that may be already phase-corrected).
+
+  U - the |psi(t')>
+  U_prev = |psi(t)>
+
+  t' > t
+
+*/
+
+  int i;
+  complex<double> f;
+  int nc = U.n_cols;
+
+  CMATRIX phase_corr(nc, 1);
+
+  // Default values
+  for(i=0;i<nc; i++){  phase_corr.set(i, 0, 1.0, 0.0); }
+
+  // Compute phase corrections  
+  for(i=0; i<nc; i++){
+
+    f = (U_prev.col(i).H() * U.col(i) ).get(0);
+    double af = abs(f);
+
+    if(af > 0.0){   phase_corr.set(i, 0, f / af);     }
+
+  }// for i
+
+  return phase_corr;
+
+}
+
+
+CMATRIX nHamiltonian::update_phases(CMATRIX& U_prev, int lvl){
+/**
+  This function computes the phase corrections to all current eigenvectors
+  w.r.t. those in U_prev.
+  It also applies the correction to the present eigenvectors. 
+  Finally, this function computes the phases by which the adiabatic amplitudes 
+  should be updated and returns these corrections as a column-vector.
+  
+  basis_transform - the |psi(t')>
+  U_prev = |psi(t)>
+
+  t' > t
+
+*/
+
+    // Memorize the cumulative phase correction up to this step
+    CMATRIX* cum_phase_corr_prev; 
+    cum_phase_corr_prev = new CMATRIX(nadi, 1);
+    *cum_phase_corr_prev = *cum_phase_corr;
+  
+    // Compute cumulative phase corrections
+    *cum_phase_corr = compute_phase_corrections(*basis_transform, U_prev);
+
+    // Update the wavefunction and wavefunction-dependent properties with 
+    // the new phase corrections    
+    apply_phase_corrections(cum_phase_corr, lvl);
+
+    // Compute the phase corrction to the evolving amplitudes
+    CMATRIX ampl_corr(nadi, 1);
+
+    for(int i=0;i<nadi; i++){
+      complex<double> scl(1.0, 0.0);
+
+      if( abs(cum_phase_corr_prev->get(i,0) ) > 0.0 ){
+        scl = cum_phase_corr->get(i,0)/cum_phase_corr_prev->get(i,0); 
+      }
+      ampl_corr.set(i,0, scl);
+    }
+    delete cum_phase_corr_prev;
+ 
+    return ampl_corr;
+
+}
+
+CMATRIX nHamiltonian::update_phases(CMATRIX& U_prev){
+
+  return update_phases(U_prev, 0);
+}
+
 
 
 

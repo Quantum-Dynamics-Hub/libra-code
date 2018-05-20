@@ -155,7 +155,7 @@ def run_test(_q, _p, _Cadi, _iM, model, rep, outname, params1, rnd, st):
         if rep==0:
             st = tsh0(dt, q, p, iM,  Cdia, st, ham, compute_model, params, params1, rnd)
         elif rep==1:
-            st = tsh0(dt, q, p, iM,  Cadi, st, ham, compute_model, params, params1, rnd, 1)
+            st = tsh0(dt, q, p, iM,  Cadi, st, ham, compute_model, params, params1, rnd, 1, 1)
 
 
         #=========== Properties ==========
@@ -201,7 +201,7 @@ model = 1
 rnd = Random()
 
 q = MATRIX(1,1);   q.set(0, 0, -5.0) 
-p = MATRIX(1,1);   p.set(0, 0, 20.0) 
+p = MATRIX(1,1);   p.set(0, 0, 50.0) 
 iM = MATRIX(1,1);  iM.set(0,0, 1.0/2000.0)
 
 Cdia, Cadi = CMATRIX(2,1), CMATRIX(2,1)

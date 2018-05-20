@@ -134,6 +134,81 @@ void tsh_internal2physical(nHamiltonian& ham, vector<int>& internal, vector<int>
 }
 
 
+CMATRIX compute_phases(CMATRIX& U, CMATRIX& U_prev){
+/**
+
+  X - the |psi(t')>
+  Xprev = |psi(t)>,  t' > t
+
+*/
+
+  int i;
+  complex<double> f;
+  int nc = U.n_cols;
+
+  CMATRIX phases(nc, 1);
+
+  // Default values
+  for(i=0;i<nc; i++){  phases.set(i, 0, 1.0, 0.0); }
+
+  // Compute phase corrections  
+  for(i=0; i<nc; i++){
+
+    f = (U_prev.col(i).H() * U.col(i) ).get(0);
+    double af = abs(f);
+
+    if(af > 0.0){   phases.set(i, 0, f / af);     }
+
+  }// for i
+
+  return phases;
+
+}
+
+
+void phase_correct_ampl(CMATRIX& C, CMATRIX& cum_phases, CMATRIX& cum_phases_prev){
+/** 
+  C - the amplitude in the superposition: |Psi> = |Phi_adi> * C_adi
+  cum_phases - the phase corrections at this timestep
+  cum_phases - the phase corrections at a previous timestep
+*/
+
+  int nst = C.n_rows;
+
+  for(int i=0;i<nst; i++){
+    complex<double> scl(1.0, 0.0);
+
+    if(abs(cum_phases_prev.get(i,0) ) > 0.0 ){
+      scl = cum_phases.get(i,0)/cum_phases_prev.get(i,0);
+      C.scale(i, 0, scl);
+    }
+  }// for i
+
+}
+
+void phase_correct_ampl(CMATRIX* C, CMATRIX* phases){
+/** 
+  C - the amplitude in the superposition: |Psi> = |Phi_adi> * C_adi
+  phases - the phase corrections at this timestep
+
+*/
+
+  int nst = C->n_rows;
+
+  for(int i=0;i<nst; i++){  C->scale(i, 0, phases->get(i,0));  }
+
+}
+
+void phase_correct_ampl(CMATRIX& C, CMATRIX& phases){
+
+  phase_correct_ampl(&C, &phases);
+
+}
+
+
+
+
+
 
 int hop(int initstate, MATRIX& g, double ksi){
 /** 

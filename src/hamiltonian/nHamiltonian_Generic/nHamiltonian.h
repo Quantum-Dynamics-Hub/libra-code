@@ -161,9 +161,6 @@ public:
   */
   int nadi;                   ///< the number of electronic DOFs in the adiabatic basis
 
-  vector<int>* ordering_adi;  ///< the permutation describing how the indices of the internally-stored
-                              /// properties like ham_adi or nac_adi relate to the indices of the 
-                              /// actual "physical" states.
 
   vector<CMATRIX*> dc1_adi;   ///< first-order derivative coupling matrices in the adiabatic basis 
   vector<int> dc1_adi_mem_status;
@@ -213,6 +210,16 @@ public:
 
   CMATRIX* basis_transform;  ///< These are the eigenvectors of the generalized eigenvalue problem for diabatic Hamiltonian
   int basis_transform_mem_status;
+
+  vector<int>* ordering_adi;  ///< the permutation describing how the indices of the internally-stored
+                              /// properties like ham_adi or nac_adi relate to the indices of the 
+                              /// actual "physical" states.
+
+  CMATRIX* cum_phase_corr;    /// These are the cumulative phase corrections applied to basis_transform (this correction is indexed by
+                              /// the inernal indexing of states, not physical)
+                              /// Keep in mind that these phases have already been applied to basis_transform variable
+                              /// (this is the convention)
+  int cum_phase_corr_mem_status;
 
 
   /**
@@ -273,9 +280,6 @@ public:
 
 
   // Adiabatic
-  void set_ordering_adi_by_ref(vector<int>& ordering_adi_);
-  void set_ordering_adi_by_val(vector<int>& ordering_adi_);
-
   void init_dc1_adi();
   void set_dc1_adi_by_ref(vector<CMATRIX>& dc1_adi_);
   void set_dc1_adi_by_val(vector<CMATRIX>& dc1_adi_);
@@ -305,6 +309,15 @@ public:
   void set_basis_transform_by_ref(CMATRIX& basis_transform_);
   void set_basis_transform_by_val(CMATRIX& basis_transform_);
 
+  void set_ordering_adi_by_ref(vector<int>& ordering_adi_);
+  void set_ordering_adi_by_val(vector<int>& ordering_adi_);
+
+  void init_cum_phase_corr();
+  void set_cum_phase_corr_by_ref(CMATRIX& cum_phase_corr_);
+  void set_cum_phase_corr_by_val(CMATRIX& cum_phase_corr_);
+
+
+
 
   /// Getters
   // Diabatic
@@ -326,8 +339,6 @@ public:
   CMATRIX get_d2ham_dia(int i, int j, vector<int>& id_);
 
   // Adiabatic
-  vector<int> get_ordering_adi(); 
-  vector<int> get_ordering_adi(vector<int>& id_); 
   CMATRIX get_dc1_adi(int i);
   CMATRIX get_dc1_adi(int i, vector<int>& id_);
   CMATRIX get_ham_adi();
@@ -346,6 +357,14 @@ public:
   // Transforms
   CMATRIX get_basis_transform();
   CMATRIX get_basis_transform(vector<int>& id_);
+
+  vector<int> get_ordering_adi(); 
+  vector<int> get_ordering_adi(vector<int>& id_); 
+
+  CMATRIX get_cum_phase_corr();
+  CMATRIX get_cum_phase_corr(vector<int>& id_);
+
+
 
 
 
@@ -368,6 +387,15 @@ public:
   ///< In nHamiltonian_compute_adiabatic.cpp
   void update_ordering(vector<int>& perm_t, int lvl);
   void update_ordering(vector<int>& perm_t);
+
+  void apply_phase_corrections(CMATRIX* phase_corr, int lvl);
+  void apply_phase_corrections(CMATRIX& phase_corr, int lvl);
+  void apply_phase_corrections(CMATRIX* phase_corr);
+  void apply_phase_corrections(CMATRIX& phase_corr);
+
+  CMATRIX update_phases(CMATRIX& U_prev, int lvl);
+  CMATRIX update_phases(CMATRIX& U_prev);
+
 
   void compute_adiabatic(int der_lvl, int lvl);
   void compute_adiabatic(int der_lvl);
@@ -452,6 +480,10 @@ public:
 };
 
 typedef std::vector<nHamiltonian> nHamiltonianList;  ///< data type for keeping a list of generic Hamiltonians of their derived classes
+
+
+///< In nHamiltonian_compute adiabatic
+CMATRIX compute_phase_corrections(CMATRIX& U, CMATRIX& U_prev);
 
 
 ///< In nHamiltonian_compute_ETHD.cpp

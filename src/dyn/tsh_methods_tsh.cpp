@@ -26,7 +26,7 @@ namespace libdyn{
 
 int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
          nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd,
-         int do_reordering){
+         int do_reordering, int do_phase_correction){
 
 /**
   \brief One step of the TSH algorithm for electron-nuclear DOFs for one trajectory
@@ -88,9 +88,11 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
   CMATRIX* Uprev; 
   CMATRIX* X;
   vector<int> perm_t; 
+  complex<double> one(1.0, 0.0);
 
   int ndof = q.n_rows;
   int dof;
+  int int_state; // internal index of physical state "state"
   
 
   int nst = 0;
@@ -107,6 +109,8 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
     ham.compute_hvib_dia();
   }
   else if(rep==1){  
+    int_state = ham.get_ordering_adi()[state];
+
     ham.compute_nac_adi(p, invM); 
     ham.compute_hvib_adi();
   }
@@ -114,6 +118,9 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
   propagate_electronic(0.5*dt, C, ham, rep);   
 
   //============== Nuclear propagation ===================
+
+  cstate *= 0.0;
+  cstate.set(int_state, 0, one);
     
        if(rep==0){  p = p + ham.forces_dia(cstate).real() * 0.5*dt;  }
   else if(rep==1){  p = p + ham.forces_adi(cstate).real() * 0.5*dt;  }
@@ -127,7 +134,6 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
   if(do_reordering){
     if(rep==1){
       Uprev = new CMATRIX(ham.nadi, ham.nadi);
-      X = new CMATRIX(ham.nadi, ham.nadi);
       *Uprev = ham.get_basis_transform();  
     }
   }
@@ -135,23 +141,38 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
   ham.compute_diabatic(py_funct, bp::object(q), params);
   ham.compute_adiabatic(1);
 
-  // Reordering, if needed
-  if(do_reordering){
 
-    if(rep==1){
-      *X = (*Uprev) * ham.get_basis_transform().H();
+  // Only for adiabatic representation
+  if(rep==1){
+
+    // Reordering, if needed
+    if(do_reordering){
+      X = new CMATRIX(ham.nadi, ham.nadi);
+      *X = (*Uprev).H() * ham.get_basis_transform();
+
       perm_t = get_reordering(*X);
       ham.update_ordering(perm_t);
+      cstate.permute_rows(perm_t);
+
       delete Uprev;
       delete X;
-    }
+    }// reorderng
 
-    cstate.permute_rows(perm_t);
-    state = perm_t[state];
+    if(do_phase_correction){
+        CMATRIX* phases; phases = new CMATRIX(ham.nadi, 1); 
 
-  }
+        // Phase correction in U, NAC, and Hvib
+        *phases = ham.update_phases(*Uprev);
+
+        // Phase correction in Cadi
+        phase_correct_ampl(&C, phases);
+
+    }// phase correction
+  }// adiabatic
 
 
+  cstate *= 0.0;
+  cstate.set(int_state, 0, one);
 
        if(rep==0){  p = p + ham.forces_dia(cstate).real() * 0.5*dt;  }
   else if(rep==1){  p = p + ham.forces_adi(cstate).real() * 0.5*dt;  }
@@ -204,13 +225,17 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
 
   /// Attempt to hop
   double ksi = rnd.uniform(0.0,1.0);  /// generate random number 
-  int new_state = hop(state, g, ksi); /// Proposed hop
+  int new_state = hop(int_state, g, ksi); /// Proposed hop in the internal indexing space
 
   /// Check whether the proposed hop should be accepted.
   /// If this it is: the nuclear momenta will be re-scaled
-  state = apply_transition0(p, invM, ham, state, new_state, vel_rescale_opt, do_reverse, 1);
+  int_state = apply_transition0(p, invM, ham, int_state, new_state, vel_rescale_opt, do_reverse, 1);
 
-  return new_state;
+  /// Convert back to the physical index
+  perm_t = ham.get_ordering_adi(); 
+  state = inverse_permutation(perm_t)[ int_state ];
+
+  return state;
 
 }
 
@@ -218,7 +243,10 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
 int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
          nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd){
 
-  return tsh0(dt, q, p, invM, C, state, ham, py_funct, params, params1, rnd, 0);
+  const int do_reordering = 1;
+  const int do_phase_correction = 1;
+
+  return tsh0(dt, q, p, invM, C, state, ham, py_funct, params, params1, rnd, do_reordering, do_phase_correction);
 
 }
 
