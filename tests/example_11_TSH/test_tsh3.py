@@ -56,40 +56,38 @@ def get_probabilities(q, states, params, ndia, nadi, rep, ham, Cdia, Cadi):
     """
     Computes the scattering probabilities
     q = [ndof x ntraj] coordinates
-    states = [nst x ntraj] matrix with states
+    states = [list of ntraj integers]
     params = defines conditions
     """
 
-    nst = states.num_of_rows
-    ntraj = states.num_of_cols
+    nst = ham.nadi
+    ntraj = len(states)
 
-    pop_transm = CMATRIX(nst, 1)  # transmitted
-    pop_refl = CMATRIX(nst, 1)  # reflected
+    pop_transm = MATRIX(nst, 1)  # transmitted
+    pop_refl = MATRIX(nst, 1)  # reflected
 
     act_dof = params["act_dof"]
     left_boundary = params["left_boundary"]
     right_boundary = params["right_boundary"]
 
+
     ntransm, nrefl = 0.0, 0.0
     for traj in xrange(ntraj):
 
-        c = states.col(traj)
-        c.permute_rows(ham.get_ordering_adi(Py2Cpp_int([0, traj])) )
-
         if q.get(act_dof, traj) < left_boundary:
-            pop_refl = pop_refl + c
+            pop_refl.add(states[traj], 0, 1.0)
             nrefl += 1.0
 
         if q.get(act_dof, traj) > right_boundary:
-            pop_transm = pop_transm + c
-            ntransm += 1.0            
+            pop_transm.add(states[traj], 0, 1.0)
+            ntransm += 1.0         
  
-
     if ntransm > 0.0:
         pop_transm = pop_transm / ntransm
 
     if nrefl > 0.0:
         pop_refl = pop_refl / nrefl
+
 
 
     dm_dia_tr, dm_adi_tr = CMATRIX(ndia, ndia), CMATRIX(nadi, nadi)
@@ -112,9 +110,16 @@ def get_probabilities(q, states, params, ndia, nadi, rep, ham, Cdia, Cadi):
        
         elif rep==1:
             c = Cadi.col(traj)
-            c.permute_rows(ham.get_ordering_adi(indx))
-
+            M = ham.get_ordering_adi(Py2Cpp_int([0, traj]))
+            iM = inverse_permutation(M)
+            c.permute_rows(iM)
             dm_tmp = c * c.H()
+            S = ham.get_ovlp_dia(indx)
+            U = ham.get_basis_transform(indx)     
+#            correct_phase(U)
+            su = S * U
+
+
             su = ham.get_ovlp_dia(indx) * ham.get_basis_transform(indx)
 
             if q.get(act_dof, traj) < left_boundary:
@@ -132,11 +137,11 @@ def get_probabilities(q, states, params, ndia, nadi, rep, ham, Cdia, Cadi):
     dm_dia_re = dm_dia_re / float(nrefl)
 
 
-    return pop_refl.real(), pop_transm.real(), dm_adi_re.real(), dm_dia_re.real(), dm_adi_tr.real(), dm_dia_tr.real()
+    return pop_refl, pop_transm, dm_adi_re.real(), dm_dia_re.real(), dm_adi_tr.real(), dm_dia_tr.real()
 
 
 
-def run_test(dt, md_run, ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, params1, rnd, states):
+def run_test(dt, md_run, ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, params1, rnd, _states):
     """
     model - setup the Hamiltonian
     rep - 0 - diabatic, 1 - adiabatic
@@ -151,7 +156,9 @@ def run_test(dt, md_run, ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, mo
     iM = MATRIX(_iM)
     Cdia = CMATRIX(_Cdia)
     Cadi = CMATRIX(_Cadi)
-
+    states = intList()
+    for tr in xrange(ntraj):
+        states.append(_states[tr])
     
 
     # ======= Hierarchy of Hamiltonians =======
@@ -197,7 +204,7 @@ def run_test(dt, md_run, ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, mo
         if rep==0:
             tsh1(dt, q, p, iM,  Cdia, states, ham, compute_model, params, params1, rnd)
         elif rep==1:
-            tsh1(dt, q, p, iM,  Cadi, states, ham, compute_model, params, params1, rnd, 1)
+            tsh1(dt, q, p, iM,  Cadi, states, ham, compute_model, params, params1, rnd, 1, 1)
  
 
         #=========== Properties ==========
@@ -217,7 +224,7 @@ def run_test(dt, md_run, ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, mo
 def run_scattering():
 
     model = 1
-    ndia, nadi, nnucl, ntraj = 2, 2, 1, 50
+    ndia, nadi, nnucl, ntraj = 2, 2, 1, 100
 
     rnd = Random()
 
@@ -233,12 +240,13 @@ def run_scattering():
     rep = 1
     istate = 0
     Cdia, Cadi = CMATRIX(ndia, ntraj), CMATRIX(nadi, ntraj)
-    states = CMATRIX(ndia, ntraj)
+    states = intList()
+    
 
 
     for traj in xrange(ntraj):
         Cadi.set(istate, traj, 1.0+0.0j);  
-        states.set(istate, traj, 1.0+0.0j)
+        states.append(istate)
 
     params1 = {"rep":rep, "rep_sh":1, "tsh_method":0, "use_boltz_factor":0,
                "Temperature":300.0, "do_reverse":1, "vel_rescale_opt":0 }
@@ -248,12 +256,12 @@ def run_scattering():
     out.close()
 
     p0 = 1.0
-    while p0<20.0:
+    while p0<50.0:
 
         mean_p.set(0, 0, p0)
         p = MATRIX(nnucl,ntraj);  tsh.sample(p, mean_p, sigma_p, rnd)
 
-        dt = 5.0 / p0
+        dt = 10.0 / p0
         md_run = 5000
 
         pops = run_test(dt, md_run, ndia, nadi, nnucl, ntraj, q, p, Cdia, Cadi, iM, model, rep, params1, rnd, states)
@@ -267,7 +275,7 @@ def run_scattering():
                          Trans_adi(0)= %8.5f Trans_adi(1)= %8.5f  Trans_dia(0)= %8.5f Trans_dia(1)= %8.5f\n" %  rec)
         out.close()
 
-        p0 = p0 + 1.0
+        p0 = p0 + 0.5
         
 
 run_scattering()

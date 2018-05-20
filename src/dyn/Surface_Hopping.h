@@ -214,7 +214,8 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
          nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd);
 
 void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
-         nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd, int do_reordering);
+         nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd, 
+         int do_reordering, int do_phase_correction);
 void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
          nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd);
 

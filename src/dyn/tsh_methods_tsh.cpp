@@ -255,7 +255,7 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
 
 void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
           nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd,
-          int do_reordering){
+          int do_reordering, int do_phase_correction){
 
 /**
   \brief One step of the TSH algorithm for electron-nuclear DOFs for one trajectory
@@ -370,16 +370,17 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>
   }
 
 
-  if(do_reordering){
-    if(rep==1){      
+  if(rep==1){      
+    if(do_reordering){
+
       Uprev = new CMATRIX*[ntraj];
-      X = new CMATRIX(ham.nadi, ham.nadi);
       for(traj=0; traj<ntraj; traj++){
         Uprev[traj] = new CMATRIX(ham.nadi, ham.nadi);
         *Uprev[traj] = ham.children[traj]->get_basis_transform();  
       }
-    }
-  }
+
+    }// do_reordering
+  }// rep == 1
 
 
   ham.compute_diabatic(py_funct, bp::object(q), params, 1);
@@ -388,52 +389,59 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>
 
   // Reordering, if needed
   //istates = tsh_vec2indx(states);  /// starting states
-  if(do_reordering){
 
-    if(rep==1){
+  if(rep==1){
+
+    // Reordering, if needed
+    if(do_reordering){
+
+      X = new CMATRIX(ham.nadi, ham.nadi);
+
       for(traj=0; traj<ntraj; traj++){
         *X = (*Uprev[traj]).H() * ham.children[traj]->get_basis_transform();
         perm_t = get_reordering(*X);
 
-        /// Go there if the permutation is non-trivial (non-identity)
-//        int prop_state = perm_t[ istates[traj] ];
-//        if(prop_state != istates[traj]){
+        ham.children[traj]->update_ordering(perm_t, 1);
 
-/*
-          /// Rescale velocities           
-          nucl_stenc_y[0] = traj;
-          pop_submatrix(p, p_traj, nucl_stenc_x, nucl_stenc_y);          
-          fstates[traj] = apply_transition0(p_traj, invM, ham.children[traj], istates[traj], prop_state, 0, 0, 1);
-          push_submatrix(p, p_traj, nucl_stenc_x, nucl_stenc_y);
+        el_stenc_y[0] = traj;
+        CMATRIX x(ham.nadi, 1); 
+        x = C.col(traj);
+        x.permute_rows(perm_t);
+        push_submatrix(C, x, el_stenc_x, el_stenc_y);
 
-
-          if(fstates[traj]==prop_state){
-*/
-            ham.children[traj]->update_ordering(perm_t, 1);
-            el_stenc_y[0] = traj;
-
-            CMATRIX x(ham.nadi, 1);      
-//            x = states.col(traj);
-//            x.permute_rows(perm_t);
-//            push_submatrix(states, x, el_stenc_x, el_stenc_y);
-
-            x = C.col(traj);
-            x.permute_rows(perm_t);
-            push_submatrix(C, x, el_stenc_x, el_stenc_y);
-
-//          }
-//        }// prop_state != istate
-        
-        delete Uprev[traj];
       }// for trajectories
 
-//      tsh_indx2vec(states, fstates);
-
       delete X;
-      delete Uprev;
-    }// rep == 1
+    }// do_reordering
 
-  }
+
+    if(do_phase_correction){
+
+      CMATRIX* phases; phases = new CMATRIX(ham.nadi, 1); 
+
+      for(traj=0; traj<ntraj; traj++){
+
+        // Phase correction in U, NAC, and Hvib
+        *phases = ham.children[traj]->update_phases(*Uprev[traj], 1);
+
+        // Phase correction in Cadi
+        el_stenc_y[0] = traj;
+        CMATRIX x(ham.nadi, 1); 
+        x = C.col(traj);
+        phase_correct_ampl(&x, phases);
+        push_submatrix(C, x, el_stenc_x, el_stenc_y);
+
+      }// for traj
+
+      delete phases;
+    }// phase correction
+
+    if(do_phase_correction || do_reordering){
+      for(traj=0; traj<ntraj; traj++){  delete Uprev[traj]; }
+      delete Uprev;
+    }
+
+  }// rep == 1
 
 
 
@@ -521,7 +529,11 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>
 void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
           nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd){
 
-    tsh1(dt, q, p, invM, C, act_states, ham, py_funct, params, params1, rnd);
+  const int do_reordering = 1;
+  const int do_phase_correction = 1;
+
+  tsh1(dt, q, p, invM, C, act_states, ham, py_funct, params, params1, rnd, do_reordering, do_phase_correction);
+
 }
 
 

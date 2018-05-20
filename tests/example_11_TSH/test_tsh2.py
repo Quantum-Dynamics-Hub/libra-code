@@ -27,7 +27,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from libra_py import *
 
-import energy
+#import energy
 
 class tmp:
     pass    
@@ -59,20 +59,20 @@ def compute_model(q, params, full_id):
 
 def get_probabilities(ham, states):
     """
-    states = [nst x ntraj] matrix with states
+    states = [list of ntraj integers] matrix with states
     """
 
     nst = ham.nadi
     ntraj = len(states)
 
-    res = CMATRIX(nst, 1)
+    res = MATRIX(nst, 1)
 
     for traj in xrange(ntraj):        
-        res.add(states[traj], 0, 1.0+0.0j)
+        res.add(states[traj], 0, 1.0)
 
     res = res * (1.0/float(ntraj))
 
-    return res.real()
+    return res
 
 
 
@@ -116,7 +116,7 @@ def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, ou
     params = {"model":model, "rep":rep}
 
     # Simulation parameters
-    dt = 0.1
+    dt = 0.5
 
 
     # Initial calculations
@@ -144,13 +144,13 @@ def run_test(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, rep, ou
 
 
     # Do the propagation
-    for i in xrange(5000):
+    for i in xrange(400):
+
 
         if rep==0:
             tsh1(dt, q, p, iM,  Cdia, states, ham, compute_model, params, params1, rnd)
         elif rep==1:
-            tsh1(dt, q, p, iM,  Cadi, states, ham, compute_model, params, params1, rnd, 1)
-
+            tsh1(dt, q, p, iM,  Cadi, states, ham, compute_model, params, params1, rnd, 1, 1)
 
 
         #=========== Properties ==========
