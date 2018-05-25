@@ -621,22 +621,19 @@ void compute_hopping_probabilities_mssh(Nuclear* mol, Electronic* el, Hamiltonia
   for(j=0;j<el->nstates;j++){
     double gjj = (el->q[j]*el->q[j] + el->p[j]*el->p[j]); // c_j^* * c_j 
 
-      if(use_boltz_factor){
-	for (i=0;i<el->nstates;i++){
-	  if(ham->H(j,j).real()>ham->H(i,i).real()){
-	    argg = -(ham->H(j,j).real() - ham->H(i,i).real())/(kb*T);
-	    if(argg<500.0){ g_ij = g_ij * std::exp(argg); }
-	  }
-	}
-      }
-
-    for(i=0;i<el->nstates;i++){   g->set(i,j,gjj);   }// for i
-
-
+      for(i=0;i<el->nstates;i++){   g->set(i,j,gjj);   }// for i^M
   }// for j
 
-
-
+  if(use_boltz_factor){
+    for (i=0;i<el->nstates;i++){
+      for (j=0;j<el->nstates;j++){
+	if(ham->H(j,j).real()>ham->H(i,i).real()){
+	  argg = -(ham->H(j,j).real() - ham->H(i,i).real())/(kb*T);
+	  if(argg<500.0){ g->set(i,j,g->get(i,j) * std::exp(argg)); }
+	} //if ham->...
+      }// j
+    }// i
+  }// if use_boltz_factor
 
 
 }// compute probabilities mssh
