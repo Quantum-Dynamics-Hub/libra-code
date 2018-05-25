@@ -31,6 +31,10 @@ void RigidBody::Rotate_I_x(double phi){
   \param[in] phi The rotation angle, in radians
 */
 
+//  VECTOR body_dir(1.0, 0.0, 0.0);
+//  lab_frame_to_body_frame(lab_dir, body_dir);
+
+
   MATRIX3x3 R; R.Rx(phi);
   rb_A_I_to_e = R * rb_A_I_to_e;
   set_orientation(rb_A_I_to_e);
@@ -44,7 +48,7 @@ void RigidBody::Rotate_I_y(double phi){
   \param[in] phi The rotation angle, in radians
 */
 
-  MATRIX3x3 R; R.Rx(phi);
+  MATRIX3x3 R; R.Ry(phi);
   rb_A_I_to_e = R * rb_A_I_to_e;
   set_orientation(rb_A_I_to_e);
 }
@@ -57,7 +61,7 @@ void RigidBody::Rotate_I_z(double phi){
   \param[in] phi The rotation angle, in radians
 */
 
-  MATRIX3x3 R; R.Rx(phi);
+  MATRIX3x3 R; R.Rz(phi);
   rb_A_I_to_e = R * rb_A_I_to_e;
   set_orientation(rb_A_I_to_e);
 }
@@ -87,7 +91,7 @@ void RigidBody::Rotate_e_y(double phi){
 
   VECTOR ux,uy,uz;
   rb_A_I_to_e.get_vectors(ux,uy,uz);
-  MATRIX3x3 R; R.Rotation(phi*ux);
+  MATRIX3x3 R; R.Rotation(phi*uy);
   rb_A_I_to_e = R * rb_A_I_to_e;
   set_orientation(rb_A_I_to_e);
 }
@@ -102,14 +106,15 @@ void RigidBody::Rotate_e_z(double phi){
 
   VECTOR ux,uy,uz;
   rb_A_I_to_e.get_vectors(ux,uy,uz);
-  MATRIX3x3 R; R.Rotation(phi*ux);
+  MATRIX3x3 R; R.Rotation(phi*uz);
   rb_A_I_to_e = R * rb_A_I_to_e;
   set_orientation(rb_A_I_to_e);
 }
 
+
 void RigidBody::Rotate(MATRIX3x3& R){
 /**
-  \brief Arbitrary rotation in body frame, parameterized by a matrix
+  \brief Arbitrary rotation in the body frame, parameterized by a matrix
 
   Warning: Matrix R should be a valid (unitary, with norm = 1) rotation matrix
 
@@ -121,7 +126,7 @@ void RigidBody::Rotate(MATRIX3x3& R){
 
 void RigidBody::Rotate(QUATERNION& quat){
 /**
-  \brief Arbitrary rotation in body frame, parameterized by a quaternion
+  \brief Arbitrary rotation in the body frame, parameterized by a quaternion
 
   \param[in] quaternion Rotation quaternion
 */
@@ -132,9 +137,9 @@ void RigidBody::Rotate(QUATERNION& quat){
   set_orientation(rb_A_I_to_e);
 }
 
-void RigidBody::Rotate(double phi,VECTOR& dir){
+void RigidBody::Rotate_e(double phi,VECTOR& dir){
 /**
-  \brief Arbitrary rotation in body frame, parameterized by a rotation axis and angle
+  \brief Arbitrary rotation in the body frame, parameterized by a rotation axis and angle
 
   The rotation axis and angle define a quaternion, which is then applied to produce rotation
 
@@ -148,6 +153,33 @@ void RigidBody::Rotate(double phi,VECTOR& dir){
   QUATERNION quat(cs,si*u.x,si*u.y,si*u.z);
   Rotate(quat);
 }
+
+
+
+
+void RigidBody::Rotate_I(double phi,VECTOR& lab_dir){
+/**
+  \brief Arbitrary rotation in the lab (external) frame, parameterized by a rotation axis and angle
+
+  The rotation axis and angle define a quaternion, which is then applied to produce rotation
+
+  \param[in] phi the rotation angle
+  \param[in] dir the rotation axis, direction
+*/
+
+  double cs = cos(0.5*phi);
+  double si = sin(0.5*phi);
+
+  VECTOR body_dir;
+  lab_frame_to_body_frame(lab_dir, body_dir);
+
+  VECTOR u = body_dir.unit();
+  QUATERNION quat(cs,si*u.x,si*u.y,si*u.z);
+  Rotate(quat);
+
+}
+
+
 
 
 }// namespace librigidbody

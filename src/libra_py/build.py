@@ -57,6 +57,42 @@ def read_xyz(filename):
 
     return L, coords
 
+def read_xyz_crystal(filename, a,b,c):
+    """
+    a,b,c - unit cell vectors (in Bohrs)
+    """
+
+    M = MATRIX(3,3)
+    M.init(a,b,c)
+    M = M.T()
+
+    f = open(filename,"r")
+    A = f.readlines()
+    f.close()
+
+    tmp = A[0].split()
+    Natoms = int(float(tmp[0]))
+
+    L = [] 
+    coords = []
+
+    for a in A[2:]:
+        tmp = a.split()
+        if len(tmp)==4:
+            x = float(tmp[1]) 
+            y = float(tmp[2])
+            z = float(tmp[3])
+             
+            # Now apply PBC
+            R = M * VECTOR(x,y,z) # * Angst_to_Bohr
+
+            L.append(tmp[0])
+            coords.append(R)
+
+    return L, coords
+
+
+
 
 
 def generate_replicas_xyz2(L, R, tv1, tv2, tv3, Nx, Ny, Nz):
@@ -129,6 +165,83 @@ def crop_sphere_xyz2(L, R, Rcut):
         lab.append(L[i])
 
     return lab, coords
+
+
+def crop_sphere_xyz3(L, R, Rcut, pairs, new_L):
+    """
+    L - list of element names
+    R - list of VECTOR objects with the coordinates of the particles, in Bohrs
+    Rcut - the radius of the sphere from the center of the QD, in Bohrs
+    pairs - list [int, int, VECTOR, VECTOR] - integers describe the indices for the connected atoms
+    new_L - is a map containing pairs (string:string), where the key string corresponds to the label of 
+          the atom that is inside the cropped sphere, and the value string corresponds to the label of 
+          the atom which will turn out to be connected to this atom, but is outside the sphere
+
+    Output:
+    new lists of L and R after cropping
+
+    """
+
+
+    # Compute COM
+    Rcom = VECTOR(0.0, 0.0, 0.0)
+
+    for r in R:
+        Rcom = Rcom + r
+
+    # Geometric center
+    Natoms = len(R)
+    Rcom = Rcom / Natoms
+
+ 
+    # Compute remaining number of atoms
+    Nat = 0
+    indx = []
+    for i in range(0,Natoms):
+        r = (R[i] - Rcom).length()
+        if(r<=Rcut):
+            Nat = Nat + 1
+            indx.append(i)
+            
+
+    # Prepare the coordinates and labels of the remaining atoms
+    coords = []
+    lab = []     
+    for i in indx:
+        coords.append(R[i])
+        lab.append(L[i])
+
+
+    # Now add a number of atoms that are ourside the sphere
+    added = [] # indices of the added atoms - we need them to avoid a multiple placing
+    for it in pairs:
+           
+        if (it[0] in indx and it[1] in indx):  # both atoms are within the sphere
+            pass
+        elif (it[0] in indx and it[1] not in indx):  # it[0] is inside, it[1] is outside
+            if it[1] not in added:
+
+                new_lab = new_L[ L[it[0]] ]  # new label
+                if new_lab == "none":
+                    pass
+                else:
+                    coords.append(R[it[1]])
+                    lab.append(new_lab)            
+                    added.append(it[1])
+
+        elif (it[1] in indx and it[0] not in indx):  # it[1] is inside, it[0] is outside
+            if it[0] not in added:
+                new_lab = new_L[ L[it[1]] ]  # new label
+                if new_lab == "none":
+                    pass
+                else:
+                    coords.append(R[it[0]])
+                    lab.append(new_lab)
+                    added.append(it[0])
+
+
+    return lab, coords
+
 
 
 

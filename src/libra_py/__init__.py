@@ -26,6 +26,11 @@ __all__ = ["init_system",
            "datautils",
            "build",
            "autoconnect",
-           "vesta2qe"
+           "vesta2qe",
+           "scf",
+           "namd",
+           "models_Libra",
+           "models_Tully",
+           "models_Martens"
           ]
 

@@ -300,7 +300,7 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib){
 }// propagate_electronic
 
 
-void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
+void propagate_electronic_eig(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
 /**
   Solves the time-dependent Schrodinger equation:
 
@@ -355,6 +355,32 @@ void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
 
 
 }// propagate_electronic
+
+void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
+
+  int i,j;
+  // Faster and more robust solver:
+  int ntraj = Coeff.n_cols;
+  int nel = Coeff.n_rows;  
+  Electronic el(nel);
+
+  for(j=0; j<ntraj; j++){
+
+    for(i=0; i<nel; i++){ 
+      el.q[i] = Coeff.get(i,j).real(); 
+      el.p[i] = Coeff.get(i,j).imag();       
+    }
+    propagate_electronic(dt, el, Hvib);
+
+    for(i=0; i<nel; i++){   
+      Coeff.set(i,j, complex<double>(el.q[i], el.p[i]));    
+    }
+
+  }
+
+  // Older Default 
+  //propagate_electronic_eig(dt, Coeff, Hvib);
+}
 
 
 
@@ -757,6 +783,79 @@ void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
 
 
 }// propagate_electronic
+
+
+void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep){
+
+  if(rep==0){  // diabatic
+
+    CMATRIX Hvib(ham.ndia, ham.ndia);  Hvib = ham.get_hvib_dia();
+    CMATRIX Sdia(ham.ndia, ham.ndia);  Sdia = ham.get_ovlp_dia();
+
+    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+
+  }
+
+  else if(rep==1){  // adiabatic
+
+    CMATRIX Hvib(ham.nadi, ham.nadi);  Hvib = ham.get_hvib_adi(); 
+
+    propagate_electronic(dt, C, Hvib);  // in this case C - adiabatic coeffs
+  }
+
+}
+
+void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep){
+
+  if(rep==0){  // diabatic
+
+    CMATRIX Hvib(ham->ndia, ham->ndia);  Hvib = ham->get_hvib_dia();
+    CMATRIX Sdia(ham->ndia, ham->ndia);  Sdia = ham->get_ovlp_dia();
+
+    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+
+  }
+
+  else if(rep==1){  // adiabatic
+
+    CMATRIX Hvib(ham->nadi, ham->nadi);  Hvib = ham->get_hvib_adi(); 
+
+    propagate_electronic(dt, C, Hvib);  // in this case C - adiabatic coeffs
+  }
+
+}
+
+
+void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep){
+
+  if(C.n_cols!=ham.size()){
+    cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep): \n";
+    cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<ham.size()<<"\n";
+    cout<<"Exiting...\n";
+    exit(0);
+  }
+
+  int nst = C.n_rows;
+  int ntraj = C.n_cols;
+  
+  CMATRIX ctmp(nst, 1);
+
+  for(int traj=0; traj<ntraj; traj++){
+    ctmp = C.col(traj);
+    propagate_electronic(dt, ctmp, ham[traj], rep);
+
+    // Insert the propagated result back
+    for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }
+
+  }
+
+}
+
+
+
+
+
+
 
 
 

@@ -49,7 +49,13 @@ def get_reordering(time_overlap):
 
     """
 
-    # define variables
+    print "ERROR in libra_py.unavoided.get_reordering(...)"
+    print "The implementation contained a bug. It is now re-implemented in C++\
+          with the bug fixed. Please use the C++ version. Exiting..."
+    sys.exit(0)
+    
+
+    # extract the indices where <phi_i(t)|phi_i(t+dt)> is not close to 1. 
     S = CMATRIX(time_overlap)   # just a temporary working object
     sz = time_overlap.num_of_rows
     perm = range(sz)  # original permutation

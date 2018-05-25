@@ -23,6 +23,8 @@
 /// liblibra namespace
 namespace liblibra{
 
+namespace bp = boost::python;
+
 /// libhamiltonian namespace 
 namespace libhamiltonian{
 
@@ -214,6 +216,67 @@ void init_X2(vector<CMATRIX*> ptx, vector<int>& x_mem_status, int nrows, int nco
 
 
 
+void nHamiltonian::check_cmatrix(bp::object obj, std::string matrix_name, int nrows, int ncols){
+/**
+  This function checks whether the dimensions of the matrix named <matrix_name>
+  extracted from a Python object <obj> agree with the expected number of rows <nrows>
+  and number of columns <ncols>
+*/
+
+    CMATRIX& tmp = extract<CMATRIX&>(obj.attr(matrix_name.c_str()));
+
+    if(tmp.n_rows != nrows){
+      cout<<"ERROR in nHamiltonian...\n"; 
+      cout<<"The number of rows in the extracted "<<matrix_name<<" object ("<<tmp.n_rows<<")"
+          <<" is not equal to the expected number of rows = "<<nrows<<"\nExiting...\n";
+      exit(0);
+    }
+    if(tmp.n_cols != ncols){
+      cout<<"ERROR in nHamiltonian...\n"; 
+      cout<<"The number of rows in the extracted "<<matrix_name<<" object ("<<tmp.n_cols<<")"
+          <<" is not equal to the expected number of columns = "<<ncols<<"\nExiting...\n";
+      exit(0);
+    }
+
+}
+
+
+void nHamiltonian::check_cmatrix_list(bp::object obj, std::string matrix_name, int nrows, int ncols, int length){
+/**
+  This function checks whether the dimensions of the vector of matrices named <matrix_name>
+  extracted from a Python object <obj> agree with the expected number of rows <nrows>
+  and number of columns <ncols> for each element and whether the number of elements of the list is 
+  equal to the expected value of <length>
+*/
+
+    vector<CMATRIX>& tmp = extract<vector<CMATRIX>&>(obj.attr(matrix_name.c_str()));
+
+    if(tmp.size() != length){
+      cout<<"ERROR in nHamiltonian...\n"; 
+      cout<<"The number of elements in the extracted "<<matrix_name<<" object ("<<tmp.size()<<")"
+          <<"is not equal to the expected number of elements = "<<length<<"\nExiting...\n";
+      exit(0);
+    }
+
+    // For speed, check the dimensions of only the first element
+    if(tmp.size()>0){
+
+      if(tmp[0].n_rows != nrows){
+        cout<<"ERROR in nHamiltonian...\n"; 
+        cout<<"The number of rows in the extracted "<<matrix_name<<"[0] object ("<<tmp[0].n_rows<<")"
+            <<" is not equal to the expected number of rows = "<<nrows<<"\nExiting...\n";
+        exit(0);
+      }
+      if(tmp[0].n_cols != ncols){
+        cout<<"ERROR in nHamiltonian...\n"; 
+        cout<<"The number of rows in the extracted "<<matrix_name<<"[0] object ("<<tmp[0].n_cols<<")"
+            <<" is not equal to the expected number of columns = "<<ncols<<"\nExiting...\n";
+        exit(0);
+      }
+    }
+
+
+}
 
 
 

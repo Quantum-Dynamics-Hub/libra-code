@@ -109,6 +109,8 @@ void export_base_matrix(){
       .def("Transpose", &base_matrix<T1>::Transpose )
       .def("swap_cols", &base_matrix<T1>::swap_cols )
       .def("swap_rows", &base_matrix<T1>::swap_rows )
+      .def("permute_cols", &base_matrix<T1>::permute_cols )
+      .def("permute_rows", &base_matrix<T1>::permute_rows )
       .def("RightRotation", &base_matrix<T1>::RightRotation )
       .def("LeftRotation", &base_matrix<T1>::LeftRotation )
 
@@ -380,6 +382,24 @@ void export_CMATRIX(){
   ;
 
 
+  vector<int> (*expt_get_reordering_v1)(CMATRIX& X) = &get_reordering;
+  def("get_reordering", expt_get_reordering_v1);
+
+
+  vector<int> (*expt_compute_signature_v1)(CMATRIX& Ref, CMATRIX& X) = &compute_signature;
+  vector<int> (*expt_compute_signature_v2)(CMATRIX& X) = &compute_signature;
+  def("compute_signature", expt_compute_signature_v1);
+  def("compute_signature", expt_compute_signature_v2);
+
+
+  void (*expt_correct_phase_v1)(CMATRIX& Ref, CMATRIX& X) = &correct_phase;
+  void (*expt_correct_phase_v2)(CMATRIX& X) = &correct_phase;
+  def("correct_phase", expt_correct_phase_v1);
+  def("correct_phase", expt_correct_phase_v2);
+
+
+
+
 
 }
 
@@ -563,6 +583,28 @@ void export_FT(){
 
 }
 
+void export_permutations(){
+
+
+  vector<int> (*expt_id_permutation_v1)(int sz) = &id_permutation;
+  def("id_permutation", expt_id_permutation_v1);
+
+  vector<int> (*expt_inverse_permutation_v1)(vector<int>& perm) = &inverse_permutation;
+  def("inverse_permutation", expt_inverse_permutation_v1);
+
+  vector<int> (*expt_composite_permutation_v1)(vector<int>& perm_t, vector<int>& perm_cum) = &composite_permutation;
+  def("composite_permutation", expt_composite_permutation_v1);
+
+
+  void (*expt_update_permutation_v1)(vector<int>& perm_t, vector<int>& perm_cum) = &update_permutation;
+  def("update_permutation", expt_update_permutation_v1);
+
+
+  void (*expt_check_permutation_v1)(vector<int>& perm, int n) = &check_permutation;
+  def("check_permutation", expt_check_permutation_v1);
+
+
+}
 
 void export_linalg_objects(){
 /** 
@@ -589,6 +631,27 @@ void export_linalg_objects(){
   ;
 
 
+
+
+  class_< intList2 >("intList2")
+      .def(vector_indexing_suite< intList2 >())
+  ;
+
+  class_< floatList2 >("floatList2")
+      .def(vector_indexing_suite< floatList2 >())
+  ;
+
+  class_< doubleList2 >("doubleList2")
+      .def(vector_indexing_suite< doubleList2 >())
+  ;
+
+  class_< complexList >("complexList2")
+      .def(vector_indexing_suite< complexList2 >())
+  ;
+
+
+
+
   class_< intMap >("intMap")
       .def(vector_indexing_suite< intMap >())
   ;
@@ -605,6 +668,8 @@ void export_linalg_objects(){
       .def(vector_indexing_suite< complexMap >())
   ;
 
+
+  export_permutations();
 
   export_VECTOR();
   export_QUATERNION();
@@ -624,6 +689,9 @@ void export_linalg_objects(){
   def("MATRIX_TO_QUATERNION", expt_MATRIX_TO_QUATERNION_v2);
   def("QUATERNION_TO_MATRIX", expt_QUATERNION_TO_MATRIX_v1);
   def("QUATERNION_TO_MATRIX", expt_QUATERNION_TO_MATRIX_v2);
+
+
+
 
 
 

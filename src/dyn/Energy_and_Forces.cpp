@@ -26,6 +26,39 @@ namespace liblibra{
 namespace libdyn{
 
 
+double compute_kinetic_energy(MATRIX& p, MATRIX& invM){
+/**
+  \brief Compute kinetic energy of nuclear DOFs
+  \param[in] p [ndof x ntraj] Momenta of ntraj replicas of the system with ndof 
+  nuclear DOFs
+  \param[in] invM [ndof x 1] Matrix of inverted masses of all DOFs
+
+  In the case of more than 1 trajectories supplied into this function, the 
+  total kinetic energy of all trajectories is returned.
+
+  This is the classical nuclear kinetic energy
+*/
+  int ndof = p.n_rows;
+  int ntraj = p.n_cols;
+
+  double Ekin = 0.0;
+  
+    
+  for(int dof=0; dof < ndof; dof++){ 
+
+    double sum = 0.0;
+    for(int traj=0; traj < ntraj; traj++){    
+      sum = p.get(dof, traj) * p.get(dof, traj);
+    }
+    Ekin += sum * invM.get(dof, 0);
+  }
+  Ekin *= 0.5;
+
+  return Ekin;
+
+}
+
+
 double compute_kinetic_energy(Nuclear* mol){
 /**
   \brief Compute kinetic energy of Nuclear object 

@@ -28,6 +28,7 @@
 
 
 #include "../io/libio.h"
+#include "permutations.h"
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -391,6 +392,31 @@ public:
       T1 tmp = M[I*n_cols+col];
       M[I*n_cols+col] = M[J*n_cols+col];
       M[J*n_cols+col] = tmp;
+    }
+  }
+
+  void permute_cols(vector<int>& perm){ ///< Permute columns according to the given permutation
+
+    int col;
+    check_permutation(perm, n_cols);
+
+    vector<T1> tmp(n_cols);
+    for(int row=0;row<n_rows;row++){ 
+      for(col=0; col<n_cols; col++){   tmp[col] = M[row*n_cols+perm[col]];   }
+      for(col=0; col<n_cols; col++){   M[row*n_cols+col] = tmp[col];   }
+    }
+  }
+
+  void permute_rows(vector<int>& perm){ ///< Permute rows according to the given permutation
+
+    int row;
+    check_permutation(perm, n_rows);
+
+    vector<T1> tmp(n_rows);
+    for(int col=0;col<n_cols;col++){ 
+      for(row=0; row<n_rows; row++){   tmp[row] = M[perm[row]*n_cols+col];   }
+      for(row=0; row<n_rows; row++){   M[row*n_cols+col] = tmp[row];   }
+
     }
   }
 

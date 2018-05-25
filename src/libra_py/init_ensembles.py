@@ -23,6 +23,9 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 import LoadMolecule
 import LoadPT
 
+
+
+
 def init_ext_hamiltonians(ntraj, nnucl, nel, verbose=0):
     ##
     # This function allocates memory for matrices (external objects). The function

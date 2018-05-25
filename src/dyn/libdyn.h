@@ -20,6 +20,7 @@
 
 // Dynamics classes
 #include "nuclear/libnuclear.h"
+#include "Dynamics.h"
 //#include "../dyn_rigidbody/librigidbody.h"
 #include "electronic/libelectronic.h"
 #include "thermostat/libthermostat.h"
@@ -29,10 +30,8 @@
 #include "gwp/libgwp.h"
 
 // General dynamics
-#include "Ehrenfest.h"
 #include "Energy_and_Forces.h"
 #include "Surface_Hopping.h"
-#include "Surface_Hopping_method1.h"
 #include "Dynamics_Nuclear.h"
 #include "Dynamics_Ensemble.h"
 
