@@ -543,10 +543,7 @@ def surface_hopping(mol, el, ham, rnd, params):
     print_prob = params["print_tsh_probabilities"]
     check_prob = params["check_tsh_probabilities"]
     use_boltz_factor = params["use_boltz_factor"]
-
-    nconfig = params["nconfig"]
-    nstates_init = len(params["excitations_init"])
-    num_SH_traj = params["num_SH_traj"]
+    
 
     # Parameters characterizing the system and the ensemble
     if len(el)!=len(mol):
@@ -560,51 +557,41 @@ def surface_hopping(mol, el, ham, rnd, params):
     nstates = el[0].nstates  # how many electronic DOF
 
 
-    g_ave = MATRIX(nstates,nstates)
+
 
     g = MATRIX(nstates,nstates) # initialize a matrix of hopping probability
 
-    #for i in xrange(ntraj):
-    for iconf in xrange(nconfig):     # all initial nuclear configurations
-        for i_ex in xrange(nstates_init):  # consider initial excitations to be on all the basis
-                                                   # states - this may be unnecessary for all cases, 
-                                                   # so we may want to make this part customizable
-            cnt = iconf*nstates_init + i_ex # cnt doesn't include the suffix of TSH trajectory
+    for i in xrange(ntraj):
 
-            for itraj in xrange(num_SH_traj): # all stochastic SH realizations
-                cnt_inc_el = iconf*nstates_init*num_SH_traj + i_ex*num_SH_traj + itraj
-                if params["do_rescaling"] == 1:
-                    cnt = cnt_inc_el
-                #Compute hopping probabilities
-                if tsh_method == 1: # FSSH
-                    compute_hopping_probabilities_fssh(mol[cnt], el[cnt_inc_el], ham[cnt], g, dt_nucl, use_boltz_factor, Temperature)
-                elif tsh_method == 2: # GFSH
-                    compute_hopping_probabilities_gfsh(mol[cnt], el[cnt_inc_el], ham[cnt], g, dt_nucl, use_boltz_factor, Temperature)
-                elif tsh_method == 3: # MSSH
-                    compute_hopping_probabilities_mssh(mol[cnt], el[cnt_inc_el], ham[cnt], g, dt_nucl, use_boltz_factor, Temperature)
-                else:
-                    print "Warning in surface_hopping: tsh_method can be 1, 2, or 3. Other values are not defined"
-                g_ave += g
+        #Compute hopping probabilities
+        if tsh_method == 1: # FSSH
+            compute_hopping_probabilities_fssh(mol[i], el[i], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
+        elif tsh_method == 2: # GFSH
+            compute_hopping_probabilities_gfsh(mol[i], el[i], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
+        elif tsh_method == 3: # MSSH
+            compute_hopping_probabilities_mssh(mol[i], el[i], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
+        else:
+            print "Warning in surface_hopping: tsh_method can be 1, 2, or 3. Other values are not defined"
 
-                # check elements of g matrix are less than 1 or not.
-                if check_prob == 1:
-                    for st in xrange(nstates):
-                        for st1 in xrange(nstates):
-                            if g.get(st,st1) > 1:
-                                print "g(%d,%d) is %f, larger than 1; better to decrease dt_nucl" %(st,st1,g.get(st,st1))
 
-                # Attempt to hop
-                ksi = rnd.uniform(0.0,1.0) # generate random number for every trajectory   
+        # output hopping probability
+        if print_prob == 1:
+            print "hopping probability matrix is:"
+            print g.show_matrix()
 
-                # Everything else - change of electronic state and velocities rescaling/reversal happens here     
-                el[cnt_inc_el].istate = hop(el[cnt_inc_el].istate, mol[cnt], ham[cnt], ksi, g, do_rescaling, rep, do_reverse)
+        # check elements of g matrix are less than 1 or not.
+        if check_prob == 1:
+            for st in xrange(nstates):
+                for st1 in xrange(nstates):
+                    if g.get(st,st1) > 1:
+                        print "g(%d,%d) is %f, larger than 1; better to decrease dt_nucl" %(st,st1,g.get(st,st1))
 
-            # output hopping probability
-            if print_prob == 1:
-                g_ave = g_ave / float(num_SH_traj)
-                #print "hopping probability matrix is:"
-                #print g.show_matrix()
-                g_ave.show_matrix(params["hop_probs"] + "g_" + str(params["time_step"]))
+        # Attempt to hop
+        ksi = rnd.uniform(0.0,1.0) # generate random number for every trajectory   
+
+        # Everything else - change of electronic state and velocities rescaling/reversal happens here     
+        el[i].istate = hop(el[i].istate, mol[i], ham[i], ksi, g, do_rescaling, rep, do_reverse)
+
 
     # Nothing to return - mol, ham, and el objects are modified accordingly
 
