@@ -31,6 +31,7 @@ __all__ = ["init_system",
            "namd",
            "models_Libra",
            "models_Tully",
-           "models_Martens"
+           "models_Martens",
+           "regexlib"
           ]
 

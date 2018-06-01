@@ -22,7 +22,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-
+from regexlib import *
 
 def Load_Molecule(univ,syst,mol_file,format):
 ## -------- Load molecular system -------------
@@ -39,27 +39,27 @@ def Load_Molecule(univ,syst,mol_file,format):
 
 
 #------- Here are some basic patterns -------------
-    INT    = '([1-9]([0-9]*))'
-    NINT   = '([0-9]+)'
-    SP     = '\s+'    
-    DOUBLE = '([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?)'
-    WORD   = '([a-zA-Z]+)'
-    ID     = '(([a-zA-Z]+)([a-zA-Z]+|\d+)*)'
-    PHRASE = '"((\w|\W)+)"'
-    compINT = re.compile(INT)
+#    INT    = '([1-9]([0-9]*))'
+#    NINT   = '([0-9]+)'
+#    SP     = '\s+'    
+#    DOUBLE = '([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?)'
+#    WORD   = '([a-zA-Z]+)'
+#    ID     = '(([a-zA-Z]+)([a-zA-Z]+|\d+)*)'
+#    PHRASE = '"((\w|\W)+)"'
+#    compINT = re.compile(INT)
 
 
 #------- Here we define a format of file ----------
 # p - means 'Pattern'
     pAtom_keyword = '(?P<Atom_keyword>'+'HETATM'+')'+SP
     pAtom_id      = '(?P<Atom_id>'+DOUBLE+')'+SP    
-    pAtom_element = '(?P<Atom_element>'+WORD+')'+SP
+#    pAtom_element = '(?P<Atom_element>'+WORD+')'+SP
     pAtom_mol     = '(?P<Atom_mol>'+WORD+')'+SP
     pAtom_chain   = '(?P<Atom_chain>'+WORD+')'+SP
     pAtom_id1     = '(?P<Atom_id1>'+DOUBLE+')'+SP
-    pAtom_x_coord = '(?P<Atom_x_coord>'+DOUBLE+')'+SP
-    pAtom_y_coord = '(?P<Atom_y_coord>'+DOUBLE+')'+SP
-    pAtom_z_coord = '(?P<Atom_z_coord>'+DOUBLE+')'+SP
+#    pAtom_x_coord = '(?P<Atom_x_coord>'+DOUBLE+')'+SP
+#    pAtom_y_coord = '(?P<Atom_y_coord>'+DOUBLE+')'+SP
+#    pAtom_z_coord = '(?P<Atom_z_coord>'+DOUBLE+')'+SP
     pAtom_type    = '(?P<Atom_type>'+INT+')'+SP
     pAtom_occ     = '(?P<Atom_occ>'+DOUBLE+')'+SP
     pAtom_charge  = '(?P<Atom_charge>'+DOUBLE+')'+SP
@@ -67,15 +67,15 @@ def Load_Molecule(univ,syst,mol_file,format):
     pAtom_name    = '(?P<Atom_name>'+WORD+')'+SP
 
     if format=="pdb":
-        Atom_Record = pAtom_keyword + pAtom_id + pAtom_element + pAtom_id1 + pAtom_x_coord + pAtom_y_coord + pAtom_z_coord + pAtom_charge 
+        Atom_Record = pAtom_keyword + pAtom_id + pElement_name + pAtom_id1 + pX_val + pY_val + pZ_val + pAtom_charge 
     elif format=="pdb_1":
-        Atom_Record = pAtom_keyword + pAtom_id + pAtom_element + pAtom_id1 + pAtom_x_coord + pAtom_y_coord + pAtom_z_coord + pAtom_chain
+        Atom_Record = pAtom_keyword + pAtom_id + pElement_name + pAtom_id1 + pX_val + pY_val + pZ_val + pAtom_chain
     elif format=="true_pdb":
-        Atom_Record = pAtom_keyword + pAtom_id + pAtom_element + pAtom_mol + pAtom_chain + pAtom_id1 + pAtom_x_coord + pAtom_y_coord + pAtom_z_coord + pAtom_occ + pAtom_charge 
+        Atom_Record = pAtom_keyword + pAtom_id + pElement_name + pAtom_mol + pAtom_chain + pAtom_id1 + pX_val + pY_val + pZ_val + pAtom_occ + pAtom_charge 
     elif format=="xyz":
-        Atom_Record = pAtom_element + pAtom_x_coord + pAtom_y_coord + pAtom_z_coord
+        Atom_Record = pElement_name + pX_val + pY_val + pZ_val
     elif format=="iqmol_pdb":
-        Atom_Record = pAtom_keyword + pAtom_id + pAtom_element + pAtom_chain + pAtom_id1 + pAtom_x_coord + pAtom_y_coord + pAtom_z_coord + pAtom_occ + pAtom_charge + pAtom_name 
+        Atom_Record = pAtom_keyword + pAtom_id + pElement_name + pAtom_chain + pAtom_id1 + pX_val + pY_val + pZ_val + pAtom_occ + pAtom_charge + pAtom_name 
 
 
 
@@ -110,10 +110,10 @@ def Load_Molecule(univ,syst,mol_file,format):
         if m1!=None:           
             atom_dict = {}
 
-            atom_dict["Atom_element"] = a[m1.start('Atom_element'):m1.end('Atom_element')]
-            atom_dict["Atom_cm_x"] = float(a[m1.start('Atom_x_coord'):m1.end('Atom_x_coord')]) * Angst_to_Bohr
-            atom_dict["Atom_cm_y"] = float(a[m1.start('Atom_y_coord'):m1.end('Atom_y_coord')]) * Angst_to_Bohr
-            atom_dict["Atom_cm_z"] = float(a[m1.start('Atom_z_coord'):m1.end('Atom_z_coord')]) * Angst_to_Bohr
+            atom_dict["Atom_element"] = a[m1.start('Element_name'):m1.end('Element_name')]
+            atom_dict["Atom_cm_x"] = float(a[m1.start('X_val'):m1.end('X_val')]) * Angst_to_Bohr
+            atom_dict["Atom_cm_y"] = float(a[m1.start('Y_val'):m1.end('Y_val')]) * Angst_to_Bohr
+            atom_dict["Atom_cm_z"] = float(a[m1.start('Z_val'):m1.end('Z_val')]) * Angst_to_Bohr
 
             if format=="pdb" or format=="true_pdb":
                 atom_dict["Atom_charge"] = float(a[m1.start('Atom_charge'):m1.end('Atom_charge')])
