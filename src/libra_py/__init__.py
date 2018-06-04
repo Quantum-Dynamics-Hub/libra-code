@@ -32,6 +32,7 @@ __all__ = ["init_system",
            "models_Libra",
            "models_Tully",
            "models_Martens",
-           "regexlib"
+           "regexlib",
+           "hpc_utils",
           ]
 
