@@ -143,11 +143,13 @@ void export_MSSH_hopping_probabilities_objects(){
   (Ensemble& ens, int i, MATRIX& g,
    double dt, int use_boltz_factor,double T) = &compute_hopping_probabilities_mssh;
 
+  MATRIX (*expt_compute_hopping_probabilities_mssh_v4)
+    (CMATRIX& Coeff, CMATRIX* Hvib, int use_boltz_factor,double T)  = &compute_hopping_probabilities_mssh;
 
   def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v1);
   def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v2);
   def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v3);
-
+  def("compute_hopping_probabilities_mssh",expt_compute_hopping_probabilities_mssh_v4);
 
 }
 
