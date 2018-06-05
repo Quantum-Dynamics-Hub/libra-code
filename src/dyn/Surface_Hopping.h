@@ -87,6 +87,7 @@ void compute_hopping_probabilities_gfsh(Ensemble& ens, int i, MATRIX& g, double 
 ///================  In tsh_prob_mssh.cpp  ===================================
 
 MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff);
+MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff, CMATRIX* Hvib, int use_boltz_factor, double T);
 
 /// Backward-compatibility
 void compute_hopping_probabilities_mssh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,

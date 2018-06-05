@@ -70,6 +70,47 @@ MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff){
 
 }
 
+  MATRIX compute_hopping_probabilities_mssh(CMATRIX& Coeff, CMATRIX* Hvib, int use_boltz_factor,double T){
+  /**
+     \brief Compute the MSSH surface hopping probabilities scaled by Boltzmann factor
+     This is the version taking the minimal amount of input information
+     \param[in] Coeff The amplitudes of different basis states in the coherent superposition. This matrix is assumed to be
+     a column-vector, so of the size N x 1, where N is the number of basis excited states
+     \param[in] Hvib - [ndia x ndia] or a [nadi x nadi] vibronic Hamiltonian matrix
+     \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
+     \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
+     The function returns the matrix g with hopping probabilities
+     Abbreviation: MSSH - Markov state surface hopping
+     References:
+     (1) Akimov, A. V.; Trivedi, D.; Wang, L.; Prezhdo, O. V. Analysis of the Trajectory Surface Hopping Method from the Markov State Model Perspective. J. Phys. Soc. Jpn. 2015, 84, 094002.
+  */
+
+  int nst = Coeff.n_rows;
+  MATRIX g(nst,nst);
+
+  const double kb = 3.166811429e-6; // Hartree/K
+  double argg;
+
+  double norm; norm = (Coeff.H() * Coeff).get(0,0).real();  // <- this is the norm <PSI|PSI>
+  // Calculate the hopping probabilities
+  for(int j=0;j<nst;j++){
+    double gjj = (std::conj(Coeff.get(j)) * Coeff.get(j)).real()/norm; // c_j^* * c_j
+    for(int i=0;i<nst;i++){ g.set(i,j,gjj);}
+  }
+  if(use_boltz_factor){
+    for(int j=0;j<nst;j++){
+      for(int i=0;i<nst;i++){
+	if(Hvib->get(j,j).real() > Hvib->get(i,i).real()){
+	  argg = -(Hvib->get(j,j).real() - Hvib->get(i,i).real())/(kb*T);        
+	  if(argg<500.0){ g.set(i,j, g.get(i,j) * std::exp(argg));}
+	}// Hvib->get
+      }// i
+    }// j 
+  }// use_boltz_factor
+
+  return g;
+
+}
 
 
 void compute_hopping_probabilities_mssh(Nuclear* mol, Electronic* el, Hamiltonian* ham, MATRIX* g,
@@ -109,10 +150,18 @@ void compute_hopping_probabilities_mssh(Nuclear* mol, Electronic* el, Hamiltonia
   for(j=0;j<el->nstates;j++){
     double gjj = (el->q[j]*el->q[j] + el->p[j]*el->p[j]); // c_j^* * c_j 
 
-    for(i=0;i<el->nstates;i++){   g->set(i,j,gjj);   }// for i
-
-  }// for j
-
+    for(i=0;i<el->nstates;i++){   g->set(i,j,gjj);}
+  }
+  if(use_boltz_factor){
+    for(j=0;j<el->nstates;j++){
+      for(i=0;i<el->nstates;i++){
+	if(ham->H(j,j).real()>ham->H(i,i).real()){
+	  argg = -(ham->H(j,j).real() - ham->H(i,i).real())/(kb*T);        
+	  if(argg<500.0){ g->set(i,j,g->get(i,j) * std::exp(argg)); }
+	} // ham->
+      }// for i 
+    }// for j
+  }// use_boltz_factor
 
 }// compute probabilities mssh
 
