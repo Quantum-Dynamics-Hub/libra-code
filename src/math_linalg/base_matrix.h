@@ -229,18 +229,50 @@ public:
 
   ///========= Operations =====================
   ///< Increment the "row", "col" matrix element by "x"
-  void add(int row,int col, T1 x){ M[row*n_cols + col] += (T1)x; }  
-//  void add(int row,int col, int x){ M[row*n_cols + col] += x; }  
+  void add(int row,int col, T1 x){ 
 
-  ///< Increment the "row", "col" matrix element by "x"
-//  void add(int row,int col, double x){ M[row*n_cols + col] += x; }  
+    if(row==-1 && col==-1){
+      for(int i=0;i<n_rows;i++){ 
+        for(int j=0;j<n_cols;j++){ M[i*n_cols + j] += (T1)x; }
+      }
+    }
+
+    if(row==-1 && col!=-1){
+      for(int i=0;i<n_rows;i++){ M[i*n_cols + col] += (T1)x; }
+    }
+
+    if(row!=-1 && col==-1){
+      for(int i=0;i<n_cols;i++){ M[row*n_cols + i] += (T1)x; }
+    }
+
+    if(row!=-1 && col!=-1){
+      M[row*n_cols + col] += (T1)x; 
+    }
+
+
+  }
 
   ///< Scale (multiply)  the "row", "col" matrix element by "x"
-  void scale(int row,int col, T1 x){ M[row*n_cols + col] *= (T1)x; }  
-//  void scale(int row,int col, int x){ M[row*n_cols + col] *= x; }  
+  void scale(int row,int col, T1 x){ 
 
-  ///< Scale (multiply) the "row", "col" matrix element by "x"
-//  void scale(int row,int col, double x){ M[row*n_cols + col] *= x; }  
+    if(row==-1 && col==-1){
+      for(int i=0;i<n_rows;i++){ 
+        for(int j=0;j<n_cols;j++){ M[i*n_cols + j] *= (T1)x; }
+      }
+    }
+
+    if(row==-1 && col!=-1){
+      for(int i=0;i<n_rows;i++){ M[i*n_cols + col] *= (T1)x; }
+    }
+
+    if(row!=-1 && col==-1){
+      for(int i=0;i<n_cols;i++){ M[row*n_cols + i] *= (T1)x; }
+    }
+
+    if(row!=-1 && col!=-1){
+      M[row*n_cols + col] *= (T1)x; 
+    }
+  }  
 
 
   void product(const base_matrix<T1>& B,const base_matrix<T1>& C){
