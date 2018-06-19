@@ -188,7 +188,7 @@ def run_test(model, rep, outname):
         out.close()
                                                                     
 
-model = 1
+model = 2
 
 run_test(model, 0, "_0_new.txt")
 run_test(model, 1, "_1_new.txt")

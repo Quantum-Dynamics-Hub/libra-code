@@ -199,7 +199,7 @@ def run_test(model, rep, outname):
                                                                     
 
 
-model = 1
+model = 4
 
 run_test(model, 0, "_0.txt")
 run_test(model, 1, "_1.txt")

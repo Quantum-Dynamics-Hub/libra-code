@@ -156,7 +156,7 @@ def run_Ehrenfest(ndia, nadi, nnucl, ntraj, _q, _p, _Cdia, _Cadi, _iM, model, re
 
 def run_test():                                                                    
 
-    model = 1
+    model = 4
     ndia, nadi, nnucl, ntraj = 2, 2, 1, 1
 
     rnd = Random()

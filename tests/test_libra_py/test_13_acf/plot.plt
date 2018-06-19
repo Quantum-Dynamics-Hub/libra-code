@@ -52,9 +52,9 @@ set xlabel "Frequency, cm^{-1}" offset 0, 0.5
 
 set xrange [0:2000]
 set xtics 250
-set yrange [-0.6:1.5]
+#set yrange [-0.6:1.5]
 #set ytics 0.4
 
 set output "spectrum_.png"
-plot "spectrum_.txt" using 1:2  w l  ls 11  lw 5  t "J(w)"
+plot "spectrum.txt" using 1:2  w l  ls 11  lw 5  t "J(w)"
 
