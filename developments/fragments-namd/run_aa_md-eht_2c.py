@@ -1343,10 +1343,11 @@ def main():
 
             g = None
             if sh_method==0:
-                g = compute_hopping_probabilities_mssh(Coeff[tr][prop_bastyp])
+                #g = compute_hopping_probabilities_mssh(Coeff[tr][prop_bastyp])
+                g = compute_hopping_probabilities_mssh(Coeff[tr][prop_bastyp],Hvib,1,therm.Temperature)
             elif sh_method==1:
-                g = compute_hopping_probabilities_fssh(Coeff[tr][prop_bastyp], Hvib, md.dt)
-
+                #g = compute_hopping_probabilities_fssh(Coeff[tr][prop_bastyp], Hvib, md.dt)
+                g = compute_hopping_probabilities_fssh(Coeff[tr][prop_bastyp], Hvib, md.dt,1,therm.Temperature)
             #if tr==0:
             #    print "Hopping matrix for the first trajectory is: "; g.show_matrix()
 
