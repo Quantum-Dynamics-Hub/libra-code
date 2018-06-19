@@ -36,6 +36,8 @@ using namespace libwfcgrid;
 using namespace libensemble;
 using namespace libgwp;
 
+using namespace libthermostat;
+
 
 void export_Verlet_objects(){
 
@@ -47,6 +49,28 @@ void export_Verlet_objects(){
   def("Verlet1", expt_Verlet1_v1);
   def("Verlet1", expt_Verlet1_v2);
 
+  void (*expt_Verlet0_nvt_v1)
+  (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, Thermostat& therm)
+   = &Verlet0_nvt;
+  void (*expt_Verlet1_nvt_v1)
+  (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, vector<Thermostat>& therm)
+  = &Verlet1_nvt;
+  void (*expt_Verlet1_nvt_v2)
+  (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, int ent_opt, vector<Thermostat>& therm)
+  = &Verlet1_nvt;
+  void (*expt_Verlet1_nvt_v3)
+  (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, Thermostat& therm)
+  = &Verlet1_nvt;
+  void (*expt_Verlet1_nvt_v4)
+  (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, int ent_opt, Thermostat& therm)
+  = &Verlet1_nvt;
+
+
+  def("Verlet0_nvt", expt_Verlet0_nvt_v1);
+  def("Verlet1_nvt", expt_Verlet1_nvt_v1);
+  def("Verlet1_nvt", expt_Verlet1_nvt_v2);
+  def("Verlet1_nvt", expt_Verlet1_nvt_v3);
+  def("Verlet1_nvt", expt_Verlet1_nvt_v4);
 
 }
 

@@ -52,6 +52,8 @@ class Thermostat{
   void extract_dictionary(boost::python::dict);
 
 
+public:  
+
   // Dynamic variables and internal parameters for Nose-Hoover chain thermostat
   vector<double> s_t;           int s_t_size;           ///< Nose-Hoover chain thermostat positions coupled to tr. deg. of freedom
   vector<double> s_r;           int s_r_size;           ///< Nose-Hoover chain thermostat positions coupled to rot. deg. of freedom
@@ -75,7 +77,7 @@ class Thermostat{
                                                         ///< = 1 for isotropic dilation, = 9 for flexible cell
 
 
-public:  
+
   // Dynamic variables and internal parameters for Nose-Poincare thermostat
   double s_var;                 int is_s_var;           ///< Thermostat variable
   double Ps;                    int is_Ps;              ///< Momentum conjugate to s_var
@@ -147,8 +149,19 @@ public:
   void propagate_nhc(double,double, double, double);
   void cool();
 
+  friend bool operator == (const Thermostat& t1, const Thermostat& t2){
+    return &t1 == &t2;
+  }
+  friend bool operator != (const Thermostat& t1, const Thermostat& t2){
+    return !(t1==t2);  // only compare addresses
+  }
+
+
 
 };
+
+typedef std::vector< Thermostat > ThermostatList; ///< Type containing the vector of Thermostat objects
+
 
 void save(boost::property_tree::ptree& pt,std::string path,vector<Thermostat>& vt);
 void load(boost::property_tree::ptree& pt,std::string path,vector<Thermostat>& vt,int& status);

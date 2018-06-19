@@ -65,6 +65,19 @@ void export_Thermostat_objects(){
       .def_readwrite("Temperature",&Thermostat::Temperature)
       .def_readwrite("thermostat_type",&Thermostat::thermostat_type)
 
+      .def_readwrite("s_t", &Thermostat::s_t)
+      .def_readwrite("s_r", &Thermostat::s_r)
+      .def_readwrite("s_b", &Thermostat::s_b)
+      .def_readwrite("ksi_t", &Thermostat::ksi_t)
+      .def_readwrite("ksi_r", &Thermostat::ksi_r)
+      .def_readwrite("ksi_b", &Thermostat::ksi_b)
+      .def_readwrite("G_t", &Thermostat::G_t)
+      .def_readwrite("G_r", &Thermostat::G_r)
+      .def_readwrite("G_b", &Thermostat::G_b)
+      .def_readwrite("Q_t", &Thermostat::Q_t)
+      .def_readwrite("Q_r", &Thermostat::Q_r)
+      .def_readwrite("Q_b", &Thermostat::Q_b)
+
       .def("show_info",&Thermostat::show_info)
 
       .def("energy", &Thermostat::energy)
@@ -97,7 +110,15 @@ void export_Thermostat_objects(){
 
   ;
 
+
+  class_< ThermostatList >("ThermostatList")
+      .def(vector_indexing_suite< ThermostatList >())
+  ;
+
+
 }// export_Thermostat_objects
+
+
 
 
 
