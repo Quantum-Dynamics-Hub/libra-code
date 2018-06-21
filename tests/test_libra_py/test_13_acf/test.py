@@ -30,6 +30,6 @@ def run_test():
         t = it * dt * fs2au
         data.append( VECTOR(math.sin(w1*t), math.cos(w2*t), math.sin(w3*t)) )
     
-    acf.recipe1(data, dt, wspan, dw)
+    acf_vector.recipe1(data, dt, wspan, dw)
 
 run_test()
