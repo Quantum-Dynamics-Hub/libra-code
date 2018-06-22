@@ -48,7 +48,7 @@ params["x0"], params["k"], params["D"], params["V"], params["omega"] = 1.0, 0.1,
 
 # Simulation and output parameters
 params["dt"] = 10.0
-params["nsteps"] = 25000
+params["nsteps"] = 2500
 params["out_energy"] = "_output.txt"
 params["out_phase_space"] = "_phase_space.txt"
 params["out_positions"] = "_pos_space.txt"

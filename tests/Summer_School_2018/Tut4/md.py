@@ -143,7 +143,7 @@ def run_nvt(_nnucl, _ntraj, _q, _p, iM, model, params):
     ham.compute_adiabatic(1, 1); 
 
     therms = Thermostat(params)
-    therms.set_Nf_t(nnucl)
+    therms.set_Nf_t(nnucl*ntraj)
     therms.set_Nf_r(0)
     therms.set_Nf_b(0)
     therms.init_nhc()

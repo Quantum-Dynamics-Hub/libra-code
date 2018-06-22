@@ -22,8 +22,10 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 from libra_py import *
 
-from common import compute_etot
+from common import compute_etot, print_xyz
 from Hamiltonian import compute_model
+
+kb = (1.9872065E-3 / 627.5094709)  # in Ha now
 
 
 def run_nve(_nnucl, _ntraj, _q, _p, iM, model, params):
@@ -48,8 +50,6 @@ def run_nve(_nnucl, _ntraj, _q, _p, iM, model, params):
 
 
     #  Set up the models and compute internal variables
-
-
     # Initial calculations
     ham.compute_diabatic(compute_model, q, params, 1)
     ham.compute_adiabatic(1, 1); 
@@ -66,10 +66,16 @@ def run_nve(_nnucl, _ntraj, _q, _p, iM, model, params):
     Q.append( MATRIX(q) )
     P.append( MATRIX(p) )
 
-    # Do the propagation
+
+    f = open(params["trajectory_filename"], "w")    
+    f.close()
+
+
     for i in xrange(params["nsteps"]):
 
+        print_xyz(params["label"], q, params["trajectory_index"], params["trajectory_filename"], i)
         Verlet1(dt, q, p, iM, ham, compute_model, params, 0)
+
 
         Q.append( MATRIX(q) )
         P.append( MATRIX(p) )
@@ -79,10 +85,12 @@ def run_nve(_nnucl, _ntraj, _q, _p, iM, model, params):
 
         Ekin, Epot, Etot = compute_etot(ham, p, iM)
 
+        Tcurr = 2.0 * Ekin / (nnucl * kb)
+
         # Print the ensemble average - kinetic, potential, and total energies
         # Print the tunneling information. Here, we count each trajectory across the barrier.
         out1 = open(params["out_energy"], "a")
-        out1.write( " %8.5f  %8.5f  %8.5f  %8.5f\n" % ( i*dt, Ekin, Epot, Etot ) )
+        out1.write( " %8.5f  %8.5f  %8.5f  %8.5f  %8.5f\n" % ( i*dt, Ekin, Epot, Etot, Tcurr ) )
         out1.close()
 
         # Print the phase space information
@@ -99,6 +107,7 @@ def run_nve(_nnucl, _ntraj, _q, _p, iM, model, params):
             out3.write( " %8.5f" % ( q.get(0,j) ) )
         out3.write( "\n" )
         out3.close()  
+
 
     return Q, P
 
@@ -129,22 +138,18 @@ def run_nvt(_nnucl, _ntraj, _q, _p, iM, model, params):
 
 
     #  Set up the models and compute internal variables
-
-
     # Initial calculations
     ham.compute_diabatic(compute_model, q, params, 1)
     ham.compute_adiabatic(1, 1); 
 
     therms = Thermostat(params)
-    therms.set_Nf_t(nnucl*ntraj)
+    therms.set_Nf_t(nnucl * ntraj)
     therms.set_Nf_r(0)
     therms.set_Nf_b(0)
     therms.init_nhc()
     Ebath = therms.energy()
 
     therms.show_info()
-
-#    sys.exit()
 
 
     Ekin, Epot, Etot = compute_etot(ham, p, iM)
@@ -159,10 +164,18 @@ def run_nvt(_nnucl, _ntraj, _q, _p, iM, model, params):
     Q.append( MATRIX(q) )
     P.append( MATRIX(p) )
 
+
+
+    f = open(params["trajectory_filename"], "w")    
+    f.close()
+
     # Do the propagation
     for i in xrange(params["nsteps"]):
-        
+
+        print_xyz(params["label"], q, params["trajectory_index"], params["trajectory_filename"], i)        
+
         Verlet1_nvt(dt, q, p, iM, ham, compute_model, params, 0, therms)
+
 
         Q.append( MATRIX(q) )
         P.append( MATRIX(p) )
@@ -172,11 +185,12 @@ def run_nvt(_nnucl, _ntraj, _q, _p, iM, model, params):
         Ekin, Epot, Etot = compute_etot(ham, p, iM)
         Ebath = therms.energy() / float(ntraj)
 
+        Tcurr = 2.0 * Ekin / (nnucl * kb)
 
         # Print the ensemble average - kinetic, potential, and total energies
         # Print the tunneling information. Here, we count each trajectory across the barrier.
         out1 = open(params["out_energy"], "a")
-        out1.write( " %8.5f  %8.5f  %8.5f  %8.5f   %8.5f  %8.5f\n" % ( i*dt, Ekin, Epot, Etot, Ebath, Etot+Ebath ) )
+        out1.write( " %8.5f  %8.5f  %8.5f  %8.5f   %8.5f  %8.5f  %8.5f\n" % ( i*dt, Ekin, Epot, Etot, Ebath, Etot+Ebath, Tcurr ) )
         out1.close()
 
         # Print the phase space information
