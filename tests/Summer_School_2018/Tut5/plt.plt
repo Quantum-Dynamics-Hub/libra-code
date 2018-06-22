@@ -69,6 +69,12 @@ plot  "_output.txt" u ($1):3 w l lt 7 lw 5 t "Potential",\
       "_output.txt" u ($1):4 w l lt 8 lw 5 t "Total",\
       "_output.txt" u ($1):6 w l lt 9 lw 5 t "Extended"
 
+set output "_1D_verlet_ens_T.png"
+set xlabel "Time (a.u)" offset 0.0, 0.5
+set ylabel "Temperature, K" offset 2.2, 0.0
+plot  "_output.txt" u ($1):5 w l lt 7 lw 5 notitle
+
+
 
 
 
@@ -125,8 +131,10 @@ plot fName u 3:4 w l lt 8 lw 1 t ""
 
 
 set xrange [100:5000]
-set yrange [0:8000000]
+#set yrange [0:8000000]
+set yrange [0:10000]
 set xtics 1000
+#set ytics 2000
 set xlabel "Frequency, cm^{-1}" offset 0.0, 0.5
 set ylabel "Intencity" offset 1.5, 0.0
 

@@ -48,7 +48,7 @@ for i in xrange(ndof):
 # ===== Define the simulation parameters ==========
 # Model parameters 
 params = {}
-params["x0"], params["k"], params["D"], params["V"], params["omega"] = 2.0, 0.1, -0.1, 0.05, 0.25
+params["x0"], params["k"], params["D"], params["V"], params["omega"] = 2.0, 0.05, -0.1, 0.05, 0.25
 
 # Simulation and output parameters
 params["dt"] = 10.0

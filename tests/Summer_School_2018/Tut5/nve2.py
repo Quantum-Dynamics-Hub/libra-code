@@ -21,25 +21,28 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from libra_py import *
 
-from common import sample, compute_statistics, compute_statistics2, chain_x, chain_px
+from common import sample, compute_statistics, compute_statistics2, chain_x, chain_px, lattice, lattice_p
 from Hamiltonian import compute_model
 from md import run_nve
 
 
 
 # ===== Define the system ==========
-nnucl = 5
-ndof, ntraj = 3*nnucl, 5
+Nx, Ny, Nz = 2, 2, 2
+nnucl = Nx * Ny * Nz
+ndof, ntraj = 3*nnucl, 1
 
 # Dynamical variables and system-specific properties
-dx = 2.1
-sigma_q = 0.01
-mean_p = 0.0
-sigma_px = 0.1
+dx, dy, dz = 2.0, 2.0, 2.0
+sx, sy, sz = 0.1, 0.1, 0.1
+px, py, pz = 0.0, 0.0, 0.0
+spx, spy, spz = 0.1, 0.1, 0.1
 
 rnd = Random()
-q = MATRIX(ndof,ntraj);  chain_x(q, dx, sigma_q, 0.0, 0.0, rnd)
-p = MATRIX(ndof,ntraj);  chain_px(p, mean_p, 0.0, 0.0, sigma_px, 0.0, 0.0,  rnd)
+q = MATRIX(ndof,ntraj);  lattice(q, Nx,Ny,Nz, dx, dy, dz, sx, sy, sz, rnd)
+p = MATRIX(ndof,ntraj);  lattice_p(p, Nx,Ny,Nz, px, py, pz, spx, spy, spz, rnd)
+
+                         
 iM = MATRIX(ndof,1);     
 for i in xrange(ndof):
     iM.set(i,0, 1.0/100.0)
@@ -52,7 +55,7 @@ params["x0"], params["k"], params["D"], params["V"], params["omega"] = 2.0, 0.05
 
 # Simulation and output parameters
 params["dt"] = 10.0
-params["nsteps"] = 2000
+params["nsteps"] = 1000
 params["out_energy"] = "_output.txt"
 params["out_phase_space"] = "_phase_space.txt"
 params["out_positions"] = "_pos_space.txt"
@@ -60,7 +63,21 @@ params["label"] = ["H"]*nnucl
 params["trajectory_index"] = 0
 params["trajectory_filename"] = "_traj.xyz"
 
+params["sigma"] = 2.0
+params["epsilon"] = 0.01
 
+# Annealing
+params["nsteps"] = 100
+for i in xrange(4):
+    Q, P = run_nve(ndof, ntraj, q, p, iM, compute_model, params)
+
+    # Reset velocities
+    q = MATRIX(Q[-1])    
+    lattice_p(p, Nx,Ny,Nz, px, py, pz, spx, spy, spz, rnd)
+
+
+# Production run
+params["nsteps"] = 1000
 Q, P = run_nve(ndof, ntraj, q, p, iM, compute_model, params)
 
 idof = 0

@@ -69,6 +69,12 @@ plot  "_output.txt" u ($1):3 w l lt 7 lw 5 t "Potential",\
       "_output.txt" u ($1):4 w l lt 8 lw 5 t "Total",\
       "_output.txt" u ($1):6 w l lt 9 lw 5 t "Extended"
 
+set output "_1D_verlet_ens_T.png"
+set xlabel "Time (a.u)" offset 0.0, 0.5
+set ylabel "Temperature, K" offset 2.2, 0.0
+plot  "_output.txt" u ($1):7 w l lt 7 lw 5 notitle
+
+
 
 
 
@@ -77,7 +83,7 @@ set lmargin at screen 0.17
 set output "_1D_verlet_ens_t-q.png"
 set xlabel "Time (a.u)" offset 0.0, 0.5
 set ylabel "Position (a.u)" offset 1.3, 0.0
-set yrange[-0.75:0.75]
+#set yrange[-0.75:0.75]
 set ytics 0.5
 fName = '_pos_space.txt'
 stat fName nooutput
@@ -88,7 +94,7 @@ plot for [i=2:N] fName u ($1):i w l lt 8 lw 1 t "",\
 set output "_1D_verlet_ens_t-q-first.png"
 set xlabel "Time (a.u)" offset 0.0, 0.5
 set ylabel "Position (a.u)" offset 1.3, 0.0
-set yrange[-0.75:0.75]
+#set yrange[-0.75:0.75]
 set ytics 0.5
 fName = '_pos_space.txt'
 plot fName u ($1):2 w l lt 8 lw 1 t ""
@@ -101,32 +107,34 @@ set output "_1D_verlet_ens_q-p.png"
 set xlabel "Position (a.u)" offset 0.0, 0.5
 set ylabel "Momentum (a.u)" offset 1.3, 0.0
 set xtics 0.1
-set xrange[-0.5:0.5]
-set yrange[-1.5:1.5]
-set ytics 1.0
-fName = '_phase_space.txt'
-stat fName nooutput
-N = STATS_columns #number of columns found in file
-plot for [i=2:N/2] fName u 2*i-1:2*i w l lt 8 lw 1 t "",\
+#set xrange[-0.5:0.5]
+#set yrange[-1.5:1.5]
+#set ytics 1.0
+#fName = '_phase_space.txt'
+#stat fName nooutput
+#N = STATS_columns #number of columns found in file
+#plot for [i=2:N/2] fName u 2*i-1:2*i w l lt 8 lw 1 t "",\
 
 
 set output "_1D_verlet_ens_q-p-first.png"
 set xlabel "Position (a.u)" offset 0.0, 0.5
 set ylabel "Momentum (a.u)" offset 1.3, 0.0
 set xtics 0.1
-set xrange[-0.5:0.5]
-set yrange[-1.5:1.5]
+#set xrange[-0.5:0.5]
+#set yrange[-1.5:1.5]
 set ytics 1.0
 fName = '_phase_space.txt'
-plot fName u 3:4 w l lt 8 lw 1 t ""
+#plot fName u 3:4 w l lt 8 lw 1 t ""
 
 
 
 
 
 set xrange [100:5000]
-set yrange [0:8000000]
+set yrange [0:500000]
+#set yrange [0:10000]
 set xtics 1000
+#set ytics 2000
 set xlabel "Frequency, cm^{-1}" offset 0.0, 0.5
 set ylabel "Intencity" offset 1.5, 0.0
 
