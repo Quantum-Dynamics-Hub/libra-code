@@ -35,7 +35,7 @@ plot "_acf_vel.txt" using 1:2 w l ls 11 lw 5 t "velocity ACF"
 
 
 set output "_cv.png"
-plot "_cv.txt" using 1:2 w l ls 11 lw 5 t "C_v"
+plot "_cv.txt" using 1:3 w l ls 11 lw 5 t "C_v"
 
 
 set output "_rmsd.png"
