@@ -124,6 +124,7 @@ void Hamiltonian_Atomistic::set_Hamiltonian_type(std::string ham_type){ // libch
 
 }
 
+
 void Hamiltonian_Atomistic::show_interactions_statistics(){
   mm_ham->show_interactions_statistics();
 }
@@ -1016,6 +1017,42 @@ void Hamiltonian_Atomistic::excite_bet(int I, int J){
 
 }
 
+MATRIX3x3 Hamiltonian_Atomistic::get_stress(std::string opt){
+
+  MATRIX3x3 res; res = 0.0;
+  
+  if(ham_types[0]==1){
+    int nint = mm_ham->active_interactions.size();
+
+    if(opt=="at"){
+      for(int i=0;i<nint;i++){
+        if(mm_ham->interactions[mm_ham->active_interactions[i]].get_status()){
+          res += mm_ham->interactions[mm_ham->active_interactions[i]].stress_at; 
+        }
+      }
+    }// at
+
+    else if(opt=="fr"){
+      for(int i=0;i<nint;i++){
+        if(mm_ham->interactions[mm_ham->active_interactions[i]].get_status()){
+          res += mm_ham->interactions[mm_ham->active_interactions[i]].stress_fr; 
+        }
+      }
+    }// fr
+
+    else if(opt=="ml"){
+      for(int i=0;i<nint;i++){
+        if(mm_ham->interactions[mm_ham->active_interactions[i]].get_status()){
+          res += mm_ham->interactions[mm_ham->active_interactions[i]].stress_ml; 
+        }
+      }
+    }// ml
+
+  }// MM Hamiltonians
+
+
+  return res;
+}
 
 
 

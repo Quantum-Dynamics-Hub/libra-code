@@ -457,6 +457,11 @@ void export_VECTOR(){
 
 void export_MATRIX3x3(){
 
+  void (MATRIX3x3::*expt_eigen_v1)(MATRIX3x3&, MATRIX3x3&) = &MATRIX3x3::eigen;  
+  void (MATRIX3x3::*expt_eigen_v2)(MATRIX3x3&, MATRIX3x3&, double) = &MATRIX3x3::eigen;  
+
+  void (MATRIX3x3::*expt_diag_v1)(double x) = &MATRIX3x3::diag;  
+  void (MATRIX3x3::*expt_diag_v2)(double x, double y, double z) = &MATRIX3x3::diag;  
 
   class_<MATRIX3x3>("MATRIX3x3",init<>())      
       .def(init<const VECTOR&, const VECTOR&, const VECTOR&>())
@@ -476,10 +481,33 @@ void export_MATRIX3x3(){
 
       .def(self+self)
       .def(self-self)
+      .def(self+=self)
+      .def(self-=self)
       .def(self*self)
       .def(self/double())
       .def(self*double())
+      .def(self/=double())
+      .def(self*=double())
       .def(double()*self)
+      .def(self*VECTOR())
+
+      .def("tensor_product",&MATRIX3x3::tensor_product)
+      .def("Determinant",&MATRIX3x3::Determinant)
+      .def("tr",&MATRIX3x3::tr)
+      .def("get_vectors",&MATRIX3x3::get_vectors)
+      .def("inverse",&MATRIX3x3::inverse)
+      .def("transpose",&MATRIX3x3::transpose)
+      .def("T",&MATRIX3x3::T)
+      .def("eigen",expt_eigen_v1)
+      .def("eigen",expt_eigen_v2)
+      .def("identity",&MATRIX3x3::identity)
+      .def("diag",expt_diag_v1)
+      .def("diag",expt_diag_v2)
+      .def("skew",&MATRIX3x3::skew)
+      .def("Rx",&MATRIX3x3::Rx)
+      .def("Ry",&MATRIX3x3::Ry)
+      .def("Rz",&MATRIX3x3::Rz)
+      .def("Rotation",&MATRIX3x3::Rotation)
 
   ;
 
@@ -512,6 +540,17 @@ void export_QUATERNION(){
       .def(double()*self)
       .def(self+=self)
       .def(self-=self)
+      .def(self*VECTOR())
+      .def(VECTOR()*self)
+      .def(MATRIX()*self)
+
+      .def("inverse", &QUATERNION::inverse)
+      .def("conj", &QUATERNION::conj)
+      .def("sqal", &QUATERNION::sqal)
+      .def("vect", &QUATERNION::vect)
+      .def("norm", &QUATERNION::norm)
+      .def("mod", &QUATERNION::mod)
+      .def("normalize", &QUATERNION::normalize)
 
   ;
 

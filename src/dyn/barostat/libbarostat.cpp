@@ -48,6 +48,13 @@ void export_Barostat_objects(){
   void (Barostat::*expt_set_Nf_b_v2)(double nf_t) = &Barostat::set_Nf_b;
 
 
+  void (Barostat::*expt_update_barostat_forces_v1)
+  (double ekin_tr,double ekin_rot,double curr_volume, double curr_pressure) = &Barostat::update_barostat_forces;
+  void (Barostat::*expt_update_barostat_forces_v2)
+  (double ekin_tr,double ekin_rot,double curr_volume, MATRIX3x3& curr_pressure_tensor) = &Barostat::update_barostat_forces;
+
+
+
   class_<Barostat>("Barostat",init<>())
       .def(init<boost::python::dict>())
       .def(init<const Barostat&>())
@@ -76,9 +83,15 @@ void export_Barostat_objects(){
       .def("get_Nf_b", &Barostat::get_Nf_b)
 
       .def("ekin_baro", &Barostat::ekin_baro)
+      .def("update_barostat_forces", expt_update_barostat_forces_v1)
+      .def("update_barostat_forces", expt_update_barostat_forces_v2)
       .def("apply_barostat_force", &Barostat::apply_barostat_force)
       .def("scale_velocity", &Barostat::scale_velocity)
       .def("propagate_velocity", &Barostat::propagate_velocity)      
+      .def("pos_scale", &Barostat::pos_scale)
+      .def("vpos_scale", &Barostat::vpos_scale)
+      .def("vel_scale", &Barostat::vel_scale)
+      .def("ang_vel_scale", &Barostat::ang_vel_scale)
       .def("cool", &Barostat::cool)
 
   ;

@@ -107,6 +107,8 @@ void export_hamiltonian_atomistic_objects(){
       .def("compute_diabatic", &Hamiltonian_Atomistic::compute_diabatic)
       .def("compute_adiabatic",&Hamiltonian_Atomistic::compute_adiabatic)
 
+      .def("get_stress", &Hamiltonian_Atomistic::get_stress)
+
 /*
       .def("H", &Hamiltonian_Atomistic::H)
       .def("dHdq", &Hamiltonian_Atomistic::dHdq)
