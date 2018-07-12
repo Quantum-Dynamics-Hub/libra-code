@@ -56,7 +56,7 @@ void Barostat::show_info() const {
   if(is_Nf_r) {std::cout<<"Nf_r = "<<Nf_r<<std::endl; }
   if(is_Nf_b) {std::cout<<"Nf_b = "<<Nf_b<<std::endl; }
   if(is_nu_baro)  {std::cout<<"nu_baro = "<<nu_baro<<" tau"<<std::endl; }
-  if(is_Pressure) {std::cout<<"Pressure = "<<(Pressure/atm_to_int)<<" atmospheres "<<Pressure<<" internal units"<<std::endl;   }
+  if(is_Pressure) {std::cout<<"Pressure = "<<(Pressure*(hartree * Angst*Angst*Angst)/atm_to_int)<<" atmospheres "<<Pressure<<" [Ha/Bohr^3]"<<std::endl;   }
   if(is_barostat_type){ std::cout<<"barostat_type = "<<barostat_type<<std::endl; }
   std::cout<<std::endl;
 }
@@ -119,7 +119,8 @@ void Barostat::extract_dictionary(boost::python::dict d){
     if(key=="Wg") { Wg = extract<double>(d.values()[i]);  is_Wg = 1; }
     else if(key=="nu_baro") { nu_baro = extract<double>(d.values()[i]);  is_nu_baro = 1; }
     else if(key=="Pressure") { Pressure = extract<double>(d.values()[i]); 
-                               Pressure *= atm_to_int;  // Convert atmospheres to internal units
+                               Pressure *= atm_to_int;  // Convert atmospheres to internal units  (kcal/mol*Angst^3)
+                               Pressure /= (hartree * Angst*Angst*Angst); // But really we work in atomic units!
                                is_Pressure = 1; }
     else if(key=="barostat_type") { barostat_type = extract<double>(d.values()[i]);  is_barostat_type = 1; }
   }
