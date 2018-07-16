@@ -36,8 +36,15 @@ def compute_hprime(es_curr, info, filename):
     scl1 = (1.0+0.0j)
     scl2 = (0.0+1.0j)
 
+    # figure out if we are using a completed wavefunction or not
+    if g_sz == npw:
+        g_sz = min(g_sz,npw)
+        is_compl = 0
+    else:
+        is_compl = 1
 
-    N = coeff.num_of_cols
+
+    N = g_sz 
     Hx = CMATRIX(N,N); Hy = CMATRIX(N,N); Hz = CMATRIX(N,N);
     for i in xrange(N):  
         for j in xrange(N):
@@ -51,14 +58,17 @@ def compute_hprime(es_curr, info, filename):
                 gy = scl1*(grid[g].x*b1.y + grid[g].y*b2.y + grid[g].z*b3.y)
                 gz = scl1*(grid[g].x*b1.z + grid[g].y*b2.z + grid[g].z*b3.z)
 
-                if(g==0):
-                    hx += tmp.get(0)*gx; hy += tmp.get(0)*gy; hz += tmp.get(0)*gz;  # This should give zero!
-                   
-                #Now the Hprime_ matrices are purely imaginary, for the case of gamma-symmetry.
-                else:
-                    hx +=  2.0*scl2*tmp.get(0).real*gx   
-                    hy +=  2.0*scl2*tmp.get(0).real*gy             
-                    hz +=  2.0*scl2*tmp.get(0).real*gz
+                if(is_compl==0):
+                    hx += tmp.get(0)*gx; hy += tmp.get(0)*gy; hz += tmp.get(0)*gz;
+                
+                if(is_compl==1): 
+                    if(g==0):
+                        hx += tmp.get(0)*gx; hy += tmp.get(0)*gy; hz += tmp.get(0)*gz;  # This should give zero!  
+                    #Now the Hprime_ matrices are purely imaginary, for the case of gamma-symmetry.
+                    else:
+                        hx +=  2.0*scl2*tmp.get(0).real*gx   
+                        hy +=  2.0*scl2*tmp.get(0).real*gy             
+                        hz +=  2.0*scl2*tmp.get(0).real*gz
 
             Hx.set(i,j,hx)
             Hy.set(i,j,hy)
