@@ -9,5 +9,8 @@
 
 __all__ = ["utils",
            "compute_nosoc",
+           "compute_hprime"
+           "compute_soc",
+           "excitation_spectrum",
            "trajectory",
           ]

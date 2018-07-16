@@ -1,5 +1,5 @@
 #***********************************************************
-# * Copyright (C) 2017-2018 Wei Li and Alexey V. Akimov
+# * Copyright (C) 2017-2018 Brendan A. Smith, Wei Li, and Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
@@ -17,65 +17,70 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from libra_py import *
 
-import utils 
+from utils import *
+from trajectory import *
 
 
 def compute_properties_gamma(params, es_curr, es_next, curr_index):
 
     Ca_curr = es_curr["Coeff_dia"][0]
     Ca_next = es_next["Coeff_dia"][0]
-    Ea_curr = es_curr["E_dia"][0]
-    Ea_next = es_next["E_dia"][0]
+    Ea_curr = es_curr["E_dia"]
+    Ea_next = es_next["E_dia"]
 
-    orthogonalize = get_value(params,"orthogonalize","0","i")
-    rd = get_value(params,"root_directory",os.getcwd()+"/tmp","s")   # of where the files will be printed out
+    rd = get_value(params,"rd",os.getcwd()+"../../res","s")   # of where the files will be printed out
     dt = get_value(params,"dt","1.0","f") # time step in fs - rescale NAC if actual dt is different
     dt = 41.34145 * dt  # convert to a.u., so the NACs are in a.u.
 
+    is_st   = get_value(params,"compute_st",  "1","i")  # <current|next>
+    is_nac  = get_value(params,"compute_nac", "1","i")  
+    is_edia = get_value(params,"compute_edia","1","i")  
+    is_hvib = get_value(params,"compute_hvib","1","i")  
 
-    if orthogonalize==1:
-        print "Do internal orbital orthogonalization"
-        Ca_curr = utils.orthogonalize_orbitals(es_curr["Coeff_dia"][0])
-        Ca_next = utils.orthogonalize_orbitals(es_next["Coeff_dia"][0])
-
-
-    is_st = get_value(params,"compute_st","0","i")  # <current|next>
-    is_nac = get_value(params,"compute_nac","0","i")  
-    is_hadi = get_value(params,"compute_hadi","0","i")  
-    is_hvib = get_value(params,"compute_hvib","0","i")  
-
-    ovlp_cn, nac, eadi, hvib = None, None, None
+    St, nac, edia, hvib = None, None, None, None
 
     #========== Computations ================
     if is_st==1 or is_nac==1 or is_hvib:    
-        ovlp_cn  = coeff_curr0[0].H() * coeff_next0[0]
+        St = Ca_curr.H() * Ca_next
 
-    if is_nac==1 or is_hvib==1:
-        nac = (0.5/dt)*(ovlp_cn - ovlp_cn.H())
+    if is_nac==1 or is_hvib==1:                                   
+        nac = (0.5/dt)*(St - St.H())
 
-    if is_eadi==1 or is_hvib==1:
-        eadi = 0.5*(Ea_curr + Ea_next)
+    if is_edia==1 or is_hvib==1:
+        edia = 0.5*(Ea_curr + Ea_next)
 
     if is_hvib==1:
-        hvib = eadi - 1.0j * nac
+        hvib = edia - 1.0j * nac
 
 
+    S = Ca_curr.H() * Ca_curr
+    S_dia_pw = Ca_curr
+  
+    os.system("mkdir %s" % rd)
     #========== Print out ================
     if is_st==1:    
-        ovlp_cn.real().show_matrix("%s/st_dia_%d_re" % (rd, curr_index))
-        ovlp_cn.imag().show_matrix("%s/st_dia_%d_im" % (rd, curr_index))
+        St.real().show_matrix("%s/St_dia_ks_%d_re" % (rd, curr_index))
+        St.imag().show_matrix("%s/St_dia_ks_%d_im" % (rd, curr_index))
 
     if is_nac==1:
-        nac.real().show_matrix("%s/nac_dia_%d_re" % (rd, curr_index))
-        nac.imag().show_matrix("%s/nac_dia_%d_im" % (rd, curr_index))
+        nac.real().show_matrix("%s/nac_dia_ks_%d_re" % (rd, curr_index))
+        nac.imag().show_matrix("%s/nac_dia_ks_%d_im" % (rd, curr_index))
 
-    if is_eadi==1:
-        eadi.real().show_matrix("%s/eadi_dia_%d_re" % (rd, curr_index))
-        eadi.imag().show_matrix("%s/eadi_dia_%d_im" % (rd, curr_index))
+    if is_edia==1:
+        edia.real().show_matrix("%s/E_dia_ks_%d_re" % (rd, curr_index))
+        edia.imag().show_matrix("%s/E_dia_ks_%d_im" % (rd, curr_index))
 
     if is_hvib==1:
         hvib.real().show_matrix("%s/hvib_dia_%d_re" % (rd, curr_index))
         hvib.imag().show_matrix("%s/hvib_dia_%d_im" % (rd, curr_index))
+
+
+    S.real().show_matrix("%s/S_dia_ks_%d_re" % (rd, curr_index) )
+    S.imag().show_matrix("%s/S_dia_ks_%d_im" % (rd, curr_index) )
+    S_dia_pw.real().show_matrix("%s/S_dia_pw_%d_re" % (rd, curr_index) )
+    S_dia_pw.imag().show_matrix("%s/S_dia_pw_%d_im" % (rd, curr_index) )
+
+    return hvib
 
 
 
