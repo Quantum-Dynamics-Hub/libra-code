@@ -201,11 +201,11 @@ def read_all(params):
             coeff.append( QE_methods.read_qe_wfc(file2, act_space, verb1))   # CMATRIX(npw x len(act_space))
 
             ## Extract binary wfc file(s) ##
-            rd_wfc = rd + "/wf_storage_"+str(params["curr_index"])
-            pref1  = prefix[0:5]
-            pref2  = prefix[6:8]
-            os.system( "mkdir %s" % (rd_wfc) )
-            os.system( "cp %s/%s/%s.wfc* %s/" % (wd, pref1, pref2, rd_wfc) )
+            #rd_wfc = rd + "/wf_storage_"+str(params["curr_index"])
+            #pref1  = prefix[0:5]
+            #pref2  = prefix[6:8]
+            #os.system( "mkdir %s" % (rd_wfc) )
+            #os.system( "cp %s/%s/%s.wfc* %s/" % (wd, pref1, pref2, rd_wfc) )
 
         if is_grd==1:
             file3 = "%s/%s/grid.%i" % (wd, prefix, ik+1)
@@ -277,6 +277,11 @@ def read_wfc_grid(params, info0, info1):
         #====== Current electron electructure =======
         params["prefix"] = "curr1/x1.export"
         info_curr, e_curr, coeff_curr, grid_curr = read_all(params)
+
+        if orthogonalize==1:
+            print "Do internal orbital orthogonalization"
+            coeff_curr[0] = orthogonalize_orbitals(coeff_curr[0])
+
         C_adi_curr, E_adi_curr = post_process(coeff_curr, e_curr, 1)
         res_curr["Coeff_adi"] = C_adi_curr
         res_curr["E_adi"] = E_adi_curr
@@ -286,6 +291,11 @@ def read_wfc_grid(params, info0, info1):
         #====== Next electronic structure ===========
         params["prefix"] = "next1/x1.export"
         info_next, e_next, coeff_next, grid_next = read_all(params)
+
+        if orthogonalize==1:
+            print "Do internal orbital orthogonalization"
+            coeff_next[0] = orthogonalize_orbitals(coeff_next[0])
+
         C_adi_next, E_adi_next = post_process(coeff_next, e_next, 1)
         res_next["Coeff_adi"] = C_adi_next
         res_next["E_adi"] = E_adi_next

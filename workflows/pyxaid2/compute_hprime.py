@@ -37,20 +37,20 @@ def compute_hprime(es_curr, info, filename):
     scl2 = (0.0+1.0j)
 
     # figure out if we are using a completed wavefunction or not
-    if g_sz == npw:
+    if g_sz != npw:
         g_sz = min(g_sz,npw)
-        is_compl = 0
-    else:
         is_compl = 1
+    else:
+        is_compl = 0
 
 
-    N = g_sz 
+    N = coeff.num_of_cols 
     Hx = CMATRIX(N,N); Hy = CMATRIX(N,N); Hz = CMATRIX(N,N);
     for i in xrange(N):  
         for j in xrange(N):
 
             hx, hy, hz = 0.0, 0.0, 0.0
-            for g in xrange(10):
+            for g in xrange(g_sz):
 
                 tmp  = coeff.H().row(i).col(g) * coeff.col(j).row(g)
 
