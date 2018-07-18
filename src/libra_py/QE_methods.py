@@ -302,9 +302,14 @@ def read_qe_wfc(filename, orb_list, verbose=0):
             coeff.set(i, mo_indx, float(c[2*i]), float(c[2*i+1]))
 
 
-
     #======== Normalize or restore (gamma-point trick) wavefunction ===============
     coeff2 = coeff #CMATRIX(ngw,norbs)
+
+    #print "\nNOT IN RETORE"
+    #print "\n Printing coeff2.get(1,0)"
+    #print coeff2.get(1,0)
+    #print "\n Printing coeff2.get(1+ngw-1,0)"
+    #print coeff2.get(1+ngw-1,0)
 
     if wfc_preprocess=="restore":
 
@@ -316,8 +321,13 @@ def read_qe_wfc(filename, orb_list, verbose=0):
                 coeff2.set(i, o, coeff.get(i, o))
                 coeff2.set(i+ngw-1, o, coeff.get(i, o).conjugate() )
 
-        ngw = 2*ngw - 1
+        #print "\nIN RETORE"
+        #print "\n Printing coeff2.get(1,0)"
+        #print coeff2.get(1,0)
+        #print "\n Printing coeff2.get(1+ngw-1,0)"
+        #print coeff2.get(1+ngw-1,0)
 
+        ngw = 2*ngw - 1
 
     if wfc_preprocess=="normalize" or wfc_preprocess=="restore":
 

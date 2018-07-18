@@ -9,6 +9,7 @@
 
 import os
 import sys
+import math
 
 # Fisrt, we add the location of the library to test to the PYTHON path
 if sys.platform=="cygwin":
@@ -31,14 +32,13 @@ def compute_properties_gamma(params, es_curr, es_next, curr_index):
     rd = get_value(params,"rd",os.getcwd()+"../../res","s")   # of where the files will be printed out
     dt = get_value(params,"dt","1.0","f") # time step in fs - rescale NAC if actual dt is different
     dt = 41.34145 * dt  # convert to a.u., so the NACs are in a.u.
-
+    hbar = 1.0 #0.658218 # units eV * fs
     is_st   = get_value(params,"compute_st",  "1","i")  # <current|next>
     is_nac  = get_value(params,"compute_nac", "1","i")  
     is_edia = get_value(params,"compute_edia","1","i")  
     is_hvib = get_value(params,"compute_hvib","1","i")  
 
     St, nac, edia, hvib = None, None, None, None
-
     #========== Computations ================
     if is_st==1 or is_nac==1 or is_hvib:    
         St = Ca_curr.H() * Ca_next
@@ -50,11 +50,10 @@ def compute_properties_gamma(params, es_curr, es_next, curr_index):
         edia = 0.5*(Ea_curr + Ea_next)
 
     if is_hvib==1:
-        hvib = edia - 1.0j * nac
+        hvib = edia - 1.0j * hbar * nac
 
 
     S = Ca_curr.H() * Ca_curr
-    S_dia_pw = Ca_curr
   
     os.system("mkdir %s" % rd)
     #========== Print out ================
@@ -74,11 +73,6 @@ def compute_properties_gamma(params, es_curr, es_next, curr_index):
         hvib.real().show_matrix("%s/hvib_dia_%d_re" % (rd, curr_index))
         hvib.imag().show_matrix("%s/hvib_dia_%d_im" % (rd, curr_index))
 
-
-    S.real().show_matrix("%s/S_dia_ks_%d_re" % (rd, curr_index) )
-    S.imag().show_matrix("%s/S_dia_ks_%d_im" % (rd, curr_index) )
-    S_dia_pw.real().show_matrix("%s/S_dia_pw_%d_re" % (rd, curr_index) )
-    S_dia_pw.imag().show_matrix("%s/S_dia_pw_%d_im" % (rd, curr_index) )
 
     return hvib
 
