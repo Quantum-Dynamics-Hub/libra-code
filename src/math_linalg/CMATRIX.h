@@ -135,6 +135,11 @@ public:
 
   using base_matrix<complex<double> >::tr;
   using base_matrix<complex<double> >::sum;
+  using base_matrix<complex<double> >::sum_col;
+  using base_matrix<complex<double> >::sum_row;
+  using base_matrix<complex<double> >::prod_col;
+  using base_matrix<complex<double> >::prod_row;
+
 
 
   double NonOrtogonality_Measure();

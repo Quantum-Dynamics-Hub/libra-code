@@ -118,6 +118,10 @@ class MATRIX : public base_matrix<double>{
 
   using base_matrix<double >::tr;
   using base_matrix<double >::sum;
+  using base_matrix<double >::sum_col;
+  using base_matrix<double >::sum_row;
+  using base_matrix<double >::prod_col;
+  using base_matrix<double >::prod_row;
 
 
   double NonOrtogonality_Measure();

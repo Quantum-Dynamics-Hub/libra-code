@@ -51,6 +51,17 @@ void export_base_matrix(){
 //  void (base_matrix<T1>::*expt_scale_v1)(int row,int col, int x) = &base_matrix<T1>::scale;
 //  void (base_matrix<T1>::*expt_scale_v2)(int row,int col, double x) = &base_matrix<T1>::scale;
 
+
+  T1 (base_matrix<T1>::*expt_sum_col_v1)(int icol) = &base_matrix<T1>::sum_col;
+  T1 (base_matrix<T1>::*expt_sum_col_v2)(int icol, int power) = &base_matrix<T1>::sum_col;
+  T1 (base_matrix<T1>::*expt_sum_row_v1)(int irow) = &base_matrix<T1>::sum_row;
+  T1 (base_matrix<T1>::*expt_sum_row_v2)(int irow, int power) = &base_matrix<T1>::sum_row;
+
+  T1 (base_matrix<T1>::*expt_prod_col_v1)(int icol) = &base_matrix<T1>::prod_col;
+  T1 (base_matrix<T1>::*expt_prod_row_v1)(int irow) = &base_matrix<T1>::prod_row;
+
+
+
   void (base_matrix<T1>::*expt_show_matrix_v1)() = &base_matrix<T1>::show_matrix;
   void (base_matrix<T1>::*expt_show_matrix_v2)(char * Output_File) = &base_matrix<T1>::show_matrix;
 
@@ -117,6 +128,14 @@ void export_base_matrix(){
       /// Generic properties
       .def("tr", &base_matrix<T1>::tr )
       .def("sum", &base_matrix<T1>::sum )
+
+      .def("sum_col", expt_sum_col_v1)
+      .def("sum_col", expt_sum_col_v2)
+      .def("sum_row", expt_sum_row_v1)
+      .def("sum_row", expt_sum_row_v2)
+      .def("prod_col", expt_prod_col_v1)
+      .def("prod_row", expt_prod_row_v1)
+
 
       /// Generic IO operations
       .def("bin_dump", &base_matrix<T1>::bin_dump )
