@@ -89,10 +89,6 @@ def read_qe_index(filename, orb_list, verbose=0):
     tmp = ctx.get("Cell/b3/<xmlattr>/xyz","-1.0").split()
     info["b3"] = VECTOR(float(tmp[0]), float(tmp[1]), float(tmp[2]))
 
-
-    print "WE HAVE MADE IT THUS FAR1"
-
-
     # K-points
     # Weights of the k-points
     tmp = ctx.get("Kmesh/weights","-1.0").split()
@@ -140,7 +136,6 @@ def read_qe_index(filename, orb_list, verbose=0):
 
         all_e.append(e)
 
-    print "WE HAVE MADE IT THUS FAR2"
 
     if verbose==1:
         print " nspin = ", info["nspin"], " nk = ", info["nk"], " nbnd = ", info["nbnd"], " efermi = ", info["efermi"], \
@@ -166,8 +161,6 @@ def read_qe_index(filename, orb_list, verbose=0):
             all_e[ik].show_matrix()
             print ""
 
-
-    print "WE HAVE MADE IT THUS FAR3"
 
     return info, all_e
 
@@ -269,9 +262,8 @@ def read_qe_wfc(filename, orb_list, verbose=0):
             sys.exit(0)
 
     wfc_preprocess = "normalize"
-    if gamma_only=="T":
-        wfc_preprocess = "restore"
-
+    #if gamma_only=="T":
+    #    wfc_preprocess = "restore"
 
     norbs = len(orb_list)
     for o in orb_list:
@@ -305,9 +297,16 @@ def read_qe_wfc(filename, orb_list, verbose=0):
     #======== Normalize or restore (gamma-point trick) wavefunction ===============
     coeff2 = coeff #CMATRIX(ngw,norbs)
 
-    wfc_preprocess = "restore"
+    print "\nNOT IN RESTORE"
+    print "\n Printing coeff2.get(0,0)"
+    print coeff2.get(0,0)
+    print "\n Printing coeff2.get(0+ngw-1,0)"
+    print coeff2.get(0+ngw-1,0)
 
-    if wfc_preprocess=="restore":
+    # The following bit of code always restores the wavefucntion - this is a 
+    # needed but temporary change.
+
+    if gamma_only=="T":
 
         coeff2 = CMATRIX(2*ngw-1,norbs)
         for o in xrange(norbs):
@@ -317,13 +316,47 @@ def read_qe_wfc(filename, orb_list, verbose=0):
                 coeff2.set(i, o, coeff.get(i, o))
                 coeff2.set(i+ngw-1, o, coeff.get(i, o).conjugate() )
 
-        print "\nIN RESTORE"
+        print "\nIN gamma_only==T RESTORE"
+        print "\n Printing coeff2.get(0,0)"
+        print coeff2.get(0,0)
+        print "\n Printing coeff2.get(0+ngw-1,0)"
+        print coeff2.get(0+ngw-1,0)
         print "\n Printing coeff2.get(1,0)"
         print coeff2.get(1,0)
         print "\n Printing coeff2.get(1+ngw-1,0)"
         print coeff2.get(1+ngw-1,0)
+        print "\n Printing coeff2.get(2,0)"
+        print coeff2.get(2,0)
+        print "\n Printing coeff2.get(2+ngw-1,0)"
+        print coeff2.get(2+ngw-1,0)
 
         ngw = 2*ngw - 1
+
+    #""" 
+    if gamma_only=="F":
+
+        coeff2 = CMATRIX(2*ngw,norbs)
+        for o in xrange(norbs):
+            for i in xrange(ngw):
+                coeff2.set(i, o, coeff.get(i, o))
+                coeff2.set(i+ngw, o, coeff.get(i, o).conjugate() )
+
+        print "\nIN gamma_only==F RESTORE"
+        print "\n Printing coeff2.get(0,0)"
+        print coeff2.get(0,0)
+        print "\n Printing coeff2.get(0+ngw,0)"
+        print coeff2.get(0+ngw,0)
+        print "\n Printing coeff2.get(1,0)"
+        print coeff2.get(1,0)
+        print "\n Printing coeff2.get(1+ngw,0)"
+        print coeff2.get(1+ngw,0)
+        print "\n Printing coeff2.get(2,0)"
+        print coeff2.get(2,0)
+        print "\n Printing coeff2.get(2+ngw,0)"
+        print coeff2.get(2+ngw,0)
+
+        ngw = 2*ngw - 1
+    #"""
 
     if wfc_preprocess=="normalize" or wfc_preprocess=="restore":
 

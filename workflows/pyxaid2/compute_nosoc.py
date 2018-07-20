@@ -52,9 +52,7 @@ def compute_properties_gamma(params, es_curr, es_next, curr_index):
     if is_hvib==1:
         hvib = edia - 1.0j * hbar * nac
 
-
-    S = Ca_curr.H() * Ca_curr
-  
+ 
     os.system("mkdir %s" % rd)
     #========== Print out ================
     if is_st==1:    
@@ -73,6 +71,9 @@ def compute_properties_gamma(params, es_curr, es_next, curr_index):
         hvib.real().show_matrix("%s/hvib_dia_%d_re" % (rd, curr_index))
         hvib.imag().show_matrix("%s/hvib_dia_%d_im" % (rd, curr_index))
 
+    S = Ca_curr.H() * Ca_curr
+    S.real().show_matrix("%s/S_dia_%d_re" % (rd, curr_index))
+    S.imag().show_matrix("%s/S_dia_%d_im" % (rd, curr_index))
 
     return hvib
 
