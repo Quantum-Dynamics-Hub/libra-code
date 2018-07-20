@@ -226,6 +226,19 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>
 int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi);
 
 
+///================  In tsh_methods_sdm.cpp  ===================================
+
+CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, vector<double>& En, double Ekin, double C_param, double eps_param);
+Electronic sdm(Electronic& Coeff, double dt, int act_st, vector<double>& En, double Ekin, double C_param, double eps_param);
+
+
+///================  In tsh_methods_msdm.cpp  ===================================
+
+CMATRIX msdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates);
+Electronic msdm(Electronic& Coeff, double dt, int act_st, MATRIX& decoh_rates);
+
+
+
 ///================  In tsh_methods_dish.cpp  ===================================
 
 MATRIX coherence_intervals(CMATRIX& Coeff, MATRIX& rates);

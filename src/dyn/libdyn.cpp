@@ -320,6 +320,54 @@ void export_tsh_aux_hop_objects(){
 }
 
 
+void export_decoherence_objects(){
+ 
+  //================== ID-A =======================
+
+  int (*expt_ida_v1)(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi) = &ida;
+  def("ida", expt_ida_v1);
+
+
+
+  //=============== SDM & MSDM ====================
+
+  CMATRIX (*expt_sdm_v1)
+  (CMATRIX& Coeff, double dt, int act_st, vector<double>& En, double Ekin, double C_param, double eps_param) = &sdm;
+
+  Electronic (*expt_sdm_v2)
+  (Electronic& Coeff, double dt, int act_st, vector<double>& En, double Ekin, double C_param, double eps_param) = &sdm;
+
+  def("sdm", expt_sdm_v1);
+  def("sdm", expt_sdm_v2);
+
+
+
+  CMATRIX (*expt_msdm_v1)
+  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates) = &msdm;
+
+  Electronic (*expt_msdm_v2)
+  (Electronic& Coeff, double dt, int act_st, MATRIX& decoh_rates) = &msdm;
+
+
+
+
+  //================== DISH =======================
+
+  MATRIX (*expt_coherence_intervals_v1)(CMATRIX& Coeff, MATRIX& rates) = &coherence_intervals;
+
+  int (*expt_dish_v1)(Electronic& el, MATRIX& t_m, const MATRIX& tau_m, const CMATRIX& Hvib,
+          int use_boltz_flag, double Ekin, double T, double ksi1, double ksi2) = &dish;
+
+  int (*expt_dish_v2)(Electronic& el, Nuclear& mol, Hamiltonian& ham, 
+          MATRIX& t_m, const MATRIX& tau_m, int use_boltz_flag, double T, double ksi1, double ksi2) = &dish;
+
+  def("coherence_intervals", expt_coherence_intervals_v1);
+  def("dish", expt_dish_v1);
+  def("dish", expt_dish_v2);
+
+
+}
+
 void export_Dyn_objects(){
 /** 
   \brief Exporter of libdyn classes and functions
@@ -347,6 +395,8 @@ void export_Dyn_objects(){
 
   export_tsh_aux_hop_objects();
   export_tsh_aux_rescale_objects();
+
+  export_decoherence_objects();
 
 
 
@@ -398,22 +448,6 @@ void export_Dyn_objects(){
   def("tsh1", expt_tsh1_v2);
 
 
-
-  int (*expt_ida_v1)(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi) = &ida;
-  def("ida", expt_ida_v1);
-
-
-  MATRIX (*expt_coherence_intervals_v1)(CMATRIX& Coeff, MATRIX& rates) = &coherence_intervals;
-
-  int (*expt_dish_v1)(Electronic& el, MATRIX& t_m, const MATRIX& tau_m, const CMATRIX& Hvib,
-          int use_boltz_flag, double Ekin, double T, double ksi1, double ksi2) = &dish;
-
-  int (*expt_dish_v2)(Electronic& el, Nuclear& mol, Hamiltonian& ham, 
-          MATRIX& t_m, const MATRIX& tau_m, int use_boltz_flag, double T, double ksi1, double ksi2) = &dish;
-
-  def("coherence_intervals", expt_coherence_intervals_v1);
-  def("dish", expt_dish_v1);
-  def("dish", expt_dish_v2);
 
 
 
