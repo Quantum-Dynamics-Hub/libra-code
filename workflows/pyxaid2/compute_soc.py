@@ -30,7 +30,7 @@ def compute_properties_gamma(params, es_curr, es_next, curr_index):
     rd = get_value(params,"rd",os.getcwd()+"../../res","s")   # of where the files will be printed out
     dt = get_value(params,"dt","1.0","f") # time step in fs - rescale NAC if actual dt is different
     dt = 41.34145 * dt  # convert to a.u., so the NACs are in a.u.
-
+    hbar = 1.0 #0.658218 # units eV * fs
     is_st   = get_value(params,"compute_st",  "1","i")  # <current|next>
     is_nac  = get_value(params,"compute_nac", "1","i")  
     is_eadi = get_value(params,"compute_eadi","1","i")  
@@ -52,8 +52,7 @@ def compute_properties_gamma(params, es_curr, es_next, curr_index):
         hvib = eadi - 1.0j * nac
 
     S = Ca_curr.H() * Ca_curr
-    S_adi_pw = Ca_curr
-
+    #S_adi_pw = Ca_curr
     ##### Pauli matrices ###
     #
     #        | 0  1 |         | 0  -i |         | 1   0 |
@@ -61,7 +60,7 @@ def compute_properties_gamma(params, es_curr, es_next, curr_index):
     #        | 1  0 |         | i   0 |         | 0  -1 |
     #
     ######
-
+    """
     sx = S.num_of_cols
     sig1 = CMATRIX(sx/2, sx/2)
     sig2 = CMATRIX(sx/2, sx/2)
@@ -78,10 +77,11 @@ def compute_properties_gamma(params, es_curr, es_next, curr_index):
     #sig2.imag().show_matrix("%s/0_sig2_%d_im" % (rd, curr_index) )
     #sig3.real().show_matrix("%s/0_sig3_%d_re" % (rd, curr_index) )
     #sig3.imag().show_matrix("%s/0_sig3_%d_im" % (rd, curr_index) )
+    """
     S.real().show_matrix("%s/S_adi_ks_%d_re" % (rd, curr_index) )
     S.imag().show_matrix("%s/S_adi_ks_%d_im" % (rd, curr_index) )
-    S_adi_pw.real().show_matrix("%s/S_adi_pw_%d_re" % (rd, curr_index) )
-    S_adi_pw.imag().show_matrix("%s/S_adi_pw_%d_im" % (rd, curr_index) )
+    #S_adi_pw.real().show_matrix("%s/S_adi_pw_%d_re" % (rd, curr_index) )
+    #S_adi_pw.imag().show_matrix("%s/S_adi_pw_%d_im" % (rd, curr_index) )
 
   
     os.system("mkdir %s" % rd)
