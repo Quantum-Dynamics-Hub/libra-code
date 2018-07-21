@@ -348,6 +348,8 @@ void export_decoherence_objects(){
   Electronic (*expt_msdm_v2)
   (Electronic& Coeff, double dt, int act_st, MATRIX& decoh_rates) = &msdm;
 
+  def("msdm", expt_msdm_v1);
+  def("msdm", expt_msdm_v2);
 
 
 

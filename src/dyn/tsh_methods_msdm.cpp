@@ -45,30 +45,93 @@ CMATRIX msdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
     double sclf;
 
     CMATRIX C(Coeff);
-    // First - update all the coefficients for the non-active states        
-    int N = Coeff.n_elts;
-    for(int i = 0; i<N; i++){
-      if(i != act_st){
-        double itau = decoh_rates.get(i, act_st); 
-        sclf = exp(-dt*itau);
-        C.scale(i, 0, sclf);
-      }
-    }
 
     // Population of the active state
-    double p_aa_old = (std::conj(C.get(act_st,act_st)) * C.get(act_st,act_st)).real();
+    double p_aa_old = (std::conj(C.get(act_st)) * C.get(act_st)).real();
 
-    // the total population of all inactive states after rescaling
-    double new_norm = (C.H() * C).get(0,0).real() - p_aa_old; 
-    double p_aa_new = 1.0 - new_norm;
-
-    sclf = 1.0;
-    if(p_aa_old > 0.0){
-      sclf = sqrt( p_aa_new / p_aa_old );  // scaling factor for the active state
+    if(p_aa_old>1.0){
+      cout<<"=== Place 1 =====\n";
+      cout<<"Error in CMATRIX msdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates):\n";
+      cout<<"active state is larger than 1: p_aa_old = "<< p_aa_old << endl;
+      cout<<"C = \n"; C.show_matrix();
+      cout<<"act_st = "<<act_st<<endl;
+      cout<<"Coeff = \n"; Coeff.show_matrix();
+      cout<<"decoh_rates = \n"; decoh_rates.show_matrix();
+      cout<<"initial total pop = "<<(Coeff.H() * Coeff).get(0,0).real();
+      exit(0);
     }
+
+    if(p_aa_old>0.0){
+
+      // First - update all the coefficients for the non-active states        
+      int N = Coeff.n_elts;
+
+      double inact_st_pop = 0.0; // population of the inactive states after rescaling
+
+      for(int i=0; i<N; i++){
+        if(i != act_st){
+          double itau = decoh_rates.get(i, act_st); 
+          sclf = exp(-dt*itau);
+          C.scale(i, 0, sclf);
+
+          inact_st_pop += (std::conj(C.get(i)) * C.get(i)).real();
+        }
+      }
+
+      if(inact_st_pop>1.0){
+        cout<<"=== Place 2 =====\n";
+        cout<<"Error in CMATRIX msdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates):\n";
+        cout<<"Total population of inactive states after rescaling is larger than 1: inact_st_pop = "<<inact_st_pop<<endl;
+        cout<<"C = \n"; C.show_matrix();
+        cout<<"act_st = "<<act_st<<endl;
+        cout<<"Coeff = \n"; Coeff.show_matrix();
+        cout<<"decoh_rates = \n"; decoh_rates.show_matrix();
+        cout<<"initial total pop = "<<(Coeff.H() * Coeff).get(0,0).real();
+        exit(0);
+      }
+
+      double p_aa_new = 1.0 - inact_st_pop;
+
+     
+      if(p_aa_new<0.0){
+        cout<<"=== Place 3 =====\n";
+        cout<<"Error in CMATRIX msdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates):\n";
+        cout<<"new population of the active state "<< p_aa_new <<" is negative...\n";
+        cout<<"inact_st_pop = "<<inact_st_pop<<endl;
+        cout<<"p_aa_old = "<<p_aa_old<<endl;
+        cout<<"C = \n"; C.show_matrix();
+        cout<<"act_st = "<<act_st<<endl;
+        cout<<"Coeff = \n"; Coeff.show_matrix();
+        cout<<"decoh_rates = \n"; decoh_rates.show_matrix();     
+        cout<<"initial total pop = "<<(Coeff.H() * Coeff).get(0,0).real();
+        exit(0);
+      }
+
+      sclf = sqrt( p_aa_new / p_aa_old );  // scaling factor for the active state
         
-    // Rescale the active state
-    C.scale(act_st, 0, sclf);
+      // Rescale the active state
+      C.scale(act_st, 0, sclf);
+
+    }// if p_aa_old > 0.0
+
+    double new_norm = (C.H() * C).get(0,0).real();
+    //cout<<"new_norm = "<<new_norm<<endl;
+
+
+    if(fabs(new_norm-1.0)>0.1){
+      cout<<"=== Place 4 =====\n";
+      cout<<"Error in CMATRIX msdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates):\n";
+    //  cout<<"new population of the active state "<< p_aa_new <<" is negative...\n";
+    //  cout<<"inact_st_pop = "<<inact_st_pop<<endl;
+      cout<<"p_aa_old = "<<p_aa_old<<endl;
+      cout<<"C = \n"; C.show_matrix();
+      cout<<"act_st = "<<act_st<<endl;
+      cout<<"Coeff = \n"; Coeff.show_matrix();
+      cout<<"decoh_rates = \n"; decoh_rates.show_matrix();     
+      cout<<"initial total pop = "<<(Coeff.H() * Coeff).get(0,0).real();
+      exit(0);
+    }
+
         
     return C;
 
