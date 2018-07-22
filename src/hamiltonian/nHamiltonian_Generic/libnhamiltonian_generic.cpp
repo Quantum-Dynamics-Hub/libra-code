@@ -240,6 +240,10 @@ void export_nhamiltonian_generic_objects(){
   void (nHamiltonian::*expt_add_ethd_dia_v1)(const MATRIX& q, const MATRIX& invM, int der_lvl) = &nHamiltonian::add_ethd_dia;
   void (nHamiltonian::*expt_add_ethd_adi_v1)(const MATRIX& q, const MATRIX& invM, int der_lvl) = &nHamiltonian::add_ethd_adi;
 
+  void (nHamiltonian::*expt_add_ethd3_dia_v1)(const MATRIX& q, const MATRIX& invM, double alp, int der_lvl) = &nHamiltonian::add_ethd3_dia;
+  void (nHamiltonian::*expt_add_ethd3_adi_v1)(const MATRIX& q, const MATRIX& invM, double alp, int der_lvl) = &nHamiltonian::add_ethd3_adi;
+
+
 
 
   class_<nHamiltonian>("nHamiltonian",init<int,int,int>())
@@ -420,6 +424,10 @@ void export_nhamiltonian_generic_objects(){
       .def("add_ethd_dia", expt_add_ethd_dia_v1)
       .def("add_ethd_adi", expt_add_ethd_adi_v1)
 
+      .def("add_ethd3_dia", expt_add_ethd3_dia_v1)
+      .def("add_ethd3_adi", expt_add_ethd3_adi_v1)
+
+
 
 
       .def("Ehrenfest_energy_adi", expt_Ehrenfest_energy_adi_v1)
@@ -455,6 +463,14 @@ void export_nhamiltonian_generic_objects(){
 
   def("ETHD_energy", expt_ETHD_energy_v1);
   def("ETHD_forces", expt_ETHD_forces_v1);
+
+
+  double (*expt_ETHD3_energy_v1)(const MATRIX& q, const MATRIX& invM, double alp) = &ETHD3_energy;
+  MATRIX (*expt_ETHD3_forces_v1)(const MATRIX& q, const MATRIX& invM, double alp) = &ETHD3_forces;
+
+  def("ETHD3_energy", expt_ETHD3_energy_v1);
+  def("ETHD3_forces", expt_ETHD3_forces_v1);
+
 
 }
 

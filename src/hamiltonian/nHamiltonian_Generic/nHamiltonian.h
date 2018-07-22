@@ -382,6 +382,10 @@ public:
   void add_ethd_dia(const MATRIX& q, const MATRIX& invM, int der_lvl);
   void add_ethd_adi(const MATRIX& q, const MATRIX& invM, int der_lvl);
 
+  void add_ethd3_dia(const MATRIX& q, const MATRIX& invM, double alp, int der_lvl);
+  void add_ethd3_adi(const MATRIX& q, const MATRIX& invM, double alp, int der_lvl);
+
+
 
 
   ///< In nHamiltonian_compute_adiabatic.cpp
@@ -489,6 +493,12 @@ CMATRIX compute_phase_corrections(CMATRIX& U, CMATRIX& U_prev);
 ///< In nHamiltonian_compute_ETHD.cpp
 double ETHD_energy(const MATRIX& q, const MATRIX& invM);
 MATRIX ETHD_forces(const MATRIX& q, const MATRIX& invM);
+
+
+///< In nHamiltonian_compute_ETHD3.cpp
+double ETHD3_energy(const MATRIX& q, const MATRIX& invM, double alp);
+MATRIX ETHD3_forces(const MATRIX& q, const MATRIX& invM, double alp);
+
 
 
 }// namespace libhamiltonian_generic
