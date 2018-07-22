@@ -332,7 +332,7 @@ def read_qe_wfc(filename, orb_list, verbose=0):
 
         ngw = 2*ngw - 1
 
-    #""" 
+    """ 
     if gamma_only=="F":
 
         coeff2 = CMATRIX(2*ngw,norbs)
@@ -356,7 +356,7 @@ def read_qe_wfc(filename, orb_list, verbose=0):
         print coeff2.get(2+ngw,0)
 
         ngw = 2*ngw - 1
-    #"""
+    """
 
     if wfc_preprocess=="normalize" or wfc_preprocess=="restore":
 
