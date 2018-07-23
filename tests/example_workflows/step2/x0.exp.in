@@ -1,0 +1,11 @@
+&inputpp
+  prefix = 'x0',
+  outdir = './',
+  pseudo_dir = '/util/academic/espresso/6.2.1/pseudopotentials/upf_files/',
+  psfile(1) = 'Cs.pbe-mt_fhi.UPF',
+  psfile(2) = 'Pb.pbe-mt_fhi.UPF',
+  psfile(3) = 'I.pbe-mt_fhi.UPF',
+  single_file = .FALSE.,
+  ascii = .TRUE.,
+  uspp_spsi = .FALSE.,
+/

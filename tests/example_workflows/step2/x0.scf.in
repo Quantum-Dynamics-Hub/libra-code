@@ -1,0 +1,50 @@
+&CONTROL
+  calculation = 'scf',
+  pseudo_dir = '/util/academic/espresso/6.2.1/pseudopotentials/upf_files/',
+  outdir = './',
+  prefix = 'x0',
+  disk_io = 'low',
+  wf_collect = .true.
+/
+
+&SYSTEM
+  ibrav = 0,
+  nat = 40,
+  ntyp = 3,
+  nspin = 1,
+  nbnd = 175,
+  ecutwfc = 60,
+  occupations = 'smearing',
+  smearing = 'gaussian',
+  degauss = 0.005,
+  nosym = .true.,
+/
+
+&ELECTRONS
+  electron_maxstep = 300,
+  conv_thr = 1.D-8,
+  mixing_beta = 0.35,
+/
+
+&IONS
+  ion_dynamics = 'verlet',
+  ion_temperature = 'andersen',
+  tempw = 300.00 ,
+  nraise = 1,
+/
+
+
+ATOMIC_SPECIES
+ Cs  132.9   Cs.pbe-mt_fhi.UPF
+ Pb  207.02  Pb.pbe-mt_fhi.UPF            
+ I   126.9   I.pbe-mt_fhi.UPF
+
+K_POINTS automatic
+ 1 1 1 0 0 0                  
+                               
+CELL_PARAMETERS (angstrom)
+  12.555000    0.000000    0.000000
+   0.000000   12.555000    0.000000
+   0.000000    0.000000   12.555000
+
+
