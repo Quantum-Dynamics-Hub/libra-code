@@ -27,7 +27,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import acf
+import acf_vector
 
 
 def show_matrix_splot(X, filename, set_diag_to_zero=0):
@@ -222,7 +222,7 @@ def matrix_freqs(X, a, b, dt, prefix, Nfreqs, verbose = [1,1,1], dw = 1.0, wspan
         data_ab.append(VECTOR(X[n].get(a,b), 0.0, 0.0))
     
     # Now compute ACFs of X matrix elements and print out the corresponding data
-    T,  norm_acf,  raw_acf  = acf.acf( acf.center_data(data_ab)  , dt )  # dt is in a.u.
+    T,  norm_acf,  raw_acf  = acf_vector.acf( acf_vector.center_data(data_ab)  , dt )  # dt is in a.u.
 
 
     # Printing the ACF    
@@ -234,7 +234,7 @@ def matrix_freqs(X, a, b, dt, prefix, Nfreqs, verbose = [1,1,1], dw = 1.0, wspan
         f.close()
     
     # Do the FT
-    W,  J  = acf.ft(norm_acf,  wspan, dw, dt)  # dt is in a.u.
+    W,  J  = acf_vector.ft(norm_acf,  wspan, dw, dt)  # dt is in a.u.
     jsz = len(W)
 
 
