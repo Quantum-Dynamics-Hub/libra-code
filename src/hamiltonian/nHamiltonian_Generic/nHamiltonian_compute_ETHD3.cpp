@@ -186,15 +186,14 @@ MATRIX ETHD3_forces(const MATRIX& q, const MATRIX& invM, double alp){
         double drhok_dQan = 0.0;
 
         for(traj_j=0; traj_j<ntraj; traj_j++){    
-
-          double pref = 0.0;
           if(traj_n==traj_j || traj_n==traj_k){ 
-            pref = 2.0*(q.get(dof_a, traj_k) - q.get(dof_a, traj_j)) * g.get(traj_k, traj_j);
-          }
+
+            double pref = (q.get(dof_a, traj_k) - q.get(dof_a, traj_j)) * g.get(traj_k, traj_j);
           
-          if(traj_n==traj_k){   drhok_dQan += pref; }
-          if(traj_n==traj_j){   drhok_dQan -= pref; }         
- 
+            if(traj_n==traj_k){   drhok_dQan += pref; }
+            if(traj_n==traj_j){   drhok_dQan -= pref; }         
+
+          }// if  
         }// traj_j
 
         drhok_dQan *= (-2.0*alp);
@@ -213,21 +212,17 @@ MATRIX ETHD3_forces(const MATRIX& q, const MATRIX& invM, double alp){
           double drho_prime_ik_dQan = 0.0;          
 
           for(traj_j=0; traj_j<ntraj; traj_j++){    
-
-            double pref = 0.0;       
-
-            if(dof_i==dof_a){  pref = 1.0; }
-
-            double qq = 0.0;
             if(traj_n==traj_j || traj_n==traj_k){ 
-              qq = 2.0*(q.get(dof_i, traj_k) - q.get(dof_i, traj_j)) *  (q.get(dof_a, traj_k) - q.get(dof_a, traj_j)); 
-            }
 
-            if(traj_n==traj_k){ pref += qq; }
-            if(traj_n==traj_j){ pref -= qq; }
-            
-            drho_prime_ik_dQan += pref * g.get(traj_k, traj_j);
- 
+              double pref = -2.0*alp*(q.get(dof_i, traj_k) - q.get(dof_i, traj_j)) *  (q.get(dof_a, traj_k) - q.get(dof_a, traj_j)); 
+              if(dof_i==dof_a){  pref += 1.0; }
+
+              pref *= g.get(traj_k, traj_j);
+
+              if(traj_n==traj_k){ drho_prime_ik_dQan += pref; }
+              if(traj_n==traj_j){ drho_prime_ik_dQan -= pref; }
+
+            }// if 
           }// traj_j
 
           drho_prime_ik_dQan *= (-2.0*alp);
@@ -250,32 +245,30 @@ MATRIX ETHD3_forces(const MATRIX& q, const MATRIX& invM, double alp){
           double drho_dprime_ik_dQan = 0.0;          
 
           for(traj_j=0; traj_j<ntraj; traj_j++){    
-
-            double pref2 = 0.0;
             if(traj_n==traj_j || traj_n==traj_k){ 
 
+              double pref = 0.0;
               double dq_i_kj = (q.get(dof_i, traj_k) - q.get(dof_i, traj_j));
               double dq_a_kj = (q.get(dof_a, traj_k) - q.get(dof_a, traj_j));
-              double pref = 0.0;       
 
-              if(dof_i==dof_a){  pref = 2.0*alp*dq_i_kj; }
-              pref += 2.0*alp*dq_a_kj*dq_i_kj*dq_i_kj;
-              pref -= dq_a_kj;
+              if(dof_i==dof_a){  pref = 2.0*dq_i_kj; }
+              pref -= 2.0*alp* dq_a_kj  *dq_i_kj * dq_i_kj;
+              pref += dq_a_kj;
               
-              pref2 = pref * g.get(traj_k, traj_j);
-            }
-            
-            if(traj_n==traj_k){   drho_dprime_ik_dQan += pref2; }
-            if(traj_n==traj_j){   drho_dprime_ik_dQan -= pref2; }
- 
+              pref *= g.get(traj_k, traj_j);
+
+              if(traj_n==traj_k){   drho_dprime_ik_dQan += pref; }
+              if(traj_n==traj_j){   drho_dprime_ik_dQan -= pref; }
+
+            }// if 
           }// traj_j
 
-          drho_dprime_ik_dQan *= (4.0*alp);
+          drho_dprime_ik_dQan *= (4.0*alp*alp);
 
           //==================================================
           
 
-          dBk_dQan += 2.0*invM.get(dof_i, 0) * drho_dprime_ik_dQan;
+          dBk_dQan += invM.get(dof_i, 0) * drho_dprime_ik_dQan;
 
         }// dof_i
 
@@ -291,10 +284,10 @@ MATRIX ETHD3_forces(const MATRIX& q, const MATRIX& invM, double alp){
         double rhok2 = rhok * rhok;
         double rhok4 = rhok2 * rhok2;
 
-        double val_k = (( dAk_dQan  - 2.0* Bk * drhok_dQan) * rhok2 + 2.0 * Ak * rhok * drhok_dQan  - 2.0 * dBk_dQan * rhok2); 
+        double val_k = (( dAk_dQan  + 2.0* Bk * drhok_dQan) * rhok2 - 2.0 * Ak * rhok * drhok_dQan  - 2.0 * dBk_dQan * rhok2 * rhok); 
         val_k /= rhok4;
 
-        f.add(dof_a, traj_n, 0.125*val_k);
+        f.add(dof_a, traj_n, -0.125*val_k);
 
       }// for traj_k
     }// for dof_a
