@@ -101,6 +101,15 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ha
   int ntraj = q.n_cols;
   int traj, dof;
 
+  //============= Extract optional parameters: needed for some execution scenarios =============
+  double ETHD3_alpha = 1.0;
+  std::string key;
+  boost::python::dict d = (boost::python::dict)params;
+  for(int i=0;i<len(d.values());i++){
+    key = extract<std::string>(d.keys()[i]);
+    if(key=="ETHD3_alpha") { ETHD3_alpha = extract<double>(d.values()[i]);   }
+  }
+
 
   vector<int> t1(ndof, 0); for(int i=0;i<ndof;i++){  t1[i] = i; }
   vector<int> t2(1,0);
@@ -138,6 +147,7 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ha
 
   if(entanglement_opt==0){    /* Nothing to do */   }
   else if(entanglement_opt==1){   ham.add_ethd_adi(q, invM, 1);  }
+  else if(entanglement_opt==2){   ham.add_ethd3_adi(q, invM, ETHD3_alpha, 1);  }
   else{
     cout<<"ERROR in Verlet1: The entanglement option = "<<entanglement_opt<<" is not avaialable\n";
     exit(0);
@@ -208,6 +218,15 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& P, MATRIX& invM, nHamiltonian& ha
   int ntraj = q.n_cols;
   int traj, dof;
 
+  //============= Extract optional parameters: needed for some execution scenarios =============
+  double ETHD3_alpha = 1.0;
+  std::string key;
+  boost::python::dict d = (boost::python::dict)params;
+  for(int i=0;i<len(d.values());i++){
+    key = extract<std::string>(d.keys()[i]);
+    if(key=="ETHD3_alpha") { ETHD3_alpha = extract<double>(d.values()[i]);   }
+  }
+
 
   vector<int> t1(ndof, 0); for(int i=0;i<ndof;i++){  t1[i] = i; }
   vector<int> t2(1,0);
@@ -244,6 +263,7 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& P, MATRIX& invM, nHamiltonian& ha
 
   if(entanglement_opt==0){    /* Nothing to do */   }
   else if(entanglement_opt==1){   ham.add_ethd_adi(q, invM, 1);  }
+  else if(entanglement_opt==2){   ham.add_ethd3_adi(q, invM, ETHD3_alpha, 1);  }
   else{
     cout<<"ERROR in Verlet1: The entanglement option = "<<entanglement_opt<<" is not avaialable\n";
     exit(0);
