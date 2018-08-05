@@ -21,6 +21,69 @@ namespace libhamiltonian{
 namespace libhamiltonian_model{
 
 
+void model_ECWR(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+                vector<double>& q, vector<double>& params){ 
+/*** 
+    To use with the nHamiltonian class
+
+  \param[out] Hdia  The Hamiltonian in the diabatic basis (diabatic Hamiltonian)
+  \param[out] Sdia  The overlap matrix in the diabatic basis
+  \param[out] d1ham_dia  The 1-st order derivatives of the diabatic Hamiltonian w.r.t. all nuclear DOFs
+  \param[out] dc1_dia  The 1-st order derivative couplings in the diabatic basis w.r.t. all nuclear DOFs
+  \param[in] q The nuclear DOFs
+  \param[in] params The model parameters: up to 4 parameters (see the chart below) will be used. If not defined,
+            the default values will be used:
+
+  Internal parameter        Input        Default value
+   A                       params[0]         0.0006
+   B                       params[1]         0.1000
+   C                       params[2]         0.9000
+
+  ECWR hamiltonian and its derivatives in diabatic representation:
+
+  H_00 = A
+  H_11 = -H_00
+  H_01 = B*exp(C*x);          x <= 0
+         B*(2.0 - exp(-C*x)); x > 0
+*/
+
+    double e;
+
+    // ECWR potetnial
+    // Default parameters
+    double A = 0.0006;  double B = 0.100;   double C = 0.900;  
+
+    if(params.size()>=3){
+      A = params[0];    B = params[1];     C = params[2];   
+    }
+
+    double H01, dH01;
+
+    // H01
+    if(q[0]>=0){  e = exp(-C*q[0]);  H01 = B*(2.0 - e);   dH01 = B*C*e;  } 
+    else{      e = exp(C*q[0]);  H01 = B*e;  dH01 = B*C*e;   }
+
+
+    Sdia.set(0,0, 1.0, 0.0);  Sdia.set(0,1, 0.0, 0.0);
+    Sdia.set(1,0, 0.0, 0.0);  Sdia.set(1,1, 1.0, 0.0);
+
+    Hdia.set(0,0, A, 0.0);    Hdia.set(0,1,  H01, 0.0);
+    Hdia.set(1,0, H01, 0.0);  Hdia.set(1,1, -A, 0.0);
+
+    //  d Hdia / dq_0
+    d1ham_dia[0].set(0,0, 0.0, 0.0);   d1ham_dia[0].set(0,1, dH01, 0.0);
+    d1ham_dia[0].set(1,0, dH01, 0.0);   d1ham_dia[0].set(1,1, 0.0, 0.0);
+
+    //  <dia| d/dq_0| dia >
+    dc1_dia[0].set(0,0, 0.0, 0.0);   dc1_dia[0].set(0,1, 0.0, 0.0);
+    dc1_dia[0].set(1,0, 0.0, 0.0);   dc1_dia[0].set(1,1, 0.0, 0.0);
+
+
+}
+
+
+
+
 void ECWR_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params){ 
 // ECWR hamiltonian in diabatic representation
 
@@ -29,12 +92,10 @@ void ECWR_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& para
   if(d2H->n_elts!=4){ std::cout<<"Error in ECWR_Ham: d2H matrix must be allocated\n"; exit(0);}
 
   // Default parameters
-  double A = 0.0006;  double B = 0.100;
-  double C = 0.900;   double D = 1.00;  
+  double A = 0.0006;  double B = 0.100;  double C = 0.900;   
 
-  if(params.size()>=4){
-    A = params[0];    B = params[1];
-    C = params[2];    D = params[3];
+  if(params.size()>=3){
+    A = params[0];    B = params[1];    C = params[2];   
   }
 
 

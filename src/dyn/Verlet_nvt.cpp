@@ -52,6 +52,17 @@ void Verlet0_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ha
   int ndof = q.n_rows;
   int dof;
 
+  int ham_rep = 0; // default -- assume the Hamiltonian is first computed in the diabatic representation
+                   // and then will be transformed to the adiabatic in this function. 
+
+  std::string key;
+  boost::python::dict d = (boost::python::dict)params;
+  for(int i=0;i<len(d.values());i++){
+    key = extract<std::string>(d.keys()[i]);
+    if(key=="ham_rep") { ham_rep = extract<int>(d.values()[i]);   }
+  }
+
+
 
   CMATRIX Cadi(1,1); Cadi.set(0,0,1.0,0.0);
 
@@ -64,8 +75,13 @@ void Verlet0_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ha
     q.add(dof, 0,  invM.get(dof,0) * p.get(dof,0) * dt ); 
   }
 
-  ham.compute_diabatic(py_funct, bp::object(q), params, 0);
-  ham.compute_adiabatic(1, 0);
+  if(ham_rep==0){
+    ham.compute_diabatic(py_funct, bp::object(q), params, 0);
+    ham.compute_adiabatic(1, 0);
+  }
+  else if(ham_rep==1){
+    ham.compute_adiabatic(py_funct, bp::object(q), params, 0);
+  }
 
   double ekin = compute_kinetic_energy(p, invM);
   therm.propagate_nhc(dt, ekin, 0.0, 0.0);
@@ -101,6 +117,10 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ha
   int ntraj = q.n_cols;
   int traj, dof;
 
+  int ham_rep = 0; // default -- assume the Hamiltonian is first computed in the diabatic representation
+                   // and then will be transformed to the adiabatic in this function. 
+
+
   //============= Extract optional parameters: needed for some execution scenarios =============
   double ETHD3_alpha = 1.0;
   std::string key;
@@ -108,6 +128,7 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ha
   for(int i=0;i<len(d.values());i++){
     key = extract<std::string>(d.keys()[i]);
     if(key=="ETHD3_alpha") { ETHD3_alpha = extract<double>(d.values()[i]);   }
+    if(key=="ham_rep") { ham_rep = extract<int>(d.values()[i]);   }
   }
 
 
@@ -142,8 +163,14 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ha
     }
   }
 
-  ham.compute_diabatic(py_funct, bp::object(q), params, 1);
-  ham.compute_adiabatic(1, 1);
+  if(ham_rep==0){
+    ham.compute_diabatic(py_funct, bp::object(q), params, 1);
+    ham.compute_adiabatic(1, 1);
+  }
+  else if(ham_rep==1){
+    ham.compute_adiabatic(py_funct, bp::object(q), params, 1);
+  }
+
 
   if(entanglement_opt==0){    /* Nothing to do */   }
   else if(entanglement_opt==1){   ham.add_ethd_adi(q, invM, 1);  }
