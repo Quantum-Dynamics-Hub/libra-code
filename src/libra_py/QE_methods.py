@@ -1,29 +1,3 @@
-
-Skip to content
-
-    Pull requests
-    Issues
-    Marketplace
-    Explore
-
-    @bsmith24
-
-5
-2
-
-    8
-
-Quantum-Dynamics-Hub/libra-code
-Code
-Issues 0
-Pull requests 1
-Projects 0
-Wiki
-Insights
-libra-code/src/libra_py/QE_methods.py
-dc728a6 on Jun 3
-@alexvakimov alexvakimov Moved some of the common-use functions from Pyxaid/Pyxaid2 to libra_py
-executable file 789 lines (631 sloc) 28.7 KB
 #*********************************************************************************
 #* Copyright (C) 2016 Alexey V. Akimov
 #*
