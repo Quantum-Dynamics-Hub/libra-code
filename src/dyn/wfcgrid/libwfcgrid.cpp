@@ -40,6 +40,13 @@ void export_Wfcgrid_objects(){
 
   boost::python::list (Wfcgrid::*expt_absorb_1D)(double dL) = &Wfcgrid::absorb_1D;
 
+  void (Wfcgrid::*expt_update_potential_1D_v1)(Hamiltonian& ham) = &Wfcgrid::update_potential_1D;
+  void (Wfcgrid::*expt_update_potential_1D_v2)(bp::object py_funct, bp::object params) = &Wfcgrid::update_potential_1D;
+  void (Wfcgrid::*expt_update_potential_2D_v1)(Hamiltonian& ham) = &Wfcgrid::update_potential_2D;
+  void (Wfcgrid::*expt_update_potential_2D_v2)(bp::object py_funct, bp::object params) = &Wfcgrid::update_potential_2D;
+
+
+
 
   class_<Wfcgrid>("Wfcgrid",init<double,double,double,int>())
       .def(init<double, double, double, double, double, double, int>())
@@ -60,8 +67,10 @@ void export_Wfcgrid_objects(){
       .def("print_populations_1D", &Wfcgrid::print_populations_1D)
       .def("print_populations_2D", &Wfcgrid::print_populations_2D)
 
-      .def("update_potential_1D", &Wfcgrid::update_potential_1D)
-      .def("update_potential_2D", &Wfcgrid::update_potential_2D)
+      .def("update_potential_1D", expt_update_potential_1D_v1)
+      .def("update_potential_1D", expt_update_potential_1D_v2)
+      .def("update_potential_2D", expt_update_potential_2D_v1)
+      .def("update_potential_2D", expt_update_potential_2D_v2)
 
       .def("update_propagator_1D", &Wfcgrid::update_propagator_1D)
       .def("update_propagator_2D", &Wfcgrid::update_propagator_2D)

@@ -30,6 +30,112 @@ namespace libwfcgrid{
 using namespace libmeigen;
 
 
+
+void Wfcgrid::update_potential_1D(bp::object py_funct, bp::object params){
+/**
+  \brief Update the Hamiltonian for 1D grid
+  \param[in,out] ham The Hamiltonian object. The internal state of the object will be updated
+  Eventually, it will correspond to that of the last point on the grid. Here, we use this
+  Hamiltonian object only as the functor (it defines how to compute potential and couplings), but
+  we don't care about the final state of the ham variable. The results for each point of the grid 
+  will be saved internally in H matrix.
+
+  This function recomputes the Hamiltonian for all points
+  working in atomic units: hbar = 1
+*/
+
+  MATRIX q(1,1);
+  CMATRIX* ham_dia; ham_dia = new CMATRIX(nstates, nstates);
+
+
+  // Precompute H, d_ij, ... along grid
+  for(int nx=0;nx<Nx;nx++){
+    // For all r points of the grid compute local(potential energy) part
+    q.set(0,0, real(X->M[nx]));
+
+    // Call the Python function with such arguments
+    bp::object obj = py_funct(bp::object(q), params);  
+  
+    // Extract all the computed properties
+    int has_attr=0;
+    has_attr = (int)hasattr(obj,"ham_dia"); 
+    if(has_attr){  
+
+//      check_cmatrix(obj, "ham_dia", nstates, nstates);
+      *ham_dia = extract<CMATRIX>(obj.attr("ham_dia")); 
+    }
+
+    for(int nst=0;nst<nstates;nst++){        
+      for(int nst1=0;nst1<nstates;nst1++){               
+
+        H[nst][nst1].M[nx] = ham_dia->get(nst, nst1);  
+                                                      
+      }// for nst1
+    }// for nst
+
+  }// for nx
+
+  delete ham_dia;
+
+}// update_potential_1D
+
+
+void Wfcgrid::update_potential_2D(bp::object py_funct, bp::object params){
+/**
+  \brief Update the Hamiltonian for 2D grid
+  \param[in,out] ham The Hamiltonian object. The internal state of the object will be updated
+  Eventually, it will correspond to that of the last point on the grid. Here, we use this
+  Hamiltonian object only as the functor (it defines how to compute potential and couplings), but
+  we don't care about the final state of the ham variable. The results for each point of the grid 
+  will be saved internally in H matrix.
+
+  This function recomputes the Hamiltonian for all points
+  working in atomic units: hbar = 1
+*/
+
+  MATRIX q(2,1);
+  CMATRIX* ham_dia; ham_dia = new CMATRIX(nstates, nstates);
+
+  // Precompute H, d_ij, ... along grid
+  for(int nx=0;nx<Nx;nx++){
+    for(int ny=0;ny<Ny;ny++){
+
+      // For all r points of the grid compute local(potential energy) part
+      q.set(0,0, real(X->M[nx]));
+      q.set(1,0, real(Y->M[ny]));
+
+      // Call the Python function with such arguments
+      bp::object obj = py_funct(bp::object(q), params);  
+  
+      // Extract all the computed properties
+      int has_attr=0;
+      has_attr = (int)hasattr(obj,"ham_dia"); 
+      if(has_attr){  
+
+//        check_cmatrix(obj, "ham_dia", nstates, nstates);
+        *ham_dia = extract<CMATRIX>(obj.attr("ham_dia")); 
+      }
+
+
+      for(int nst=0;nst<nstates;nst++){        
+        for(int nst1=0;nst1<nstates;nst1++){               
+
+          H[nst][nst1].M[nx*Ny+ny] = ham_dia->get(nst, nst1);  
+                                                        
+        }// for nst1
+      }// for nst
+
+    }// for ny
+  }// for nx
+
+  delete ham_dia;
+
+}// update_potential_2D
+
+
+
+
+
 void Wfcgrid::update_potential_1D(Hamiltonian& ham){
 /**
   \brief Update the Hamiltonian for 1D grid

@@ -25,7 +25,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 class tmp:
     pass    
 
-def Tully1(q, params):
+def Tully1_py(q, params):
     """
     Implementation of the Tully model I
 
@@ -81,5 +81,80 @@ def Tully1(q, params):
     obj.dc1_dia = dc1_dia
 
     return obj
+
+
+
+def Tully1(q, params):
+    """
+    Implementation of the Tully model II
+
+    \param[in] q [ndof x 1, MATRIX] coordinate of the particle
+    \param[in] params [dictionary] parameters of the model
+ 
+    """
+
+    obj = tmp()
+    obj.ham_dia = CMATRIX(2,2)
+    obj.ovlp_dia = CMATRIX(2,2)
+    obj.d1ham_dia = CMATRIXList();  obj.d1ham_dia.append( CMATRIX(2,2) )
+    obj.dc1_dia = CMATRIXList();  obj.dc1_dia.append( CMATRIX(2,2) )
+
+    # Convert MATRIX to doubleList()
+    qq = doubleList();  qq.append(q.get(0))
+    prms = doubleList() # will use the default values
+    
+    model_SAC(obj.ham_dia, obj.ovlp_dia, obj.d1ham_dia, obj.dc1_dia, qq, prms); 
+
+    return obj
+
+
+
+def Tully2(q, params):
+    """
+    Implementation of the Tully model II
+
+    \param[in] q [ndof x 1, MATRIX] coordinate of the particle
+    \param[in] params [dictionary] parameters of the model
+ 
+    """
+
+    obj = tmp()
+    obj.ham_dia = CMATRIX(2,2)
+    obj.ovlp_dia = CMATRIX(2,2)
+    obj.d1ham_dia = CMATRIXList();  obj.d1ham_dia.append( CMATRIX(2,2) )
+    obj.dc1_dia = CMATRIXList();  obj.dc1_dia.append( CMATRIX(2,2) )
+
+    # Convert MATRIX to doubleList()
+    qq = doubleList();  qq.append(q.get(0))
+    prms = doubleList() # will use the default values
+    
+    model_DAC(obj.ham_dia, obj.ovlp_dia, obj.d1ham_dia, obj.dc1_dia, qq, prms); 
+
+    return obj
+
+
+def Tully3(q, params):
+    """
+    Implementation of the Tully model III
+
+    \param[in] q [ndof x 1, MATRIX] coordinate of the particle
+    \param[in] params [dictionary] parameters of the model
+ 
+    """
+
+    obj = tmp()
+    obj.ham_dia = CMATRIX(2,2)
+    obj.ovlp_dia = CMATRIX(2,2)
+    obj.d1ham_dia = CMATRIXList();  obj.d1ham_dia.append( CMATRIX(2,2) )
+    obj.dc1_dia = CMATRIXList();  obj.dc1_dia.append( CMATRIX(2,2) )
+
+    # Convert MATRIX to doubleList()
+    qq = doubleList();  qq.append(q.get(0))
+    prms = doubleList() # will use the default values
+    
+    model_ECWR(obj.ham_dia, obj.ovlp_dia, obj.d1ham_dia, obj.dc1_dia, qq, prms); 
+
+    return obj
+
 
 

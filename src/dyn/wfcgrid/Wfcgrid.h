@@ -123,6 +123,8 @@ public:
 
   void update_potential_1D(Hamiltonian& ham);
   void update_potential_2D(Hamiltonian& ham);
+  void update_potential_1D(bp::object py_funct, bp::object params);
+  void update_potential_2D(bp::object py_funct, bp::object params);
 
   void update_propagator_1D(double dt,double m0);
   void update_propagator_2D(double dt,double m0);

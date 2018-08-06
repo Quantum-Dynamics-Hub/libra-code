@@ -66,6 +66,15 @@ void export_hamiltonian_model_objects(){
                vector<double>& q, vector<double>& params) = &model_SAC;
   def("model_SAC", expt_model_SAC_v1);
 
+  void (*expt_model_DAC_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+               vector<double>& q, vector<double>& params) = &model_DAC;
+  def("model_DAC", expt_model_DAC_v1);
+
+  void (*expt_model_ECWR_v1)(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+               vector<double>& q, vector<double>& params) = &model_ECWR;
+  def("model_ECWR", expt_model_ECWR_v1);
+
+
 
 
 
