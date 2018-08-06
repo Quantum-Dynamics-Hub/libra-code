@@ -1,3 +1,29 @@
+
+Skip to content
+
+    Pull requests
+    Issues
+    Marketplace
+    Explore
+
+    @bsmith24
+
+5
+2
+
+    8
+
+Quantum-Dynamics-Hub/libra-code
+Code
+Issues 0
+Pull requests 1
+Projects 0
+Wiki
+Insights
+libra-code/src/libra_py/QE_methods.py
+dc728a6 on Jun 3
+@alexvakimov alexvakimov Moved some of the common-use functions from Pyxaid/Pyxaid2 to libra_py
+executable file 789 lines (631 sloc) 28.7 KB
 #*********************************************************************************
 #* Copyright (C) 2016 Alexey V. Akimov
 #*
@@ -14,7 +40,6 @@
 import os
 import sys
 import math
-import time
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -89,6 +114,7 @@ def read_qe_index(filename, orb_list, verbose=0):
     tmp = ctx.get("Cell/b3/<xmlattr>/xyz","-1.0").split()
     info["b3"] = VECTOR(float(tmp[0]), float(tmp[1]), float(tmp[2]))
 
+
     # K-points
     # Weights of the k-points
     tmp = ctx.get("Kmesh/weights","-1.0").split()
@@ -131,11 +157,10 @@ def read_qe_index(filename, orb_list, verbose=0):
             mo_indx = orb_list.index(band) 
         
             ei = float(e_str[band-1])  # band starts from 1, not 0!
-          
-            e.set(mo_indx,mo_indx, ei * Ry2Ha , 0.0)                   
+        
+            e.set(mo_indx,mo_indx, ei * Ry2Ha, 0.0)
 
         all_e.append(e)
-
 
     if verbose==1:
         print " nspin = ", info["nspin"], " nk = ", info["nk"], " nbnd = ", info["nbnd"], " efermi = ", info["efermi"], \
@@ -262,8 +287,9 @@ def read_qe_wfc(filename, orb_list, verbose=0):
             sys.exit(0)
 
     wfc_preprocess = "normalize"
-    #if gamma_only=="T":
-    #    wfc_preprocess = "restore"
+    if gamma_only=="T":
+        wfc_preprocess = "restore"
+
 
     norbs = len(orb_list)
     for o in orb_list:
@@ -294,19 +320,11 @@ def read_qe_wfc(filename, orb_list, verbose=0):
             coeff.set(i, mo_indx, float(c[2*i]), float(c[2*i+1]))
 
 
+
     #======== Normalize or restore (gamma-point trick) wavefunction ===============
     coeff2 = coeff #CMATRIX(ngw,norbs)
 
-    print "\nNOT IN RESTORE"
-    print "\n Printing coeff2.get(0,0)"
-    print coeff2.get(0,0)
-    print "\n Printing coeff2.get(0+ngw-1,0)"
-    print coeff2.get(0+ngw-1,0)
-
-    # The following bit of code always restores the wavefucntion - this is a 
-    # needed but temporary change.
-
-    if gamma_only=="T":
+    if wfc_preprocess=="restore":
 
         coeff2 = CMATRIX(2*ngw-1,norbs)
         for o in xrange(norbs):
@@ -316,47 +334,8 @@ def read_qe_wfc(filename, orb_list, verbose=0):
                 coeff2.set(i, o, coeff.get(i, o))
                 coeff2.set(i+ngw-1, o, coeff.get(i, o).conjugate() )
 
-        print "\nIN gamma_only==T RESTORE"
-        print "\n Printing coeff2.get(0,0)"
-        print coeff2.get(0,0)
-        print "\n Printing coeff2.get(0+ngw-1,0)"
-        print coeff2.get(0+ngw-1,0)
-        print "\n Printing coeff2.get(1,0)"
-        print coeff2.get(1,0)
-        print "\n Printing coeff2.get(1+ngw-1,0)"
-        print coeff2.get(1+ngw-1,0)
-        print "\n Printing coeff2.get(2,0)"
-        print coeff2.get(2,0)
-        print "\n Printing coeff2.get(2+ngw-1,0)"
-        print coeff2.get(2+ngw-1,0)
-
         ngw = 2*ngw - 1
 
-    """ 
-    if gamma_only=="F":
-
-        coeff2 = CMATRIX(2*ngw,norbs)
-        for o in xrange(norbs):
-            for i in xrange(ngw):
-                coeff2.set(i, o, coeff.get(i, o))
-                coeff2.set(i+ngw, o, coeff.get(i, o).conjugate() )
-
-        print "\nIN gamma_only==F RESTORE"
-        print "\n Printing coeff2.get(0,0)"
-        print coeff2.get(0,0)
-        print "\n Printing coeff2.get(0+ngw,0)"
-        print coeff2.get(0+ngw,0)
-        print "\n Printing coeff2.get(1,0)"
-        print coeff2.get(1,0)
-        print "\n Printing coeff2.get(1+ngw,0)"
-        print coeff2.get(1+ngw,0)
-        print "\n Printing coeff2.get(2,0)"
-        print coeff2.get(2,0)
-        print "\n Printing coeff2.get(2+ngw,0)"
-        print coeff2.get(2+ngw,0)
-
-        ngw = 2*ngw - 1
-    """
 
     if wfc_preprocess=="normalize" or wfc_preprocess=="restore":
 
@@ -522,7 +501,6 @@ def out2pdb(out_filename,T,dt,pdb_prefix):
     No more than T steps from the out_filename file will be used
     dt - the difference of indexes of the frames which are written consequetively
     such that if you dt = 5 it will write frames 0,5,10,15,etc. with 0 - being the input configuration
-
     Example of usage:
     > out2pdb.convert("x.md.out",250,25,"snaps/snap_")
     This will create MD snapshots at times 0 (input configuration), 25 (25-th nuclear configuration), 50, etc.
@@ -698,7 +676,6 @@ def out2xyz(out_filename,T,dt,xyz_filename):
     No more than T steps from the out_filename file will be used
     dt - number of steps between output frames, so dt = 5 will output frames 0, 5, 10, 15, etc.
     xyz_filename - is the prefix of the file to which the result is written
-
     Example of usage:
     > out2xyz.convert("x.md.out",250,25,"snaps/traj.xyz")
     This will create the MD trajectory file in .xyz format with the snapshots takes at times 0
@@ -829,100 +806,5 @@ def out2xyz(out_filename,T,dt,xyz_filename):
 
     fr.close()
     f.close()
-   
 
-def make_submit(Nstart,Nend,job_dir,submit_templ):
-# This function makes the submit file in the job_dir
-# submit_templ - is a file name of the template for submit file
-    f = open(submit_templ,"r")
-    A = f.readlines()
-    f.close()
-
-    f_out = open("%s/%s" % (job_dir,submit_templ), "w")
-    for a in A:
-        if a.find("param1=")!=-1:
-            a = a[:-1] + str(Nstart) + "\n"
-        elif a.find("param2=")!=-1:
-            a = a[:-1] + str(Nend) + "\n"
-        f_out.write(a)
-    f_out.write("\n")
-    f_out.close();
-
-
-def job(Nstart,Nend,job_dir,prefixes):
-# This function prepares the group of input files to be executed as a single job
-# note the <job> here referres to a single PBS submission file and may be executed
-# on several processors
-# Nstart - is the minimal index of the job file
-# Nend - is the maximal index of the job file
-# prefix - is input file prefix (was x.scf)
-
-    # Create <job_dir> directory if it does not exist yet
-    if os.path.isdir(job_dir):
-        pass
-    else:
-        os.system("mkdir %s" % job_dir)
-
-    # Copy all files
-    i = Nstart
-    while i<=Nend:
-        for prefix in prefixes:
-            os.system("cp %s.%d.in %s" % (prefix,i,job_dir))
-        i = i + 1
-
-
-def distribute(Nmin,Nmax,max_steps,submit_templ,exp_files,prefixes,do_submit):
-# This function creates a number of jobs from the pool
-# of the input files which start from Nmin to Nmax with the
-# maximal number of input files in one job given by max_steps
-# It also starts the job in a given directory
-# exp_files - is a list of the input files for export
-# prefixes - is a list of prefixes of the files to be distributed
-# do_submit - a flag to choose if we actually want to submit the jobs (do_submit==1 || ==2)
-#            or only distribute the files (otherwise)
-# do_submit == 0 - only discribute files, no actual execution
-# do_submit == 1 - distribute and submit using PBS
-# do_submit == 2 - distribute and submit using SLURM
-
-    j = 0  # job index
-    Nstart = 0
-    Nend = max_steps-1
-    njobs = (Nmax -1 - Nmin)/max_steps
-
-    while j<njobs:
-        job(Nstart,Nend+1,"job%d" % j,prefixes) # add 1 to avoid merging adjacent runs
-        make_submit(Nstart,Nend+1,"job%d" % j,submit_templ)
-        Nstart = Nstart + max_steps 
-        Nend = Nend + max_steps    
-        # Go into that directory and submit the job  
-        os.chdir("job%d" % j)
-       
-        for exp_file in exp_files:
-            os.system("cp ../%s ." % exp_file)
-
-        if do_submit==1:
-            os.system("qsub %s" % submit_templ)
-            time.sleep(10)
-        elif do_submit==2:
-            os.system("sbatch %s" % submit_templ)
-            time.sleep(10)
-
-        os.chdir("../")
-        j = j + 1
-
-    job(Nstart,min(Nend,Nmax),"job%d" % j,prefixes)
-    make_submit(Nstart,min(Nend,Nmax),"job%d" % j,submit_templ)
-    os.chdir("job%d" % j)
-
-    for exp_file in exp_files:
-        os.system("cp ../%s ." % exp_file)
-
-    if do_submit==1:
-        os.system("qsub %s" % submit_templ)    
-        time.sleep(10)  # we need to wait some time before submitting a new job - to make sure the memory is available
-    elif do_submit==2:
-        os.system("sbatch %s" % submit_templ)
-        time.sleep(10)
-
-    os.chdir("../")
 
