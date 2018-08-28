@@ -50,21 +50,24 @@ void Verlet0_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ha
 */
 
   int ndof = q.n_rows;
+  int nadi = ham.nadi;
   int dof;
 
   int ham_rep = 0; // default -- assume the Hamiltonian is first computed in the diabatic representation
                    // and then will be transformed to the adiabatic in this function. 
+
+  int act_state = 0; // default -- assume the active adiabatic surface is the ground state
 
   std::string key;
   boost::python::dict d = (boost::python::dict)params;
   for(int i=0;i<len(d.values());i++){
     key = extract<std::string>(d.keys()[i]);
     if(key=="ham_rep") { ham_rep = extract<int>(d.values()[i]);   }
+    if(key=="act_state"){ act_state = extract<int>(d.values()[i]); }
   }
 
 
-
-  CMATRIX Cadi(1,1); Cadi.set(0,0,1.0,0.0);
+  CMATRIX Cadi(nadi,1); Cadi.set(act_state,0, 1.0,0.0);
 
   
   p *= therm.vel_scale(0.5*dt);     
@@ -115,10 +118,13 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ha
 
   int ndof = q.n_rows;
   int ntraj = q.n_cols;
+  int nadi = ham.nadi;
   int traj, dof;
 
   int ham_rep = 0; // default -- assume the Hamiltonian is first computed in the diabatic representation
                    // and then will be transformed to the adiabatic in this function. 
+
+  int act_state = 0; // default -- assume the active adiabatic surface is the ground state
 
 
   //============= Extract optional parameters: needed for some execution scenarios =============
@@ -129,6 +135,7 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ha
     key = extract<std::string>(d.keys()[i]);
     if(key=="ETHD3_alpha") { ETHD3_alpha = extract<double>(d.values()[i]);   }
     if(key=="ham_rep") { ham_rep = extract<int>(d.values()[i]);   }
+    if(key=="act_state"){ act_state = extract<int>(d.values()[i]); }
   }
 
 
@@ -136,7 +143,7 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ha
   vector<int> t2(1,0);
   vector<int> t3(2,0);
 
-  CMATRIX Cadi(1,1); Cadi.set(0,0,1.0,0.0);
+  CMATRIX Cadi(nadi,1); Cadi.set(act_state,0, 1.0,0.0);
   MATRIX F(ndof, ntraj);
   MATRIX f(ndof, 1);
 
@@ -182,7 +189,8 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ha
 
   for(traj=0; traj<ntraj; traj++){
     t2[0] = traj; 
-    push_submatrix(p, f, t1, t2);
+//    push_submatrix(p, f, t1, t2);
+    pop_submatrix(p, f, t1, t2);
     double ekin = compute_kinetic_energy(f, invM);
     therm[traj].propagate_nhc(dt, ekin, 0.0, 0.0);
   }
@@ -243,7 +251,14 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& P, MATRIX& invM, nHamiltonian& ha
 
   int ndof = q.n_rows;
   int ntraj = q.n_cols;
+  int nadi = ham.nadi;
   int traj, dof;
+
+  int ham_rep = 0; // default -- assume the Hamiltonian is first computed in the diabatic representation
+                   // and then will be transformed to the adiabatic in this function. 
+
+  int act_state = 0; // default -- assume the active adiabatic surface is the ground state
+
 
   //============= Extract optional parameters: needed for some execution scenarios =============
   double ETHD3_alpha = 1.0;
@@ -252,6 +267,8 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& P, MATRIX& invM, nHamiltonian& ha
   for(int i=0;i<len(d.values());i++){
     key = extract<std::string>(d.keys()[i]);
     if(key=="ETHD3_alpha") { ETHD3_alpha = extract<double>(d.values()[i]);   }
+    if(key=="ham_rep") { ham_rep = extract<int>(d.values()[i]);   }
+    if(key=="act_state"){ act_state = extract<int>(d.values()[i]); }
   }
 
 
@@ -259,7 +276,7 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& P, MATRIX& invM, nHamiltonian& ha
   vector<int> t2(1,0);
   vector<int> t3(2,0);
 
-  CMATRIX Cadi(1,1); Cadi.set(0,0,1.0,0.0);
+  CMATRIX Cadi(nadi,1); Cadi.set(act_state,0, 1.0,0.0);
   MATRIX F(ndof, ntraj);
   MATRIX f(ndof, 1);
   MATRIX p(ndof, 1);
@@ -285,8 +302,13 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& P, MATRIX& invM, nHamiltonian& ha
     }
   }
 
-  ham.compute_diabatic(py_funct, bp::object(q), params, 1);
-  ham.compute_adiabatic(1, 1);
+  if(ham_rep==0){
+    ham.compute_diabatic(py_funct, bp::object(q), params, 1);
+    ham.compute_adiabatic(1, 1);
+  }
+  else if(ham_rep==1){
+    ham.compute_adiabatic(py_funct, bp::object(q), params, 1);
+  }
 
   if(entanglement_opt==0){    /* Nothing to do */   }
   else if(entanglement_opt==1){   ham.add_ethd_adi(q, invM, 1);  }
