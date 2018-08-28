@@ -482,6 +482,7 @@ def amplitudes2denmat(coeffs):
     denmat = []
 
     for tr in xrange(ntraj):
+
         denmat.append( coeffs[tr] * coeffs[tr].H() )
 
     return denmat
@@ -911,14 +912,19 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T):
     Returns: the index (int) of a new state 
 
     """
+
     g = 0.0
     if sh_method==0:
         g = compute_hopping_probabilities_mssh(Coeff)
     elif sh_method==1:
         g = compute_hopping_probabilities_fssh(Coeff, Hvib, dt)
+    elif sh_method==2:
+        g = compute_hopping_probabilities_fssh(Coeff, Hvib, dt, 1, T)
+      
 
     old_st = istate
     new_st = hop(istate, g, ksi)
+
 
     if new_st != old_st:
         E_old = Hvib.get(old_st,old_st).real

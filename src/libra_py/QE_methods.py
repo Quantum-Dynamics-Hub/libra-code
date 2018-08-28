@@ -475,7 +475,6 @@ def out2pdb(out_filename,T,dt,pdb_prefix):
     No more than T steps from the out_filename file will be used
     dt - the difference of indexes of the frames which are written consequetively
     such that if you dt = 5 it will write frames 0,5,10,15,etc. with 0 - being the input configuration
-
     Example of usage:
     > out2pdb.convert("x.md.out",250,25,"snaps/snap_")
     This will create MD snapshots at times 0 (input configuration), 25 (25-th nuclear configuration), 50, etc.
@@ -651,7 +650,6 @@ def out2xyz(out_filename,T,dt,xyz_filename):
     No more than T steps from the out_filename file will be used
     dt - number of steps between output frames, so dt = 5 will output frames 0, 5, 10, 15, etc.
     xyz_filename - is the prefix of the file to which the result is written
-
     Example of usage:
     > out2xyz.convert("x.md.out",250,25,"snaps/traj.xyz")
     This will create the MD trajectory file in .xyz format with the snapshots takes at times 0
@@ -782,7 +780,5 @@ def out2xyz(out_filename,T,dt,xyz_filename):
 
     fr.close()
     f.close()
-   
-
 
 

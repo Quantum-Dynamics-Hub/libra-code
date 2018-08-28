@@ -1,5 +1,5 @@
 #***********************************************************
-# * Copyright (C) 2017-2018 Wei Li and Alexey V. Akimov
+# * Copyright (C) 2017-2018 Brendan A. Smith, Wei Li, and Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
@@ -9,6 +9,7 @@
 
 import os
 import sys
+import math
 
 # Fisrt, we add the location of the library to test to the PYTHON path
 if sys.platform=="cygwin":
@@ -189,7 +190,7 @@ def post_process(coeff, ene, issoc):
 
         C_a = merge_orbitals(c_a, c_b)
         C_b = merge_orbitals(c_b, c_a)
-        C = [C_a, C_b]  # "2-component spinor" format
+        C = [C_a,C_b]  # "2-component spinor" format
 
         # Same with energies:
         E = CMATRIX(2*N_ks_orb, 2*N_ks_orb)
@@ -210,7 +211,7 @@ def post_process(coeff, ene, issoc):
             C = [C_a, C_b]  # "2-component spinor" format
 
             # Same with energies:
-            E = CMATRIX(N_ks_orb, N_ks_orb)
+            E = CMATRIX(2*N_ks_orb, 2*N_ks_orb)
             push_submatrix(E, ene[0], range(0,N_ks_orb), range(0,N_ks_orb) )
             push_submatrix(E, ene[0], range(N_ks_orb,2*N_ks_orb), range(N_ks_orb,2*N_ks_orb) )
 
@@ -226,9 +227,15 @@ def post_process(coeff, ene, issoc):
             C = [C_a, C_b]  # "2-component spinor" format
 
             # Same with energies:
-            E = CMATRIX(N_ks_orb, N_ks_orb)
+            E = CMATRIX(2*N_ks_orb, 2*N_ks_orb)
             push_submatrix(E, ene[0], range(0,N_ks_orb), range(0,N_ks_orb) )
             push_submatrix(E, ene[1], range(N_ks_orb,2*N_ks_orb), range(N_ks_orb,2*N_ks_orb) )
+
+
+    print "\nPrint C\n"
+    print C
+    print "\nPrint E\n"
+    print E
 
 
     return C, E
@@ -295,4 +302,100 @@ def orthogonalize_orbitals2(Ca,Cb):
     Cb_tilda = Cb * S_i_half
 
     return Ca_tilda, Cb_tilda
+
+
+
+def xyz2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt):
+    """
+    out_filename - name of the file which contains the xyz (MD) trajectory
+    templ_filename - name of the template file for input generation, should not contain atomic positions!
+    prefix - is the prefix of the files generated at output
+    wd - working directory - will be created 
+    t0 and t1 - define the starting and final frames
+    dt - defines the spacing between frames which are written
+    this is defined as a difference between written configuration indexes:
+    so if dt = 5, the following frames will be written: 0,5,10,15, etc...
+    """
+    verbose = 0
+    # Read the template file
+    f_templ = open(templ_filename,"r")
+    T = f_templ.readlines()
+    f_templ.close()
+    T_sz = len(T)
+
+    if os.path.isdir(wd):
+        pass
+    else:
+        # Create working directory and generate the files
+        os.system("mkdir %s" % wd)
+
+    # Parameters
+    nat = 0   # Number of atoms per unit cell
+    is_nat = 0# flag defining if nat variable has been set
+    start = 0 # flag to start reading the coordinates
+    t = 0     # index of the input file
+    at_line = 0 # line with the coordinates of at_line-th atom is being written
+
+    # Read the file
+    if verbose==1:
+        print "Reading file", out_filename
+    f = open(out_filename,"r")
+
+    f_t = open("%s/tmp" % wd, "w")
+    f_t.close()
+
+    count = 0
+    # for a in the xyz file:
+    for a in f:
+
+        count += 1
+        if start==0:
+
+            b = a.strip().split()
+
+            if is_nat==0:
+
+                if len(b) == 1:
+                    nat = int(float(b[0]))
+                    is_nat = 1
+
+            else:
+
+                if b[0] == "Frame":
+
+                    if t>=t0 and t<=tmax:
+                        if math.fmod(t-t0,dt)==0:
+                            f_t = open("%s/%s.%d.in" % (wd,prefix,t), "w")
+                            # Write the template header
+                            i = 0
+                            while i<T_sz:
+                                f_t.write(T[i])
+                                i = i + 1
+                            # Write the header for positions
+                            f_t.write("ATOMIC_POSITIONS (angstrom)\n")
+                            # Set flag to write positions
+                            start = 1
+                            at_line = 0
+                        else:
+                            t = t + 1
+                    elif t>tmax:
+                        break;
+                    else:
+                        t = t + 1
+
+        elif start==1:
+            if at_line<=nat-1:
+                f_t.write(a)
+            else:
+                # A blank line just in case
+                f_t.write("\n")
+                f_t.close()
+                t = t + 1
+                start = 0
+            at_line = at_line + 1
+
+
+    f.close()
+
+
 
