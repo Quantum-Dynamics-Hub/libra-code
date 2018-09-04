@@ -455,8 +455,12 @@ void export_nhamiltonian_generic_objects(){
 
 
   CMATRIX (*expt_compute_phase_corrections_v1)
+  (CMATRIX& S) = &compute_phase_corrections;
+  CMATRIX (*expt_compute_phase_corrections_v2)
   (CMATRIX& U, CMATRIX& U_prev) = &compute_phase_corrections;
   def("compute_phase_corrections", expt_compute_phase_corrections_v1);
+  def("compute_phase_corrections", expt_compute_phase_corrections_v2);
+
 
   double (*expt_ETHD_energy_v1)(const MATRIX& q, const MATRIX& invM) = &ETHD_energy;
   MATRIX (*expt_ETHD_forces_v1)(const MATRIX& q, const MATRIX& invM) = &ETHD_forces;

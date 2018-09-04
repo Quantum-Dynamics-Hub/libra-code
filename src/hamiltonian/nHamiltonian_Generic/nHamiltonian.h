@@ -487,6 +487,7 @@ typedef std::vector<nHamiltonian> nHamiltonianList;  ///< data type for keeping 
 
 
 ///< In nHamiltonian_compute adiabatic
+CMATRIX compute_phase_corrections(CMATRIX& S);
 CMATRIX compute_phase_corrections(CMATRIX& U, CMATRIX& U_prev);
 
 
