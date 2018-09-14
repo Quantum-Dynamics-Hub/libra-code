@@ -23,6 +23,17 @@ import compute_hprime
 
 
 def run_qe(params, t, dirname0, dirname1):
+    """
+    This fucntions runs the QE code for a system whose information is stored in the 
+    params dictionary
+
+    \param[in] params A dictionary containing important simulation parameters
+    \param[in] t The current time step
+    \param[in] dirname0 Name of the temporary directory where data will be stored 
+              for the case without SOC 
+    \param[in] dirname1 Name of the temporary directory where data will be stored 
+              for the case with SOC 
+    """
 
     tim = Timer()
     tim.start()
@@ -67,6 +78,15 @@ def run_qe(params, t, dirname0, dirname1):
 
 
 def read_info(params):
+    """
+    This fucntions reads the output from a QE calculations, and stores the output
+    information in dictionaries
+
+    \param[in] params A dictionary containing important simulation parameters
+  
+    Returns: Lists that contains system specific information such as the values
+             for lattice constants, eigenvalues, etc. 
+    """
 
     tim = Timer()
     tim.start()
@@ -124,33 +144,31 @@ def read_all(params):
     The number of wfc and grid files may be larger than 1 - this is the
     case of spin-polarized or multiple k-points calculations
 
-    params - is the dictionary with the key-value pairs controlling the calculations
-    The possible keys are:
-    params["prefix"] - (string) - the location of the folder containing index.xml, wfc.*, and grid.* files
-    params["read_wfc"] - (0 or 1) - whether or not to read the wfc coefficients. Default: 1
-    params["read_grid"] - (0 or 1) - whether or not to read the grid informations. Default: 1
-    params["verb0"] - (0 or 1) - turn off/on the extra printout while reading index.xml. Default: 0
-    params["verb1"] - (0 or 1) - turn off/on the extra printout while reading wfc.*. Default: 0
-    params["verb2"] - (0 or 1) - turn off/on the extra printout while reading grid.*. Default: 0
-    params["nac_method"] - (0, 1, 2) - the expectations about what format to read
+   \param[in] params A dictionary containing important simulation parameters
+              params["prefix"] - (string) - the location of the folder containing index.xml, wfc.*, and grid.* files
+              params["read_wfc"] - (0 or 1) - whether or not to read the wfc coefficients. Default: 1
+              params["read_grid"] - (0 or 1) - whether or not to read the grid informations. Default: 1
+              params["verb0"] - (0 or 1) - turn off/on the extra printout while reading index.xml. Default: 0
+              params["verb1"] - (0 or 1) - turn off/on the extra printout while reading wfc.*. Default: 0
+              params["verb2"] - (0 or 1) - turn off/on the extra printout while reading grid.*. Default: 0
+              params["nac_method"] - (0, 1, 2) - the expectations about what format to read
                      0 - non-SOC, non-polarized
                      1 - non-SOC, spin-polarized
                      2 - SOC, non-collinear
-    params["minband"] - (int, starting from 1) - index of the lowest energy orbital to include in the active space
-    params["maxband"] - (int, starting from 1) - index of the highest energy orbital to include in the active space
+              params["minband"] - (int, starting from 1) - index of the lowest energy orbital to include 
+                                  in the active space
+              params["maxband"] - (int, starting from 1) - index of the highest energy orbital to include 
+                                  in the active space
+  
+    Returns: The function returs lists containing: 
+             e - energies
+             coeff - MOs the plane wave coefficients,
+             grid - the grid point vectors
 
-
-    Return values:
-    The function returs lists containing: 
-    e - energies
-    coeff - MOs the plane wave coefficients,
-    grid - the grid point vectors
-
-    The number of elements in each list is determined by the number of k points
-    Note that, for spin-polarized calculations, the number of k-points is always twice
-    that of the non-spin-polarized or non-collinear k-points
-    """
-
+             The number of elements in each list is determined by the number of k points
+             Note that, for spin-polarized calculations, the number of k-points is always twice
+             that of the non-spin-polarized or non-collinear k-points
+    """  
 
     tim = Timer()
     tim.start()
@@ -220,6 +238,15 @@ def read_wfc_grid(params, info0, info1):
     """
     Read the coefficients and energies for the multi k-points cases, 
     even if some cases require gamma only
+
+    \param[in] params A dictionary containing important simulation parameters
+    \param[in] info0 Name of the temporary directory where data will be stored 
+              for the case without SOC 
+    \param[in] info1 Name of the temporary directory where data will be stored 
+              for the case with SOC 
+  
+    Returns: Dictionaries that contain the data for the eigenvalues, g-vectors, and pw coefficients 
+             for the current and next timesteps.    
     """
 
     tim = Timer()
@@ -302,6 +329,11 @@ def read_wfc_grid(params, info0, info1):
 
 
 def run(params):
+    """
+    This function is the main driver for workflows/pyxaid2
+
+    \param[in] params A dictionary containing important simulation parameters
+    """
 
     print "Starting trajectory.run"
 
@@ -414,7 +446,7 @@ def run(params):
 
            
                     if compute_Hprime == 1:
-                        compute_hprime.compute_hprime(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
+                        compute_hprime.compute_hprime_nosoc(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
 
 
                 elif info0["nspin"]==2:

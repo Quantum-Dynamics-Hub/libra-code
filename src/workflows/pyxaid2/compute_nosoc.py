@@ -20,6 +20,19 @@ from libra_py import *
 from utils import*
 
 def compute_properties_gamma(params, es_curr, es_next, curr_index):
+    """
+    This fucntions computes the properties needed to construct the
+    vibrionic Hamiltonian, and then computes it.
+
+    \param[in] params A dictionary containing important simulation parameters
+    \param[in] es_curr A dictionary containing the data for the g-vectors and pw coefficients
+                     for the current timestep
+    \param[in] es_next A dictionary containing the data for the g-vectors and pw coefficients 
+                     for the next timestep
+    \param[in] curr_index This is index represents the current time step
+  
+    Returns: The vibrionic Hamiltonian in Ha = a.u. of energy    
+    """
 
     Ca_curr = es_curr["Coeff_dia"]
     Ca_next = es_next["Coeff_dia"]
@@ -96,6 +109,12 @@ def compute_properties_gamma(params, es_curr, es_next, curr_index):
 
 
 def compute_properties_general(params, es_curr, es_next, curr_index):
+    """  
+    This fucntions computes the properties needed to construct the
+    vibrionic Hamiltonian for multiple K-points, and then computes it.
+
+    ## This function is not tested and still under construction ##
+    """
 
     print "You are dealing with multiple kpoints"
 

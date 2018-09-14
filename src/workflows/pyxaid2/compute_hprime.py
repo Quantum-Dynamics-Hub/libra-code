@@ -17,7 +17,18 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from libra_py import *
 
-def compute_hprime(es_curr, info, filename):
+def compute_hprime_nosoc(es_curr, info, filename):
+    """
+    This function computes the matrix elements of the dipole operator for the
+    case without SOC, and prints them to them to the file specificed by the 
+    function parameter "filename"
+
+    \param[in] es_curr A dictionary containing the data for the g-vectors and pw coefficients
+    \param[in] info A dictionary containing the basic information regarding the system, such 
+               as recip. lattice vectors 
+    \param[in] filename This is the name of the output file where the data will be printed
+    """  
+
 
     coeff = es_curr["Coeff_dia"][0]
     grid  = es_curr["grid"][0]
@@ -43,34 +54,36 @@ def compute_hprime(es_curr, info, filename):
 
 
     N = coeff.num_of_cols 
-    Hx = CMATRIX(N,N); Hy = CMATRIX(N,N); Hz = CMATRIX(N,N);
-    for i in xrange(N):  
-        for j in xrange(N):
+    Hx = CMATRIX(N/2,N/2); Hy = CMATRIX(N/2,N/2); Hz = CMATRIX(N/2,N/2);
+    for g in xrange(g_sz):
 
-            hx, hy, hz = 0.0, 0.0, 0.0
-            for g in xrange(g_sz):
+        hx, hy, hz = 0.0, 0.0, 0.0
 
-                tmp  = coeff.H().row(i).col(g) * coeff.col(j).row(g)
+        for i in xrange(N/2):  
+            for j in xrange(N/2):
 
+                tmp  = coeff.H().get(i,g) * coeff.get(g,j)
+             
                 gx = scl1*(grid[g].x*b1.x + grid[g].y*b2.x + grid[g].z*b3.x)
                 gy = scl1*(grid[g].x*b1.y + grid[g].y*b2.y + grid[g].z*b3.y)
                 gz = scl1*(grid[g].x*b1.z + grid[g].y*b2.z + grid[g].z*b3.z)
 
                 if(is_compl==0):
-                    hx += tmp.get(0)*gx; hy += tmp.get(0)*gy; hz += tmp.get(0)*gz;
+                    hx += tmp.real*gx; hy += tmp.real*gy; hz += tmp.real*gz;
                 
                 if(is_compl==1): 
                     if(g==0):
-                        hx += tmp.get(0)*gx; hy += tmp.get(0)*gy; hz += tmp.get(0)*gz;  # This should give zero!  
+                        hx += tmp.real*gx; hy += tmp.real*gy; hz += tmp.real*gz;  # This should give zero!  
+
                     #Now the Hprime_ matrices are purely imaginary, for the case of gamma-symmetry.
                     else:
-                        hx +=  2.0*scl2*tmp.get(0).real*gx   
-                        hy +=  2.0*scl2*tmp.get(0).real*gy             
-                        hz +=  2.0*scl2*tmp.get(0).real*gz
+                        hx +=  2.0*scl2*tmp.real*gx   
+                        hy +=  2.0*scl2*tmp.real*gy             
+                        hz +=  2.0*scl2*tmp.real*gz
 
-            Hx.set(i,j,hx)
-            Hy.set(i,j,hy)
-            Hz.set(i,j,hz)
+                Hx.add(i,j,hx)
+                Hy.add(i,j,hy)
+                Hz.add(i,j,hz)
 
     Hx.real().show_matrix("%sx_re" % (filename));  Hx.imag().show_matrix("%sx_im" % (filename))    
     Hy.real().show_matrix("%sy_re" % (filename));  Hy.imag().show_matrix("%sy_im" % (filename))    

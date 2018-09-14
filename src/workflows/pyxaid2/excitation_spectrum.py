@@ -21,19 +21,25 @@ from libra_py import *
 
 
 def calculate(energy_prefix,energy_suffix,dip_prefix,dip_suffix,isnap,fsnap,opt,scl1,scl2,outfile,HOMO,minE,maxE,dE):
-    # Compute average value of the Hamiltonian matrix elements in energy axis:
-    # energy_prefix - prefix of the files containing the energy of the states (diagonal terms)
-    # energy_suffix - --//--
-    # dip_prefix - is the prefix of the series of filenames containing transition dipole moment
-    # dip_suffix - is the suffix of the series of filenames containing transition dipole moment
-    # isnap - index of initial file
-    # fsnap - index of final file
-    # opt - option for averaging
-    # scl1 - scaling factor for energy scale
-    # scl2 - scaling factor for output quantity scale
-    # outfile - is the name of the file, where the map will be written
-    # HOMO - is the index (starting from 1) of the HOMO orbital
-    # minE, maxE, dE determine the range and the resolution of the absorption spectrum
+    """
+    This fucntions Computes average value of the Hamiltonian matrix elements in energy axis
+
+    \param[in] energy_prefix Prefix of the files containing the energy of the states (diagonal terms)
+    \param[in] energy_suffix Similarly to energy_prefix
+    \param[in] dip_prefix The prefix of the series of filenames containing transition dipole moment
+    \param[in] dip_suffix The suffix of the series of filenames containing transition dipole moment
+    \param[in] isnap Index of initial file
+    \param[in] fsnap Index of final file
+    \param[in] opt Option for averaging
+    \param[in] scl1 Scaling factor for energy scale
+    \param[in] scl2 Scaling factor for output quantity scale 
+    \param[in] outfile The name of the file, where the map will be written
+    \param[in] HOMO The index (starting from 1) of the HOMO orbital
+    \param[in] inE, maxE, dE Determine the range and the resolution of the absorption spectrum
+  
+    Returns: A list of grid points for the x-axis and an intensity of unit energy for each
+             point on the x-axis   
+    """
 
     filename = energy_prefix + str(isnap) + energy_suffix
     f = open(filename,"r")
@@ -149,14 +155,17 @@ def calculate(energy_prefix,energy_suffix,dip_prefix,dip_suffix,isnap,fsnap,opt,
 
 
 def ham_map(prefix,isnap,fsnap,suffix,opt,scl,outfile):
-# Compute average value of the Hamiltonian matrix elements in energy axis:
-# prefix - is the prefix of the series of filenames containing required matrix elements
-# isnap - index of initial file
-# fsnap - index of final file
-# suffix - similarly to prefix
-# opt - option for averaging
-# scl - scaling factor. e.g. to convert units
-# outfile - is the name of the file, where the map will be written
+    """
+    This fucntions Computes the average value of the Hamiltonian matrix elements in energy axis:
+
+    \param[in] prefix The prefix of the series of filenames containing required matrix elements 
+    \param[in] isnap Index of initial file
+    \param[in] fsnap Index of final file
+    \param[in] suffix Similarly to prefix
+    \param[in] opt Option for averaging
+    \param[in] scl Scaling factor. e.g. to convert units
+    \param[in] outfile The name of the file, where the map will be written
+    """
 
     filename = prefix + str(isnap) + suffix
     f = open(filename,"r")
