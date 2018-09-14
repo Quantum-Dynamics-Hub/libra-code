@@ -18,8 +18,6 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 from libra_py import *
 
 
-
-
 def get_value(params,key,default,typ):
 # Function to extract parameter from the dictionary
     # Try to get value from the dictionary
@@ -210,7 +208,7 @@ def post_process(coeff, ene, issoc):
             C = [C_a, C_b]  # "2-component spinor" format
 
             # Same with energies:
-            E = CMATRIX(N_ks_orb, N_ks_orb)
+            E = CMATRIX(2*N_ks_orb, 2*N_ks_orb)
             push_submatrix(E, ene[0], range(0,N_ks_orb), range(0,N_ks_orb) )
             push_submatrix(E, ene[0], range(N_ks_orb,2*N_ks_orb), range(N_ks_orb,2*N_ks_orb) )
 
@@ -226,7 +224,7 @@ def post_process(coeff, ene, issoc):
             C = [C_a, C_b]  # "2-component spinor" format
 
             # Same with energies:
-            E = CMATRIX(N_ks_orb, N_ks_orb)
+            E = CMATRIX(2*N_ks_orb, 2*N_ks_orb)
             push_submatrix(E, ene[0], range(0,N_ks_orb), range(0,N_ks_orb) )
             push_submatrix(E, ene[1], range(N_ks_orb,2*N_ks_orb), range(N_ks_orb,2*N_ks_orb) )
 
@@ -254,6 +252,15 @@ def orthogonalize_orbitals(C):
     """
 
     S = C.H() * C  # overlap matrix
+
+    # Test is S is invertabile
+    print "\nTesting if S is invertabile\n"
+    print FullPivLU_rank_invertible(S)
+    print "Det = ", FullPivLU_det(S)
+    is_inv = FullPivLU_rank_invertible(S)
+    if is_inv[1] != 1:
+        print "Error, S is not invertible, Exiting Program" 
+        sys.exit(0)
 
     S_half = CMATRIX(S.num_of_rows, S.num_of_cols)
     S_i_half = CMATRIX(S.num_of_rows, S.num_of_cols)
@@ -295,4 +302,5 @@ def orthogonalize_orbitals2(Ca,Cb):
     Cb_tilda = Cb * S_i_half
 
     return Ca_tilda, Cb_tilda
+
 
