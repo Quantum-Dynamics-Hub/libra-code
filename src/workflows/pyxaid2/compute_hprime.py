@@ -43,7 +43,7 @@ def compute_hprime_nosoc(es_curr, info, filename):
     print "npw   = ", npw 
     
     scl1 = (1.0+0.0j)
-    scl2 = (0.0+1.0j)
+    scl2 = 2.0*(0.0+1.0j)
 
     # figure out if we are using a completed wavefunction or not
     if g_sz != npw:
@@ -57,8 +57,6 @@ def compute_hprime_nosoc(es_curr, info, filename):
     Hx = CMATRIX(N/2,N/2); Hy = CMATRIX(N/2,N/2); Hz = CMATRIX(N/2,N/2);
     for g in xrange(g_sz):
 
-        hx, hy, hz = 0.0, 0.0, 0.0
-
         gx = scl1*(grid[g].x*b1.x + grid[g].y*b2.x + grid[g].z*b3.x)
         gy = scl1*(grid[g].x*b1.y + grid[g].y*b2.y + grid[g].z*b3.y)
         gz = scl1*(grid[g].x*b1.z + grid[g].y*b2.z + grid[g].z*b3.z)
@@ -68,18 +66,19 @@ def compute_hprime_nosoc(es_curr, info, filename):
 
                 tmp  = coeff.H().get(i,g) * coeff.get(g,j)
             
+                hx, hy, hz = 0.0, 0.0, 0.0
                 if(is_compl==0):
-                    hx += tmp.real*gx; hy += tmp.real*gy; hz += tmp.real*gz;
+                    hx = tmp.real*gx; hy = tmp.real*gy; hz = tmp.real*gz;
                 
                 if(is_compl==1): 
                     if(g==0):
-                        hx += tmp.real*gx; hy += tmp.real*gy; hz += tmp.real*gz;  # This should give zero!  
+                        hx = tmp.real*gx; hy = tmp.real*gy; hz = tmp.real*gz;  # This should give zero!  
 
                     #Now the Hprime_ matrices are purely imaginary, for the case of gamma-symmetry.
                     else:
-                        hx = 2.0*scl2*tmp.real*gx   
-                        hy = 2.0*scl2*tmp.real*gy             
-                        hz = 2.0*scl2*tmp.real*gz
+                        hx = scl2*tmp.real*gx   
+                        hy = scl2*tmp.real*gy             
+                        hz = scl2*tmp.real*gz
 
                 Hx.add(i,j,hx)
                 Hy.add(i,j,hy)
