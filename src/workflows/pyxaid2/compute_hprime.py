@@ -59,15 +59,15 @@ def compute_hprime_nosoc(es_curr, info, filename):
 
         hx, hy, hz = 0.0, 0.0, 0.0
 
+        gx = scl1*(grid[g].x*b1.x + grid[g].y*b2.x + grid[g].z*b3.x)
+        gy = scl1*(grid[g].x*b1.y + grid[g].y*b2.y + grid[g].z*b3.y)
+        gz = scl1*(grid[g].x*b1.z + grid[g].y*b2.z + grid[g].z*b3.z)
+
         for i in xrange(N/2):  
             for j in xrange(N/2):
 
                 tmp  = coeff.H().get(i,g) * coeff.get(g,j)
-             
-                gx = scl1*(grid[g].x*b1.x + grid[g].y*b2.x + grid[g].z*b3.x)
-                gy = scl1*(grid[g].x*b1.y + grid[g].y*b2.y + grid[g].z*b3.y)
-                gz = scl1*(grid[g].x*b1.z + grid[g].y*b2.z + grid[g].z*b3.z)
-
+            
                 if(is_compl==0):
                     hx += tmp.real*gx; hy += tmp.real*gy; hz += tmp.real*gz;
                 
@@ -77,9 +77,9 @@ def compute_hprime_nosoc(es_curr, info, filename):
 
                     #Now the Hprime_ matrices are purely imaginary, for the case of gamma-symmetry.
                     else:
-                        hx +=  2.0*scl2*tmp.real*gx   
-                        hy +=  2.0*scl2*tmp.real*gy             
-                        hz +=  2.0*scl2*tmp.real*gz
+                        hx = 2.0*scl2*tmp.real*gx   
+                        hy = 2.0*scl2*tmp.real*gy             
+                        hz = 2.0*scl2*tmp.real*gz
 
                 Hx.add(i,j,hx)
                 Hy.add(i,j,hy)
