@@ -1,0 +1,47 @@
+#!/bin/sh
+#SBATCH --partition=valhalla
+#SBATCH --clusters=chemistry
+#SBATCH --time=02:30:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=6
+#SBATCH --mem=5000
+#SBATCH --mail-user=alexeyak@buffalo.edu
+
+echo "SLURM_JOBID="$SLURM_JOBID
+echo "SLURM_JOB_NODELIST="$SLURM_JOB_NODELIST
+echo "SLURM_NNODES="$SLURM_NNODES
+echo "SLURMTMPDIR="$SLURMTMPDIR
+echo "working directory="$SLURM_SUBMIT_DIR
+
+NPROCS=`srun --nodes=${SLURM_NNODES} bash -c 'hostname' |wc -l`
+echo NPROCS=$NPROCS
+
+
+module load intel/17.0
+module load intel-mpi/2017.0.1
+module load mkl/2017.0.1
+module load espresso/6.2.1
+
+
+#The PMI library is necessary for srun
+export I_MPI_PMI_LIBRARY=/usr/lib64/libpmi.so
+
+# Setup all manual parameters here
+# Must be ABSOLUTE paths
+#MPI='mpirun'  for Wei
+MPI='srun' 
+NP=6
+exe_qespresso=/util/academic/espresso/6.2.1/bin/pw.x
+exe_export=/util/academic/espresso/6.2.1/bin/pw_export.x
+exe_convert=/util/academic/espresso/6.2.1/bin/iotk
+
+
+$MPI -n $NP $exe_qespresso < x0.scf.0.in > x0.scf.0.out
+$MPI -n $NP $exe_export < x0.exp.in > x0.exp.out
+
+ 
+
+
+
+
+
