@@ -1,0 +1,9 @@
+&inputpp
+  prefix = 'x0',
+  outdir = './',
+  pseudo_dir = '/util/academic/espresso/6.2.1/pseudopotentials/upf_files/',
+  psfile(1) = 'Si.pbesol-n-rrkjus_psl.0.1.UPF',
+  single_file = .FALSE.,
+  ascii = .TRUE.,
+  uspp_spsi = .FALSE.,
+/

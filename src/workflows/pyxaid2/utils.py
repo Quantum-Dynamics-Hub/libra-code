@@ -18,10 +18,19 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 from libra_py import *
 
 
-
-
 def get_value(params,key,default,typ):
-# Function to extract parameter from the dictionary
+    """
+    Function to extract parameter from the dictionary
+
+    \param[in] params A dictionary containing important simulation parameters
+    \param[in] key The name of the variable that we wish to extract from the params
+               dictionary 
+    \param[in] default The default value assigned to a dictionary key 
+    \param[in] typ The data type assigned to a value that is extracted from the dictionary
+  
+    Returns: a value from the params dictionary that is of type "typ"
+    """
+
     # Try to get value from the dictionary
     str_val = "None"
     if key in params:
@@ -48,7 +57,8 @@ def get_value(params,key,default,typ):
 
 
 def split_orbitals_energies(C, E):
-    """ In SOC, non-collinear case, the orbitals are 2-component spinors:
+    """ 
+    In SOC, non-collinear case, the orbitals are 2-component spinors:
              | psi_i^alp |          | E_i_alp          |
      psi_i = |           |,  so E = |                  |
              | psi_i^bet |          |          E_i_bet |
@@ -61,6 +71,10 @@ def split_orbitals_energies(C, E):
     Thus, there are 2*N_mo_adi columns, so we need to extract spin-components 
     into 2 matrices
 
+    \param[in] C Coefficient matrix of size N_pw x 2*N_Mo 
+    \param[in] E Eigenvalue matrix of size  2*N_mo x 2*N_Mo
+
+    Returns: Matricies for the alpha and beta components of the input matricies
     """
 
     N_pw = C.num_of_rows
@@ -93,6 +107,11 @@ def split_orbitals_energies(C, E):
 def merge_orbitals(Ca, Cb):
     """
     This function puts two matrices together into a single matrix
+
+    \param[in] Ca Coefficient matrix corresponding to alpha orbitals of size N_pw x N_Mo 
+    \param[in] Cb Coefficient matrix corresponding to beta orbitals of size N_pw x N_Mo 
+
+    Returns: A single matrix of size N_pw x 2*N_Mo   
     """
 
     npw_a = Ca.num_of_rows
@@ -117,7 +136,6 @@ def merge_orbitals(Ca, Cb):
 def post_process(coeff, ene, issoc):
 
     """
-
     issoc = 0 - no SOC, = 1 - SOC
 
     In SOC case (spinor):
@@ -177,6 +195,10 @@ def post_process(coeff, ene, issoc):
     E^alpha-block  = E^beta-block (SOC or non-polarized non-SOC)
     E^alpha-block != E^beta-block (spin-polarized non-SOC)
 
+    Returns:  No-SOC case: 2 lists, where list[0] = list[1]
+           
+              SOC case: 2 lists, where list[0] = alpha components
+                                       list[1] = beta components
     """
 
     C, E = None, None
@@ -210,7 +232,7 @@ def post_process(coeff, ene, issoc):
             C = [C_a, C_b]  # "2-component spinor" format
 
             # Same with energies:
-            E = CMATRIX(N_ks_orb, N_ks_orb)
+            E = CMATRIX(2*N_ks_orb, 2*N_ks_orb)
             push_submatrix(E, ene[0], range(0,N_ks_orb), range(0,N_ks_orb) )
             push_submatrix(E, ene[0], range(N_ks_orb,2*N_ks_orb), range(N_ks_orb,2*N_ks_orb) )
 
@@ -226,7 +248,7 @@ def post_process(coeff, ene, issoc):
             C = [C_a, C_b]  # "2-component spinor" format
 
             # Same with energies:
-            E = CMATRIX(N_ks_orb, N_ks_orb)
+            E = CMATRIX(2*N_ks_orb, 2*N_ks_orb)
             push_submatrix(E, ene[0], range(0,N_ks_orb), range(0,N_ks_orb) )
             push_submatrix(E, ene[1], range(N_ks_orb,2*N_ks_orb), range(N_ks_orb,2*N_ks_orb) )
 
@@ -238,9 +260,6 @@ def post_process(coeff, ene, issoc):
 
 def orthogonalize_orbitals(C):
     """
-    C = N_pw x N_mo   (just alpha or beta orbitals)
-    flag == 2:   C = N_pw x 2*N_mo (both alpha and beta orbitals)
-
     This function takes an input of orbitals (C), which may not
     be rigorously orthogonal, finds a suitable transformation (U)
     and converts them into rigorously orthogonal orbitals (C_tilda)
@@ -251,9 +270,22 @@ def orthogonalize_orbitals(C):
 
     U = S^{-1/2}, where S = C^+ * C
 
+    \param[in] C A matrix of size  N_pw x N_mo (just alpha or beta orbitals) 
+
+    Returns: A matrix of size  N_pw x N_mo (just alpha or beta orbitals), where
+             the overlap matrix constructed using this matrix is the identity matrix    
     """
 
     S = C.H() * C  # overlap matrix
+
+    # Test is S is invertabile
+    print "\nTesting if S is invertabile\n"
+    print FullPivLU_rank_invertible(S)
+    print "Det = ", FullPivLU_det(S)
+    is_inv = FullPivLU_rank_invertible(S)
+    if is_inv[1] != 1:
+        print "Error, S is not invertible, Exiting Program" 
+        sys.exit(0)
 
     S_half = CMATRIX(S.num_of_rows, S.num_of_cols)
     S_i_half = CMATRIX(S.num_of_rows, S.num_of_cols)
@@ -282,6 +314,11 @@ def orthogonalize_orbitals2(Ca,Cb):
 
     U = S^{-1/2}, where S = Ca^+ * Ca + Cb^+ * Cb
 
+    \param[in] Ca and Cb Matricies of size N_pw x N_mo - represent 
+               the spin-components of the adiabatic states
+
+    Returns: Two matricies of size N_pw x N_mo where the overlap matrix 
+             constructed using this matrix is the identity matrix  
     """
 
     S = Ca.H() * Ca + Cb.H() * Cb  # overlap matrix
@@ -295,4 +332,5 @@ def orthogonalize_orbitals2(Ca,Cb):
     Cb_tilda = Cb * S_i_half
 
     return Ca_tilda, Cb_tilda
+
 

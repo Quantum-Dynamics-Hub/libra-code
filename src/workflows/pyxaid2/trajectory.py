@@ -1,5 +1,5 @@
 #***********************************************************
-# * Copyright (C) 2017-2018 Wei Li and Alexey V. Akimov
+# * Copyright (C) 2017-2018 Brendan A. Smith, Wei Li, and Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
@@ -17,12 +17,23 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from libra_py import *
 
-
-from utils import get_value, post_process
-
+from utils import *
+import compute_nosoc
+import compute_hprime
 
 
 def run_qe(params, t, dirname0, dirname1):
+    """
+    This fucntions runs the QE code for a system whose information is stored in the 
+    params dictionary
+
+    \param[in] params A dictionary containing important simulation parameters
+    \param[in] t The current time step
+    \param[in] dirname0 Name of the temporary directory where data will be stored 
+              for the case without SOC 
+    \param[in] dirname1 Name of the temporary directory where data will be stored 
+              for the case with SOC 
+    """
 
     tim = Timer()
     tim.start()
@@ -67,6 +78,15 @@ def run_qe(params, t, dirname0, dirname1):
 
 
 def read_info(params):
+    """
+    This fucntions reads the output from a QE calculations, and stores the output
+    information in dictionaries
+
+    \param[in] params A dictionary containing important simulation parameters
+  
+    Returns: Lists that contains system specific information such as the values
+             for lattice constants, eigenvalues, etc. 
+    """
 
     tim = Timer()
     tim.start()
@@ -80,8 +100,8 @@ def read_info(params):
 
     # for non-relativistic, non-spin-polarized calculations
     if nac_method == 0:
-#        info0, all_e_dum0 = QE_methods.read_qe_index("%s/curr0/x0.export/index.xml" % wd, [], 0)
-        info0, all_e_dum0 = QE_methods.read_qe_index("%s/index.xml" % wd0, [], 0)
+        info0, all_e_dum0 = QE_methods.read_qe_index("%s/curr0/x0.export/index.xml" % wd0, [], 0)
+#        info0, all_e_dum0 = QE_methods.read_qe_index("%s/index.xml" % wd0, [], 0)
 
         if info0["nspin"] != 1:
             print "Error, you are not running the non-relativistic, non-spin-polarized calculation \
@@ -91,8 +111,8 @@ def read_info(params):
 
     # for non-relativistic, spin-polarized calculations
     if nac_method == 1 or nac_method == 3:
-#        info0, all_e_dum0 = QE_methods.read_qe_index("%s/curr0/x0.export/index.xml" % wd, [], 0)
-        info0, all_e_dum0 = QE_methods.read_qe_index("%s/index.xml" % wd0, [], 0)
+        info0, all_e_dum0 = QE_methods.read_qe_index("%s/curr0/x0.export/index.xml" % wd0, [], 0)
+#        info0, all_e_dum0 = QE_methods.read_qe_index("%s/index.xml" % wd0, [], 0)
 
         if info0["nspin"] != 2:
             print "Error, you are not running spin-polarized calculations,\
@@ -102,8 +122,8 @@ def read_info(params):
 
     # for fully-relativistic non-collinear calculations
     if nac_method == 2 or nac_method==3:
-#        info1, all_e_dum1 = QE_methods.read_qe_index("%s/curr1/x1.export/index.xml" % wd, [], 0)
-        info1, all_e_dum1 = QE_methods.read_qe_index("%s/index.xml" % wd1, [], 0)
+        info1, all_e_dum1 = QE_methods.read_qe_index("%s/curr1/x1.export/index.xml" % wd0, [], 0)
+#        info1, all_e_dum1 = QE_methods.read_qe_index("%s/index.xml" % wd1, [], 0)
 
         if info1["nspin"] != 4:
             print "Error,you are not running SOC calculations \
@@ -124,37 +144,37 @@ def read_all(params):
     The number of wfc and grid files may be larger than 1 - this is the
     case of spin-polarized or multiple k-points calculations
 
-    params - is the dictionary with the key-value pairs controlling the calculations
-    The possible keys are:
-    params["prefix"] - (string) - the location of the folder containing index.xml, wfc.*, and grid.* files
-    params["read_wfc"] - (0 or 1) - whether or not to read the wfc coefficients. Default: 1
-    params["read_grid"] - (0 or 1) - whether or not to read the grid informations. Default: 1
-    params["verb0"] - (0 or 1) - turn off/on the extra printout while reading index.xml. Default: 0
-    params["verb1"] - (0 or 1) - turn off/on the extra printout while reading wfc.*. Default: 0
-    params["verb2"] - (0 or 1) - turn off/on the extra printout while reading grid.*. Default: 0
-    params["nac_method"] - (0, 1, 2) - the expectations about what format to read
+   \param[in] params A dictionary containing important simulation parameters
+              params["prefix"] - (string) - the location of the folder containing index.xml, wfc.*, and grid.* files
+              params["read_wfc"] - (0 or 1) - whether or not to read the wfc coefficients. Default: 1
+              params["read_grid"] - (0 or 1) - whether or not to read the grid informations. Default: 1
+              params["verb0"] - (0 or 1) - turn off/on the extra printout while reading index.xml. Default: 0
+              params["verb1"] - (0 or 1) - turn off/on the extra printout while reading wfc.*. Default: 0
+              params["verb2"] - (0 or 1) - turn off/on the extra printout while reading grid.*. Default: 0
+              params["nac_method"] - (0, 1, 2) - the expectations about what format to read
                      0 - non-SOC, non-polarized
                      1 - non-SOC, spin-polarized
                      2 - SOC, non-collinear
-    params["minband"] - (int, starting from 1) - index of the lowest energy orbital to include in the active space
-    params["maxband"] - (int, starting from 1) - index of the highest energy orbital to include in the active space
+              params["minband"] - (int, starting from 1) - index of the lowest energy orbital to include 
+                                  in the active space
+              params["maxband"] - (int, starting from 1) - index of the highest energy orbital to include 
+                                  in the active space
+  
+    Returns: The function returs lists containing: 
+             e - energies
+             coeff - MOs the plane wave coefficients,
+             grid - the grid point vectors
 
-
-    Return values:
-    The function returs lists containing: 
-    e - energies
-    coeff - MOs the plane wave coefficients,
-    grid - the grid point vectors
-
-    The number of elements in each list is determined by the number of k points
-    Note that, for spin-polarized calculations, the number of k-points is always twice
-    that of the non-spin-polarized or non-collinear k-points
-    """
-
+             The number of elements in each list is determined by the number of k points
+             Note that, for spin-polarized calculations, the number of k-points is always twice
+             that of the non-spin-polarized or non-collinear k-points
+    """  
 
     tim = Timer()
     tim.start()
 
+    wd = get_value(params,"wd","wd","s")
+    rd = get_value(params,"rd",os.getcwd()+"../../res","s") # of where the files will be printed out
     prefix = get_value(params,"prefix","x0.export","s")
     is_wfc = get_value(params,"read_wfc",1,"i")
     is_grd = get_value(params,"read_grid",1,"i")
@@ -165,21 +185,22 @@ def read_all(params):
     minband = get_value(params,"minband",1,"i")
     maxband = get_value(params,"maxband",2,"i")
 
+    print "printing prefix:  ", prefix
 
     act_space = []    
     if(nac_method==0 or nac_method==1):
-        # Use this for nspin = 1 or 2
-        act_space = range(minband, maxband+1)     # min = 1, max = 2 => range(1,3) = [1,2]
+        file0 = "%s/%s/index.xml" % (wd, prefix)
+        act_space = range(minband, maxband+1)              # min = 1, max = 2 => range(1,3) = [1,2]
+
+        print "Reading index from file ", file0
+        info, e = QE_methods.read_qe_index(file0, act_space, 1)
 
     elif nac_method==2:
-        # Use this for nspin = 4
-        act_space = range(2*minband-1, 2*(maxband+1)-1 ) # min =1, max = 2 => range(1,5) = [1,2,3,4]
+        file1 = "%s/%s/index.xml" % (wd, prefix)
+        act_space = range(2*minband-1, 2*(maxband+1)-1 )   # min =1, max = 2 => range(1,5) = [1,2,3,4]
 
-
-
-    file0 = "%s/index.xml" % (prefix)
-    print "Reading index from file ", file0
-    info, e = QE_methods.read_qe_index(file0, act_space, verb0)
+        print "Reading index from file ", file1
+        info, e = QE_methods.read_qe_index(file1, act_space, verb0)
 
     coeff = []
     grid = []
@@ -189,14 +210,22 @@ def read_all(params):
          % (ik, info["k"][ik].x, info["k"][ik].y, info["k"][ik].z)
 
         if is_wfc==1:
-            file1 = "%s/wfc.%i" % (prefix, ik+1)
-            print "Reading the wfc from file ",file1
-            coeff.append( QE_methods.read_qe_wfc(file1, act_space, verb1))   # CMATRIX(npw x len(act_space))
+
+            file2 = "%s/%s/wfc.%i" % (wd, prefix, ik+1)
+            print "Reading the wfc from file ",file2
+            coeff.append( QE_methods.read_qe_wfc(file2, act_space, verb1))   # CMATRIX(npw x len(act_space))
+
+            ## Extract binary wfc file(s) ##
+            #rd_wfc = rd + "/wf_storage_"+str(params["curr_index"])
+            #pref1  = prefix[0:5]
+            #pref2  = prefix[6:8]
+            #os.system( "mkdir %s" % (rd_wfc) )
+            #os.system( "cp %s/%s/%s.wfc* %s/" % (wd, pref1, pref2, rd_wfc) )
 
         if is_grd==1:
-            file2 = "%s/grid.%i" % (prefix, ik+1)
-            print "Reading the grid from file ", file2
-            grid.append( QE_methods.read_qe_wfc_grid(file2 , verb2) )
+            file3 = "%s/%s/grid.%i" % (wd, prefix, ik+1)
+            print "Reading the grid from file ", file3
+            grid.append( QE_methods.read_qe_wfc_grid(file3 , verb2) )
 
     print "The time to read index, wavefunctions, and grid about your QE calculations = ", tim.stop();  
 
@@ -207,25 +236,25 @@ def read_all(params):
 
 def read_wfc_grid(params, info0, info1):
     """
-    Read the coefficients and energies for the mluti k-points cases, 
+    Read the coefficients and energies for the multi k-points cases, 
     even if some cases require gamma only
+
+    \param[in] params A dictionary containing important simulation parameters
+    \param[in] info0 Name of the temporary directory where data will be stored 
+              for the case without SOC 
+    \param[in] info1 Name of the temporary directory where data will be stored 
+              for the case with SOC 
+  
+    Returns: Dictionaries that contain the data for the eigenvalues, g-vectors, and pw coefficients 
+             for the current and next timesteps.    
     """
 
     tim = Timer()
     tim.start()
 
 
-    wd = get_value(params,"wd","wd","s")
     nac_method = get_value(params,"nac_method",0,"i")  # choose what method for NAC calculations to use: 0 -standard, 1-corrected
-    minband = get_value(params,"minband",1,"i")
-    maxband = get_value(params,"maxband",2,"i")
-    minband_soc = get_value(params,"minband_soc",1,"i")
-    maxband_soc = get_value(params,"maxband_soc",2,"i")
-    # Use this for nspin = 1 or 2
-    act_sp1 = range(minband, maxband+1)     # min = 1, max = 2 => range(1,3) = [1,2]
-    # Use this for nspin = 4
-    act_sp2 = range(2*minband_soc-1, 2*(maxband_soc+1)-1 ) # min =1, max = 2 => range(1,5) = [1,2,3,4]
-
+    orthogonalize = get_value(params,"orthogonalize","0","i")
 
     """
     Here, adi - refers to spin-adiabatic (2-component spinor functions)
@@ -239,35 +268,59 @@ def read_wfc_grid(params, info0, info1):
     if nac_method == 0 or nac_method == 1 or nac_method == 3:
 
         #====== Current electronic structure ========
-        e_curr, coeff_curr, grid_curr = read_all(wd, "curr", 0, act_sp1, info0)
+        params["prefix"] = "curr0/x0.export"
+        info_curr, e_curr, coeff_curr, grid_curr = read_all(params)
+
+        if orthogonalize==1:
+            print "Do internal orbital orthogonalization"
+            coeff_curr[0] = orthogonalize_orbitals(coeff_curr[0])
+
+            id1 = CMATRIX(coeff_curr[0].num_of_cols, coeff_curr[0].num_of_cols)
+            id1.identity()
+            if abs( (coeff_curr[0].H() * coeff_curr[0] - id1).max_elt() ) > 1e-5:
+                print "Error\n"
+                sys.exit(0)
+
+
         C_dia_curr, E_dia_curr = post_process(coeff_curr, e_curr, 0)
         res_curr["Coeff_dia"] = C_dia_curr
         res_curr["E_dia"] = E_dia_curr
         res_curr["grid"] = grid_curr
 
         #====== Next electronic structure ===========
-        e_next, coeff_next, grid_next = read_all(wd, "next", 0, act_sp1, info0)
+        params["prefix"] = "next0/x0.export"
+        info_next, e_next, coeff_next, grid_next = read_all(params)
+
+        if orthogonalize==1:
+            print "Do internal orbital orthogonalization"
+            coeff_next[0] = orthogonalize_orbitals(coeff_next[0])
+
         C_dia_next, E_dia_next = post_process(coeff_next, e_next, 0)
         res_next["Coeff_dia"] = C_dia_next
         res_next["E_dia"] = E_dia_next
         res_next["grid"] = grid_next
 
+
     if nac_method == 2 or nac_method == 3:
 
         #====== Current electron electructure =======
-        e_curr, coeff_curr, grid_curr = read_all(wd, "curr", 1, act_sp2, info1)
+        params["prefix"] = "curr1/x1.export"
+        info_curr, e_curr, coeff_curr, grid_curr = read_all(params)
         C_adi_curr, E_adi_curr = post_process(coeff_curr, e_curr, 1)
         res_curr["Coeff_adi"] = C_adi_curr
         res_curr["E_adi"] = E_adi_curr
+        res_curr["grid"] = grid_curr
 
        
         #====== Next electronic structure ===========
-        e_next, coeff_next, grid_next = read_all(wd, "next", 1, act_sp2, info1)
+        params["prefix"] = "next1/x1.export"
+        info_next, e_next, coeff_next, grid_next = read_all(params)
         C_adi_next, E_adi_next = post_process(coeff_next, e_next, 1)
         res_next["Coeff_adi"] = C_adi_next
         res_next["E_adi"] = E_adi_next
+        res_next["grid"] = grid_next
 
-         
+
     print "Time to read index, wfc, and wfc grids = ", tim.stop();
 
     return res_curr, res_next
@@ -276,6 +329,11 @@ def read_wfc_grid(params, info0, info1):
 
 
 def run(params):
+    """
+    This function is the main driver for workflows/pyxaid2
+
+    \param[in] params A dictionary containing important simulation parameters
+    """
 
     print "Starting trajectory.run"
 
@@ -347,8 +405,6 @@ def run(params):
     # Create the working directory where all output files will be written
     # The results directory should already exist
     os.system("mkdir %s" % wd)  
-                                
-
     while t<=stop_indx:
         print ">>>>>>>>>>>>>>>>>>>>  t= ", t, " <<<<<<<<<<<<<<<<<<<<<"
 
@@ -368,23 +424,30 @@ def run(params):
         
         if curr_index>=start_indx:
 
+            # Update curr_index in params - this may be useful
+            params["curr_index"] = curr_index
+
             # First see wether the calculation is what we wanted
             info0, all_e_dum0, info1, all_e_dum1 = read_info(params)
 
             # Read present and next electronic structure (es) in a formatted way
-            es_curr, es_next = read_wfc_grids(params, info0, info1)
-
+            es_curr, es_next = read_wfc_grid(params, info0, info1)
 
             # Finally,  using the current and the next wavefunctions to compute the properties of interest
-
             # non-relativistic, non-spin-polarized case
             if nac_method == 0 or nac_method == 1 or nac_method == 3:
 
                 if info0["nspin"]==1:  # non SOC case
                     if info0["nk"]==1: # Only one k-point
-                        compute_nosoc.compute_properties_gamma(params, es_curr, es_next)
+                        H_nosoc = compute_nosoc.compute_properties_gamma(params, es_curr, es_next, curr_index)
+
                     else: 
-                        compute_nosoc.compute_properties_general(params, es_curr, es_next)
+                        compute_nosoc.compute_properties_general(params, es_curr, es_next, curr_index)
+
+           
+                    if compute_Hprime == 1:
+                        compute_hprime.compute_hprime_nosoc(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
+
 
                 elif info0["nspin"]==2:
 
@@ -408,56 +471,14 @@ def run(params):
                         print "multiple k-point for spin-polarized case is not yet implemented"
                         sys.exit(0)
 
-
+               
 
             if nac_method == 2 or nac_method == 3:
 
                 if info1["nk"]==1: # Only one k-point
+               
+                    H_soc = compute_soc.compute_properties_gamma(params, es_curr, es_next, curr_index)
 
-                    S = coeff_curr1[0].H() * coeff_curr1[0]
-                    St = coeff_curr1[0].H() * coeff_next1[0]  # overlap of wfc at different times
-
-
-                    sx = S.num_of_cols
-                    ovlp = CMATRIX(sx/2, sx/2)
-                    ##### Pauli matrices ###
-                    #
-                    #        | 0  1 |         | 0  -i |         | 1   0 |
-                    #  sig1 =|      |  sig2 = |       |  sig3 = |       | 
-                    #        | 1  0 |         | i   0 |         | 0  -1 |
-                    #
-                    ######
- 
-                    sig1 = CMATRIX(sx/2, sx/2)
-                    sig2 = CMATRIX(sx/2, sx/2)
-                    sig3 = CMATRIX(sx/2, sx/2)
-
-                    nac = CMATRIX(sx/2, sx/2)
-                    ec = CMATRIX(sx/2, sx/2)
-                    en = CMATRIX(sx/2, sx/2)
-
-                    for n in xrange(sx/2):
-                        for k in xrange(sx/2):
-                            ovlp.set(n,k, S.get(2*n,2*k) + S.get(2*n+1,2*k+1) )
-                            sig1.set(n,k, S.get(2*n,2*k+1) + S.get(2*n+1,2*k) )
-                            sig2.set(n,k, (-S.get(2*n,2*k+1) + S.get(2*n+1,2*k))*(1.0j+0.0) )
-                            sig3.set(n,k, S.get(2*n,2*k) - S.get(2*n+1,2*k+1) )
-
-                            nac.set(n,k, St.get(2*n,2*k).real + St.get(2*n+1,2*k+1).real, 0.0 )
-                        ec.set(n,n, 0.5*(e_curr1[0].get(2*n, 2*n)+e_curr1[0].get(2*n+1, 2*n+1)) )
-                        en.set(n,n, 0.5*(e_next1[0].get(2*n, 2*n)+e_next1[0].get(2*n+1, 2*n+1)) )
-
-                    H_soc = 0.5*(ec + en) - (0.5j/dt)*(nac - nac.H())
-                    S_soc = ovlp
-
-                    sig1.real().show_matrix("%s/0_sig1_%d_re" % (rd, curr_index) )
-                    sig1.imag().show_matrix("%s/0_sig1_%d_im" % (rd, curr_index) )
-                    sig2.real().show_matrix("%s/0_sig2_%d_re" % (rd, curr_index) )
-                    sig2.imag().show_matrix("%s/0_sig2_%d_im" % (rd, curr_index) )
-                    sig3.real().show_matrix("%s/0_sig3_%d_re" % (rd, curr_index) )
-                    sig3.imag().show_matrix("%s/0_sig3_%d_im" % (rd, curr_index) )
-                    nac.real().show_matrix("%s/St_adi_ks_%d_re" % (rd, curr_index) )
-                    nac.imag().show_matrix("%s/St_adi_ks_%d_im" % (rd, curr_index) )
                 else:
                     print "Multiple k-points scheme with SOC is not yet implemented"
                     sys.exit(0)
@@ -481,16 +502,15 @@ def run(params):
                 params = {"do_orth": 0, "root_directory": rd, "curr_index": curr_index, "print_overlaps": 1, "dt": dt}
                 compute_ovlps(coeff_curr0, coeff_next0, coeff_curr1, coeff_next1, e_curr0, e_next0, e_curr1, e_next1, params)
 
-
-
+            
             if nac_method == 0 or nac_method == 1 or nac_method == 3:
-                H.real().show_matrix("%s/0_Ham_%d_re" % (rd, curr_index) )
-                H.imag().show_matrix("%s/0_Ham_%d_im" % (rd, curr_index) )
-
+            
+                H_nosoc.real().show_matrix("%s/0_Ham_%d_re" % (rd, curr_index) )
+                H_nosoc.imag().show_matrix("%s/0_Ham_%d_im" % (rd, curr_index) )
+            
             if nac_method == 2 or nac_method == 3:
                 H_soc.real().show_matrix("%s/0_Ham_soc_%d_re" % (rd, curr_index) )
                 H_soc.imag().show_matrix("%s/0_Ham_soc_%d_im" % (rd, curr_index) )
-
 
 
             #-----------------------------------------------------------------
@@ -499,14 +519,14 @@ def run(params):
             if nac_method == 0 or nac_method == 1 or nac_method==3:
                 os.system("rm -rf %s/curr0" % wd )
                 os.system("mv %s/next0 %s/curr0" % (wd, wd) )
-
+            
             if nac_method==2 or nac_method==3:
                 os.system("rm -rf %s/curr1" % wd )
                 os.system("mv %s/next1 %s/curr1" % (wd, wd) )
-
+            
             print "old files deleted, new have become old"
-
-
+             
+            
 # ACHTUNG!!! Restoring wfc makes some complications, so we might need to destroy wfc objects
 # after each round of operations and create new objects from the beginning - thia may be safer!
 
