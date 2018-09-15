@@ -29,6 +29,77 @@ namespace libhamiltonian{
 namespace libhamiltonian_model{
 
 
+void model_DAC(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+               vector<double> q, vector<double>& params){ 
+/*** 
+    To use with the nHamiltonian class
+
+  \param[out] Hdia  The Hamiltonian in the diabatic basis (diabatic Hamiltonian)
+  \param[out] Sdia  The overlap matrix in the diabatic basis
+  \param[out] d1ham_dia  The 1-st order derivatives of the diabatic Hamiltonian w.r.t. all nuclear DOFs
+  \param[out] dc1_dia  The 1-st order derivative couplings in the diabatic basis w.r.t. all nuclear DOFs
+  \param[in] q The nuclear DOFs
+  \param[in] params The model parameters: up to 4 parameters (see the chart below) will be used. If not defined,
+            the default values will be used:
+
+  Internal parameter        Input        Default value
+   A                       param[0]         0.100
+   B                       param[1]         0.028
+   C                       param[2]         0.015
+   D                       param[3]         0.060
+   E                       param[4]         0.050
+
+  DAC hamiltonian and its derivatives in diabatic representation:
+  H_00 = 0.0
+  H_11 = E - A*exp(-B*x^2)
+  H_01 = C*exp(-D*x^2)
+*/
+
+
+    // DAC potetnial
+    // Default parameters
+    double A = 0.100;  double B = 0.028;
+    double C = 0.015;  double D = 0.06;
+    double E = 0.05;
+
+    if(params.size()>=5){
+      A = params[0];    B = params[1];
+      C = params[2];    D = params[3];
+      E = params[4];
+    }
+
+    double H00, H01, H10, H11;      
+    double dH00, dH01, dH10, dH11;
+
+    // H00, H11
+    // H01 = H10
+    double e = A*exp(-B*q[0]*q[0]);
+
+    H00 = 0.0;                  H01 = C*exp(-D*q[0]*q[0]);
+    H10 = C*exp(-D*q[0]*q[0]);  H11 = E - e;
+       
+    dH00 = 0.0;                 dH01 =  -2.0*D*q[0]*H01;
+    dH10 = -2.0*D*q[0]*H10;     dH11 =  2.0*B*q[0]*e;
+
+    Sdia.set(0,0, 1.0, 0.0);  Sdia.set(0,1, 0.0, 0.0);
+    Sdia.set(1,0, 0.0, 0.0);  Sdia.set(1,1, 1.0, 0.0);
+
+    Hdia.set(0,0, H00, 0.0);  Hdia.set(0,1, H01, 0.0);
+    Hdia.set(1,0, H10, 0.0);  Hdia.set(1,1, H11, 0.0);
+
+    //  d Hdia / dq_0
+    d1ham_dia[0].set(0,0, dH00, 0.0);   d1ham_dia[0].set(0,1, dH01, 0.0);
+    d1ham_dia[0].set(1,0, dH10, 0.0);   d1ham_dia[0].set(1,1, dH11, 0.0);
+
+    //  <dia| d/dq_0| dia >
+    dc1_dia[0].set(0,0, 0.0, 0.0);   dc1_dia[0].set(0,1, 0.0, 0.0);
+    dc1_dia[0].set(1,0, 0.0, 0.0);   dc1_dia[0].set(1,1, 0.0, 0.0);
+
+}
+
+
+
+
 void DAC_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params){ 
 /**
   \param[in] x The nuclear coordinate (1D)

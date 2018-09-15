@@ -123,6 +123,7 @@ typedef std::vector< Electronic > ElectronicList; ///< Type containing the vecto
 
 
 // In Electronic_Dynamics1.cpp
+
 void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham);
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib);
 void propagate_electronic(double dt,CMATRIX& Coeff, CMATRIX& Hvib);
@@ -133,6 +134,10 @@ void propagate_electronic(double dt,CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S);
 
 void propagate_electronic_nonHermitian(double dt, CMATRIX& Coeff, CMATRIX& Hvib);
 
+void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep);
+void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep);
+void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep);
+//void propagate_electronic(double dt, nHamiltonian& ham, int rep);
 
 void grid_propagator(double dt, CMATRIX& Hvib, CMATRIX& S, CMATRIX& U);
 

@@ -63,6 +63,10 @@
 #include "qchem_tools/libqchem_tools.h"
 #include "solvers/libsolvers.h"
 
+
+#include "montecarlo/libmontecarlo.h"
+#include "opt/libopt.h"
+
 /// ErgoSCF numeric types
 #include "realtype.h"
 

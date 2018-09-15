@@ -1,0 +1,45 @@
+<calculation>
+  runtype = scf
+  hamiltonian = eht
+  DF = 0
+</calculation>
+
+<hamiltonian>
+  parameters = muller_params
+  eht_params_format = eht+2
+  eht_formula = 0
+  eht_sce_formula = 0
+  eht_fock_opt = 0
+  eht_electrostatics = 0
+</hamiltonian>
+
+<guess_options>
+  guess_type = core
+</guess_options>
+
+<scf_options> 
+  use_disk = 0
+  scf_algo = none  
+  use_rosh = 0
+
+  pop_opt = 0
+
+  use_diis = 0
+  diis_max = 5
+  diis_start_iter = 10
+
+  use_level_shift = 0
+  shift_magnitude = 2.5
+
+  use_damping = 0
+  damping_start = 5
+  damping_const = 0.1
+
+  Niter = 300
+  etol = 1e-4
+  den_tol = 1e-3
+
+  degen_tol = 0.2
+</scf_options>
+
+

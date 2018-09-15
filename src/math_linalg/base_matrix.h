@@ -28,6 +28,7 @@
 
 
 #include "../io/libio.h"
+#include "permutations.h"
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -228,18 +229,50 @@ public:
 
   ///========= Operations =====================
   ///< Increment the "row", "col" matrix element by "x"
-  void add(int row,int col, T1 x){ M[row*n_cols + col] += (T1)x; }  
-//  void add(int row,int col, int x){ M[row*n_cols + col] += x; }  
+  void add(int row,int col, T1 x){ 
 
-  ///< Increment the "row", "col" matrix element by "x"
-//  void add(int row,int col, double x){ M[row*n_cols + col] += x; }  
+    if(row==-1 && col==-1){
+      for(int i=0;i<n_rows;i++){ 
+        for(int j=0;j<n_cols;j++){ M[i*n_cols + j] += (T1)x; }
+      }
+    }
+
+    if(row==-1 && col!=-1){
+      for(int i=0;i<n_rows;i++){ M[i*n_cols + col] += (T1)x; }
+    }
+
+    if(row!=-1 && col==-1){
+      for(int i=0;i<n_cols;i++){ M[row*n_cols + i] += (T1)x; }
+    }
+
+    if(row!=-1 && col!=-1){
+      M[row*n_cols + col] += (T1)x; 
+    }
+
+
+  }
 
   ///< Scale (multiply)  the "row", "col" matrix element by "x"
-  void scale(int row,int col, T1 x){ M[row*n_cols + col] *= (T1)x; }  
-//  void scale(int row,int col, int x){ M[row*n_cols + col] *= x; }  
+  void scale(int row,int col, T1 x){ 
 
-  ///< Scale (multiply) the "row", "col" matrix element by "x"
-//  void scale(int row,int col, double x){ M[row*n_cols + col] *= x; }  
+    if(row==-1 && col==-1){
+      for(int i=0;i<n_rows;i++){ 
+        for(int j=0;j<n_cols;j++){ M[i*n_cols + j] *= (T1)x; }
+      }
+    }
+
+    if(row==-1 && col!=-1){
+      for(int i=0;i<n_rows;i++){ M[i*n_cols + col] *= (T1)x; }
+    }
+
+    if(row!=-1 && col==-1){
+      for(int i=0;i<n_cols;i++){ M[row*n_cols + i] *= (T1)x; }
+    }
+
+    if(row!=-1 && col!=-1){
+      M[row*n_cols + col] *= (T1)x; 
+    }
+  }  
 
 
   void product(const base_matrix<T1>& B,const base_matrix<T1>& C){
@@ -394,6 +427,31 @@ public:
     }
   }
 
+  void permute_cols(vector<int>& perm){ ///< Permute columns according to the given permutation
+
+    int col;
+    check_permutation(perm, n_cols);
+
+    vector<T1> tmp(n_cols);
+    for(int row=0;row<n_rows;row++){ 
+      for(col=0; col<n_cols; col++){   tmp[col] = M[row*n_cols+perm[col]];   }
+      for(col=0; col<n_cols; col++){   M[row*n_cols+col] = tmp[col];   }
+    }
+  }
+
+  void permute_rows(vector<int>& perm){ ///< Permute rows according to the given permutation
+
+    int row;
+    check_permutation(perm, n_rows);
+
+    vector<T1> tmp(n_rows);
+    for(int col=0;col<n_cols;col++){ 
+      for(row=0; row<n_rows; row++){   tmp[row] = M[perm[row]*n_cols+col];   }
+      for(row=0; row<n_rows; row++){   M[row*n_cols+col] = tmp[row];   }
+
+    }
+  }
+
 
   void RightRotation(int i,int j, T1 sine, T1 cosine){
     T1 a_row_i,a_row_j, A_row_i,A_row_j;
@@ -454,6 +512,62 @@ public:
     for(int i=0;i<n_elts; i++){   res += M[i];   }
     return res;
   }
+
+
+  T1 sum_col(int icol){          ///< Compute the sum of matrix elements in a given column
+    T1 res = 0.0;
+    for(int irow=0; irow<n_rows; irow++){   res += M[irow * n_rows + icol];   }
+    return res;
+  }
+
+  T1 sum_col(int icol, int power){      ///< Compute the sum of n-th power of matrix elements in a given column
+    T1 res = 0.0;
+    for(int irow=0; irow<n_rows; irow++){   
+
+      T1 tn = (T1)1.0;
+      T1 t1 = M[irow * n_rows + icol];
+      for(int n=0;n<power;n++){   tn *= t1;   }
+      res += tn;  
+
+    }
+    return res;
+  }
+
+
+  T1 sum_row(int irow){          ///< Compute the sum of matrix elements in a given row
+    T1 res = 0.0;
+    for(int icol=0; icol<n_cols; icol++){   res += M[irow * n_rows + icol];   }
+    return res;
+  }
+
+  T1 sum_row(int irow, int power){      ///< Compute the sum of n-th power of matrix elements in a given row
+    T1 res = 0.0;
+    for(int icol=0; icol<n_cols; icol++){   
+
+      T1 tn = (T1)1.0;
+      T1 t1 = M[irow * n_rows + icol];
+      for(int n=0;n<power;n++){   tn *= t1;   }
+      res += tn;  
+
+    }
+    return res;
+  }
+
+
+
+  T1 prod_col(int icol){          ///< Compute the product of matrix elements in a given column
+    T1 res = (T1)1.0;
+    for(int irow=0; irow<n_rows; irow++){   res *= M[irow * n_rows + icol];   }
+    return res;
+  }
+
+  T1 prod_row(int irow){          ///< Compute the product of matrix elements in a given row
+    T1 res = (T1)1.0;
+    for(int icol=0; icol<n_cols; icol++){   res *= M[irow * n_rows + icol];   }
+    return res;
+  }
+
+
 
 
 

@@ -77,7 +77,7 @@ void Integrator(MATRIX& q, MATRIX& p, vector<MATRIX>& M, double& action, MATRIX&
   MATRIX dv(Ndof,1);     // derivatives
   MATRIX d2v(Ndof,Ndof); // 2-nd order derivatives
 
-  const double const1 = 1.d/sqrt(3.0);
+  const double const1 = 1.0/sqrt(3.0);
   vector<double> a(4,0.0), b(4,0.0);
   a[0]  = 0.5 * (1.0 - const1) * dt;
   a[1]  = const1 * dt;

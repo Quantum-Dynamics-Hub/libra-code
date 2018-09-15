@@ -51,6 +51,17 @@ void export_base_matrix(){
 //  void (base_matrix<T1>::*expt_scale_v1)(int row,int col, int x) = &base_matrix<T1>::scale;
 //  void (base_matrix<T1>::*expt_scale_v2)(int row,int col, double x) = &base_matrix<T1>::scale;
 
+
+  T1 (base_matrix<T1>::*expt_sum_col_v1)(int icol) = &base_matrix<T1>::sum_col;
+  T1 (base_matrix<T1>::*expt_sum_col_v2)(int icol, int power) = &base_matrix<T1>::sum_col;
+  T1 (base_matrix<T1>::*expt_sum_row_v1)(int irow) = &base_matrix<T1>::sum_row;
+  T1 (base_matrix<T1>::*expt_sum_row_v2)(int irow, int power) = &base_matrix<T1>::sum_row;
+
+  T1 (base_matrix<T1>::*expt_prod_col_v1)(int icol) = &base_matrix<T1>::prod_col;
+  T1 (base_matrix<T1>::*expt_prod_row_v1)(int irow) = &base_matrix<T1>::prod_row;
+
+
+
   void (base_matrix<T1>::*expt_show_matrix_v1)() = &base_matrix<T1>::show_matrix;
   void (base_matrix<T1>::*expt_show_matrix_v2)(char * Output_File) = &base_matrix<T1>::show_matrix;
 
@@ -109,12 +120,22 @@ void export_base_matrix(){
       .def("Transpose", &base_matrix<T1>::Transpose )
       .def("swap_cols", &base_matrix<T1>::swap_cols )
       .def("swap_rows", &base_matrix<T1>::swap_rows )
+      .def("permute_cols", &base_matrix<T1>::permute_cols )
+      .def("permute_rows", &base_matrix<T1>::permute_rows )
       .def("RightRotation", &base_matrix<T1>::RightRotation )
       .def("LeftRotation", &base_matrix<T1>::LeftRotation )
 
       /// Generic properties
       .def("tr", &base_matrix<T1>::tr )
       .def("sum", &base_matrix<T1>::sum )
+
+      .def("sum_col", expt_sum_col_v1)
+      .def("sum_col", expt_sum_col_v2)
+      .def("sum_row", expt_sum_row_v1)
+      .def("sum_row", expt_sum_row_v2)
+      .def("prod_col", expt_prod_col_v1)
+      .def("prod_row", expt_prod_row_v1)
+
 
       /// Generic IO operations
       .def("bin_dump", &base_matrix<T1>::bin_dump )
@@ -380,6 +401,24 @@ void export_CMATRIX(){
   ;
 
 
+  vector<int> (*expt_get_reordering_v1)(CMATRIX& X) = &get_reordering;
+  def("get_reordering", expt_get_reordering_v1);
+
+
+  vector<int> (*expt_compute_signature_v1)(CMATRIX& Ref, CMATRIX& X) = &compute_signature;
+  vector<int> (*expt_compute_signature_v2)(CMATRIX& X) = &compute_signature;
+  def("compute_signature", expt_compute_signature_v1);
+  def("compute_signature", expt_compute_signature_v2);
+
+
+  void (*expt_correct_phase_v1)(CMATRIX& Ref, CMATRIX& X) = &correct_phase;
+  void (*expt_correct_phase_v2)(CMATRIX& X) = &correct_phase;
+  def("correct_phase", expt_correct_phase_v1);
+  def("correct_phase", expt_correct_phase_v2);
+
+
+
+
 
 }
 
@@ -437,6 +476,11 @@ void export_VECTOR(){
 
 void export_MATRIX3x3(){
 
+  void (MATRIX3x3::*expt_eigen_v1)(MATRIX3x3&, MATRIX3x3&) = &MATRIX3x3::eigen;  
+  void (MATRIX3x3::*expt_eigen_v2)(MATRIX3x3&, MATRIX3x3&, double) = &MATRIX3x3::eigen;  
+
+  void (MATRIX3x3::*expt_diag_v1)(double x) = &MATRIX3x3::diag;  
+  void (MATRIX3x3::*expt_diag_v2)(double x, double y, double z) = &MATRIX3x3::diag;  
 
   class_<MATRIX3x3>("MATRIX3x3",init<>())      
       .def(init<const VECTOR&, const VECTOR&, const VECTOR&>())
@@ -456,10 +500,33 @@ void export_MATRIX3x3(){
 
       .def(self+self)
       .def(self-self)
+      .def(self+=self)
+      .def(self-=self)
       .def(self*self)
       .def(self/double())
       .def(self*double())
+      .def(self/=double())
+      .def(self*=double())
       .def(double()*self)
+      .def(self*VECTOR())
+
+      .def("tensor_product",&MATRIX3x3::tensor_product)
+      .def("Determinant",&MATRIX3x3::Determinant)
+      .def("tr",&MATRIX3x3::tr)
+      .def("get_vectors",&MATRIX3x3::get_vectors)
+      .def("inverse",&MATRIX3x3::inverse)
+      .def("transpose",&MATRIX3x3::transpose)
+      .def("T",&MATRIX3x3::T)
+      .def("eigen",expt_eigen_v1)
+      .def("eigen",expt_eigen_v2)
+      .def("identity",&MATRIX3x3::identity)
+      .def("diag",expt_diag_v1)
+      .def("diag",expt_diag_v2)
+      .def("skew",&MATRIX3x3::skew)
+      .def("Rx",&MATRIX3x3::Rx)
+      .def("Ry",&MATRIX3x3::Ry)
+      .def("Rz",&MATRIX3x3::Rz)
+      .def("Rotation",&MATRIX3x3::Rotation)
 
   ;
 
@@ -492,6 +559,17 @@ void export_QUATERNION(){
       .def(double()*self)
       .def(self+=self)
       .def(self-=self)
+      .def(self*VECTOR())
+      .def(VECTOR()*self)
+      .def(MATRIX()*self)
+
+      .def("inverse", &QUATERNION::inverse)
+      .def("conj", &QUATERNION::conj)
+      .def("sqal", &QUATERNION::sqal)
+      .def("vect", &QUATERNION::vect)
+      .def("norm", &QUATERNION::norm)
+      .def("mod", &QUATERNION::mod)
+      .def("normalize", &QUATERNION::normalize)
 
   ;
 
@@ -563,6 +641,28 @@ void export_FT(){
 
 }
 
+void export_permutations(){
+
+
+  vector<int> (*expt_id_permutation_v1)(int sz) = &id_permutation;
+  def("id_permutation", expt_id_permutation_v1);
+
+  vector<int> (*expt_inverse_permutation_v1)(vector<int>& perm) = &inverse_permutation;
+  def("inverse_permutation", expt_inverse_permutation_v1);
+
+  vector<int> (*expt_composite_permutation_v1)(vector<int>& perm_t, vector<int>& perm_cum) = &composite_permutation;
+  def("composite_permutation", expt_composite_permutation_v1);
+
+
+  void (*expt_update_permutation_v1)(vector<int>& perm_t, vector<int>& perm_cum) = &update_permutation;
+  def("update_permutation", expt_update_permutation_v1);
+
+
+  void (*expt_check_permutation_v1)(vector<int>& perm, int n) = &check_permutation;
+  def("check_permutation", expt_check_permutation_v1);
+
+
+}
 
 void export_linalg_objects(){
 /** 
@@ -589,6 +689,27 @@ void export_linalg_objects(){
   ;
 
 
+
+
+  class_< intList2 >("intList2")
+      .def(vector_indexing_suite< intList2 >())
+  ;
+
+  class_< floatList2 >("floatList2")
+      .def(vector_indexing_suite< floatList2 >())
+  ;
+
+  class_< doubleList2 >("doubleList2")
+      .def(vector_indexing_suite< doubleList2 >())
+  ;
+
+  class_< complexList >("complexList2")
+      .def(vector_indexing_suite< complexList2 >())
+  ;
+
+
+
+
   class_< intMap >("intMap")
       .def(vector_indexing_suite< intMap >())
   ;
@@ -605,6 +726,8 @@ void export_linalg_objects(){
       .def(vector_indexing_suite< complexMap >())
   ;
 
+
+  export_permutations();
 
   export_VECTOR();
   export_QUATERNION();
@@ -624,6 +747,9 @@ void export_linalg_objects(){
   def("MATRIX_TO_QUATERNION", expt_MATRIX_TO_QUATERNION_v2);
   def("QUATERNION_TO_MATRIX", expt_QUATERNION_TO_MATRIX_v1);
   def("QUATERNION_TO_MATRIX", expt_QUATERNION_TO_MATRIX_v2);
+
+
+
 
 
 

@@ -349,7 +349,7 @@ def md( params ):
 
 
     # Compute the ACF and spectra    
-    acf.recipe1(mu, dt*0.02419, 5000.0, 1.0, acffile, specfile, 0)
+    acf_vector.recipe1(mu, dt*0.02419, 5000.0, 1.0, acffile, specfile, 0)
 
 
 

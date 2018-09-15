@@ -1070,7 +1070,7 @@ double Vdw_LJ2_no_excl(VECTOR* r,                                               
                     f[at_indx1] += f12;
                     f[at_indx2] -= f12;
 
-//                    tp.tensor_product(rij , f12);   at_stress += tscale*tp;
+                    tp.tensor_product(rij , f12);   at_stress += tscale*tp;
                     tp.tensor_product(gij , f12);   fr_stress += tscale*tp;
                   }
 
@@ -1153,6 +1153,8 @@ double Vdw_LJ2_excl(VECTOR* r,                                               /* 
             f12 = (SW*f1 - en*dSW);
             f[at_indx1] += f12;
             f[at_indx2] -= f12;
+
+            tp.tensor_product(rij , f12);   at_stress += tscale*tp;
             tp.tensor_product(gij , f12);   fr_stress += tscale*tp;
           }
         }// scl1>0.0

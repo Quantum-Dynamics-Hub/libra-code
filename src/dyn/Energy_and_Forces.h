@@ -44,6 +44,7 @@ using namespace libelectronic;
 using namespace libensemble;
 
 
+double compute_kinetic_energy(MATRIX& p, MATRIX& invM);
 double compute_kinetic_energy(Nuclear* mol);
 double compute_kinetic_energy(Nuclear& mol);
 double compute_kinetic_energy(Ensemble& ens);

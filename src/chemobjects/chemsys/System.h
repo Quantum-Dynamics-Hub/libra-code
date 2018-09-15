@@ -223,6 +223,8 @@ public:
   void TRANSLATE_MOLECULE(double,VECTOR,int);
   void ROTATE_FRAGMENT(double, VECTOR,int);
   void ROTATE_FRAGMENT(double, VECTOR,int, VECTOR);
+  void ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, int center_indx);
+
   void ROTATE_MOLECULE(double, VECTOR,int);
 
   //----------- Defined in System_methods4.cpp ------------------

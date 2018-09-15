@@ -23,6 +23,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 from libra_py import *
 
+rnd = Random()
 
 def main():
 
@@ -91,7 +92,7 @@ def main():
 
     ########################## Production MD #################################
 
-    syst.init_atom_velocities(300.0)
+    syst.init_atom_velocities(300.0, rnd)
 
     f = open("_en_md.txt","w")
     f.close()

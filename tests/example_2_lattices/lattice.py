@@ -456,7 +456,7 @@ def md(syst, R, MaxCoord, params):
 
     # Compute the ACF and spectra    
     if is_mu_acf==1:
-        acf.recipe1(mu, dt*0.02419, 5000.0, 1.0, acffile, specfile, 0)
+        acf_vector.recipe1(mu, dt*0.02419, 5000.0, 1.0, acffile, specfile, 0)
 
 
 

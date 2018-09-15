@@ -23,6 +23,8 @@ using namespace liblinalg;
 namespace libhamiltonian{
 namespace libhamiltonian_model{
 
+void model_ECWR(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
+                vector<double>& q, vector<double>& params);
 
 void ECWR_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params_);
 boost::python::list ECWR_Ham(double x, boost::python::list params_);
