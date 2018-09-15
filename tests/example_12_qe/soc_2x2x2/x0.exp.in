@@ -1,0 +1,10 @@
+&inputpp
+  prefix = 'x0',
+  outdir = './',
+  pseudo_dir = '/projects/academic/alexeyak/alexeyak/multiple-k-points/pp',
+  psfile(1) = 'Ga.pbe-dn-rrkjus_psl.0.2.UPF',
+  psfile(2) = 'As.pbe-n-rrkjus_psl.0.2.UPF',
+  single_file = .FALSE.,
+  ascii = .TRUE.,
+  uspp_spsi = .FALSE.,
+/

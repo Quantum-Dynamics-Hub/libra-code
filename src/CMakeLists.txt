@@ -207,11 +207,6 @@ add_custom_target(copy-libra-py ALL
     COMMAND cmake -E copy_directory ${CMAKE_SOURCE_DIR}/src/libra_py ${CMAKE_BINARY_DIR}/src/libra_py
 )
 
-add_custom_target(copy-workflows ALL
-    COMMAND cmake -E copy_directory ${CMAKE_SOURCE_DIR}/src/workflows ${CMAKE_BINARY_DIR}/src/workflows
-)
-
-
 add_custom_target(copy-libra-params ALL
     COMMAND cmake -E copy_directory ${CMAKE_SOURCE_DIR}/src/libra_params ${CMAKE_BINARY_DIR}/src/libra_params
 )

@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2015 Alexey V. Akimov
+#* Copyright (C) 2015-2018 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -16,56 +16,23 @@ import os
 import sys
 import math
 
-# Fisrt, we add the location of the library to test to the PYTHON path
-cwd = os.getcwd()
-print "Current working directory", cwd
-sys.path.insert(1,cwd+"/../../../_build/src/mmath")
-sys.path.insert(1,cwd+"/../../../_build/src/chemobjects")
-sys.path.insert(1,cwd+"/../../../_build/src/hamiltonian")
-sys.path.insert(1,cwd+"/../../../_build/src/hamiltonian/Hamiltonian_Atomistic")
-sys.path.insert(1,cwd+"/../../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM")
-sys.path.insert(1,cwd+"/../../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Control_Parameters")
-sys.path.insert(1,cwd+"/../../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Model_Parameters")
-sys.path.insert(1,cwd+"/../../../_build/src/hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Basis_Setups")
-sys.path.insert(1,cwd+"/../../../_build/src/dyn")
-sys.path.insert(1,cwd+"/../../../_build/src/qchem/qobjects")
-sys.path.insert(1,cwd+"/../../../_build/src/qchem/basis")
-sys.path.insert(1,cwd+"/../../../_build/src/converters")
-sys.path.insert(1,cwd+"/../../../_build/src/calculators")
-sys.path.insert(1,cwd+"/../../../_build/src/qchem_tools")
+if sys.platform=="cygwin":
+    from cyglibra_core import *
+elif sys.platform=="linux" or sys.platform=="linux2":
+    from liblibra_core import *
 
-print "\nTest 1: Importing the library and its content"
-from cygmmath import *
-from cygchemobjects import *
-from cyghamiltonian import *
-from cyghamiltonian_qm import *
-from cygcontrol_parameters import *
-from cygmodel_parameters import *
-from cygbasis_setups import *
-from cygdyn import *
-from cygqobjects import *
-from cygbasis import *
-from cygconverters import *
-from cygcalculators import *
-from cygqchem_tools import *
-
-from LoadPT import * # Load_PT
-from LoadMolecule import * # Load_Molecule
+from libra_py import proj_dos, LoadPT, LoadMolecule
 
 
 
 #=========== STEP 1:  Create Universe and populate it ================
 U = Universe()
-Load_PT(U, "elements.dat", 1)
+LoadPT.Load_PT(U, "elements.dat", 1)
 
 
 #=========== STEP 2:  Create system and load a molecule ================
 syst = System()
-Load_Molecule(U, syst, os.getcwd()+"/QD_6_h.inp.xyz", "xyz")
-#Load_Molecule(U, syst, os.getcwd()+"/benzene.pdb", "pdb_1")
-#Load_Molecule(U, syst, os.getcwd()+"/c.pdb", "pdb_1")
-#Load_Molecule(U, syst, os.getcwd()+"/c2.pdb", "pdb_1")
-#Load_Molecule(U, syst, os.getcwd()+"/ch4.pdb", "pdb_1")
+LoadMolecule.Load_Molecule(U, syst, os.getcwd()+"/QD_6_h.inp.xyz", "xyz")
 
 
 print "Number of atoms in the system = ", syst.Number_of_atoms
@@ -205,18 +172,12 @@ prms.nx_grid = 80
 prms.ny_grid = 80
 prms.nz_grid = 80
 prms.charge_density_prefix = "qd6/"
-
 charge_density( el, syst, basis_ao, prms)
 
 
 # Compute DOSs
 prms.dos_prefix = "qd6/"
 compute_dos( el, syst, basis_ao, prms, atom_to_ao_map)
-
-
-sys.path.insert(1,cwd+"/../../../_build/src/scripts")
-import proj_dos
-
-proj_dos.main(-35.0, 35.0, 0.1,[["tot",range(0,103)]],"qd6/_alpha_wfc_atom","dos_proj.txt",238)    
+proj_dos.pdos(-35.0, 35.0, 0.1,[["tot",range(0,103)]],"qd6/_alpha_wfc_atom","dos_proj.txt",238)    
 
 

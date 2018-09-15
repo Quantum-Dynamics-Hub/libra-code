@@ -1,0 +1,66 @@
+&CONTROL
+  calculation = 'scf',
+  dt = 20.67055,
+!  nstep = 50,
+  pseudo_dir = '/projects/academic/alexeyak/alexeyak/multiple-k-points/pp',
+  outdir = './',
+  prefix = 'x0',
+  disk_io = 'low',
+  wf_collect = .true.
+/
+
+&SYSTEM
+  ibrav = 0,
+  celldm(1) = 1.89,
+  nat = 8,
+  ntyp = 2,
+  nspin = 1,
+  nbnd = 100,
+  ecutwfc = 25,
+  tot_charge = 0.0,
+  !starting_magnetization(1) = 0.01,
+  occupations = 'smearing',
+  smearing = 'gaussian',
+  degauss = 0.005,
+  nosym = .true.,
+  !lspinorb=.true.,
+  !noncolin = .true.,
+/
+
+&ELECTRONS
+  electron_maxstep = 300,
+  conv_thr = 1.D-5,
+  mixing_beta = 0.45,
+/
+
+&IONS
+  ion_dynamics = 'verlet',
+  ion_temperature = 'andersen',
+  tempw = 300.00 ,
+  nraise = 1,
+/
+
+
+ATOMIC_SPECIES
+ Ga   69.723   Ga.pbe-dn-rrkjus_psl.0.2.UPF
+ As   74.921   As.pbe-n-rrkjus_psl.0.2.UPF
+
+
+K_POINTS automatic
+ 1 1 1  0 0 0
+     
+CELL_PARAMETERS
+   5.745328496   0.000000000   0.000000000
+   0.000000000   5.745329803   0.000000000
+   0.000000000   0.000000000   5.745329473 
+
+ATOMIC_POSITIONS (alat)
+Ga   0.0000031   -0.0000044  0.0000016
+Ga   0.0000017   2.8749712  2.8749847
+Ga   2.8749938   0.0000074  2.8749783
+Ga   2.8749672   2.8749899  -0.0000003
+As   1.4374897   1.4374899  1.4374891
+As   4.3124776   4.3124655  1.4374902
+As   4.3124735   1.4374960  4.3124868
+As   1.4374889   4.3124777  4.3124655
+
