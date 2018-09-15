@@ -53,6 +53,11 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ha
 // Ehrenfest.cpp
 void Ehrenfest0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham, bp::object py_funct, bp::object params, int rep);
 void Ehrenfest1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham, bp::object py_funct, bp::object params, int rep);
+void Ehrenfest2(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, 
+                nHamiltonian& ham, bp::object py_funct, bp::object params, int rep, int do_reordering, int do_phase_correction);
+void Ehrenfest2(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, 
+                nHamiltonian& ham, bp::object py_funct, bp::object params, int rep);
+
 
 
 }// namespace libdyn

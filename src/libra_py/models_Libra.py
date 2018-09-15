@@ -395,3 +395,129 @@ def model5(q, params):
 
     return obj
 
+
+
+def model6(q, params):
+    """
+              A0*cos(w0*x+delta0) + B0         V
+    Hdia =               V        A1*cos(w1*x+delta1) + B1
+
+    Sdia =  I
+
+    Ddia  = 0.0
+
+    """
+
+    Hdia = CMATRIX(2,2)
+    Sdia = CMATRIX(2,2)
+    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(2,2))
+    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(2,2))
+  
+
+    x = q.get(0)
+    A0, A1 = params["A0"], params["A1"]
+    B0, B1 = params["B0"], params["B1"]
+    w0, w1 = params["w0"], params["w1"]
+    delta0, delta1 = params["delta0"], params["delta1"]
+    V01 = params["V01"]
+
+    Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
+    Sdia.set(1,0, 0.0+0.0j);  Sdia.set(1,1, 1.0+0.0j);
+
+    Hdia.set(0,0, (A0*math.cos(w0*x+delta0) + B0)*(1.0+0.0j) );   Hdia.set(0,1, V01*(1.0+0.0j));
+    Hdia.set(1,0, V01*(1.0+0.0j));                  Hdia.set(1,1, (A1*math.cos(w1*x+delta1) + B1)*(1.0+0.0j));
+
+
+    for i in [0]:
+        #  d Hdia / dR_0
+        d1ham_dia[i].set(0,0,-w0*A0*math.sin(w0*x+delta0)*(1.0+0.0j) );   d1ham_dia[i].set(0,1, 0.0+0.0j);
+        d1ham_dia[i].set(1,0, 0.0+0.0j);                        d1ham_dia[i].set(1,1, -w1*A1*math.sin(w1*x+delta1)*(1.0+0.0j));
+
+        #  <dia| d/dR_0| dia >
+        dc1_dia[i].set(0,0, 0.0+0.0j);   dc1_dia[i].set(0,1, 0.0+0.0j);
+        dc1_dia[i].set(1,0, 0.0+0.0j);   dc1_dia[i].set(1,1, 0.0+0.0j);
+
+
+    obj = tmp()
+    obj.ham_dia = Hdia
+    obj.ovlp_dia = Sdia
+    obj.d1ham_dia = d1ham_dia
+    obj.dc1_dia = dc1_dia
+
+    return obj
+
+
+
+
+def model7(q, params):
+    """
+              A0*cos(w0*x+delta0) + B0         V01              V02
+    Hdia =               V01        A1*cos(w1*x+delta1) + B1    V12
+                         V02                   V12          A2*cos(w2*x+delta2) + B2
+    Sdia =  I
+
+    Ddia  = 0.0
+
+    """
+
+    Hdia = CMATRIX(3,3)
+    Sdia = CMATRIX(3,3)
+    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(3,3))
+    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(3,3))
+  
+
+    x = q.get(0)
+    A0, A1, A2 = params["A0"], params["A1"], params["A2"]
+    B0, B1, B2 = params["B0"], params["B1"], params["B2"]
+    w0, w1, w2 = params["w0"], params["w1"], params["w2"]
+    delta0, delta1, delta2 = params["delta0"], params["delta1"], params["delta2"]
+    V01, V02, V12 = params["V01"], params["V02"], params["V12"]
+
+    Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);  Sdia.set(0,2, 0.0+0.0j);
+    Sdia.set(1,0, 0.0+0.0j);  Sdia.set(1,1, 1.0+0.0j);  Sdia.set(1,2, 0.0+0.0j);
+    Sdia.set(2,0, 0.0+0.0j);  Sdia.set(2,1, 0.0+0.0j);  Sdia.set(2,2, 1.0+0.0j);
+
+    Hdia.set(0,0, (A0*math.cos(w0*x+delta0) + B0)*(1.0+0.0j) ); 
+    Hdia.set(0,1, V01*(1.0+0.0j));
+    Hdia.set(0,2, V02*(1.0+0.0j));
+
+    Hdia.set(1,0, V01*(1.0+0.0j));
+    Hdia.set(1,1, (A1*math.cos(w1*x+delta1) + B1)*(1.0+0.0j));
+    Hdia.set(1,2, V12*(1.0+0.0j));
+
+    Hdia.set(2,0, V02*(1.0+0.0j));
+    Hdia.set(2,1, V12*(1.0+0.0j));
+    Hdia.set(2,2, (A2*math.cos(w2*x+delta2) + B2)*(1.0+0.0j));
+
+
+
+    for i in [0]:
+        #  d Hdia / dR_0
+        d1ham_dia[i].set(0,0,-w0*A0*math.sin(w0*x+delta0)*(1.0+0.0j) );
+        d1ham_dia[i].set(0,1, 0.0+0.0j);
+        d1ham_dia[i].set(0,2, 0.0+0.0j);
+
+        d1ham_dia[i].set(1,0, 0.0+0.0j); 
+        d1ham_dia[i].set(1,1, -w1*A1*math.sin(w1*x+delta1)*(1.0+0.0j));
+        d1ham_dia[i].set(1,2, 0.0+0.0j); 
+
+        d1ham_dia[i].set(2,0, 0.0+0.0j); 
+        d1ham_dia[i].set(2,1, 0.0+0.0j); 
+        d1ham_dia[i].set(2,2, -w2*A2*math.sin(w2*x+delta2)*(1.0+0.0j));
+
+
+        #  <dia| d/dR_0| dia >
+        dc1_dia[i].set(0,0, 0.0+0.0j);   dc1_dia[i].set(0,1, 0.0+0.0j);  dc1_dia[i].set(0,2, 0.0+0.0j);
+        dc1_dia[i].set(1,0, 0.0+0.0j);   dc1_dia[i].set(1,1, 0.0+0.0j);  dc1_dia[i].set(1,2, 0.0+0.0j);
+        dc1_dia[i].set(2,0, 0.0+0.0j);   dc1_dia[i].set(2,1, 0.0+0.0j);  dc1_dia[i].set(2,2, 0.0+0.0j);
+
+
+    obj = tmp()
+    obj.ham_dia = Hdia
+    obj.ovlp_dia = Sdia
+    obj.d1ham_dia = d1ham_dia
+    obj.dc1_dia = dc1_dia
+
+    return obj
+
+

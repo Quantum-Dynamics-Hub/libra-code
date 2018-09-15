@@ -82,8 +82,17 @@ void export_Ehrenfest_objects(){
   void (*expt_Ehrenfest1_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham,
   bp::object py_funct, bp::object params, int rep) = &Ehrenfest1;
 
+  void (*expt_Ehrenfest2_v1)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, 
+  nHamiltonian& ham, bp::object py_funct, bp::object params, int rep, 
+  int do_reordering, int do_phase_correction) = &Ehrenfest2; 
+  void (*expt_Ehrenfest2_v2)(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, 
+  nHamiltonian& ham, bp::object py_funct, bp::object params, int rep) = &Ehrenfest2; 
+
+
   def("Ehrenfest0", expt_Ehrenfest0_v1);
   def("Ehrenfest1", expt_Ehrenfest1_v1);
+  def("Ehrenfest2", expt_Ehrenfest2_v1);
+  def("Ehrenfest2", expt_Ehrenfest2_v2);
 
 }
 
