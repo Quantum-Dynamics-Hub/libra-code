@@ -151,7 +151,9 @@ void DIIS::update_diis_coefficients(){
         cout<<"Reduced matrix rank = "<<rank<<endl;
       }
 
-      if(rank==N_diis+2){ A = new MatrixXd(N_diis+2,N_diis+2);  *A = tempA; }
+      if(rank==N_diis+2){ 
+        delete A;   A = new MatrixXd(N_diis+2,N_diis+2);   *A = tempA; 
+      }
 
     }// while
 
