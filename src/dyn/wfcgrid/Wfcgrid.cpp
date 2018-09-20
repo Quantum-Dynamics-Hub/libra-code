@@ -399,6 +399,42 @@ void Wfcgrid::print_reci_wfc_1D(std::string prefix, int snap, int state){
 
 }// print_wfc_1D
 
+
+void Wfcgrid::print_reci_wfc_2D(std::string prefix, int snap, int state){
+/**
+  \brief Prints 2D wavefunction (in k-representation, reciprocal space) into a file
+  \param[in] prefix The prefix of the filenames to which the wfc will be printed out
+  \param[in] snap This is the integer indexing the printed out wavefunction - e.g. convenient for printing wfc at different times
+  \param[in] state The wavefunction projection on this state will be printed out
+  
+  for 2D profile on XY plane 
+*/
+
+  std::string filename, snaps, states;
+  stringstream ss(stringstream::in | stringstream::out);
+  stringstream ss1(stringstream::in | stringstream::out);
+
+  ss  << snap;   ss  >> snaps;
+  ss1 << state;  ss1 >> states;
+
+
+  filename = prefix+".state"+states+".frame"+snaps;
+  ofstream out(filename.c_str(),ios::out);
+
+
+  for(int nx=0;nx<Nx;nx++){
+    for(int ny=0;ny<Ny;ny++){
+
+      out<<real(X->M[nx])<<"  "<<real(Y->M[ny])<<"  "<<real(std::conj(reciPSI[state].M[nx*Ny+ny])*reciPSI[state].M[nx*Ny+ny])<<endl;
+
+    }// for ny
+    out<<"\n";
+  }// for nx
+
+  out.close();
+}
+
+
 void Wfcgrid::print_complex_matrix_1D(CMATRIX& CM, std::string filename){
 /**
   \brief An auxiliary function for printing a complex matrix into a file

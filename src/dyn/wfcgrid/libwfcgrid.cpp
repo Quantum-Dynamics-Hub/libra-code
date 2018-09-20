@@ -60,6 +60,7 @@ void export_Wfcgrid_objects(){
       .def("print_wfc_1D", &Wfcgrid::print_wfc_1D)
       .def("print_wfc_2D", &Wfcgrid::print_wfc_2D)
       .def("print_reci_wfc_1D", &Wfcgrid::print_reci_wfc_1D)
+      .def("print_reci_wfc_2D", &Wfcgrid::print_reci_wfc_2D)
       .def("print_ham_1D", &Wfcgrid::print_ham_1D)
       .def("print_expH_1D", &Wfcgrid::print_expH_1D)
       .def("print_expK_1D", &Wfcgrid::print_expK_1D)
