@@ -425,7 +425,7 @@ void Wfcgrid::print_reci_wfc_2D(std::string prefix, int snap, int state){
   for(int nx=0;nx<Nx;nx++){
     for(int ny=0;ny<Ny;ny++){
 
-      out<<real(X->M[nx])<<"  "<<real(Y->M[ny])<<"  "<<real(std::conj(reciPSI[state].M[nx*Ny+ny])*reciPSI[state].M[nx*Ny+ny])<<endl;
+      out<<real(Kx->M[nx])<<"  "<<real(Ky->M[ny])<<"  "<<real(std::conj(reciPSI[state].M[nx*Ny+ny])*reciPSI[state].M[nx*Ny+ny])<<endl;
 
     }// for ny
     out<<"\n";
