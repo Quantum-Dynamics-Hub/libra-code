@@ -84,7 +84,25 @@ void init_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double d
   \param[in] nstates The number of electronic states for which to initialize the wavefunction
   \param[in] occ_state Index of the occupied electronic state on which the wavepacket is initialized
 
-  G(x) = [ (1/(2.0*pi*dx^2))^(1/4) ] * exp(-((x-x_)/(2*dx))^2 + i*((x-x_)/dx)*px_)
+  G(x) = [ (1/(2.0*pi*dx^2))^(1/4) ] * exp(-((x-x_)/(2*dx))^2 + i*(x-x_)*px_)
+
+  P(x) = |G(x)|^2 = [ (1/(2.0*pi*dx^2)^2) ] * exp( -(x-x_)^2/(2*dx^2) )
+
+  That is according to: https://en.wikipedia.org/wiki/Normal_distribution,  
+  dx - corresponds to standard deviation (in the classical distribution)
+  dx^2 - variance (in the classical distribution)
+
+  That is, this wavepacket would correspond to the probability density (classical coordinates)
+  that are generated like this:
+
+  x_i = x_ * dx * rnd.normal()
+
+
+  Other connections:     
+  2*a = 1/2*dx^2 =>  a = 1/(2*dx)^2 , where a is such that:  alpha/2 = a + i*b, where a and b are defined in:
+
+  (1) Heller, E. J. Guided Gaussian Wave Packets. Acc. Chem. Res. 2006, 39, 127–134.  
+  (2) Akimov, A. V.; Prezhdo, O. V. Formulation of Quantized Hamiltonian Dynamics in Terms of Natural Variables. J. Chem. Phys. 2012, 137, 224115.
 
 */
 
@@ -109,7 +127,7 @@ void init_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double d
         double deltx = 0.5*(X.M[nx].real() - x_)/dx;
 
         double c1 = -deltx*deltx;
-        double c2 = 2.0* px_* deltx;
+        double c2 = px_*(X.M[nx].real() - x_);
 
         wfc[st].M[nx*1+0] = nrm * exp(c1) * (cos(c2)+one*sin(c2));
       }
@@ -230,8 +248,8 @@ void init_gauss_2D(vector<CMATRIX>& wfc,
   \param[in] occ_state Index of the occupied electronic state on which the wavepacket is initialized
 
   G(x,y) = G(x)*G(y)
-  G(x) = [ (1/(2.0*pi*dx^2))^(1/4) ] * exp(-((x-x_)/(2*dx))^2 + i*((x-x_)/dx)*px_)
-  G(y) = [ (1/(2.0*pi*dy^2))^(1/4) ] * exp(-((y-y_)/(2*dy))^2 + i*((y-y_)/dy)*py_)
+  G(x) = [ (1/(2.0*pi*dx^2))^(1/4) ] * exp(-((x-x_)/(2*dx))^2 + i*(x-x_)*px_)
+  G(y) = [ (1/(2.0*pi*dy^2))^(1/4) ] * exp(-((y-y_)/(2*dy))^2 + i*(y-y_)*py_)
 
 */
 

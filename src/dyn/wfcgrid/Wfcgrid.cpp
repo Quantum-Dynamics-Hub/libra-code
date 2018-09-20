@@ -258,7 +258,7 @@ void Wfcgrid::init_wfc_1D(double x0, double px0, double dx0, int init_state){
   \param[in] dx0 Spread (distribution width) of the spatial component of the Gaussian wavepacket
   \param[in] init_state Index of the electronic state on which the wavepacket is initialized
 
-   G(x) = [ (1/(2.0*pi*dx0^2))^(1/4) ] * exp(-((x-x0)/(2*dx0))^2 + i*((x-x0)/dx0)*px0)
+   G(x) = [ (1/(2.0*pi*dx0^2))^(1/4) ] * exp(-((x-x0)/(2*dx0))^2 + i*(x-x0)*px0)
 
 */
 
@@ -283,8 +283,8 @@ void Wfcgrid::init_wfc_2D(double x0, double y0, double px0, double py0, double d
 
   G(x,y) = G(x)*G(y), 
   where
-  G(x) = [ (1/(2.0*pi*dx0^2))^(1/4) ] * exp(-((x-x0)/(2*dx0))^2 + i*((x-x0)/dx0)*px0)
-  G(y) = [ (1/(2.0*pi*dy0^2))^(1/4) ] * exp(-((y-y0)/(2*dy0))^2 + i*((y-y0)/dy0)*py0)
+  G(x) = [ (1/(2.0*pi*dx0^2))^(1/4) ] * exp(-((x-x0)/(2*dx0))^2 + i*(x-x0)*px0)
+  G(y) = [ (1/(2.0*pi*dy0^2))^(1/4) ] * exp(-((y-y0)/(2*dy0))^2 + i*(y-y0)*py0)
 
 */
 
