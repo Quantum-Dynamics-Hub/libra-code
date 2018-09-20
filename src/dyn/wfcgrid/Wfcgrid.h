@@ -101,6 +101,7 @@ public:
   void print_wfc_1D(std::string prefix, int snap, int state);
   void print_wfc_2D(std::string prefix, int snap, int state);
   void print_reci_wfc_1D(std::string prefix, int snap, int state);
+  void print_reci_wfc_2D(std::string prefix, int snap, int state);
   void print_ham_1D(std::string prefix, int i, int j);
   void print_expH_1D(std::string prefix, int i, int j);
   void print_expK_1D(std::string prefix, int i);
