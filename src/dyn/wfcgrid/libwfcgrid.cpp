@@ -54,6 +54,33 @@ void export_Wfcgrid_objects(){
       .def("__copy__", &generic__copy__<Wfcgrid>)
       .def("__deepcopy__", &generic__deepcopy__<Wfcgrid>)
 
+      .def_readwrite("nstates", &Wfcgrid::nstates)
+      .def_readwrite("Nx", &Wfcgrid::Nx)
+      .def_readwrite("Ny", &Wfcgrid::Ny)
+      .def_readwrite("xmin", &Wfcgrid::xmin)
+      .def_readwrite("ymin", &Wfcgrid::ymin)
+      .def_readwrite("xmax", &Wfcgrid::xmax)
+      .def_readwrite("ymax", &Wfcgrid::ymax)
+      .def_readwrite("dx", &Wfcgrid::dx)
+      .def_readwrite("dy", &Wfcgrid::dy)
+      .def_readwrite("kxmin", &Wfcgrid::kxmin)
+      .def_readwrite("kymin", &Wfcgrid::kymin)
+
+      .def_readwrite("PSI", &Wfcgrid::PSI)
+      .def_readwrite("reciPSI", &Wfcgrid::reciPSI)
+      .def_readwrite("DtreciPSI", &Wfcgrid::DtreciPSI)
+      .def_readwrite("DxPSI", &Wfcgrid::DxPSI)
+      .def_readwrite("DyPSI", &Wfcgrid::DyPSI)
+      .def_readwrite("KxreciPSI", &Wfcgrid::KxreciPSI)
+      .def_readwrite("KyreciPSI", &Wfcgrid::KyreciPSI)
+
+      .def_readwrite("H", &Wfcgrid::H)
+      .def_readwrite("Dx", &Wfcgrid::Dx)
+      .def_readwrite("Dy", &Wfcgrid::Dy)
+      .def_readwrite("expH", &Wfcgrid::expH)
+      .def_readwrite("expK", &Wfcgrid::expK)
+
+
       .def("init_wfc_1D", &Wfcgrid::init_wfc_1D)
       .def("init_wfc_2D", &Wfcgrid::init_wfc_2D)
 
@@ -83,6 +110,10 @@ void export_Wfcgrid_objects(){
       .def("propagate_exact_2D", &Wfcgrid::propagate_exact_2D)
 
       .def("absorb_1D",expt_absorb_1D)
+
+      .def("norm", &Wfcgrid::norm)
+      .def("get_x_1D", &Wfcgrid::get_x_1D)
+      .def("get_px_1D", &Wfcgrid::get_px_1D)
 
       .def("e_kin_1D", &Wfcgrid::e_kin_1D)
       .def("e_pot_1D", &Wfcgrid::e_pot_1D)

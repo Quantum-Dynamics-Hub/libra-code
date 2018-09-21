@@ -65,6 +65,10 @@ public:
   double kxmin, kymin; ///< minimal values of grid in the reciprocal (momentum)  space
   CMATRIX* X;          ///< grid of r-points 1 x Nx
   CMATRIX* Y;          ///< grid of r-points 1 x Ny
+
+  /**
+  Note the relationship:  px = 2*M_PI*kx and py = 2*M_PI*ky 
+  */
   CMATRIX* Kx;         ///< grid of k-points 1 x Nx
   CMATRIX* Ky;         ///< grid of k-points 1 x Ny
 
@@ -113,6 +117,11 @@ public:
 
   // Flux
   void flux_1D(double xf,vector<double>& res, double m0);
+
+  // Norm and properties
+  double norm();
+  double get_x_1D();
+  double get_px_1D();
 
   // Energy
   double e_pot_1D();
