@@ -600,8 +600,10 @@ void export_FT(){
   void (*expt_cft1_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx) = &cft1;
   void (*expt_inv_cft1_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx) = &inv_cft1;
 
-  void (*expt_cft2_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk) = &cft2;
-  void (*expt_inv_cft2_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk) = &inv_cft2;
+//  The functions below are commented because the inv_CFT[ CFT ] is not the identity, perhaps because dk 
+//  would need to satisfy some additional conditions
+//  void (*expt_cft2_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk) = &cft2;
+//  void (*expt_inv_cft2_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk) = &inv_cft2;
 
 
   def("cft", expt_cft_v1);
@@ -609,7 +611,10 @@ void export_FT(){
   def("cft", expt_cft2_v1);
   def("inv_cft", expt_inv_cft_v1);
   def("inv_cft", expt_inv_cft1_v1);
-  def("inv_cft", expt_inv_cft2_v1);
+
+//  The function below are commented because the inv_CFT[ CFT ] is not the identity, perhaps because dk 
+//  would need to satisfy some additional conditions
+//  def("inv_cft", expt_inv_cft2_v1);
 
 
   void (*expt_cft1_2D_v1)(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy) = &cft1_2D;
@@ -727,14 +732,16 @@ void export_linalg_objects(){
   ;
 
 
-  export_permutations();
-
-  export_VECTOR();
-  export_QUATERNION();
-  export_MATRIX3x3();
-
   export_MATRIX();
   export_CMATRIX();
+
+  export_VECTOR();
+  export_MATRIX3x3();
+  export_QUATERNION();
+
+  export_FT();
+  export_permutations();
+
 
 
   void (*expt_MATRIX_TO_QUATERNION_v1)(MATRIX&,QUATERNION&) = &MATRIX_TO_QUATERNION;
