@@ -111,6 +111,8 @@ void export_Wfcgrid_objects(){
 
       .def("absorb_1D",expt_absorb_1D)
 
+      .def("flux_1D", &Wfcgrid::flux_1D)
+
       .def("norm", &Wfcgrid::norm)
       .def("get_x_1D", &Wfcgrid::get_x_1D)
       .def("get_px_1D", &Wfcgrid::get_px_1D)
