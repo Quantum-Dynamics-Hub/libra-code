@@ -608,12 +608,12 @@ void export_FT(){
 
   def("cft", expt_cft_v1);
   def("cft", expt_cft1_v1);
-  def("cft", expt_cft2_v1);
   def("inv_cft", expt_inv_cft_v1);
   def("inv_cft", expt_inv_cft1_v1);
 
 //  The function below are commented because the inv_CFT[ CFT ] is not the identity, perhaps because dk 
 //  would need to satisfy some additional conditions
+//  def("cft", expt_cft2_v1);
 //  def("inv_cft", expt_inv_cft2_v1);
 
 
