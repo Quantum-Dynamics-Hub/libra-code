@@ -264,7 +264,7 @@ def plot_pes(params):
 
 
 
-def run_exact(params):
+def run_exact(params, opt):
     """
     The main routine to run fully quantum calculations
     """
@@ -287,8 +287,27 @@ def run_exact(params):
     for i in xrange(params["nsnaps"]):  # time steps
         for j in xrange(params["nsteps"] ):  # time steps
             wfc.propagate_exact_1D(0)
-            res = wfc.absorb_1D(5.0)
-            cum = cum + res[1][0]
+
+            if opt==0:
+                """
+                This is the case with absorbing potential - the total energy of the remaining
+                wavefunction is not conserved! Also, the population dynamics may be delayed 
+                depending on where the potential is located
+                """
+                res = wfc.absorb_1D(5.0)
+                cum = cum + res[1][0]
+
+            elif opt==1:
+                """
+                This is the case with population density fluxes. 
+                The total population and energy is conserved. 
+                The dynamics is not delayed, because we measure exactly what we want (crossing some point)
+                """
+
+                res = Py2Cpp_double([0.0])
+                wfc.flux_1D(params["barrier"], res, params["mass"])
+                cum = cum + res[0]*dt
+
 
 
         epot = wfc.e_pot_1D()
@@ -308,19 +327,20 @@ def run_exact(params):
 
 # Model parameters 
 case = 3
-
-params = { "mass":2000.0, "nsnaps":500, "nsteps":2, "dt":10.0 } 
+params = { "mass":2000.0, "nsnaps":100, "nsteps":2, "dt":10.0 } 
 
 if case==1:
     # Double well potential
-    params.update({"model":2, "q0":-1.1, "p0":0.0, "sq0":0.04, "sp0":0.0 })
+    params.update({"model":2, "q0":-1.1, "p0":0.0, "sq0":0.04, "sp0":0.0, "barrier":0.00 })
 elif case==2:
     # Cubic, no switching
-    params.update({"model":3, "q0":-0.2, "p0":0.0, "sq0":0.1, "sp0":0.0 })
+    params.update({"model":3, "q0":-0.2, "p0":0.0, "sq0":0.1, "sp0":0.0, "barrier":0.67 })
 elif case==3:
     # Cubic, with switching
-    params.update({"model":4, "q0":-0.2, "p0":0.0, "sq0":0.1, "sp0":5.25 })   
+    params.update({"model":4, "q0":-0.2, "p0":0.0, "sq0":0.1, "sp0":5.25, "barrier":0.67 })   
 
 
 plot_pes(params)
-run_exact(params)
+
+opt = 1 
+run_exact(params, opt)
