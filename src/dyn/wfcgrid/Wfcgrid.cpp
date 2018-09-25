@@ -274,6 +274,34 @@ void Wfcgrid::init_wfc_1D(double x0, double px0, double dx0, int init_state){
 }// init_wavefunction
 
 
+void Wfcgrid::init_wfc_1D(vector<double>& x0, vector<double>& px0, vector<double>& dx0, vector<int>& init_state, vector<complex<double> >& weights){
+/**
+  \brief Initialize 1D wavefunction - taken as moving Gaussian wavepacket
+  \param[in] x0 Position of the center of the Gaussian wavepacket
+  \param[in] px0 Momentum of the Gaussian wavepacket
+  \param[in] dx0 Spread (distribution width) of the spatial component of the Gaussian wavepacket
+  \param[in] init_state Index of the electronic state on which the wavepacket is initialized
+
+   G(x) = [ (1/(2.0*pi*dx0^2))^(1/4) ] * exp(-((x-x0)/(2*dx0))^2 + i*(x-x0)*px0)
+*/
+
+  int sz = x0.size();
+
+  init_gauss_1D(PSI, *X, x0[0], px0[0], dx0[0], nstates, init_state[0], weights[0]);
+
+  for(int i=1; i<sz; i++){
+    add_gauss_1D(PSI, *X, x0[i], px0[i], dx0[i], nstates, init_state[i], weights[i]);
+  }
+   
+
+  // PSI(r)->PSI(k)=reciPSI
+  ft_1D(PSI,reciPSI,1,xmin,kxmin,dx);
+
+  cout<<"Wavefunction is initialized\n";
+
+}
+
+
 void Wfcgrid::init_wfc_2D(double x0, double y0, double px0, double py0, double dx0, double dy0, int init_state){
 /**
   \brief Initialize 2D wavefunction - taken as moving Gaussian wavepacket

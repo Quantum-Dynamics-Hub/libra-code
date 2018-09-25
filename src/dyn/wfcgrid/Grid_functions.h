@@ -46,7 +46,9 @@ CMATRIX init_grid(double xmin,double xmax, double dx);
 
 
 //------------------- 1D specific -------------------
+void init_gauss_1D(vector<CMATRIX>& wfc, CMATRIX& X, double x_, double p_, double dx, int nstates, int occ_state, complex<double> scl);
 void init_gauss_1D(vector<CMATRIX>& wfc, CMATRIX& X, double x_, double p_, double dx, int nstates, int occ_state);
+void add_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double dx, int nstates, int occ_state, complex<double> weight);
 
 void print_1D(CMATRIX& X, vector<CMATRIX>& PSI,string filename);
 void print_1D(CMATRIX& X, vector<CMATRIX>& PSI,string prefix, int frame);

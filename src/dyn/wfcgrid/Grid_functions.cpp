@@ -73,7 +73,7 @@ CMATRIX init_grid(double xmin,double xmax, double dx){
 
 //------------------ 1D specific --------------------------
 
-void init_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double dx, int nstates, int occ_state){
+void init_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double dx, int nstates, int occ_state, complex<double> scl){
 /**
   \brief Initialize a Gaussian wavepacket on a 1D grid
   \param[out] wfc Is a list of complex matrices (vectors), each containing numerical wavefunction for different electronic state
@@ -129,7 +129,7 @@ void init_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double d
         double c1 = -deltx*deltx;
         double c2 = px_*(X.M[nx].real() - x_);
 
-        wfc[st].M[nx*1+0] = nrm * exp(c1) * (cos(c2)+one*sin(c2));
+        wfc[st].M[nx*1+0] = scl * nrm * exp(c1) * (cos(c2)+one*sin(c2));
       }
       else{ wfc[st].M[nx*1+0] = 0.0; }
 
@@ -137,6 +137,83 @@ void init_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double d
   }// for nx
 
 }// init_gauss_1D
+
+
+void init_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double dx, int nstates, int occ_state){
+
+  complex<double> one(1.0, 0.0);
+  init_gauss_1D(wfc, X, x_, px_, dx, nstates, occ_state, one); 
+
+}
+
+
+void add_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double dx, int nstates, int occ_state, complex<double> weight){
+/**
+  \brief Adds a Gaussian wavepacket with a given weight to a 1D grid
+
+  \param[out] wfc Is a list of complex matrices (vectors), each containing numerical wavefunction for different electronic state
+  \param[in] X is the complex matrix(vector) containing the grid points
+  \param[in] x_ Position of the center of the Gaussian wavepacket
+  \param[in] px_ Momentum of the Gaussian wavepacket
+  \param[in] dx Spread (distribution width) of the spatial component of the Gaussian wavepacket
+  \param[in] nstates The number of electronic states for which to initialize the wavefunction
+  \param[in] occ_state Index of the occupied electronic state on which the wavepacket is initialized
+
+  G(x) = [ (1/(2.0*pi*dx^2))^(1/4) ] * exp(-((x-x_)/(2*dx))^2 + i*(x-x_)*px_)
+
+  P(x) = |G(x)|^2 = [ (1/(2.0*pi*dx^2)^2) ] * exp( -(x-x_)^2/(2*dx^2) )
+
+  That is according to: https://en.wikipedia.org/wiki/Normal_distribution,  
+  dx - corresponds to standard deviation (in the classical distribution)
+  dx^2 - variance (in the classical distribution)
+
+  That is, this wavepacket would correspond to the probability density (classical coordinates)
+  that are generated like this:
+
+  x_i = x_ * dx * rnd.normal()
+
+
+  Other connections:     
+  2*a = 1/2*dx^2 =>  a = 1/(2*dx)^2 , where a is such that:  alpha/2 = a + i*b, where a and b are defined in:
+
+  (1) Heller, E. J. Guided Gaussian Wave Packets. Acc. Chem. Res. 2006, 39, 127–134.  
+  (2) Akimov, A. V.; Prezhdo, O. V. Formulation of Quantized Hamiltonian Dynamics in Terms of Natural Variables. J. Chem. Phys. 2012, 137, 224115.
+
+*/
+
+  // Get the size of the 1D grid
+  int Nx = X.n_elts; 
+
+  // The memory should be allocated already
+  // wfc = vector<CMATRIX>(nstates,CMATRIX(Nx,1));
+
+  // Constants
+  const double nrm = pow((1.0/(2.0*M_PI*dx*dx)),0.25);
+  const complex<double> one(0.0, 1.0);
+
+
+  // Copute wfc values at the grid points
+  for(int nx=0;nx<Nx;nx++){ 
+
+    for(int st=0;st<nstates;st++){
+      if(st==occ_state){
+
+        double deltx = 0.5*(X.M[nx].real() - x_)/dx;
+
+        double c1 = -deltx*deltx;
+        double c2 = px_*(X.M[nx].real() - x_);
+
+        wfc[st].M[nx*1+0] += weight * nrm * exp(c1) * (cos(c2)+one*sin(c2));
+      }
+      else{ wfc[st].M[nx*1+0] += 0.0; }
+
+    }// for st
+  }// for nx
+
+}// init_gauss_1D
+
+
+
 
 
 void print_1D(CMATRIX& X,vector<CMATRIX>& PSI,string prefix, int frame){
