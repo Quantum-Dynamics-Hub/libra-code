@@ -118,29 +118,42 @@ public:
   // Flux
   void flux_1D(double xf,vector<double>& res, double m0);
 
-  // Norm and properties
-  double norm();
+  // Properties
   double get_x_1D();
   double get_px_1D();
 
+  double get_x_2D();
+  double get_y_2D();
+  double get_px_2D();
+  double get_py_2D();
+
   // Energy
+  double norm_1D();
   double e_pot_1D();
   double e_kin_1D(double m0);
   double e_tot_1D(double m0);
 
+  double norm_2D();
+  double e_pot_2D();
+  double e_kin_2D(double m1, double m2);
+  double e_tot_2D(double m1, double m2);
+
 
   //--------------- in Wfcgrid_Dynamics1 ------------------
+  // Setup kinetic energy in the reciprocal grid
+  void update_propagator_K_1D(double dt,double m0);
+  void update_propagator_K_2D(double dt,double m1, double m2);
+  void update_propagator_K_2D(double dt,double m0);
 
+  // Setup potential energy in the real-space grid
   void update_potential_1D(Hamiltonian& ham);
   void update_potential_2D(Hamiltonian& ham);
   void update_potential_1D(bp::object py_funct, bp::object params);
   void update_potential_2D(bp::object py_funct, bp::object params);
-
+   
+  // Update the propagator 
   void update_propagator_1D(double dt,double m0);
   void update_propagator_2D(double dt,double m0);
-
-  void update_propagator_K_1D(double dt,double m0);
-  void update_propagator_K_2D(double dt,double m0);
 
 
   void propagate_exact_1D(int Nmts);

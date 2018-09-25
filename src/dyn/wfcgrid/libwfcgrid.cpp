@@ -46,6 +46,9 @@ void export_Wfcgrid_objects(){
   void (Wfcgrid::*expt_update_potential_2D_v2)(bp::object py_funct, bp::object params) = &Wfcgrid::update_potential_2D;
 
 
+  void (Wfcgrid::*expt_update_propagator_K_2D_v1)(double dt, double m1, double m2) = &Wfcgrid::update_propagator_K_2D;
+  void (Wfcgrid::*expt_update_propagator_K_2D_v2)(double dt, double m0) = &Wfcgrid::update_propagator_K_2D;
+
 
 
   class_<Wfcgrid>("Wfcgrid",init<double,double,double,int>())
@@ -104,7 +107,8 @@ void export_Wfcgrid_objects(){
       .def("update_propagator_2D", &Wfcgrid::update_propagator_2D)
 
       .def("update_propagator_K_1D", &Wfcgrid::update_propagator_K_1D)
-      .def("update_propagator_K_2D", &Wfcgrid::update_propagator_K_2D)
+      .def("update_propagator_K_2D", expt_update_propagator_K_2D_v1)
+      .def("update_propagator_K_2D", expt_update_propagator_K_2D_v2)
 
       .def("propagate_exact_1D", &Wfcgrid::propagate_exact_1D)
       .def("propagate_exact_2D", &Wfcgrid::propagate_exact_2D)
@@ -113,13 +117,24 @@ void export_Wfcgrid_objects(){
 
       .def("flux_1D", &Wfcgrid::flux_1D)
 
-      .def("norm", &Wfcgrid::norm)
       .def("get_x_1D", &Wfcgrid::get_x_1D)
       .def("get_px_1D", &Wfcgrid::get_px_1D)
 
+      .def("get_x_2D", &Wfcgrid::get_x_2D)
+      .def("get_y_2D", &Wfcgrid::get_y_2D)
+      .def("get_px_2D", &Wfcgrid::get_px_2D)
+      .def("get_py_2D", &Wfcgrid::get_py_2D)
+
+      .def("norm_1D", &Wfcgrid::norm_1D)
       .def("e_kin_1D", &Wfcgrid::e_kin_1D)
       .def("e_pot_1D", &Wfcgrid::e_pot_1D)
       .def("e_tot_1D", &Wfcgrid::e_tot_1D)
+
+      .def("norm_2D", &Wfcgrid::norm_2D)
+      .def("e_kin_2D", &Wfcgrid::e_kin_2D)
+      .def("e_pot_2D", &Wfcgrid::e_pot_2D)
+      .def("e_tot_2D", &Wfcgrid::e_tot_2D)
+
  
   ;
 
