@@ -99,9 +99,16 @@ public:
 
   // Populate wfc
   void init_wfc_1D(double x0, double px0, double dx, int init_state); ///< initialization of 1D wavefunction
-
   ///< initialization of 1D wavefunction
   void init_wfc_1D(vector<double>& x0, vector<double>& px0, vector<double>& dx, vector<int>& init_state, vector<complex<double> >& weights);
+
+  void init_wfc_1D_HO(vector<int>& init_state, vector<int>& nu, 
+                      vector<complex<double> >& weights,
+                      vector<double>& x0, vector<double>& px0, vector<double>& alpha );
+
+  ///< Initialize an arbitrary wavefunction
+  void init_wfc_1D_ARB(bp::object py_funct, bp::object params);
+
  
   void init_wfc_2D(double x0, double y0, double px0, double py0, double dx, double dy, int init_state); ///< initialization of 2D wavefunction
 

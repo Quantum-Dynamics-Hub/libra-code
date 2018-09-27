@@ -50,10 +50,19 @@ void export_Wfcgrid_objects(){
   void (Wfcgrid::*expt_update_propagator_K_2D_v2)(double dt, double m0) = &Wfcgrid::update_propagator_K_2D;
 
 
+  // Gaussian wavepackets
   void (Wfcgrid::*expt_init_wfc_1D_v1)(double x0, double px0, double dx, int init_state) = &Wfcgrid::init_wfc_1D;
   void (Wfcgrid::*expt_init_wfc_1D_v2)
   (vector<double>& x0, vector<double>& px0, vector<double>& dx, vector<int>& init_state, vector<complex<double> >& weights) = &Wfcgrid::init_wfc_1D;
 
+  // Harmonic oscillator
+  void (Wfcgrid::*expt_init_wfc_1D_HO_v1)
+  (vector<int>& init_state, vector<int>& nu, vector<complex<double> >& weights,
+   vector<double>& x0, vector<double>& px0, vector<double>& alpha) = &Wfcgrid::init_wfc_1D_HO;
+
+  // Arbitrary wavefunction
+  void (Wfcgrid::*expt_init_wfc_1D_ARB_v1)
+  (bp::object py_funct, bp::object params) = &Wfcgrid::init_wfc_1D_ARB;
 
 
   class_<Wfcgrid>("Wfcgrid",init<double,double,double,int>())
@@ -91,6 +100,9 @@ void export_Wfcgrid_objects(){
 
       .def("init_wfc_1D", expt_init_wfc_1D_v1)
       .def("init_wfc_1D", expt_init_wfc_1D_v2)
+      .def("init_wfc_1D_HO", expt_init_wfc_1D_HO_v1)
+      .def("init_wfc_1D_ARB", expt_init_wfc_1D_ARB_v1)
+
       .def("init_wfc_2D", &Wfcgrid::init_wfc_2D)
 
       .def("print_wfc_1D", &Wfcgrid::print_wfc_1D)

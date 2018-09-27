@@ -286,10 +286,10 @@ void Wfcgrid::init_wfc_1D(vector<double>& x0, vector<double>& px0, vector<double
 */
 
   int sz = x0.size();
+//  init_gauss_1D(PSI, *X, x0[0], px0[0], dx0[0], nstates, init_state[0], weights[0]);
 
-  init_gauss_1D(PSI, *X, x0[0], px0[0], dx0[0], nstates, init_state[0], weights[0]);
-
-  for(int i=1; i<sz; i++){
+  // PSI should be already allocated by this point
+  for(int i=0; i<sz; i++){
     add_gauss_1D(PSI, *X, x0[i], px0[i], dx0[i], nstates, init_state[i], weights[i]);
   }
    
@@ -300,6 +300,66 @@ void Wfcgrid::init_wfc_1D(vector<double>& x0, vector<double>& px0, vector<double
   cout<<"Wavefunction is initialized\n";
 
 }
+
+
+void Wfcgrid::init_wfc_1D_HO(vector<int>& init_state, vector<int>& nu, 
+                             vector<complex<double> >& weights,
+                             vector<double>& x0, vector<double>& px0, vector<double>& alpha ){
+/**
+  \brief Initialize 1D wavefunction as a superposition of moving Harmonic oscillator eigenstates
+
+  \param[in] init_state Index of the electronic state to which the wavepacket is added
+  \param[in] nu Vibrational quantum number of the HO basis function
+  \param[in] weight The weight with which the basis function is added to the grid
+  \param[in] x0 Position of the center of the HO basis function
+  \param[in] px0 Momentum of the HO basis wavepacket 
+  \param[in] alpha The parameter related to the reference HO Hamiltonian:  alpha = sqrt(k*mu/hbar^2)
+             Where:  H = -hbar^2 /(2*mu) d^2/dx^2  + 1/2 * k * (x-x_)^2 
+
+*/
+
+  int sz = x0.size();
+
+  // PSI should be already allocated by this point
+  for(int i=0; i<sz; i++){
+    add_ho_1D(PSI, *X, nu[i], x0[i], px0[i], weights[i], init_state[i], alpha[i]);
+  }
+   
+  // PSI(r)->PSI(k)=reciPSI
+  ft_1D(PSI,reciPSI,1,xmin,kxmin,dx);
+
+  cout<<"Wavefunction is initialized\n";
+
+}
+
+
+
+
+
+void Wfcgrid::init_wfc_1D_ARB(bp::object py_funct, bp::object params){
+/**
+  \brief Initialize a 1D wavefunction according the external Python function
+
+  \param[in] py_funct - the name of the Python-defined function. Expectations is that the 
+  function returns a complex-values result for different states
+  \param[in] params - parameters of that function
+
+*/
+  
+  CMATRIX res(nstates, 1);
+
+  for(int nx=0; nx<Nx; nx++){
+    res = bp::extract< CMATRIX >( py_funct(real(X->M[nx]), params) );
+    for(int i=0; i<nstates; i++){  PSI[i].M[nx] = res.get(nx);  }
+  }
+   
+  // PSI(r)->PSI(k)=reciPSI
+  ft_1D(PSI,reciPSI,1,xmin,kxmin,dx);
+
+  cout<<"Wavefunction is initialized\n";
+
+}
+
 
 
 void Wfcgrid::init_wfc_2D(double x0, double y0, double px0, double py0, double dx0, double dy0, int init_state){

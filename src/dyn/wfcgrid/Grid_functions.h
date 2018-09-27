@@ -50,6 +50,8 @@ void init_gauss_1D(vector<CMATRIX>& wfc, CMATRIX& X, double x_, double p_, doubl
 void init_gauss_1D(vector<CMATRIX>& wfc, CMATRIX& X, double x_, double p_, double dx, int nstates, int occ_state);
 void add_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double dx, int nstates, int occ_state, complex<double> weight);
 
+void add_ho_1D(vector<CMATRIX>& wfc, CMATRIX& X, int nu, double x_, double px_, complex<double> weight, int occ_state, int alpha);
+
 void print_1D(CMATRIX& X, vector<CMATRIX>& PSI,string filename);
 void print_1D(CMATRIX& X, vector<CMATRIX>& PSI,string prefix, int frame);
 

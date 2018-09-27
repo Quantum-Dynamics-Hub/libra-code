@@ -215,6 +215,63 @@ void add_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double dx
 
 
 
+void add_ho_1D(vector<CMATRIX>& wfc, CMATRIX& X, int nu, double x_, double px_, complex<double> weight, int occ_state, int alpha){
+/**
+  \brief Adds a moving! Harmonic Oscillator (HO) with a given weight to a 1D grid wavefunction
+
+  \param[out] wfc Is a list of complex matrices (vectors), each containing numerical wavefunction for different electronic state
+  \param[in] X is the complex matrix(vector) containing the grid points
+  \param[in] nu Quantum number of the HO basis function
+  \param[in] x_ Position of the center of the HO basis function
+  \param[in] px_ Momentum of the HO basis wavepacket 
+  \param[in] weight The weight with which the basis function is added to the grid
+  \param[in] occ_state Index of the electronic state to which the wavepacket is added
+  \param[in] alpha The parameter related to the reference HO Hamiltonian:  alpha = sqrt(k*mu/hbar^2)
+             Where:  H = -hbar^2 /(2*mu) d^2/dx^2  + 1/2 * k * (x-x_)^2 
+
+
+  This function adds:
+
+  weight * HO_nu(x-x_) * exp(i*px_*(x-x_))
+
+  HO_nu(x) = N_nu * H_nu(sqrt(alpha) * (x)) * exp(-1/2 * alpha * x^2 ) 
+
+  N_nu = 1/sqrt(2^nu * nu!)  * (alpha/pi)^(1/4) - normalization factor
+
+  H_nu(ksi):  H_{nu+1}(ksi) - 2 ksi*H_{nu}(ksi) + 2*nu *H_{nu-1}(ksi) = 0  - Hermite polynomial
+
+*/
+
+  // Get the size of the 1D grid
+  int Nx = X.n_elts; 
+
+  // Allocate memory, if not yet done
+  // wfc = vector<CMATRIX>(nstates,CMATRIX(Nx,1));
+
+  // Constants
+  const double nrm = (1.0/sqrt(pow(2.0, nu) * FACTORIAL(nu)) ) * pow((alpha/M_PI),0.25);
+  const complex<double> one(0.0, 1.0);
+
+  double H, dH;
+
+  // Copute wfc values at the grid points
+  for(int nx=0;nx<Nx;nx++){ 
+    
+    double ksi = sqrt(alpha) * (X.M[nx].real() - x_);
+    HERMITE(nu, ksi, H, dH);
+
+    double c2 = px_*(X.M[nx].real() - x_);
+
+    wfc[occ_state].M[nx] += weight * nrm *  H * exp(-0.5*ksi*ksi) * (cos(c2)+one*sin(c2));
+
+  }// for nx
+
+}// init_ho_1D
+
+
+
+
+
 
 void print_1D(CMATRIX& X,vector<CMATRIX>& PSI,string prefix, int frame){
 /**
