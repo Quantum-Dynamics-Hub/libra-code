@@ -131,7 +131,9 @@ public:
 
   // Properties
   double get_x_1D();
+  double get_pow_x_1D(double n);
   double get_px_1D();
+  double get_pow_px_1D(int n);
 
   double get_x_2D();
   double get_y_2D();

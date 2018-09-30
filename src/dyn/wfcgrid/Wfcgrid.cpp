@@ -789,6 +789,38 @@ double Wfcgrid::get_x_1D(){
 }
 
 
+double Wfcgrid::get_pow_x_1D(double n){
+/**
+  Compute expectation value of a power of coordinate x^n a 1D wavefunction: <psi|x^n|psi> / <psi|psi>
+*/
+
+  double res; res = 0.0;
+  double norm; norm = 0.0;
+
+  for(int nst=0;nst<nstates;nst++){        
+    for(int nst1=0;nst1<nstates;nst1++){        
+
+      for(int nx=0;nx<Nx;nx++){
+   
+        double d = real(std::conj(PSI[nst].M[nx]) * PSI[nst1].M[nx] );
+
+        norm += d; 
+        res += d * pow(real(X->M[nx]), n);
+
+      }// for nx
+
+    }// for nst1
+  }// for nst
+
+  res = res / norm;
+
+  return res;
+
+}
+
+
+
+
 double Wfcgrid::get_px_1D(){
 /**
   Compute the expectation value of momentum of a 1D wavefunction: <psi|-i*hbar*d/dx |psi> / <psi|psi>
@@ -817,6 +849,39 @@ double Wfcgrid::get_px_1D(){
   return res;
 
 }
+
+
+
+double Wfcgrid::get_pow_px_1D(int n){
+/**
+  Compute the expectation value of power of momentum of a 1D wavefunction: <psi|(-i*hbar*d/dx)^n|psi> / <psi|psi>
+*/
+
+  double res; res = 0.0;
+  double norm; norm = 0.0;
+
+  for(int nst=0;nst<nstates;nst++){        
+    for(int nst1=0;nst1<nstates;nst1++){        
+
+      for(int nx=0;nx<Nx;nx++){
+
+        norm += real(std::conj(PSI[nst].M[nx]) * PSI[nst1].M[nx] );  
+        res += pow(real(Kx->M[nx]), n) * real( std::conj(reciPSI[nst].M[nx]) * reciPSI[nst1].M[nx] );
+
+      }// for nx
+
+    }// for nst1
+  }// for nst
+ 
+  norm *= dx;
+  res *= (pow(2.0*M_PI, n)/((double)Nx*dx));
+  res = res / norm;
+
+  return res;
+
+}
+
+
 
 
 

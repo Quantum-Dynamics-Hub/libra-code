@@ -136,7 +136,9 @@ void export_Wfcgrid_objects(){
       .def("flux_1D", &Wfcgrid::flux_1D)
 
       .def("get_x_1D", &Wfcgrid::get_x_1D)
+      .def("get_pow_x_1D", &Wfcgrid::get_pow_x_1D)
       .def("get_px_1D", &Wfcgrid::get_px_1D)
+      .def("get_pow_px_1D", &Wfcgrid::get_pow_px_1D)
 
       .def("get_x_2D", &Wfcgrid::get_x_2D)
       .def("get_y_2D", &Wfcgrid::get_y_2D)
