@@ -319,9 +319,18 @@ void Wfcgrid::init_wfc_1D_HO(vector<int>& init_state, vector<int>& nu,
 */
 
   int sz = x0.size();
+  cout<<"Initialize the wfc as a superposition of "<<sz<<" Harmonic Oscillators\n";
 
   // PSI should be already allocated by this point
   for(int i=0; i<sz; i++){
+    cout<<"===== Oscillator "<<i<<" ======\n";
+    cout<<"add it to the electronic state = "<<init_state[i]<<endl;
+    cout<<"vibrational quantum number, nu = "<<nu[i]<<endl;
+    cout<<"add it with the weight, w = "<<weights[i]<<endl;
+    cout<<"coordinate, x0 = "<<x0[i]<<endl;
+    cout<<"momentum, px0 = "<<px0[i]<<endl;
+    cout<<"exponent, alpha = "<<alpha[i]<<endl;
+
     add_ho_1D(PSI, *X, nu[i], x0[i], px0[i], weights[i], init_state[i], alpha[i]);
   }
    

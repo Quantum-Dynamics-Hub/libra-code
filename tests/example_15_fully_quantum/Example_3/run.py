@@ -193,8 +193,8 @@ wfc2.update({"nu":[0, 1]})
 wfc2.update({"weights":[1.0+0.0j, 1.0+0.0j]})
 wfc2.update({"x0":[0.0, 0.0]})
 wfc2.update({"px0":[0.0, 0.0]})
-wfc2.update({"alpha":[ math.sqrt(params["k"] * params["mass"]) ]})
-
+alp = math.sqrt(params["k"] * params["mass"])
+wfc2.update({"alpha":[ alp, alp ] })
 
 
 if case==0:
