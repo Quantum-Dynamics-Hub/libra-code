@@ -1023,8 +1023,22 @@ double Wfcgrid::get_py_2D(){
 
 
 
+void Wfcgrid::normalize_wfc_1D(double norm){
+/**
+  Normalize the wavefunction
+*/
 
+  norm = norm_1D();
+  
+  for(int nst=0;nst<nstates;nst++){
+    for(int nx=0;nx<Nx;nx++){
 
+      PSI[nst].M[nx] /= sqrt(norm);
+
+      }// for nx
+  }// for nst
+
+}
 
 
 
