@@ -14,12 +14,14 @@
 */
 
 #include "PW.h"
+#include "../util/libutil.h"
 
 /// liblibra namespace
 namespace liblibra{
 
 using namespace liblinalg;
 using namespace libspecialfunctions;
+using namespace libutil;
 
 
 /// libqobjects namespace
@@ -332,6 +334,222 @@ CMATRIX pw_overlap(VECTOR& k1, VECTOR& k2, CMATRIX& coeff1, CMATRIX& coeff2, vec
     return *S;
 
 }
+
+
+
+
+CMATRIX QE_read_acsii_wfc(std::string filename, int kpt, vector<int>& act_space, int verbose){
+/**
+   filename - the name of the file from which we'll read this info
+   kpt - the index of the k-point that we want to read (starting from 0)
+   act_space - is a list of integers that correspond to the the orbitals to be read (starting from 0)
+   verbose - the level of verbosity
+   
+   Returns: 
+   wfc - is a npw x nmo  matrix containing certain orbitals in the PW basis   
+*/
+
+  // Read all lines
+  vector<std::string> A;
+  int filesize = read_file(filename,1,A);
+
+  // Find k-point sections
+  vector<int> beg,end;
+  int nkpts = 0;
+  int start = 0;
+  int status = 1;
+  while(status!=0){
+    int b,e;
+    status = find_section(A,"<Kpoint.","</Kpoint.",start,filesize,b,e);
+    if(status==1){ nkpts++; start = e; beg.push_back(b); end.push_back(e); }
+  }
+  if(verbose){  cout<<"Number of K-points = "<<nkpts<<endl; }
+ 
+  
+  // Now find the positions of the bands for all k-points
+  vector< vector<int> > kbeg( nkpts,vector<int>() );
+  vector< vector<int> > kend( nkpts,vector<int>() );
+
+  if(kpt<0){ cout<<"Error: The k-point index ( "<<kpt<<" ) can not be less than 0\n"; exit(0); }
+  if(kpt>nkpts-1){ cout<<"Error: The k-point index ("<<kpt<<" ) is not allowed. The maximal\
+                   value is = "<<nkpts-1<<"\n"; exit(0); }
+
+
+  start = beg[kpt]; status = 1; int knbnd = 0;
+
+  while(status!=0){
+    int b,e;
+    status = find_section(A,"<Wfc.","</Wfc.",start,end[kpt],b,e);
+    if(status==1) { start = e+1; knbnd++; kbeg[kpt].push_back(b); kend[kpt].push_back(e);}
+  }
+  if(verbose){ cout<<"Number of bands for k-point "<<kpt<<" is = "<<knbnd<<endl; }
+
+
+  // Construct MOs:
+  int nbands = kbeg[kpt].size();                   // Number of bands(MOs) in each k-point
+  int npw =  kend[kpt][0] - kbeg[kpt][0] - 1;      // Number of plane waves in each band
+
+  // Sanity check:
+  int sz = act_space.size();
+  for(int i=0; i<sz; i++){
+    if(act_space[i]<0){ 
+      cout<<"Error: Orbital index can not be less than 0, given = "<<act_space[i]<<endl; 
+      cout<<"Exiting...\n";
+      exit(0);
+    }
+    if(act_space[i]>nbands-1){ 
+      cout<<"Error: Orbital index can not be larger than "<<nbands-1<<", given = "<<act_space[i]<<endl; 
+      cout<<"Exiting...\n";
+      exit(0);
+    }
+  }// for i
+  nbands = sz; // if all is fine - we'll just read what we need, as dictated by the act_space
+
+
+  CMATRIX wfc(npw, nbands);
+    
+
+  
+
+  // Now finally get the coefficients 
+  for(int iband=0;iband<nbands;iband++){
+      int band = act_space[iband];
+
+    for(int pw=0;pw<npw;pw++){
+      
+      int i = kbeg[kpt][band]+1+pw;
+
+      vector<std::string> At;
+      split_line(A[i],At,',');
+      double re = atof(At[0].c_str());
+      double im = atof(At[1].c_str());
+
+      wfc.set(pw, band, re, im);
+
+    }//for npw
+  }//for band
+
+  // Free the memory
+  A.clear();
+
+  return wfc;
+}
+
+
+MATRIX QE_read_acsii_grid(std::string filename, int verbose){
+
+  // Read all lines
+  vector<std::string> A;
+  int filesize = read_file(filename,1,A);
+
+  // Find k-point sections
+  int beg,end;
+  int start = 0;
+  int status = 0;
+  status = find_section(A,"<grid","</grid>",start,filesize,beg,end);
+  int sz = end-beg-1;
+  if(verbose){  cout<<"Size of the grid = "<<sz<<endl; }
+
+  MATRIX grid(sz, 3);
+
+  // Read all grid points now
+  for(int i=0;i<sz;i++){
+    vector<std::string> At;
+    split_line(A[i+beg+1],At);
+
+    grid.set(i,0, atof(At[0].c_str()));
+    grid.set(i,1, atof(At[1].c_str()));
+    grid.set(i,2, atof(At[2].c_str()));
+
+  }// for i
+
+  // Free memory
+  A.clear();
+
+  return grid;  
+}
+
+
+
+
+vector<CMATRIX> compute_Hprime(CMATRIX& wfc, MATRIX& grid, MATRIX& reci){
+/**
+   wfc - is a npw x nmo  matrix containing certain orbitals in the PW basis   
+   grid - is a npw x 3 matrix containing the grid point coordinates in terms of reciprocal vectors
+   reci - is a 3 x 3 matrix of reciprocal vectors - 1-column = bx, 2-nd column = by, 3-rd column = bz
+
+   Returns: 
+   hprime - an 3 x nmo x nmo vector of transition dipoles 
+
+*/
+
+  int g_sz = grid.n_rows; 
+  int nmo = wfc.n_cols; //used to be sz
+  int npw = wfc.n_rows;
+
+  int is_compl = 0;
+  if(g_sz!=npw){ 
+    if(npw==(2*g_sz-1)){
+      cout<<"Warning: Using reconstructed (completed) wavefunction\n";
+      is_compl = 1;
+    }
+    else{
+      cout<<"Warning in compute_Hprime: number of plane waves = "
+          <<npw<<" is different from the grid size ="<<g_sz<<endl;
+    }
+    g_sz = min(g_sz,npw);
+  }
+
+  // Compute
+  complex<double> scl(1.0,0.0); // scaling factor
+  complex<double> scl1(0.0,1.0);
+
+  vector<CMATRIX> hprime = vector<CMATRIX>(3, CMATRIX(nmo, nmo));
+
+  complex<double> tmp;
+  double gx,gy,gz;  
+
+  
+  for(int i=0;i<nmo;i++){
+    for(int j=0;j<nmo;j++){
+
+      for(int g=0;g<g_sz;g++){
+
+        tmp = ( std::conj(wfc.get(g,i)) * wfc.get(g, j) );
+
+        gx = grid.get(g,0)*reci.get(0,0) +  grid.get(g,1)*reci.get(0,1) +  grid.get(g,2)*reci.get(0,2);
+        gy = grid.get(g,0)*reci.get(1,0) +  grid.get(g,1)*reci.get(1,1) +  grid.get(g,2)*reci.get(1,2);
+        gz = grid.get(g,0)*reci.get(2,0) +  grid.get(g,1)*reci.get(2,1) +  grid.get(g,2)*reci.get(2,2);
+ 
+        if(is_compl==0){
+          hprime[0].add(i,j, tmp*gx);
+          hprime[1].add(i,j, tmp*gy);
+          hprime[2].add(i,j, tmp*gz);
+        }
+        else if(is_compl==1){
+          if(g==0){ 
+            // This should give zero!
+            hprime[0].add(i,j, tmp*gx);
+            hprime[1].add(i,j, tmp*gy);
+            hprime[2].add(i,j, tmp*gz);
+          }
+          else{ 
+            // Now the Hprime_ matrices are purely imaginary, for the case of gamma-symmetry.
+            hprime[0].add(i,j, complex<double>(0.0, 2.0*tmp.real()*gx) );
+            hprime[1].add(i,j, complex<double>(0.0, 2.0*tmp.real()*gy) );
+            hprime[2].add(i,j, complex<double>(0.0, 2.0*tmp.real()*gz) );
+          }
+        }// is_compl==1
+        
+      }// for g
+
+    }// for j
+  }// for i
+
+  return hprime;
+
+}
+
 
     
 
