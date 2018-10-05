@@ -1693,7 +1693,7 @@ CMATRIX nHamiltonian::get_cum_phase_corr(){
     exit(0);
   }
 
-  return *basis_transform; 
+  return *cum_phase_corr; 
 }
 
 

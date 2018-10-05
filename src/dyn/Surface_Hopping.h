@@ -180,7 +180,7 @@ void tsh_indx2vec(nHamiltonian& ham, CMATRIX& states, vector<int>& res);
 void tsh_internal2physical(nHamiltonian& ham, vector<int>& internal, vector<int>& physical);
 void tsh_physical2internal(nHamiltonian& ham, vector<int>& internal, vector<int>& physical);
 
-CMATRIX compute_phases(CMATRIX& U, CMATRIX& U_prev);
+//CMATRIX compute_phases(CMATRIX& U, CMATRIX& U_prev);
 void phase_correct_ampl(CMATRIX& C, CMATRIX& cum_phases, CMATRIX& cum_phases_prev);
 void phase_correct_ampl(CMATRIX* C, CMATRIX* phases);
 void phase_correct_ampl(CMATRIX& C, CMATRIX& phases);

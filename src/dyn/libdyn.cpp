@@ -300,8 +300,8 @@ void export_tsh_aux_hop_objects(){
 
 
 
-  CMATRIX (*expt_compute_phases_v1)(CMATRIX& U, CMATRIX& U_prev) = &compute_phases;
-  def("compute_phases", expt_compute_phases_v1);
+//  CMATRIX (*expt_compute_phases_v1)(CMATRIX& U, CMATRIX& U_prev) = &compute_phases;
+//  def("compute_phases", expt_compute_phases_v1);
 
   void (*expt_phase_correct_ampl_v1)
   (CMATRIX& C, CMATRIX& cum_phases, CMATRIX& cum_phases_prev) = &phase_correct_ampl;

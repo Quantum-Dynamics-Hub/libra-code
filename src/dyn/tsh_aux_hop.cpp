@@ -133,14 +133,14 @@ void tsh_internal2physical(nHamiltonian& ham, vector<int>& internal, vector<int>
 
 }
 
-
-CMATRIX compute_phases(CMATRIX& U, CMATRIX& U_prev){
 /**
+CMATRIX compute_phases(CMATRIX& U, CMATRIX& U_prev){
+
 
   X - the |psi(t')>
   Xprev = |psi(t)>,  t' > t
 
-*/
+
 
   int i;
   complex<double> f;
@@ -164,6 +164,7 @@ CMATRIX compute_phases(CMATRIX& U, CMATRIX& U_prev){
   return phases;
 
 }
+*/
 
 
 void phase_correct_ampl(CMATRIX& C, CMATRIX& cum_phases, CMATRIX& cum_phases_prev){

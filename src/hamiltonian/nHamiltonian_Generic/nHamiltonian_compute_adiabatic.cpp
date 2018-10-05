@@ -245,7 +245,7 @@ CMATRIX compute_phase_corrections(CMATRIX& S){
   for(i=0; i<nc; i++){
 
     f = S.get(i,i);
-    double af = abs(f);
+    double af = std::norm(f);
 
     if(af > 0.0){   phase_corr.set(i, 0, f / af);     }
 
@@ -288,9 +288,11 @@ CMATRIX compute_phase_corrections(CMATRIX& U, CMATRIX& U_prev){
   for(i=0; i<nc; i++){
 
     f = (U_prev.col(i).H() * U.col(i) ).get(0);
-    double af = abs(f);
+    double af = std::norm(f);
 
-    if(af > 0.0){   phase_corr.set(i, 0, f / af);     }
+    if(af > 0.0){   phase_corr.set(i, 0, f / af);        }
+
+//    cout<<"In compute_phase_corrections.. i = "<<i<<" f= "<<f<<" af = "<<af<<" phase_corr = "<<phase_corr.get(i)<<endl;
 
   }// for i
 
@@ -315,6 +317,8 @@ CMATRIX nHamiltonian::update_phases(CMATRIX& U_prev, int lvl){
   t' > t
 
 */
+
+  if(lvl==level){
 
     // Memorize the cumulative phase correction up to this step
     CMATRIX* cum_phase_corr_prev; 
@@ -343,6 +347,20 @@ CMATRIX nHamiltonian::update_phases(CMATRIX& U_prev, int lvl){
  
     return ampl_corr;
 
+  }// level==lvl
+
+  else if(lvl>level){
+  
+    for(int i=0;i<children.size();i++){
+      children[i]->apply_phase_corrections(U_prev, lvl);
+    }
+
+  }// lvl >level
+
+  else{
+    cout<<"WARNING in void nHamiltonian::update_phases(CMATRIX& U_prev, int lvl) :\n"; 
+    cout<<"Can not run the function in the parent Hamiltonian from the child node\n";    
+  }
 }
 
 CMATRIX nHamiltonian::update_phases(CMATRIX& U_prev){

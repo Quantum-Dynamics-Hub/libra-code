@@ -34,9 +34,8 @@ def Henon_Heiles(q, params):
     \param[in] params [dictionary] parameters of the model
 
     References:
-    Sim, E.; Makri, N. Time-Dependent Discrete Variable Representations for Quantum Wave Packet Propagation. 
-    J. Chem. Phys. 1995, 102, 5616–5625.
- 
+    Sim, E.; Makri, N. Time-Dependent Discrete Variable Representations for Quantum Wave Packet Propagation
+    J. Chem. Phys. 1995, 102, 5616-5625
     """
 
     lam = 0.2   
