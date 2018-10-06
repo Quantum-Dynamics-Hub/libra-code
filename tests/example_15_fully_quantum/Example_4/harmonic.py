@@ -178,6 +178,7 @@ def main(nsnaps, nsteps, params, case):
     dt = params["dt"]
     coeff = params["coeff"]
     etot = 0.0
+    t = 0
 
     nbasis = len(coeff)
     # Initialize the coeffcient list
@@ -196,8 +197,10 @@ def main(nsnaps, nsteps, params, case):
             # For each time step, we have to update all coeffcients 
             for n in xrange(nbasis):
 
-                exp = math.cos( i*(n+0.5) ) - 1.0j*math.sin( i*(n+0.5 ) )
+                exp = math.cos( t*(n+0.5) ) - 1.0j*math.sin( t*(n+0.5 ) )
                 coeff_curr.set(n,0,coeff_orig.get(n,0)*exp)
+
+                t += dt
             
         # Compute propeties (expectation values, etc)
         q  = compute_q(params,coeff_curr,energy,i)
