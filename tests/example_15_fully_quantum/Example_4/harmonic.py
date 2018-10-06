@@ -200,7 +200,7 @@ def main(nsnaps, nsteps, params, case):
                 exp = math.cos( t*(n+0.5) ) - 1.0j*math.sin( t*(n+0.5 ) )
                 coeff_curr.set(n,0,coeff_orig.get(n,0)*exp)
 
-                t += dt
+            t += dt
             
         # Compute propeties (expectation values, etc)
         q  = compute_q(params,coeff_curr,energy,i)
