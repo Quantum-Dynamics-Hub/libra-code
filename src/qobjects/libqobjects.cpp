@@ -388,12 +388,25 @@ void export_qobjects_objects(){
   CMATRIX (*expt_pw_overlap_v1)
   (VECTOR& k1, VECTOR& k2, CMATRIX& coeff1, CMATRIX& coeff2, vector<VECTOR>& grid1, vector<VECTOR>& grid2) = &pw_overlap;
 
+  CMATRIX (*expt_QE_read_acsii_wfc_v1)
+  (std::string filename, int kpt, vector<int>& act_space, int verbose) = &QE_read_acsii_wfc;
+
+  MATRIX (*expt_QE_read_acsii_grid_v1)(std::string filename, int verbose) = &QE_read_acsii_grid;
+
+  vector<CMATRIX> (*expt_compute_Hprime_v1)
+  (CMATRIX& wfc, MATRIX& grid, MATRIX& reci) = &compute_Hprime;
+
+
 
   // ============ Now export functions =============
   // Overlaps
   def("I_1D", expt_I_1D_v1);
   def("I_3D", expt_I_3D_v1);
   def("pw_overlap", expt_pw_overlap_v1);
+
+  def("QE_read_acsii_wfc", expt_QE_read_acsii_wfc_v1);
+  def("QE_read_acsii_grid", expt_QE_read_acsii_grid_v1);
+  def("compute_Hprime", expt_compute_Hprime_v1);
 
 
   //============ SD class =====================
