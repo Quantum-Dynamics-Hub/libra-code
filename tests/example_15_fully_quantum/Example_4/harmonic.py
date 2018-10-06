@@ -28,6 +28,11 @@ def compute_energy(n,omega):
     """
     Computes the energy for the nth HO vibraitonal mode    
     with frequency omega
+   
+    omega - Frequency associated with the harmonic potential
+    n - The HO eigenstate index
+
+    Returns: The energy for the nth HO eigenstate
     """
 
     E = omega * ( n + 0.5 )
@@ -38,6 +43,13 @@ def compute_q(params,coeff_curr,energy,t):
     """
     Computes the expecation value < PSI | q | PSI >. Where PSI 
     is a user defined superposition of HO eigenstates
+
+    params - A dictionary containg simulation parameters
+    coeff_curr - a CMATRIX HO eigenstate coefficients of size (nbasis,1)
+    energy = a MATRIX of HO eigenenergies of size (nbasis,1)
+    t = current time step
+
+    Returns: < PSI | q | PSI >
     """
 
     q = 0.0
@@ -68,6 +80,13 @@ def compute_q2(params,coeff_curr,energy,t):
     """
     Computes the expecation value < PSI | q^2 | PSI >. Where PSI 
     is a user defined superposition of HO eigenstates
+
+    params - A dictionary containg simulation parameters
+    coeff_curr - a CMATRIX HO eigenstate coefficients of size (nbasis,1)
+    energy = a MATRIX of HO eigenenergies of size (nbasis,1)
+    t = current time step
+
+    Returns: < PSI | q^2 | PSI >
     """
 
     q = 0.0
@@ -106,6 +125,13 @@ def compute_p(params,coeff_curr,energy,t):
     """
     Computes the expecation value < PSI | p | PSI >. Where PSI 
     is a user defined superposition of HO eigenstates
+
+    params - A dictionary containg simulation parameters
+    coeff_curr - a CMATRIX HO eigenstate coefficients of size (nbasis,1)
+    energy = a MATRIX of HO eigenenergies of size (nbasis,1)
+    t = current time step
+
+    Returns: < PSI | p | PSI >
     """
 
     p = 0.0
@@ -137,6 +163,13 @@ def compute_p2(params,coeff_curr,energy,t):
     """
     Computes the expecation value < PSI | p^2 | PSI >. Where PSI 
     is a user defined superposition of HO eigenstates
+
+    params - A dictionary containg simulation parameters
+    coeff_curr - a CMATRIX HO eigenstate coefficients of size (nbasis,1)
+    energy = a MATRIX of HO eigenenergies of size (nbasis,1)
+    t = current time step
+
+    Returns: < PSI | p^2 | PSI >
     """
 
     p = 0.0
@@ -173,6 +206,11 @@ def compute_p2(params,coeff_curr,energy,t):
 def run_analytical(nsnaps, nsteps, params, case):    
     """
     This is the driver fucntion for the file harmonic.py 
+
+    nsnaps - number of instances to be printed
+    nsteps - number of steps between each nsnap
+    params - A dictionary containg simulation parameters
+    case   - the index for a particular case
     """
 
     dt = params["dt"]
@@ -203,14 +241,14 @@ def run_analytical(nsnaps, nsteps, params, case):
             t += dt
             
         # Compute propeties (expectation values, etc)
-        q  = compute_q(params,coeff_curr,energy,i)
-        p  = compute_p(params,coeff_curr,energy,i)
-        q2 = compute_q2(params,coeff_curr,energy,i)
-        p2 = compute_p2(params,coeff_curr,energy,i)
+        q  = compute_q(params,coeff_curr,energy,t)
+        p  = compute_p(params,coeff_curr,energy,t)
+        q2 = compute_q2(params,coeff_curr,energy,t)
+        p2 = compute_p2(params,coeff_curr,energy,t)
    
         # Print results
         f = open("_res"+str(case)+".txt", "a")
-        f.write("%8.5f  %8.5f  %8.5f  %8.5f  %8.5f  %8.5f\n" % (i*dt*nsteps, etot, q, p, q2, p2) )
+        f.write("%8.5f  %8.5f  %8.5f  %8.5f  %8.5f  %8.5f\n" % (t, etot, q, p, q2, p2) )
         f.close()
 
 
