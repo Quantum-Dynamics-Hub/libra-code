@@ -1,15 +1,44 @@
-from liblibra_core import *
+#*********************************************************************************
+#* Copyright (C) 2017-2018  Brendan A. Smith, Alexey V. Akimov
+#*
+#* This file is distributed under the terms of the GNU General Public License
+#* as published by the Free Software Foundation, either version 2 of
+#* the License, or (at your option) any later version.
+#* See the file LICENSE in the root directory of this distribution
+#* or <http://www.gnu.org/licenses/>.
+#*
+#*********************************************************************************/
+
+
+import cmath
+import math
+import os
+import sys
+
+if sys.platform=="cygwin":
+    from cyglibra_core import *
+elif sys.platform=="linux" or sys.platform=="linux2":
+    from liblibra_core import *
 from libra_py import *
+
 import math
 import sys
 
 def compute_energy(n,omega):
+    """
+    Computes the energy for the nth HO vibraitonal mode    
+    with frequency omega
+    """
 
     E = omega * ( n + 0.5 )
     return E
 
 
 def compute_q(params,coeff_curr,energy,t):
+    """
+    Computes the expecation value < PSI | q | PSI >. Where PSI 
+    is a user defined superposition of HO eigenstates
+    """
 
     q = 0.0
     mass  = params["mass"]
@@ -36,6 +65,10 @@ def compute_q(params,coeff_curr,energy,t):
 
 
 def compute_q2(params,coeff_curr,energy,t):
+    """
+    Computes the expecation value < PSI | q^2 | PSI >. Where PSI 
+    is a user defined superposition of HO eigenstates
+    """
 
     q = 0.0
     mass  = params["mass"]
@@ -70,6 +103,10 @@ def compute_q2(params,coeff_curr,energy,t):
 
 
 def compute_p(params,coeff_curr,energy,t):
+    """
+    Computes the expecation value < PSI | p | PSI >. Where PSI 
+    is a user defined superposition of HO eigenstates
+    """
 
     p = 0.0
     mass  = params["mass"]
@@ -97,6 +134,10 @@ def compute_p(params,coeff_curr,energy,t):
 
 
 def compute_p2(params,coeff_curr,energy,t):
+    """
+    Computes the expecation value < PSI | p^2 | PSI >. Where PSI 
+    is a user defined superposition of HO eigenstates
+    """
 
     p = 0.0
     mass  = params["mass"]
@@ -130,6 +171,9 @@ def compute_p2(params,coeff_curr,energy,t):
 
 
 def main(nsnaps, nsteps, params, case):    
+    """
+    This is the driver fucntion for the file harmonic.py 
+    """
 
     dt = params["dt"]
     coeff = params["coeff"]
@@ -186,11 +230,11 @@ def init_params(case):
 
 
 def run_HO(nsnaps, nsteps):
-    for case in [0,1,2]:
+    for case in [1]:
 
         params = init_params(case)
         main(nsnaps, nsteps, params, case)
 
-nsnaps = 50
+nsnaps = 200
 nsteps = 10
 run_HO(nsnaps, nsteps)

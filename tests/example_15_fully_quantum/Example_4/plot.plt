@@ -37,9 +37,8 @@ set tmargin at screen 0.95
 set output "_etot.png"
 set xlabel "Time (fs)" offset 0.0, 0.5
 set ylabel "Total Energy" offset 1.75, 0.0
-plot  "_res0.txt" u ($1/41.3410):2 w l ls 12 lw 5  t "case0",\
-      "_res1.txt" u ($1/41.3410):2 w l ls 23 lw 5  t "case1",\
-      "_res2.txt" u ($1/41.3410):2 w l ls 32 lw 5  t "case2",\
+plot  "_res1.txt" u ($1/41.3410):2 w l ls 12 lw 5  t "Analytical",\
+      "_pops.txt" u ($1/41.3410):4 w l ls 32 lw 5 t  "Grid"
 
 set lmargin at screen 0.15
 set rmargin at screen 0.95
@@ -49,10 +48,9 @@ set tmargin at screen 0.95
 set output "_q.png"
 set xlabel "Time (fs)" offset 0.0, 0.5
 set ylabel "<q>" offset 1.75, 0.0
-plot  "_res0.txt" u ($1/41.3410):3 w l ls 12 lw 5  t "case0",\
-      "_res1.txt" u ($1/41.3410):3 w l ls 23 lw 5  t "case1",\
-      "_res2.txt" u ($1/41.3410):3 w l ls 32 lw 5  t "case2",\
-      
+plot  "_res1.txt" u ($1/41.3410):3 w l ls 12 lw 5  t "Analytical",\
+      "_pops.txt" u ($1/41.3410):6 w l ls 32 lw 5 t  "Grid"
+ 
 set lmargin at screen 0.15
 set rmargin at screen 0.95
 set bmargin at screen 0.15
@@ -61,22 +59,19 @@ set tmargin at screen 0.95
 set output "_p.png"
 set xlabel "Time (fs)" offset 0.0, 0.5
 set ylabel "<p>" offset 1.0, 0.0
-plot  "_res0.txt" u ($1/41.3410):4 w l ls 12 lw 5  t "case0",\
-      "_res1.txt" u ($1/41.3410):4 w l ls 23 lw 5  t "case1",\
-      "_res2.txt" u ($1/41.3410):4 w l ls 32 lw 5  t "case2",\
+plot  "_res1.txt" u ($1/41.3410):4 w l ls 12 lw 5  t "Analytical",\
+      "_pops.txt" u ($1/41.3410):7 w l ls 32 lw 5 t  "Grid"
 
-
-set lmargin at screen 0.15
+set lmargin at screen 0.175
 set rmargin at screen 0.95
 set bmargin at screen 0.15
 set tmargin at screen 0.95
 
 set output "_q2.png"
 set xlabel "Time (fs)" offset 0.0, 0.5
-set ylabel "<q^2>" offset 1.5, 0.0
-plot  "_res0.txt" u ($1/41.3410):5 w l ls 12 lw 5  t "case0",\
-      "_res1.txt" u ($1/41.3410):5 w l ls 23 lw 5  t "case1",\
-      "_res2.txt" u ($1/41.3410):5 w l ls 32 lw 5  t "case2",\
+set ylabel "<q^2>" offset 2.0, 0.0
+plot  "_res1.txt" u ($1/41.3410):5 w l ls 12 lw 5  t "Analytical",\
+      "_pops.txt" u ($1/41.3410):8 w l ls 32 lw 5 t  "Grid"
 
 set lmargin at screen 0.15
 set rmargin at screen 0.95
@@ -86,7 +81,6 @@ set tmargin at screen 0.95
 set output "_p2.png"
 set xlabel "Time (fs)" offset 0.0, 0.5
 set ylabel "<p^2>" offset 1.0, 0.0
-plot  "_res0.txt" u ($1/41.3410):6 w l ls 12 lw 5  t "case0",\
-      "_res1.txt" u ($1/41.3410):6 w l ls 23 lw 5  t "case1",\
-      "_res2.txt" u ($1/41.3410):6 w l ls 32 lw 5  t "case2",\
+plot  "_res1.txt" u ($1/41.3410):6 w l ls 12 lw 5  t "Analytical",\
+      "_pops.txt" u ($1/41.3410):9 w l ls 32 lw 5 t  "Grid"
 

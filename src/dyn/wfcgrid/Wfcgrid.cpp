@@ -1054,12 +1054,12 @@ void Wfcgrid::normalize_wfc_1D(){
  *   Normalize the wavefunction
  *   */
 
-  double norm = norm_1D();
+  double sqrt_norm = sqrt( norm_1D() );
 
   for(int nst=0;nst<nstates;nst++){
     for(int nx=0;nx<Nx;nx++){
 
-      PSI[nst].M[nx] /= sqrt(norm);
+      PSI[nst].M[nx] /= sqrt_norm;
 
       }// for nx
   }// for nst
