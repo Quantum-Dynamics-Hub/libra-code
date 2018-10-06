@@ -21,6 +21,8 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from libra_py import *
 
+import harmonic
+
 class tmp:
     pass
 
@@ -114,13 +116,15 @@ def plot_pes(params):
 
 
 
-def run_exact(params):
+
+
+def run_exact(nsnaps, nsteps, params, case):
     """
     The main routine to run fully quantum calculations
     """
 
     # Here we initialize the grid and wavefunction
-    wfc = Wfcgrid(-25.0, 25.0, 0.01, 1)
+    wfc = Wfcgrid(-20.0, 20.0, 0.01, 1)
 
     wfc.init_wfc_1D_HO(Py2Cpp_int(params["wfc"]["init_state"]), 
                        Py2Cpp_int(params["wfc"]["nu"]),
@@ -136,17 +140,17 @@ def run_exact(params):
     wfc.update_propagator_1D(0.5*dt, params["mass"])  # this is important because we are using exp(-0.5*dt*H_loc)...
     wfc.update_propagator_K_1D(dt, params["mass"])    # ... together with exp(-dt*H_non-loc)            
 
-    f = open("_pops.txt", "w")
+    f = open("_pops"+str(case)+".txt", "w")
     f.close()
-    os.system("mkdir _res")
+    os.system("mkdir _res"+str(case)+"")
 
     # Compute dynamics
     cum = 0.0
 
     exp_pow = doubleList()
     exp_pow.append(2.0)
-    for i in xrange(params["nsnaps"]):  # time steps
-        for j in xrange(params["nsteps"] ):  # time steps
+    for i in xrange(nsnaps):  # time steps
+        for j in xrange(nsteps):  # time steps
 
             wfc.propagate_exact_1D(0)
 
@@ -162,57 +166,67 @@ def run_exact(params):
         x2  = wfc.get_pow_x_1D(exp_pow[0])
         px2 = wfc.get_pow_px_1D(2)
 
-
-        f = open("_pops.txt", "a")
-        f.write("%8.5f   %8.5f    %8.5f   %8.5f  %8.5f  %8.5f    %8.5f    %8.5f  %8.5f  %8.5f\n" % (i*params["nsteps"]*dt, ekin, epot, etot, cum, x, px, x2, px2, wfc.norm_1D()))
+        f = open("_pops"+str(case)+".txt", "a")
+        f.write("%8.5f   %8.5f    %8.5f   %8.5f  %8.5f  %8.5f    %8.5f    %8.5f  %8.5f  %8.5f\n" % (i*nsteps*dt, ekin, epot, etot, cum, x, px, x2, px2, wfc.norm_1D()))
         f.close()
 
-        wfc.print_wfc_1D("_res/wfc", i, 0)   # Be sure to make a "res" directory
+        wfc.print_wfc_1D("_res"+str(case)+"/wfc", i, 0)   # Be sure to make a "res" directory
         
 
+def init_params(case):
+    """
+    This function intiializes the params dictionary for a given case    
+    """
 
-# Model parameters 
-case = 2
+    params = { "mass":2000.0, "dt":1.0, "barrier":0.00 }
+    params.update( {"x0":0.0, "k":0.032} )
 
-params = { "mass":2000.0, "nsnaps":200, "nsteps":10, "dt":1.0, "barrier":0.00 } 
-params.update( {"model":1, "x0":0.0, "k":0.032} )
+    # Compute omega based on k
+    omega = math.sqrt(params["k"]/params["mass"])
+    params.update({"omega":omega})
 
-wfc0 = {}
-wfc0.update({"init_state":[0]})
-wfc0.update({"nu":[0]})
-wfc0.update({"weights":[1.0+0.0j]})
-wfc0.update({"x0":[0.0]})
-wfc0.update({"px0":[0.0]})
-wfc0.update({"alpha":[ math.sqrt(params["k"] * params["mass"]) ]})
+    if   case == 0:       
 
-wfc1 = {}
-wfc1.update({"init_state":[0]})
-wfc1.update({"nu":[1]})
-wfc1.update({"weights":[1.0+0.0j]})
-wfc1.update({"x0":[0.0]})
-wfc1.update({"px0":[0.0]})
-wfc1.update({"alpha":[ math.sqrt(params["k"] * params["mass"]) ]})
+        wfc = {}
+        wfc.update({"init_state":[0]})
+        wfc.update({"nu":[0]})
+        wfc.update({"weights":[1.0+0.0j]})
+        wfc.update({"x0":[0.0]})
+        wfc.update({"px0":[0.0]})
+        wfc.update({"alpha":[ math.sqrt(params["k"] * params["mass"]) ]})
 
-wfc2 = {}
-wfc2.update({"init_state":[0, 0]})
-wfc2.update({"nu":[0, 1]})
-wfc2.update({"weights":[1.0+0.0j, 1.0+0.0j]})
-wfc2.update({"x0":[0.0, 0.0]})
-wfc2.update({"px0":[0.0, 0.0]})
-alp = math.sqrt(params["k"] * params["mass"])
-wfc2.update({"alpha":[ alp, alp ] })
+        params.update( {"coeff":[1.0]} )
+        params.update( {"model":1, "wfc": wfc} )
 
+    elif case == 1:
 
-if case==0:
-    params.update({"wfc": wfc0 })
+        wfc = {}
+        wfc.update({"init_state":[0, 0]})
+        wfc.update({"nu":[0, 1]})
+        wfc.update({"weights":[1.0+0.0j, 1.0+0.0j]})
+        wfc.update({"x0":[0.0, 0.0]})
+        wfc.update({"px0":[0.0, 0.0]})
+        alp = math.sqrt(params["k"] * params["mass"])
+        wfc.update({"alpha":[ alp, alp ] })
 
-elif case==1:
-    params.update({"wfc": wfc1 })
+        params.update( {"coeff":[1.0, 1.0]} )
+        params.update( {"model":1, "wfc": wfc} )
 
-elif case==2:
-    params.update({"wfc": wfc2 })
+    return params
 
 
-plot_pes(params)
-run_exact(params)
+def run(nsnaps, nsteps):
+    for case in [1]:
+
+        params = init_params(case)
+        harmonic.run_analytical(nsnaps, nsteps, params, case)
+        run_exact(nsnaps, nsteps, params, case)
+
+    plot_pes(params)
+
+
+nsnaps = 200
+nsteps = 10
+run(nsnaps, nsteps)
+
 

@@ -21,5 +21,4 @@ module load intel-mpi/2017.0.1
 module load mkl/2017.0.1
 module load espresso
 
-python harmonic.py
 python run.py

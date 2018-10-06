@@ -170,7 +170,7 @@ def compute_p2(params,coeff_curr,energy,t):
     return p.real
 
 
-def main(nsnaps, nsteps, params, case):    
+def run_analytical(nsnaps, nsteps, params, case):    
     """
     This is the driver fucntion for the file harmonic.py 
     """
@@ -197,7 +197,7 @@ def main(nsnaps, nsteps, params, case):
             # For each time step, we have to update all coeffcients 
             for n in xrange(nbasis):
 
-                exp = math.cos( t*(n+0.5) ) - 1.0j*math.sin( t*(n+0.5 ) )
+                exp = math.cos( t*params["omega"]*(n+0.5) ) - 1.0j*math.sin( t*params["omega"]*(n+0.5) )
                 coeff_curr.set(n,0,coeff_orig.get(n,0)*exp)
 
             t += dt
@@ -215,29 +215,3 @@ def main(nsnaps, nsteps, params, case):
 
 
 
-def init_params(case):
-    """
-    This function intiializes the params dictionary for a given case    
-    """
-
-    params = {"mass":2000.0, "omega":0.004, "dt":1.0}
-
-    if   case == 0:
-        params.update( { "coeff":[1.0] } )
-    elif case == 1:
-        params.update( { "coeff":[1.0, 1.0] } )
-    elif case == 2:
-        params.update( { "coeff":[1.0, 1.0, 1.0] } )
-
-    return params
-
-
-def run_HO(nsnaps, nsteps):
-    for case in [1]:
-
-        params = init_params(case)
-        main(nsnaps, nsteps, params, case)
-
-nsnaps = 200
-nsteps = 10
-run_HO(nsnaps, nsteps)
