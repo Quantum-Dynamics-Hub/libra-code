@@ -85,7 +85,7 @@ def compute_q(params,coeff):
     return q
 
 
-def compute_q2(params,coeff_curr,energy,t):
+def compute_q2(params,coeff_curr):
     """
     Computes the expecation value < PSI | q^2 | PSI >. Where PSI 
     is a user defined superposition of HO eigenstates
@@ -147,7 +147,7 @@ def compute_p(params,coeff):
 
 
 
-def compute_p2(params,coeff_curr,energy,t):
+def compute_p2(params,coeff_curr):
     """
     Computes the expecation value < PSI | p^2 | PSI >. Where PSI 
     is a user defined superposition of HO eigenstates
