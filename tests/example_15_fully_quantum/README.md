@@ -15,4 +15,9 @@
 ## Example 3
 
    Illustrates how to initialize the wavefunctions to be the superpositions of HO eigenstates
-   
+
+
+## Example 4
+
+   The analytical solution for dynamics involving superposition of HO eigenstates  
+

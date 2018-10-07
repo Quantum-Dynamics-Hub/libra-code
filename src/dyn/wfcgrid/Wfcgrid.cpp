@@ -1022,12 +1022,6 @@ double Wfcgrid::get_py_2D(){
 }
 
 
-
-
-
-
-
-
 double Wfcgrid::norm_1D(){
 /**
   Compute the norm of the 1D wavefunction: <psi|psi>
@@ -1051,6 +1045,24 @@ double Wfcgrid::norm_1D(){
 
   return norm;
 
+
+}
+
+
+void Wfcgrid::normalize_wfc_1D(){
+/**
+ *   Normalize the wavefunction
+ *   */
+
+  double sqrt_norm = sqrt( norm_1D() );
+
+  for(int nst=0;nst<nstates;nst++){
+    for(int nx=0;nx<Nx;nx++){
+
+      PSI[nst].M[nx] /= sqrt_norm;
+
+      }// for nx
+  }// for nst
 
 }
 

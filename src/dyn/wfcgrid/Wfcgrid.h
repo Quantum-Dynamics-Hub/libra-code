@@ -112,6 +112,9 @@ public:
  
   void init_wfc_2D(double x0, double y0, double px0, double py0, double dx, double dy, int init_state); ///< initialization of 2D wavefunction
 
+  // Normalize wfc
+  void normalize_wfc_1D();
+
   // Print 1D and 2D wavefunctions to file
   void print_wfc_1D(std::string prefix, int snap, int state);
   void print_wfc_2D(std::string prefix, int snap, int state);

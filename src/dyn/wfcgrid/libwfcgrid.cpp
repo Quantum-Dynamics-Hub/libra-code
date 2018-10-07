@@ -131,6 +131,8 @@ void export_Wfcgrid_objects(){
       .def("propagate_exact_1D", &Wfcgrid::propagate_exact_1D)
       .def("propagate_exact_2D", &Wfcgrid::propagate_exact_2D)
 
+      .def("normalize_wfc_1D", &Wfcgrid::normalize_wfc_1D)
+
       .def("absorb_1D",expt_absorb_1D)
 
       .def("flux_1D", &Wfcgrid::flux_1D)
