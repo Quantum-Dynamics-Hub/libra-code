@@ -98,35 +98,24 @@ def compute_q2(params,coeff_curr,energy,t):
     Returns: < PSI | q^2 | PSI >
     """
 
-    q = 0.0
     mass  = params["mass"]
     omega = params["omega"]
-    prefix = 0.5/(mass*omega)
     nbasis = coeff_curr.num_of_rows
 
+    q = 0.0
     # for ( a_+ a_- ) + ( a_- a_+ )
     for n in xrange(nbasis):
-
         c1 = coeff_curr.get(n,0).conjugate() * coeff_curr.get(n,0)
-        q += c1 * (2*n+1)
+        q += (2*n+1) * c1.real
 
     # for ( a_+^2 ) + ( a_-^2 )
     for n in xrange(nbasis - 2):
+        c2 = coeff_curr.get(n+2,0).conjugate() * coeff_curr.get(n,0)
+        q += 2.0 * math.sqrt(n+1) * math.sqrt(n+2) * c2.real
 
-        c2   = coeff_curr.get(n+2,0).conjugate() * coeff_curr.get(n,0)
-        c3   = coeff_curr.get(n,0).conjugate() * coeff_curr.get(n+2,0)
+    q *= 0.5/(mass*omega)
 
-        e2   = (energy.get(n,0)-energy.get(n+2,0))  
-        e3   = (energy.get(n+2,0)-energy.get(n,0))
-
-        exp2 = math.cos( t*e2 ) - 1.0j*math.sin( t*e2 )
-        exp3 = math.cos( t*e3 ) - 1.0j*math.sin( t*e3 )
- 
-        q += math.sqrt(n+1) * math.sqrt(n+2) * ( c2*exp2 + c3*exp3 )
-
-
-    q *= prefix
-    return q.real
+    return q
 
 
 
@@ -171,35 +160,26 @@ def compute_p2(params,coeff_curr,energy,t):
     Returns: < PSI | p^2 | PSI >
     """
 
-    p = 0.0
     mass  = params["mass"]
     omega = params["omega"]
-    prefix = 0.5*(mass*omega)
     nbasis = coeff_curr.num_of_rows
+
+    p = 0.0
 
     # for ( a_+ a_- ) + ( a_- a_+ )
     for n in xrange(nbasis):
-
         c1 = coeff_curr.get(n,0).conjugate() * coeff_curr.get(n,0)
-        p +=  c1.real * (2*n+1)
+        p += (2*n+1) * c1.real
 
     # for ( a_+^2 ) + ( a_-^2 )
     for n in xrange(nbasis - 2):
+        c2 = coeff_curr.get(n+2,0).conjugate() * coeff_curr.get(n,0)
+        p -= 2.0 * math.sqrt(n+1) * math.sqrt(n+2) * c2.real
 
-        c2   = coeff_curr.get(n+2,0).conjugate() * coeff_curr.get(n,0)
-        c3   = coeff_curr.get(n,0).conjugate() * coeff_curr.get(n+2,0)
+    p *= 0.5*mass*omega
 
-        e2   = (energy.get(n,0)-energy.get(n+2,0))
-        e3   = (energy.get(n+2,0)-energy.get(n,0))
+    return p
 
-        exp2 = math.cos( t*e2 ) - 1.0j*math.sin( t*e2 )
-        exp3 = math.cos( t*e3 ) - 1.0j*math.sin( t*e3 )
-
-        p -= math.sqrt(n+1) * math.sqrt(n+2) * ( c2*exp2 + c3*exp3 )
-
-
-    p *= prefix
-    return p.real
 
 
 def run_analytical(params):    
