@@ -333,6 +333,8 @@ void Wfcgrid::init_wfc_1D_HO(vector<int>& init_state, vector<int>& nu,
 
     add_ho_1D(PSI, *X, nu[i], x0[i], px0[i], weights[i], init_state[i], alpha[i]);
   }
+
+  normalize_wfc_1D();
    
   // PSI(r)->PSI(k)=reciPSI
   ft_1D(PSI,reciPSI,1,xmin,kxmin,dx);

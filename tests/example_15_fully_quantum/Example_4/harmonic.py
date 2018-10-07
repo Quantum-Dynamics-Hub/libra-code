@@ -39,41 +39,50 @@ def compute_energy(n,omega):
     return E
 
 
-def compute_q(params,coeff_curr,energy,t):
+def tot_energy(coeff, omega):
+    """
+    Computes the total energy of a superposition of HOs
+   
+    coeff = CMATRIX(nstates,1) coefficients of the superposition
+    omega (double) the frequency of the HO
+
+    """
+
+    n = coeff.num_of_rows
+
+    E = 0.0
+    for i in xrange(n):
+        E = E + ( i + 0.5 ) * (coeff.get(i,0).conjugate() * coeff.get(i,0)).real
+    E = E * omega
+
+    return E
+
+
+
+def compute_q(params,coeff):
     """
     Computes the expecation value < PSI | q | PSI >. Where PSI 
     is a user defined superposition of HO eigenstates
 
     params - A dictionary containg simulation parameters
     coeff_curr - a CMATRIX HO eigenstate coefficients of size (nbasis,1)
-    energy = a MATRIX of HO eigenenergies of size (nbasis,1)
-    t = current time step
 
     Returns: < PSI | q | PSI >
     """
 
-    q = 0.0
+
     mass  = params["mass"]
     omega = params["omega"]
-    prefix = math.sqrt(0.5/(mass*omega))
-    nbasis = coeff_curr.num_of_rows
+    nbasis = coeff.num_of_rows
 
-    for n in xrange(nbasis - 1):
+    q = 0.0
+    for n in xrange(nbasis-1):
+        c1 = coeff.get(n+1,0).conjugate() * coeff.get(n,0)
+        q +=  math.sqrt(n+1) * c1.real
 
-        c1 = coeff_curr.get(n+1,0).conjugate() * coeff_curr.get(n,0)
-        c2 = coeff_curr.get(n,0).conjugate()   * coeff_curr.get(n+1,0)
+    q *= math.sqrt(2.0/(mass*omega))
 
-        e1 = (energy.get(n,0)-energy.get(n+1,0))
-        e2 = (energy.get(n+1,0)-energy.get(n,0))
-
-        exp1 = math.cos( t*e1 ) - 1.0j*math.sin( t*e1 )
-        exp2 = math.cos( t*e2 ) - 1.0j*math.sin( t*e2 )
-
-        q +=  math.sqrt(n+1) * ( c1*exp1 + c2*exp2 )
-
-    q *= prefix    
-
-    return q.real
+    return q
 
 
 def compute_q2(params,coeff_curr,energy,t):
@@ -121,10 +130,10 @@ def compute_q2(params,coeff_curr,energy,t):
 
 
 
-def compute_p(params,coeff_curr,energy,t):
+def compute_p(params,coeff):
     """
     Computes the expecation value < PSI | p | PSI >. Where PSI 
-    is a user defined superposition of HO eigenstates
+    is a user-defined superposition of HO eigenstates
 
     params - A dictionary containg simulation parameters
     coeff_curr - a CMATRIX HO eigenstate coefficients of size (nbasis,1)
@@ -134,28 +143,18 @@ def compute_p(params,coeff_curr,energy,t):
     Returns: < PSI | p | PSI >
     """
 
-    p = 0.0
     mass  = params["mass"]
     omega = params["omega"]
-    prefix = 1.0j*math.sqrt(0.5*mass*omega)
-    nbasis = coeff_curr.num_of_rows
+    nbasis = coeff.num_of_rows
 
-    for n in xrange(nbasis - 1):
-
-        c1 = coeff_curr.get(n+1,0).conjugate() * coeff_curr.get(n,0)
-        c2 = coeff_curr.get(n,0).conjugate() * coeff_curr.get(n+1,0)
-
-        e1 = (energy.get(n,0)-energy.get(n+1,0))
-        e2 = (energy.get(n+1,0)-energy.get(n,0))
-
-        exp1 = math.cos( t*e1 ) - 1.0j*math.sin( t*e1 )
-        exp2 = math.cos( t*e2 ) - 1.0j*math.sin( t*e2 )
-
-        p +=  math.sqrt(n+1) * ( c1*exp1 - c2*exp2 )
+    p = 0.0
+    for n in xrange(nbasis-1):
+        c1 = coeff.get(n+1,0).conjugate() * coeff.get(n,0)
+        p -=  math.sqrt(n+1) * c1.imag
  
+    p *= math.sqrt(2.0*mass*omega)
 
-    p *= prefix
-    return p.real
+    return p
 
 
 
@@ -203,7 +202,7 @@ def compute_p2(params,coeff_curr,energy,t):
     return p.real
 
 
-def run_analytical(nsnaps, nsteps, params, case):    
+def run_analytical(params):    
     """
     This is the driver fucntion for the file harmonic.py 
 
@@ -216,40 +215,51 @@ def run_analytical(nsnaps, nsteps, params, case):
     dt = params["dt"]
     coeff = params["coeff"]
     etot = 0.0
-    t = 0
 
-    nbasis = len(coeff)
+
+    nbasis = len(params["coeff"])
+
     # Initialize the coeffcient list
-    coeff_orig = CMATRIX(nbasis,1)
-    coeff_curr = CMATRIX(nbasis,1)
+    coeff = CMATRIX(nbasis,1)
     energy = MATRIX(nbasis,1)
+
     for n in xrange(nbasis):
-        coeff_orig.set(n,0,coeff[n])
-        energy.set(n,0,compute_energy(n,params["omega"]))
-        etot += compute_energy(n,params["omega"])
+        coeff.set(n,0, params["coeff"][n])
+        energy.set(n,0, compute_energy(n,params["omega"]) )
 
-    f = open("_res"+str(case)+".txt", "w");  f.close()
-    for i in xrange(nsnaps):
-        for j in xrange(nsteps):
-       
-            # For each time step, we have to update all coeffcients 
-            for n in xrange(nbasis):
+    # Normalize the wavefunction
+    norm = (coeff.H()*coeff).get(0).real
+    coeff = coeff / math.sqrt(norm)
 
-                exp = math.cos( t*params["omega"]*(n+0.5) ) - 1.0j*math.sin( t*params["omega"]*(n+0.5) )
-                coeff_curr.set(n,0,coeff_orig.get(n,0)*exp)
 
-            t += dt
-            
+
+    f = open("_res.txt", "w");  
+    f.close()
+
+
+    t = 0
+    for i in xrange(params["nsnaps"]): 
+
         # Compute propeties (expectation values, etc)
-        q  = compute_q(params,coeff_curr,energy,t)
-        p  = compute_p(params,coeff_curr,energy,t)
-        q2 = compute_q2(params,coeff_curr,energy,t)
-        p2 = compute_p2(params,coeff_curr,energy,t)
+        etot = tot_energy(coeff, params["omega"]) 
+        q  = compute_q(params,coeff)
+        p  = compute_p(params,coeff)
+        q2 = compute_q2(params,coeff,energy,t)
+        p2 = compute_p2(params,coeff,energy,t)
    
         # Print results
-        f = open("_res"+str(case)+".txt", "a")
+        f = open("_res.txt", "a")
         f.write("%8.5f  %8.5f  %8.5f  %8.5f  %8.5f  %8.5f\n" % (t, etot, q, p, q2, p2) )
         f.close()
 
+        for j in xrange(params["nsteps"]):
+            # For each time step, we have to update all coeffcients 
+            for n in xrange(nbasis):
+                argg = dt*params["omega"]*(n+0.5)
+                U_n = math.cos( argg ) - 1.0j*math.sin( argg )
+                coeff.scale(n,0, U_n)
+
+            t += dt
+            
 
 

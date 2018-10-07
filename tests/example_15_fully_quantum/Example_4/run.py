@@ -118,7 +118,7 @@ def plot_pes(params):
 
 
 
-def run_exact(nsnaps, nsteps, params, case):
+def run_exact(params, case):
     """
     The main routine to run fully quantum calculations
     """
@@ -133,7 +133,7 @@ def run_exact(nsnaps, nsteps, params, case):
                        Py2Cpp_double(params["wfc"]["px0"]),
                        Py2Cpp_double(params["wfc"]["alpha"]) ) 
 
-    wfc.normalize_wfc_1D()
+#    wfc.normalize_wfc_1D()
 
     wfc.update_potential_1D(potential, params)
     dt = params["dt"]
@@ -149,15 +149,8 @@ def run_exact(nsnaps, nsteps, params, case):
 
     exp_pow = doubleList()
     exp_pow.append(2.0)
-    for i in xrange(nsnaps):  # time steps
-        for j in xrange(nsteps):  # time steps
 
-            wfc.propagate_exact_1D(0)
-
-            res = Py2Cpp_double([0.0])
-            wfc.flux_1D(params["barrier"], res, params["mass"])
-            cum = cum + res[0]*dt
-
+    for i in xrange(params["nsnaps"]):  # time steps
 
         epot = wfc.e_pot_1D()
         ekin = wfc.e_kin_1D(params["mass"])
@@ -167,25 +160,35 @@ def run_exact(nsnaps, nsteps, params, case):
         px2 = wfc.get_pow_px_1D(2)
 
         f = open("_pops"+str(case)+".txt", "a")
-        f.write("%8.5f   %8.5f    %8.5f   %8.5f  %8.5f  %8.5f    %8.5f    %8.5f  %8.5f  %8.5f\n" % (i*nsteps*dt, ekin, epot, etot, cum, x, px, x2, px2, wfc.norm_1D()))
+        f.write("%8.5f   %8.5f    %8.5f   %8.5f  %8.5f  %8.5f    %8.5f    %8.5f  %8.5f  %8.5f\n"
+                % (i*params["nsteps"]*dt, ekin, epot, etot, cum, x, px, x2, px2, wfc.norm_1D()))
         f.close()
 
         wfc.print_wfc_1D("_res"+str(case)+"/wfc", i, 0)   # Be sure to make a "res" directory
+
+
+        for j in xrange(params["nsteps"]):  # time steps
+            wfc.propagate_exact_1D(0)
+
+            res = Py2Cpp_double([0.0])
+            wfc.flux_1D(params["barrier"], res, params["mass"])
+            cum = cum + res[0]*dt
+
         
 
-def init_params(case):
+def test(case):
     """
     This function intiializes the params dictionary for a given case    
     """
 
-    params = { "mass":2000.0, "dt":1.0, "barrier":0.00 }
+    params = { "mass":2000.0, "dt":1.0, "barrier":0.00, "nsnaps":200, "nsteps":10 }
     params.update( {"x0":0.0, "k":0.032} )
 
     # Compute omega based on k
     omega = math.sqrt(params["k"]/params["mass"])
     params.update({"omega":omega})
 
-    if   case == 0:       
+    if case == 0:
 
         wfc = {}
         wfc.update({"init_state":[0]})
@@ -212,21 +215,15 @@ def init_params(case):
         params.update( {"coeff":[1.0, 1.0]} )
         params.update( {"model":1, "wfc": wfc} )
 
-    return params
 
-
-def run(nsnaps, nsteps):
-    for case in [1]:
-
-        params = init_params(case)
-        harmonic.run_analytical(nsnaps, nsteps, params, case)
-        run_exact(nsnaps, nsteps, params, case)
+    harmonic.run_analytical(params)
+    run_exact(params, case)
 
     plot_pes(params)
 
 
-nsnaps = 200
-nsteps = 10
-run(nsnaps, nsteps)
+test(1)
 
 
+# k = m*w^2 => w = sqrt(k/m)
+# alpha = m * w = m * sqrt(k/m) = sqrt(m*k)
