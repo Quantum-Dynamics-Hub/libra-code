@@ -80,9 +80,9 @@ def Holstein_uncoupled(q, params):
             x = q.get(n);
 
             if(n==0):
-                obj[n].ham_dia.set(i,i, (k*x + alpha)*(1.0+0.0j))  #  dH(i,i)/dx_n
-            else:
-                obj[n].ham_dia.set(i,i, k*x*(1.0+0.0j))            #  dH(i,i)/dx_n
+                obj.d1ham_dia[n].set(i,i, (k*x + alpha)*(1.0+0.0j))  #  dH(i,i)/dx_n
+            else:               
+                obj.d1ham_dia[n].set(i,i, k*x*(1.0+0.0j))            #  dH(i,i)/dx_n
 
     return obj
 
