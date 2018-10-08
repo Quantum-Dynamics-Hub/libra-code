@@ -198,7 +198,6 @@ def test(case):
         wfc.update({"px0":[0.0]})
         wfc.update({"alpha":[ math.sqrt(params["k"] * params["mass"]) ]})
 
-        params.update( {"coeff":[1.0]} )
         params.update( {"model":1, "wfc": wfc} )
 
     elif case == 1:
@@ -212,7 +211,6 @@ def test(case):
         alp = math.sqrt(params["k"] * params["mass"])
         wfc.update({"alpha":[ alp, alp ] })
 
-        params.update( {"coeff":[1.0, 1.0]} )
         params.update( {"model":1, "wfc": wfc} )
 
     elif case == 2:
@@ -220,13 +218,12 @@ def test(case):
         wfc = {}
         wfc.update({"init_state":[0, 0, 0, 0]})
         wfc.update({"nu":[0, 1, 2, 3]})
-        wfc.update({"weights":[1.0+0.0j, -(1.0+0.0j), -(1.0+0.0j), 1.0+0.0j]})
+        wfc.update({"weights":[1.0+0.0j, -1.0+0.0j, -1.0+0.0j, 1.0+0.0j]})
         wfc.update({"x0":[0.0, 0.0, 0.0, 0.0]})
         wfc.update({"px0":[0.0, 0.0, 0.0, 0.0]})
         alp = math.sqrt(params["k"] * params["mass"])
         wfc.update({"alpha":[ alp, alp, alp, alp ] })
 
-        params.update( {"coeff":[1.0, -1.0, -1.0, 1.0]} )
         params.update( {"model":1, "wfc": wfc} )
 
 
