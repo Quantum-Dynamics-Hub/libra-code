@@ -25,12 +25,14 @@ scl2 = 1000.0 # some scaling to get plottable data
 tmin = 0
 tmax = 2
 
+os.system("mkdir spectr")
+
 # Energy, couplings and H' in space of orbital indexes
 excitation_spectrum.ham_map("res/0_Ham_",   tmin,tmax,"_re" ,opt,scl1,"spectr/ave_Ham_re.dat")
 excitation_spectrum.ham_map("res/0_Ham_",   tmin,tmax,"_im" ,opt,scl1,"spectr/ave_Ham_im.dat")
 
 
-HOMO = 21 # Index begins at 1
+HOMO = 3 # Index begins at 1
 minE = 0.0
 maxE = 10.0
 dE = 0.05
