@@ -4,7 +4,7 @@
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=12
-#SBATCH --mem=5000
+#SBATCH --mem=25000
 #SBATCH --mail-user=bsmith24@buffalo.edu
 
 echo "SLURM_JOBID="$SLURM_JOBID
@@ -44,7 +44,7 @@ param2=
 # NOTE: minband - starting from 1
 #       maxband - is included
 
-python -c "from workflows.pyxaid2 import *
+python -c "from libra_py.workflows.pyxaid2 import *
 params = { }
 params[\"NP\"]=$NP
 params[\"EXE\"]=\"$exe_qespresso\"
@@ -54,13 +54,13 @@ params[\"start_indx\"]=\"$param1\"
 params[\"stop_indx\"]=\"$param2\"
 params[\"wd\"]=\"wd\"
 params[\"rd\"]=\"$res\"
-params[\"minband\"]=15
-params[\"nocc\"]=16
-params[\"maxband\"]=18
+params[\"minband\"]=180
+params[\"nocc\"]=200
+params[\"maxband\"]=220
 params[\"nac_method\"]=0
 params[\"orthogonalize\"]=1
 params[\"prefix0\"]=\"x0.scf\"
-params[\"compute_Hprime\"]=0
+params[\"compute_Hprime\"]=1
 print params
 trajectory.run(params)
 "
