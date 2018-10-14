@@ -20,11 +20,15 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 from libra_py import *
 
 
-nsteps_per_job = 25
-tot_nsteps = 25
+nsteps_per_job = 2 
+tot_nsteps = 2
+
+# tot_nsteps = total simulation time
+# tot_nsteps / nsteps_per_job = total number of jobs submitted
 
 os.system("mkdir res")
 QE_methods.out2inp("x0.md.out","x0.scf.in","wd","x0.scf",0,tot_nsteps,1)
+#QE_methods.xyz2inp("cMAPbI3.xyz","x0.scf.in","wd","x0.scf",0,tot_nsteps,1)
 
 os.system("cp submit_templ.slm wd"); os.system("cp x0.exp.in wd"); os.chdir("wd")
 hpc_utils.distribute(0,tot_nsteps,nsteps_per_job,"submit_templ.slm",["x0.exp.in"],["x0.scf"],2)

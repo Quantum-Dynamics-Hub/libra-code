@@ -37,5 +37,6 @@ __all__ = ["init_system",
            "models_Martens",
            "regexlib",
            "hpc_utils",
+           "workflows",
           ]
 
