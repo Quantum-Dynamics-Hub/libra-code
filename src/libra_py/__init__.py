@@ -40,5 +40,6 @@ __all__ = ["init_system",
            "models_Tully",
            "regexlib",
            "hpc_utils",
+           "workflows",
           ]
 
