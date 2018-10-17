@@ -52,6 +52,7 @@ def Load_Molecule(univ,syst,mol_file,format):
 #------- Here we define a format of file ----------
 # p - means 'Pattern'
     pAtom_keyword = '(?P<Atom_keyword>'+'HETATM'+')'+SP
+    pAtom_keyword1= '(?P<Atom_keyword>'+'ATOM'+')'+SP
     pAtom_id      = '(?P<Atom_id>'+DOUBLE+')'+SP    
 #    pAtom_element = '(?P<Atom_element>'+WORD+')'+SP
     pAtom_mol     = '(?P<Atom_mol>'+WORD+')'+SP
@@ -72,6 +73,8 @@ def Load_Molecule(univ,syst,mol_file,format):
         Atom_Record = pAtom_keyword + pAtom_id + pElement_name + pAtom_id1 + pX_val + pY_val + pZ_val + pAtom_chain
     elif format=="true_pdb":
         Atom_Record = pAtom_keyword + pAtom_id + pElement_name + pAtom_mol + pAtom_chain + pAtom_id1 + pX_val + pY_val + pZ_val + pAtom_occ + pAtom_charge 
+    elif format=="true_pdb2":
+        Atom_Record = pAtom_keyword1 + pAtom_id + pElement_name + pAtom_mol + pAtom_chain + pAtom_id1 + pX_val + pY_val + pZ_val + pAtom_occ + pAtom_charge 
     elif format=="xyz":
         Atom_Record = pElement_name + pX_val + pY_val + pZ_val
     elif format=="iqmol_pdb":
