@@ -54,7 +54,7 @@ def Load_Molecule(univ,syst,mol_file,format):
     pAtom_keyword = '(?P<Atom_keyword>'+'HETATM'+')'+SP
     pAtom_keyword1= '(?P<Atom_keyword>'+'ATOM'+')'+SP
     pAtom_id      = '(?P<Atom_id>'+DOUBLE+')'+SP    
-#    pAtom_element = '(?P<Atom_element>'+WORD+')'+SP
+    pAtom_element = '(?P<Atom_element>'+ID+')'+SP
     pAtom_mol     = '(?P<Atom_mol>'+WORD+')'+SP
     pAtom_chain   = '(?P<Atom_chain>'+WORD+')'+SP
     pAtom_id1     = '(?P<Atom_id1>'+DOUBLE+')'+SP
@@ -74,7 +74,7 @@ def Load_Molecule(univ,syst,mol_file,format):
     elif format=="true_pdb":
         Atom_Record = pAtom_keyword + pAtom_id + pElement_name + pAtom_mol + pAtom_chain + pAtom_id1 + pX_val + pY_val + pZ_val + pAtom_occ + pAtom_charge 
     elif format=="true_pdb2":
-        Atom_Record = pAtom_keyword1 + pAtom_id + pElement_name + pAtom_mol + pAtom_chain + pAtom_id1 + pX_val + pY_val + pZ_val + pAtom_occ + pAtom_charge 
+        Atom_Record = pAtom_keyword1 + pAtom_id + pAtom_element + pAtom_mol + pAtom_chain + pAtom_id1 + pX_val + pY_val + pZ_val + pAtom_occ + pAtom_charge 
     elif format=="xyz":
         Atom_Record = pElement_name + pX_val + pY_val + pZ_val
     elif format=="iqmol_pdb":
@@ -113,7 +113,16 @@ def Load_Molecule(univ,syst,mol_file,format):
         if m1!=None:           
             atom_dict = {}
 
-            atom_dict["Atom_element"] = a[m1.start('Element_name'):m1.end('Element_name')]
+            if format=="true_pdb2":
+                p1 = '(?P<p1>'+WORD+')'
+                s = a[m1.start('Atom_element'):m1.end('Atom_element')]
+                m2 = re.search(p1, s)
+                if m2!=None:
+                    atom_dict["Atom_element"] = s[m2.start('p1'):m2.end('p1')]
+
+            else:
+                atom_dict["Atom_element"] = a[m1.start('Element_name'):m1.end('Element_name')]
+
             atom_dict["Atom_cm_x"] = float(a[m1.start('X_val'):m1.end('X_val')]) * Angst_to_Bohr
             atom_dict["Atom_cm_y"] = float(a[m1.start('Y_val'):m1.end('Y_val')]) * Angst_to_Bohr
             atom_dict["Atom_cm_z"] = float(a[m1.start('Z_val'):m1.end('Z_val')]) * Angst_to_Bohr
@@ -123,7 +132,7 @@ def Load_Molecule(univ,syst,mol_file,format):
 #            atm.Atom_ff_int_type     = int(float(a[m1.start('Atom_type'):m1.end('Atom_type')]))
 #            atm.Atom_is_C60_CT       = int(a[m1.start('Atom_C60'):m1.end('Atom_C60')])
  
-            print "CREATE_ATOM ",atom_dict["Atom_element"]
+            print "CREATE_ATOM "
             syst.CREATE_ATOM( Atom(univ,atom_dict)  ) 
     
     #--------- Create bonds ------------------

@@ -253,8 +253,10 @@ public:
 
   void Rotate(MATRIX3x3&);
   void Rotate(QUATERNION&);
+  void Rotate(QUATERNION& quat, VECTOR& pivot);
+  void Rotate(double,VECTOR&);
+  void Rotate(double phi,VECTOR& dir, VECTOR& pivot);
 
-  void Rotate_e(double,VECTOR&);
   void Rotate_I(double,VECTOR&);
 
 

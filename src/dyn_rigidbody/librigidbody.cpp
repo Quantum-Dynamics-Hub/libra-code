@@ -59,11 +59,13 @@ void export_RigidBody_objects(){
   int (RigidBody::*apply_force1)(double)      = &RigidBody::apply_force;
   int (RigidBody::*apply_force2)(MATRIX3x3&)  = &RigidBody::apply_force;
 
-  void (RigidBody::*Rotate1)(MATRIX3x3&)       = &RigidBody::Rotate;
-  void (RigidBody::*Rotate2)(QUATERNION&)      = &RigidBody::Rotate;
+  void (RigidBody::*Rotate1)(MATRIX3x3&) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate2)(QUATERNION& quat) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate3)(QUATERNION& quat, VECTOR& pivot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate4)(double phi, VECTOR& dir) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate5)(double phi, VECTOR& dir, VECTOR& pivot) = &RigidBody::Rotate;
 
   void (RigidBody::*expt_Rotate_I_v1)(double,VECTOR&)   = &RigidBody::Rotate_I;
-  void (RigidBody::*expt_Rotate_e_v1)(double,VECTOR&)   = &RigidBody::Rotate_e;
 
 
   void (RigidBody::*expt_propagate_dlml_v1)(double t,double&) = &RigidBody::propagate_dlml;
@@ -168,15 +170,13 @@ void export_RigidBody_objects(){
       .def("Rotate_e_z",&RigidBody::Rotate_e_z,"rotate arond z axis in rigid body coordinate system")
       .def("Rotate",Rotate1,"arbitrary rotation of RB, rotation is defined by the transformation matrix")
       .def("Rotate",Rotate2,"arbitrary rotation of RB, rotation is defined by the quaternion")
-
+      .def("Rotate",Rotate3,"")
+      .def("Rotate",Rotate4,"")
+      .def("Rotate",Rotate5,"")
 
 
       .def("Rotate_I",expt_Rotate_I_v1, 
            "rotate the RB around the specified vector in the external (moving) frame \
-            for a magnitude defined by the provided argument (in radians)"
-          )
-      .def("Rotate_e",expt_Rotate_e_v1,
-           "rotate the RB around the specified vector in the internal (body) frame \
             for a magnitude defined by the provided argument (in radians)"
           )
 

@@ -226,7 +226,7 @@ void System::TRANSLATE_MOLECULE(double amount,VECTOR direction,int Mol){
   }// if v!=-1
 }
 
-void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr){
+void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction, int Gr){
 /**
   \param[in] degree_amount The magnitude of rotation, in degrees
   \param[in] direction The vector definining the axis of rotation. in the external coordinate system
@@ -239,26 +239,21 @@ void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr){
 */
 
 
-  MATRIX3x3 R;
   double phi = M_PI*degree_amount/180.0; // Convert to the radians
-  double cs = cos(0.5*phi);
-  double si = sin(0.5*phi);
   VECTOR u = direction.unit();
-  QUATERNION quat(cs,si*u.x,si*u.y,si*u.z);
-  QUATERNION_TO_MATRIX(quat,R);
 
   int v = get_fragment_index_by_fragment_id(Gr);
   if(v!=-1){
-    Fragments[v].Group_RB.Rotate_I(degree_amount, direction);
-//    rotate_atoms_of_fragment(v,R);
+    Fragments[v].Group_RB.Rotate(phi, direction);
     update_atoms_for_fragment(v);
   }
+
   // Molecule orientation does not change because the center of mass of the
   // fragment v does not change
 
 }
 
-void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, VECTOR center){
+void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction, int Gr, VECTOR center){
 /**
   \param[in] degree_amount The magnitude of rotation, in degrees
   \param[in] direction The vector definining the axis of rotation in the external coordinate system
@@ -271,6 +266,16 @@ void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, VECT
   around the axis given by "VECTOR direction" around the center given by "center"
 */
 
+  double phi = M_PI*degree_amount/180.0; // Convert to the radians
+  VECTOR u = direction.unit();
+
+  int v = get_fragment_index_by_fragment_id(Gr);
+  if(v!=-1){
+    Fragments[v].Group_RB.Rotate(phi, direction, center);
+    update_atoms_for_fragment(v);
+  }
+
+/*
   int v = get_fragment_index_by_fragment_id(Gr);
 
   VECTOR dir; dir = center - Fragments[v].Group_RB.rb_cm;
@@ -284,7 +289,7 @@ void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, VECT
 
   // Translate the fragment's center of mass back to the original position
   TRANSLATE_FRAGMENT(-amount, dir,Gr);
-
+*/
 }
 
 void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, int center_indx){
