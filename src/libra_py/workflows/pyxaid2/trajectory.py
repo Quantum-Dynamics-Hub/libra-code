@@ -18,7 +18,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 from libra_py import *
 
 from utils import *
-import compute_nosoc
+import compute_properties
 import compute_hprime
 
 
@@ -306,6 +306,17 @@ def read_wfc_grid(params, info0, info1):
         #====== Current electron electructure =======
         params["prefix"] = "curr1/x1.export"
         info_curr, e_curr, coeff_curr, grid_curr = read_all(params)
+
+        if orthogonalize==1:
+            print "Do internal orbital orthogonalization"
+            coeff_curr[0] = orthogonalize_orbitals(coeff_curr[0])
+
+            id1 = CMATRIX(coeff_curr[0].num_of_cols, coeff_curr[0].num_of_cols)
+            id1.identity()
+            if abs( (coeff_curr[0].H() * coeff_curr[0] - id1).max_elt() ) > 1e-5:
+                print "Error\n"
+                sys.exit(0)
+
         C_adi_curr, E_adi_curr = post_process(coeff_curr, e_curr, 1)
         res_curr["Coeff_adi"] = C_adi_curr
         res_curr["E_adi"] = E_adi_curr
@@ -315,6 +326,11 @@ def read_wfc_grid(params, info0, info1):
         #====== Next electronic structure ===========
         params["prefix"] = "next1/x1.export"
         info_next, e_next, coeff_next, grid_next = read_all(params)
+
+        if orthogonalize==1:
+            print "Do internal orbital orthogonalization"
+            coeff_next[0] = orthogonalize_orbitals(coeff_next[0])
+
         C_adi_next, E_adi_next = post_process(coeff_next, e_next, 1)
         res_next["Coeff_adi"] = C_adi_next
         res_next["E_adi"] = E_adi_next
@@ -437,47 +453,24 @@ def run(params):
             # non-relativistic, non-spin-polarized case
             if nac_method == 0 or nac_method == 1 or nac_method == 3:
 
-                if info0["nspin"]==1:  # non SOC case
-                    if info0["nk"]==1: # Only one k-point
-                        H_nosoc = compute_nosoc.compute_properties_gamma(params, es_curr, es_next, curr_index)
+                if info0["nspin"]==1 or info0["nspin"]==2:  # non SOC case
+
+                    if info0["nk"]==1 or info0["nk"] == 2: # Only one k-point
+
+                        H_nosoc = compute_properties.compute_properties_dia_gamma(params, es_curr, es_next, curr_index)
 
                     else: 
-                        compute_nosoc.compute_properties_general(params, es_curr, es_next, curr_index)
-
+                        compute_properties.compute_properties_general(params, es_curr, es_next, curr_index)
            
                     if compute_Hprime == 1:
-                        compute_hprime.compute_hprime_nosoc(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
-
-
-                elif info0["nspin"]==2:
-
-                    if info0["nk"] == 2:  #single k-point! 
-
-                        # assume we use only the alpha coefficient, similar as PYXAID1, ham() function
-                        # H_dia =  Eii - i*hbar*(<i(t)|j(t+dt)> - <i(t+dt)|j(t)>)
-
-                        orthogonalize = 1
-                        if orthogonalize==1:
-                            print "Do internal orbital orthogonalization"
-                            coeff_curr0[0] = orthogonalize_orbitals(coeff_curr0[0])
-                            coeff_next0[0] = orthogonalize_orbitals(coeff_next0[0])
-
-                        ovlp_cn  = coeff_curr0[0].H() * coeff_next0[0]   
-                        H = 0.5*(e_curr0[0] + e_next0[0]) - (0.5j/dt)*(ovlp_cn - ovlp_cn.H())
-                        S = 0.5 *(coeff_curr0[0].H() * coeff_curr0[0] + coeff_next0[0].H() * coeff_next0[0])
-                    
-                    else:
-
-                        print "multiple k-point for spin-polarized case is not yet implemented"
-                        sys.exit(0)
-
+                        compute_hprime.compute_hprime_dia(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
                
 
             if nac_method == 2 or nac_method == 3:
 
                 if info1["nk"]==1: # Only one k-point
                
-                    H_soc = compute_soc.compute_properties_gamma(params, es_curr, es_next, curr_index)
+                    H_soc = compute_properties.compute_properties_adi_gamma(params, es_curr, es_next, curr_index)
 
                 else:
                     print "Multiple k-points scheme with SOC is not yet implemented"
@@ -502,7 +495,7 @@ def run(params):
                 params = {"do_orth": 0, "root_directory": rd, "curr_index": curr_index, "print_overlaps": 1, "dt": dt}
                 compute_ovlps(coeff_curr0, coeff_next0, coeff_curr1, coeff_next1, e_curr0, e_next0, e_curr1, e_next1, params)
 
-            
+            """
             if nac_method == 0 or nac_method == 1 or nac_method == 3:
             
                 H_nosoc.real().show_matrix("%s/0_Ham_%d_re" % (rd, curr_index) )
@@ -511,7 +504,7 @@ def run(params):
             if nac_method == 2 or nac_method == 3:
                 H_soc.real().show_matrix("%s/0_Ham_soc_%d_re" % (rd, curr_index) )
                 H_soc.imag().show_matrix("%s/0_Ham_soc_%d_im" % (rd, curr_index) )
-
+            """
 
             #-----------------------------------------------------------------
 

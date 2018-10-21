@@ -1,7 +1,7 @@
 &CONTROL
   calculation = 'md',
   dt = 20.67055,
-  nstep = 100,
+  nstep = 1000,
   pseudo_dir = '/util/academic/espresso/6.2.1/pseudopotentials/upf_files/',
   outdir = './',
   prefix = 'x0',
@@ -15,6 +15,7 @@
   nspin = 1,
   nbnd = 60,
   ecutwfc = 50,
+  ecutrho = 500,
   occupations = 'fixed',
   nosym = .true.,
 /
@@ -37,7 +38,7 @@
 
 
 ATOMIC_SPECIES
-Si  28.086 Si.pbesol-n-rrkjus_psl.0.1.UPF 
+Si  28.086 Si.pbesol-n-kjpaw_psl.0.1.UPF
 
 K_POINTS gamma
 

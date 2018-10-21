@@ -207,11 +207,13 @@ def post_process(coeff, ene, issoc):
 
         c_a, c_b, e_a, e_b = split_orbitals_energies(coeff[0], ene[0])
 
-        N_ks_orb = c_a.num_of_cols  # should be equal to Cb.num_of_cols
+        N_ks_orb = c_a.num_of_cols  # should be equal to c_b.num_of_cols
+        N_pw = c_a.num_of_rows      # should be equal to c_b.num_of_rows
 
-        C_a = merge_orbitals(c_a, c_b)
-        C_b = merge_orbitals(c_b, c_a)
-        C = [C_a, C_b]  # "2-component spinor" format
+        # Construct spin-Orbtial matrix of size (2*N_pw,2*N_ks_orb)
+        C = CMATRIX(2*N_pw, 2*N_ks_orb)
+        push_submatrix(C, c_a, range(0,N_pw), range(0,N_ks_orb) )
+        push_submatrix(C, c_b, range(N_pw,2*N_pw), range(N_ks_orb,2*N_ks_orb) )
 
         # Same with energies:
         E = CMATRIX(2*N_ks_orb, 2*N_ks_orb)
@@ -224,14 +226,14 @@ def post_process(coeff, ene, issoc):
         if len(coeff)==1:  # spin-unpolarized (1-k point)
 
             N_ks_orb = coeff[0].num_of_cols  
-        
-            zero = CMATRIX(coeff[0].num_of_rows, N_ks_orb)
+            N_pw = coeff[0].num_of_rows 
 
-            C_a = merge_orbitals(coeff[0], zero)
-            C_b = merge_orbitals(zero, coeff[0])
-            C = [C_a, C_b]  # "2-component spinor" format
-
-            # Same with energies:
+            # Construct spin-Orbtial matrix of size (2*N_pw,2*N_ks_orb)
+            C = CMATRIX(2*N_pw, 2*N_ks_orb)
+            push_submatrix(C, coeff[0], range(0,N_pw), range(0,N_ks_orb) ) 
+            push_submatrix(C, coeff[0], range(N_pw,2*N_pw), range(N_ks_orb,2*N_ks_orb) )
+ 
+            # Construct energy matrix of size (2*N_ks_orb,2*N_ks_orb):
             E = CMATRIX(2*N_ks_orb, 2*N_ks_orb)
             push_submatrix(E, ene[0], range(0,N_ks_orb), range(0,N_ks_orb) )
             push_submatrix(E, ene[0], range(N_ks_orb,2*N_ks_orb), range(N_ks_orb,2*N_ks_orb) )
@@ -240,12 +242,12 @@ def post_process(coeff, ene, issoc):
         elif len(coeff)==2:  # spin-polarized (or 2-k points, non-polarized case, beware!)
 
             N_ks_orb = coeff[0].num_of_cols  
-        
-            zero = CMATRIX(coeff[0].num_of_rows, N_ks_orb)
+            N_pw = coeff[0].num_of_rows
 
-            C_a = merge_orbitals(coeff[0], zero)
-            C_b = merge_orbitals(zero, coeff[1])
-            C = [C_a, C_b]  # "2-component spinor" format
+            # Construct spin-Orbtial matrix of size (2*N_pw,2*N_ks_orb)
+            C = CMATRIX(2*N_pw, 2*N_ks_orb)
+            push_submatrix(C, coeff[0], range(0,N_pw), range(0,N_ks_orb) )
+            push_submatrix(C, coeff[1], range(N_pw,2*N_pw), range(N_ks_orb,2*N_ks_orb) )
 
             # Same with energies:
             E = CMATRIX(2*N_ks_orb, 2*N_ks_orb)
