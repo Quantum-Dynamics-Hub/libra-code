@@ -221,6 +221,15 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>
          nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd);
 
 
+///================  In tsh_methods_tsh2.cpp  ===================================
+
+void tsh2(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, vector<int>& act_states,
+          nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd);
+
+void tsh2a(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
+           nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd);
+
+
 ///================  In tsh_methods_ida.cpp  ===================================
 
 int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi);

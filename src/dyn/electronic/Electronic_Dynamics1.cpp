@@ -852,6 +852,37 @@ void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int
 }
 
 
+void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level){
+
+  vector<nHamiltonian*> branches; 
+  branches = ham.get_branches(level);
+
+  if(C.n_cols!=branches.size()){
+    cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level): \n";
+    cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<branches.size()<<"\n";
+    cout<<"Exiting...\n";
+    exit(0);
+  }
+
+  int nst = C.n_rows;
+  int ntraj = C.n_cols;
+  
+  CMATRIX ctmp(nst, 1);
+
+  for(int traj=0; traj<ntraj; traj++){
+    ctmp = C.col(traj);
+    propagate_electronic(dt, ctmp, branches[traj], rep);
+
+    // Insert the propagated result back
+    for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }
+
+  }
+
+}
+
+
+
+
 
 
 

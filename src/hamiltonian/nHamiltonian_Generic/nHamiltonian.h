@@ -68,6 +68,8 @@ class nHamiltonian{
   void check_cmatrix(bp::object obj, std::string matrix_name, int nrows, int ncols);
   void check_cmatrix_list(bp::object obj, std::string matrix_name, int nrows, int ncols, int length);
 
+  void add_branches(int target_level, vector<nHamiltonian*>& res);
+
 public:
 
   int level;                        ///< level in the tree hierarchy
@@ -242,6 +244,7 @@ public:
   void add_child(nHamiltonian& child);  ///< Associate an existing Hamiltonian with the present one
                                         ///< to become its child
   vector<int> get_full_id();            ///< Entire path of the note in the tree
+  vector<nHamiltonian*> get_branches(int target_level);
 
 
   void init_all(int lvl);
@@ -421,15 +424,18 @@ public:
 
   ///< In nHamiltonian_compute_forces.cpp
 
-  CMATRIX forces_adi(CMATRIX& ampl_adi);  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
-  CMATRIX forces_adi(CMATRIX& ampl_adi, vector<int>& id_);  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
-  CMATRIX forces_dia(CMATRIX& ampl_dia);  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
-  CMATRIX forces_dia(CMATRIX& ampl_dia, vector<int>& id_);  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
-
   vector<CMATRIX> forces_tens_adi(CMATRIX& ampl_adi); // 
   vector<CMATRIX> forces_tens_adi(CMATRIX& ampl_adi, vector<int>& id_); // 
   vector<CMATRIX> forces_tens_dia(CMATRIX& ampl_dia); // 
   vector<CMATRIX> forces_tens_dia(CMATRIX& ampl_dia, vector<int>& id_); // 
+
+  CMATRIX forces_adi(CMATRIX& ampl_adi);  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
+  CMATRIX forces_adi(CMATRIX& ampl_adi, vector<int>& id_);  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
+  CMATRIX forces_adi(vector<int>& act_states);   // -dE/dR in the adiabatic basis for several trajectories
+  CMATRIX forces_adi(int act_state);   // -dE/dR in the adiabatic basis for several trajectories, all in the same state
+
+  CMATRIX forces_dia(CMATRIX& ampl_dia);  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
+  CMATRIX forces_dia(CMATRIX& ampl_dia, vector<int>& id_);  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
 
 
   ///< In nHamiltonian_compute_nac.cpp
