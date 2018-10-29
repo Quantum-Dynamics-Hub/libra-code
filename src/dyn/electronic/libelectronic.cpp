@@ -90,7 +90,8 @@ void export_Electronic_objects(){
   void (*expt_propagate_electronic_v4)(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S) = &propagate_electronic;
   void (*expt_propagate_electronic_v5)(double dt,CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S) = &propagate_electronic;
   void (*expt_propagate_electronic_v6)(double dt, CMATRIX& C, nHamiltonian& ham, int rep) = &propagate_electronic;
-//  void (*expt_propagate_electronic_v7)(double dt, nHamiltonian& ham, int rep) = &propagate_electronic;
+  void (*expt_propagate_electronic_v7)(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level) = &propagate_electronic;
+
 
   def("propagate_electronic", expt_propagate_electronic_v1);
   def("propagate_electronic", expt_propagate_electronic_v2);
@@ -98,7 +99,7 @@ void export_Electronic_objects(){
   def("propagate_electronic", expt_propagate_electronic_v4);
   def("propagate_electronic", expt_propagate_electronic_v5);
   def("propagate_electronic", expt_propagate_electronic_v6);
-//  def("propagate_electronic", expt_propagate_electronic_v7);
+  def("propagate_electronic", expt_propagate_electronic_v7);
 
   void (*expt_propagate_electronic_nonHermitian_v1)(double dt,CMATRIX& Coeff, CMATRIX& Hvib) = &propagate_electronic_nonHermitian;
   def("propagate_electronic_nonHermitian", expt_propagate_electronic_nonHermitian_v1);
