@@ -43,6 +43,9 @@ class Context{
     int i= 0; BOOST_FOREACH(ptree::value_type &v, ctx_pt){ if(i==0){ path = v.first; } i++;  }
   }
   Context(const Context& c){  ctx_pt = c.ctx_pt; path = c.path; path_separator = c.path_separator; } 
+  Context(const boost::property_tree::ptree& pt, std::string _path, char _path_separator)
+  { ctx_pt = pt; path = _path; path_separator = _path_separator; } 
+
   virtual ~Context(){}
 
   // Manupulation of the "path": These functions are essentially for getting and setting the name of the context variable (path)
@@ -57,9 +60,20 @@ class Context{
 
   void add_context(Context ctxt);
 
+  int size();
 
+
+
+  Context get_child(std::string _path, std::string varname, Context default_val);
+  Context get_child(std::string varname, Context default_val);
+  vector<Context> get_children(std::string _path, std::string varname);
+  vector<Context> get_children(std::string varname);
+  vector<Context> get_children_all(std::string _path);
+  vector<Context> get_children_all();
 
   void show_children(std::string _path);
+  void show_children();
+
 
 
   // Get value for given variable name, if exist in datastructure. Or return default value
@@ -69,6 +83,7 @@ class Context{
     X varval; 
 
     libio::load(ctx_pt, path+path_separator+varname, path_separator, varval, st); 
+//    libio::load(ctx_pt, varname, path_separator, varval, st); 
     if(st){ return varval; }else{ return default_val; }
 
   }
@@ -79,9 +94,24 @@ class Context{
     X varval; 
 
     liblinalg::load(ctx_pt, path+path_separator+varname, path_separator, varval, st); 
+//    liblinalg::load(ctx_pt, varname, path_separator, varval, st); 
     if(st){ return varval; }else{ return default_val; }
 
   }
+
+
+  template<typename X>
+  X get_value(){
+  /** 
+    \brief Extracts the value from the current node of the property tree
+    \param[in] pt Is the property tree from which we want to extract the value
+  */
+
+    try{  return ctx_pt.get_value<X>();    }
+    catch(std::exception& e){ cout<<"Error in get_value()!\n"; }
+  }
+
+
 
 
 
@@ -109,16 +139,27 @@ class Context{
   vector<MATRIX> get(std::string varname,vector<MATRIX> default_val);
 */
 
-  Context get_context(std::string varname, Context default_val);
 
 
-  
 
+  friend int operator == (const Context& ctx1, const Context& ctx2){
+    return (&ctx1 == &ctx2);
+  }
+  friend int operator != (const Context& ctx1, const Context& ctx2){
+    return !(ctx1==ctx2);
+  }
+
+
+ 
   void save_xml(std::string filename){ libio::save_xml(filename, ctx_pt); }
   void load_xml(std::string filename){ libio::load_xml(filename, ctx_pt); }
 
 
 };
+
+typedef std::vector<Context> ContextList;  ///< Data type that holds a vector of Context objects
+typedef std::vector<vector<Context> > ContextMap;  ///< Data type that holds the table (grid) of Context objects
+
 
 void export_Context_objects();
 
