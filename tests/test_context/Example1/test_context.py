@@ -64,11 +64,13 @@ ctx.add("param2", param2)
 print ctx.get("param2", "Milk") 
 print ctx.get("param2a", "Milk") 
 
+
 print "add integer-list-valued variable"
 param3 = intList()
 for i in xrange(3):
     param3.append(i)
 ctx.add("param3", param3)
+
 
 d = intList()
 d.append(-1)
@@ -84,9 +86,11 @@ print "\nTest 6: We can also add one context into another one"
 ctx1 = Context("ctx_3.xml")
 ctx1.set_path("old_path")
 
+
 p1 = 2.0
 ctx.add("param1", p1)
 ctx.save_xml("ctx_4a.xml")
+
 
 ctx.add(ctx1) 
 ctx.save_xml("ctx_4b.xml")
@@ -94,15 +98,16 @@ ctx.save_xml("ctx_4b.xml")
 
 
 print "\nTest 7: We can extract one context from the other"
-ctx2 = ctx.get("old_path", ctx)
+ctx2 = ctx.get_child("old_path", ctx)
 print "path=", ctx2.get_path()
 ctx2.save_xml("ctx_5.xml") 
 
 
 print "\nTest 8: We can extract one context from the other"
-ctx3 = ctx.get("old_path.param3", ctx)
+ctx3 = ctx.get_child("old_path.param3", ctx)
 print "path=", ctx3.get_path()
 ctx3.save_xml("ctx_5a.xml") 
+
 
 
 
