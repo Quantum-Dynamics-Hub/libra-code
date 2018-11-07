@@ -60,7 +60,7 @@ params[\"maxband\"]=19
 params[\"nac_method\"]=0
 params[\"orthogonalize\"]=1
 params[\"prefix0\"]=\"x0.scf\"
-params[\"compute_Hprime\"]=1
+params[\"compute_Hprime\"]=0
 print params
 trajectory.run(params)
 "

@@ -17,7 +17,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from libra_py import *
 
-def compute_hprime_nosoc(es, info, filename):
+def compute_hprime_dia(es, info, filename):
     """
     This function computes the matrix elements of the dipole operator for the
     case without SOC, and prints them to them to the file specificed by the 
@@ -29,7 +29,7 @@ def compute_hprime_nosoc(es, info, filename):
     \param[in] filename This is the name of the output file where the data will be printed
     """  
 
-    coeff = es["Coeff_dia"][0]
+    coeff = es["Coeff_dia"]
     grid  = es["grid"][0]
     b1    = info["b1"] 
     b2    = info["b2"]
