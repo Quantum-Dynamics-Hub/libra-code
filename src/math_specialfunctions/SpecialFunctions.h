@@ -30,6 +30,7 @@ namespace libspecialfunctions{
 
 
 using liblinalg::MATRIX;
+using liblinalg::CMATRIX;
 using liblinalg::MATRIX3x3;
 using liblinalg::QUATERNION;
 
@@ -87,6 +88,17 @@ MATRIX3x3 exp1_(MATRIX3x3&,double);
 
 int merge_sort(vector< pair<int,double> >&, vector< pair<int,double> >&);
 boost::python::list merge_sort(boost::python::list inp);
+
+
+MATRIX mean(MATRIX& X);
+CMATRIX mean(CMATRIX& X);
+
+MATRIX deviation(MATRIX& X);
+CMATRIX deviation(CMATRIX& X);
+
+MATRIX covariance(MATRIX& X);
+CMATRIX covariance(CMATRIX& X);
+
 
 }// namespace libspecialfunctions
 }// namespace liblibra

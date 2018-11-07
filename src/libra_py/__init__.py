@@ -41,5 +41,8 @@ __all__ = ["init_system",
            "regexlib",
            "hpc_utils",
            "workflows",
+           "units",
+           "normal_modes",
+           "LAMMPS_methods",
           ]
 

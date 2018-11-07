@@ -73,6 +73,24 @@ void export_SpecialFunctions_objects(){
   boost::python::list (*expt_merge_sort_v1)(boost::python::list) = &merge_sort;
   def("merge_sort", expt_merge_sort_v1); 
 
+
+  MATRIX (*expt_mean_v1)(MATRIX& X) = &mean;
+  CMATRIX (*expt_mean_v2)(CMATRIX& X) = &mean;
+  def("mean", expt_mean_v1); 
+  def("mean", expt_mean_v2); 
+
+  MATRIX (*expt_deviation_v1)(MATRIX& X) = &deviation;
+  CMATRIX (*expt_deviation_v2)(CMATRIX& X) = &deviation;
+  def("deviation", expt_deviation_v1); 
+  def("deviation", expt_deviation_v2); 
+
+  MATRIX (*expt_covariance_v1)(MATRIX& X) = &covariance;
+  CMATRIX (*expt_covariance_v2)(CMATRIX& X) = &covariance;
+  def("covariance", expt_covariance_v1); 
+  def("covariance", expt_covariance_v2); 
+
+
+
 }
 
 

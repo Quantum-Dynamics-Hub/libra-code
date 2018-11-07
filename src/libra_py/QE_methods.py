@@ -20,6 +20,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+import units
 
 def cryst2cart(a1,a2,a3,r):
 # auxiliary function
@@ -374,7 +375,7 @@ def read_md_data(filename):
     for i in xrange(nspecs):
         name = specs[i].get("<xmlattr>/name", "X")
         mass = specs[i].get("mass", 1.0)
-        PT.update({name:mass*amu})
+        PT.update({name:mass*units.amu})
 
 
     #========== Read the raw coordinates and assign masses ==========
