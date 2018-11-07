@@ -341,6 +341,95 @@ def read_qe_wfc(filename, orb_list, verbose=0):
 
 
 
+def read_md_data(filename):
+    """
+    filename (string) - the name of the xml file that contains an MD data
+    this function is specifically tailored for the QE output format
+
+    Returns:
+    R ( MATRIX(ndof x nsteps-1) ) - coordinates of all DOFs for all mid-timesteps
+    V ( MATRIX(ndof x nsteps-1) ) - velocities of all DOFs for all mid-timesteps
+    A ( MATRIX(ndof x nsteps-1) ) - accelerations of all DOFs for all mid-timesteps
+    M ( MATRIX(ndof x 1) ) - masses of all DOFs
+    E (list of ndof/3) - atom names (elements) of all atoms
+
+    All quantities are in atomic units
+    """
+
+    # Default (empty) context object
+    dctx = Context()
+
+    ctx = Context(filename)      
+    ctx.set_path_separator("/")
+    steps = ctx.get_children("step")   
+    nsteps = len(steps)
+    atoms = steps[0].get_child("atomic_structure",dctx).get_child("atomic_positions", dctx).get_children("atom")
+    nat = len(atoms)
+    dt = float(ctx.get_child("input", dctx).get_child("ion_control", dctx).get_child("md", dctx).get_child("timestep", dctx).get("",""))
+    specs = ctx.get_child("input", dctx).get_child("atomic_species", dctx).get_children("species")
+    nspecs = len(specs)
+
+    #========== Masses of elements =============
+    PT = {} 
+    for i in xrange(nspecs):
+        name = specs[i].get("<xmlattr>/name", "X")
+        mass = specs[i].get("mass", 1.0)
+        PT.update({name:mass*amu})
+
+
+    #========== Read the raw coordinates and assign masses ==========
+    D = MATRIX(3*nat, nsteps)
+    f = MATRIX(3*nat, nsteps)
+    M = MATRIX(3*nat, 1)
+    E = []
+
+    for t in xrange(nsteps):
+
+        # ========== Coordinates =========
+        atoms = steps[t].get_child("atomic_structure",dctx).get_child("atomic_positions", dctx).get_children("atom")
+
+        for i in xrange(nat):        
+            xyz_str = atoms[i].get("", "").split(' ')
+            name = atoms[i].get("<xmlattr>/name", "X")
+            D.set(3*i+0, t, float(xyz_str[0]) )
+            D.set(3*i+1, t, float(xyz_str[1]) )
+            D.set(3*i+2, t, float(xyz_str[1]) )
+
+            #=========== And masses ==========
+            if t==0:
+                M.set(3*i+0, 0, PT[name])
+                M.set(3*i+1, 0, PT[name])
+                M.set(3*i+2, 0, PT[name])
+                E.append(name)
+
+        # ========== Forces  =========
+        frcs = steps[t].get("forces","").split('\n')
+        sz = len(frcs)
+        cnt = 0
+        for i in xrange(sz):        
+            xyz_str = frcs[i].split()  
+            if len(xyz_str)==3:
+                f.set(3*cnt+0, t, float(xyz_str[0]) )
+                f.set(3*cnt+1, t, float(xyz_str[1]) )
+                f.set(3*cnt+2, t, float(xyz_str[1]) )
+                cnt = cnt + 1                 
+        
+        
+    #====== Compute velocities and coordinates at the mid-points ========
+    R = MATRIX(3*nat, nsteps-1)
+    V = MATRIX(3*nat, nsteps-1)
+    A = MATRIX(3*nat, nsteps-1)
+
+    for t in xrange(nsteps-1):
+        for i in xrange(3*nat):    
+            R.set(i, t, 0.5*(D.get(i, t+1) + D.get(i, t)) )
+            V.set(i, t, (0.5/dt)*(D.get(i, t+1) - D.get(i, t)) )
+            A.set(i, t, 0.5*(f.get(i, t+1) + f.get(i, t)) / M.get(i) )
+
+    return R, V, A, M, E
+
+
+
 
 def out2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt):
     """
