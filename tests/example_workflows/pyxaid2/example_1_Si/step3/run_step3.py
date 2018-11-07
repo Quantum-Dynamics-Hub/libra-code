@@ -46,31 +46,35 @@ params["St_dia_ks_re_suffix"] = "_re"
 params["St_dia_ks_im_prefix"] = rt + "/res/St_dia_ks_"
 params["St_dia_ks_im_suffix"] = "_im"
 
-
 ### Set up simulation specific parameters ###
-
 # Initialize the SD basis
-params["psi_dia_ks"] = range(1,5)  # 2 pairs of KS orbitals, indexing starts from 1
+params["psi_dia_ks"] = range(1,7)  # 2 pairs of KS orbitals, indexing starts from 1
 
 Phi_basis = []
-Phi_0 = [ 1,-1,2,-2 ]
-Phi_1 = [ 1,-1,2,-3 ]
-Phi_2 = [ 1,-1,3,-2 ]
-Phi_3 = [ 1,-1,2,-4 ]
-Phi_4 = [ 1,-1,4,-2 ]
+Phi_0 = [ 3,-3 ]
+Phi_1 = [ 3,-4 ]
+Phi_2 = [ 4,-3 ]
+Phi_3 = [ 3,-5 ]
+Phi_4 = [ 5,-3 ]
+Phi_5 = [ 3,-6 ]
+Phi_6 = [ 6,-3 ]
 
 Phi_basis.append( Phi_0 )
 Phi_basis.append( Phi_1 ); Phi_basis.append( Phi_2 )
 Phi_basis.append( Phi_3 ); Phi_basis.append( Phi_4 )
+Phi_basis.append( Phi_5 ); Phi_basis.append( Phi_6 )
 params["Phi_basis"] = Phi_basis
 
 ### Initilize the spin-adapated basis ###
 coeff = []
-coeff = [ [1,0,0,0,0], [0,1,-1,0,0], [0,0,0,1,-1] ]
+coeff = [ [1,0,0,0,0,0,0], [0,1,-1,0,0,0,0], [0,0,0,1,-1,0,0], [0,0,0,0,0,1,-1] ]
 P2C = CMATRIX(len(Phi_basis),len(coeff))
 for i in xrange(len(Phi_basis)):
     for j in xrange(len(coeff)):
         P2C.set(i,j,coeff[j][i])
+
+#P2C.show_matrix()
+#sys.exit(0)
 
 # Account for normalization constants #
 N = []
@@ -84,9 +88,11 @@ for i in xrange(P2C.num_of_cols):
     for j in xrange(P2C.num_of_rows):
         P2C.set(j,i, N[i] * P2C.get(j,i))        
 
+
+
 ### ###
 params["P2C"] = P2C
-params["init_Chi"] = 2
+params["init_Chi"] = 3
 params["Phi_dE"] = [];
 for i in xrange(len(params["Phi_basis"])):
     params["Phi_dE"].append(0.0)

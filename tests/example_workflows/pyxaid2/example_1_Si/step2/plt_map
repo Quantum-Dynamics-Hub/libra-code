@@ -23,23 +23,22 @@ set pm3d explicit at b
 
 
 set output "NAC_MAP_IM_ORBITAL.png"
-set xlabel "Orbtial index: 0 = HOMO"  offset 0.0, 0.5
-set ylabel "Orbtial index: 0 = HOMO"  offset 0.5, 0.0
+set xlabel "Orbtial index: 0 = HOMO"  offset  0.0, 0.5
+set ylabel "Orbtial index: 0 = HOMO"  offset -0.5, 0.0
 set label "NAC (meV)" at 9, 12
 set border 31 lw 5
 # Recall: minband of active space == 0
 # If minband of active space == HOMO-1, HOMO = 1
 # Indexing starts from 0 here
-HOMO = 3
+HOMO = 2
 set xrange [-HOMO:HOMO+1]
 set yrange [-HOMO:HOMO+1]
 
-set cbrange[0:50]
-set xtics 5
-set ytics 5
+set cbrange[0:25]
+set xtics 1
+set ytics 1
 splot "ave_Ham_im.dat" using ($1-HOMO):($2-HOMO):($3*1000),\
 
-
-set output "NAC_MAP_RE_ORBITAL.png"
-splot "ave_Ham_re.dat" using ($1-HOMO):($2-HOMO):($3*1000),\
+#set output "NAC_MAP_RE_ORBITAL.png"
+#splot "ave_Ham_re.dat" using ($1-HOMO):($2-HOMO):($3*1000),\
 

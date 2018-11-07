@@ -34,20 +34,21 @@ set style line 46 lc rgb '#8B0000' pt 6 ps 1 lt 1 lw 5 # --- darkred
 
 
 set lmargin at screen 0.20
-set rmargin at screen 0.95
+set rmargin at screen 0.93
 set bmargin at screen 0.20
 set tmargin at screen 0.95
 
 set border 31 lw 4
-set key font ",14"
+set key font ",16"
 
-set output "RELAX.png"
-set ylabel "Population" offset 1.0, 0.0
+set output "RELAX_CHI.png"
+set ylabel "Population" offset 1.5, 0.0
 set xlabel "Time (fs)" offset 0.0, 0.5
 
-set xtics 200
+set xtics 250
 
-plot "_pop_Chi_sh.txt" using ($2):((1-$5)) w l ls 32 lw 8 t "",
+plot "_pop_Chi_se.txt" using ($2):14 w l ls 12 lw 8 t "SE",\
+     "_pop_Chi_sh.txt" using ($2):14 w l ls 32 lw 8 t "SH",
 
 
 

@@ -61,7 +61,7 @@ def center_data(data):
     ave = average(data)
     for d in data:
         data_new.append(d - ave)
- 
+
     return data_new
 
 
@@ -85,9 +85,6 @@ def acf(data,dt):
         for j in range(0,sz-i):
             total += (data[j].T()*data[j+i]).get(0)   # scalar product
             count += 1.0
-
-        print total/(count*ndof)
-
         autocorr.append( total/(count*ndof) )
 
 
@@ -152,12 +149,12 @@ def recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spec
     inv_cm2ev = (1.0/8065.54468111324)
     ev2Ha = (1.0/27.211)    # 27.2 ev is 1 Ha 
     inv_cm2Ha = inv_cm2ev * ev2Ha
-    #fs2au = (1.0/0.02419)   # 40 a.u. is 1 fs 
+    fs2au = (1.0/0.02419)   # 40 a.u. is 1 fs 
 
         
     wspan = wspan * inv_cm2Ha  # convert to Ha (atomic units)
     dw = dw * inv_cm2Ha        # convert to Ha (atomic units)
-    #dt = dt * fs2au            # convert to  atomic units of time
+    dt = dt * fs2au            # convert to  atomic units of time
 
     
     # ACFs
@@ -166,7 +163,7 @@ def recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spec
 
     f = open(acf_filename,"w")
     for it in xrange(sz):
-        f.write("%8.5f  %8.5f  %8.5f  \n" % (T[it] , norm_acf[it], row_acf[it]))
+        f.write("%8.5f  %8.5f  %8.5f  \n" % (T[it]/fs2au , norm_acf[it], row_acf[it]))
     f.close()
 
     # FT
@@ -174,12 +171,12 @@ def recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spec
     sz = len(W)
     f = open(spectrum_filename,"w")
     for iw in xrange(sz):
-        f.write("%8.5f  %8.5f  \n" % (W[iw]/inv_cm2Ha, J[iw]*J[iw] ) )
+        f.write("%8.5f  %8.5f  \n" % (W[iw]/inv_cm2Ha, J[iw] ) )
     f.close()
 
 
 
-"""    
+    
 if __name__ == '__main__':
 
     # Parameters
@@ -206,4 +203,3 @@ if __name__ == '__main__':
         data.append( d )
     
     recipe1(data, 1.0, 2000.0, 1.0)
-"""
