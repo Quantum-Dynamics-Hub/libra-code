@@ -76,7 +76,7 @@ def compute_dynmat(lmp, filename, atoms, dr, opt=1):
     # Masses and types
     for at in atoms:
         a = atoms.index(at)
-        E = append(atype[at][0])
+        E.append(atype[at][0])
         for pa in [0,1,2]:
             i = 3*a + pa      
             M.set(i,0, mass[atype[at][0]][0])
