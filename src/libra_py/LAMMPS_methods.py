@@ -73,7 +73,7 @@ def compute_dynmat(lmp, filename, atoms, dr, opt=1):
             i = 3*a + pa
             R.set(i,0, r[at][pa])
 
-    # Masses
+    # Masses and types
     for at in atoms:
         a = atoms.index(at)
         E = append(atype[at][0])
@@ -124,7 +124,7 @@ def compute_dynmat(lmp, filename, atoms, dr, opt=1):
         for j in xrange(ndof):
             D.set(i,j, H.get(i,j)/math.sqrt(M.get(i)*M.get(j)))
 
-    return D, H, R, M
+    return D, H, R, M, E
 
 
 
