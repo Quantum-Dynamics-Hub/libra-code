@@ -1,5 +1,5 @@
 #***********************************************************
-# * Copyright (C) 2017-2018 Brendan A. Smith and Alexey V. Akimov
+# * Copyright (C) 2017-2018 Brendan A. Smith, Wei Li, and Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
