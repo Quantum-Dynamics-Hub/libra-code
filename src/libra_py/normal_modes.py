@@ -350,9 +350,3 @@ def compute_dynmat(R, D, M, E, params):
     return w, w_inv_cm, U_a
  
 
-#R, V, A, M, E = read_md_data_QE(params["md_file"])         
-#get_normal_modes({"nsteps":100, "nperiods":1, "scale":10.0, "md_file":"x0.xml", "print_modes":[4, 5] } )
-#get_normal_modes({"nsteps":100, "nperiods":1, "scale":10.0, "md_file":"x0_h2.xml", "print_modes":[4] } )
-#get_normal_modes({"nsteps":100, "nperiods":1, "scale":1.0, "md_file":"x0_co2.xml", "print_modes":[3,4,5,6,7,8] } )
-#def read_md_data(filename):
-

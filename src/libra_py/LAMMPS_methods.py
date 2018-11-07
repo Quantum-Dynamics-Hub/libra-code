@@ -19,7 +19,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 
-def compute_dynmat(lmp, filename, atoms, dr):
+def compute_dynmat(lmp, filename, atoms, dr, opt=1):
     """
     The function to return the dynamic matrix for a system using LAMMPS
 
@@ -38,6 +38,9 @@ def compute_dynmat(lmp, filename, atoms, dr):
     r (MATRIX(ndof, 1)) - coordinates of all atoms
     M (MATRIX(ndof, 1)) - masses of all atoms
     E (list of ndof ints) - types of atoms - later can be mapped to atom names
+    opt (int) - flag to use all atoms or only the pupplied sub-set
+       opt = 0 - use all atoms
+       opt = 1 - use only the supplied subset (default)
     """
 
     # run infile all at once
@@ -51,6 +54,8 @@ def compute_dynmat(lmp, filename, atoms, dr):
     mass = lmp.numpy.extract_atom_darray("mass", ntypes+1)
     atype = lmp.numpy.extract_atom_iarray("type", nlocal)
 
+    if opt==0:
+        atoms = range(nlocal)
 
     nat = len(atoms)
     ndof = 3 * nat
