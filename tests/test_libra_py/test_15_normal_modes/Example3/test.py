@@ -31,7 +31,7 @@ lmp = lammps.lammps()
 # Do the Hessian/dynmat calculations
 D, H, R, M, typ  = LAMMPS_methods.compute_dynmat(lmp, "in.lammps", [], 1e-3, 1)
 
-print "Atom types are:", E
+print "Atom types are:", typ
 print "Masses are:"; M.show_matrix()
 print "Coordinates are:"; R.show_matrix()
 #print "Hessian matrix is:"; H.show_matrix()
