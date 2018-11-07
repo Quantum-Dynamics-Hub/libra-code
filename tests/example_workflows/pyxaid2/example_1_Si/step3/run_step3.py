@@ -18,7 +18,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from libra_py import *
-import namd
+from libra_py.workflows.pyxaid2 import *
 
 #############################################################################################
 # This is an example of an input file to run namd calculations with SOC
@@ -46,34 +46,61 @@ params["St_dia_ks_re_suffix"] = "_re"
 params["St_dia_ks_im_prefix"] = rt + "/res/St_dia_ks_"
 params["St_dia_ks_im_suffix"] = "_im"
 
-##### Set up simulation specific parameters #####
-# Spin-diabatic Parameters
-params["psi_dia_ks"] = range(1,12)  # 2 pairs of KS orbitals, indexing starts from 1
 
-Chi_0 = [ [ 1.0 , [1,-1,2,-2,3,-3,4,-4,5,-5,6,-6] ] ]
-Chi_1 = [ [ 1.0 , [1,-1,2,-2,3,-3,4,-4,5,-5,6,-7] ] , [ -1.0 , [1,-1,2,-2,3,-3,4,-4,5,-5,-6,7] ] ]
+### Set up simulation specific parameters ###
 
-params["Chi_basis"] = []
-params["Chi_basis"].append( Chi_0 )
-params["Chi_basis"].append( Chi_1 )
+# Initialize the SD basis
+params["psi_dia_ks"] = range(1,5)  # 2 pairs of KS orbitals, indexing starts from 1
 
+Phi_basis = []
+Phi_0 = [ 1,-1,2,-2 ]
+Phi_1 = [ 1,-1,2,-3 ]
+Phi_2 = [ 1,-1,3,-2 ]
+Phi_3 = [ 1,-1,2,-4 ]
+Phi_4 = [ 1,-1,4,-2 ]
+
+Phi_basis.append( Phi_0 )
+Phi_basis.append( Phi_1 ); Phi_basis.append( Phi_2 )
+Phi_basis.append( Phi_3 ); Phi_basis.append( Phi_4 )
+params["Phi_basis"] = Phi_basis
+
+### Initilize the spin-adapated basis ###
+coeff = []
+coeff = [ [1,0,0,0,0], [0,1,-1,0,0], [0,0,0,1,-1] ]
+P2C = CMATRIX(len(Phi_basis),len(coeff))
+for i in xrange(len(Phi_basis)):
+    for j in xrange(len(coeff)):
+        P2C.set(i,j,coeff[j][i])
+
+# Account for normalization constants #
+N = []
+for i in xrange(P2C.num_of_cols):
+    count = 0.0
+    N.append(0.0)
+    for j in xrange(P2C.num_of_rows):
+        if P2C.get(j,i) != 0:
+            count += 1.0 
+    N[i] = 1.0 / math.sqrt(count)
+    for j in xrange(P2C.num_of_rows):
+        P2C.set(j,i, N[i] * P2C.get(j,i))        
+
+### ###
+params["P2C"] = P2C
+params["init_Chi"] = 2
 params["Phi_dE"] = [];
-for i in xrange(len(params["psi_dia_ks"])):
+for i in xrange(len(params["Phi_basis"])):
     params["Phi_dE"].append(0.0)
-
 print params["Phi_dE"]
-print params["Chi_basis"]
-
-params["init_Chi"] = 1  # Spin-Adapated Singlet Wavefunction 
+print params["Phi_basis"]
 
 # Actual simulation paramters
 params["init_time"] = 0  # starting from the first file 
 params["len_traj"] = 1000
 params["sh_method"] = 1   # 0, 1
-params["do_collapse"] = 0 # 0 - no decoherence, 1 - decoherence
-params["num_sh_traj"] = 100
+params["do_collapse"] = 1 # 0 - no decoherence, 1 - decoherence
+params["num_sh_traj"] = 1000
 params["dt"] = 1
-params["T"] = 400
+params["T"] = 300
 
 print "\nPrinting params from run_step3.py"
 print params

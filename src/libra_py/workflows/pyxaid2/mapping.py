@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2018-2019 Brendan A. Smith, Alexey V. Akimov
+#* Copyright (C) 2018-2019 Brendan A. Smith, Wei Li, Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -44,7 +44,7 @@ def energy_mat_arb(SD, e, dE):
 
     n = len(SD)
     E = CMATRIX(n,n)
-
+  
     E0 = energy_arb(SD[0], e) + dE[0]*(1.0+0.0j)
     for i in xrange(n):
         E.set(i,i, energy_arb(SD[i], e) + dE[i]*(1.0+0.0j) - E0 )
@@ -90,19 +90,9 @@ def ovlp_arb(SD1, SD2, S):
     sd2 = sd2indx(SD2,nbasis)
     s = CMATRIX(len(sd1),len(sd2))
 
-    #print "\nNOW WE ARE COMPUTING THE OVERLAP"
-    #print SD1
-    #print SD2
-    #print sd1
-    #print sd2
-
     for i in xrange(len(sd1)):
         for j in xrange(len(sd2)):
              s.set(i,j,S.get(sd1[i],sd2[j]))
-
-    #s.show_matrix()
-    #print "\n"
-    #print det(s)
 
     return det(s) # Eq. 16
 
@@ -118,17 +108,10 @@ def ovlp_mat_arb(SD1, SD2, S):
     N, M = len(SD1), len(SD2)
     res = CMATRIX(N,M)
 
-    #print S.show_matrix()
-    #print SD1
-    #print SD2
-    #print N
-    #print M
-
     for n in xrange(N):
         for m in xrange(M):
             res.set(n,m, ovlp_arb(SD1[n], SD2[m], S))
 
     return res
-
 
 

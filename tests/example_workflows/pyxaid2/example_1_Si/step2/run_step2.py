@@ -20,7 +20,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 from libra_py import *
 
 
-nsteps_per_job = 100 
+nsteps_per_job = 50 
 tot_nsteps = 1000
 
 # tot_nsteps = total simulation time

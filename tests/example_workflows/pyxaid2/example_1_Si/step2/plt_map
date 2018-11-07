@@ -30,9 +30,9 @@ set border 31 lw 5
 # Recall: minband of active space == 0
 # If minband of active space == HOMO-1, HOMO = 1
 # Indexing starts from 0 here
-HOMO = 5
-set xrange [-HOMO:HOMO]
-set yrange [-HOMO:HOMO]
+HOMO = 3
+set xrange [-HOMO:HOMO+1]
+set yrange [-HOMO:HOMO+1]
 
 set cbrange[0:50]
 set xtics 5
