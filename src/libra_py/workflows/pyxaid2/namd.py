@@ -140,6 +140,20 @@ def run_namd(params):
 
         sz = St_dia_ks.num_of_rows 
 
+
+        ### Perform state reordering (must be done before the phase correction) ###
+
+        if params["do_state_reordering"]:
+
+            perm = get_reordering(St_dia_ks)
+
+            St_dia_ks.permute_cols(perm)
+            St_dia_ks.permute_rows(perm)
+
+            E_dia_ks.permute_cols(perm)
+            E_dia_ks.permute_rows(perm)
+
+
         ### Perform phase correction ###
         if params["do_phase_correction"]:
             ### Initiate the cumulative phase correction factors ###

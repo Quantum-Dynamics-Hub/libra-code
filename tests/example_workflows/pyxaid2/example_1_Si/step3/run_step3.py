@@ -102,6 +102,7 @@ print params["Phi_basis"]
 # Actual simulation paramters
 params["init_time"] = 0  # starting from the first file 
 params["len_traj"] = 30
+params["do_state_reordering"] = 1
 params["do_phase_correction"] = 1
 params["sh_method"] = 1   # 0 - MSSH, 1 - FSSH
 params["do_collapse"] = 1 # 0 - no decoherence, 1 - decoherence (ID-A)
