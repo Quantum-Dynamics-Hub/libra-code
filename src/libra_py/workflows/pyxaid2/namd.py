@@ -111,6 +111,8 @@ def run_namd(params):
   
     # ------------------read and store the projection and energies------------------
     H_vib = []
+    phase_ref = None
+
     for i in range(0,len_traj):
 
         ##############################################################################
@@ -136,7 +138,25 @@ def run_namd(params):
         St_dia_ks = get_matrix(nst_dia_ks, nst_dia_ks, i, re_pr, re_sf, im_pr, im_sf )
 
         ### Perform phase correction ###
-        correct_phase(St_dia_ks)
+        if params["do_phase_correction"]:
+            if i==0:
+                phase_ref = compute_phase_corrections(St_dia_ks)
+
+            phase_i = compute_phase_corrections(St_dia_ks)
+
+            sz = phase_ref.num_of_rows
+            phase_corr = CMATRIX(sz,1)
+            for a in xrange(sz):
+                phase_corr.set(a, 0, phase_i.get(a)/phase_ref.get(a))
+
+            ### Correct the overlap matrix ###
+            for a in xrange(sz):   
+                for b in xrange(sz): 
+                    fba = phase_corr.get(b) * phase_corr.get(a).conjugate()
+                    St_dia_ks.scale(b,a, fba)
+
+        ### Done with the phase correction ###
+
 
         # Printing what we just extracted for t = 0
         #"""
