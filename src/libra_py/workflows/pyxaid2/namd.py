@@ -111,6 +111,9 @@ def run_namd(params):
   
     # ------------------read and store the projection and energies------------------
     H_vib = []
+#    phase_ref = None
+    cum_phase = None  # F(n-1)
+
     for i in range(0,len_traj):
 
         ##############################################################################
@@ -135,8 +138,46 @@ def run_namd(params):
         im_sf = params["St_dia_ks_im_suffix"] 
         St_dia_ks = get_matrix(nst_dia_ks, nst_dia_ks, i, re_pr, re_sf, im_pr, im_sf )
 
+        sz = St_dia_ks.num_of_rows 
+
+
+        ### Perform state reordering (must be done before the phase correction) ###
+
+        if params["do_state_reordering"]:
+
+            perm = get_reordering(St_dia_ks)
+
+            St_dia_ks.permute_cols(perm)
+            St_dia_ks.permute_rows(perm)
+
+            E_dia_ks.permute_cols(perm)
+            E_dia_ks.permute_rows(perm)
+
+
         ### Perform phase correction ###
-        correct_phase(St_dia_ks)
+        if params["do_phase_correction"]:
+            ### Initiate the cumulative phase correction factors ###
+            if i==0:
+                cum_phase = CMATRIX(sz,1)
+                for a in xrange(sz):
+                    cum_phase.set(a, 0, 1.0+0.0j)
+
+            ### Compute the instantaneous phase correction factors ###
+            phase_i = compute_phase_corrections(St_dia_ks)   # f(i)
+
+            ### Correct the overlap matrix ###
+            for a in xrange(sz):   
+                for b in xrange(sz): 
+                    fab = cum_phase.get(b) * cum_phase.get(b).conjugate() * phase_i.get(b).conjugate()
+                    St_dia_ks.scale(a,b, fab)
+
+            ### Update the cumulative phase correction factors ###
+            for a in xrange(sz):
+                cum_phase.scale(a, 0, phase_i.get(a))
+          
+
+        ### Done with the phase correction ###
+
 
         # Printing what we just extracted for t = 0
         #"""

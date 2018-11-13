@@ -28,7 +28,7 @@ from libra_py.workflows.pyxaid2 import *
 
 params = {}
 
-rt="/projects/academic/alexeyak/brendan/libra-code/tests/example_workflows/pyxaid2/example_1_Si/step2"
+rt="/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/tests/example_workflows/pyxaid2/example_1_Si/step2"
 
 ##### Extract Spin-diabatic Information #####
 params["E_dia_ks_re_prefix"] = rt + "/res/E_dia_ks_"
@@ -101,9 +101,11 @@ print params["Phi_basis"]
 
 # Actual simulation paramters
 params["init_time"] = 0  # starting from the first file 
-params["len_traj"] = 1000
-params["sh_method"] = 1   # 0, 1
-params["do_collapse"] = 1 # 0 - no decoherence, 1 - decoherence
+params["len_traj"] = 30
+params["do_state_reordering"] = 1
+params["do_phase_correction"] = 1
+params["sh_method"] = 1   # 0 - MSSH, 1 - FSSH
+params["do_collapse"] = 1 # 0 - no decoherence, 1 - decoherence (ID-A)
 params["num_sh_traj"] = 1000
 params["dt"] = 1
 params["T"] = 300
