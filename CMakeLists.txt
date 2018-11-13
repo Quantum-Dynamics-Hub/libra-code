@@ -61,7 +61,7 @@ MESSAGE("Advice: If this search fails, try setting cache variables: -DPYTHON_LIB
 MESSAGE("Hint to self: -DPYTHON_INCLUDE_DIR=/home/Alexey_2/Soft/Python-2.6.7/bin/include/python2.6 -DPYTHON_LIBRARY=/home/Alexey_2/Soft/Python-2.6.7/bin/bin")
 
 # For Linux and Cygwin
-FIND_PACKAGE(PythonLibs 2.7.0 REQUIRED)
+FIND_PACKAGE(PythonLibs 2.7.5 REQUIRED)
 
 IF(PYTHONLIBS_FOUND)
   MESSAGE("Success!")
