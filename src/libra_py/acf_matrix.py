@@ -99,6 +99,48 @@ def acf(data,dt):
     return T, nautocorr, autocorr
 
 
+
+def acf2(data,dt):
+    """
+    Compute the autocorrelation function of the given data set
+    using the method described at:
+    https://www.itl.nist.gov/div898/handbook/eda/section3/autocopl.htm
+
+    Where C_h = (1/N) Sum_{t=1,N-h} (Y[t]-Y_avg)(Y[t+h]-Y_avg)
+
+    data - (list of MATRIX (ndof x 1) objects) - Data to analyze
+    dt - (float) - time distance between the adjacent data points
+    """
+
+    N   = len(data)
+    avg = MATRIX(data[0].num_of_rows,1)
+    for i in xrange(N):
+        avg += data[i]
+    avg /= float(N)
+
+    T, nC, C  = [], [], []
+    #out1 = open("acf.txt","w")
+    for k in xrange(N):
+
+        # Compute the autocovariance of data 
+        acovar = MATRIX(1,1)
+        for i in xrange(N - k):
+            acovar += ( (data[i]-avg).T() * (data[i+k]-avg) )
+        acovar /= float(N)
+
+        # Compute the variance of data 
+        var = MATRIX(1,1)
+        for i in xrange(N):
+            var += (data[i]-avg).T() * (data[i]-avg)
+        var /= float(N)
+
+        C.append(acovar.tr()/var.tr())
+        nC.append(C[k]/C[0])
+        T.append(k*dt)
+
+    return T, nC, C
+
+
 def ft(acf_data, wspan, dw, dt):  
     """
     We do have a number of FT and FFT functions in the Libra core, but
@@ -176,6 +218,51 @@ def recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spec
 
 
 
+
+def recipe2(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spectrum.txt", do_center=1):
+    """
+    data (MATRIX (ndof x 1) ) - data points (each is a multidimensional)
+    dt (float) [ fs ] - timestep between adjacent data points
+    dspan (float) [ cm^-1 ] - window of frequencies for the Fourier transform
+    dw (float) [ cm^-1 ] - grid points spacing in the frequency domain
+    acf_filename (string) - the name of the file where to print the ACF
+    spectrum_filename (string) - the name of the file where to print the spectrum
+    do_center (int) - a flag controlling whether to center data (=1) or not (=0)
+    Centering means we subtract the average value (over all the data points) from all
+    the data points - this way, we convert values into their fluctuations.
+    """
+
+
+    # Parameters
+    inv_cm2ev = (1.0/8065.54468111324)
+    ev2Ha = (1.0/27.211)    # 27.2 ev is 1 Ha 
+    inv_cm2Ha = inv_cm2ev * ev2Ha
+    fs2au = (1.0/0.02419)   # 40 a.u. is 1 fs 
+
+
+    wspan = wspan * inv_cm2Ha  # convert to Ha (atomic units)
+    dw = dw * inv_cm2Ha        # convert to Ha (atomic units)
+    dt = dt * fs2au            # convert to  atomic units of time
+
+
+    # ACFs
+    T, norm_acf, row_acf = acf2(data,dt)
+    sz = len(norm_acf)
+
+    f = open(acf_filename,"w")
+    for it in xrange(sz):
+        f.write("%8.5f  %8.5f  \n" % (T[it]/fs2au, norm_acf[it]))
+    f.close()
+
+    # FT
+    W, J = ft(norm_acf, wspan, dw, dt)
+    sz = len(W)
+    f = open(spectrum_filename,"w")
+    for iw in xrange(sz):
+        f.write("%8.5f  %8.5f  \n" % (W[iw]/inv_cm2Ha, J[iw] ) )
+    f.close()
+
+
     
 if __name__ == '__main__':
 
@@ -203,3 +290,5 @@ if __name__ == '__main__':
         data.append( d )
     
     recipe1(data, 1.0, 2000.0, 1.0)
+    #recipe2(data, 1.0, 2000.0, 1.0)
+
