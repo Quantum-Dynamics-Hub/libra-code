@@ -16,3 +16,14 @@
   * LAMMSP_methods.py  - Utility functions to use with LAMMPS
   
    - compute_dynmat(lmp, filename, atoms, dr)
+
+  * acf_matrix.py  - A file containing various schemes to compute the ACF of a given data set 
+                     with data elements of the type MATRIX.
+   - acf(data)
+     Computes the autocovariance function using the method with the least bias
+     [Ref: https://www.itl.nist.gov/div898/handbook/eda/section3/eda331.htm]
+   - acf2(data)
+     Computes the autocovariance function using the method with more bias, but is less
+     prone to noise for large values of "k"
+     [Ref: https://www.itl.nist.gov/div898/handbook/eda/section3/eda331.htm]
+
