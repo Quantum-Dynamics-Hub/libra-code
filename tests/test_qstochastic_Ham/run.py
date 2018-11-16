@@ -23,7 +23,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from libra_py import *
 
-from libra_py.workflows.quasi_stochastic_Ham import *
+from libra_py.workflows.qsh import *
 
 params = {}
 params["dt"] = 41.0
@@ -42,4 +42,4 @@ params["istate"] = 1 # initial state
 params["rt"] = "/home/eric/PROJECT/Alexey3/res/" #directory containning the direct direct Ham files
 params["deco_time"]  =  6.5 # dephasing time obtained from the direct vibronic Ham files, in fs
 
-qstochastic_Ham.run_test(params)
+qstochastic_Ham.run(params)
