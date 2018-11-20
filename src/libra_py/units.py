@@ -21,3 +21,4 @@ amu = 1836.0            # chemical mass unit in masses of electron
 
 boltzmann = 1.9872065E-3  # in kcal/mol*K
 hartree = 627.5094709   # 1 Ha = 627.5.. kcal/mol
+kB = 3.166815151251607985889922605788E-6  # Ha/mol*K

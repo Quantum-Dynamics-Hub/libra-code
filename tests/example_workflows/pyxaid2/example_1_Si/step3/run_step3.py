@@ -102,13 +102,16 @@ print params["Phi_basis"]
 # Actual simulation paramters
 params["init_time"] = 0  # starting from the first file 
 params["len_traj"] = 30
-params["do_state_reordering"] = 1
+
+params["do_state_reordering"] = 2
+params["state_reordering_alpha"] = 0.01
+
 params["do_phase_correction"] = 1
 params["sh_method"] = 1   # 0 - MSSH, 1 - FSSH
 params["do_collapse"] = 1 # 0 - no decoherence, 1 - decoherence (ID-A)
 params["num_sh_traj"] = 1000
-params["dt"] = 1
-params["T"] = 300
+params["dt"] = 1.0
+params["T"] = 300.0
 
 print "\nPrinting params from run_step3.py"
 print params

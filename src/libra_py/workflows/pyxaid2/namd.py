@@ -97,6 +97,7 @@ def run_namd(params):
 
     rnd = Random()
     T = params["T"]
+    kT = units.kB * T
     init_time = params["init_time"]  # integer
     dt = params["dt"]
     len_traj = params["len_traj"]
@@ -143,10 +144,49 @@ def run_namd(params):
 
         ### Perform state reordering (must be done before the phase correction) ###
 
-        if params["do_state_reordering"]:
+        if params["do_state_reordering"]==1:
+            """
+            A simple approach based on permuations - but this is not robust
+            may have loops
+            """
 
             perm = get_reordering(St_dia_ks)
 
+            St_dia_ks.permute_cols(perm)
+            St_dia_ks.permute_rows(perm)
+
+            E_dia_ks.permute_cols(perm)
+            E_dia_ks.permute_rows(perm)
+
+        elif params["do_state_reordering"]==2:
+            """
+            The Hungarian approach
+            """
+            # construct the cost matrix
+            alp = 0.0
+            if "state_reordering_alpha" in params.keys():
+                alp = params["state_reordering_alpha"]
+
+            cost_mat = MATRIX(sz, sz)
+            for a in xrange(sz):
+                for b in xrange(sz):
+                    s = St_dia_ks.get(a,b)
+                    s2 =  (s*s.conjugate()).real
+                    dE = (E_dia_ks.get(a,a)-E_dia_ks.get(b,b)).real/kT
+                    val = s2 * math.exp(-alp*dE**2)
+                    cost_mat.set(a,b, val)
+
+            # run the assignment calculations
+            res = hungarian.maximize(cost_mat)
+
+            # convert the list of lists into the permutation object
+            perm = intList() 
+            for a in xrange(sz):
+                perm.append(a)
+            for r in res:
+                perm[r[0]] = r[1]
+
+            # apply the permutation
             St_dia_ks.permute_cols(perm)
             St_dia_ks.permute_rows(perm)
 
