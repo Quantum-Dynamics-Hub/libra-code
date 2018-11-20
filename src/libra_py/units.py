@@ -15,6 +15,8 @@ inv_cm2ev = (1.0/8065.54468111324)
 ev2Ha = (1.0/27.211)    # 27.2 ev is 1 Ha 
 inv_cm2Ha = inv_cm2ev * ev2Ha
 fs2au = (1.0/0.02419)   # 40 a.u. is 1 fs 
+au2fs = 0.02419 # 40 a.u. is 1 fs
+au2wavn = 27.211 * 8065.54468111324
 
 Angst = 1.889725989     # in Bohr
 amu = 1836.0            # chemical mass unit in masses of electron
