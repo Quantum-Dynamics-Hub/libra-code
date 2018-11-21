@@ -227,7 +227,11 @@ def mat_freqs(X, a, b, dt, filename, Nfreqs):
 
 
 
-def read_Hvib(rt, i, act_sp):
+def read_Hvib(prefix, act_sp):
+    """
+    prefix - 
+    act_sp - 
+    """
 
     nstates = len(act_sp)
     Hvib_im = MATRIX(nstates,nstates)

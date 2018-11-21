@@ -16,7 +16,6 @@ import os
 import sys
 import math
 
-
 if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
@@ -27,19 +26,18 @@ from libra_py.workflows.qsh import *
 
 params = {}
 params["dt"] = 41.0
-params["nfiles"] = 2000 # number of direct direct Ham files we want to include 
-params["nsteps"] = 20000000 # total length of stochastical direct Ham
+params["nfiles"] = 30 # number of direct direct Ham files we want to include 
+params["nsteps"] = 2000 # total length of stochastical direct Ham
 params["T"] = 300.0 
-params["Nfreqs"] = 6 # number of nuclear modes included in the calculation
+params["Nfreqs"] = 1 # number of nuclear modes included in the calculation
 params["ntraj"] = 100 
 
-# 35 - HOMO
-# 36 - LUMO
-# 37 - LUMO+1
-#params["active_space"] = [36,37]   # L +1 -> L
-params["active_space"] = [35,36]   # L -> H
+# 3 - HOMO
+# 4 - LUMO
+# 5 - LUMO+1
+params["active_space"] = [3,4]   # L -> H
 params["istate"] = 1 # initial state
-params["rt"] = "/home/eric/PROJECT/Alexey3/res/" #directory containning the direct direct Ham files
+params["prefix"] = "res/Ham_" #directory containning the direct direct Ham files
 params["deco_time"]  =  6.5 # dephasing time obtained from the direct vibronic Ham files, in fs
 
 qstochastic_Ham.run(params)
