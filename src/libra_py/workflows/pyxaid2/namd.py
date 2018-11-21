@@ -99,6 +99,7 @@ def run_namd(params):
     T = params["T"]
     kT = units.kB * T
     init_time = params["init_time"]  # integer
+    do_rescale = params["do_rescale"]
     dt = params["dt"]
     len_traj = params["len_traj"]
     num_sh_traj = params["num_sh_traj"]
@@ -299,7 +300,7 @@ def run_namd(params):
             ksi2 = rnd.uniform(0.0, 1.0)
 
             # Surface hopping in Chi basis
-            istate[tr] = tsh.hopping(Coeff_Chi[tr], H_vib[i], istate[tr], sh_method, do_collapse, ksi, ksi2, dt, T)
+            istate[tr] = tsh.hopping(Coeff_Chi[tr], H_vib[i], istate[tr], sh_method, do_collapse, ksi, ksi2, dt, T, do_rescale)
             Coeff_Phi[tr] = P2C*Coeff_Chi[tr]
 
         #============== Analysis of Dynamics  =====================

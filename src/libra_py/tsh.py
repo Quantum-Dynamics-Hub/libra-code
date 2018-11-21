@@ -895,7 +895,7 @@ def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
 
 
 
-def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T):
+def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, do_rescale):
     """
     A simplified version for the CPA-like hopping
 
@@ -915,7 +915,7 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T):
     if sh_method==0:
         g = compute_hopping_probabilities_mssh(Coeff)
     elif sh_method==1:
-        g = compute_hopping_probabilities_fssh(Coeff, Hvib, dt)
+        g = compute_hopping_probabilities_fssh(Coeff, Hvib, dt, do_rescale, T)
 
     old_st = istate
     new_st = hop(istate, g, ksi)
