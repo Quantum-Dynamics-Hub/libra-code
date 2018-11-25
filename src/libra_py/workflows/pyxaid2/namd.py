@@ -84,21 +84,21 @@ def run_namd(params):
     T = params["T"]
     kT = units.kB * T
     init_time = params["init_time"]  # integer
-    active_space = params["active_space"]
     dt = params["dt"]
     len_traj = params["len_traj"]
     num_sh_traj = params["num_sh_traj"]
     sh_method = params["sh_method"]
     do_collapse = params["do_collapse"]
+    bolt_opt = params["Boltz_opt"]
 
     psi_dia_ks = params["psi_dia_ks"];   nst_dia_ks = 2*len(psi_dia_ks)
+    active_space = range(0, nst_dia_ks) #params["active_space"]
 
     Phi_basis = params["Phi_basis"]
     P2C = params["P2C"];                 nst_dia_sac = P2C.num_of_cols
   
     # ------------------read and store the projection and energies------------------
     H_vib = []
-#    phase_ref = None
     cum_phase = None  # F(n-1)
 
     for i in range(0,len_traj):
@@ -175,7 +175,7 @@ def run_namd(params):
 
 
         ### Perform phase correction ###
-        if params["do_phase_correction"]:
+        if params["do_phase_correction"]==1:
             ### Initiate the cumulative phase correction factors ###
             if i==0:
                 cum_phase = CMATRIX(sz,1)
@@ -279,7 +279,7 @@ def run_namd(params):
             ksi2 = rnd.uniform(0.0, 1.0)
 
             # Surface hopping in Chi basis
-            istate[tr] = tsh.hopping(Coeff_Chi[tr], H_vib[i], istate[tr], sh_method, do_collapse, ksi, ksi2, dt, T)
+            istate[tr] = tsh.hopping(Coeff_Chi[tr], H_vib[i], istate[tr], sh_method, do_collapse, ksi, ksi2, dt, T, bolt_opt)
             Coeff_Phi[tr] = P2C*Coeff_Chi[tr]
 
         #============== Analysis of Dynamics  =====================
