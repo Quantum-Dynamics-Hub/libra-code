@@ -7,5 +7,8 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 #***********************************************************/
 
-__all__ = ["pyxaid2","qsh"
+__all__ = ["pyxaid2",
+           "qsh", 
+           "lz",
+           "common_utils"
           ]

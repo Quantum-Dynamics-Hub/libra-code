@@ -9,23 +9,23 @@
 #*
 #*********************************************************************************/
 
+"""
+  Implementation of the Quasistochastic Hamiltonian method
+      Akimov, J. Phys. Chem. Lett. 2017, 8, 5190
+"""
 
 import cmath
 import math
 import os
 import sys
 
-
-"""
-  Implementation of the Quasistochastic Hamiltonian method
-      Akimov, J. Phys. Chem. Lett. 2017, 8, 5190
-"""
-
 if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-from libra_py import *
+#from libra_py import *
+
+import libra_py.workflows.common_utils as comn
 
 
 def find_maxima(s):
@@ -298,6 +298,7 @@ def run(params):
     use_boltz_factor = 1;
     dt = params["dt"]
     T = params["T"]
+    norbitals = params["norbitals"]  # the number of orbitals in the input files
     act_sp = Py2Cpp_int(params["active_space"])
     nsteps = params["nsteps"]
     nfiles = params["nfiles"]
@@ -325,10 +326,19 @@ def run(params):
 
     freqs_re, freqs_im = None, None
 
-    
+
     for i in xrange(0, nfiles): # how many files we have
 
-        hvib_re, hvib_im = read_Hvib(rt, i, act_sp)
+        ##############################################################################
+        # Read in the "elementary" overlaps and energies - in the basis of KS orbitals
+        ##############################################################################       
+
+        filename_re = params["Hvib_re_prefix"]+str(i)+params["Hvib_re_suffix"]
+        filename_im = params["Hvib_im_prefix"]+str(i)+params["Hvib_im_suffix"]
+        Hvib = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, act_sp)
+        Hvib.scale(-1, -1, 0.5) #convert from Ry to Ha 
+
+        hvib_re, hvib_im = Hvib.real(), Hvib.imag()
         H_vib_re.append(hvib_re)
         H_vib_im.append(hvib_im)
 

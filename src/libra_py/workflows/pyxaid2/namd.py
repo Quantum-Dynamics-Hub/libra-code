@@ -23,6 +23,8 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 from libra_py import *
 
 import mapping
+import libra_py.workflows.common_utils as comn
+
 
 def show_matrix_splot(X, filename):
     ncol, nrow = X.num_of_cols, X.num_of_rows
@@ -57,23 +59,6 @@ def add_printout(i, pop, filename):
     f.write(line)
     f.close()
 
-    
-def get_matrix(nrows, ncols, i, prefix_re, suffix_re, prefix_im, suffix_im):
-
-    filename_re = prefix_re + str(i) + suffix_re
-    filename_im = prefix_im + str(i) + suffix_im
-
-    #print "\nfilename_re\n"
-    #print filename_re
-    #print "\nfilename_im\n"
-    #print filename_im
-
-    x_re = MATRIX(nrows, ncols); x_re.Load_Matrix_From_File(filename_re)
-    x_im = MATRIX(nrows, ncols); x_im.Load_Matrix_From_File(filename_im)
-
-
-    return CMATRIX(x_re, x_im)
-
 
 def compute_Hvib(basis, St_ks, E_ks, dE, dt):
     """
@@ -99,6 +84,7 @@ def run_namd(params):
     T = params["T"]
     kT = units.kB * T
     init_time = params["init_time"]  # integer
+    active_space = params["active_space"]
     dt = params["dt"]
     len_traj = params["len_traj"]
     num_sh_traj = params["num_sh_traj"]
@@ -121,23 +107,17 @@ def run_namd(params):
         # Read in the "elementary" overlaps and energies - in the basis of KS orbitals
         ##############################################################################       
 
-        re_pr = params["E_dia_ks_re_prefix"] 
-        re_sf = params["E_dia_ks_re_suffix"] 
-        im_pr = params["E_dia_ks_im_prefix"] 
-        im_sf = params["E_dia_ks_im_suffix"] 
-        E_dia_ks = get_matrix(nst_dia_ks, nst_dia_ks, i, re_pr, re_sf, im_pr, im_sf )
+        filename_re = params["E_dia_ks_re_prefix"]+str(i)+params["E_dia_ks_re_suffix"]
+        filename_im = params["E_dia_ks_im_prefix"]+str(i)+params["E_dia_ks_im_suffix"]
+        E_dia_ks = comn.get_matrix(nst_dia_ks, nst_dia_ks, filename_re, filename_im, active_space )
 
-        re_pr = params["S_dia_ks_re_prefix"] 
-        re_sf = params["S_dia_ks_re_suffix"] 
-        im_pr = params["S_dia_ks_im_prefix"] 
-        im_sf = params["S_dia_ks_im_suffix"] 
-        S_dia_ks = get_matrix(nst_dia_ks, nst_dia_ks, i, re_pr, re_sf, im_pr, im_sf )
+        filename_re = params["S_dia_ks_re_prefix"]+str(i)+params["S_dia_ks_re_suffix"]
+        filename_im = params["S_dia_ks_im_prefix"]+str(i)+params["S_dia_ks_im_suffix"]
+        S_dia_ks = comn.get_matrix(nst_dia_ks, nst_dia_ks, filename_re, filename_im, active_space )
 
-        re_pr = params["St_dia_ks_re_prefix"] 
-        re_sf = params["St_dia_ks_re_suffix"] 
-        im_pr = params["St_dia_ks_im_prefix"] 
-        im_sf = params["St_dia_ks_im_suffix"] 
-        St_dia_ks = get_matrix(nst_dia_ks, nst_dia_ks, i, re_pr, re_sf, im_pr, im_sf )
+        filename_re = params["St_dia_ks_re_prefix"]+str(i)+params["St_dia_ks_re_suffix"]
+        filename_im = params["St_dia_ks_im_prefix"]+str(i)+params["St_dia_ks_im_suffix"]
+        St_dia_ks = comn.get_matrix(nst_dia_ks, nst_dia_ks, filename_re, filename_im, active_space )
 
         sz = St_dia_ks.num_of_rows 
 

@@ -40,4 +40,5 @@ params["istate"] = 1 # initial state
 params["prefix"] = "res/Ham_" #directory containning the direct direct Ham files
 params["deco_time"]  =  6.5 # dephasing time obtained from the direct vibronic Ham files, in fs
 
+
 qstochastic_Ham.run(params)
