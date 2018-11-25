@@ -99,6 +99,12 @@
   * parse_gamess_basis(filename) - parse the file with the GAMESS-type format of the atomic basis data
 
 
+## probabilities.py - the module that implements probabilities for certain events in statistical mechanics
+  * Boltz_prob_up(E, T) - probability to have kinetic energy more or equal to E at temperature T
+  * HO_prob(E, qn, T) - probability to find a multi-dimensional HO in one of its states
+  * HO_prob_up(E, qn, T) - probability that each of the HO occupies states above given quantum number
+
+
 ## proj_dos.py - handling projected densities of states
   * fermi_integral(bnds, ef, degen) - auxiliary function to compute the Fermi integral
   * fermi_energy(bnds, Nel, degen) - auxiliary function to compute the Fermi energy
@@ -121,3 +127,5 @@
   * xyz2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt) - convert the XYZ MD trajectory file to a set of QE input files
  
 ## regexlib.py - definitions of some common regular expressions
+
+
