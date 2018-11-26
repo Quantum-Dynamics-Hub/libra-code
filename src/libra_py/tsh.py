@@ -34,6 +34,9 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+import units
+import probabilities
+
 
 __author__ = "Alexey V. Akimov, Kosuke Sato"
 __copyright__ = "Copyright 2016-2018 Kosuke Sato, Alexey V. Akimov"
@@ -727,7 +730,7 @@ def surface_hopping_cpa2(mol, el, ham, rnd, params):
 
 
 
-def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse):
+def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse, boltz_opt=1):
 
     ##
     # This function implements the decoherence correction 
@@ -739,23 +742,35 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse):
     # \param[in]           T [ float ] The Temperature of nuclear DOF  
     # \param[in]         ksi [ float ] A random number uniformly distributed in the range of (0.0, 1.0) 
     # \param[in] do_collapse [ 0 or 1 ] The flag turning the decoherence (at the IDA level on/off). 1 - include decoherence, 0 - do not include decoherence 
+    # \param[in] boltz_opt [0, 1, or 2] How to determine if the hop may be frustrated:
+    #              0 - all proposed hops are accepted - no rejection based on energies
+    #              1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
+    #              2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
 
     # The function returns:
     # res [ integer ] - index of the final state, after IDA is applied (or not)
     # C [CMATRIX or Electronic] - the updated state of the electronic DOF, in the same data type as the input
 
-    kb = 3.166811429e-6  # Hartree/K
     res = old_st
     dE = (E_new - E_old)
 
     # Compute the Boltzmann scaling factor, but only if we consider a hop up in energy
-    boltz_f = 1.0   
-    if dE > 0.0:
-        argg = dE/(kb*T)
-        if argg > 50.0:
-            boltz_f = 0.0
-        else:
-            boltz_f = math.exp(-argg)
+    boltz_f = 1.0 
+
+    if boltz_opt==0:
+        boltz_f = 1.0
+
+    elif boltz_opt==1:
+        if dE > 0.0:
+            argg = dE/(units.kB*T)
+            if argg > 50.0:
+                boltz_f = 0.0
+            else:
+                boltz_f = math.exp(-argg)
+
+    elif boltz_opt==2:
+        if dE > 0.0:
+            boltz_f = probabilities.Boltz_prob_up(dE, T)
 
 
     # In case the electronic DOF are given in the form of CMATRIX
@@ -766,7 +781,7 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse):
         if dE>0.0:
         
             if ksi<boltz_f:
-                res = new_st  # accepted hop
+                res = new_st  # we've got enough kinetic energy - accept the hop
                 
                 # Collapse the wavefunction to the new state 
                 if do_collapse:
@@ -790,15 +805,18 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse):
         
             if ksi<boltz_f:
                 res = new_st  # accepted hop
+         
                 # Collapse the wavefunction to the new state                                                                                                           
-                for st in xrange(C.nstates):
-                    C.q[st], C.p[st] = 0.0, 0.0
-                C.q[new_st], C.p[new_st] = 1.0, 0.0
+                if do_collapse:
+                    for st in xrange(C.nstates):
+                        C.q[st], C.p[st] = 0.0, 0.0
+                    C.q[new_st], C.p[new_st] = 1.0, 0.0
             else:
                 # Unsuccessful hop - collapse wfc back to the original state^M                                                                                         
-                for st in xrange(C.nstates):
-                    C.q[st], C.p[st] = 0.0, 0.0
-                C.q[old_st], C.p[old_st] = 1.0, 0.0
+                if do_collapse:
+                    for st in xrange(C.nstates):
+                        C.q[st], C.p[st] = 0.0, 0.0
+                    C.q[old_st], C.p[old_st] = 1.0, 0.0
         else:
             res = new_st
         
@@ -824,8 +842,6 @@ def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
     # The function returns:
     # C [CMATRIX or Electronic] - the updated state of the electronic DOF, in the same data type as the input
 
-    kb = 3.166811429e-6  # Hartree/K
-   
 
     # In case the electronic DOF are given in the form of CMATRIX
     if type(Coeff).__name__ == "CMATRIX":
@@ -895,7 +911,7 @@ def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
 
 
 
-def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T):
+def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz_opt=1):
     """
     A simplified version for the CPA-like hopping
 
@@ -907,6 +923,11 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T):
     ksi, ksi2 (float in [0, 1]) random numbers cotrolling the execution of SH
     dt (float) time interval for the surface hopping (in a.u.)
     T (float) temperature in K
+
+    boltz_opt [0, 1, or 2] How to determine if the hop may be frustrated:
+               0 - all proposed hops are accepted - no rejection based on energies
+               1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
+               2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
 
     Returns: the index (int) of a new state 
 
@@ -925,7 +946,7 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T):
         E_new = Hvib.get(new_st,new_st).real
 
         # ID-A decoherence                
-        istate, Coeff1 = ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi2, do_collapse)
+        istate, Coeff1 = ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi2, do_collapse, boltz_opt)
 
 
     return istate #, Coeff1

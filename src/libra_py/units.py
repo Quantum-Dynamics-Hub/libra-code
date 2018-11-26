@@ -11,13 +11,16 @@
 
 
 # Unit conversions Parameters
-inv_cm2ev = (1.0/8065.54468111324)
-ev2Ha = (1.0/27.211)    # 27.2 ev is 1 Ha 
-inv_cm2Ha = inv_cm2ev * ev2Ha
-fs2au = (1.0/0.02419)   # 40 a.u. is 1 fs 
+inv_cm2ev = 1.239841870000000847635400992705E-4    # (1.0/8065.54468111324)
+ev2Ha = 0.0367498438131637940538752710301          # (1.0/27.211)    # 27.2 ev is 1 Ha 
+inv_cm2Ha = 4.5563995075520960186520193771085E-6   # inv_cm2ev * ev2Ha
+fs2au = 41.339396444811905746176105828855          # (1.0/0.02419)   # 41.34 a.u. is 1 fs 
+au2fs = 0.02419                                    # 41.34 a.u. is 1 fs
+au2wavn = 219471.53631777237364                    # 27.211 * 8065.54468111324
 
-Angst = 1.889725989     # in Bohr
-amu = 1836.0            # chemical mass unit in masses of electron
+Angst = 1.889725989                                # in Bohr
+amu = 1836.0                                       # chemical mass unit in masses of electron
 
-boltzmann = 1.9872065E-3  # in kcal/mol*K
-hartree = 627.5094709   # 1 Ha = 627.5.. kcal/mol
+boltzmann = 1.9872065E-3                           # in kcal/mol*K
+hartree = 627.5094709                              # 1 Ha = 627.5.. kcal/mol
+kB = 3.166815151251607985889922605788E-6           # Ha/mol*K

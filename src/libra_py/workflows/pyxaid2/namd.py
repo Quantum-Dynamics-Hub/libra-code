@@ -23,6 +23,8 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 from libra_py import *
 
 import mapping
+import libra_py.workflows.common_utils as comn
+
 
 def show_matrix_splot(X, filename):
     ncol, nrow = X.num_of_cols, X.num_of_rows
@@ -57,23 +59,6 @@ def add_printout(i, pop, filename):
     f.write(line)
     f.close()
 
-    
-def get_matrix(nrows, ncols, i, prefix_re, suffix_re, prefix_im, suffix_im):
-
-    filename_re = prefix_re + str(i) + suffix_re
-    filename_im = prefix_im + str(i) + suffix_im
-
-    #print "\nfilename_re\n"
-    #print filename_re
-    #print "\nfilename_im\n"
-    #print filename_im
-
-    x_re = MATRIX(nrows, ncols); x_re.Load_Matrix_From_File(filename_re)
-    x_im = MATRIX(nrows, ncols); x_im.Load_Matrix_From_File(filename_im)
-
-
-    return CMATRIX(x_re, x_im)
-
 
 def compute_Hvib(basis, St_ks, E_ks, dE, dt):
     """
@@ -97,22 +82,25 @@ def run_namd(params):
 
     rnd = Random()
     T = params["T"]
+    kT = units.kB * T
     init_time = params["init_time"]  # integer
     dt = params["dt"]
     len_traj = params["len_traj"]
     num_sh_traj = params["num_sh_traj"]
     sh_method = params["sh_method"]
     do_collapse = params["do_collapse"]
+    bolt_opt = params["Boltz_opt"]
 
     psi_dia_ks = params["psi_dia_ks"];   nst_dia_ks = 2*len(psi_dia_ks)
+    active_space = range(0, nst_dia_ks) #params["active_space"]
 
     Phi_basis = params["Phi_basis"]
     P2C = params["P2C"];                 nst_dia_sac = P2C.num_of_cols
   
     # ------------------read and store the projection and energies------------------
     H_vib = []
-#    phase_ref = None
     cum_phase = None  # F(n-1)
+    perm_cum = intList() # cumulative permutation
 
     for i in range(0,len_traj):
 
@@ -120,42 +108,81 @@ def run_namd(params):
         # Read in the "elementary" overlaps and energies - in the basis of KS orbitals
         ##############################################################################       
 
-        re_pr = params["E_dia_ks_re_prefix"] 
-        re_sf = params["E_dia_ks_re_suffix"] 
-        im_pr = params["E_dia_ks_im_prefix"] 
-        im_sf = params["E_dia_ks_im_suffix"] 
-        E_dia_ks = get_matrix(nst_dia_ks, nst_dia_ks, i, re_pr, re_sf, im_pr, im_sf )
+        filename_re = params["E_dia_ks_re_prefix"]+str(i)+params["E_dia_ks_re_suffix"]
+        filename_im = params["E_dia_ks_im_prefix"]+str(i)+params["E_dia_ks_im_suffix"]
+        E_dia_ks = comn.get_matrix(nst_dia_ks, nst_dia_ks, filename_re, filename_im, active_space )
 
-        re_pr = params["S_dia_ks_re_prefix"] 
-        re_sf = params["S_dia_ks_re_suffix"] 
-        im_pr = params["S_dia_ks_im_prefix"] 
-        im_sf = params["S_dia_ks_im_suffix"] 
-        S_dia_ks = get_matrix(nst_dia_ks, nst_dia_ks, i, re_pr, re_sf, im_pr, im_sf )
+        filename_re = params["S_dia_ks_re_prefix"]+str(i)+params["S_dia_ks_re_suffix"]
+        filename_im = params["S_dia_ks_im_prefix"]+str(i)+params["S_dia_ks_im_suffix"]
+        S_dia_ks = comn.get_matrix(nst_dia_ks, nst_dia_ks, filename_re, filename_im, active_space )
 
-        re_pr = params["St_dia_ks_re_prefix"] 
-        re_sf = params["St_dia_ks_re_suffix"] 
-        im_pr = params["St_dia_ks_im_prefix"] 
-        im_sf = params["St_dia_ks_im_suffix"] 
-        St_dia_ks = get_matrix(nst_dia_ks, nst_dia_ks, i, re_pr, re_sf, im_pr, im_sf )
+        filename_re = params["St_dia_ks_re_prefix"]+str(i)+params["St_dia_ks_re_suffix"]
+        filename_im = params["St_dia_ks_im_prefix"]+str(i)+params["St_dia_ks_im_suffix"]
+        St_dia_ks = comn.get_matrix(nst_dia_ks, nst_dia_ks, filename_re, filename_im, active_space )
 
         sz = St_dia_ks.num_of_rows 
 
+    
+        # Initialize the cumulative permutation as the identity permutation
+        if i==0:        
+            for a in xrange(St_dia_ks.num_of_rows):
+                perm_cum.append(a)
+
 
         ### Perform state reordering (must be done before the phase correction) ###
+        # Current permutation
+        perm_t = intList() 
+        for a in xrange(St_dia_ks.num_of_rows):
+            perm_t.append(a)
 
-        if params["do_state_reordering"]:
+        if params["do_state_reordering"]==1:
+            """
+            A simple approach based on permuations - but this is not robust
+            may have loops
+            """
+            perm_t = get_reordering(St_dia_ks)
 
-            perm = get_reordering(St_dia_ks)
 
-            St_dia_ks.permute_cols(perm)
-            St_dia_ks.permute_rows(perm)
+        elif params["do_state_reordering"]==2:
+            """
+            The Hungarian approach
+            """
+            # construct the cost matrix
+            alp = 0.0
+            if "state_reordering_alpha" in params.keys():
+                alp = params["state_reordering_alpha"]
 
-            E_dia_ks.permute_cols(perm)
-            E_dia_ks.permute_rows(perm)
+            cost_mat = MATRIX(sz, sz)
+            for a in xrange(sz):
+                for b in xrange(sz):
+                    s = St_dia_ks.get(a,b)
+                    s2 =  (s*s.conjugate()).real
+                    dE = (E_dia_ks.get(a,a)-E_dia_ks.get(b,b)).real/kT
+                    val = s2 * math.exp(-alp*dE**2)
+                    cost_mat.set(a,b, val)
+
+            # run the assignment calculations
+            res = hungarian.maximize(cost_mat)
+
+            # convert the list of lists into the permutation object
+            for r in res:
+                perm_t[r[0]] = r[1]
+
+
+        # apply the cumulative permutation  
+        update_permutation(perm_t, perm_cum)
+
+        # apply the permutation
+        # Because St = <psi(t)|psi(t+dt)> - we permute only columns
+        St_dia_ks.permute_cols(perm_cum)
+
+        E_dia_ks.permute_cols(perm_cum)
+        E_dia_ks.permute_rows(perm_cum)
+
 
 
         ### Perform phase correction ###
-        if params["do_phase_correction"]:
+        if params["do_phase_correction"]==1:
             ### Initiate the cumulative phase correction factors ###
             if i==0:
                 cum_phase = CMATRIX(sz,1)
@@ -259,7 +286,7 @@ def run_namd(params):
             ksi2 = rnd.uniform(0.0, 1.0)
 
             # Surface hopping in Chi basis
-            istate[tr] = tsh.hopping(Coeff_Chi[tr], H_vib[i], istate[tr], sh_method, do_collapse, ksi, ksi2, dt, T)
+            istate[tr] = tsh.hopping(Coeff_Chi[tr], H_vib[i], istate[tr], sh_method, do_collapse, ksi, ksi2, dt, T, bolt_opt)
             Coeff_Phi[tr] = P2C*Coeff_Chi[tr]
 
         #============== Analysis of Dynamics  =====================

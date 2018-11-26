@@ -44,5 +44,7 @@ __all__ = ["init_system",
            "units",
            "normal_modes",
            "LAMMPS_methods",
+           "hungarian",
+           "probabilities",
           ]
 
