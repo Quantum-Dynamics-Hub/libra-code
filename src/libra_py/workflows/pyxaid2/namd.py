@@ -20,10 +20,13 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-from libra_py import *
+#from libra_py import *
 
 import mapping
 import libra_py.workflows.common_utils as comn
+import libra_py.tsh as tsh
+import libra_py.units as units
+import libra_py.hungarian as hungarian
 
 
 def show_matrix_splot(X, filename):
@@ -60,6 +63,165 @@ def add_printout(i, pop, filename):
     f.close()
 
 
+
+def get_data(params):
+    """
+    Read the "elementary" overlaps and energies in the basis of KS orbitals
+    """
+
+    len_traj = params["len_traj"]
+
+    psi_dia_ks = params["psi_dia_ks"];
+    nst_dia_ks = 2*len(psi_dia_ks)
+    active_space = range(0, nst_dia_ks) 
+
+    S, St, E = [], [], [] 
+
+    for i in range(0,len_traj):
+
+        filename_re = params["S_dia_ks_re_prefix"]+str(i)+params["S_dia_ks_re_suffix"]
+        filename_im = params["S_dia_ks_im_prefix"]+str(i)+params["S_dia_ks_im_suffix"]
+        s = comn.get_matrix(nst_dia_ks, nst_dia_ks, filename_re, filename_im, active_space )
+        S.append(s)
+
+        filename_re = params["St_dia_ks_re_prefix"]+str(i)+params["St_dia_ks_re_suffix"]
+        filename_im = params["St_dia_ks_im_prefix"]+str(i)+params["St_dia_ks_im_suffix"]
+        st = comn.get_matrix(nst_dia_ks, nst_dia_ks, filename_re, filename_im, active_space )
+        St.append(st)
+
+        filename_re = params["E_dia_ks_re_prefix"]+str(i)+params["E_dia_ks_re_suffix"]
+        filename_im = params["E_dia_ks_im_prefix"]+str(i)+params["E_dia_ks_im_suffix"]
+        e = comn.get_matrix(nst_dia_ks, nst_dia_ks, filename_re, filename_im, active_space )
+        E.append(e)
+
+    return S, St, E
+
+
+def apply_state_reordering(St, E, params):
+    """
+    St [list of CMATRIX]
+    E [list of CMATRIX] 
+    """
+
+    nsteps = len(St)
+    nstates = St[0].num_of_cols
+
+
+    # Initialize the cumulative permutation as the identity permutation
+    perm_cum = intList() # cumulative permutation
+    for a in xrange(nstates):
+        perm_cum.append(a)
+
+
+    for i in range(0, nsteps):
+    
+        ### Perform state reordering (must be done before the phase correction) ###
+        # Current permutation
+        perm_t = intList() 
+        for a in xrange(nstates):
+            perm_t.append(a)
+    
+        if params["do_state_reordering"]==1:
+            """
+            A simple approach based on permuations - but this is not robust
+            may have loops
+            """
+            perm_t = get_reordering(St[i])
+    
+    
+        elif params["do_state_reordering"]==2:
+            """
+            The Hungarian approach
+            """
+            # construct the cost matrix
+            alp = 0.0
+            if "state_reordering_alpha" in params.keys():
+                alp = params["state_reordering_alpha"]
+    
+            cost_mat = MATRIX(nstates, nstates)
+            for a in xrange(nstates):
+                for b in xrange(nstates):
+                    s = St[i].get(a,b)
+                    s2 =  (s*s.conjugate()).real
+                    dE = (E[i].get(a,a)-E[i].get(b,b)).real
+                    val = s2 * math.exp(-alp*dE**2)
+                    cost_mat.set(a,b, val)
+    
+            # run the assignment calculations
+            res = hungarian.maximize(cost_mat)
+    
+            # convert the list of lists into the permutation object
+            for r in res:
+                perm_t[r[0]] = r[1]
+    
+
+        # apply the cumulative permutation  
+        update_permutation(perm_t, perm_cum)
+
+        # apply the permutation
+        # Because St = <psi(t)|psi(t+dt)> - we permute only columns
+        St[i].permute_cols(perm_cum)
+
+        E[i].permute_cols(perm_cum)
+        E[i].permute_rows(perm_cum)
+
+
+
+
+
+def apply_phase_correction(St, params):
+    """
+    Perform the phase correction according to:
+        
+    Akimov, A. V. J. Phys. Chem. Lett, 2018, 9, 6096
+
+    """
+
+    nsteps = len(St)
+    nstates = St[0].num_of_cols
+
+    ### Initiate the cumulative phase correction factors ###    
+    cum_phase = CMATRIX(nstates,1)  # F(n-1)  cumulative phase
+    for a in xrange(nstates):
+        cum_phase.set(a, 0, 1.0+0.0j)
+
+
+    for i in range(0, nsteps):
+
+        if params["do_phase_correction"]==1:
+            ### Compute the instantaneous phase correction factors ###
+            phase_i = compute_phase_corrections(St[i])   # f(i)
+        
+            ### Correct the overlap matrix ###
+            for a in xrange(nstates):   
+                for b in xrange(nstates): 
+                    fab = cum_phase.get(b) * cum_phase.get(b).conjugate() * phase_i.get(b).conjugate()
+                    St[i].scale(a,b, fab)
+        
+            ### Update the cumulative phase correction factors ###
+            for a in xrange(nstates):
+                cum_phase.scale(a, 0, phase_i.get(a))
+          
+        # Printing what we just extracted for t = 0
+        """
+        if i == 0:
+            print "\nE_dia_ks = ";            E_dia_ks.real().show_matrix()
+            print "\nS_dia_ks = ";            S_dia_ks.real().show_matrix()  
+            print "\nSt_dia_ks = ";           St_dia_ks.real().show_matrix()
+            Hvib = compute_Hvib(Phi_basis, St_dia_ks, E_dia_ks, params["Phi_dE"], params["dt"] )
+
+            print "\nHvib_Phi_dia.imag()\n";  Hvib.imag().show_matrix()
+            print "\nHvib_Phi_dia.real()\n";  Hvib.real().show_matrix()
+
+            print "\n Making H_vib (Chi_basis)"; 
+            Hvib = P2C.H() * Hvib * P2C
+
+            print "\nHvib_Chi_dia.imag()\n";  Hvib.imag().show_matrix()
+            print "\nHvib_Chi_dia.real()\n";  Hvib.real().show_matrix()
+            #sys.exit(0)        
+        """
+
+
 def compute_Hvib(basis, St_ks, E_ks, dE, dt):
     """
     Basis - list of list of lists of integers
@@ -78,159 +240,55 @@ def compute_Hvib(basis, St_ks, E_ks, dE, dt):
     return H_vib
 
 
+
+
 def run_namd(params):
 
     rnd = Random()
     T = params["T"]
     kT = units.kB * T
     init_time = params["init_time"]  # integer
-    dt = params["dt"]
-    len_traj = params["len_traj"]
     num_sh_traj = params["num_sh_traj"]
     sh_method = params["sh_method"]
     do_collapse = params["do_collapse"]
+    dt = params["dt"]
     bolt_opt = params["Boltz_opt"]
 
-    psi_dia_ks = params["psi_dia_ks"];   nst_dia_ks = 2*len(psi_dia_ks)
-    active_space = range(0, nst_dia_ks) #params["active_space"]
+#    psi_dia_ks = params["psi_dia_ks"];   nst_dia_ks = 2*len(psi_dia_ks)
+#    active_space = range(0, nst_dia_ks) #params["active_space"]
 
-    Phi_basis = params["Phi_basis"]
-    P2C = params["P2C"];                 nst_dia_sac = P2C.num_of_cols
-  
-    # ------------------read and store the projection and energies------------------
-    H_vib = []
-    cum_phase = None  # F(n-1)
-    perm_cum = intList() # cumulative permutation
+    P2C = params["P2C"];
+    nst_dia_sac = P2C.num_of_cols
 
-    for i in range(0,len_traj):
 
-        ##############################################################################
-        # Read in the "elementary" overlaps and energies - in the basis of KS orbitals
-        ##############################################################################       
 
-        filename_re = params["E_dia_ks_re_prefix"]+str(i)+params["E_dia_ks_re_suffix"]
-        filename_im = params["E_dia_ks_im_prefix"]+str(i)+params["E_dia_ks_im_suffix"]
-        E_dia_ks = comn.get_matrix(nst_dia_ks, nst_dia_ks, filename_re, filename_im, active_space )
-
-        filename_re = params["S_dia_ks_re_prefix"]+str(i)+params["S_dia_ks_re_suffix"]
-        filename_im = params["S_dia_ks_im_prefix"]+str(i)+params["S_dia_ks_im_suffix"]
-        S_dia_ks = comn.get_matrix(nst_dia_ks, nst_dia_ks, filename_re, filename_im, active_space )
-
-        filename_re = params["St_dia_ks_re_prefix"]+str(i)+params["St_dia_ks_re_suffix"]
-        filename_im = params["St_dia_ks_im_prefix"]+str(i)+params["St_dia_ks_im_suffix"]
-        St_dia_ks = comn.get_matrix(nst_dia_ks, nst_dia_ks, filename_re, filename_im, active_space )
-
-        sz = St_dia_ks.num_of_rows 
-
+    """
+    1. Read in the "elementary" overlaps and energies in the basis of KS orbitals
+    2. Apply state reordering to KS
+    3. Apply phase correction to KS
+    4. Construct the Hvib in the basis of Slater determinants
+    5. Convert the Hvib to the basis of symmery-adapted configurations (SAC)
+    """
     
-        # Initialize the cumulative permutation as the identity permutation
-        if i==0:        
-            for a in xrange(St_dia_ks.num_of_rows):
-                perm_cum.append(a)
+    S_dia_ks, St_dia_ks, E_dia_ks = get_data(params)  
+    apply_state_reordering(St_dia_ks, E_dia_ks, params)    
+    apply_phase_correction(St_dia_ks, params)
 
+    nsteps = len(St_dia_ks)
+    H_vib = []
+    for i in xrange(nsteps):
+        # Hvib in the basis of SDs
+        hvib = compute_Hvib(params["Phi_basis"], St_dia_ks[i], E_dia_ks[i], params["Phi_dE"], dt) 
 
-        ### Perform state reordering (must be done before the phase correction) ###
-        # Current permutation
-        perm_t = intList() 
-        for a in xrange(St_dia_ks.num_of_rows):
-            perm_t.append(a)
-
-        if params["do_state_reordering"]==1:
-            """
-            A simple approach based on permuations - but this is not robust
-            may have loops
-            """
-            perm_t = get_reordering(St_dia_ks)
-
-
-        elif params["do_state_reordering"]==2:
-            """
-            The Hungarian approach
-            """
-            # construct the cost matrix
-            alp = 0.0
-            if "state_reordering_alpha" in params.keys():
-                alp = params["state_reordering_alpha"]
-
-            cost_mat = MATRIX(sz, sz)
-            for a in xrange(sz):
-                for b in xrange(sz):
-                    s = St_dia_ks.get(a,b)
-                    s2 =  (s*s.conjugate()).real
-                    dE = (E_dia_ks.get(a,a)-E_dia_ks.get(b,b)).real/kT
-                    val = s2 * math.exp(-alp*dE**2)
-                    cost_mat.set(a,b, val)
-
-            # run the assignment calculations
-            res = hungarian.maximize(cost_mat)
-
-            # convert the list of lists into the permutation object
-            for r in res:
-                perm_t[r[0]] = r[1]
-
-
-        # apply the cumulative permutation  
-        update_permutation(perm_t, perm_cum)
-
-        # apply the permutation
-        # Because St = <psi(t)|psi(t+dt)> - we permute only columns
-        St_dia_ks.permute_cols(perm_cum)
-
-        E_dia_ks.permute_cols(perm_cum)
-        E_dia_ks.permute_rows(perm_cum)
+        # SAC
+        H_vib.append( P2C.H() * hvib * P2C )
 
 
 
-        ### Perform phase correction ###
-        if params["do_phase_correction"]==1:
-            ### Initiate the cumulative phase correction factors ###
-            if i==0:
-                cum_phase = CMATRIX(sz,1)
-                for a in xrange(sz):
-                    cum_phase.set(a, 0, 1.0+0.0j)
-
-            ### Compute the instantaneous phase correction factors ###
-            phase_i = compute_phase_corrections(St_dia_ks)   # f(i)
-
-            ### Correct the overlap matrix ###
-            for a in xrange(sz):   
-                for b in xrange(sz): 
-                    fab = cum_phase.get(b) * cum_phase.get(b).conjugate() * phase_i.get(b).conjugate()
-                    St_dia_ks.scale(a,b, fab)
-
-            ### Update the cumulative phase correction factors ###
-            for a in xrange(sz):
-                cum_phase.scale(a, 0, phase_i.get(a))
-          
-
-        ### Done with the phase correction ###
+    #========== Compute decoherence times  ===============
+    tau, tau_inv = comn.decoherence_times(H_vib, 1)
 
 
-        # Printing what we just extracted for t = 0
-        #"""
-        if i == 0:
-            print "\nE_dia_ks = "
-            E_dia_ks.real().show_matrix()
-            print "\nS_dia_ks = "
-            S_dia_ks.real().show_matrix()  
-            print "\nSt_dia_ks = "
-            St_dia_ks.real().show_matrix()
-            Hvib = compute_Hvib(Phi_basis, St_dia_ks, E_dia_ks, params["Phi_dE"], params["dt"] )
-            print "\nHvib_Phi_dia.imag()\n"
-            Hvib.imag().show_matrix()
-            print "\nHvib_Phi_dia.real()\n"
-            Hvib.real().show_matrix()
-            print "\n Making H_vib (Chi_basis)"
-            Hvib = P2C.H() * Hvib * P2C
-            print "\nHvib_Chi_dia.imag()\n"
-            Hvib.imag().show_matrix()
-            print "\nHvib_Chi_dia.real()\n"
-            Hvib.real().show_matrix()
-            #sys.exit(0)        
-        #"""
-
-        H_vib.append( compute_Hvib(Phi_basis, St_dia_ks, E_dia_ks, params["Phi_dE"], params["dt"]) )
-        H_vib[i] = P2C.H() * H_vib[i] * P2C
 
     #========== Initialize the wavefunction amplitudes ===============
     init_Chi = params["init_Chi"]    
@@ -274,7 +332,7 @@ def run_namd(params):
 
     #=============== Entering Dynamics !! =========================  
     #=============== Now handle the electronic structure ==========
-    for i in xrange(init_time, init_time + len_traj):
+    for i in xrange(init_time, init_time + nsteps):
 
         #============== TD-SE and surface hopping =================
         for tr in xrange(num_sh_traj):
