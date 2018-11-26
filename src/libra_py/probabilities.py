@@ -35,7 +35,7 @@ def Boltz_quant_prob(E, T):
 
     """
  
-    b = 1.0/(units.kB * T))
+    b = 1.0/(units.kB * T)
 
     nstates = len(E)
 
