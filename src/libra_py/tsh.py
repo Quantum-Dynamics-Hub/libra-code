@@ -746,6 +746,7 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse, boltz_opt=1
     #              0 - all proposed hops are accepted - no rejection based on energies
     #              1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
     #              2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
+    #              3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
 
     # The function returns:
     # res [ integer ] - index of the final state, after IDA is applied (or not)
@@ -770,7 +771,12 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse, boltz_opt=1
 
     elif boltz_opt==2:
         if dE > 0.0:
-            boltz_f = probabilities.Boltz_prob_up(dE, T)
+            boltz_f = probabilities.Boltz_cl_prob_up(dE, T)
+
+    elif boltz_opt==3:
+        if dE > 0.0:
+            boltz_f = probabilities.Boltz_quant_prob([0.0, dE], T)
+
 
 
     # In case the electronic DOF are given in the form of CMATRIX
@@ -928,6 +934,7 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz
                0 - all proposed hops are accepted - no rejection based on energies
                1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
                2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
+               3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
 
     Returns: the index (int) of a new state 
 

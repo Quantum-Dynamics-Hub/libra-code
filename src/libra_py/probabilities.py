@@ -26,14 +26,41 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 import units
 
 
+def Boltz_quant_prob(E, T):
+    """
+    E [list of doubles] - energy levels [in a.u.]
+    T [double] - temperature [K]
+ 
+    Computes the quantum Boltzmann probability of occupying different energy levels at given temperature T
 
-def Boltz_prob_up(E, T):
+    """
+ 
+    b = 1.0/(units.kB * T))
+
+    nstates = len(E)
+
+    Z = 1.0  # partition function
+    prob = []
+
+    for n in xrange(nstates):
+        prob.append(math.exp(-E[n]*b))
+        Z += prob[n]
+    
+    for n in xrange(nstates):
+        prob[n] = prob[n] / Z
+
+    return prob
+
+
+
+
+def Boltz_cl_prob_up(E, T):
     """
     E [doubles] - the minimum energy level [in a.u.]
     T [double] - temperature [K]
 
-    Computes the probability to have kinetic energy larger than a given threshold E 
-    at temperature T
+    Computes the classical Boltzmann probability to have kinetic energy larger than a given 
+    threshold E  at temperature T
 
     See Eq. 7. The present function is related to it.
     """
