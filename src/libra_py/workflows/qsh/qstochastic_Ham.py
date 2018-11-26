@@ -26,108 +26,8 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 #from libra_py import *
 
 import libra_py.workflows.common_utils as comn
-
-
-def find_maxima(s):
-# This function finds all the maxima of the data set and sorts them according to the data
-# The maxima are defined as s[i-1] < s[i] > s[i+1]
-# s - it the matrix of data 
-#
-# Returns the list of the indices of the maximal values
-
-    max_indxs = []
-    sz = s.num_of_elems
-    for i in xrange(1, sz-1):
-        if s.get(i) > s.get(i-1) and s.get(i) > s.get(i+1):
-            max_indxs.append(i)
-
-    inp = []
-    sz = len(max_indxs)
-    for i in xrange(sz):
-        inp.append( [ max_indxs[i], s.get(max_indxs[i]) ] )
-
-
-    out = merge_sort(inp)  # largest in the end
-
-
-    lgfile = open("run.log", "a")
-    lgfile.write("Found maxima of the spectrum:\n")
-    for i in xrange(sz):
-        lgfile.write("index = %3i  frequency index = %8.5f  intensity = %8.5f \n" % (i, out[sz-1-i][0], out[sz-1-i][1]) )
-    lgfile.close()    
-    
-    return out
-    
-
-def flt_stat(X):
-# compute average and std 
-# X - is a list of matrices
-    N = len(X)
-    res = 0.0
-
-    #===== Average ====
-    for i in xrange(N):
-        res = res + X[i]
-    res = res / float(N)
-
-
-    #===== Std ========
-    res2 = 0.0
-    
-    for i in xrange(N):
-        res2 = res2 + (X[i] - res)**2
-    res2 = math.sqrt( res2 / float(N) )
-
-    return res, res2
-
-
-def mat_stat(X):
-# window transformation
-# X - is a list of matrices
-
-    N = len(X)
-    res = MATRIX(X[0]); res *= 0.0
-
-    #===== Average ====
-    for i in xrange(N):
-        res = res + X[i]
-    res = res / float(N)
-
-
-    #===== Std ========
-    res2 = MATRIX(X[0]); res2 *= 0.0
-
-    for a in xrange(res2.num_of_rows):
-        for b in xrange(res2.num_of_cols):
-        
-            tmp = 0.0
-            for i in xrange(N):
-                tmp = tmp + (X[i].get(a,b) - res.get(a,b))**2
-            tmp = math.sqrt( tmp / float(N) )
-
-            res2.set(a,b, tmp)
-
-    # Find maximal and minimal values
-    up_bound = MATRIX(X[0]); up_bound *= 0.0
-    dw_bound = MATRIX(X[0]); dw_bound *= 0.0
-
-
-
-    for a in xrange(res2.num_of_rows):
-        for b in xrange(res2.num_of_cols):
-
-            up_bound.set(a,b, X[0].get(a,b))
-            dw_bound.set(a,b, X[0].get(a,b))
-
-            for i in xrange(N):
-                xab = X[i].get(a,b)
-                if xab > up_bound.get(a,b):
-                    up_bound.set(a,b, xab)
-                if xab < dw_bound.get(a,b):
-                    dw_bound.set(a,b,xab)
-
-
-    return res, res2, dw_bound, up_bound
+from libra_py.workflows.common_utils import mat_stat, flt_stat, find_maxima
+import libra_py.workflows.units as units
 
 
 
@@ -307,7 +207,7 @@ def run(params):
     rt = params["rt"]
     Nfreqs = params["Nfreqs"]
     ntraj = params["ntraj"]
-    deco_time=params["deco_time"]
+    deco_time = params["deco_time"] * units.fs2au
 
     rnd = Random()
 
@@ -316,6 +216,7 @@ def run(params):
     # Electronic Hamiltonian
     H_vib_re = []  # list of MATRIX
     H_vib_im = []  # list of MATRIX
+    H_vib = [] # list of CMATRIX
     dH = [] # list of MATRIX
     dev = [0.0, 0.0, 0.0]
 
@@ -337,6 +238,7 @@ def run(params):
         filename_im = params["Hvib_im_prefix"]+str(i)+params["Hvib_im_suffix"]
         Hvib = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, act_sp)
         Hvib.scale(-1, -1, 0.5) #convert from Ry to Ha 
+        H_vib.append(Hvib)
 
         hvib_re, hvib_im = Hvib.real(), Hvib.imag()
         H_vib_re.append(hvib_re)
@@ -362,9 +264,10 @@ def run(params):
     freqs_re1 = mat_freqs(H_vib_re, 1, 1, dt, "H_vib_re_E1_", Nfreqs)
     freqs_im = mat_freqs(H_vib_im, 0, 1, dt, "H_vib_im_D01_", Nfreqs)
 
-
     dH_ave, dH_std, dw_dH, up_dH =  mat_stat(dH)
 
+
+    """
     decoh_times = MATRIX(nstates, nstates)
     decoh_rates = MATRIX(nstates, nstates)
 
@@ -376,12 +279,14 @@ def run(params):
             else:
                 de = dH_std.get(a,b)
                 if de>0.0:
-                      decoh_times.set(a,b, deco_time*41.0 )
-                      decoh_rates.set(a,b, 1.0/deco_time/41.0  )
-
+                      decoh_times.set(a,b, deco_time )
+                      decoh_rates.set(a,b, 1.0/deco_time )
 
     print "Decoherence rates matrix (a.u.^-1):"
     decoh_rates.show_matrix()
+    """
+
+    decoh_times, decoh_rates = comn.decoherence_times(Hvib, 1)
 
 
     if len(freqs_re0) < Nfreqs:
