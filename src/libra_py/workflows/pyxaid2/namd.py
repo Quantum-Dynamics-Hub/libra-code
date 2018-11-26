@@ -100,6 +100,7 @@ def run_namd(params):
     # ------------------read and store the projection and energies------------------
     H_vib = []
     cum_phase = None  # F(n-1)
+    perm_cum = intList() # cumulative permutation
 
     for i in range(0,len_traj):
 
@@ -121,22 +122,26 @@ def run_namd(params):
 
         sz = St_dia_ks.num_of_rows 
 
+    
+        # Initialize the cumulative permutation as the identity permutation
+        if i==0:        
+            for a in xrange(St_dia_ks.num_of_rows):
+                perm_cum.append(a)
+
 
         ### Perform state reordering (must be done before the phase correction) ###
+        # Current permutation
+        perm_t = intList() 
+        for a in xrange(St_dia_ks.num_of_rows):
+            perm_t.append(a)
 
         if params["do_state_reordering"]==1:
             """
             A simple approach based on permuations - but this is not robust
             may have loops
             """
+            perm_t = get_reordering(St_dia_ks)
 
-            perm = get_reordering(St_dia_ks)
-
-            St_dia_ks.permute_cols(perm)
-            St_dia_ks.permute_rows(perm)
-
-            E_dia_ks.permute_cols(perm)
-            E_dia_ks.permute_rows(perm)
 
         elif params["do_state_reordering"]==2:
             """
@@ -160,18 +165,20 @@ def run_namd(params):
             res = hungarian.maximize(cost_mat)
 
             # convert the list of lists into the permutation object
-            perm = intList() 
-            for a in xrange(sz):
-                perm.append(a)
             for r in res:
-                perm[r[0]] = r[1]
+                perm_t[r[0]] = r[1]
 
-            # apply the permutation
-            St_dia_ks.permute_cols(perm)
-            St_dia_ks.permute_rows(perm)
 
-            E_dia_ks.permute_cols(perm)
-            E_dia_ks.permute_rows(perm)
+        # apply the cumulative permutation  
+        update_permutation(perm_t, perm_cum)
+
+        # apply the permutation
+        # Because St = <psi(t)|psi(t+dt)> - we permute only columns
+        St_dia_ks.permute_cols(perm_cum)
+
+        E_dia_ks.permute_cols(perm_cum)
+        E_dia_ks.permute_rows(perm_cum)
+
 
 
         ### Perform phase correction ###
