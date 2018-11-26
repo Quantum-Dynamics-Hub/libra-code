@@ -35,11 +35,11 @@ def Boltz_quant_prob(E, T):
 
     """
  
-    b = 1.0/(units.kB * T))
+    b = 1.0/(units.kB * T)
 
     nstates = len(E)
 
-    Z = 1.0  # partition function
+    Z = 0.0  # partition function
     prob = []
 
     for n in xrange(nstates):

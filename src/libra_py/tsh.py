@@ -775,7 +775,7 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse, boltz_opt=1
 
     elif boltz_opt==3:
         if dE > 0.0:
-            boltz_f = probabilities.Boltz_quant_prob([0.0, dE], T)
+            boltz_f = probabilities.Boltz_quant_prob([0.0, dE], T)[1]
 
 
 
