@@ -26,9 +26,9 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 #from libra_py import *
 
 import libra_py.workflows.common_utils as comn
-from libra_py.workflows.common_utils import mat_stat, flt_stat, find_maxima
-import libra_py.workflows.units as units
-
+import libra_py.units as units
+import libra_py.acf_vector as acf_vector
+import libra_py.tsh as tsh
 
 
 def mat_freqs(X, a, b, dt, filename, Nfreqs):
@@ -47,6 +47,8 @@ def mat_freqs(X, a, b, dt, filename, Nfreqs):
     data_ab = []
     for n in xrange(N):
         data_ab.append(VECTOR(X[n].get(a,b), 0.0, 0.0))
+        #print X[n].get(a,b)
+    
     
     # Now compute ACFs of X matrix elements and print out the corresponding data
     T,  norm_acf,  raw_acf  = acf_vector.acf( acf_vector.center_data(data_ab)  , dt )  # dt is in a.u.
@@ -75,7 +77,7 @@ def mat_freqs(X, a, b, dt, filename, Nfreqs):
 
     
     # Determine all frequencies (peaks) and sort them (in accending mannaer)
-    out = find_maxima(sp)
+    out = comn.find_maxima(sp)
 
     #print out
 
@@ -126,29 +128,6 @@ def mat_freqs(X, a, b, dt, filename, Nfreqs):
     return freqs
 
 
-
-def read_Hvib(prefix, act_sp):
-    """
-    prefix - 
-    act_sp - 
-    """
-
-    nstates = len(act_sp)
-    Hvib_im = MATRIX(nstates,nstates)
-    Hvib_re = MATRIX(nstates,nstates)
-    X_re = MATRIX(56,56)
-    X_im = MATRIX(56,56)
-
-    filename = rt+"0_Ham_"+str(i)
-    X_re.Load_Matrix_From_File(filename+"_re")
-    pop_submatrix(X_re, Hvib_re, act_sp, act_sp)
-    Hvib_re *= 0.5  # convert from Ry to Ha 
-
-    X_im.Load_Matrix_From_File(filename+"_im")
-    pop_submatrix(X_im, Hvib_im, act_sp, act_sp)
-    Hvib_im *= 0.5  # convert from Ry to Ha 
-
-    return Hvib_re, Hvib_im
 
 
 def compute_Hvib(Nfreqs, freqs_re0, freqs_re1, freqs_im, t, 
@@ -207,6 +186,7 @@ def run(params):
     rt = params["rt"]
     Nfreqs = params["Nfreqs"]
     ntraj = params["ntraj"]
+    set_deco = params["set_deco"]
     deco_time = params["deco_time"] * units.fs2au
 
     rnd = Random()
@@ -234,8 +214,8 @@ def run(params):
         # Read in the "elementary" overlaps and energies - in the basis of KS orbitals
         ##############################################################################       
 
-        filename_re = params["Hvib_re_prefix"]+str(i)+params["Hvib_re_suffix"]
-        filename_im = params["Hvib_im_prefix"]+str(i)+params["Hvib_im_suffix"]
+        filename_re = rt+params["Hvib_re_prefix"]+str(i)+params["Hvib_re_suffix"]
+        filename_im = rt+params["Hvib_im_prefix"]+str(i)+params["Hvib_im_suffix"]
         Hvib = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, act_sp)
         Hvib.scale(-1, -1, 0.5) #convert from Ry to Ha 
         H_vib.append(Hvib)
@@ -244,50 +224,37 @@ def run(params):
         H_vib_re.append(hvib_re)
         H_vib_im.append(hvib_im)
 
-        dE = MATRIX(nstates, nstates)
-        for a in xrange(nstates):
-            for b in xrange(nstates):
-                dE.set(a,b, hvib_re.get(a,a) - hvib_re.get(b,b))
-        dH.append(dE)
-
-
     
-    H_vib_re_ave, H_vib_re_std, dw_Hvib_re, up_Hvib_re = mat_stat(H_vib_re)
-    H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im = mat_stat(H_vib_im)    
+    H_vib_re_ave, H_vib_re_std, dw_Hvib_re, up_Hvib_re = comn.mat_stat(H_vib_re)
+    H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im = comn.mat_stat(H_vib_im)    
     print "dw_re = "; dw_Hvib_re.show_matrix()
     print "up_re = "; up_Hvib_re.show_matrix()
     print "dw_im = "; dw_Hvib_im.show_matrix()
     print "up_im = "; up_Hvib_im.show_matrix()
 
 
-    freqs_re0 = mat_freqs(H_vib_re, 0, 0, dt, "H_vib_re_E0_", Nfreqs)
-    freqs_re1 = mat_freqs(H_vib_re, 1, 1, dt, "H_vib_re_E1_", Nfreqs)
-    freqs_im = mat_freqs(H_vib_im, 0, 1, dt, "H_vib_im_D01_", Nfreqs)
+    freqs_re0 = mat_freqs(H_vib_re, 0, 0, dt, "_H_vib_re_E0_", Nfreqs)
+    freqs_re1 = mat_freqs(H_vib_re, 1, 1, dt, "_H_vib_re_E1_", Nfreqs)
+    freqs_im = mat_freqs(H_vib_im, 0, 1, dt, "_H_vib_im_D01_", Nfreqs)
 
-    dH_ave, dH_std, dw_dH, up_dH =  mat_stat(dH)
+#    dH_ave, dH_std, dw_dH, up_dH =  comn.mat_stat(comn.energy_gaps(H_vib))
 
+    # whether to set decoherence maunally
+    if set_deco == 0:
+       decoh_times, decoh_rates = comn.decoherence_times(Hvib, 1)
 
-    """
-    decoh_times = MATRIX(nstates, nstates)
-    decoh_rates = MATRIX(nstates, nstates)
-
-    for a in xrange(nstates):
-        for b in xrange(nstates):
-            if a==b:
+    elif set_deco ==1:
+       decoh_times = MATRIX(nstates, nstates)
+       decoh_rates = MATRIX(nstates, nstates)
+       for a in xrange(nstates):
+          for b in xrange(nstates):
+             if a==b:
                 decoh_times.set(a,a, 1000000.0)
                 decoh_rates.set(a,a, 0.0)
-            else:
-                de = dH_std.get(a,b)
-                if de>0.0:
-                      decoh_times.set(a,b, deco_time )
-                      decoh_rates.set(a,b, 1.0/deco_time )
-
-    print "Decoherence rates matrix (a.u.^-1):"
-    decoh_rates.show_matrix()
-    """
-
-    decoh_times, decoh_rates = comn.decoherence_times(Hvib, 1)
-
+             else:
+                tau = deco_time # in a.u. unit
+                decoh_times.set(a,b, tau)
+                decoh_rates.set(a,b, 1.0/tau)
 
     if len(freqs_re0) < Nfreqs:
         Nfreqs = len(freqs_re0)
@@ -311,7 +278,7 @@ def run(params):
         dev[i] = math.sqrt( dev[i] / 1000000.0 )
                     
 
-    bf = math.exp( - ( H_vib_re_ave.get(1,1) - H_vib_re_ave.get(0,0) )/(units.kb*T) )
+    bf = math.exp( - ( H_vib_re_ave.get(1,1) - H_vib_re_ave.get(0,0) )/(units.kB*T) )
     print "Boltzmann factor = ", bf
     # bf = e/g,  e + g = 1;   e + e/bf = 1 =>  e *(1 + 1/bf) = 1 =>  e = 1/ (1 + 1/bf) = bf / (1 + bf)
     print "Equilibrium Ex st. population = ", bf /( 1.0 + bf )

@@ -46,7 +46,7 @@ def get_matrix(nrows, ncols, filename_re, filename_im, act_sp):
 
     pop_submatrix(X_re, x_re, act_sp, act_sp)
     pop_submatrix(X_im, x_im, act_sp, act_sp)
-
+    
     return CMATRIX(x_re, x_im)
 
 
