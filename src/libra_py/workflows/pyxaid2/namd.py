@@ -112,14 +112,15 @@ def apply_state_reordering(St, E, params):
     for a in xrange(nstates):
         perm_cum.append(a)
 
+    # Current permutation
+    perm_t = intList() 
+    for a in xrange(nstates):
+        perm_t.append(a)
+
 
     for i in range(0, nsteps):
     
         ### Perform state reordering (must be done before the phase correction) ###
-        # Current permutation
-        perm_t = intList() 
-        for a in xrange(nstates):
-            perm_t.append(a)
     
         if params["do_state_reordering"]==1:
             """
@@ -127,12 +128,26 @@ def apply_state_reordering(St, E, params):
             may have loops
             """
             perm_t = get_reordering(St[i])
+
+            # apply the cumulative permutation  
+            update_permutation(perm_t, perm_cum)
+
+            # apply the permutation
+            # Because St = <psi(t)|psi(t+dt)> - we permute only columns
+            St[i].permute_cols(perm_cum)
+
+            E[i].permute_cols(perm_cum)
+            E[i].permute_rows(perm_cum)
     
     
         elif params["do_state_reordering"]==2:
             """
             The Hungarian approach
             """
+
+            # S' = Pn^+ * S
+            St[i].permute_rows(perm_t)  # here we use the old value, perm_t = P_n 
+
             # construct the cost matrix
             alp = 0.0
             if "state_reordering_alpha" in params.keys():
@@ -152,18 +167,15 @@ def apply_state_reordering(St, E, params):
     
             # convert the list of lists into the permutation object
             for r in res:
-                perm_t[r[0]] = r[1]
+                perm_t[r[0]] = r[1]   # now, this becomes a new value: perm_t = P_{n+1}
     
+            # apply the permutation
+            # Because St = <psi(t)|psi(t+dt)> - we permute only columns
+            St[i].permute_cols(perm_t)
 
-        # apply the cumulative permutation  
-        update_permutation(perm_t, perm_cum)
+            E[i].permute_cols(perm_t)
+            E[i].permute_rows(perm_t)
 
-        # apply the permutation
-        # Because St = <psi(t)|psi(t+dt)> - we permute only columns
-        St[i].permute_cols(perm_cum)
-
-        E[i].permute_cols(perm_cum)
-        E[i].permute_rows(perm_cum)
 
 
 

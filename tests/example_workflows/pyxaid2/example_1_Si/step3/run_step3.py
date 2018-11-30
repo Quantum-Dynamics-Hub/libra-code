@@ -104,7 +104,7 @@ params["init_time"] = 0  # starting from the first file
 params["len_traj"] = 30
 
 params["do_state_reordering"] = 2
-params["state_reordering_alpha"] = 0.01
+params["state_reordering_alpha"] = 0.00
 
 params["do_phase_correction"] = 1
 params["sh_method"] = 1   # 0 - MSSH, 1 - FSSH
