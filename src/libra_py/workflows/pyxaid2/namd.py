@@ -67,31 +67,42 @@ def add_printout(i, pop, filename):
 def get_data(params):
     """
     Read the "elementary" overlaps and energies in the basis of KS orbitals
+
+    Required parameter keys:
+
+    params["norbitals"]      [int] - how many lines/columns in the file - the total number of spin-orbitals
+    params["active_space"]   [list of ints] - which orbitals we care about (indexing starts with 0)
+    params["Hvib_re_prefix"] [string] - prefixes of the files with real part of the Hamiltonian
+    params["Hvib_im_prefix"] [string] - prefixes of the files with imaginary part of the Hamiltonian
+    params["Hvib_re_suffix"] [string] - suffixes of the files with real part of the Hamiltonian
+    params["Hvib_im_suffix"] [string] - suffixes of the files with imaginary part of the Hamiltonian
+    params["nsteps"]         [int] - how many files to read, starting from index 0
+
+
     """
 
-    len_traj = params["len_traj"]
-
-    psi_dia_ks = params["psi_dia_ks"];
-    nst_dia_ks = 2*len(psi_dia_ks)
-    active_space = range(0, nst_dia_ks) 
+    norbitals = params["norbitals"]  # the number of orbitals in the input files
+    active_space = params["active_space"]
+    nstates = len(active_space)
+    nsteps = params["nsteps"]
 
     S, St, E = [], [], [] 
 
-    for i in range(0,len_traj):
+    for i in range(0,nsteps):
 
         filename_re = params["S_dia_ks_re_prefix"]+str(i)+params["S_dia_ks_re_suffix"]
         filename_im = params["S_dia_ks_im_prefix"]+str(i)+params["S_dia_ks_im_suffix"]
-        s = comn.get_matrix(nst_dia_ks, nst_dia_ks, filename_re, filename_im, active_space )
+        s = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space )
         S.append(s)
 
         filename_re = params["St_dia_ks_re_prefix"]+str(i)+params["St_dia_ks_re_suffix"]
         filename_im = params["St_dia_ks_im_prefix"]+str(i)+params["St_dia_ks_im_suffix"]
-        st = comn.get_matrix(nst_dia_ks, nst_dia_ks, filename_re, filename_im, active_space )
+        st = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space )
         St.append(st)
 
         filename_re = params["E_dia_ks_re_prefix"]+str(i)+params["E_dia_ks_re_suffix"]
         filename_im = params["E_dia_ks_im_prefix"]+str(i)+params["E_dia_ks_im_suffix"]
-        e = comn.get_matrix(nst_dia_ks, nst_dia_ks, filename_re, filename_im, active_space )
+        e = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space )
         E.append(e)
 
     return S, St, E
@@ -214,24 +225,31 @@ def apply_phase_correction(St, params):
             for a in xrange(nstates):
                 cum_phase.scale(a, 0, phase_i.get(a))
           
-        # Printing what we just extracted for t = 0
-        """
-        if i == 0:
-            print "\nE_dia_ks = ";            E_dia_ks.real().show_matrix()
-            print "\nS_dia_ks = ";            S_dia_ks.real().show_matrix()  
-            print "\nSt_dia_ks = ";           St_dia_ks.real().show_matrix()
-            Hvib = compute_Hvib(Phi_basis, St_dia_ks, E_dia_ks, params["Phi_dE"], params["dt"] )
 
-            print "\nHvib_Phi_dia.imag()\n";  Hvib.imag().show_matrix()
-            print "\nHvib_Phi_dia.real()\n";  Hvib.real().show_matrix()
 
-            print "\n Making H_vib (Chi_basis)"; 
-            Hvib = P2C.H() * Hvib * P2C
+def sac_matrices(coeff):
 
-            print "\nHvib_Chi_dia.imag()\n";  Hvib.imag().show_matrix()
-            print "\nHvib_Chi_dia.real()\n";  Hvib.real().show_matrix()
-            #sys.exit(0)        
-        """
+    n_chi = len(coeff)
+    n_phi = len(coeff[0])
+
+    P2C = CMATRIX(n_phi, n_chi)
+    for j in xrange(n_chi):
+        for i in xrange(n_phi):
+            P2C.set(i,j,coeff[j][i]*(1.0+0.0j) )
+
+
+    # Normalize the Chi wavefunctions #
+    norm = P2C.H() * P2C
+    for i in xrange(n_chi):
+        if norm.get(i,i).real > 0.0:
+            P2C.scale(-1, i, 1.0/math.sqrt(norm.get(i,i).real) )
+        else:
+            print "Error in CHI normalizaiton: some combination gives zero norm\n"
+            sys.exit(0)
+
+
+    return P2C
+
 
 
 def compute_Hvib(basis, St_ks, E_ks, dE, dt):
@@ -266,14 +284,6 @@ def run_namd(params):
     dt = params["dt"]
     bolt_opt = params["Boltz_opt"]
 
-#    psi_dia_ks = params["psi_dia_ks"];   nst_dia_ks = 2*len(psi_dia_ks)
-#    active_space = range(0, nst_dia_ks) #params["active_space"]
-
-    P2C = params["P2C"];
-    nst_dia_sac = P2C.num_of_cols
-
-
-
     """
     1. Read in the "elementary" overlaps and energies in the basis of KS orbitals
     2. Apply state reordering to KS
@@ -281,12 +291,15 @@ def run_namd(params):
     4. Construct the Hvib in the basis of Slater determinants
     5. Convert the Hvib to the basis of symmery-adapted configurations (SAC)
     """
+
+    P2C = sac_matrices(params["P2C"])
     
     S_dia_ks, St_dia_ks, E_dia_ks = get_data(params)  
     apply_state_reordering(St_dia_ks, E_dia_ks, params)    
     apply_phase_correction(St_dia_ks, params)
 
     nsteps = len(St_dia_ks)
+    nstates = len(params["P2C"])
     H_vib = []
     for i in xrange(nsteps):
         # Hvib in the basis of SDs
@@ -311,7 +324,7 @@ def run_namd(params):
 
     for tr in xrange(num_sh_traj):
 
-        Coeff_Chi.append(CMATRIX(nst_dia_sac, 1)); 
+        Coeff_Chi.append(CMATRIX(nstates, 1)); 
         Coeff_Chi[tr].set(init_Chi, 1.0, 0.0)
         Coeff_Phi.append(P2C*Coeff_Chi[tr]) 
 
@@ -344,7 +357,7 @@ def run_namd(params):
 
     #=============== Entering Dynamics !! =========================  
     #=============== Now handle the electronic structure ==========
-    for i in xrange(init_time, init_time + nsteps):
+    for i in xrange(nsteps):
 
         #============== TD-SE and surface hopping =================
         for tr in xrange(num_sh_traj):
@@ -369,7 +382,7 @@ def run_namd(params):
         denmat_Phi_sh = []
         for tr in xrange(num_sh_traj):
 
-            denmat_Chi_sh.append(CMATRIX(nst_dia_sac, nst_dia_sac))
+            denmat_Chi_sh.append(CMATRIX(nstates, nstates))
             denmat_Chi_sh[tr].set(istate[tr],istate[tr], 1.0, 0.0)
             denmat_Phi_sh.append( P2C*denmat_Chi_sh[tr]*P2C.H() )
 
