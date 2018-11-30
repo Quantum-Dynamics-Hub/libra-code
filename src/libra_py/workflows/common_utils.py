@@ -256,7 +256,7 @@ def decoherence_times(Hvib, verbosity=0):
         decoh_times.show_matrix()
 
         print "Decoherence times matrix (fs):"
-        tmp = decoh_rates * units.au2fs
+        tmp = decoh_times * units.au2fs
         tmp.show_matrix()
 
         print "Decoherence rates matrix (a.u.^-1):"
