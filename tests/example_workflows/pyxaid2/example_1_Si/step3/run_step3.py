@@ -136,6 +136,9 @@ params["init_time"] = 0  # starting from the first file
 params["nsteps"] = 30
 params["init_Chi"] = 3
 
+
+params["outfile"] = "_out.txt"
+
 params["do_state_reordering"] = 2
 params["state_reordering_alpha"] = 0.00
 
