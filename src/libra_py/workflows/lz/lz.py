@@ -149,33 +149,6 @@ def Belyaev_Lebedev(Hvib, dt):
     return P
 
 
-def printout(t, pops, Hvib, outfile):
-    """
-    t - time [a.u.] 
-    pops - [MATRIX] - populations
-    Hvib - [CMATRIX] - vibronic Hamiltonian
-    outfile - filename where we'll print everything out
-    """
-
-    nstates = Hvib.num_of_cols
-
-
-    line = "%8.5f " % (t)
-    P, E = 0.0, 0.0
-    for state in xrange(nstates):
-        p, e = pops.get(state,0), Hvib.get(state, state).real
-        P += p
-        E += p*e
-        line = line + " %8.5f  %8.5f " % (p, e)
-    line = line + " %8.5f  %8.5f \n" % (P, E)
-
-    f = open(outfile, "a") 
-    f.write(line)
-    f.close()
-
-
-
-
 def run_LZ(params):
     """
     Main function to run the SH calculations based on the Landau-Zener hopping
@@ -227,7 +200,7 @@ def run_LZ(params):
 
     for n in xrange(params["nsteps"]):
 
-      printout(n*params["dt"], pops, Hvib[n], params["outfile"])
+      comn.printout(n*params["dt"], pops, Hvib[n], params["outfile"])
       pops = tsh.compute_sh_statistics(nstates, states)
            
 

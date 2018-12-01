@@ -265,3 +265,31 @@ def decoherence_times(Hvib, verbosity=0):
 
     return decoh_times, decoh_rates
 
+
+
+
+def printout(t, pops, Hvib, outfile):
+    """
+    t - time [a.u.] 
+    pops - [MATRIX] - populations
+    Hvib - [CMATRIX] - vibronic Hamiltonian
+    outfile - filename where we'll print everything out
+    """
+
+    nstates = Hvib.num_of_cols
+
+
+    line = "%8.5f " % (t)
+    P, E = 0.0, 0.0
+    for state in xrange(nstates):
+        p, e = pops.get(state,0), Hvib.get(state, state).real
+        P += p
+        E += p*e
+        line = line + " %8.5f  %8.5f " % (p, e)
+    line = line + " %8.5f  %8.5f \n" % (P, E)
+
+    f = open(outfile, "a") 
+    f.write(line)
+    f.close()
+
+

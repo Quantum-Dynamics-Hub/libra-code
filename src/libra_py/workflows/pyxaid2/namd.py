@@ -184,8 +184,8 @@ def apply_state_reordering(St, E, params):
             # Because St = <psi(t)|psi(t+dt)> - we permute only columns
             St[i].permute_cols(perm_t)
 
-            E[i].permute_cols(perm_t)
-            E[i].permute_rows(perm_t)
+            #E[i].permute_cols(perm_t)
+            #E[i].permute_rows(perm_t)
 
 
 
@@ -359,6 +359,9 @@ def run_namd(params):
     #=============== Now handle the electronic structure ==========
     for i in xrange(nsteps):
 
+        pops = tsh.compute_sh_statistics(nstates, istate)
+        comn.printout(i*params["dt"], pops, H_vib[i], params["outfile"])
+
         #============== TD-SE and surface hopping =================
         for tr in xrange(num_sh_traj):
 
@@ -371,6 +374,7 @@ def run_namd(params):
             # Surface hopping in Chi basis
             istate[tr] = tsh.hopping(Coeff_Chi[tr], H_vib[i], istate[tr], sh_method, do_collapse, ksi, ksi2, dt, T, bolt_opt)
             Coeff_Phi[tr] = P2C*Coeff_Chi[tr]
+
 
         #============== Analysis of Dynamics  =====================
         # Update SE-derived density matrices
