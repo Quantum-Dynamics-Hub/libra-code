@@ -31,20 +31,22 @@ params = {}
 rt="/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/tests/example_workflows/pyxaid2/example_1_Si/step2"
 
 ##### Extract Spin-diabatic Information #####
-params["E_dia_ks_re_prefix"] = rt + "/res/E_dia_ks_"
-params["E_dia_ks_re_suffix"] = "_re"
-params["E_dia_ks_im_prefix"] = rt + "/res/E_dia_ks_"
-params["E_dia_ks_im_suffix"] = "_im"
+params["E_re_prefix"] = rt + "/res/E_dia_ks_"
+params["E_re_suffix"] = "_re"
+params["E_im_prefix"] = rt + "/res/E_dia_ks_"
+params["E_im_suffix"] = "_im"
 
-params["S_dia_ks_re_prefix"] = rt + "/res/S_dia_ks_"
-params["S_dia_ks_re_suffix"] = "_re"
-params["S_dia_ks_im_prefix"] = rt + "/res/S_dia_ks_"
-params["S_dia_ks_im_suffix"] = "_im"
+params["S_re_prefix"] = rt + "/res/S_dia_ks_"
+params["S_re_suffix"] = "_re"
+params["S_im_prefix"] = rt + "/res/S_dia_ks_"
+params["S_im_suffix"] = "_im"
 
-params["St_dia_ks_re_prefix"] = rt + "/res/St_dia_ks_"
-params["St_dia_ks_re_suffix"] = "_re"
-params["St_dia_ks_im_prefix"] = rt + "/res/St_dia_ks_"
-params["St_dia_ks_im_suffix"] = "_im"
+params["St_re_prefix"] = rt + "/res/St_dia_ks_"
+params["St_re_suffix"] = "_re"
+params["St_im_prefix"] = rt + "/res/St_dia_ks_"
+params["St_im_suffix"] = "_im"
+
+params["is_pyxaid_format"] = False
 
 
 ### Set up basis and basis transformations ###

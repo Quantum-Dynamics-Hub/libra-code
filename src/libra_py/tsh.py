@@ -930,7 +930,7 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz
     dt (float) time interval for the surface hopping (in a.u.)
     T (float) temperature in K
 
-    boltz_opt [0, 1, or 2] How to determine if the hop may be frustrated:
+    boltz_opt [0, 1, 2, or 3] How to determine if the hop may be frustrated:
                0 - all proposed hops are accepted - no rejection based on energies
                1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
                2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
