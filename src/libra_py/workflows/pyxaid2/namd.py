@@ -93,7 +93,7 @@ def get_data(params):
     critical_params = ["norbitals", "active_space", "S_re_prefix", "S_im_prefix",
     "St_re_prefix", "St_im_prefix", "E_re_prefix", "E_im_prefix", "nsteps" ]
 
-    default_params = { "is_pyxaid_format":False, "S_re_suffix":"_re", "S_suffix":"_im",
+    default_params = { "is_pyxaid_format":False, "S_re_suffix":"_re", "S_im_suffix":"_im",
     "St_re_suffix":"_re", "St_im_suffix":"_im", "E_re_suffix":"_re", "E_im_suffix":"_im"}
 
     comn.check_input(params, default_params, critical_params)
@@ -317,15 +317,16 @@ def run_namd(params):
     params["P2C"]              [list of lists of complex] - define the superpositions to SDs to get spin-adapted functions
     params["Phi_dE"]           [list of doubles] - define corrections of the SAC state energies
     params["T"]                [double] - temperature of nuclear/electronic dynamics [in K, default: 300.0]
-    params["num_sh_traj"]      [int] - the number of stochastic surface hopping trajectories [default: 1000]
+    params["ntraj"]            [int] - the number of stochastic surface hopping trajectories [default: 1]
     params["sh_method"]        [int] - how to compute surface hopping probabilities [default: 1]
                                Options:
                                0 - MSSH
                                1 - FSSH
-    params["do_collapse"]      [int] - decoherence method [default: 1]
+    params["decoherence_method"]  [int] - selection of decoherence method [default: 0]
                                Options:
                                0 - no decoherence
                                1 - ID-A
+                               2 - MSDM
     params["dt"]               [double] - nuclear dynamics integration time step [in a.u. of time, default: 41.0]
 
     params["Boltz_opt"]        [int] - option to select a probability of hopping acceptance [default: 3]
@@ -334,7 +335,7 @@ def run_namd(params):
                                1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
                                2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
                                3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
-    params["init_Chi"]         [int] - index of the initial spin-adapted state [default: 0]
+    params["istate"]           [int] - index of the initial spin-adapted state [default: 0]
     params["outfile"]          [string] - the name of the file where to print populations and energies of states [default: "_out.txt"]    
 
 
@@ -361,18 +362,22 @@ def run_namd(params):
     """
 
     critical_params = [ "P2C", "Phi_basis", "Phi_dE", ]
-    default_params = { "T":300.0, "num_sh_traj":1000, 
-                       "sh_method":1, "do_collapse":1, "dt":41.0, "Boltz_opt":3,
-                       "init_Chi":0, "outfile":"_out.txt" }
+    default_params = { "T":300.0, "ntraj":1, 
+                       "sh_method":1, "decoherence_method":0, "dt":41.0, "Boltz_opt":3,
+                       "istate":0, "outfile":"_out.txt" }
     comn.check_input(params, default_params, critical_params)
 
 
     rnd = Random()
     T = params["T"]
     kT = units.kB * T
-    num_sh_traj = params["num_sh_traj"]
+    ntraj = params["ntraj"]
     sh_method = params["sh_method"]
-    do_collapse = params["do_collapse"]
+
+    do_collapse = 0
+    if params["decoherence_method"]==1:
+        do_collapse = 1
+
     dt = params["dt"]
     bolt_opt = params["Boltz_opt"]
 
@@ -403,70 +408,38 @@ def run_namd(params):
 
 
     #========== Compute decoherence times  ===============
-    tau, tau_inv = comn.decoherence_times(H_vib, 1)
+    tau, decoh_rates = comn.decoherence_times(H_vib, 1)
 
 
 
     #========== Initialize the wavefunction amplitudes ===============
-    init_Chi = params["init_Chi"]    
-
     # TD-SE coefficients
-    Coeff_Chi = [];  
-    Coeff_Phi = [];
+    Coeff_Chi, Coeff_Phi, istate = [], [], []
 
-    for tr in xrange(num_sh_traj):
-
+    for tr in xrange(ntraj):
+        istate.append(params["istate"])
         Coeff_Chi.append(CMATRIX(nstates, 1)); 
-        Coeff_Chi[tr].set(init_Chi, 1.0, 0.0)
+        Coeff_Chi[tr].set(params["istate"], 1.0, 0.0)
         Coeff_Phi.append(P2C*Coeff_Chi[tr]) 
 
-        if tr==0:
-            print "Coeff_Chi = "; Coeff_Chi[tr].show_matrix()
-            print "Coeff_Phi = "; Coeff_Phi[tr].show_matrix()
-
-
-    #========== Initialize the SE density matrices ===============
-    # Density matrices
+    # SE density matrices
     denmat_Chi_se = tsh.amplitudes2denmat(Coeff_Chi)
     denmat_Phi_se = tsh.amplitudes2denmat(Coeff_Phi)
 
     print "denmat_Chi_se = "; denmat_Chi_se[0].show_matrix()
     print "denmat_Phi_se = "; denmat_Phi_se[0].show_matrix()
 
-    #========== Initialize the state for adiabatic sh ===============
-    istate  = []  # in the Chi basis (referring to spin-adaapted states)
-    for tr in xrange(num_sh_traj):
-        prob = tsh.denmat2prob(denmat_Chi_se[tr])
-        st = tsh.set_random_state(prob, rnd.uniform(0.0, 1.0)) 
-        istate.append(st)
 
     #========== Initialize output files ===============
     f = open("_pop_Chi_se.txt","w");   f.close()
     f = open("_pop_Chi_sh.txt","w");   f.close()
     f = open("_pop_Phi_se.txt","w");   f.close()
     f = open("_pop_Phi_sh.txt","w");   f.close()
+    f = open(params["outfile"], "w");  f.close()
 
 
-    #=============== Entering Dynamics !! =========================  
-    #=============== Now handle the electronic structure ==========
+    #=============== Entering Dynamics !!! ========================
     for i in xrange(nsteps):
-
-        pops = tsh.compute_sh_statistics(nstates, istate)
-        comn.printout(i*params["dt"], pops, H_vib[i], params["outfile"])
-
-        #============== TD-SE and surface hopping =================
-        for tr in xrange(num_sh_traj):
-
-            # Coherent evolution for Chi
-            propagate_electronic(dt, Coeff_Chi[tr], H_vib[i])  # propagate in the diabatic basis (Chi)
-
-            ksi  = rnd.uniform(0.0, 1.0);
-            ksi2 = rnd.uniform(0.0, 1.0)
-
-            # Surface hopping in Chi basis
-            istate[tr] = tsh.hopping(Coeff_Chi[tr], H_vib[i], istate[tr], sh_method, do_collapse, ksi, ksi2, dt, T, bolt_opt)
-            Coeff_Phi[tr] = P2C*Coeff_Chi[tr]
-
 
         #============== Analysis of Dynamics  =====================
         # Update SE-derived density matrices
@@ -476,20 +449,48 @@ def run_namd(params):
         # Use SE-derived density matrices to make SH-derived density matrices
         denmat_Chi_sh = []
         denmat_Phi_sh = []
-        for tr in xrange(num_sh_traj):
-
+        for tr in xrange(ntraj):
             denmat_Chi_sh.append(CMATRIX(nstates, nstates))
             denmat_Chi_sh[tr].set(istate[tr],istate[tr], 1.0, 0.0)
             denmat_Phi_sh.append( P2C*denmat_Chi_sh[tr]*P2C.H() )
 
+        # Update SE and SH populations 
         ave_pop_Chi_sh, ave_pop_Chi_se = tsh.ave_pop(denmat_Chi_sh, denmat_Chi_se)
         ave_pop_Phi_sh, ave_pop_Phi_se = tsh.ave_pop(denmat_Phi_sh, denmat_Phi_se)
 
-        #===================== Print out ==============================
         add_printout(i, ave_pop_Chi_sh, "_pop_Chi_sh.txt")
         add_printout(i, ave_pop_Chi_se, "_pop_Chi_se.txt")
-
         add_printout(i, ave_pop_Phi_sh, "_pop_Phi_sh.txt")
         add_printout(i, ave_pop_Phi_se, "_pop_Phi_se.txt")
+
+        
+        pops = tsh.compute_sh_statistics(nstates, istate)
+        comn.printout(i*params["dt"], pops, H_vib[i], params["outfile"])
+
+
+        #============== Propagation: TD-SE and surface hopping ==========
+        for tr in xrange(ntraj):
+
+            # Coherent evolution for Chi
+            propagate_electronic(dt, Coeff_Chi[tr], H_vib[i])  # propagate in the diabatic basis (Chi)
+
+            if params["decoherence_method"]==0:    # No decoherence
+                pass
+            elif params["decoherence_method"]==1:  # ID-A, taken care of in the tsh.hopping
+                pass
+            elif params["decoherence_method"]==2:  # MSDM
+                Coeff_Chi[tr] = msdm(Coeff_Chi[tr], params["dt"], istate[tr], decoh_rates)
+
+            # This will be added later
+            #elif params["decoherence_method"]==2:  # DISH
+            #    tau_m = coherence_intervals(Coeff_Chi[tr], decoh_rates)
+
+            ksi  = rnd.uniform(0.0, 1.0);
+            ksi2 = rnd.uniform(0.0, 1.0)
+
+            # Surface hopping in Chi basis
+            istate[tr] = tsh.hopping(Coeff_Chi[tr], H_vib[i], istate[tr], sh_method, do_collapse, ksi, ksi2, dt, T, bolt_opt)
+            Coeff_Phi[tr] = P2C*Coeff_Chi[tr]
+
 
 
