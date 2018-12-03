@@ -146,7 +146,7 @@ params["state_reordering_alpha"] = 0.00
 
 params["do_phase_correction"] = 1
 params["sh_method"] = 1   # 0 - MSSH, 1 - FSSH
-params["decoherence_method"] = 2  # 0 - no decoherence, 1 - decoherence (ID-A), 2 - MSDM
+params["decoherence_method"] = 3  # 0 - no decoherence, 1 - decoherence (ID-A), 2 - MSDM, 3 - DISH
 params["Boltz_opt"] = 3
 params["ntraj"] = 1000
 params["dt"] = 41.0  # in a.u.

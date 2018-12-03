@@ -327,6 +327,7 @@ def run_namd(params):
                                0 - no decoherence
                                1 - ID-A
                                2 - MSDM
+                               3 - DISH
     params["dt"]               [double] - nuclear dynamics integration time step [in a.u. of time, default: 41.0]
 
     params["Boltz_opt"]        [int] - option to select a probability of hopping acceptance [default: 3]
@@ -397,6 +398,12 @@ def run_namd(params):
 
     nsteps = len(St_dia_ks)
     nstates = len(params["P2C"])
+
+    t_m, tau_m = [], []  # coherence times and coherence intervals for DISH
+    for tr in xrange(ntraj):
+        t_m.append(MATRIX(nstates,1))
+        tau_m.append(MATRIX(nstates,1))
+
     H_vib = []
     for i in xrange(nsteps):
         # Hvib in the basis of SDs
@@ -474,23 +481,32 @@ def run_namd(params):
             # Coherent evolution for Chi
             propagate_electronic(dt, Coeff_Chi[tr], H_vib[i])  # propagate in the diabatic basis (Chi)
 
-            if params["decoherence_method"]==0:    # No decoherence
-                pass
-            elif params["decoherence_method"]==1:  # ID-A, taken care of in the tsh.hopping
-                pass
-            elif params["decoherence_method"]==2:  # MSDM
-                Coeff_Chi[tr] = msdm(Coeff_Chi[tr], params["dt"], istate[tr], decoh_rates)
-
-            # This will be added later
-            #elif params["decoherence_method"]==2:  # DISH
-            #    tau_m = coherence_intervals(Coeff_Chi[tr], decoh_rates)
-
-            ksi  = rnd.uniform(0.0, 1.0);
-            ksi2 = rnd.uniform(0.0, 1.0)
 
             # Surface hopping in Chi basis
-            istate[tr] = tsh.hopping(Coeff_Chi[tr], H_vib[i], istate[tr], sh_method, do_collapse, ksi, ksi2, dt, T, bolt_opt)
-            Coeff_Phi[tr] = P2C*Coeff_Chi[tr]
+            ksi  = rnd.uniform(0.0, 1.0)
+            ksi2 = rnd.uniform(0.0, 1.0)
 
+            if params["decoherence_method"] in [0, 1, 2]:
+
+                if params["decoherence_method"]==0:    # No decoherence
+                    pass
+                elif params["decoherence_method"]==1:  # ID-A, taken care of in the tsh.hopping
+                    pass
+                elif params["decoherence_method"]==2:  # MSDM
+                    Coeff_Chi[tr] = msdm(Coeff_Chi[tr], params["dt"], istate[tr], decoh_rates)
+
+                istate[tr] = tsh.hopping(Coeff_Chi[tr], H_vib[i], istate[tr], sh_method, do_collapse, ksi, ksi2, dt, T, bolt_opt)
+
+            elif params["decoherence_method"] in [3]:  # DISH
+            
+                tau_m[tr] = coherence_intervals(Coeff_Chi[tr], decoh_rates)
+                #print "step = %i, traj = %i" % (i, tr)
+                #print "tau_m = "; tau_m[tr].show_matrix()
+                #print "t_m = "; t_m[tr].show_matrix()
+                istate[tr] = tsh.dish_py(Coeff_Chi[tr], istate[tr], t_m[tr], tau_m[tr], H_vib[i], bolt_opt, T, ksi, ksi2)
+                t_m[tr] += params["dt"]
+
+            # Convert to the Phi basis
+            Coeff_Phi[tr] = P2C*Coeff_Chi[tr]
 
 
