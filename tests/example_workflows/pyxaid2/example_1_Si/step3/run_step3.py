@@ -31,20 +31,22 @@ params = {}
 rt="/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/tests/example_workflows/pyxaid2/example_1_Si/step2"
 
 ##### Extract Spin-diabatic Information #####
-params["E_dia_ks_re_prefix"] = rt + "/res/E_dia_ks_"
-params["E_dia_ks_re_suffix"] = "_re"
-params["E_dia_ks_im_prefix"] = rt + "/res/E_dia_ks_"
-params["E_dia_ks_im_suffix"] = "_im"
+params["E_re_prefix"] = rt + "/res/E_dia_ks_"
+params["E_re_suffix"] = "_re"
+params["E_im_prefix"] = rt + "/res/E_dia_ks_"
+params["E_im_suffix"] = "_im"
 
-params["S_dia_ks_re_prefix"] = rt + "/res/S_dia_ks_"
-params["S_dia_ks_re_suffix"] = "_re"
-params["S_dia_ks_im_prefix"] = rt + "/res/S_dia_ks_"
-params["S_dia_ks_im_suffix"] = "_im"
+params["S_re_prefix"] = rt + "/res/S_dia_ks_"
+params["S_re_suffix"] = "_re"
+params["S_im_prefix"] = rt + "/res/S_dia_ks_"
+params["S_im_suffix"] = "_im"
 
-params["St_dia_ks_re_prefix"] = rt + "/res/St_dia_ks_"
-params["St_dia_ks_re_suffix"] = "_re"
-params["St_dia_ks_im_prefix"] = rt + "/res/St_dia_ks_"
-params["St_dia_ks_im_suffix"] = "_im"
+params["St_re_prefix"] = rt + "/res/St_dia_ks_"
+params["St_re_suffix"] = "_re"
+params["St_im_prefix"] = rt + "/res/St_dia_ks_"
+params["St_im_suffix"] = "_im"
+
+params["is_pyxaid_format"] = False
 
 
 ### Set up basis and basis transformations ###
@@ -134,7 +136,7 @@ print params["Phi_basis"]
 # Actual simulation paramters
 params["init_time"] = 0  # starting from the first file 
 params["nsteps"] = 30
-params["init_Chi"] = 3
+params["istate"] = 3
 
 
 params["outfile"] = "_out.txt"
@@ -144,9 +146,9 @@ params["state_reordering_alpha"] = 0.00
 
 params["do_phase_correction"] = 1
 params["sh_method"] = 1   # 0 - MSSH, 1 - FSSH
-params["do_collapse"] = 0 # 0 - no decoherence, 1 - decoherence (ID-A)
+params["decoherence_method"] = 3  # 0 - no decoherence, 1 - decoherence (ID-A), 2 - MSDM, 3 - DISH
 params["Boltz_opt"] = 3
-params["num_sh_traj"] = 1000
+params["ntraj"] = 1000
 params["dt"] = 41.0  # in a.u.
 params["T"] = 300.0
 

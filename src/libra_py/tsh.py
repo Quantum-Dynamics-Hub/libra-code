@@ -727,6 +727,32 @@ def surface_hopping_cpa2(mol, el, ham, rnd, params):
 
 
 
+def boltz_factor(E_new, E_old, T, boltz_opt):
+    # Compute the Boltzmann scaling factor, but only if we consider a hop up in energy
+
+    dE = (E_new - E_old)
+    boltz_f = 1.0 
+
+    if boltz_opt==0:
+        boltz_f = 1.0
+
+    elif boltz_opt==1:
+        if dE > 0.0:
+            argg = dE/(units.kB*T)
+            if argg > 50.0:
+                boltz_f = 0.0
+            else:
+                boltz_f = math.exp(-argg)
+
+    elif boltz_opt==2:
+        if dE > 0.0:
+            boltz_f = probabilities.Boltz_cl_prob_up(dE, T)
+
+    elif boltz_opt==3:
+        if dE > 0.0:
+            boltz_f = probabilities.Boltz_quant_prob([0.0, dE], T)[1]
+
+    return boltz_f
 
 
 
@@ -753,31 +779,9 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse, boltz_opt=1
     # C [CMATRIX or Electronic] - the updated state of the electronic DOF, in the same data type as the input
 
     res = old_st
-    dE = (E_new - E_old)
 
-    # Compute the Boltzmann scaling factor, but only if we consider a hop up in energy
-    boltz_f = 1.0 
-
-    if boltz_opt==0:
-        boltz_f = 1.0
-
-    elif boltz_opt==1:
-        if dE > 0.0:
-            argg = dE/(units.kB*T)
-            if argg > 50.0:
-                boltz_f = 0.0
-            else:
-                boltz_f = math.exp(-argg)
-
-    elif boltz_opt==2:
-        if dE > 0.0:
-            boltz_f = probabilities.Boltz_cl_prob_up(dE, T)
-
-    elif boltz_opt==3:
-        if dE > 0.0:
-            boltz_f = probabilities.Boltz_quant_prob([0.0, dE], T)[1]
-
-
+    dE = E_new - E_old
+    boltz_f = boltz_factor(E_new, E_old, T, boltz_opt)
 
     # In case the electronic DOF are given in the form of CMATRIX
     if type(Coeff).__name__ == "CMATRIX":
@@ -930,7 +934,7 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz
     dt (float) time interval for the surface hopping (in a.u.)
     T (float) temperature in K
 
-    boltz_opt [0, 1, or 2] How to determine if the hop may be frustrated:
+    boltz_opt [0, 1, 2, or 3] How to determine if the hop may be frustrated:
                0 - all proposed hops are accepted - no rejection based on energies
                1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
                2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
@@ -958,3 +962,103 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz
 
     return istate #, Coeff1
     
+
+
+def project_out(Coeff, i):
+    """
+      Projects the state i out of a coherent superposition of states
+      i   [int]  The index of the state to be projected out
+
+    """
+    nstates = Coeff.num_of_rows
+    
+    ci = Coeff.get(i,0)
+    pi = (ci.conjugate() * ci).real
+    nrm = 1.0 - pi
+    if nrm<0.0:
+        nrm = 0.0
+    if nrm>0.0:
+        nrm = 1.0/math.sqrt(nrm)
+
+    Coeff.scale(-1, 0, nrm)
+    Coeff.set(i, 0, 1.0+0.0j)
+
+
+def collapse(Coeff, i):   
+    Coeff *= 0.0
+    Coeff.set(i, 0, 1.0+0.0j)
+
+
+def dish_py(Coeff, istate, t_m, tau_m, Hvib, boltz_opt, T, ksi1, ksi2):
+    """
+    Decoherence-induced surface hopping (DISH)
+    Reference: Jaeger, H. M.; Fischer, S.; Prezhdo, O. V. Decoherence-Induced Surface Hopping. J. Chem. Phys. 2012, 137, 22A545.
+
+    Coeff  [CMATRIX, N x 1]   Amplitudes of electronic states
+    istate [int]          Initial state
+    t_m    [MATRIX, N x 1]    Matrix of the times each state resides in a coherence interval since the last decoherence event
+    tau_m  [MATRIX, N x 1]    Matrix of the coherence intervals for each electronic state
+    Hvib   [CMATRIx, N x N]   Energies 
+    boltz_opt [0, 1, 2, or 3] How to determine if the hop may be frustrated:
+               0 - all proposed hops are accepted - no rejection based on energies
+               1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
+               2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
+               3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
+    T      [double]  The temperature of the system [K]
+    ksi1   [double]  A random number from a uniform distribution on the [0,1] interval
+    ksi2   [double]  Another random number from a uniform distribution on the [0,1] interval
+
+    The function modifies  Coeff and t_m variables
+    Returns: 
+     - the index of the electronic state after the "hop" (old state index or a new one)
+
+    """
+
+    fstate = istate
+
+    nstates = Coeff.num_of_rows
+    dm = Coeff * Coeff.H()     # density matrix
+
+    i = 0
+    has_decoherence = False   # set to True if we have encountered a decoherence event
+
+    while i<nstates and not has_decoherence:
+
+        # The state i has evolved coherently for longer than the coherence interval
+        # so it has to experience a decoherence event 
+        if t_m.get(i) >= tau_m.get(i):
+            # There are essentially two outcomes when the decoherence takes place:
+
+            if ksi1 < dm.get(i,i).real:  
+                # One: we collapse the wavefunction onto the state i with the probability 
+                # given by the population of that state
+
+                # Now, lets determine if the hop is possible based on the energy conservation
+                # considerations 
+                boltz_f = boltz_factor(Hvib.get(i,i).real, Hvib.get(istate, istate).real, T, boltz_opt)
+ 
+                if ksi2 < boltz_f:
+                    #  Now, decide about decoherence         
+                    collapse(Coeff, i)      # Here is the actuall collapse
+                    fstate = i
+                else:
+                    project_out(Coeff, i)       # Project out of the state
+                    fstate = istate
+
+            else:
+                # Second: project the system out of that state
+                project_out(Coeff, i)   # Project out of the state
+                fstate = istate
+
+            # Reset the time axis for state i (only for this state)
+            # other states still reside in a coherent superposition
+            t_m.set(i, 0.0)
+
+            # Set the flag that we have attempted a decoherence event
+            # so we done with DISH at this point in time
+            has_decoherence = True
+
+        i = i + 1
+
+    return fstate;
+

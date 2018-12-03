@@ -48,6 +48,11 @@ def get_data(params):
 
     """
 
+    critical_params = ["norbitals", "active_space", "Hvib_re_prefix", "Hvib_im_prefix", "nsteps" ]
+    default_params = { "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im"}
+    comn.check_input(params, default_params, critical_params)
+
+
     norbitals = params["norbitals"]  # the number of orbitals in the input files
     active_space = params["active_space"]
     nstates = len(active_space)
@@ -178,6 +183,15 @@ def run_LZ(params):
     params["T"]              [double, K] - temperature of the simulation
 
     """
+
+
+    critical_params = [  ]
+    default_params = { "T":300.0, "ntraj":1000, "nsteps":1,"istate":0, 
+                       "sh_method":1, "decoherence_method":0, "dt":41.0,
+                       "outfile":"_out.txt" }
+    comn.check_input(params, default_params, critical_params)
+
+
     
     rnd = Random()
 
