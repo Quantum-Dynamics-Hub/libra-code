@@ -31,87 +31,125 @@ params = {}
 rt="/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/tests/example_workflows/pyxaid2/example_1_Si/step2"
 
 ##### Extract Spin-diabatic Information #####
-params["E_dia_ks_re_prefix"] = rt + "/res/E_dia_ks_"
-params["E_dia_ks_re_suffix"] = "_re"
-params["E_dia_ks_im_prefix"] = rt + "/res/E_dia_ks_"
-params["E_dia_ks_im_suffix"] = "_im"
+params["E_re_prefix"] = rt + "/res/E_dia_ks_"
+params["E_re_suffix"] = "_re"
+params["E_im_prefix"] = rt + "/res/E_dia_ks_"
+params["E_im_suffix"] = "_im"
 
-params["S_dia_ks_re_prefix"] = rt + "/res/S_dia_ks_"
-params["S_dia_ks_re_suffix"] = "_re"
-params["S_dia_ks_im_prefix"] = rt + "/res/S_dia_ks_"
-params["S_dia_ks_im_suffix"] = "_im"
+params["S_re_prefix"] = rt + "/res/S_dia_ks_"
+params["S_re_suffix"] = "_re"
+params["S_im_prefix"] = rt + "/res/S_dia_ks_"
+params["S_im_suffix"] = "_im"
 
-params["St_dia_ks_re_prefix"] = rt + "/res/St_dia_ks_"
-params["St_dia_ks_re_suffix"] = "_re"
-params["St_dia_ks_im_prefix"] = rt + "/res/St_dia_ks_"
-params["St_dia_ks_im_suffix"] = "_im"
+params["St_re_prefix"] = rt + "/res/St_dia_ks_"
+params["St_re_suffix"] = "_re"
+params["St_im_prefix"] = rt + "/res/St_dia_ks_"
+params["St_im_suffix"] = "_im"
 
-### Set up simulation specific parameters ###
-# Initialize the SD basis
-params["psi_dia_ks"] = range(1,7)  # 2 pairs of KS orbitals, indexing starts from 1
-
-Phi_basis = []
-Phi_0 = [ 3,-3 ]
-Phi_1 = [ 3,-4 ]
-Phi_2 = [ 4,-3 ]
-Phi_3 = [ 3,-5 ]
-Phi_4 = [ 5,-3 ]
-Phi_5 = [ 3,-6 ]
-Phi_6 = [ 6,-3 ]
-
-Phi_basis.append( Phi_0 )
-Phi_basis.append( Phi_1 ); Phi_basis.append( Phi_2 )
-Phi_basis.append( Phi_3 ); Phi_basis.append( Phi_4 )
-Phi_basis.append( Phi_5 ); Phi_basis.append( Phi_6 )
-params["Phi_basis"] = Phi_basis
-
-### Initilize the spin-adapated basis ###
-coeff = []
-coeff = [ [1,0,0,0,0,0,0], [0,1,-1,0,0,0,0], [0,0,0,1,-1,0,0], [0,0,0,0,0,1,-1] ]
-P2C = CMATRIX(len(Phi_basis),len(coeff))
-for i in xrange(len(Phi_basis)):
-    for j in xrange(len(coeff)):
-        P2C.set(i,j,coeff[j][i])
-
-#P2C.show_matrix()
-#sys.exit(0)
-
-# Account for normalization constants #
-N = []
-for i in xrange(P2C.num_of_cols):
-    count = 0.0
-    N.append(0.0)
-    for j in xrange(P2C.num_of_rows):
-        if P2C.get(j,i) != 0:
-            count += 1.0 
-    N[i] = 1.0 / math.sqrt(count)
-    for j in xrange(P2C.num_of_rows):
-        P2C.set(j,i, N[i] * P2C.get(j,i))        
+params["is_pyxaid_format"] = False
 
 
+### Set up basis and basis transformations ###
+"""
+    Example: 
+
+    Setup 1
+
+    What is in file   -->   What we actually need             --->  How states are indexed in the SDs
+
+    norbitals = 12      active_space = range(2,6)+range(5,12)     numbers used in params["Phi_basis"]
+
+    alpha  beta
+            11 ----------------------------> 11 --------------------------> -4
+            10 ----------------------------> 10 --------------------------> -3
+         (L) 9 ---------------------------->  9 --------------------------> -2
+         (H) 8 ---------------------------->  8 --------------------------> -1
+             7 
+             6
+     5 ---------------------------->  5  -------------------------->    4
+     4 ---------------------------->  4  -------------------------->    3
+ (L) 3 ---------------------------->  3  -------------------------->    2
+ (H) 2 ---------------------------->  2  -------------------------->    1
+     1
+     0
+
+
+
+    Setup 2
+
+    What is in file   -->   What we actually need             --->  How states are indexed in the SDs
+
+    norbitals = 12      active_space = range(0,12)     numbers used in params["Phi_basis"]
+
+    alpha  beta
+            11 ----------------------------> 11 --------------------------> -6
+            10 ----------------------------> 10 --------------------------> -5
+         (L) 9 ---------------------------->  9 --------------------------> -4
+         (H) 8 ---------------------------->  8 --------------------------> -3
+             7 ---------------------------->  7 --------------------------> -2
+             6 ---------------------------->  6 --------------------------> -1
+     5 ---------------------------->  5  -------------------------->    6
+     4 ---------------------------->  4  -------------------------->    5
+ (L) 3 ---------------------------->  3  -------------------------->    4
+ (H) 2 ---------------------------->  2  -------------------------->    3
+     1 ---------------------------->  1  -------------------------->    2
+     0 ---------------------------->  0  -------------------------->    1
+
+
+"""
+
+setup = 1
+
+if setup==1:
+    # ===  Basis of KS orbitals ====
+    params["norbitals"] = 12  # 6 pairs of KS orbitals, 12 spin-orbitals
+    params["active_space"] = range(2,6)+range(8,12)
+
+    # ===  Basis of SDs (Phi) ====
+    params["Phi_basis"] = [ [ 1,-1 ], [ 1,-2 ], [ 2,-1 ], [ 1,-3 ], [ 3,-1 ], [ 1,-4 ], [ 4,-1 ] ]
+
+elif setup==2:
+    # ===  Basis of KS orbitals ====
+    params["norbitals"] = 12  # 6 pairs of KS orbitals, 12 spin-orbitals
+    params["active_space"] = range(0,12)
+
+    # ===  Basis of SDs (Phi) ====
+    params["Phi_basis"] = [ [ 3,-3 ], [ 3,-4 ], [ 4,-3 ], [ 3,-5 ], [ 5,-3 ], [ 3,-6 ], [ 6,-3 ] ]
+
+
+# ===  Basis of spin-adapted SDs (Chi) ====
+params["P2C"] = [ [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ], 
+                  [0.0, 1.0,-1.0, 0.0, 0.0, 0.0, 0.0 ],
+                  [0.0, 0.0, 0.0, 1.0,-1.0, 0.0, 0.0 ],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 1.0,-1.0 ] 
+                ]
 
 ### ###
-params["P2C"] = P2C
-params["init_Chi"] = 3
 params["Phi_dE"] = [];
 for i in xrange(len(params["Phi_basis"])):
     params["Phi_dE"].append(0.0)
+
 print params["Phi_dE"]
 print params["Phi_basis"]
 
+
 # Actual simulation paramters
 params["init_time"] = 0  # starting from the first file 
-params["len_traj"] = 30
+params["nsteps"] = 30
+params["istate"] = 3
+
+
+params["outfile"] = "_out.txt"
 
 params["do_state_reordering"] = 2
-params["state_reordering_alpha"] = 0.01
+params["state_reordering_alpha"] = 0.00
 
 params["do_phase_correction"] = 1
 params["sh_method"] = 1   # 0 - MSSH, 1 - FSSH
-params["do_collapse"] = 0 # 0 - no decoherence, 1 - decoherence (ID-A)
+params["decoherence_method"] = 3  # 0 - no decoherence, 1 - decoherence (ID-A), 2 - MSDM, 3 - DISH
 params["Boltz_opt"] = 3
-params["num_sh_traj"] = 1000
-params["dt"] = 1.0
+params["ntraj"] = 1000
+params["dt"] = 41.0  # in a.u.
 params["T"] = 300.0
 
 print "\nPrinting params from run_step3.py"

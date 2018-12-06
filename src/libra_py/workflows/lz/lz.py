@@ -48,6 +48,11 @@ def get_data(params):
 
     """
 
+    critical_params = ["norbitals", "active_space", "Hvib_re_prefix", "Hvib_im_prefix", "nsteps" ]
+    default_params = { "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im"}
+    comn.check_input(params, default_params, critical_params)
+
+
     norbitals = params["norbitals"]  # the number of orbitals in the input files
     active_space = params["active_space"]
     nstates = len(active_space)
@@ -149,33 +154,6 @@ def Belyaev_Lebedev(Hvib, dt):
     return P
 
 
-def printout(t, pops, Hvib, outfile):
-    """
-    t - time [a.u.] 
-    pops - [MATRIX] - populations
-    Hvib - [CMATRIX] - vibronic Hamiltonian
-    outfile - filename where we'll print everything out
-    """
-
-    nstates = Hvib.num_of_cols
-
-
-    line = "%8.5f " % (t)
-    P, E = 0.0, 0.0
-    for state in xrange(nstates):
-        p, e = pops.get(state,0), Hvib.get(state, state).real
-        P += p
-        E += p*e
-        line = line + " %8.5f  %8.5f " % (p, e)
-    line = line + " %8.5f  %8.5f \n" % (P, E)
-
-    f = open(outfile, "a") 
-    f.write(line)
-    f.close()
-
-
-
-
 def run_LZ(params):
     """
     Main function to run the SH calculations based on the Landau-Zener hopping
@@ -205,6 +183,15 @@ def run_LZ(params):
     params["T"]              [double, K] - temperature of the simulation
 
     """
+
+
+    critical_params = [  ]
+    default_params = { "T":300.0, "ntraj":1000, "nsteps":1,"istate":0, 
+                       "sh_method":1, "decoherence_method":0, "dt":41.0,
+                       "outfile":"_out.txt" }
+    comn.check_input(params, default_params, critical_params)
+
+
     
     rnd = Random()
 
@@ -227,7 +214,7 @@ def run_LZ(params):
 
     for n in xrange(params["nsteps"]):
 
-      printout(n*params["dt"], pops, Hvib[n], params["outfile"])
+      comn.printout(n*params["dt"], pops, Hvib[n], params["outfile"])
       pops = tsh.compute_sh_statistics(nstates, states)
            
 

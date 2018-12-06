@@ -8,7 +8,7 @@
 #***********************************************************/
 
 __all__ = ["utils",
-           "compute_nosoc",
+           "compute_properties",
            "compute_hprime",
            "excitation_spectrum",
            "trajectory",

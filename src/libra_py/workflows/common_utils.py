@@ -22,6 +22,38 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from libra_py import units
 
+
+
+def check_input(params, default_params, critical_params):
+    """
+    params          [dictionary] 
+    default_params  [dictionary]
+    critical_params [list]
+
+    This function checks whether the required keys are defined in the input.
+    If not - print out a worning and set the parameters to the default values provided.
+
+    But the critical parameters should be present - otherwise will exit
+
+    Revises the parameters dictionary - but only according to the subset of 
+    default parameters - other ones are not affects
+    """
+
+    for key in critical_params:
+        if key not in params:
+            print "ERROR: The critical parameter ", key, " must be defined!"
+            print "Exiting now..."
+            sys.exit(0)
+
+    for key in default_params:
+        if key not in params:
+            print "WARNING: Parameter ", key, " is not defined! in the input parameters"
+            print "Use the default value = ", default_params[key]
+            params.update({key: default_params[key]})
+        else:
+            pass
+            
+
     
 def get_matrix(nrows, ncols, filename_re, filename_im, act_sp):
     """
@@ -50,6 +82,30 @@ def get_matrix(nrows, ncols, filename_re, filename_im, act_sp):
     return CMATRIX(x_re, x_im)
 
 
+def orbs2spinorbs(s):
+    """
+    This function converts the matrices in the orbital basis (e.g. old PYXAID style)
+    to the spin-orbital basis.
+    Essentially, it makes a block matrix of a double dimension: 
+           ( s  0 )
+    s -->  ( 0  s )
+
+    This is meant to be used for backward compatibility with PYXIAD-generated data
+    """
+
+    sz = s.num_of_cols
+    zero = CMATRIX(sz, sz)    
+    act_sp1 = range(0, sz)
+    act_sp2 = range(sz, 2*sz)
+    
+    S = CMATRIX(2*sz, 2*sz)
+
+    push_submatrix(S, s, act_sp1, act_sp1)
+    push_submatrix(S, zero, act_sp1, act_sp2)
+    push_submatrix(S, zero, act_sp2, act_sp1)
+    push_submatrix(S, s, act_sp2, act_sp2)
+
+    return S
 
 
 
@@ -256,7 +312,7 @@ def decoherence_times(Hvib, verbosity=0):
         decoh_times.show_matrix()
 
         print "Decoherence times matrix (fs):"
-        tmp = decoh_rates * units.au2fs
+        tmp = decoh_times * units.au2fs
         tmp.show_matrix()
 
         print "Decoherence rates matrix (a.u.^-1):"
@@ -264,4 +320,32 @@ def decoherence_times(Hvib, verbosity=0):
 
 
     return decoh_times, decoh_rates
+
+
+
+
+def printout(t, pops, Hvib, outfile):
+    """
+    t - time [a.u.] 
+    pops - [MATRIX] - populations
+    Hvib - [CMATRIX] - vibronic Hamiltonian
+    outfile - filename where we'll print everything out
+    """
+
+    nstates = Hvib.num_of_cols
+
+
+    line = "%8.5f " % (t)
+    P, E = 0.0, 0.0
+    for state in xrange(nstates):
+        p, e = pops.get(state,0), Hvib.get(state, state).real
+        P += p
+        E += p*e
+        line = line + " %8.5f  %8.5f " % (p, e)
+    line = line + " %8.5f  %8.5f \n" % (P, E)
+
+    f = open(outfile, "a") 
+    f.write(line)
+    f.close()
+
 
