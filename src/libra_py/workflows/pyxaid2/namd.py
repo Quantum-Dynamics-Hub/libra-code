@@ -406,13 +406,18 @@ def run_namd(params):
 
     H_vib = []
     for i in xrange(nsteps):
+
         # Hvib in the basis of SDs
         hvib = compute_Hvib(params["Phi_basis"], St_dia_ks[i], E_dia_ks[i], params["Phi_dE"], dt) 
-
+ 
         # SAC
         H_vib.append( P2C.H() * hvib * P2C )
 
-
+        # make files to store phi and chi hamiltonians
+        hvib.real().show_matrix("res/_hvib_phi_"+str(i)+"_re" % ())
+        hvib.imag().show_matrix("res/_hvib_phi_"+str(i)+"_im" % ())
+        H_vib[i].real().show_matrix("res/_hvib_chi_"+str(i)+"_re" % ())
+        H_vib[i].imag().show_matrix("res/_hvib_chi_"+str(i)+"_im" % ())
 
     #========== Compute decoherence times  ===============
     tau, decoh_rates = comn.decoherence_times(H_vib, 1)
