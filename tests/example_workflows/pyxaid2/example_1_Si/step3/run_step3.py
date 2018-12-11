@@ -130,24 +130,17 @@ for i in xrange(len(params["Phi_basis"])):
     params["Phi_dE"].append(0.0)
 
 ### Initialize paramters to scale energies and NACs ###
-en_gap = 3.21 # units in eV
-params["Chi_dE"] = []
+en_gap = 3.21*units.ev2Ha # experimental band gap, units in Ha
+params["Chi_en_gap"] = en_gap
+# Scale NAC < i | d/dt | j >. Format = [ [i,j], scaling factor ]
+params["do_scale"] = 1
+params["sc_nac_method"] = 0
 params["NAC_dE"] = []
-# For each Chi state, appead the energy correction between state Chi[n] and Chi[n+1]
-params["Chi_dE"].append( en_gap )
-# Scale NAC < n | d/dt | n+1 >. Format = [ [n,n+1], scaling factor ]
-params["NAC_dE"].append( [ [0,1], 0.0 ] )
-params["NAC_dE"].append( [ [0,2], 0.0 ] )
-params["NAC_dE"].append( [ [0,3], 0.0 ] )
-params["sc_nac_method"] = 1
-
-# Printing info
+params["NAC_dE"].append( [ [0,1], 1.0 ] )
 print params["Phi_dE"]
-print params["Phi_basis"]
-print params["Chi_dE"]
 print params["NAC_dE"]
 
-
+os.system("mkdir res")
 # Actual simulation paramters
 params["init_time"] = 0  # starting from the first file 
 params["nsteps"] = 30
