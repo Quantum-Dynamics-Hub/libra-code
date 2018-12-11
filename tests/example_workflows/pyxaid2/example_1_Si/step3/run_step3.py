@@ -129,8 +129,23 @@ params["Phi_dE"] = [];
 for i in xrange(len(params["Phi_basis"])):
     params["Phi_dE"].append(0.0)
 
+### Initialize paramters to scale energies and NACs ###
+en_gap = 3.21 # units in eV
+params["Chi_dE"] = []
+params["NAC_dE"] = []
+# For each Chi state, appead the energy correction between state Chi[n] and Chi[n+1]
+params["Chi_dE"].append( en_gap )
+# Scale NAC < n | d/dt | n+1 >. Format = [ [n,n+1], scaling factor ]
+params["NAC_dE"].append( [ [0,1], 0.0 ] )
+params["NAC_dE"].append( [ [0,2], 0.0 ] )
+params["NAC_dE"].append( [ [0,3], 0.0 ] )
+params["sc_nac_method"] = 1
+
+# Printing info
 print params["Phi_dE"]
 print params["Phi_basis"]
+print params["Chi_dE"]
+print params["NAC_dE"]
 
 
 # Actual simulation paramters
@@ -149,7 +164,7 @@ params["sh_method"] = 1   # 0 - MSSH, 1 - FSSH
 params["decoherence_method"] = 3  # 0 - no decoherence, 1 - decoherence (ID-A), 2 - MSDM, 3 - DISH
 params["Boltz_opt"] = 3
 params["ntraj"] = 1000
-params["dt"] = 41.0  # in a.u.
+params["dt"] = 41.3413  # in a.u.
 params["T"] = 300.0
 
 print "\nPrinting params from run_step3.py"
