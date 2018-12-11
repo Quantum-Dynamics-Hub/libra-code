@@ -30,23 +30,32 @@ params["T"] = 300.0
 
 params["nfiles"] = 300 # number of direct Ham files we want to include 
 params["nsteps"] = 20000 # total length of quasi-stochastical Ham
-params["Nfreqs"] = 1 # number of nuclear modes included 
-params["ntraj"] = 100 #number of stochastic SH 
+params["Nfreqs"] = 1 # number of frequency included 
+params["ntraj"] = 2000 #number of stochastic SH 
 
-# 35 - HOMO
-# 36 - LUMO
 params["norbitals"] = 56
-params["active_space"] = [35,36]   # L -> H
-params["istate"] = 1 # initial state
+params["active_space"] = [36,37,38]   # 36-L; 37-L+1
+params["istate"] = 2 # initial state, start from zero
 
-params["set_deco"] = 1 # whether to set decoherence time manually, 0 - no; 1 - yes
-params["deco_time"]  =  6.5 # dephasing time obtained from the direct vibronic Ham files, in fs
+params["set_decoherence"] = -1 # how to set decoherence time , 
+                               # -1 - don't include decoherence effects
+                               # 0 - set decoherence time use Libra module; 
+			       # 1 - set decoherence time manually
 
+params["deco_time"]  =  6.5 # decoherence time obtained from the direct vibronic Ham files, in fs
+                            # works only when set_decoherence = 1
 
-params["rt"] = "res/" #directory containning the direct Ham files
-params["Hvib_re_prefix"] = "0_Ham_"
+params["time_inteval"] = 1000 # the QSH energies and couplings are printed out every time_interval steps
+                              # QSH energies and couplings files will be stored in out directory
+
+# input data
+params["Hvib_re_prefix"] = "res/0_Ham_" # need to make res directory before running the script
 params["Hvib_re_suffix"] = "_re"
-params["Hvib_im_prefix"] = "0_Ham_"
+params["Hvib_im_prefix"] = "res/0_Ham_"
 params["Hvib_im_suffix"] = "_im"
+
+# output data
+params["qsh_Ham_prefix"] = "out/qsh_Ham_" # need to make out directory before running the script
+
 
 qstochastic_Ham.run(params)
