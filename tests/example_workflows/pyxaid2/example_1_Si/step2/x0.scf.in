@@ -1,6 +1,6 @@
 &CONTROL
   calculation = 'scf',
-  pseudo_dir = '/gpfs/scratch/brendan/Structure_Optimization/bulk_Si/1x1x1_unitcell/',
+  pseudo_dir = '/util/academic/espresso/6.2.1/pseudopotentials/upf_files/',
   outdir = './',
   prefix = 'x0',
   disk_io = 'low',
@@ -29,7 +29,7 @@
 /
 
 ATOMIC_SPECIES
-Si  28.086 Si.pbe-n-kjpaw_psl.1.0.0.UPF
+Si  28.086 Si.pbe-n-kjpaw_psl.0.1.UPF
 
 K_POINTS gamma
 
