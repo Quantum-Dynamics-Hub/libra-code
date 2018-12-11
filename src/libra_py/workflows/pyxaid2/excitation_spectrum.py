@@ -154,7 +154,7 @@ def calculate(energy_prefix,energy_suffix,dip_prefix,dip_suffix,isnap,fsnap,opt,
 
 
 
-def ham_map(prefix,isnap,fsnap,suffix,opt,scl,outfile):
+def ham_map(prefix, isnap, fsnap, suffix, opt, scl, outfile):
     """
     This fucntions Computes the average value of the Hamiltonian matrix elements in energy axis:
 
@@ -171,7 +171,7 @@ def ham_map(prefix,isnap,fsnap,suffix,opt,scl,outfile):
     f = open(filename,"r")
     a = f.readline()
     f.close()
-    sz = len(a.split())/2
+    sz = len(a.split())
     print "Map size is %d by %d" % (sz,sz)
 
     #========= Prepare storage ============
