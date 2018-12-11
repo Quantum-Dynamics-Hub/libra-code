@@ -99,19 +99,15 @@
   * parse_gamess_basis(filename) - parse the file with the GAMESS-type format of the atomic basis data
 
 
+## pdos.py - handling projected densities of states
+  * def convolve(X0, Y0, dx0, dx, var) - convolve data with Gaussian distribution
+  * QE_pdos(prefix, emin, emax, de, projections, Ef, outfile, do_convolve, de_new, var) - compute projected density of states (for QE)
+
+
 ## probabilities.py - the module that implements probabilities for certain events in statistical mechanics
   * Boltz_prob_up(E, T) - probability to have kinetic energy more or equal to E at temperature T
   * HO_prob(E, qn, T) - probability to find a multi-dimensional HO in one of its states
   * HO_prob_up(E, qn, T) - probability that each of the HO occupies states above given quantum number
-
-
-## proj_dos.py - handling projected densities of states
-  * fermi_integral(bnds, ef, degen) - auxiliary function to compute the Fermi integral
-  * fermi_energy(bnds, Nel, degen) - auxiliary function to compute the Fermi energy
-  * pdos(emin, emax, de, projections, prefix, outfile, Nel) - compute projected density of states (for QE)
-  * convolve(X, dx0, dx, var) - convolve data with Gaussians
-  * printout(out,TM,X,R) - auxiliary function to output data to files
-  * sum_pdos(prefix,lst,nat,symb_lst,out,E_f,nspin,do_convolve,dx0,dx,var,PT) - compute pDOS of various types (for QE)
 
 
 ## QE_methods.py - functions for helping with QE calculations
