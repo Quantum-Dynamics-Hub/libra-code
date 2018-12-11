@@ -12,23 +12,24 @@
   nat = 8,
   ntyp = 1,
   nbnd = 60,
-  ecutwfc = 50,
-  ecutrho = 500,
+  ecutwfc = 40,
+  ecutrho = 400,
   nspin = 1,
   !starting_magnetization(1) = 0.1,
   occupations = 'smearing',
-  degauss = 0.01,
+  degauss = 0.02,
   nosym = .true.,
 /
 
 &ELECTRONS
   electron_maxstep = 100,
-  conv_thr = 1.D-9,
-  mixing_beta = 0.7,
+  conv_thr = 1.D-8,
+  mixing_beta = 0.35,
+  diago_full_acc = .TRUE.,
 /
 
 ATOMIC_SPECIES
-Si  28.086 Si.pbesol-n-kjpaw_psl.0.1.UPF
+Si  28.086 Si.pbe-n-kjpaw_psl.0.1.UPF
 
 K_POINTS gamma
 
