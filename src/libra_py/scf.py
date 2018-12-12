@@ -23,7 +23,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import datautils
-import proj_dos
+import pdos
 
 def takeSecond(elem):
     return elem[1]

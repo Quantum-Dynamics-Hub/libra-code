@@ -29,13 +29,54 @@ import libra_py.units as units
 import libra_py.acf_vector as acf_vector
 import libra_py.tsh as tsh
 
-def mat_freqs(X, a, b, dt, filename, Nfreqs):
-# X - is a list of matrices
-# a, b - indices that define which matrix elements to analyze
-# dt - time step in a.u.
-# filename - prefix for the filename to which the data will be printed out
-# Nfreqs - the number of frequencies we want to extract
 
+def decoh_method(set_decoherence,nstates,Hvib,deco_time):
+    """
+    set_decoherence - possible value, -1, 0, 1
+    nstates - number of states
+    Hvib, nstates x nstates matrix, vibronic Ham
+    deco_time - float, decoherence time in case we want to set it muanlly
+
+    Returns: nstates x nstates matrix, decoherence time, decoherence rates
+    """
+    if set_decoherence == 0:
+        # set decoherence time from the Libra module
+        # Akimov and Prezhdo, J. Phys. Chem. Lett., 2013, 4, 3857
+        decoh_times, decoh_rates = comn.decoherence_times(Hvib, 1)
+
+    else:
+       decoh_times = MATRIX(nstates, nstates)
+       decoh_rates = MATRIX(nstates, nstates)
+
+       for a in xrange(nstates):
+           for b in xrange(nstates):
+               if a==b:
+                   decoh_times.set(a,a, 1000000.0)
+                   decoh_rates.set(a,a, 0.0)
+               else:
+                   if set_decoherence ==1:
+                       # set the decoherence time manually
+                       tau = deco_time # in a.u. unit
+                       decoh_times.set(a,b, tau)
+                       decoh_rates.set(a,b, 1.0/tau)
+
+                   elif set_decoherence == -1:
+                       # don't include decoherence effect, set it to infinite
+                       decoh_times.set(a,b, 1000000.0)
+                       decoh_rates.set(a,b, 0.0)
+
+    return decoh_times, decoh_rates
+
+def mat_freqs(X, a, b, dt, filename, Nfreqs):
+    """
+    X - is a list of matrices
+    a, b - indices that define which matrix elements to analyze
+    dt - time step in a.u.
+    filename - prefix for the filename to which the data will be printed out
+    Nfreqs - the number of frequencies we want to extract
+
+    Return: list of list, frequencies
+    """
     N = len(X)
     sz = X[0].num_of_rows
     freqs = []
@@ -131,21 +172,24 @@ def compute_Hvib(Nfreqs, freqs, t, nstates,
                  H_vib_re_ave, H_vib_re_std, dw_Hvib_re, up_Hvib_re, 
                  H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im, 
                  dev):
-# Compute the QSH Hamiltonians
-# Nfreqs - the number of frequencies we want to extract
-# freqs - 2D list contains the frequencies for energies and couplings
-# t - time step in a.u.
-# nstates - number of states
-# H_vib_re_ave - average of energies for direct Hamiltonian
-# H_vib_im_ave - average of couplings for direct Hamiltonian
-# H_vib_re_std - std of energies for direct Hamiltonian
-# H_vib_im_std - std of couplings for direct Hamiltonian
-# up_Hvib_re - maximum value of energies for direct Hamiltonian
-# up_Hvib_im - maximum value of couplings for direct Hamiltonian
-# dw_Hvib_re - minimal value of energies for direct Hamiltonian
-# dw_Hvib_im - minimal value of couplings for direct Hamiltonian
-# return nstates x nstates complex matrix contains QSH Hamiltonian and couplings 
-
+    """
+    Compute the QSH Hamiltonians
+    Nfreqs - the number of frequencies we want to extract
+    freqs - 2D list contains the frequencies for energies and couplings
+    t - time step in a.u.
+    nstates - number of states
+    H_vib_re_ave - nstates x nstates matrix, average of energies for direct Hamiltonian
+    H_vib_im_ave - nstates x nstates matrix, average of couplings for direct Hamiltonian
+    H_vib_re_std - nstates x nstates matrix, std of energies for direct Hamiltonian
+    H_vib_im_std - nstates x nstates matrix, std of couplings for direct Hamiltonian
+    up_Hvib_re - nstates x nstates matrix, maximum value of energies for direct Hamiltonian
+    up_Hvib_im - nstates x nstates matrix, maximum value of couplings for direct Hamiltonian
+    dw_Hvib_re - nstates x nstates matrix, minimal value of energies for direct Hamiltonian
+    dw_Hvib_im - nstates x nstates matrix, minimal value of couplings for direct Hamiltonian
+    std - nstates x nstates matrix, std for direct Hamiltonian
+    
+    Return: nstates x nstates complex matrix contains QSH Hamiltonian and couplings 
+    """
     Hvib_stoch_re = MATRIX(nstates,nstates)
     Hvib_stoch_im = MATRIX(nstates,nstates)
 
@@ -181,7 +225,33 @@ def compute_Hvib(Nfreqs, freqs, t, nstates,
 
 
 
-def run(params):
+def run_namd(params):
+    """
+    The main procedure to run NA-MD calculations according to QSH workflow
+    
+    === Required parameter keys:  ===
+
+    params["nsteps"]           [int] - define the length of QSH-NAMD simulation
+    params["active_space"]     [list of ints] - which orbitals we care about (indexing starts with 0)
+    params["norbitals"]        [int] - how many lines/columns in the file
+    params["nfiles"]           [int] - how many files to read
+    params["qsh_Ham_prefix"]   [string] - the prefix of output files
+    params["time_inteval"]     [int] - define the time interval between adjacent output files  
+    params["deco_time"]        [float] - decoherenc time in case we want to set it manually
+
+    params["dt"]               [double] - nuclear dynamics integration time step [in a.u. of time, default: 41.0]
+    params["istate"]           [int] - index of the initial state [default: 0]  
+    params["ntraj"]            [int] - the number of stochastic surface hopping trajectories [default: 1]
+    params["T"]                [double] - temperature of nuclear/electronic dynamics [in K, default: 300.0]
+    params["set_decoherence"]  [int] - selection of how we include decoherence effect
+
+    """
+
+    critical_params = ["norbitals", "active_space", "nfiles",  "nsteps","qsh_Ham_prefix" ]
+    default_params = { "T":300.0, "ntraj":100, "Nfreqs":1, 
+                       "set_decoherence":-1, "deco_time":100000, "dt":41.0, 
+                       "istate":1, "time_inteval":1 }
+    comn.check_input(params, default_params, critical_params)
 
     use_boltz_factor = 1;
     dt = params["dt"]
@@ -248,31 +318,8 @@ def run(params):
 	            freqs[i][j] = mat_freqs(H_vib_im, i, j, dt, "out/H_vib_im_D_", Nfreqs) 
 
     
-    if set_decoherence == 0:
-        # set decoherence time from the Libra module
-        # Akimov and Prezhdo, J. Phys. Chem. Lett., 2013, 4, 3857
-        decoh_times, decoh_rates = comn.decoherence_times(Hvib, 1)
+    decoh_times, decoh_rates = decoh_method(set_decoherence, nstates, Hvib, deco_time)    
 
-    else:
-       decoh_times = MATRIX(nstates, nstates)
-       decoh_rates = MATRIX(nstates, nstates)
-
-       for a in xrange(nstates):
-           for b in xrange(nstates):
-               if a==b:
-                   decoh_times.set(a,a, 1000000.0)
-                   decoh_rates.set(a,a, 0.0)
-               else:
-	           if set_decoherence ==1:
-		       # set the decoherence time manually
-                       tau = deco_time # in a.u. unit
-                       decoh_times.set(a,b, tau)
-                       decoh_rates.set(a,b, 1.0/tau)
-
-		   elif set_decoherence == -1:
-		       # don't include decoherence effect, set it to infinite
-                       decoh_times.set(a,b, 1000000.0)
-                       decoh_rates.set(a,b, 0.0)
 
     if len(freqs[0][0]) < Nfreqs:
         Nfreqs = len(freqs[0][0])
@@ -283,12 +330,12 @@ def run(params):
     dev = [ [ 0.0 for i in xrange(nstates)] for j in xrange(nstates)]
     for r in xrange(1000000):
         fu = [ [ 0.0 for i in xrange(nstates)] for j in xrange(nstates)]
-	for i in xrange(nstates):
-	    for j in xrange(nstates):
-	        for k in xrange(Nfreqs):
-		       fu[i][j] = fu[i][j] + freqs[i][j][k][2] * math.sin(freqs[i][j][k][0]*r*dt/units.au2wavn)
+        for i in xrange(nstates):
+            for j in xrange(nstates):
+                for k in xrange(Nfreqs):
+		    fu[i][j] = fu[i][j] + freqs[i][j][k][2] * math.sin(freqs[i][j][k][0]*r*dt/units.au2wavn)
  	
-	for i in xrange(nstates):
+        for i in xrange(nstates):
 	     for j in xrange(nstates):
                   dev[i][j] = dev[i][j] + fu[i][j]**2
      

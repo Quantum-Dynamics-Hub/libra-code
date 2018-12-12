@@ -29,13 +29,13 @@ params["dt"] = 41.0
 params["T"] = 300.0 
 
 params["nfiles"] = 300 # number of direct Ham files we want to include 
-params["nsteps"] = 20000 # total length of quasi-stochastical Ham
+params["nsteps"] = 200 # total length of quasi-stochastical Ham
 params["Nfreqs"] = 1 # number of frequency included 
 params["ntraj"] = 2000 #number of stochastic SH 
 
-params["norbitals"] = 56
-params["active_space"] = [36,37,38]   # 36-L; 37-L+1
-params["istate"] = 2 # initial state, start from zero
+params["norbitals"] = 62
+params["active_space"] = [30,31]   # L -> H
+params["istate"] = 1 # initial state, start from zero
 
 params["set_decoherence"] = -1 # how to set decoherence time , 
                                # -1 - don't include decoherence effects
@@ -49,13 +49,13 @@ params["time_inteval"] = 1000 # the QSH energies and couplings are printed out e
                               # QSH energies and couplings files will be stored in out directory
 
 # input data
-params["Hvib_re_prefix"] = "res/0_Ham_" # need to make res directory before running the script
+params["Hvib_re_prefix"] = "/home/weili/bzs/res/0_Ham_" # need to make res directory before running the script
 params["Hvib_re_suffix"] = "_re"
-params["Hvib_im_prefix"] = "res/0_Ham_"
+params["Hvib_im_prefix"] = "/home/weili/bzs/res/0_Ham_"
 params["Hvib_im_suffix"] = "_im"
 
 # output data
 params["qsh_Ham_prefix"] = "out/qsh_Ham_" # need to make out directory before running the script
 
 
-qstochastic_Ham.run(params)
+qstochastic_Ham.run_namd(params)
