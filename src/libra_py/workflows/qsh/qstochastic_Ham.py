@@ -23,30 +23,70 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-#from libra_py import *
 
 import libra_py.workflows.common_utils as comn
-from libra_py.workflows.common_utils import mat_stat, flt_stat, find_maxima
-import libra_py.workflows.units as units
+import libra_py.units as units
+import libra_py.acf_vector as acf_vector
+import libra_py.tsh as tsh
 
 
+def decoh_method(set_decoherence,nstates,Hvib,deco_time):
+    """
+    set_decoherence - possible value, -1, 0, 1
+    nstates - number of states
+    Hvib, nstates x nstates matrix, vibronic Ham
+    deco_time - float, decoherence time in case we want to set it muanlly
+
+    Returns: nstates x nstates matrix, decoherence time, decoherence rates
+    """
+    if set_decoherence == 0:
+        # set decoherence time from the Libra module
+        # Akimov and Prezhdo, J. Phys. Chem. Lett., 2013, 4, 3857
+        decoh_times, decoh_rates = comn.decoherence_times(Hvib, 1)
+
+    else:
+       decoh_times = MATRIX(nstates, nstates)
+       decoh_rates = MATRIX(nstates, nstates)
+
+       for a in xrange(nstates):
+           for b in xrange(nstates):
+               if a==b:
+                   decoh_times.set(a,a, 1000000.0)
+                   decoh_rates.set(a,a, 0.0)
+               else:
+                   if set_decoherence ==1:
+                       # set the decoherence time manually
+                       tau = deco_time # in a.u. unit
+                       decoh_times.set(a,b, tau)
+                       decoh_rates.set(a,b, 1.0/tau)
+
+                   elif set_decoherence == -1:
+                       # don't include decoherence effect, set it to infinite
+                       decoh_times.set(a,b, 1000000.0)
+                       decoh_rates.set(a,b, 0.0)
+
+    return decoh_times, decoh_rates
 
 def mat_freqs(X, a, b, dt, filename, Nfreqs):
-# X - is a list of matrices
-# a, b - indices that define which matrix elements to analyze
-# dt - time step in a.u.
-# filename - prefix for the filename to which the data will be printed out
-# Nfreqs - the number of frequencies we want to extract
+    """
+    X - is a list of matrices
+    a, b - indices that define which matrix elements to analyze
+    dt - time step in a.u.
+    filename - prefix for the filename to which the data will be printed out
+    Nfreqs - the number of frequencies we want to extract
 
+    Return: list of list, frequencies
+    """
     N = len(X)
     sz = X[0].num_of_rows
     freqs = []
-            
 
     # Collect info in a different format
     data_ab = []
     for n in xrange(N):
         data_ab.append(VECTOR(X[n].get(a,b), 0.0, 0.0))
+        #print X[n].get(a,b)
+    
     
     # Now compute ACFs of X matrix elements and print out the corresponding data
     T,  norm_acf,  raw_acf  = acf_vector.acf( acf_vector.center_data(data_ab)  , dt )  # dt is in a.u.
@@ -56,7 +96,7 @@ def mat_freqs(X, a, b, dt, filename, Nfreqs):
     dw = dw * units.inv_cm2Ha        # convert to Ha (atomic units)
     wspan = wspan * units.inv_cm2Ha        # convert to Ha (atomic units)
     
-    f = open(filename+"_acf"+str(a)+"_"+str(b)+".txt","w")   
+    f = open(filename+"_acf_"+str(a)+"_"+str(b)+".txt","w")   
     tsz = len(T)
     for it in xrange(tsz):
       f.write("%8.5f  %8.5f  %8.5f  \n" % (T[it]*units.au2fs , norm_acf[it], raw_acf[it]))
@@ -66,7 +106,7 @@ def mat_freqs(X, a, b, dt, filename, Nfreqs):
     W,  J  = acf_vector.ft(norm_acf,  wspan, dw, dt)  # dt is in a.u.
     jsz = len(W)
     
-    f = open(filename+"_spectrum"+str(a)+"_"+str(b)+".txt","w")
+    f = open(filename+"_spectrum_"+str(a)+"_"+str(b)+".txt","w")
     sp = MATRIX(jsz, 1)
     for iw in xrange(jsz):
         f.write("%8.5f  %8.5f  \n" % (W[iw]*units.au2wavn, J[iw] ) )
@@ -74,13 +114,13 @@ def mat_freqs(X, a, b, dt, filename, Nfreqs):
     f.close()
 
     
-    # Determine all frequencies (peaks) and sort them (in accending mannaer)
-    out = find_maxima(sp)
+    # Determine all frequencies (peaks) and sort them (in accending manner)
+    out = comn.find_maxima(sp)
 
     #print out
 
     lgfile = open("run.log", "a")
-    lgfile.write("Maximal peaks in the file "+filename+"_spectrum"+str(a)+"_"+str(b)+".txt\n")
+    lgfile.write("Maximal peaks in the file "+filename+"_spectrum_"+str(a)+"_"+str(b)+".txt\n")
 
     if Nfreqs > len(out):
         Nfreqs = len(out)
@@ -127,65 +167,57 @@ def mat_freqs(X, a, b, dt, filename, Nfreqs):
 
 
 
-def read_Hvib(prefix, act_sp):
-    """
-    prefix - 
-    act_sp - 
-    """
 
-    nstates = len(act_sp)
-    Hvib_im = MATRIX(nstates,nstates)
-    Hvib_re = MATRIX(nstates,nstates)
-    X_re = MATRIX(56,56)
-    X_im = MATRIX(56,56)
-
-    filename = rt+"0_Ham_"+str(i)
-    X_re.Load_Matrix_From_File(filename+"_re")
-    pop_submatrix(X_re, Hvib_re, act_sp, act_sp)
-    Hvib_re *= 0.5  # convert from Ry to Ha 
-
-    X_im.Load_Matrix_From_File(filename+"_im")
-    pop_submatrix(X_im, Hvib_im, act_sp, act_sp)
-    Hvib_im *= 0.5  # convert from Ry to Ha 
-
-    return Hvib_re, Hvib_im
-
-
-def compute_Hvib(Nfreqs, freqs_re0, freqs_re1, freqs_im, t, 
+def compute_Hvib(Nfreqs, freqs, t, nstates, 
                  H_vib_re_ave, H_vib_re_std, dw_Hvib_re, up_Hvib_re, 
                  H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im, 
                  dev):
-
-    Hvib_stoch_re = MATRIX(2,2)
-    Hvib_stoch_im = MATRIX(2,2)
-
-    fu = [0.0, 0.0, 0.0]
-    for i in xrange(Nfreqs):
-        fu[0] = fu[0] + freqs_re0[i][2] * math.sin(freqs_re0[i][0]*t/units.au2wavn)
-        fu[1] = fu[1] + freqs_re1[i][2] * math.sin(freqs_re1[i][0]*t/units.au2wavn)
-        fu[2] = fu[2] + freqs_im[i][2] * math.sin(freqs_im[i][0]*t/units.au2wavn)
+    """
+    Compute the QSH Hamiltonians
+    Nfreqs - the number of frequencies we want to extract
+    freqs - 2D list contains the frequencies for energies and couplings
+    t - time step in a.u.
+    nstates - number of states
+    H_vib_re_ave - nstates x nstates matrix, average of energies for direct Hamiltonian
+    H_vib_im_ave - nstates x nstates matrix, average of couplings for direct Hamiltonian
+    H_vib_re_std - nstates x nstates matrix, std of energies for direct Hamiltonian
+    H_vib_im_std - nstates x nstates matrix, std of couplings for direct Hamiltonian
+    up_Hvib_re - nstates x nstates matrix, maximum value of energies for direct Hamiltonian
+    up_Hvib_im - nstates x nstates matrix, maximum value of couplings for direct Hamiltonian
+    dw_Hvib_re - nstates x nstates matrix, minimal value of energies for direct Hamiltonian
+    dw_Hvib_im - nstates x nstates matrix, minimal value of couplings for direct Hamiltonian
+    std - nstates x nstates matrix, std for direct Hamiltonian
     
-    xab = H_vib_re_ave.get(0,0) + H_vib_re_std.get(0,0) * (fu[0]/dev[0] ) 
-    if xab < dw_Hvib_re.get(0,0):
-        xab = dw_Hvib_re.get(0,0)
-    elif xab > up_Hvib_re.get(0,0):
-        xab = up_Hvib_re.get(0,0)
-    Hvib_stoch_re.set(0,0,   xab )
+    Return: nstates x nstates complex matrix contains QSH Hamiltonian and couplings 
+    """
+    Hvib_stoch_re = MATRIX(nstates,nstates)
+    Hvib_stoch_im = MATRIX(nstates,nstates)
 
-    xab = H_vib_re_ave.get(1,1) + H_vib_re_std.get(1,1) * (fu[1]/dev[1] ) 
-    if xab < dw_Hvib_re.get(1,1):
-        xab = dw_Hvib_re.get(1,1)
-    elif xab > up_Hvib_re.get(1,1):
-        xab = up_Hvib_re.get(1,1)
-    Hvib_stoch_re.set(1,1,   xab )
+    fu = [ [ 0.0 for i in xrange(nstates)] for j in xrange(nstates)]
 
-    xab = H_vib_im_ave.get(0,1) + H_vib_im_std.get(0,1) * (fu[2]/dev[2] ) 
-    if xab < dw_Hvib_im.get(0,1):
-        xab = dw_Hvib_im.get(0,1)
-    elif xab > up_Hvib_im.get(0,1):
-        xab = up_Hvib_im.get(0,1)
-    Hvib_stoch_im.set(0,1,   xab )
-    Hvib_stoch_im.set(1,0,  -xab )
+    for i in xrange(nstates):
+        for j in xrange(nstates):
+            for k in xrange(Nfreqs):
+		    fu[i][j] = fu[i][j] + freqs[i][j][k][2] * math.sin(freqs[i][j][k][0]*t/units.au2wavn)
+
+    for i in xrange(nstates):
+        for j in xrange(nstates):
+	    if i==j:
+	        xab = H_vib_re_ave.get(i,j) + H_vib_re_std.get(i,j) * (fu[i][j]/dev[i][j] ) 
+                if xab < dw_Hvib_re.get(i,j):
+                    xab = dw_Hvib_re.get(i,j)
+                elif xab > up_Hvib_re.get(i,j):
+                    xab = up_Hvib_re.get(i,j)
+                Hvib_stoch_re.set(i,j,   xab )
+
+            elif i<j:
+		xab = H_vib_im_ave.get(i,j) + H_vib_im_std.get(i,j) * (fu[i][j]/dev[i][j] ) 
+                if xab < dw_Hvib_im.get(i,j):
+                    xab = dw_Hvib_im.get(i,j)
+                elif xab > up_Hvib_im.get(i,j):
+                    xab = up_Hvib_im.get(i,j)
+                Hvib_stoch_im.set(i,j,   xab )
+                Hvib_stoch_im.set(j,i,  -xab )
 
     Hvib_stoch = CMATRIX(Hvib_stoch_re, Hvib_stoch_im)
 
@@ -193,7 +225,33 @@ def compute_Hvib(Nfreqs, freqs_re0, freqs_re1, freqs_im, t,
 
 
 
-def run(params):
+def run_namd(params):
+    """
+    The main procedure to run NA-MD calculations according to QSH workflow
+    
+    === Required parameter keys:  ===
+
+    params["nsteps"]           [int] - define the length of QSH-NAMD simulation
+    params["active_space"]     [list of ints] - which orbitals we care about (indexing starts with 0)
+    params["norbitals"]        [int] - how many lines/columns in the file
+    params["nfiles"]           [int] - how many files to read
+    params["qsh_Ham_prefix"]   [string] - the prefix of output files
+    params["time_inteval"]     [int] - define the time interval between adjacent output files  
+    params["deco_time"]        [float] - decoherenc time in case we want to set it manually
+
+    params["dt"]               [double] - nuclear dynamics integration time step [in a.u. of time, default: 41.0]
+    params["istate"]           [int] - index of the initial state [default: 0]  
+    params["ntraj"]            [int] - the number of stochastic surface hopping trajectories [default: 1]
+    params["T"]                [double] - temperature of nuclear/electronic dynamics [in K, default: 300.0]
+    params["set_decoherence"]  [int] - selection of how we include decoherence effect
+
+    """
+
+    critical_params = ["norbitals", "active_space", "nfiles",  "nsteps","qsh_Ham_prefix" ]
+    default_params = { "T":300.0, "ntraj":100, "Nfreqs":1, 
+                       "set_decoherence":-1, "deco_time":100000, "dt":41.0, 
+                       "istate":1, "time_inteval":1 }
+    comn.check_input(params, default_params, critical_params)
 
     use_boltz_factor = 1;
     dt = params["dt"]
@@ -204,10 +262,12 @@ def run(params):
     nfiles = params["nfiles"]
     nstates = len(act_sp)
     istate = params["istate"]
-    rt = params["rt"]
     Nfreqs = params["Nfreqs"]
     ntraj = params["ntraj"]
+    set_decoherence = params["set_decoherence"]
     deco_time = params["deco_time"] * units.fs2au
+    time_inteval = params["time_inteval"]
+    qsh_Ham_prefix = params["qsh_Ham_prefix"]
 
     rnd = Random()
 
@@ -217,8 +277,6 @@ def run(params):
     H_vib_re = []  # list of MATRIX
     H_vib_im = []  # list of MATRIX
     H_vib = [] # list of CMATRIX
-    dH = [] # list of MATRIX
-    dev = [0.0, 0.0, 0.0]
 
     H_vib_re_ave, H_vib_re_std = None, None
     H_vib_im_ave, H_vib_im_std = None, None
@@ -226,7 +284,6 @@ def run(params):
     dw_Hvib_im, up_Hvib_im = None, None
 
     freqs_re, freqs_im = None, None
-
 
     for i in xrange(0, nfiles): # how many files we have
 
@@ -244,94 +301,54 @@ def run(params):
         H_vib_re.append(hvib_re)
         H_vib_im.append(hvib_im)
 
-        dE = MATRIX(nstates, nstates)
-        for a in xrange(nstates):
-            for b in xrange(nstates):
-                dE.set(a,b, hvib_re.get(a,a) - hvib_re.get(b,b))
-        dH.append(dE)
-
-
     
-    H_vib_re_ave, H_vib_re_std, dw_Hvib_re, up_Hvib_re = mat_stat(H_vib_re)
-    H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im = mat_stat(H_vib_im)    
+    H_vib_re_ave, H_vib_re_std, dw_Hvib_re, up_Hvib_re = comn.mat_stat(H_vib_re)
+    H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im = comn.mat_stat(H_vib_im)    
     print "dw_re = "; dw_Hvib_re.show_matrix()
     print "up_re = "; up_Hvib_re.show_matrix()
     print "dw_im = "; dw_Hvib_im.show_matrix()
     print "up_im = "; up_Hvib_im.show_matrix()
 
+    freqs = [ [ [] for i in xrange(nstates)] for j in xrange(nstates)]
+    for i in xrange(nstates):
+        for j in xrange(nstates):
+                if i == j:
+	            freqs[i][j] =  mat_freqs(H_vib_re, i, j, dt, "out/H_vib_re_E_", Nfreqs) 
+	        else:
+	            freqs[i][j] = mat_freqs(H_vib_im, i, j, dt, "out/H_vib_im_D_", Nfreqs) 
 
-    freqs_re0 = mat_freqs(H_vib_re, 0, 0, dt, "H_vib_re_E0_", Nfreqs)
-    freqs_re1 = mat_freqs(H_vib_re, 1, 1, dt, "H_vib_re_E1_", Nfreqs)
-    freqs_im = mat_freqs(H_vib_im, 0, 1, dt, "H_vib_im_D01_", Nfreqs)
-
-    dH_ave, dH_std, dw_dH, up_dH =  mat_stat(dH)
-
-
-    """
-    decoh_times = MATRIX(nstates, nstates)
-    decoh_rates = MATRIX(nstates, nstates)
-
-    for a in xrange(nstates):
-        for b in xrange(nstates):
-            if a==b:
-                decoh_times.set(a,a, 1000000.0)
-                decoh_rates.set(a,a, 0.0)
-            else:
-                de = dH_std.get(a,b)
-                if de>0.0:
-                      decoh_times.set(a,b, deco_time )
-                      decoh_rates.set(a,b, 1.0/deco_time )
-
-    print "Decoherence rates matrix (a.u.^-1):"
-    decoh_rates.show_matrix()
-    """
-
-    decoh_times, decoh_rates = comn.decoherence_times(Hvib, 1)
+    
+    decoh_times, decoh_rates = decoh_method(set_decoherence, nstates, Hvib, deco_time)    
 
 
-    if len(freqs_re0) < Nfreqs:
-        Nfreqs = len(freqs_re0)
+    if len(freqs[0][0]) < Nfreqs:
+        Nfreqs = len(freqs[0][0])
         print "The input Nfreqs is larger than the maximal number of the peaks, changing it to ", Nfreqs
 
     # Ok, now we have the function - sum of sines, so let's compute the standard deviation
     # This is a silly method - just do it numerically
-
+    dev = [ [ 0.0 for i in xrange(nstates)] for j in xrange(nstates)]
     for r in xrange(1000000):
-
-        fu = [0.0, 0.0, 0.0]
-        for i in xrange(Nfreqs):
-            fu[0] = fu[0] + freqs_re0[i][2] * math.sin(freqs_re0[i][0]*r*dt/units.au2wavn)
-            fu[1] = fu[1] + freqs_re1[i][2] * math.sin(freqs_re1[i][0]*r*dt/units.au2wavn)
-            fu[2] = fu[2] + freqs_im[i][2] * math.sin(freqs_im[i][0]*r*dt/units.au2wavn)
-
-        for i in xrange(3):
-            dev[i] = dev[i] + fu[i]**2
-
-    for i in xrange(3):
-        dev[i] = math.sqrt( dev[i] / 1000000.0 )
-                    
-
-    bf = math.exp( - ( H_vib_re_ave.get(1,1) - H_vib_re_ave.get(0,0) )/(units.kb*T) )
-    print "Boltzmann factor = ", bf
-    # bf = e/g,  e + g = 1;   e + e/bf = 1 =>  e *(1 + 1/bf) = 1 =>  e = 1/ (1 + 1/bf) = bf / (1 + bf)
-    print "Equilibrium Ex st. population = ", bf /( 1.0 + bf )
-    print freqs_re0, freqs_re1, freqs_im
-
-    tau = [0.0, 0.0, 0.0]                 
-    tau[0] = (2.0*math.pi*units.au2wavn/freqs_re0[0][0] )*dt
-    tau[1] = (2.0*math.pi*units.au2wavn/freqs_re1[0][0] )*dt
-    tau[2] = (2.0*math.pi*units.au2wavn/freqs_im[0][0] )*dt
- 
-    print tau, "in a.u."
-
-
+        fu = [ [ 0.0 for i in xrange(nstates)] for j in xrange(nstates)]
+        for i in xrange(nstates):
+            for j in xrange(nstates):
+                for k in xrange(Nfreqs):
+		    fu[i][j] = fu[i][j] + freqs[i][j][k][2] * math.sin(freqs[i][j][k][0]*r*dt/units.au2wavn)
+ 	
+        for i in xrange(nstates):
+	     for j in xrange(nstates):
+                  dev[i][j] = dev[i][j] + fu[i][j]**2
+     
+    for i in xrange(nstates):
+	 for j in xrange(nstates):
+               dev[i][j] = math.sqrt( dev[i][j] / 1000000.0 )
+			 
     ################## Part 2: Run the dynamics with q-stochastic Hamiltonian ================
 
 
     out = open("populations.txt", "w")
     out.close()
-
- 
+	
     t = 0.0
 
     Cadi = []
@@ -342,8 +359,8 @@ def run(params):
         Cadi[traj].set(istate, 0, 1.0+0.0j)
         state.append( istate  )
     
-
-    Hvib = compute_Hvib(Nfreqs, freqs_re0, freqs_re1, freqs_im, t, 
+    # for initization
+    Hvib = compute_Hvib(Nfreqs, freqs, t, nstates,
                         H_vib_re_ave, H_vib_re_std, dw_Hvib_re, up_Hvib_re, 
                         H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im, 
                         dev)
@@ -351,22 +368,18 @@ def run(params):
     for i in xrange(1, nsteps): # nsteps     
 
         for traj in xrange(ntraj):
-#            print traj
             propagate_electronic(0.5*dt, Cadi[traj], Hvib)
             Cadi[traj] = msdm(Cadi[traj], 0.5*dt, state[traj], decoh_rates)
 
-    
-        Hvib = compute_Hvib(Nfreqs, freqs_re0, freqs_re1, freqs_im, i*dt, 
+        # compute QSH Hvib at time i
+        Hvib = compute_Hvib(Nfreqs, freqs, i*dt, nstates,
                             H_vib_re_ave, H_vib_re_std, dw_Hvib_re, up_Hvib_re, 
                             H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im, 
                             dev)
 
         for traj in xrange(ntraj):
-#            print traj
             propagate_electronic(0.5*dt, Cadi[traj], Hvib)
             Cadi[traj] = msdm(Cadi[traj], 0.5*dt, state[traj], decoh_rates)
-    
-        
 
         denmat_se = []
         denmat_sh = []
@@ -386,12 +399,16 @@ def run(params):
         pop = tsh.update_sh_pop( state , nstates )
         dm_sh, dm_se = tsh.ave_pop(denmat_sh, denmat_se)
 
-
+        # print out the QSH population and vibronc Ham
         out = open("populations.txt", "a")
-        rec = (i*dt/41.0, dm_se.get(0,0).real, dm_se.get(1,1).real, pop[1], Hvib.get(0,0).real, Hvib.get(1,1).real, Hvib.get(0,1).imag  )
-        out.write("%8.5f %8.5f %8.5f  %8.5f  %8.5f %8.5f %8.5f \n" %  rec )
+	out.write("%d " % (i*dt/41.0) )
+	for j in xrange(nstates):
+	    out.write("   %8.5f  " % pop[j] )
+        out.write("\n")
         out.close()
+
+        if i%time_inteval == 0:
+	    Hvib.real().show_matrix(qsh_Ham_prefix+str(i)+"_re")
+	    Hvib.imag().show_matrix(qsh_Ham_prefix+str(i)+"_im")
       
 
-
-        
