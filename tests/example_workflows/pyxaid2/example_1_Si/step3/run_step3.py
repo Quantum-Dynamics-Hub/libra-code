@@ -129,10 +129,18 @@ params["Phi_dE"] = [];
 for i in xrange(len(params["Phi_basis"])):
     params["Phi_dE"].append(0.0)
 
+### Initialize paramters to scale energies and NACs ###
+en_gap = 3.21*units.ev2Ha # experimental band gap, units in Ha
+params["Chi_en_gap"] = en_gap
+# Scale NAC < i | d/dt | j >. Format = [ [i,j], scaling factor ]
+params["do_scale"] = 1
+params["sc_nac_method"] = 0
+params["NAC_dE"] = []
+params["NAC_dE"].append( [ [0,1], 1.0 ] )
 print params["Phi_dE"]
-print params["Phi_basis"]
+print params["NAC_dE"]
 
-
+os.system("mkdir res")
 # Actual simulation paramters
 params["init_time"] = 0  # starting from the first file 
 params["nsteps"] = 30
@@ -149,7 +157,7 @@ params["sh_method"] = 1   # 0 - MSSH, 1 - FSSH
 params["decoherence_method"] = 3  # 0 - no decoherence, 1 - decoherence (ID-A), 2 - MSDM, 3 - DISH
 params["Boltz_opt"] = 3
 params["ntraj"] = 1000
-params["dt"] = 41.0  # in a.u.
+params["dt"] = 41.3413  # in a.u.
 params["T"] = 300.0
 
 print "\nPrinting params from run_step3.py"

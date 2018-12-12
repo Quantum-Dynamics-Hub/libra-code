@@ -286,6 +286,61 @@ def sac_matrices(coeff):
     return P2C
 
 
+def scale_H_vib(hvib, en_gap, dNAC, sc_nac_method):
+    """
+    This function scales the energies and NACs in the vibrionic Hamiltonian
+    in the Chi basis.   
+    hvib   [List of CMATRIX objects] = CMATRIXlist of vibronic hamiltonians in the Chi basis
+    en_gap [Float]  = The desired energy gap (E_1 - E_0), for the Chi basis
+    dNAC   [List of lists of (list, float)] = The scaling terms by which specific nacs will 
+                                              be scaled datatype = list of lists of (list, float)
+
+                                                         [  [ [i,j], val ], ...  ]          
+
+                                             n and n+1 are the col (and thereby row) indicies of 
+                                             the nacs to be scaled by the value val 
+    sc_nac_method [Int] = The method used to scale NACs in the Chi basis, chosen by the user.
+                          If sc_nac_method = 1, then the NACs are scaled by the ivnerse of the
+                          magnitude of the change in energy, according to Lin et al.
+
+                          Reference:
+                          Lin, Y. & Akimov, A. V. J. Phys. Chem. A (2016) 
+    """
+
+    traj_len = len(hvib)
+
+    # Do the scaling
+    nrows = hvib[0].num_of_rows
+    ncols = hvib[0].num_of_cols   
+    for i in xrange(traj_len):
+
+        prev_gap = hvib[i].get(1,1) - hvib[i].get(0,0)
+        shift = en_gap - prev_gap 
+
+        # Scale the energy gap, by adding the scaling factors to all excited states
+        # This is to keep the ground state enegy equal to 0.0 by definition
+        for j in xrange(1,ncols):
+            hvib[i].add(j, j, shift)
+
+        if sc_nac_method == 0:
+
+            # Scales nacs manually as set by user
+            for it in dNAC:
+                a,b = it[0][0], it[0][1]
+                val = it[1]
+                hvib[i].scale(a,b, val)
+                hvib[i].scale(b,a, val)
+
+        elif sc_nac_method == 1:
+
+            # Scales nacs by the inverse of the change in energy gap
+            for j in xrange(1,ncols):
+                scl_nac = prev_gap / (shift + prev_gap)
+                hvib[i].scale(0, j, scl_nac)
+                hvib[i].scale(j, 0, scl_nac)
+
+    return hvib                    
+
 
 def compute_Hvib(basis, St_ks, E_ks, dE, dt):
     """
@@ -409,7 +464,7 @@ def run_namd(params):
 
         # Hvib in the basis of SDs
         hvib = compute_Hvib(params["Phi_basis"], St_dia_ks[i], E_dia_ks[i], params["Phi_dE"], dt) 
- 
+
         # SAC
         H_vib.append( P2C.H() * hvib * P2C )
 
@@ -419,10 +474,13 @@ def run_namd(params):
         H_vib[i].real().show_matrix("res/_hvib_chi_"+str(i)+"_re" % ())
         H_vib[i].imag().show_matrix("res/_hvib_chi_"+str(i)+"_im" % ())
 
+
+    #========== Scale H_vibs ===============
+    if params["do_scale"] == 1:
+        scale_H_vib(H_vib, params["Chi_en_gap"], params["NAC_dE"], params["sc_nac_method"])
+  
     #========== Compute decoherence times  ===============
     tau, decoh_rates = comn.decoherence_times(H_vib, 1)
-
-
 
     #========== Initialize the wavefunction amplitudes ===============
     # TD-SE coefficients
