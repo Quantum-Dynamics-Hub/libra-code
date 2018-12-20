@@ -101,11 +101,12 @@ def get_data(params):
     norbitals = params["norbitals"]  # the number of orbitals in the input files
     active_space = params["active_space"]
     nstates = len(active_space)
+    init_time = params["init_time"]
     nsteps = params["nsteps"]
 
     S, St, E = [], [], [] 
 
-    for i in range(0,nsteps):
+    for i in range(init_time,nsteps):
 
         filename_re = params["S_re_prefix"]+str(i)+params["S_re_suffix"]
         filename_im = params["S_im_prefix"]+str(i)+params["S_im_suffix"]
@@ -144,6 +145,7 @@ def apply_state_reordering(St, E, params):
     comn.check_input(params, default_params, critical_params)
 
 
+    init_time = params["init_time"]
     nsteps = len(St)
     nstates = St[0].num_of_cols
 
@@ -159,7 +161,7 @@ def apply_state_reordering(St, E, params):
         perm_t.append(a)
 
 
-    for i in range(0, nsteps):
+    for i in range(init_time, nsteps):
     
         ### Perform state reordering (must be done before the phase correction) ###
     
@@ -235,6 +237,7 @@ def apply_phase_correction(St, params):
     comn.check_input(params, default_params, critical_params)
 
 
+    init_time = params["init_time"]
     nsteps = len(St)
     nstates = St[0].num_of_cols
 
@@ -244,7 +247,7 @@ def apply_phase_correction(St, params):
         cum_phase.set(a, 0, 1.0+0.0j)
 
 
-    for i in range(0, nsteps):
+    for i in range(init_time, nsteps):
 
         if params["do_phase_correction"]==1:
             ### Compute the instantaneous phase correction factors ###
@@ -448,9 +451,11 @@ def run_namd(params):
     P2C = sac_matrices(params["P2C"])
     
     S_dia_ks, St_dia_ks, E_dia_ks = get_data(params)  
+
     apply_state_reordering(St_dia_ks, E_dia_ks, params)    
     apply_phase_correction(St_dia_ks, params)
 
+    init_time = params["init_time"]
     nsteps = len(St_dia_ks)
     nstates = len(params["P2C"])
 
@@ -462,23 +467,37 @@ def run_namd(params):
     H_vib = []
     for i in xrange(nsteps):
 
+        # Make time-derivative overlap matriices for phi and chi basis
+        St_phi = mapping.ovlp_mat_arb(params["Phi_basis"], params["Phi_basis"], St_dia_ks[i])
+        St_chi = P2C.H() * St_phi * P2C
+
+        # Print out the time-derivative overlaps for all considered basis states
+        St_dia_ks[i].real().show_matrix("_res/_St_ks_"+str(i+init_time)+"_re" % ())
+        St_phi.real().show_matrix("_res/_St_phi_"+str(i+init_time)+"_re" % ())
+        St_chi.real().show_matrix("_res/_St_chi_"+str(i+init_time)+"_re" % ())
+
         # Hvib in the basis of SDs
         hvib = compute_Hvib(params["Phi_basis"], St_dia_ks[i], E_dia_ks[i], params["Phi_dE"], dt) 
 
+        # make files to store phi and chi hamiltonians
+        hvib.real().show_matrix("_res/_hvib_phi_"+str(i+init_time)+"_re" % ())
+        hvib.imag().show_matrix("_res/_hvib_phi_"+str(i+init_time)+"_im" % ())
+
         # SAC
         H_vib.append( P2C.H() * hvib * P2C )
-
-        # make files to store phi and chi hamiltonians
-        hvib.real().show_matrix("res/_hvib_phi_"+str(i)+"_re" % ())
-        hvib.imag().show_matrix("res/_hvib_phi_"+str(i)+"_im" % ())
-        H_vib[i].real().show_matrix("res/_hvib_chi_"+str(i)+"_re" % ())
-        H_vib[i].imag().show_matrix("res/_hvib_chi_"+str(i)+"_im" % ())
 
 
     #========== Scale H_vibs ===============
     if params["do_scale"] == 1:
         scale_H_vib(H_vib, params["Chi_en_gap"], params["NAC_dE"], params["sc_nac_method"])
-  
+ 
+    for i in xrange(nsteps):
+
+        # make files to store phi hamiltonians
+        H_vib[i].real().show_matrix("_res/_hvib_chi_"+str(i)+"_re" % ())
+        H_vib[i].imag().show_matrix("_res/_hvib_chi_"+str(i)+"_im" % ())
+
+
     #========== Compute decoherence times  ===============
     tau, decoh_rates = comn.decoherence_times(H_vib, 1)
 
@@ -501,10 +520,10 @@ def run_namd(params):
 
 
     #========== Initialize output files ===============
-    f = open("_pop_Chi_se.txt","w");   f.close()
-    f = open("_pop_Chi_sh.txt","w");   f.close()
-    f = open("_pop_Phi_se.txt","w");   f.close()
-    f = open("_pop_Phi_sh.txt","w");   f.close()
+    #f = open("_pop_Chi_se.txt","w");   f.close()
+    #f = open("_pop_Chi_sh.txt","w");   f.close()
+    #f = open("_pop_Phi_se.txt","w");   f.close()
+    #f = open("_pop_Phi_sh.txt","w");   f.close()
     f = open(params["outfile"], "w");  f.close()
 
 
@@ -528,14 +547,13 @@ def run_namd(params):
         ave_pop_Chi_sh, ave_pop_Chi_se = tsh.ave_pop(denmat_Chi_sh, denmat_Chi_se)
         ave_pop_Phi_sh, ave_pop_Phi_se = tsh.ave_pop(denmat_Phi_sh, denmat_Phi_se)
 
-        add_printout(i, ave_pop_Chi_sh, "_pop_Chi_sh.txt")
-        add_printout(i, ave_pop_Chi_se, "_pop_Chi_se.txt")
-        add_printout(i, ave_pop_Phi_sh, "_pop_Phi_sh.txt")
-        add_printout(i, ave_pop_Phi_se, "_pop_Phi_se.txt")
-
+        #add_printout(i+init_time, ave_pop_Chi_sh, "_pop_Chi_sh.txt")
+        #add_printout(i+init_time, ave_pop_Chi_se, "_pop_Chi_se.txt")
+        #add_printout(i+init_time, ave_pop_Phi_sh, "_pop_Phi_sh.txt")
+        #add_printout(i+init_time, ave_pop_Phi_se, "_pop_Phi_se.txt")
         
         pops = tsh.compute_sh_statistics(nstates, istate)
-        comn.printout(i*params["dt"], pops, H_vib[i], params["outfile"])
+        comn.printout(((i+init_time)*params["dt"]), pops, H_vib[i], params["outfile"])
 
 
         #============== Propagation: TD-SE and surface hopping ==========
