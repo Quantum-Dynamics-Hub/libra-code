@@ -981,12 +981,22 @@ def project_out(Coeff, i):
         nrm = 1.0/math.sqrt(nrm)
 
     Coeff.scale(-1, 0, nrm)
-    Coeff.set(i, 0, 1.0+0.0j)
+    Coeff.set(i, 0, 0.0+0.0j)
+
 
 
 def collapse(Coeff, i):   
+    """ 
+    Collapse the wfc but such that to preserve the phase!
+    """
     Coeff *= 0.0
-    Coeff.set(i, 0, 1.0+0.0j)
+
+    ci = Coeff.get(i,0)
+    pi = (ci.conjugate() * ci).real
+    if pi>0.0:
+        Coeff.set(i, 0, ci/math.sqrt(pi))     
+    else:
+        Coeff.set(i, 0, 1.0+0.0j)
 
 
 def dish_py(Coeff, istate, t_m, tau_m, Hvib, boltz_opt, T, ksi1, ksi2):
@@ -1045,6 +1055,9 @@ def dish_py(Coeff, istate, t_m, tau_m, Hvib, boltz_opt, T, ksi1, ksi2):
                     project_out(Coeff, i)       # Project out of the state
                     fstate = istate
 
+            # The below section is not present in the DISH implementation in PYXAID
+            # but this is not how it should be done according to the paper of Jaeger et al.
+            # so this implementation does follow the algorithm outlined in the paper
             else:
                 # Second: project the system out of that state
                 project_out(Coeff, i)   # Project out of the state
