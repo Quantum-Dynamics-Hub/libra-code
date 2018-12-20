@@ -494,8 +494,8 @@ def run_namd(params):
     for i in xrange(nsteps):
 
         # make files to store phi hamiltonians
-        H_vib[i].real().show_matrix("_res/_hvib_chi_"+str(i)+"_re" % ())
-        H_vib[i].imag().show_matrix("_res/_hvib_chi_"+str(i)+"_im" % ())
+        H_vib[i].real().show_matrix("_res/_hvib_chi_"+str(i+init_time)+"_re" % ())
+        H_vib[i].imag().show_matrix("_res/_hvib_chi_"+str(i+init_time)+"_im" % ())
 
 
     #========== Compute decoherence times  ===============
