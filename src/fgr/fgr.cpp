@@ -255,8 +255,13 @@ double NEFGRL_rate(double V, double omega_DA, double t, double dtau,
   \param[in] req_nm     - equilibrum position displacement in the excited state vs. the ground state
   \param[in] shift_NE   - non-equilibrium shift of the normal modes
   \param[in] method     - flag that specifies which method to use:
-                        0 - Marcus theory
-  \param[in] beta       - kB*T thermal energy [a.u.]
+                        0 - Exact quantum result
+                        1 - LSC
+                        2 - CAV
+                        3 - CD
+                        4 - W0
+                        5 - Marcus
+  \param[in] beta       - inverse thermal energy [unitless]
 
   Returns: the instantaneous rate at a given time
 
@@ -349,7 +354,6 @@ MATRIX NEFGRL_population(double V, double omega_DA, double dtau,
 
   \param[in]     V      - D-A coupling [a.u. of energy] 
   \param[in]  omega_DA  - D-A electronic transition frequency [a.u.]
-  \param[in]      t     - time since the initial photoexcitation [a.u. of time]
   \param[in]   dtau     - integration timestep for backward propagation, used to take the integral above
                          (tau = dtau*n < t, where n is integer)
   \param[in] omega_nm   - frequencies of the bath normal modes
@@ -357,7 +361,15 @@ MATRIX NEFGRL_population(double V, double omega_DA, double dtau,
   \param[in] req_nm     - equilibrum position displacement in the excited state vs. the ground state
   \param[in] shift_NE   - non-equilibrium shift of the normal modes
   \param[in] method     - flag that specifies which method to use:
-                        0 - Marcus theory
+                        0 - Exact quantum result
+                        1 - LSC
+                        2 - CAV
+                        3 - CD
+                        4 - W0
+                        5 - Marcus
+  \param[in]      T     - time since the initial photoexcitation [a.u. of time]
+  \param[in]     dt     - integration timestep for the trajectory [a.u. of time]
+  \param[in]   beta     - hbar*omega_cutoff / kB*T inverse "temperature" [unitless]
 
   Returns: the matrix with: current time, instantaneous rate, population on the donor state
 
