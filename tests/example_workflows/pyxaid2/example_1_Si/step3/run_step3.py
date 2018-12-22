@@ -18,7 +18,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from libra_py import *
-from libra_py.workflows.pyxaid2 import *
+
+import libra_py.workflows.nbra.step3 as step3
 
 #############################################################################################
 # This is an example of an input file to run namd calculations with SOC
@@ -26,27 +27,33 @@ from libra_py.workflows.pyxaid2 import *
 # the diabatic cases for now. 
 #############################################################################################
 
+setup = 1  # both setups should give the same results
+
+
 params = {}
 
-rt="/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/tests/example_workflows/pyxaid2/example_1_Si/step2"
-
-##### Extract Spin-diabatic Information #####
-params["E_re_prefix"] = rt + "/res/E_dia_ks_"
-params["E_re_suffix"] = "_re"
-params["E_im_prefix"] = rt + "/res/E_dia_ks_"
-params["E_im_suffix"] = "_im"
-
-params["S_re_prefix"] = rt + "/res/S_dia_ks_"
-params["S_re_suffix"] = "_re"
-params["S_im_prefix"] = rt + "/res/S_dia_ks_"
-params["S_im_suffix"] = "_im"
-
-params["St_re_prefix"] = rt + "/res/St_dia_ks_"
-params["St_re_suffix"] = "_re"
-params["St_im_prefix"] = rt + "/res/St_dia_ks_"
-params["St_im_suffix"] = "_im"
-
+params["nsteps"] = 30
+params["dt"] = 41.3413  # in a.u.
 params["is_pyxaid_format"] = False
+params["do_state_reordering"] = 2
+params["state_reordering_alpha"] = 0.0
+params["do_phase_correction"] = 1
+
+params["data_set_paths"] = ["/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/tests/example_workflows/pyxaid2/example_1_Si/step2/res/"]
+params["E_re_prefix"] = "E_dia_ks_"; params["E_re_suffix"] = "_re"
+params["E_im_prefix"] = "E_dia_ks_"; params["E_im_suffix"] = "_im"
+params["S_re_prefix"] = "S_dia_ks_"; params["S_re_suffix"] = "_re"
+params["S_im_prefix"] = "S_dia_ks_"; params["S_im_suffix"] = "_im"
+params["St_re_prefix"] = "St_dia_ks_"; params["St_re_suffix"] = "_re"
+params["St_im_prefix"] = "St_dia_ks_"; params["St_im_suffix"] = "_im"
+
+if setup==1:
+    params["output_set_paths"] = ["/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/tests/example_workflows/pyxaid2/example_1_Si/step3/res_setup1/"]
+elif setup==2:
+    params["output_set_paths"] = ["/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/tests/example_workflows/pyxaid2/example_1_Si/step3/res_setup2/"]
+
+params["Hvib_re_prefix"] = "Hvib_"; params["Hvib_re_suffix"] = "_re"
+params["Hvib_im_prefix"] = "Hvib_"; params["Hvib_im_suffix"] = "_im"
 
 
 ### Set up basis and basis transformations ###
@@ -98,7 +105,6 @@ params["is_pyxaid_format"] = False
 
 """
 
-setup = 1
 
 if setup==1:
     # ===  Basis of KS orbitals ====
@@ -116,7 +122,6 @@ elif setup==2:
     # ===  Basis of SDs (Phi) ====
     params["Phi_basis"] = [ [ 3,-3 ], [ 3,-4 ], [ 4,-3 ], [ 3,-5 ], [ 5,-3 ], [ 3,-6 ], [ 6,-3 ] ]
 
-
 # ===  Basis of spin-adapted SDs (Chi) ====
 params["P2C"] = [ [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ], 
                   [0.0, 1.0,-1.0, 0.0, 0.0, 0.0, 0.0 ],
@@ -124,12 +129,19 @@ params["P2C"] = [ [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
                   [0.0, 0.0, 0.0, 0.0, 0.0, 1.0,-1.0 ] 
                 ]
 
-### ###
 params["Phi_dE"] = [];
 for i in xrange(len(params["Phi_basis"])):
     params["Phi_dE"].append(0.0)
 
-### Initialize paramters to scale energies and NACs ###
+
+step3.run(params)
+
+
+
+"""
+I keep it here just to have it handy - need to find out what to do with this
+
+### Initialize parameters to scale energies and NACs ###
 en_gap = 3.21*units.ev2Ha # experimental band gap, units in Ha
 params["Chi_en_gap"] = en_gap
 # Scale NAC < i | d/dt | j >. Format = [ [i,j], scaling factor ]
@@ -139,29 +151,5 @@ params["NAC_dE"] = []
 params["NAC_dE"].append( [ [0,1], 1.0 ] )
 print params["Phi_dE"]
 print params["NAC_dE"]
-
-os.system("mkdir res")
-# Actual simulation paramters
-params["init_time"] = 0  # starting from the first file 
-params["nsteps"] = 30
-params["istate"] = 3
-
-
-params["outfile"] = "_out.txt"
-
-params["do_state_reordering"] = 2
-params["state_reordering_alpha"] = 0.00
-
-params["do_phase_correction"] = 1
-params["sh_method"] = 1   # 0 - MSSH, 1 - FSSH
-params["decoherence_method"] = 3  # 0 - no decoherence, 1 - decoherence (ID-A), 2 - MSDM, 3 - DISH
-params["Boltz_opt"] = 3
-params["ntraj"] = 1000
-params["dt"] = 41.3413  # in a.u.
-params["T"] = 300.0
-
-print "\nPrinting params from run_step3.py"
-print params
-
-namd.run_namd(params)
+"""
 

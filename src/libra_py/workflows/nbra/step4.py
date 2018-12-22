@@ -34,7 +34,7 @@ def get_Hvib(params):
     Required parameter keys:
 
     params["nstates"]          [int] - how many lines/columns in the file 
-    params["nsteps"]           [int] - how many files to read, starting from index 0
+    params["nfiles"]           [int] - how many files to read, starting from index 0
     params["Hvib_re_prefix"]   [string] - prefixes of the files with real part of the MO overlaps at time t
     params["Hvib_re_suffix"]   [string] - suffixes of the files with real part of the MO overlaps at time t
     params["Hvib_im_prefix"]   [string] - prefixes of the files with imaginary part of the MO overlaps at time t
@@ -42,17 +42,17 @@ def get_Hvib(params):
 
     """
 
-    critical_params = ["nstates", "nsteps", "Hvib_re_prefix", "Hvib_im_prefix"]
+    critical_params = ["nstates", "nfiles", "Hvib_re_prefix", "Hvib_im_prefix"]
     default_params = { "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im"}
     comn.check_input(params, default_params, critical_params)
 
-    nsteps = params["nsteps"]
+    nfiles = params["nfiles"]
     nstates = params["nstates"]  # the number of states in the input files
     active_space = range(nstates)
 
     Hvib = []
 
-    for i in range(0,nsteps):
+    for i in range(0,nfiles):
 
         filename_re = params["Hvib_re_prefix"]+str(i)+params["Hvib_re_suffix"]
         filename_im = params["Hvib_im_prefix"]+str(i)+params["Hvib_im_suffix"]
@@ -85,11 +85,19 @@ def traj_statistics(i, Coeff, istate, Hvib, itimes):
 
     #================ Dimensions ==================
 
-    Ntraj = len(Coeff)               # total number of trajectpry = data set size x number of init times x number of SH trajectories
+    #print "In traj_statistics...\n"
+
+    Ntraj = len(Coeff)               # total number of trajectory = data set size x number of init times x number of SH trajectories
     nstates = Coeff[0].num_of_rows   # the number of states
     ndata = len(Hvib)                # how many data sets
     nitimes = len(itimes)            # how many initial times
     ntraj = Ntraj/(ndata * nitimes)  # how many stochastic SH trajectories per data set/initial condition
+
+    #print "Ntraj = ", Ntraj
+    #print "nstates = ", nstates
+    #print "ndata = ", ndata
+    #print "nitimes = ", nitimes
+    #print "ntraj = ", ntraj
 
 
     # Update SE-derived density matrices
@@ -104,19 +112,22 @@ def traj_statistics(i, Coeff, istate, Hvib, itimes):
         for it_indx in xrange(nitimes):
             it = itimes[it_indx]
 
-            H_vib_ave += Hvib[idata][it+i]
+            H_vib_ave = H_vib_ave + Hvib[idata][it+i]
 
-            for tr in xrange(ntraj):
-
-                Tr = idata*ndata + it_indx*nitimes + tr
+            for tr in xrange(ntraj):                
+                Tr = idata*(nitimes*ntraj) + it_indx*(ntraj) + tr
 
                 denmat_sh.append(CMATRIX(nstates, nstates))
                 denmat_sh[Tr].set(istate[Tr],istate[Tr], 1.0, 0.0)
-                H_vib.append(Hvib[idata][it+i])   
+                H_vib.append(CMATRIX(Hvib[idata][it+i]))   
 
     H_vib_ave *= (1.0/float(ndata * nitimes))
 
     # Update TSH-ensemble-averaged SE and SH populations 
+    #print "len(denmat_se) = ", len(denmat_se)
+    #print "len(denmat_sh) = ", len(denmat_sh)
+    #print "len(H_vbi) = ", len(H_vib)
+
     ave_pop_sh, ave_pop_se = tsh.ave_pop(denmat_sh, denmat_se)
     ave_en_sh,  ave_en_se  = tsh.ave_en(denmat_sh, denmat_se, H_vib)
 
@@ -125,17 +136,19 @@ def traj_statistics(i, Coeff, istate, Hvib, itimes):
    
     tot_sh, tot_se = 0.0, 0.0
     for j in xrange(nstates):
-        res.set(i, 3*j+0, H_vib_ave.get(j,j).real)   # Energy of the state j
-        res.set(i, 3*j+1, ave_pop_se.get(j,j).real)  # SE population
-        res.set(i, 3*j+2, ave_pop_sh.get(j,j).real)  # SH population
+        res.set(0, 3*j+0, H_vib_ave.get(j,j).real)   # Energy of the state j
+        res.set(0, 3*j+1, ave_pop_se.get(j,j).real)  # SE population
+        res.set(0, 3*j+2, ave_pop_sh.get(j,j).real)  # SH population
 
         tot_se += ave_pop_se.get(j,j).real
         tot_sh += ave_pop_sh.get(j,j).real
 
-    res.set(i, 3*nstates+0, ave_en_se)  # Average SE energy
-    res.set(i, 3*nstates+1, ave_en_sh)  # Average SH energy
-    res.set(i, 3*nstates+2, tot_se)     # Total SE population
-    res.set(i, 3*nstates+3, tot_sh)     # Total SH population
+    res.set(0, 3*nstates+0, ave_en_se)  # Average SE energy
+    res.set(0, 3*nstates+1, ave_en_sh)  # Average SH energy
+    res.set(0, 3*nstates+2, tot_se)     # Total SE population
+    res.set(0, 3*nstates+3, tot_sh)     # Total SH population
+
+    #print "End of traj_statistics...\n"
 
     return res
 
@@ -183,7 +196,7 @@ def run(params):
                                2 - MSDM
                                3 - DISH
     params["dt"]               [double] - nuclear dynamics integration time step [in a.u. of time, default: 41.0]
-
+    params["nsteps"]           [int] - the length of the NA-MD trajectory
     params["Boltz_opt"]        [int] - option to select a probability of hopping acceptance [default: 3]
                                Options:
                                0 - all proposed hops are accepted - no rejection based on energies
@@ -198,7 +211,7 @@ def run(params):
     === Required by the get_data() ===
 
     params["nstates"]          [int] - how many lines/columns in the file - the total number of spin-orbitals
-    params["nsteps"]           [int] - how many files to read, starting from index 0
+    params["nfiles"]           [int] - hom many files there are to read for each data set
     params["data_set_paths"]   [list of strings] - define the pathes of the directories where the vibronic Hamiltonians for
                                different data sets (independent MD trajectories) are located
     params["Hvib_re_prefix"]   [string] - prefixes of the files with real part of the vibronic Hamiltonian at time t
@@ -227,7 +240,7 @@ def run(params):
      
     """
 
-    critical_params = [ "nstates", "nsteps", "data_set_paths" ]
+    critical_params = [ "nstates", "nsteps", "data_set_paths", "nfiles" ]
     default_params = { "T":300.0, "ntraj":1, 
                        "sh_method":1, "decoherence_method":0, "dt":41.0, "Boltz_opt":3,
                        "istate":0, "init_times":[0], "outfile":"_out.txt" }
@@ -268,7 +281,7 @@ def run(params):
 
     #========== Compute PARAMETERS  ===============
     # Decoherence times for DISH
-    tau, decoh_rates = dectim.decoherence_times(H_vib, params["init_times"], nsteps, 1) 
+    tau, decoh_rates = dectim.decoherence_times_ave(H_vib, params["init_times"], nsteps, 1) 
 
     #========== Initialize the DYNAMICAL VARIABLES  ===============
     # TD-SE coefficients and active state indices
@@ -285,6 +298,9 @@ def run(params):
         tau_m.append(MATRIX(nstates,1))  
 
            
+    # Prepare the output file
+    f = open(params["outfile"],"w"); f.close()
+
     #=============== Entering the DYNAMICS ========================
     for i in xrange(nsteps):  # over all evolution times
 
@@ -298,7 +314,7 @@ def run(params):
 
         # Update the overal results matrix
         res.set(i,0, i*dt)
-        push_submatrix(res, res_i, Py2Cpp_int([i]), Py2Cpp_int(range(1,3*nstates+6)) )
+        push_submatrix(res, res_i, Py2Cpp_int([i]), Py2Cpp_int(range(1,3*nstates+5)) )
 
 
         #=============== Propagation ==============================
@@ -310,12 +326,13 @@ def run(params):
 
                 for tr in xrange(ntraj):  # over all stochastic trajectories
 
-                    Tr = idata*ndata + it_indx*nitimes + tr
+                    Tr = idata*(nitimes*ntraj) + it_indx*(ntraj) + tr
 
                     #============== Propagation: TD-SE and surface hopping ==========
         
                     # Coherent evolution amplitudes
-                    propagate_electronic(dt, Coeff[Tr], H_vib[idata][it+i]])   # propagate the electronic DOFs
+                    propagate_electronic(dt, Coeff[Tr], H_vib[idata][it+i])   # propagate the electronic DOFs
+
         
                     # Surface hopping 
                     ksi  = rnd.uniform(0.0, 1.0)
@@ -337,6 +354,7 @@ def run(params):
                         tau_m[Tr] = coherence_intervals(Coeff[Tr], decoh_rates)
                         istate[Tr] = tsh.dish_py(Coeff[Tr], istate[Tr], t_m[Tr], tau_m[Tr], H_vib[idata][it+i], bolt_opt, T, ksi, ksi2)
                         t_m[Tr] += dt
+
         
     return res
 

@@ -73,7 +73,7 @@ def energy_gaps_ave(Hvib, itimes, nsteps):
     
     ndata = len(Hvib)
     nitimes = len(itimes)
-    nstates = Hvib[0].num_of_cols
+    nstates = Hvib[0][0].num_of_cols
     
     dE = []
     for step in xrange(0, nsteps):
@@ -82,13 +82,13 @@ def energy_gaps_ave(Hvib, itimes, nsteps):
         for i in xrange(nstates):
             for j in xrange(i+1, nstates):
 
-                de = 0.0
+                deij = 0.0
                 for idata in xrange(ndata):
                     for it_indx in xrange(nitimes): 
                         it = itimes[it_indx]
 
                         deij = deij + math.fabs(Hvib[idata][it+step].get(i,i).real - Hvib[idata][it+step].get(j,j).real)
-                de = de/float(nitimes*ndata)
+                deij = deij/float(nitimes*ndata)
 
                 dEij.set(i,j, deij)
                 dEij.set(j,i, deij)

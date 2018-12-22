@@ -353,6 +353,17 @@ def run(params):
     params["Phi_dE"]           [list of doubles] - define corrections of the SAC state energies
     params["dt"]               [double] - nuclear dynamics integration time step [in a.u. of time, default: 41.0]
 
+    params["do_state_reordering"]     [int] - option to do the state reordering [default: 2]: 
+                                 0 - no state reordering
+                                 1 - older method (may be wrong)
+                                 2 - Hungarian algorithm
+
+    params["state_reordering_alpha"]  [double] - the energy window parameter in the Hungarian approach  [default: 0.00]
+    params["do_phase_correction"]     [int] - option to do the phase correction [default: 1]
+                                 0 - don't do 
+                                 1 - do
+
+
     === Required by the get_data() ===
 
     params["norbitals"]        [int] - how many lines/columns in the file - the total number of spin-orbitals
@@ -386,7 +397,10 @@ def run(params):
     critical_params = [ "P2C", "Phi_basis", "Phi_dE", "data_set_paths" ]
     default_params = { "dt":41.0,  "output_set_paths":params["data_set_paths"], 
                        "Hvib_re_prefix":"Hvib_", "Hvib_im_prefix":"Hvib_",
-                       "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im" }
+                       "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im",
+                       "do_state_reordering":2, "state_reordering_alpha":0.0,
+                       "do_phase_correction":1
+                     }
     comn.check_input(params, default_params, critical_params)
  
     if(len(params["data_set_paths"]) != len(params["output_set_paths"])):
