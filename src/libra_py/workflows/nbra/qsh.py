@@ -24,7 +24,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import libra_py.workflows.common_utils as comn
+import common_utils as comn
+import decoherence_times as dectim
 import libra_py.units as units
 import libra_py.acf_vector as acf_vector
 import libra_py.tsh as tsh
@@ -42,7 +43,7 @@ def decoh_method(set_decoherence,nstates,Hvib,deco_time):
     if set_decoherence == 0:
         # set decoherence time from the Libra module
         # Akimov and Prezhdo, J. Phys. Chem. Lett., 2013, 4, 3857
-        decoh_times, decoh_rates = comn.decoherence_times(Hvib, 1)
+        decoh_times, decoh_rates = dectim.decoherence_times(Hvib, 1)
 
     else:
        decoh_times = MATRIX(nstates, nstates)
@@ -225,7 +226,7 @@ def compute_Hvib(Nfreqs, freqs, t, nstates,
 
 
 
-def run_namd(params):
+def run(params):
     """
     The main procedure to run NA-MD calculations according to QSH workflow
     

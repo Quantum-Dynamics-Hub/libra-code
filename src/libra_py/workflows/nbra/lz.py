@@ -25,8 +25,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import libra_py.workflows.common_utils as comn
-import libra_py.units as units
+import common_utils as comn
+import units
 import libra_py.probabilities as prob
 import libra_py.tsh as tsh
 
@@ -154,7 +154,7 @@ def Belyaev_Lebedev(Hvib, dt):
     return P
 
 
-def run_LZ(params):
+def run(params):
     """
     Main function to run the SH calculations based on the Landau-Zener hopping
     probabilities, all within the NBRA. The probabilities are implemented according to

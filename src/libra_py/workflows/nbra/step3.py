@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2017 Brendan A. Smith, Wei Li, Alexey V. Akimov
+#* Copyright (C) 2017-2018 Brendan A. Smith, Wei Li, Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -11,6 +11,17 @@
 #
 #  
 #
+"""
+ This module is designed to convert the results of QE calculations (KS orbital energies and
+ time-overlaps in the KS basis) to the generic Hvib matrices, which account for:
+ - state reordering;
+ - phase corrections;
+ - multi-electron wavefunction (Slater determinants) and spin-adaptation
+ - scissor operator corrections to energy levels
+
+"""
+
+
 import sys
 import cmath
 import math
@@ -20,48 +31,12 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-#from libra_py import *
 
 import mapping
-import libra_py.workflows.common_utils as comn
+import common_utils as comn
 import libra_py.tsh as tsh
 import libra_py.units as units
 import libra_py.hungarian as hungarian
-
-
-
-def show_matrix_splot(X, filename):
-    ncol, nrow = X.num_of_cols, X.num_of_rows
-
-    line = ""
-    for i in xrange(nrow):
-        for j in xrange(ncol):
-            val = X.get(i,j)
-            if i==j:
-                val = 0.0
-            line = line + "%4i %4i %8.5f \n" % (i, j, val)
-        line = line + "\n"
-
-    f = open(filename, "w")
-    f.write(line)
-    f.close()
- 
-    
-
-def add_printout(i, pop, filename):
-    # pop - CMATRIX(nstates, 1)
-
-    f = open(filename,"a")
-    line = "step= %4i " % i    
-
-    tot_pop = 0.0
-    for st in xrange(pop.num_of_cols):
-        pop_o = pop.get(st,st).real
-        tot_pop = tot_pop + pop_o
-        line = line + " P(%4i)= %8.5f " % (st, pop_o)
-    line = line + " Total= %8.5f \n" % (tot_pop)
-    f.write(line)
-    f.close()
 
 
 
@@ -73,6 +48,7 @@ def get_data(params):
 
     params["norbitals"]        [int] - how many lines/columns in the file - the total number of spin-orbitals
     params["active_space"]     [list of ints] - which orbitals we care about (indexing starts with 0)
+    params["data_set_path"]    [string] - the path to the directory in which all the files are located
     params["S_re_prefix"]      [string] - prefixes of the files with real part of the MO overlaps at time t
     params["S_re_suffix"]      [string] - suffixes of the files with real part of the MO overlaps at time t
     params["S_im_prefix"]      [string] - prefixes of the files with imaginary part of the MO overlaps at time t
@@ -91,7 +67,7 @@ def get_data(params):
     """
 
     critical_params = ["norbitals", "active_space", "S_re_prefix", "S_im_prefix",
-    "St_re_prefix", "St_im_prefix", "E_re_prefix", "E_im_prefix", "nsteps" ]
+    "St_re_prefix", "St_im_prefix", "E_re_prefix", "E_im_prefix", "nsteps", "data_set_path" ]
 
     default_params = { "is_pyxaid_format":False, "S_re_suffix":"_re", "S_im_suffix":"_im",
     "St_re_suffix":"_re", "St_im_suffix":"_im", "E_re_suffix":"_re", "E_im_suffix":"_im"}
@@ -107,22 +83,22 @@ def get_data(params):
 
     for i in range(0,nsteps):
 
-        filename_re = params["S_re_prefix"]+str(i)+params["S_re_suffix"]
-        filename_im = params["S_im_prefix"]+str(i)+params["S_im_suffix"]
+        filename_re = params["data_set_path"]+params["S_re_prefix"]+str(i)+params["S_re_suffix"]
+        filename_im = params["data_set_path"]+params["S_im_prefix"]+str(i)+params["S_im_suffix"]
         s = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space )
         if params["is_pyxaid_format"]==True:
             s = comn.orbs2spinorbs(s)
         S.append(s)
 
-        filename_re = params["St_re_prefix"]+str(i)+params["St_re_suffix"]
-        filename_im = params["St_im_prefix"]+str(i)+params["St_im_suffix"]
+        filename_re = params["data_set_path"]+params["St_re_prefix"]+str(i)+params["St_re_suffix"]
+        filename_im = params["data_set_path"]+params["St_im_prefix"]+str(i)+params["St_im_suffix"]
         st = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space )
         if params["is_pyxaid_format"]==True:
             st = comn.orbs2spinorbs(st)
         St.append(st)
 
-        filename_re = params["E_re_prefix"]+str(i)+params["E_re_suffix"]
-        filename_im = params["E_im_prefix"]+str(i)+params["E_im_suffix"]
+        filename_re = params["data_set_path"]+params["E_re_prefix"]+str(i)+params["E_re_suffix"]
+        filename_im = params["data_set_path"]+params["E_im_prefix"]+str(i)+params["E_im_suffix"]
         e = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space )
         if params["is_pyxaid_format"]==True:
             e = comn.orbs2spinorbs(e)
@@ -290,16 +266,16 @@ def scale_H_vib(hvib, en_gap, dNAC, sc_nac_method):
     """
     This function scales the energies and NACs in the vibrionic Hamiltonian
     in the Chi basis.   
-    hvib   [List of CMATRIX objects] = CMATRIXlist of vibronic hamiltonians in the Chi basis
-    en_gap [Float]  = The desired energy gap (E_1 - E_0), for the Chi basis
-    dNAC   [List of lists of (list, float)] = The scaling terms by which specific nacs will 
+    hvib   [list of CMATRIX objects] = CMATRIXlist of vibronic hamiltonians in the Chi basis
+    en_gap [float]  = The desired energy gap (E_1 - E_0), for the Chi basis
+    dNAC   [list of lists of (list, float)] = The scaling terms by which specific nacs will 
                                               be scaled datatype = list of lists of (list, float)
 
                                                          [  [ [i,j], val ], ...  ]          
 
                                              n and n+1 are the col (and thereby row) indicies of 
                                              the nacs to be scaled by the value val 
-    sc_nac_method [Int] = The method used to scale NACs in the Chi basis, chosen by the user.
+    sc_nac_method [int] = The method used to scale NACs in the Chi basis, chosen by the user.
                           If sc_nac_method = 1, then the NACs are scaled by the ivnerse of the
                           magnitude of the change in energy, according to Lin et al.
 
@@ -332,7 +308,6 @@ def scale_H_vib(hvib, en_gap, dNAC, sc_nac_method):
                 hvib[i].scale(b,a, val)
 
         elif sc_nac_method == 1:
-
             # Scales nacs by the inverse of the change in energy gap
             for j in xrange(1,ncols):
                 scl_nac = prev_gap / (shift + prev_gap)
@@ -362,43 +337,29 @@ def compute_Hvib(basis, St_ks, E_ks, dE, dt):
 
 
 
-def run_namd(params):
+def run(params):
     """
-    The main procedure to run NA-MD calculations according to the PYXAID2 workflow
+    The procedure to converts the results of QE calculations (KS orbital energies and
+    time-overlaps in the KS basis) to the generic Hvib matrices, which account for:   
+    - state reordering;
+    - phase corrections;
+    - multi-electron wavefunction (Slater determinants) and spin-adaptation
+    - scissor operator corrections to energy levels
 
     === Required parameter keys: ===
 
     params["Phi_basis"]        [list of lists of ints] - define the Slater Determinants basis
     params["P2C"]              [list of lists of complex] - define the superpositions to SDs to get spin-adapted functions
     params["Phi_dE"]           [list of doubles] - define corrections of the SAC state energies
-    params["T"]                [double] - temperature of nuclear/electronic dynamics [in K, default: 300.0]
-    params["ntraj"]            [int] - the number of stochastic surface hopping trajectories [default: 1]
-    params["sh_method"]        [int] - how to compute surface hopping probabilities [default: 1]
-                               Options:
-                               0 - MSSH
-                               1 - FSSH
-    params["decoherence_method"]  [int] - selection of decoherence method [default: 0]
-                               Options:
-                               0 - no decoherence
-                               1 - ID-A
-                               2 - MSDM
-                               3 - DISH
     params["dt"]               [double] - nuclear dynamics integration time step [in a.u. of time, default: 41.0]
-
-    params["Boltz_opt"]        [int] - option to select a probability of hopping acceptance [default: 3]
-                               Options:
-                               0 - all proposed hops are accepted - no rejection based on energies
-                               1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
-                               2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
-                               3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
-    params["istate"]           [int] - index of the initial spin-adapted state [default: 0]
-    params["outfile"]          [string] - the name of the file where to print populations and energies of states [default: "_out.txt"]    
-
 
     === Required by the get_data() ===
 
     params["norbitals"]        [int] - how many lines/columns in the file - the total number of spin-orbitals
     params["active_space"]     [list of ints] - which orbitals we care about (indexing starts with 0)
+    params["nsteps"]           [int] - how many files to read, starting from index 0
+    params["is_pyxaid_format"] [Boolean] - whether the input in the old PYXAID format (just orbital space matrices)   
+    params["data_set_paths"]   [string] - where the input files are located
     params["S_re_prefix"]      [string] - prefixes of the files with real part of the MO overlaps at time t
     params["S_re_suffix"]      [string] - suffixes of the files with real part of the MO overlaps at time t
     params["S_im_prefix"]      [string] - prefixes of the files with imaginary part of the MO overlaps at time t
@@ -411,31 +372,31 @@ def run_namd(params):
     params["E_re_suffix"]      [string] - suffixes of the files with real part of the MO energies  at time t
     params["E_im_prefix"]      [string] - prefixes of the files with imaginary part of the MO energies at time t
     params["E_im_suffix"]      [string] - suffixes of the files with imaginary part of the MO energies  at time t
-    params["nsteps"]           [int] - how many files to read, starting from index 0
-    params["is_pyxaid_format"] [Boolean] - whether the input in the old PYXAID format (just orbital space matrices)
 
+
+    === Define the output ===
+    params["output_set_paths"] [string] - where the resulting Hvib files are to be stored [default: the same as the input paths]
+    params["Hvib_re_prefix"]   [string] - prefixes of the output files with real part of the vibronic Hamiltonian at time t
+    params["Hvib_re_suffix"]   [string] - suffixes of the output files with real part of the vibronic Hamiltonian at time t
+    params["Hvib_im_prefix"]   [string] - prefixes of the output files with imaginary part of the vibronic Hamiltonian at time t
+    params["Hvib_im_suffix"]   [string] - suffixes of the output files with imaginary part of the vibronic Hamiltonian at time t
      
     """
 
-    critical_params = [ "P2C", "Phi_basis", "Phi_dE", ]
-    default_params = { "T":300.0, "ntraj":1, 
-                       "sh_method":1, "decoherence_method":0, "dt":41.0, "Boltz_opt":3,
-                       "istate":0, "outfile":"_out.txt" }
+    critical_params = [ "P2C", "Phi_basis", "Phi_dE", "data_set_paths" ]
+    default_params = { "dt":41.0,  "output_set_paths":params["data_set_paths"], 
+                       "Hvib_re_prefix":"Hvib_", "Hvib_im_prefix":"Hvib_",
+                       "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im" }
     comn.check_input(params, default_params, critical_params)
-
-
-    rnd = Random()
-    T = params["T"]
-    kT = units.kB * T
-    ntraj = params["ntraj"]
-    sh_method = params["sh_method"]
-
-    do_collapse = 0
-    if params["decoherence_method"]==1:
-        do_collapse = 1
+ 
+    if(len(params["data_set_paths"]) != len(params["output_set_paths"])):
+        print "Error: Input and output sets paths should have equal number of entries\n"
+        print "len(params[\"data_set_paths\"]) = ", len(params["data_set_paths"])
+        print "len(params[\"output_set_paths\"]) = ", len(params["output_set_paths"])
+        print "Exiting...\n"
+        sys.exit(0)
 
     dt = params["dt"]
-    bolt_opt = params["Boltz_opt"]
 
     """
     1. Read in the "elementary" overlaps and energies in the basis of KS orbitals
@@ -446,130 +407,46 @@ def run_namd(params):
     """
 
     P2C = sac_matrices(params["P2C"])
-    
-    S_dia_ks, St_dia_ks, E_dia_ks = get_data(params)  
-    apply_state_reordering(St_dia_ks, E_dia_ks, params)    
-    apply_phase_correction(St_dia_ks, params)
-
-    nsteps = len(St_dia_ks)
-    nstates = len(params["P2C"])
-
-    t_m, tau_m = [], []  # coherence times and coherence intervals for DISH
-    for tr in xrange(ntraj):
-        t_m.append(MATRIX(nstates,1))
-        tau_m.append(MATRIX(nstates,1))
-
     H_vib = []
-    for i in xrange(nsteps):
+    ndata = len(params["data_set_paths"])
 
-        # Hvib in the basis of SDs
-        hvib = compute_Hvib(params["Phi_basis"], St_dia_ks[i], E_dia_ks[i], params["Phi_dE"], dt) 
+    for idata in xrange(ndata):
 
-        # SAC
-        H_vib.append( P2C.H() * hvib * P2C )
+        prms = dict(params)
+        prms.update({"data_set_path":params["data_set_paths"][idata]})    
+        S_dia_ks, St_dia_ks, E_dia_ks = get_data(prms)  
 
-        # make files to store phi and chi hamiltonians
-        hvib.real().show_matrix("res/_hvib_phi_"+str(i)+"_re" % ())
-        hvib.imag().show_matrix("res/_hvib_phi_"+str(i)+"_im" % ())
-        H_vib[i].real().show_matrix("res/_hvib_chi_"+str(i)+"_re" % ())
-        H_vib[i].imag().show_matrix("res/_hvib_chi_"+str(i)+"_im" % ())
-
-
-    #========== Scale H_vibs ===============
-    if params["do_scale"] == 1:
-        scale_H_vib(H_vib, params["Chi_en_gap"], params["NAC_dE"], params["sc_nac_method"])
-  
-    #========== Compute decoherence times  ===============
-    tau, decoh_rates = comn.decoherence_times(H_vib, 1)
-
-    #========== Initialize the wavefunction amplitudes ===============
-    # TD-SE coefficients
-    Coeff_Chi, Coeff_Phi, istate = [], [], []
-
-    for tr in xrange(ntraj):
-        istate.append(params["istate"])
-        Coeff_Chi.append(CMATRIX(nstates, 1)); 
-        Coeff_Chi[tr].set(params["istate"], 1.0, 0.0)
-        Coeff_Phi.append(P2C*Coeff_Chi[tr]) 
-
-    # SE density matrices
-    denmat_Chi_se = tsh.amplitudes2denmat(Coeff_Chi)
-    denmat_Phi_se = tsh.amplitudes2denmat(Coeff_Phi)
-
-    print "denmat_Chi_se = "; denmat_Chi_se[0].show_matrix()
-    print "denmat_Phi_se = "; denmat_Phi_se[0].show_matrix()
-
-
-    #========== Initialize output files ===============
-    f = open("_pop_Chi_se.txt","w");   f.close()
-    f = open("_pop_Chi_sh.txt","w");   f.close()
-    f = open("_pop_Phi_se.txt","w");   f.close()
-    f = open("_pop_Phi_sh.txt","w");   f.close()
-    f = open(params["outfile"], "w");  f.close()
-
-
-    #=============== Entering Dynamics !!! ========================
-    for i in xrange(nsteps):
-
-        #============== Analysis of Dynamics  =====================
-        # Update SE-derived density matrices
-        denmat_Chi_se = tsh.amplitudes2denmat(Coeff_Chi)
-        denmat_Phi_se = tsh.amplitudes2denmat(Coeff_Phi)
-
-        # Use SE-derived density matrices to make SH-derived density matrices
-        denmat_Chi_sh = []
-        denmat_Phi_sh = []
-        for tr in xrange(ntraj):
-            denmat_Chi_sh.append(CMATRIX(nstates, nstates))
-            denmat_Chi_sh[tr].set(istate[tr],istate[tr], 1.0, 0.0)
-            denmat_Phi_sh.append( P2C*denmat_Chi_sh[tr]*P2C.H() )
-
-        # Update SE and SH populations 
-        ave_pop_Chi_sh, ave_pop_Chi_se = tsh.ave_pop(denmat_Chi_sh, denmat_Chi_se)
-        ave_pop_Phi_sh, ave_pop_Phi_se = tsh.ave_pop(denmat_Phi_sh, denmat_Phi_se)
-
-        add_printout(i, ave_pop_Chi_sh, "_pop_Chi_sh.txt")
-        add_printout(i, ave_pop_Chi_se, "_pop_Chi_se.txt")
-        add_printout(i, ave_pop_Phi_sh, "_pop_Phi_sh.txt")
-        add_printout(i, ave_pop_Phi_se, "_pop_Phi_se.txt")
+        apply_state_reordering(St_dia_ks, E_dia_ks, prms)    
+        apply_phase_correction(St_dia_ks, prms)
+        
+        nsteps = len(St_dia_ks)
+        nstates = len(prms["P2C"])
 
         
-        pops = tsh.compute_sh_statistics(nstates, istate)
-        comn.printout(i*params["dt"], pops, H_vib[i], params["outfile"])
+        Hvib = []
+        for i in xrange(nsteps):
+        
+            # Hvib in the basis of SDs
+            hvib = compute_Hvib(prms["Phi_basis"], St_dia_ks[i], E_dia_ks[i], prms["Phi_dE"], dt) 
+        
+            # SAC
+            Hvib.append( P2C.H() * hvib * P2C )
 
+        #========== Scale H_vibs ===============
+        # Document the params keys - then we may uncomment this
+        #if params["do_scale"] == 1:
+        #    scale_H_vib(Hvib, params["Chi_en_gap"], params["NAC_dE"], params["sc_nac_method"])
 
-        #============== Propagation: TD-SE and surface hopping ==========
-        for tr in xrange(ntraj):
+        
+        # Output the resulting Hamiltonians
+        for i in xrange(nsteps):
+            re_filename = prms["output_set_paths"][idata] + prms["Hvib_re_prefix"] + str(i) + prms["Hvib_re_suffix"]
+            im_filename = prms["output_set_paths"][idata] + prms["Hvib_im_prefix"] + str(i) + prms["Hvib_im_suffix"]        
+            Hvib[i].real().show_matrix(re_filename)
+            Hvib[i].imag().show_matrix(im_filename)
 
-            # Coherent evolution for Chi
-            propagate_electronic(dt, Coeff_Chi[tr], H_vib[i])  # propagate in the diabatic basis (Chi)
+        H_vib.append(Hvib)        
+        
 
-
-            # Surface hopping in Chi basis
-            ksi  = rnd.uniform(0.0, 1.0)
-            ksi2 = rnd.uniform(0.0, 1.0)
-
-            if params["decoherence_method"] in [0, 1, 2]:
-
-                if params["decoherence_method"]==0:    # No decoherence
-                    pass
-                elif params["decoherence_method"]==1:  # ID-A, taken care of in the tsh.hopping
-                    pass
-                elif params["decoherence_method"]==2:  # MSDM
-                    Coeff_Chi[tr] = msdm(Coeff_Chi[tr], params["dt"], istate[tr], decoh_rates)
-
-                istate[tr] = tsh.hopping(Coeff_Chi[tr], H_vib[i], istate[tr], sh_method, do_collapse, ksi, ksi2, dt, T, bolt_opt)
-
-            elif params["decoherence_method"] in [3]:  # DISH
-            
-                tau_m[tr] = coherence_intervals(Coeff_Chi[tr], decoh_rates)
-                #print "step = %i, traj = %i" % (i, tr)
-                #print "tau_m = "; tau_m[tr].show_matrix()
-                #print "t_m = "; t_m[tr].show_matrix()
-                istate[tr] = tsh.dish_py(Coeff_Chi[tr], istate[tr], t_m[tr], tau_m[tr], H_vib[i], bolt_opt, T, ksi, ksi2)
-                t_m[tr] += params["dt"]
-
-            # Convert to the Phi basis
-            Coeff_Phi[tr] = P2C*Coeff_Chi[tr]
-
+    return H_vib
 

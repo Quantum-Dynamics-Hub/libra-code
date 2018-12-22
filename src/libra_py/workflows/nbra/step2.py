@@ -360,26 +360,32 @@ def run(params):
     # rd - results directory, where all final results (energy, NAC, H', etc.) will be written by default it will be set to wd    
 
     # Now try to get parameters from the input
-    BATCH_SYSTEM = get_value(params,"BATCH_SYSTEM","srun","s")  # either "srun" (for SLURM) or "mpirun" (for PBS)
-    NP = get_value(params,"NP","1","i")
-    EXE = get_value(params,"EXE","","s")
-    EXE_EXPORT = get_value(params,"EXE_EXPORT","","s")
-    EXE_CONVERT = get_value(params,"EXE_CONVERT","","s")  # this is the path to iotk executable
-    start_indx = get_value(params,"start_indx","0","i")
-    stop_indx = get_value(params,"stop_indx","1","i")
-    dt = get_value(params,"dt","1.0","f") # time step in fs - rescale NAC if actual dt is different
-    dt = 41.34145 * dt # convert to a.u., so the NACs are in a.u.
-    pp_type = get_value(params,"pp_type","NC","s")
-    wd = get_value(params,"wd","wd","s")
-    rd = get_value(params,"rd",wd,"s")
-    minband = get_value(params,"minband",1,"i")
-    maxband = get_value(params,"maxband",2,"i")
-    minband_soc = get_value(params,"minband_soc",1,"i")
-    maxband_soc = get_value(params,"maxband_soc",2,"i")
-    nac_method = get_value(params,"nac_method",0,"i")  # choose what method for NAC calculations to use: 0 -standard, 1-corrected
-    prefix0 = get_value(params,"prefix0","x0.scf","s")
-    prefix1 = get_value(params,"prefix1","x1.scf","s")
-    compute_Hprime = get_value(params,"compute_Hprime",0,"i") # transition dipole moments
+    critical_params = [ "wd"  ]
+    default_params = { "BATCH_SYSTEM":"srun", "NP":1, "EXE":"", "EXE_EXPORT":"", "EXE_CONVERT":"",
+                       "start_indx":0, "stop_indx":1, "dt":41.34145, "pp_type":"NC", 
+                       "rd":params["wd"], "minband":1, "maxband":2, "minband_soc":1, "maxband_soc":2, 
+                       "nac_method":0, "prefix0":"x0.scf", "prefix1":"x1.scf", "compute_Hprime":0 }
+    comn.check_input(params, default_params, critical_params)
+
+    BATCH_SYSTEM = params["BATCH_SYSTEM"]
+    NP = params["NP"]
+    EXE = params["EXE"]
+    EXE_EXPORT = params["EXE_EXPORT"]
+    EXE_CONVERT = params["EXE_CONVERT"]
+    start_indx = params["start_indx"]
+    stop_indx = params["stop_indx"]
+    dt = params["dt"]
+    pp_type = params["pp_type"]  
+    wd = params["wd"]
+    rd = params["rd"]
+    minband = params["minband"]
+    maxband = params["maxband"]
+    minband_soc = params["minband_soc"]
+    maxband_soc = params["maxband_soc"]
+    nac_method = params["nac_method"]
+    prefix0 = params["prefix0"]
+    prefix1 = params["prefix1"]
+    compute_Hprime = params["compute_Hprime"]
 
 
     # Sanity/Convention check
