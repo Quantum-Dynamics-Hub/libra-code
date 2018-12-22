@@ -469,8 +469,8 @@ def ave_en(denmat_sh, denmat_se, Hvib):
     den = 1.0/float(ntraj)
 
     for i in xrange(ntraj):
-        ave_en_se =  den * (denmat_se[i].real() * Hvib[i].real() ).tr()  # SE
-        ave_en_sh =  den * (denmat_sh[i].real() * Hvib[i].real() ).tr()  # SH
+        ave_en_se =  ave_en_se + den * (denmat_se[i].real() * Hvib[i].real() ).tr()  # SE
+        ave_en_sh =  ave_en_sh + den * (denmat_sh[i].real() * Hvib[i].real() ).tr()  # SH
 
     return ave_en_sh, ave_en_se
 
