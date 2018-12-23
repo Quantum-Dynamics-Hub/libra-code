@@ -23,7 +23,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 from libra_py import *
 from libra_py.units import inv_cm2Ha
 
-prefix = "res/Ham_"
+prefix = "res/Hvib_"
 
 w1 = 100.0 * inv_cm2Ha  # in cm^-1
 w2 = 250.0 * inv_cm2Ha  # in cm^-1

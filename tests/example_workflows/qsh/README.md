@@ -1,3 +1,21 @@
+# QSH workflow
+
+## step2  - generate the "short trajectory" data
+
+  * ```cd step2```
+  * ```mkdir res```
+  * ```python gen_data.py```
+
+
+## step3  - extend the trajectory data to longer times, using QSH
+
+  * ```cd ../step3```
+  * ```mkdir res_sqh```
+  * ```python gen_data.py```
+
+
+
+
 # Script to run quasi-stochastic Hamiltonian (QSH) NA-MD simulation
 
   * gen_data.py - script to generate the short time direct Hamiltonian files used for QSH simulation for tutorial purpose
@@ -23,4 +41,5 @@
   * out/qsh_Ham_xx_re - QSH energies print at every time_intervals steps
  
   * out/qsh_Ham_xx_im - QSH couplings print at every time_intervals steps
+
 

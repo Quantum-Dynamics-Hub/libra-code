@@ -109,7 +109,7 @@ def orbs2spinorbs(s):
 
 
 
-def find_maxima(s):
+def find_maxima(s, logname):
     """
     s [list of double] - data
 
@@ -132,7 +132,7 @@ def find_maxima(s):
 
     out = merge_sort(inp)  # largest in the end
 
-    lgfile = open("run.log", "a")
+    lgfile = open(logname, "a")
     lgfile.write("Found maxima of the spectrum:\n")
     for i in xrange(sz):
         lgfile.write("index = %3i  frequency index = %8.5f  intensity = %8.5f \n" % (i, out[sz-1-i][0], out[sz-1-i][1]) )

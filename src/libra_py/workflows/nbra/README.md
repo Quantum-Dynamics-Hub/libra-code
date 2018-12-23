@@ -4,7 +4,7 @@
    * check_input(params, default_params, critical_params) - checks the presenece of required parameters
    * get_matrix(nrows, ncols, filename_re, filename_im, act_sp) - reads the files into a matrix
    * orbs2spinorbs(s) - conversion from the older PYXAID style to the new style
-   * find_maxima(s) - finds the maxima in the data series
+   * find_maxima(s, logname) - finds the maxima in the data series
    * flt_stat(X) - computes statistical properties on the scalar data series
    * mat_stat(X) - computes statistical properties on the MATRIX data series
    * cmat_stat(X) - computes statistical properties on the CMATRIX data series
@@ -29,6 +29,9 @@
    * calculate(energy_prefix,energy_suffix,dip_prefix,dip_suffix,isnap,fsnap,opt,scl1,scl2,outfile,HOMO,minE,maxE,dE)
    * ham_map(prefix, isnap, fsnap, suffix, opt, scl, outfile)
 
+## influence_spectrum.py - computes the ACF of Hamiltonian matrix elements and its FT 
+   * compute(X, a, b, dt, Nfreqs, filename, logname, dw=1.0, wspan=3000.0)
+
 ## lz.py - Landau-Zener theory as applied to NA-MD (experimental module)
    * get_data(params) - read in the vibronic Hamiltonian files 
    * Belyaev_Lebedev(Hvib, dt) - compute probabilities of NA transitions along a trajectory
@@ -43,13 +46,13 @@
 
 
 ## qsh.py - generates the QSH files for longer trajectory
-   * decoh_method(set_decoherence,nstates,Hvib,deco_time) - computes decoherence times/rates
-   * mat_freqs(X, a, b, dt, filename, Nfreqs) - compute the frequencies of the matrix elements in a time-series
-   * compute_Hvib(Nfreqs, freqs, t, nstates, 
+   * compute_freqs(nstates, H_vib_re, H_vib_im, dt, Nfreqs, filename, logname, dw, wspan) - compute
+     the frequencies of the matrix elements in a time-series
+   * compute_qs_Hvib(Nfreqs, freqs, t, nstates, 
                  H_vib_re_ave, H_vib_re_std, dw_Hvib_re, up_Hvib_re, 
                  H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im, 
                  dev) - compute the quasi-stochastic Hamiltonian
-   * run(params) - execute the QSH calculations - this should be changed soon - invoke the step4.run() instead
+   * run(params) - execute the QSH calculations
 
 
 ## step2.py - run QE calculations and computes the time-overlaps of the orbitals
