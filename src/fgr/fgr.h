@@ -48,6 +48,7 @@ void Integrand_2cumu_inh(double omega, double t, double &re, double &im);
 
 double eq_shift(double Er, double Omega);
 double reorganization_energy(double y0, double Omega);
+double reorganization_energy(vector<double>& omega_nm, vector<double>& req_nm);
 double diabat_crossing(double dE, double Er, double y0);
 double coupling_Condon(double gamma, double dE, double Er, double y0);
 double coupling_non_Condon(double y, double gamma, double dE, double Er, double y0);

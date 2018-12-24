@@ -105,7 +105,7 @@ double eq_shift(double Er, double Omega){
 
 */
 
-  double y0 = 0.5*Er/(Omega*Omega);
+  double y0 = sqrt(0.5*Er/(Omega*Omega));
   return y0;
 
 }
@@ -130,6 +130,38 @@ double reorganization_energy(double y0, double Omega){
   return Er;
 
 }
+
+
+double reorganization_energy(vector<double>& omega_nm, vector<double>& req_nm){
+/**
+  Compute the reorganization energy 
+ 
+  Ref:  (1) Sun, X.; Geva, E. JCP, 2016, 145, 064109, ??
+
+  \param[in] omega_nm  - normal-mode frequencies [a.u.]
+  \param[in] req_nm    - normal-mode displacements upon charge transfer [a.u.]
+
+*/
+  int sz = omega_nm.size();
+
+  if(req_nm.size()!=sz){
+    cout<<"ERROR in reorganization_energy: the dimensions of the input arguments do not match\n";
+    cout<<"len(omega_nm) = "<<omega_nm.size()<<endl;
+    cout<<"len(req_nm) = "<<req_nm.size()<<endl;
+    cout<<"Exiting...\n";
+    exit(0);
+  }
+
+  double Er = 0.0;
+  for(int i=0;i<sz;i++){ 
+    double d = omega_nm[i]*req_nm[i];
+    Er += d*d;
+  }
+  return 0.5*Er;
+
+}
+
+
 
 
 double diabat_crossing(double dE, double Er, double y0){
@@ -238,8 +270,8 @@ vector<double> normal_modes(vector<double>& omega, vector<double>& coeff, MATRIX
 
     D.set(0, 0, omega[0]*omega[0]);
     for(i=1; i<ndof; i++){  
-      D.add(0, 0, coeff[i]/(omega[i]*omega[i]) ); 
-      D.set(i, i, omega[0]*omega[0] );
+      D.add(0, 0, coeff[i]*coeff[i]/(omega[i]*omega[i]) ); 
+      D.set(i, i, omega[i]*omega[i] );
       D.set(0, i, coeff[i] );   
       D.set(i, 0, coeff[i] ); 
     }

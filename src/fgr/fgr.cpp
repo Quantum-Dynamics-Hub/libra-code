@@ -284,32 +284,32 @@ double NEFGRL_rate(double V, double omega_DA, double t, double dtau,
       switch(method){
 
         case 0: {
-          argg += Integrand_NE_exact(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); //already multiplies S_array in Integrand_NE subroutine
+          argg += Integrand_NE_exact(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); 
           ampl += Linear_NE_exact(gamma_nm[w], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta);
         } break;
 
         case 1: {
-          argg += Integrand_NE_LSC(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); //already multiplies S_array in Integrand_NE subroutine
+          argg += Integrand_NE_LSC(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta);
           ampl += Linear_NE_LSC(gamma_nm[w], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta);
         } break;
 
         case 2: {
-          argg += Integrand_NE_CAV(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); //already multiplies S_array in Integrand_NE subroutine
+          argg += Integrand_NE_CAV(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); 
           ampl += Linear_NE_CAV(gamma_nm[w], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta);
         } break;
 
         case 3: {
-          argg += Integrand_NE_CD(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); //already multiplies S_array in Integrand_NE subroutine
+          argg += Integrand_NE_CD(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); 
           ampl += Linear_NE_CD(gamma_nm[w], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta);
         } break;
 
         case 4: {
-          argg += Integrand_NE_W0(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); //already multiplies S_array in Integrand_NE subroutine
+          argg += Integrand_NE_W0(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); 
           ampl += Linear_NE_W0(gamma_nm[w], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta);
         } break;
     
         case 5: {
-          argg += Integrand_NE_Marcus(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); //already multiplies S_array in Integrand_NE subroutine
+          argg += Integrand_NE_Marcus(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); 
           ampl += Linear_NE_Marcus(gamma_nm[w], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta);
         } break;
 
@@ -329,13 +329,14 @@ double NEFGRL_rate(double V, double omega_DA, double t, double dtau,
 
     }
  
-    // k = exp(integral) * ampl = [cos(Re(integral)+i*sin(Im(integral))] * [Re(ampl) + i*Im(ampl)]
+    // k = exp(argg) * ampl = exp[Re(argg)+i*Im(argg)] * [Re(ampl) + i*Im(ampl)] = 
+    // = exp(Re(argg)) * [cos(Im(argg)) + i*sin(Im(argg))] * [Re(ampl) + i*Im(ampl)]
     // but we only need Re(k)
-    k += ( cos(argg.real()) * ampl.real() - sin(argg.imag()) *  ampl.imag() ); // this is Re(k)
+    k += exp(argg.real()) * ( cos(argg.imag()) * ampl.real() - sin(argg.imag()) *  ampl.imag() ); // this is Re(k)
   
   }
 
-  k *= (2.0*V*V * dtau);
+  k *= (2.0*dtau);
            
   return k;
 

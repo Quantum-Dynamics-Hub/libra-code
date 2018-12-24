@@ -58,6 +58,7 @@ void export_fgr_objects(){
 
   double (*expt_eq_shift_v1)(double Er, double Omega) = &eq_shift;
   double (*expt_reorganization_energy_v1)(double y0, double Omega) = &reorganization_energy;
+  double (*expt_reorganization_energy_v2)(vector<double>& omega_nm, vector<double>& req_nm) = &reorganization_energy;
   double (*expt_diabat_crossing_v1)(double dE, double Er, double y0) = &diabat_crossing;
   double (*expt_coupling_Condon_v1)(double gamma, double dE, double Er, double y0) = &coupling_Condon;
   double (*expt_coupling_non_Condon_v1)(double y, double gamma, double dE, double Er, double y0) = &coupling_non_Condon;
@@ -70,6 +71,7 @@ void export_fgr_objects(){
 
   def("eq_shift", expt_eq_shift_v1);
   def("reorganization_energy", expt_reorganization_energy_v1);
+  def("reorganization_energy", expt_reorganization_energy_v2);
   def("diabat_crossing", expt_diabat_crossing_v1);
   def("coupling_Condon", expt_coupling_Condon_v1);
   def("coupling_non_Condon", expt_coupling_non_Condon_v1);

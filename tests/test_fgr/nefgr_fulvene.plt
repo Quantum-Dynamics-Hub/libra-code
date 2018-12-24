@@ -27,13 +27,16 @@ set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 set xlabel "Time, a.u." offset 0.0, 0.5
 set ylabel "Rate, a.u.^-1"
 #set xtics 10.0
-#set xrange [:300.0]
+#set xrange [:20.0]
 #set xrange [-1.5:1.5]
 #set yrange [0.0:25]
 #set yrange [0.0:25]
 set key left top
 #set key at -0.6, 22
 
-set output "rates.png"
-plot "res-0-0-0-0.txt" using 1:2 w l ls 11 t "Exact"
+set output "_rates.png"
+plot "_res.txt" using ($1/41.0):2 w l ls 11 t "Exact"
+
+set output "_populations.png"
+plot "_res.txt" using ($1/41.0):3 w l ls 11 t "Exact"
 

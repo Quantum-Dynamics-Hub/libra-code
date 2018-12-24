@@ -27,11 +27,9 @@ fs = units.fs2au
 method = 0 
 tmax = 40 
 dt = 0.20
-dtau = dt/100.0
-
+dtau = dt/5.0
 
 gamma = 0.1
-
 
 nomega = 500
 w_c = 1.0
@@ -102,7 +100,22 @@ for w_DA in [0.0]: #, 2.0]:   # Donor-Acceptor energy gap
 
                 V = coupling_Condon(gamma, dE, params["Er"], y0)
                 print "V = ", V
-                
+
+                """
+                for step in xrange(10):
+                    t = step*dt
+                    k = NEFGRL_rate(V, params["omega_DA"], t, dtau, omega_nm, gamma_nm, req_nm, shift_NE, method, beta)
+
+                    for w in range(nomega-1):
+                        tau = t
+                        integ = Integrand_NE_exact(params["omega_DA"], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta)
+                        lin = Linear_NE_exact(gamma_nm[w], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta)
+                        print w, omega_nm[w], integ, lin
+
+                    print step, k
+
+                sys.exit(0)
+                """
                 res = NEFGRL_population(V, params["omega_DA"], dtau, omega_nm, gamma_nm, req_nm, shift_NE, method, tmax, dt, beta)
 
                 res.show_matrix("res-%i-%i-%i-%i.txt" % (i1,i2,i3,i4))
