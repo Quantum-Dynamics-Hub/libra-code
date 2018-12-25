@@ -40,7 +40,7 @@ def compute(X, a, b, dt, Nfreqs, filename, logname, dw=1.0, wspan=3000.0):
 
     Return: [list of lists],
             frequencies:
-               freqs[fr][0] - frequency of the mode fr [in cm^-1]
+               freqs[fr][0] - frequency of the mode fr [in 2*pi*a.u.^-1]
                freqs[fr][1] - amplitude of the mode fr in the influence spectrum [arb. units]
                freqs[fr][2] - normalized amplitued of the mode fr [arb.units]
 
@@ -57,8 +57,8 @@ def compute(X, a, b, dt, Nfreqs, filename, logname, dw=1.0, wspan=3000.0):
     
     
     # Now compute ACFs of X matrix elements and print out the corresponding data
-#    T,  norm_acf,  raw_acf  = acf_vector.acf( acf_vector.center_data(data_ab)  , dt )  # dt is in a.u.
-    T,  norm_acf,  raw_acf  = acf_vector.acf( data_ab  , dt )  # dt is in a.u.
+    T,  norm_acf,  raw_acf  = acf_vector.acf( acf_vector.center_data(data_ab)  , dt )  # dt is in a.u.
+#    T,  norm_acf,  raw_acf  = acf_vector.acf( data_ab  , dt )  # dt is in a.u.
     
     dw = dw * units.inv_cm2Ha           # convert to Ha (atomic units)
     wspan = wspan * units.inv_cm2Ha     # convert to Ha (atomic units)
@@ -100,7 +100,7 @@ def compute(X, a, b, dt, Nfreqs, filename, logname, dw=1.0, wspan=3000.0):
        
     for i in xrange(Nfreqs):
         indx = out[szo-i][0]
-        freqs.append( [W[indx]*units.au2wavn, J[indx], J[indx]/norm ] )
+        freqs.append( [W[indx], J[indx], J[indx]/norm ] )
 
         lgfile.write("index= %3i  frequency= %8.5f  amplitude= %8.5f normalized_amplitude= %8.5f \n" % (i, W[indx]*units.au2wavn, J[indx], J[indx]/norm) )
     lgfile.close()    
@@ -109,11 +109,11 @@ def compute(X, a, b, dt, Nfreqs, filename, logname, dw=1.0, wspan=3000.0):
     lgfile = open(logname, "a")
     for a in freqs:
         lgfile.write(" ========= Mode = %5i =========== \n" % (freqs.index(a)) )
-        lgfile.write(" Timescale is = %8.5f [Ha] \n" % (a[0]/units.au2wavn) )
-        lgfile.write(" omega = E/hbar = %8.5f [2 pi*a.u. of time^-1] \n" % (a[0]/units.au2wavn)   )
-        lgfile.write(" linear frequency = %8.5f [a.u.^-1] \n" % (a[0]/(2.0*math.pi*units.au2wavn))   )
-        lgfile.write(" Timescale = %8.5f [a.u. of time] \n " % (2.0*math.pi*units.au2wavn/a[0]) )
-        lgfile.write(" Timescale = %8.5f [fs] \n" % ( 2.0*math.pi*units.au2wavn*units.au2fs/a[0]) )
+        lgfile.write(" Timescale is = %8.5f [Ha] \n" % (a[0]) )
+        lgfile.write(" omega = E/hbar = %8.5f [2 pi*a.u. of time^-1] \n" % (a[0])   )
+        lgfile.write(" linear frequency = %8.5f [a.u.^-1] \n" % (a[0]/(2.0*math.pi))   )
+        lgfile.write(" Timescale = %8.5f [a.u. of time] \n " % (2.0*math.pi/a[0]) )
+        lgfile.write(" Timescale = %8.5f [fs] \n" % ( 2.0*math.pi*units.au2fs/a[0]) )
         lgfile.write(" Amplitude = %8.5f \n" % (a[1]) )
         lgfile.write(" Normalized amplitude = %8.5f \n" % (a[2]))
 

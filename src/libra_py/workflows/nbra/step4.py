@@ -25,6 +25,7 @@ import common_utils as comn
 import decoherence_times as dectim
 import libra_py.tsh as tsh
 import libra_py.units as units
+import qsh
 
 
 def get_Hvib(params):
@@ -220,6 +221,11 @@ def run(params):
     params["Hvib_im_suffix"]   [string] - suffixes of the files with imaginary part of the vibronic Hamiltonian at time t
 
 
+    === Required for the on-the-fly QSH ===
+    params["on-the-fly-qsh"]   [Boolean] - flag to select if the QSH calculations are dine via files or on the fly (no intermediate files) [Default: False]
+    params["qsh-params"]       [Python dictionary] - see the ```qsh.run()``` for the description of the parameters
+   
+
     ```The full name of the vibronic Hamiltonian files will be:
     
     params["data_set_path"]+params["Hvib_re_prefix"]+integer(time step)+params["Hvib_re_suffix"] - for real part
@@ -240,20 +246,27 @@ def run(params):
      
     """
 
-    critical_params = [ "nstates", "nsteps", "data_set_paths", "nfiles" ]
+    critical_params = [ "nstates", "nsteps" ]  # "data_set_paths", "nfiles"
     default_params = { "T":300.0, "ntraj":1, 
                        "sh_method":1, "decoherence_method":0, "dt":41.0, "Boltz_opt":3,
-                       "istate":0, "init_times":[0], "outfile":"_out.txt" }
+                       "istate":0, "init_times":[0], "outfile":"_out.txt",
+                       "on-the-fly-qsh":False }
     comn.check_input(params, default_params, critical_params)
 
 
     rnd = Random()
 
+    if params["on-the-fly-qsh"]:
+        # To ensure consistency, we'll borrow some of the parameters from the
+        # QSH calculations
+        params.update(params["qsh-params"])
+        
+
 
     nsteps = params["nsteps"]
     nstates = params["nstates"]
-    ntraj = params["ntraj"]
     ndata = len(params["data_set_paths"])
+    ntraj = params["ntraj"]
     nitimes = len(params["init_times"])
     Ntraj = ndata * nitimes * ntraj
 
@@ -270,13 +283,16 @@ def run(params):
     #======== Read in the vibronic Hamiltonian along the trajectory for each data set ============
     H_vib = []
 
-    for idata in params["data_set_paths"]:   # over all MD trajectories (data sets)
-        prms = dict(params)    
-        prms.update({"Hvib_re_prefix": idata+params["Hvib_re_prefix"] })
-        prms.update({"Hvib_im_prefix": idata+params["Hvib_im_prefix"] })                
+    if params["on-the-fly-qsh"]:
+        H_vib = qsh.run(params["qsh-params"])
+    else:
+        for idata in params["data_set_paths"]:   # over all MD trajectories (data sets)
+            prms = dict(params)    
+            prms.update({"Hvib_re_prefix": idata+params["Hvib_re_prefix"] })
+            prms.update({"Hvib_im_prefix": idata+params["Hvib_im_prefix"] })                
 
-        h_vib = get_Hvib(prms)  
-        H_vib.append(h_vib)
+            h_vib = get_Hvib(prms)  
+            H_vib.append(h_vib)
 
 
     #========== Compute PARAMETERS  ===============

@@ -41,40 +41,25 @@ set tmargin at screen 0.95
 set border 31 lw 4
 set key font ",16"
 
-set ylabel "Population" offset 1.5, 0.0
+set output "_acf.png"
+set ylabel "ACF" offset 1.5, 0.0
 set xlabel "Time (fs)" offset 0.0, 0.5
 
 #set xtics 250
 
-set output "_pop_se.png"
-plot "_out.txt" using ($1/41.0):6 w l ls 12 lw 8 t "Standard",\
-     "_out_qsh.txt" using ($1/41.0):6 w l ls 32 lw 8 t "QSH",\
-     "_out_qsh_fly.txt" using ($1/41.0):6 w l ls 22 lw 8 t "QSH-fly"
-
-set output "_pop_sh.png"
-plot "_out.txt" using ($1/41.0):7 w l ls 12 lw 8 t "Standard",\
-     "_out_qsh.txt" using ($1/41.0):7 w l ls 32 lw 8 t "QSH",\
-     "_out_qsh_fly.txt" using ($1/41.0):7 w l ls 22 lw 8 t "QSH-fly"
+plot "_spectr__re__acf_0_0.txt" using ($1):2 w l ls 11 lw 8 t "ACF(0,0)",\
+     "_spectr__re__acf_1_1.txt" using ($1):2 w l ls 12 lw 8 t "ACF(1,1)",\
+     "_spectr__im__acf_0_1.txt" using ($1):2 w l ls 21 lw 8 t "ACF(0,1)"
 
 
-
-
-set ylabel "Energy" offset 1.5, 0.0
+set output "_IS.png"
+set ylabel "IS" offset 1.5, 0.0
 set xlabel "Time (fs)" offset 0.0, 0.5
 
-#set xtics 250
+plot "_spectr__re__spectrum_0_0.txt" using ($1):2 w l ls 11 lw 8 t "(0,0)",\
+     "_spectr__re__spectrum_1_1.txt" using ($1):2 w l ls 12 lw 8 t "(1,1)",\
+     "_spectr__im__spectrum_0_1.txt" using ($1):2 w l ls 21 lw 8 t "(0,1)"
 
-set output "_en-direct.png"
-plot "_out.txt" using ($1/41.0):2 w l ls 12 lw 8 t "E1",\
-     "_out.txt" using ($1/41.0):5 w l ls 32 lw 8 t "E2"
-
-set output "_en-qsh.png"
-plot "_out_qsh.txt" using ($1/41.0):2 w l ls 12 lw 8 t "E1",\
-     "_out_qsh.txt" using ($1/41.0):5 w l ls 32 lw 8 t "E2"
-
-set output "_en-qsh-fly.png"
-plot "_out_qsh_fly.txt" using ($1/41.0):2 w l ls 12 lw 8 t "E1",\
-     "_out_qsh_fly.txt" using ($1/41.0):5 w l ls 32 lw 8 t "E2"
 
 
 

@@ -36,17 +36,25 @@ def compute_freqs(nstates, H_vib_re, H_vib_im, dt, Nfreqs, filename, logname, dw
     """
     Compute a matrix of frequencies for each matrix element
 
+    nstates   [int] - the number of states (defines the dimensionality of the matrices)
+    H_vib_re  [list of MATRIX] - time-series: real parts of the vibronic Hamiltonian
+    H_vib_im  [list of MATRIX] - time-series: imaginary parts of the vibronic Hamiltonian
+    dt        [double] - time step between the data in the time-series [a.u. of time]
+    Nfreqs    [int] - the maximal number of frequencies we want to extract
+    filename  [string] - the prefix of the filenames generated
+    logname   [string] - the name of the log-file
+    dw        [double] - the freqency grinding distance [cm^-1, Default: 1.0 cm^-1]
+    wspan     [double] - the width of the spectral window to resolve [cm^-1, Default: 3000 cm^-1]
+
     """
     
     freqs = [ [ [] for i in xrange(nstates)] for j in xrange(nstates)]
     for i in xrange(nstates):
         for j in xrange(nstates):
-                if i == j:
-                    freqs[i][j] = influence_spectrum.compute(H_vib_re, i, j, dt, Nfreqs, filename+"_re_", logname, dw, wspan)
-                else:
-                    freqs[i][j] = influence_spectrum.compute(H_vib_im, i, j, dt, Nfreqs, filename+"_im_", logname, dw, wspan)
-
-
+            if i == j:
+                freqs[i][j] = influence_spectrum.compute(H_vib_re, i, j, dt, Nfreqs, filename+"_re_", logname, dw, wspan)
+            else:
+                freqs[i][j] = influence_spectrum.compute(H_vib_im, i, j, dt, Nfreqs, filename+"_im_", logname, dw, wspan)
 
     if len(freqs[0][0]) < Nfreqs:
         Nfreqs = len(freqs[0][0])
@@ -55,21 +63,25 @@ def compute_freqs(nstates, H_vib_re, H_vib_im, dt, Nfreqs, filename, logname, dw
     # Ok, now we have the function - sum of sines, so let's compute the standard deviation
     # This is a silly method - just do it numerically
     dev = [ [ 0.0 for i in xrange(nstates)] for j in xrange(nstates)]
-    for r in xrange(1000000):
-        fu = [ [ 0.0 for i in xrange(nstates)] for j in xrange(nstates)]
-        for i in xrange(nstates):
-            for j in xrange(nstates):
-                for k in xrange(Nfreqs):
-		    fu[i][j] = fu[i][j] + freqs[i][j][k][2] * math.sin(freqs[i][j][k][0]*r*dt/units.au2wavn)
- 	
-        for i in xrange(nstates):
-	     for j in xrange(nstates):
-                  dev[i][j] = dev[i][j] + fu[i][j]**2
-     
+        
     for i in xrange(nstates):
-	 for j in xrange(nstates):
-               dev[i][j] = math.sqrt( dev[i][j] / 1000000.0 )
+        for j in xrange(nstates):
 
+            # Adjust the number of frequencies
+            if len(freqs[i][j]) < Nfreqs:
+                Nfreqs = len(freqs[i][j])
+
+            fu_ave, fu2_ave = 0.0, 0.0
+            for r in xrange(1000000):
+
+                fu = 0.0
+                for k in xrange(Nfreqs):
+                    fu = fu + freqs[i][j][k][2] * math.sin(freqs[i][j][k][0]*r*dt)
+
+                fu_ave = fu_ave + fu
+                fu2_ave = fu2_ave + fu*fu
+
+            dev[i][j] = math.sqrt( (fu2_ave - fu_ave**2) / 1000000.0 ) 	
     
     return freqs, dev
 
@@ -105,13 +117,18 @@ def compute_qs_Hvib(Nfreqs, freqs, t, nstates,
 
     for i in xrange(nstates):
         for j in xrange(nstates):
+            # Adjust the number of frequencies
+            if len(freqs[i][j]) < Nfreqs:
+                Nfreqs = len(freqs[i][j])
+
             for k in xrange(Nfreqs):
-		    fu[i][j] = fu[i][j] + freqs[i][j][k][2] * math.sin(freqs[i][j][k][0]*t/units.au2wavn)
+                fu[i][j] = fu[i][j] + freqs[i][j][k][2] * math.sin(freqs[i][j][k][0]*t)
+
 
     for i in xrange(nstates):
         for j in xrange(nstates):
-	    if i==j:
-	        xab = H_vib_re_ave.get(i,j) + H_vib_re_std.get(i,j) * (fu[i][j]/dev[i][j] ) 
+            if i==j:
+                xab = H_vib_re_ave.get(i,j) + H_vib_re_std.get(i,j) * (fu[i][j]/dev[i][j] ) 
                 if xab < dw_Hvib_re.get(i,j):
                     xab = dw_Hvib_re.get(i,j)
                 elif xab > up_Hvib_re.get(i,j):
@@ -119,7 +136,7 @@ def compute_qs_Hvib(Nfreqs, freqs, t, nstates,
                 Hvib_stoch_re.set(i,j,   xab )
 
             elif i<j:
-		xab = H_vib_im_ave.get(i,j) + H_vib_im_std.get(i,j) * (fu[i][j]/dev[i][j] ) 
+                xab = H_vib_im_ave.get(i,j) + H_vib_im_std.get(i,j) * (fu[i][j]/dev[i][j] ) 
                 if xab < dw_Hvib_im.get(i,j):
                     xab = dw_Hvib_im.get(i,j)
                 elif xab > up_Hvib_im.get(i,j):
@@ -158,7 +175,8 @@ def run(params):
     params["Hvib_im_suffix"]      [string] - suffixes of the files with imaginary part of the vibronic Hamiltonian at time t
 
     === Define the output ===
-
+    params["do_output"]           [Boolean] - the flag that determines whether to generate the output files. Default: True. 
+                                  Set to False for the on-the-fly QSH
     params["nsteps"]              [int] - how many output files (QSH) to write, starting from index 0
     params["output_set_paths"]    [string] - where the resulting Hvib files are to be stored [default: the same as the input paths]
     params["qsh_Hvib_re_prefix"]  [string] - prefixes of the output files with real part of the QSH vibronic Hamiltonian at time t
@@ -170,22 +188,24 @@ def run(params):
      
     """
 
-    critical_params = [ "nstates", "nfiles", "nsteps", "data_set_paths", "output_set_paths" ]
+    critical_params = [ "nstates", "nfiles", "nsteps"] # "data_set_paths", "output_set_paths" ]
     default_params = { "dt":41.0, "nfreqs":1, "dw":1.0, "wspan":4000.0, "logname":"out.log",
                        "filename":"influence_spectra_",
                        "Hvib_re_prefix":"Hvib_", "Hvib_im_prefix":"Hvib_",
                        "Hvib_re_suffix":"_re",   "Hvib_im_suffix":"_im",
                        "qsh_Hvib_re_prefix":"qsh_Hvib_", "qsh_Hvib_im_prefix":"qsh_Hvib_",
-                       "qsh_Hvib_re_suffix":"_re",   "qsh_Hvib_im_suffix":"_im"                 }
+                       "qsh_Hvib_re_suffix":"_re",   "qsh_Hvib_im_suffix":"_im",
+                       "do_output":True                 }
     comn.check_input(params, default_params, critical_params)
- 
+
+    """ 
     if(len(params["data_set_paths"]) != len(params["output_set_paths"])):
         print "Error: Input and output sets paths should have equal number of entries\n"
         print "len(params[\"data_set_paths\"]) = ", len(params["data_set_paths"])
         print "len(params[\"output_set_paths\"]) = ", len(params["output_set_paths"])
         print "Exiting...\n"
         sys.exit(0)
-
+    """
 
     dt = params["dt"]
     ndata = len(params["data_set_paths"])
@@ -220,18 +240,11 @@ def run(params):
             H_vib_im.append(h_vib[i].imag())
 
 
-
         #======== Analyze the Hvib time-seris  ============
         H_vib_re_ave, H_vib_re_std, dw_Hvib_re, up_Hvib_re = comn.mat_stat(H_vib_re)
         H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im = comn.mat_stat(H_vib_im)    
 
         freqs, dev = compute_freqs(nstates, H_vib_re, H_vib_im, dt, nfreqs, filename, logname, dw, wspan)
-
-        #print "dw_re = "; dw_Hvib_re.show_matrix()
-        #print "up_re = "; up_Hvib_re.show_matrix()
-        #print "dw_im = "; dw_Hvib_im.show_matrix()
-        #print "up_im = "; up_Hvib_im.show_matrix()
-
 
         
         #============= Output the resulting QSH Hamiltonians ===========================
@@ -242,11 +255,13 @@ def run(params):
                             up_Hvib_re, H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im,  dev)
 
             Hvib.append(CMATRIX(qs_Hvib))
-            #============= Output the resulting QSH Hamiltonians ===========================
-            re_filename = prms["output_set_paths"][idata] + prms["qsh_Hvib_re_prefix"] + str(i) + prms["qsh_Hvib_re_suffix"]
-            im_filename = prms["output_set_paths"][idata] + prms["qsh_Hvib_im_prefix"] + str(i) + prms["qsh_Hvib_im_suffix"]        
-            qs_Hvib.real().show_matrix(re_filename)
-            qs_Hvib.imag().show_matrix(im_filename)
+
+            if params["do_output"]==True:
+                #============= Output the resulting QSH Hamiltonians ===========================
+                re_filename = prms["output_set_paths"][idata] + prms["qsh_Hvib_re_prefix"] + str(i) + prms["qsh_Hvib_re_suffix"]
+                im_filename = prms["output_set_paths"][idata] + prms["qsh_Hvib_im_prefix"] + str(i) + prms["qsh_Hvib_im_suffix"]        
+                qs_Hvib.real().show_matrix(re_filename)
+                qs_Hvib.imag().show_matrix(im_filename)
 
         H_vib.append(Hvib)        
         

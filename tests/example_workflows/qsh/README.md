@@ -30,5 +30,12 @@
   * The files from the ```res_qsh``` or from ```res``` directories can be used and the input to this function
   In the former case, one obtains QSH dynamics, in the latter - the direct dynamics
 
+  This script actually runs 3 variants of the TSH calculations:
+  a) the standard one
+  b) file-based QSH 
+  c) file-less (on-the-fly) QSH
+
+
+
 
 

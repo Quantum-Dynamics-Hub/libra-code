@@ -27,7 +27,7 @@ import libra_py.workflows.nbra.qsh as qsh
 params = {}
 
 params["dt"] = 41.0
-params["nfreqs"] = 250 # number of frequency included 
+params["nfreqs"] = 25 # number of frequency included 
 params["dw"] = 1.0
 params["wspan"] = 3000.0
 params["filename"] = "_spectr_"
@@ -39,6 +39,7 @@ params["data_set_paths"] = ["/mnt/c/cygwin/home/Alexey-user/Programming/Project_
 params["Hvib_re_prefix"] = "Hvib_"; params["Hvib_re_suffix"] = "_re"
 params["Hvib_im_prefix"] = "Hvib_"; params["Hvib_im_suffix"] = "_im"
 
+params["do_output"] = True
 params["nsteps"] = 500 # total length of quasi-stochastical Ham
 params["output_set_paths"] = ["/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/tests/example_workflows/qsh/step3/res_qsh/"]
 params["qsh_Hvib_re_prefix"] = "Hvib_"; params["qsh_Hvib_re_suffix"] = "_re"
