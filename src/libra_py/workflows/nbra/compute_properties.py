@@ -39,8 +39,7 @@ def compute_properties_dia_gamma(params, es_curr, es_next, curr_index):
     Ea_next = es_next["E_dia"]
 
     rd = get_value(params,"rd",os.getcwd()+"../../res","s")   # of where the files will be printed out
-    dt = get_value(params,"dt","1.0","f") # time step in fs - rescale NAC if actual dt is different
-    dt = 41.34145 * dt  # convert to a.u., so the NACs are in a.u.
+    dt = get_value(params,"dt","41.34145","f") # time step in a.u - rescale NAC if actual dt is different
 
     S  = Ca_curr.H() * Ca_curr
     St = Ca_curr.H() * Ca_next
@@ -50,7 +49,7 @@ def compute_properties_dia_gamma(params, es_curr, es_next, curr_index):
 
     os.system("mkdir %s" % rd)
     #========== Print out ================
-    S.real().show_matrix("%s/S_dia_ks_%d_re" % (rd, curr_index))
+    #S.real().show_matrix("%s/S_dia_ks_%d_re" % (rd, curr_index))
 
     St.real().show_matrix("%s/St_dia_ks_%d_re" % (rd, curr_index))
     St.imag().show_matrix("%s/St_dia_ks_%d_im" % (rd, curr_index))
@@ -59,7 +58,7 @@ def compute_properties_dia_gamma(params, es_curr, es_next, curr_index):
     #nac.imag().show_matrix("%s/nac_dia_ks_%d_im" % (rd, curr_index))
 
     edia.real().show_matrix("%s/E_dia_ks_%d_re" % (rd, curr_index))
-    edia.imag().show_matrix("%s/E_dia_ks_%d_im" % (rd, curr_index))
+    #edia.imag().show_matrix("%s/E_dia_ks_%d_im" % (rd, curr_index))
 
     hvib.real().show_matrix("%s/hvib_dia_%d_re" % (rd, curr_index))
     hvib.imag().show_matrix("%s/hvib_dia_%d_im" % (rd, curr_index))

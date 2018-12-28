@@ -23,28 +23,28 @@ import libra_py.workflows.nbra.step4 as step4
 
 params = {}
 
-params["nstates"] = 4
-params["nfiles"] = 30
+params["nfiles"]  = 1000  # Ex) # of Hvib files to read for a given traj
+params["nstates"] = 2     # Ex) # of Chi states  
 
 # Normal example
-params["data_set_paths"] = ["/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/tests/example_workflows/pyxaid2/example_1_Si/step3/res_setup1/"]
+params["data_set_paths"] = ["/projects/academic/alexeyak/brendan/libra-code/tests/example_workflows/pyxaid2/example_1_Si/step3/res_setup1/"]
 
 # Pretend we have 2 directories:
-#params["data_set_paths"].append("/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/tests/example_workflows/pyxaid2/example_1_Si/step3/res_setup1/")
+#params["data_set_paths"] = ["/projects/academic/alexeyak/brendan/libra-code/tests/example_workflows/pyxaid2/example_1_Si/step3/res_setup1/"]
 
 params["Hvib_re_prefix"] = "Hvib_"; params["Hvib_re_suffix"] = "_re"
 params["Hvib_im_prefix"] = "Hvib_"; params["Hvib_im_suffix"] = "_im"
 
 # General simulaiton parameters
 params["T"] = 300.0               # Temperature, K
-params["ntraj"] = 10              # how many stochastic trajectories
+params["ntraj"] = 1000            # how many stochastic trajectories
 params["sh_method"] = 1           # 0 - MSSH, 1 - FSSH
 params["decoherence_method"] = 0  # 0 - no decoherence, 1 - decoherence (ID-A), 2 - MSDM, 3 - DISH
 params["dt"] = 41.3413            # Nuclear dynamics integration timestep, in a.u.
-params["nsteps"] = 10             # The length of the NA-MD trajectory
+params["nsteps"] = 500            # The length of the NA-MD trajectory
 params["Boltz_opt"] = 3           # Option for the frustrated hops acceptance/rejection
-params["istate"] = 3              # The index of the starting excited state (indexing from 0)
-params["init_times"] = [0,15]     # starting points for sub-trajectories
+params["istate"] = 1              # The index of the starting excited state (indexing from 0)
+params["init_times"] = [0,500]    # starting points for sub-trajectories
 params["outfile"] = "_out.txt"    # output file
 
 step4.run(params)
