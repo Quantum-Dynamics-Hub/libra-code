@@ -105,7 +105,6 @@ def get_data(params):
         E.append(e)
 
 
-
     return S, St, E
 
 
@@ -395,7 +394,7 @@ def run(params):
     """
 
     critical_params = [ "P2C", "Phi_basis", "Phi_dE", "data_set_paths" ]
-    default_params = { "dt":41.0,  "output_set_paths":params["data_set_paths"], 
+    default_params = { "dt":41.3413,  "output_set_paths":params["data_set_paths"], 
                        "Hvib_re_prefix":"Hvib_", "Hvib_im_prefix":"Hvib_",
                        "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im",
                        "do_state_reordering":2, "state_reordering_alpha":0.0,
@@ -435,7 +434,6 @@ def run(params):
         
         nsteps = len(St_dia_ks)
         nstates = len(prms["P2C"])
-
         
         Hvib = []
         for i in xrange(nsteps):
@@ -454,10 +452,19 @@ def run(params):
         
         # Output the resulting Hamiltonians
         for i in xrange(nsteps):
+
             re_filename = prms["output_set_paths"][idata] + prms["Hvib_re_prefix"] + str(i) + prms["Hvib_re_suffix"]
             im_filename = prms["output_set_paths"][idata] + prms["Hvib_im_prefix"] + str(i) + prms["Hvib_im_suffix"]        
+
             Hvib[i].real().show_matrix(re_filename)
             Hvib[i].imag().show_matrix(im_filename)
+
+            # Make time-derivative overlap matriices for chi basis and print
+            #St_phi = mapping.ovlp_mat_arb(params["Phi_basis"], params["Phi_basis"], St_dia_ks[i])
+            #St_chi = P2C.H() * St_phi * P2C
+
+            #re_filename = prms["output_set_paths"][idata] + prms["St_SD_re_prefix"] + str(i) + prms["St_SD_re_suffix"]
+            #St_chi.real().show_matrix(re_filename)
 
         H_vib.append(Hvib)        
         
