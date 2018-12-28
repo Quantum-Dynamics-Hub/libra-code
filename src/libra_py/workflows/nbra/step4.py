@@ -211,7 +211,7 @@ def run(params):
 
     === Required by the get_data() ===
 
-    params["nstates"]          [int] - how many lines/columns in the file - the total number of spin-orbitals
+    params["nstates"]          [int] - how many lines/columns in the file - the total number of states set in step3
     params["nfiles"]           [int] - hom many files there are to read for each data set
     params["data_set_paths"]   [list of strings] - define the pathes of the directories where the vibronic Hamiltonians for
                                different data sets (independent MD trajectories) are located
