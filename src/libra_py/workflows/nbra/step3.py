@@ -460,11 +460,11 @@ def run(params):
             Hvib[i].imag().show_matrix(im_filename)
 
             # Make time-derivative overlap matriices for chi basis and print
-            St_phi = mapping.ovlp_mat_arb(params["Phi_basis"], params["Phi_basis"], St_dia_ks[i])
-            St_chi = P2C.H() * St_phi * P2C
+            #St_phi = mapping.ovlp_mat_arb(params["Phi_basis"], params["Phi_basis"], St_dia_ks[i])
+            #St_chi = P2C.H() * St_phi * P2C
 
-            re_filename = prms["output_set_paths"][idata] + prms["St_SD_re_prefix"] + str(i) + prms["St_SD_re_suffix"]
-            St_chi.real().show_matrix(re_filename)
+            #re_filename = prms["output_set_paths"][idata] + prms["St_SD_re_prefix"] + str(i) + prms["St_SD_re_suffix"]
+            #St_chi.real().show_matrix(re_filename)
 
         H_vib.append(Hvib)        
         

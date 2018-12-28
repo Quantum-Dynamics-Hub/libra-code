@@ -2,7 +2,7 @@
   calculation = 'md',
   dt = 20.67055,
   nstep = 1000,
-  pseudo_dir = '/gpfs/scratch/brendan/PP/',
+  pseudo_dir = '/util/academic/espresso/6.2.1/pseudopotentials/upf_files/',
   outdir = './',
   prefix = 'x0',
   disk_io = 'low',
@@ -13,11 +13,11 @@
   nat = 8,
   ntyp = 1,
   nspin = 1,
+  nbnd = 60,
   ecutwfc = 40,
-  ecutrho = 400,
   occupations = 'smearing',
   smearing = 'gaussian'
-  degauss = 0.02
+  degauss = 0.05
   nosym = .true.,
 /
 
@@ -30,8 +30,8 @@
 
 &IONS
   ion_dynamics = 'verlet',
-  pot_extrapolation='second-order',
-  wfc_extrapolation='second-order',
+  pot_extrapolation='second-order'
+  wfc_extrapolation='second-order'
   ion_temperature = 'andersen',
   tempw = 300.00 ,
   nraise = 1,
@@ -39,10 +39,10 @@
 
 
 ATOMIC_SPECIES
-Si  28.086 Si.pbe-n-kjpaw_psl.0.1.UPF
+Si  28.086 Si.pbesol-n-kjpaw_psl.0.1.UPF
 
 K_POINTS automatic
- 5 5 5 0 0 0
+ 3 3 3 0 0 0 
 
 CELL_PARAMETERS (angstrom)
     5.4306998253         0.0000000000         0.0000000000
@@ -50,12 +50,12 @@ CELL_PARAMETERS (angstrom)
     0.0000000000         0.0000000000         5.4306998253
 
 ATOMIC_POSITIONS (angstrom)
-Si       0.078719844  -0.017337626  -0.030957134
-Si      -0.046812461   2.806220279   2.683019242
-Si       2.716879201   2.574777845   0.040045062
-Si       2.703224615   0.051184285   2.756143944
-Si       4.110303417   1.375284685   4.001938771
-Si       1.271352338   1.356419619   1.412811366
-Si       1.433403881   3.996890075   4.089203401
-Si       4.025028641   4.148660314   1.339894823
+Si      -0.218308976  -0.264057604  -1.307846064
+Si      -0.359458309   3.225570594   2.859542526
+Si       2.519064301   2.546588340   0.533782276
+Si       3.244898686  -0.426385143   2.948319698
+Si       3.627262771   1.740186292   3.880868374
+Si       1.673832390   1.617437046   2.636295205
+Si       1.716400788   3.622934432   3.906396809
+Si       4.088407826   4.229825520   0.834740653
 
