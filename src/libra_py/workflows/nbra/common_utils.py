@@ -109,7 +109,7 @@ def orbs2spinorbs(s):
 
 
 
-def find_maxima(s):
+def find_maxima(s, logname):
     """
     s [list of double] - data
 
@@ -132,7 +132,7 @@ def find_maxima(s):
 
     out = merge_sort(inp)  # largest in the end
 
-    lgfile = open("run.log", "a")
+    lgfile = open(logname, "a")
     lgfile.write("Found maxima of the spectrum:\n")
     for i in xrange(sz):
         lgfile.write("index = %3i  frequency index = %8.5f  intensity = %8.5f \n" % (i, out[sz-1-i][0], out[sz-1-i][1]) )
@@ -250,78 +250,6 @@ def cmat_stat(X):
 
 
 
-def energy_gaps(Hvib):
-    """
-    Pre-compute the energy gaps along the trajectory 
-
-    Hvib [list of CMATRIX] - Vibronic Hamiltonians along the trajectory
-    """
-
-    nsteps = len(Hvib)
-    nstates = Hvib[0].num_of_cols
-    
-    dE = []
-    for step in xrange(0, nsteps):
-        dEij = MATRIX(nstates, nstates)
-
-        for i in xrange(nstates):
-            for j in xrange(i+1, nstates):
-
-                deij = math.fabs(Hvib[step].get(i,i).real - Hvib[step].get(j,j).real)
-                dEij.set(i,j, deij)
-                dEij.set(j,i, deij)
-
-        dE.append(dEij)
-
-    return dE
-
-
-
-
-def decoherence_times(Hvib, verbosity=0):
-    """
-    Hvib [list of CMATRIX] - timeseries of the vibronic Hamiltonian
-
-    Compute the decoherence times:
-    Ref: Akimov, A. V; Prezhdo O. V. J. Phys. Chem. Lett. 2013, 4, 3857  
-
-    """
-
-    # Compute energy gaps
-    dE = energy_gaps(Hvib)
-    dE_ave, dE_std, dE_dw_bound, dE_up_bound = mat_stat(dE)
-
-    nstates = Hvib[0].num_of_cols
-    decoh_times = MATRIX(nstates, nstates)
-    decoh_rates = MATRIX(nstates, nstates)
-
-    for a in xrange(nstates):
-        for b in xrange(nstates):
-            if a==b:
-                decoh_times.set(a,a, 1000000.0)
-                decoh_rates.set(a,a, 0.0)
-            else:
-                de = dE_std.get(a,b)
-                if de>0.0:
-                      tau = math.sqrt(12.0/5.0) / de
-                      decoh_times.set(a,b, tau)
-                      decoh_rates.set(a,b, 1.0/tau)
-
-    if verbosity>0:
-        print "Decoherence times matrix (a.u. of time):"
-        decoh_times.show_matrix()
-
-        print "Decoherence times matrix (fs):"
-        tmp = decoh_times * units.au2fs
-        tmp.show_matrix()
-
-        print "Decoherence rates matrix (a.u.^-1):"
-        decoh_rates.show_matrix()
-
-
-    return decoh_times, decoh_rates
-
-
 
 
 def printout(t, pops, Hvib, outfile):
@@ -345,6 +273,41 @@ def printout(t, pops, Hvib, outfile):
     line = line + " %8.5f  %8.5f \n" % (P, E)
 
     f = open(outfile, "a") 
+    f.write(line)
+    f.close()
+
+
+
+def show_matrix_splot(X, filename):
+    ncol, nrow = X.num_of_cols, X.num_of_rows
+
+    line = ""
+    for i in xrange(nrow):
+        for j in xrange(ncol):
+            val = X.get(i,j)
+            if i==j:
+                val = 0.0
+            line = line + "%4i %4i %8.5f \n" % (i, j, val)
+        line = line + "\n"
+
+    f = open(filename, "w")
+    f.write(line)
+    f.close()
+ 
+    
+
+def add_printout(i, pop, filename):
+    # pop - CMATRIX(nstates, 1)
+
+    f = open(filename,"a")
+    line = "step= %4i " % i    
+
+    tot_pop = 0.0
+    for st in xrange(pop.num_of_cols):
+        pop_o = pop.get(st,st).real
+        tot_pop = tot_pop + pop_o
+        line = line + " P(%4i)= %8.5f " % (st, pop_o)
+    line = line + " Total= %8.5f \n" % (tot_pop)
     f.write(line)
     f.close()
 

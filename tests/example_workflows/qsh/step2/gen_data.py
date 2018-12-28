@@ -23,7 +23,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 from libra_py import *
 from libra_py.units import inv_cm2Ha
 
-prefix = "res/Ham_"
+prefix = "res/Hvib_"
 
 w1 = 100.0 * inv_cm2Ha  # in cm^-1
 w2 = 250.0 * inv_cm2Ha  # in cm^-1
@@ -39,7 +39,7 @@ for i in xrange(1000):
     d = 0.01*math.sin(w3*t)
 
     H.set(0, 0, E1*(1.0+0.0j));  H.set(0, 1, d*(0.0-1.0j))
-    H.set(1, 0, d*(0.0-1.0j));   H.set(1, 1, E2*(1.0+0.0j))
+    H.set(1, 0, d*(0.0+1.0j));   H.set(1, 1, E2*(1.0+0.0j))
 
     H.real().show_matrix(prefix+"%i_re" % (i))
     H.imag().show_matrix(prefix+"%i_im" % (i))

@@ -56,6 +56,7 @@ using namespace libforcefield;
 using namespace libcontrol_parameters;
 using namespace libhamiltonian;
 
+using namespace libfgr;
 using namespace libivr;
 using namespace libdyn;
 
@@ -111,6 +112,7 @@ void export_libra_core_objects(){
 
   export_Hamiltonian_objects();
 
+  export_fgr_objects();
   export_ivr_objects();
 
   export_Dyn_objects();

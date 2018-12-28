@@ -83,7 +83,10 @@ def acf(data,dt):
 
     #normalize the ACF	
     nautocorr = []
-    norm = 1.0/autocorr[0]
+
+    norm = 1.0
+    if autocorr[0] > 0.0:
+        norm = 1.0/autocorr[0]
     T = []
     for it in range(0,sz):
         T.append(it*dt)

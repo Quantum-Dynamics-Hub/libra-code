@@ -245,7 +245,7 @@ CMATRIX compute_phase_corrections(CMATRIX& S){
   for(i=0; i<nc; i++){
 
     f = S.get(i,i);
-    double af = std::norm(f);
+    double af = sqrt( std::norm(f) );
 
     if(af > 0.0){   phase_corr.set(i, 0, f / af);     }
 
