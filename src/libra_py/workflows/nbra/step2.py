@@ -18,6 +18,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 from libra_py import *
 
 from utils import *
+import common_utils as comn
 import compute_properties
 import compute_hprime
 
@@ -367,13 +368,14 @@ def run(params):
                        "nac_method":0, "prefix0":"x0.scf", "prefix1":"x1.scf", "compute_Hprime":0 }
     comn.check_input(params, default_params, critical_params)
 
+
     BATCH_SYSTEM = params["BATCH_SYSTEM"]
     NP = params["NP"]
     EXE = params["EXE"]
     EXE_EXPORT = params["EXE_EXPORT"]
     EXE_CONVERT = params["EXE_CONVERT"]
-    start_indx = params["start_indx"]
-    stop_indx = params["stop_indx"]
+    start_indx = int( params["start_indx"] )
+    stop_indx = int( params["stop_indx"] )
     dt = params["dt"]
     pp_type = params["pp_type"]  
     wd = params["wd"]
@@ -429,6 +431,9 @@ def run(params):
     os.system("mkdir %s" % wd)  
     while t<=stop_indx:
         print ">>>>>>>>>>>>>>>>>>>>  t= ", t, " <<<<<<<<<<<<<<<<<<<<<"
+
+        print "stop_indx", stop_indx
+        print "start_indx", start_indx
 
         dirname = ""
         if t==start_indx:
