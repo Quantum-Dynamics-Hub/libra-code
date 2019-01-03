@@ -195,26 +195,50 @@ def apply_state_reordering(St, E, params):
     default_params = { "do_state_reordering":2, "state_reordering_alpha":0.0 }
     comn.check_input(params, default_params, critical_params)
 
-
     nsteps = len(St)
     nstates = St[0].num_of_cols
-
+    indx = nstates/2
 
     # Initialize the cumulative permutation as the identity permutation
-    perm_cum = intList() # cumulative permutation
-    for a in xrange(nstates):
-        perm_cum.append(a)
+    perm_cum_aa = intList() # cumulative permutation for alpha spatial orbitals
+    perm_cum_bb = intList() # cumulative permutation for beta  spatial orbtials
+    for a in xrange(indx):
+        perm_cum_aa.append(a)
+        perm_cum_bb.append(a)
 
     # Current permutation
-    perm_t = intList() 
-    for a in xrange(nstates):
-        perm_t.append(a)
+    perm_t_aa = intList() 
+    perm_t_bb = intList()
+    for a in xrange(indx):
+        perm_t_aa.append(a)
+        perm_t_bb.append(a)
 
-
+    # Setup alpha and beta sub-matricies
+    mat_aa = CMATRIXList() # aa = alpha-alpha
+    mat_bb = CMATRIXList() # bb = beta-beta
+    mat_ab = CMATRIXList() # ab = alpha-beta
+    mat_ba = CMATRIXList() # ba = beta_alpha
     for i in range(0, nsteps):
-    
-        ### Perform state reordering (must be done before the phase correction) ###
-    
+
+        aa = CMATRIX(indx,indx)
+        bb = CMATRIX(indx,indx)
+        ab = CMATRIX(indx,indx)
+        ba = CMATRIX(indx,indx)
+ 
+        # For aa
+        pop_submatrix(St[i],aa,range(0,indx),range(0,indx))
+        # For bb
+        pop_submatrix(St[i],bb,range(indx,indx+indx),range(indx,indx+indx))
+        # For ab
+        pop_submatrix(St[i],ab,range(0,indx),range(indx,indx+indx))
+        # For ba
+        pop_submatrix(St[i],ba,range(indx,indx+indx),range(0,indx))
+
+        mat_aa.append(aa)
+        mat_bb.append(bb)
+        mat_ab.append(ab)
+        mat_ba.append(ba)
+
         if params["do_state_reordering"]==1:
             """
             A simple approach based on permuations - but this is not robust
@@ -231,46 +255,70 @@ def apply_state_reordering(St, E, params):
 
             E[i].permute_cols(perm_cum)
             E[i].permute_rows(perm_cum)
-    
-    
+
+
         elif params["do_state_reordering"]==2:
             """
             The Hungarian approach
             """
 
-            # S' = Pn^+ * S
-            St[i].permute_rows(perm_t)  # here we use the old value, perm_t = P_n 
+            # Compute: S'_{alp}{alp} (n) = (P_n^alp)^+ S^{alp}{alp} (n)
+            mat_aa[i].permute_rows(perm_t_aa) 
+            # Compute: S_'{bet}{bet} (n) = (P_n^bet)^+ S^{bet}{bet} (n)
+            mat_bb[i].permute_rows(perm_t_bb)
 
-            # construct the cost matrix
+            # compute the cost matrices for both sets of spin-orbtials
             alp = 0.0
             if "state_reordering_alpha" in params.keys():
                 alp = params["state_reordering_alpha"]
     
-            cost_mat = MATRIX(nstates, nstates)
-            for a in xrange(nstates):
-                for b in xrange(nstates):
-                    s = St[i].get(a,b)
-                    s2 =  (s*s.conjugate()).real
+            cost_mat_aa = MATRIX(nstates/2, nstates/2)
+            cost_mat_bb = MATRIX(nstates/2, nstates/2)
+            for a in xrange(nstates/2):
+                for b in xrange(nstates/2):
+
+                    # for < alpha | alpha > subsection
+                    s_aa = mat_aa[i].get(a,b)
+                    s2_aa = (s_aa*s_aa.conjugate()).real
                     dE = (E[i].get(a,a)-E[i].get(b,b)).real
-                    val = s2 * math.exp(-alp*dE**2)
-                    cost_mat.set(a,b, val)
-    
-            # run the assignment calculations
-            res = hungarian.maximize(cost_mat)
-    
-            # convert the list of lists into the permutation object
-            for r in res:
-                perm_t[r[0]] = r[1]   # now, this becomes a new value: perm_t = P_{n+1}
-    
-            # apply the permutation
-            # Because St = <psi(t)|psi(t+dt)> - we permute only columns
-            St[i].permute_cols(perm_t)
+                    val_aa = s2_aa * math.exp(-alp*dE**2)
+                    cost_mat_aa.set(a,b, val_aa)
 
-            #E[i].permute_cols(perm_t)
-            #E[i].permute_rows(perm_t)
+                    # for < beta | beta > subsection
+                    s_bb = mat_bb[i].get(a,b)
+                    s2_bb = (s_bb*s_bb.conjugate()).real
+                    dE = (E[i].get(a+nstates/2,a+nstates/2)-E[i].get(b+nstates/2,b+nstates/2)).real
+                    val_bb = s2_bb * math.exp(-alp*dE**2)
+                    cost_mat_bb.set(a,b, val_bb)
 
+            # Solve the optimal assignment problem 
+            res_aa = hungarian.maximize(cost_mat_aa)
+            res_bb = hungarian.maximize(cost_mat_bb)
+   
+            # Permute the off-diagonal blocks by col
+            mat_ab[i].permute_cols(perm_t_aa)
+            mat_ba[i].permute_cols(perm_t_bb)          
 
+            # Convert the list of lists into the permutation object
+            for ra in res_aa:
+                perm_t_aa[ra[0]] = ra[1]  # for < alpha | alpha > this becomes a new value: perm_t = P_{n+1}
+            for rb in res_bb:
+                perm_t_bb[rb[0]] = rb[1]  # for < beta | beta > this becomes a new value: perm_t = P_{n+1}   
 
+            # Permute the diagonal blocks
+            mat_aa[i].permute_cols(perm_t_aa)
+            mat_bb[i].permute_cols(perm_t_bb)
+
+            # Permute the off-diagonal elements by row
+            mat_ab[i].permute_cols(perm_t_bb)
+            mat_ba[i].permute_cols(perm_t_aa)          
+
+            # Reconstruct the entire S'' matrix 
+            push_submatrix(St[i], mat_aa[i], range(0,nstates/2), range(0,nstates/2))
+            push_submatrix(St[i], mat_bb[i], range(nstates/2,nstates), range(nstates/2,nstates))   
+            push_submatrix(St[i], mat_ab[i], range(0,nstates/2), range(nstates/2,nstates))   
+            push_submatrix(St[i], mat_ba[i], range(nstates/2,nstates), range(0,nstates/2))   
+            
 
 
 
