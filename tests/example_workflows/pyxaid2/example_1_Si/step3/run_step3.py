@@ -49,8 +49,10 @@ params["St_im_prefix"] = "St_dia_ks_"; params["St_im_suffix"] = "_im"
 
 if setup==1:
     params["output_set_paths"] = ["/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/tests/example_workflows/pyxaid2/example_1_Si/step3/res_setup1/"]
+    os.system("mkdir res_setup1")
 elif setup==2:
     params["output_set_paths"] = ["/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/tests/example_workflows/pyxaid2/example_1_Si/step3/res_setup2/"]
+    os.system("mkdir res_setup2")
 
 params["Hvib_re_prefix"] = "Hvib_"; params["Hvib_re_suffix"] = "_re"
 params["Hvib_im_prefix"] = "Hvib_"; params["Hvib_im_suffix"] = "_im"
