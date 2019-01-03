@@ -109,6 +109,83 @@ def get_data(params):
     return S, St, E
 
 
+def get_Lowdin(S):
+    """
+    Find the S_i_half for the S matrix - alpha and beta components
+    """
+
+    nstates = S.num_of_cols/2  # division by 2 because it is a super-matrix
+
+    alp = range(0,nstates)
+    bet = range(nstates, 2*nstates)
+
+    S_aa = CMATRIX(nstates, nstates)
+    S_bb = CMATRIX(nstates, nstates)
+
+    pop_submatrix(S, S_aa, alp, alp)
+    pop_submatrix(S, S_bb, bet, bet)
+
+    is_inv = FullPivLU_rank_invertible(S_aa)
+    if is_inv[1] != 1:
+        print "Error, S_aa is not invertible, Exiting Program";  sys.exit(0)
+
+    is_inv = FullPivLU_rank_invertible(S_bb)
+    if is_inv[1] != 1:
+        print "Error, S_bb is not invertible, Exiting Program";  sys.exit(0)
+
+    S_aa_half = CMATRIX(nstates,nstates)
+    S_aa_i_half = CMATRIX(nstates,nstates)
+    sqrt_matrix(S_aa, S_aa_half, S_aa_i_half)
+
+    S_bb_half = CMATRIX(nstates,nstates)
+    S_bb_i_half = CMATRIX(nstates,nstates)
+    sqrt_matrix(S_bb, S_bb_half, S_bb_i_half)
+
+    return S_aa_i_half, S_bb_i_half
+
+
+
+
+def apply_normalization(S, St, params):
+    """
+    Ensure the transition density matrix is computed using the 
+    normalized wavefunctions.
+    """
+
+    critical_params = [ ]
+    default_params = { "do_orthogonalization":0 }
+    comn.check_input(params, default_params, critical_params)
+
+    if params["do_othogonalization"]==1:
+
+        nsteps = len(St)
+        nstates = St[0].num_of_cols/2  # division by 2 because it is a super-matrix
+        
+        alp = range(0,nstates)
+        bet = range(nstates, 2*nstates)
+
+        St_aa = CMATRIX(nstates,nstates);  St_ab = CMATRIX(nstates,nstates);
+        St_ba = CMATRIX(nstates,nstates);  St_bb = CMATRIX(nstates,nstates);
+        
+        for i in range(0, nsteps-1):
+        
+            U1_a, U1_b = get_Lowdin(S[i])    # time n
+            U2_a, U2_b = get_Lowdin(S[i+1])  # time n+1
+        
+            pop_submatrix(St[i], St_aa, alp, alp);    pop_submatrix(St[i], St_ab, alp, bet)
+            pop_submatrix(St[i], St_ba, bet, alp);    pop_submatrix(St[i], St_bb, bet, bet)
+        
+            St_aa = U1_a.H() * St_aa * U2_a
+            St_ab = U1_a.H() * St_ab * U2_b
+            St_ba = U1_b.H() * St_ba * U2_a
+            St_bb = U1_b.H() * St_bb * U2_b
+        
+            push_submatrix(St[i], St_aa, alp, alp);   push_submatrix(St[i], St_ab, alp, bet)
+            push_submatrix(St[i], St_ba, bet, alp);   push_submatrix(St[i], St_bb, bet, bet)
+        
+         
+
+
 def apply_state_reordering(St, E, params):
     """
     St [list of CMATRIX]
@@ -430,6 +507,7 @@ def run(params):
         prms.update({"data_set_path":params["data_set_paths"][idata]})    
         S_dia_ks, St_dia_ks, E_dia_ks = get_data(prms)  
 
+        apply_normalization(S_dia_ks, St_dia_ks, prms)
         apply_state_reordering(St_dia_ks, E_dia_ks, prms)    
         apply_phase_correction(St_dia_ks, prms)
         
