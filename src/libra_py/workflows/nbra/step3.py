@@ -169,7 +169,7 @@ def apply_normalization(S, St, params):
         for i in range(0, nsteps-1):
         
             U1_a, U1_b = get_Lowdin(S[i])    # time n
-            U2_a, U2_b = get_Lowdin(S[i+1])  # time n+1
+            U2_a, U2_b = get_Lowdin(S[i+1])  # time n+1          
         
             pop_submatrix(St[i], St_aa, alp, alp);    pop_submatrix(St[i], St_ab, alp, bet)
             pop_submatrix(St[i], St_ba, bet, alp);    pop_submatrix(St[i], St_bb, bet, bet)
@@ -181,14 +181,16 @@ def apply_normalization(S, St, params):
         
             push_submatrix(St[i], St_aa, alp, alp);   push_submatrix(St[i], St_ab, alp, bet)
             push_submatrix(St[i], St_ba, bet, alp);   push_submatrix(St[i], St_bb, bet, bet)
+
+
         
          
-def make_cost_mat(orb_mat_inp, en_mat_inp, alp):
+def make_cost_mat(orb_mat_inp, en_mat_inp, alpha):
     """
     Makes the cost matrix from a given CMATRIX/MATRIX input  
     orb_mat_inp [CMATRIX or MATRIX]
     en_mat_inp  [MATRIX]
-    alp [float]
+    alpha [float]
     """
 
     nstates = orb_mat_inp.num_of_cols
@@ -200,8 +202,8 @@ def make_cost_mat(orb_mat_inp, en_mat_inp, alp):
             s = orb_mat_inp.get(a,b)
             s2 = (s*s.conjugate()).real
             dE = (en_mat_inp.get(a,a) - en_mat_inp.get(b,b)).real
-            val = s2 * math.exp(-alp*dE**2)
-            cost_mat.set(a,b, val)
+            val = s2 * math.exp(-alpha*dE**2)
+            cost_mat.set(a,b,val)
 
     return cost_mat
 
@@ -217,25 +219,24 @@ def apply_state_reordering(St, E, params):
     comn.check_input(params, default_params, critical_params)
 
     nsteps = len(St)
-    nstates = St[0].num_of_cols
-    indx = nstates/2
+    nstates = St[0].num_of_cols/2 # division by 2 because it is a super-matrix
+
+    alp = range(0,nstates)
+    bet = range(nstates, 2*nstates)
 
     # Initialize the cumulative permutation as the identity permutation
     perm_cum_aa = intList() # cumulative permutation for alpha spatial orbitals
     perm_cum_bb = intList() # cumulative permutation for beta  spatial orbtials
-    for a in xrange(indx):
+    for a in xrange(nstates):
         perm_cum_aa.append(a)
         perm_cum_bb.append(a)
 
     # Current permutation
     perm_t_aa = intList() 
     perm_t_bb = intList()
-    for a in xrange(indx):
+    for a in xrange(nstates):
         perm_t_aa.append(a)
         perm_t_bb.append(a)
-
-    en_mat_aa = CMATRIX(indx, indx)
-    en_mat_bb = CMATRIX(indx, indx)
 
     for i in range(0, nsteps):
 
@@ -262,44 +263,34 @@ def apply_state_reordering(St, E, params):
             The Hungarian approach
             """
 
-            aa = CMATRIX(indx,indx) # aa = alpha-alpha
-            bb = CMATRIX(indx,indx) # bb = beta-beta
-            ab = CMATRIX(indx,indx) # ab = alpha-beta
-            ba = CMATRIX(indx,indx) # ba = beta-alpha
+            aa = CMATRIX(nstates, nstates); ab = CMATRIX(nstates, nstates)
+            ba = CMATRIX(nstates, nstates); bb = CMATRIX(nstates, nstates)
 
-            # For aa
-            pop_submatrix(St[i],aa,range(0,indx),range(0,indx))
-            # For bb
-            pop_submatrix(St[i],bb,range(indx,indx+indx),range(indx,indx+indx))
-            # For ab
-            pop_submatrix(St[i],ab,range(0,indx),range(indx,indx+indx))
-            # For ba
-            pop_submatrix(St[i],ba,range(indx,indx+indx),range(0,indx))
+            en_mat_aa = CMATRIX(nstates, nstates); en_mat_bb = CMATRIX(nstates, nstates)
+
+            pop_submatrix(St[i], aa, alp, alp); pop_submatrix(St[i], ab, alp, bet)
+            pop_submatrix(St[i], ba, bet, alp); pop_submatrix(St[i], bb, bet, bet)
 
             # Extract the alpha and beta orbtial energies
-            pop_submatrix(E[i],en_mat_aa,range(0,indx),range(0,indx))
-            pop_submatrix(E[i],en_mat_bb,range(indx,indx+indx),range(indx,indx+indx))
+            pop_submatrix(E[i], en_mat_aa, alp, alp); pop_submatrix(E[i], en_mat_bb, bet, bet)
 
-            # S'_{alp}{alp} (n) = (P_n^alp)^+ S^{alp}{alp} (n)
             # Permute rows for diagonal blocks  
-            aa.permute_rows(perm_t_aa) 
-            bb.permute_rows(perm_t_bb)
+            aa.permute_rows(perm_t_aa); bb.permute_rows(perm_t_bb)
 
             # compute the cost matrices for diagonal blocks
-            alp = 0.0
+            alpha = 0.0
             if "state_reordering_alpha" in params.keys():
-                alp = params["state_reordering_alpha"]  
+                alpha = params["state_reordering_alpha"]  
 
-            cost_mat_aa = make_cost_mat(aa, en_mat_aa, alp)
-            cost_mat_bb = make_cost_mat(bb, en_mat_bb, alp)          
+            cost_mat_aa = make_cost_mat(aa, en_mat_aa, alpha)
+            cost_mat_bb = make_cost_mat(bb, en_mat_bb, alpha)          
 
             # Solve the optimal assignment problem for diagonal blocks
             res_aa = hungarian.maximize(cost_mat_aa)
             res_bb = hungarian.maximize(cost_mat_bb)
    
             # Permute the off-diagonal blocks by row
-            ab.permute_rows(perm_t_aa)
-            ba.permute_rows(perm_t_bb)          
+            ab.permute_rows(perm_t_aa); ba.permute_rows(perm_t_bb)          
 
             # Convert the list of lists into the permutation object
             for ra in res_aa:
@@ -307,20 +298,32 @@ def apply_state_reordering(St, E, params):
             for rb in res_bb:
                 perm_t_bb[rb[0]] = rb[1]  # for < beta | beta > this becomes a new value: perm_t = P_{n+1}   
 
-            # Permute the diagonal blocks
-            aa.permute_cols(perm_t_aa)
-            bb.permute_cols(perm_t_bb)
+            # Permute the diagonal blocks by col
+            aa.permute_cols(perm_t_aa); bb.permute_cols(perm_t_bb)
 
-            # Permute the off-diagonal elements by col
-            ab.permute_cols(perm_t_bb)
-            ba.permute_cols(perm_t_aa)          
+            # Permute the off-diagonal blocks by col
+            ab.permute_cols(perm_t_bb); ba.permute_cols(perm_t_aa)          
 
-            # Reconstruct the entire S'' matrix 
-            push_submatrix(St[i], aa, range(0,nstates/2), range(0,nstates/2))
-            push_submatrix(St[i], bb, range(nstates/2,nstates), range(nstates/2,nstates))   
-            push_submatrix(St[i], ab, range(0,nstates/2), range(nstates/2,nstates))   
-            push_submatrix(St[i], ba, range(nstates/2,nstates), range(0,nstates/2))   
-          
+            # Reconstruct St matrix 
+            push_submatrix(St[i], aa, alp, alp); push_submatrix(St[i], ab, alp, bet)
+            push_submatrix(St[i], ba, bet, alp); push_submatrix(St[i], bb, bet, bet)
+
+
+
+
+def do_phase_corr(St, phase_i, cum_phase):
+    """
+    St [CMATRIX] ex) could be alpha or beta sub-blocks
+    """
+   
+    nstates = St.num_of_rows
+
+    ### Correct the overlap matrix ###
+    for a in xrange(nstates):
+        for b in xrange(nstates):
+            fab = cum_phase.get(b) * cum_phase.get(b).conjugate() * phase_i.get(b).conjugate()
+            St.scale(a,b, fab)
+
 
 
 
@@ -336,32 +339,49 @@ def apply_phase_correction(St, params):
     default_params = { "do_phase_correction":1 }
     comn.check_input(params, default_params, critical_params)
 
-
     nsteps = len(St)
-    nstates = St[0].num_of_cols
+    nstates = St[0].num_of_cols/2  # division by 2 because it is a super-matrix
+
+    alp = range(0,nstates)
+    bet = range(nstates, 2*nstates)
 
     ### Initiate the cumulative phase correction factors ###    
-    cum_phase = CMATRIX(nstates,1)  # F(n-1)  cumulative phase
+    cum_phase_aa = CMATRIX(nstates,1)  # F(n-1)  cumulative phase
+    cum_phase_bb = CMATRIX(nstates,1)  # F(n-1)  cumulative phase
     for a in xrange(nstates):
-        cum_phase.set(a, 0, 1.0+0.0j)
-
+        cum_phase_aa.set(a, 0, 1.0+0.0j)
+        cum_phase_bb.set(a, 0, 1.0+0.0j)
 
     for i in range(0, nsteps):
 
+        St_aa = CMATRIX(nstates, nstates); St_ab = CMATRIX(nstates, nstates)
+        St_ba = CMATRIX(nstates, nstates); St_bb = CMATRIX(nstates, nstates)
+
+        pop_submatrix(St[i], St_aa, alp, alp)
+        pop_submatrix(St[i], St_bb, bet, bet)
+
         if params["do_phase_correction"]==1:
-            ### Compute the instantaneous phase correction factors ###
-            phase_i = compute_phase_corrections(St[i])   # f(i)
+
+            ### Compute the instantaneous phase correction factors for diag. blocks ###
+            phase_i_aa = compute_phase_corrections(St_aa)   # f(i)
+            phase_i_bb = compute_phase_corrections(St_bb)   # f(i)       
+
+            ### Do the  phase correstions for the diag. blocks ###
+            do_phase_corr(St_aa, phase_i_aa, cum_phase_aa); do_phase_corr(St_bb, phase_i_bb, cum_phase_bb)
         
-            ### Correct the overlap matrix ###
-            for a in xrange(nstates):   
-                for b in xrange(nstates): 
-                    fab = cum_phase.get(b) * cum_phase.get(b).conjugate() * phase_i.get(b).conjugate()
-                    St[i].scale(a,b, fab)
-        
-            ### Update the cumulative phase correction factors ###
+            ### Do the  phase correstions for the off-diag. blocks ###
+            do_phase_corr(St_ab, phase_i_bb, cum_phase_aa); do_phase_corr(St_ba, phase_i_aa, cum_phase_bb)
+
+            ### Push the corrected diag. blocks to orig. St matrix ###
+            push_submatrix(St[i], St_aa, alp, alp);   push_submatrix(St[i], St_ab, alp, bet)
+            push_submatrix(St[i], St_ba, bet, alp);   push_submatrix(St[i], St_bb, bet, bet)
+
+            ### Update the cumulative phase correction factors for diag. blocks ###
             for a in xrange(nstates):
-                cum_phase.scale(a, 0, phase_i.get(a))
-          
+                cum_phase_aa.scale(a, 0, phase_i_aa.get(a))
+                cum_phase_bb.scale(a, 0, phase_i_bb.get(a))
+
+
 
 
 def sac_matrices(coeff):
