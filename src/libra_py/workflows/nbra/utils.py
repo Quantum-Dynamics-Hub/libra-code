@@ -228,10 +228,10 @@ def post_process(coeff, ene, issoc):
             N_ks_orb = coeff[0].num_of_cols  
             N_pw = coeff[0].num_of_rows 
 
-            # Construct spin-Orbtial matrix of size (2*N_pw,2*N_ks_orb)
-            C = CMATRIX(2*N_pw, 2*N_ks_orb)
+            # Construct spin-Orbtial matrix of size (N_pw,2*N_ks_orb)
+            C = CMATRIX(N_pw, 2*N_ks_orb)
             push_submatrix(C, coeff[0], range(0,N_pw), range(0,N_ks_orb) ) 
-            push_submatrix(C, coeff[0], range(N_pw,2*N_pw), range(N_ks_orb,2*N_ks_orb) )
+            push_submatrix(C, coeff[0], range(0,N_pw), range(N_ks_orb,2*N_ks_orb) )
  
             # Construct energy matrix of size (2*N_ks_orb,2*N_ks_orb):
             E = CMATRIX(2*N_ks_orb, 2*N_ks_orb)
@@ -244,10 +244,10 @@ def post_process(coeff, ene, issoc):
             N_ks_orb = coeff[0].num_of_cols  
             N_pw = coeff[0].num_of_rows
 
-            # Construct spin-Orbtial matrix of size (2*N_pw,2*N_ks_orb)
-            C = CMATRIX(2*N_pw, 2*N_ks_orb)
+            # Construct spin-Orbtial matrix of size (N_pw,2*N_ks_orb)
+            C = CMATRIX(N_pw, 2*N_ks_orb)
             push_submatrix(C, coeff[0], range(0,N_pw), range(0,N_ks_orb) )
-            push_submatrix(C, coeff[1], range(N_pw,2*N_pw), range(N_ks_orb,2*N_ks_orb) )
+            push_submatrix(C, coeff[1], range(0,N_pw), range(N_ks_orb,2*N_ks_orb) )
 
             # Same with energies:
             E = CMATRIX(2*N_ks_orb, 2*N_ks_orb)

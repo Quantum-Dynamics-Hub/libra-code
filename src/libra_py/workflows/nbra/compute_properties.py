@@ -49,7 +49,7 @@ def compute_properties_dia_gamma(params, es_curr, es_next, curr_index):
 
     os.system("mkdir %s" % rd)
     #========== Print out ================
-    #S.real().show_matrix("%s/S_dia_ks_%d_re" % (rd, curr_index))
+    S.real().show_matrix("%s/S_dia_ks_%d_re" % (rd, curr_index))
 
     St.real().show_matrix("%s/St_dia_ks_%d_re" % (rd, curr_index))
     St.imag().show_matrix("%s/St_dia_ks_%d_im" % (rd, curr_index))
