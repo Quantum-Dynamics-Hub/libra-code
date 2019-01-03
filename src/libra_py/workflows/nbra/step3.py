@@ -155,7 +155,7 @@ def apply_normalization(S, St, params):
     default_params = { "do_orthogonalization":0 }
     comn.check_input(params, default_params, critical_params)
 
-    if params["do_othogonalization"]==1:
+    if params["do_orthogonalization"]==1:
 
         nsteps = len(St)
         nstates = St[0].num_of_cols/2  # division by 2 because it is a super-matrix
@@ -183,6 +183,27 @@ def apply_normalization(S, St, params):
             push_submatrix(St[i], St_ba, bet, alp);   push_submatrix(St[i], St_bb, bet, bet)
         
          
+def make_cost_mat(orb_mat_inp, en_mat_inp, alp):
+    """
+    Makes the cost matrix from a given CMATRIX/MATRIX input  
+    orb_mat_inp [CMATRIX or MATRIX]
+    en_mat_inp  [MATRIX]
+    alp [float]
+    """
+
+    nstates = orb_mat_inp.num_of_cols
+    cost_mat = MATRIX(nstates, nstates)
+
+    for a in xrange(nstates):
+        for b in xrange(nstates):
+
+            s = orb_mat_inp.get(a,b)
+            s2 = (s*s.conjugate()).real
+            dE = (en_mat_inp.get(a,a) - en_mat_inp.get(b,b)).real
+            val = s2 * math.exp(-alp*dE**2)
+            cost_mat.set(a,b, val)
+
+    return cost_mat
 
 
 def apply_state_reordering(St, E, params):
@@ -213,31 +234,10 @@ def apply_state_reordering(St, E, params):
         perm_t_aa.append(a)
         perm_t_bb.append(a)
 
-    # Setup alpha and beta sub-matricies
-    mat_aa = CMATRIXList() # aa = alpha-alpha
-    mat_bb = CMATRIXList() # bb = beta-beta
-    mat_ab = CMATRIXList() # ab = alpha-beta
-    mat_ba = CMATRIXList() # ba = beta_alpha
+    en_mat_aa = CMATRIX(indx, indx)
+    en_mat_bb = CMATRIX(indx, indx)
+
     for i in range(0, nsteps):
-
-        aa = CMATRIX(indx,indx)
-        bb = CMATRIX(indx,indx)
-        ab = CMATRIX(indx,indx)
-        ba = CMATRIX(indx,indx)
- 
-        # For aa
-        pop_submatrix(St[i],aa,range(0,indx),range(0,indx))
-        # For bb
-        pop_submatrix(St[i],bb,range(indx,indx+indx),range(indx,indx+indx))
-        # For ab
-        pop_submatrix(St[i],ab,range(0,indx),range(indx,indx+indx))
-        # For ba
-        pop_submatrix(St[i],ba,range(indx,indx+indx),range(0,indx))
-
-        mat_aa.append(aa)
-        mat_bb.append(bb)
-        mat_ab.append(ab)
-        mat_ba.append(ba)
 
         if params["do_state_reordering"]==1:
             """
@@ -262,42 +262,44 @@ def apply_state_reordering(St, E, params):
             The Hungarian approach
             """
 
-            # Compute: S'_{alp}{alp} (n) = (P_n^alp)^+ S^{alp}{alp} (n)
-            mat_aa[i].permute_rows(perm_t_aa) 
-            # Compute: S_'{bet}{bet} (n) = (P_n^bet)^+ S^{bet}{bet} (n)
-            mat_bb[i].permute_rows(perm_t_bb)
+            aa = CMATRIX(indx,indx) # aa = alpha-alpha
+            bb = CMATRIX(indx,indx) # bb = beta-beta
+            ab = CMATRIX(indx,indx) # ab = alpha-beta
+            ba = CMATRIX(indx,indx) # ba = beta-alpha
 
-            # compute the cost matrices for both sets of spin-orbtials
+            # For aa
+            pop_submatrix(St[i],aa,range(0,indx),range(0,indx))
+            # For bb
+            pop_submatrix(St[i],bb,range(indx,indx+indx),range(indx,indx+indx))
+            # For ab
+            pop_submatrix(St[i],ab,range(0,indx),range(indx,indx+indx))
+            # For ba
+            pop_submatrix(St[i],ba,range(indx,indx+indx),range(0,indx))
+
+            # Extract the alpha and beta orbtial energies
+            pop_submatrix(E[i],en_mat_aa,range(0,indx),range(0,indx))
+            pop_submatrix(E[i],en_mat_bb,range(indx,indx+indx),range(indx,indx+indx))
+
+            # S'_{alp}{alp} (n) = (P_n^alp)^+ S^{alp}{alp} (n)
+            # Permute rows for diagonal blocks  
+            aa.permute_rows(perm_t_aa) 
+            bb.permute_rows(perm_t_bb)
+
+            # compute the cost matrices for diagonal blocks
             alp = 0.0
             if "state_reordering_alpha" in params.keys():
-                alp = params["state_reordering_alpha"]
-    
-            cost_mat_aa = MATRIX(nstates/2, nstates/2)
-            cost_mat_bb = MATRIX(nstates/2, nstates/2)
-            for a in xrange(nstates/2):
-                for b in xrange(nstates/2):
+                alp = params["state_reordering_alpha"]  
 
-                    # for < alpha | alpha > subsection
-                    s_aa = mat_aa[i].get(a,b)
-                    s2_aa = (s_aa*s_aa.conjugate()).real
-                    dE = (E[i].get(a,a)-E[i].get(b,b)).real
-                    val_aa = s2_aa * math.exp(-alp*dE**2)
-                    cost_mat_aa.set(a,b, val_aa)
+            cost_mat_aa = make_cost_mat(aa, en_mat_aa, alp)
+            cost_mat_bb = make_cost_mat(bb, en_mat_bb, alp)          
 
-                    # for < beta | beta > subsection
-                    s_bb = mat_bb[i].get(a,b)
-                    s2_bb = (s_bb*s_bb.conjugate()).real
-                    dE = (E[i].get(a+nstates/2,a+nstates/2)-E[i].get(b+nstates/2,b+nstates/2)).real
-                    val_bb = s2_bb * math.exp(-alp*dE**2)
-                    cost_mat_bb.set(a,b, val_bb)
-
-            # Solve the optimal assignment problem 
+            # Solve the optimal assignment problem for diagonal blocks
             res_aa = hungarian.maximize(cost_mat_aa)
             res_bb = hungarian.maximize(cost_mat_bb)
    
-            # Permute the off-diagonal blocks by col
-            mat_ab[i].permute_cols(perm_t_aa)
-            mat_ba[i].permute_cols(perm_t_bb)          
+            # Permute the off-diagonal blocks by row
+            ab.permute_rows(perm_t_aa)
+            ba.permute_rows(perm_t_bb)          
 
             # Convert the list of lists into the permutation object
             for ra in res_aa:
@@ -306,19 +308,19 @@ def apply_state_reordering(St, E, params):
                 perm_t_bb[rb[0]] = rb[1]  # for < beta | beta > this becomes a new value: perm_t = P_{n+1}   
 
             # Permute the diagonal blocks
-            mat_aa[i].permute_cols(perm_t_aa)
-            mat_bb[i].permute_cols(perm_t_bb)
+            aa.permute_cols(perm_t_aa)
+            bb.permute_cols(perm_t_bb)
 
-            # Permute the off-diagonal elements by row
-            mat_ab[i].permute_cols(perm_t_bb)
-            mat_ba[i].permute_cols(perm_t_aa)          
+            # Permute the off-diagonal elements by col
+            ab.permute_cols(perm_t_bb)
+            ba.permute_cols(perm_t_aa)          
 
             # Reconstruct the entire S'' matrix 
-            push_submatrix(St[i], mat_aa[i], range(0,nstates/2), range(0,nstates/2))
-            push_submatrix(St[i], mat_bb[i], range(nstates/2,nstates), range(nstates/2,nstates))   
-            push_submatrix(St[i], mat_ab[i], range(0,nstates/2), range(nstates/2,nstates))   
-            push_submatrix(St[i], mat_ba[i], range(nstates/2,nstates), range(0,nstates/2))   
-            
+            push_submatrix(St[i], aa, range(0,nstates/2), range(0,nstates/2))
+            push_submatrix(St[i], bb, range(nstates/2,nstates), range(nstates/2,nstates))   
+            push_submatrix(St[i], ab, range(0,nstates/2), range(nstates/2,nstates))   
+            push_submatrix(St[i], ba, range(nstates/2,nstates), range(0,nstates/2))   
+          
 
 
 
