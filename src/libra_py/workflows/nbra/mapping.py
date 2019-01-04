@@ -56,22 +56,35 @@ def sd2indx(inp,nbasis):
     This function maps a list of integers defining a given spin
     configuration on the list of indices of the corresponding 
     spin-orbitals
+
+    Example of spatial indexing notation change:
+
+    Slater Determinant
+    [1,-3] 
+   
+    For alpha:
+        1 -> 0
+
+    For beta:
+       -3 -> 2  
     """
 
     sz = len(inp)
-    out = [0] * sz
+
+    spat = [0] * sz
 
     for i in xrange(sz):
+
         # alpha
         if inp[i] > 0: 
-            out[i] = inp[i] - 1
+            spat[i] = inp[i] - 1
+
         # beta
         else:
-            out[i] = (abs(inp[i])) + nbasis/2 - 1
+            spat[i] = (abs(inp[i])) - 1  #+ nbasis/2 - 1
 
     # Rearrange in ascending order
-    out = sorted(out)
-
+    out = sorted(spat)   
     return out
 
 
@@ -92,9 +105,13 @@ def ovlp_arb(SD1, SD2, S):
 
     for i in xrange(len(sd1)):
         for j in xrange(len(sd2)):
-             s.set(i,j,S.get(sd1[i],sd2[j]))
 
-    return det(s) # Eq. 16
+            if (SD1[i] * SD2[j]) > 0:          
+                s.set(i,j,S.get(sd1[i],sd2[j]))
+            else:
+                s.set(i,j,0.0)
+
+    return det(s)
 
 
 def ovlp_mat_arb(SD1, SD2, S):
