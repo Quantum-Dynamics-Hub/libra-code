@@ -417,7 +417,7 @@ def apply_phase_correction(St, params):
 
 
 
-def sac_matrices(coeff, basis):
+def sac_matrices(coeff, basis, norbs):
 
     n_chi = len(coeff)
     n_phi = len(coeff[0])
@@ -427,10 +427,23 @@ def sac_matrices(coeff, basis):
         for i in xrange(n_phi):
             P2C.set(i,j,coeff[j][i]*(1.0+0.0j) )
 
+    # Make Sorb
+    norbs = 4
+
+    alp = range(0,norbs/2)
+    bet = range(norbs/2, norbs)
+
+    Sorb = CMATRIX(norbs,norbs)
+    iden = CMATRIX(norbs/2,norbs/2)
+    for i in xrange(norbs/2):
+        iden.set(i,i,1.0,0.0)
+
+    push_submatrix(Sorb, iden, alp, alp); push_submatrix(Sorb, iden, alp, bet)
+    push_submatrix(Sorb, iden, bet, alp); push_submatrix(Sorb, iden, bet, bet)
 
     # Compute the overlaps of the SDs:
     #
-    Ssd = mapping.ovlp_mat_arb(SD1, SD2, Sorb)
+    Ssd = mapping.ovlp_mat_arb(basis, basis, Sorb)
 
     # Normalize the Chi wavefunctions #
     norm = (P2C.H() * Ssd * P2C).real()
@@ -603,7 +616,7 @@ def run(params):
     5. Convert the Hvib to the basis of symmery-adapted configurations (SAC)
     """
 
-    P2C = sac_matrices(params["P2C"], prms["Phi_basis"])
+    P2C = sac_matrices(params["P2C"], params["Phi_basis"], params["norbitals"])
     H_vib = []
     ndata = len(params["data_set_paths"])
 
