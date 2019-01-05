@@ -428,8 +428,6 @@ def sac_matrices(coeff, basis, norbs):
             P2C.set(i,j,coeff[j][i]*(1.0+0.0j) )
 
     # Make Sorb
-    norbs = 4
-
     alp = range(0,norbs/2)
     bet = range(norbs/2, norbs)
 
