@@ -273,10 +273,6 @@ def run(params):
     T = params["T"]
     bolt_opt = params["Boltz_opt"]
     dt = params["dt"]
-    do_collapse = 0
-    if params["decoherence_method"]==1:
-        do_collapse = 1
-
 
     res = MATRIX(nsteps, 3*nstates+5)
 
@@ -356,11 +352,13 @@ def run(params):
         
                     if params["decoherence_method"] in [0, 1, 2]:
                     
+                        do_collapse = None
                         if params["decoherence_method"]==0:    # No decoherence
-                            pass
+                            do_collapse = 0
                         elif params["decoherence_method"]==1:  # ID-A, taken care of in the tsh.hopping
-                            pass
+                            do_collapse = 1
                         elif params["decoherence_method"]==2:  # MSDM
+                            do_collapse = 0
                             Coeff[Tr] = msdm(Coeff[Tr], dt, istate[Tr], decoh_rates)
                     
                         istate[Tr] = tsh.hopping(Coeff[Tr], H_vib[idata][it+i], istate[Tr], params["sh_method"], do_collapse, ksi, ksi2, dt, T, bolt_opt)
