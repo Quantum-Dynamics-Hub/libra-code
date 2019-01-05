@@ -109,7 +109,7 @@ def ovlp_arb(SD1, SD2, S):
             if (SD1[i] * SD2[j]) > 0:          
                 s.set(i,j,S.get(sd1[i],sd2[j]))
             else:
-                s.set(i,j,0.0)
+                s.set(i,j,0.0,0.0)
 
     return det(s)
 
