@@ -209,6 +209,16 @@ def run(params):
     params["outfile"]          [string] - the name of the file where to print populations and energies of states [default: "_out.txt"]    
 
 
+    === Data tuning (e.g. units conversion or other trickery) ===
+    params["Hvib_shift1"]      [CMATRIX(nstates,nstates)] - first shift corrections [a.u. of energy]
+    params["Hvib_shift2"]      [CMATRIX(nstates,nstates)] - second shift corrections [a.u. of energy]
+    params["Hvib_scale"]       [CMATRIX(nstates,nstates)] - scaling of the Hvib [unitless]
+
+    Hvib(original) ->    ( Hvib + Hvib_shift1 ) x (Hvib_scale) + Hvib_shift2,  
+
+    Here, x indicates the element-wise multiplicaiton
+
+
     === Required by the get_data() ===
 
     params["nstates"]          [int] - how many lines/columns in the file - the total number of states set in step3
@@ -246,7 +256,7 @@ def run(params):
      
     """
 
-    critical_params = [ "nstates", "nsteps" ]  # "data_set_paths", "nfiles"
+    critical_params = [ "nstates", "nsteps", "Hvib_shift1", "Hvib_shift2", "Hvib_scale" ]  # "data_set_paths", "nfiles"
     default_params = { "T":300.0, "ntraj":1, 
                        "sh_method":1, "decoherence_method":0, "dt":41.0, "Boltz_opt":3,
                        "istate":0, "init_times":[0], "outfile":"_out.txt",
@@ -290,6 +300,13 @@ def run(params):
             h_vib = get_Hvib(prms)  
             H_vib.append(h_vib)
 
+    #======== Optional Hvib shifts and rescalings ===========
+    for idata in xrange(ndata):
+        for istep in xrange(nsteps):
+            tmp = CMATRIX(H_vib[idata][istep])
+            tmp.dot_product(tmp.add(params["Hvib_shift1"]), params["Hvib_scale"]).add(params["Hvib_shift2"])
+            H_vib[idata][istep] = CMATRIX(tmp)
+        
 
     #========== Compute PARAMETERS  ===============
     # Decoherence times for DISH
