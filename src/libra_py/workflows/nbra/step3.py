@@ -331,19 +331,20 @@ def apply_state_reordering(St, E, params):
 
 
 
-def do_phase_corr(cum_phase, St, phase_i):
+def do_phase_corr(cum_phase1, St, cum_phase2, phase_i):
     """
     This function changes the St matrix according to
     the previous cumulative phases and the current 
     phase correction:
 
-    St -> St = F_n * St * (f_{n+1})^+
+    St -> St = F_n * St * (F_{n+1})^+ = F_n * St * (F_{n})^+ * (f_{n+1})^+
 
-    cum_phase [CMATRIX(nstates, 1)]        cumulative phase corrections up to step n (F_n)
-    St        [CMATRIX(nstates, nstates)]  input/output TDM to be processed: 
-                                           could be alpha-alpha, beta-beta, alpha-beta, 
-                                           or beta-alpha sub-blocks
-    phase_i   [CMATRIX(nstates, 1)]        the current step phase corrections (f_{n+1})
+    cum_phase1 [CMATRIX(nstates, 1)]        cumulative phase corrections up to step n (F_n)
+    cum_phase2 [CMATRIX(nstates, 1)]        cumulative phase corrections up to step n (F_n)
+    St         [CMATRIX(nstates, nstates)]  input/output TDM to be processed: 
+                                            could be alpha-alpha, beta-beta, alpha-beta, 
+                                            or beta-alpha sub-blocks
+    phase_i    [CMATRIX(nstates, 1)]        the current step phase corrections (f_{n+1})
     """
    
     nstates = St.num_of_rows
@@ -351,8 +352,7 @@ def do_phase_corr(cum_phase, St, phase_i):
     ### Correct the TDM matrix ###
     for a in xrange(nstates):
         for b in xrange(nstates):
-            #fab = cum_phase.get(b) * cum_phase.get(b).conjugate() * phase_i.get(b).conjugate()
-            fab = cum_phase.get(a) * phase_i.get(b).conjugate()
+            fab = cum_phase1.get(a) * cum_phase2.get(b).conjugate() * phase_i.get(b).conjugate()
             St.scale(a,b, fab)
 
 
@@ -398,12 +398,12 @@ def apply_phase_correction(St, params):
             phase_i_bb = compute_phase_corrections(St_bb)   # f(i)       
 
             ### Do the  phase correstions for the diag. blocks ###
-            do_phase_corr(cum_phase_aa, St_aa, phase_i_aa)
-            do_phase_corr(cum_phase_bb, St_bb, phase_i_bb)
+            do_phase_corr(cum_phase_aa, St_aa, cum_phase_aa, phase_i_aa)
+            do_phase_corr(cum_phase_bb, St_bb, cum_phase_bb, phase_i_bb)
         
             ### Do the  phase correstions for the off-diag. blocks ###
-            do_phase_corr(cum_phase_aa, St_ab, phase_i_bb)
-            do_phase_corr(cum_phase_bb, St_ba, phase_i_aa)
+            do_phase_corr(cum_phase_aa, St_ab, cum_phase_bb, phase_i_bb)
+            do_phase_corr(cum_phase_bb, St_ba, cum_phase_aa, phase_i_aa)
 
             ### Push the corrected diag. blocks to orig. St matrix ###
             push_submatrix(St[i], St_aa, alp, alp);   push_submatrix(St[i], St_ab, alp, bet)
