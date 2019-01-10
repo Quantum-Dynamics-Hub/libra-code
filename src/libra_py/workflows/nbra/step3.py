@@ -390,6 +390,9 @@ def apply_phase_correction(St, params):
 
         pop_submatrix(St[i], St_aa, alp, alp)
         pop_submatrix(St[i], St_bb, bet, bet)
+        pop_submatrix(St[i], St_ab, alp, bet)
+        pop_submatrix(St[i], St_ba, bet, alp)
+
 
         if params["do_phase_correction"]==1:
 
