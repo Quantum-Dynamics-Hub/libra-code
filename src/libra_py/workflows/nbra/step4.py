@@ -11,6 +11,29 @@
 #
 #  
 #
+"""
+    The module usage example:
+    
+    # Regular NBRA-NA-MD:
+    import step4
+
+    Hvib = step4.get_Hvib2(params)  # get the Hvib for all data sets
+    step4.transform_data(Hvib, {})  # default parameters don't change data
+    step4.run(Hvib, params)         # this ```params``` could be the same or different from the above
+
+
+    # On-the-fly QSH-NA-MD:
+    import step4
+    import qsh
+
+    Hvib = qsh.run(qsh_params)      # generate the QSH Hvib data sets, see the ```qsh.run()``` for 
+                                    # the description of the ```qsh_params``` parameters
+    step4.transform_data(Hvib, {})  # default parameters don't change data
+    step4.run(Hvib, params)         # 
+
+
+"""
+
 import sys
 import cmath
 import math
@@ -61,6 +84,85 @@ def get_Hvib(params):
         Hvib.append(hvib)
 
     return Hvib
+
+
+def get_Hvib2(params):
+    """
+    Read a several sets of generic vibronic Hamiltonian files 
+
+    Required parameter keys:
+
+    params["data_set_paths"]   [list of strings] - define the pathes of the directories where the vibronic Hamiltonians for
+                               different data sets (independent MD trajectories) are located
+
+    === Required by the get_Hvib() ===
+
+    params["nstates"]          [int] - how many lines/columns in the file 
+    params["nfiles"]           [int] - how many files to read, starting from index 0
+    params["Hvib_re_prefix"]   [string] - prefixes of the files with real part of the MO overlaps at time t
+    params["Hvib_re_suffix"]   [string] - suffixes of the files with real part of the MO overlaps at time t
+    params["Hvib_im_prefix"]   [string] - prefixes of the files with imaginary part of the MO overlaps at time t
+    params["Hvib_im_suffix"]   [string] - suffixes of the files with imaginary part of the MO overlaps at time t
+
+    """
+
+    critical_params = [ "data_set_paths" ] 
+    default_params = { }
+    comn.check_input(params, default_params, critical_params)
+
+    H_vib = []
+
+    for idata in params["data_set_paths"]:   # over all MD trajectories (data sets)
+        prms = dict(params)    
+        prms.update({"Hvib_re_prefix": idata+params["Hvib_re_prefix"] })
+        prms.update({"Hvib_im_prefix": idata+params["Hvib_im_prefix"] })                
+
+        h_vib = get_Hvib(prms)  
+        H_vib.append(h_vib)
+
+    return H_vib
+
+
+def transform_data(X, params):
+    """
+    This is an auxiliary function to morph the original X (e.g. H_vib) according to:     
+
+    X(original) ->    ( X + shift1 ) x (scale) + shift2,  
+
+    Here, x indicates the element-wise multiplicaiton, and shift1, shift2, and scale are matrices
+
+    Transformes X (e.g. H_vib) input directly, so changes the original input
+
+    === Data tuning (e.g. units conversion or other trickery) ===
+    params["shift1"]      [CMATRIX(nstates,nstates)] - first shift corrections [units of X]
+    params["shift2"]      [CMATRIX(nstates,nstates)] - second shift corrections [units of X]
+    params["scale"]       [CMATRIX(nstates,nstates)] - scaling of the X [unitless]
+
+
+    """
+
+    ndata = len(X)
+    nsteps = len(X[0])
+    nstates = X[0][0].num_of_cols
+
+    sh1 = CMATRIX(nstates, nstates) # zero
+    sh2 = CMATRIX(nstates, nstates) # zero
+    scl = CMATRIX(nstates, nstates) # all elements are 1
+
+    for i in xrange(nstates):
+        for j in xrange(nstates):
+            scl.set(i,j, 1.0+0.0j)
+
+    critical_params = [  ] 
+    default_params = { "shift1":sh1, "shift2":sh2, "scale":scl  }
+    comn.check_input(params, default_params, critical_params)
+
+    for idata in xrange(ndata):
+        for istep in xrange(nsteps):
+            tmp = CMATRIX(X[idata][istep])
+            tmp.dot_product(tmp.add(params["shift1"]), params["scale"]).add(params["shift2"])
+            X[idata][istep] = CMATRIX(tmp)
+
 
 
 
@@ -178,9 +280,14 @@ def printout(t, res, outfile):
 
 
 
-def run(params):
+def run(H_vib, params):
     """
     The main procedure to run NA-MD calculations according to the PYXAID2 workflow
+
+    H_vib                     [list of lists of CMATRIX] - the vibronic Hamiltonian for all data sets and all time-points
+
+    H_vib[idata][istep].get(i,j) - i,j matrix element for the data set ```idata``` and step in that data set ```istep```
+    
 
     === Required parameter keys: ===
 
@@ -209,17 +316,7 @@ def run(params):
     params["outfile"]          [string] - the name of the file where to print populations and energies of states [default: "_out.txt"]    
 
 
-    === Data tuning (e.g. units conversion or other trickery) ===
-    params["Hvib_shift1"]      [CMATRIX(nstates,nstates)] - first shift corrections [a.u. of energy]
-    params["Hvib_shift2"]      [CMATRIX(nstates,nstates)] - second shift corrections [a.u. of energy]
-    params["Hvib_scale"]       [CMATRIX(nstates,nstates)] - scaling of the Hvib [unitless]
-
-    Hvib(original) ->    ( Hvib + Hvib_shift1 ) x (Hvib_scale) + Hvib_shift2,  
-
-    Here, x indicates the element-wise multiplicaiton
-
-
-    === Required by the get_data() ===
+    === Required by the get_Hvib2() ===
 
     params["nstates"]          [int] - how many lines/columns in the file - the total number of states set in step3
     params["nfiles"]           [int] - hom many files there are to read for each data set
@@ -230,12 +327,7 @@ def run(params):
     params["Hvib_im_prefix"]   [string] - prefixes of the files with imaginary part of the vibronic Hamiltonian at time t
     params["Hvib_im_suffix"]   [string] - suffixes of the files with imaginary part of the vibronic Hamiltonian at time t
 
-
-    === Required for the on-the-fly QSH ===
-    params["on-the-fly-qsh"]   [Boolean] - flag to select if the QSH calculations are dine via files or on the fly (no intermediate files) [Default: False]
-    params["qsh-params"]       [Python dictionary] - see the ```qsh.run()``` for the description of the parameters
    
-
     ```The full name of the vibronic Hamiltonian files will be:
     
     params["data_set_path"]+params["Hvib_re_prefix"]+integer(time step)+params["Hvib_re_suffix"] - for real part
@@ -256,7 +348,7 @@ def run(params):
      
     """
 
-    critical_params = [ "nstates", "nsteps", "Hvib_shift1", "Hvib_shift2", "Hvib_scale" ]  # "data_set_paths", "nfiles"
+    critical_params = [ "nstates", "nsteps" ] 
     default_params = { "T":300.0, "ntraj":1, 
                        "sh_method":1, "decoherence_method":0, "dt":41.0, "Boltz_opt":3,
                        "istate":0, "init_times":[0], "outfile":"_out.txt",
@@ -286,27 +378,6 @@ def run(params):
 
     res = MATRIX(nsteps, 3*nstates+5)
 
-    #======== Read in the vibronic Hamiltonian along the trajectory for each data set ============
-    H_vib = []
-
-    if params["on-the-fly-qsh"]:
-        H_vib = qsh.run(params["qsh-params"])
-    else:
-        for idata in params["data_set_paths"]:   # over all MD trajectories (data sets)
-            prms = dict(params)    
-            prms.update({"Hvib_re_prefix": idata+params["Hvib_re_prefix"] })
-            prms.update({"Hvib_im_prefix": idata+params["Hvib_im_prefix"] })                
-
-            h_vib = get_Hvib(prms)  
-            H_vib.append(h_vib)
-
-    #======== Optional Hvib shifts and rescalings ===========
-    for idata in xrange(ndata):
-        for istep in xrange(nsteps):
-            tmp = CMATRIX(H_vib[idata][istep])
-            tmp.dot_product(tmp.add(params["Hvib_shift1"]), params["Hvib_scale"]).add(params["Hvib_shift2"])
-            H_vib[idata][istep] = CMATRIX(tmp)
-        
 
     #========== Compute PARAMETERS  ===============
     # Decoherence times for DISH
