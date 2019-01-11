@@ -66,7 +66,7 @@ complex<double> Linear_NE_exact(double tp, double tau, double gamma, double omeg
 }
 
 
-complex<double> ACF_NE_exact(double tp, double tau, double omega_DA,
+complex<double> ACF_NE_exact(double tp, double tau, double omega_DA, double V,
                              vector<double>& omega_nm, vector<double>& gamma_nm,
                              vector<double>& req_nm, vector<double>& shift_NE, 
                              double beta, int type){
@@ -98,7 +98,7 @@ complex<double> ACF_NE_exact(double tp, double tau, double omega_DA,
       }
     }
 
-    if(type==0){  ampl = complex<double>(1.0, 0.0); }
+    if(type==0){  ampl = complex<double>(V*V, 0.0); }
 
     // C = exp(argg) * ampl = exp[Re(argg)+i*Im(argg)] * [Re(ampl) + i*Im(ampl)] = 
     // = exp(Re(argg)) * [cos(Im(argg)) + i*sin(Im(argg))] * [Re(ampl) + i*Im(ampl)]
@@ -140,7 +140,7 @@ complex<double> Linear_NE_LSC(double tp, double tau, double gamma, double omega,
 
 }
 
-complex<double> ACF_NE_LSC(double tp, double tau, double omega_DA,
+complex<double> ACF_NE_LSC(double tp, double tau, double omega_DA, double V,
                            vector<double>& omega_nm, vector<double>& gamma_nm,
                            vector<double>& req_nm, vector<double>& shift_NE, 
                            double beta, int type){
@@ -172,7 +172,7 @@ complex<double> ACF_NE_LSC(double tp, double tau, double omega_DA,
       }
     }
 
-    if(type==0){  ampl = complex<double>(1.0, 0.0); }
+    if(type==0){  ampl = complex<double>(V*V, 0.0); }
 
     // C = exp(argg) * ampl = exp[Re(argg)+i*Im(argg)] * [Re(ampl) + i*Im(ampl)] = 
     // = exp(Re(argg)) * [cos(Im(argg)) + i*sin(Im(argg))] * [Re(ampl) + i*Im(ampl)]
@@ -216,7 +216,7 @@ complex<double> Linear_NE_CAV(double tp, double tau, double gamma, double omega,
 
 }
 
-complex<double> ACF_NE_CAV(double tp, double tau, double omega_DA,
+complex<double> ACF_NE_CAV(double tp, double tau, double omega_DA, double V,
                            vector<double>& omega_nm, vector<double>& gamma_nm,
                            vector<double>& req_nm, vector<double>& shift_NE,
                            double beta, int type){
@@ -248,7 +248,7 @@ complex<double> ACF_NE_CAV(double tp, double tau, double omega_DA,
       }
     }
 
-    if(type==0){  ampl = complex<double>(1.0, 0.0); }
+    if(type==0){  ampl = complex<double>(V*V, 0.0); }
 
     // C = exp(argg) * ampl = exp[Re(argg)+i*Im(argg)] * [Re(ampl) + i*Im(ampl)] = 
     // = exp(Re(argg)) * [cos(Im(argg)) + i*sin(Im(argg))] * [Re(ampl) + i*Im(ampl)]
@@ -293,7 +293,7 @@ complex<double> Linear_NE_CD(double tp, double tau, double gamma, double omega, 
 
 }
 
-complex<double> ACF_NE_CD(double tp, double tau, double omega_DA,
+complex<double> ACF_NE_CD(double tp, double tau, double omega_DA, double V,
                           vector<double>& omega_nm, vector<double>& gamma_nm,
                           vector<double>& req_nm, vector<double>& shift_NE, 
                           double beta, int type){
@@ -325,7 +325,7 @@ complex<double> ACF_NE_CD(double tp, double tau, double omega_DA,
       }
     }
 
-    if(type==0){  ampl = complex<double>(1.0, 0.0); }
+    if(type==0){  ampl = complex<double>(V*V, 0.0); }
 
     // C = exp(argg) * ampl = exp[Re(argg)+i*Im(argg)] * [Re(ampl) + i*Im(ampl)] = 
     // = exp(Re(argg)) * [cos(Im(argg)) + i*sin(Im(argg))] * [Re(ampl) + i*Im(ampl)]
@@ -367,7 +367,7 @@ complex<double> Linear_NE_W0(double tp, double tau, double gamma, double omega, 
 
 }
 
-complex<double> ACF_NE_W0(double tp, double tau, double omega_DA,
+complex<double> ACF_NE_W0(double tp, double tau, double omega_DA, double V,
                           vector<double>& omega_nm, vector<double>& gamma_nm,
                           vector<double>& req_nm, vector<double>& shift_NE, 
                           double beta, int type){
@@ -399,7 +399,7 @@ complex<double> ACF_NE_W0(double tp, double tau, double omega_DA,
       }
     }
 
-    if(type==0){  ampl = complex<double>(1.0, 0.0); }
+    if(type==0){  ampl = complex<double>(V*V, 0.0); }
 
     // C = exp(argg) * ampl = exp[Re(argg)+i*Im(argg)] * [Re(ampl) + i*Im(ampl)] = 
     // = exp(Re(argg)) * [cos(Im(argg)) + i*sin(Im(argg))] * [Re(ampl) + i*Im(ampl)]
@@ -450,7 +450,7 @@ complex<double> Linear_NE_Marcus(double tp, double tau, double gamma, double ome
   return gamma*gamma*complex<double>(re, im);
 }
 
-complex<double> ACF_NE_Marcus(double tp, double tau, double omega_DA,
+complex<double> ACF_NE_Marcus(double tp, double tau, double omega_DA, double V,
                               vector<double>& omega_nm, vector<double>& gamma_nm,
                               vector<double>& req_nm, vector<double>& shift_NE, 
                               double beta, int type){
@@ -482,7 +482,7 @@ complex<double> ACF_NE_Marcus(double tp, double tau, double omega_DA,
       }
     }
 
-    if(type==0){  ampl = complex<double>(1.0, 0.0); }
+    if(type==0){  ampl = complex<double>(V*V, 0.0); }
 
     // C = exp(argg) * ampl = exp[Re(argg)+i*Im(argg)] * [Re(ampl) + i*Im(ampl)] = 
     // = exp(Re(argg)) * [cos(Im(argg)) + i*sin(Im(argg))] * [Re(ampl) + i*Im(ampl)]
@@ -497,7 +497,7 @@ complex<double> ACF_NE_Marcus(double tp, double tau, double omega_DA,
 
 
 
-double NEFGRL_rate(double tp, double V, double omega_DA, 
+double NEFGRL_rate(double tp, double omega_DA, double V, 
                    vector<double>& omega_nm, vector<double>& gamma_nm,
                    vector<double>& req_nm, vector<double>& shift_NE,
                    int method, double beta, int type, double dtau
@@ -545,12 +545,12 @@ double NEFGRL_rate(double tp, double V, double omega_DA,
     if(tau<=tp){
 
       switch(method){
-        case 0: {  C = ACF_NE_exact(tp, tau, omega_DA, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
-        case 1: {  C = ACF_NE_LSC(tp, tau, omega_DA, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
-        case 2: {  C = ACF_NE_CAV(tp, tau, omega_DA, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
-        case 3: {  C = ACF_NE_CD(tp, tau, omega_DA, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
-        case 4: {  C = ACF_NE_W0(tp, tau, omega_DA, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
-        case 5: {  C = ACF_NE_Marcus(tp, tau, omega_DA, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
+        case 0: {  C = ACF_NE_exact(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
+        case 1: {  C = ACF_NE_LSC(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
+        case 2: {  C = ACF_NE_CAV(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
+        case 3: {  C = ACF_NE_CD(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
+        case 4: {  C = ACF_NE_W0(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
+        case 5: {  C = ACF_NE_Marcus(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
         default: {
           cout<<"Method "<<method<<" is not available. Please choose from the following options:\n";
           cout<<"0 - Exact\n";
@@ -576,7 +576,7 @@ double NEFGRL_rate(double tp, double V, double omega_DA,
 
 
 
-MATRIX NEFGRL_population(double V, double omega_DA, 
+MATRIX NEFGRL_population(double omega_DA, double V,
                          vector<double>& omega_nm, vector<double>& gamma_nm,
                          vector<double>& req_nm, vector<double>& shift_NE,
                          int method, double beta, int type, double dtau, double tmax, double dt 
@@ -617,7 +617,7 @@ MATRIX NEFGRL_population(double V, double omega_DA,
   for(int step=0; step<nsteps; step++) {  // t' 
 
     // k = k(t')
-    double k = NEFGRL_rate(step*dt, V, omega_DA, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, type, dtau);
+    double k = NEFGRL_rate(step*dt, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, type, dtau);
         
     sum += k * dt; 
     double P = exp(-sum);  //exp(- int dt' k(t'))

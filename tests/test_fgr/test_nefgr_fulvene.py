@@ -20,7 +20,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 from libra_py import models_LVC, units
-import populations
+import fgr_py
 
 fs = units.fs2au
 
@@ -90,7 +90,7 @@ V = gamma
 #res = NEFGRL_population(V, dE, omega_nm, gamma_nm,req_nm, shift_NE, method, beta, dyn_type, dtau, tmax, dt)
 #res.show_matrix("_res.txt")
 
-populations.run_NEFGRL_populations(V, dE, omega_nm, gamma_nm,req_nm, shift_NE, method, beta, dyn_type, dtau, tmax, dt, "_res.txt")
+fgr_py.run_NEFGRL_populations(dE, V, omega_nm, gamma_nm,req_nm, shift_NE, method, beta, dyn_type, dtau, tmax, dt, "_res.txt")
 
 """
 for step in xrange(50):

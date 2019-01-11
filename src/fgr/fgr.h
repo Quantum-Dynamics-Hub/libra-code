@@ -65,41 +65,41 @@ vector<double> LVC2GOA_req(vector<double>& omega_nm, vector<double>& d1, vector<
 
 complex<double> Integrand_NE_exact(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta);
 complex<double> Linear_NE_exact(double tp, double tau, double gamma, double omega, double shift, double req, double beta);
-complex<double> ACF_NE_exact(double tp, double tau, double omega_DA, vector<double>& omega_nm, vector<double>& gamma_nm,
+complex<double> ACF_NE_exact(double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
                              vector<double>& req_nm, vector<double>& shift_NE, double beta, int type);
 
 complex<double> Integrand_NE_LSC(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta);
 complex<double> Linear_NE_LSC(double tp, double tau, double gamma, double omega, double shift, double req, double beta);
-complex<double> ACF_NE_LSC(double tp, double tau, double omega_DA, vector<double>& omega_nm, vector<double>& gamma_nm,
+complex<double> ACF_NE_LSC(double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
                            vector<double>& req_nm, vector<double>& shift_NE, double beta, int type);
 
 complex<double> Integrand_NE_CAV(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta);
 complex<double> Linear_NE_CAV(double tp, double tau, double gamma, double omega, double shift, double req, double beta);
-complex<double> ACF_NE_CAV(double tp, double tau, double omega_DA, vector<double>& omega_nm, vector<double>& gamma_nm,
+complex<double> ACF_NE_CAV(double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
                            vector<double>& req_nm, vector<double>& shift_NE, double beta, int type);
 
 complex<double> Integrand_NE_CD(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta);
 complex<double> Linear_NE_CD(double tp, double tau, double gamma, double omega, double shift, double req, double beta);
-complex<double> ACF_NE_CD(double tp, double tau, double omega_DA, vector<double>& omega_nm, vector<double>& gamma_nm,
+complex<double> ACF_NE_CD(double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
                           vector<double>& req_nm, vector<double>& shift_NE, double beta, int type);
 
 complex<double> Integrand_NE_W0(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta);
 complex<double> Linear_NE_W0(double tp, double tau, double gamma, double omega, double shift, double req, double beta);
-complex<double> ACF_NE_W0(double tp, double tau, double omega_DA, vector<double>& omega_nm, vector<double>& gamma_nm,
+complex<double> ACF_NE_W0(double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
                           vector<double>& req_nm, vector<double>& shift_NE, double beta, int type);
 
 complex<double> Integrand_NE_Marcus(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta);
 complex<double> Linear_NE_Marcus(double tp, double tau, double gamma, double omega, double shift, double req, double beta);
-complex<double> ACF_NE_Marcus(double tp, double tau, double omega_DA, vector<double>& omega_nm, vector<double>& gamma_nm,
+complex<double> ACF_NE_Marcus(double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
                               vector<double>& req_nm, vector<double>& shift_NE, double beta, int type);
 
 
-double NEFGRL_rate(double t, double V, double omega_DA,   
+double NEFGRL_rate(double t, double omega_DA, double V,
                    vector<double>& omega_nm, vector<double>& gamma_nm,
                    vector<double>& req_nm, vector<double>& shift_NE,
                    int method, double beta, int type, double dtau);
 
-MATRIX NEFGRL_population(double V, double omega_DA, 
+MATRIX NEFGRL_population(double omega_DA, double V,
                          vector<double>& omega_nm, vector<double>& gamma_nm,
                          vector<double>& req_nm, vector<double>& shift_NE,
                          int method, double beta, int type, double dtau, double tmax, double dt);
