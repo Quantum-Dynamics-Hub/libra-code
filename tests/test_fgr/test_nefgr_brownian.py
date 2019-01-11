@@ -24,11 +24,11 @@ import fgr_py
 
 fs = units.fs2au
 
-method = 5
+method = 0
 tmax = 40.0
 dt = 0.10
 dtau = dt/20.0
-dyn_type = 0 # 0 - Condon, 1 - non-Condon
+dyn_type = 1 # 0 - Condon, 1 - non-Condon
 
 gamma = 0.1
 
@@ -104,21 +104,24 @@ for w_DA in [0.0]: #, 2.0]:   # Donor-Acceptor energy gap
 
                 ###=== Test 1 : Regular execution type ===
                 ### Results are printed out only once the entire calculations is completed
+                #
                 #res = NEFGRL_population(params["omega_DA"], V, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, dyn_type, dtau, tmax, dt)
                 #res.show_matrix("res-%i-%i-%i-%i.txt" % (i1,i2,i3,i4))
 
                 ###=== Test 2 : Same as above, but via an auxiliary Python script ===
                 ### Results are printed out continuously
-                #fgr_py.run_NEFGRL_populations(params["omega_DA"], V, omega_nm, gamma_nm,req_nm, shift_NE, method, beta, dyn_type, dtau, tmax, dt, "res-%i-%i-%i-%i.txt" % (i1,i2,i3,i4) )
+                #
+                fgr_py.run_NEFGRL_populations(params["omega_DA"], V, omega_nm, gamma_nm,req_nm, shift_NE, method, beta, dyn_type, dtau, tmax, dt, "res-%i-%i-%i-%i.txt" % (i1,i2,i3,i4) )
 
                 ###=== Test 3 : A more detailed test ===
                 ### Consider different times (fractions of the maximal time) - t'
                 ### Compute the ACF for each of these times fixed - as a function of tau
                 ### Together with it, compute the integrals of C(tau) from 0 to t', which are the rate constants at t'
                 ### Print out to several files - one file per fixed t'
-                for n in [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]:
-                    tp = tmax * n
-                    fgr_py.run_Test1(params["omega_DA"], V, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, dyn_type, tp, dtau, "_acf-%2.1f.txt" % (n))
+                #
+                #for n in [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]:
+                #    tp = tmax * n
+                #    fgr_py.run_Test1(params["omega_DA"], V, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, dyn_type, tp, dtau, "_acf-%2.1f.txt" % (n))
 
 
 
