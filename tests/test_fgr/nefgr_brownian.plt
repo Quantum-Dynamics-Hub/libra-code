@@ -24,7 +24,7 @@ set style line 32 lc rgb '#00008B' pt 6 ps 1 lt 1 lw 5 # --- darkblue
 set style line 41 lc rgb '#2F4F4F' pt 6 ps 1 lt 1 lw 5 # --- darkslategray
 
 
-set xlabel "Time, a.u." offset 0.0, 0.5
+set xlabel "Time, fs" offset 0.0, 0.5
 set ylabel "Rate, a.u.^-1"
 #set xtics 10.0
 #set xrange [:300.0]

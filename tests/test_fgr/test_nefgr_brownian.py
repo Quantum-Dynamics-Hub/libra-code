@@ -20,14 +20,15 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 from libra_py import units
-
+import populations
 
 fs = units.fs2au
 
-method = 0 
-tmax = 40 
-dt = 0.20
-dtau = dt/5.0
+method = 0
+tmax = 40.0
+dt = 0.10
+dtau = dt/10.0
+dyn_type = 1 # 0 - Condon, 1 - non-Condon
 
 gamma = 0.1
 
@@ -64,7 +65,7 @@ for w_DA in [0.0]: #, 2.0]:   # Donor-Acceptor energy gap
                 params["omega"] = [0.5*w_c]
                 params["coup"] = [0.0]
 
-                for a in xrange(1, nomega-1):
+                for a in xrange(1, nomega):
                     w_a = a*dw
                     params["omega"].append(w_a)
 
@@ -104,21 +105,23 @@ for w_DA in [0.0]: #, 2.0]:   # Donor-Acceptor energy gap
                 """
                 for step in xrange(10):
                     t = step*dt
-                    k = NEFGRL_rate(V, params["omega_DA"], t, dtau, omega_nm, gamma_nm, req_nm, shift_NE, method, beta)
+                    k = NEFGRL_rate(t, V, params["omega_DA"], omega_nm, gamma_nm, req_nm, shift_NE, method, beta, dyn_type, dtau)
 
                     for w in range(nomega-1):
                         tau = t
-                        integ = Integrand_NE_exact(params["omega_DA"], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta)
-                        lin = Linear_NE_exact(gamma_nm[w], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta)
+                        integ = Integrand_NE_exact(t, tau, params["omega_DA"], omega_nm[w], shift_NE[w], req_nm[w], beta)
+                        lin = Linear_NE_exact(t, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta)
                         print w, omega_nm[w], integ, lin
 
                     print step, k
 
                 sys.exit(0)
                 """
-                res = NEFGRL_population(V, params["omega_DA"], dtau, omega_nm, gamma_nm, req_nm, shift_NE, method, tmax, dt, beta)
 
-                res.show_matrix("res-%i-%i-%i-%i.txt" % (i1,i2,i3,i4))
+                #res = NEFGRL_population(V, params["omega_DA"], omega_nm, gamma_nm, req_nm, shift_NE, method, beta, dyn_type, dtau, tmax, dt)
+                #res.show_matrix("res-%i-%i-%i-%i.txt" % (i1,i2,i3,i4))
+
+                populations.run_NEFGRL_populations(V, params["omega_DA"], omega_nm, gamma_nm,req_nm, shift_NE, method, beta, dyn_type, dtau, tmax, dt, "res-%i-%i-%i-%i.txt" % (i1,i2,i3,i4) )
 
 
 
