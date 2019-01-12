@@ -955,6 +955,8 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz
     old_st = istate
     new_st = hop(istate, g, ksi)
 
+    Coeff1 = Coeff
+
     if new_st != old_st:
         E_old = Hvib.get(old_st,old_st).real
         E_new = Hvib.get(new_st,new_st).real
@@ -963,7 +965,7 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz
         istate, Coeff1 = ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi2, do_collapse, boltz_opt)
 
 
-    return istate #, Coeff1
+    return istate, Coeff1
     
 
 

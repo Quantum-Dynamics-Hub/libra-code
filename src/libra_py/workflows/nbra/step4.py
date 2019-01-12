@@ -159,8 +159,11 @@ def transform_data(X, params):
 
     for idata in xrange(ndata):
         for istep in xrange(nsteps):
+
             tmp = CMATRIX(X[idata][istep])
-            tmp.dot_product(tmp.add(params["shift1"]), params["scale"]).add(params["shift2"])
+            tmp = tmp + params["shift1"]
+            tmp.dot_product( tmp, params["scale"] )
+            tmp = tmp + params["shift2"]
             X[idata][istep] = CMATRIX(tmp)
 
 
@@ -449,7 +452,7 @@ def run(H_vib, params):
                             do_collapse = 0
                             Coeff[Tr] = msdm(Coeff[Tr], dt, istate[Tr], decoh_rates)
                     
-                        istate[Tr] = tsh.hopping(Coeff[Tr], H_vib[idata][it+i], istate[Tr], params["sh_method"], do_collapse, ksi, ksi2, dt, T, bolt_opt)
+                        istate[Tr], Coeff[Tr] = tsh.hopping(Coeff[Tr], H_vib[idata][it+i], istate[Tr], params["sh_method"], do_collapse, ksi, ksi2, dt, T, bolt_opt)
                     
                     elif params["decoherence_method"] in [3]:  # DISH
                     
