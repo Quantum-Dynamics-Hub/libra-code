@@ -617,7 +617,7 @@ def run(params):
     5. Convert the Hvib to the basis of symmery-adapted configurations (SAC)
     """
 
-    P2C = sac_matrices(params["P2C"], params["Phi_basis"], params["norbitals"])
+    P2C = sac_matrices(params["P2C"], params["Phi_basis"], len(params["active_space"]))
     H_vib = []
     ndata = len(params["data_set_paths"])
 
