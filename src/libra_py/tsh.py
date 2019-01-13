@@ -955,7 +955,7 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz
     old_st = istate
     new_st = hop(istate, g, ksi)
 
-    Coeff1 = Coeff
+    Coeff1 = CMATRIX(Coeff)
 
     if new_st != old_st:
         E_old = Hvib.get(old_st,old_st).real
