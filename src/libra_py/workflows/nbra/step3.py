@@ -420,7 +420,7 @@ def apply_phase_correction(St, params):
 
 
 
-def sac_matrices(coeff, basis, norbs):
+def sac_matrices(coeff, basis, S_ks):
 
     n_chi = len(coeff)
     n_phi = len(coeff[0])
@@ -430,21 +430,9 @@ def sac_matrices(coeff, basis, norbs):
         for i in xrange(n_phi):
             P2C.set(i,j,coeff[j][i]*(1.0+0.0j) )
 
-    # Make Sorb
-    alp = range(0,norbs/2)
-    bet = range(norbs/2, norbs)
-
-    Sorb = CMATRIX(norbs,norbs)
-    iden = CMATRIX(norbs/2,norbs/2)
-    for i in xrange(norbs/2):
-        iden.set(i,i,1.0,0.0)
-
-    push_submatrix(Sorb, iden, alp, alp); push_submatrix(Sorb, iden, alp, bet)
-    push_submatrix(Sorb, iden, bet, alp); push_submatrix(Sorb, iden, bet, bet)
-
     # Compute the overlaps of the SDs:
     #
-    Ssd = mapping.ovlp_mat_arb(basis, basis, Sorb)
+    Ssd = mapping.ovlp_mat_arb(basis, basis, S_ks)
 
     # Normalize the Chi wavefunctions #
     norm = (P2C.H() * Ssd * P2C).real()
@@ -454,7 +442,6 @@ def sac_matrices(coeff, basis, norbs):
         else:
             print "Error in CHI normalizaiton: some combination gives zero norm\n"
             sys.exit(0)
-
 
     return P2C
 
@@ -617,7 +604,6 @@ def run(params):
     5. Convert the Hvib to the basis of symmery-adapted configurations (SAC)
     """
 
-    P2C = sac_matrices(params["P2C"], params["Phi_basis"], len(params["active_space"]))
     H_vib = []
     ndata = len(params["data_set_paths"])
 
@@ -630,16 +616,17 @@ def run(params):
         apply_normalization(S_dia_ks, St_dia_ks, prms)
         apply_state_reordering(St_dia_ks, E_dia_ks, prms)    
         apply_phase_correction(St_dia_ks, prms)
-        
+       
         nsteps = len(St_dia_ks)
-        nstates = len(prms["P2C"])
         
         Hvib = []
         for i in xrange(nsteps):
         
             # Hvib in the basis of SDs
             hvib = compute_Hvib(prms["Phi_basis"], St_dia_ks[i], E_dia_ks[i], prms["Phi_dE"], dt) 
-        
+       
+            P2C = sac_matrices(params["P2C"], params["Phi_basis"], S_dia_ks[i])
+
             # SAC
             Hvib.append( P2C.H() * hvib * P2C )
 
@@ -648,6 +635,7 @@ def run(params):
         #if params["do_scale"] == 1:
         #    scale_H_vib(Hvib, params["Chi_en_gap"], params["NAC_dE"], params["sc_nac_method"])
 
+        nstates = len(prms["P2C"])
         
         # Output the resulting Hamiltonians
         for i in xrange(nsteps):
