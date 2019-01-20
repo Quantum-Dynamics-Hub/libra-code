@@ -75,12 +75,11 @@ def get_Hvib(params):
     active_space = range(nstates)
 
     Hvib = []
-
     for i in range(0,nfiles):
 
         filename_re = params["Hvib_re_prefix"]+str(i)+params["Hvib_re_suffix"]
         filename_im = params["Hvib_im_prefix"]+str(i)+params["Hvib_im_suffix"]
-        hvib = comn.get_matrix(nstates, nstates, filename_re, filename_im, active_space )
+        hvib = comn.get_matrix(nstates, nstates, filename_re, filename_im, active_space ) 
         Hvib.append(hvib)
 
     return Hvib
@@ -157,7 +156,7 @@ def transform_data(X, params):
     default_params = { "shift1":sh1, "shift2":sh2, "scale":scl  }
     comn.check_input(params, default_params, critical_params)
 
-    #print "Before shifting / scaling = "
+    #print "\nBefore shifting / scaling = "
     #X[0][0].show_matrix()
     #print "shift1 = "
     #params["shift1"].show_matrix()
@@ -169,7 +168,7 @@ def transform_data(X, params):
 
             tmp = CMATRIX(X[idata][istep])
             tmp = tmp + params["shift1"]
-            tmp.dot_product( tmp, params["scale"].H() )
+            tmp.dot_product( tmp, params["scale"] )
             tmp = tmp + params["shift2"]
             X[idata][istep] = CMATRIX(tmp)
 
