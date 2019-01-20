@@ -156,13 +156,6 @@ def transform_data(X, params):
     default_params = { "shift1":sh1, "shift2":sh2, "scale":scl  }
     comn.check_input(params, default_params, critical_params)
 
-    #print "\nBefore shifting / scaling = "
-    #X[0][0].show_matrix()
-    #print "shift1 = "
-    #params["shift1"].show_matrix()
-    #print "scale = "
-    #params["scale"].show_matrix()
-
     for idata in xrange(ndata):
         for istep in xrange(nsteps):
 
@@ -172,9 +165,7 @@ def transform_data(X, params):
             tmp = tmp + params["shift2"]
             X[idata][istep] = CMATRIX(tmp)
 
-    #print "After shifting / scaling = "
-    #X[0][0].show_matrix()
-    #sys.exit(0)
+
 
 
 def traj_statistics(i, Coeff, istate, Hvib, itimes):
