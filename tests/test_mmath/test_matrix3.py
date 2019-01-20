@@ -47,5 +47,18 @@ print "Original matrix"; A.show_matrix()
 print "Result"; C.show_matrix()
 
 
+print "========== Scaling 3 ============"
+# What if one of matrices is also used to store the result
+print "Original matrix"; A.show_matrix()
+B.set(0,0, 1.0);   B.set(0,1, 0.1);
+B.set(1,0, 10.0);  B.set(1,1, 1.0);
+A.dot_product(A,B)
+
+print "Scaling matrix"; B.show_matrix()
+print "Result"; A.show_matrix()
+
+
+
+
 
 
