@@ -421,6 +421,17 @@ def apply_phase_correction(St, params):
 
 
 def sac_matrices(coeff, basis, S_ks):
+    """
+    This function makes the Phi-to-Chi (P2C) transformation matrix.
+    Normalization factros for the Chi states are computed based on the 
+    overlaps of Phi states.
+    < Chi_i | Chi_j > = 1
+    = N_i * N_j * < Phi_i - Phi_i' | Phi_j - Phi_j' > = 1
+
+    coeff [List of lists] - P2C as initialized by the user
+    basis [Phi basis] - as initialized by the user 
+    S_ks  [CMATRIX] - Time overlap matrix of elementary KS orbtials, from step2
+    """
 
     n_chi = len(coeff)
     n_phi = len(coeff[0])
