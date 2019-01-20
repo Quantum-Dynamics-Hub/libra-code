@@ -73,9 +73,11 @@ def acf(data,dt):
     dt - (float) - time distance between the adjacent data points
     """
 
-    sz = len(data)/2  # how many elements we have in the time series
-                      # we use only a half of the point, because of the 
-                      # poorer statistics we get otherwise
+    sz = len(data)    # For now, we will use the full data set 
+
+                      ###               how many elements we have in the time series
+                      ###  old comments we use only a half of the point, because of the 
+                      ###               poorer statistics we get otherwise
     autocorr = []
     ndof = data[0].num_of_rows
 
