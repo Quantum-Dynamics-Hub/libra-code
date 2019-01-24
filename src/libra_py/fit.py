@@ -13,8 +13,19 @@
 
 import math
 
-def Regression(X,Y):
-# Finds y = a + b*x
+def Regression(X,Y, opt=0):
+    """   
+    Performs a linear regression of the Y vs. X of the form:
+    Y = b*x      opt=0  default
+    Y = a + b*x  opt=1
+
+    X     [list of double]  x axis data
+    Y     [list of double]  y axis data
+    opt   [int: 0 or 1]     type of the fitting to perform
+                            opt = 0:  Y = b*X  (default)
+                            opt = 1:  Y = a + b*X
+
+    """
     x,y,x2,y2,xy = 0.0, 0.0, 0.0, 0.0, 0.0
 
     sz = len(X)
@@ -28,16 +39,20 @@ def Regression(X,Y):
         xy = xy + X[i]*Y[i]
         i = i + 1
     N = float(sz)
-    b = (N*xy - x*y)/(N*x2 - x*x)
-    a = (y - b*x)/N
 
-    b = y/x
-    a = 0.0
+    a,b = 0.0, 0.0
+    if opt==0:
+        b = y/x
+        a = 0.0
+    elif opt==1:
+        b = (N*xy - x*y)/(N*x2 - x*x)
+        a = (y - b*x)/N
+
 
     return [a,b]
 
 
-def fit_exp(X,Y, x0, verbose=1):
+def fit_exp(X,Y, x0, verbose=1, linreg_opt=0):
     # Fit Y vs. X data to  Y = A*exp(-B*(X-x0))
 
     sz = len(X)  # The number of data points
@@ -51,7 +66,7 @@ def fit_exp(X,Y, x0, verbose=1):
         liny[i] = math.log(Y[i])
 
     # Run regression and compute parameters   
-    a,b = Regression(linx,liny)  # ln(y) = ln(A) - B*(X-x0) = a + b*x, so: a = ln(A), b = -B, x = X-x0
+    a,b = Regression(linx,liny,linreg_opt)  # ln(y) = ln(A) - B*(X-x0) = a + b*x, so: a = ln(A), b = -B, x = X-x0
 
     A = math.exp(a)
     B = -b
@@ -70,7 +85,7 @@ def fit_exp(X,Y, x0, verbose=1):
 
 
 
-def fit_gau(X,Y, x0, verbose=1):
+def fit_gau(X,Y, x0, verbose=1,linreg_opt=0):
     # Fit Y vs. X data to  Y = A*exp(-B*(X-x0)^2)
 
     sz = len(X)  # The number of data points
@@ -84,7 +99,7 @@ def fit_gau(X,Y, x0, verbose=1):
         liny[i] = math.log(Y[i])
 
     # Run regression and compute parameters   
-    a,b = Regression(linx,liny)  # ln(y) = ln(A) - B*(X-x0)^2 = a + b*x, so: a = ln(A), b = -B,  x = (X-x0)^2
+    a,b = Regression(linx,liny,linreg_opt)  # ln(y) = ln(A) - B*(X-x0)^2 = a + b*x, so: a = ln(A), b = -B,  x = (X-x0)^2
 
     A = math.exp(a)
     B = -b
@@ -141,8 +156,16 @@ def get_data_from_file(filename, xindx, yindx, xminval=None, xmaxval=None, yminv
 # Example of usage:
 if __name__ == '__main__': 
     X, Y = get_data_from_file("relax.txt", 0, 1)
-    #Ypred, A, B = fit_exp(X,Y, 0.0)  # Y = A * exp(-B*X)
-    Ypred, A, B = fit_gau(X,Y, 0.0)  # Y = A * exp(-B*X^2)
+    Ypred, A, B = fit_exp(X,Y, 0.0)  # Y = exp(-B*X)
+    #Ypred, A, B = fit_gau(X,Y, 0.0)  # Y = exp(-B*X^2)
+
+    #Ypred, A, B = fit_exp(X,Y, 0.0, 1, 1)  # Y = A * exp(-B*X)
+    #Ypred, A, B = fit_gau(X,Y, 0.0, 1, 1)  # Y = A * exp(-B*X^2)
+
+    #Ypred, A, B = fit_exp(X,Y, 1.5, 1, 1)  # Y = A * exp(-B*(X+1.5))
+    #Ypred, A, B = fit_gau(X,Y,-1.0, 1, 1)  # Y = A * exp(-B*(X-1.0)^2)
+
+
 
 
     f = open("relax_and_fit.txt","w")
