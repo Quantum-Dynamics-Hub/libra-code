@@ -45,7 +45,7 @@ def energy_mat_arb(SD, e, dE):
     n = len(SD)
     E = CMATRIX(n,n)
   
-    E0 = energy_arb(SD[0], e) + dE[0]*(1.0+0.0j)
+    E0 = 0.0 #energy_arb(SD[0], e) + dE[0]*(1.0+0.0j)
     for i in xrange(n):
         E.set(i,i, energy_arb(SD[i], e) + dE[i]*(1.0+0.0j) - E0 )
 
