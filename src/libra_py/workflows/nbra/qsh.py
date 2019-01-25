@@ -151,9 +151,14 @@ def compute_qs_Hvib(Nfreqs, freqs, t, nstates,
 
 
 
-def run(params):
+def run(H_vib, params):
     """
     The procedure to convert the results of QE/model Hvib calculations to longer timescales using the QSH approach
+
+    H_vib                         [list of lists of CMATRIX] - the vibronic Hamiltonian for all data sets and all time-points
+
+    H_vib[idata][istep].get(i,j) - i,j matrix element for the data set ```idata``` and step in that data set ```istep```
+
     
     === General control parameters ===
 
@@ -167,6 +172,7 @@ def run(params):
     === Required by the input ===
    
     params["nstates"]             [int] - how many lines/columns in the file - the total number of states
+    params["active_space"]        [list of ints] - the indices of the states we care about, default: range(nstates)
     params["nfiles"]              [int] - how many input files (direct Hvib) to read, starting from index 0
     params["data_set_paths"]      [string] - where the input files are located
     params["Hvib_re_prefix"]      [string] - prefixes of the files with real part of the vibronic Hamiltonian at time t
@@ -208,36 +214,37 @@ def run(params):
     """
 
     dt = params["dt"]
-    ndata = len(params["data_set_paths"])
-    nfiles = params["nfiles"]
-    nsteps = params["nsteps"]
-
-    nstates = params["nstates"]
     nfreqs = params["nfreqs"]
 
     filename = params["filename"] 
     logname = params["logname"]
     dw = params["dw"]
     wspan = params["wspan"]
+
+                             
+    nfiles = params["nfiles"]
+    nsteps = params["nsteps"]
+    nstates = params["nstates"]
+    ndata = len(params["data_set_paths"])
+    ntraj = params["ntraj"]
+    nitimes = len(params["init_times"])
+    Ntraj = ndata * nitimes * ntraj
+
     
 
 
-    H_vib = []
+    qsh_H_vib = []
 
     for idata in xrange(ndata):   # over all MD trajectories (data sets)
         
         #======== Read in the vibronic Hamiltonian along the trajectory for each data set ============
-        prms = dict(params)    
-        prms.update({"Hvib_re_prefix": params["data_set_paths"][idata]+params["Hvib_re_prefix"] })
-        prms.update({"Hvib_im_prefix": params["data_set_paths"][idata]+params["Hvib_im_prefix"] })                
-
-        h_vib = step4.get_Hvib(prms)  # direct Hvib time-series
 
         H_vib_re = []  # list of MATRIX
         H_vib_im = []  # list of MATRIX
+
         for i in xrange(nfiles):
-            H_vib_re.append(h_vib[i].real())
-            H_vib_im.append(h_vib[i].imag())
+            H_vib_re.append(H_vib[idata][i].real())
+            H_vib_im.append(H_vib[idata][i].imag())
 
 
         #======== Analyze the Hvib time-seris  ============
@@ -263,8 +270,8 @@ def run(params):
                 qs_Hvib.real().show_matrix(re_filename)
                 qs_Hvib.imag().show_matrix(im_filename)
 
-        H_vib.append(Hvib)        
+        qsh_H_vib.append(Hvib)        
         
 
-    return H_vib
+    return qsh_H_vib
 
