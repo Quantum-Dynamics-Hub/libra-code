@@ -72,7 +72,7 @@ def get_Hvib(params):
 
     nfiles = params["nfiles"]
     nstates = params["nstates"]  # the number of states in the input files
-    active_space = range(nstates)
+    active_space = params["active_space"]
 
     Hvib = []
     for i in range(0,nfiles):
@@ -80,6 +80,9 @@ def get_Hvib(params):
         filename_re = params["Hvib_re_prefix"]+str(i)+params["Hvib_re_suffix"]
         filename_im = params["Hvib_im_prefix"]+str(i)+params["Hvib_im_suffix"]
         hvib = comn.get_matrix(nstates, nstates, filename_re, filename_im, active_space ) 
+
+        hvib.show_matrix()
+        sys.exit()
         Hvib.append(hvib)
 
     return Hvib
