@@ -80,9 +80,6 @@ def get_Hvib(params):
         filename_re = params["Hvib_re_prefix"]+str(i)+params["Hvib_re_suffix"]
         filename_im = params["Hvib_im_prefix"]+str(i)+params["Hvib_im_suffix"]
         hvib = comn.get_matrix(nstates, nstates, filename_re, filename_im, active_space ) 
-
-        hvib.show_matrix()
-        sys.exit()
         Hvib.append(hvib)
 
     return Hvib
