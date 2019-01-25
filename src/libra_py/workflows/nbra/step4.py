@@ -58,6 +58,7 @@ def get_Hvib(params):
     Required parameter keys:
 
     params["nstates"]          [int] - how many lines/columns in the file 
+    params["active_space"]     [list of ints] - the indices of the states we care about, default: range(nstates)
     params["nfiles"]           [int] - how many files to read, starting from index 0
     params["Hvib_re_prefix"]   [string] - prefixes of the files with real part of the MO overlaps at time t
     params["Hvib_re_suffix"]   [string] - suffixes of the files with real part of the MO overlaps at time t
@@ -67,12 +68,12 @@ def get_Hvib(params):
     """
 
     critical_params = ["nstates", "nfiles", "Hvib_re_prefix", "Hvib_im_prefix"]
-    default_params = { "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im"}
+    default_params = { "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im", "active_space":range(params["nstates"])}
     comn.check_input(params, default_params, critical_params)
 
     nfiles = params["nfiles"]
     nstates = params["nstates"]  # the number of states in the input files
-    active_space = range(nstates)
+#    active_space = range(nstates)
 
     Hvib = []
     for i in range(0,nfiles):
@@ -360,10 +361,10 @@ def run(H_vib, params):
 
     rnd = Random()
 
-    if params["on-the-fly-qsh"]:
+#    if params["on-the-fly-qsh"]:
         # To ensure consistency, we'll borrow some of the parameters from the
         # QSH calculations
-        params.update(params["qsh-params"])
+#        params.update(params["qsh-params"])
         
 
 
