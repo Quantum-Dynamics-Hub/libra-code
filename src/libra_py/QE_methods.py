@@ -380,7 +380,7 @@ def read_md_data(filename):
 
 
     #========== Read the raw coordinates and assign masses ==========
-    D = MATRIX(3*nat, nsteps)
+    D = MATRIX(3*nat, nsteps) # coordinates
     f = MATRIX(3*nat, nsteps)
     M = MATRIX(3*nat, 1)
     E = []
@@ -395,7 +395,7 @@ def read_md_data(filename):
             name = atoms[i].get("<xmlattr>/name", "X")
             D.set(3*i+0, t, float(xyz_str[0]) )
             D.set(3*i+1, t, float(xyz_str[1]) )
-            D.set(3*i+2, t, float(xyz_str[1]) )
+            D.set(3*i+2, t, float(xyz_str[2]) )
 
             #=========== And masses ==========
             if t==0:
@@ -413,9 +413,8 @@ def read_md_data(filename):
             if len(xyz_str)==3:
                 f.set(3*cnt+0, t, float(xyz_str[0]) )
                 f.set(3*cnt+1, t, float(xyz_str[1]) )
-                f.set(3*cnt+2, t, float(xyz_str[1]) )
+                f.set(3*cnt+2, t, float(xyz_str[2]) )
                 cnt = cnt + 1                 
-        
         
     #====== Compute velocities and coordinates at the mid-points ========
     R = MATRIX(3*nat, nsteps-1)
@@ -429,6 +428,46 @@ def read_md_data(filename):
             A.set(i, t, 0.5*(f.get(i, t+1) + f.get(i, t)) / M.get(i) )
 
     return R, V, A, M, E
+
+
+
+def read_md_data_cell(filename):
+    """
+    filename (string) - the name of the xml file that contains an MD data
+    this function is specifically tailored for the QE output format
+
+    Returns:
+    C ( MATRIX(9 x nsteps) ) - cell coordinates for all timesteps
+
+    All quantities are in atomic units
+    """
+
+    # Default (empty) context object
+    dctx = Context()
+
+    ctx = Context(filename)      
+    ctx.set_path_separator("/")
+    steps = ctx.get_children("step")   
+    nsteps = len(steps)
+
+    #========== Read the raw coordinates and assign masses ==========
+    C = MATRIX(9, nsteps)     # cell parameters
+
+
+    for t in xrange(nsteps):
+
+        # ========== Cell =========
+        cell = steps[t].get_child("atomic_structure",dctx).get_child("cell", dctx)
+
+        a1_str = cell.get("a1", "").split(' ')
+        a2_str = cell.get("a2", "").split(' ')
+        a3_str = cell.get("a3", "").split(' ')
+
+        C.set(0, t, float(a1_str[0]) );  C.set(1, t, float(a1_str[1]) );   C.set(2, t, float(a1_str[2]) );        
+        C.set(3, t, float(a2_str[0]) );  C.set(4, t, float(a2_str[1]) );   C.set(5, t, float(a2_str[2]) );        
+        C.set(6, t, float(a3_str[0]) );  C.set(7, t, float(a3_str[1]) );   C.set(8, t, float(a3_str[2]) );        
+        
+    return C
 
 
 
