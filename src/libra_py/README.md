@@ -87,6 +87,7 @@
      [Ref: Pereverzev, A.; Sewell, T. D. Obtaining the Hessian from the Force Covariance Matrix:
       Application to Crystalline Explosives PETN and RDX. J. Chem. Phys. 2015, 142, 134110]
    * compute_dynmat(R, D, E, params)
+   * get_xyz(E, R, M, U, mode) - the auxiliary function to generate an xyz in the format good for py3Dmol visualization
 
 
 ## nve_md.py - functions for doing NVE MD in a maximally-Pythonic way 
@@ -117,6 +118,7 @@
   * read_qe_wfc_grid(filename, verbose=0) - read the wavefunction grid (may be too large and hence very slow!)
   * read_qe_wfc(filename, orb_list, verbose=0) - read the wavefunctions in their planewave representation
   * read_md_data(filename) - read the info about the MD run, saved in the xml file 
+  * read_md_data_cell(filename) - read the cell dimensions at all times
   * out2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt) - convert the output file with MD trajectory to a set of QE input files
   * out2pdb(out_filename,T,dt,pdb_prefix) - convert the output file with MD trajectory to a set of PDB files
   * out2xyz(out_filename,T,dt,xyz_filename) - convert the output file with MD trajectory to an XYZ trajectory file
