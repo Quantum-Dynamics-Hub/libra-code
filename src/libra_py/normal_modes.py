@@ -9,6 +9,39 @@
 #*
 #*********************************************************************************/
 
+"""
+.. module:: normal_modes
+   :platform: Unix, Windows
+   :synopsis:   
+   ========= Theory ==============
+  
+   Convention on the normal modes transformations:
+
+   U^T * H * U = W^2       (1)
+
+   x = U * q               (2a)
+
+   so q = U^T * x          (2b)
+                       
+   x = M^(1/2) * (R-R_ave) (3)
+
+   Here:
+   H - mass-scaled Hessian (dynamical matrix): H_ij = (d^2E/dx_i * dx_j )/sqrt(m_i * m_j)
+   U, q - normal modes (q are columns of U)
+   x - mass-scaled and shifted coordinates  
+   R - Cartesian coordinates
+      
+   Note: to relate to the definitions here (as of 11/7/2018), use: U = D^T
+   https://www.pci.uni-heidelberg.de//tc/usr/mctdh/doc/vcham/latex/nmode_coo.pdf
+
+   Also useful:
+   https://nanohub.org/courses/FATM/01a/asset/256
+
+.. moduleauthor:: Alexey V. Akimov
+
+
+"""
+
 import os
 import math
 import sys
@@ -18,34 +51,6 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import units
-
-
-"""
-  ========= Theory ==============
-  
-  Convention on the normal modes transformations:
-
-  U^T * H * U = W^2       (1)
-
-  x = U * q               (2a)
-
-  so q = U^T * x          (2b)
-                       
-  x = M^(1/2) * (R-R_ave) (3)
-
-  Here:
-  H - mass-scaled Hessian (dynamical matrix): H_ij = (d^2E/dx_i * dx_j )/sqrt(m_i * m_j)
-  U, q - normal modes (q are columns of U)
-  x - mass-scaled and shifted coordinates  
-  R - Cartesian coordinates
-      
-  Note: to relate to the definitions here (as of 11/7/2018), use: U = D^T
-  https://www.pci.uni-heidelberg.de//tc/usr/mctdh/doc/vcham/latex/nmode_coo.pdf
-
-  Also useful:
-  https://nanohub.org/courses/FATM/01a/asset/256
-
-"""
 
 
 def covariance_matrix(X, M, flag):

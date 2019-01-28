@@ -7,10 +7,13 @@
 #* See the file LICENSE in the root directory of this distribution   
 #* or <http://www.gnu.org/licenses/>.          
 #***********************************************************************************
-## \file namd.py 
-# This module implements functions for running NA-MD
-#
+"""
+.. module:: namd
+   :platform: Unix, Windows
+   :synopsis: This module implements functions for running NA-MD
+.. moduleauthor:: Alexey V. Akimov
 
+"""
 
 import os
 import sys
@@ -25,17 +28,17 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 
 def compute_Hvib(ham_old, ham_cur, orb, dt):
-    ##          
-    # Computes the vibronic Hamiltonian - in the MO basis - this is equivalent to the general version 
-    # below with the 1-electron "Slater determinant" basis functions.
-    # This function is going to be deprecated, but let keep it here, for backward compatibility
-    #
-    # \param[in] ham_old (Hamiltonian object) - unperturbed at t-dt
-    # \param[in] ham_cur (Hamiltonian object) - unperturbed at t
-    # \param[in] orb (list of ints) - indices of the orbitals included in the active space
-    # indexing starts with 0
-    # \param[in] dt (float) Time step (in a.u.)
-
+    """
+    Computes the vibronic Hamiltonian - in the MO basis - this is equivalent to the general version 
+    below with the 1-electron "Slater determinant" basis functions.
+    This function is going to be deprecated, but let keep it here, for backward compatibility
+    
+    \param[in] ham_old (Hamiltonian object) - unperturbed at t-dt
+    \param[in] ham_cur (Hamiltonian object) - unperturbed at t
+    \param[in] orb (list of ints) - indices of the orbitals included in the active space
+    indexing starts with 0
+    \param[in] dt (float) Time step (in a.u.)
+    """
 
     N_act = len(orb)  # number of orbitals in the active space
 
@@ -83,7 +86,7 @@ def compute_Hvib(ham_old, ham_cur, orb, dt):
 
 
 def compute_Hvib_sd(ham_old, ham_cur, orb, SD_basis, dt):
-    ##         
+    """         
     # Computes the vibronic Hamiltonian - in the MO basis
     #
     # \param[in] ham_old (Hamiltonian object) - unperturbed at t-dt
@@ -158,7 +161,7 @@ def compute_Hvib_sd(ham_old, ham_cur, orb, SD_basis, dt):
     #                  /\      /\                /\      /\
     #                  |       |                 |       |
     #               L+10 alp  L+15 bet         L+10 alp L+15 beta
-
+    """
 
 
     N_act = len(orb)  # number of orbitals in the active space
