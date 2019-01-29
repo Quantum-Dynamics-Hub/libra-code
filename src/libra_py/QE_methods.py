@@ -15,6 +15,7 @@
 import os
 import sys
 import math
+import re
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -22,6 +23,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import units
+import regexlib as rgl
 
 def cryst2cart(a1,a2,a3,r):
 # auxiliary function
@@ -1003,6 +1005,110 @@ def xyz2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt):
                 start = 0
             at_line = at_line + 1
 
-
     f.close()
+
+
+def get_QE_normal_modes(filename, verbosity=0):
+    """
+    This function reads the QE phonon calculations output files
+    to get the key information for further normal modes visualization
+    or other types of calculations related to normal modes  
+  
+    filename - the name of .dyn file produced by QE code
+    verbosity - to control the amount of print outs
+
+    >>> get_QE_normal_modes("silicon.dyn1", 1)
+    >>> get_QE_normal_modes("Cs4SnBr6_T200.dyn1")
+
+    """
+
+    #========= Read in the file and determine the key dimensions =======
+    f   = open(filename,'r')
+    A = f.readlines()
+    f.close()
+
+    tmp = A[2].split()
+    nspec =  int(float(tmp[0]))  # number of types of atoms (species)
+    nat = int(float(tmp[1]))     # number of atoms
+    if verbosity>0:
+        print "%i atoms of %i types" % (nat, nspec)
+
+
+    #============= Determine the types of atoms ===============
+    pfreq_indx = '(?P<freq_indx>'+rgl.INT+')'
+    pAtom_type = '(?P<Atom_type>'+rgl.INT+')'+rgl.SP
+    pAtom_type2 = '(?P<Atom_type2>'+rgl.INT+')'+rgl.SP
+    PHRASE1 = '\'(?P<Atom_element>[a-zA-Z]+)\s+\''+rgl.SP
+
+    last_index = 0
+    E = {}
+    for a in A:        
+        m1 = re.search(pAtom_type + PHRASE1 + rgl.pX_val,a)
+        if m1!=None:           
+            ind = int(float(a[m1.start('Atom_type'):m1.end('Atom_type')]))
+            elt = a[m1.start('Atom_element'):m1.end('Atom_element')]
+            E.update({ind:elt})
+            last_index = A.index(a)
+    if verbosity>0:
+        print "atom type index - element type mapping: ", E
+
+
+    #============= Get the coordinates ========================
+    R = MATRIX(3*nat, 1)
+    Elts = []
+
+    cnt = 0
+    for i in range(last_index+1, last_index+1+nat):    
+        tmp = A[i].split()
+        ind = int(float(tmp[1]))
+        x = float(tmp[2])
+        y = float(tmp[3])
+        z = float(tmp[4])
+
+        Elts.append(E[ind])
+        R.set(3*cnt+0, 0, x)
+        R.set(3*cnt+1, 0, y)
+        R.set(3*cnt+2, 0, z)
+        cnt = cnt + 1
+
+    if verbosity>0:
+        print "Your system's elements = \n", Elts
+    if verbosity>1:
+        print "Your system's coordinates = \n"; R.show_matrix()
+
+
+    #=========== Now look for frequencies ===============
+    ndof = 3*nat
+    U = MATRIX(ndof, ndof)
+
+    pattern = 'freq \(\s+' + pfreq_indx + '\) \=\s+' + rgl.pX_val + '\[THz\] \=\s+' + rgl.pY_val + '\[cm\-1\]\s+'
+    sz = len(A)
+    cnt = 0
+    for i in xrange(sz):        
+        m1 = re.search(pattern, A[i])
+        if m1!=None:
+            ind = A[i][m1.start('freq_indx'):m1.end('freq_indx')] 
+            freq1 = A[i][m1.start('X_val'):m1.end('X_val')] 
+            freq2 = A[i][m1.start('Y_val'):m1.end('Y_val')] 
+            #print ind, freq1, freq2
+ 
+            for j in xrange(nat):
+                tmp = A[i+j+1].split()
+                x = float(tmp[1])
+                y = float(tmp[3])
+                z = float(tmp[5])
+
+                U.set(3*j+0, cnt, x)
+                U.set(3*j+1, cnt, y)
+                U.set(3*j+2, cnt, z)
+                
+            i = i + nat
+            cnt = cnt + 1
+
+    if verbosity>1:
+        print "Eigenvectors = \n"; U.show_matrix()
+
+    return Elts, R, U
+   
+
 

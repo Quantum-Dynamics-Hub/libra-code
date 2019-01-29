@@ -438,3 +438,30 @@ def get_xyz(E, R, M, U, mode):
         res = res + "%s  %5.3f  %5.3f  %5.3f  %5.3f  %5.3f  %5.3f\n" % (E[i], x,y,z, ux,uy,uz)
 
     return res
+
+def get_xyz2(E, R, U, mode):
+    """
+    This function returns a string in the xyz format with X, Y, Z and UX, UY, UZ
+    where X,Y,Z are the coordinates, UX, UY, UZ - vectors coming from those coordinates - e.g. normal modes
+
+    E [list of ndof/3]            - atom names (elements) of all atoms
+    R [MATRIX(ndof x nsteps-1) ]  - coordinates of all DOFs for all mid-timesteps
+    U [MATRIX(ndof x ndof) ]      - a matrix containing normal mode vectors 
+    mode [int]                    - index of the normal mode that we want to visualize
+
+    Returns: 
+    a string representing an xyz file
+
+    """
+
+    natoms = len(E)
+    res = "%3i\nComment\n" % (natoms)
+    
+    for i in xrange(natoms):
+        x,y,z = R.get(3*i,0), R.get(3*i+1,0), R.get(3*i+2,0)        
+        ux, uy, uz = U.get(3*i+0, mode), U.get(3*i+1, mode), U.get(3*i+2, mode)
+        
+        res = res + "%s  %5.3f  %5.3f  %5.3f  %5.3f  %5.3f  %5.3f\n" % (E[i], x,y,z, ux,uy,uz)
+
+    return res
+

@@ -88,7 +88,7 @@
       Application to Crystalline Explosives PETN and RDX. J. Chem. Phys. 2015, 142, 134110]
    * compute_dynmat(R, D, E, params)
    * get_xyz(E, R, M, U, mode) - the auxiliary function to generate an xyz in the format good for py3Dmol visualization
-
+   * get_xyz2(E, R, U, mode) - similar to get_xyz, but assumes the normal modes are already include the mass-factors
 
 ## nve_md.py - functions for doing NVE MD in a maximally-Pythonic way 
    * nve_md_init(syst, mol, el, ham) - initialize an NVE MD run 
@@ -123,6 +123,7 @@
   * out2pdb(out_filename,T,dt,pdb_prefix) - convert the output file with MD trajectory to a set of PDB files
   * out2xyz(out_filename,T,dt,xyz_filename) - convert the output file with MD trajectory to an XYZ trajectory file
   * xyz2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt) - convert the XYZ MD trajectory file to a set of QE input files
+  * get_QE_normal_modes(filename, verbosity=0) - read the normal modes information from QE calculations (.dyn files)
  
 ## regexlib.py - definitions of some common regular expressions
 
