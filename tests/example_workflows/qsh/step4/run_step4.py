@@ -28,11 +28,14 @@ qsh_params = {}
 qsh_params["dt"] = 41.0
 qsh_params["dw"] = 1.0
 qsh_params["wspan"] = 3000.0
+qsh_params["T"] = 300.0               # Temperature, K
 
 qsh_params["filename"] = "_spectr_"
 qsh_params["logname"] = "_log.txt"
 qsh_params["do_output"] = False
-qsh_params["T"] = 300.0               # Temperature, K
+#qsh_params["output_set_paths"]=[""]
+#qsh_params["qsh_Hvib_re_prefix"] = "0_Ham_"; qsh_params["qsh_Hvib_re_suffix"] = "_re"
+#qsh_params["qsh_Hvib_im_prefix"] = "0_Ham_"; qsh_params["qsh_Hvib_im_suffix"] = "_im"
 
 qsh_params["nfreqs"] = 6 # number of frequency included 
 qsh_params["norbitals"] = 56
