@@ -54,18 +54,20 @@ import units
 
 
 def covariance_matrix(X, M, flag):
-    """
-    Computes the covariance matrix K^x = <sqrt(m_i * m_j) * x_i * x_j }>
+    """Computes the covariance matrix
 
-    Input:
-    X (MATRIX(ndof, nsteps)) - data collected along a trajectory: can be R, V, or A
-    M (MATRIX(ndof, 1)) - masses of all DOFs 
-    flag (int) - controls how to compute variance
-          0 - using the data as they are (no centering)
-          1 - using the fluctuations of the data around the mean (do centering)
+    Computes the covariance matrix $$K^x = <sqrt(m_i * m_j) * x_i * x_j }>$$
+
+    Args:
+        X (MATRIX(ndof, nsteps)): data collected along a trajectory: can be R, V, or A
+        M (MATRIX(ndof, 1)): masses of all DOFs 
+        flag (int): controls how to compute variance
+            0 - using the data as they are (no centering)
+            1 - using the fluctuations of the data around the mean (do centering)
 
     Returns:
-    K (MATRIX(ndof, ndof)) - the matrix of covariance of all DOFs averaged over the trajectory
+        MATRIX(ndof, ndof): the matrix of covariance of all DOFs averaged over the trajectory
+
     """
 
     ndof = X.num_of_rows
@@ -94,30 +96,32 @@ def covariance_matrix(X, M, flag):
 
 def visualize_modes(E, R, U, M, w, params):
     """
+
     This function "visualizes" a particular collective modes for a particular set of data.
     The visualization means we generate an "xyz" file, showing the trajectory with defined number
     of repetitions of the mode.
 
-    Input:
-    E (list of ndof/3) - atom names (elements) of all atoms
-    R ( MATRIX(ndof x nsteps-1) ) - coordinates of all DOFs for all mid-timesteps
-    U ( MATRIX(ndof, ndof) ) - eigenvectors defining the collective modes in terms of the original DOFs, see the theory
-    M ( MATRIX(ndof x 1) ) - masses of all DOFs
-    w (list of ndof) - frequencies of all modes
-    params (dictionary) - parameters controlling how to do the visualization
-      Contains keyword-value pairs:
-      "scale" (double) - mode amplification factor (for better visualization)
-      "print_modes" (list of integers) - indices of the modes to hande. Indexing starts with 0 and should 
-      be consistent with other data arrays provided - e.g. "w"
-      "prefix" (string) - the name of the prefix of the files, to where the modes are printed out
-      "nperiods" (integer) - the number of periods of motion to repeat
-      "nsteps" (integer) - how many steps should be in the "visualization" trajectory. Controlls the resolution of the modes
-
-    All quantities are in atomic units
+    Args:
+        E (list of ndof/3): atom names (elements) of all atoms
+        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps
+        U ( MATRIX(ndof, ndof) ): eigenvectors defining the collective modes in terms of the original DOFs, see the theory
+        M ( MATRIX(ndof x 1) ): masses of all DOFs
+        w (list of ndof): frequencies of all modes
+        params (dictionary): parameters controlling how to do the visualization. Contains keyword-value pairs::
+            * scale (double): mode amplification factor (for better visualization)
+            * print_modes (list of integers): indices of the modes to handle. Indexing starts with 0 and should be consistent
+              with other data arrays provided - e.g. "w"
+            * prefix (string): the name of the prefix of the files, to where the modes are printed out
+            * nperiods (integer): the number of periods of motion to repeat
+            * nsteps (integer): how many steps should be in the "visualization" trajectory. Controlls the resolution of the modes
 
     Returns:
-    Simply prints out a number of files with the trajectories (using Angstrom units) showing the
-    periodic motion along the modes of interest
+        None: Simply prints out a number of files with the trajectories (using Angstrom units) showing the
+          periodic motion along the modes of interest
+
+    Note:
+        All quantities are in atomic units
+
  
     """
 
@@ -152,29 +156,38 @@ def visualize_modes(E, R, U, M, w, params):
 
 def compute_cov(R, V, A, M, E, params):
     """
+
     Computes and visualizes (as the trajectories) normal modes following the
     methods described in:
 
     (1) Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics 
     or Monte Carlo Simulation. J. Chem. Phys. 2003, 120, 1-4.
 
-    Input:
-    R ( MATRIX(ndof x nsteps-1) ) - coordinates of all DOFs for all mid-timesteps
-    V ( MATRIX(ndof x nsteps-1) ) - velocities of all DOFs for all mid-timesteps
-    A ( MATRIX(ndof x nsteps-1) ) - accelerations of all DOFs for all mid-timesteps
-    M ( MATRIX(ndof x 1) ) - masses of all DOFs
-    E (list of ndof/3) - atom names (elements) of all atoms
+    Args:
+        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps
+        V ( MATRIX(ndof x nsteps-1) ): velocities of all DOFs for all mid-timesteps
+        A ( MATRIX(ndof x nsteps-1) ): accelerations of all DOFs for all mid-timesteps
+        M ( MATRIX(ndof x 1) ): masses of all DOFs
+        E (list of ndof/3): atom names (elements) of all atoms
+        params (dictionary): parameters controlling the computations, including the visualization (see the visualize_modes(E, R, U, w, params) description). 
+            Contains keyword-value pairs::
 
-    params (dictionary) - parameters controlling the computations, including the visualization
-    (see the visualize_modes(E, R, U, w, params) description)
+            * verbosity (int): level to control verbosity
+            * visualize (int): flag to control whether we want to produce additional files (with normal modes)
+                - 0 - not to
+                - 1 - do it
 
-    In addition:
-    params["verbosity"]  [int]    - level to control verbosity
-    params["visualize"]  [int]    - flag to control whether we want to produce additional files (with normal modes)
-                                   0 - not to
-                                   1 - do it
+    Returns:
+        tuple: (w, w_inv_cm, U_v,  w2, w2_inv_cm, U_a), where::
+            * w (MATRIX(ndof,1)): frequencies from the velocity covariance matrix
+            * w_inv_cm (MATRIX(ndof,1)): frequencies from the velocity covariance matrix, in cm^-1 units
+            * U_v (MATRIX(ndof,ndof)): eigenvectors of the velocity covariance matrix
+            * w2 (MATRIX(ndof,1)): frequencies from the acceleration covariance matrix
+            * w2_inv_cm (MATRIX(ndof,1)): frequencies from the acceleration covariance matrix, in cm^-1 units
+            * U_a (MATRIX(ndof,ndof)): eigenvectors of the acceleration covariance matrix
 
-    All quantities are in atomic units
+    Note:
+        All quantities are in atomic units
  
     """
     verbosity = params["verbosity"]

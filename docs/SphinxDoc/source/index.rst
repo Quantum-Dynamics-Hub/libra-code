@@ -13,6 +13,7 @@ Libra Documentation
 
 
 .. automodule:: libra_py
+   
 
 normal_modes 
 =============
@@ -23,17 +24,6 @@ namd
 =============
 .. automodule:: libra_py.namd
    :members:
-
-
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
 
 
