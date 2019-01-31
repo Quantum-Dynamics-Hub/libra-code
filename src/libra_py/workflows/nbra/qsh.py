@@ -55,7 +55,6 @@ def compute_freqs(nstates, H_vib_re, H_vib_im, dt, Nfreqs, filename, logname, dw
                 freqs[i][j] = influence_spectrum.compute(H_vib_re, i, j, dt, Nfreqs, filename+"_re_", logname, dw, wspan)
             else:
                 freqs[i][j] = influence_spectrum.compute(H_vib_im, i, j, dt, Nfreqs, filename+"_im_", logname, dw, wspan)
-
     if len(freqs[0][0]) < Nfreqs:
         Nfreqs = len(freqs[0][0])
         print "The input Nfreqs is larger than the maximal number of the peaks, changing it to ", Nfreqs
@@ -250,9 +249,7 @@ def run(H_vib, params):
         #======== Analyze the Hvib time-seris  ============
         H_vib_re_ave, H_vib_re_std, dw_Hvib_re, up_Hvib_re = comn.mat_stat(H_vib_re)
         H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im = comn.mat_stat(H_vib_im)    
-
         freqs, dev = compute_freqs(nstates, H_vib_re, H_vib_im, dt, nfreqs, filename, logname, dw, wspan)
-
         
         #============= Output the resulting QSH Hamiltonians ===========================
         Hvib = []
@@ -267,8 +264,6 @@ def run(H_vib, params):
                 #============= Output the resulting QSH Hamiltonians ===========================
                 re_filename = prms["output_set_paths"][idata] + prms["qsh_Hvib_re_prefix"] + str(i) + prms["qsh_Hvib_re_suffix"]
                 im_filename = prms["output_set_paths"][idata] + prms["qsh_Hvib_im_prefix"] + str(i) + prms["qsh_Hvib_im_suffix"]        
-                qs_Hvib.real().show_matrix(re_filename)
-                qs_Hvib.imag().show_matrix(im_filename)
 
         qsh_H_vib.append(Hvib)        
         

@@ -71,16 +71,14 @@ def get_Hvib(params):
     default_params = { "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im", "active_space":range(params["nstates"])}
     comn.check_input(params, default_params, critical_params)
 
-    nstates = params["nstates"]  # the number of states in the input files
+    norbitals = params["norbitals"]  # the number of states in the input files
 
     Hvib = []
     for i in range(0,params["nfiles"]):
-
         filename_re = params["Hvib_re_prefix"]+str(i)+params["Hvib_re_suffix"]
         filename_im = params["Hvib_im_prefix"]+str(i)+params["Hvib_im_suffix"]
-        hvib = comn.get_matrix(nstates, nstates, filename_re, filename_im, params["active_space"] ) 
+        hvib = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, params["active_space"] ) 
         Hvib.append(hvib)
-
     return Hvib
 
 
@@ -149,7 +147,7 @@ def transform_data(X, params):
 
     for i in xrange(nstates):
         for j in xrange(nstates):
-            scl.set(i,j, 1.0+0.0j)
+            scl.set(i,j, float(params["scale"])+0.0j)
 
     critical_params = [  ] 
     default_params = { "shift1":sh1, "shift2":sh2, "scale":scl  }
@@ -160,7 +158,7 @@ def transform_data(X, params):
 
             tmp = CMATRIX(X[idata][istep])
             tmp = tmp + params["shift1"]
-            tmp.dot_product( tmp, params["scale"] )
+            tmp.dot_product( tmp, scl )
             tmp = tmp + params["shift2"]
             X[idata][istep] = CMATRIX(tmp)
 
@@ -365,14 +363,15 @@ def run(H_vib, params):
 #        params.update(params["qsh-params"])
         
 
-
+    active_space = params["active_space"]
+    norbitals = params["norbitals"]
     nsteps = params["nsteps"]
     nstates = params["nstates"]
     ndata = len(params["data_set_paths"])
     ntraj = params["ntraj"]
     nitimes = len(params["init_times"])
     Ntraj = ndata * nitimes * ntraj
-
+    decoh_time = params["decoh_time"]
     T = params["T"]
     bolt_opt = params["Boltz_opt"]
     dt = params["dt"]
@@ -382,7 +381,23 @@ def run(H_vib, params):
 
     #========== Compute PARAMETERS  ===============
     # Decoherence times for DISH
-    tau, decoh_rates = dectim.decoherence_times_ave(H_vib, params["init_times"], nsteps, 1) 
+
+    if params["set_decoh"]:
+       decoh_times = MATRIX(nstates, nstates)
+       decoh_rates = MATRIX(nstates, nstates)
+
+       for a in xrange(nstates):
+           for b in xrange(nstates):
+               if a==b:
+                   decoh_times.set(a,a, 1000000.0)
+                   decoh_rates.set(a,a, 0.0)
+               else:
+                   # set the decoherence time manually
+                   tau = decoh_time*units.fs2au # in a.u. unit
+                   decoh_times.set(a,b, tau)
+                   decoh_rates.set(a,b, 1.0/tau)
+    else:
+        tau, decoh_rates = dectim.decoherence_times_ave(H_vib, params["init_times"], nsteps, 1)
 
     #========== Initialize the DYNAMICAL VARIABLES  ===============
     # TD-SE coefficients and active state indices
