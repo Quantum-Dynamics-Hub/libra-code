@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2018 Alexey V. Akimov                                                   
+#* Copyright (C) 2018-2019 Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -29,15 +29,22 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 def compute_Hvib(ham_old, ham_cur, orb, dt):
     """
+
     Computes the vibronic Hamiltonian - in the MO basis - this is equivalent to the general version 
     below with the 1-electron "Slater determinant" basis functions.
     This function is going to be deprecated, but let keep it here, for backward compatibility
-    
-    \param[in] ham_old (Hamiltonian object) - unperturbed at t-dt
-    \param[in] ham_cur (Hamiltonian object) - unperturbed at t
-    \param[in] orb (list of ints) - indices of the orbitals included in the active space
-    indexing starts with 0
-    \param[in] dt (float) Time step (in a.u.)
+
+    Args:     
+        ham_old ( Hamiltonian ): Hamiltonian at time t-dt [units: a.u. of energy]
+        ham_cur ( Hamiltonian ): Hamiltonian at time t [units: a.u. of energy]
+        orb ( list of ints ): indices of the orbitals included in the active space. The Hvib dimensions will 
+            be determined by the N_act = len(orb) and the elements of Hvib will reflect only the orbitals included 
+            in this active state. Indexing starts with 0.
+        dt ( float ): Time step [units: a.u. of time]
+
+    Returns:
+        CMATRIX(N_act,N_act): vibronic Hamiltonian matrix in the MO basis:  Hvib = Hel - i*hbar*d_ij
+
     """
 
     N_act = len(orb)  # number of orbitals in the active space
@@ -86,81 +93,82 @@ def compute_Hvib(ham_old, ham_cur, orb, dt):
 
 
 def compute_Hvib_sd(ham_old, ham_cur, orb, SD_basis, dt):
-    """         
-    # Computes the vibronic Hamiltonian - in the MO basis
-    #
-    # \param[in] ham_old (Hamiltonian object) - unperturbed at t-dt
-    # \param[in] ham_cur (Hamiltonian object) - unperturbed at t
-    # \param[in] orb (list of ints) - global indices of the orbitals included in the active space
-    # The first orbital has index 0
-    # \param[in] SD_basis (list of lists of ints) - Slater determinant basis - are defined in 
-    # terms of the indices withing the active space, with the numbering starting from 0. 
-    # In no-SOC case, the numbers smaller than N_act = len(orb) will correspond to alpha orbitals
-    # other - to beta orbitals
+    """ Computes the vibronic Hamiltonian - in the MO basis
 
-    # \param[in] dt (float) Time step (in a.u.)
+    Args:     
+        ham_old ( Hamiltonian ): Hamiltonian at time t-dt [units: a.u. of energy]
+        ham_cur ( Hamiltonian ): Hamiltonian at time t [units: a.u. of energy]
+        orb ( list of ints ): indices of the orbitals included in the active space. The Hvib dimensions will 
+            be determined by the norb = len(orb) and the elements of Hvib will reflect only the orbitals included 
+            in this active state. Indexing starts with 0.
+        SD_basis ( list of lists of ints ): Slater determinant (SD) basis - are defined in terms of the indices 
+            withing the active space, with the numbering starting from 0. In no-SOC case, the numbers smaller
+            than N_act = len(orb) will correspond to alpha orbitals other - to beta orbitals
+        dt ( float ): Time step [units: a.u. of time]
 
-    # Example #1:
-    # If we have a system with HOMO being the orbital with index 20, LUMO - with 21, then 
-    # if we want to consider a minimal 2-state system, we can choose orb = [20, 21]
-    #  Mapping:
-    #     0       1      2      3     
-    #    H(alp) L(alp) H(bet)  L(bet) 
-    #
-    #             GS = |H(alp),H(beta)|    S1 = |H(alp),L(beta)|
-    # 
-    # and SD_basis = [ [0,    2],             [0,      3]   ]
-    #                  /\    /\                /\      /\
-    #                  |     |                 |       |
-    #               H alp   H bet             H alp   L beta
+    Returns:
+        CMATRIX(N,N): vibronic Hamiltonian matrix in the SD basis:  Hvib = Hel - i*hbar*d_ij. Here, N = len(SD_basis)
+        
+    
+    Example:
+        If we have a system with HOMO being the orbital with index 20, LUMO - with 21, then 
+        if we want to consider a minimal 2-state system, we can choose orb = [20, 21]
+        Mapping::
+            0       1      2      3     
+            H(alp) L(alp) H(bet)  L(bet) 
+    
+                     GS = |H(alp),H(beta)|    S1 = |H(alp),L(beta)|
+     
+         and SD_basis = [ [0,    2],             [0,      3]   ]
+                          /\    /\                /\      /\
+                          |     |                 |       |  
+                       H alp   H bet             H alp   L beta
 
+    Example:
+        If we have a system with HOMO being the orbital with index 20, LUMO - with 21, then 
+        if we want to consider a minimal 2-state system with spin-flip, we can choose orb = [20, 21]
+        Mapping::
 
-    # Example #2:
-    # If we have a system with HOMO being the orbital with index 20, LUMO - with 21, then 
-    # if we want to consider a minimal 2-state system with spin-flip, we can choose orb = [20, 21]
-    #  Mapping:
-    #     0       1      2      3     
-    #    H(alp) L(alp) H(bet)  L(bet) 
-    #   
-    #
-    #            GS = |H(alp),H(beta)|     S1 =|H(alp),L(beta)|    T0 = |H(alp),L(alp)|    T1 = |H(bet),L(bet)|
-    #                                                                              
-    # and SD_basis = [ [0,    2],             [0,      3]  ,            [0,   1] ,               [ 2,    3 ] ]
-    #                  /\    /\                /\      /\               /\    /\                  /\     /\
-    #                  |     |                 |       |                |     |                   |      |
-    #               H alp   H bet             H alp   L beta           H alp  L alp              H bet   L bet
+            0       1      2      3     
+            H(alp) L(alp) H(bet)  L(bet) 
+       
+                    GS = |H(alp),H(beta)|     S1 =|H(alp),L(beta)|    T0 = |H(alp),L(alp)|    T1 = |H(bet),L(bet)|
+                                                                                  
+            and SD_basis = [ [0,    2],             [0,      3]  ,            [0,   1] ,               [ 2,    3 ] ]
+                             /\    /\                /\      /\               /\    /\                  /\     /\
+                             |     |                 |       |                |     |                   |      |   
+                          H alp   H bet             H alp   L beta           H alp  L alp              H bet   L bet
 
+    Example:
+        If we have a radiacl in a system with 3 electrons, occuplying  HOMO-1 (doubly) and HOMO (singly).
+        Say, the HOMO is the orbital with index 20, HOMO-1 - with 19, then 
+        if we may want to consider the active space of 3 orbitals: [19, 20, 21]
+        Mapping::
+            0       1      2      3        4      5
+            H-1(alp) H(alp) L(alp) H-1(bet) H(bet) L(bet)
+    
+                    GS = |H-1(alp),H-1(beta), H(alp)| 
+                 
+            and SD_basis = [  [0,       3,        1],    [0,       3,        4],       ...     ]
+                              /\        /\       /\      /\        /\       /\  
+                              |         |        |       |         |        |   
+                             H-1 alp  H-1 bet   H alp   H-1 alp  H-1 bet   H bet
 
-    # Example #3:
-    # If we have a radiacl in a system with 3 electrons, occuplying  HOMO-1 (doubly) and HOMO (singly).
-    # Say, the HOMO is the orbital with index 20, HOMO-1 - with 19, then 
-    # if we may want to consider the active space of 3 orbitals: [19, 20, 21]
-    #  Mapping:
-    #     0       1      2      3        4      5
-    #  H-1(alp) H(alp) L(alp) H-1(bet) H(bet) L(bet)
-    #
-    #             GS = |H-1(alp),H-1(beta), H(alp)| 
-    #             
-    # and SD_basis = [  [0,       3,        1],    [0,       3,        4],       ...     ]
-    #                   /\        /\       /\      /\        /\       /\  
-    #                   |         |        |       |         |        |   
-    #                  H-1 alp  H-1 bet   H alp   H-1 alp  H-1 bet   H bet
+    Example:
+        We may consider a transition between certain orbitals, say we are interested in transition between 
+        LUMO+10 (index 30) and LUMO+15 (index 35), then we can choose orb = [30, 35]
+        Note, the definition of the SD basis used in Example #1 can be re-used. 
+        Mapping::
+            0       1            2            3     
+            L+10(alp) L+15(alp)  L+10(bet)   L+15(bet) 
+    
+                    GS = |L+10(alp),L+10(beta)|    S1 = |L+10(alp),L+15(beta)|
+    
+            and SD_basis = [ [0,      2],             [0,      3]   ]
+                             /\      /\                /\      /\
+                             |       |                 |       |    
+                          L+10 alp  L+15 bet         L+10 alp L+15 beta
 
-
-    # Example #4:
-    # We may consider a transition between certain orbitals, say we are interested in transition between 
-    # LUMO+10 (index 30) and LUMO+15 (index 35), then we can choose orb = [30, 35]
-    # Note, the definition of the SD basis used in Example #1 can be re-used. 
-    #  Mapping:               
-    #     0       1            2            3     
-    #   L+10(alp) L+15(alp)  L+10(bet)   L+15(bet) 
-    #
-    #             GS = |L+10(alp),L+10(beta)|    S1 = |L+10(alp),L+15(beta)|
-    # 
-    # and SD_basis = [ [0,      2],             [0,      3]   ]
-    #                  /\      /\                /\      /\
-    #                  |       |                 |       |
-    #               L+10 alp  L+15 bet         L+10 alp L+15 beta
     """
 
 

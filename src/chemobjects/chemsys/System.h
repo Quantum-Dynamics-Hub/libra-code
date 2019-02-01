@@ -330,6 +330,7 @@ public:
   void print_xyz(std::string,int,std::string,int);
 
 
+  std::string get_xyz(int fold,std::string pbc_type,int frame);
   
 };
 

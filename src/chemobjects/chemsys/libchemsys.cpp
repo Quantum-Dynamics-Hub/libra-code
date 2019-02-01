@@ -54,6 +54,8 @@ void (System::*print_ent4)(std::string,boost::python::list,int,std::string) = &S
 void (System::*print_xyz1)(std::string,int) = &System::print_xyz;
 void (System::*print_xyz2)(std::string,int,std::string,int) = &System::print_xyz;
 
+std::string (System::*expt_get_xyz_v1)(int fold,std::string pbc_type,int frame) = &System::get_xyz;
+
 int (System::*expt_Find_Angle_v1)(int,int) = &System::Find_Angle;
 int (System::*expt_Find_Angle_v2)(int,int,int) = &System::Find_Angle;
 
@@ -300,6 +302,8 @@ void (System::*expt_ROTATE_FRAGMENT_v3)(double, VECTOR, int, int) = &System::ROT
 
       .def("print_xyz",print_xyz1)
       .def("print_xyz",print_xyz2)
+
+      .def("get_xyz", expt_get_xyz_v1);
 
   ;
 

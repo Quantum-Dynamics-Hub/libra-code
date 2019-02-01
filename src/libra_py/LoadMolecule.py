@@ -24,7 +24,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 from regexlib import *
 
-def Load_Molecule(univ,syst,mol_file,format):
+def Load_Molecule(univ,syst,mol_file,format, verbosity=0):
 ## -------- Load molecular system -------------
 # Specify format manually (this gives flexibility) of format recognizable by program
 # In this particular implementation my .ent format is loading
@@ -131,8 +131,9 @@ def Load_Molecule(univ,syst,mol_file,format):
                 atom_dict["Atom_charge"] = float(a[m1.start('Atom_charge'):m1.end('Atom_charge')])
 #            atm.Atom_ff_int_type     = int(float(a[m1.start('Atom_type'):m1.end('Atom_type')]))
 #            atm.Atom_is_C60_CT       = int(a[m1.start('Atom_C60'):m1.end('Atom_C60')])
- 
-            print "CREATE_ATOM "
+
+            if verbosity>0:
+                print "CREATE_ATOM "
             syst.CREATE_ATOM( Atom(univ,atom_dict)  ) 
     
     #--------- Create bonds ------------------
@@ -146,7 +147,8 @@ def Load_Molecule(univ,syst,mol_file,format):
 #               exit(0)
         i = 1   
         while i < len(lst):
-            print 'LINK_ATOMS ',lst[0][0], ' and ', lst[i][0],'...'
+            if verbosity>0:
+                print 'LINK_ATOMS ',lst[0][0], ' and ', lst[i][0],'...'
             syst.LINK_ATOMS(int(float(lst[0][0])),int(float(lst[i][0])))
             i = i + 1
         print "----------------------------"
@@ -166,7 +168,8 @@ def Load_Molecule(univ,syst,mol_file,format):
                 gr_atoms.append(int(float(lst[i][0])))
                 i = i + 1
 #            if len(gr_atoms)>0:
-            print "GROUP_ATOMS",gr_atoms," to form fragment with Group_id = ",j
+            if verbosity>0:
+                print "GROUP_ATOMS",gr_atoms," to form fragment with Group_id = ",j
             syst.GROUP_ATOMS(gr_atoms,j)
 #            syst.show_fragments()
             j = j + 1
