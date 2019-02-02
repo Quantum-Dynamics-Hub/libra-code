@@ -20,9 +20,22 @@ normal_modes
 .. automodule:: libra_py.normal_modes
    :members:
 
+
 namd
 =============
 .. automodule:: libra_py.namd
+   :members:
+
+
+pdos
+=============
+.. automodule:: libra_py.pdos
+   :members:
+
+
+probabilities
+=============
+.. automodule:: libra_py.probabilities
    :members:
 
 

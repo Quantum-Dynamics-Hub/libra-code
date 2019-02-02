@@ -119,10 +119,10 @@ def compute_Hvib_sd(ham_old, ham_cur, orb, SD_basis, dt):
     
                      GS = |H(alp),H(beta)|    S1 = |H(alp),L(beta)|
      
-         and SD_basis = [ [0,    2],             [0,      3]   ]
-                          /\    /\                /\      /\
-                          |     |                 |       |  
-                       H alp   H bet             H alp   L beta
+            and SD_basis = [ [0,    2],             [0,      3]   ]
+                             /\    /\                /\      /\
+                             |     |                 |       |  
+                          H alp   H bet             H alp   L beta
 
     Example:
         If we have a system with HOMO being the orbital with index 20, LUMO - with 21, then 
