@@ -13,29 +13,36 @@ Libra Documentation
 
 
 .. automodule:: libra_py
-   
 
-normal_modes 
+
+build
 =============
-.. automodule:: libra_py.normal_modes
+.. automodule:: libra_py.build
    :members:
-
 
 namd
 =============
 .. automodule:: libra_py.namd
    :members:
-
+  
+normal_modes 
+=============
+.. automodule:: libra_py.normal_modes
+   :members:
 
 pdos
 =============
 .. automodule:: libra_py.pdos
    :members:
 
-
 probabilities
 =============
 .. automodule:: libra_py.probabilities
+   :members:
+
+units
+=============
+.. automodule:: libra_py.units
    :members:
 
 

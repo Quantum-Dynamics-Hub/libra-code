@@ -28,8 +28,8 @@
    * example_1() - example
 
 ## build.py  - Creation of molecular/atomistic models
-
    * read_xyz(filename) - read the xyz file 
+   * make_xyz(L, R) - returns an xyz-formatted string representing the molecular system
    * read_xyz_crystal(filename, a,b,c) - same + periodic translation
    * generate_replicas_xyz2(L, R, tv1, tv2, tv3, Nx, Ny, Nz) -  multiply the atoms into periodic images
    * generate_replicas_xyz(tv1,tv2,tv3, rep1, rep2, rep3 , filename, outfile) - another version
@@ -37,6 +37,7 @@
    * crop_sphere_xyz3(L, R, Rcut, pairs, new_L) - alternative version
    * crop_sphere_xyz(infile, outfile, Rcut) - another version
    * add_atoms_to_system(syst, L, R, scl, mass, univ_file) - add atoms to a system
+   * add_atom_to_system(syst, coords, MaxCoords, Nx,Ny,Nz, a,b,c, shift, elt, mass, scl, max_coord, rnd) - add an atom and its periodic images to a system
 
 ## datautils.py - some utility functions for data prosessing
 

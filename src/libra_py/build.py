@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2017 Alexey V. Akimov                                                   
+#* Copyright (C) 2017-2019 Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -7,10 +7,14 @@
 #* See the file LICENSE in the root directory of this distribution   
 #* or <http://www.gnu.org/licenses/>.          
 #***********************************************************************************
-## \file build.py 
-# This module implements functions for building molecular structures
-#
+"""
+.. module:: build
+   :platform: Unix, Windows
+   :synopsis: This module implements functions for building molecular structures
 
+.. moduleauthor:: Alexey V. Akimov
+
+"""
 
 import os
 import sys
@@ -23,13 +27,30 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import LoadPT
+import units
 
 
-Angst_to_Bohr = 1.889725989  
-
-def read_xyz(filename):
+def read_xyz(filename, inp_units=1, out_units=0):
     """
-    And convert to Bohrs
+    
+    Args:
+        filename ( string ): the name of the xyz file to read
+        inp_units ( int ): defines the coordinates' units in the input file:
+
+            * 0 - Bohr
+            * 1 - Angstrom ( default )
+
+        out_units ( int ): defines the output coordinates' units:
+
+            * 0 - Bohr ( default )
+            * 1 - Angstrom
+
+    Returns: 
+        tuple: (L, coords), where:
+ 
+            * L ( list of N strings ): the labels of N atoms read
+            * coords ( list of N VECTORs ): the coordinates of N atoms read
+
     """
 
     f = open(filename,"r")
@@ -50,12 +71,43 @@ def read_xyz(filename):
             z = float(tmp[3])
              
             # Now apply PBC
-            R = VECTOR(x,y,z) * Angst_to_Bohr
+            R = VECTOR(x,y,z) * units.length_converter(inp_units, out_units)
 
             L.append(tmp[0])
             coords.append(R)
 
     return L, coords
+
+
+def make_xyz(L, R, inp_units=0, out_units=1):
+    """
+    Args:
+        L ( list of N strings ): the labels of N atoms in the system
+        R ( list of N VECTORs ): the coordinates of N atoms in the system
+        inp_units ( int ): defines the units of variables stored in R:
+
+            * 0 - Bohr ( default )
+            * 1 - Angstrom 
+
+        out_units ( int ): defines the units of the coordinates written in xyz file:
+
+            * 0 - Bohr 
+            * 1 - Angstrom ( default )
+
+    Returns: 
+        string: a string representing the xyz file of the system
+                
+
+    """
+
+    nat = len(L)
+    res = "%i\n" % (nat)
+    res = res + "\n"
+
+    for i in xrange(nat):
+        res = res + "%s   %12.8f  %12.8f  %12.8f \n" % (L[i], R[i].x/units.Angst, R[i].y/units.Angst, R[i].z/units.Angst)
+    return res
+
 
 def read_xyz_crystal(filename, a,b,c):
     """
@@ -276,6 +328,69 @@ def add_atoms_to_system(syst, L, R, scl, mass, univ_file):
         p = VECTOR(scl.x*rnd.normal(), scl.y*rnd.normal(), scl.z*rnd.normal())
         syst.Atoms[nat+i].Atom_RB.set_momentum(p);
 
+
+
+
+def add_atom_to_system(syst, coords, MaxCoords, Nx,Ny,Nz, a,b,c, shift, elt, mass, scl, max_coord, rnd):
+    """
+       
+    This function adds an atom and its periordic replicas to a (chemical) System object. 
+    The momenta of the atoms are also initialized and are drawn from the normal distribution along
+    each of the directions (Cartesian x, y, and z), no center of mass momentum subtraction is made however.
+    This is good for constructing lattices.
+
+    Args:
+        syst ( System object ): the chemical system to which we are going to add the atoms
+        coords ( list of VECTORs ): coordinates of all atoms in a system
+        MaxCoords (list of ints): Maximal coordination number of each atom
+        Nx ( int ): how many times to replicate the atom along a direction
+        Ny ( int ): how many times to replicate the atom along b direction
+        Nz ( int ): how many times to replicate the atom along c direction
+        a ( VECTOR ): the periodicity translation vector along the a direction [Bohr]
+        b ( VECTOR ): the periodicity translation vector along the b direction [Bohr]
+        c ( VECTOR ): the periodicity translation vector along the c direction [Bohr]
+        shift ( VECTOR ): essentially a coordinate of the atom in the unit cell [Bohr]
+        elt ( string ): Element name
+        mass ( double ): mass of the atom [a.u. of mass, 1 = mass of an electron]        
+        scl ( double ): width of the momentum distrubution [a.u. of momentum]
+        max_coord ( int ): maximal coordination number of the added atom allowed
+        rnd ( Random ): an instance of the random number generator class
+
+    Returns:
+        None: But the following objects will be updated: 
+     
+        * syst - the new atoms will be added
+        * coords - the new coordinates will be added
+        * MaxCoords - the maximal coordination numbers for new atoms will be added
+
+    """
+
+    nat = syst.Number_of_atoms
+
+    # Associate the coordinates with a molecular system
+    U = Universe() 
+    LoadPT.Load_PT(U, "elements.dat", 0)
+
+    i = 0
+
+    for nx in xrange(Nx):
+        for ny in xrange(Ny):
+            for nz in xrange(Nz):
+
+                R = VECTOR(nx * a + ny * b + nz * c + shift)
+                coords.append(R)
+                MaxCoords.append(max_coord)
+
+                syst.CREATE_ATOM( Atom(U,  {"Atom_element":elt,"Atom_cm_x":R.x,"Atom_cm_y":R.y,"Atom_cm_z":R.z})  )
+
+                # Masses
+                syst.Atoms[nat+i].Atom_RB.set_mass(mass)
+
+                # Momenta
+                p = VECTOR(scl.x*rnd.normal(), scl.y*rnd.normal(), scl.z*rnd.normal())
+                syst.Atoms[i].Atom_RB.set_momentum(p);
+
+                i = i + 1
 
 
 
