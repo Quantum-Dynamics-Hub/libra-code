@@ -331,7 +331,7 @@ def add_atoms_to_system(syst, L, R, scl, mass, univ_file):
 
 
 
-def add_atom_to_system(syst, coords, MaxCoords, Nx,Ny,Nz, a,b,c, shift, elt, mass, scl, max_coord, rnd):
+def add_atom_to_system(syst, coords, MaxCoords, Nx,Ny,Nz, a,b,c, shift, elt, mass, scl, max_coord, rnd, inp_units=0):
     """
        
     This function adds an atom and its periordic replicas to a (chemical) System object. 
@@ -355,6 +355,11 @@ def add_atom_to_system(syst, coords, MaxCoords, Nx,Ny,Nz, a,b,c, shift, elt, mas
         scl ( double ): width of the momentum distrubution [a.u. of momentum]
         max_coord ( int ): maximal coordination number of the added atom allowed
         rnd ( Random ): an instance of the random number generator class
+        inp_units ( int ): defines the units of variables stored in shift, a,b, and c
+
+            * 0 - Bohr ( default )
+            * 1 - Angstrom 
+
 
     Returns:
         None: But the following objects will be updated: 
@@ -373,11 +378,12 @@ def add_atom_to_system(syst, coords, MaxCoords, Nx,Ny,Nz, a,b,c, shift, elt, mas
 
     i = 0
 
+    out_units = 0 # internal units in System objects are atomic units
     for nx in xrange(Nx):
         for ny in xrange(Ny):
             for nz in xrange(Nz):
-
-                R = VECTOR(nx * a + ny * b + nz * c + shift)
+             
+                R = VECTOR(nx * a + ny * b + nz * c + shift) * units.length_converter(inp_units, out_units)
                 coords.append(R)
                 MaxCoords.append(max_coord)
 

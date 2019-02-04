@@ -189,39 +189,6 @@ def compute_Hvib(ham_old, ham_cur, orb_dia, orb_adi, dt, orb_prime):
 
 
 
-def add_atom_to_system(syst, coords, MaxCoords, Nx,Ny,Nz, a,b,c, shift, elt, mass, scl, max_coord):
-#    syst = System()  # chemical system
-
-    rnd = Random()
-
-    nat = syst.Number_of_atoms
-
-    # Associate the coordinates with a molecular system
-    U = Universe() 
-    LoadPT.Load_PT(U, "elements.dat", 0)
-
-    i = 0
-
-    for nx in xrange(Nx):
-        for ny in xrange(Ny):
-            for nz in xrange(Nz):
-
-                R = VECTOR(nx * a + ny * b + nz * c + shift)
-                coords.append(R)
-                MaxCoords.append(max_coord)
-
-                syst.CREATE_ATOM( Atom(U,  {"Atom_element":elt,"Atom_cm_x":R.x,"Atom_cm_y":R.y,"Atom_cm_z":R.z})  )
-
-                # Masses
-                syst.Atoms[nat+i].Atom_RB.set_mass(mass)
-
-                # Momenta
-                p = VECTOR(scl.x*rnd.normal(), scl.y*rnd.normal(), scl.z*rnd.normal())
-                syst.Atoms[i].Atom_RB.set_momentum(p);
-
-                i = i + 1
-
-
 def init_interactions(interactions, syst, Hess):
     """
     interactions - (list of Interaction_N_Body or derived objects). Represents interactions
@@ -537,6 +504,8 @@ def normal_modes( params ):
 
 ###===================== Test calculations ============================   
 
+rnd = Random()
+
 # Unit cell parameters
 a = VECTOR(2.0, 0.0, 0.0)
 b = VECTOR(0.0, 2.0, 0.0)
@@ -546,7 +515,7 @@ c = VECTOR(0.0, 0.0, 2.0)
 Nx, Ny, Nz = 5, 5, 5  # 
 
 syst, R, MaxCoord = System(), [], []
-add_atom_to_system(syst, R, MaxCoord, Nx,Ny,Nz, a, b, c, VECTOR(0.0, 0.0, 0.0), "H", 2000.0, VECTOR(1.0, 1.0, 1.0), 6)
+build.add_atom_to_system(syst, R, MaxCoord, Nx,Ny,Nz, a, b, c, VECTOR(0.0, 0.0, 0.0), "H", 2000.0, VECTOR(1.0, 1.0, 1.0), 6, rnd)
 
 
 # Setup parameters of MD

@@ -66,11 +66,11 @@ def length_converter(inp_units, out_units):
         if out_units==0:  # output in Bohrs
             scl = 1.0
         elif out_units==1:  # output in Angstroms
-            scl = 1.0/units.Angst
+            scl = 1.0/Angst
 
     elif inp_units==1:  # input in Angstroms
         if out_units==0:  # output in Bohrs
-            scl = 1.0*units.Angst
+            scl = Angst
         elif out_units==1:  # output in Angstroms
             scl = 1.0
 
