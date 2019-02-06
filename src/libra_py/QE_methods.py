@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2018 Brendan A. Smith, Alexey V. Akimov
+#* Copyright (C) 2018-2019 Brendan A. Smith, Alexey V. Akimov
 #* Copyright (C) 2016-2017 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
@@ -9,8 +9,17 @@
 #* or <http://www.gnu.org/licenses/>.
 #*
 #*********************************************************************************/
-## \file QE_methods.py
-# This module implements functions for dealing with the outputs from QE (Quantum Espresso) package
+"""
+.. module:: QE_methods
+   :platform: Unix, Windows
+   :synopsis: This module implements functions for dealing with the outputs from QE (Quantum Espresso) package
+
+.. moduleauthor:: 
+       Alexey V. Akimov 
+       Brendan A. Smith
+  
+"""
+
 
 import os
 import sys
@@ -26,9 +35,23 @@ import units
 import regexlib as rgl
 
 def cryst2cart(a1,a2,a3,r):
-# auxiliary function
-# convert vertor <r> in crystal (alat) coordinates with the cell defined by
-# vectors a1, a2, a3, to the Cartesian coordinate xyz
+    """Crystal to Cartesian coordinate conversion 
+
+    An auxiliary function that convert vector <r> in crystal (alat) 
+    coordinates with the cell defined by vectors a1, a2, a3, to the
+    Cartesian coordinate xyz
+
+    Args:
+        a1 ( [double, double, double] ): one of the unit cell/periodicty vectors
+        a2 ( [double, double, double] ): one of the unit cell/periodicty vectors
+        a3 ( [double, double, double] ): one of the unit cell/periodicty vectors
+        r ( [double, double, double] ): Crystal (fractional) coordinates of the atom
+
+
+    Returns:
+        [double, double, double]: the Cartesian coordinates of an atom
+
+    """
     x = [0.0,0.0,0.0]
     for i in [0,1,2]:
         x[i] = a1[i]*r[0] + a2[i]*r[1] + a3[i]*r[2]
@@ -38,19 +61,26 @@ def cryst2cart(a1,a2,a3,r):
 
 
 def read_qe_index(filename, orb_list, verbose=0):
-##
-#  This functions reads an ASCII/XML format file containing wavefunction
-#  and returns the coefficients of the plane waves that constitute the
-#  wavefunction
-#
-#  \param[in] filename This is the name of the file we will be reading to construct a wavefunction
-#  \param[in] upper_tag This is the name of the upper-level tag
-#  \param[in] orb_list The list containing the indices of the orbitals which we want to consider
-#   (indexing is starting with 1, not 0!)
-#  
-# Returns: a diagonal matrix (complex-valued) of orbital energies - only for those that are of interest
-# in Ha = a.u. of energy
+    """
 
+    This functions reads an ASCII/XML format file containing wavefunction
+    and returns the coefficients of the plane waves that constitute the
+    wavefunction
+
+    Args:
+        filename ( string ): This is the name of the file we will be reading to construct a wavefunction
+        orb_list ( list of ints ): The indices of the orbitals which we want to consider. Orbitals indexing 
+            at 1, not 0
+        verbose ( int ): The flag controlling the amout of extra output:
+        
+            * 0 - no extra output (default)
+            * 1 - print extra stuff
+  
+    Returns: 
+        CMATRIX(norb, norb): a diagonal matrix (complex-valued) of orbital energies - only for those that are of interest
+            Here, norb = len(orb_list) and the matrix will only contain numbers that correspond to orbitals defined
+            in the orb_list argument [units: Ha]
+    """
 
     Ry2Ha = 0.5 # conversion factor
    
@@ -170,13 +200,38 @@ def read_qe_index(filename, orb_list, verbose=0):
 
 
 def read_qe_wfc_info(filename, verbose=0):
-##
-#  This functions reads an ASCII/XML format file containing wavefunction
-#  and returns the some descriptors
-#
-#  \param[in] filename This is the name of the file we will be reading to construct a wavefunction
-#  
-   
+    """
+
+    This functions reads an ASCII/XML format file containing wavefunction
+    and returns some descriptors
+
+    Args:
+        filename ( string ): This is the name of the file we will be reading to construct a wavefunction
+        verbose ( int ): The flag controlling the amout of extra output:
+        
+            * 0 - no extra output (default)
+            * 1 - print extra stuff
+  
+    Returns: 
+        dictionary: a dictionary object that will contain key-value pairs with the descriptors
+
+            * res["ngw"] ( int ): the number of plane waves needed to represent the orbital
+            * res["igwx"] ( int ): the number of the G points = plane waves needed to
+                represent the orbital for given k-point. Use this number when working with multiple k-points
+            
+            * res["nbnd"] ( int ): the number of bands (orbitals)
+            * res["nspin"] ( int ): the desriptor of the spin-polarisation in the calculation 
+
+                - 1: unpolarized
+                - 2: polarized 
+                - 4: non-collinear 
+
+            * res["gamma_only"]: ( string = "T" or "F" ): T - use the Gamma-point storae trick, F otherwise
+            * res["ik"] ( int ): index of the k point wfc
+            * res["nk"] ( int ): the number of k-points in the wfc
+        
+    """   
+
     ctx = Context(filename)  #("x.export/wfc.1")
     ctx.set_path_separator("/")
     print "path=", ctx.get_path()
@@ -205,12 +260,22 @@ def read_qe_wfc_info(filename, verbose=0):
 
 
 def read_qe_wfc_grid(filename, verbose=0):
-##
-#  This functions reads an ASCII/XML format file containing grid of G-points for given k-point
-#  and returns a list of VECTOR objects
-#
-#  \param[in] filename This is the name of the file we will be reading to construct a wavefunction
-#     
+    """
+
+    This functions reads an ASCII/XML format file containing grid of G-points for given k-point
+    and returns a list of VECTOR objects
+
+    Args:
+        filename ( string ): This is the name of the file we will be reading to construct a wavefunction
+        verbose ( int ): The flag controlling the amout of extra output:
+        
+            * 0 - no extra output (default)
+            * 1 - print extra stuff
+  
+    Returns: 
+        VectorList = list of VECTOR objects: the definitions of all G points in the present calculation
+
+    """
 
     ctx = Context(filename)  #("x.export/grid.1")
     ctx.set_path_separator("/")
@@ -239,15 +304,25 @@ def read_qe_wfc_grid(filename, verbose=0):
 
 
 def read_qe_wfc(filename, orb_list, verbose=0):
-##
-#  This functions reads an ASCII/XML format file containing wavefunction
-#  and returns the coefficients of the plane waves that constitute the
-#  wavefunction
-#
-#  \param[in] filename This is the name of the file we will be reading to construct a wavefunction
-#  \param[in] orb_list The list containing the indices of the orbitals which we want to consider
-#   (indexing is starting with 1, not 0!)
-#     
+    """
+
+    This functions reads an ASCII/XML format file containing wavefunction
+    and returns the coefficients of the plane waves that constitute the wavefunction
+
+    Args:
+        filename ( string ): This is the name of the file we will be reading to construct a wavefunction
+        orb_list ( list of ints ): The indices of the orbitals which we want to consider. Orbitals indexing 
+            at 1, not 0
+        verbose ( int ): The flag controlling the amout of extra output:
+        
+            * 0 - no extra output (default)
+            * 1 - print extra stuff
+  
+    Returns: 
+        CMATRIX(ngw,norbs): The plane-wave expansion coefficients for all orbitals
+
+    """
+
 
     ctx = Context(filename)  #("x.export/wfc.1")
     ctx.set_path_separator("/")
@@ -346,18 +421,21 @@ def read_qe_wfc(filename, orb_list, verbose=0):
 
 
 def read_md_data(filename):
-    """
-    filename (string) - the name of the xml file that contains an MD data
-    this function is specifically tailored for the QE output format
+    """Read in the QE MD data stored in an XML file
+
+    Args:
+        filename (string): the name of the xml file that contains an MD data
+            this function is specifically tailored for the QE output format
 
     Returns:
-    R ( MATRIX(ndof x nsteps-1) ) - coordinates of all DOFs for all mid-timesteps
-    V ( MATRIX(ndof x nsteps-1) ) - velocities of all DOFs for all mid-timesteps
-    A ( MATRIX(ndof x nsteps-1) ) - accelerations of all DOFs for all mid-timesteps
-    M ( MATRIX(ndof x 1) ) - masses of all DOFs
-    E (list of ndof/3) - atom names (elements) of all atoms
+        tuple: (R, V, A, M, E), where:
 
-    All quantities are in atomic units
+        * R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps [Bohr]
+        * V ( MATRIX(ndof x nsteps-1) ): velocities of all DOFs for all mid-timesteps [a.u. of velocity]
+        * A ( MATRIX(ndof x nsteps-1) ): accelerations of all DOFs for all mid-timesteps [a.u. of acceleration]
+        * M ( MATRIX(ndof x 1) ): masses of all DOFs [a.u. of mass]
+        * E (list of ndof/3): atom names (elements) of all atoms 
+
     """
 
     # Default (empty) context object
@@ -434,14 +512,19 @@ def read_md_data(filename):
 
 
 def read_md_data_cell(filename):
-    """
-    filename (string) - the name of the xml file that contains an MD data
-    this function is specifically tailored for the QE output format
+    """Read in the QE MD unit cell vectors stored in an XML file
+
+    Args:
+        filename (string): the name of the xml file that contains an MD data
+            this function is specifically tailored for the QE output format
 
     Returns:
-    C ( MATRIX(9 x nsteps) ) - cell coordinates for all timesteps
+        MATRIX(9 x nsteps): cell coordinates for all timesteps, in the format [Bohr]: 
+                 
+            C(0,0) = a1.x    C(0,1) = a1.y    C(0,2) = a1.z
+            C(1,0) = a2.x    C(1,1) = a2.y    C(1,2) = a2.z
+            C(2,0) = a3.x    C(2,1) = a3.y    C(2,2) = a3.z
 
-    All quantities are in atomic units
     """
 
     # Default (empty) context object
@@ -476,15 +559,28 @@ def read_md_data_cell(filename):
 
 def out2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt):
     """
-    out_filename - name of the file which contains the MD trajectory
-    templ_filename - name of the template file for input generation, should not contain atomic positions!
-    prefix - is the prefix of the files generated at output
-    wd - working directory - will be created 
-    t0 and t1 - define the starting and final frames
-    dt - defines the spacing between frames which are written
-    this is defined as a difference between written configuration indexes:
-    so if dt = 5, the following frames will be written: 0,5,10,15, etc...
+ 
+    Converts a QE output file with an MD trajectory to a bunch of input files
+    for SCF calculations. These input files all have the same control settings,
+    but differ in atomic coordinates
+    
+    Args:
+        out_filename ( string ): name of the file which contains the MD trajectory
+        templ_filename ( string ): name of the template file for input generation
+            should not contain atomic positions! 
+
+        prefix ( string ): the prefix of the files generated as the output
+        wd ( string ): working directory where all files will be created/processed - will be created 
+        t0 ( int ): defines the starting timestep to process (not all the MD timesteps may be precessed)
+        tmax ( int ): defines the maximal timestep to process (not all the MD timesteps may be precessed)
+        dt ( int ):  defines the spacing between frames which are written this is defined as a 
+            difference between written configuration indexes. So if dt = 5, the following frames
+            will be written: 0,5,10,15, etc...
+
+    Returns:
+        None: but will create a bunch of new input files in the created working directory
     """
+
     verbose = 0
     # Read the template file
     f_templ = open(templ_filename,"r")
@@ -601,17 +697,28 @@ def out2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt):
 
 def out2pdb(out_filename,T,dt,pdb_prefix):
     """
-    out_filename - name of the file which contains the MD trajectory
-    this file is the QE MD trajectory output
-    The function will convert this output file into pdb file (containing trajectory)
-    No more than T steps from the out_filename file will be used
-    dt - the difference of indexes of the frames which are written consequetively
-    such that if you dt = 5 it will write frames 0,5,10,15,etc. with 0 - being the input configuration
 
-    Example of usage:
-    > out2pdb.convert("x.md.out",250,25,"snaps/snap_")
-    This will create MD snapshots at times 0 (input configuration), 25 (25-th nuclear configuration), 50, etc.
-    the files will be collcted in the folder /snaps and named snap_0.pdb, snap_25.pdb, snap_50.pdb, etc.
+    Converts a QE output file with an MD trajectory to a bunch of pdb files
+    
+    Args:
+        out_filename ( string ): name of the file which contains the MD trajectory.
+            This file is the QE MD trajectory output
+        T ( int ): defines the maximal timestep to process (not all the MD timesteps may be precessed)
+        dt ( int ):  defines the spacing between frames which are written this is defined as a 
+            difference between written configuration indexes. So if dt = 5, the following frames
+            will be written: 0,5,10,15, etc...
+
+    Returns:
+        None: but will create a bunch of new pdb files with the trajectory info, including the unit cell params.
+
+
+    Example:
+
+        >>> QE_methods.out2pdb("x.md.out",250,25,"snaps/snap_")
+
+       This will create MD snapshots at times 0 (input configuration), 25 (25-th nuclear configuration), 50, etc.
+       the files will be collcted in the folder /snaps and named snap_0.pdb, snap_25.pdb, snap_50.pdb, etc.
+
     """
 
     dt = dt - 1
@@ -785,7 +892,7 @@ def out2xyz(out_filename,T,dt,xyz_filename):
     xyz_filename - is the prefix of the file to which the result is written
 
     Example of usage:
-    > out2xyz.convert("x.md.out",250,25,"snaps/traj.xyz")
+    > QE_methods.out2xyz("x.md.out",250,25,"snaps/traj.xyz")
     This will create the MD trajectory file in .xyz format with the snapshots takes at times 0
     (input configuration), 25 (25-th nuclear configuration), 50, etc.
     the snapshots will written in the file trahj.xyz in the folder /snaps 

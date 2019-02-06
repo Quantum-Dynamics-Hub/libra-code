@@ -40,6 +40,11 @@ probabilities
 .. automodule:: libra_py.probabilities
    :members:
 
+QE_methods
+=============
+.. automodule:: libra_py.QE_methods
+   :members:
+
 units
 =============
 .. automodule:: libra_py.units
