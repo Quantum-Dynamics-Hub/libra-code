@@ -84,6 +84,9 @@
    * compute_cov(R, V, A, M, E, params)
      [Ref: Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics 
       or Monte Carlo Simulations. J. Chem. Phys. 2003, 120, 1–4]
+   * compute_cov1(R, V, M, E, params) - same as compute_cov, but without acceleration matrix
+     [Ref: Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics 
+      or Monte Carlo Simulations. J. Chem. Phys. 2003, 120, 1–4]
    * compute_cov2(R, A, E, params)
      [Ref: Pereverzev, A.; Sewell, T. D. Obtaining the Hessian from the Force Covariance Matrix:
       Application to Crystalline Explosives PETN and RDX. J. Chem. Phys. 2015, 142, 134110]
@@ -119,6 +122,7 @@
   * read_qe_wfc_grid(filename, verbose=0) - read the wavefunction grid (may be too large and hence very slow!)
   * read_qe_wfc(filename, orb_list, verbose=0) - read the wavefunctions in their planewave representation
   * read_md_data(filename) - read the info about the MD run, saved in the xml file 
+  * read_md_data_xyz(filename, PT, dt) - read the info about the MD run stored in xyz format
   * read_md_data_cell(filename) - read the cell dimensions at all times
   * out2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt) - convert the output file with MD trajectory to a set of QE input files
   * out2pdb(out_filename,T,dt,pdb_prefix) - convert the output file with MD trajectory to a set of PDB files

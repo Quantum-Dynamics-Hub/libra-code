@@ -511,6 +511,70 @@ def read_md_data(filename):
 
 
 
+def read_md_data_xyz(filename, PT, dt):
+    """Read in the MD trajectory stored in an XYZ format
+
+    Args:
+        filename ( string ): the name of the xyz file that contains an MD data
+        PT ( dict{ string:float } ): definition of the masses of different atomic species [masses in amu, where 1 is the mass of H]
+        dt ( double ): MD nuclear integration time step [a.u. of time]
+
+    Returns:
+        tuple: (R, V, M, E), where:
+
+        * R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps [Bohr]
+        * V ( MATRIX(ndof x nsteps-1) ): velocities of all DOFs for all mid-timesteps [a.u. of velocity]
+        * M ( MATRIX(ndof x 1) ): masses of all DOFs [a.u. of mass]
+        * E (list of ndof/3): atom names (elements) of all atoms         
+
+    """
+
+    f = open(filename, "r")
+    A = f.readlines()
+    f.close()
+
+    nlines = len(A)  # the number of lines in the file
+    nat = int(float(A[0].split()[0])) # the number of atoms
+    nsteps = int(nlines/(nat+2)) - 1 
+
+
+    #========== Read the raw coordinates and assign masses ==========
+    D = MATRIX(3*nat, nsteps) # coordinates
+    M = MATRIX(3*nat, 1)
+    E = []
+
+    for t in xrange(nsteps):
+
+        # ========== Coordinates =========
+        for i in xrange(nat):        
+            xyz_str = A[t*(nat+2)+2+i].split()
+
+            name = xyz_str[0]
+            D.set(3*i+0, t, float(xyz_str[1]) )
+            D.set(3*i+1, t, float(xyz_str[2]) )
+            D.set(3*i+2, t, float(xyz_str[3]) )
+
+            #=========== And masses ==========
+            if t==0:
+                M.set(3*i+0, 0, PT[name]*units.amu)
+                M.set(3*i+1, 0, PT[name]*units.amu)
+                M.set(3*i+2, 0, PT[name]*units.amu)
+                E.append(name)
+
+
+    #====== Compute velocities and coordinates at the mid-points ========
+    R = MATRIX(3*nat, nsteps-1)
+    V = MATRIX(3*nat, nsteps-1)
+
+    for t in xrange(nsteps-1):
+        for i in xrange(3*nat):    
+            R.set(i, t, 0.5*(D.get(i, t+1) + D.get(i, t)) )
+            V.set(i, t, (0.5/dt)*(D.get(i, t+1) - D.get(i, t)) )
+
+    return R, V, M, E
+
+
+
 def read_md_data_cell(filename):
     """Read in the QE MD unit cell vectors stored in an XML file
 
@@ -1113,6 +1177,8 @@ def xyz2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt):
             at_line = at_line + 1
 
     f.close()
+
+
 
 
 def get_QE_normal_modes(filename, verbosity=0):
