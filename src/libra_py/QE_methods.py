@@ -550,9 +550,9 @@ def read_md_data_xyz(filename, PT, dt):
             xyz_str = A[t*(nat+2)+2+i].split()
 
             name = xyz_str[0]
-            D.set(3*i+0, t, float(xyz_str[1]) )
-            D.set(3*i+1, t, float(xyz_str[2]) )
-            D.set(3*i+2, t, float(xyz_str[3]) )
+            D.set(3*i+0, t, float(xyz_str[1]) * units.Angst )
+            D.set(3*i+1, t, float(xyz_str[2]) * units.Angst )
+            D.set(3*i+2, t, float(xyz_str[3]) * units.Angst )
 
             #=========== And masses ==========
             if t==0:

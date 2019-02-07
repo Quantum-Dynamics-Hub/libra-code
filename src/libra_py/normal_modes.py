@@ -201,27 +201,27 @@ def compute_cov(R, V, A, M, E, params):
     
     if verbosity>0:
         print "Computing covariance matrix of positions\n"; 
-    K_r = covariance_matrix(R, M, cov_flag)
+    K_r = CMATRIX(covariance_matrix(R, M, cov_flag))
     if verbosity>0:
         print "Computing covariance matrix of velocities\n"; 
-    K_v = covariance_matrix(V, M, cov_flag)
+    K_v = CMATRIX(covariance_matrix(V, M, cov_flag))
     if verbosity>0:
         print "Computing covariance matrix of accelerations\n"; 
-    K_a = covariance_matrix(A, M, cov_flag)
+    K_a = CMATRIX(covariance_matrix(A, M, cov_flag))
 
-    w_r = MATRIX(ndof, ndof);  U_r = MATRIX(ndof, ndof)
-    w_v = MATRIX(ndof, ndof);  U_v = MATRIX(ndof, ndof)
-    w_a = MATRIX(ndof, ndof);  U_a = MATRIX(ndof, ndof)
+    w_r = CMATRIX(ndof, ndof);  U_r = CMATRIX(ndof, ndof)
+    w_v = CMATRIX(ndof, ndof);  U_v = CMATRIX(ndof, ndof)
+    w_a = CMATRIX(ndof, ndof);  U_a = CMATRIX(ndof, ndof)
 
     if verbosity>0:
         print "Eigenvalue solver for covariance matrix of positions\n"
-    solve_eigen(K_r, w_r, U_r, 0)
+    solve_eigen_nosort(K_r, w_r, U_r, 0)
     if verbosity>0:
         print "Eigenvalue solver for covariance matrix of velocities\n"
-    solve_eigen(K_v, w_v, U_v, 0)
+    solve_eigen_nosort(K_v, w_v, U_v, 0)
     if verbosity>0:
         print "Eigenvalue solver for covariance matrix of accelerations\n"
-    solve_eigen(K_a, w_a, U_a, 0)
+    solve_eigen_nosort(K_a, w_a, U_a, 0)
 
     if verbosity>1:
         print "K_r:"; K_r.show_matrix()
@@ -239,8 +239,8 @@ def compute_cov(R, V, A, M, E, params):
 
     w = MATRIX(ndof, 1)      
     for dof in xrange(ndof):
-        if w_r.get(dof, dof)>0.0:
-            w.set(dof, 0,  math.sqrt( math.fabs( w_v.get(dof, dof)/w_r.get(dof, dof)) )  )
+        if w_r.get(dof, dof).real>0.0:
+            w.set(dof, 0,  math.sqrt( math.fabs( w_v.get(dof, dof).real/w_r.get(dof, dof).real) )  )
         else:
             w.set(dof, 0, 0.0)
     w_inv_cm = w / units.inv_cm2Ha
@@ -252,7 +252,7 @@ def compute_cov(R, V, A, M, E, params):
     w2 = MATRIX(ndof, 1)      
     for dof in xrange(ndof):
         if w_r.get(dof, dof)>0.0:
-            w2.set(dof, 0,  math.pow( math.fabs( w_a.get(dof, dof)/w_r.get(dof, dof) ) , 0.25)  )
+            w2.set(dof, 0,  math.pow( math.fabs( w_a.get(dof, dof).real/w_r.get(dof, dof).real ) , 0.25)  )
         else:
             w2.set(dof, 0, 0.0)
     w2_inv_cm = w2 / units.inv_cm2Ha
@@ -265,17 +265,17 @@ def compute_cov(R, V, A, M, E, params):
             print "Visualizing modes based on velocities covariance\n" 
         prefix = params["prefix"]
         params.update({"prefix": prefix+"_velocity"})
-        visualize_modes(E, R, U_v, M, w, params);
+        visualize_modes(E, R, U_v.real(), M, w, params);
 
         if verbosity>0:
             print "Visualizing modes based on accelerations covariance\n" 
         params.update({"prefix": prefix+"_acceleration"})
-        visualize_modes(E, R, U_a, M, w2, params);
+        visualize_modes(E, R, U_a.real(), M, w2, params);
 
     if verbosity>0:
         print "========= Done with the Normal modes calculations =============================" 
 
-    return w, w_inv_cm, U_v,  w2, w2_inv_cm, U_a
+    return w, w_inv_cm, U_v.real(),  w2, w2_inv_cm, U_a.real()
 
 
 
@@ -290,9 +290,9 @@ def compute_cov1(R, V, M, E, params):
     or Monte Carlo Simulation. J. Chem. Phys. 2003, 120, 1-4.
 
     Args:
-        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps
-        V ( MATRIX(ndof x nsteps-1) ): velocities of all DOFs for all mid-timesteps
-        M ( MATRIX(ndof x 1) ): masses of all DOFs
+        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps [Bohr]
+        V ( MATRIX(ndof x nsteps-1) ): velocities of all DOFs for all mid-timesteps [a.u. of velocity]
+        M ( MATRIX(ndof x 1) ): masses of all DOFs [a.u. of mass]
         E ( list of ndof/3 strings ): atom names (elements) of all atoms
         params ( dictionary ): parameters controlling the computations, including the 
             visualization (see the visualize_modes(E, R, U, w, params) description). 
@@ -326,20 +326,20 @@ def compute_cov1(R, V, M, E, params):
     
     if verbosity>0:
         print "Computing covariance matrix of positions\n"; 
-    K_r = covariance_matrix(R, M, cov_flag)
+    K_r = CMATRIX(covariance_matrix(R, M, cov_flag))
     if verbosity>0:
         print "Computing covariance matrix of velocities\n"; 
-    K_v = covariance_matrix(V, M, cov_flag)
+    K_v = CMATRIX(covariance_matrix(V, M, cov_flag))
 
-    w_r = MATRIX(ndof, ndof);  U_r = MATRIX(ndof, ndof)
-    w_v = MATRIX(ndof, ndof);  U_v = MATRIX(ndof, ndof)
+    w_r = CMATRIX(ndof, ndof);  U_r = CMATRIX(ndof, ndof)
+    w_v = CMATRIX(ndof, ndof);  U_v = CMATRIX(ndof, ndof)
 
     if verbosity>0:
         print "Eigenvalue solver for covariance matrix of positions\n"
-    solve_eigen(K_r, w_r, U_r, 0)
+    solve_eigen_nosort(K_r, w_r, U_r, 0)
     if verbosity>0:
         print "Eigenvalue solver for covariance matrix of velocities\n"
-    solve_eigen(K_v, w_v, U_v, 0)
+    solve_eigen_nosort(K_v, w_v, U_v, 0)
 
     if verbosity>1:
         print "K_r:"; K_r.show_matrix()
@@ -353,8 +353,8 @@ def compute_cov1(R, V, M, E, params):
 
     w = MATRIX(ndof, 1)      
     for dof in xrange(ndof):
-        if w_r.get(dof, dof)>0.0:
-            w.set(dof, 0,  math.sqrt( math.fabs( w_v.get(dof, dof)/w_r.get(dof, dof)) )  )
+        if w_r.get(dof, dof).real>0.0:
+            w.set(dof, 0,  math.sqrt( math.fabs( w_v.get(dof, dof).real/w_r.get(dof, dof).real) )  )
         else:
             w.set(dof, 0, 0.0)
     w_inv_cm = w / units.inv_cm2Ha
@@ -368,13 +368,13 @@ def compute_cov1(R, V, M, E, params):
             print "Visualizing modes based on velocities covariance\n" 
         prefix = params["prefix"]
         params.update({"prefix": prefix+"_velocity"})
-        visualize_modes(E, R, U_v, M, w, params);
+        visualize_modes(E, R, U_v.real(), M, w, params);
 
 
     if verbosity>0:
         print "========= Done with the Normal modes calculations =============================" 
 
-    return w, w_inv_cm, U_v
+    return w, w_inv_cm, U_v.real()
 
 
 
@@ -429,18 +429,18 @@ def compute_cov2(R, A, M, E, T, params):
         print "Computing covariance matrix of accelerations\n"
     K_a = None
     if cov_flag==0:
-        K_a = covariance(A)
+        K_a = CMATRIX(covariance(A))
     elif cov_flag==1:
         dA = deviation(A)
-        K_a = covariance(dA)
+        K_a = CMATRIX(covariance(dA))
 
     k = units.boltzmann / units.hartree
     K_a *= (1.0/(k*T))
 
     if verbosity>0:
         print "Eigenvalue solver for covariance matrix of accelerations\n";
-    w_a = MATRIX(ndof, ndof);  U_a = MATRIX(ndof, ndof)
-    solve_eigen(K_a, w_a, U_a, 0)
+    w_a = CMATRIX(ndof, ndof);  U_a = CMATRIX(ndof, ndof)
+    solve_eigen_nosort(K_a, w_a, U_a, 0)
 
     if verbosity>1:
         print "K_a:"; K_a.show_matrix()
@@ -449,8 +449,8 @@ def compute_cov2(R, A, M, E, T, params):
 
     w = MATRIX(ndof, 1)      
     for dof in xrange(ndof):
-        if w_a.get(dof, dof)>0.0:
-            w.set(dof, 0,  math.sqrt(w_a.get(dof, dof)) ) 
+        if w_a.get(dof, dof).real>0.0:
+            w.set(dof, 0,  math.sqrt(w_a.get(dof, dof).real) ) 
     w_inv_cm = w / units.inv_cm2Ha
     if verbosity>0:
         print "Frequencies (cm^-1)";  w_inv_cm.show_matrix()
@@ -458,12 +458,12 @@ def compute_cov2(R, A, M, E, T, params):
     if params["visualize"]>0:
         if verbosity>0:
             print "Visualizing modes based on accelerations covariance matrix\n" 
-        visualize_modes(E, R, U_a, M, w, params);
+        visualize_modes(E, R, U_a.real(), M, w, params);
 
     if verbosity>0:
         print "========= Done with the Normal modes calculations ============================="
 
-    return w_a, w_inv_cm, U_a
+    return w_a, w_inv_cm, U_a.real()
 
 
 def compute_dynmat(R, D, M, E, params):
@@ -510,7 +510,7 @@ def compute_dynmat(R, D, M, E, params):
 
     w_a = MATRIX(ndof, ndof);  U_a = MATRIX(ndof, ndof)
 
-    solve_eigen(D, w_a, U_a, 0)
+    solve_eigen_nosort(D, w_a, U_a, 0)
 
     if verbosity>1:
         print "Dynamic matrix:"; D.show_matrix()
