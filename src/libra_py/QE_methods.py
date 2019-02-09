@@ -948,18 +948,30 @@ def out2pdb(out_filename,T,dt,pdb_prefix):
 
 def out2xyz(out_filename,T,dt,xyz_filename):
     """
-    out_filename - name of the file which contains the MD trajectory
-    this file is the QE MD trajectory output
-    The function will convert this output file into xyz file (containing trajectory)
+  
+    This function converts the QE output file into a .xyz trajectory file. 
     No more than T steps from the out_filename file will be used
-    dt - number of steps between output frames, so dt = 5 will output frames 0, 5, 10, 15, etc.
-    xyz_filename - is the prefix of the file to which the result is written
 
-    Example of usage:
-    > QE_methods.out2xyz("x.md.out",250,25,"snaps/traj.xyz")
-    This will create the MD trajectory file in .xyz format with the snapshots takes at times 0
-    (input configuration), 25 (25-th nuclear configuration), 50, etc.
-    the snapshots will written in the file trahj.xyz in the folder /snaps 
+    Args: 
+        out_filename ( string ): name of the file which contains the MD trajectory.
+            This file is the QE MD trajectory output
+        T ( int ): defines the maximal timestep to process (not all the MD timesteps may be precessed)
+        dt ( int ):  defines the spacing between frames which are written this is defined as a 
+            difference between written configuration indexes. So if dt = 5, the following frames
+            will be written: 0,5,10,15, etc...
+        xyz_filename ( string ): the name of the file to which the resulting .xyz trajectory will be written
+
+    Returns:
+        None: but will create a .xyz file with the trajectory.
+
+    Example:
+
+        >>> QE_methods.out2xyz("x.md.out",250,25,"snaps/traj.xyz")
+
+        This will create the MD trajectory file in .xyz format with the snapshots takes at times 0
+        (input configuration), 25 (25-th nuclear configuration), 50, etc.
+        the snapshots will written in the file trahj.xyz in the folder /snaps 
+
     """
 
 #    dt = dt - 1
@@ -1089,14 +1101,27 @@ def out2xyz(out_filename,T,dt,xyz_filename):
 
 def xyz2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt):
     """
-    out_filename - name of the file which contains the xyz (MD) trajectory
-    templ_filename - name of the template file for input generation, should not contain atomic positions!
-    prefix - is the prefix of the files generated at output
-    wd - working directory - will be created 
-    t0 and t1 - define the starting and final frames
-    dt - defines the spacing between frames which are written
-    this is defined as a difference between written configuration indexes:
-    so if dt = 5, the following frames will be written: 0,5,10,15, etc...
+
+    Converts a xyz trajectory file with an MD trajectory to a bunch of input files
+    for SCF calculations. These input files all have the same control settings,
+    but differ in atomic coordinates
+    
+    Args:
+        out_filename ( string ): name of the file which contains the MD trajectory (in xyz format)
+        templ_filename ( string ): name of the template file for input generation
+            should not contain atomic positions! 
+
+        wd ( string ): working directory where all files will be created/processed - will be created 
+        prefix ( string ): the prefix of the files generated as the output
+        t0 ( int ): defines the starting timestep to process (not all the MD timesteps may be precessed)
+        tmax ( int ): defines the maximal timestep to process (not all the MD timesteps may be precessed)
+        dt ( int ):  defines the spacing between frames which are written this is defined as a 
+            difference between written configuration indexes. So if dt = 5, the following frames
+            will be written: 0,5,10,15, etc...
+
+    Returns:
+        None: but will create a bunch of new input files in the created working directory
+
     """
     verbose = 0
     # Read the template file
@@ -1183,15 +1208,28 @@ def xyz2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt):
 
 def get_QE_normal_modes(filename, verbosity=0):
     """
+
     This function reads the QE phonon calculations output files
     to get the key information for further normal modes visualization
     or other types of calculations related to normal modes  
-  
-    filename - the name of .dyn file produced by QE code
-    verbosity - to control the amount of print outs
+ 
+    Args:  
+        filename ( string ): the name of a .dyn file produced by QE code
+        verbosity ( int ) to control the amount of printouts
 
-    >>> get_QE_normal_modes("silicon.dyn1", 1)
-    >>> get_QE_normal_modes("Cs4SnBr6_T200.dyn1")
+            * 0 - no extra output (default)
+            * 1 - print extra stuff
+  
+    Returns: 
+        tuple: (Elts, R, U), where:
+
+        * Elts ( list of nat string ): labels of all atoms, nat - is the number of atoms
+        * R ( MATRIX(3*nat x 1) ): coordinates of all atoms [Angstrom]
+        * U ( MATRIX(ndof x ndof) ): eigenvectors, defining the normal modes
+
+    Example:
+        >>> get_QE_normal_modes("silicon.dyn1", 1)     # verbose output
+        >>> get_QE_normal_modes("Cs4SnBr6_T200.dyn1")  # not verbose output
 
     """
 

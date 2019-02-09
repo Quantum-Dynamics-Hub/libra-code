@@ -31,7 +31,7 @@ import units
 
 
 def read_xyz(filename, inp_units=1, out_units=0):
-    """
+    """Read an xyz file (single structure)
     
     Args:
         filename ( string ): the name of the xyz file to read
@@ -49,7 +49,7 @@ def read_xyz(filename, inp_units=1, out_units=0):
         tuple: (L, coords), where:
  
             * L ( list of N strings ): the labels of N atoms read
-            * coords ( list of N VECTORs ): the coordinates of N atoms read
+            * coords ( list of N VECTORs ): the coordinates of N atoms read [defined by out_units]
 
     """
 
@@ -70,7 +70,6 @@ def read_xyz(filename, inp_units=1, out_units=0):
             y = float(tmp[2])
             z = float(tmp[3])
              
-            # Now apply PBC
             R = VECTOR(x,y,z) * units.length_converter(inp_units, out_units)
 
             L.append(tmp[0])
@@ -80,7 +79,8 @@ def read_xyz(filename, inp_units=1, out_units=0):
 
 
 def make_xyz(L, R, inp_units=0, out_units=1):
-    """
+    """Convert atomic labels and coordinates to a string formatted according to xyz
+
     Args:
         L ( list of N strings ): the labels of N atoms in the system
         R ( list of N VECTORs ): the coordinates of N atoms in the system
@@ -109,9 +109,31 @@ def make_xyz(L, R, inp_units=0, out_units=1):
     return res
 
 
-def read_xyz_crystal(filename, a,b,c):
-    """
-    a,b,c - unit cell vectors (in Bohrs)
+
+def read_xyz_crystal(filename, a,b,c, inp_units=0, out_units=0):
+    """Read an xyz file with atomic coordinates given in fractional lattice vector units
+
+    Args:
+        filename ( string ): the name of the xyz file to read
+        a ( VECTOR ): the unit cell vector in the direction a [units defined by inp_units]
+        b ( VECTOR ): the unit cell vector in the direction b [units defined by inp_units]
+        c ( VECTOR ): the unit cell vector in the direction c [units defined by inp_units]
+        inp_units ( int ): defines the units of a,b,c:
+
+            * 0 - Bohr ( default )
+            * 1 - Angstrom 
+
+        out_units ( int ): defines the units of the coordinates in the ourput variable:
+
+            * 0 - Bohr ( default )
+            * 1 - Angstrom 
+
+    Returns: 
+        tuple: (L, coords), where:
+ 
+            * L ( list of N strings ): the labels of N atoms read
+            * coords ( list of N VECTORs ): the coordinates of N atoms read [defined by out_units]
+                
     """
 
     M = MATRIX(3,3)
@@ -135,8 +157,7 @@ def read_xyz_crystal(filename, a,b,c):
             y = float(tmp[2])
             z = float(tmp[3])
              
-            # Now apply PBC
-            R = M * VECTOR(x,y,z) # * Angst_to_Bohr
+            R = M * VECTOR(x,y,z)  * units.length_converter(inp_units, out_units)
 
             L.append(tmp[0])
             coords.append(R)
@@ -146,18 +167,134 @@ def read_xyz_crystal(filename, a,b,c):
 
 
 
-
-def generate_replicas_xyz2(L, R, tv1, tv2, tv3, Nx, Ny, Nz):
+def generate_replicas_xyz(tv1, tv2, tv3, rep1, rep2, rep3 , filename, outfile, inp_units=0, out_units=0):
     """
-    L - initial labels (list of strings)
-    R - initial coords (list of VECTOR objects) in Bohrs
-    tv1, tv2, tv3 - translation vectors (VECTOR objects), in Bohrs
-    Nx, Ny, Nz - the number of replications along each vector
+
+    This function generates a lattice of coordinates and an array of 
+    corresponding atomic labels by replicating a given set of labeled
+    atoms periodically in up to 3 dimensions (with a variable number of 
+    replicas in each direction). This function first reads in the 
+    atomic coordinates (supplied in an .xyz format) and then writes 
+    the resulting data into another file (.xyz format)
+
+    Args:
+        tv1 ( VECTOR ): translation vector in direction 1 [defined by inp_units] 
+        tv2 ( VECTOR ): translation vector in direction 2 [defined by inp_units] 
+        tv3 ( VECTOR ): translation vector in direction 3 [defined by inp_units] 
+        rep1 ( int ): the number of replications along the vector tv1, not counting the original cell
+        rep2 ( int ): the number of replications along the vector tv2, not counting the original cell
+        rep3 ( int ): the number of replications along the vector tv3, not counting the original cell
+        filename ( string ): the name of the file containing input coordinates (original unit cell)
+        outfile ( string ): the name of the file where the resulting lattice atoms will be written
+        inp_units ( int ): defines the units of variables in filename, tv1, tv2, and tv3:
+
+            * 0 - Bohr ( default )
+            * 1 - Angstrom 
+
+        out_units ( int ): defines the units of the coordinates written to outfile
+
+            * 0 - Bohr ( default )
+            * 1 - Angstrom 
+
+    Returns:
+        None: but a new .xyz file will be printed out
+
+    Example:
+        The example below read in a unit cell of Si (8 atoms), replicates in 5 times 
+        in x, y, and z directions (so we get a 6 x 6 x 6 supercell). The resulting 
+        structure is written to the "cube10.xyz" file
+
+        >>> a = [     5.4307100000000000,    0.0000000000000000,    0.0000000000000000 ]
+        >>> b = [     0.0000000000000000,    5.4307100000000000,    0.0000000000000000 ]
+        >>> c = [     0.0000000000000000,    0.0000000000000000,    5.4307100000000000 ]
+        >>> generate_replicas_xyz(a, b, c, 5, 5, 5 , "Si.xyz", "cube10.xyz")
+
+
+    """
+
+    transl = []
+    for x in range(0,rep1+1):
+        for y in range(0,rep2+1):
+            for z in range(0,rep3+1):
+                transl.append([x,y,z])
+
+
+    f = open(filename,"r")
+    A = f.readlines()
+    f.close()
+
+    tmp = A[0].split()
+    Natoms = int(float(tmp[0]))
+    f = open(outfile, "w")
+    f.write("%i \n" % int(len(transl) * Natoms))
+    f.write(A[1][:-1] + "\n")
+
+    L = [] 
+    coords = []
+
+    for T in transl:
+        for a in A[2:]:
+            tmp = a.split()
+            if len(tmp)==4:
+                x = float(tmp[1]) 
+                y = float(tmp[2])
+                z = float(tmp[3])
+                 
+                # Now apply PBC
+                dx = T[0]*tv1[0] + T[1]*tv2[0] + T[2]*tv3[0]
+                dy = T[0]*tv1[1] + T[1]*tv2[1] + T[2]*tv3[1]
+                dz = T[0]*tv1[2] + T[1]*tv2[2] + T[2]*tv3[2]
+
+                f.write("%s  %8.5f  %8.5f  %8.5f \n" % (tmp[0], x+dx, y+dy, z+dz ) )
+
+                L.append(tmp[0])
+                coords.append(VECTOR(x+dx, y+dy, z+dz))
+    f.close()
+
+    return L, coords
+
+
+
+def generate_replicas_xyz2(L, R, tv1, tv2, tv3, Nx, Ny, Nz, inp_units=0, out_units=0):
+    """
+
+    This function generates a lattice of coordinates and an array of 
+    corresponding atomic labels by replicating a given set of labeled
+    atoms periodically in up to 3 dimensions (with a variable number of 
+    replicas in each direction)
+
+    Args:
+        L ( list of strings ): atomis labels
+        R ( list of VECTOR objects ): initial atomic coords [defined by inp_units] 
+        tv1 ( VECTOR ): translation vector in direction 1 [defined by inp_units] 
+        tv2 ( VECTOR ): translation vector in direction 2 [defined by inp_units] 
+        tv3 ( VECTOR ): translation vector in direction 3 [defined by inp_units] 
+        Nx ( int ): the number of replications along the vector tv1, not counting the original cell
+        Ny ( int ): the number of replications along the vector tv2, not counting the original cell
+        Nz ( int ): the number of replications along the vector tv3, not counting the original cell
+        inp_units ( int ): defines the units of variables R, tv1, tv2, and tv3:
+
+            * 0 - Bohr ( default )
+            * 1 - Angstrom 
+
+        out_units ( int ): defines the units of the coordinates returned:
+
+            * 0 - Bohr ( default )
+            * 1 - Angstrom 
+
+    Returns:
+        tuple: (lab, newR), where:
+ 
+            * lab ( list of N strings ): the labels of all atoms and their corresponding replicas
+            * newR ( list of N VECTORs ): the coordinates of all replicated atoms [defined by out_units]
+
+
     """
 
     nat = len(R)
 
     lab, newR = [], []
+    scl = units.length_converter(inp_units, out_units)
 
     for i in xrange(nat):
 
@@ -166,12 +303,13 @@ def generate_replicas_xyz2(L, R, tv1, tv2, tv3, Nx, Ny, Nz):
                 for nz in range(Nz):
                  
                     # Now apply PBC
-                    r = VECTOR(R[i] + nx * tv1 + ny * tv2 + nz * tv3)
+                    r = VECTOR(R[i] + nx * tv1 + ny * tv2 + nz * tv3) * scl
 
                     lab.append(L[i])
                     newR.append(r)
 
     return lab, newR
+
 
 
 
@@ -398,57 +536,6 @@ def add_atom_to_system(syst, coords, MaxCoords, Nx,Ny,Nz, a,b,c, shift, elt, mas
 
                 i = i + 1
 
-
-
-def generate_replicas_xyz(tv1,tv2,tv3, rep1, rep2, rep3 , filename, outfile):
-    """
-    tv1, tv2, tv3 - translation vectors (lists of 3 floats)
-    rep1, rep2, rep3 - the number of replications along each vector
-    filename - the name of the file (xyz format) containing the unit cell structure
-    outfile - the name of the output file
-    """
-
-
-    transl = []
-    for x in range(0,rep1+1):
-        for y in range(0,rep2+1):
-            for z in range(0,rep3+1):
-                transl.append([x,y,z])
-
-
-    f = open(filename,"r")
-    A = f.readlines()
-    f.close()
-
-    tmp = A[0].split()
-    Natoms = int(float(tmp[0]))
-    f = open(outfile, "w")
-    f.write("%i \n" % int(len(transl) * Natoms))
-    f.write(A[1][:-1] + "\n")
-
-    L = [] 
-    coords = []
-
-    for T in transl:
-        for a in A[2:]:
-            tmp = a.split()
-            if len(tmp)==4:
-                x = float(tmp[1]) 
-                y = float(tmp[2])
-                z = float(tmp[3])
-                 
-                # Now apply PBC
-                dx = T[0]*tv1[0] + T[1]*tv2[0] + T[2]*tv3[0]
-                dy = T[0]*tv1[1] + T[1]*tv2[1] + T[2]*tv3[1]
-                dz = T[0]*tv1[2] + T[1]*tv2[2] + T[2]*tv3[2]
-
-                f.write("%s  %8.5f  %8.5f  %8.5f \n" % (tmp[0], x+dx, y+dy, z+dz ) )
-
-                L.append(tmp[0])
-                coords.append(VECTOR(x+dx, y+dy, z+dz))
-    f.close()
-
-    return L, coords
 
 
 def crop_sphere_xyz(infile, outfile, Rcut):
