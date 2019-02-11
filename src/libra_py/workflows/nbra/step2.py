@@ -1,11 +1,21 @@
 #***********************************************************
-# * Copyright (C) 2017-2018 Brendan A. Smith, Wei Li, and Alexey V. Akimov
+# * Copyright (C) 2017-2019 Brendan A. Smith, Wei Li, and Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
 # * License, or (at your option) any later version.
 # * http://www.gnu.org/copyleft/gpl.txt
 #***********************************************************/
+
+"""
+.. module:: build
+   :platform: Unix, Windows
+   :synopsis: This module implements functions for building molecular structures
+
+.. moduleauthor:: Brendan A. Smith, Wei Li, and Alexey V. Akimov
+
+"""
+
 
 import os
 import sys
@@ -25,15 +35,47 @@ import compute_hprime
 
 def run_qe(params, t, dirname0, dirname1):
     """
-    This fucntions runs the QE code for a system whose information is stored in the 
-    params dictionary
 
-    \param[in] params A dictionary containing important simulation parameters
-    \param[in] t The current time step
-    \param[in] dirname0 Name of the temporary directory where data will be stored 
-              for the case without SOC 
-    \param[in] dirname1 Name of the temporary directory where data will be stored 
-              for the case with SOC 
+    This function runs necessary QE calculations as defined by the "params" dictionary
+
+    Args:
+        params ( dictionary ): A dictionary containing important simulation parameters
+
+            * **params["BATCH_SYSTEM"]** ( string ): the name of the job submission command
+                use "srun" if run calculations on SLURM system or "mpirun" if run on PBS system
+                [default: "srun"]
+            * **params["NP"]** ( int ): the number of nodes on which execute calculations
+                [default: 1]
+            * **params["EXE"]** ( string ): the name of the program to be executed. This may be 
+                the absolute path to the QE (pw.x) binary
+                [default: "" (empty string), you really need to define it]
+            * **params["prefix0"]** ( string ): the name of scf template input file - it should 
+                contain all the parameters controlling the computational methodology for QE.
+                If the file is called "x0.scf.in", use "x0.scf" as the value of the "prefix0"
+                [default: "x0.scf"]
+            * **params["prefix1"]** ( string ): the name of scf template input file - it should 
+                contain all the parameters controlling the computational methodology for QE.
+                Presently is used for SOC-enabled calculations, whereas the "prefix0" defines the
+                no-SOC calculations. If the file is called "x1.scf.in", use "x1.scf" as the value
+                of the "prefix1" [default: "x1.scf"]
+            * **params["nac_method"]** ( int ): selects the type of calculations to perform:
+ 
+                - 0 : non-spin-polarized calculations (needs only "prefix0")
+                - 1 : spin-polarized calculations (needs only "prefix0")
+                - 2 : non-collinear calculation (SOC) only (needs only "prefix1")
+                - 3 : spin-polarized and non-collinear calculation (SOC) (needs both "prefix0" and "prefix1")
+
+                [default: 0]
+
+            * **params["wd"]** ( string ): the name of a "working directory (can be removed once the calculatons
+                are done)" that will be created during this function execution.
+
+        t ( int ): the current time step
+        dirname0 ( string ): Name of the temporary directory where data will be stored 
+            for the case without SOC 
+        dirname1 ( string ): Name of the temporary directory where data will be stored 
+            for the case with SOC 
+
     """
 
     tim = Timer()
@@ -46,7 +88,7 @@ def run_qe(params, t, dirname0, dirname1):
     EXE_EXPORT = get_value(params,"EXE_EXPORT","","s")
     prefix0 = get_value(params,"prefix0","x0.scf","s")
     prefix1 = get_value(params,"prefix1","x1.scf","s")
-    nac_method = get_value(params,"nac_method",0,"i")  # choose what method for NAC calculations to use: 0 -standard, 1-corrected
+    nac_method = get_value(params,"nac_method",0,"i")  
     wd = get_value(params,"wd","wd","s")
 
     # Run calculations

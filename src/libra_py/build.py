@@ -314,14 +314,119 @@ def generate_replicas_xyz2(L, R, tv1, tv2, tv3, Nx, Ny, Nz, inp_units=0, out_uni
 
 
 
+def crop_sphere_xyz(infile, outfile, Rcut):
+    """
+    
+    This function reads an .xyz file with the geometry, cuts the atoms that are outside
+    of a sphere of given radius and then prints out the remaining atoms to a new file
+    in .xyz format
+
+    Args: 
+        infile ( string ): the name of the .xyz file that contains the original coordinates
+        outfile ( string ): the name of the new .xyz file to create (with the cropped geometry)
+        Rcut ( double ): the radius of the sphere from the center of the QD [ same units as used in infile ]
+
+    Returns:
+        tuple: (lab, coords), where:
+ 
+            * lab ( list of N strings ): the labels of all remaining atoms
+            * coords ( list of N VECTORs ): the coordinates of all remaining atoms
+
+    Example:
+        The example below read in a unit cell of Si (8 atoms), replicates in 5 times 
+        in x, y, and z directions (so we get a 6 x 6 x 6 supercell). The resulting 
+        structure is written to the "cube10.xyz" file. Then the file cube10.xyz
+        is read and cropped to make a sphere of 5 Angstrom. The resulting system
+        is then printed out to the "qd_5.xyz" file.
+
+        >>> a = [     5.4307100000000000,    0.0000000000000000,    0.0000000000000000 ]
+        >>> b = [     0.0000000000000000,    5.4307100000000000,    0.0000000000000000 ]
+        >>> c = [     0.0000000000000000,    0.0000000000000000,    5.4307100000000000 ]
+        >>> generate_replicas_xyz(a, b, c, 5, 5, 5 , "Si.xyz", "cube10.xyz")
+        >>> crop_sphere_xyz("cube10.xyz", "qd_5.xyz", 5.0)
+
+    """
+
+    f = open(infile,"r")
+    A = f.readlines()
+    f.close()
+
+    tmp = A[0].split()
+    Natoms = int(float(tmp[0]))
+    print A[1][:-1]
+
+    # Read coordinates and compute COM
+    L = []
+    R = []
+    Rcom = [0.0,0.0,0.0]
+
+    for a in A[2:]:
+        tmp = a.split()
+        if len(tmp)==4:
+            x = float(tmp[1]) 
+            y = float(tmp[2])
+            z = float(tmp[3])
+
+            Rcom[0] = Rcom[0] + x
+            Rcom[1] = Rcom[1] + y
+            Rcom[2] = Rcom[2] + z
+
+            L.append(tmp[0])
+            R.append([x,y,z])
+
+    # Geometric center
+    Rcom[0] = Rcom[0] / Natoms
+    Rcom[1] = Rcom[1] / Natoms
+    Rcom[2] = Rcom[2] / Natoms
+
+ 
+    # Compute remaining number of atoms
+    Nat = 0
+    indx = []
+    for i in range(0,Natoms):
+        r = math.sqrt((R[i][0] - Rcom[0])**2 + (R[i][1] - Rcom[1])**2 + (R[i][2] - Rcom[2])**2)
+        if(r<=Rcut):
+            Nat = Nat + 1
+            indx.append(i)
+            
+
+    # Print resulting coordinates
+    f1 = open(outfile,"w")
+    f1.write("%5i\n" % Nat)
+    f1.write(A[1])
+
+
+    coords = []
+    lab = []     
+    for i in indx:
+        coords.append(VECTOR(R[i][0], R[i][1], R[i][2]))
+        lab.append(L[i])
+        f1.write("%s  %12.6f  %12.6f  %12.6f \n" % (L[i], R[i][0], R[i][1], R[i][2]) )
+
+    f1.close()
+
+    return lab, coords
+
+
+
+
 def crop_sphere_xyz2(L, R, Rcut):
     """
-    L - list of element names
-    R - list of VECTOR objects with the coordinates of the particles, in Bohrs
-    Rcut - the radius of the sphere from the center of the QD, in Bohrs
+    
+    This function removes all atoms that are outside of a sphere of 
+    Rcut radius. The sphere is centered on GEOMETRIC center of the 
+    system
 
-    Output:
-    new lists of L and R after cropping
+    Args: 
+        L ( list of strings ): element names, this list will be trimmed accordingly
+        R ( VECTORList or list of VECTOR objects): coordinates of the particles [ Bohr ]
+        Rcut ( double ): the radius of the sphere from the center of the QD [ Bohrs ]
+
+    Returns:
+        tuple: (lab, coords), where:
+ 
+            * lab ( list of N strings ): the labels of all remaining atoms
+            * coords ( list of N VECTORs ): the coordinates of all remaining atoms
 
     """
 
@@ -357,18 +462,37 @@ def crop_sphere_xyz2(L, R, Rcut):
     return lab, coords
 
 
+
 def crop_sphere_xyz3(L, R, Rcut, pairs, new_L):
     """
-    L - list of element names
-    R - list of VECTOR objects with the coordinates of the particles, in Bohrs
-    Rcut - the radius of the sphere from the center of the QD, in Bohrs
-    pairs - list [int, int, VECTOR, VECTOR] - integers describe the indices for the connected atoms
-    new_L - is a map containing pairs (string:string), where the key string corresponds to the label of 
-          the atom that is inside the cropped sphere, and the value string corresponds to the label of 
-          the atom which will turn out to be connected to this atom, but is outside the sphere
 
-    Output:
-    new lists of L and R after cropping
+    This function removes all atoms that are outside of a sphere of 
+    Rcut radius. The sphere is centered on GEOMETRIC center of the 
+    system
+
+    Args: 
+        L ( list of strings ): element names, this list will be trimmed accordingly
+        R ( VECTORList or list of VECTOR objects): coordinates of the particles [ Bohr ]
+        Rcut ( double ): the radius of the sphere from the center of the QD [ Bohrs ]
+        pairs ( list of [int, int, VECTOR, VECTOR] lists ): integers describe the indices for 
+            the connected atoms, the VECTORs describe the translation vector by which the atoms
+            should be translated before considering connected (e.g. for periodic boundary conditions)
+            these VECTOR objects are not used in the present function, but the format
+            is kept such that the output of other functions could be used in this function.
+
+        new_L ( dictionary(string:string) ): a map containing the key-value pairs, where 
+            the key string corresponds to the label of the atom that is inside the cropped sphere.
+            The value string corresponds to the new label of the atom outside the sphere. The function
+            will use the original connectivity information to decide how to cap the dangling bonds
+            formed at cropping. So, if the atom A is connected to atom B, atom A is inside of the 
+            sphere and B is outside the sphere. The vaule element will become a new label for atom
+            B, if the key element corresponds to atom type A.
+
+    Returns:
+        tuple: (lab, coords), where:
+ 
+            * lab ( list of N strings ): the labels of all remaining atoms
+            * coords ( list of N VECTORs ): the coordinates of all remaining atoms
 
     """
 
@@ -438,12 +562,18 @@ def crop_sphere_xyz3(L, R, Rcut, pairs, new_L):
 
 def add_atoms_to_system(syst, L, R, scl, mass, univ_file):
     """
-    syst - the System object, initially may be empty
-    L - list of element names
-    R - list of VECTOR objects with the coordinates of the particles - in Bohrs
-    scl - a VECTOR - scaling coefficients for sampling the initial momenta
-    mass - list of atomic masses (floats)
-    univ_file - name of the file that contains the Universe properties
+
+    Args:    
+        syst ( System object ): the chemical system to which we are going to add the atoms
+        L ( list of strings ): element names    
+        R ( list of VECTOR objects ): coordinates of the particles [ Bohrs ]
+        scl ( VECTOR ): momentum rescaling factors along each direction [a.u. of momentum]
+        mass ( list of doubles ): atomic masses [a.u. of mass]
+        univ_file ( string ): name of the file that contains the Universe properties
+
+    Returns:
+        None: but adds new atoms to the System object, modifies the syst variable
+
     """
 
     rnd = Random()
@@ -490,7 +620,7 @@ def add_atom_to_system(syst, coords, MaxCoords, Nx,Ny,Nz, a,b,c, shift, elt, mas
         shift ( VECTOR ): essentially a coordinate of the atom in the unit cell [Bohr]
         elt ( string ): Element name
         mass ( double ): mass of the atom [a.u. of mass, 1 = mass of an electron]        
-        scl ( double ): width of the momentum distrubution [a.u. of momentum]
+        scl ( VECTOR ): momentum rescaling factors along each direction [a.u. of momentum]
         max_coord ( int ): maximal coordination number of the added atom allowed
         rnd ( Random ): an instance of the random number generator class
         inp_units ( int ): defines the units of variables stored in shift, a,b, and c
@@ -536,80 +666,3 @@ def add_atom_to_system(syst, coords, MaxCoords, Nx,Ny,Nz, a,b,c, shift, elt, mas
 
                 i = i + 1
 
-
-
-def crop_sphere_xyz(infile, outfile, Rcut):
-    """
-    infile - the name of the input file with the input structure (xyz format)
-    outfile - the name of the output file where the resulting structure be printed out (xyz format)
-    """
-
-    f = open(infile,"r")
-    A = f.readlines()
-    f.close()
-
-    tmp = A[0].split()
-    Natoms = int(float(tmp[0]))
-    print A[1][:-1]
-
-    # Read coordinates and compute COM
-    L = []
-    R = []
-    Rcom = [0.0,0.0,0.0]
-
-    for a in A[2:]:
-        tmp = a.split()
-        if len(tmp)==4:
-            x = float(tmp[1]) 
-            y = float(tmp[2])
-            z = float(tmp[3])
-
-            Rcom[0] = Rcom[0] + x
-            Rcom[1] = Rcom[1] + y
-            Rcom[2] = Rcom[2] + z
-
-            L.append(tmp[0])
-            R.append([x,y,z])
-
-    # Geometric center
-    Rcom[0] = Rcom[0] / Natoms
-    Rcom[1] = Rcom[1] / Natoms
-    Rcom[2] = Rcom[2] / Natoms
-
- 
-    # Compute remaining number of atoms
-    Nat = 0
-    indx = []
-    for i in range(0,Natoms):
-        r = math.sqrt((R[i][0] - Rcom[0])**2 + (R[i][1] - Rcom[1])**2 + (R[i][2] - Rcom[2])**2)
-        if(r<=Rcut):
-            Nat = Nat + 1
-            indx.append(i)
-            
-
-    # Print resulting coordinates
-    f1 = open(outfile,"w")
-    f1.write("%5i\n" % Nat)
-    f1.write(A[1])
-
-
-    coords = []
-    lab = []     
-    for i in indx:
-        coords.append(VECTOR(R[i][0], R[i][1], R[i][2]))
-        lab.append(L[i])
-        f1.write("%s  %12.6f  %12.6f  %12.6f \n" % (L[i], R[i][0], R[i][1], R[i][2]) )
-
-    f1.close()
-
-    return lab, coords
-
-
-
-
-if __name__=='__main__':
-    a = [     5.4307100000000000,    0.0000000000000000,    0.0000000000000000 ]
-    b = [     0.0000000000000000,    5.4307100000000000,    0.0000000000000000 ]
-    c = [     0.0000000000000000,    0.0000000000000000,    5.4307100000000000 ]
-    generate_replicas_xyz(a, b, c, 5, 5, 5 , "Si.xyz", "cube10.xyz")
-    crop_sphere_xyz("cube10.xyz", "qd_5.xyz", 5.0)
