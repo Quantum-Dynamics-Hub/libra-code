@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2017-2018 Brendan A. Smith, Wei Li, Alexey V. Akimov
+#* Copyright (C) 2017-2019 Brendan A. Smith, Wei Li, Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -12,24 +12,30 @@
 #  
 #
 """
-    The module usage example:
-    
-    # Regular NBRA-NA-MD:
-    import step4
 
-    Hvib = step4.get_Hvib2(params)  # get the Hvib for all data sets
-    step4.transform_data(Hvib, {})  # default parameters don't change data
-    step4.run(Hvib, params)         # this ```params``` could be the same or different from the above
+.. module:: step4
+   :platform: Unix, Windows
+   :synopsis: This module implements functions for running TSH calculations within the NBRA
 
 
-    # On-the-fly QSH-NA-MD:
-    import step4
-    import qsh
+   Example:    
 
-    Hvib = qsh.run(qsh_params)      # generate the QSH Hvib data sets, see the ```qsh.run()``` for 
-                                    # the description of the ```qsh_params``` parameters
-    step4.transform_data(Hvib, {})  # default parameters don't change data
-    step4.run(Hvib, params)         # 
+       # Regular NBRA-NA-MD:
+       >>> import step4
+       >>> 
+       >>> Hvib = step4.get_Hvib2(params)  # get the Hvib for all data sets
+       >>> step4.transform_data(Hvib, {})  # default parameters don't change data
+       >>> step4.run(Hvib, params)         # this ```params``` could be the same or different from the above
+
+       # On-the-fly QSH-NA-MD:
+       >>> import step4
+       >>> import qsh
+       >>> Hvib = qsh.run(qsh_params)      # generate the QSH Hvib data sets, see the ```qsh.run()``` for 
+       >>>                                 # the description of the ```qsh_params``` parameters
+       >>> step4.transform_data(Hvib, {})  # default parameters don't change data
+       >>> step4.run(Hvib, params)         # 
+
+.. moduleauthor:: Brendan A. Smith, Wei Li, Alexey V. Akimov
 
 
 """
@@ -52,18 +58,41 @@ import qsh
 
 
 def get_Hvib(params):
-    """
-    Read a single set of generic vibronic Hamiltonian files 
+    """Read a single set of vibronic Hamiltonian files 
 
-    Required parameter keys:
+    Args:
+        params ( dictionary ): parameters controlling the function execution
 
-    params["nstates"]          [int] - how many lines/columns in the file 
-    params["active_space"]     [list of ints] - the indices of the states we care about, default: range(nstates)
-    params["nfiles"]           [int] - how many files to read, starting from index 0
-    params["Hvib_re_prefix"]   [string] - prefixes of the files with real part of the MO overlaps at time t
-    params["Hvib_re_suffix"]   [string] - suffixes of the files with real part of the MO overlaps at time t
-    params["Hvib_im_prefix"]   [string] - prefixes of the files with imaginary part of the MO overlaps at time t
-    params["Hvib_im_suffix"]   [string] - suffixes of the files with imaginary part of the MO overlaps at time t
+            Required parameter keys:
+
+            * **params["nstates"]** ( int ): how many lines/columns in the file [Required!]
+            * **params["nfiles"]** ( int ): how many files to read, starting from index 0 [Required!]
+            * **params["Hvib_re_prefix"]** ( string ): prefixes of the files with real part of the Hvib(t) [Required!]
+            * **params["Hvib_im_prefix"]** ( string ): prefixes of the files with imaginary part of the Hvib(t) [Required!]
+            * **params["active_space"]** ( list of ints ): the indices of the states we care 
+                about. These indices will be used to determine the size of the created CMATRIX objects
+                and only these states will be extracted from the original files [ default: range(nstates) ]
+            * **params["Hvib_re_suffix"]** ( string ): suffixes of the files with real part of the Hvib(t) [default: "_re"]
+            * **params["Hvib_im_suffix"]** ( string ): suffixes of the files with imaginary part of the Hvib(t) [default: "_im"]
+
+    Returns:
+        list of CMATRIX objects: Hvib: 
+            a time series of Hvib matrices, such that Hvib[time] is a Hvib at time step `time`
+
+    Example:
+        This example will read 10 pairs of files: "Hvib_0_re", "Hvib_0_im", "Hvib_1_re", "Hvib_1_im", ...
+        "Hvib_9_re", "Hvib_9_im". Each file should contain a 4 x 4 matrix of numbers. It will generate a 
+        list of 4 x 4 complex-valued matrices.
+
+        >>> hvib = get_Hvib({"nstates":4, "nfiles":10, "Hvib_re_prefix":"Hvib", "Hvib_im_prefix":"Hvib"})
+
+
+        The following example will do the same as the example above, however the intially-read 4 x 4 matrices will
+        be partially discarded. Out of 16 values only 4 (the upper left block of 4 numbers)  will be stored in 
+        the resulting list of 2 x 2 complex-valued matrices. 
+
+        >>> hvib = get_Hvib({"nstates":4, "nfiles":10, "Hvib_re_prefix":"Hvib", "Hvib_im_prefix":"Hvib", "active_space":[0,1]})
+
 
     """
 
@@ -85,23 +114,26 @@ def get_Hvib(params):
 
 
 def get_Hvib2(params):
-    """
-    Read a several sets of generic vibronic Hamiltonian files 
+    """Reads several sets of vibronic Hamiltonian files 
 
-    Required parameter keys:
+    Args:
+        params ( dictionary ): parameters controlling the function execution [Required!]
 
-    params["data_set_paths"]   [list of strings] - define the pathes of the directories where the vibronic Hamiltonians for
-                               different data sets (independent MD trajectories) are located
+            Required parameter keys:
 
-    === Required by the get_Hvib() ===
+            * **params["data_set_paths"]** ( list of strings ):
+                define the paths of the directories where the vibronic Hamiltonian files for
+                different data sets (e.g. independent MD trajectories) are located. 
+            .. note::
+                In addition, requires parameters described in
+                :func:`libra_py.workflows.nbra.step4.getHvib`
 
-    params["nstates"]          [int] - how many lines/columns in the file 
-    params["nfiles"]           [int] - how many files to read, starting from index 0
-    params["Hvib_re_prefix"]   [string] - prefixes of the files with real part of the MO overlaps at time t
-    params["Hvib_re_suffix"]   [string] - suffixes of the files with real part of the MO overlaps at time t
-    params["Hvib_im_prefix"]   [string] - prefixes of the files with imaginary part of the MO overlaps at time t
-    params["Hvib_im_suffix"]   [string] - suffixes of the files with imaginary part of the MO overlaps at time t
-
+    Returns:
+        list of lists of CMATRIX: Hvib: 
+            the time series of Hvib matrices for several data sets, such that
+            Hvib[idata][time] is a CMATRIX for the data set indexed by `idata`
+            at time `time`
+            
     """
 
     critical_params = [ "data_set_paths" ] 

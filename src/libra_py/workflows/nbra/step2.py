@@ -8,7 +8,7 @@
 #***********************************************************/
 
 """
-.. module:: build
+.. module:: step2
    :platform: Unix, Windows
    :synopsis: This module implements functions for building molecular structures
 
