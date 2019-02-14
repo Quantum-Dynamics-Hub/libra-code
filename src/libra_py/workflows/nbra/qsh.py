@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2018 Wei Li and Alexey V. Akimov
+#* Copyright (C) 2018-2019 Wei Li and Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -32,34 +32,50 @@ import libra_py.acf_vector as acf_vector
 import influence_spectrum
 
 
-def compute_freqs(nstates, H_vib_re, H_vib_im, dt, Nfreqs, filename, logname, dw, wspan):
-    """
-    Compute a matrix of frequencies for each matrix element
+def compute_freqs(H_vib, params):
+    """Compute a matrix of frequencies for each matrix element
 
-    nstates   [int] - the number of states (defines the dimensionality of the matrices)
-    H_vib_re  [list of MATRIX] - time-series: real parts of the vibronic Hamiltonian
-    H_vib_im  [list of MATRIX] - time-series: imaginary parts of the vibronic Hamiltonian
-    dt        [double] - time step between the data in the time-series [a.u. of time]
-    Nfreqs    [int] - the maximal number of frequencies we want to extract
-    filename  [string] - the prefix of the filenames generated
-    logname   [string] - the name of the log-file
-    dw        [double] - the freqency grinding distance [cm^-1, Default: 1.0 cm^-1]
-    wspan     [double] - the width of the spectral window to resolve [cm^-1, Default: 3000 cm^-1]
+    Args:
 
-    """
+        H_vib ( list of CMATRIX objects ): the vibronic Hamiltonian for all time-points
+            H_vib[istep].get(i,j) - i,j matrix element for the step `istep`
     
-    freqs = [ [ [] for i in xrange(nstates)] for j in xrange(nstates)]
-    for i in xrange(nstates):
-        for j in xrange(nstates):
-            if i == j:
-                freqs[i][j] = influence_spectrum.compute(H_vib_re, i, j, dt, Nfreqs, filename+"_re_", logname, dw, wspan)
-            else:
-                freqs[i][j] = influence_spectrum.compute(H_vib_im, i, j, dt, Nfreqs, filename+"_im_", logname, dw, wspan)
+        params ( dictionary ): the parameters that control the execution of this function
 
-    if len(freqs[0][0]) < Nfreqs:
-        Nfreqs = len(freqs[0][0])
-        print "The input Nfreqs is larger than the maximal number of the peaks, changing it to ", Nfreqs
+            * **params["dt"]** ( double ): time step between the data in the time-series [a.u. of time]
+            * **params["nfreqs"]** ( int ): the maximal number of frequencies we want to extract
+            * **params["dw"]** ( double ): the freqency grid distance [cm^-1, Default: 1.0 cm^-1]
+            * **params["wspan"]** ( double ): the width of the spectral window to resolve [cm^-1, Default: 4000 cm^-1]
+            * **params["do_output"]** ( Boolean ): whether to generate the output files [default: False]
+            * **params["filename"]** ( string ): the prefix of the filenames generated. Doesn't matter 
+                if `do_output == False`
+            * **params["logname"]** ( string ): the name of the log-file. Doesn't matter if `do_output == False`
 
+    """
+
+    # Set defaults and check critical parameters
+    critical_params = [ ] 
+    default_params = { "dt":41.0, "nfreqs":1, "dw":1.0, "wspan":4000.0, 
+                       "do_output":False, "logname":"out.log", "filename":"influence_spectra_" }
+    comn.check_input(params, default_params, critical_params)
+
+
+    # Local variables and dimensions
+    nsteps = len(H_vib)    
+    nstates = H_vib[0].num_of_rows
+
+    dt = params["dt"]
+    dw = params["dw"] * units.inv_cm2Ha           # convert to Ha (atomic units)
+    wspan = params["wspan"] * units.inv_cm2Ha     # convert to Ha (atomic units)    
+    do_center = params["do_center"]
+    do_output = params["do_output"] 
+    filename = params["filename"]
+    logname = params["logname"]
+
+
+    freqs = influence_spectrum.compute_all(H_vib, params)
+
+    
     # Ok, now we have the function - sum of sines, so let's compute the standard deviation
     # This is a silly method - just do it numerically
     dev = [ [ 0.0 for i in xrange(nstates)] for j in xrange(nstates)]
@@ -68,14 +84,16 @@ def compute_freqs(nstates, H_vib_re, H_vib_im, dt, Nfreqs, filename, logname, dw
         for j in xrange(nstates):
 
             # Adjust the number of frequencies
-            if len(freqs[i][j]) < Nfreqs:
-                Nfreqs = len(freqs[i][j])
+            nfreqs = params["nfreqs"]            
+            if len(freqs[i][j]) < nfreqs:
+                nfreqs = len(freqs[i][j])
 
+            # Compute the variation of the QSH terms
             fu_ave, fu2_ave = 0.0, 0.0
             for r in xrange(1000000):
 
                 fu = 0.0
-                for k in xrange(Nfreqs):
+                for k in xrange(nfreqs):
                     fu = fu + freqs[i][j][k][2] * math.sin(freqs[i][j][k][0]*r*dt)
 
                 fu_ave = fu_ave + fu
@@ -84,6 +102,8 @@ def compute_freqs(nstates, H_vib_re, H_vib_im, dt, Nfreqs, filename, logname, dw
             dev[i][j] = math.sqrt( (fu2_ave - fu_ave**2) / 1000000.0 ) 	
     
     return freqs, dev
+
+
 
 
 def compute_qs_Hvib(Nfreqs, freqs, t, nstates, 

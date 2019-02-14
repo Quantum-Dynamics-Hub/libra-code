@@ -65,12 +65,23 @@ def center_data(data):
     return data_new
 
 
-def acf(data,dt):
+def acf(data, dt, opt=0):
     """
     Compute the autocorrelation function of the given data set
 
     data - (list of MATRIX (ndof x 1) objects) - Data to analyze
     dt - (float) - time distance between the adjacent data points
+
+
+    Compute the autocorrelation function of the given data set
+    using the method described at:
+    https://www.itl.nist.gov/div898/handbook/eda/section3/autocopl.htm
+
+    Where C_h = (1/N) Sum_{t=1,N-h} (Y[t]*Y[t+h])
+
+    data - (list of MATRIX (ndof x 1) objects) - Data to analyze
+    dt - (float) - time distance between the adjacent data points
+
     """
 
     sz = len(data)    # For now, we will use the full data set 
@@ -81,18 +92,21 @@ def acf(data,dt):
     autocorr = []
     ndof = data[0].num_of_rows
 
-    for i in range(0,sz):
+    for i in xrange(sz):
         total = 0.0
-        count = 0.0
-        for j in range(0,sz-i):
+        for j in xrange(sz-i):
             total += (data[j].T()*data[j+i]).get(0)   # scalar product
-            count += 1.0
-        autocorr.append( total/(count*ndof) )
-
+        if opt==0:
+            autocorr.append( total/((sz-i)*ndof) )  # less bias, chemistry adopted
+        elif opt==1:
+            autocorr.append( total/(sz*ndof) )      # statistically-preferred option
 
     #normalize the ACF	
     nautocorr = []
-    norm = 1.0/autocorr[0]
+    norm = 1.0
+    if math.fabs(autocorr[0])>0.0:
+        norm = 1.0/autocorr[0]
+
     T = []
     for it in range(0,sz):
         T.append(it*dt)
@@ -100,47 +114,6 @@ def acf(data,dt):
 
     return T, nautocorr, autocorr
 
-
-
-def acf2(data,dt):
-    """
-    Compute the autocorrelation function of the given data set
-    using the method described at:
-    https://www.itl.nist.gov/div898/handbook/eda/section3/autocopl.htm
-
-    Where C_h = (1/N) Sum_{t=1,N-h} (Y[t]-Y_avg)(Y[t+h]-Y_avg)
-
-    data - (list of MATRIX (ndof x 1) objects) - Data to analyze
-    dt - (float) - time distance between the adjacent data points
-    """
-
-    N   = len(data)
-    avg = MATRIX(data[0].num_of_rows,1)
-    for i in xrange(N):
-        avg += data[i]
-    avg /= float(N)
-
-    T, nC, C  = [], [], []
-    #out1 = open("acf.txt","w")
-    for k in xrange(N):
-
-        # Compute the autocovariance of data 
-        acovar = MATRIX(1,1)
-        for i in xrange(N - k):
-            acovar += ( (data[i]-avg).T() * (data[i+k]-avg) )
-        acovar /= float(N)
-
-        # Compute the variance of data 
-        var = MATRIX(1,1)
-        for i in xrange(N):
-            var += (data[i]-avg).T() * (data[i]-avg)
-        var /= float(N)
-
-        C.append(acovar.tr()/var.tr())
-        nC.append(C[k]/C[0])
-        T.append(k*dt)
-
-    return T, nC, C
 
 
 def ft(acf_data, wspan, dw, dt):  
