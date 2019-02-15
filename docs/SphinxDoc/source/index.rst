@@ -26,6 +26,11 @@ workflows.nbra.step4
    :members:
 
 
+acf_matrix
+=============
+.. automodule:: libra_py.acf_matrix
+   :members:
+
 
 build
 =============

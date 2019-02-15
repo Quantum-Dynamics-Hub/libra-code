@@ -1,6 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2018 Alexey V. Akimov                                                   
-#* Copyright (C) 2017 Wei Li, Alexey V. Akimov                                                   
+#* Copyright (C) 2017-2019 Brendan Smith, Wei Li, Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -8,19 +7,20 @@
 #* See the file LICENSE in the root directory of this distribution   
 #* or <http://www.gnu.org/licenses/>.          
 #***********************************************************************************
-## \file acf_matrix.py 
-# This module implements the functionality to compute Autocorrelation Functions (ACF)
-# and do some transformations of them
-# The assumption is that data are provided in a matrix form - not vectors, so we can handle the
-# data of arbitrary dimensionality
-#
-# The module contain the following functions:
-# average(data)
-# center_data(data)
-# center_data2(data)
-# acf(data)
-# recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectr_filename="spectrum_.txt", do_center=1)
-# recipe2(data, dt, wspan, dw)
+"""
+.. module:: acf_matrix
+   :platform: Unix, Windows
+   :synopsis: 
+       This module implements the functionality to compute Autocorrelation Functions (ACF)
+       and do some transformations of them
+
+       The assumption is that data are provided in a matrix form - not vectors, so we can handle the
+       data of arbitrary dimensionality
+
+
+.. moduleauthor:: Brendan Smith, Wei Li, Alexey V. Akimov
+
+"""
 
 import os
 import sys
@@ -34,9 +34,13 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 
 def average(data):
-    """    
-    This function computes the average value of the data
-    # data - (list of MATRIX - (ndof x 1) objects)
+    """This function computes the average value of the data series
+
+    Args:
+        data ( list of MATRIX(ndof, 1) objects ): sequence of real-valued ndof-dimensional vectors
+
+    Returns:
+        MATRIX(ndof, 1): the average value for each DOF in the time-series
     """
 
     ndof = data[0].num_of_rows  
@@ -52,9 +56,15 @@ def average(data):
 
 def center_data(data):
     """
+
     This function centers data on zero, by subtracting the average 
     value from each element, dof by dof
-    data - (list of MATRIX (ndof x 1) objects) - The data
+
+    Args:
+        data ( list of MATRIX(ndof, 1) objects ): sequence of real-valued ndof-dimensional vectors
+
+    Returns:
+        MATRIX(ndof, 1): the fluctuation (deviation) value for each DOF in the time-series (dX(t) = X(t) -<X> )
     """
 
     data_new = []    
@@ -66,21 +76,26 @@ def center_data(data):
 
 
 def acf(data, dt, opt=0):
-    """
-    Compute the autocorrelation function of the given data set
+    """Compute the autocorrelation function of the given data set
 
-    data - (list of MATRIX (ndof x 1) objects) - Data to analyze
-    dt - (float) - time distance between the adjacent data points
+    Args:
+        data ( list of MATRIX(ndof, 1) objects ): sequence of real-valued ndof-dimensional vectors
+        dt ( double ): time distance between the adjacent data points [units: general]
+        opt ( int ): selector of the convention to to compute ACF
 
+            * 0 : the chemist convention,  (1/(N-h)) Sum_{t=1,N-h} (Y[t]*Y[t+h])
+            * 1 : the statistician convention, (1/N) Sum_{t=1,N-h} (Y[t]*Y[t+h])
 
-    Compute the autocorrelation function of the given data set
-    using the method described at:
-    https://www.itl.nist.gov/div898/handbook/eda/section3/autocopl.htm
+    Returns:
+        tuple: (T, nautocorr, autocorr), where:
 
-    Where C_h = (1/N) Sum_{t=1,N-h} (Y[t]*Y[t+h])
+            T (list of sz doubles ): lag time scale for the ACF [units: same as for dt]
+            nautocorr (list of sz doubles ): normalized ACF
+            autocorr (list of sz doubles ): un-normalized ACF
 
-    data - (list of MATRIX (ndof x 1) objects) - Data to analyze
-    dt - (float) - time distance between the adjacent data points
+    SeeAlso:
+        https://www.itl.nist.gov/div898/handbook/eda/section3/autocopl.htm
+
 
     """
 
@@ -116,19 +131,28 @@ def acf(data, dt, opt=0):
 
 
 
-def ft(acf_data, wspan, dw, dt):  
-    """
+def ft(X, wspan, dw, dt):  
+    """Discrete Fourier transform
+
     We do have a number of FT and FFT functions in the Libra core, but
     this one may be also convenient to have
 
-    acf_data - (list of floats): C(0), C(dt), C(2*dt), etc. where C - is an ACF
-    wspan (float) - is the range of the frequencies we want to compute
-    dw (float) - is the distance between the nearby points on the frequency scale
-    dt (float) - is the time step
+    Args:
+        X ( list of floats ): data time-series
+        wspan ( float ): is the range (the maximal value) of frequencies we want to compute
+        dw ( float ): is the distance between the nearby points on the frequency scale
+        dt ( float ): is the time step
+
+    Returns: 
+        tuple: (W, J): where
+
+            W ( list of npoints doubles): frequencies               
+            J ( list of npoints doubles): amplitudes of the cos-transform
+
     """
 
     ############### based on the code from Pyxaid ###################
-    sz=len(acf_data)    # the # of input points
+    sz=len(X)    # the # of input points
     npoints = int(wspan/dw)   # the # of output points    
 
     J = [0.0] * npoints   # FT
@@ -140,7 +164,7 @@ def ft(acf_data, wspan, dw, dt):
         J[iw] = 1.0  # corresponds to it = 0
         for it in range(1,sz):
             t = it * dt
-            J[iw] += 2.0*math.cos(w * t)*acf_data[it]
+            J[iw] += 2.0*math.cos(w * t)*X[it]
 
         W[iw] = w
         J[iw] *= dt
@@ -148,15 +172,65 @@ def ft(acf_data, wspan, dw, dt):
     return W, J
 
 
+def py_cft(X, dt):  
+    """Complex Discrete Fourier transform
+
+    We do have a number of FT and FFT functions in the Libra core, but
+    this one may be also convenient to have
+
+    According to this definition: http://mathworld.wolfram.com/DiscreteFourierTransform.html
+
+    Args:
+        X ( list of floats ): data time-series
+        wspan ( float ): is the range (the maximal value) of frequencies we want to compute
+        dw ( float ): is the distance between the nearby points on the frequency scale
+        dt ( float ): is the time step
+
+    Returns: 
+        tuple: (W, C, S): where
+
+            W ( list of npoints doubles): frequencies               
+            C ( list of npoints doubles): amplitudes of the cos-transform
+            S ( list of npoints doubles): amplitudes of the sin-transform
+
+    """
+
+    ############### based on the code from Pyxaid ###################
+    N = len(X)    # the # of input points
+    dv = 1.0/(N*dt)
+    dw = 2.0*math.pi*dv
+
+    W = [0.0] * npoints   # frequencies
+    C = [0.0] * npoints   # FT
+    S = [0.0] * npoints   # FT
+
+    for iw in xrange(N):
+        w = iw * dw
+
+        C[iw], S[iw] = 0.0, 0.0
+        for it in xrange(N):
+            t = it * dt            
+            C[iw] += math.cos(w * t)*X[it]   
+            S[iw] -= math.sin(w * t)*X[it]
+
+        W[iw] = w
+
+    return W, C, S
+
+
+
+
 def recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spectrum.txt", do_center=1):
     """
-    data (MATRIX (ndof x 1) ) - data points (each is a multidimensional)
-    dt (float) [ fs ] - timestep between adjacent data points
-    dspan (float) [ cm^-1 ] - window of frequencies for the Fourier transform
-    dw (float) [ cm^-1 ] - grid points spacing in the frequency domain
-    acf_filename (string) - the name of the file where to print the ACF
-    spectrum_filename (string) - the name of the file where to print the spectrum
-    do_center (int) - a flag controlling whether to center data (=1) or not (=0)
+    
+    Args:
+        data ( MATRIX(ndof , 1) ): data points (each is a multidimensional)
+        dt ( float ): timestep between adjacent data points [ units: fs ]
+        dspan ( float ): window of frequencies for the Fourier transform [ cm^-1 ]
+        dw ( float ): grid points spacing in the frequency domain [ cm^-1 ]
+        acf_filename ( string ): the name of the file where to print the ACF
+        spectrum_filename ( string ): the name of the file where to print the spectrum
+        do_center ( int ): a flag controlling whether to center data (=1) or not (=0)
     Centering means we subtract the average value (over all the data points) from all
     the data points - this way, we convert values into their fluctuations.
     """
