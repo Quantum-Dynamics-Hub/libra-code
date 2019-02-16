@@ -32,6 +32,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+import units
+
 
 def average(data):
     """This function computes the average value of the data series
@@ -220,41 +222,43 @@ def py_cft(X, dt):
 
 
 
-def recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spectrum.txt", do_center=1):
+def recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spectrum.txt", do_center=1, opt=0):
     """
     
     Args:
-        data ( MATRIX(ndof , 1) ): data points (each is a multidimensional)
-        dt ( float ): timestep between adjacent data points [ units: fs ]
-        dspan ( float ): window of frequencies for the Fourier transform [ cm^-1 ]
-        dw ( float ): grid points spacing in the frequency domain [ cm^-1 ]
+        data ( list of MATRIX(ndof, 1) objects ): sequence of real-valued ndof-dimensional vectors
+        dt ( double ): time distance between the adjacent data points [units: fs]
+        wspan ( double ): window of frequencies for the Fourier transform [ units: cm^-1 ]
+        dw ( double ): grid points spacing in the frequency domain [ units: cm^-1 ]
         acf_filename ( string ): the name of the file where to print the ACF
         spectrum_filename ( string ): the name of the file where to print the spectrum
         do_center ( int ): a flag controlling whether to center data (=1) or not (=0)
-    Centering means we subtract the average value (over all the data points) from all
-    the data points - this way, we convert values into their fluctuations.
+            Centering means we subtract the average value (over all the data points) from all
+            the data points - this way, we convert values into their fluctuations.
+
+        opt ( int ): selector of the convention to to compute ACF
+
+            * 0 : the chemist convention,  (1/(N-h)) Sum_{t=1,N-h} (Y[t]*Y[t+h])
+            * 1 : the statistician convention, (1/N) Sum_{t=1,N-h} (Y[t]*Y[t+h])
+
+
+    Returns:
+        None: 
+
+
     """
 
-
-    # Parameters
-    inv_cm2ev = (1.0/8065.54468111324)
-    ev2Ha = (1.0/27.211)    # 27.2 ev is 1 Ha 
-    inv_cm2Ha = inv_cm2ev * ev2Ha
-    fs2au = (1.0/0.02419)   # 40 a.u. is 1 fs 
-
-        
-    wspan = wspan * inv_cm2Ha  # convert to Ha (atomic units)
-    dw = dw * inv_cm2Ha        # convert to Ha (atomic units)
-    dt = dt * fs2au            # convert to  atomic units of time
-
+    wspan = wspan * units.inv_cm2Ha  # convert to Ha (atomic units)
+    dw = dw * units.inv_cm2Ha        # convert to Ha (atomic units)
+    dt = dt * units.fs2au            # convert to  atomic units of time
     
     # ACFs
-    T, norm_acf, row_acf = acf( center_data(data) , dt)
+    T, norm_acf, row_acf = acf( center_data(data) , dt, opt)
     sz = len(T)
 
     f = open(acf_filename,"w")
     for it in xrange(sz):
-        f.write("%8.5f  %8.5f  %8.5f  \n" % (T[it]/fs2au , norm_acf[it], row_acf[it]))
+        f.write("%8.5f  %8.5f  %8.5f  \n" % (T[it]/units.fs2au , norm_acf[it], row_acf[it]))
     f.close()
 
     # FT
@@ -262,7 +266,7 @@ def recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spec
     sz = len(W)
     f = open(spectrum_filename,"w")
     for iw in xrange(sz):
-        f.write("%8.5f  %8.5f  \n" % (W[iw]/inv_cm2Ha, J[iw] ) )
+        f.write("%8.5f  %8.5f  \n" % (W[iw]/units.inv_cm2Ha, J[iw] ) )
     f.close()
 
 
@@ -281,17 +285,9 @@ def recipe2(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spec
     the data points - this way, we convert values into their fluctuations.
     """
 
-
-    # Parameters
-    inv_cm2ev = (1.0/8065.54468111324)
-    ev2Ha = (1.0/27.211)    # 27.2 ev is 1 Ha 
-    inv_cm2Ha = inv_cm2ev * ev2Ha
-    fs2au = (1.0/0.02419)   # 40 a.u. is 1 fs 
-
-
-    wspan = wspan * inv_cm2Ha  # convert to Ha (atomic units)
-    dw = dw * inv_cm2Ha        # convert to Ha (atomic units)
-    dt = dt * fs2au            # convert to  atomic units of time
+    wspan = wspan * units.inv_cm2Ha  # convert to Ha (atomic units)
+    dw = dw * units.inv_cm2Ha        # convert to Ha (atomic units)
+    dt = dt * units.fs2au            # convert to  atomic units of time
 
 
     # ACFs

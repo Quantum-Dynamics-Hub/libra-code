@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2015-2016 Alexey V. Akimov
+#* Copyright (C) 2015-2019 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -8,10 +8,14 @@
 #* or <http://www.gnu.org/licenses/>.
 #*
 #*********************************************************************************/
-## \file LoadMolecule.py 
-# This module implements functions for loading data into a Chemobject objects - by reading 
-# formatted data files. 
+"""
+.. module:: LoadMolecule
+   :platform: Unix, Windows
+   :synopsis: This module implements functions for loading data into a Chemobject 
+       objects - by reading formatted data files. 
+.. moduleauthor:: Alexey V. Akimov
 
+"""
 import re
 import os
 import sys
@@ -23,31 +27,37 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 from regexlib import *
+import units
+
 
 def Load_Molecule(univ,syst,mol_file,format, verbosity=0):
-## -------- Load molecular system -------------
-# Specify format manually (this gives flexibility) of format recognizable by program
-# In this particular implementation my .ent format is loading
-# \param[in] univ A Universe object, containing basic information about chemical elements
-# \param[in,out] syst The Chemobjects object that represents molecular system - this is what we construct
-# \param[in] mol_file The name of the file containing the molecular structure
-# \param[in] format The name of the format according to which the file "mol_file" is assumed to be formatted
+    """Load molecular system from various formats
+ 
+    Specify format manually (this gives flexibility) of format recognizable by program
 
-######### Assume coordinates are given in Angstroms #############
+    Args:
+        univ ( Universe object ): Contains the basic information about chemical elements
+        syst ( System ): The Chemobjects object that represents molecular system - this is what we construct
+        mol_file ( string ): The name of the file containing the molecular structure
+        format ( string ): The name of the format according to which the file "mol_file" is assumed to be formatted
+            Available options are:
+ 
+            * pdb
+            * pdb_1
+            * true_pdb
+            * true_pdb2
+            * xyz
+            * iqmol_pdb
 
-    Angst_to_Bohr = 1.889725989  
+    Returns:
+        None: but the `syst` object is modified to add the atoms and bonds, and to group atoms together
 
+    Note:
+        We assume that the coordinates in the files read are given in Angsrom.
 
-#------- Here are some basic patterns -------------
-#    INT    = '([1-9]([0-9]*))'
-#    NINT   = '([0-9]+)'
-#    SP     = '\s+'    
-#    DOUBLE = '([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?)'
-#    WORD   = '([a-zA-Z]+)'
-#    ID     = '(([a-zA-Z]+)([a-zA-Z]+|\d+)*)'
-#    PHRASE = '"((\w|\W)+)"'
-#    compINT = re.compile(INT)
+        However, the syst stores this data in the atomic units (Borh), so conversion happens
 
+    """
 
 #------- Here we define a format of file ----------
 # p - means 'Pattern'
@@ -58,9 +68,6 @@ def Load_Molecule(univ,syst,mol_file,format, verbosity=0):
     pAtom_mol     = '(?P<Atom_mol>'+WORD+')'+SP
     pAtom_chain   = '(?P<Atom_chain>'+WORD+')'+SP
     pAtom_id1     = '(?P<Atom_id1>'+DOUBLE+')'+SP
-#    pAtom_x_coord = '(?P<Atom_x_coord>'+DOUBLE+')'+SP
-#    pAtom_y_coord = '(?P<Atom_y_coord>'+DOUBLE+')'+SP
-#    pAtom_z_coord = '(?P<Atom_z_coord>'+DOUBLE+')'+SP
     pAtom_type    = '(?P<Atom_type>'+INT+')'+SP
     pAtom_occ     = '(?P<Atom_occ>'+DOUBLE+')'+SP
     pAtom_charge  = '(?P<Atom_charge>'+DOUBLE+')'+SP
@@ -123,9 +130,9 @@ def Load_Molecule(univ,syst,mol_file,format, verbosity=0):
             else:
                 atom_dict["Atom_element"] = a[m1.start('Element_name'):m1.end('Element_name')]
 
-            atom_dict["Atom_cm_x"] = float(a[m1.start('X_val'):m1.end('X_val')]) * Angst_to_Bohr
-            atom_dict["Atom_cm_y"] = float(a[m1.start('Y_val'):m1.end('Y_val')]) * Angst_to_Bohr
-            atom_dict["Atom_cm_z"] = float(a[m1.start('Z_val'):m1.end('Z_val')]) * Angst_to_Bohr
+            atom_dict["Atom_cm_x"] = float(a[m1.start('X_val'):m1.end('X_val')]) * units.Angst
+            atom_dict["Atom_cm_y"] = float(a[m1.start('Y_val'):m1.end('Y_val')]) * units.Angst
+            atom_dict["Atom_cm_z"] = float(a[m1.start('Z_val'):m1.end('Z_val')]) * units.Angst
 
             if format=="pdb" or format=="true_pdb":
                 atom_dict["Atom_charge"] = float(a[m1.start('Atom_charge'):m1.end('Atom_charge')])
@@ -151,7 +158,6 @@ def Load_Molecule(univ,syst,mol_file,format, verbosity=0):
                 print 'LINK_ATOMS ',lst[0][0], ' and ', lst[i][0],'...'
             syst.LINK_ATOMS(int(float(lst[0][0])),int(float(lst[i][0])))
             i = i + 1
-        print "----------------------------"
 
     #----------- Group atoms --------------------
     j = 1
