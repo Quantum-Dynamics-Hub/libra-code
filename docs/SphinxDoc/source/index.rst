@@ -37,6 +37,19 @@ build
 .. automodule:: libra_py.build
    :members:
 
+
+fit
+=============
+.. automodule:: libra_py.fit
+   :members:
+
+
+LoadMolecule
+=============
+.. automodule:: libra_py.LoadMolecule
+   :members:
+
+
 namd
 =============
 .. automodule:: libra_py.namd

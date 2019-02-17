@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2017 Alexey V. Akimov                                                   
+#* Copyright (C) 2017-2019 Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -7,23 +7,36 @@
 #* See the file LICENSE in the root directory of this distribution   
 #* or <http://www.gnu.org/licenses/>.          
 #***********************************************************************************
-## \file fit.py 
-# This module implements a linear regression method and several pre-defined fit functions
-#
+"""
+.. module:: fit
+   :platform: Unix, Windows
+   :synopsis: This module implements a linear regression method and several pre-defined fit functions
+.. moduleauthor:: Alexey V. Akimov
+
+"""
 
 import math
 
 def Regression(X,Y, opt=0):
-    """   
-    Performs a linear regression of the Y vs. X of the form:
-    Y = b*x      opt=0  default
-    Y = a + b*x  opt=1
+    """
 
-    X     [list of double]  x axis data
-    Y     [list of double]  y axis data
-    opt   [int: 0 or 1]     type of the fitting to perform
-                            opt = 0:  Y = b*X  (default)
-                            opt = 1:  Y = a + b*X
+    Performs a linear regression of the Y vs. X of the form:    
+
+        Y = b*x      opt=0  (default)
+        Y = a + b*x  opt=1
+
+    Args:
+        X ( list of doubles ): The x axis data
+        Y ( list of doubles ): The y axis data
+        opt ( int ): Selects the type of fitting to perform:
+
+            * opt = 0: The fitting is of the form: Y = b*X  (default)
+            * opt = 1: The fitting is of a more general form: Y = a + b*X
+
+    Returns:
+        [double, double]: the linear regression coefficients a and b
+
+            For opt==0, a = 0 
 
     """
     x,y,x2,y2,xy = 0.0, 0.0, 0.0, 0.0, 0.0
@@ -52,8 +65,48 @@ def Regression(X,Y, opt=0):
     return [a,b]
 
 
-def fit_exp(X,Y, x0, verbose=1, linreg_opt=0):
-    # Fit Y vs. X data to  Y = A*exp(-B*(X-x0))
+
+def fit_exp(X,Y, x0=0.0, verbose=0, linreg_opt=0):
+    """Fits Y vs. X data using:  Y = A*exp(-B*(X-x0))
+
+    Args: 
+        X ( list of doubles ): The x axis data
+        Y ( list of doubles ): The y axis data
+        x0 ( double ): the "origin" of the exponential function [default: 0.0]
+        verbose ( int ): whether to print extra info (1) or not (0) [default: 0]
+        linreg_opt ( int ): the type of the linear regression to use
+            SeeAlso:: :funct:`Regression` [default: 0]
+
+            * opt = 0: ln(Y) = b*(X-x0)
+            * opt = 1: ln(Y) = a + b*(X-x0)
+
+    Returns:
+        predy ( list of doubles ): The Y values predicted using the obtained linear 
+            interpolation parameters. These values are computed for all X values
+   
+        A ( double ):  The A coefficient in: Y = A*exp(-B*(X-x0))
+        B ( double ):  The B coefficient in: Y = A*exp(-B*(X-x0))
+
+
+    Example:
+
+        >>> # get the first two columns of data as X and Y
+        >>> X, Y = get_data_from_file("relax.txt", 0, 1) 
+        >>>
+        >>> # Y = exp(-B*X), the minimaal version
+        >>> Ypred, A, B = fit_exp(X,Y)        
+        >>>
+        >>> # Y = exp(-B*X), the more explicit version
+        >>> Ypred, A, B = fit_exp(X,Y, 0.0)   
+        >>>
+        >>> # Y = A * exp(-B*X), the most explicit version
+        >>> Ypred, A, B = fit_exp(X,Y, 0.0, 1, 1)  
+        >>>
+        >>> # Assume the fitting function is: Y = A * exp(-B*(X+1.5))
+        >>> Ypred, A, B = fit_exp(X,Y, 1.5, 1, 1)  # Y = A * exp(-B*(X+1.5))
+
+        
+    """
 
     sz = len(X)  # The number of data points
     
@@ -85,8 +138,47 @@ def fit_exp(X,Y, x0, verbose=1, linreg_opt=0):
 
 
 
-def fit_gau(X,Y, x0, verbose=1,linreg_opt=0):
-    # Fit Y vs. X data to  Y = A*exp(-B*(X-x0)^2)
+def fit_gau(X,Y, x0=0.0, verbose=0, linreg_opt=0):
+    """Fits Y vs. X data using:  Y = A*exp(-B*(X-x0)^2)
+
+    Args: 
+        X ( list of doubles ): The x axis data
+        Y ( list of doubles ): The y axis data
+        x0 ( double ): the "origin" of the exponential function [default: 0.0]
+        verbose ( int ): whether to print extra info (1) or not (0) [default: 0]
+        linreg_opt ( int ): the type of the linear regression to use
+            SeeAlso:: :funct:`Regression` [default: 0]
+
+            * opt = 0: ln(Y) = b*(X-x0)^2
+            * opt = 1: ln(Y) = a + b*(X-x0)^2
+
+    Returns:
+        predy ( list of doubles ): The Y values predicted using the obtained linear 
+            interpolation parameters. These values are computed for all X values
+   
+        A ( double ):  The A coefficient in: Y = A*exp(-B*(X-x0)^2)
+        B ( double ):  The B coefficient in: Y = A*exp(-B*(X-x0)^2)
+
+    Example:
+
+        >>> # get the first two columns of data as X and Y
+        >>> X, Y = get_data_from_file("relax.txt", 0, 1) 
+        >>>
+        >>> # Y = exp(-B*X^2), the minimaal version
+        >>> Ypred, A, B = fit_gau(X,Y)        
+        >>>
+        >>> # Y = exp(-B*X^2), the more explicit version
+        >>> Ypred, A, B = fit_gau(X,Y, 0.0)   
+        >>>
+        >>> # Y = A * exp(-B*X^2), the most explicit version
+        >>> Ypred, A, B = fit_gau(X,Y, 0.0, 1, 1)  
+        >>>
+        >>> # Assume the fitting function is: Y = A * exp(-B*(X-1)^2)
+        >>> Ypred, A, B = fit_exp(X,Y, -1.0, 1, 1)  # Y = A * exp(-B*(X-1)^2)
+
+
+        
+    """
 
     sz = len(X)  # The number of data points
     
@@ -119,6 +211,28 @@ def fit_gau(X,Y, x0, verbose=1,linreg_opt=0):
 
 
 def get_data_from_file(filename, xindx, yindx, xminval=None, xmaxval=None, yminval=None, ymaxval=None):
+    """Read in the numeric data stored in a file as columns into Python lists
+
+    Args:
+        filename ( string ): The name of the data file
+        xindx ( int ): the index of the column read as X
+        yindx ( int ): the index of the column read as Y
+        xminval ( double ): the minimal X value allowed in the read data set, 
+            the points with X values below it will not be included [ default: None ]
+        xmaxval ( double ): the maximal X value allowed in the read data set, 
+            the points with X values above it will not be included [ default: None ]
+        yminval ( double ): the minimal Y value allowed in the read data set, 
+            the points with Y values below it will not be included [ default: None ]
+        ymaxval ( double ): the maximal Y value allowed in the read data set, 
+            the points with Y values above it will not be included [ default: None ]
+
+    Returns:
+        (list, list): (X, Y), where: 
+
+            * X ( list of doubles ): x values read from the file, cropped according the conditions
+            * Y ( list of doubles ): y values read from the file, cropped according the conditions
+
+    """
 
     f = open(filename,"r")
     A = f.readlines()
