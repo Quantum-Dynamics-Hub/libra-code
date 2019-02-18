@@ -222,19 +222,20 @@ def py_cft(X, dt):
 
 
 
-def recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spectrum.txt", do_center=1, opt=0):
-    """
-    
+def recipe1(data, dt, wspan, dw, do_output=False, acf_filename="acf.txt", spectrum_filename="spectrum.txt", do_center=True, opt=0):
+    """A recipe to compute ACF and its FT 
+           
     Args:
         data ( list of MATRIX(ndof, 1) objects ): sequence of real-valued ndof-dimensional vectors
         dt ( double ): time distance between the adjacent data points [units: fs]
         wspan ( double ): window of frequencies for the Fourier transform [ units: cm^-1 ]
         dw ( double ): grid points spacing in the frequency domain [ units: cm^-1 ]
+        do_output ( Boolean ): whether we print out the data the results into files [ default: False ]
         acf_filename ( string ): the name of the file where to print the ACF
         spectrum_filename ( string ): the name of the file where to print the spectrum
-        do_center ( int ): a flag controlling whether to center data (=1) or not (=0)
+        do_center ( Boolean ): a flag controlling whether to center data (=1) or not (=0)
             Centering means we subtract the average value (over all the data points) from all
-            the data points - this way, we convert values into their fluctuations.
+            the data points - this way, we convert values into their fluctuations [default: True ]
 
         opt ( int ): selector of the convention to to compute ACF
 
@@ -243,8 +244,14 @@ def recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spec
 
 
     Returns:
-        None: 
+        tuple: (T, norm_acf, raw_acf, W, J, J2), where:
 
+            * T ( list of double ): time axis [ units: fs ] 
+            * norm_acf ( list of double ): normalized ACF
+            * raw_acf ( list of double ): un-normalized ACF
+            * W ( list of double ): frequencies axis [ units: cm^-1 ]
+            * J ( list of double ): amplitudes of FT 
+            * J2 ( list of double ): (1/2pi)*|J|^2 
 
     """
 
@@ -252,79 +259,55 @@ def recipe1(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spec
     dw = dw * units.inv_cm2Ha        # convert to Ha (atomic units)
     dt = dt * units.fs2au            # convert to  atomic units of time
     
-    # ACFs
-    T, norm_acf, row_acf = acf( center_data(data) , dt, opt)
+
+    #========
+    data_new = data
+    if do_center:
+        data_new = center_data(data)
+
+    #=========== ACFs ==============
+    T, norm_acf, raw_acf = acf( data_new , dt, opt)
     sz = len(T)
 
-    f = open(acf_filename,"w")
     for it in xrange(sz):
-        f.write("%8.5f  %8.5f  %8.5f  \n" % (T[it]/units.fs2au , norm_acf[it], row_acf[it]))
-    f.close()
+        T[it] = T[it]/units.fs2au  # convert to fs
 
-    # FT
+    if do_output:
+        f = open(acf_filename,"w")
+        for it in xrange(sz):
+            f.write("%8.5f  %8.5f  %8.5f  \n" % (T[it] , norm_acf[it], raw_acf[it]))
+        f.close()
+
+
+    #=========== FT =============
     W, J = ft(norm_acf, wspan, dw, dt)
     sz = len(W)
-    f = open(spectrum_filename,"w")
+
+    J2 = []
     for iw in xrange(sz):
-        f.write("%8.5f  %8.5f  \n" % (W[iw]/units.inv_cm2Ha, J[iw] ) )
-    f.close()
+        W[iw] = W[iw]/units.inv_cm2Ha
+        J2.append( (1.0/(2.0*math.pi))*J[iw]*J[iw] )
 
+    if do_output:
+        f = open(spectrum_filename,"w")
+        for iw in xrange(sz):
+            f.write("%8.5f  %8.5f  %8.5f\n" % (W[iw], J[iw], J2[iw] ) )
+        f.close()
 
-
-
-def recipe2(data, dt, wspan, dw, acf_filename="acf.txt", spectrum_filename="spectrum.txt", do_center=1):
-    """
-    data (MATRIX (ndof x 1) ) - data points (each is a multidimensional)
-    dt (float) [ fs ] - timestep between adjacent data points
-    dspan (float) [ cm^-1 ] - window of frequencies for the Fourier transform
-    dw (float) [ cm^-1 ] - grid points spacing in the frequency domain
-    acf_filename (string) - the name of the file where to print the ACF
-    spectrum_filename (string) - the name of the file where to print the spectrum
-    do_center (int) - a flag controlling whether to center data (=1) or not (=0)
-    Centering means we subtract the average value (over all the data points) from all
-    the data points - this way, we convert values into their fluctuations.
-    """
-
-    wspan = wspan * units.inv_cm2Ha  # convert to Ha (atomic units)
-    dw = dw * units.inv_cm2Ha        # convert to Ha (atomic units)
-    dt = dt * units.fs2au            # convert to  atomic units of time
-
-
-    # ACFs
-    T, norm_acf, row_acf = acf2(data,dt)
-    sz = len(norm_acf)
-
-    f = open(acf_filename,"w")
-    for it in xrange(sz):
-        f.write("%8.5f  %8.5f  \n" % (T[it]/fs2au, norm_acf[it]))
-    f.close()
-
-    # FT
-    W, J = ft(norm_acf, wspan, dw, dt)
-    sz = len(W)
-    f = open(spectrum_filename,"w")
-    for iw in xrange(sz):
-        f.write("%8.5f  %8.5f  \n" % (W[iw]/inv_cm2Ha, J[iw] ) )
-    f.close()
+    return T, norm_acf, raw_acf, W, J, J2
 
 
     
 if __name__ == '__main__':
 
-    # Parameters
-    inv_cm2ev = (1.0/8065.54468111324)
-    ev2Ha = (1.0/27.211)    # 27.2 ev is 1 Ha 
-    inv_cm2Ha = inv_cm2ev * ev2Ha
-    fs2au = (1.0/0.02419)   # 40 a.u. is 1 fs 
-
     # Test case: 3 frequences
     data = []
-    dt = 1.0 * fs2au
-    dw = 1.0 * inv_cm2Ha
-    w1 = 500.0 * inv_cm2Ha
-    w2 = 1400.0 * inv_cm2Ha
-    w3 = 850.0 * inv_cm2Ha
-    wspan = 2000.0 * inv_cm2Ha
+    dt = 1.0 * units.fs2au
+    dw = 1.0 * units.inv_cm2Ha
+    w1 = 500.0 * units.inv_cm2Ha
+    w2 = 1400.0 * units.inv_cm2Ha
+    w3 = 850.0 * units.inv_cm2Ha
+    wspan = 2000.0 * units.inv_cm2Ha
 
     for it in xrange(1000):
         t = it * dt
@@ -335,5 +318,5 @@ if __name__ == '__main__':
         data.append( d )
     
     recipe1(data, 1.0, 2000.0, 1.0)
-    #recipe2(data, 1.0, 2000.0, 1.0)
+
 
