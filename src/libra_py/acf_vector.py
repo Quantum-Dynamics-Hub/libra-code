@@ -28,36 +28,6 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 
-def average(data):
-    """
-    This function computes the average value of the data
-    # data - (list of VECTOR objects)
-    """
-    ave = VECTOR()
-    sz = len(data)
-
-    for i in xrange(sz):
-        ave = ave + data[i] 
-
-    ave = ave/float(sz)
-    return ave
-
-
-def center_data(data):
-    """
-    This function centers data on zero, by subtracting the average 
-    value from each element
-    data - (list of VECTOR objects) - The data
-    """
-
-    data_new = []    
-    ave = average(data)
-    for d in data:
-        data_new.append(d - ave)
-
-    return data_new
-
-
 
 def acf(data,dt):
     """

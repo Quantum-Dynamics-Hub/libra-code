@@ -209,64 +209,6 @@ def fit_gau(X,Y, x0=0.0, verbose=0, linreg_opt=0):
     return predy, A, B
 
 
-
-def get_data_from_file(filename, xindx, yindx, xminval=None, xmaxval=None, yminval=None, ymaxval=None):
-    """Read in the numeric data stored in a file as columns into Python lists
-
-    Args:
-        filename ( string ): The name of the data file
-        xindx ( int ): the index of the column read as X
-        yindx ( int ): the index of the column read as Y
-        xminval ( double ): the minimal X value allowed in the read data set, 
-            the points with X values below it will not be included [ default: None ]
-        xmaxval ( double ): the maximal X value allowed in the read data set, 
-            the points with X values above it will not be included [ default: None ]
-        yminval ( double ): the minimal Y value allowed in the read data set, 
-            the points with Y values below it will not be included [ default: None ]
-        ymaxval ( double ): the maximal Y value allowed in the read data set, 
-            the points with Y values above it will not be included [ default: None ]
-
-    Returns:
-        (list, list): (X, Y), where: 
-
-            * X ( list of doubles ): x values read from the file, cropped according the conditions
-            * Y ( list of doubles ): y values read from the file, cropped according the conditions
-
-    """
-
-    f = open(filename,"r")
-    A = f.readlines()
-    f.close()
-
-    X, Y = [], []
-
-    for a in A:
-        tmp = a.split()
-
-        x = float(tmp[xindx])
-        y = float(tmp[yindx])
-
-        is_add = 1
-        if xminval != None:
-            if  x < xminval:
-                is_add = 0
-        if xmaxval != None:
-            if x > xmaxval:
-                is_add = 0
-        if yminval != None:
-            if  y < yminval:
-                is_add = 0
-        if ymaxval != None:
-            if y > ymaxval:
-                is_add = 0
-
-        if is_add:
-            X.append(x)  
-            Y.append(y)
-
-    return X, Y
-
-
 # Example of usage:
 if __name__ == '__main__': 
     X, Y = get_data_from_file("relax.txt", 0, 1)

@@ -33,48 +33,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import units
-
-
-def average(data):
-    """This function computes the average value of the data series
-
-    Args:
-        data ( list of MATRIX(ndof, 1) objects ): sequence of real-valued ndof-dimensional vectors
-
-    Returns:
-        MATRIX(ndof, 1): the average value for each DOF in the time-series
-    """
-
-    ndof = data[0].num_of_rows  
-    ave = MATRIX(ndof, 1)
-
-    sz = len(data)
-    for i in xrange(sz):
-        ave = ave + data[i] 
-
-    ave = ave/float(sz)
-    return ave
-
-
-def center_data(data):
-    """
-
-    This function centers data on zero, by subtracting the average 
-    value from each element, dof by dof
-
-    Args:
-        data ( list of MATRIX(ndof, 1) objects ): sequence of real-valued ndof-dimensional vectors
-
-    Returns:
-        MATRIX(ndof, 1): the fluctuation (deviation) value for each DOF in the time-series (dX(t) = X(t) -<X> )
-    """
-
-    data_new = []    
-    ave = average(data)
-    for d in data:
-        data_new.append(d - ave)
-
-    return data_new
+import data_stat
 
 
 def acf(data, dt, opt=0):
@@ -263,7 +222,7 @@ def recipe1(data, dt, wspan, dw, do_output=False, acf_filename="acf.txt", spectr
     #========
     data_new = data
     if do_center:
-        data_new = center_data(data)
+        data_new = data_stat.center_data(data)
 
     #=========== ACFs ==============
     T, norm_acf, raw_acf = acf( data_new , dt, opt)
