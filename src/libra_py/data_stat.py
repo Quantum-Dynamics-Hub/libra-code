@@ -109,7 +109,7 @@ def mat_center_data(data):
     """
 
     data_new = []    
-    ave = math_average(data)
+    ave = mat_average(data)
     for d in data:
         data_new.append(d - ave)
 
@@ -125,7 +125,7 @@ def find_maxima(data, params):
     The maxima are defined as data[i-1] < data[i] > data[i+1]
     
     Args: 
-        data ( MATRIX(N, 1) ): data to be analyzed
+        data ( list of doubles ): data to be analyzed
         params ( Python dictionary ): parameters controlling the execution
  
             * **params["do_output"] ( Boolean ): wheather to output the data to file [ default: False ]
@@ -153,21 +153,21 @@ def find_maxima(data, params):
     default_params = { "do_output":False, "logname":"data_maxima.txt", "verbose":0 }
     comn.check_input(params, default_params, critical_params)
 
-    do_output = param["do_output"]
+    do_output = params["do_output"]
     logname = params["logname"]
     verbose = params["verbose"]
 
 
     max_indxs = []
-    sz = data.num_of_elems
+    sz = len(data)
     for i in xrange(1, sz-1):
-        if data.get(i) > data.get(i-1) and data.get(i) > data.get(i+1):
+        if data[i] > data[i-1] and data[i] > data[i+1]:
             max_indxs.append(i)
 
     inp = []
     sz = len(max_indxs)
     for i in xrange(sz):
-        inp.append( [ max_indxs[i], data.get(max_indxs[i]) ] )
+        inp.append( [ max_indxs[i], data[max_indxs[i]] ] )
 
     out = merge_sort(inp)  # largest in the end
 

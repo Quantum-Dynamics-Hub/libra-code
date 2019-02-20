@@ -36,6 +36,34 @@ def energy_arb(SD, e):
     return res 
 
 
+
+def orbs2spinorbs(s):
+    """
+    This function converts the matrices in the orbital basis (e.g. old PYXAID style)
+    to the spin-orbital basis.
+    Essentially, it makes a block matrix of a double dimension: 
+           ( s  0 )
+    s -->  ( 0  s )
+
+    This is meant to be used for backward compatibility with PYXIAD-generated data
+    """
+
+    sz = s.num_of_cols
+    zero = CMATRIX(sz, sz)    
+    act_sp1 = range(0, sz)
+    act_sp2 = range(sz, 2*sz)
+    
+    S = CMATRIX(2*sz, 2*sz)
+
+    push_submatrix(S, s, act_sp1, act_sp1)
+    push_submatrix(S, zero, act_sp1, act_sp2)
+    push_submatrix(S, zero, act_sp2, act_sp1)
+    push_submatrix(S, s, act_sp2, act_sp2)
+
+    return S
+
+
+
 def energy_mat_arb(SD, e, dE):
     # Computes a matrix of the SD energies 
     # SD - [ [list_of_ints], [list_of_ints], ... ]    # a list of SDs 

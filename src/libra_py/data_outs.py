@@ -61,3 +61,49 @@ def show_matrix_splot(X, filename, set_diag_to_zero=0):
     f.write(line)
     f.close()
  
+
+
+
+
+def printout(t, pops, Hvib, outfile):
+    """
+    t - time [a.u.] 
+    pops - [MATRIX] - populations
+    Hvib - [CMATRIX] - vibronic Hamiltonian
+    outfile - filename where we'll print everything out
+    """
+
+    nstates = Hvib.num_of_cols
+
+
+    line = "%8.5f " % (t)
+    P, E = 0.0, 0.0
+    for state in xrange(nstates):
+        p, e = pops.get(state,0), Hvib.get(state, state).real
+        P += p
+        E += p*e
+        line = line + " %8.5f  %8.5f " % (p, e)
+    line = line + " %8.5f  %8.5f \n" % (P, E)
+
+    f = open(outfile, "a") 
+    f.write(line)
+    f.close()
+
+
+    
+
+def add_printout(i, pop, filename):
+    # pop - CMATRIX(nstates, 1)
+
+    f = open(filename,"a")
+    line = "step= %4i " % i    
+
+    tot_pop = 0.0
+    for st in xrange(pop.num_of_cols):
+        pop_o = pop.get(st,st).real
+        tot_pop = tot_pop + pop_o
+        line = line + " P(%4i)= %8.5f " % (st, pop_o)
+    line = line + " Total= %8.5f \n" % (tot_pop)
+    f.write(line)
+    f.close()
+
