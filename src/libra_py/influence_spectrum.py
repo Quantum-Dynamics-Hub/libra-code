@@ -290,6 +290,11 @@ def compute_all(X, params):
 
     """
 
+    critical_params = [ ] 
+    default_params = { "filename":"influence_spectra_" }
+    comn.check_input(params, default_params, critical_params)
+
+
     params_re = dict(params)
     params_re.update({"filename":params["filename"]+"_re_"})
 

@@ -32,11 +32,10 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 
-import common_utils as comn
-import step4
+import libra_py.common_utils as comn
 import libra_py.units as units
-import influence_spectrum
-import data_stat
+import libra_py.influence_spectrum as influence_spectrum
+import libra_py.data_stat as data_stat
 
 
 def compute_freqs(H_vib, params):
@@ -162,11 +161,11 @@ def compute_qs_Hvib(Nfreqs, freqs, t,
     for i in xrange(nstates):
         for j in xrange(nstates):
             # Adjust the number of frequencies
-            nfreq = Nfreqs
+            nfreqs = Nfreqs
             if len(freqs[i][j]) < Nfreqs:
                 nfreqs = len(freqs[i][j])
 
-            for k in xrange(Nfreqs):
+            for k in xrange(nfreqs):
                 fu[i][j] = fu[i][j] + freqs[i][j][k][2] * math.sin(conv*freqs[i][j][k][0]*t)
 
 
@@ -186,8 +185,8 @@ def compute_qs_Hvib(Nfreqs, freqs, t,
                     xab = dw_Hvib_im.get(i,j)
                 elif xab > up_Hvib_im.get(i,j):
                     xab = up_Hvib_im.get(i,j)
-                Hvib_stoch_im.set(i,j,   xab )
-                Hvib_stoch_im.set(j,i,  -xab )
+                Hvib_stoch_im.set(i,j,  -xab )
+                Hvib_stoch_im.set(j,i,   xab )
 
     Hvib_stoch = CMATRIX(Hvib_stoch_re, Hvib_stoch_im)
 
@@ -246,6 +245,7 @@ def run(H_vib, params):
     # General dimensions
     ndata = len(H_vib)
     nstates = H_vib[0][0].num_of_cols
+    output_set_paths = []
     for i in xrange(ndata): 
         output_set_paths.append( "QSH_%s" % (i) )
 
