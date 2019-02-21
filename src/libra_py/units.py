@@ -33,6 +33,7 @@ hartree = 627.5094709                              # 1 Ha = 627.5.. kcal/mol
 fs2au = 41.339396444811905746176105828855          # (1.0/0.02419)   # 41.34 a.u. is 1 fs 
 au2fs = 0.02419                                    # 41.34 a.u. is 1 fs
 au2wavn = 219471.53631777237364                    # 27.211 * 8065.54468111324
+wavn2au = 4.5563995075520960186520193771085E-6     # 1/au2wavn
 
 # Mass units
 amu = 1836.0                                       # chemical mass unit in masses of electron
