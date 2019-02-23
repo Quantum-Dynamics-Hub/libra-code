@@ -172,70 +172,6 @@ def get_Hvib2(params):
     return H_vib
 
 
-def transform_data(X, params):
-    """
-
-    This is an auxiliary function to transform the original matrices X (e.g. H_vib) according to:     
-    X(original) ->    ( X + shift1 ) (x) (scale) + shift2,  
-
-    Here, (x) indicates the element-wise multiplicaiton, and shift1, shift2, and scale are matrices
-
-    Args: 
-        X ( list of lists of CMATRIX(nstates, nstates) ): the original data stored as
-            X[idata][step] - a CMATRIX(nstates, nstates) for the dataset `idata` and time 
-            step `step`
-        params ( dictionary ): parameters controlling the transformation
-
-            * **params["shift1"]** ( CMATRIX(nstates,nstates) ): first shift corrections [units of X], [default: zero]
-            * **params["shift2"]** ( CMATRIX(nstates,nstates) ): second shift corrections [units of X], [default: zero]
-            * **params["scale"]** ( CMATRIX(nstates,nstates) ): scaling of the X [unitless], [default: 1.0 in all matrix elements]
-
-    Returns:    
-        None: but transformes X input directly, so changes the original input
-
-
-    Example:
-        Lets say we have a data set of 2x2 matrices and we want to increase the energy gap by 0.1 units and scale the
-        couplings by a factor of 3. Then, the input is going to be like this:
-
-        >>> scl = CMATRIX(2,2); 
-        >>> scl.set(0,0, 1.0+0.0j);  scl.set(0,1, 3.0+0.0j);
-        >>> scl.set(0,0, 3.0+0.0j);  scl.set(0,1, 1.0+0.0j);
-        >>> shi = CMATRIX(2,2); 
-        >>> shi.set(0,0, 0.0+0.0j);  shi.set(0,1, 0.0+0.0j);
-        >>> shi.set(0,0, 0.0+0.0j);  shi.set(0,1, 0.1+0.0j);
-        >>> transform_data(X, {"shift2":shi, "scale":scl })
-
-
-    """
-
-    ndata = len(X)
-    nsteps = len(X[0])
-    nstates = X[0][0].num_of_cols
-
-    sh1 = CMATRIX(nstates, nstates) # zero
-    sh2 = CMATRIX(nstates, nstates) # zero
-    scl = CMATRIX(nstates, nstates) # all elements are 1
-
-    for i in xrange(nstates):
-        for j in xrange(nstates):
-            scl.set(i,j, 1.0+0.0j)
-
-    critical_params = [  ] 
-    default_params = { "shift1":sh1, "shift2":sh2, "scale":scl  }
-    comn.check_input(params, default_params, critical_params)
-
-    for idata in xrange(ndata):
-        for istep in xrange(nsteps):
-
-            tmp = CMATRIX(X[idata][istep])
-            tmp = tmp + params["shift1"]
-            tmp.dot_product( tmp, params["scale"] )
-            tmp = tmp + params["shift2"]
-            X[idata][istep] = CMATRIX(tmp)
-
-
-
 
 def traj_statistics(i, Coeff, istate, Hvib, itimes):
     """Compute the averages over the TSH-ensembles
@@ -363,16 +299,27 @@ def run(H_vib, params):
 
             * **params["T"]** ( double ): temperature of nuclear/electronic dynamics [in K, default: 300.0]
             * **params["ntraj"]** ( int ): the number of stochastic surface hopping trajectories [default: 1]
-            * **params["sh_method"]** ( int ): selects the algorithm to compute surface hopping probabilities [default: 1]
+            * **params["sh_method"]** ( int ): selects the algorithm to compute surface hopping probabilities 
                 Options:
 
                 - 0 - MSSH
-                - 1 - FSSH
+                - 1 - FSSH [ default ]
 
-            * **params["decoherence_method"]** ( int ): selects the decoherence method [default: 0]
+            * **params["decoherence_constants"]** ( int ): selects whether to compute decoherence parameters
+                on the fly or to use provided parameters:
+
+                - 0 - pre-compute the parameters from the trajectory data before NA-MD run [ default ]
+                - 1 - use the provided parameters ..seealso:: ```params["decoherence_times"]``` and ```params["decoherence_rates"]```
+
+            * **params["decoherence_times"]** ( MATRIX(nstates,nstates) ): decoherence times for all 
+                pairs of states. This should be provided if ``` params["decoherence_constants"] == 1``` the dimensions should be
+                consistent with those of the input Hvib data. [ units: a.u. of time ]
+             
+
+            * **params["decoherence_method"]** ( int ): selects the decoherence method 
                 Options:
 
-                - 0 - no decoherence
+                - 0 - no decoherence [ default ]
                 - 1 - ID-A
                 - 2 - MSDM
                 - 3 - DISH
@@ -405,7 +352,7 @@ def run(H_vib, params):
     
     critical_params = [ "nsteps" ] 
     default_params = { "T":300.0, "ntraj":1, 
-                       "sh_method":1, "decoherence_method":0, "dt":41.0, "Boltz_opt":3,
+                       "sh_method":1, "decoherence_constants": 0, "decoherence_method":0, "dt":41.0, "Boltz_opt":3,
                        "istate":0, "init_times":[0], "outfile":"_out.txt" }
     comn.check_input(params, default_params, critical_params)
 
@@ -427,8 +374,22 @@ def run(H_vib, params):
 
 
     #========== Compute PARAMETERS  ===============
-    # Decoherence times for DISH
-    tau, decoh_rates = dectim.decoherence_times_ave(H_vib, params["init_times"], nsteps, 1) 
+    # Decoherence times
+    tau, decoh_rates = None, None
+
+    if params["decoherence_constants"] == 0:
+        tau, decoh_rates = dectim.decoherence_times_ave(H_vib, params["init_times"], nsteps, 1) 
+
+    elif params["decoherence_constants"] == 1:
+        if params["decoherence_times"].num_of_cols != nstates:
+            print "Error: dimensions of the input decoherence times matrix are not consistent with \
+                   the dimensions of the Hamiltonian matrices (the number of states). Exiting...\n" 
+            sys.exit(0)
+        else:
+            tau = MATRIX(params["decoherence_times"])
+            decoh_rates = dectim.decoherence_times2rates(tau)
+
+
 
     #========== Initialize the DYNAMICAL VARIABLES  ===============
     # TD-SE coefficients and active state indices

@@ -145,6 +145,26 @@ def decoherence_times(Hvib, verbosity=0):
 
 
 
+def decoherence_times2rates(tau):
+    """
+    """
+
+    nstates = tau.num_of_cols
+    decoh_rates = MATRIX(nstates, nstates)
+
+    for i in xrange(nstates):
+        for j in xrange(nstates):
+            if i==j:
+                decoh_rates.set(i,i, 0.0)
+            else:
+                tau_ij = tau.get(i,j)
+                if tau_ij > 0.0:                      
+                    decoh_rates.set(i,j, 1.0/tau_ij)
+
+    return decoh_rates
+
+
+
 
 def decoherence_times_ave(Hvib, itimes, nsteps, verbosity=0):
     """
@@ -162,20 +182,19 @@ def decoherence_times_ave(Hvib, itimes, nsteps, verbosity=0):
     dE_ave, dE_std, dE_dw_bound, dE_up_bound = comn.mat_stat(dE)
 
     nstates = Hvib[0][0].num_of_cols
-    decoh_times = MATRIX(nstates, nstates)
-    decoh_rates = MATRIX(nstates, nstates)
+    decoh_times = MATRIX(nstates, nstates)   
 
     for a in xrange(nstates):
         for b in xrange(nstates):
             if a==b:
-                decoh_times.set(a,a, 1000000.0)
-                decoh_rates.set(a,a, 0.0)
+                decoh_times.set(a,a, 1.0e+10)
             else:
                 de = dE_std.get(a,b)
                 if de>0.0:
                       tau = math.sqrt(12.0/5.0) / de
                       decoh_times.set(a,b, tau)
-                      decoh_rates.set(a,b, 1.0/tau)
+
+    decoh_rates = decoherence_times2rates(decoh_times)
 
     if verbosity>0:
         print "Decoherence times matrix (a.u. of time):"
