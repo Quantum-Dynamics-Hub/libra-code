@@ -33,7 +33,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import mapping
-import common_utils as comn
+import libra_py.common_utils as comn
 import libra_py.tsh as tsh
 import libra_py.units as units
 import libra_py.hungarian as hungarian
@@ -87,21 +87,21 @@ def get_data(params):
         filename_im = params["data_set_path"]+params["S_im_prefix"]+str(i)+params["S_im_suffix"]
         s = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space )
         if params["is_pyxaid_format"]==True:
-            s = comn.orbs2spinorbs(s)
+            s = mapping.orbs2spinorbs(s)
         S.append(s)
 
         filename_re = params["data_set_path"]+params["St_re_prefix"]+str(i)+params["St_re_suffix"]
         filename_im = params["data_set_path"]+params["St_im_prefix"]+str(i)+params["St_im_suffix"]
         st = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space )
         if params["is_pyxaid_format"]==True:
-            st = comn.orbs2spinorbs(st)
+            st = mapping.orbs2spinorbs(st)
         St.append(st)
 
         filename_re = params["data_set_path"]+params["E_re_prefix"]+str(i)+params["E_re_suffix"]
         filename_im = params["data_set_path"]+params["E_im_prefix"]+str(i)+params["E_im_suffix"]
         e = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space )
         if params["is_pyxaid_format"]==True:
-            e = comn.orbs2spinorbs(e)
+            e = mapping.orbs2spinorbs(e)
         E.append(e)
 
 

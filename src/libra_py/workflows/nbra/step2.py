@@ -28,7 +28,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 from libra_py import *
 
 from utils import *
-import common_utils as comn
+import libra_py.common_utils as comn
 import compute_properties
 import compute_hprime
 

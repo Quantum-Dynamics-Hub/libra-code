@@ -24,8 +24,9 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
+
 from libra_py import units
-import common_utils as comn
+import libra_py.data_stat as data_stat
 
 
 __all__ = ["energy_gaps",
@@ -111,7 +112,7 @@ def decoherence_times(Hvib, verbosity=0):
 
     # Compute energy gaps
     dE = energy_gaps(Hvib)
-    dE_ave, dE_std, dE_dw_bound, dE_up_bound = comn.mat_stat(dE)
+    dE_ave, dE_std, dE_dw_bound, dE_up_bound = data_stat.mat_stat(dE)
 
     nstates = Hvib[0].num_of_cols
     decoh_times = MATRIX(nstates, nstates)
@@ -179,7 +180,7 @@ def decoherence_times_ave(Hvib, itimes, nsteps, verbosity=0):
 
     # Compute energy gaps
     dE = energy_gaps_ave(Hvib, itimes, nsteps)
-    dE_ave, dE_std, dE_dw_bound, dE_up_bound = comn.mat_stat(dE)
+    dE_ave, dE_std, dE_dw_bound, dE_up_bound = data_stat.mat_stat(dE)
 
     nstates = Hvib[0][0].num_of_cols
     decoh_times = MATRIX(nstates, nstates)   
