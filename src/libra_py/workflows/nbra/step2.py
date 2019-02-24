@@ -48,7 +48,9 @@ def run_qe(params, t, dirname0, dirname1):
                 [default: 1]
             * **params["EXE"]** ( string ): the name of the program to be executed. This may be 
                 the absolute path to the QE (pw.x) binary
-                [default: "" (empty string), you really need to define it]
+            * **params["EXE_EXPORT"]** ( string ): the name of the program that converts the binary files
+                with the QE wavefunctions to the text format (pw_export.x). The name includes the 
+                absolute path to the binary
             * **params["prefix0"]** ( string ): the name of scf template input file - it should 
                 contain all the parameters controlling the computational methodology for QE.
                 If the file is called "x0.scf.in", use "x0.scf" as the value of the "prefix0"
@@ -81,15 +83,21 @@ def run_qe(params, t, dirname0, dirname1):
     tim = Timer()
     tim.start()
 
+
     # Now try to get parameters from the input
-    BATCH_SYSTEM = get_value(params,"BATCH_SYSTEM","srun","s")  # either "srun" (for SLURM) or "mpirun" (for PBS)
-    NP = get_value(params,"NP","1","i")
-    EXE = get_value(params,"EXE","","s")
-    EXE_EXPORT = get_value(params,"EXE_EXPORT","","s")
-    prefix0 = get_value(params,"prefix0","x0.scf","s")
-    prefix1 = get_value(params,"prefix1","x1.scf","s")
-    nac_method = get_value(params,"nac_method",0,"i")  
-    wd = get_value(params,"wd","wd","s")
+    critical_params = [ "EXE", "EXE_EXPORT" ] 
+    default_params = { "BATCH_SYSTEM":"srun", "NP":1, "prefix0":"x0.scf", "prefix1":"x1.scf", "nac_method":0, "wd":"wd"  }
+    comn.check_input(params, default_params, critical_params)
+
+
+    BATCH_SYSTEM = params["BATCH_SYSTEM"]
+    NP = params["NP"]
+    EXE = params["EXE"]
+    EXE_EXPORT = params["EXE_EXPORT"]
+    prefix0 = params["prefix0"]
+    prefix1 = params["prefix1"]
+    nac_method = params["nac_method"]
+    wd = params["wd"]
 
     # Run calculations
     # A regular calculation anyway
