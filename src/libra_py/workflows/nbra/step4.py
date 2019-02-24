@@ -51,6 +51,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import libra_py.common_utils as comn
+import libra_py.data_read as data_read
 import decoherence_times as dectim
 import libra_py.tsh as tsh
 import libra_py.units as units
@@ -106,7 +107,7 @@ def get_Hvib(params):
 
         filename_re = params["Hvib_re_prefix"]+str(i)+params["Hvib_re_suffix"]
         filename_im = params["Hvib_im_prefix"]+str(i)+params["Hvib_im_suffix"]
-        hvib = comn.get_matrix(nstates, nstates, filename_re, filename_im, params["active_space"] ) 
+        hvib = data_read.get_matrix(nstates, nstates, filename_re, filename_im, params["active_space"] ) 
         Hvib.append(hvib)
 
     return Hvib
@@ -358,9 +359,10 @@ def run(H_vib, params):
 
     rnd = Random()
 
-    nstates = H_vib[0][0].num_of_cols  # number of states
+    ndata = len(H_vib)
     nsteps = params["nsteps"]
-    ndata = len(params["data_set_paths"])
+    nstates = H_vib[0][0].num_of_cols  # number of states
+
     ntraj = params["ntraj"]
     nitimes = len(params["init_times"])
     Ntraj = ndata * nitimes * ntraj

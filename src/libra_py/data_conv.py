@@ -94,6 +94,82 @@ def transform_data(X, params):
 
 
 
+def unit_conversion(X, scaling_factor):
+
+    nst = X[0][0].num_of_cols
+
+    scl = CMATRIX(nst, nst);                             
+    shi = CMATRIX(nst, nst);                             
+
+    # Default ones
+    for i in xrange(nst):
+        for j in xrange(nst):
+            scl.set(i,j, scaling_factor*(1.0+0.0j))
+            shi.set(i,j, (0.0+0.0j))        
+    transform_data(X, {"shift2":shi, "scale":scl }) 
+
+
+
+
+def scale_NAC(X, a, b, scaling_factor):
+
+    nst = X[0][0].num_of_cols
+
+    scl = CMATRIX(nst, nst);                             
+    shi = CMATRIX(nst, nst);                             
+
+    # Default ones
+    for i in xrange(nst):
+        for j in xrange(nst):
+            scl.set(i,j, 1.0+0.0j)
+            shi.set(i,j, 0.0+0.0j)        
+    scl.set(a,b, scaling_factor)
+
+    transform_data(X, {"shift2":shi, "scale":scl }) 
+
+
+
+def scale_NACs(X, scaling_factor):
+
+    nst = X[0][0].num_of_cols
+
+    scl = CMATRIX(nst, nst);                             
+    shi = CMATRIX(nst, nst);                             
+
+    # Default ones
+    for i in xrange(nst):
+        for j in xrange(nst):
+            if i!=j:
+                scl.set(i,j, scaling_factor*(1.0+0.0j))
+            else:
+                scl.set(i,j, (1.0+0.0j))
+            shi.set(i,j, (0.0+0.0j))        
+
+    transform_data(X, {"shift2":shi, "scale":scl }) 
+
+
+
+
+def scissor(X, a, dE):
+
+    nst = X[0][0].num_of_cols
+
+    scl = CMATRIX(nst, nst);                             
+    shi = CMATRIX(nst, nst);                             
+
+    # Default ones
+    for i in xrange(nst):
+        for j in xrange(nst):
+            scl.set(i,j, 1.0+0.0j)
+            shi.set(i,j, 0.0+0.0j)        
+
+    for i in xrange(a, nst):
+        shi.add(i,i, dE)
+
+    transform_data(X, {"shift2":shi, "scale":scl }) 
+
+
+
 
 def unpack1(H, i, j, component):
     """
@@ -110,6 +186,7 @@ def unpack1(H, i, j, component):
  
             - 0: real
             - 1: imaginary
+            - 2: the whole thing - use for real matrices
 
     Returns:
         list of doubles: time-series of a given matrix element's component
@@ -122,8 +199,23 @@ def unpack1(H, i, j, component):
             res.append( H[k].get(i,j).real )
         elif component==1:
             res.append( H[k].get(i,j).imag )
+        elif component==2:
+            res.append( H[k].get(i,j) )
 
     return res
+
+
+
+def unpack2(H, i):
+    sz = H.num_of_rows
+
+    res = []
+    for k in xrange(sz):
+        res.append( H.get(k, i) )
+
+    return res
+
+
 
 
 def list2MATRIX(data):
@@ -144,6 +236,7 @@ def list2MATRIX(data):
         res.set(n, 0, data[n])
 
     return res
+
 
 
 
