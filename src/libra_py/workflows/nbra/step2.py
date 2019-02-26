@@ -130,21 +130,50 @@ def run_qe(params, t, dirname0, dirname1):
 
 def read_info(params):
     """
-    This fucntions reads the output from a QE calculations, and stores the output
+
+    This fucntions reads the output from QE calculations, and stores the output
     information in dictionaries
 
-    \param[in] params A dictionary containing important simulation parameters
+    Args:
+        params ( dictionary ): Calculation control parameters
+        
+            * **params["nac_method"]** ( int ): selects the type of output to analyze:
+
+                - 0 : non-spin-polarized calculations 
+                - 1 : spin-polarized calculations
+                - 2 : non-collinear calculation (SOC) only 
+                - 3 : spin-polarized and non-collinear calculation (SOC)
   
-    Returns: Lists that contains system specific information such as the values
-             for lattice constants, eigenvalues, etc. 
+    Returns: 
+    
+        tuple: ( info0, all_e_dum0, info1, all_e_dum1 ): 
+
+            info0 ( dictionary ): QE calculations info for the spin-diabatic calculations
+
+            all_e_dum0 ( list of CMATRIX(norb, norb) objects ): (eigen)energies for all the k-points for 
+                the spin-diabatic calculations
+
+            info1 ( dictionary ): QE calculations info for the non-collinear (spin-adiabatic) calculations
+
+            all_e_dum1 ( list of CMATRIX(norb, norb) objects ): (eigen)energies for all the k-points for 
+                the non-collinear (spin-adiabatic) calculations
+
+            ..seealso:: ```QE_methods.read_qe_index```
+
     """
 
     tim = Timer()
     tim.start()
 
-    nac_method = get_value(params,"nac_method",0,"i")  # choose what method for NAC calculations to use: 0 -standard, 1-corrected
-    wd0 = get_value(params,"wd0","wd","s")
-    wd1 = get_value(params,"wd1","wd","s")
+    # Now try to get parameters from the input
+    critical_params = [ ] 
+    default_params = { "nac_method":0, "wd":"wd" }
+    comn.check_input(params, default_params, critical_params)
+
+    nac_method = params["nac_method"] 
+    wd0 = params["wd"] 
+
+
 
     info0, all_e_dum0 = None, None
     info1, all_e_dum1 = None, None
@@ -191,50 +220,68 @@ def read_info(params):
 
 def read_all(params):
     """
+
     This function reads index, wfc and grid files from a given directory
     The number of wfc and grid files may be larger than 1 - this is the
     case of spin-polarized or multiple k-points calculations
 
-   \param[in] params A dictionary containing important simulation parameters
-              params["prefix"] - (string) - the location of the folder containing index.xml, wfc.*, and grid.* files
-              params["read_wfc"] - (0 or 1) - whether or not to read the wfc coefficients. Default: 1
-              params["read_grid"] - (0 or 1) - whether or not to read the grid informations. Default: 1
-              params["verb0"] - (0 or 1) - turn off/on the extra printout while reading index.xml. Default: 0
-              params["verb1"] - (0 or 1) - turn off/on the extra printout while reading wfc.*. Default: 0
-              params["verb2"] - (0 or 1) - turn off/on the extra printout while reading grid.*. Default: 0
-              params["nac_method"] - (0, 1, 2) - the expectations about what format to read
-                     0 - non-SOC, non-polarized
-                     1 - non-SOC, spin-polarized
-                     2 - SOC, non-collinear
-              params["minband"] - (int, starting from 1) - index of the lowest energy orbital to include 
-                                  in the active space
-              params["maxband"] - (int, starting from 1) - index of the highest energy orbital to include 
-                                  in the active space
-  
-    Returns: The function returs lists containing: 
-             e - energies
-             coeff - MOs the plane wave coefficients,
-             grid - the grid point vectors
+    Args:
 
-             The number of elements in each list is determined by the number of k points
-             Note that, for spin-polarized calculations, the number of k-points is always twice
-             that of the non-spin-polarized or non-collinear k-points
+    params ( dictionary ): Parameters controlling the simulation parameters
+
+        * **params["prefix"]** ( string ): the location of the folder containing index.xml, wfc.*, and grid.* files [default: x0.export ]
+        * **params["read_wfc"]** ( 0 or 1 ): whether or not to read the wfc coefficients. [ default: 1 ]
+        * **params["read_grid"]** ( 0 or 1 ): whether or not to read the grid informations. [ default: 1 ]
+        * **params["verb0"]** ( 0 or 1 ): turn off/on the extra printout while reading index.xml. [ default: 0 ]
+        * **params["verb1"]** ( 0 or 1 ): turn off/on the extra printout while reading wfc.*. [ default: 0 ]
+        * **params["verb2"]** ( 0 or 1 ): turn off/on the extra printout while reading grid.*. [ default: 0 ]
+        * **params["nac_method"]** ( 0, 1, 2 ): the expectations about what format to read:
+
+            - 0 - non-SOC, non-polarized
+            - 1 - non-SOC, spin-polarized
+            - 2 - SOC, non-collinear
+
+        * **params["minband"]** ( int ): index of the lowest energy orbital to include
+            in the active space, counting starts from 1 [ default: 1]
+
+        * **params["maxband"]** ( int ): index of the highest energy orbital to include 
+            in the active space, counting starts from 1 [ defaults: 2]
+  
+    Returns: 
+        tuple: ( info, e, coeff, grid ), where 
+
+            * info ( dictionary ): general descritor info ..seealso::```QE_methods.read_qe_index```
+            * e ( list of CMATRIX(norbs, norbs) ): band energies for each k-pints  ..seealso::```QE_methods.read_qe_index```
+            * coeff ( list of CMATRIX(npw, len(act_space)) objects ): such the 
+                coeff[k] are the MOs in the plane wave basis for the k-point k
+            * grid ( list of VECTOR objects ): the grid point vectors [ units: tpiba ]
+
+            The number of elements in each list is determined by the number of k points
+            Note that, for spin-polarized calculations, the number of k-points is always twice
+            that of the non-spin-polarized or non-collinear k-points
     """  
 
     tim = Timer()
     tim.start()
 
-    wd = get_value(params,"wd","wd","s")
-    rd = get_value(params,"rd",os.getcwd()+"../../res","s") # of where the files will be printed out
-    prefix = get_value(params,"prefix","x0.export","s")
-    is_wfc = get_value(params,"read_wfc",1,"i")
-    is_grd = get_value(params,"read_grid",1,"i")
-    verb0 = get_value(params,"verb0",0,"i")
-    verb1 = get_value(params,"verb1",0,"i")
-    verb2 = get_value(params,"verb2",0,"i")
-    nac_method = get_value(params,"nac_method",0,"i") 
-    minband = get_value(params,"minband",1,"i")
-    maxband = get_value(params,"maxband",2,"i")
+    # Now try to get parameters from the input
+    critical_params = [ ] 
+    default_params = { "nac_method":0, "wd":"wd" , "rd":os.getcwd()+"../../res",  "prefix":"x0.export" 
+    "read_wfc":1, "read_grid":1, "verb0":0, "verb1":0, "verb2":0, "minband":1, "maxband":2  }
+    comn.check_input(params, default_params, critical_params)
+
+    wd = params["wd"]
+    rd = params["rd"]
+    prefix = params["prefix"]
+    is_wfc = params["read_wfc"]
+    is_grd = params["read_grid"]
+    verb0 = params["verb0"]
+    verb1 = params["verb1"]
+    verb2 = params["verb2"]
+    nac_method = params["nac_method"]
+    minband = params["minband"]
+    maxband = params["maxband"]
+
 
     print "printing prefix:  ", prefix
 

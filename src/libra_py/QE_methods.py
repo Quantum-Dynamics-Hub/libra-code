@@ -77,9 +77,34 @@ def read_qe_index(filename, orb_list, verbose=0):
             * 1 - print extra stuff
   
     Returns: 
-        CMATRIX(norb, norb): a diagonal matrix (complex-valued) of orbital energies - only for those that are of interest
-            Here, norb = len(orb_list) and the matrix will only contain numbers that correspond to orbitals defined
-            in the orb_list argument [units: Ha]
+        tuple: ( info, all_e ), where:
+
+            * info ( dictionary ): contains all the descritive information about the QE calculations and the system
+
+                It contains the following info:
+
+                * **info["nspin"]** ( int ): the type of calculations: 1 - non-polarized, 2 - polarized, 4 - non-collinear
+                * **info["nk"]** ( int ): the number of k-points
+                * **info["nbnd"]** ( int ): the number of orbitals in each k-point
+                * **info["efermi"]** ( double ): the Fermi energy [units: a.u.]
+                * **info["alat"]** ( double ): lattice constant, a [units: Bohr]
+                * **info["omega"]** ( double ): unit cell volume [units: Bohr^3]
+                * **info["tpiba"]** ( double ): reciprocal cell size, 2*pi/a [units: Bohr^-1]
+                * **info["tpiba2"]** ( double ): squared reciprocal cell size, (2*pi/a)^2 [units: Bohr^-2]
+                * **info["a1"]** ( VECTOR ): direct lattice vector 1 [units: Bohr]
+                * **info["a2"]** ( VECTOR ): direct lattice vector 2 [units: Bohr]
+                * **info["a3"]** ( VECTOR ): direct lattice vector 3 [units: Bohr]
+                * **info["b1"]** ( VECTOR ): reciprocal lattice vector 1 [units: Bohr^-1]
+                * **info["b2"]** ( VECTOR ): reciprocal lattice vector 2 [units: Bohr^-1]
+                * **info["b3"]** ( VECTOR ): reciprocal lattice vector 3 [units: Bohr^-1]
+                * **info["weights"]** ( list ): weights of all the k-points in evaluating the integrals
+                * **info["k"]** ( list of VECTOR objects ): coordinates of the k-points [units: tpiba]
+
+            all_e ( list of CMATRIX(norb, norb) objects ): orbital energies for all the k-points, such that
+                all_e[k] is a diagonal matrix (complex-valued) of orbital energies - only for those that are of interest
+                Here, norb = len(orb_list) and the matrix will only contain numbers that correspond to orbitals defined
+                in the orb_list argument [units: a.u.]
+
     """
 
     Ry2Ha = 0.5 # conversion factor
