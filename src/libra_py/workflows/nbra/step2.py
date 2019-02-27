@@ -29,6 +29,7 @@ from libra_py import *
 
 from utils import *
 import libra_py.common_utils as comn
+from libra_py import units
 import compute_properties
 import compute_hprime
 
@@ -332,27 +333,65 @@ def read_all(params):
 
 
 
-def read_wfc_grid(params, info0, info1):
+def read_wfc_grid(params):
     """
+
     Read the coefficients and energies for the multi k-points cases, 
     even if some cases require gamma only
 
-    \param[in] params A dictionary containing important simulation parameters
-    \param[in] info0 Name of the temporary directory where data will be stored 
-              for the case without SOC 
-    \param[in] info1 Name of the temporary directory where data will be stored 
-              for the case with SOC 
+    Args:
+        params ( dictionary ): The control parameters, which may contain:
+
+            * **param["nac_method"]** ( 0, 1, 2, 3 ): the expectations about what format to read:
+
+                - 0 : non-spin-polarized calculations [ default ]
+                - 1 : spin-polarized calculations
+                - 2 : non-collinear calculation (SOC) only 
+                - 3 : spin-polarized and non-collinear calculation (SOC)
+         
   
-    Returns: Dictionaries that contain the data for the eigenvalues, g-vectors, and pw coefficients 
-             for the current and next timesteps.    
+    Returns: 
+        tuple: ( res_curr, res_next ), Here _curr, refers to the current timestep properties,
+            and the _next refers to the consecutive timestep properties. Each element of the 
+            output is a dictionary with the following elements:
+
+            * **res_curr["Coeff_dia"]** ( list of CMATRIX(npw, len(act_space)) objects ) : the 
+                wavefunction coefficients in the planewave basis for the spin-diabatic wavefunctions, such
+                that res_curr["Coeff_dia"][k] is a matrix for the k-point with index k.
+                Only for nac_method == 0, 1, and 3. 
+
+            * **res_curr["E_dia"]** ( list of MATRIX(len(act_space), len(act_space)) objects ) : the MO
+                energies for the spin-diabatic wavefunctions, such
+                that res_curr["E_dia"][k] is a matrix for the k-point with index k.
+                Only for nac_method == 0, 1, and 3. 
+
+            * **res_curr["Coeff_adi"]** ( list of CMATRIX(npw, len(act_space)) objects ) : the 
+                wavefunction coefficients in the planewave basis for the spin-adiabatic wavefunctions, such
+                that res_curr["Coeff_adi"][k] is a matrix for the k-point with index k.
+                Only for nac_method == 2 and 3. 
+
+            * **res_curr["E_adi"]** ( list of MATRIX(len(act_space), len(act_space)) objects ) : the MO
+                energies for the spin-adiabatic wavefunctions, such
+                that res_curr["E_adi"][k] is a matrix for the k-point with index k.
+                Only for nac_method == 2 and 3. 
+
+            * **res_curr["grid"]** ( list of VECTOR objects ): the grid point vectors [ units: tpiba ]
+
     """
 
     tim = Timer()
     tim.start()
 
 
-    nac_method = get_value(params,"nac_method",0,"i")  # choose what method for NAC calculations to use: 0 -standard, 1-corrected
-    orthogonalize = get_value(params,"orthogonalize","0","i")
+    # Now try to get parameters from the input
+    critical_params = [ ] 
+    default_params = { "nac_method":0, "orthogonalize":0 }
+    comn.check_input(params, default_params, critical_params)
+
+    nac_method = params["nac_method"]
+    orthogonalize = params["orthogonalize"]
+
+
 
     """
     Here, adi - refers to spin-adiabatic (2-component spinor functions)
@@ -443,49 +482,74 @@ def read_wfc_grid(params, info0, info1):
 
 
 def run(params):
+    """This function is the main driver for the NAC calculations withing the workflows/nbra
+
+    Args:
+        params ( dictionary ): Simulation control parameters
+
+        * **params["start_indx"]** ( int ): index of the starting datapoint in the trajectory to compute
+            the NACs [default: 0]
+        * **params["stop_indx"]** ( int ): index of the final datapoint in the trajectory to compute
+            the NACs [default: 1]
+        * **params["dt"]** ( double ): time step between two adjacent datapoint a the trajectory [units: a.u.; default: 41.0]
+        * **params["wd"]** ( string ): the name of a "working directory (can be removed once the calculatons
+            are done)" that will be created during this function execution - this is where all output 
+            (working) files will be written [ default: "wd" ]
+        * **params["nac_method"]** ( int ): selects the type of output to analyze:
+
+            - 0 : non-spin-polarized calculations [default]
+            - 1 : spin-polarized calculations
+            - 2 : non-collinear calculation (SOC) only 
+            - 3 : spin-polarized and non-collinear calculation (SOC)
+
+        * **params["minband"]** ( int ): index of the lowest energy orbital to include
+            in the active space in the non-SOC (spin-diabatic) calculations, 
+            counting starts from 1. Used for nac_method == 0, 1, 3. [ default: 1]
+        * **params["maxband"]** ( int ): index of the highest energy orbital to include 
+            in the active space  in the non-SOC (spin-diabatic) calculations, 
+            counting starts from 1. Used for nac_method == 0, 1, 3. [ defaults: 2]
+        * **params["minband_soc"]** ( int ): index of the lowest energy orbital pair to include
+            in the active space in the SOC (spin-adiabatic) calculations, 
+            counting starts from 1. Used for nac_method == 2 and 3. [ default: 1]
+        * **params["maxband_soc"]** ( int ): index of the highest energy orbital pair to include 
+            in the active space  in the SOC (spin-adiabatic) calculations, 
+            counting starts from 1. Used for nac_method == 2 and 3. [ defaults: 2]
+        * **params["compute_Hprime"]** ( Boolean ): the flag to compute the <i|H'|j> matrices [ default: False]
+        * **params["verbosity"]** ( int ): the verbosity level regarding the execution of the current function [default: 0]
+
+    Returns:
+        None: but generates the files with couplings, energies and transition density matrices
+ 
     """
-    This function is the main driver for workflows/pyxaid2
-
-    \param[in] params A dictionary containing important simulation parameters
-    """
-
-    print "Starting trajectory.run"
-
-    tim = Timer()
-    # Parameters meaning
-    # pp_type - pseudopotential type: US - ultra-soft, NC - norm-conserving, PAW - projector-augmented waves
-    # wd - working directory, where all output (working) files will be written
-    # rd - results directory, where all final results (energy, NAC, H', etc.) will be written by default it will be set to wd    
 
     # Now try to get parameters from the input
-    critical_params = [ "wd"  ]
-    default_params = { "BATCH_SYSTEM":"srun", "NP":1, "EXE":"", "EXE_EXPORT":"", "EXE_CONVERT":"",
-                       "start_indx":0, "stop_indx":1, "dt":41.34145, "pp_type":"NC", 
-                       "rd":params["wd"], "minband":1, "maxband":2, "minband_soc":1, "maxband_soc":2, 
-                       "nac_method":0, "prefix0":"x0.scf", "prefix1":"x1.scf", "compute_Hprime":0 }
+    critical_params = [ ]
+    default_params = { "start_indx":0, "stop_indx":1, "dt":1.0*units.fs2au, 
+                       "wd":"wd",
+                       "nac_method":0,
+                       "minband":1, "maxband":2, 
+                       "minband_soc":1, "maxband_soc":2, 
+                       "compute_Hprime":False, 
+                       "verbosity":0
+                     }
     comn.check_input(params, default_params, critical_params)
 
 
-    BATCH_SYSTEM = params["BATCH_SYSTEM"]
-    NP = params["NP"]
-    EXE = params["EXE"]
-    EXE_EXPORT = params["EXE_EXPORT"]
-    EXE_CONVERT = params["EXE_CONVERT"]
-    start_indx = int( params["start_indx"] )
-    stop_indx = int( params["stop_indx"] )
+    start_indx =  params["start_indx"] 
+    stop_indx = params["stop_indx"] 
     dt = params["dt"]
-    pp_type = params["pp_type"]  
     wd = params["wd"]
-    rd = params["rd"]
+    nac_method = params["nac_method"]
     minband = params["minband"]
     maxband = params["maxband"]
     minband_soc = params["minband_soc"]
     maxband_soc = params["maxband_soc"]
-    nac_method = params["nac_method"]
-    prefix0 = params["prefix0"]
-    prefix1 = params["prefix1"]
     compute_Hprime = params["compute_Hprime"]
+    verbosity = params["verbosity"]
 
+    if verbosity>0:
+        print "Starting trajectory.run"
+    tim = Timer()
 
     # Sanity/Convention check
     if(minband<=0): 
@@ -494,15 +558,19 @@ def run(params):
     if(minband>maxband):
         print "Error: minband must be smaller or equal to maxband. Current values: minband = ",minband," maxband = ",maxband
         sys.exit(0)
-    
-    if nac_method == 0:
-        print "non-relativistic, non-spin-polarized calculations \n"
+        
+    if nac_method == 0:        
+        if verbosity>0:
+            print "non-relativistic, non-spin-polarized calculations \n"
     elif nac_method == 1:
-        print "non-relativistic, spin-polarized calculations \n"
+        if verbosity>0:
+            print "non-relativistic, spin-polarized calculations \n"
     elif nac_method == 2:
-        print "fully relativistic, non-collinear calculations \n"
+        if verbosity>0:
+            print "fully relativistic, non-collinear calculations \n"
     elif nac_method == 3:
-        print "same as 2 + 1, followed by the projections  \n"
+        if verbosity>0:
+            print "same as 2 + 1, followed by the projections  \n"
     else:
         print "Error: nac_method must be one of the values in [0,1,2,3]  \n"
         sys.exit(0)
@@ -520,25 +588,30 @@ def run(params):
     curr_index = start_indx - 1
     t = start_indx
 
-    print "In trajectory.run: current working directory for python: ",os.getcwd()
-    print "In trajectory.run: current working directory for sh:",os.system("echo $(pwd)")
+    if verbosity>0:
+        print "In trajectory.run: current working directory for python: ",os.getcwd()
+        print "In trajectory.run: current working directory for sh:",os.system("echo $(pwd)")
 
     # Create the working directory where all output files will be written
     # The results directory should already exist
     os.system("mkdir %s" % wd)  
     while t<=stop_indx:
-        print ">>>>>>>>>>>>>>>>>>>>  t= ", t, " <<<<<<<<<<<<<<<<<<<<<"
 
-        print "stop_indx", stop_indx
-        print "start_indx", start_indx
+        if verbosity>1:
+            print ">>>>>>>>>>>>>>>>>>>>  t= ", t, " <<<<<<<<<<<<<<<<<<<<<"
+
+            print "stop_indx", stop_indx
+            print "start_indx", start_indx
 
         dirname = ""
         if t==start_indx:
-           print "Starting first point in this batch"
+           if verbosity>1:
+               print "Starting first point in this batch"
            dirname0, dirname1 = "curr0", "curr1"
 
         if t>start_indx:
-           print "Continuing with other points in this batch"
+           if verbosity>1:
+               print "Continuing with other points in this batch"
            dirname0, dirname1 = "next0", "next1"
 
 
@@ -570,8 +643,8 @@ def run(params):
                     else: 
                         compute_properties.compute_properties_general(params, es_curr, es_next, curr_index)
            
-                    if compute_Hprime == 1:
-                        compute_hprime.compute_hprime_dia(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
+                    if compute_Hprime == True:
+                        compute_hprime.compute_hprime_dia(es_curr, info0, "%s/0_Hprime_%d" % (wd, curr_index) )
                
 
             if nac_method == 2 or nac_method == 3:
@@ -600,8 +673,8 @@ def run(params):
                     sys.exit(0)
 
 
-                params = {"do_orth": 0, "root_directory": rd, "curr_index": curr_index, "print_overlaps": 1, "dt": dt}
-                compute_ovlps(coeff_curr0, coeff_next0, coeff_curr1, coeff_next1, e_curr0, e_next0, e_curr1, e_next1, params)
+                params1 = {"do_orth": 0, "root_directory": rd, "curr_index": curr_index, "print_overlaps": 1, "dt": dt}
+                compute_ovlps(coeff_curr0, coeff_next0, coeff_curr1, coeff_next1, e_curr0, e_next0, e_curr1, e_next1, params1)
 
             """
             if nac_method == 0 or nac_method == 1 or nac_method == 3:
@@ -625,15 +698,18 @@ def run(params):
                 os.system("rm -rf %s/curr1" % wd )
                 os.system("mv %s/next1 %s/curr1" % (wd, wd) )
             
-            print "old files deleted, new have become old"
+            if verbosity>1:
+                print "old files deleted, new have become old"
              
             
-# ACHTUNG!!! Restoring wfc makes some complications, so we might need to destroy wfc objects
-# after each round of operations and create new objects from the beginning - thia may be safer!
+        # ACHTUNG!!! Restoring wfc makes some complications, so we might need to destroy wfc objects
+        # after each round of operations and create new objects from the beginning - thia may be safer!
 
         curr_index = curr_index + 1
                
-        print "End of step t=", t
+        if verbosity>1:
+            print "End of step t=", t
+
         t = t + 1
 
 
