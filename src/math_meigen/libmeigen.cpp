@@ -48,23 +48,27 @@ void export_mEigen_objects(){
   def("FullPivLU_det", expt_FullPivLU_det_v2);
 
 
-  void (*expt_solve_eigen_v1)(MATRIX& H, MATRIX& S, MATRIX& E, MATRIX& C, int symm) = &solve_eigen;
+  void (*expt_solve_eigen_v1)(CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C, int symm) = &solve_eigen;
   void (*expt_solve_eigen_v2)(MATRIX& H, MATRIX& S, CMATRIX& E, CMATRIX& C, int symm) = &solve_eigen;
-  void (*expt_solve_eigen_v3)(CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C, int symm, int reorder) = &solve_eigen;
-  void (*expt_solve_eigen_v4)(CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C, int symm) = &solve_eigen;
-
+  void (*expt_solve_eigen_v3)(MATRIX& H, MATRIX& S, MATRIX& E, MATRIX& C, int symm) = &solve_eigen;
   def("solve_eigen", expt_solve_eigen_v1);
   def("solve_eigen", expt_solve_eigen_v2);
   def("solve_eigen", expt_solve_eigen_v3);
+
+  void (*expt_solve_eigen_v4)(CMATRIX& H, CMATRIX& E, CMATRIX& C, int symm) = &solve_eigen;
+  void (*expt_solve_eigen_v5)(MATRIX& H, CMATRIX& E, CMATRIX& C, int symm) = &solve_eigen;
+  void (*expt_solve_eigen_v6)(MATRIX& H, MATRIX& E, MATRIX& C, int symm) = &solve_eigen;
   def("solve_eigen", expt_solve_eigen_v4);
+  def("solve_eigen", expt_solve_eigen_v5);
+  def("solve_eigen", expt_solve_eigen_v6);
 
-  void (*expt_solve_eigen_v1a)(MATRIX& H, MATRIX& E, MATRIX& C, int symm) = &solve_eigen;
-  void (*expt_solve_eigen_v2a)(MATRIX& H, CMATRIX& E, CMATRIX& C, int symm) = &solve_eigen;
-  void (*expt_solve_eigen_v3a)(CMATRIX& H, CMATRIX& E, CMATRIX& C, int symm) = &solve_eigen;
+  void (*expt_solve_eigen_nosort_v1)(CMATRIX& H, CMATRIX& E, CMATRIX& C, int symm) = &solve_eigen_nosort;
+  void (*expt_solve_eigen_nosort_v2)(MATRIX& H, CMATRIX& E, CMATRIX& C, int symm) = &solve_eigen_nosort;
+  void (*expt_solve_eigen_nosort_v3)(MATRIX& H, MATRIX& E, MATRIX& C, int symm) = &solve_eigen_nosort;
+  def("solve_eigen_nosort", expt_solve_eigen_nosort_v1);
+  def("solve_eigen_nosort", expt_solve_eigen_nosort_v2);
+  def("solve_eigen_nosort", expt_solve_eigen_nosort_v3);
 
-  def("solve_eigen", expt_solve_eigen_v1a);
-  def("solve_eigen", expt_solve_eigen_v2a);
-  def("solve_eigen", expt_solve_eigen_v3a);
 
 
 

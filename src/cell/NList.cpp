@@ -23,6 +23,54 @@ namespace liblibra{
 /// libcell namespace
 namespace libcell{
 
+
+
+MATRIX fold_coords(MATRIX& R, MATRIX3x3& Box, std::string pbc_type){
+/** 
+  \param[in] R  Coordinates of all atoms: ndof x nsteps
+  \param[in] box  The periodic cell in the format: (tv1, tv2, tv3)
+  \param[in] pbc_type The parameter controlling the periodicity (when and if folding) of the unit cell
+  Can take values: "a", "b", "c", "ab", "ac", "bc", and "abc"
+
+*/
+
+  int ndof = R.n_rows;
+  int nat = ndof/3;
+  int nsteps = R.n_cols;
+
+  MATRIX res(ndof, nsteps); // results
+  MATRIX3x3 invBox; invBox = Box.inverse();
+
+  for(int step=0; step<nsteps; step++){
+
+    for(int i=0;i<nat;i++){
+
+      VECTOR r; 
+      r.x = R.get(3*i, step);  r.y = R.get(3*i+1, step);  r.z = R.get(3*i+2, step);
+      r = invBox*r;
+
+      if((pbc_type=="a")||(pbc_type=="ab")||(pbc_type=="ac")||(pbc_type=="abc")) {
+        r.x = r.x - floor(r.x);
+      }
+      if((pbc_type=="b")||(pbc_type=="ab")||(pbc_type=="bc")||(pbc_type=="abc")) {
+        r.y = r.y - floor(r.y);
+      }
+      if((pbc_type=="c")||(pbc_type=="ac")||(pbc_type=="bc")||(pbc_type=="abc")) {
+        r.z = r.z - floor(r.z);
+      }
+      r = Box * r;
+
+      res.set(3*i, step, r.x);  res.set(3*i+1, step, r.y);  res.set(3*i+2, step, r.z);
+
+    }// for i - all atoms
+  }// for step - all data points
+
+  return res;
+
+}
+
+
+
 void max_vector(VECTOR& t1,VECTOR& t2,VECTOR& t3,VECTOR& T){
 /**
   \brief Finding the maximal-length vector

@@ -53,3 +53,20 @@
 
 
 
+
+## Example 4
+
+### Instructions
+
+  1.  Just run the script ```python test.py ```
+
+### Explanations 
+
+  This exmple demonstrates how to get the coordinates, element names, and normal modes for a given system from
+  QE (phonon) output file (.dyn). This example simply shows how to invoke the processing of two files - the first one
+  produces some verbose output on how thigs are going under the hood - good for demonstrations. The other file
+  deals with a much larger system, so we don't really want to produce a lot of output for it - just get the objects with
+  the data we need. For this, we use the default value of verbosity flag (0 - no output). 
+
+  The objects generated can later be used for visualization of the normal modes, with for instance the
+  normal_modes.get_xyz2 function

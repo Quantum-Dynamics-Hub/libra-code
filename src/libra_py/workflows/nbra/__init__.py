@@ -7,16 +7,14 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 #***********************************************************/
 
-__all__ = ["common_utils",
-           "compute_hprime",
+__all__ = ["compute_hprime",
            "compute_properties",
            "decoherence_times",
-           "excitation_spectrum",
-           "influence_spectrum",
            "lz",
            "mapping",           
            "qsh", 
            "step2",
+           "step2_analysis",
            "step3",
            "step4",
            "utils",

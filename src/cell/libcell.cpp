@@ -54,6 +54,7 @@ void export_Cell_objects(){
   boost::python::list (*expt_serial_to_vector_v1)(int c,int Nx,int Ny,int Nz) = &serial_to_vector;
   boost::python::list (*expt_serial_to_vector_symm_v1)(int c,int Nx,int Ny,int Nz) = &serial_to_vector_symm;
   boost::python::list (*expt_form_neibc_v1)(int c,int Nx,int Ny,int Nz,double cellx,double celly,double cellz,double Roff) = &form_neibc;
+  MATRIX (*expt_fold_coords_v1)(MATRIX& R, MATRIX3x3& box, std::string pbc_type) = &fold_coords;
 
   def("max_vector", expt_max_vector_v1);
   def("apply_pbc", expt_apply_pbc_v1);
@@ -68,6 +69,9 @@ void export_Cell_objects(){
 
   def("bruteforce",bruteforce);  
   def("energy",energy);
+
+  def("fold_coords",expt_fold_coords_v1);  
+
 
 
 } // export_Cell_objects()

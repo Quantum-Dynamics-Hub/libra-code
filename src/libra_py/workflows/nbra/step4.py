@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2017-2018 Brendan A. Smith, Wei Li, Alexey V. Akimov
+#* Copyright (C) 2017-2019 Brendan A. Smith, Wei Li, Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -11,6 +11,35 @@
 #
 #  
 #
+"""
+
+.. module:: step4
+   :platform: Unix, Windows
+   :synopsis: This module implements functions for running TSH calculations within the NBRA
+
+
+   Example:    
+
+       # Regular NBRA-NA-MD:
+       >>> import step4
+       >>> 
+       >>> Hvib = step4.get_Hvib2(params)  # get the Hvib for all data sets
+       >>> step4.transform_data(Hvib, {})  # default parameters don't change data
+       >>> step4.run(Hvib, params)         # this ```params``` could be the same or different from the above
+
+       # On-the-fly QSH-NA-MD:
+       >>> import step4
+       >>> import qsh
+       >>> Hvib = qsh.run(qsh_params)      # generate the QSH Hvib data sets, see the ```qsh.run()``` for 
+       >>>                                 # the description of the ```qsh_params``` parameters
+       >>> step4.transform_data(Hvib, {})  # default parameters don't change data
+       >>> step4.run(Hvib, params)         # 
+
+.. moduleauthor:: Brendan A. Smith, Wei Li, Alexey V. Akimov
+
+
+"""
+
 import sys
 import cmath
 import math
@@ -21,84 +50,160 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import common_utils as comn
+import libra_py.common_utils as comn
+import libra_py.data_read as data_read
 import decoherence_times as dectim
 import libra_py.tsh as tsh
 import libra_py.units as units
-import qsh
 
 
 def get_Hvib(params):
-    """
-    Read a single set of generic vibronic Hamiltonian files 
+    """Read a single set of vibronic Hamiltonian files 
 
-    Required parameter keys:
+    Args:
+        params ( dictionary ): parameters controlling the function execution
 
-    params["nstates"]          [int] - how many lines/columns in the file 
-    params["nfiles"]           [int] - how many files to read, starting from index 0
-    params["Hvib_re_prefix"]   [string] - prefixes of the files with real part of the MO overlaps at time t
-    params["Hvib_re_suffix"]   [string] - suffixes of the files with real part of the MO overlaps at time t
-    params["Hvib_im_prefix"]   [string] - prefixes of the files with imaginary part of the MO overlaps at time t
-    params["Hvib_im_suffix"]   [string] - suffixes of the files with imaginary part of the MO overlaps at time t
+            Required parameter keys:
+
+            * **params["nstates"]** ( int ): how many lines/columns in the file [Required!]
+            * **params["nfiles"]** ( int ): how many files to read, starting from index 0 [Required!]
+            * **params["Hvib_re_prefix"]** ( string ): prefixes of the files with real part of the Hvib(t) [Required!]
+            * **params["Hvib_im_prefix"]** ( string ): prefixes of the files with imaginary part of the Hvib(t) [Required!]
+            * **params["active_space"]** ( list of ints ): the indices of the states we care 
+                about. These indices will be used to determine the size of the created CMATRIX objects
+                and only these states will be extracted from the original files [ default: range(nstates) ]
+            * **params["Hvib_re_suffix"]** ( string ): suffixes of the files with real part of the Hvib(t) [default: "_re"]
+            * **params["Hvib_im_suffix"]** ( string ): suffixes of the files with imaginary part of the Hvib(t) [default: "_im"]
+
+    Returns:
+        list of CMATRIX objects: Hvib: 
+            a time series of Hvib matrices, such that Hvib[time] is a Hvib at time step `time`
+
+    Example:
+        This example will read 10 pairs of files: "Hvib_0_re", "Hvib_0_im", "Hvib_1_re", "Hvib_1_im", ...
+        "Hvib_9_re", "Hvib_9_im". Each file should contain a 4 x 4 matrix of numbers. It will generate a 
+        list of 4 x 4 complex-valued matrices.
+
+        >>> hvib = get_Hvib({"nstates":4, "nfiles":10, "Hvib_re_prefix":"Hvib", "Hvib_im_prefix":"Hvib"})
+
+
+        The following example will do the same as the example above, however the intially-read 4 x 4 matrices will
+        be partially discarded. Out of 16 values only 4 (the upper left block of 4 numbers)  will be stored in 
+        the resulting list of 2 x 2 complex-valued matrices. 
+
+        >>> hvib = get_Hvib({"nstates":4, "nfiles":10, "Hvib_re_prefix":"Hvib", "Hvib_im_prefix":"Hvib", "active_space":[0,1]})
+
 
     """
 
     critical_params = ["nstates", "nfiles", "Hvib_re_prefix", "Hvib_im_prefix"]
-    default_params = { "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im"}
+    default_params = { "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im", "active_space":range(params["nstates"])}
     comn.check_input(params, default_params, critical_params)
 
-    nfiles = params["nfiles"]
     nstates = params["nstates"]  # the number of states in the input files
-    active_space = range(nstates)
 
     Hvib = []
-
-    for i in range(0,nfiles):
+    for i in range(0,params["nfiles"]):
 
         filename_re = params["Hvib_re_prefix"]+str(i)+params["Hvib_re_suffix"]
         filename_im = params["Hvib_im_prefix"]+str(i)+params["Hvib_im_suffix"]
-        hvib = comn.get_matrix(nstates, nstates, filename_re, filename_im, active_space )
+        hvib = data_read.get_matrix(nstates, nstates, filename_re, filename_im, params["active_space"] ) 
         Hvib.append(hvib)
 
     return Hvib
 
 
+def get_Hvib2(params):
+    """Reads several sets of vibronic Hamiltonian files 
+
+    Args:
+        params ( dictionary ): parameters controlling the function execution [Required!]
+
+            Required parameter keys:
+
+            * **params["data_set_paths"]** ( list of strings ):
+                define the paths of the directories where the vibronic Hamiltonian files for
+                different data sets (e.g. independent MD trajectories) are located. 
+            .. note::
+                In addition, requires parameters described in
+                :func:`libra_py.workflows.nbra.step4.getHvib`
+
+    Returns:
+        list of lists of CMATRIX: Hvib: 
+            the time series of Hvib matrices for several data sets, such that
+            Hvib[idata][time] is a CMATRIX for the data set indexed by `idata`
+            at time `time`
+
+    Example:
+        The full name of the vibronic Hamiltonian files read by this module should be:
+    
+        params["data_set_paths"][idata]+params["Hvib_re_prefix"]+integer(time step)+params["Hvib_re_suffix"] - for real part
+
+        params["data_set_paths"][idata]+params["Hvib_im_prefix"]+integer(time step)+params["Hvib_im_suffix"] - for imaginary part
+
+        Say, the directory "/home/alexeyak/test/step3/res0" contains files:
+        Hvib_0_re, Hvib_1_re, .... ,    Hvib_999_re
+        Hvib_0_im, Hvib_1_im, .... ,    Hvib_999_im
+
+        Then set:
+
+        >>> params["data_set_paths"] = ["/home/alexeyak/test/step3/res0/"]
+        >>> params["Hvib_re_prefix"] = "Hvib_"
+        >>> params["Hvib_re_suffix"] = "_re"
+        >>> params["Hvib_im_prefix"] = "Hvib_"
+        >>> params["Hvib_im_suffix"] = "_im"
+
+    """
+
+    critical_params = [ "data_set_paths" ] 
+    default_params = { }
+    comn.check_input(params, default_params, critical_params)
+
+    H_vib = []
+
+    for idata in params["data_set_paths"]:   # over all MD trajectories (data sets)
+        prms = dict(params)    
+        prms.update({"Hvib_re_prefix": idata+params["Hvib_re_prefix"] })
+        prms.update({"Hvib_im_prefix": idata+params["Hvib_im_prefix"] })                
+
+        h_vib = get_Hvib(prms)  
+        H_vib.append(h_vib)
+
+    return H_vib
+
+
 
 def traj_statistics(i, Coeff, istate, Hvib, itimes):
-    """
-    Compute the averages over the TSH-ensembles
+    """Compute the averages over the TSH-ensembles
 
-    i           [int]                         - timestep index
-    Coeff       [list of CMATRIX(nstates,1)]  - TD-SE amplitudes for all trajectories (data sets/initial times/stochastic realizations)
-    istate      [list of nstates integers]    - indices of the active states for each trajectory (data sets/initial times/stochastic realizations)
-    Hvib        [list of lists of CMATRIX(nstates,nstates)]
-                                              - Hamiltonians for all data sets and all timesteps
-    itimes      [list of ints]                - indices of the NA-MD starting points
+    Args:
+        i ( int ): timestep index, counting since the beginning of the current sub-trajectory
+        Coeff ( list of ntraj CMATRIX(nstates,1) object ): the TD-SE amplitudes for all trajectories
+            (data sets/initial times/stochastic realizations)
 
+        istate ( list of ntraj integers ): indices of the active states for each trajectory 
+            (data sets/initial times/stochastic realizations)
+
+        Hvib ( list of lists of CMATRIX(nstates,nstates) ): Hamiltonians for all data sets 
+            and all (not just a sub-set of data!) timesteps
+        itimes ( list of ints ): indices of the NA-MD starting points (in the global data indexing scale)
 
     Returns: 
-    MATRIX(1, 3*nstates+4)   with the following columns: 
-    E(0), P_SE(0), P_SH(0), ...,   E(nst-1), P_SE(nst-1), P_SH(nst-1), <E*P_SE>, <E*P_SH>, sum{P_SE}, sum{P_SH}
-    
-       First state info                    Nst state info
+        MATRIX(1, 3*nstates+4): the trajectory (and initial-condition)-averaged observables,
+            the assumed format is: 
 
+            First state info        ...          N-st state info All-states-related data
+
+            E(0), P_SE(0), P_SH(0), ...,   E(nst-1), P_SE(nst-1), P_SH(nst-1), <E*P_SE>, <E*P_SH>, sum{P_SE}, sum{P_SH}
+    
     """
 
     #================ Dimensions ==================
-
-    #print "In traj_statistics...\n"
-
     Ntraj = len(Coeff)               # total number of trajectory = data set size x number of init times x number of SH trajectories
     nstates = Coeff[0].num_of_rows   # the number of states
     ndata = len(Hvib)                # how many data sets
     nitimes = len(itimes)            # how many initial times
     ntraj = Ntraj/(ndata * nitimes)  # how many stochastic SH trajectories per data set/initial condition
-
-    #print "Ntraj = ", Ntraj
-    #print "nstates = ", nstates
-    #print "ndata = ", ndata
-    #print "nitimes = ", nitimes
-    #print "ntraj = ", ntraj
 
 
     # Update SE-derived density matrices
@@ -125,10 +230,6 @@ def traj_statistics(i, Coeff, istate, Hvib, itimes):
     H_vib_ave *= (1.0/float(ndata * nitimes))
 
     # Update TSH-ensemble-averaged SE and SH populations 
-    #print "len(denmat_se) = ", len(denmat_se)
-    #print "len(denmat_sh) = ", len(denmat_sh)
-    #print "len(H_vbi) = ", len(H_vib)
-
     ave_pop_sh, ave_pop_se = tsh.ave_pop(denmat_sh, denmat_se)
     ave_en_sh,  ave_en_se  = tsh.ave_en(denmat_sh, denmat_se, H_vib)
 
@@ -149,18 +250,22 @@ def traj_statistics(i, Coeff, istate, Hvib, itimes):
     res.set(0, 3*nstates+2, tot_se)     # Total SE population
     res.set(0, 3*nstates+3, tot_sh)     # Total SH population
 
-    #print "End of traj_statistics...\n"
-
     return res
 
 
 
 
 def printout(t, res, outfile):
-    """
-    t        [float]       - time [a.u.] 
-    res      [MATRIX(1,N)] - information to be printed out
-    outfile  [string]      - filename where we'll print everything out
+    """This function does a simple output of a matrix columns to a file
+
+    Args:    
+        t ( double ): time [units: a.u.] 
+        res ( MATRIX(1,N) ): information to be printed out
+        outfile ( string ): filename where we'll print everything out, the output 
+            will be appended to the existing output file
+
+    Returns:
+        None: but modifies the file
 
     """
 
@@ -178,94 +283,86 @@ def printout(t, res, outfile):
 
 
 
-def run(params):
+def run(H_vib, params):
     """
-    The main procedure to run NA-MD calculations according to the PYXAID2 workflow
-
-    === Required parameter keys: ===
-
-    params["T"]                [double] - temperature of nuclear/electronic dynamics [in K, default: 300.0]
-    params["ntraj"]            [int] - the number of stochastic surface hopping trajectories [default: 1]
-    params["sh_method"]        [int] - how to compute surface hopping probabilities [default: 1]
-                               Options:
-                               0 - MSSH
-                               1 - FSSH
-    params["decoherence_method"]  [int] - selection of decoherence method [default: 0]
-                               Options:
-                               0 - no decoherence
-                               1 - ID-A
-                               2 - MSDM
-                               3 - DISH
-    params["dt"]               [double] - nuclear dynamics integration time step [in a.u. of time, default: 41.0]
-    params["nsteps"]           [int] - the length of the NA-MD trajectory
-    params["Boltz_opt"]        [int] - option to select a probability of hopping acceptance [default: 3]
-                               Options:
-                               0 - all proposed hops are accepted - no rejection based on energies
-                               1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
-                               2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
-                               3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
-    params["istate"]           [int] - index of the initial spin-adapted state [default: 0]
-    params["init_times"]       [list of ints] - indices of the starting point in the provided data arrays [default: [0]]
-    params["outfile"]          [string] - the name of the file where to print populations and energies of states [default: "_out.txt"]    
-
-
-    === Required by the get_data() ===
-
-    params["nstates"]          [int] - how many lines/columns in the file - the total number of states set in step3
-    params["nfiles"]           [int] - hom many files there are to read for each data set
-    params["data_set_paths"]   [list of strings] - define the pathes of the directories where the vibronic Hamiltonians for
-                               different data sets (independent MD trajectories) are located
-    params["Hvib_re_prefix"]   [string] - prefixes of the files with real part of the vibronic Hamiltonian at time t
-    params["Hvib_re_suffix"]   [string] - suffixes of the files with real part of the vibronic Hamiltonian at time t
-    params["Hvib_im_prefix"]   [string] - prefixes of the files with imaginary part of the vibronic Hamiltonian at time t
-    params["Hvib_im_suffix"]   [string] - suffixes of the files with imaginary part of the vibronic Hamiltonian at time t
-
-
-    === Required for the on-the-fly QSH ===
-    params["on-the-fly-qsh"]   [Boolean] - flag to select if the QSH calculations are dine via files or on the fly (no intermediate files) [Default: False]
-    params["qsh-params"]       [Python dictionary] - see the ```qsh.run()``` for the description of the parameters
-   
-
-    ```The full name of the vibronic Hamiltonian files will be:
     
-    params["data_set_path"]+params["Hvib_re_prefix"]+integer(time step)+params["Hvib_re_suffix"] - for real part
-    params["data_set_path"]+params["Hvib_im_prefix"]+integer(time step)+params["Hvib_im_suffix"] - for imaginary part
+    The main procedure to run NA-MD calculations within the NBRA workflow
 
-    Example: 
-    Say, the directory "/home/alexeyak/test/step3/res0" contains files:
-    Hvib_0_re, Hvib_1_re, .... ,    Hvib_999_re
-    Hvib_0_im, Hvib_1_im, .... ,    Hvib_999_im
+    Args: 
+        H_vib ( list of lists of CMATRIX objects ): the vibronic Hamiltonian for all data sets and all time-points
+            H_vib[idata][istep].get(i,j) - i,j matrix element for the data set `idata` and step in that data set `istep`
+    
+        params ( dictionary ): the parameters that control the execution of the NA-MD-NBRA calculations
 
-    Then set:
-    params["data_set_paths"] = ["/home/alexeyak/test/step3/res0/"]
-    params["Hvib_re_prefix"] = "Hvib_"
-    params["Hvib_re_suffix"] = "_re"
-    params["Hvib_im_prefix"] = "Hvib_"
-    params["Hvib_im_suffix"] = "_im"
-    ```
+            * **params["nsteps"]** ( int ): the length of the NA-MD trajectory. This parameter is not 
+                necessarily the same as len(H_vib[0]), so need to be provided [Required!] 
+
+            * **params["T"]** ( double ): temperature of nuclear/electronic dynamics [in K, default: 300.0]
+            * **params["ntraj"]** ( int ): the number of stochastic surface hopping trajectories [default: 1]
+            * **params["sh_method"]** ( int ): selects the algorithm to compute surface hopping probabilities 
+                Options:
+
+                - 0 - MSSH
+                - 1 - FSSH [ default ]
+
+            * **params["decoherence_constants"]** ( int ): selects whether to compute decoherence parameters
+                on the fly or to use provided parameters:
+
+                - 0 - pre-compute the parameters from the trajectory data before NA-MD run [ default ]
+                - 1 - use the provided parameters ..seealso:: ```params["decoherence_times"]``` and ```params["decoherence_rates"]```
+
+            * **params["decoherence_times"]** ( MATRIX(nstates,nstates) ): decoherence times for all 
+                pairs of states. This should be provided if ``` params["decoherence_constants"] == 1``` the dimensions should be
+                consistent with those of the input Hvib data. [ units: a.u. of time ]
+             
+
+            * **params["decoherence_method"]** ( int ): selects the decoherence method 
+                Options:
+
+                - 0 - no decoherence [ default ]
+                - 1 - ID-A
+                - 2 - MSDM
+                - 3 - DISH
+
+            * **params["dt"]** ( double ): nuclear dynamics integration time step [in a.u. of time, default: 41.0]
+            * **params["Boltz_opt"]** ( int ): option to select a probability of hopping acceptance [default: 3]
+                Options:
+
+                - 0 - all proposed hops are accepted - no rejection based on energies
+                - 1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
+                - 2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
+                - 3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
+
+            * **params["istate"]** ( int ): index of the initial state [default: 0]
+            * **params["init_times"]** ( list of ints ): indices of the starting point in the provided data arrays [default: [0]]
+            * **params["outfile"]** ( string ): the name of the file where to print populations
+                and energies of states [default: "_out.txt"]    
+
+    Returns: 
+        MATRIX(nsteps, 3*nstates+5): the trajectory (and initial-condition)-averaged observables for every timesteps,
+            the assumed format is: 
+
+            time, first state info        ...          N-st state info All-states-related data
+
+            time, E(0), P_SE(0), P_SH(0), ...,   E(nst-1), P_SE(nst-1), P_SH(nst-1), <E*P_SE>, <E*P_SH>, sum{P_SE}, sum{P_SH}
+
      
     """
 
-    critical_params = [ "nstates", "nsteps" ]  # "data_set_paths", "nfiles"
+    
+    critical_params = [ "nsteps" ] 
     default_params = { "T":300.0, "ntraj":1, 
-                       "sh_method":1, "decoherence_method":0, "dt":41.0, "Boltz_opt":3,
-                       "istate":0, "init_times":[0], "outfile":"_out.txt",
-                       "on-the-fly-qsh":False }
+                       "sh_method":1, "decoherence_constants": 0, "decoherence_method":0, "dt":41.0, "Boltz_opt":3,
+                       "istate":0, "init_times":[0], "outfile":"_out.txt" }
     comn.check_input(params, default_params, critical_params)
 
 
     rnd = Random()
 
-    if params["on-the-fly-qsh"]:
-        # To ensure consistency, we'll borrow some of the parameters from the
-        # QSH calculations
-        params.update(params["qsh-params"])
-        
-
-
+    ndata = len(H_vib)
     nsteps = params["nsteps"]
-    nstates = params["nstates"]
-    ndata = len(params["data_set_paths"])
+    nstates = H_vib[0][0].num_of_cols  # number of states
+
     ntraj = params["ntraj"]
     nitimes = len(params["init_times"])
     Ntraj = ndata * nitimes * ntraj
@@ -273,31 +370,27 @@ def run(params):
     T = params["T"]
     bolt_opt = params["Boltz_opt"]
     dt = params["dt"]
-    do_collapse = 0
-    if params["decoherence_method"]==1:
-        do_collapse = 1
-
 
     res = MATRIX(nsteps, 3*nstates+5)
 
-    #======== Read in the vibronic Hamiltonian along the trajectory for each data set ============
-    H_vib = []
-
-    if params["on-the-fly-qsh"]:
-        H_vib = qsh.run(params["qsh-params"])
-    else:
-        for idata in params["data_set_paths"]:   # over all MD trajectories (data sets)
-            prms = dict(params)    
-            prms.update({"Hvib_re_prefix": idata+params["Hvib_re_prefix"] })
-            prms.update({"Hvib_im_prefix": idata+params["Hvib_im_prefix"] })                
-
-            h_vib = get_Hvib(prms)  
-            H_vib.append(h_vib)
-
 
     #========== Compute PARAMETERS  ===============
-    # Decoherence times for DISH
-    tau, decoh_rates = dectim.decoherence_times_ave(H_vib, params["init_times"], nsteps, 1) 
+    # Decoherence times
+    tau, decoh_rates = None, None
+
+    if params["decoherence_constants"] == 0:
+        tau, decoh_rates = dectim.decoherence_times_ave(H_vib, params["init_times"], nsteps, 1) 
+
+    elif params["decoherence_constants"] == 1:
+        if params["decoherence_times"].num_of_cols != nstates:
+            print "Error: dimensions of the input decoherence times matrix are not consistent with \
+                   the dimensions of the Hamiltonian matrices (the number of states). Exiting...\n" 
+            sys.exit(0)
+        else:
+            tau = MATRIX(params["decoherence_times"])
+            decoh_rates = dectim.decoherence_times2rates(tau)
+
+
 
     #========== Initialize the DYNAMICAL VARIABLES  ===============
     # TD-SE coefficients and active state indices
@@ -356,14 +449,16 @@ def run(params):
         
                     if params["decoherence_method"] in [0, 1, 2]:
                     
+                        do_collapse = None
                         if params["decoherence_method"]==0:    # No decoherence
-                            pass
+                            do_collapse = 0
                         elif params["decoherence_method"]==1:  # ID-A, taken care of in the tsh.hopping
-                            pass
+                            do_collapse = 1
                         elif params["decoherence_method"]==2:  # MSDM
+                            do_collapse = 0
                             Coeff[Tr] = msdm(Coeff[Tr], dt, istate[Tr], decoh_rates)
                     
-                        istate[Tr] = tsh.hopping(Coeff[Tr], H_vib[idata][it+i], istate[Tr], params["sh_method"], do_collapse, ksi, ksi2, dt, T, bolt_opt)
+                        istate[Tr], Coeff[Tr] = tsh.hopping(Coeff[Tr], H_vib[idata][it+i], istate[Tr], params["sh_method"], do_collapse, ksi, ksi2, dt, T, bolt_opt)
                     
                     elif params["decoherence_method"] in [3]:  # DISH
                     

@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2017 Brendan Smith, Ekadashi Pradhan, Alexey V. Akimov
+#* Copyright (C) 2017-2019 Brendan Smith, Ekadashi Pradhan, Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -8,10 +8,16 @@
 #* or <http://www.gnu.org/licenses/>.
 #*
 #*********************************************************************************/
-#
-#  The code that automatically determines a connectivity matrix in an arbitrary molecular system.
-#
-#
+"""
+.. module:: build
+   :platform: Unix, Windows
+   :synopsis: This module implements functions to determine the connectivity 
+       matrix in molecular systems.
+
+.. moduleauthor:: Brendan Smith, Ekadashi Pradhan, Alexey V. Akimov
+
+"""
+
 
 import os
 import sys

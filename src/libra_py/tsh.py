@@ -928,7 +928,7 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz
     Coeff (CMATRIX(nstates, 1) ) object with the amplitudes of all states
     Hvib (CMATRIX(nstates, nstates) )  object containing the vibronic Hamiltonian 
     istate (int) the index of the initial state
-    sh_method (int) selector of the TSH method: 0 - MSSH, 1 - FSSH
+    sh_method (int) selector of the TSH method: 0 - MSSH, 1 - FSSH, 2 - GFSH
     do_collapse (int) flag to turn on the decoherence via ID-A: 0 - no decoherence, 1 - decoherence via ID-A
     ksi, ksi2 (float in [0, 1]) random numbers cotrolling the execution of SH
     dt (float) time interval for the surface hopping (in a.u.)
@@ -948,9 +948,14 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz
         g = compute_hopping_probabilities_mssh(Coeff)
     elif sh_method==1:
         g = compute_hopping_probabilities_fssh(Coeff, Hvib, dt)
+    elif sh_method==2:
+        g = compute_hopping_probabilities_gfsh(Coeff, Hvib, dt)
+
 
     old_st = istate
     new_st = hop(istate, g, ksi)
+
+    Coeff1 = CMATRIX(Coeff)
 
     if new_st != old_st:
         E_old = Hvib.get(old_st,old_st).real
@@ -960,7 +965,7 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz
         istate, Coeff1 = ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi2, do_collapse, boltz_opt)
 
 
-    return istate #, Coeff1
+    return istate, Coeff1
     
 
 

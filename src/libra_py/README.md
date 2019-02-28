@@ -28,15 +28,19 @@
    * example_1() - example
 
 ## build.py  - Creation of molecular/atomistic models
+   * read_xyz(filename, inp_units=1, out_units=0) - read the xyz file 
+   * make_xyz(L, R, inp_units=0, out_units=1) - returns an xyz-formatted string representing the molecular system
+   * read_xyz_crystal(filename, a,b,c, inp_units=0, out_units=0) - same + periodic translation
 
-   * read_xyz(filename) - read the xyz file 
-   * read_xyz_crystal(filename, a,b,c) - same + periodic translation
-   * generate_replicas_xyz2(L, R, tv1, tv2, tv3, Nx, Ny, Nz) -  multiply the atoms into periodic images
-   * generate_replicas_xyz(tv1,tv2,tv3, rep1, rep2, rep3 , filename, outfile) - another version
+   * generate_replicas_xyz(tv1,tv2,tv3, rep1, rep2, rep3 , filename, outfile, inp_units=0, out_units=0) - another version
+   * generate_replicas_xyz2(L, R, tv1, tv2, tv3, Nx, Ny, Nz, inp_units=0, out_units=0) -  multiply the atoms into periodic images
+
+   * crop_sphere_xyz(infile, outfile, Rcut) - another version
    * crop_sphere_xyz2(L, R, Rcut) - remove atoms outside a sphere
    * crop_sphere_xyz3(L, R, Rcut, pairs, new_L) - alternative version
-   * crop_sphere_xyz(infile, outfile, Rcut) - another version
+
    * add_atoms_to_system(syst, L, R, scl, mass, univ_file) - add atoms to a system
+   * add_atom_to_system(syst, coords, MaxCoords, Nx,Ny,Nz, a,b,c, shift, elt, mass, scl, max_coord, rnd) - add an atom and its periodic images to a system
 
 ## datautils.py - some utility functions for data prosessing
 
@@ -83,11 +87,15 @@
    * compute_cov(R, V, A, M, E, params)
      [Ref: Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics 
       or Monte Carlo Simulations. J. Chem. Phys. 2003, 120, 1–4]
+   * compute_cov1(R, V, M, E, params) - same as compute_cov, but without acceleration matrix
+     [Ref: Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics 
+      or Monte Carlo Simulations. J. Chem. Phys. 2003, 120, 1–4]
    * compute_cov2(R, A, E, params)
      [Ref: Pereverzev, A.; Sewell, T. D. Obtaining the Hessian from the Force Covariance Matrix:
       Application to Crystalline Explosives PETN and RDX. J. Chem. Phys. 2015, 142, 134110]
    * compute_dynmat(R, D, E, params)
-
+   * get_xyz(E, R, M, U, mode) - the auxiliary function to generate an xyz in the format good for py3Dmol visualization
+   * get_xyz2(E, R, U, mode) - similar to get_xyz, but assumes the normal modes are already include the mass-factors
 
 ## nve_md.py - functions for doing NVE MD in a maximally-Pythonic way 
    * nve_md_init(syst, mol, el, ham) - initialize an NVE MD run 
@@ -117,10 +125,13 @@
   * read_qe_wfc_grid(filename, verbose=0) - read the wavefunction grid (may be too large and hence very slow!)
   * read_qe_wfc(filename, orb_list, verbose=0) - read the wavefunctions in their planewave representation
   * read_md_data(filename) - read the info about the MD run, saved in the xml file 
+  * read_md_data_xyz(filename, PT, dt) - read the info about the MD run stored in xyz format
+  * read_md_data_cell(filename) - read the cell dimensions at all times
   * out2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt) - convert the output file with MD trajectory to a set of QE input files
   * out2pdb(out_filename,T,dt,pdb_prefix) - convert the output file with MD trajectory to a set of PDB files
   * out2xyz(out_filename,T,dt,xyz_filename) - convert the output file with MD trajectory to an XYZ trajectory file
   * xyz2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt) - convert the XYZ MD trajectory file to a set of QE input files
+  * get_QE_normal_modes(filename, verbosity=0) - read the normal modes information from QE calculations (.dyn files)
  
 ## regexlib.py - definitions of some common regular expressions
 

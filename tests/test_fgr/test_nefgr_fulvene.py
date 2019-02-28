@@ -20,16 +20,18 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 from libra_py import models_LVC, units
+import fgr_py
 
 fs = units.fs2au
 
 params = models_LVC.get_LVC_set1b()  # parameters are the same as in Xiang's code
  
-T = 300.0 # K
+T = 100.0 # K
 beta = 1.0 / (units.kB * T)
-tmax = 50 * fs
-dt = 0.25 * fs
+tmax = 10 * fs
+dt = 0.1 * fs
 dtau = dt/5.0
+dyn_type = 1 # 0 - Condon, 1 - non-Condon
 
 gamma = 1.0   # DA_coupling
 s = -1.0
@@ -85,21 +87,22 @@ print "shift_NE = ", Cpp2Py(shift_NE)
 #print "V = ", V
 V = gamma
 
-res = NEFGRL_population(V, dE, dtau, omega_nm, gamma_nm,req_nm, shift_NE, method, tmax, dt, beta)
-res.show_matrix("_res.txt")
+#res = NEFGRL_population(V, dE, omega_nm, gamma_nm,req_nm, shift_NE, method, beta, dyn_type, dtau, tmax, dt)
+#res.show_matrix("_res.txt")
 
+fgr_py.run_NEFGRL_populations(dE, V, omega_nm, gamma_nm,req_nm, shift_NE, method, beta, dyn_type, dtau, tmax, dt, "_res.txt")
 
 """
 for step in xrange(50):
     t = step*dt
-    k = NEFGRL_rate(V, dE, t, dtau, omega_nm, gamma_nm, req_nm, shift_NE, method, beta)
+    k = NEFGRL_rate(t, V, dE, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, dyn_type, dtau)
     print "Time [a.u.] = ", t, " rate constant[a.u.^-1] = ", k
 
     nomega = len(omega_nm)
     for w in range(nomega):
         tau = t
-        integ = Integrand_NE_exact(dE, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta)
-        lin = Linear_NE_exact(gamma_nm[w], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta)
+        integ = Integrand_NE_exact(t, tau, dE, omega_nm[w], shift_NE[w], req_nm[w], beta)
+        lin = Linear_NE_exact(t, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta)
         print w, omega_nm[w], integ, lin
 
 """

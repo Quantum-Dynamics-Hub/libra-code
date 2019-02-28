@@ -33,7 +33,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import mapping
-import common_utils as comn
+import libra_py.common_utils as comn
 import libra_py.tsh as tsh
 import libra_py.units as units
 import libra_py.hungarian as hungarian
@@ -87,57 +87,189 @@ def get_data(params):
         filename_im = params["data_set_path"]+params["S_im_prefix"]+str(i)+params["S_im_suffix"]
         s = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space )
         if params["is_pyxaid_format"]==True:
-            s = comn.orbs2spinorbs(s)
+            s = mapping.orbs2spinorbs(s)
         S.append(s)
 
         filename_re = params["data_set_path"]+params["St_re_prefix"]+str(i)+params["St_re_suffix"]
         filename_im = params["data_set_path"]+params["St_im_prefix"]+str(i)+params["St_im_suffix"]
         st = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space )
         if params["is_pyxaid_format"]==True:
-            st = comn.orbs2spinorbs(st)
+            st = mapping.orbs2spinorbs(st)
         St.append(st)
 
         filename_re = params["data_set_path"]+params["E_re_prefix"]+str(i)+params["E_re_suffix"]
         filename_im = params["data_set_path"]+params["E_im_prefix"]+str(i)+params["E_im_suffix"]
         e = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space )
         if params["is_pyxaid_format"]==True:
-            e = comn.orbs2spinorbs(e)
+            e = mapping.orbs2spinorbs(e)
         E.append(e)
 
 
     return S, St, E
 
 
+def get_Lowdin(S):
+    """
+    Find the S_i_half for the S matrix - alpha and beta components
+    """
+
+    nstates = S.num_of_cols/2  # division by 2 because it is a super-matrix
+
+    alp = range(0,nstates)
+    bet = range(nstates, 2*nstates)
+
+    S_aa = CMATRIX(nstates, nstates)
+    S_bb = CMATRIX(nstates, nstates)
+
+    pop_submatrix(S, S_aa, alp, alp)
+    pop_submatrix(S, S_bb, bet, bet)
+
+    is_inv = FullPivLU_rank_invertible(S_aa)
+    if is_inv[1] != 1:
+        print "Error, S_aa is not invertible, Exiting Program";  sys.exit(0)
+
+    is_inv = FullPivLU_rank_invertible(S_bb)
+    if is_inv[1] != 1:
+        print "Error, S_bb is not invertible, Exiting Program";  sys.exit(0)
+
+    S_aa_half = CMATRIX(nstates,nstates)
+    S_aa_i_half = CMATRIX(nstates,nstates)
+    sqrt_matrix(S_aa, S_aa_half, S_aa_i_half)
+
+    S_bb_half = CMATRIX(nstates,nstates)
+    S_bb_i_half = CMATRIX(nstates,nstates)
+    sqrt_matrix(S_bb, S_bb_half, S_bb_i_half)
+
+    return S_aa_i_half, S_bb_i_half
+
+
+
+
+def apply_normalization(S, St, params):
+    """
+    Ensure the transition density matrix is computed using the 
+    normalized wavefunctions.
+    """
+
+    critical_params = [ ]
+    default_params = { "do_orthogonalization":0 }
+    comn.check_input(params, default_params, critical_params)
+
+    if params["do_orthogonalization"]==1:
+
+        nsteps = len(St)
+        nstates = St[0].num_of_cols/2  # division by 2 because it is a super-matrix
+        
+        alp = range(0,nstates)
+        bet = range(nstates, 2*nstates)
+
+        St_aa = CMATRIX(nstates,nstates);  St_ab = CMATRIX(nstates,nstates);
+        St_ba = CMATRIX(nstates,nstates);  St_bb = CMATRIX(nstates,nstates);
+        
+        for i in range(0, nsteps-1):
+        
+            U1_a, U1_b = get_Lowdin(S[i])    # time n
+            U2_a, U2_b = get_Lowdin(S[i+1])  # time n+1          
+        
+            pop_submatrix(St[i], St_aa, alp, alp);    pop_submatrix(St[i], St_ab, alp, bet)
+            pop_submatrix(St[i], St_ba, bet, alp);    pop_submatrix(St[i], St_bb, bet, bet)
+        
+            St_aa = U1_a.H() * St_aa * U2_a
+            St_ab = U1_a.H() * St_ab * U2_b
+            St_ba = U1_b.H() * St_ba * U2_a
+            St_bb = U1_b.H() * St_bb * U2_b
+        
+            push_submatrix(St[i], St_aa, alp, alp);   push_submatrix(St[i], St_ab, alp, bet)
+            push_submatrix(St[i], St_ba, bet, alp);   push_submatrix(St[i], St_bb, bet, bet)
+
+
+        
+         
+def make_cost_mat(orb_mat_inp, en_mat_inp, alpha):
+    """
+    Makes the cost matrix from a given TDM and information on states' energies
+
+    orb_mat_inp  [CMATRIX(nstates,nstates) or MATRIX(nstates,nstate)] TDM in a given basis
+    en_mat_inp   [MATRIX(nstates, nstates)]            Matrix of energies in a given basis [a.u.]
+    alpha        [float] Parameter controlling the range of the orbitals that can participate in
+                         the reordering. Setting is to 0 makes all orbitals be considered for reordering
+                         Setting it to a large number makes the effective number of orbitals participating
+                         in the reordering smaller - this can be used to turn off the reordering. [a.u.^-1]
+
+    """
+
+    nstates = orb_mat_inp.num_of_cols
+    cost_mat = MATRIX(nstates, nstates)
+
+    for a in xrange(nstates):
+        for b in xrange(nstates):
+
+            s = orb_mat_inp.get(a,b)
+            s2 = (s*s.conjugate()).real
+            dE = (en_mat_inp.get(a,a) - en_mat_inp.get(b,b)).real
+            val = s2 * math.exp(-(alpha*dE)**2)
+            cost_mat.set(a,b,val)
+
+    return cost_mat
+
+
+
 def apply_state_reordering(St, E, params):
     """
-    St [list of CMATRIX]
-    E [list of CMATRIX] 
+    Performs the state's identity reordering in a given basis for all time steps.
+    This is reflects in the corresponding changess of the TDM.
+
+    St      [list of CMATRIX] - TDM for each timestep
+    E       [list of CMATRIX] - energies of all states at every step
+    params  [Python dictionary] - parameters controlling the reordering
+
+    === Required parameter keys: ===
+
+    params["do_state_reordering"]    [int] - option to select an algorithm [default: 2]
+                                     Available options:
+                                     1 - older version developed by Kosuke Sato, may not the working all the times
+                                     2 - Munkres-Kuhn (Hungarian) method
+
+    params["state_reordering_alpha"] [double] - a parameter that controls how many states will be included in the 
+                                     reordering
+
     """
 
     critical_params = [ ]
     default_params = { "do_state_reordering":2, "state_reordering_alpha":0.0 }
     comn.check_input(params, default_params, critical_params)
 
-
     nsteps = len(St)
-    nstates = St[0].num_of_cols
+    nstates = St[0].num_of_cols/2 # division by 2 because it is a super-matrix
 
+    alp = range(0,nstates)
+    bet = range(nstates, 2*nstates)
 
     # Initialize the cumulative permutation as the identity permutation
-    perm_cum = intList() # cumulative permutation
+    perm_cum_aa = intList() # cumulative permutation for alpha spatial orbitals
+    perm_cum_bb = intList() # cumulative permutation for beta  spatial orbtials
     for a in xrange(nstates):
-        perm_cum.append(a)
+        perm_cum_aa.append(a)
+        perm_cum_bb.append(a)
 
     # Current permutation
-    perm_t = intList() 
+    perm_t_aa = intList() 
+    perm_t_bb = intList()
     for a in xrange(nstates):
-        perm_t.append(a)
+        perm_t_aa.append(a)
+        perm_t_bb.append(a)
+
+
+    # Temporary matrices for the Hungarian method
+    aa = CMATRIX(nstates, nstates); ab = CMATRIX(nstates, nstates)
+    ba = CMATRIX(nstates, nstates); bb = CMATRIX(nstates, nstates)
+
+    en_mat_aa = CMATRIX(nstates, nstates); en_mat_bb = CMATRIX(nstates, nstates)
+
 
 
     for i in range(0, nsteps):
-    
-        ### Perform state reordering (must be done before the phase correction) ###
-    
+
         if params["do_state_reordering"]==1:
             """
             A simple approach based on permuations - but this is not robust
@@ -154,46 +286,74 @@ def apply_state_reordering(St, E, params):
 
             E[i].permute_cols(perm_cum)
             E[i].permute_rows(perm_cum)
-    
-    
+
+
         elif params["do_state_reordering"]==2:
             """
             The Hungarian approach
             """
 
-            # S' = Pn^+ * S
-            St[i].permute_rows(perm_t)  # here we use the old value, perm_t = P_n 
+            pop_submatrix(St[i], aa, alp, alp); pop_submatrix(St[i], ab, alp, bet)
+            pop_submatrix(St[i], ba, bet, alp); pop_submatrix(St[i], bb, bet, bet)
 
-            # construct the cost matrix
-            alp = 0.0
-            if "state_reordering_alpha" in params.keys():
-                alp = params["state_reordering_alpha"]
-    
-            cost_mat = MATRIX(nstates, nstates)
-            for a in xrange(nstates):
-                for b in xrange(nstates):
-                    s = St[i].get(a,b)
-                    s2 =  (s*s.conjugate()).real
-                    dE = (E[i].get(a,a)-E[i].get(b,b)).real
-                    val = s2 * math.exp(-alp*dE**2)
-                    cost_mat.set(a,b, val)
-    
-            # run the assignment calculations
-            res = hungarian.maximize(cost_mat)
-    
-            # convert the list of lists into the permutation object
-            for r in res:
-                perm_t[r[0]] = r[1]   # now, this becomes a new value: perm_t = P_{n+1}
-    
-            # apply the permutation
-            # Because St = <psi(t)|psi(t+dt)> - we permute only columns
-            St[i].permute_cols(perm_t)
+            # Extract the alpha and beta orbtial energies
+            pop_submatrix(E[i], en_mat_aa, alp, alp); pop_submatrix(E[i], en_mat_bb, bet, bet)
 
-            #E[i].permute_cols(perm_t)
-            #E[i].permute_rows(perm_t)
+            # Permute rows 
+            aa.permute_rows(perm_t_aa);   ab.permute_rows(perm_t_aa)
+            ba.permute_rows(perm_t_bb);   bb.permute_rows(perm_t_bb)
 
 
+            # compute the cost matrices for diagonal blocks
+            cost_mat_aa = make_cost_mat(aa, en_mat_aa, params["state_reordering_alpha"])
+            cost_mat_bb = make_cost_mat(bb, en_mat_bb, params["state_reordering_alpha"])          
 
+            # Solve the optimal assignment problem for diagonal blocks
+            res_aa = hungarian.maximize(cost_mat_aa)
+            res_bb = hungarian.maximize(cost_mat_bb)
+   
+
+            # Convert the list of lists into the permutation object
+            for ra in res_aa:
+                perm_t_aa[ra[0]] = ra[1]  # for < alpha | alpha > this becomes a new value: perm_t = P_{n+1}
+            for rb in res_bb:
+                perm_t_bb[rb[0]] = rb[1]  # for < beta | beta > this becomes a new value: perm_t = P_{n+1}   
+
+            # Permute the blocks by col
+            aa.permute_cols(perm_t_aa);  ab.permute_cols(perm_t_bb)
+            ba.permute_cols(perm_t_aa);  bb.permute_cols(perm_t_bb)
+
+
+            # Reconstruct St matrix 
+            push_submatrix(St[i], aa, alp, alp); push_submatrix(St[i], ab, alp, bet)
+            push_submatrix(St[i], ba, bet, alp); push_submatrix(St[i], bb, bet, bet)
+
+
+
+
+def do_phase_corr(cum_phase1, St, cum_phase2, phase_i):
+    """
+    This function changes the St matrix according to
+    the previous cumulative phases and the current 
+    phase correction:
+
+    St -> St = F_n * St * (F_{n+1})^+ = F_n * St * (F_{n})^+ * (f_{n+1})^+
+
+    cum_phase1 [CMATRIX(nstates, 1)]        cumulative phase corrections up to step n (F_n)
+    cum_phase2 [CMATRIX(nstates, 1)]        cumulative phase corrections up to step n (F_n)
+    St         [CMATRIX(nstates, nstates)]  input/output TDM to be processed: 
+                                            could be alpha-alpha, beta-beta, alpha-beta, 
+                                            or beta-alpha sub-blocks
+    phase_i    [CMATRIX(nstates, 1)]        the current step phase corrections (f_{n+1})
+    """
+   
+    nstates = St.num_of_rows
+
+    ### Correct the TDM matrix ###
+    for a in xrange(nstates):
+        for b in xrange(nstates):
+            fab = cum_phase1.get(a) * cum_phase2.get(b).conjugate() * phase_i.get(b).conjugate()
+            St.scale(a,b, fab)
 
 
 
@@ -209,35 +369,69 @@ def apply_phase_correction(St, params):
     default_params = { "do_phase_correction":1 }
     comn.check_input(params, default_params, critical_params)
 
-
     nsteps = len(St)
-    nstates = St[0].num_of_cols
+    nstates = St[0].num_of_cols/2  # division by 2 because it is a super-matrix
+
+    alp = range(0,nstates)
+    bet = range(nstates, 2*nstates)
 
     ### Initiate the cumulative phase correction factors ###    
-    cum_phase = CMATRIX(nstates,1)  # F(n-1)  cumulative phase
+    cum_phase_aa = CMATRIX(nstates,1)  # F(n-1)  cumulative phase
+    cum_phase_bb = CMATRIX(nstates,1)  # F(n-1)  cumulative phase
     for a in xrange(nstates):
-        cum_phase.set(a, 0, 1.0+0.0j)
+        cum_phase_aa.set(a, 0, 1.0+0.0j)
+        cum_phase_bb.set(a, 0, 1.0+0.0j)
 
+
+    St_aa = CMATRIX(nstates, nstates); St_ab = CMATRIX(nstates, nstates)
+    St_ba = CMATRIX(nstates, nstates); St_bb = CMATRIX(nstates, nstates)
 
     for i in range(0, nsteps):
 
+        pop_submatrix(St[i], St_aa, alp, alp)
+        pop_submatrix(St[i], St_bb, bet, bet)
+        pop_submatrix(St[i], St_ab, alp, bet)
+        pop_submatrix(St[i], St_ba, bet, alp)
+
+
         if params["do_phase_correction"]==1:
-            ### Compute the instantaneous phase correction factors ###
-            phase_i = compute_phase_corrections(St[i])   # f(i)
+
+            ### Compute the instantaneous phase correction factors for diag. blocks ###
+            phase_i_aa = compute_phase_corrections(St_aa)   # f(i)
+            phase_i_bb = compute_phase_corrections(St_bb)   # f(i)       
+
+            ### Do the  phase correstions for the diag. blocks ###
+            do_phase_corr(cum_phase_aa, St_aa, cum_phase_aa, phase_i_aa)
+            do_phase_corr(cum_phase_bb, St_bb, cum_phase_bb, phase_i_bb)
         
-            ### Correct the overlap matrix ###
-            for a in xrange(nstates):   
-                for b in xrange(nstates): 
-                    fab = cum_phase.get(b) * cum_phase.get(b).conjugate() * phase_i.get(b).conjugate()
-                    St[i].scale(a,b, fab)
-        
-            ### Update the cumulative phase correction factors ###
+            ### Do the  phase correstions for the off-diag. blocks ###
+            do_phase_corr(cum_phase_aa, St_ab, cum_phase_bb, phase_i_bb)
+            do_phase_corr(cum_phase_bb, St_ba, cum_phase_aa, phase_i_aa)
+
+            ### Push the corrected diag. blocks to orig. St matrix ###
+            push_submatrix(St[i], St_aa, alp, alp);   push_submatrix(St[i], St_ab, alp, bet)
+            push_submatrix(St[i], St_ba, bet, alp);   push_submatrix(St[i], St_bb, bet, bet)
+
+            ### Update the cumulative phase correction factors for diag. blocks ###
             for a in xrange(nstates):
-                cum_phase.scale(a, 0, phase_i.get(a))
-          
+                cum_phase_aa.scale(a, 0, phase_i_aa.get(a))
+                cum_phase_bb.scale(a, 0, phase_i_bb.get(a))
 
 
-def sac_matrices(coeff):
+
+
+def sac_matrices(coeff, basis, S_ks):
+    """
+    This function makes the Phi-to-Chi (P2C) transformation matrix.
+    Normalization factros for the Chi states are computed based on the 
+    overlaps of Phi states.
+    < Chi_i | Chi_j > = 1
+    = N_i * N_j * < Phi_i - Phi_i' | Phi_j - Phi_j' > = 1
+
+    coeff [List of lists] - P2C as initialized by the user
+    basis [Phi basis] - as initialized by the user 
+    S_ks  [CMATRIX] - Time overlap matrix of elementary KS orbtials, from step2
+    """
 
     n_chi = len(coeff)
     n_phi = len(coeff[0])
@@ -247,16 +441,18 @@ def sac_matrices(coeff):
         for i in xrange(n_phi):
             P2C.set(i,j,coeff[j][i]*(1.0+0.0j) )
 
+    # Compute the overlaps of the SDs:
+    #
+    Ssd = mapping.ovlp_mat_arb(basis, basis, S_ks)
 
     # Normalize the Chi wavefunctions #
-    norm = P2C.H() * P2C
+    norm = (P2C.H() * Ssd * P2C).real()
     for i in xrange(n_chi):
-        if norm.get(i,i).real > 0.0:
-            P2C.scale(-1, i, 1.0/math.sqrt(norm.get(i,i).real) )
+        if norm.get(i,i) > 0.0:
+            P2C.scale(-1, i, 1.0/math.sqrt(norm.get(i,i)) )
         else:
             print "Error in CHI normalizaiton: some combination gives zero norm\n"
             sys.exit(0)
-
 
     return P2C
 
@@ -419,7 +615,6 @@ def run(params):
     5. Convert the Hvib to the basis of symmery-adapted configurations (SAC)
     """
 
-    P2C = sac_matrices(params["P2C"])
     H_vib = []
     ndata = len(params["data_set_paths"])
 
@@ -429,18 +624,20 @@ def run(params):
         prms.update({"data_set_path":params["data_set_paths"][idata]})    
         S_dia_ks, St_dia_ks, E_dia_ks = get_data(prms)  
 
+        apply_normalization(S_dia_ks, St_dia_ks, prms)
         apply_state_reordering(St_dia_ks, E_dia_ks, prms)    
         apply_phase_correction(St_dia_ks, prms)
-        
+       
         nsteps = len(St_dia_ks)
-        nstates = len(prms["P2C"])
         
         Hvib = []
         for i in xrange(nsteps):
         
             # Hvib in the basis of SDs
             hvib = compute_Hvib(prms["Phi_basis"], St_dia_ks[i], E_dia_ks[i], prms["Phi_dE"], dt) 
-        
+       
+            P2C = sac_matrices(params["P2C"], params["Phi_basis"], S_dia_ks[i])
+
             # SAC
             Hvib.append( P2C.H() * hvib * P2C )
 
@@ -449,6 +646,7 @@ def run(params):
         #if params["do_scale"] == 1:
         #    scale_H_vib(Hvib, params["Chi_en_gap"], params["NAC_dE"], params["sc_nac_method"])
 
+        nstates = len(prms["P2C"])
         
         # Output the resulting Hamiltonians
         for i in xrange(nsteps):

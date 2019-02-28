@@ -53,9 +53,9 @@ class DATA{
   double rmse;            int is_rmse;       // root mean square error
 
   // Minimax
-  double min;             int is_min;        // minimal value
+  double min_val;         int is_min_val;    // minimal value
   int min_indx;           int is_min_indx;   // index of the minimal entry
-  double max;             int is_max;        // maximal value
+  double max_val;         int is_max_val;        // maximal value
   int max_indx;           int is_max_indx;   // index of the maximal entry
 
   // Operations
@@ -73,9 +73,9 @@ class DATA{
      is_mae = 0;
      is_rmse= 0;
 
-     is_min = 0;
+     is_min_val = 0;
      is_min_indx = 0;
-     is_max = 0;
+     is_max_val = 0;
      is_max_indx = 0;
 
      scale_factor = 1.0;  is_scale_factor = 1;
@@ -112,7 +112,9 @@ class DATA{
 
   // Descriptive Statistics
   int Calculate_Estimators(double&,double&,double&,double&,double&,double&,double&);
+  int Calculate_Estimators();
   int Calculate_MiniMax(double&,int&,double&,int&);
+  int Calculate_MiniMax();
   int Calculate_Distribution(vector<double>&,vector<double>&,vector<double>&);
   boost::python::list DATA::Calculate_Distribution(boost::python::list Interval);
 

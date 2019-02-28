@@ -26,6 +26,8 @@ namespace liblibra{
 /// libcell namespace
 namespace libcell{
 
+MATRIX fold_coords(MATRIX& R, MATRIX3x3& box, std::string pbc_type);
+
 // Auxiliary functions
 void max_vector(VECTOR& t1,VECTOR& t2,VECTOR& t3,VECTOR& T);
 VECTOR max_vector(VECTOR t1,VECTOR t2,VECTOR t3);

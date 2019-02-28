@@ -13,8 +13,7 @@
 *********************************************************************************/
 /**
   \file fgr.cpp
-  \brief This file implements the Fermi Golden Rule (FGR)-based formula for quantum
-  dynamics rates. 
+  \brief This file implements the Fermi Golden Rule (FGR)-based formula for quantum dynamics rates. 
 */
 
 #include "fgr.h"
@@ -29,7 +28,7 @@ namespace libfgr{
 
 
 
-complex<double> Integrand_NE_exact(double omega_DA, double omega, double tp, double tau, double shift, double req, double beta){
+complex<double> Integrand_NE_exact(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta){
 /**
 */
   double re, im;
@@ -39,14 +38,13 @@ complex<double> Integrand_NE_exact(double omega_DA, double omega, double tp, dou
   double pref = omega*req*req*0.5;
 
   re = -pref*(1.0-cos(wt))/tanh(0.5*wb);
-  im = omega_DA*tau - pref*sin(wt) - omega*req*shift*(sin(wtp) + sin(wt - wtp));
+  im = omega_DA*tau - pref*sin(wt) - omega*req*shift*(sin(wtp) - sin(wtp - wt));
 
   return complex<double>(re, im);
 }
 
 
-
-complex<double> Linear_NE_exact(double gamma, double omega, double tp, double tau, double shift, double req, double beta){
+complex<double> Linear_NE_exact(double tp, double tau, double gamma, double omega, double shift, double req, double beta){
 /**
 */
   double re, im;
@@ -68,18 +66,61 @@ complex<double> Linear_NE_exact(double gamma, double omega, double tp, double ta
 }
 
 
+complex<double> ACF_NE_exact(double tp, double tau, double omega_DA, double V,
+                             vector<double>& omega_nm, vector<double>& gamma_nm,
+                             vector<double>& req_nm, vector<double>& shift_NE, 
+                             double beta, int type){
+    /**
+    Computes the ACF, according to:
+    Sun, X.; Geva, E. J. Chem. Phys. 145, 064109, 2016 -  Eq. 56
 
+    tp   [a.u. of time]        - time at which the rate constant is to be determined
+    tau  [a.u. of time]        - lag time - the main argument of the ACF
+    type                       - flag that detemines if the ACF if for Condon (type=0), or non-Condon (type=1) case
+    omega_DA [Ha]              - the energy gap of between donor and acceptor levels (hbar = 1)
+    omega_nm [Ha]              - energies of the normal modes (hbar = 1)
+    gamma_nm [Ha]              - the electron-phonon coupling of each normal mode
+    req_nm   [Bohr]            - shift of the equilibrium position of each noraml mode coordinate upon the charge transfer
+    shift_nm [Bohr]            - non-equilibrium displacement of each normal mode
+    beta [Ha^-1]  1/(kB*T)     - the inverse of thermal energy
 
+    */
 
-complex<double> Integrand_NE_LSC(double omega_DA, double omega, double tp, double tau, double shift, double req, double beta){
-/**
-*/
+    int n_omega = omega_nm.size();
+    complex<double> argg(0.0, 0.0);
+    complex<double> ampl(0.0, 0.0);
 
-  return Integrand_NE_exact(omega_DA, omega, tp, tau, shift, req, beta);
+    for(int w=0; w<n_omega; w++){
+      argg += Integrand_NE_exact(tp, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta); 
+
+      if(type==1){
+          ampl += Linear_NE_exact(tp, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta);
+      }
+    }
+
+    if(type==0){  ampl = complex<double>(V*V, 0.0); }
+
+    // C = exp(argg) * ampl = exp[Re(argg)+i*Im(argg)] * [Re(ampl) + i*Im(ampl)] = 
+    // = exp(Re(argg)) * [cos(Im(argg)) + i*sin(Im(argg))] * [Re(ampl) + i*Im(ampl)]
+    double C_re = exp(argg.real()) * ( cos(argg.imag()) * ampl.real() - sin(argg.imag()) *  ampl.imag() ); // this is Re(C)
+    double C_im = exp(argg.real()) * ( cos(argg.imag()) * ampl.imag() + sin(argg.imag()) *  ampl.real() ); // this is Im(C)
+
+    return complex<double>(C_re, C_im);
 
 }
 
-complex<double> Linear_NE_LSC(double gamma, double omega, double tp, double tau, double shift, double req, double beta){
+
+
+
+complex<double> Integrand_NE_LSC(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta){
+/**
+*/
+
+  return Integrand_NE_exact(tp, tau, omega_DA, omega, shift, req, beta);
+
+}
+
+complex<double> Linear_NE_LSC(double tp, double tau, double gamma, double omega, double shift, double req, double beta){
 /**
 */
   double re, im;
@@ -99,10 +140,53 @@ complex<double> Linear_NE_LSC(double gamma, double omega, double tp, double tau,
 
 }
 
+complex<double> ACF_NE_LSC(double tp, double tau, double omega_DA, double V,
+                           vector<double>& omega_nm, vector<double>& gamma_nm,
+                           vector<double>& req_nm, vector<double>& shift_NE, 
+                           double beta, int type){
+    /**
+    Computes the ACF, according to:
+    Sun, X.; Geva, E. J. Chem. Phys. 145, 064109, 2016 -  Eq. 57
+
+    tp   [a.u. of time]        - time at which the rate constant is to be determined
+    tau  [a.u. of time]        - lag time - the main argument of the ACF
+    type                       - flag that detemines if the ACF if for Condon (type=0), or non-Condon (type=1) case
+    omega_DA [Ha]              - the energy gap of between donor and acceptor levels (hbar = 1)
+    omega_nm [Ha]              - energies of the normal modes (hbar = 1)
+    gamma_nm [Ha]              - the electron-phonon coupling of each normal mode
+    req_nm   [Bohr]            - shift of the equilibrium position of each noraml mode coordinate upon the charge transfer
+    shift_nm [Bohr]            - non-equilibrium displacement of each normal mode
+    beta [Ha^-1]  1/(kB*T)     - the inverse of thermal energy
+
+    */
+
+    int n_omega = omega_nm.size();
+    complex<double> argg(0.0, 0.0);
+    complex<double> ampl(0.0, 0.0);
+
+    for(int w=0; w<n_omega; w++){
+      argg += Integrand_NE_LSC(tp, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta); 
+
+      if(type==1){
+          ampl += Linear_NE_LSC(tp, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta);
+      }
+    }
+
+    if(type==0){  ampl = complex<double>(V*V, 0.0); }
+
+    // C = exp(argg) * ampl = exp[Re(argg)+i*Im(argg)] * [Re(ampl) + i*Im(ampl)] = 
+    // = exp(Re(argg)) * [cos(Im(argg)) + i*sin(Im(argg))] * [Re(ampl) + i*Im(ampl)]
+    double C_re = exp(argg.real()) * ( cos(argg.imag()) * ampl.real() - sin(argg.imag()) *  ampl.imag() ); // this is Re(C)
+    double C_im = exp(argg.real()) * ( cos(argg.imag()) * ampl.imag() + sin(argg.imag()) *  ampl.real() ); // this is Im(C)
+
+    return complex<double>(C_re, C_im);
+
+}
 
 
 
-complex<double> Integrand_NE_CAV(double omega_DA, double omega, double tp, double tau, double shift, double req, double beta){
+
+complex<double> Integrand_NE_CAV(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta){
 /**
 */
   double re, im;
@@ -116,7 +200,7 @@ complex<double> Integrand_NE_CAV(double omega_DA, double omega, double tp, doubl
 }
 
 
-complex<double> Linear_NE_CAV(double gamma, double omega, double tp, double tau, double shift, double req, double beta){
+complex<double> Linear_NE_CAV(double tp, double tau, double gamma, double omega, double shift, double req, double beta){
 /**
 */
   double re, im;
@@ -132,10 +216,55 @@ complex<double> Linear_NE_CAV(double gamma, double omega, double tp, double tau,
 
 }
 
+complex<double> ACF_NE_CAV(double tp, double tau, double omega_DA, double V,
+                           vector<double>& omega_nm, vector<double>& gamma_nm,
+                           vector<double>& req_nm, vector<double>& shift_NE,
+                           double beta, int type){
+    /**
+    Computes the ACF, according to:
+    Sun, X.; Geva, E. J. Chem. Phys. 145, 064109, 2016 -  Eq. 58
+
+    tp   [a.u. of time]        - time at which the rate constant is to be determined
+    tau  [a.u. of time]        - lag time - the main argument of the ACF
+    type                       - flag that detemines if the ACF if for Condon (type=0), or non-Condon (type=1) case
+    omega_DA [Ha]              - the energy gap of between donor and acceptor levels (hbar = 1)
+    omega_nm [Ha]              - energies of the normal modes (hbar = 1)
+    gamma_nm [Ha]              - the electron-phonon coupling of each normal mode
+    req_nm   [Bohr]            - shift of the equilibrium position of each noraml mode coordinate upon the charge transfer
+    shift_nm [Bohr]            - non-equilibrium displacement of each normal mode
+    beta [Ha^-1]  1/(kB*T)     - the inverse of thermal energy
+
+    */
+
+    int n_omega = omega_nm.size();
+    complex<double> argg(0.0, 0.0);
+    complex<double> ampl(0.0, 0.0);
+
+    for(int w=0; w<n_omega; w++){
+      argg += Integrand_NE_CAV(tp, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta); 
+
+      if(type==1){
+          ampl += Linear_NE_CAV(tp, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta);
+      }
+    }
+
+    if(type==0){  ampl = complex<double>(V*V, 0.0); }
+
+    // C = exp(argg) * ampl = exp[Re(argg)+i*Im(argg)] * [Re(ampl) + i*Im(ampl)] = 
+    // = exp(Re(argg)) * [cos(Im(argg)) + i*sin(Im(argg))] * [Re(ampl) + i*Im(ampl)]
+    double C_re = exp(argg.real()) * ( cos(argg.imag()) * ampl.real() - sin(argg.imag()) *  ampl.imag() ); // this is Re(C)
+    double C_im = exp(argg.real()) * ( cos(argg.imag()) * ampl.imag() + sin(argg.imag()) *  ampl.real() ); // this is Im(C)
+
+    return complex<double>(C_re, C_im);
+
+}
 
 
 
-complex<double> Integrand_NE_CD(double omega_DA, double omega, double tp, double tau, double shift, double req, double beta){
+
+
+
+complex<double> Integrand_NE_CD(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta){
 /**
 */
   double re, im;
@@ -149,7 +278,7 @@ complex<double> Integrand_NE_CD(double omega_DA, double omega, double tp, double
   return complex<double>(re, im);
 }
 
-complex<double> Linear_NE_CD(double gamma, double omega, double tp, double tau, double shift, double req, double beta){
+complex<double> Linear_NE_CD(double tp, double tau, double gamma, double omega, double shift, double req, double beta){
 /**
 */
   double re, im;
@@ -164,9 +293,53 @@ complex<double> Linear_NE_CD(double gamma, double omega, double tp, double tau, 
 
 }
 
+complex<double> ACF_NE_CD(double tp, double tau, double omega_DA, double V,
+                          vector<double>& omega_nm, vector<double>& gamma_nm,
+                          vector<double>& req_nm, vector<double>& shift_NE, 
+                          double beta, int type){
+    /**
+    Computes the ACF, according to:
+    Sun, X.; Geva, E. J. Chem. Phys. 145, 064109, 2016 -  Eq. 59
+
+    tp   [a.u. of time]        - time at which the rate constant is to be determined
+    tau  [a.u. of time]        - lag time - the main argument of the ACF
+    type                       - flag that detemines if the ACF if for Condon (type=0), or non-Condon (type=1) case
+    omega_DA [Ha]              - the energy gap of between donor and acceptor levels (hbar = 1)
+    omega_nm [Ha]              - energies of the normal modes (hbar = 1)
+    gamma_nm [Ha]              - the electron-phonon coupling of each normal mode
+    req_nm   [Bohr]            - shift of the equilibrium position of each noraml mode coordinate upon the charge transfer
+    shift_nm [Bohr]            - non-equilibrium displacement of each normal mode
+    beta [Ha^-1]  1/(kB*T)     - the inverse of thermal energy
+
+    */
+
+    int n_omega = omega_nm.size();
+    complex<double> argg(0.0, 0.0);
+    complex<double> ampl(0.0, 0.0);
+
+    for(int w=0; w<n_omega; w++){
+      argg += Integrand_NE_CD(tp, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta); 
+
+      if(type==1){
+          ampl += Linear_NE_CD(tp, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta);
+      }
+    }
+
+    if(type==0){  ampl = complex<double>(V*V, 0.0); }
+
+    // C = exp(argg) * ampl = exp[Re(argg)+i*Im(argg)] * [Re(ampl) + i*Im(ampl)] = 
+    // = exp(Re(argg)) * [cos(Im(argg)) + i*sin(Im(argg))] * [Re(ampl) + i*Im(ampl)]
+    double C_re = exp(argg.real()) * ( cos(argg.imag()) * ampl.real() - sin(argg.imag()) *  ampl.imag() ); // this is Re(C)
+    double C_im = exp(argg.real()) * ( cos(argg.imag()) * ampl.imag() + sin(argg.imag()) *  ampl.real() ); // this is Im(C)
+
+    return complex<double>(C_re, C_im);
+
+}
 
 
-complex<double> Integrand_NE_W0(double omega_DA, double omega, double tp, double tau, double shift, double req, double beta){
+
+
+complex<double> Integrand_NE_W0(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta){
 /**
 */
   double re, im;
@@ -179,7 +352,7 @@ complex<double> Integrand_NE_W0(double omega_DA, double omega, double tp, double
   return complex<double>(re, im);
 }
 
-complex<double> Linear_NE_W0(double gamma, double omega, double tp, double tau, double shift, double req, double beta){
+complex<double> Linear_NE_W0(double tp, double tau, double gamma, double omega, double shift, double req, double beta){
 /**
 */
   double re, im;
@@ -194,9 +367,53 @@ complex<double> Linear_NE_W0(double gamma, double omega, double tp, double tau, 
 
 }
 
+complex<double> ACF_NE_W0(double tp, double tau, double omega_DA, double V,
+                          vector<double>& omega_nm, vector<double>& gamma_nm,
+                          vector<double>& req_nm, vector<double>& shift_NE, 
+                          double beta, int type){
+    /**
+    Computes the ACF, according to:
+    Sun, X.; Geva, E. J. Chem. Phys. 145, 064109, 2016 -  Eq. 60
+
+    tp   [a.u. of time]        - time at which the rate constant is to be determined
+    tau  [a.u. of time]        - lag time - the main argument of the ACF
+    type                       - flag that detemines if the ACF if for Condon (type=0), or non-Condon (type=1) case
+    omega_DA [Ha]              - the energy gap of between donor and acceptor levels (hbar = 1)
+    omega_nm [Ha]              - energies of the normal modes (hbar = 1)
+    gamma_nm [Ha]              - the electron-phonon coupling of each normal mode
+    req_nm   [Bohr]            - shift of the equilibrium position of each noraml mode coordinate upon the charge transfer
+    shift_nm [Bohr]            - non-equilibrium displacement of each normal mode
+    beta [Ha^-1]  1/(kB*T)     - the inverse of thermal energy
+
+    */
+
+    int n_omega = omega_nm.size();
+    complex<double> argg(0.0, 0.0);
+    complex<double> ampl(0.0, 0.0);
+
+    for(int w=0; w<n_omega; w++){
+      argg += Integrand_NE_W0(tp, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta); 
+
+      if(type==1){
+          ampl += Linear_NE_W0(tp, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta);
+      }
+    }
+
+    if(type==0){  ampl = complex<double>(V*V, 0.0); }
+
+    // C = exp(argg) * ampl = exp[Re(argg)+i*Im(argg)] * [Re(ampl) + i*Im(ampl)] = 
+    // = exp(Re(argg)) * [cos(Im(argg)) + i*sin(Im(argg))] * [Re(ampl) + i*Im(ampl)]
+    double C_re = exp(argg.real()) * ( cos(argg.imag()) * ampl.real() - sin(argg.imag()) *  ampl.imag() ); // this is Re(C)
+    double C_im = exp(argg.real()) * ( cos(argg.imag()) * ampl.imag() + sin(argg.imag()) *  ampl.real() ); // this is Im(C)
+
+    return complex<double>(C_re, C_im);
+
+}
 
 
-complex<double> Integrand_NE_Marcus(double omega_DA, double omega, double tp, double tau, double shift, double req, double beta){
+
+
+complex<double> Integrand_NE_Marcus(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta){
 /**
   omega -  frequency of the normal mode [a.u.] 
   tp    -  [a.u.]
@@ -215,7 +432,7 @@ complex<double> Integrand_NE_Marcus(double omega_DA, double omega, double tp, do
 }
 
                                  
-complex<double> Linear_NE_Marcus(double gamma, double omega, double tp, double tau, double shift, double req, double beta){
+complex<double> Linear_NE_Marcus(double tp, double tau, double gamma, double omega, double shift, double req, double beta){
 /**
   omega -  frequency of the normal mode [a.u.] 
   tp    -  [a.u.]
@@ -233,15 +450,63 @@ complex<double> Linear_NE_Marcus(double gamma, double omega, double tp, double t
   return gamma*gamma*complex<double>(re, im);
 }
 
+complex<double> ACF_NE_Marcus(double tp, double tau, double omega_DA, double V,
+                              vector<double>& omega_nm, vector<double>& gamma_nm,
+                              vector<double>& req_nm, vector<double>& shift_NE, 
+                              double beta, int type){
+    /**
+    Computes the ACF, according to:
+    Sun, X.; Geva, E. J. Chem. Phys. 145, 064109, 2016 -  Eq. 61
+
+    tp   [a.u. of time]        - time at which the rate constant is to be determined
+    tau  [a.u. of time]        - lag time - the main argument of the ACF
+    type                       - flag that detemines if the ACF if for Condon (type=0), or non-Condon (type=1) case
+    omega_DA [Ha]              - the energy gap of between donor and acceptor levels (hbar = 1)
+    omega_nm [Ha]              - energies of the normal modes (hbar = 1)
+    gamma_nm [Ha]              - the electron-phonon coupling of each normal mode
+    req_nm   [Bohr]            - shift of the equilibrium position of each noraml mode coordinate upon the charge transfer
+    shift_nm [Bohr]            - non-equilibrium displacement of each normal mode
+    beta [Ha^-1]  1/(kB*T)     - the inverse of thermal energy
+
+    */
+
+    int n_omega = omega_nm.size();
+    complex<double> argg(0.0, 0.0);
+    complex<double> ampl(0.0, 0.0);
+
+    for(int w=0; w<n_omega; w++){
+      argg += Integrand_NE_Marcus(tp, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta); 
+
+      if(type==1){
+          ampl += Linear_NE_Marcus(tp, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta);
+      }
+    }
+
+    if(type==0){  ampl = complex<double>(V*V, 0.0); }
+
+    // C = exp(argg) * ampl = exp[Re(argg)+i*Im(argg)] * [Re(ampl) + i*Im(ampl)] = 
+    // = exp(Re(argg)) * [cos(Im(argg)) + i*sin(Im(argg))] * [Re(ampl) + i*Im(ampl)]
+    double C_re = exp(argg.real()) * ( cos(argg.imag()) * ampl.real() - sin(argg.imag()) *  ampl.imag() ); // this is Re(C)
+    double C_im = exp(argg.real()) * ( cos(argg.imag()) * ampl.imag() + sin(argg.imag()) *  ampl.real() ); // this is Im(C)
+
+    return complex<double>(C_re, C_im);
+
+}
 
 
-double NEFGRL_rate(double V, double omega_DA, double t, double dtau,  
+
+
+
+double NEFGRL_rate(double tp, double omega_DA, double V, 
                    vector<double>& omega_nm, vector<double>& gamma_nm,
                    vector<double>& req_nm, vector<double>& shift_NE,
-                   int method, double beta
+                   int method, double beta, int type, double dtau
                   ){
 /** 
-  Noneq FGR in non-Condon case (linear coupling) using normal modes
+  Computes the nonequilibrium FGR rates in Condon (type=0) and non-Condon(type=1) cases using normal modes
+
+  Sun, X.; Geva, E. J. Chem. Phys. 145, 064109, 2016 -  Eq. 6
+
 
   k(t') = 2/(hbar^2) * Re { int_0^t' { dtau * C(tau) }  }
 
@@ -269,50 +534,23 @@ double NEFGRL_rate(double V, double omega_DA, double t, double dtau,
 
   double k = 0.0;  // rate constant
 
-  int N = static_cast<int>(t/dtau); 
-  int n_omega = omega_nm.size();
+  int N = int(tp/dtau); //static_cast<int>(tp/dtau); 
+
+  complex<double> C(0.0, 0.0);
 
   for(int n=0; n<N; n++){ //tau index
 
     double tau = n * dtau;
 
-    complex<double> argg(0.0, 0.0);
-    complex<double> ampl(0.0, 0.0);
-
-    for(int w=0; w<n_omega; w++){
+    if(tau<=tp){
 
       switch(method){
-
-        case 0: {
-          argg += Integrand_NE_exact(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); 
-          ampl += Linear_NE_exact(gamma_nm[w], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta);
-        } break;
-
-        case 1: {
-          argg += Integrand_NE_LSC(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta);
-          ampl += Linear_NE_LSC(gamma_nm[w], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta);
-        } break;
-
-        case 2: {
-          argg += Integrand_NE_CAV(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); 
-          ampl += Linear_NE_CAV(gamma_nm[w], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta);
-        } break;
-
-        case 3: {
-          argg += Integrand_NE_CD(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); 
-          ampl += Linear_NE_CD(gamma_nm[w], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta);
-        } break;
-
-        case 4: {
-          argg += Integrand_NE_W0(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); 
-          ampl += Linear_NE_W0(gamma_nm[w], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta);
-        } break;
-    
-        case 5: {
-          argg += Integrand_NE_Marcus(omega_DA, omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta); 
-          ampl += Linear_NE_Marcus(gamma_nm[w], omega_nm[w], t, tau, shift_NE[w], req_nm[w], beta);
-        } break;
-
+        case 0: {  C = ACF_NE_exact(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
+        case 1: {  C = ACF_NE_LSC(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
+        case 2: {  C = ACF_NE_CAV(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
+        case 3: {  C = ACF_NE_CD(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
+        case 4: {  C = ACF_NE_W0(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
+        case 5: {  C = ACF_NE_Marcus(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
         default: {
           cout<<"Method "<<method<<" is not available. Please choose from the following options:\n";
           cout<<"0 - Exact\n";
@@ -323,30 +561,25 @@ double NEFGRL_rate(double V, double omega_DA, double t, double dtau,
           cout<<"5 - Marcus\n";
           cout<<"Exiting now...\n";
           exit(0);
-        }
-
+        }// default
       }// switch
+    }// tau<=tp
 
-    }
- 
-    // k = exp(argg) * ampl = exp[Re(argg)+i*Im(argg)] * [Re(ampl) + i*Im(ampl)] = 
-    // = exp(Re(argg)) * [cos(Im(argg)) + i*sin(Im(argg))] * [Re(ampl) + i*Im(ampl)]
-    // but we only need Re(k)
-    k += exp(argg.real()) * ( cos(argg.imag()) * ampl.real() - sin(argg.imag()) *  ampl.imag() ); // this is Re(k)
-  
+    k += C.real(); // we only need Re(k)  
   }
 
-  k *= (2.0*dtau);
+  k *= (2.0*dtau);  // yields k = k(t')
            
   return k;
 
 }
 
 
-MATRIX NEFGRL_population(double V, double omega_DA, double dtau,  
+
+MATRIX NEFGRL_population(double omega_DA, double V,
                          vector<double>& omega_nm, vector<double>& gamma_nm,
                          vector<double>& req_nm, vector<double>& shift_NE,
-                         int method, double T, double dt, double beta
+                         int method, double beta, int type, double dtau, double tmax, double dt 
                         ){
 /**
   Noneq FGR in non-Condon case (linear coupling) using normal modes
@@ -368,7 +601,7 @@ MATRIX NEFGRL_population(double V, double omega_DA, double dtau,
                         3 - CD
                         4 - W0
                         5 - Marcus
-  \param[in]      T     - time since the initial photoexcitation [a.u. of time]
+  \param[in]   tmax     - time since the initial photoexcitation [a.u. of time]
   \param[in]     dt     - integration timestep for the trajectory [a.u. of time]
   \param[in]   beta     - hbar*omega_cutoff / kB*T inverse "temperature" [unitless]
 
@@ -376,14 +609,15 @@ MATRIX NEFGRL_population(double V, double omega_DA, double dtau,
 
 */
 
-  int nsteps = (int)(T/dt)+1;
+  int nsteps = (int)(tmax/dt)+1;
   MATRIX res(nsteps, 3);
 
   double sum = 0.0; //probability of donor state
 
   for(int step=0; step<nsteps; step++) {  // t' 
 
-    double k = NEFGRL_rate(V, omega_DA, step*dt, dtau, omega_nm, gamma_nm, req_nm, shift_NE, method, beta);
+    // k = k(t')
+    double k = NEFGRL_rate(step*dt, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, type, dtau);
         
     sum += k * dt; 
     double P = exp(-sum);  //exp(- int dt' k(t'))

@@ -25,8 +25,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import common_utils as comn
-import units
+import libra_py.common_utils as comn
+import libra_py.units as units
 import libra_py.probabilities as prob
 import libra_py.tsh as tsh
 

@@ -45,20 +45,16 @@ def compute_properties_dia_gamma(params, es_curr, es_next, curr_index):
     St = Ca_curr.H() * Ca_next
     nac = (0.5/dt)*(St - St.H())
     edia = 0.5*(Ea_curr + Ea_next)
-    hvib = edia - 1.0j * nac
+    hvib = edia - 1.0j * CMATRIX(nac.real())  # explicitly drop of all the "complex" NACs
 
     os.system("mkdir %s" % rd)
     #========== Print out ================
-    #S.real().show_matrix("%s/S_dia_ks_%d_re" % (rd, curr_index))
+    S.real().show_matrix("%s/S_dia_ks_%d_re" % (rd, curr_index))
 
     St.real().show_matrix("%s/St_dia_ks_%d_re" % (rd, curr_index))
     St.imag().show_matrix("%s/St_dia_ks_%d_im" % (rd, curr_index))
 
-    #nac.real().show_matrix("%s/nac_dia_ks_%d_re" % (rd, curr_index))
-    #nac.imag().show_matrix("%s/nac_dia_ks_%d_im" % (rd, curr_index))
-
     edia.real().show_matrix("%s/E_dia_ks_%d_re" % (rd, curr_index))
-    #edia.imag().show_matrix("%s/E_dia_ks_%d_im" % (rd, curr_index))
 
     hvib.real().show_matrix("%s/hvib_dia_%d_re" % (rd, curr_index))
     hvib.imag().show_matrix("%s/hvib_dia_%d_im" % (rd, curr_index))

@@ -34,28 +34,50 @@ complex<double> det(CMATRIX&);
 complex<double> FullPivLU_det(CMATRIX& A);
 
 
-///=========== Look in: mEigen_eigensolve.cpp ==================
+///=========== Look in: mEigen_eigensolve1.cpp ==================
 ///< Solving the generalized eigenvalue problem: H * C = S * C * E
-void solve_eigen(MATRIX* H, MATRIX* S, MATRIX* E, MATRIX* C, int symm);
-void solve_eigen(MATRIX& H, MATRIX& S, MATRIX& E, MATRIX& C, int symm);
+///< using GeneralizedSelfAdjointEigenSolver<MatrixXd> solution(A,B)- reordering may happen
+///< All-MATRIX versions
+void solve_eigen(MATRIX* H, MATRIX* S, MATRIX* E, MATRIX* C, int symm);      ///< pointers
+void solve_eigen(MATRIX& H, MATRIX& S, MATRIX& E, MATRIX& C, int symm);      ///< references
+///< All-CMATRIX versions
+void solve_eigen(CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C, int symm);  ///< pointers
+void solve_eigen(CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C, int symm);  ///< references
+///< Mixed MATRIX-CMATRIX versions
+void solve_eigen(MATRIX* H, MATRIX* S, CMATRIX* E, CMATRIX* C, int symm);    ///< pointers
+void solve_eigen(MATRIX& H, MATRIX& S, CMATRIX& E, CMATRIX& C, int symm);    ///< references
 
-void solve_eigen_raw(CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C, int symm);
-void solve_eigen(CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C, int symm, int reorder);
-void solve_eigen(CMATRIX* H, CMATRIX* S, CMATRIX* E, CMATRIX* C, int symm);
-void solve_eigen(CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C, int symm, int reorder);
-void solve_eigen(CMATRIX& H, CMATRIX& S, CMATRIX& E, CMATRIX& C, int symm);
 
-void solve_eigen(MATRIX* H, MATRIX* S, CMATRIX* E, CMATRIX* C, int symm);
-void solve_eigen(MATRIX& H, MATRIX& S, CMATRIX& E, CMATRIX& C, int symm);
+///=========== Look in: mEigen_eigensolve2.cpp ==================
+///< Solving the eigenvalue problem: H * C = C * E  
+///< These functions essentially wrap around the functions that call
+///< GeneralizedSelfAdjointEigenSolver<MatrixXd> solution(A,B), so the reordering may happen
+///< All-CMATRIX versions
+void solve_eigen(CMATRIX* H, CMATRIX* E, CMATRIX* C, int symm);              ///< pointers  
+void solve_eigen(CMATRIX& H, CMATRIX& E, CMATRIX& C, int symm);              ///< references
+///< Mixed MATRIX-CMATRIX versions
+void solve_eigen(MATRIX* H, CMATRIX* E, CMATRIX* C, int symm);               ///< pointers  
+void solve_eigen(MATRIX& H, CMATRIX& E, CMATRIX& C, int symm);               ///< references
+///< All-MATRIX versions
+void solve_eigen(MATRIX* H, MATRIX* E, MATRIX* C, int symm);                 ///< pointers
+void solve_eigen(MATRIX& H, MATRIX& E, MATRIX& C, int symm);                 ///< references
 
 
-///< Solving the eigenvalue problem: H * C = C * E
-void solve_eigen(MATRIX* H, MATRIX* E, MATRIX* C, int symm);
-void solve_eigen(MATRIX& H, MATRIX& E, MATRIX& C, int symm);
-void solve_eigen(MATRIX* H, CMATRIX* E, CMATRIX* C, int symm);
-void solve_eigen(MATRIX& H, CMATRIX& E, CMATRIX& C, int symm);
-void solve_eigen(CMATRIX* H, CMATRIX* E, CMATRIX* C, int symm);
-void solve_eigen(CMATRIX& H, CMATRIX& E, CMATRIX& C, int symm);
+///=========== Look in: mEigen_eigensolve3.cpp ==================
+///< Solving the eigenvalue problem: H * C = C * E 
+///< These functions call the EigenSolver<MatrixXd> solution(A) directly from Eigen3
+///< so, not reordering is made
+///< All-MATRIX versions
+void solve_eigen_nosort(MATRIX* H, MATRIX* E, MATRIX* C, int symm);          ///< pointers
+void solve_eigen_nosort(MATRIX& H, MATRIX& E, MATRIX& C, int symm);          ///< references
+///< All-CMATRIX versions
+void solve_eigen_nosort(CMATRIX* H, CMATRIX* E, CMATRIX* C, int symm);       ///< pointers  
+void solve_eigen_nosort(CMATRIX& H, CMATRIX& E, CMATRIX& C, int symm);       ///< references
+///< Mixed MATRIX-CMATRIX versions
+void solve_eigen_nosort(MATRIX* H, CMATRIX* E, CMATRIX* C, int symm);        ///< pointers  
+void solve_eigen_nosort(MATRIX& H, CMATRIX& E, CMATRIX& C, int symm);        ///< references
+
+
 
 
 ///=========== Look in: mEigen_inverse.cpp ==================

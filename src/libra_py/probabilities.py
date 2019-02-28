@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2018 Alexey V. Akimov
+#* Copyright (C) 2018-2019 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -8,9 +8,13 @@
 #* or <http://www.gnu.org/licenses/>.
 #*
 #*********************************************************************************/
-
 """
-  This module aims to implement the probabilities to find system in a given state
+.. module:: probabilities
+   :platform: Unix, Windows
+   :synopsis: This module aims to implement the probabilities to find system in a given state
+
+.. moduleauthor:: Alexey V. Akimov
+  
 """
 
 import cmath
@@ -28,11 +32,19 @@ import units
 
 def Boltz_quant_prob(E, T):
     """
-    E [list of doubles] - energy levels [in a.u.]
-    T [double] - temperature [K]
- 
-    Computes the quantum Boltzmann probability of occupying different energy levels at given temperature T
 
+    Computes the quantum Boltzman probability of occupying different 
+    energy levels at given temperature T:  P_i = exp(-E_i/kT) / Z
+    where Z = sum_i { exp(-E_i/kT)  }
+
+    Args:
+        E ( list of doubles ): energy levels [in a.u.]
+        T ( double ): temperature [K]
+
+    Returns:
+        double: prob: the probability to  find a system in a discrete state i with
+            energy E_i at given temperature T, considering a number of selected energy
+            levels as given by the list E
     """
  
     b = 1.0/(units.kB * T)
@@ -53,25 +65,29 @@ def Boltz_quant_prob(E, T):
 
 
 
-
 def Boltz_cl_prob_up(E, T):
     """
-    E [doubles] - the minimum energy level [in a.u.]
-    T [double] - temperature [K]
 
     Computes the classical Boltzmann probability to have kinetic energy larger than a given 
-    threshold E  at temperature T
+    threshold E  at temperature T. See Eq. 7 of probabilities_theory.docx.
+    The present function is related to it.
 
-    See Eq. 7. The present function is related to it.
+    Args: 
+        E ( double ): the minimum energy level [in a.u.]
+        T ( double ): temperature [K]
+
+    Returns:
+        double: The probability to have kinetic energy greater than a given threshold value at
+            given temperature
+
+    See Also:
+        This is essentially a Maxwell-Boltzmann distribution in the energy scale
+        Used this: http://mathworld.wolfram.com/MaxwellDistribution.html
+
     """
  
     x = math.sqrt(E/(units.kB * T))
     res = 1.0
-
-    """
-    This is essentially a Maxwell-Boltzmann distribution in the energy scale
-    Used this: http://mathworld.wolfram.com/MaxwellDistribution.html
-    """
 
     D = ERF(x) - math.sqrt(4.0/math.pi) * x * math.exp(-x*x)
     if D>1.0 or D<0.0:
@@ -86,13 +102,23 @@ def Boltz_cl_prob_up(E, T):
 
 def HO_prob(E, qn, T):
     """
-    E [list of doubles] - all the energy levels present in the system [in a.u.]
-    qn [list of ints] - quantum numbers for each frequency
-    T [double] - temperature 
-
+    
     Probability that the oscillators are in the given vibrational states
-
     Multi-oscillator generalization of Eq. 10
+
+    Args:
+        E ( list of doubles ): all the energy levels present in the system [in a.u.]
+        qn ( list of ints ): quantum numbers for each oscillator
+        T ( double ): temperature 
+
+    Returns:
+        tuple: (res, prob), where:
+
+            * res ( double ): the probability that the system of N oscillators is in a given
+                state, defined by quantum numbers of each oscillator
+            * prob ( list of N doubles ): probability with which each of N oscillators occupies 
+                given vibrational state
+    
     """
     n_freqs = len(E)
  
@@ -108,14 +134,23 @@ def HO_prob(E, qn, T):
 
 def HO_prob_up(E, qn, T):
     """
-    E [list of doubles] - all the energy levels  present in the system [in a.u.]
-    qn [list of ints]- min quantum numbers for each frequency
-    T [double] - temperature [K]
 
     Probability that the oscillators are in vibrational states with quantum numbers
-    above or equal to the minimal quantum numbers provided
+    above or equal to the minimal quantum numbers provided. Multi-oscillator generalization of Eq. 12
 
-    Multi-oscillator generalization of Eq. 12
+    Args:
+        E ( list of doubles ): all the energy levels  present in the system [in a.u.]
+        qn ( list of ints ): min quantum numbers for each frequency
+        T ( double ): temperature [K]
+
+    Returns:
+        tuple: (res, prob), where:
+
+            * res ( double ): the probability that the system of N oscillators is in any state
+                higher than given quantum numbers of each oscillators
+            * prob ( list of N doubles ): probability with which each oscillator can be found in any of 
+                the vibrational states higher than given by the quantum numbers in the qn argument
+
     """
     n_freqs = len(E)
  
@@ -131,13 +166,19 @@ def HO_prob_up(E, qn, T):
 
 def HO_prob_E_up(E, Emin, T):
     """
-    E [list of doubles] - all the energy levels  present in the system [in a.u.]
-    Emin [double]- the minimum energy
-    T [double] - temperature [K]
 
     We will compute the probability that a system of N oscillators 
     has energy more or equal of Emin. The oscillators can have only 
     quantized energy values
+
+    Args:
+        E ( list of doubles ): all the energy levels  present in the system [in a.u.]
+        Emin ( double ): the minimum energy
+        T ( double ): temperature [K]
+
+    Note:
+        This function is not yet implemented
+
     """
     pass
     

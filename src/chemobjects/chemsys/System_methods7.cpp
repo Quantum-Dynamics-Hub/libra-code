@@ -14,6 +14,8 @@
     
 */
 
+#include <sstream>
+
 #include "System.h"
 #include "../../Units.h"
 
@@ -301,6 +303,94 @@ void System::print_xyz(std::string filename,int fold,std::string pbc_type,int fr
   }
   fclose(fp);
 }
+
+
+std::string System::get_xyz(int fold,std::string pbc_type,int frame){
+/**Returns a string representing the system in an xyz format 
+  
+  \param[in] filename The name of the file where the info will be trinted out
+  \param[in] fold Controlls the folding of the coordinates into the unit-cell 
+  if fold==1 - will output coordinates folded into simulation box
+  \param[in] pbc_type The parameter controlling the periodicity (when and if folding) of the unit cell
+  Can take values: "a", "b", "c", "ab", "ac", "bc", and "abc"
+  \param[in] frame The integer index (in MD - the MD step, for instance) to be printed in the label of each record
+
+  Print the state of the system into file in XYZ format. Note that this functions will append the output to the
+  file fileanme, if the latter is not empty. This way, we can print out the whole MD trajectory in a single file. 
+  If this is not what you want, you may need to delete the older version of the file
+*/
+
+  stringstream ss; //(stringstream::in | stringstream::out);
+  //std::string out;
+
+  ss << Number_of_atoms << "\n";  // %6d
+
+  // Crystal structure information, CRYST1 record see: 
+  //http://deposit.rcsb.org/adit/docs/pdb_atom_format.html
+  if(is_Box){
+    VECTOR tv1,tv2,tv3;
+    Box.get_vectors(tv1,tv2,tv3);
+    double a,b,c,alp,bet,gam;
+    a = tv1.length();
+    b = tv2.length();
+    c = tv3.length();
+    tv1 = tv1/a;
+    tv2 = tv2/b;
+    tv3 = tv3/c;
+    alp = acos(tv2*tv3)*radians_to_degrees;
+    bet = acos(tv3*tv1)*radians_to_degrees;
+    gam = acos(tv1*tv2)*radians_to_degrees;
+
+    ss << "Molecule frame= "<<frame<<" "<<a*bohr<<" "<<b*bohr<<" "<<c*bohr; 
+    ss <<" "<<alp<<" "<<bet<<" "<<gam <<"\n";   // %6d %9.3f%9.3f%9.3f%7.2f%7.2f%7.2f
+    //ss>>out;
+  } 
+  else{
+    ss << "Molecule frame= "<<frame<<" \n"; // %6d 
+    //ss>>out;
+  }
+
+  for(int i=0;i<Number_of_atoms;i++){
+    int at_ser_num = 1;
+    std::string at_name = "H";
+    int grp_num;
+    VECTOR r;
+    double occup = 1.0;
+    double b_fact = 0.0;
+
+    if(Atoms[i].is_Atom_id){at_ser_num = Atoms[i].Atom_id;}
+    if(Atoms[i].is_Atom_element){at_name = Atoms[i].Atom_element;}
+    grp_num = Atoms[i].globGroup_Index;
+    if(Atoms[i].is_Atom_RB){  if(Atoms[i].Atom_RB.is_rb_cm){   r = Atoms[i].Atom_RB.rb_cm;  }  }
+    if(Atoms[i].is_Atom_charge){ b_fact = Atoms[i].Atom_charge; }
+
+    if(fold && is_Box){
+      MATRIX3x3 invBox; invBox = Box.inverse();
+      VECTOR borig; borig = 0.0; // box origin
+
+      r = invBox * (r - borig);
+
+      if((pbc_type=="a")||(pbc_type=="ab")||(pbc_type=="ac")||(pbc_type=="abc")) {
+        r.x = r.x - floor(r.x);
+      }
+      if((pbc_type=="b")||(pbc_type=="ab")||(pbc_type=="bc")||(pbc_type=="abc")) {
+        r.y = r.y - floor(r.y);
+      }
+      if((pbc_type=="c")||(pbc_type=="ac")||(pbc_type=="bc")||(pbc_type=="abc")) {
+        r.z = r.z - floor(r.z);
+      }
+      r = Box * r + borig;
+    }// fold && is_Box
+
+    r *= bohr; // convert from internal units (a.u.) to conventional units (Angstrom)
+
+    ss << at_name<<" "<<r.x<<" "<<r.y<<" "<<r.z<<"\n";  // %4s  %8.3f%8.3f%8.3f
+    //ss>>out;
+  }
+
+  return ss.str();
+}
+
 
 
 }// namespace libchemsys

@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2018 Wei Li and Alexey V. Akimov
+#* Copyright (C) 2018-2019 Wei Li and Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -8,11 +8,18 @@
 #* or <http://www.gnu.org/licenses/>.
 #*
 #*********************************************************************************/
+"""
+
+.. module:: qsh
+   :platform: Unix, Windows
+   :synopsis:   Implementation of the QuasiStochastic Hamiltonian method
+       Akimov, J. Phys. Chem. Lett. 2017, 8, 5190
+
+.. moduleauthor:: Wei Li and Alexey V. Akimov
+
 
 """
-  Implementation of the Quasistochastic Hamiltonian method
-      Akimov, J. Phys. Chem. Lett. 2017, 8, 5190
-"""
+
 
 import cmath
 import math
@@ -25,41 +32,66 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 
-import common_utils as comn
-import step4
+import libra_py.common_utils as comn
 import libra_py.units as units
-import libra_py.acf_vector as acf_vector
-import influence_spectrum
+import libra_py.influence_spectrum as influence_spectrum
+import libra_py.data_stat as data_stat
 
 
-def compute_freqs(nstates, H_vib_re, H_vib_im, dt, Nfreqs, filename, logname, dw, wspan):
-    """
-    Compute a matrix of frequencies for each matrix element
+def compute_freqs(H_vib, params):
+    """Compute a matrix of frequencies for each matrix element
 
-    nstates   [int] - the number of states (defines the dimensionality of the matrices)
-    H_vib_re  [list of MATRIX] - time-series: real parts of the vibronic Hamiltonian
-    H_vib_im  [list of MATRIX] - time-series: imaginary parts of the vibronic Hamiltonian
-    dt        [double] - time step between the data in the time-series [a.u. of time]
-    Nfreqs    [int] - the maximal number of frequencies we want to extract
-    filename  [string] - the prefix of the filenames generated
-    logname   [string] - the name of the log-file
-    dw        [double] - the freqency grinding distance [cm^-1, Default: 1.0 cm^-1]
-    wspan     [double] - the width of the spectral window to resolve [cm^-1, Default: 3000 cm^-1]
+    Args:
 
-    """
+        H_vib ( list of CMATRIX objects ): the vibronic Hamiltonian for all time-points
+            H_vib[istep].get(i,j) - i,j matrix element for the step `istep`
     
-    freqs = [ [ [] for i in xrange(nstates)] for j in xrange(nstates)]
-    for i in xrange(nstates):
-        for j in xrange(nstates):
-            if i == j:
-                freqs[i][j] = influence_spectrum.compute(H_vib_re, i, j, dt, Nfreqs, filename+"_re_", logname, dw, wspan)
-            else:
-                freqs[i][j] = influence_spectrum.compute(H_vib_im, i, j, dt, Nfreqs, filename+"_im_", logname, dw, wspan)
+        params ( dictionary ): the parameters that control the execution of this function
 
-    if len(freqs[0][0]) < Nfreqs:
-        Nfreqs = len(freqs[0][0])
-        print "The input Nfreqs is larger than the maximal number of the peaks, changing it to ", Nfreqs
+            SeeAlso: influence_spectrum.compute_mat_elt for the description of other parameters:
 
+                * filename
+                * logname
+                * nfreqs
+
+            SeeAlso: influence_spectrum.recipe1(data, params) for the description of other parameters: 
+            
+                * dt
+                * wspan
+                * dw
+                * do_output
+                * acf_filename
+                * spectrum_filename
+                * do_center
+                * acf_type
+                * data_type
+
+    Returns:
+        tuple: (freqs, dev), where:
+
+            SeeAlso: influence_spectrum.compute_mat_elt for the description of the output `freqs`
+
+            dev ( list of lists of double ): 
+                dev[i][j] is the standard deviation the QSH terms (sum over frequencies)
+
+    """
+
+    # Set defaults and check critical parameters
+    critical_params = [ ] 
+    default_params = {  }
+    comn.check_input(params, default_params, critical_params)
+
+
+    # Local variables and dimensions
+    nsteps = len(H_vib)    
+    nstates = H_vib[0].num_of_rows
+
+    freqs, T,  norm_acf,  raw_acf,  W,  J, J2 = influence_spectrum.compute_all(H_vib, params)  # T in fs, W and freqs in cm^-1
+
+    dt = params["dt"]
+    conv = units.wavn2au * units.fs2au
+
+    
     # Ok, now we have the function - sum of sines, so let's compute the standard deviation
     # This is a silly method - just do it numerically
     dev = [ [ 0.0 for i in xrange(nstates)] for j in xrange(nstates)]
@@ -68,15 +100,17 @@ def compute_freqs(nstates, H_vib_re, H_vib_im, dt, Nfreqs, filename, logname, dw
         for j in xrange(nstates):
 
             # Adjust the number of frequencies
-            if len(freqs[i][j]) < Nfreqs:
-                Nfreqs = len(freqs[i][j])
+            nfreqs = params["nfreqs"]            
+            if len(freqs[i][j]) < nfreqs:
+                nfreqs = len(freqs[i][j])
 
+            # Compute the variation of the QSH terms
             fu_ave, fu2_ave = 0.0, 0.0
             for r in xrange(1000000):
 
                 fu = 0.0
-                for k in xrange(Nfreqs):
-                    fu = fu + freqs[i][j][k][2] * math.sin(freqs[i][j][k][0]*r*dt)
+                for k in xrange(nfreqs):
+                    fu = fu + freqs[i][j][k][2] * math.sin(conv*freqs[i][j][k][0]*r*dt)
 
                 fu_ave = fu_ave + fu
                 fu2_ave = fu2_ave + fu*fu
@@ -86,30 +120,39 @@ def compute_freqs(nstates, H_vib_re, H_vib_im, dt, Nfreqs, filename, logname, dw
     return freqs, dev
 
 
-def compute_qs_Hvib(Nfreqs, freqs, t, nstates, 
+
+
+def compute_qs_Hvib(Nfreqs, freqs, t, 
                  H_vib_re_ave, H_vib_re_std, dw_Hvib_re, up_Hvib_re, 
                  H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im, 
                  dev):
-    """
-    Compute the QSH Hamiltonians
+    """Compute the QSH Hamiltonians
 
-    Nfreqs        [int] - the number of frequencies we want to use in the QSH calculations (upper limit, the actual number could be smaller)
-    freqs         [list of lists of doubles] - contains the spectral info for various matrix elements of the sampled Hvib
-    t             [double] - time at which we want to reconstruct the QSH [a.u.]
-    nstates       [int] - the number of states
-    H_vib_re_ave  [MATRIX(nstates, nstates)] - average of energies for direct Hamiltonian
-    H_vib_im_ave  [MATRIX(nstates, nstates)] - average of couplings for direct Hamiltonian
-    H_vib_re_std  [MATRIX(nstates, nstates)] - std of energies for direct Hamiltonian
-    H_vib_im_std  [MATRIX(nstates, nstates)] - std of couplings for direct Hamiltonian
-    up_Hvib_re    [MATRIX(nstates, nstates)] - maximum value of energies for direct Hamiltonian
-    up_Hvib_im    [MATRIX(nstates, nstates)] - maximum value of couplings for direct Hamiltonian
-    dw_Hvib_re    [MATRIX(nstates, nstates)] - minimal value of energies for direct Hamiltonian
-    dw_Hvib_im    [MATRIX(nstates, nstates)] - minimal value of couplings for direct Hamiltonian
-    std - nstates x nstates matrix, std for direct Hamiltonian
+    Args:
+        Nfreqs ( int ): the number of frequencies we want to use in the QSH calculations (upper limit, the actual number could be smaller)
+        freqs ( list of lists of doubles ): contains the spectral info for various matrix elements of the sampled Hvib
+            SeeAlso: influence_spectrum.compute_mat_elt for the description of the output `freqs`
+
+        t ( double ): time at which we want to reconstruct the QSH [ units: a.u. ]
+        H_vib_re_ave ( MATRIX(nstates, nstates) ): average of energies for direct Hamiltonian
+        H_vib_im_ave ( MATRIX(nstates, nstates) ): average of couplings for direct Hamiltonian
+        H_vib_re_std ( MATRIX(nstates, nstates) ): std of energies for direct Hamiltonian
+        H_vib_im_std ( MATRIX(nstates, nstates) ): std of couplings for direct Hamiltonian
+        up_Hvib_re ( MATRIX(nstates, nstates) ): maximum value of energies for direct Hamiltonian
+        up_Hvib_im ( MATRIX(nstates, nstates) ): maximum value of couplings for direct Hamiltonian
+        dw_Hvib_re ( MATRIX(nstates, nstates) ): minimal value of energies for direct Hamiltonian
+        dw_Hvib_im ( MATRIX(nstates, nstates) ): minimal value of couplings for direct Hamiltonian
+        dev ( list of lists of doubles, nstates x nstates ): std for direct Hamiltonian
+            SeeAlso: compute_freqs for the description of the output `dev`
     
-    Return: CMATRIX(nstates, nstates) - contains QSH vibronic Hamiltonian at given time
+    Returns: 
+        CMATRIX(nstates, nstates): contains QSH vibronic Hamiltonian at a given time
 
     """
+
+    nstates = H_vib_re_ave.num_of_cols
+    conv = units.wavn2au
+    
     Hvib_stoch_re = MATRIX(nstates,nstates)
     Hvib_stoch_im = MATRIX(nstates,nstates)
 
@@ -118,11 +161,12 @@ def compute_qs_Hvib(Nfreqs, freqs, t, nstates,
     for i in xrange(nstates):
         for j in xrange(nstates):
             # Adjust the number of frequencies
+            nfreqs = Nfreqs
             if len(freqs[i][j]) < Nfreqs:
-                Nfreqs = len(freqs[i][j])
+                nfreqs = len(freqs[i][j])
 
-            for k in xrange(Nfreqs):
-                fu[i][j] = fu[i][j] + freqs[i][j][k][2] * math.sin(freqs[i][j][k][0]*t)
+            for k in xrange(nfreqs):
+                fu[i][j] = fu[i][j] + freqs[i][j][k][2] * math.sin(conv*freqs[i][j][k][0]*t)
 
 
     for i in xrange(nstates):
@@ -141,8 +185,8 @@ def compute_qs_Hvib(Nfreqs, freqs, t, nstates,
                     xab = dw_Hvib_im.get(i,j)
                 elif xab > up_Hvib_im.get(i,j):
                     xab = up_Hvib_im.get(i,j)
-                Hvib_stoch_im.set(i,j,   xab )
-                Hvib_stoch_im.set(j,i,  -xab )
+                Hvib_stoch_im.set(i,j,  -xab )
+                Hvib_stoch_im.set(j,i,   xab )
 
     Hvib_stoch = CMATRIX(Hvib_stoch_re, Hvib_stoch_im)
 
@@ -151,120 +195,120 @@ def compute_qs_Hvib(Nfreqs, freqs, t, nstates,
 
 
 
-def run(params):
+def run(H_vib, params):
     """
-    The procedure to convert the results of QE/model Hvib calculations to longer timescales using the QSH approach
-    
-    === General control parameters ===
 
-    params["dt"]                  [double] - nuclear dynamics integration time step [in a.u. of time, default: 41.0]
-    params["nfreqs"]              [int] - maximal number of frequencies to use to reconstruct all the matrix elements
-    params["dw"]                  [double] - frequency spacing [cm^-1, Default: 1.0]
-    params["wspan"]               [double] - maximal frequency value [cm^-1, Default: 4000.0]
-    params["filename"]            [string] - prefix for the filenames where the spectral calculations will be printed out
-    params["logname"]             [string] - the name of the file to contain general output of the spectral calculations
+    The procedure to convert the results of QE/model Hvib calculations to longer 
+    timescales using the QSH approach
 
-    === Required by the input ===
-   
-    params["nstates"]             [int] - how many lines/columns in the file - the total number of states
-    params["nfiles"]              [int] - how many input files (direct Hvib) to read, starting from index 0
-    params["data_set_paths"]      [string] - where the input files are located
-    params["Hvib_re_prefix"]      [string] - prefixes of the files with real part of the vibronic Hamiltonian at time t
-    params["Hvib_re_suffix"]      [string] - suffixes of the files with real part of the vibronic Hamiltonian at time t
-    params["Hvib_im_prefix"]      [string] - prefixes of the files with imaginary part of the vibronic Hamiltonian at time t
-    params["Hvib_im_suffix"]      [string] - suffixes of the files with imaginary part of the vibronic Hamiltonian at time t
+    Args:
+        H_vib ( list of lists of CMATRIX ): the vibronic Hamiltonian for all data sets and all time-points
 
-    === Define the output ===
-    params["do_output"]           [Boolean] - the flag that determines whether to generate the output files. Default: True. 
-                                  Set to False for the on-the-fly QSH
-    params["nsteps"]              [int] - how many output files (QSH) to write, starting from index 0
-    params["output_set_paths"]    [string] - where the resulting Hvib files are to be stored [default: the same as the input paths]
-    params["qsh_Hvib_re_prefix"]  [string] - prefixes of the output files with real part of the QSH vibronic Hamiltonian at time t
-    params["qsh_Hvib_re_suffix"]  [string] - suffixes of the output files with real part of the QSH vibronic Hamiltonian at time t
-    params["qsh_Hvib_im_prefix"]  [string] - prefixes of the output files with imaginary part of the QSH vibronic Hamiltonian at time t
-    params["qsh_Hvib_im_suffix"]  [string] - suffixes of the output files with imaginary part of the QSH vibronic Hamiltonian at time t
+            Such that H_vib[idata][istep].get(i,j) is the i,j matrix element for the data 
+            set ```idata``` and step in that data set ```istep```
 
-    Return: list of reconstructed QSH objects for 
+        params ( dictionary ): controls the present and all underlying level calculations
+
+            * **params["dt"]** ( double ): nuclear dynamics integration time step
+                this is also the spacing between initial data points [ units: a.u. of time, default: 41.0]
+
+            * **params["nfreqs"]** ( int ): maximal number of frequencies to use to reconstruct all the matrix elements [ default: 1]
+
+            * **params["nsteps"]** ( int ): how many time-steps of QSH to generate [ default: 10]
+
+            * **params["do_QSH_output"]** ( Boolean ): the flag that determines whether to generate the 
+                output files containing the QSH Hamiltonians. [ default : False] 
+
+            * **params["output_set_paths"]** ( list of strings ): 
+                Directories where the resulting QSH Hvib files will be printed out. These directories should already exist
+                [default: QSH_#_of_data_set, e.g. QSH_0, QSH_1, etc.]
+
+            * **params["qsh_Hvib_re_prefix"]** ( string ): prefixes of the output files with real part 
+                of the QSH vibronic Hamiltonian at time t
+
+            * **params["qsh_Hvib_re_suffix"]** ( string ): suffixes of the output files with real part 
+                of the QSH vibronic Hamiltonian at time t
+
+            * **params["qsh_Hvib_im_prefix"]** ( string ): prefixes of the output files with imaginary part
+                of the QSH vibronic Hamiltonian at time t
+
+            * **params["qsh_Hvib_im_suffix"]** ( string ): suffixes of the output files with imaginary part
+                of the QSH vibronic Hamiltonian at time t
+
+    Returns: 
+        ( list of lists ): qsh_H_vib, such as
+            qsh_H_vib[idata][istep] - is a CMATRIX(nstates, nstates) object representing a vibronic Hamiltonian
+            predicted for the time step `istep` using the training dataset `idata`
      
     """
 
-    critical_params = [ "nstates", "nfiles", "nsteps"] # "data_set_paths", "output_set_paths" ]
-    default_params = { "dt":41.0, "nfreqs":1, "dw":1.0, "wspan":4000.0, "logname":"out.log",
-                       "filename":"influence_spectra_",
-                       "Hvib_re_prefix":"Hvib_", "Hvib_im_prefix":"Hvib_",
-                       "Hvib_re_suffix":"_re",   "Hvib_im_suffix":"_im",
+    # General dimensions
+    ndata = len(H_vib)
+    nstates = H_vib[0][0].num_of_cols
+    output_set_paths = []
+    for i in xrange(ndata): 
+        output_set_paths.append( "QSH_%s" % (i) )
+
+    # Check the input parameters and setup defaults
+    critical_params = [ ] 
+    default_params = { "dt":41.0, "nfreqs":1, "nsteps":10,
+                       "do_QSH_output":False,
+                       "output_set_paths":output_set_paths,
                        "qsh_Hvib_re_prefix":"qsh_Hvib_", "qsh_Hvib_im_prefix":"qsh_Hvib_",
-                       "qsh_Hvib_re_suffix":"_re",   "qsh_Hvib_im_suffix":"_im",
-                       "do_output":True                 }
+                       "qsh_Hvib_re_suffix":"_re",   "qsh_Hvib_im_suffix":"_im" }
     comn.check_input(params, default_params, critical_params)
 
-    """ 
-    if(len(params["data_set_paths"]) != len(params["output_set_paths"])):
-        print "Error: Input and output sets paths should have equal number of entries\n"
-        print "len(params[\"data_set_paths\"]) = ", len(params["data_set_paths"])
-        print "len(params[\"output_set_paths\"]) = ", len(params["output_set_paths"])
-        print "Exiting...\n"
-        sys.exit(0)
-    """
-
-    dt = params["dt"]
-    ndata = len(params["data_set_paths"])
-    nfiles = params["nfiles"]
-    nsteps = params["nsteps"]
-
-    nstates = params["nstates"]
+    # Local parameters
     nfreqs = params["nfreqs"]
+    nsteps = params["nsteps"]
+    dt = params["dt"]
 
-    filename = params["filename"] 
-    logname = params["logname"]
-    dw = params["dw"]
-    wspan = params["wspan"]
-    
+    # Parameters for the undelying functions
+    params1 = dict(params)
+    params1["dt"] = params["dt"] * units.au2fs  # compute_freqs takes dt in fs
 
 
-    H_vib = []
+    qsh_H_vib = []
 
     for idata in xrange(ndata):   # over all MD trajectories (data sets)
         
-        #======== Read in the vibronic Hamiltonian along the trajectory for each data set ============
-        prms = dict(params)    
-        prms.update({"Hvib_re_prefix": params["data_set_paths"][idata]+params["Hvib_re_prefix"] })
-        prms.update({"Hvib_im_prefix": params["data_set_paths"][idata]+params["Hvib_im_prefix"] })                
-
-        h_vib = step4.get_Hvib(prms)  # direct Hvib time-series
+        #======== Split complex-valued matrices into real and imaginary sets ============
 
         H_vib_re = []  # list of MATRIX
         H_vib_im = []  # list of MATRIX
-        for i in xrange(nfiles):
-            H_vib_re.append(h_vib[i].real())
-            H_vib_im.append(h_vib[i].imag())
+
+        nsteps0 = len(H_vib[idata])   
+        for i in xrange(nsteps0):
+            H_vib_re.append(H_vib[idata][i].real())
+            H_vib_im.append(H_vib[idata][i].imag())
 
 
         #======== Analyze the Hvib time-seris  ============
-        H_vib_re_ave, H_vib_re_std, dw_Hvib_re, up_Hvib_re = comn.mat_stat(H_vib_re)
-        H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im = comn.mat_stat(H_vib_im)    
+        H_vib_re_ave, H_vib_re_std, dw_Hvib_re, up_Hvib_re = data_stat.mat_stat(H_vib_re)
+        H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im = data_stat.mat_stat(H_vib_im)    
 
-        freqs, dev = compute_freqs(nstates, H_vib_re, H_vib_im, dt, nfreqs, filename, logname, dw, wspan)
+        
+        freqs, dev = compute_freqs(H_vib[idata], params1)   # freqs are in cm^-1
 
         
         #============= Output the resulting QSH Hamiltonians ===========================
         Hvib = []
         for i in xrange(nsteps):
             # compute QSH Hvib at time t_i = i * dt
-            qs_Hvib = compute_qs_Hvib(nfreqs, freqs, i*dt, nstates,  H_vib_re_ave, H_vib_re_std, dw_Hvib_re, 
+            qs_Hvib = compute_qs_Hvib(nfreqs, freqs, i*dt, H_vib_re_ave, H_vib_re_std, dw_Hvib_re, 
                             up_Hvib_re, H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im,  dev)
 
             Hvib.append(CMATRIX(qs_Hvib))
 
-            if params["do_output"]==True:
+            if params["do_QSH_output"]==True:
                 #============= Output the resulting QSH Hamiltonians ===========================
                 re_filename = prms["output_set_paths"][idata] + prms["qsh_Hvib_re_prefix"] + str(i) + prms["qsh_Hvib_re_suffix"]
                 im_filename = prms["output_set_paths"][idata] + prms["qsh_Hvib_im_prefix"] + str(i) + prms["qsh_Hvib_im_suffix"]        
                 qs_Hvib.real().show_matrix(re_filename)
                 qs_Hvib.imag().show_matrix(im_filename)
 
-        H_vib.append(Hvib)        
+        qsh_H_vib.append(Hvib)        
         
 
-    return H_vib
+    return qsh_H_vib
 
