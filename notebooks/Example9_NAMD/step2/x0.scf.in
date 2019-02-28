@@ -1,0 +1,54 @@
+&CONTROL
+  calculation = 'scf',
+  dt = 20.67055,
+  nstep = 10,
+  pseudo_dir = '/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/notebooks/Example9_NAMD/PP/',
+  outdir = './',
+  prefix = 'x0',
+  disk_io = 'low',
+  wf_collect = .true.
+/
+
+&SYSTEM
+  ibrav = 0,
+  celldm(1) = 1.89,
+  nat = 4,
+  ntyp = 2,
+  nspin = 2,
+  starting_magnetization(1) = 0.1,
+  nbnd = 40,
+  ecutwfc = 40,
+  tot_charge = 0.0,
+  occupations = 'smearing',
+  smearing = 'gaussian',
+  degauss = 0.005,
+  nosym = .true.,
+/
+
+&ELECTRONS
+  electron_maxstep = 300,
+  conv_thr = 1.D-5,
+  mixing_beta = 0.45,
+/
+
+&IONS
+  ion_dynamics = 'verlet',
+  ion_temperature = 'andersen',
+  tempw = 300.00 ,
+  nraise = 1,
+/
+
+
+ATOMIC_SPECIES
+ Cd 121.411  Cd.pbe-n-rrkjus_psl.1.0.0.UPF
+ Se 78.96    Se.pbe-dn-rrkjus_psl.1.0.0.UPF
+
+
+K_POINTS automatic
+ 1 1 1 0 0 0
+
+CELL_PARAMETERS (alat=  1.89000000)
+   4.716986504  -0.015512615  -0.002400656
+  -2.371926710   4.062829845  -0.000273730
+  -0.002552594  -0.001387965   8.436361230
+

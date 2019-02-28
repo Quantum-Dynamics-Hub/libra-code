@@ -10,12 +10,12 @@
 """
 .. module:: step2
    :platform: Unix, Windows
-   :synopsis: This module implements functions for building molecular structures
+   :synopsis: This module implements functions for doing NAC calculaitons in the 1-electron
+       basis of KS orbitals, withe the QE package
 
 .. moduleauthor:: Brendan A. Smith, Wei Li, and Alexey V. Akimov
 
 """
-
 
 import os
 import sys
@@ -25,13 +25,13 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-from libra_py import *
-
-from utils import *
-import libra_py.common_utils as comn
+from libra_py import QE_methods
 from libra_py import units
+
+import libra_py.common_utils as comn
 import compute_properties
 import compute_hprime
+import utils
 
 
 def run_qe(params, t, dirname0, dirname1):
@@ -103,8 +103,13 @@ def run_qe(params, t, dirname0, dirname1):
     # Run calculations
     # A regular calculation anyway
     if nac_method == 0 or nac_method == 1 or nac_method == 3:
-        os.system( "%s -n %s %s < %s.%d.in > %s.%d.out" % (BATCH_SYSTEM,NP,EXE,prefix0,t,prefix0,t) )
-        os.system( "%s -n %s %s < x0.exp.in > x0.exp.out" % (BATCH_SYSTEM,NP,EXE_EXPORT) )
+        if BATCH_SYSTEM==None:
+            os.system( "%s < %s.%d.in > %s.%d.out" % ( EXE,prefix0,t,prefix0,t) )
+            os.system( "%s < x0.exp.in > x0.exp.out" % ( EXE_EXPORT ) )
+
+        else:
+            os.system( "%s -n %s %s < %s.%d.in > %s.%d.out" % (BATCH_SYSTEM,NP,EXE,prefix0,t,prefix0,t) )
+            os.system( "%s -n %s %s < x0.exp.in > x0.exp.out" % (BATCH_SYSTEM,NP,EXE_EXPORT) )
 
         # Create temporary directory
         os.system("mkdir %s/%s" % (wd, dirname0) )
@@ -116,8 +121,12 @@ def run_qe(params, t, dirname0, dirname1):
                                                                         
     # Perform the soc calculation on its own, or in addition to the regular one
     if nac_method == 2 or nac_method == 3:
-        os.system( "%s -n %s %s < %s.%d.in > %s.%d.out" % (BATCH_SYSTEM,NP,EXE,prefix1,t,prefix1,t) )
-        os.system( "%s -n %s %s < x1.exp.in > x1.exp.out" % (BATCH_SYSTEM,NP,EXE_EXPORT) )
+        if BATCH_SYSTEM==None:
+            os.system( "%s < %s.%d.in > %s.%d.out" % ( EXE,prefix0,t,prefix0,t) )
+            os.system( "%s < x0.exp.in > x0.exp.out" % ( EXE_EXPORT ) )
+        else:
+            os.system( "%s -n %s %s < %s.%d.in > %s.%d.out" % (BATCH_SYSTEM,NP,EXE,prefix1,t,prefix1,t) )
+            os.system( "%s -n %s %s < x1.exp.in > x1.exp.out" % (BATCH_SYSTEM,NP,EXE_EXPORT) )
 
         os.system("mkdir %s/%s" % (wd,dirname1) )
 
@@ -137,6 +146,10 @@ def read_info(params):
 
     Args:
         params ( dictionary ): Calculation control parameters
+
+            * **params["wd"]** ( string ): the name of a "working directory (can be removed once the calculatons
+                are done)" that will be created during this function execution - this is where the temporary files
+                are written to [default: "wd"]
         
             * **params["nac_method"]** ( int ): selects the type of output to analyze:
 
@@ -182,7 +195,6 @@ def read_info(params):
     # for non-relativistic, non-spin-polarized calculations
     if nac_method == 0:
         info0, all_e_dum0 = QE_methods.read_qe_index("%s/curr0/x0.export/index.xml" % wd0, [], 0)
-#        info0, all_e_dum0 = QE_methods.read_qe_index("%s/index.xml" % wd0, [], 0)
 
         if info0["nspin"] != 1:
             print "Error, you are not running the non-relativistic, non-spin-polarized calculation \
@@ -193,7 +205,6 @@ def read_info(params):
     # for non-relativistic, spin-polarized calculations
     if nac_method == 1 or nac_method == 3:
         info0, all_e_dum0 = QE_methods.read_qe_index("%s/curr0/x0.export/index.xml" % wd0, [], 0)
-#        info0, all_e_dum0 = QE_methods.read_qe_index("%s/index.xml" % wd0, [], 0)
 
         if info0["nspin"] != 2:
             print "Error, you are not running spin-polarized calculations,\
@@ -204,7 +215,6 @@ def read_info(params):
     # for fully-relativistic non-collinear calculations
     if nac_method == 2 or nac_method==3:
         info1, all_e_dum1 = QE_methods.read_qe_index("%s/curr1/x1.export/index.xml" % wd0, [], 0)
-#        info1, all_e_dum1 = QE_methods.read_qe_index("%s/index.xml" % wd1, [], 0)
 
         if info1["nspin"] != 4:
             print "Error,you are not running SOC calculations \
@@ -230,7 +240,11 @@ def read_all(params):
 
     params ( dictionary ): Parameters controlling the simulation parameters
 
-        * **params["prefix"]** ( string ): the location of the folder containing index.xml, wfc.*, and grid.* files [default: x0.export ]
+        * **params["wd"]** ( string ): the name of a "working directory (can be removed once the calculatons
+            are done)" that will be created during this function execution - this is where the temporary files
+            are written to [default: "wd"]
+
+        * **params["prefix"]** ( string ): the location of the folder containing index.xml, wfc.*, and grid.* files [default: "x0.export" ]
         * **params["read_wfc"]** ( 0 or 1 ): whether or not to read the wfc coefficients. [ default: 1 ]
         * **params["read_grid"]** ( 0 or 1 ): whether or not to read the grid informations. [ default: 1 ]
         * **params["verb0"]** ( 0 or 1 ): turn off/on the extra printout while reading index.xml. [ default: 0 ]
@@ -267,12 +281,14 @@ def read_all(params):
 
     # Now try to get parameters from the input
     critical_params = [ ] 
-    default_params = { "nac_method":0, "wd":"wd" , "rd":os.getcwd()+"../../res",  "prefix":"x0.export" 
-    "read_wfc":1, "read_grid":1, "verb0":0, "verb1":0, "verb2":0, "minband":1, "maxband":2  }
+    default_params = { "wd":"wd" , "prefix":"x0.export",
+                       "read_wfc":1, "read_grid":1, 
+                       "verb0":0, "verb1":0, "verb2":0, 
+                       "nac_method":0, "minband":1, "maxband":2 
+                     }
     comn.check_input(params, default_params, critical_params)
 
     wd = params["wd"]
-    rd = params["rd"]
     prefix = params["prefix"]
     is_wfc = params["read_wfc"]
     is_grd = params["read_grid"]
@@ -283,6 +299,12 @@ def read_all(params):
     minband = params["minband"]
     maxband = params["maxband"]
 
+    if(minband<=0): 
+        print "Error: minband should be >0, current value of minband = ",minband
+        sys.exit(0)
+    if(minband>maxband):
+        print "Error: minband must be smaller or equal to maxband. Current values: minband = ",minband," maxband = ",maxband
+        sys.exit(0)
 
     print "printing prefix:  ", prefix
 
@@ -301,25 +323,17 @@ def read_all(params):
         print "Reading index from file ", file1
         info, e = QE_methods.read_qe_index(file1, act_space, verb0)
 
+
     coeff = []
     grid = []
-
     for ik in xrange(info["nk"]):
         print "Handling the k-point %i with coordinates: %8.5f %8.5f %8.5f " \
          % (ik, info["k"][ik].x, info["k"][ik].y, info["k"][ik].z)
 
         if is_wfc==1:
-
             file2 = "%s/%s/wfc.%i" % (wd, prefix, ik+1)
             print "Reading the wfc from file ",file2
             coeff.append( QE_methods.read_qe_wfc(file2, act_space, verb1))   # CMATRIX(npw x len(act_space))
-
-            ## Extract binary wfc file(s) ##
-            #rd_wfc = rd + "/wf_storage_"+str(params["curr_index"])
-            #pref1  = prefix[0:5]
-            #pref2  = prefix[6:8]
-            #os.system( "mkdir %s" % (rd_wfc) )
-            #os.system( "cp %s/%s/%s.wfc* %s/" % (wd, pref1, pref2, rd_wfc) )
 
         if is_grd==1:
             file3 = "%s/%s/grid.%i" % (wd, prefix, ik+1)
@@ -348,6 +362,19 @@ def read_wfc_grid(params):
                 - 1 : spin-polarized calculations
                 - 2 : non-collinear calculation (SOC) only 
                 - 3 : spin-polarized and non-collinear calculation (SOC)
+
+            * **params["minband"]** ( int ): index of the lowest energy orbital to include
+                in the active space in the non-SOC (spin-diabatic) calculations, 
+                counting starts from 1. Used for nac_method == 0, 1, 3. [ default: 1]
+            * **params["maxband"]** ( int ): index of the highest energy orbital to include 
+                in the active space  in the non-SOC (spin-diabatic) calculations, 
+                counting starts from 1. Used for nac_method == 0, 1, 3. [ defaults: 2]
+            * **params["minband_soc"]** ( int ): index of the lowest energy orbital pair to include
+                in the active space in the SOC (spin-adiabatic) calculations, 
+                counting starts from 1. Used for nac_method == 2 and 3. [ default: 1]
+            * **params["maxband_soc"]** ( int ): index of the highest energy orbital pair to include 
+                in the active space  in the SOC (spin-adiabatic) calculations, 
+                counting starts from 1. Used for nac_method == 2 and 3. [ defaults: 2]
          
   
     Returns: 
@@ -385,12 +412,26 @@ def read_wfc_grid(params):
 
     # Now try to get parameters from the input
     critical_params = [ ] 
-    default_params = { "nac_method":0, "orthogonalize":0 }
+    default_params = { "nac_method":0, "orthogonalize":0,
+                       "minband":1, "maxband":2, 
+                       "minband_soc":1, "maxband_soc":2
+                     }
     comn.check_input(params, default_params, critical_params)
+
 
     nac_method = params["nac_method"]
     orthogonalize = params["orthogonalize"]
+    minband = params["minband"]
+    maxband = params["maxband"]
+    minband_soc = params["minband_soc"]
+    maxband_soc = params["maxband_soc"]
 
+
+    params_nosoc = dict(params)
+
+    params_soc = dict(params)
+    params_soc["minband"] = params["minband_soc"]
+    params_soc["maxband"] = params["maxband_soc"]
 
 
     """
@@ -405,8 +446,8 @@ def read_wfc_grid(params):
     if nac_method == 0 or nac_method == 1 or nac_method == 3:
 
         #====== Current electronic structure ========
-        params["prefix"] = "curr0/x0.export"
-        info_curr, e_curr, coeff_curr, grid_curr = read_all(params)
+        params_nosoc["prefix"] = "curr0/x0.export"
+        info_curr, e_curr, coeff_curr, grid_curr = read_all(params_nosoc)
 
         if orthogonalize==1:
             print "Do internal orbital orthogonalization"
@@ -419,20 +460,20 @@ def read_wfc_grid(params):
                 sys.exit(0)
 
 
-        C_dia_curr, E_dia_curr = post_process(coeff_curr, e_curr, 0)
+        C_dia_curr, E_dia_curr = utils.post_process(coeff_curr, e_curr, 0)
         res_curr["Coeff_dia"] = C_dia_curr
         res_curr["E_dia"] = E_dia_curr
         res_curr["grid"] = grid_curr
 
         #====== Next electronic structure ===========
-        params["prefix"] = "next0/x0.export"
-        info_next, e_next, coeff_next, grid_next = read_all(params)
+        params_nosoc["prefix"] = "next0/x0.export"
+        info_next, e_next, coeff_next, grid_next = read_all(params_nosoc)
 
         if orthogonalize==1:
             print "Do internal orbital orthogonalization"
-            coeff_next[0] = orthogonalize_orbitals(coeff_next[0])
+            coeff_next[0] = utils.orthogonalize_orbitals(coeff_next[0])
 
-        C_dia_next, E_dia_next = post_process(coeff_next, e_next, 0)
+        C_dia_next, E_dia_next = utils.post_process(coeff_next, e_next, 0)
         res_next["Coeff_dia"] = C_dia_next
         res_next["E_dia"] = E_dia_next
         res_next["grid"] = grid_next
@@ -441,12 +482,13 @@ def read_wfc_grid(params):
     if nac_method == 2 or nac_method == 3:
 
         #====== Current electron electructure =======
-        params["prefix"] = "curr1/x1.export"
-        info_curr, e_curr, coeff_curr, grid_curr = read_all(params)
+        params_soc["prefix"] = "curr1/x1.export"
+        params_soc["nac_method"] = 2
+        info_curr, e_curr, coeff_curr, grid_curr = read_all(params_soc)
 
         if orthogonalize==1:
             print "Do internal orbital orthogonalization"
-            coeff_curr[0] = orthogonalize_orbitals(coeff_curr[0])
+            coeff_curr[0] = utils.orthogonalize_orbitals(coeff_curr[0])
 
             id1 = CMATRIX(coeff_curr[0].num_of_cols, coeff_curr[0].num_of_cols)
             id1.identity()
@@ -454,21 +496,22 @@ def read_wfc_grid(params):
                 print "Error\n"
                 sys.exit(0)
 
-        C_adi_curr, E_adi_curr = post_process(coeff_curr, e_curr, 1)
+        C_adi_curr, E_adi_curr = utils.post_process(coeff_curr, e_curr, 1)
         res_curr["Coeff_adi"] = C_adi_curr
         res_curr["E_adi"] = E_adi_curr
         res_curr["grid"] = grid_curr
 
        
         #====== Next electronic structure ===========
-        params["prefix"] = "next1/x1.export"
-        info_next, e_next, coeff_next, grid_next = read_all(params)
+        params_soc["prefix"] = "next1/x1.export"
+        params_soc["nac_method"] = 2
+        info_next, e_next, coeff_next, grid_next = read_all(params_soc)
 
         if orthogonalize==1:
             print "Do internal orbital orthogonalization"
-            coeff_next[0] = orthogonalize_orbitals(coeff_next[0])
+            coeff_next[0] = utils.orthogonalize_orbitals(coeff_next[0])
 
-        C_adi_next, E_adi_next = post_process(coeff_next, e_next, 1)
+        C_adi_next, E_adi_next = utils.post_process(coeff_next, e_next, 1)
         res_next["Coeff_adi"] = C_adi_next
         res_next["E_adi"] = E_adi_next
         res_next["grid"] = grid_next
@@ -493,8 +536,10 @@ def run(params):
             the NACs [default: 1]
         * **params["dt"]** ( double ): time step between two adjacent datapoint a the trajectory [units: a.u.; default: 41.0]
         * **params["wd"]** ( string ): the name of a "working directory (can be removed once the calculatons
-            are done)" that will be created during this function execution - this is where all output 
-            (working) files will be written [ default: "wd" ]
+            are done)" that will be created during this function execution - this is where the temporary files
+            are written to 
+        * **params["rd"]** ( string ): the name of a "results directory" - this is where all the output files 
+            files will be written to [ default: "res" ]
         * **params["nac_method"]** ( int ): selects the type of output to analyze:
 
             - 0 : non-spin-polarized calculations [default]
@@ -502,48 +547,58 @@ def run(params):
             - 2 : non-collinear calculation (SOC) only 
             - 3 : spin-polarized and non-collinear calculation (SOC)
 
-        * **params["minband"]** ( int ): index of the lowest energy orbital to include
-            in the active space in the non-SOC (spin-diabatic) calculations, 
-            counting starts from 1. Used for nac_method == 0, 1, 3. [ default: 1]
-        * **params["maxband"]** ( int ): index of the highest energy orbital to include 
-            in the active space  in the non-SOC (spin-diabatic) calculations, 
-            counting starts from 1. Used for nac_method == 0, 1, 3. [ defaults: 2]
-        * **params["minband_soc"]** ( int ): index of the lowest energy orbital pair to include
-            in the active space in the SOC (spin-adiabatic) calculations, 
-            counting starts from 1. Used for nac_method == 2 and 3. [ default: 1]
-        * **params["maxband_soc"]** ( int ): index of the highest energy orbital pair to include 
-            in the active space  in the SOC (spin-adiabatic) calculations, 
-            counting starts from 1. Used for nac_method == 2 and 3. [ defaults: 2]
         * **params["compute_Hprime"]** ( Boolean ): the flag to compute the <i|H'|j> matrices [ default: False]
         * **params["verbosity"]** ( int ): the verbosity level regarding the execution of the current function [default: 0]
 
+
+        ..seealso:: parameters of ::funct::```run_qe``` function
+            * **params["BATCH_SYSTEM"]**
+            * **params["NP"]**
+            * **params["EXE"]**
+            * **params["EXE_EXPORT"]**
+            * **params["prefix0"]**
+            * **params["prefix1"]**
+
+        ..seealso:: parameters of ::funct::```read_all``` function
+
+            * **params["read_wfc"]** 
+            * **params["read_grid"]**
+            * **params["verb0"]** 
+            * **params["verb1"]**
+            * **params["verb2"]**
+
+        ..seealso:: parameters of ::funct::```read_wfc_grid``` function
+            * **params["maxband"]**
+            * **params["minband"]**
+            * **params["maxband_soc"]**
+            * **params["minband_soc"]**
+
+
+
     Returns:
         None: but generates the files with couplings, energies and transition density matrices
+            The matrices are of  2N x 2N dimensions, where N = maxband - minband + 1
  
     """
 
     # Now try to get parameters from the input
-    critical_params = [ ]
+    critical_params = [ "rd" ]
     default_params = { "start_indx":0, "stop_indx":1, "dt":1.0*units.fs2au, 
                        "wd":"wd",
                        "nac_method":0,
-                       "minband":1, "maxband":2, 
-                       "minband_soc":1, "maxband_soc":2, 
                        "compute_Hprime":False, 
                        "verbosity":0
                      }
     comn.check_input(params, default_params, critical_params)
 
 
+    rd = params["rd"]
+
     start_indx =  params["start_indx"] 
     stop_indx = params["stop_indx"] 
     dt = params["dt"]
     wd = params["wd"]
     nac_method = params["nac_method"]
-    minband = params["minband"]
-    maxband = params["maxband"]
-    minband_soc = params["minband_soc"]
-    maxband_soc = params["maxband_soc"]
     compute_Hprime = params["compute_Hprime"]
     verbosity = params["verbosity"]
 
@@ -552,12 +607,6 @@ def run(params):
     tim = Timer()
 
     # Sanity/Convention check
-    if(minband<=0): 
-        print "Error: minband should be >0, current value of minband = ",minband
-        sys.exit(0)
-    if(minband>maxband):
-        print "Error: minband must be smaller or equal to maxband. Current values: minband = ",minband," maxband = ",maxband
-        sys.exit(0)
         
     if nac_method == 0:        
         if verbosity>0:
@@ -574,13 +623,6 @@ def run(params):
     else:
         print "Error: nac_method must be one of the values in [0,1,2,3]  \n"
         sys.exit(0)
-
-
-    # Use this for nspin = 1 or 2
-    act_sp1 = range(minband, maxband+1)     # min = 1, max = 2 => range(1,3) = [1,2]
-
-    # Use this for nspin = 4
-    act_sp2 = range(2*minband_soc-1, 2*(maxband_soc+1)-1 ) # min =1, max = 2 => range(1,5) = [1,2,3,4]
 
 
 
@@ -628,7 +670,7 @@ def run(params):
             info0, all_e_dum0, info1, all_e_dum1 = read_info(params)
 
             # Read present and next electronic structure (es) in a formatted way
-            es_curr, es_next = read_wfc_grid(params, info0, info1)
+            es_curr, es_next = read_wfc_grid(params) 
 
             # Finally,  using the current and the next wavefunctions to compute the properties of interest
             # non-relativistic, non-spin-polarized case
@@ -644,7 +686,8 @@ def run(params):
                         compute_properties.compute_properties_general(params, es_curr, es_next, curr_index)
            
                     if compute_Hprime == True:
-                        compute_hprime.compute_hprime_dia(es_curr, info0, "%s/0_Hprime_%d" % (wd, curr_index) )
+                        compute_hprime.compute_hprime_dia(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
+                        #compute_hprime.hprime_py(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
                
 
             if nac_method == 2 or nac_method == 3:

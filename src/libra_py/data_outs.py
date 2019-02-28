@@ -28,6 +28,43 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 
+def show_matrix_pyplot(X, set_diag_to_zero=0):
+    """
+
+    This function prints a matrix in a file in the format
+    recognized by the matplotlib for 2D surfaces and maps
+
+    Args:
+        X ( MATRIX(N,M) ): object containing the data to be printed out
+        set_diag_to_zero ( int ): wheather print out the diagonal elements as 0.0 
+
+            * 0 - no, print out the diagonal elements as they are [ default ]
+            * 1 - yes, print out the diagonal elements as 0.0
+
+    """
+
+    ncol, nrow = X.num_of_cols, X.num_of_rows
+    x, y = [], []
+    for i in xrange(ncol):
+        x.append(i)
+    for i in xrange(nrow):
+        y.append(i)
+
+    
+    z = []    
+    for i in xrange(nrow):
+        z_i = []
+        for j in xrange(ncol):
+            val = X.get(i,j)
+            if set_diag_to_zero==1:
+                if i==j:
+                    val = 0.0
+            z_i.append(val)
+        z.append(z_i)
+         
+    return x, y, z
+
+
 
 def show_matrix_splot(X, filename, set_diag_to_zero=0):
     """
@@ -56,12 +93,12 @@ def show_matrix_splot(X, filename, set_diag_to_zero=0):
                     val = 0.0
             line = line + "%4i %4i %8.5f \n" % (i, j, val)
         line = line + "\n"
-
+        
     f = open(filename, "w")
     f.write(line)
     f.close()
  
-
+    return line
 
 
 

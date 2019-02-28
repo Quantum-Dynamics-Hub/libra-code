@@ -22,7 +22,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import datautils
+import data_outs
 import pdos
 
 def takeSecond(elem):
@@ -79,7 +79,7 @@ def spectrum(ham, T_file = "T_mo.dat", spec_file = "spectrum.txt"):
     # sort list with key
     sorted_res = sorted(res, key=takeSecond)
 
-    datautils.show_matrix_splot(Tmo, T_file)        
+    data_outs.show_matrix_splot(Tmo, T_file)        
 
     f = open(spec_file,"w") 
     for it in sorted_res:

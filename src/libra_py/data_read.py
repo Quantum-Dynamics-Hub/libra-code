@@ -26,6 +26,8 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
+import common_utils as comn
+
 
     
 def get_matrix(nrows, ncols, filename_re, filename_im, act_sp):
@@ -71,6 +73,126 @@ def get_matrix(nrows, ncols, filename_re, filename_im, act_sp):
     pop_submatrix(X_im, x_im, act_sp, act_sp)
 
     return CMATRIX(x_re, x_im)
+
+
+
+
+def get_data(params):
+    """Read a single set of data files 
+
+    Args:
+        params ( dictionary ): parameters controlling the function execution
+
+            Required parameter keys:
+
+            * **params["data_dim"]** ( int ): matrix dimension how many lines/columns in the file [Required!]
+            * **params["active_space"]** ( list of ints ): the indices of the states we care 
+                about. These indices will be used to determine the size of the created CMATRIX objects
+                and only these states will be extracted from the original files [ default: range(data_dim) ]
+            * **params["isnap"]** ( int ): index of the first file to read [Required!]
+            * **params["fsnap"]** ( int ): index of the final file to read [Required!]
+            * **params["data_re_prefix"]** ( string ): prefixes of the files with real part of the data [Required!]
+            * **params["data_im_prefix"]** ( string ): prefixes of the files with imaginary part of the data [Required!]
+            * **params["data_re_suffix"]** ( string ): suffixes of the files with real part of the Hvib(t) [default: "_re"]
+            * **params["data_im_suffix"]** ( string ): suffixes of the files with imaginary part of the Hvib(t) [default: "_im"]
+
+    Returns:
+        list of CMATRIX objects: data: 
+            a time series of data matrices, such that data[time] is a data at time step `time`
+
+    Example:
+        This example will read 10 pairs of files: "Hvib_0_re", "Hvib_0_im", "Hvib_1_re", "Hvib_1_im", ...
+        "Hvib_9_re", "Hvib_9_im". Each file should contain a 4 x 4 matrix of numbers. It will generate a 
+        list of 4 x 4 complex-valued matrices.
+
+        >>> hvib = get_data({"data_dim":4, "isnap":0, "fsnap":10, "data_re_prefix":"Hvib", "data_im_prefix":"Hvib"})
+
+        The following example will do the same as the example above, however the intially-read 4 x 4 matrices will
+        be partially discarded. Out of 16 values only 4 (the upper left block of 4 numbers)  will be stored in 
+        the resulting list of 2 x 2 complex-valued matrices. 
+
+        >>> hvib = get_data({"data_dim":4, "isnap":0, "fsnap":10, "data_re_prefix":"Hvib", "data_im_prefix":"Hvib", "active_space":[0,1]})
+
+
+    """
+
+    critical_params = ["data_dim", "isnap", "fsnap", "data_re_prefix", "data_im_prefix"]
+    default_params = { "data_re_suffix":"_re", "data_im_suffix":"_im", "active_space":range(params["data_dim"])}
+    comn.check_input(params, default_params, critical_params)
+
+    ndim = params["data_dim"]  # the number of cols/row in the input files
+
+    data = []
+    for i in range(params["isnap"],params["fsnap"]):
+
+        filename_re = params["data_re_prefix"]+str(i)+params["data_re_suffix"]
+        filename_im = params["data_im_prefix"]+str(i)+params["data_im_suffix"]
+        data_i = get_matrix(ndim, ndim, filename_re, filename_im, params["active_space"] ) 
+        data.append(data_i)
+
+    return data
+
+
+def get_data_sets(params):
+    """Reads several sets of data files 
+
+    Args:
+        params ( dictionary ): parameters controlling the function execution [Required!]
+
+            Required parameter keys:
+
+            * **params["data_set_paths"]** ( list of strings ):
+                define the paths of the directories where the data files for
+                different data sets (e.g. independent MD trajectories) are located. 
+            .. note::
+                In addition, requires parameters described in
+                :func:`get_data`
+
+    Returns:
+        list of lists of CMATRIX: data: 
+            the time series of Hvib matrices for several data sets, such that
+            data[idata][time] is a CMATRIX for the data set indexed by `idata`
+            at time `time`
+
+
+    Example:
+        The full name of the vibronic Hamiltonian files read by this module should be:
+    
+        params["data_set_paths"][idata]+params["data_re_prefix"]+integer(time step)+params["data_re_suffix"] - for real part
+
+        params["data_set_paths"][idata]+params["data_im_prefix"]+integer(time step)+params["data_im_suffix"] - for imaginary part
+
+        Say, the directory "/home/alexeyak/test/step3/res0" contains files:
+        Hvib_0_re, Hvib_1_re, .... ,    Hvib_999_re
+        Hvib_0_im, Hvib_1_im, .... ,    Hvib_999_im
+
+        Then set:
+
+        >>> params["data_set_paths"] = ["/home/alexeyak/test/step3/res0/"]
+        >>> params["data_re_prefix"] = "Hvib_"
+        >>> params["data_re_suffix"] = "_re"
+        >>> params["data_im_prefix"] = "Hvib_"
+        >>> params["data_im_suffix"] = "_im"
+
+    """
+
+    critical_params = [ "data_set_paths" ] 
+    default_params = { }
+    comn.check_input(params, default_params, critical_params)
+
+    data = []
+
+    for idata in params["data_set_paths"]:   # over all MD trajectories (data sets)
+        prms = dict(params)    
+        prms.update({"data_re_prefix": idata+params["data_re_prefix"] })
+        prms.update({"data_im_prefix": idata+params["data_im_prefix"] })                
+
+        data_i = get_data(prms)  
+        data.append(data_i)
+
+    return data
+
+
 
 
 

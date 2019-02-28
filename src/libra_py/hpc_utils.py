@@ -68,6 +68,8 @@ def distribute(Nmin,Nmax,max_steps,submit_templ,exp_files,prefixes,do_submit):
     do_submit == 0 - only discribute files, no actual execution
     do_submit == 1 - distribute and submit using PBS
     do_submit == 2 - distribute and submit using SLURM
+    do_submit == 3 - distribute and submit using PYTHON no scheduling systems - good for runs on a local computer
+
     """
 
     j = 0  # job index
@@ -77,7 +79,9 @@ def distribute(Nmin,Nmax,max_steps,submit_templ,exp_files,prefixes,do_submit):
 
     while j<njobs:
         job(Nstart,Nend+1,"job%d" % j,prefixes) # add 1 to avoid merging adjacent runs
-        make_submit(Nstart,Nend+1,"job%d" % j,submit_templ)
+        if do_submit in [0, 1, 2]:
+            make_submit(Nstart,Nend+1,"job%d" % j,submit_templ)
+
         Nstart = Nstart + max_steps 
         Nend = Nend + max_steps    
         # Go into that directory and submit the job  
@@ -97,7 +101,9 @@ def distribute(Nmin,Nmax,max_steps,submit_templ,exp_files,prefixes,do_submit):
         j = j + 1
 
     job(Nstart,min(Nend,Nmax),"job%d" % j,prefixes)
-    make_submit(Nstart,min(Nend,Nmax),"job%d" % j,submit_templ)
+
+    if do_submit in [0, 1, 2]:
+        make_submit(Nstart,min(Nend,Nmax),"job%d" % j,submit_templ)
     os.chdir("job%d" % j)
 
     for exp_file in exp_files:
