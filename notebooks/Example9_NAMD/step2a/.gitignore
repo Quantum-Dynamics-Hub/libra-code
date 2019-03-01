@@ -1,0 +1,8 @@
+.ipynb_checkpoints
+*.txt
+res
+wd
+PP
+*.in
+*.out
+*.slm
