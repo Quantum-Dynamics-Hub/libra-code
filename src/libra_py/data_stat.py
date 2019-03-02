@@ -323,3 +323,115 @@ def cmat_stat(X):
 
 
 
+
+
+
+def cmat_stat2(X, opt):
+    """Computes the norm-N average of a list of CMATRIX(N,N) objects
+
+    Args:
+        X ( list of CMATRIX(N,N) objects ): the data to be analyzed
+        opt ( int ): the option for averaging:
+
+            * opt == 0 :  t_ij = <x_ij>  + i <y_ij>
+            * opt == 1 :  t_ij = <|x_ij|>  + i <|y_ij|>
+            * opt == 2 :  t_ij = sqrt(<x_ij^2>)  + i sqrt(<y_ij^2>)
+            * opt == 3 :  t_ij = sqrt(<x_ij^2> + <y_ij^2>) = sqrt(|z_ij|^2) 
+            
+    Returns:
+        CMATRIX(N,N): norm-N average of each matrix element of data
+
+
+    """
+
+    ndata = len(X)
+    N = X[0].num_of_cols
+
+    res = CMATRIX(N, N)
+
+
+    #===== Average ====
+    for idata in xrange(ndata):
+
+        for i in xrange(N):
+            for j in xrange(N):
+ 
+                if opt == 0:
+                    res.add(i,j, X[idata].get(i,j))
+
+                elif opt == 1:
+                    re = math.fabs(X[idata].get(i,j).real)
+                    im = math.fabs(X[idata].get(i,j).imag)
+                    res.add(i,j, re+1.0j*im)
+
+                elif opt == 2:
+                    re = math.fabs(X[idata].get(i,j).real)
+                    im = math.fabs(X[idata].get(i,j).imag)
+                    res.add(i,j, re*re+1.0j*im*im)
+
+                elif opt == 3:
+                    re = math.fabs(X[idata].get(i,j).real)
+                    im = math.fabs(X[idata].get(i,j).imag)
+                    res.add(i,j, math.sqrt(re*re+im*im)*(1.0+0.0j) )
+
+
+    res = res / float(ndata)
+
+    for i in xrange(N):
+        for j in xrange(N):
+
+            if opt == 2:
+                re = math.sqrt( res.get(i,j).real )
+                im = math.sqrt( res.get(i,j).imag )
+                res.set(i,j, re+1.0j*im )
+
+
+    return res
+
+
+
+def cmat_distrib(X, i, j, component, xmin, xmax, dx):
+    """Computes the distribution of the matrix element values in the list of CMATRIX(N,N) objects
+
+    Args:
+        X ( list of CMATRIX(N,N) objects ): the data to be analyzed
+        i ( int ): row index of the matrix element to analyze
+        j ( int ): column index of the matrix element to analyze
+        component ( int = 0 or 1 ): determines whether to analyze the real (0) or imaginary (1)
+            component of the data series
+        xmin ( double ): the minimal value of the bin support
+        xmax ( double ): the maximal value of the bin support
+        dx ( double ): the value of the bin support grid spacing
+                    
+    Returns:
+        tuple: ( bin_support, dens, cum ), where:
+
+            * bin_support ( list of doubles ): the range of values the distribution is computed for
+            * dens ( list of doubles ): the probability density
+            * cum ( list of doubles ): the cumulative distribution function 
+
+    """
+
+    #============= Extract the data ===========    
+    ndata = len(X)
+    y = []
+    for idata in xrange(ndata):
+        if component==0:
+            y.append( X[idata].get(i,j).real )
+        elif component==1:
+            y.append( X[idata].get(i,j).imag )
+    data = DATA(y)    
+
+    #============= Build the bin support ===========
+    bin_support = []
+    x = xmin
+    while x <= xmax:        
+        bin_support.append(x)
+        x = x + dx
+        
+
+    dens, cum = data.Calculate_Distribution(bin_support)
+
+    return bin_support, dens, cum
+
+
