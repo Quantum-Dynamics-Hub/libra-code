@@ -31,172 +31,116 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 import libra_py.common_utils as comn
 
 
-def calculate(params):
-    """
-    This function computes average value of the Hamiltonian matrix elements in energy axis
+def takeFirst(elem):
+    return elem[0]
+
+def takeSecond(elem):
+    return elem[1]
+
+
+
+def compute_oscillator_strengths(Hvib, Hprime_x, Hprime_y, Hprime_z, params):
+    """Auxiliary function for the computation of the absorption/emission spectrum of the system
+
+    https://en.wikipedia.org/wiki/Oscillator_strength
 
     Args:
-        params ( dictionary ): Control parameters for the calculations to be executed. Can contain:
+        Hvib ( list of CMATRIX ): "vibronic" Hamiltonians along the trajectory [units: a.u.]
+        Hprime_x ( list of CMATRIX ): i*hbar*<i|p_x|j> matrices along the trajectory [units: a.u.]
+        Hprime_y ( list of CMATRIX ): i*hbar*<i|p_y|j> matrices along the trajectory [units: a.u.]
+        Hprime_z ( list of CMATRIX ): i*hbar*<i|p_z|j> matrices along the trajectory [units: a.u.]
 
-            * **params["energy_prefix"]** ( string ): Prefix of the files containing the energies of the states (diagonal terms)
-            * **params["energy_suffix"]** ( string ): Similarly to energy_prefix, but a suffix
-            * **params["dip_prefix"]** ( string ): The prefix of the series of filenames containing transition dipole moment 
-            * **params["dip_suffix"]** ( string ): The suffix of the series of filenames containing transition dipole moment
-            * **params["isnap"]** ( int ): The index of the initial file
-            * **params["fsnap"]** ( int ): The index of the final file
-            * **params["opt"]** ( int ): Option for averaging
+    Returns:
+        [ [dE, f_ij, istep, i, j] ...], where:
 
-                - 0: <x>
-                - 1: <|x|>
-                - 2: sqrt(<x^2>)
+            * dE ( double ): energy gap [units: a.u.]
+            * f_ij ( double ): oscillator strength for a given transition [units: a.u.]
+            * istep ( int ): index of the time step along the given trajectory
+            * i ( int ): index of the initial (from where) state
+            * j ( int ): index of the final (to where) state
+    
+    """
 
-            * **params["scl1"]** ( double ): Scaling factor for energy scale
-            * **params["scl2"]** ( double ): Scaling factor for output quantity scale 
-            * **params["outfile"] ( string ): The name of the file, where the map will be written
-            * **params["HOMO"] ( int ): The index (starting from 1) of the HOMO orbital
-            * **params["minE"] ( double ): The minimal energy for the x axis in the absorption spectrum [ units: same as of the energy file]
-            * **params["maxE"] ( double ): The maximal energy for the x axis in the absorption spectrum [ units: same as of the energy file]
-            * **params["dE"] ( double ): The grid spacing for the x axis in the absorption spectrum [ units: same as of the energy file]
-  
-    Returns: 
-        (list, list): ( exE, exI ): where
+    homo = params["HOMO"]
 
-        exE: ( list of doubles ): energies of the excitations [units: same as in the input file]
-        exI: ( list of doubles ): |I|^2 - the transition amplitude (|I_ij^x|^2 + |I_ij^z|^2 + |I_ij^z|^2), where
-            |I_ij^alp| = <psi_i| alp |psi_j > the matrix element of the transition dipole moment
+    nsteps = len(Hvib)
+    nmo = Hvib[0].num_of_cols
+
+
+    res = []
+    for istep in xrange(nsteps):             # All data points
+ 
+        for i in xrange(homo+1):            # All occupied orbitals
+            for j in xrange(homo+1, nmo):   # All unoccupied orbitals
+
+                dE = Hvib[istep].get(j,j).real - Hvib[istep].get(i,i).real  # >= 0.0
+
+                X = Hprime_x[istep].get(i,j)
+                X2 = (X.conjugate() * X ).real
+
+                Y = Hprime_y[istep].get(i,j)
+                Y2 = (Y.conjugate() * Y ).real
+
+                Z = Hprime_z[istep].get(i,j)
+                Z2 = (Z.conjugate() * Z ).real
+
+                f_ij = 0.0
+                if dE>0.0:
+                    f_ij = (2.0/3.0)*( X2 + Y2 + Z2 )*(1.0/dE) 
+
+                res.append([dE, f_ij, istep, i, j])
+
+    return res
+
+
+
+def compute_spectrum(Hvib, Hprime_x, Hprime_y, Hprime_z, params):
+    """Auxiliary function for the computation of the absorption/emission spectrum of the system
+
+    https://en.wikipedia.org/wiki/Oscillator_strength
+
+    Args:
+        Hvib ( list of CMATRIX ): "vibronic" Hamiltonians along the trajectory [units: a.u.]
+        Hprime_x ( list of CMATRIX ): i*hbar*<i|p_x|j> matrices along the trajectory [units: a.u.]
+        Hprime_y ( list of CMATRIX ): i*hbar*<i|p_y|j> matrices along the trajectory [units: a.u.]
+        Hprime_z ( list of CMATRIX ): i*hbar*<i|p_z|j> matrices along the trajectory [units: a.u.]
+
+    Returns:
+        tuple: ( E, osc_str, istep, init_st, fin_st ), where are the sorted data:
+
+            * E ( list of doubles ): energy gaps [units: a.u.]
+            * osc_str ( list of doubles ): oscillator strengths [units: a.u.]
+            * istep ( list of ints ): indices of the time steps
+            * init_st ( int ): indices of the initial states
+            * fin_st ( int ): indices of the final states
 
     """
 
-    critical_params = [ ] 
-    default_params = { "energy_prefix": "res/hvib_dia_", "energy_suffix": "_re" }
-    comn.check_input(params, default_params, critical_params)
-
-
-    energy_prefix = params["energy_prefix"]
-    energy_suffix = params["energy_suffix"]
-    dip_prefix = params["dip_prefix"]
-    dip_suffix = params["dip_suffix"]
-    isnap = params["isnap"] 
-    fsnap = params["fsnap"]
     opt = params["opt"]
-    scl1 = params["scl1"]
-    scl2 = params["scl2"]
-    outfile = params["outfile"]
-    HOMO = params["HOMO"]
-    minE = params["minE"]
-    maxE = params["maxE"]
-    dE = params["dE"]
 
-    filename = energy_prefix + str(isnap) + energy_suffix
-    f = open(filename,"r")
-    a = f.readline()
-    f.close()
-    sz = len(a.split())/2
-    print "Map size is %d by %d" % (sz,sz)
+    res = compute_oscillator_strengths(Hvib, Hprime_x, Hprime_y, Hprime_z, params)
 
-    HOMO = HOMO - 1 # now it has the meaning of the index rather than id
+    # sort list with key
+    sorted_res = None
 
-    #========= Prepare storage ============
-    M = []
-    i = 0
-    while i<sz:
-        m = []
-        j = 0
-        while j<sz:
-            m.append(0.0)
-            j = j + 1
-        M.append(m)
-        i = i + 1
+    if opt==0:  # sort by energies
+        sorted_res = sorted(res, key=takeFirst)
 
-    exE = []
-    exI = []
-    e = minE
-    npt = 0
-    while e<(maxE+dE):
-        exE.append(e)
-        exI.append(0.0)
-        e = e + dE
-        npt = npt + 1
+    elif opt==1:  # sort by the magnitude of oscillator strength
+        sorted_res = sorted(res, key=takeSecond)
 
 
-    #========== Read in data ==============
-    count = 0.0
-
-    for k in range(isnap,fsnap+1):
-        filename = dip_prefix + str(k) + dip_suffix
-        e_filename = energy_prefix + str(k) + energy_suffix
-        print "Reading files ",filename, e_filename
-
-
-        if(os.path.exists(filename) and os.path.exists(e_filename)):
-
-            # Read energies of the states
-            f1 = open(e_filename,"r")
-            A1 = f1.readlines()
-            f1.close()
-
-            E = []
-            i = 0
-            while i<sz:
-                tmp1 = A1[i].split()
-                y = scl1*float(tmp1[i])
-                E.append(y)
-                i = i + 1
-
-2            # Read transition dipole moments
-            f = open(filename,"r")
-            A = f.readlines()
-            f.close()
-            i = 0
-            while i<sz:
-                tmp = A[i].split()
-                j = 0
-                while j<sz:
-                    x = float(tmp[j])
-                    if opt==0:
-                        M[i][j] = x
-                    elif opt==1:
-                        M[i][j] = math.fabs(x)
-                    elif opt==2:
-                        M[i][j] = x*x
-
-                    j = j + 1
-                i = i + 1
-
-            # Now compute transition intensities
-            i = HOMO
-            while i>0:
-                j = HOMO+1
-                while j<sz:
-                    # ====== Now we are at the point to consider i->j transition
-                    de = E[j] - E[i]
-                    if(de>minE and de<maxE):
-                        indx = int( (de - minE)/dE )
-                        exI[indx] = exI[indx] + M[i][j]
-                        count = count + 1.0
-
-                    j = j + 1
-                i = i-1
+    # Unpack the data into separate lists
+    E, osc_str, istep, init_st, fin_st = [], [], [], [], []
+    for it in sorted_res:
+        E.append(it[0])
+        osc_str.append(it[1])
+        istep.append(it[2])
+        init_st.append(it[3])
+        fin_st.append(it[4])
 
 
-    #========== Average and print out results ===============
-    out = open(outfile,"w")
-
-    exI[0] = 0.0   # Do not print dipole moments
-    i = 0
-    while i<npt:
-        if(opt==0 or opt==1):
-            exI[i] = scl2*exI[i] / count
-        elif opt==2:
-            exI[i] = scl2 * math.sqrt(exI[i]) / count
-
-        out.write("%f  %f \n" % (exE[i], exI[i]) )
-        line = str(exE[i]) + "  "+str(exI[i]) + "\n"
-        out.write(line)
-        i = i + 1
-
-    out.close()
-    return exE, exI
+    return E, osc_str, istep, init_st, fin_st
 
 
 
