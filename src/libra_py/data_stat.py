@@ -435,3 +435,49 @@ def cmat_distrib(X, i, j, component, xmin, xmax, dx):
     return bin_support, dens, cum
 
 
+
+def compute_density(X, Y, minx, maxx, dx):
+    """Computes the probability density from the non-uniform distribution of pair points
+   
+    Args:
+        X ( list of double ): the original values of x
+        Y ( list of double ): the original values of y
+        minx ( double ): the minimal value of the new X axis
+        maxx ( double ): the max value of the new X axis
+        dx ( double ): the grid spacing of the new X axis
+
+    Note:
+        The pair relationship X[i] - Y[i] is expected
+
+    Returns:
+        tuple: ( nX, nY ): where
+ 
+            * nX ( list of doubles ) - new, uniform X axis
+            * nY ( list of doubles ) - renormalized Y axis
+    """
+
+    # Prepare the grids
+    nX, nY, cnt = [], [], []
+    max_pts = int((maxx - minx)/dx) + 1
+
+    for n in xrange(max_pts):
+        nX.append(minx + n * dx)
+        nY.append(0.0)
+        cnt.append(0.0)
+
+    # Compute the frequencies
+    sz = len(X)
+    for n in xrange(sz):
+        indx = int((X[n] - minx)/dx)
+
+        if indx>0 and indx<max_pts:
+            nY[indx] = nY[indx] + Y[n]
+            cnt[indx] = cnt[indx] + 1.0
+
+    for n in xrange(max_pts):
+        if cnt[n]>0.0:
+            nY[n] = nY[n]/cnt[n]
+              
+    return nX, nY
+
+
