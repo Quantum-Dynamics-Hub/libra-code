@@ -333,18 +333,26 @@ def apply_state_reordering(St, E, params):
 
 def do_phase_corr(cum_phase1, St, cum_phase2, phase_i):
     """
+
     This function changes the St matrix according to
     the previous cumulative phases and the current 
-    phase correction:
+    phase correction as:
+
+    St = <bra|ket>
 
     St -> St = F_n * St * (F_{n+1})^+ = F_n * St * (F_{n})^+ * (f_{n+1})^+
 
-    cum_phase1 [CMATRIX(nstates, 1)]        cumulative phase corrections up to step n (F_n)
-    cum_phase2 [CMATRIX(nstates, 1)]        cumulative phase corrections up to step n (F_n)
-    St         [CMATRIX(nstates, nstates)]  input/output TDM to be processed: 
-                                            could be alpha-alpha, beta-beta, alpha-beta, 
-                                            or beta-alpha sub-blocks
-    phase_i    [CMATRIX(nstates, 1)]        the current step phase corrections (f_{n+1})
+    Args:
+        cum_phase1 ( CMATRIX(nstates, 1) ): cumulative phase corrections up to step n (F_n) for bra-vectors
+        St         ( CMATRIX(nstates, nstates) ): input/output TDM to be processed: 
+            could be alpha-alpha, beta-beta, alpha-beta, or beta-alpha sub-blocks
+        cum_phase2 ( CMATRIX(nstates, 1) ): cumulative phase corrections up to step n (F_n) for ket-vectors
+        phase_i    ( CMATRIX(nstates, 1) ): the current step phase corrections (f_{n+1}) for a given pair of vectors
+
+
+    Returns: 
+        None: but changes the input matrix St
+  
     """
    
     nstates = St.num_of_rows
@@ -357,17 +365,22 @@ def do_phase_corr(cum_phase1, St, cum_phase2, phase_i):
 
 
 
-def apply_phase_correction(St, params):
-    """
-    Perform the phase correction according to:
-        
+def apply_phase_correction(St):
+    """Performs the phase correction according to:         
     Akimov, A. V. J. Phys. Chem. Lett, 2018, 9, 6096
 
-    """
+    Args:
+        St ( list of CMATRIX(N,N) ): St_ij[n] = <i(n)|j(n+1)> transition density matrix for 
+            the timestep n, where N is the number of spin-orbitals in the active space. 
+            Spin-orbitals, not just orbitals! So it is composed as:
+                  ( St_aa    St_ab  )
+            St =  (                 )
+                  ( St_ba    St_bb  )
 
-    critical_params = [ ]
-    default_params = { "do_phase_correction":1 }
-    comn.check_input(params, default_params, critical_params)
+    Returns: 
+        None: but changes the input St matrices
+
+    """
 
     nsteps = len(St)
     nstates = St[0].num_of_cols/2  # division by 2 because it is a super-matrix
@@ -393,29 +406,26 @@ def apply_phase_correction(St, params):
         pop_submatrix(St[i], St_ab, alp, bet)
         pop_submatrix(St[i], St_ba, bet, alp)
 
+        ### Compute the instantaneous phase correction factors for diag. blocks ###
+        phase_i_aa = compute_phase_corrections(St_aa)   # f(i)
+        phase_i_bb = compute_phase_corrections(St_bb)   # f(i)       
 
-        if params["do_phase_correction"]==1:
-
-            ### Compute the instantaneous phase correction factors for diag. blocks ###
-            phase_i_aa = compute_phase_corrections(St_aa)   # f(i)
-            phase_i_bb = compute_phase_corrections(St_bb)   # f(i)       
-
-            ### Do the  phase correstions for the diag. blocks ###
-            do_phase_corr(cum_phase_aa, St_aa, cum_phase_aa, phase_i_aa)
-            do_phase_corr(cum_phase_bb, St_bb, cum_phase_bb, phase_i_bb)
+        ### Do the  phase correstions for the diag. blocks ###
+        do_phase_corr(cum_phase_aa, St_aa, cum_phase_aa, phase_i_aa)
+        do_phase_corr(cum_phase_bb, St_bb, cum_phase_bb, phase_i_bb)
         
-            ### Do the  phase correstions for the off-diag. blocks ###
-            do_phase_corr(cum_phase_aa, St_ab, cum_phase_bb, phase_i_bb)
-            do_phase_corr(cum_phase_bb, St_ba, cum_phase_aa, phase_i_aa)
+        ### Do the  phase correstions for the off-diag. blocks ###
+        do_phase_corr(cum_phase_aa, St_ab, cum_phase_bb, phase_i_bb)
+        do_phase_corr(cum_phase_bb, St_ba, cum_phase_aa, phase_i_aa)
 
-            ### Push the corrected diag. blocks to orig. St matrix ###
-            push_submatrix(St[i], St_aa, alp, alp);   push_submatrix(St[i], St_ab, alp, bet)
-            push_submatrix(St[i], St_ba, bet, alp);   push_submatrix(St[i], St_bb, bet, bet)
+        ### Push the corrected diag. blocks to orig. St matrix ###
+        push_submatrix(St[i], St_aa, alp, alp);   push_submatrix(St[i], St_ab, alp, bet)
+        push_submatrix(St[i], St_ba, bet, alp);   push_submatrix(St[i], St_bb, bet, bet)
 
-            ### Update the cumulative phase correction factors for diag. blocks ###
-            for a in xrange(nstates):
-                cum_phase_aa.scale(a, 0, phase_i_aa.get(a))
-                cum_phase_bb.scale(a, 0, phase_i_bb.get(a))
+        ### Update the cumulative phase correction factors for diag. blocks ###
+        for a in xrange(nstates):
+            cum_phase_aa.scale(a, 0, phase_i_aa.get(a))
+            cum_phase_bb.scale(a, 0, phase_i_bb.get(a))
 
 
 
@@ -532,20 +542,60 @@ def compute_Hvib(basis, St_ks, E_ks, dE, dt):
 
 
 
-def run(params):
+def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
     """
     The procedure to converts the results of QE calculations (KS orbital energies and
-    time-overlaps in the KS basis) to the generic Hvib matrices, which account for:   
-    - state reordering;
-    - phase corrections;
+    time-overlaps = transition density matrices in the KS basis) to the generic Hvib matrices, 
+    which (optionally) account for:   
+
+    - enforces orthogonalization of the input KS states
+    - state reordering
+    - phase corrections
     - multi-electron wavefunction (Slater determinants) and spin-adaptation
-    - scissor operator corrections to energy levels
 
-    === Required parameter keys: ===
+    Args:
+        S_dia_ks ( list of lists of CMATRIX objects ): overlaps of the KS orbitals along trajectories
+            for each data set. Such that S_dia_ks[idata][istep].get(i,j) is <i(istep)|j(istep)> for the 
+            trajectory (=dataset) ```idata```.
 
-    params["Phi_basis"]        [list of lists of ints] - define the Slater Determinants basis
-    params["P2C"]              [list of lists of complex] - define the superpositions to SDs to get spin-adapted functions
-    params["Phi_dE"]           [list of doubles] - define corrections of the SAC state energies
+        St_dia_ks ( list of lists of CMATRIX objects ): time-overlaps (=transition density matrices) 
+            in the basis of the KS orbitals along trajectories for each data set. 
+            Such that St_dia_ks[idata][istep].get(i,j) is <i(istep)|j(istep+1)> for the trajectory (=dataset) ```idata```.
+
+        E_dia_ks ( list of lists of CMATRIX objects ): energies the KS orbitals at the mid-points along trajectories
+            for each data set. Such that E_dia_ks[idata][istep].get(i,i) is 0.5*(E_i(istep) + E_i(istep+1)) for the 
+            trajectory (=dataset) ```idata```
+
+        params ( dictionary ): Control paramerter of this type of simulation. Can include the follwing keys:
+
+            * **params["SD_basis"]** ( list of lists of ints ): define the Slater Determinants basis
+                The convention is:  params["SD_basis"][iSD][iks] is the indicator of the spin-orbital occupied by 
+                the electron iks in the Slater Determinant iSD [required!]
+
+                Example: 
+
+                    The following example defines a ground state SD (the lowest KS of the active space) and two 
+                    single excitations, which are different from each other by two spin flips of the electrons
+                    The convention is to start indexing from 1 (corresponds to index 0 in the KS matrices)
+                    Positive - for alpha electrons, negative - for beta electrons
+                    Need to be consistent: [ -1, 2 ] and [ 2, -1 ] are treated differently, this is needed for spin-adaptation
+
+                    >> params["SD_basis"] = [ [ 1,-1 ], [ 1,-2 ], [ 2,-1 ] ]
+
+                    The next example is for a system of 4 electrons and hole excitations
+                    >> params["SD_basis"] = [ [ 1,-1, 2, -2 ], [ 3, -1, 2, -2 ], [ 1, -3, 2, -2 ] ]
+
+
+            * **params["SD_energy_corr"]** ( list of doubles ): define corrections of the SD state energies in comparison to 
+                the energy give by the sum energies of the occupied spin-orbitals.
+                The convention is: params["SD_energy_corr"][iSD] is the correction to energy of the SD with index iSD. 
+                This is a constant correction - same for all energies in the set
+                                     
+            * **params["CI_basis"]** ( list of lists of complex number ): configuration interaction coefficients 
+                that define a superpositions to SDs that are considered the states of interest, e.g. spin-adapted configurations
+                The convention is: params["CI_basis"][]
+
+
     params["dt"]               [double] - nuclear dynamics integration time step [in a.u. of time, default: 41.0]
 
     params["do_state_reordering"]     [int] - option to do the state reordering [default: 2]: 
@@ -589,83 +639,81 @@ def run(params):
      
     """
 
-    critical_params = [ "P2C", "Phi_basis", "Phi_dE", "data_set_paths" ]
-    default_params = { "dt":41.3413,  "output_set_paths":params["data_set_paths"], 
+    #====== Defaults and local parameters ===============
+
+    critical_params = [ "SD_basis", "SD_energy_corr", "CI_basis", "output_set_paths" ]
+    default_params = { "dt":1.0*units.fs2au, 
+                       "do_normalization":0,
+                       "do_state_reordering":2, "state_reordering_alpha":0.0,
+                       "do_phase_correction":1,
+                       "do_output":0,
                        "Hvib_re_prefix":"Hvib_", "Hvib_im_prefix":"Hvib_",
                        "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im",
-                       "do_state_reordering":2, "state_reordering_alpha":0.0,
-                       "do_phase_correction":1
+
                      }
     comn.check_input(params, default_params, critical_params)
  
-    if(len(params["data_set_paths"]) != len(params["output_set_paths"])):
-        print "Error: Input and output sets paths should have equal number of entries\n"
-        print "len(params[\"data_set_paths\"]) = ", len(params["data_set_paths"])
-        print "len(params[\"output_set_paths\"]) = ", len(params["output_set_paths"])
-        print "Exiting...\n"
-        sys.exit(0)
-
     dt = params["dt"]
+    do_normalization = params["do_normalization"]
+    do_phase_correction = params["do_phase_correction"]
+    do_state_reordering = params["do_state_reordering"]
+    ndata =  len(St_dia_ks)
+    nsteps = len(St_dia_ks[0])
+    nstates = len(params["CI_basis"])  # the number of CI states to consider
 
-    """
-    1. Read in the "elementary" overlaps and energies in the basis of KS orbitals
-    2. Apply state reordering to KS
-    3. Apply phase correction to KS
-    4. Construct the Hvib in the basis of Slater determinants
-    5. Convert the Hvib to the basis of symmery-adapted configurations (SAC)
-    """
+    do_output = params["do_output"]
 
+    #====== Generic sanity checks ===============
+    if do_output:
+        if(ndata) != len(params["output_set_paths"])):
+            print "Error: The number of output sets paths should be the same as the number of data sets\n"
+            print "ndata = ", ndata
+            print "len(params[\"output_set_paths\"]) = ", len(params["output_set_paths"])
+            print "Exiting...\n"
+            sys.exit(0)
+
+
+
+    #====== Calculations  ===============
     H_vib = []
-    ndata = len(params["data_set_paths"])
 
     for idata in xrange(ndata):
 
-        prms = dict(params)
-        prms.update({"data_set_path":params["data_set_paths"][idata]})    
-        S_dia_ks, St_dia_ks, E_dia_ks = get_data(prms)  
+        # 1. Do the KS orbitals orthogonalization 
+        do_normalization > 0:
+            apply_normalization(S_dia_ks[idata], St_dia_ks[idata], prms)
 
-        apply_normalization(S_dia_ks, St_dia_ks, prms)
-        apply_state_reordering(St_dia_ks, E_dia_ks, prms)    
-        apply_phase_correction(St_dia_ks, prms)
+        # 2. Apply state reordering to KS
+        do_state_reordering > 0:
+            apply_state_reordering(St_dia_ks[idata], E_dia_ks[idata], prms)
+
+        # 3. Apply phase correction to KS
+        do_phase_correction > 0:
+            apply_phase_correction(St_dia_ks[idata])
        
-        nsteps = len(St_dia_ks)
         
         Hvib = []
         for i in xrange(nsteps):
         
-            # Hvib in the basis of SDs
-            hvib = compute_Hvib(prms["Phi_basis"], St_dia_ks[i], E_dia_ks[i], prms["Phi_dE"], dt) 
-       
-            P2C = sac_matrices(params["P2C"], params["Phi_basis"], S_dia_ks[i])
+            # 4. Construct the Hvib in the basis of Slater determinants (SDs)
+            hvib_sd = compute_Hvib(prms["SD_basis"], St_dia_ks[idata][i], E_dia_ks[idata][i], prms["SD_energy_corr"], dt) 
+      
+            # 5. Convert the Hvib to the basis of symmery-adapted configurations (SAC)
+            SD2CI = sac_matrices(params["CI_basis"], params["SD_basis"], S_dia_ks[idata][i])
+            hvib_ci = SD2CI.H() * hvib_sd * SD2CI
+            Hvib.append( hvib_ci )
 
-            # SAC
-            Hvib.append( P2C.H() * hvib * P2C )
 
-        #========== Scale H_vibs ===============
-        # Document the params keys - then we may uncomment this
-        #if params["do_scale"] == 1:
-        #    scale_H_vib(Hvib, params["Chi_en_gap"], params["NAC_dE"], params["sc_nac_method"])
+        if do_output:
+            # Output the resulting Hamiltonians
+            for i in xrange(nsteps):
+                re_filename = prms["output_set_paths"][idata] + prms["Hvib_re_prefix"] + str(i) + prms["Hvib_re_suffix"]
+                im_filename = prms["output_set_paths"][idata] + prms["Hvib_im_prefix"] + str(i) + prms["Hvib_im_suffix"]        
+                Hvib[i].real().show_matrix(re_filename)
+                Hvib[i].imag().show_matrix(im_filename)
 
-        nstates = len(prms["P2C"])
-        
-        # Output the resulting Hamiltonians
-        for i in xrange(nsteps):
-
-            re_filename = prms["output_set_paths"][idata] + prms["Hvib_re_prefix"] + str(i) + prms["Hvib_re_suffix"]
-            im_filename = prms["output_set_paths"][idata] + prms["Hvib_im_prefix"] + str(i) + prms["Hvib_im_suffix"]        
-
-            Hvib[i].real().show_matrix(re_filename)
-            Hvib[i].imag().show_matrix(im_filename)
-
-            # Make time-derivative overlap matriices for chi basis and print
-            #St_phi = mapping.ovlp_mat_arb(params["Phi_basis"], params["Phi_basis"], St_dia_ks[i])
-            #St_chi = P2C.H() * St_phi * P2C
-
-            #re_filename = prms["output_set_paths"][idata] + prms["St_SD_re_prefix"] + str(i) + prms["St_SD_re_suffix"]
-            #St_chi.real().show_matrix(re_filename)
 
         H_vib.append(Hvib)        
         
-
     return H_vib
 

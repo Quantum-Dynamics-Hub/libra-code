@@ -29,43 +29,8 @@ import libra_py.common_utils as comn
 import libra_py.units as units
 import libra_py.probabilities as prob
 import libra_py.tsh as tsh
-
-
-
-def get_data(params):
-    """
-    Read in all the Hvib files (we actually need only energies)
-
-    Required parameter keys:
-
-    params["norbitals"]      [int] - how many lines/columns in the file
-    params["active_space"]   [list of ints] - which orbitals we care about (indexing starts with 0)
-    params["Hvib_re_prefix"] [string] - prefixes of the files with real part of the Hamiltonian
-    params["Hvib_im_prefix"] [string] - prefixes of the files with imaginary part of the Hamiltonian
-    params["Hvib_re_suffix"] [string] - suffixes of the files with real part of the Hamiltonian
-    params["Hvib_im_suffix"] [string] - suffixes of the files with imaginary part of the Hamiltonian
-    params["nsteps"]         [int] - how many files to read
-
-    """
-
-    critical_params = ["norbitals", "active_space", "Hvib_re_prefix", "Hvib_im_prefix", "nsteps" ]
-    default_params = { "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im"}
-    comn.check_input(params, default_params, critical_params)
-
-
-    norbitals = params["norbitals"]  # the number of orbitals in the input files
-    active_space = params["active_space"]
-    nstates = len(active_space)
-    nsteps = params["nsteps"]  # how many steps 
-    
-    Hvib = []    
-    for step in xrange(0, nsteps): # how many files we have
-        filename_re = params["Hvib_re_prefix"]+str(step)+params["Hvib_re_suffix"]
-        filename_im = params["Hvib_im_prefix"]+str(step)+params["Hvib_im_suffix"]
-        hvib = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space)
-        Hvib.append(hvib)
-
-    return Hvib
+import decoherence_times
+import step4
 
 
 
@@ -94,7 +59,8 @@ def Belyaev_Lebedev(Hvib, dt):
 
 
     # Pre-compute the energy gaps along the trajectory 
-    dE = comn.energy_gaps(Hvib)
+    dE = decoherence_times.energy_gaps(Hvib)
+
 
     """
     Compute the probabilities based on the LZ formula
@@ -154,31 +120,18 @@ def Belyaev_Lebedev(Hvib, dt):
     return P
 
 
-def run(params):
+def run(H_vib, params):
     """
     Main function to run the SH calculations based on the Landau-Zener hopping
     probabilities, all within the NBRA. The probabilities are implemented according to
     the Belyaev-Lebedev work.
-
-
-    Required parameter keys:
-
-    ===== Data description =====
-
-    params["norbitals"]      [int] - how many lines/columns in the file
-    params["active_space"]   [list of ints] - which orbitals we care about (indexing starts with 0)
-    params["Hvib_re_prefix"] [string] - prefixes of the files with real part of the Hamiltonian
-    params["Hvib_im_prefix"] [string] - prefixes of the files with imaginary part of the Hamiltonian
-    params["Hvib_re_suffix"] [string] - suffixes of the files with real part of the Hamiltonian
-    params["Hvib_im_suffix"] [string] - suffixes of the files with imaginary part of the Hamiltonian
-    params["nsteps"]         [int] - how many files to read
-
 
     ===== Modeling params ===== 
 
     params["dt"]             [double, a.u.] - time distance between the adjacent data points
     params["ntraj"]          [int] - how many stochastic trajectories to use in the ensemble
     params["istate"]         [int] - index of the starting state (within those used in the active_space - see above)
+    params["do_output"]      [string] - wheather to print out the results into a file
     params["outfile"]        [string] - the name of the file, where all the results will be printed out
     params["T"]              [double, K] - temperature of the simulation
 
@@ -187,48 +140,98 @@ def run(params):
 
     critical_params = [  ]
     default_params = { "T":300.0, "ntraj":1000, "nsteps":1,"istate":0, 
-                       "sh_method":1, "decoherence_method":0, "dt":41.0,
-                       "outfile":"_out.txt" }
+                       "sh_method":1, "decoherence_method":0, "dt":41.0, 
+                       "Boltz_opt":3,
+                       "do_output":False, "outfile":"_out.txt" }
     comn.check_input(params, default_params, critical_params)
-
-
     
     rnd = Random()
 
-    #============ Read the data ===============
-    Hvib = get_data(params)
-    nstates= Hvib[0].num_of_cols
+    ndata = len(H_vib)
+    nsteps = len(H_vib[0])
+    nstates= H_vib[0][0].num_of_cols
+    dt = params["dt"]
+    do_output = params["do_output"]
+    ntraj = params["ntraj"]
+    boltz_opt = params["Boltz_opt"]
+    T = params["T"]
+
+
+    res = MATRIX(nsteps, 3*nstates+5)
 
     #===== Precompute hopping probabilities ===
-    P = Belyaev_Lebedev(Hvib, params["dt"])
+    P = []
+    itimes = [0]
+    nitimes = len(itimes)
 
-    #======= Initialization ===================
-    states = []
-    for traj in xrange(params["ntraj"]):
-        states.append(params["istate"])
-    pops = tsh.compute_sh_statistics(nstates, states)
+    for idata in xrange(ndata):
+        p = Belyaev_Lebedev(H_vib[idata], dt)
+        P.append(p)
 
 
-    #============== Dynamics ==================
-    f = open(params["outfile"], "w");  f.close()
+    #========== Initialize the DYNAMICAL VARIABLES  ===============
+    # TD-SE coefficients and active state indices
+    Coeff, istate = [], []
 
-    for n in xrange(params["nsteps"]):
+    for tr in xrange(ntraj):
+        istate.append(params["istate"])
+        Coeff.append(CMATRIX(nstates, 1)); 
+        Coeff[tr].set(params["istate"], 1.0, 0.0)
 
-      comn.printout(n*params["dt"], pops, Hvib[n], params["outfile"])
-      pops = tsh.compute_sh_statistics(nstates, states)
-           
 
-      for traj in xrange(params["ntraj"]):
-          # Proposed hop:
-          ksi = rnd.uniform(0.0, 1.0)
-          st_new = tsh.hop_py(states[traj], P[n].T(), ksi)  
+    #=============== Entering the DYNAMICS ========================
+    for i in xrange(nsteps):  # over all evolution times
 
-          # Accept the proposed hop with the Boltzmann probability
-          ksi1 = rnd.uniform(0.0, 1.0)
-          de = (Hvib[n].get(st_new,st_new) - Hvib[n].get(states[traj], states[traj])).real
-          if de>0.0:
-              if ksi1<prob.Boltz_quant_prob([0.0, de], params["T"])[1]:         
-                  states[traj] = st_new
-          else:
-              states[traj] = st_new
+        #============== Analysis of the Dynamics  =================
+        # Compute the averages
+        res_i = step4.traj_statistics(i, Coeff, istate, H_vib, itimes)
+
+        # Print out into a file
+        step4.printout(i*dt, res_i, params["outfile"])
+
+        # Update the overal results matrix
+        res.set(i,0, i*dt)
+        push_submatrix(res, res_i, Py2Cpp_int([i]), Py2Cpp_int(range(1,3*nstates+5)) )
+
+
+        #=============== Propagation ==============================
+        for idata in xrange(ndata):   # over all MD trajectories (data sets)
+
+            for it_indx in xrange(nitimes): # over all initial times
+
+                it = itimes[it_indx]
+
+                for tr in xrange(ntraj):  # over all stochastic trajectories
+
+                    Tr = idata*(nitimes*ntraj) + it_indx*(ntraj) + tr
+
+                    #============== Propagation: TD-SE and surface hopping ==========
+        
+                    # Coherent evolution amplitudes
+                    #propagate_electronic(dt, Coeff[Tr], H_vib[idata][it+i])   # propagate the electronic DOFs
+                    Coeff[Tr] = CMATRIX(P[idata][i].T()) * Coeff[Tr]
+
+        
+                    # Surface hopping 
+                    ksi  = rnd.uniform(0.0, 1.0)
+                    ksi1 = rnd.uniform(0.0, 1.0)
+
+                    
+                    # Proposed hop:
+                    st_new = tsh.hop_py(istate[Tr], P[idata][i].T(), ksi)  
+
+                    # Accept the proposed hop with the Boltzmann probability
+                    E_new = H_vib[idata][i].get(st_new,st_new).real
+                    E_old = H_vib[idata][i].get(istate[Tr], istate[Tr]).real
+                    de = E_new - E_old
+                    
+                    if de>0.0:
+                        bf = tsh.boltz_factor(E_new, E_old, T, boltz_opt)
+                        if ksi1 < bf:
+                            istate[Tr] = st_new                  
+                    else:
+                        istate[Tr] = st_new
+        
+    return res
+
 
