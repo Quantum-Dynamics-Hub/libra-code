@@ -40,74 +40,6 @@ import libra_py.hungarian as hungarian
 
 
 
-def get_data(params):
-    """
-    Read the "elementary" overlaps and energies in the basis of KS orbitals
-
-    Required parameter keys:
-
-    params["norbitals"]        [int] - how many lines/columns in the file - the total number of spin-orbitals
-    params["active_space"]     [list of ints] - which orbitals we care about (indexing starts with 0)
-    params["data_set_path"]    [string] - the path to the directory in which all the files are located
-    params["S_re_prefix"]      [string] - prefixes of the files with real part of the MO overlaps at time t
-    params["S_re_suffix"]      [string] - suffixes of the files with real part of the MO overlaps at time t
-    params["S_im_prefix"]      [string] - prefixes of the files with imaginary part of the MO overlaps at time t
-    params["S_im_suffix"]      [string] - suffixes of the files with imaginary part of the MO overlaps at time t
-    params["St_re_prefix"]     [string] - prefixes of the files with real part of the MO overlaps at times t and t' = t+dt
-    params["St_re_suffix"]     [string] - suffixes of the files with real part of the MO overlaps at times t and t' = t+dt
-    params["St_im_prefix"]     [string] - prefixes of the files with imaginary part of the MO overlaps at times t and t' = t+dt
-    params["St_im_suffix"]     [string] - suffixes of the files with imaginary part of the MO overlaps at times t and t' = t+dt
-    params["E_re_prefix"]      [string] - prefixes of the files with real part of the MO energies at time t
-    params["E_re_suffix"]      [string] - suffixes of the files with real part of the MO energies  at time t
-    params["E_im_prefix"]      [string] - prefixes of the files with imaginary part of the MO energies at time t
-    params["E_im_suffix"]      [string] - suffixes of the files with imaginary part of the MO energies  at time t
-    params["nsteps"]           [int] - how many files to read, starting from index 0
-    params["is_pyxaid_format"] [Boolean] - whether the input in the old PYXAID format (just orbital space matrices)
-
-    """
-
-    critical_params = ["norbitals", "active_space", "S_re_prefix", "S_im_prefix",
-    "St_re_prefix", "St_im_prefix", "E_re_prefix", "E_im_prefix", "nsteps", "data_set_path" ]
-
-    default_params = { "is_pyxaid_format":False, "S_re_suffix":"_re", "S_im_suffix":"_im",
-    "St_re_suffix":"_re", "St_im_suffix":"_im", "E_re_suffix":"_re", "E_im_suffix":"_im"}
-
-    comn.check_input(params, default_params, critical_params)
-
-    norbitals = params["norbitals"]  # the number of orbitals in the input files
-    active_space = params["active_space"]
-    nstates = len(active_space)
-    nsteps = params["nsteps"]
-
-    S, St, E = [], [], [] 
-
-    for i in range(0,nsteps):
-
-        filename_re = params["data_set_path"]+params["S_re_prefix"]+str(i)+params["S_re_suffix"]
-        filename_im = params["data_set_path"]+params["S_im_prefix"]+str(i)+params["S_im_suffix"]
-        s = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space )
-        if params["is_pyxaid_format"]==True:
-            s = mapping.orbs2spinorbs(s)
-        S.append(s)
-
-        filename_re = params["data_set_path"]+params["St_re_prefix"]+str(i)+params["St_re_suffix"]
-        filename_im = params["data_set_path"]+params["St_im_prefix"]+str(i)+params["St_im_suffix"]
-        st = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space )
-        if params["is_pyxaid_format"]==True:
-            st = mapping.orbs2spinorbs(st)
-        St.append(st)
-
-        filename_re = params["data_set_path"]+params["E_re_prefix"]+str(i)+params["E_re_suffix"]
-        filename_im = params["data_set_path"]+params["E_im_prefix"]+str(i)+params["E_im_suffix"]
-        e = comn.get_matrix(norbitals, norbitals, filename_re, filename_im, active_space )
-        if params["is_pyxaid_format"]==True:
-            e = mapping.orbs2spinorbs(e)
-        E.append(e)
-
-
-    return S, St, E
-
-
 def get_Lowdin(S):
     """
     Find the S_i_half for the S matrix - alpha and beta components
@@ -535,7 +467,7 @@ def compute_Hvib(basis, St_ks, E_ks, dE, dt):
 
     St    = mapping.ovlp_mat_arb(basis, basis, St_ks) 
     H_el  = mapping.energy_mat_arb(basis, E_ks, dE)
-    H_vib = H_el - (0.5j/dt)*(St-St.H())
+    H_vib = H_el - (0.5j/dt)*CMATRIX((St-St.H()).real())
 
     return H_vib
 
@@ -589,61 +521,82 @@ def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
             * **params["SD_energy_corr"]** ( list of doubles ): define corrections of the SD state energies in comparison to 
                 the energy give by the sum energies of the occupied spin-orbitals.
                 The convention is: params["SD_energy_corr"][iSD] is the correction to energy of the SD with index iSD. 
-                This is a constant correction - same for all energies in the set
+                This is a constant correction - same for all energies in the set [units: Ha] [required!]
+
+                Example:
+                    For instance, for the SD examples above, the corrections could be:
+                    >> params["SD"] = [0.0, 0.01, 0.05]
                                      
             * **params["CI_basis"]** ( list of lists of complex number ): configuration interaction coefficients 
                 that define a superpositions to SDs that are considered the states of interest, e.g. spin-adapted configurations
-                The convention is: params["CI_basis"][]
+                The convention is: params["CI_basis"][iCI][iSD] is a coefficient of ```iSD```-th SD in the expansion of the CI
+                with index ```iCI```. These coefficients don't have to account for the overal CI's normalization - the 
+                normalization will be done on the go. [required!]
 
+                Example:
 
-    params["dt"]               [double] - nuclear dynamics integration time step [in a.u. of time, default: 41.0]
+                    For the SD example above we can construct the following combinations:
+                    >> params["CI_basis"] = [ [1.0, 0.0, 0.0 ], 
+                                              [0.0, 1.0,-1.0 ],
+                                              [0.0, 1.0, 1.0 ] 
+                                            ]
 
-    params["do_state_reordering"]     [int] - option to do the state reordering [default: 2]: 
-                                 0 - no state reordering
-                                 1 - older method (may be wrong)
-                                 2 - Hungarian algorithm
+            * **params["output_set_paths"]** ( list of strings ): the directory pathes where the resulting files 
+                are to be written (if so!). If you don't plan on writing the files, just provide a list of empty strings
+                or whatever else - they will not be used in that case. The number of the strings should be equal to 
+                the number of the input data sets, e.g. to len(St_dia_ks)  [required!]
 
-    params["state_reordering_alpha"]  [double] - the energy window parameter in the Hungarian approach  [default: 0.00]
-    params["do_phase_correction"]     [int] - option to do the phase correction [default: 1]
-                                 0 - don't do 
-                                 1 - do
+                  
+            * **params["dt"]** ( double ): nuclear dynamics integration time step [units: a.u. of time, default: 41.0]
+ 
+            * **params["do_orthogonalization"]** ( int ): the option to do Lowdin orthogonalization of the orbitals - using 
+                the "raw" overlaps (at the same time). This option is needed because the wavefunction output by QE are 
+                not exactly orthonormal (because of the use of pseudopotentials). So before we use them (implicitly) 
+                in the rest of the calculations here, we may need to account for this non-ideality effect.
+                Options:
+        
+                - 0: don't do the orthogonalization - this is the same as in Pyxaid [default]
+                - 1: do the orthogonalization
 
+            * **params["do_state_reordering"]** ( int ): the option to control the state reordering
+                Options:
 
-    === Required by the get_data() ===
+                - 0: no state reordering - same as in Pyxaid
+                - 1: older method (is not robust, may or may not work) 
+                - 2: Hungarian algorithm [default]
 
-    params["norbitals"]        [int] - how many lines/columns in the file - the total number of spin-orbitals
-    params["active_space"]     [list of ints] - which orbitals we care about (indexing starts with 0)
-    params["nsteps"]           [int] - how many files to read, starting from index 0
-    params["is_pyxaid_format"] [Boolean] - whether the input in the old PYXAID format (just orbital space matrices)   
-    params["data_set_paths"]   [string] - where the input files are located
-    params["S_re_prefix"]      [string] - prefixes of the files with real part of the MO overlaps at time t
-    params["S_re_suffix"]      [string] - suffixes of the files with real part of the MO overlaps at time t
-    params["S_im_prefix"]      [string] - prefixes of the files with imaginary part of the MO overlaps at time t
-    params["S_im_suffix"]      [string] - suffixes of the files with imaginary part of the MO overlaps at time t
-    params["St_re_prefix"]     [string] - prefixes of the files with real part of the MO overlaps at times t and t' = t+dt
-    params["St_re_suffix"]     [string] - suffixes of the files with real part of the MO overlaps at times t and t' = t+dt
-    params["St_im_prefix"]     [string] - prefixes of the files with imaginary part of the MO overlaps at times t and t' = t+dt
-    params["St_im_suffix"]     [string] - suffixes of the files with imaginary part of the MO overlaps at times t and t' = t+dt
-    params["E_re_prefix"]      [string] - prefixes of the files with real part of the MO energies at time t
-    params["E_re_suffix"]      [string] - suffixes of the files with real part of the MO energies  at time t
-    params["E_im_prefix"]      [string] - prefixes of the files with imaginary part of the MO energies at time t
-    params["E_im_suffix"]      [string] - suffixes of the files with imaginary part of the MO energies  at time t
+            * **params["state_reordering_alpha"]** ( double ): the parameter that controls the width of 
+                the energy interval within wich the state reordering is in effect. Zero value means all 
+                available orbitals, larger positive value decreases the width of the window. This parameter
+                is not in effect unless the Hungarian algorithm is selected [default: 0.0]
 
+            * **params["do_phase_correction"]** ( int ): option to do the phase correction
 
-    === Define the output ===
-    params["output_set_paths"] [string] - where the resulting Hvib files are to be stored [default: the same as the input paths]
-    params["Hvib_re_prefix"]   [string] - prefixes of the output files with real part of the vibronic Hamiltonian at time t
-    params["Hvib_re_suffix"]   [string] - suffixes of the output files with real part of the vibronic Hamiltonian at time t
-    params["Hvib_im_prefix"]   [string] - prefixes of the output files with imaginary part of the vibronic Hamiltonian at time t
-    params["Hvib_im_suffix"]   [string] - suffixes of the output files with imaginary part of the vibronic Hamiltonian at time t
-     
+                - 0 - don't do 
+                - 1 - do it [default]
+
+            * **params["do_output"]** ( int ): whether to print out the Hvib matrices ( = 1) to the files or not ( = 0).
+
+            * **params["Hvib_re_prefix"]** ( string ): common prefix of the output files with real part of the vibronic 
+                Hamiltonian at all times [default: "Hvib_"]
+
+            * **params["Hvib_re_suffix"]** ( string ): common suffix of the output files with real part of the vibronic 
+                Hamiltonian at all times [default: "_re"]
+
+            * **params["Hvib_im_prefix"]** ( string ): common prefix of the output files with imaginary part of the vibronic 
+                Hamiltonian at all times [default: "Hvib_"]
+
+            * **params["Hvib_im_suffix"]** ( string ): common suffix of the output files with imaginary part of the vibronic 
+                Hamiltonian at all times [default: "_im"]
+
     """
+
 
     #====== Defaults and local parameters ===============
 
     critical_params = [ "SD_basis", "SD_energy_corr", "CI_basis", "output_set_paths" ]
     default_params = { "dt":1.0*units.fs2au, 
-                       "do_normalization":0,
+                       "do_orthogonalization":0,
                        "do_state_reordering":2, "state_reordering_alpha":0.0,
                        "do_phase_correction":1,
                        "do_output":0,
@@ -654,7 +607,7 @@ def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
     comn.check_input(params, default_params, critical_params)
  
     dt = params["dt"]
-    do_normalization = params["do_normalization"]
+    do_orthogonalization = params["do_orthogonalization"]
     do_phase_correction = params["do_phase_correction"]
     do_state_reordering = params["do_state_reordering"]
     ndata =  len(St_dia_ks)
@@ -665,7 +618,7 @@ def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
 
     #====== Generic sanity checks ===============
     if do_output:
-        if(ndata) != len(params["output_set_paths"])):
+        if(ndata) != len(params["output_set_paths"]):
             print "Error: The number of output sets paths should be the same as the number of data sets\n"
             print "ndata = ", ndata
             print "len(params[\"output_set_paths\"]) = ", len(params["output_set_paths"])
@@ -680,15 +633,15 @@ def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
     for idata in xrange(ndata):
 
         # 1. Do the KS orbitals orthogonalization 
-        do_normalization > 0:
-            apply_normalization(S_dia_ks[idata], St_dia_ks[idata], prms)
+        if do_orthogonalization > 0:
+            apply_normalization(S_dia_ks[idata], St_dia_ks[idata], params)
 
         # 2. Apply state reordering to KS
-        do_state_reordering > 0:
-            apply_state_reordering(St_dia_ks[idata], E_dia_ks[idata], prms)
+        if do_state_reordering > 0:
+            apply_state_reordering(St_dia_ks[idata], E_dia_ks[idata], params)
 
         # 3. Apply phase correction to KS
-        do_phase_correction > 0:
+        if do_phase_correction > 0:
             apply_phase_correction(St_dia_ks[idata])
        
         
@@ -696,7 +649,7 @@ def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
         for i in xrange(nsteps):
         
             # 4. Construct the Hvib in the basis of Slater determinants (SDs)
-            hvib_sd = compute_Hvib(prms["SD_basis"], St_dia_ks[idata][i], E_dia_ks[idata][i], prms["SD_energy_corr"], dt) 
+            hvib_sd = compute_Hvib(params["SD_basis"], St_dia_ks[idata][i], E_dia_ks[idata][i], params["SD_energy_corr"], dt) 
       
             # 5. Convert the Hvib to the basis of symmery-adapted configurations (SAC)
             SD2CI = sac_matrices(params["CI_basis"], params["SD_basis"], S_dia_ks[idata][i])
@@ -707,8 +660,8 @@ def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
         if do_output:
             # Output the resulting Hamiltonians
             for i in xrange(nsteps):
-                re_filename = prms["output_set_paths"][idata] + prms["Hvib_re_prefix"] + str(i) + prms["Hvib_re_suffix"]
-                im_filename = prms["output_set_paths"][idata] + prms["Hvib_im_prefix"] + str(i) + prms["Hvib_im_suffix"]        
+                re_filename = params["output_set_paths"][idata] + params["Hvib_re_prefix"] + str(i) + params["Hvib_re_suffix"]
+                im_filename = params["output_set_paths"][idata] + params["Hvib_im_prefix"] + str(i) + params["Hvib_im_suffix"]        
                 Hvib[i].real().show_matrix(re_filename)
                 Hvib[i].imag().show_matrix(im_filename)
 
