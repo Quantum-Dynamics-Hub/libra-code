@@ -1,8 +1,8 @@
-# This is the file to compute AO overlaps between two distinct geometries
-# 
+#   This file is to run the SCF calculations to generate the charge density
+#
 
 Geometry = GenFormat {
-   <<< "x2.gen"
+   <<< "x1.gen"
 }
 
 Driver = { }	       			
@@ -54,7 +54,7 @@ Hamiltonian = DFTB {
 
 Options = {
 #  WriteAutotestTag = Yes
-  WriteHS = Yes
+#  WriteHS = Yes
 #  WriteEigenvectors = Yes
 }
 
