@@ -92,17 +92,19 @@ def get_energy_forces(filename, nat):
 
 
 
-def get_dftb_matrices(filename, act_sp1, act_sp2):
+def get_dftb_matrices(filename, act_sp1=None, act_sp2=None):
     """Get the matrices printed out by the DFTB+
 
     Args: 
         filename ( string ): the name of the file to read, usually 
             these are any of the files: "hamsqr1.dat", "hamsqr2.dat", etc. or 
             "oversqrt.dat". Produced with the input containing option "WriteHS = Yes"
-        act_sp1 ( list of ints ): the row active space to extract from the original files
-            Indices here start from 0
-        act_sp2 ( list of ints ): the cols active space to extract from the original files
-            Indices here start from 0
+        act_sp1 ( list of ints or None): the row active space to extract from the original files
+            Indices here start from 0. If set to None - the number of AOs will be
+            determined automatically from the file. [default: None]
+        act_sp2 ( list of ints or None): the cols active space to extract from the original files
+            Indices here start from 0. If set to None - the number of AOs will be
+            determined automatically from the file. [default: None]
     
     Returns: 
         list of CMATRIX(N, M): X: where N = len(act_sp1) and M = len(act_sp2) 
@@ -115,9 +117,6 @@ def get_dftb_matrices(filename, act_sp1, act_sp2):
     
     """
 
-    # Determine the dimensions of the output matrices
-    nstates1 = len(act_sp1)
-    nstates2 = len(act_sp2)
     
     # Copy the content of the file to a temporary location
     f = open(filename, "r")
@@ -125,6 +124,21 @@ def get_dftb_matrices(filename, act_sp1, act_sp2):
     f.close()    
     norbs = int(float(A[1].split()[1]))
     nkpts = int(float(A[1].split()[2]))
+
+
+    # Determine the dimensions of the output matrices
+    if act_sp1==None:
+        nstates1 = norbs
+        act_sp1 = range(0, nstates1)
+    else:
+        nstates1 = len(act_sp1)
+
+    if act_sp2==None:
+        nstates2 = norbs
+        act_sp2 = range(0, nstates2)
+    else:
+        nstates2 = len(act_sp2)
+
            
     # Output variables    
     X = []
