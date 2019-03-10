@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2017-2018 Brendan A. Smith, Wei Li, Alexey V. Akimov
+#* Copyright (C) 2017-2019 Brendan A. Smith, Wei Li, Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -12,12 +12,18 @@
 #  
 #
 """
- This module is designed to convert the results of QE calculations (KS orbital energies and
- time-overlaps in the KS basis) to the generic Hvib matrices, which account for:
- - state reordering;
- - phase corrections;
- - multi-electron wavefunction (Slater determinants) and spin-adaptation
- - scissor operator corrections to energy levels
+.. module:: step3
+   :platform: Unix, Windows
+   :synopsis: This module is designed to convert the results of QE calculations 
+       (KS orbital energies and time-overlaps in the KS basis) to the generic Hvib
+       matrices, which account for:
+
+           - state reordering;
+           - phase corrections;
+           - multi-electron wavefunction (Slater determinants) and spin-adaptation
+           - scissor operator corrections to energy levels
+
+.. moduleauthor:: Brendan A. Smith, Wei Li, and Alexey V. Akimov
 
 """
 
@@ -41,8 +47,26 @@ import libra_py.hungarian as hungarian
 
 
 def get_Lowdin(S):
-    """
+    """  
     Find the S_i_half for the S matrix - alpha and beta components
+
+    Args: 
+        S ( CMATRIX(2N, 2N) ): is a matrix of MO overlaps. It has a block structure as:
+
+                (S_aa, S_ab)
+            S = (          )
+                (S_ba, S_bb)
+
+            Here, S_xy are the overlaps of the MOs for spin channels x and y (alpha, beta) - only
+            spatial components of the orbitals are taken into account here.
+            Here, N - is the total number of orbitals (double occupancies)        
+
+    Returns:
+        tuple: (S_aa_i_half, S_bb_i_half), where:
+
+            * S_aa_i_half ( CMATRIX(N,N) ): S_aa^{-1/2} - inverse square root matrix for the alpha-alpha block
+            * S_bb_i_half ( CMATRIX(N,N) ): S_bb^{-1/2} - inverse square root matrix for the beta-beta block
+          
     """
 
     nstates = S.num_of_cols/2  # division by 2 because it is a super-matrix
@@ -77,56 +101,87 @@ def get_Lowdin(S):
 
 
 
-def apply_normalization(S, St, params):
-    """
-    Ensure the transition density matrix is computed using the 
-    normalized wavefunctions.
+def apply_normalization(S, St):
     """
 
-    critical_params = [ ]
-    default_params = { "do_orthogonalization":0 }
-    comn.check_input(params, default_params, critical_params)
+    Transforms the input transition density matrix computed with potentially
+    non-orthogonalized orbitals such that it would correspond to the properly
+    orthonormalized ones
 
-    if params["do_orthogonalization"]==1:
+    Args: 
+        S ( CMATRIX(2N, 2N) ): is a matrix of MO overlaps S_ij = <i|j>. It has a block structure as:
 
-        nsteps = len(St)
-        nstates = St[0].num_of_cols/2  # division by 2 because it is a super-matrix
-        
-        alp = range(0,nstates)
-        bet = range(nstates, 2*nstates)
+                (S_aa, S_ab)
+            S = (          )
+                (S_ba, S_bb)
 
-        St_aa = CMATRIX(nstates,nstates);  St_ab = CMATRIX(nstates,nstates);
-        St_ba = CMATRIX(nstates,nstates);  St_bb = CMATRIX(nstates,nstates);
-        
-        for i in range(0, nsteps-1):
-        
-            U1_a, U1_b = get_Lowdin(S[i])    # time n
-            U2_a, U2_b = get_Lowdin(S[i+1])  # time n+1          
-        
-            pop_submatrix(St[i], St_aa, alp, alp);    pop_submatrix(St[i], St_ab, alp, bet)
-            pop_submatrix(St[i], St_ba, bet, alp);    pop_submatrix(St[i], St_bb, bet, bet)
-        
-            St_aa = U1_a.H() * St_aa * U2_a
-            St_ab = U1_a.H() * St_ab * U2_b
-            St_ba = U1_b.H() * St_ba * U2_a
-            St_bb = U1_b.H() * St_bb * U2_b
-        
-            push_submatrix(St[i], St_aa, alp, alp);   push_submatrix(St[i], St_ab, alp, bet)
-            push_submatrix(St[i], St_ba, bet, alp);   push_submatrix(St[i], St_bb, bet, bet)
+            Here, S_xy are the overlaps of the MOs for spin channels x and y (alpha, beta) - only
+            spatial components of the orbitals are taken into account here.
+            Here, N - is the total number of orbitals (double occupancies)        
+
+        St ( CMATRIX(2N, 2N) ): the transition density matrix St_ij = <i|d/dt|j>. It has a block structure as:
+
+                 (St_aa, St_ab)
+            St = (            )
+                 (St_ba, St_bb)
+
+            Here, St_xy are the transition density matrix for spin channels x and y (alpha, beta) - only
+            spatial components of the orbitals are taken into account here.
+            Here, N - is the total number of orbitals (double occupancies)        
+
+    Returns:
+        None: but the input matrix ```St``` is changed
+
+    
+    """
+
+    nsteps = len(St)
+    nstates = St[0].num_of_cols/2  # division by 2 because it is a super-matrix
+    
+    alp = range(0,nstates)
+    bet = range(nstates, 2*nstates)
+
+    St_aa = CMATRIX(nstates,nstates);  St_ab = CMATRIX(nstates,nstates);
+    St_ba = CMATRIX(nstates,nstates);  St_bb = CMATRIX(nstates,nstates);
+    
+    for i in range(0, nsteps-1):
+    
+        U1_a, U1_b = get_Lowdin(S[i])    # time n
+        U2_a, U2_b = get_Lowdin(S[i+1])  # time n+1          
+    
+        pop_submatrix(St[i], St_aa, alp, alp);    pop_submatrix(St[i], St_ab, alp, bet)
+        pop_submatrix(St[i], St_ba, bet, alp);    pop_submatrix(St[i], St_bb, bet, bet)
+    
+        St_aa = U1_a.H() * St_aa * U2_a
+        St_ab = U1_a.H() * St_ab * U2_b
+        St_ba = U1_b.H() * St_ba * U2_a
+        St_bb = U1_b.H() * St_bb * U2_b
+    
+        push_submatrix(St[i], St_aa, alp, alp);   push_submatrix(St[i], St_ab, alp, bet)
+        push_submatrix(St[i], St_ba, bet, alp);   push_submatrix(St[i], St_bb, bet, bet)
 
 
         
          
 def make_cost_mat(orb_mat_inp, en_mat_inp, alpha):
     """
+
     Makes the cost matrix from a given TDM and information on states' energies
 
-    orb_mat_inp  [CMATRIX(nstates,nstates) or MATRIX(nstates,nstate)] TDM in a given basis
-    en_mat_inp   [MATRIX(nstates, nstates)]            Matrix of energies in a given basis [a.u.]
-    alpha        [float] Parameter controlling the range of the orbitals that can participate in
-                         the reordering. Setting is to 0 makes all orbitals be considered for reordering
-                         Setting it to a large number makes the effective number of orbitals participating
-                         in the reordering smaller - this can be used to turn off the reordering. [a.u.^-1]
+    Args:    
+        orb_mat_inp  ( CMATRIX(nstates,nstates) or MATRIX(nstates,nstate) ): the transition density matrix
+            TDM in a given basis. Here, ```nstates``` - the number of states (e.g. the number of doubly-occupied
+            orbitals )
+
+        en_mat_inp ( MATRIX(nstates, nstates) ): Matrix of energies in a given basis [units: a.u.]
+
+        alpha ( float ): Parameter controlling the range of the orbitals that can participate in
+            the reordering. Setting is to 0 makes all orbitals be considered for reordering
+            Setting it to a large number makes the effective number of orbitals participating
+            in the reordering smaller - this can be used to turn off the reordering. [units: a.u.^-1]
+
+    Returns: 
+        MATRIX(nstates, nstates): the matrix of the cost values for different pairs of states
 
     """
 
@@ -148,22 +203,24 @@ def make_cost_mat(orb_mat_inp, en_mat_inp, alpha):
 
 def apply_state_reordering(St, E, params):
     """
+
     Performs the state's identity reordering in a given basis for all time steps.
     This is reflects in the corresponding changess of the TDM.
 
-    St      [list of CMATRIX] - TDM for each timestep
-    E       [list of CMATRIX] - energies of all states at every step
-    params  [Python dictionary] - parameters controlling the reordering
+    Args:
+        St ( list of CMATRIX(nstates, nstates) ): TDM for each timestep
+        E ( list of CMATRIX(nstates, nstates) ): energies of all states at every step
+        params ( dictionary ): parameters controlling the reordering
+            * **params["do_state_reordering"]** ( int ): option to select the state reordering algorithm 
+                Available options:
+                    - 1: older version developed by Kosuke Sato, may not the working all the times
+                    - 2: Munkres-Kuhn (Hungarian) method [default]
 
-    === Required parameter keys: ===
+            * **params["state_reordering_alpha"]** ( double ): a parameter that controls how 
+                many states will be included in the reordering
 
-    params["do_state_reordering"]    [int] - option to select an algorithm [default: 2]
-                                     Available options:
-                                     1 - older version developed by Kosuke Sato, may not the working all the times
-                                     2 - Munkres-Kuhn (Hungarian) method
-
-    params["state_reordering_alpha"] [double] - a parameter that controls how many states will be included in the 
-                                     reordering
+    Returns:
+        None: but changes the input St object
 
     """
 
@@ -196,8 +253,8 @@ def apply_state_reordering(St, E, params):
     aa = CMATRIX(nstates, nstates); ab = CMATRIX(nstates, nstates)
     ba = CMATRIX(nstates, nstates); bb = CMATRIX(nstates, nstates)
 
-    en_mat_aa = CMATRIX(nstates, nstates); en_mat_bb = CMATRIX(nstates, nstates)
-
+    en_mat_aa = CMATRIX(nstates, nstates); 
+    en_mat_bb = CMATRIX(nstates, nstates)
 
 
     for i in range(0, nsteps):
@@ -254,7 +311,6 @@ def apply_state_reordering(St, E, params):
             # Permute the blocks by col
             aa.permute_cols(perm_t_aa);  ab.permute_cols(perm_t_bb)
             ba.permute_cols(perm_t_aa);  bb.permute_cols(perm_t_bb)
-
 
             # Reconstruct St matrix 
             push_submatrix(St[i], aa, alp, alp); push_submatrix(St[i], ab, alp, bet)
@@ -455,14 +511,47 @@ def scale_H_vib(hvib, en_gap, dNAC, sc_nac_method):
 
 
 def compute_Hvib(basis, St_ks, E_ks, dE, dt):
-    """
-    Basis - list of list of lists of integers
-    St_ks - time overlap (CMATRIX) of the KS spin-orbitals
-    E_ks - energies of KS spin-orbitals at the mid-point
-    dE - energy corrections to the SD orbitals ("scissor operator")
-    dt - the timestep for MD integrations
+    """Compute the vibronic Hamiltonian matrix
+    
+    Args:    
+        basis ( list of lists of integers ): defines the basis of Slater Determinants, 
+            such that: basis[iSD][iks] is the indicator of the spin-orbital occupied by 
+            the electron iks in the Slater Determinant iSD
 
-    Returns: The Vibronic Hamiltonian
+            Example: 
+
+                The following example defines a ground state SD (the lowest KS of the active space) and two 
+                single excitations, which are different from each other by two spin flips of the electrons
+                The convention is to start indexing from 1 (corresponds to index 0 in the KS matrices)
+                Positive - for alpha electrons, negative - for beta electrons
+                Need to be consistent: [ -1, 2 ] and [ 2, -1 ] are treated differently, this is needed for spin-adaptation
+
+                >> basis = [ [ 1,-1 ], [ 1,-2 ], [ 2,-1 ] ]
+
+                The next example is for a system of 4 electrons and hole excitations
+                >> basis = [ [ 1,-1, 2, -2 ], [ 3, -1, 2, -2 ], [ 1, -3, 2, -2 ] ]
+
+                                                                       
+        St_ks ( CMATRIX(2*norbs, 2*norbs) ): transition density matrix in the KS spin-orbitals basis, where 
+            norb - the number of double-occupied orbitals.
+
+        E_ks ( CMATRIX(2*norbs, 2*norbs) ): the orbital energies in the KS spin-orbitals basis, where 
+            norb - the number of double-occupied orbitals.
+
+        dE ( list of doubles ): define corrections of the SD state energies in comparison to 
+            the energy give by the sum energies of the occupied spin-orbitals.
+            The convention is: dE[iSD] is the correction to energy of the SD with index iSD. 
+            This is a constant correction - same for all energies in the set [units: Ha] 
+
+            Example:
+                For instance, for the SD examples above, the corrections could be:
+                >> dE = [0.0, 0.01, 0.05]
+
+        dt ( double ): the timestep for MD integrations [units: a.u.]
+
+    Returns: 
+        CMATRIX(nstates, nstates) The Vibronic Hamiltonian
+
     """
 
     St    = mapping.ovlp_mat_arb(basis, basis, St_ks) 
@@ -589,6 +678,12 @@ def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
             * **params["Hvib_im_suffix"]** ( string ): common suffix of the output files with imaginary part of the vibronic 
                 Hamiltonian at all times [default: "_im"]
 
+    Returns:
+        list of lists of CMATRIX(N,N): Hvib, such that:
+            Hvib[idata][istep] is a CMATRIX(N,N) containing the vibronic Hamiltonian for the 
+            trajectory (dataset) ```idata``` and for the timestep ```istep```. Here, N is the number
+            of states included in the active space.
+
     """
 
 
@@ -634,7 +729,7 @@ def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
 
         # 1. Do the KS orbitals orthogonalization 
         if do_orthogonalization > 0:
-            apply_normalization(S_dia_ks[idata], St_dia_ks[idata], params)
+            apply_normalization(S_dia_ks[idata], St_dia_ks[idata])
 
         # 2. Apply state reordering to KS
         if do_state_reordering > 0:

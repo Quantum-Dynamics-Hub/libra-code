@@ -248,6 +248,8 @@ def run_step2(params):
     for i in xrange(isnap+1, fsnap-1):
         E_next, U_next, Hao_next, Sao_next = do_step(i, params)
         S = do_ovlp(i, params)
+
+        S.real().show_matrix("res/AOS_%i_re" % (i) )
         
         TDM = U_curr.H() * S * U_next
         Hvib = 0.5*(E_curr + E_next) - (0.5j/dt) * ( TDM - TDM.H() )

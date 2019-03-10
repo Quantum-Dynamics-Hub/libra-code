@@ -156,7 +156,7 @@ def get_dftb_matrices(filename, act_sp1=None, act_sp2=None):
             
             tmp = B[i].split()
             line = ""            
-            for j in xrange(norbs):                               
+            for j in xrange(norbs): 
                 z = 0.0
                 if tmp[j]=="NaN":
                     z = 0.0
