@@ -765,3 +765,106 @@ def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
         
     return H_vib
 
+
+
+
+def map_Hvib(H, basis, dE):
+
+    nbasis = -1 # doesn't matter
+
+    H_vib  = mapping.energy_mat_arb(basis, H, dE)
+
+    nstates = len(basis):
+    for i in xrange(nstates):
+        for j in xrange(nstates):
+
+            res = delta(Py2Cpp_int(basis[i], Py2Cpp_int(basis[j]) 
+ 
+            if res[0]!=0:
+                a = sd2indx(res[1], nbasis) 
+                b = sd2indx(res[2], nbasis) 
+                H_vib.add(i, j, H.get(a, b) )
+
+    return H_vib
+
+
+
+def pyxaid2libra(Hvib_pyxaid, params):
+    """
+    """
+
+    #====== Defaults and local parameters ===============
+
+    critical_params = [ "SD_basis", "SD_energy_corr", "CI_basis", "output_set_paths" ]
+    default_params = { "do_output":0,
+                       "Hvib_re_prefix":"Hvib_", "Hvib_im_prefix":"Hvib_",
+                       "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im",
+                     }
+    comn.check_input(params, default_params, critical_params)
+
+      
+    ndata =  len(Hvib_pyxaid)
+    nsteps = len(Hvib_pyxaid[0])
+    norbs = Hvib_pyxaid[0][0].num_of_cols
+    nstates = len(params["CI_basis"])  # the number of CI states to consider
+    do_output = params["do_output"]
+
+
+    S = CMATRIX(2*norbs, 2*norbs)
+    H = CMATRIX(2*norbs, 2*norbs)
+    s = CMATRIX(norbs, norbs)
+    s.identity()
+    alp = range(0, norbs)
+    bet = range(norbs, 2*norbs)
+
+    push_submatrix(S, s, alp, alp)
+    push_submatrix(S, s, alp, bet)
+    push_submatrix(S, s, bet, alp)
+    push_submatrix(S, s, bet, bet)
+
+    #====== Generic sanity checks ===============
+    if do_output:
+        if(ndata) != len(params["output_set_paths"]):
+            print "Error: The number of output sets paths should be the same as the number of data sets\n"
+            print "ndata = ", ndata
+            print "len(params[\"output_set_paths\"]) = ", len(params["output_set_paths"])
+            print "Exiting...\n"
+            sys.exit(0)
+
+
+
+    #====== Calculations  ===============
+    H_vib = []
+
+    for idata in xrange(ndata):
+
+        Hvib = []
+        for i in xrange(nsteps):
+        
+            # 1. Construct the Hvib in the basis of Slater determinants (SDs)            
+            push_submatrix(H, Hvib_pyxaid[idata][i], alp, alp)
+            push_submatrix(H, Hvib_pyxaid[idata][i], alp, bet)
+            push_submatrix(H, Hvib_pyxaid[idata][i], bet, alp)
+            push_submatrix(H, Hvib_pyxaid[idata][i], bet, bet)
+            hvib_sd = map_Hvib(H, params["SD_basis"], params["SD_energy_corr"]) 
+      
+            # 2. Convert the Hvib to the basis of symmery-adapted configurations (SAC)
+            SD2CI = sac_matrices(params["CI_basis"], params["SD_basis"], S)
+            hvib_ci = SD2CI.H() * hvib_sd * SD2CI
+            Hvib.append( hvib_ci )
+
+
+        if do_output:
+            # Output the resulting Hamiltonians
+            for i in xrange(nsteps):
+                re_filename = params["output_set_paths"][idata] + params["Hvib_re_prefix"] + str(i) + params["Hvib_re_suffix"]
+                im_filename = params["output_set_paths"][idata] + params["Hvib_im_prefix"] + str(i) + params["Hvib_im_suffix"]        
+                Hvib[i].real().show_matrix(re_filename)
+                Hvib[i].imag().show_matrix(im_filename)
+
+        H_vib.append(Hvib)        
+        
+    return H_vib
+
+
+

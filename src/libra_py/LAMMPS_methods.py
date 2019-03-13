@@ -23,7 +23,7 @@ def compute_dynmat(lmp, filename, atoms, dr, opt=1):
     """
     The function to return the dynamic matrix for a system using LAMMPS
 
-    To use this code, one naeed to have pylammps installed
+    To use this code, one needs to have pylammps installed
 
     lmp  - is lammps.lammps() object - you need to create if first
     filename (string) LAMMPS input filename defining the system and the interactions
