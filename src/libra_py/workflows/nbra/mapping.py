@@ -32,7 +32,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 #from libra_py import *
 
 
-def sd2indx(inp,nbasis):
+def sd2indx(inp,nbasis, do_sort=True):
     """
 
     This function maps a list of integers defining the 
@@ -51,6 +51,11 @@ def sd2indx(inp,nbasis):
 
         nbasis ( int ): the total number of orbitals orbitals (both alpha- and beta-
             spatial components ) in the selected active space [currently not really used!]
+
+        do_sort ( Boolean ): the flag to tell whether the indices should be sorted in 
+            a particular order:
+                - True - for new scheme (needed for the SAC) [default]
+                - use with False for Pyxaid mapping!
 
 
     Returns: 
@@ -95,10 +100,17 @@ def sd2indx(inp,nbasis):
         else:
             spat[i] = (abs(inp[i])) - 1  #+ nbasis/2 - 1
 
+
+
     # Rearrange in ascending order: this is needed for 
     # a consistency of the final results among different orbitals
+    # Warning! But the reordering messes up the mapping procedure, so it 
+    # is better not to have it. Note sure what effect it might have on spin-adaptation 
+    # though
+    out = list(spat)    
+    if do_sort==True:
+        out = sorted(spat)   
 
-    out = sorted(spat)   
     return out
 
 

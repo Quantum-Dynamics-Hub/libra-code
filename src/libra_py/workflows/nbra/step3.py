@@ -774,16 +774,16 @@ def map_Hvib(H, basis, dE):
 
     H_vib  = mapping.energy_mat_arb(basis, H, dE)
 
-    nstates = len(basis):
+    nstates = len(basis)
     for i in xrange(nstates):
         for j in xrange(nstates):
 
-            res = delta(Py2Cpp_int(basis[i], Py2Cpp_int(basis[j]) 
- 
-            if res[0]!=0:
-                a = sd2indx(res[1], nbasis) 
-                b = sd2indx(res[2], nbasis) 
-                H_vib.add(i, j, H.get(a, b) )
+            res = delta(Py2Cpp_int(basis[i]), Py2Cpp_int(basis[j]) )
+
+            if res[0] != 0:
+                if res[1] * res[2] > 0:
+                    a = mapping.sd2indx([res[1], res[2]], nbasis, False) 
+                    H_vib.add(i, j, H.get(a[0], a[1]) )
 
     return H_vib
 
