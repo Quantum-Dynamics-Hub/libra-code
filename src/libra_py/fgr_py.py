@@ -51,65 +51,94 @@ def run_NEFGRL_populations(omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, pa
 
         params ( dictionary ): parameters controlling the execution of the calculations
 
-            * **params["tmax"]** ( double ): time since the initial photoexcitation [units: a.u. of time]
+            * **params["tmax"]** ( double ): time since the initial photoexcitation [units: a.u. of time; default: 10 fs]
 
-            * **params["dt"]** ( double ): integration timestep for the forward propagation [units: a.u. of time]
+            * **params["dt"]** ( double ): integration timestep for the forward propagation [units: a.u. of time, ]
 
             * **params["dtau"]** ( double ): integration timestep for backward propagation, 
-                used to take the integral above (tau = dtau*n < t, where n is integer)
+                used to take the integral above (tau = dtau*n < t, where n is integer) [units: a.u.]
 
             * **params["method"]** ( int ): flag that specifies which method to use:
 
-                - 0: Exact quantum result
+                - 0: Exact quantum result [ default ]
                 - 1: LSC
                 - 2: CAV
                 - 3: CD
                 - 4: W0
                 - 5: Marcus
 
-            * **params["dyn_type"]** ( int ): flag that selects Condon (0) vs. non-Condon(1) approximation
+            * **params["dyn_type"]** ( int ): flag that selects:
 
-            * **params["Temperature"]** ( double ): temperature of the bath [ units: K ]
+                - 0: Condon [ default ]
+                - 1: non-Condon
+
+            * **params["Temperature"]** ( double ): temperature of the bath [ units: K, default: 300.0 ]
+
+            * **params["do_output"]** ( Boolean ): whether to print out the results in a file [ default: False ]
+
+            * **params["filename"]** ( string ): the name of the file where the results would be
+                printed out if ```do_output``` is set to True [ default: "FGR.txt" ]
 
 
-  Returns: the matrix with: current time, instantaneous rate, population on the donor state
+    Returns: 
+        tuple: (time, rate, pop), where:
+ 
+            * time ( list of doubles ): time axis [ units: a.u. ]
+            * rate ( list of doubles ): time-dependent rate constants [ units: a.u.^-1 ]
+            * pop ( list of doubles ): time-dependent population of the donor state 
 
-        *     
     """
-
 
     critical_params = [  ] 
     default_params = {  "method":0, "dyn_type":0, 
                         "Temperature":300.0, 
-                        "dtau":1.0, "tmax":10.0, "dt":1.0, 
+                        "dtau":0.02 * units.fs2au, "tmax":10.0 * units.fs2au, "dt":0.1 * units.fs2au, 
                         "do_output":False, "filename":"FGR.txt"
                      }
     comn.check_input(params, default_params, critical_params)
 
 
+    method = params["method"]
+    dyn_type = params["dyn_type"]
     T = params["Temperature"]
+    tmax = params["tmax"]
+    dt = params["dt"]
+    dtau = params["dtau"]
+    do_output = params["do_output"]
+    filename = params["filename"]
 
-    
-    f = open(filename, "w")
-    f.close()
 
+    beta = 1.0 / (units.kB * T)    
     nsteps = int(tmax/dt)+1
+
     summ, P, k = 0.0, 1.0, 0.0  # probability of donor state
+    time, pop, rate = [], [], []
+
+
+    if do_output:
+        f = open(filename, "w"); f.close()
 
 
     for step in xrange(nsteps):
-
         t = step*dt
 
-        f = open(filename, "a")
-        f.write("%8.5f  %8.5f  %8.5f \n" % (t, k, P))
-        f.close()
+        if do_output:
+            f = open(filename, "a")
+            f.write("%8.5f  %8.5f  %8.5f \n" % (t, k, P))
+            f.close()
+
+        time.append(t)
+        rate.append(k)
+        pop.append(P)
+
  
         # k = k(t')
         k = NEFGRL_rate(t, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, dyn_type, dtau)
         
         summ += k * dt; 
         P = math.exp(-summ)  # exp(- int dt' k(t'))
+
+    return time, rate, pop
 
 
 
