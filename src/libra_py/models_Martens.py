@@ -26,7 +26,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 class tmp:
     pass    
 
-def Martens1(q, params):
+def model1(q, params):
     """
     The first of the two model potential described by L. Wang, C.C. Martens, 
     and Y. Zheng, "Entangled trajectory molecular dynamics in 

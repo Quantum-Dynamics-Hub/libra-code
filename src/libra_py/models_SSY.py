@@ -73,7 +73,7 @@ def SSY(q, params):
 
 
     #=========== Energies & Derivatives ===============
-    x, y = q.set(0), q.get(1)
+    x, y = q.get(0), q.get(1)
 
     # H_00
     obj.ham_dia.set(0,0, E0*(-1.0+0.0j))
