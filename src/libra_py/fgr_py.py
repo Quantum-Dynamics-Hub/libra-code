@@ -35,7 +35,7 @@ import units
 def run_NEFGRL_populations(omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, params):
     """
 
-    Noneq FGR in non-Condon case (linear coupling) using normal modes
+    Noneq FGR in non-Condon/Condon case (linear coupling) using normal modes
      k(t') = 2/(hbar^2) * Re { int_0^t' { dtau * C(tau) }  }
     
     Compute the non-equilibrium FGR populations as a function of time
@@ -142,7 +142,55 @@ def run_NEFGRL_populations(omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, pa
 
 
 
-def run_Test1(omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, dyn_type, t, dtau, filename):
+def run_NEFRG_acf(t, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, params):
+    """
+
+    Noneq FGR in non-Condon/Condon case (linear coupling) using normal modes
+         
+    Compute the non-equilibrium FGR populations as a function of time
+
+    Args:
+        t ( double ): compute the properties (e.g. rates) for the time t [units: a.u.]
+        SeeAlso: ```run_NEFGRL_populations``` - the present function takes the same arguments
+
+    Returns:
+        tuple: (_tau, _argg_re, _argg_im, _lin_re, _lin_im, _C_re, _C_im, _int_re, _int_im), where:
+
+            * _tau ( list of doubles ): time axis [ units: a.u. ]
+            * _argg_re ( list of doubles ): real part of the sum over frequencies - sitting in the exponent, at given tau
+            * _argg_im ( list of doubles ): imaginary part of the sum over frequencies - sitting in the exponent, at given tau
+            * _lin_re ( list of doubles ): real part of the linear term - in front of the exponent, at given tau
+            * _lin_im ( list of doubles ): imaginary part of the linear term - in front of the exponent, at given tau
+            * _C_re ( list of doubles ): real part of the time-correlation function, at given tau
+            * _C_im ( list of doubles ): real part of the time-correlation function, at given tau
+            * _int_re ( list of double ): integral of _C_re to this time point,   int_0_t { C(t,tau) dtau }  for a fixed t
+            * _int_re ( list of double ): integral of _C_re to this time point,   int_0_t { C(t,tau) dtau }  for a fixed t
+
+    """
+
+    critical_params = [  ] 
+    default_params = {  "method":0, "dyn_type":0, 
+                        "Temperature":300.0, 
+                        "dtau":0.02 * units.fs2au, 
+                        "do_output":False, "filename":"FGR.txt"
+                     }
+    comn.check_input(params, default_params, critical_params)
+
+
+    method = params["method"]
+    dyn_type = params["dyn_type"]
+    T = params["Temperature"]
+    dtau = params["dtau"]
+    do_output = params["do_output"]
+    filename = params["filename"]
+
+
+    beta = 1.0 / (units.kB * T)    
+    nsteps = int(t/dtau)
+#    nsteps = int(tmax/dt)+1
+    nomega = len(omega_nm)
+
+
 
 
     _tau = []
@@ -151,15 +199,8 @@ def run_Test1(omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, d
     _C_re, _C_im = [], []
     _int_re, _int_im = [], []
 
-    f = open(filename, "w")
-    f.close()
-
-    nsteps = int(t/dtau)
-    nomega = len(omega_nm)
-
-    """
-     int_0_t { C(t,tau) dtau }  for a fixed t
-    """
+    if do_output==True:
+        f = open(filename, "w"); f.close()
 
     integ = 0.0+0.0j
 
@@ -187,6 +228,7 @@ def run_Test1(omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, d
                 argg = argg + Integrand_NE_Marcus(t, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta)
                 lin = lin + Linear_NE_Marcus(t, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta)
 
+
         C = 0.0+0.0j
         if dyn_type==0:
             C = cmath.exp(argg) * V * V
@@ -195,10 +237,11 @@ def run_Test1(omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, d
 
         integ = integ + C*dtau
 
-        f = open(filename, "a")
-        f.write("%8.5f  %8.5f  %8.5f %8.5f  %8.5f %8.5f  %8.5f %8.5f  %8.5f\n" 
-                % (tau, argg.real, argg.imag, lin.real, lin.imag, C.real, C.imag, integ.real, integ.imag))
-        f.close()
+        if do_output==True:
+            f = open(filename, "a")
+            f.write("%8.5f  %8.5f  %8.5f %8.5f  %8.5f %8.5f  %8.5f %8.5f  %8.5f\n" 
+                    % (tau, argg.real, argg.imag, lin.real, lin.imag, C.real, C.imag, integ.real, integ.imag))
+            f.close()
 
 
         _tau.append(tau)
@@ -215,7 +258,8 @@ def run_Test1(omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, d
         _int_im.append(integ.imag)
 
 
-        return _tau, _argg_re, _argg_im, _lin_re, _lin_im, _C_re, _C_im, _int_re, _int_im
+
+    return _tau, _argg_re, _argg_im, _lin_re, _lin_im, _C_re, _C_im, _int_re, _int_im
 
 
 
