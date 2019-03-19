@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2018 Alexey V. Akimov                                                   
+#* Copyright (C) 2018-2019 Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -7,11 +7,14 @@
 #* See the file LICENSE in the root directory of this distribution   
 #* or <http://www.gnu.org/licenses/>.          
 #***********************************************************************************
-## \file models_Faist_Levine.py 
-#
-# This module implements the 1D, 2-level models of Faist and Levine
-#
-#
+"""
+.. module:: models_Faist_Levine
+   :platform: Unix, Windows
+   :synopsis: This module implements the 1D, 2-level models of Faist and Levine
+.. moduleauthor:: Alexey V. Akimov
+
+"""
+
 import os
 import sys
 import math
@@ -22,37 +25,160 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+from units import Angst
+from units import ev2au
+
 class tmp:
     pass    
 
 
 
+
+def get_Faist_Levine_LiI():
+    """
+
+    Parameters for the Li + I collision potential    
+
+    Ref: Faist, M. B.; Levine, R. D. JCP 1976, 64, 2953
+
+    Args:
+        None
+
+    Returns:
+        dictionary: params, should contain the parameters:
+
+            * **params["A_cov"]** ( double ) [ units: Ha ] 
+            * **params["A_ion"]** ( double ) [ units: Ha ] 
+            * **params["B_cov"]** ( double ) [ units: Ha^(1/12) * Bohr ] 
+            * **params["B_ion"]** ( double ) [ units: Ha^(1/12) * Bohr ] 
+            * **params["C_cov"]** ( double ) [ units: Ha * Bohr^6 ] 
+            * **params["C_ion"]** ( double ) [ units: Ha * Bohr^6 ] 
+            * **params["rho_cov"]** ( double ) [ units: Bohr ] 
+            * **params["rho_ion"]** ( double ) [ units: Bohr ] 
+            * **params["alp_M+"]** ( double ) [ units: Bohr^3 ] 
+            * **params["alp_X-"]** ( double ) [ units: Bohr^3 ] 
+            * **params["E_th"]** ( double ) [ units: Ha ] 
+            * **params["A"]** ( double ) [ units: Ha ] 
+            * **params["rho"]** ( double ) [ units: Bohr ] 
+
+    """
+
+    A = Angst   # 1 Angstrom in Bohr
+    eV = ev2au  # 1 eV in Ha
+
+    params = {}
+
+    params["A_cov"] = 3150.0 * eV #1100.0 * eV - this value is declared to 
+                                  # be arbitrary, but in practice it yields
+                                  # strange curve, so I have set this parameter
+                                  # to that of the NaI model
+    params["A_ion"] = 1052.0 * eV
+    params["B_cov"] = 2.996 * math.pow(eV, 1.0/12.0) * A
+    params["B_ion"] = 1.839 * math.pow(eV, 1.0/8.0) * A
+    params["C_cov"] = 1191.2 * eV * math.pow(A, 6)
+    params["C_ion"] = 0.823 * eV * math.pow(A, 6)
+    params["rho_cov"] = 0.44 * A
+    params["rho_ion"] = 0.3786 * A
+    params["alp_M+"] = 0.029 * math.pow(A, 3)
+    params["alp_X-"] = 6.431 * math.pow(A, 3)
+    params["E_th"] = 2.326 * eV
+    params["A"] = 17.08 * eV
+    params["rho"] = 1.239 * A  ## I'm not sure why they give it in A^-1
+
+
+    return params
+   
+
+
+def get_Faist_Levine_NaI():
+    """
+
+    Parameters for Na + I collision potential
+    
+    Ref: Faist, M. B.; Levine, R. D. JCP 1976, 64, 2953
+
+    Args:
+        None
+
+    Returns:
+        dictionary: params, should contain the parameters:
+
+            * **params["A_cov"]** ( double ) [ units: Ha ] 
+            * **params["A_ion"]** ( double ) [ units: Ha ] 
+            * **params["B_cov"]** ( double ) [ units: Ha^(1/12) * Bohr ] 
+            * **params["B_ion"]** ( double ) [ units: Ha^(1/12) * Bohr ] 
+            * **params["C_cov"]** ( double ) [ units: Ha * Bohr^6 ] 
+            * **params["C_ion"]** ( double ) [ units: Ha * Bohr^6 ] 
+            * **params["rho_cov"]** ( double ) [ units: Bohr ] 
+            * **params["rho_ion"]** ( double ) [ units: Bohr ] 
+            * **params["alp_M+"]** ( double ) [ units: Bohr^3 ] 
+            * **params["alp_X-"]** ( double ) [ units: Bohr^3 ] 
+            * **params["E_th"]** ( double ) [ units: Ha ] 
+            * **params["A"]** ( double ) [ units: Ha ] 
+            * **params["rho"]** ( double ) [ units: Bohr ] 
+
+
+    """
+
+    A = Angst  # 1 Angstrom in Bohr
+    eV = ev2au # 1 eV in Ha
+
+    params = {}
+
+    params["A_cov"] = 3150.0 * eV
+    params["A_ion"] = 2760.0 * eV
+    params["B_cov"] = 2.647 * math.pow(eV, 1.0/12.0) * A
+    params["B_ion"] = 2.398 * math.pow(eV, 1.0/8.0) * A
+    params["C_cov"] = 1000.0 * eV * math.pow(A, 6)
+    params["C_ion"] = 11.3 * eV * math.pow(A, 6)
+    params["rho_cov"] = 0.435 * A
+    params["rho_ion"] = 0.3489 * A
+    params["alp_M+"] = 0.408 * math.pow(A, 3)
+    params["alp_X-"] = 6.431 * math.pow(A, 3)
+    params["E_th"] = 2.075 * eV
+    params["A"] = 17.08 * eV
+    params["rho"] = 1.239 * A  ## I'm not sure why they give it in A^-1
+
+
+    return params
+   
+
+
 def Faist_Levine(q, params):
     """
+
     Faist and Levine, 2-level, 1-dim. potential describing the
     collision of alkali and halogen atoms
 
-    \param[in] q [1 x 1, MATRIX] coordinates of the particles 
-    \param[in] params [dictionary] parameters of the model. 
-
-    Should contain the key - value pairs: 
-        key          value        description
-
-      "A_cov"    -    (double)      
-      "A_ion"    -    (double)
-      "B_cov"    -    (double)      
-      "B_ion"    -    (double)
-      "C_cov"    -    (double)      
-      "C_ion"    -    (double)
-      "rho_cov"  -    (double)      
-      "rho_ion"  -    (double)
-      "alp_M+"   -    (double)
-      "alp_X-"   -    (double)
-      "E_th"     -    (double)
-      "A"        -    (double)
-      "rho"      -    (double)
-
     Ref: Faist, M. B.; Levine, R. D. JCP 1976, 64, 2953
+
+    Args:
+        q ( MATRIX(1,1) ) : nuclear coordinate
+        params ( dictionary ) : parameters of the model potential, should contain:
+
+            * **params["A_cov"]** ( double ) [ units: Ha ] 
+            * **params["A_ion"]** ( double ) [ units: Ha ] 
+            * **params["B_cov"]** ( double ) [ units: Ha^(1/12) * Bohr ] 
+            * **params["B_ion"]** ( double ) [ units: Ha^(1/12) * Bohr ] 
+            * **params["C_cov"]** ( double ) [ units: Ha * Bohr^6 ] 
+            * **params["C_ion"]** ( double ) [ units: Ha * Bohr^6 ] 
+            * **params["rho_cov"]** ( double ) [ units: Bohr ] 
+            * **params["rho_ion"]** ( double ) [ units: Bohr ] 
+            * **params["alp_M+"]** ( double ) [ units: Bohr^3 ] 
+            * **params["alp_X-"]** ( double ) [ units: Bohr^3 ] 
+            * **params["E_th"]** ( double ) [ units: Ha ] 
+            * **params["A"]** ( double ) [ units: Ha ] 
+            * **params["rho"]** ( double ) [ units: Bohr ] 
+
+    Returns:
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian 
+            * obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ): 
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( CMATRIX(2,2) ): derivative coupling in the diabatic basis [ zero ]
+
     
     """
 
@@ -102,13 +228,13 @@ def Faist_Levine(q, params):
 
     # H_00
     e = math.exp(-R/rho_cov)
-    b12 = math.pow(B_cov)
+    b12 = math.pow(B_cov, 12)
     pb12 = b12 * p12
 
-    z = (A_cov + pb12 ) * e - C_cov * p8
+    z = (A_cov + pb12 ) * e - C_cov * p6
     dzdx =  (-12.0 * pb12 / R ) * e
     dzdx += (-1.0/rho_cov) * (A_cov + pb12 ) * e
-    dzdx += 8.0 * C_cov * p8 / R
+    dzdx += 6.0 * C_cov * p6 / R
 
     obj.ham_dia.set(0,0, z*(1.0+0.0j))
     obj.d1ham_dia[0].set(0,0, dzdx*(1.0+0.0j))
@@ -116,7 +242,7 @@ def Faist_Levine(q, params):
 
     # H_11
     e = math.exp(-R/rho_ion)
-    b8 = math.pow(B_ion)
+    b8 = math.pow(B_ion, 8)
     pb8 = b8 * p8
 
     z = (A_ion + pb8 ) * e - C_ion * p6 - p1 - 0.5*(alp_Mp + alp_Xm)*p4 - 2.0*alp_Mp*alp_Xm*p6/R + E_th
@@ -146,66 +272,3 @@ def Faist_Levine(q, params):
     return obj
 
 
-
-def get_Faist_Levine_LiI():
-    """
-    Parameters for Li + I collision
-    
-    Ref: Faist, M. B.; Levine, R. D. JCP 1976, 64, 2953
-
-    """
-
-    A = 1.889725989  # 1 Angstrom in Bohr
-    eV = 0.036749309 # 1 eV in Ha
-
-    params = {}
-
-    params["A_cov"] = 1100.0 * eV
-    params["A_ion"] = 1052.0 * eV
-    params["B_cov"] = 2.996 * math.pow(eV, 1.0/12.0) * A
-    params["B_ion"] = 1.839 * math.pow(eV, 1.0/8.0) * A
-    params["C_cov"] = 1191.2 * eV * math.pow(A, 8)
-    params["C_ion"] = 0.823 * eV * math.pow(A, 6)
-    params["rho_cov"] = 0.44 * eV
-    params["rho_ion"] = 0.3786 * eV
-    params["alp_M+"] = 0.029 * math.pow(A, 3)
-    params["alp_X-"] = 6.431 * math.pow(A, 3)
-    params["E_th"] = 2.326 * eV
-    params["A"] = 17.08 * eV
-    params["rho"] = 1.239 * A  ## I'm not sure why they give it in A^-1
-
-
-    return params
-   
-
-
-def get_Faist_Levine_NaI():
-    """
-    Parameters for Na + I collision
-    
-    Ref: Faist, M. B.; Levine, R. D. JCP 1976, 64, 2953
-
-    """
-
-    A = 1.889725989  # 1 Angstrom in Bohr
-    eV = 0.036749309 # 1 eV in Ha
-
-    params = {}
-
-    params["A_cov"] = 3150.0 * eV
-    params["A_ion"] = 2760.0 * eV
-    params["B_cov"] = 2.647 * math.pow(eV, 1.0/12.0) * A
-    params["B_ion"] = 2.398 * math.pow(eV, 1.0/8.0) * A
-    params["C_cov"] = 1000.0 * eV * math.pow(A, 8)
-    params["C_ion"] = 11.3 * eV * math.pow(A, 6)
-    params["rho_cov"] = 0.435 * eV
-    params["rho_ion"] = 0.3489 * eV
-    params["alp_M+"] = 0.408 * math.pow(A, 3)
-    params["alp_X-"] = 6.431 * math.pow(A, 3)
-    params["E_th"] = 2.075 * eV
-    params["A"] = 17.08 * eV
-    params["rho"] = 1.239 * A  ## I'm not sure why they give it in A^-1
-
-
-    return params
-   
