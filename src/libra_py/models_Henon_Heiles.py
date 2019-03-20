@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2018 Alexey V. Akimov                                                   
+#* Copyright (C) 2018-2019 Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -7,11 +7,14 @@
 #* See the file LICENSE in the root directory of this distribution   
 #* or <http://www.gnu.org/licenses/>.          
 #***********************************************************************************
-## \file models_Henon_Heiles.py 
-#
-# This module implements the Henon-Heiles model potential
-#
-#
+"""
+.. module:: models_Henon_Heiles
+   :platform: Unix, Windows
+   :synopsis: This module implements the Henon-Heiles model potential
+.. moduleauthor:: Alexey V. Akimov
+
+"""
+
 import os
 import sys
 import math
@@ -21,6 +24,7 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
+import common_utils as comn
 
 class tmp:
     pass    
@@ -28,17 +32,35 @@ class tmp:
 
 def Henon_Heiles(q, params):
     """
-    Implementation of the Henon-Heiles potential
 
-    \param[in] q [ndof x 1, MATRIX] coordinate of the particle, ndof = 2 
-    \param[in] params [dictionary] parameters of the model
+    Implementation of the Henon-Heiles potential
 
     References:
     Sim, E.; Makri, N. Time-Dependent Discrete Variable Representations for Quantum Wave Packet Propagation
     J. Chem. Phys. 1995, 102, 5616-5625
+
+    Args:
+        q ( MATRIX(2,1) ): coordinates of the particle, ndof = 2 
+        params ( dictionary ): model parameters
+
+            * **params["lam"]** ( double ): lambda parameter [ default: 0.2, units: Ha/Bohr^3]
+
+    Returns:       
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(1,1) ): diabatic Hamiltonian 
+            * obj.ovlp_dia ( CMATRIX(1,1) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of 2 CMATRIX(1,1) objects ): 
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of 2 CMATRIX(1,1) objects ): derivative coupling in the diabatic basis [ zero ]
+
     """
 
-    lam = 0.2   
+    critical_params = [  ] 
+    default_params = { "lam":0.2,  }
+    comn.check_input(params, default_params, critical_params)
+
+    lam = params["lam"]
 
     # Hdia and Sdia are ndia x ndia in dimension
     Hdia = CMATRIX(1,1)

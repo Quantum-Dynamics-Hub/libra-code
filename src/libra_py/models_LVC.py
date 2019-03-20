@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2018 Alexey V. Akimov                                                   
+#* Copyright (C) 2018-2019 Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -7,11 +7,14 @@
 #* See the file LICENSE in the root directory of this distribution   
 #* or <http://www.gnu.org/licenses/>.          
 #***********************************************************************************
-## \file models_LVC.py 
-#
-# This module implements Linear Vibronic Coupling Hamiltonian
-#
-#
+"""
+.. module:: models_LVC
+   :platform: Unix, Windows
+   :synopsis: This module implements Linear Vibronic Coupling (LVC) Hamiltonian
+.. moduleauthor:: Alexey V. Akimov
+
+"""
+
 import os
 import sys
 import math
@@ -21,29 +24,43 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
+import common_utils as comn
+import units
+
 
 class tmp:
     pass    
-
 
 
 def LVC(q, params):
     """
     Linear Vibronic Coupling Hamiltonian, 2-level, N-dim. problem
 
-    \param[in] q [ndof x 1, MATRIX] coordinates of the particles 
-    \param[in] params [dictionary] parameters of the model. 
-    Should contain the key - value pairs: 
-        key          value        description
-      "omega_DA" -  (double)     (E_D - E_A)/hbar, energy gap in au
-      "Er"       -  (double)      Reorganization energy, in au
-      "Delta1"   -  (double)     E_D, energy minimum of the lower state, au
-      "Delta2"   -  (double)     E_D, energy minimum of the higher state, au
-      "omega"    -  (double)     Normal modes frequencies (same for both electronic states), in au
-      "d1"       -  list (ndof)  Electron-phonon couplings for the lower state
-      "d2"       -  list (ndof)  Electron-phonon couplings for the higher state
-      "coup"     -  list (ndof)  Off-diagonal Electron-phonon couplings 
-      "mass"     -  list (ndof)  Masses of the normal modes, in a.u.
+    Args:
+        q ( MATRIX(ndof, 1) ): coordinates of the classical particles, ndof is an 
+            arbitrary number of degrees of freedom (e.g. 3N, where N is the number of particles)
+        params ( dictionary ): model parameters, should contain:
+
+            * **params["Delta1"]** ( double ): energy minimum of the lower state [ units: Ha ]
+            * **params["Delta2"]** ( double ): energy minimum of the upper state [ units: Ha ]
+            * **params["omega"]** ( list on ndof doubles ): normal modes frequencies
+                same for both electronic states [ units: Ha ]
+            * **params["d1"]** ( list on ndof doubles ): electron-phonon couplings for 
+                the lower state [ units: Ha/Bohr ]
+            * **params["d2"]** ( list on ndof doubles ): electron-phonon couplings for 
+                the upper state [ units: Ha/Bohr ]
+            * **params["coup"]** ( list on ndof doubles ): electron-phonon couplings [ units: Ha/Bohr ]
+            * **params["mass"]** ( list on ndof doubles ): masses of the normal modes [ units: amu ]
+
+    Returns:       
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian 
+            * obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of ndof CMATRIX(2,2) objects ): 
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of ndof CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]
+
 
     Note: the Hamiltonian defined in
 
@@ -55,7 +72,10 @@ def LVC(q, params):
     
     """
 
-    ndof = q.num_of_rows  # the number of nuclear DOFs
+    # Define potential specific constants
+    critical_params = [ "omega", "d1", "d2", "coup", "mass", "Delta1", "Delta2" ] 
+    default_params = { }
+    comn.check_input(params, default_params, critical_params)
 
     w = params["omega"]
     d1 = params["d1"]
@@ -63,6 +83,9 @@ def LVC(q, params):
     c = params["coup"]
     m = params["mass"]
 
+
+
+    ndof = q.num_of_rows  # the number of nuclear DOFs
 
     obj = tmp()
     obj.ham_dia = CMATRIX(2,2)

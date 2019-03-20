@@ -32,8 +32,6 @@ class tmp:
     pass    
 
 
-
-
 def get_Faist_Levine_LiI():
     """
 
@@ -45,7 +43,7 @@ def get_Faist_Levine_LiI():
         None
 
     Returns:
-        dictionary: params, should contain the parameters:
+        dictionary: params, will contain the parameters:
 
             * **params["A_cov"]** ( double ) [ units: Ha ] 
             * **params["A_ion"]** ( double ) [ units: Ha ] 
@@ -101,7 +99,7 @@ def get_Faist_Levine_NaI():
         None
 
     Returns:
-        dictionary: params, should contain the parameters:
+        dictionary: params, will contain the parameters:
 
             * **params["A_cov"]** ( double ) [ units: Ha ] 
             * **params["A_ion"]** ( double ) [ units: Ha ] 
@@ -177,7 +175,7 @@ def Faist_Levine(q, params):
             * obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]
             * obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ): 
                 derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
-            * obj.dc1_dia ( CMATRIX(2,2) ): derivative coupling in the diabatic basis [ zero ]
+            * obj.dc1_dia ( list of 2 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]
 
     
     """

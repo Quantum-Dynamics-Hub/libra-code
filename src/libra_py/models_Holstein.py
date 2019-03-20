@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2018 Alexey V. Akimov                                                   
+#* Copyright (C) 2018-2019 Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -7,11 +7,14 @@
 #* See the file LICENSE in the root directory of this distribution   
 #* or <http://www.gnu.org/licenses/>.          
 #***********************************************************************************
-## \file models_Holstein.py 
-#
-# This module implements Holstein Hamiltonians
-#
-#
+"""
+.. module:: models_Holstein
+   :platform: Unix, Windows
+   :synopsis: This module implements the Henon-Heiles Hamiltonians
+.. moduleauthor:: Alexey V. Akimov
+
+"""
+
 import os
 import sys
 import math
@@ -21,6 +24,9 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
+import common_utils as comn
+import units
+
 
 class tmp:
     pass    
@@ -28,23 +34,46 @@ class tmp:
 
 def Holstein_uncoupled(q, params):
     """
-    Implementation of a generic Holstein Hamiltonian
+    Implementation of a generic Holstein Hamiltonian. 
+ 
+    Args:
+        q ( MATRIX(ndof, 1) ): coordinates of the classical particles, ndof is an 
+            arbitrary number of degrees of freedom (e.g. 3N, where N is the number of particles)
+        params ( dictionary ): the parameters of the Hamiltonian, should contain:
 
-    \param[in] q [ndof x 1, MATRIX] coordinate of the particle
-    \param[in] params [dictionary] parameters of the model
+            * **params["k_harmonic"]** ( double ) [ units: Ha/Bohr^2 ] 
+            * **params["el-phon_coupling"]** ( double ) [ units: Ha/Bohr ] 
+            * **params["site_coupling"]** ( double ): electronic coupling between nearby sites [ units: Ha ] 
+            * **params["is_periodic"]** ( Boolean ): whether the first and last sites are connected
+
+    Returns:       
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(ndof,ndof) ): diabatic Hamiltonian 
+            * obj.ovlp_dia ( CMATRIX(ndof,ndof) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of ndof CMATRIX(ndof,ndof) objects ): 
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of 2 CMATRIX(ndof,ndof) objects ): derivative coupling in the diabatic basis [ zero ]
+
+
  
     """
 
-    ndof = q.num_of_rows  # the number of nuclear DOFs
-    N = ndof              # in this case, each site has one nuclear DOF
+    critical_params = [ "k_harmonic", "el-phon_coupling", "site_coupling", "is_periodic" ] 
+    default_params = { }
+    comn.check_input(params, default_params, critical_params)
 
     k = params["k_harmonic"]  # force constant
     alpha = params["el-phon_coupling"] # local electron-phonon coupling
     V = params["site_coupling"]  # diabatic coupling between the adjacent sites
+    is_periodic = params["is_periodic"]
 
+
+
+    ndof = q.num_of_rows  # the number of nuclear DOFs
+    N = ndof              # in this case, each site has one nuclear DOF
 
     obj = tmp()
-
     obj.ham_dia = CMATRIX(N,N)
     obj.ovlp_dia = CMATRIX(N,N);  obj.ovlp_dia.identity()
     obj.d1ham_dia = CMATRIXList()
@@ -60,7 +89,7 @@ def Holstein_uncoupled(q, params):
         obj.ham_dia.set(i,i+1, -V)
         obj.ham_dia.set(i+1,i, -V)
 
-    if params["is_periodic"]==1:
+    if is_periodic==True:
         obj.ham_dia.set(0,N-1, -V)
         obj.ham_dia.set(N-1,0, -V)
 
@@ -90,22 +119,31 @@ def Holstein_uncoupled(q, params):
 
 def get_Holstein_set1():
     """
+
     Parameters from:
     Qiu, J.; Bai, X.; Wang, L. Crossing Classified and Corrected Fewest Switches Surface Hopping.
     J. Phys. Chem. Lett. 2018, 9, 4319-4325.
+
+    Args:
+        None
+
+    Returns:
+        dictionary: params, will contain the parameters:
+
+            * **params["k_harmonic"]** ( double ) [ units: Ha/Bohr^2 ] 
+            * **params["el-phon_coupling"]** ( double ) [ units: Ha/Bohr ] 
+            * **params["mass"]** ( double ): mass of the particles [ units: a.u. of mass ]
+            * **params["site_coupling"]** ( double ): electronic coupling between nearby sites [ units: Ha ] 
+            * **params["is_periodic"]** ( Boolean ): whether the first and last sites are connected
+
     """
 
-    cm1 = 4.5563e-6  # cm^-1 in Ha units
-    Ang = 1.0/0.529177249  #  Angstrom in Bohr units
-    amu = 1822.89  # amu in units of electron mass
-    ps = 4.134137e4  # ps in atomic time units
-
     params = {}
-    params["k_harmonic"]  = 14500 * amu/(ps*ps),
-    params["el-phon_coupling"] = 3500.0 * (cm1/Ang) # in Ha/Bohr
-    params["mass"] = 250.0 * amu
-    params["site_coupling"] = 10.0 * cm1
-    params["is_periodic"] = 0
+    params["k_harmonic"]  = 14500.0 * units.amu/(units.ps2au * units.ps2au)
+    params["el-phon_coupling"] = 3500.0 * (units.inv_cm2Ha/units.Angst) 
+    params["mass"] = 250.0 * units.amu
+    params["site_coupling"] = 10.0 * units.inv_cm2Ha
+    params["is_periodic"] = False
 
     return params
    

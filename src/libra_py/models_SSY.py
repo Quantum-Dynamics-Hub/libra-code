@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2018 Alexey V. Akimov                                                   
+#* Copyright (C) 2018-2019 Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -7,11 +7,13 @@
 #* See the file LICENSE in the root directory of this distribution   
 #* or <http://www.gnu.org/licenses/>.          
 #***********************************************************************************
-## \file models_SSY.py 
-#
-# This module implements the 2D, 2-level model of Shenvi-Subotnik-Yang
-#
-#
+"""
+.. module:: models_SSY
+   :platform: Unix, Windows
+   :synopsis: This module implements the 2D, 2-level model of Shenvi-Subotnik-Yang
+.. moduleauthor:: Alexey V. Akimov
+
+"""
 import os
 import sys
 import math
@@ -21,44 +23,59 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
+import common_utils as comn
+import units
+
 
 class tmp:
     pass    
 
 
-
 def SSY(q, params):
     """
-    Shenvi-Subotnik-Yang, 2-level, 2-dim. problem
 
-    \param[in] q [2 x 1, MATRIX] coordinates of the particles 
-    \param[in] params [dictionary] parameters of the model. 
+    The Hamiltonian of Shenvi-Subotnik-Yang, 2-level, 2-dim. problem
 
-    Should contain the key - value pairs: 
-        key          value        description
+    Reference: Shenvi, N.; Subotnik, J.; Yang, W. JCP 2011, 135, 024101
 
-      "E0" -    (double)      
-      "A"  -    (double)
-      "B"  -    (double)
-      "C"  -    (double)
-      "D"  -    (double)
+    Args:
+        q ( MATRIX(2,1) ): coordinates of the particle, ndof = 2 
+        params ( dictionary ): model parameters
 
-    Ref: Shenvi, N.; Subotnik, J.; Yang, W. JCP 2011, 135, 024101
-    
+            * **params["E0"]** ( double ):  [ default: 0.05, units: Ha]
+            * **params["A"]** ( double ): [ default: 0.15, units: Ha]
+            * **params["B"]** ( double ): [ default: 0.14, units: Bohr^-2]
+            * **params["C"]** ( double ): [ default: 0.015, units: Ha]
+            * **params["D"]** ( double ): [ default: 0.06, units: Bohr^-2]
+
+
+    Returns:       
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian 
+            * obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of 2 CMATRIX(2,2) objects ): 
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of 2 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]
+
     """
 
-    ndof = q.num_of_rows  # the number of nuclear DOFs
-
-    if ndof != 2:
-        print "Error: The SSY Hamiltonian takes 2 nuclear DOFs only. Given = ", ndof
-        print "Exiting..."
-        sys.exit(0)
+    critical_params = [ ] 
+    default_params = {"E0":0.05, "A":0.15, "B":0.14, "C":0.015, "D":0.06 }
+    comn.check_input(params, default_params, critical_params)
 
     E0 = params["E0"]
     A = params["A"]
     B = params["B"]
     C = params["C"]
     D = params["D"]
+
+
+    ndof = q.num_of_rows  # the number of nuclear DOFs
+    if ndof != 2:
+        print "Error: The SSY Hamiltonian takes 2 nuclear DOFs only. Given = ", ndof
+        print "Exiting..."
+        sys.exit(0)
 
 
     obj = tmp()
@@ -105,20 +122,3 @@ def SSY(q, params):
 
     return obj
 
-
-
-def get_SSY():
-    """
-    Parameters from:  Shenvi, N.; Subotnik, J.; Yang, W. JCP 2011, 135, 024101
-
-    """
-
-    params = {}
-    params["E0"] = 0.05
-    params["A"] = 0.15
-    params["B"] = 0.14
-    params["C"] = 0.015
-    params["D"] = 0.06
-
-    return params
-   
