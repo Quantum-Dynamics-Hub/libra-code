@@ -222,7 +222,7 @@ def compute_mat_elt(X, a, b, params):
     params1["verbose"] = 0
 
 
-    T, norm_acf, raw_acf, W, J, J2 = recipe1(X, params1)   # T is in fs, W is in cm^-1
+    T, norm_acf, raw_acf, W, J, J2 = recipe1(data_ab, params1)   # T is in fs, W is in cm^-1
  
     
     #===== Determine all frequencies (peaks) and sort them (in accending manner) ====

@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2018 Brendan A. Smith, Alexey V. Akimov                                                   
+#* Copyright (C) 2018-2019 Brendan A. Smith, Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -7,12 +7,16 @@
 #* See the file LICENSE in the root directory of this distribution   
 #* or <http://www.gnu.org/licenses/>.          
 #***********************************************************************************
-## \file Libra.py 
-#
-#  Original Libra models - well, they are not necessarily introduced here for the 
-#  first time, but these are the models I define for the internal test purposes
-#
-#
+"""
+.. module:: models_Libra
+   :platform: Unix, Windows
+   :synopsis: The Libra models - well, they are not necessarily introduced here for the 
+       first time (the special cases might have been already used in different context),
+       but these are the models we define for the internal test purposes
+
+.. moduleauthor:: Brendan A. Smith, Alexey V. Akimov
+
+"""
 import os
 import sys
 import math
@@ -22,6 +26,9 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
+import common_utils as comn
+import units
+
 
 class tmp:
     pass    
@@ -30,6 +37,10 @@ class tmp:
 
 def model1(q, params):
     """
+
+    Essentially the spin-boson (Marcus) model
+    
+
               k*x^2         V
     Hdia =       V        k*(x-x0)^2 + D
 
@@ -37,8 +48,35 @@ def model1(q, params):
 
     Ddia  = 0.0
 
+    Args: 
+        q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1
+        params ( dictionary ): model parameters
+
+            * **params["x0"]** ( double ): displacement of the minimum of one of the diabatic states
+                [ default: 1.0, units: Bohr ]
+            * **params["k"]** ( double ): force constante [ default: 0.01, units: Ha/Bohr]
+            * **params["D"]** ( double ): gap between the minima of the states 1 and 0, negative 
+                value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]
+            * **params["V"]** ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]
+
+    Returns:       
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian 
+            * obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ): 
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]
+ 
+
+
     """
 
+    critical_params = [ ] 
+    default_params = {"x0":1.0, "k":0.01, "D":0.0, "V":0.005 }
+    comn.check_input(params, default_params, critical_params)
+
+    x0,k,D,V = params["x0"], params["k"], params["D"], params["V"]
 
     Hdia = CMATRIX(2,2)
     Sdia = CMATRIX(2,2)
@@ -47,8 +85,6 @@ def model1(q, params):
   
 
     x = q.get(0)
-    x0,k,D,V = params["x0"], params["k"], params["D"], params["V"]
-
 
 
     Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
@@ -76,8 +112,13 @@ def model1(q, params):
     return obj
 
 
+
 def model1a(Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
     """
+
+    Same as ::funct:```model1``` just different interface
+    
+
               k*x^2         V
     Hdia =       V        k*(x-x0)^2 + D
 
@@ -85,6 +126,26 @@ def model1a(Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
 
     Ddia  = 0.0
 
+    Args: 
+        Hdia ( CMATRIX(2,2) ): diabatic Hamiltonian - updated by this function
+        Sdia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states - updated by this function [ identity ] 
+        d1ham_dia ( list of 1 CMATRIX(2,2) objects ): derivatives of the diabatic Hamiltonian w.r.t. 
+            the nuclear coordinate - updated by this function
+        dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis - updated 
+            by this function [ zero ]
+        q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1
+        params ( dictionary ): model parameters
+
+            * **params["x0"]** ( double ): displacement of the minimum of one of the diabatic states
+                [ default: 1.0, units: Bohr ]
+            * **params["k"]** ( double ): force constante [ default: 0.01, units: Ha/Bohr]
+            * **params["D"]** ( double ): gap between the minima of the states 1 and 0, negative 
+                value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]
+            * **params["V"]** ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]
+
+    Returns:       
+        None
+ 
     """
 
     x = q
@@ -106,6 +167,7 @@ def model1a(Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
         #  <dia| d/dR_0| dia >
         dc1_dia[i].set(0,0, 0.0+0.0j);   dc1_dia[i].set(0,1, 0.0+0.0j);
         dc1_dia[i].set(1,0, 0.0+0.0j);   dc1_dia[i].set(1,1, 0.0+0.0j);
+
 
     
 

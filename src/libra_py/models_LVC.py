@@ -138,13 +138,33 @@ def LVC(q, params):
 
 def get_LVC_set1():
     """
-    Parameters from:
-    (1) Izmaylov, A. F.; Mendive-Tapia, D.; Bearpark, M. J.; Robb, M. A.; 
-        Tully, J. C.; Frisch, M. J. JCP, 2011, 135, 234106
 
-    (2) Sun, X.; Geva, E. J. Chem. Phys. 2016, 144, 244105 (files)
+    Parameters for **Fulvene** molecule
+    References: 
 
-    Fulvene
+        1. Izmaylov, A. F.; Mendive-Tapia, D.; Bearpark, M. J.; Robb, M. A.; 
+            Tully, J. C.; Frisch, M. J. JCP, 2011, 135, 234106
+
+        2. Sun, X.; Geva, E. J. Chem. Phys. 2016, 144, 244105 (files)
+
+    Args:
+        None
+
+    Returns:
+        dictionary: params, will contain the parameters:
+
+            * **params["omega_DA"]** ( double ): donor-acceptor energy gap [ units: Ha ] 
+                TODO: how is this different from Delta2 - Delta1?
+            * **params["Delta1"]** ( double ): energy minimum of the lower state [ units: Ha ]
+            * **params["Delta2"]** ( double ): energy minimum of the upper state [ units: Ha ]
+            * **params["Er"]** ( double ): reorganization energy [ units: Ha ]
+            * **params["omega"]** ( list on ndof doubles ): normal modes frequencies
+                same for both electronic states [ units: Ha ]
+            * **params["d1"]** ( list on ndof doubles ): electron-phonon couplings for 
+                the lower state [ units: Ha/Bohr ]
+            * **params["d2"]** ( list on ndof doubles ): electron-phonon couplings for 
+                the upper state [ units: Ha/Bohr ]
+            * **params["coup"]** ( list on ndof doubles ): electron-phonon couplings [ units: Ha/Bohr ]
 
     """
 
@@ -188,12 +208,34 @@ def get_LVC_set1():
 
 def get_LVC_set1b():
     """
-    Parameters from:
-    (2) Sun, X.; Geva, E. J. Chem. Phys. 2016, 144, 244105 (code!)
 
+    Parameters for **Fulvene** molecule
     From the NEFGRL_Fulvene.cpp code
 
-    Fulvene
+    References: 
+
+        1. Sun, X.; Geva, E. J. Chem. Phys. 2016, 144, 244105 (code!)
+
+    Args:
+        None
+
+    Returns:
+        dictionary: params, will contain the parameters:
+
+            * **params["omega_DA"]** ( double ): donor-acceptor energy gap [ units: Ha ] 
+                TODO: how is this different from Delta2 - Delta1?
+            * **params["Delta1"]** ( double ): energy minimum of the lower state [ units: Ha ]
+            * **params["Delta2"]** ( double ): energy minimum of the upper state [ units: Ha ]
+            * **params["Er"]** ( double ): reorganization energy [ units: Ha ]
+            * **params["omega"]** ( list on ndof doubles ): normal modes frequencies
+                same for both electronic states [ units: Ha ]
+            * **params["d1"]** ( list on ndof doubles ): electron-phonon couplings for 
+                the lower state [ units: Ha/Bohr ]
+            * **params["d2"]** ( list on ndof doubles ): electron-phonon couplings for 
+                the upper state [ units: Ha/Bohr ]
+            * **params["coup"]** ( list on ndof doubles ): electron-phonon couplings [ units: Ha/Bohr ]
+
+
 
     """
 
@@ -240,13 +282,34 @@ def get_LVC_set1b():
 
 def get_LVC_set2():
     """
-    Parameters from:
-    (1) Izmaylov, A. F.; Mendive-Tapia, D.; Bearpark, M. J.; Robb, M. A.; 
-        Tully, J. C.; Frisch, M. J. JCP, 2011, 135, 234106
 
-    (2) Sun, X.; Geva, E. J. Chem. Phys. 2016, 144, 244105
+    Parameters for **2,6-bis(methylene)adamantyl (BMA)** radical cation
+    References: 
 
-    2,6-bis(methylene)adamantyl (BMA) radical cation
+        1. Izmaylov, A. F.; Mendive-Tapia, D.; Bearpark, M. J.; Robb, M. A.; 
+            Tully, J. C.; Frisch, M. J. JCP, 2011, 135, 234106
+
+        2. Sun, X.; Geva, E. J. Chem. Phys. 2016, 144, 244105 (files)
+
+    Args:
+        None
+
+    Returns:
+        dictionary: params, will contain the parameters:
+
+            * **params["omega_DA"]** ( double ): donor-acceptor energy gap [ units: Ha ] 
+                TODO: how is this different from Delta2 - Delta1?
+            * **params["Delta1"]** ( double ): energy minimum of the lower state [ units: Ha ]
+            * **params["Delta2"]** ( double ): energy minimum of the upper state [ units: Ha ]
+            * **params["Er"]** ( double ): reorganization energy [ units: Ha ]
+            * **params["omega"]** ( list on ndof doubles ): normal modes frequencies
+                same for both electronic states [ units: Ha ]
+            * **params["d1"]** ( list on ndof doubles ): electron-phonon couplings for 
+                the lower state [ units: Ha/Bohr ]
+            * **params["d2"]** ( list on ndof doubles ): electron-phonon couplings for 
+                the upper state [ units: Ha/Bohr ]
+            * **params["coup"]** ( list on ndof doubles ): electron-phonon couplings [ units: Ha/Bohr ]
+
 
     """
 
@@ -329,13 +392,35 @@ def get_LVC_set2():
 
 def get_LVC_set3():
     """
-    Parameters from:
-    (1) Izmaylov, A. F.; Mendive-Tapia, D.; Bearpark, M. J.; Robb, M. A.; 
-        Tully, J. C.; Frisch, M. J. JCP, 2011, 135, 234106
 
-    (2) Sun, X.; Geva, E. J. Chem. Phys. 2016, 144, 244105
+    Parameters for **2-methylene-6-isopropylidene-adamantyl (MIA)** radical cation
+    References: 
 
-    2-methylene-6-isopropylidene-adamantyl (MIA) radical cation
+        1. Izmaylov, A. F.; Mendive-Tapia, D.; Bearpark, M. J.; Robb, M. A.; 
+            Tully, J. C.; Frisch, M. J. JCP, 2011, 135, 234106
+
+        2. Sun, X.; Geva, E. J. Chem. Phys. 2016, 144, 244105 (files)
+
+    Args:
+        None
+
+    Returns:
+        dictionary: params, will contain the parameters:
+
+            * **params["omega_DA"]** ( double ): donor-acceptor energy gap [ units: Ha ] 
+                TODO: how is this different from Delta2 - Delta1?
+            * **params["Delta1"]** ( double ): energy minimum of the lower state [ units: Ha ]
+            * **params["Delta2"]** ( double ): energy minimum of the upper state [ units: Ha ]
+            * **params["Er"]** ( double ): reorganization energy [ units: Ha ]
+            * **params["omega"]** ( list on ndof doubles ): normal modes frequencies
+                same for both electronic states [ units: Ha ]
+            * **params["d1"]** ( list on ndof doubles ): electron-phonon couplings for 
+                the lower state [ units: Ha/Bohr ]
+            * **params["d2"]** ( list on ndof doubles ): electron-phonon couplings for 
+                the upper state [ units: Ha/Bohr ]
+            * **params["coup"]** ( list on ndof doubles ): electron-phonon couplings [ units: Ha/Bohr ]
+
+
 
     """
 
