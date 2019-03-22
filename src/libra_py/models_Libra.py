@@ -169,7 +169,156 @@ def model1a(Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
         dc1_dia[i].set(1,0, 0.0+0.0j);   dc1_dia[i].set(1,1, 0.0+0.0j);
 
 
+
+def convert_Landry_Subotnik2model1(m, Er, w, eps):
+    """
+
+    This function converts the parameter of the Landry-Subotnik Hamiltonian
+    to those of the ```model1``` form. This mapping is up to the arbitratry energy
+    scale shift factor. 
+
+    Args:
+        m ( double ): mass of the particle [a.u. of mass ]
+        Er ( double ): reorganization energy [ Ha ]
+        w ( double ): oscillator frequency [ a.u.^-1 ]
+        eps ( double ): driving energy [ Ha ]
+
+    Returns:
+        tuple: (k, x0, D): where:
+ 
+            * k ( double ): force constant of the oscillator [ units: Ha*Bohr^-2 ]
+            * x0 ( double ): displacement of the energy minima positions [ units: Bohr ]
+            * D ( double ): the energy shift of the acceptor with respect to donor [ units: Ha]
+
+
+    Ref: Landry, B. R.; Subotnik, J. E. J. Chem. Phys. 2011, 135, 191101
+
+
+    H00 = (1/2) * m * w^2 * x^2  + M x =  (1/2) * m * w^2 * ( x^2  + 2Mx/(m*w^2) ) =
+    = (1/2) * m * w^2 * [( x  + M/(m*w^2) )^2 - M^2 /(m^2 *w^4)  ] = 
+    = (1/2) * m * w^2 * [( x  + M/(m*w^2) )^2 ]  - M^2 /(2*m*w^2)  
+
+    H11 = (1/2) * m * w^2 * x^2  - M x - e =  (1/2) * m * w^2 * ( x^2  - 2Mx/(m*w^2) ) - e =
+    = (1/2) * m * w^2 * [( x  - M/(m*w^2) )^2 - M^2 /(m^2 *w^4)  ] - e = 
+    = (1/2) * m * w^2 * [( x  - M/(m*w^2) )^2 ] - M^2 /(2*m*w^2)  - e
+
+
+    M = sqrt(Er * m*w^2 / 2) =>  2* M^2 / (m*w^2) = Er
+
+    So the connection to the model1 parameters:
+
+    k = (1/2) * m * w^2 
+
+    x0 = 2 * M/(m*w^2)  = M/k = sqrt( Er / k )
+
+    D = -e
     
+    """
+
+    k = 0.5*m*w*2
+    x0 = math.sqrt(Er / k)
+    D = -e
+
+    return k, x0, D
+
+
+def get_Landry_Subotnik_set1(gamma_i, eps_i):
+    """
+
+    Returns one of the data point in the parameters set from 
+    Ref: Landry, B. R.; Subotnik, J. E. J. Chem. Phys. 2011, 135, 191101
+
+    The data set follows their Figure 2
+
+    Args:
+        gamma_i ( int ): index of the gamma parameter
+        eps_i ( int ): index of the epsilon parameter
+
+    Returns:
+        dictionary: parameters in the format suitable for use with model1:
+
+            * **params["gamma"]** ( double ): friction coefficient [ units: (a.u. time)* Ha/amu*Bohr^2 ]
+            * **params["V"]** ( double ): electronic coupling between these diabats [ units: Ha]
+            * **params["mass"]** ( double ): mass of the particle [ units: amu ]
+            * **params["kT"]** ( double ): system's temperature [ units: Ha ]
+            * **params["k"]** ( double ): force constante [ units: Ha/Bohr]
+            * **params["x0"]** ( double ): displacement of the minimum of one of the diabatic states [ units: Bohr ]
+            * **params["D"]** ( double ): gap between the minima of the states 1 and 0, negative 
+                value means the state 1 is lower in energy than state 0  [ units: Ha]
+
+    """
+
+    gammas = [1.875e-5, 3.75e-5, 7.5e-5, 1.5e-4, 3.0e-4, 6.0e-4, 1.2e-3, 2.4e-3]
+    
+    m = 1.0
+    Er = 2.39e-2
+    w = 3.5e-4
+    eps = 0.015 + eps_i*(0.03 - 0.015)/16.0 
+
+    k, x0, D =  convert_Landry_Subotnik2model1(m, Er, w, eps)
+
+
+    params =  {}
+    params["gamma"] = gammas[gamma_i]
+    params["V"] = 5.0e-5
+    params["mass"] = 1.0
+    params["kT"] = 9.5e-4
+
+    params["k"] = k
+    params["x0"] = x0
+    params["D"] = D
+    
+    return params
+
+
+def get_Landry_Subotnik_set2(V_i):
+    """
+
+    Returns one of the data point in the parameters set from 
+    Ref: Landry, B. R.; Subotnik, J. E. J. Chem. Phys. 2011, 135, 191101
+
+    The data set follows their Figure 3
+
+    Args:
+        V_i ( int ): index of the coupling parameter
+
+    Returns:
+        dictionary: parameters in the format suitable for use with model1:
+
+            * **params["gamma"]** ( double ): friction coefficient [ units: (a.u. time)* Ha/amu*Bohr^2 ]
+            * **params["V"]** ( double ): electronic coupling between these diabats [ units: Ha]
+            * **params["mass"]** ( double ): mass of the particle [ units: amu ]
+            * **params["kT"]** ( double ): system's temperature [ units: Ha ]
+            * **params["k"]** ( double ): force constante [ units: Ha/Bohr]
+            * **params["x0"]** ( double ): displacement of the minimum of one of the diabatic states [ units: Bohr ]
+            * **params["D"]** ( double ): gap between the minima of the states 1 and 0, negative 
+                value means the state 1 is lower in energy than state 0  [ units: Ha]
+
+    """
+
+        
+    m = 1.0
+    Er = 2.39e-2
+    w = 3.5e-4
+    eps = 0.015
+
+    k, x0, D =  convert_Landry_Subotnik2model1(m, Er, w, eps)
+
+
+    params =  {}
+    params["gamma"] = 0.0024
+    params["V"] = math.exp( math.log(1.49e-5) + V_i * (math.log(2.28e-4) - math.log(1.49e-5))/16.0 )
+    params["mass"] = 1.0
+    params["kT"] = 9.5e-4
+
+    params["k"] = k
+    params["x0"] = x0
+    params["D"] = D
+    
+    return params
+
+
+
 
 def model2(q, params):
     """
