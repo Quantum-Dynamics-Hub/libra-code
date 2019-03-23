@@ -54,7 +54,7 @@ def model1(q, params):
 
             * **params["x0"]** ( double ): displacement of the minimum of one of the diabatic states
                 [ default: 1.0, units: Bohr ]
-            * **params["k"]** ( double ): force constante [ default: 0.01, units: Ha/Bohr]
+            * **params["k"]** ( double ): force constante [ default: 0.01, units: Ha/Bohr^2]
             * **params["D"]** ( double ): gap between the minima of the states 1 and 0, negative 
                 value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]
             * **params["V"]** ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]
@@ -133,12 +133,12 @@ def model1a(Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
             the nuclear coordinate - updated by this function
         dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis - updated 
             by this function [ zero ]
-        q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1
+        q ( double ): coordinates of the particle, ndof = 1
         params ( dictionary ): model parameters
 
             * **params["x0"]** ( double ): displacement of the minimum of one of the diabatic states
                 [ default: 1.0, units: Bohr ]
-            * **params["k"]** ( double ): force constante [ default: 0.01, units: Ha/Bohr]
+            * **params["k"]** ( double ): force constante [ default: 0.01, units: Ha/Bohr^2]
             * **params["D"]** ( double ): gap between the minima of the states 1 and 0, negative 
                 value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]
             * **params["V"]** ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]
@@ -322,14 +322,46 @@ def get_Landry_Subotnik_set2(V_i):
 
 def model2(q, params):
     """
+
+    Essentially the spin-boson (Marcus) model    
+
               k*x^2         V
     Hdia =       V        k*(x-x0)^2 + D
+
 
     Sdia =  I
 
     Ddia != 0.0, but Ddia + Ddia.H() = dSdia/dR, with dSdia = 0.0
 
+
+    Args: 
+        q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1
+        params ( dictionary ): model parameters
+
+            * **params["x0"]** ( double ): displacement of the minimum of one of the diabatic states
+                [ default: 1.0, units: Bohr ]
+            * **params["k"]** ( double ): force constante [ default: 0.01, units: Ha/Bohr^2]
+            * **params["D"]** ( double ): gap between the minima of the states 1 and 0, negative 
+                value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]
+            * **params["V"]** ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]
+            * **params["NAC"]** ( double ): NAC in the diabatic basis  [ default: -0.1, units: Ha]
+
+    Returns:       
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian 
+            * obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ): 
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]
+ 
     """
+
+    critical_params = [ ] 
+    default_params = {"x0":1.0, "k":0.01, "D":0.0, "V":0.005, "NAC":-0.1 }
+    comn.check_input(params, default_params, critical_params)
+    x0,k,D,V, nac = params["x0"], params["k"], params["D"], params["V"], params["NAC"]
+
 
     Hdia = CMATRIX(2,2)
     Sdia = CMATRIX(2,2)
@@ -338,7 +370,6 @@ def model2(q, params):
   
 
     x = q.get(0)
-    x0,k,D,V = params["x0"], params["k"], params["D"], params["V"]
 
     Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
     Sdia.set(1,0, 0.0+0.0j);  Sdia.set(1,1, 1.0+0.0j);
@@ -353,8 +384,8 @@ def model2(q, params):
         d1ham_dia[i].set(1,0, 0.0+0.0j);   d1ham_dia[i].set(1,1,2.0*k*(x-x0)*(1.0+0.0j));
 
         #  <dia| d/dR_0| dia >
-        dc1_dia[i].set(0,0, 0.0+0.0j);   dc1_dia[i].set(0,1,-0.1+0.0j);
-        dc1_dia[i].set(1,0, 0.1+0.0j);   dc1_dia[i].set(1,1, 0.0+0.0j);
+        dc1_dia[i].set(0,0, 0.0+0.0j);          dc1_dia[i].set(0,1,nac*(1.0+0.0j));
+        dc1_dia[i].set(1,0, nac*(-1.0+0.0j));   dc1_dia[i].set(1,1, 0.0+0.0j);
 
 
     obj = tmp()
@@ -366,8 +397,13 @@ def model2(q, params):
     return obj
 
 
+
 def model2a(Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
     """
+
+    Same as ::funct:```model2``` just different interface
+    
+
               k*x^2         V
     Hdia =       V        k*(x-x0)^2 + D
 
@@ -375,10 +411,36 @@ def model2a(Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
 
     Ddia != 0.0, but Ddia + Ddia.H() = dSdia/dR, with dSdia = 0.0
 
+    Args: 
+        Hdia ( CMATRIX(2,2) ): diabatic Hamiltonian - updated by this function
+        Sdia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states - updated by this function [ identity ] 
+        d1ham_dia ( list of 1 CMATRIX(2,2) objects ): derivatives of the diabatic Hamiltonian w.r.t. 
+            the nuclear coordinate - updated by this function
+        dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis - updated 
+            by this function [ zero ]
+        q ( double ): coordinates of the particle, ndof = 1
+        params ( dictionary ): model parameters
+
+            * **params["x0"]** ( double ): displacement of the minimum of one of the diabatic states
+                [ default: 1.0, units: Bohr ]
+            * **params["k"]** ( double ): force constante [ default: 0.01, units: Ha/Bohr^2]
+            * **params["D"]** ( double ): gap between the minima of the states 1 and 0, negative 
+                value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]
+            * **params["V"]** ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]
+            * **params["NAC"]** ( double ): NAC in the diabatic basis  [ default: -0.1, units: Ha]
+
+    Returns:       
+        None
+
+
     """
 
+    critical_params = [ ] 
+    default_params = {"x0":1.0, "k":0.01, "D":0.0, "V":0.005, "NAC":-0.1 }
+    comn.check_input(params, default_params, critical_params)
+    x0,k,D,V, nac = params["x0"], params["k"], params["D"], params["V"], params["NAC"]
+
     x = q
-    x0,k,D,V = params["x0"], params["k"], params["D"], params["V"]
 
     Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
     Sdia.set(1,0, 0.0+0.0j);  Sdia.set(1,1, 1.0+0.0j);
@@ -393,33 +455,65 @@ def model2a(Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
         d1ham_dia[i].set(1,0, 0.0+0.0j);   d1ham_dia[i].set(1,1,2.0*k*(x-x0)*(1.0+0.0j));
 
         #  <dia| d/dR_0| dia >
-        dc1_dia[i].set(0,0, 0.0+0.0j);   dc1_dia[i].set(0,1,-0.1+0.0j);
-        dc1_dia[i].set(1,0, 0.1+0.0j);   dc1_dia[i].set(1,1, 0.0+0.0j);
+        dc1_dia[i].set(0,0, 0.0+0.0j);          dc1_dia[i].set(0,1, nac*(1.0+0.0j));
+        dc1_dia[i].set(1,0, nac*(-1.0+0.0j));   dc1_dia[i].set(1,1, 0.0+0.0j);
 
 
 
 def model3(q, params):
     """
+
+    More complex spin-boson model    
+
               k*x^2         V
     Hdia =       V        k*(x-x0)^2 + D
 
-    Sdia =    1                           0.05*exp(-(x-0.5*x0)^2)
-             0.05*exp(-(x-0.5*x0)^2)               1
+
+    Sdia =    1                          B*exp(-(x-0.5*x0)^2)
+             B*exp(-(x-0.5*x0)^2)               1
 
     Ddia != 0.0, but Ddia + Ddia.H() = dSdia/dR, with dSdia !=0.0
 
+
+    Args: 
+        q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1
+        params ( dictionary ): model parameters
+
+            * **params["x0"]** ( double ): displacement of the minimum of one of the diabatic states
+                [ default: 1.0, units: Bohr ]
+            * **params["k"]** ( double ): force constante [ default: 0.01, units: Ha/Bohr^2]
+            * **params["D"]** ( double ): gap between the minima of the states 1 and 0, negative 
+                value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]
+            * **params["V"]** ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]
+            * **params["B"]** ( double ): parameter controlling the overlap of the diabatic states
+                [ default: 0.05, units: Ha]
+
+    Returns:       
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian 
+            * obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ): 
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]
+
+
     """
+    critical_params = [ ] 
+    default_params = {"x0":1.0, "k":0.01, "D":0.0, "V":0.005, "B":0.05 }
+    comn.check_input(params, default_params, critical_params)
+    x0,k,D,V,B = params["x0"], params["k"], params["D"], params["V"], params["B"]
+
 
     Hdia = CMATRIX(2,2)
     Sdia = CMATRIX(2,2)
-    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(2,2))
-    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(2,2))
+    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(2,2) )
+    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(2,2) )
   
 
     x = q.get(0)
-    x0,k,D,V = params["x0"], params["k"], params["D"], params["V"]
 
-    ex = math.exp(-(x-0.5*x0)**2)*(0.05+0.0j)
+    ex = B*math.exp(-(x-0.5*x0)**2)*(1.0+0.0j)
 
     Sdia.set(0,0, 1.0+0.0j);     Sdia.set(0,1, ex );
     Sdia.set(1,0, ex);           Sdia.set(1,1, 1.0+0.0j);
@@ -433,7 +527,7 @@ def model3(q, params):
         d1ham_dia[i].set(0,0, 2.0*k*x*(1.0+0.0j) );  d1ham_dia[i].set(0,1, 0.0+0.0j);
         d1ham_dia[i].set(1,0, 0.0+0.0j);             d1ham_dia[i].set(1,1,2.0*k*(x-x0)*(1.0+0.0j));
 
-        #  <dia| d/dR_0| dia >
+        #  <dia| d/dR_0| dia >  = 0.5 * dS/dR
         d = -(x-0.5*x0)*ex
         dc1_dia[i].set(0,0, 0.0+0.0j);  dc1_dia[i].set(0,1, d);
         dc1_dia[i].set(1,0, d);         dc1_dia[i].set(1,1, 0.0+0.0j);
@@ -448,23 +542,52 @@ def model3(q, params):
     return obj
 
 
+
 def model3a(Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
     """
+
+    Same as ::funct:```model3``` just different interface
+    
+
               k*x^2         V
     Hdia =       V        k*(x-x0)^2 + D
 
-    Sdia =    1                           0.05*exp(-(x-0.5*x0)^2)
-             0.05*exp(-(x-0.5*x0)^2)               1
+    Sdia =    1                           B*exp(-(x-0.5*x0)^2)
+             B*exp(-(x-0.5*x0)^2)               1
 
     Ddia != 0.0, but Ddia + Ddia.H() = dSdia/dR, with dSdia !=0.0
 
-    """
+    Args: 
+        Hdia ( CMATRIX(2,2) ): diabatic Hamiltonian - updated by this function
+        Sdia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states - updated by this function [ identity ] 
+        d1ham_dia ( list of 1 CMATRIX(2,2) objects ): derivatives of the diabatic Hamiltonian w.r.t. 
+            the nuclear coordinate - updated by this function
+        dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis - updated 
+            by this function [ zero ]
+        q ( double ): coordinates of the particle, ndof = 1
+        params ( dictionary ): model parameters
 
+            * **params["x0"]** ( double ): displacement of the minimum of one of the diabatic states
+                [ default: 1.0, units: Bohr ]
+            * **params["k"]** ( double ): force constante [ default: 0.01, units: Ha/Bohr^2]
+            * **params["D"]** ( double ): gap between the minima of the states 1 and 0, negative 
+                value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]
+            * **params["V"]** ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]
+            * **params["B"]** ( double ): parameter controlling the overlap of the diabatic states
+                [ default: 0.05, units: Ha]
+
+    Returns:       
+        None
+
+    """
+    critical_params = [ ] 
+    default_params = {"x0":1.0, "k":0.01, "D":0.0, "V":0.005, "B":0.05 }
+    comn.check_input(params, default_params, critical_params)
+    x0,k,D,V,B = params["x0"], params["k"], params["D"], params["V"], params["B"]
 
     x = q
-    x0,k,D,V = params["x0"], params["k"], params["D"], params["V"]
 
-    ex = math.exp(-(x-0.5*x0)**2)*(0.05+0.0j)
+    ex = B*math.exp(-(x-0.5*x0)**2)*(1.0+0.0j)
 
     Sdia.set(0,0, 1.0+0.0j);     Sdia.set(0,1, ex );
     Sdia.set(1,0, ex);           Sdia.set(1,1, 1.0+0.0j);
@@ -487,6 +610,10 @@ def model3a(Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
 
 def model4(q, params):
     """
+
+    2-level system with periodic anharmonic potentials 
+    
+
               k*cos(w*x)         V
     Hdia =       V        k*sin(w*x) + D
 
@@ -494,16 +621,38 @@ def model4(q, params):
 
     Ddia  = 0.0
 
+    Args: 
+        q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1
+        params ( dictionary ): model parameters
+
+            * **params["k"]** ( double ): force constante [ default: 0.01, units: Ha]
+            * **params["w"]** ( double ): frequency  [ default: 0.1, units: Bohr^-1]
+            * **params["D"]** ( double ): gap between the minima of the states 1 and 0, negative 
+                value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]
+            * **params["V"]** ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]
+
+    Returns:       
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian 
+            * obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ): 
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]
+ 
     """
+
+    critical_params = [ ] 
+    default_params = {"k":0.01, "D":0.0, "V":0.005, "w":0.1 }
+    comn.check_input(params, default_params, critical_params)
+    k,D,V,w = params["k"], params["D"], params["V"], params["w"]
 
     Hdia = CMATRIX(2,2)
     Sdia = CMATRIX(2,2)
     d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(2,2))
     dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(2,2))
   
-
     x = q.get(0)
-    k, w, V = params["k"], params["omega"], params["V"]
 
     Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
     Sdia.set(1,0, 0.0+0.0j);  Sdia.set(1,1, 1.0+0.0j);
@@ -533,6 +682,9 @@ def model4(q, params):
 
 def model4a(Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
     """
+
+    Same as ::funct:```model4``` just different interface
+    
               k*cos(w*x)         V
     Hdia =       V        k*sin(w*x) + D
 
@@ -540,16 +692,38 @@ def model4a(Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
 
     Ddia  = 0.0
 
+    Args: 
+        Hdia ( CMATRIX(2,2) ): diabatic Hamiltonian - updated by this function
+        Sdia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states - updated by this function [ identity ] 
+        d1ham_dia ( list of 1 CMATRIX(2,2) objects ): derivatives of the diabatic Hamiltonian w.r.t. 
+            the nuclear coordinate - updated by this function
+        dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis - updated 
+            by this function [ zero ]
+        q ( double ): coordinates of the particle, ndof = 1
+        params ( dictionary ): model parameters
+
+            * **params["k"]** ( double ): force constante [ default: 0.01, units: Ha]
+            * **params["w"]** ( double ): frequency  [ default: 0.1, units: Bohr^-1]
+            * **params["D"]** ( double ): gap between the minima of the states 1 and 0, negative 
+                value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]
+            * **params["V"]** ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]
+
+    Returns:       
+        None
+
     """
+    critical_params = [ ] 
+    default_params = {"k":0.01, "D":0.0, "V":0.005, "w":0.1 }
+    comn.check_input(params, default_params, critical_params)
+    k,D,V,w = params["k"], params["D"], params["V"], params["w"]
 
     x = q
-    k, w, V = params["k"], params["omega"], params["V"]
 
     Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
     Sdia.set(1,0, 0.0+0.0j);  Sdia.set(1,1, 1.0+0.0j);
 
     Hdia.set(0,0, k*math.cos(x*w)*(1.0+0.0j) );   Hdia.set(0,1, V*(1.0+0.0j));
-    Hdia.set(1,0, V*(1.0+0.0j));                  Hdia.set(1,1, k*math.sin(x*w)*(1.0+0.0j));
+    Hdia.set(1,0, V*(1.0+0.0j));                  Hdia.set(1,1, k*math.sin(x*w)*(1.0+0.0j) + D);
 
 
     for i in [0]:
@@ -562,12 +736,31 @@ def model4a(Hdia, Sdia, d1ham_dia, dc1_dia, q, params):
         dc1_dia[i].set(1,0, 0.0+0.0j);   dc1_dia[i].set(1,1, 0.0+0.0j);
 
 
+
 def model5(q, params):
     """
+
     Symmetric Double Well Potential in 2D
-    Hdia = 0.25*(q1^4 + q2^4) - 0.5*(q1^2 + q2^2)   
+    Hdia = A*[0.25*(q1^4 + q2^4) - 0.5*(q1^2 + q2^2) ]
     Sdia = 1.0
     Ddia = 0.0
+
+    Args: 
+        q ( MATRIX(2,1) ): coordinates of the particle, ndof = 2
+        params ( dictionary ): model parameters
+
+            * **params["A"]** ( double ): scaling parameter to determine the depth
+            of the potential well/barrier  [ default: 1.0, units: None]
+
+    Returns:       
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(1,1) ): diabatic Hamiltonian 
+            * obj.ovlp_dia ( CMATRIX(1,1) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of 2 CMATRIX(1,1) objects ): 
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of 2 CMATRIX(1,1) objects ): derivative coupling in the diabatic basis [ zero ] 
+
     """
 
     # Hdia and Sdia are ndia x ndia in dimension
@@ -610,6 +803,9 @@ def model5(q, params):
 
 def model6(q, params):
     """
+
+    2-level system with periodic anharmonic potentials. More general than model 4
+    
               A0*cos(w0*x+delta0) + B0         V
     Hdia =               V        A1*cos(w1*x+delta1) + B1
 
@@ -617,7 +813,44 @@ def model6(q, params):
 
     Ddia  = 0.0
 
+    Args: 
+        q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1
+        params ( dictionary ): model parameters
+
+            * **params["A0"]** ( double ): amplitude of the state 0 [ default: 0.01, units: Ha]
+            * **params["A1"]** ( double ): amplitude of the state 1 [ default: 0.01, units: Ha]
+            * **params["w0"]** ( double ): frequency of the potential 0 [ default: 0.1, units: Bohr^-1]
+            * **params["w1"]** ( double ): frequency of the potential 1 [ default: 0.1, units: Bohr^-1]
+            * **params["delta0"]** ( double ): phase shift of potential 0 [ default: 0.0, units: None]
+            * **params["delta1"]** ( double ): phase shift of potential 1 [ default: 0.0, units: None]
+            * **params["B0"]** ( double ): energy shift of potential 0 [ default: 0.0, units: Ha]
+            * **params["B1"]** ( double ): energy shift of potential 1 [ default: 0.0, units: Ha]
+            * **params["V01"]** ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]
+
+    Returns:       
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian 
+            * obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ): 
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]
+ 
     """
+
+    critical_params = [ ] 
+    default_params = {"A0":0.01, "w0":0.1, "delta0":0.0, "B0":0.0,
+                      "A1":0.01, "w1":0.1, "delta1":0.0, "B1":0.0,
+                      "V01":0.005  }
+    comn.check_input(params, default_params, critical_params)
+
+    A0, A1 = params["A0"], params["A1"]
+    B0, B1 = params["B0"], params["B1"]
+    w0, w1 = params["w0"], params["w1"]
+    delta0, delta1 = params["delta0"], params["delta1"]
+    V01 = params["V01"]
+
+
 
     Hdia = CMATRIX(2,2)
     Sdia = CMATRIX(2,2)
@@ -626,11 +859,6 @@ def model6(q, params):
   
 
     x = q.get(0)
-    A0, A1 = params["A0"], params["A1"]
-    B0, B1 = params["B0"], params["B1"]
-    w0, w1 = params["w0"], params["w1"]
-    delta0, delta1 = params["delta0"], params["delta1"]
-    V01 = params["V01"]
 
     Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
     Sdia.set(1,0, 0.0+0.0j);  Sdia.set(1,1, 1.0+0.0j);
@@ -662,14 +890,61 @@ def model6(q, params):
 
 def model7(q, params):
     """
+
+    3-level system with periodic anharmonic potentials. 
+    
               A0*cos(w0*x+delta0) + B0         V01              V02
     Hdia =               V01        A1*cos(w1*x+delta1) + B1    V12
                          V02                   V12          A2*cos(w2*x+delta2) + B2
+
     Sdia =  I
 
     Ddia  = 0.0
 
+    Args: 
+        q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1
+        params ( dictionary ): model parameters
+
+            * **params["A0"]** ( double ): amplitude of the state 0 [ default: 0.01, units: Ha]
+            * **params["A1"]** ( double ): amplitude of the state 1 [ default: 0.01, units: Ha]
+            * **params["A2"]** ( double ): amplitude of the state 2 [ default: 0.01, units: Ha]
+            * **params["w0"]** ( double ): frequency of the potential 0 [ default: 0.1, units: Bohr^-1]
+            * **params["w1"]** ( double ): frequency of the potential 1 [ default: 0.1, units: Bohr^-1]
+            * **params["w2"]** ( double ): frequency of the potential 2 [ default: 0.1, units: Bohr^-1]
+            * **params["delta0"]** ( double ): phase shift of potential 0 [ default: 0.0, units: None]
+            * **params["delta1"]** ( double ): phase shift of potential 1 [ default: 0.0, units: None]
+            * **params["delta2"]** ( double ): phase shift of potential 2 [ default: 0.0, units: None]
+            * **params["B0"]** ( double ): energy shift of potential 0 [ default: 0.0, units: Ha]
+            * **params["B1"]** ( double ): energy shift of potential 1 [ default: 0.0, units: Ha]
+            * **params["B2"]** ( double ): energy shift of potential 2 [ default: 0.0, units: Ha]
+            * **params["V01"]** ( double ): electronic coupling between diabats 0 and 1 [ default: 0.005, units: Ha]
+            * **params["V02"]** ( double ): electronic coupling between diabats 0 and 2 [ default: 0.005, units: Ha]
+            * **params["V12"]** ( double ): electronic coupling between diabats 1 and 2 [ default: 0.005, units: Ha]
+
+    Returns:       
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(3,3) ): diabatic Hamiltonian 
+            * obj.ovlp_dia ( CMATRIX(3,3) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of 1 CMATRIX(3,3) objects ): 
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of 1 CMATRIX(3,3) objects ): derivative coupling in the diabatic basis [ zero ]
+
     """
+
+    critical_params = [ ] 
+    default_params = {"A0":0.01, "w0":0.1, "delta0":0.0, "B0":0.0,
+                      "A1":0.01, "w1":0.1, "delta1":0.0, "B1":0.0,
+                      "A2":0.01, "w2":0.1, "delta2":0.0, "B2":0.0,
+                      "V01":0.005,  "V02":0.005, "V12":0.005  }
+    comn.check_input(params, default_params, critical_params)
+
+    A0, A1, A2 = params["A0"], params["A1"], params["A2"]
+    B0, B1, B2 = params["B0"], params["B1"], params["B2"]
+    w0, w1, w2 = params["w0"], params["w1"], params["w2"]
+    delta0, delta1, delta2 = params["delta0"], params["delta1"], params["delta2"]
+    V01, V02, V12 = params["V01"], params["V02"], params["V12"]
+
 
     Hdia = CMATRIX(3,3)
     Sdia = CMATRIX(3,3)
@@ -678,11 +953,6 @@ def model7(q, params):
   
 
     x = q.get(0)
-    A0, A1, A2 = params["A0"], params["A1"], params["A2"]
-    B0, B1, B2 = params["B0"], params["B1"], params["B2"]
-    w0, w1, w2 = params["w0"], params["w1"], params["w2"]
-    delta0, delta1, delta2 = params["delta0"], params["delta1"], params["delta2"]
-    V01, V02, V12 = params["V01"], params["V02"], params["V12"]
 
     Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);  Sdia.set(0,2, 0.0+0.0j);
     Sdia.set(1,0, 0.0+0.0j);  Sdia.set(1,1, 1.0+0.0j);  Sdia.set(1,2, 0.0+0.0j);
