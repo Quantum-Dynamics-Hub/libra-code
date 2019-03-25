@@ -9,7 +9,7 @@
 #*
 #*********************************************************************************/
 """
-.. module:: build
+.. module:: autoconnect
    :platform: Unix, Windows
    :synopsis: This module implements functions to determine the connectivity 
        matrix in molecular systems.
@@ -30,154 +30,60 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-#from libra_py import *
+import common_utils as comn
 
-
-
-def autoconnect(R, MaxCoord, Rcut, opt=0, verbosity=0):
+def autoconnect(R, MaxCoord, params):
     """
-    \param[in] R (list of VECTORs) The atomic coordinates of the system
-    \param[in] MaxCoord (list of ints) The list of maxima coorination numbers
-    \param[in] Rcut (list of floats) Radius of inclusion for each atom 
-    \param[in] opt (int) Option to obey maximal coordination number: 
-               0 - (default) the connected atoms in a pair have to obey both coordination numbers
+
+    Args:
+        R ( list of VECTOR objects ): The atomic coordinates of the system [ units: arbitrary ]
+        MaxCoord ( list of ints ): Maximal coorination numbers of each atom 
+        params ( dictionary ): Parameters controlling the execution of this function
+
+            * **params["Rcut"]** ( double ): The maximal radius of connectivity [ units: same as R, default: 0.0 ]
+            * **params["tv1"]** ( VECTOR ): unit cell translation vector a [ units: same as R ]
+            * **params["tv2"]** ( VECTOR ): unit cell translation vector b [ units: same as R ]
+            * **params["tv3"]** ( VECTOR ): unit cell translation vector c [ units: same as R ]
+            * **params["pbc_opt"]** ( string ): what type of periodicity to assume. 
+                Options: "a", "b", "c", "ab", "ac", "bc", "abc", "none" [ default: None ]
+            * **params["opt"]** ( int ): Option to obey maximal coordination number: 
+                - 0: the connected atoms in a pair have to obey both the coordination numbers
                    Some of the atoms may stay undercoordinated. This is the consistent scheme in
-                   the sense that if A is connected to B, then B is necessarily connected to A
-               1 - treat the MaxCoord as the minimal coordination number each atom should attain.
+                   the sense that if A is connected to B, then B is necessarily connected to A [default]
+                - 1: treat the MaxCoord as the minimal coordination number each atom should attain.
                    Some atoms may be overcoordinated. 
+            * **params["verbosity"]** ( int ): Flag to control the amount of the printout [ default: 0 ]
 
-    \param[in] verbosity (int) Flag to control the amount of the printout
     Returns:
+        tuple: ( res, line, unsorted_pairs_out ), where:
+
+            * res ( list of lists [ res[i][0], res[0][1] ] ), where 
+                * res[i][0] ( int ): index of the atom
+                * res[i][1] ( list of ints ): indices of the atoms that are connected to res[i][0]
+
+            * line ( string ): the connectivity information in the .ent format
+
+            * unsorted_pairs_out ( same type as ```res```): same as ```res```, but not sorted
+                                  
    
     """
 
+    critical_params = [ ] 
+    default_params = { "Rcut":0.0, "pbc_opt":"none", "opt":0,
+                       "tv1":VECTOR(1.0e+10, 0.0, 0.0),
+                       "tv2":VECTOR(0.0, 1.0e+10, 0.0),
+                       "tv3":VECTOR(0.0, 0.0, 1.0e+10),
+                       "verbosity":0
+                     }
+    comn.check_input(params, default_params, critical_params)
 
-    # Preprocessing - sanity check
-    N = len(R)
-
-    if len(MaxCoord) != N:
-        print "Error: The length of the MaxCoord list should be the same as the lenght of the R list!"
-        print "Exiting now..."
-        sys.exit(0)
-
-
-
- 
-    unsorted_pairs = []
-    mapping = []
-    
-
-    # Distances between all the pairs
-    count = 0
-    for i in range(0,N):    
-        for j in range(i+1,N):        
-            r = (R[i]-R[j]).length()
-
-            if r<Rcut:
-                unsorted_pairs.append([count, r])
-                mapping.append([i,j])
-                count += 1
-
-    # Sort all the pairs according to the interparticle distance
-    sorted_pairs = merge_sort(unsorted_pairs) 
-
-
-    if verbosity==1:
-        print "Pairs of atoms separated no more than by Rcut"
-        print unsorted_pairs
-        print "Formatted printout:"
-        for it in unsorted_pairs:
-            print "Atoms %5i and %5i are separated by %8.5f " % (mapping[it[0]][0], mapping[it[0]][1], it[1])
-
-        print "Pairs of atoms separated no more than by Rcut, sorted by the distance"
-        print sorted_pairs
-        print "Formatted printout:"
-        for it in sorted_pairs:
-            print "Atoms %5i and %5i are separated by %8.5f " % (mapping[it[0]][0], mapping[it[0]][1], it[1])
-
-
-
-    # Initialize the results variables
-    act_coord = [0]*N   # actual coordination numbers
-    num_sat = 0         # the number of valence-saturated atoms
-    res = []
-    for i in xrange(N):
-        res.append([i,[]])
-
-    # Now lets pick the pairs with the minimal distance, depending on the option...
-    for it in sorted_pairs:
-        if num_sat < N:        
-            i,j = mapping[it[0]][0], mapping[it[0]][1]
-
-            if opt==0:  #... no overcoordinated atoms
-                if act_coord[i]<MaxCoord[i] and act_coord[j]<MaxCoord[j]:  
-                    res[i][1].append(j)
-                    res[j][1].append(i)
-                    act_coord[i] += 1
-                    act_coord[j] += 1
-
-                if act_coord[i]==MaxCoord[i]:
-                    num_sat += 1
-
-                if act_coord[j]==MaxCoord[j]:
-                    num_sat += 1
-
-
-
-            elif opt==1: # ... no undercoordinated atoms
-                if act_coord[i]<MaxCoord[i]:  
-                    res[i][1].append(j)
-                    act_coord[i] += 1
-
-                if act_coord[j]<MaxCoord[j]:  
-                    res[j][1].append(i)
-                    act_coord[j] += 1
-
-    # Order the indices of the atoms to which each atom is connected (for testing and convenience)    
-    for i in xrange(N):
-        res[i][1] = sorted(res[i][1])
-   
-
-    line = ""
-    for it in res:
-        line = line + "CONECT %5i " % (it[0]+1)
-        for it2 in it[1]:
-            line = line + " %5i " % (it2+1)
-        line = line + "\n"
-
-
-    if verbosity==1:
-        print "res = " , res
-        print "Formatted output:"
-        print line
-
- 
-    return res, line
-
-
-
-
-
-def autoconnect_pbc(R, MaxCoord, Rcut, tv1, tv2, tv3, pbc_opt, opt=0, verbosity=0):
-    """
-    \param[in] R (list of VECTORs) The atomic coordinates of the system
-    \param[in] MaxCoord (list of ints) The list of maxima coorination numbers
-    \param[in] Rcut (list of floats) Radius of inclusion for each atom 
-    \param[in] tv1 (VECTOR) - unit cell translation vector a
-    \param[in] tv2 (VECTOR) - unit cell translation vector b
-    \param[in] tv3 (VECTOR) - unit cell translation vector c
-    \param[in] pbc_opt (string) - "a", "b", "c", "ab", "ac", "bc", "abc", "none"
-    \param[in] opt (int) Option to obey maximal coordination number: 
-               0 - (default) the connected atoms in a pair have to obey both coordination numbers
-                   Some of the atoms may stay undercoordinated. This is the consistent scheme in
-                   the sense that if A is connected to B, then B is necessarily connected to A
-               1 - treat the MaxCoord as the minimal coordination number each atom should attain.
-                   Some atoms may be overcoordinated. 
-
-    \param[in] verbosity (int) Flag to control the amount of the printout
-    Returns:
-   
-    """
+    Rcut = params["Rcut"]
+    pbc_opt = params["pbc_opt"]
+    verbosity = params["verbosity"]
+    opt = params["opt"]
+    tv1 = params["tv1"]
+    tv2 = params["tv2"]
+    tv3 = params["tv3"]
 
 
     # Preprocessing - sanity check
@@ -335,7 +241,7 @@ def example_1():
     print "MaxCoord = ", MaxCoord
     print "Rcut = ", Rcut
     
-    autoconnect(R, MaxCoord, Rcut, 0, 1)
+    autoconnect(R, MaxCoord, {"Rcut":Rcut, "opt":0, "verbosity":1})
 
 
 
@@ -352,10 +258,10 @@ class TestAutoconnect(unittest.TestCase):
         R.append(VECTOR(1.0, 0.0, 0.0));   MaxCoord.append(1)  # Atom 2
 
                  
-        res, lines = autoconnect(R, MaxCoord, 1.5)          
+        res, lines = autoconnect(R, MaxCoord, {"Rcut":1.5})          
         self.assertEqual(res, [[0, [1]], [1, [0]]] )
 
-        res, lines = autoconnect(R, MaxCoord, 0.5)          
+        res, lines = autoconnect(R, MaxCoord, {"Rcut":0.5})          
         self.assertEqual(res, [[0,[]], [1, []]] )
 
 
@@ -369,10 +275,10 @@ class TestAutoconnect(unittest.TestCase):
         R.append(VECTOR(1.2, 0.0, 0.0));   MaxCoord.append(2)  # Atom 2
 
                  
-        res, lines = autoconnect(R, MaxCoord, 1.5)          
+        res, lines = autoconnect(R, MaxCoord, {"Rcut":1.5})          
         self.assertEqual(res, [[0, [1,2]], [1, [0,2]], [2, [0,1]] ] )
 
-        res, lines = autoconnect(R, MaxCoord, 0.5)          
+        res, lines = autoconnect(R, MaxCoord, {"Rcut":0.5})          
         print res
         self.assertEqual(res, [ [0, []], [1, [2]], [2, [1]] ] )
 

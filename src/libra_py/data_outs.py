@@ -41,6 +41,13 @@ def show_matrix_pyplot(X, set_diag_to_zero=0):
             * 0 - no, print out the diagonal elements as they are [ default ]
             * 1 - yes, print out the diagonal elements as 0.0
 
+    Returns: 
+        tuple: (x, y, z):
+        
+            * x ( list of doubles ): x grid 
+            * y ( list of doubles ): y grid 
+            * z ( list of doubles ): values of z = z(x,y)
+
     """
 
     ncol, nrow = X.num_of_cols, X.num_of_rows
@@ -79,6 +86,10 @@ def show_matrix_splot(X, filename, set_diag_to_zero=0):
 
             * 0 - no, print out the diagonal elements as they are [ default ]
             * 1 - no, print out the diagonal elements as 0.0
+
+    Returns:
+        string: the line containing the information also printed out to the file
+            This string is in a format suitable for 2D plotting with gnuplot
 
     """
 

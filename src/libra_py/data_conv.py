@@ -49,7 +49,7 @@ def transform_data(X, params):
             * **params["scale"]** ( CMATRIX(nstates,nstates) ): scaling of the X [unitless], [default: 1.0 in all matrix elements]
 
     Returns:    
-        None: but transformes X input directly, so changes the original input
+        None: but transforms X input directly, so changes the original input
 
 
     Example:
@@ -95,6 +95,23 @@ def transform_data(X, params):
 
 
 def unit_conversion(X, scaling_factor):
+    """
+
+    Rescales the data X uniformly:     
+    X(original) ->    ( X ) (x) (scaling_factor),  
+
+    Here, (x) indicates the element-wise multiplicaiton, and shift1, shift2, and scale are matrices
+
+    Args: 
+        X ( list of lists of CMATRIX(nstates, nstates) ): the original data stored as
+            X[idata][step] - a CMATRIX(nstates, nstates) for the dataset `idata` and time 
+            step `step`
+        scaling_factor ( double or complex ): the rescaling factor
+
+    Returns:    
+        None: but transforms X input directly, so changes the original input
+
+    """
 
     nst = X[0][0].num_of_cols
 
@@ -112,6 +129,22 @@ def unit_conversion(X, scaling_factor):
 
 
 def scale_NAC(X, a, b, scaling_factor):
+    """
+
+    Rescales only the matrix elements X_ab by a uniform scaling factor:     
+    X_ab(original) ->    ( X_ab ) x (scaling_factor),  
+
+    Args: 
+        X ( list of lists of CMATRIX(nstates, nstates) ): the original data stored as
+            X[idata][step] - a CMATRIX(nstates, nstates) for the dataset `idata` and time 
+            step `step`
+        scaling_factor ( double or complex ): the rescaling factor
+
+    Returns:    
+        None: but transforms X input directly, so changes the original input
+
+    """
+
 
     nst = X[0][0].num_of_cols
 
@@ -130,6 +163,22 @@ def scale_NAC(X, a, b, scaling_factor):
 
 
 def scale_NACs(X, scaling_factor):
+    """
+
+    Rescales all the off-diagonal matrix elements X_ab by a uniform scaling factor:     
+    X_ab(original) ->    ( X_ab ) x (scaling_factor),  for all a!=b
+
+    Args: 
+        X ( list of lists of CMATRIX(nstates, nstates) ): the original data stored as
+            X[idata][step] - a CMATRIX(nstates, nstates) for the dataset `idata` and time 
+            step `step`
+        scaling_factor ( double or complex ): the rescaling factor
+
+    Returns:    
+        None: but transforms X input directly, so changes the original input
+
+    """
+
 
     nst = X[0][0].num_of_cols
 
@@ -151,6 +200,22 @@ def scale_NACs(X, scaling_factor):
 
 
 def scissor(X, a, dE):
+    """
+
+    Shift the diagonal elements of X : X_ii for all i = a, a+1, ... by a constant value dE
+    X_ii(original) ->    ( X_ii ) + dE, for all i >= a
+
+    Args: 
+        X ( list of lists of CMATRIX(nstates, nstates) ): the original data stored as
+            X[idata][step] - a CMATRIX(nstates, nstates) for the dataset `idata` and time 
+            step `step`
+        dE ( double or complex ): the shift magnitude
+
+    Returns:    
+        None: but transforms X input directly, so changes the original input
+
+    """
+
 
     nst = X[0][0].num_of_cols
 
@@ -171,22 +236,22 @@ def scissor(X, a, dE):
 
 
 
-def unpack1(H, i, j, component):
+def unpack1(H, i, j, component=2):
     """
 
-    Converts a list of CMATRIX objects into a list of doubles.
+    Converts a list of CMATRIX or MATRIX objects into a list of doubles.
     These numbers are the time-series of a specifiend component (real of imaginary)
     of a specified matrix element (i,j) of each matrix:  res[k] = H[k].get(i,j).component
 
     Args:
-        H ( list of CMATRIX(n, m) ): time-series of the matrices
+        H ( list of CMATRIX(n, m) or MATRIX(n, m)): time-series of the matrices
         i ( int ): row index of the matrix element of interest
         j ( int ): column index of the matrix element of interest
         component ( int ): index selecting real or imaginary component
  
             - 0: real
             - 1: imaginary
-            - 2: the whole thing - use for real matrices
+            - 2: the whole thing - use for real matrices [ default ]
 
     Returns:
         list of doubles: time-series of a given matrix element's component
@@ -206,12 +271,37 @@ def unpack1(H, i, j, component):
 
 
 
-def unpack2(H, i):
+def unpack2(H, i, component=2):
+    """
+
+    Converts a CMATRIX or MATRIX object into a list of doubles.
+    These numbers are the time-series of a specifiend component (real of imaginary)
+    of a specified matrix column ```i``` res[k] = H.get(k,i).component
+
+    Args:
+        H ( CMATRIX(n, m) or MATRIX(n, m) ): time-series in a form of a matrix
+        i ( int ): column index of interest
+        component ( int ): index selecting real or imaginary component
+ 
+            - 0: real
+            - 1: imaginary
+            - 2: the whole thing - use for real matrices
+
+    Returns:
+        list of doubles: time-series of a given matrix column's components
+    
+    """
+
     sz = H.num_of_rows
 
     res = []
     for k in xrange(sz):
-        res.append( H.get(k, i) )
+        if component==0:
+            res.append( H.get(k,i).real )
+        elif component==1:
+            res.append( H.get(k,i).imag )
+        elif component==2:
+            res.append( H.get(k,i) )
 
     return res
 
