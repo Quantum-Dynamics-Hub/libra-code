@@ -54,6 +54,7 @@ import libra_py.common_utils as comn
 import libra_py.data_read as data_read
 import decoherence_times as dectim
 import libra_py.tsh as tsh
+import libra_py.tsh_stat as tsh_stat
 import libra_py.units as units
 
 
@@ -207,7 +208,7 @@ def traj_statistics(i, Coeff, istate, Hvib, itimes):
 
 
     # Update SE-derived density matrices
-    denmat_se = tsh.amplitudes2denmat(Coeff)   # list of Ntraj CMATRIX elements 
+    denmat_se = tsh_stat.amplitudes2denmat(Coeff)   # list of Ntraj CMATRIX elements 
 
     # Use SE-derived density matrices to make SH-derived density matrices
     denmat_sh = []
@@ -230,8 +231,8 @@ def traj_statistics(i, Coeff, istate, Hvib, itimes):
     H_vib_ave *= (1.0/float(ndata * nitimes))
 
     # Update TSH-ensemble-averaged SE and SH populations 
-    ave_pop_sh, ave_pop_se = tsh.ave_pop(denmat_sh, denmat_se)
-    ave_en_sh,  ave_en_se  = tsh.ave_en(denmat_sh, denmat_se, H_vib)
+    ave_pop_sh, ave_pop_se = tsh_stat.ave_pop(denmat_sh, denmat_se)
+    ave_en_sh,  ave_en_se  = tsh_stat.ave_en(denmat_sh, denmat_se, H_vib)
 
     # Save the computed data into a matrix to be output
     res = MATRIX(1, 3*nstates+4) 

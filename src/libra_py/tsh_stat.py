@@ -314,14 +314,14 @@ def compute_sh_statistics(nstates, istate):
             total number of quantum states considered, ```nstates```
     """
 
-    num_sh_traj = len(istate)
-    f = 1.0/float(num_sh_traj)
+    ntraj = len(istate)
+    f = 1.0/float(ntraj)
 
     coeff_sh = MATRIX(nstates, 1)
 
-    for i in xrange(num_sh_traj):
+    for i in xrange(ntraj):
         st = istate[i]
-        coeff_sh.set(st, coeff_sh.get(st) + f)
+        coeff_sh.add(st, 0, f)
  
     return coeff_sh
 
