@@ -39,7 +39,7 @@ import tsh
 import tsh_stat
 
 
-def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, rnd):
+def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute_model, rnd):
     """
 
     Args: 
@@ -71,29 +71,44 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, rnd):
             * **dyn_params["dt"]** ( double ): the nuclear and electronic integration
                 timestep [ units: a.u. of time, default: 1.0 ]
 
+        compute_model ( PyObject ): the pointer to the Python function that performs the Hamiltonian calculations
         rnd ( Random ): random numbers generator object
 
     Returns:
-        tuple: ()
+        tuple: ( obs_T, obs_q, obs_p, obs_Ekin, obs_Epot, obs_Etot, obs_dEkin, obs_dEpot, obs_dEtot, obs_Cadi, obs_Cdia, obs_dm_adi, obs_dm_dia, obs_pops ), where
+
+            * obs_T ( list of `nsteps` doubles ): time [units: a.u.]
+            * obs_q ( list of `nsteps` MATRIX(nnucl, ntraj) ): coordinates of all trajectories [ units: Bohr ]
+            * obs_p ( list of `nsteps` MATRIX(nnucl, ntraj) ): momenta of all trajectories [ units: a.u. ]
+            * obs_Ekin ( list of `nsteps` doubles ): average kinetic energy of an ensemble of trajectories [units: a.u.]
+            * obs_Epot ( list of `nsteps` doubles ): average potential energy of an ensemble of trajectories [units: a.u.]
+            * obs_Etot ( list of `nsteps` doubles ): average total energy of an ensemble of trajectories [units: a.u.]
+            * obs_dEkin ( list of `nsteps` doubles ): standard deviation of kinetic energy of an ensemble of trajectories [units: a.u.]
+            * obs_dEpot ( list of `nsteps` doubles ): standard deviation of potential energy of an ensemble of trajectories [units: a.u.]
+            * obs_dEtot ( list of `nsteps` doubles ): standard deviation of total energy of an ensemble of trajectories [units: a.u.]
+            * obs_Cadi ( list of `nsteps` CMATRIX(nadi, ntraj) ): amplitudes of adiabatic electronic states of all trajectories 
+            * obs_Cdia ( list of `nsteps` CMATRIX(ndia, ntraj) ): amplitudes of diabatic electronic states of all trajectories 
+            * obs_dm_adi ( list of `nsteps` CMATRIX(nadi, nadi) ): ensemble-averaged density matrix in adiabatic basis
+            * obs_dm_dia ( list of `nsteps` CMATRIX(ndia, ndia) ): ensemble-averaged density matrix in diabatic basis
+            * obs_pop ( list of `nsteps` MATRIX(nadi, 1) ): ensemble-averaged TSH populations of adiabatic states
               
     """
 
     
     obs_T = [] # time
-    obs_q = [] # coordinate of the first DOF
-    obs_p = [] # momentum of the first DOF
+    obs_q = [] # coordinates of all trajectories
+    obs_p = [] # momenta of all trajectories
     obs_Ekin = []  # average kinetic energy 
     obs_Epot = []  # average potential energy 
     obs_Etot = []  # average total energy 
     obs_dEkin = []  # kinetic energy fluctuation
     obs_dEpot = []  # potential energy fluctuation
     obs_dEtot = []  # total energy fluctuation
-    obs_dm_adi00 = []  # average SE-based population of the state 0 in adiabatic basis
-    obs_dm_adi11 = []  # average SE-based population of the state 1 in adiabatic basis
-    obs_dm_dia00 = []  # average SE-based population of the state 0 in diabatic basis
-    obs_dm_dia11 = []  # average SE-based population of the state 1 in diabatic basis
-    obs_pop00 = []  # average SH-based population of the state 0 in diabatic basis
-    obs_pop01 = []  # average ??
+    obs_Cadi = []  # average TD-SE amplitudes in the adiabatic basis
+    obs_Cdia = []  # average TD-SE amplitudes in the diabatic basis
+    obs_dm_adi = []  # average SE-based density matrix in adiabatic basis
+    obs_dm_dia = []  # average SE-based density matrix in diabatic basis
+    obs_pop = []  # average SH-based populations adiabatic basis
     obs_ind = []  # ??
     
     
@@ -120,7 +135,6 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, rnd):
     # ======= Hierarchy of Hamiltonians =======
     ham = nHamiltonian(ndia, nadi, nnucl)
     ham.init_all(2)
-    #print "id=", ham.id, " level=", ham.level
 
     ham1 = [] 
     for tr in xrange(ntraj):
@@ -143,11 +157,7 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, rnd):
         ham.compute_hvib_adi(1); 
 
 
-#    sys.exit(0)
     Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh_stat.compute_etot_tsh(ham, p, Cdia, Cadi, states, iM, rep) 
-    #print Ekin, Epot, Etot, dEkin, dEpot, dEtot
-
-
     
     # Do the propagation
     for i in xrange(nsteps):
@@ -175,19 +185,19 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, rnd):
         
         
         obs_T.append(i*dt) 
-        obs_q.append(q)
-        obs_p.append(p)
+        obs_q.append(MATRIX(q))
+        obs_p.append(MATRIX(p))
         obs_Ekin.append(Ekin)
         obs_Epot.append(Epot)
         obs_Etot.append(Etot)
         obs_dEkin.append(dEkin)
         obs_dEpot.append(dEpot)
         obs_dEtot.append(dEtot)
-        obs_Cadi.append(Cadi)
-        obs_Cdia.append(Cdia)
-        obs_dm_adi.append(dm_adi)
-        obs_dm_dia.append(dm_dia)
-        obs_pops.append(pops)
+        obs_Cadi.append(CMATRIX(Cadi))
+        obs_Cdia.append(CMATRIX(Cdia))
+        obs_dm_adi.append(CMATRIX(dm_adi))
+        obs_dm_dia.append(CMATRIX(dm_dia))
+        obs_pop.append(MATRIX(pops))
         obs_ind.append(ind)
         
-    return obs_T, obs_q, obs_p, obs_dm_adi00, obs_dm_adi11, obs_dm_dia00, obs_dm_dia11, obs_pop00, obs_pop01, obs_ind
+    return obs_T, obs_q, obs_p, obs_Ekin, obs_Epot, obs_Etot, obs_dEkin, obs_dEpot, obs_dEtot, obs_Cadi, obs_Cdia, obs_dm_adi, obs_dm_dia, obs_pop
