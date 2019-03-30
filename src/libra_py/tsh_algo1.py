@@ -91,6 +91,7 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
             * obs_dm_adi ( list of `nsteps` CMATRIX(nadi, nadi) ): ensemble-averaged density matrix in adiabatic basis
             * obs_dm_dia ( list of `nsteps` CMATRIX(ndia, ndia) ): ensemble-averaged density matrix in diabatic basis
             * obs_pop ( list of `nsteps` MATRIX(nadi, 1) ): ensemble-averaged TSH populations of adiabatic states
+            * obs_states ( list of `nsteps` of lists of `ntraj` ints):  # indices of the quantum states of each trajectory
               
     """
 
@@ -109,7 +110,8 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     obs_dm_adi = []  # average SE-based density matrix in adiabatic basis
     obs_dm_dia = []  # average SE-based density matrix in diabatic basis
     obs_pop = []  # average SH-based populations adiabatic basis
-    obs_ind = []  # ??
+    obs_states = []  # indices of the quantum states of each trajectory
+    #obs_ind = []  # ??
     
     
     # Create copies of the input dynamical variables, so we could run several run_test 
@@ -198,6 +200,7 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
         obs_dm_adi.append(CMATRIX(dm_adi))
         obs_dm_dia.append(CMATRIX(dm_dia))
         obs_pop.append(MATRIX(pops))
-        obs_ind.append(ind)
+        obs_states.append(list(states))
+        #obs_ind.append(ind)
         
-    return obs_T, obs_q, obs_p, obs_Ekin, obs_Epot, obs_Etot, obs_dEkin, obs_dEpot, obs_dEtot, obs_Cadi, obs_Cdia, obs_dm_adi, obs_dm_dia, obs_pop
+    return obs_T, obs_q, obs_p, obs_Ekin, obs_Epot, obs_Etot, obs_dEkin, obs_dEpot, obs_dEtot, obs_Cadi, obs_Cdia, obs_dm_adi, obs_dm_dia, obs_pop, obs_states
