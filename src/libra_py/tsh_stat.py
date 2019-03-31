@@ -194,12 +194,11 @@ def compute_etot_tsh(ham, p, Cdia, Cadi, act_states, iM, rep):
     Etot = Ekin + Epot
 
     # Variances:
-    dEkin, dEpot = 0.0, 0.0
+    dEkin, dEpot, dEtot = 0.0, 0.0, 0.0
     for traj in xrange(ntraj):
         dEkin = dEkin + (ekin[traj] - Ekin)**2
         dEpot = dEpot + (epot[traj] - Epot)**2
-
-    dEtot = dEkin + dEpot
+        dEtot = dEtot + (ekin[traj] + epot[traj] - Etot)**2
 
     dEkin = math.sqrt(dEkin/ float(ntraj))
     dEpot = math.sqrt(dEpot/ float(ntraj))

@@ -37,6 +37,8 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 import tsh
 import tsh_stat
+import common_utils as comn
+import units
 
 
 def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute_model, rnd):
@@ -204,3 +206,59 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
         #obs_ind.append(ind)
         
     return obs_T, obs_q, obs_p, obs_Ekin, obs_Epot, obs_Etot, obs_dEkin, obs_dEpot, obs_dEtot, obs_Cadi, obs_Cdia, obs_dm_adi, obs_dm_dia, obs_pop, obs_states
+
+
+
+def probabilities_1D_scattering(q, states, nst, params):
+    """Computes the scattering probabilities in 1D
+
+    Args:
+        _q ( MATRIX(nnucl, ntraj) ): coordinates of the "classical" particles [units: Bohr]
+        states ( intList, or list of ntraj ints ): the quantum state of each trajectory
+        nst ( int ): the number of possible quantum states in the problem
+        params ( dictionary ): parameters of the simulation, should contain
+ 
+            * **params["act_dof"]** ( int ): index of the nuclear DOF that is considered active (scattering coord)
+            * **params["left_boundary"] ( double ): the beginning of the reflected particles counter [units: Bohr]
+            * **params["right_boundary"] ( double ): the beginning of the transmitted particles counter [units: Bohr]
+
+    Returns:
+        tuple: ( pop_refl, pop_transm ): where
+
+            * pop_refl ( MATRIX(nst, 1) ): probabilities of reflection on each state
+            * pop_transm ( MATRIX(nst, 1) ): probabilities of transmission on each state
+
+    """
+
+    critical_params = [  ] 
+    default_params = {"act_dof":0, "left_boundary":-10.0, "right_boundary":10.0 }
+    comn.check_input(params, default_params, critical_params)
+
+
+    act_dof = params["act_dof"]
+    left_boundary = params["left_boundary"]
+    right_boundary = params["right_boundary"]
+
+
+    ntraj = len(states)
+
+    pop_transm = MATRIX(nst, 1)  # transmitted
+    pop_refl = MATRIX(nst, 1)    # reflected
+
+    ntransm, nrefl = 0.0, 0.0
+    for traj in xrange(ntraj):
+
+        if q.get(act_dof, traj) < left_boundary:
+            pop_refl.add(states[traj], 0, 1.0)
+            nrefl += 1.0
+
+        if q.get(act_dof, traj) > right_boundary:
+            pop_transm.add(states[traj], 0, 1.0)
+            ntransm += 1.0         
+
+    ntot = ntransm + nrefl 
+    if ntot > 0.0:
+        pop_transm = pop_transm / ntot
+        pop_refl = pop_refl / ntot
+
+    return pop_refl, pop_transm

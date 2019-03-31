@@ -203,7 +203,7 @@ def Tully2(q, params):
     """
 
     critical_params = [ ] 
-    default_params = {"A":0.010, "B":0.028, "C":0.015, "D":0.060, "E":0.050 }
+    default_params = {"A":0.10, "B":0.28, "C":0.015, "D":0.060, "E":0.050 }
     comn.check_input(params, default_params, critical_params)
 
     A = params["A"]
