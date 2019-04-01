@@ -39,6 +39,8 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 import units
 import probabilities
+import common_utils as comn
+
 
 
 def sample(x, mean_x, sigma_x, rnd):  
@@ -136,36 +138,120 @@ def set_random_state(prob, ksi):
     return finstate
 
 
-def surface_hopping(mol, el, ham, rnd, params):
-    ## This function perform generic surface hopping
-    # \param[in,out] mol a list containing Nuclear objects
-    # \param[in,out] el  a list containing Electronic objects
-    # \param[in,out] ham a list containing Hamiltonian objects
-    # \param[in] rnd     a random number generator object. It is important that
-    # we use the same (global) object every time this function is called. If we
-    # create it here and use - the statistical properties will be very poor, because 
-    # every new "random" number will be not far from the common seed value
-    # \param[in] params  a dictionary containing control parameters, specifically:
-    #
-    # - params["tsh_method"] : choose hopping probability calculation scheme
-    #    1 - FSSH, 2 - GFSH, 3 - MSSH
-    # - params["rep"] : choose the representation for velocity rescaling
-    #    0 - diabatic, 1 - adiabatic
-    # - params["do_rescaling"] : choose how to account for detailed balance
-    #    0 - don't do explicit rescaling, so it is used with Boltzmann factor hopping probability scaling
-    #    1 - do excplicit velocity rescaling
-    # - params["do_reverse"] : how to handle the nuclear velocities when hop is frustrated
-    #    0 - keep as they are, don't change
-    #    1 - reverse the velocities
-    # - params["dt_nucl"] : nuclear time step in fs
-    # - params["Temperature"] : Temperature of the environment, K
-    # - params["print_tsh_probabilities"] : Print hopping probabilities matrix
-    #    0 - don't print,  1 - print
-    # - params["check_tsh_probabilities"] : Run-time sanity test of the dt_nucl, 
-    #    0 - don't check,  1 - check
-    # - params["use_boltz_factor"] : whether to scale the hopping probabilities by the Boltzmann factor
-    #    0 - don't scale,  1 - scale
 
+
+def boltz_factor(E_new, E_old, T, boltz_opt):
+    """
+    Compute the Boltzmann scaling factor, but only if we consider a hop up in energy
+
+    Args: 
+        E_new ( double ): the energy of the proposed (new) state [units: a.u.]
+        E_old ( double ): the energy of the current (old) state [units: a.u.]
+        T ( double ): temperature of the bath [units: K]
+        boltz_opt ( int ): the proposed hop acceptance criterion
+
+            * 0: all hops are accepted
+            * 1: hops are accepted according to the Boltzmann ratio of the final and initial states
+            * 2: hops are accepted according to the classical Maxwell-Boltzmann distribution
+            * 3: hops are accepted based on the quantum probability of the final state
+
+    Returns:
+        double: boltz_f: the probability of the proposed hop acceptance
+
+    """
+
+    dE = (E_new - E_old)
+    boltz_f = 1.0 
+
+    if boltz_opt==0:
+        boltz_f = 1.0
+
+    elif boltz_opt==1:
+        if dE > 0.0:
+            argg = dE/(units.kB*T)
+            if argg > 50.0:
+                boltz_f = 0.0
+            else:
+                boltz_f = math.exp(-argg)
+
+    elif boltz_opt==2:
+        if dE > 0.0:
+            boltz_f = probabilities.Boltz_cl_prob_up(dE, T)
+
+    elif boltz_opt==3:
+        if dE > 0.0:
+            boltz_f = probabilities.Boltz_quant_prob([0.0, dE], T)[1]
+
+    return boltz_f
+
+
+
+
+def surface_hopping(mol, el, ham, rnd, params):
+    """This function perform generic surface hopping in molecular systems
+
+    Args:
+        mol ( list of Nuclear objects ): variables that contains classical DOFs for each trajectory
+        el ( list of Electronic objects ): variables that contains quantum DOFs for each trajectory
+        ham ( list of Hamiltonian objects ): variables that control energy/forces calculations for each trajectory
+        rnd ( Random object ): a random number generator object. It is important that
+            we use the same (global) object every time this function is called. If we
+            create it here and use - the statistical properties will be very poor, because 
+            every new "random" number will be not far from the common seed value     
+        params ( dictionary): control parameters, specifically:
+        
+            * **params["tsh_method"]** ( int ): choose the hopping probability calculation scheme
+
+                - 1: FSSH  [default]
+                - 2: GFSH
+                - 3: MSSH
+
+            * **params["rep"]** ( int ): choose the representation for velocity rescaling
+
+                - 0: diabatic (uniform rescaling) 
+                - 1: adiabatic (need the derivative couplings) [default]
+
+            * **params["do_rescaling"]** ( int ): choose how to account for detailed balance
+
+                - 0: don't do explicit rescaling, so it is used with Boltzmann factor hopping probability scaling
+                - 1: do the excplicit velocity rescaling [default]
+
+            * **params["do_reverse"]** ( int ): how to handle the nuclear velocities when hop is frustrated
+
+                - 0: keep as they are, don't change
+                - 1: reverse the velocities [default]
+
+            * **params["dt_nucl"]** ( double): nuclear time step [ units: fs, default: 1.0 TODO: check units ]
+            * **params["Temperature"]** ( double ): Temperature of the environment [ units: K, default: 300.0 ]
+            * **params["print_tsh_probabilities"]** ( int ): Print hopping probabilities matrix
+
+                - 0: don't print [default]
+                - 1: print
+
+            * **params["check_tsh_probabilities"]** ( int ): Run-time sanity test of the dt_nucl, 
+
+                - 0: don't check
+                - 1: check [default]
+
+            * **params["use_boltz_factor"]** ( int ): whether to scale the hopping probabilities by the Boltzmann factor
+
+                - 0: don't scale [default]
+                - 1: scale
+
+    Returns:
+        None: but the following variables are changed
+
+        * mol
+        * el
+        * ham
+    """
+
+
+    critical_params = [  ] 
+    default_params = { "tsh_method":0, "rep":1, "do_rescaling":1, "do_reverse":1,
+                       "dt_nucl":1.0, "Temperature":300.0, "print_tsh_probabilities":0,
+                       "check_tsh_probabilities":1, "use_boltz_factor":0     }
+    comn.check_input(params, default_params, critical_params)
 
     # Parameters to internal variables - for convenience
     tsh_method = params["tsh_method"]
@@ -192,7 +278,6 @@ def surface_hopping(mol, el, ham, rnd, params):
 
 
 
-
     g = MATRIX(nstates,nstates) # initialize a matrix of hopping probability
 
     for i in xrange(ntraj):
@@ -206,6 +291,7 @@ def surface_hopping(mol, el, ham, rnd, params):
             compute_hopping_probabilities_mssh(mol[i], el[i], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
         else:
             print "Warning in surface_hopping: tsh_method can be 1, 2, or 3. Other values are not defined"
+            sys.exit(0)
 
 
         # output hopping probability
@@ -226,8 +312,8 @@ def surface_hopping(mol, el, ham, rnd, params):
         # Everything else - change of electronic state and velocities rescaling/reversal happens here     
         el[i].istate = hop(el[i].istate, mol[i], ham[i], ksi, g, do_rescaling, rep, do_reverse)
 
-
     # Nothing to return - mol, ham, and el objects are modified accordingly
+
 
 def surface_hopping_nbra(mol, el, ham, rnd, params):
     ## This function performs surface hopping under neglect of back-reaction approximation.
@@ -354,35 +440,6 @@ def surface_hopping_cpa2(mol, el, ham, rnd, params):
     # Call actual calculations 
     surface_hopping(mol, el, ham, rnd, params)
 
-
-
-
-def boltz_factor(E_new, E_old, T, boltz_opt):
-    # Compute the Boltzmann scaling factor, but only if we consider a hop up in energy
-
-    dE = (E_new - E_old)
-    boltz_f = 1.0 
-
-    if boltz_opt==0:
-        boltz_f = 1.0
-
-    elif boltz_opt==1:
-        if dE > 0.0:
-            argg = dE/(units.kB*T)
-            if argg > 50.0:
-                boltz_f = 0.0
-            else:
-                boltz_f = math.exp(-argg)
-
-    elif boltz_opt==2:
-        if dE > 0.0:
-            boltz_f = probabilities.Boltz_cl_prob_up(dE, T)
-
-    elif boltz_opt==3:
-        if dE > 0.0:
-            boltz_f = probabilities.Boltz_quant_prob([0.0, dE], T)[1]
-
-    return boltz_f
 
 
 
