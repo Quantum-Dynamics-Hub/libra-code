@@ -186,9 +186,13 @@ def boltz_factor(E_new, E_old, T, boltz_opt):
 
 
 
-
 def surface_hopping(mol, el, ham, rnd, params):
-    """This function perform generic surface hopping in molecular systems
+    """This function performs either generic or NBRA-type surface hopping
+
+    Here, the number of nuclear objects and that of electronic ones may be not equal.
+    Each trajectory evolves both nuclear and electronic DOFs, as appropriate 
+    for the most general TSH recipe, but one can execute multiple TSH realizations per
+    selected-electron-nuclear dynamics
 
     Args:
         mol ( list of Nuclear objects ): variables that contains classical DOFs for each trajectory
@@ -238,112 +242,30 @@ def surface_hopping(mol, el, ham, rnd, params):
                 - 0: don't scale [default]
                 - 1: scale
 
+            * **params["nconfig"]** ( int ): how many distinct initial nuclear geometries
+            * **params["excitations_init"] ( list of ints ): indices of excited states to which 
+                each initial geometry may be excited, multiplies the total number of distinct
+                electron-nuclear evolutions
+            * **params["num_SH_traj"]** ( int ): the number of electronic evolutions per initial 
+                geometry per initial excitation
+
+
     Returns:
         None: but the following variables are changed
 
         * mol
         * el
         * ham
-    """
 
+    """
 
     critical_params = [  ] 
     default_params = { "tsh_method":0, "rep":1, "do_rescaling":1, "do_reverse":1,
                        "dt_nucl":1.0, "Temperature":300.0, "print_tsh_probabilities":0,
-                       "check_tsh_probabilities":1, "use_boltz_factor":0     }
+                       "check_tsh_probabilities":1, "use_boltz_factor":0,
+                       "nconfig":1, "excitations_init":[0], "num_SH_traj"  }
     comn.check_input(params, default_params, critical_params)
 
-    # Parameters to internal variables - for convenience
-    tsh_method = params["tsh_method"]
-    rep = params["rep"]
-    do_rescaling = params["do_rescaling"]
-    do_reverse = params["do_reverse"]
-    dt_nucl = params["dt_nucl"]
-    Temperature = params["Temperature"]
-    print_prob = params["print_tsh_probabilities"]
-    check_prob = params["check_tsh_probabilities"]
-    use_boltz_factor = params["use_boltz_factor"]
-    
-
-    # Parameters characterizing the system and the ensemble
-    if len(el)!=len(mol):
-        print "Error in surface_hopping: The size of the ensemble of Electronic objects (",len(el),") should be the same\
-              as the length of the ensemble of Nuclear objects (", len(mol),")\n"             
-    if len(el)!=len(ham):
-        print "Error in surface_hopping: The size of the ensemble of Electronic objects (",len(el),") should be the same\
-              as the length of the ensemble of Hamiltonian objects (", len(mol),")\n"             
-
-    ntraj = len(el)          # this is the number of trajectories in an ensemble
-    nstates = el[0].nstates  # how many electronic DOF
-
-
-
-    g = MATRIX(nstates,nstates) # initialize a matrix of hopping probability
-
-    for i in xrange(ntraj):
-
-        #Compute hopping probabilities
-        if tsh_method == 1: # FSSH
-            compute_hopping_probabilities_fssh(mol[i], el[i], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
-        elif tsh_method == 2: # GFSH
-            compute_hopping_probabilities_gfsh(mol[i], el[i], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
-        elif tsh_method == 3: # MSSH
-            compute_hopping_probabilities_mssh(mol[i], el[i], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
-        else:
-            print "Warning in surface_hopping: tsh_method can be 1, 2, or 3. Other values are not defined"
-            sys.exit(0)
-
-
-        # output hopping probability
-        if print_prob == 1:
-            print "hopping probability matrix is:"
-            print g.show_matrix()
-
-        # check elements of g matrix are less than 1 or not.
-        if check_prob == 1:
-            for st in xrange(nstates):
-                for st1 in xrange(nstates):
-                    if g.get(st,st1) > 1:
-                        print "g(%d,%d) is %f, larger than 1; better to decrease dt_nucl" %(st,st1,g.get(st,st1))
-
-        # Attempt to hop
-        ksi = rnd.uniform(0.0,1.0) # generate random number for every trajectory   
-
-        # Everything else - change of electronic state and velocities rescaling/reversal happens here     
-        el[i].istate = hop(el[i].istate, mol[i], ham[i], ksi, g, do_rescaling, rep, do_reverse)
-
-    # Nothing to return - mol, ham, and el objects are modified accordingly
-
-
-def surface_hopping_nbra(mol, el, ham, rnd, params):
-    ## This function performs surface hopping under neglect of back-reaction approximation.
-    # Here, the number of nuclear objects and that of electronic ones are not equal.
-    # \param[in,out] mol a list containing Nuclear objects
-    # \param[in,out] el  a list containing Electronic objects
-    # \param[in,out] ham a list containing Hamiltonian objects
-    # \param[in] rnd     a random number generator object. It is important that
-    # we use the same (global) object every time this function is called. If we
-    # create it here and use - the statistical properties will be very poor, because
-    # every new "random" number will be not far from the common seed value
-    # \param[in] params  a dictionary containing control parameters, specifically:
-    #
-    # - params["tsh_method"] : choose hopping probability calculation scheme
-    #    1 - FSSH, 2 - GFSH, 3 - MSSH
-    # - params["rep"] : choose the representation for velocity rescaling
-    #    0 - diabatic, 1 - adiabatic
-    # - params["do_rescaling"] : choose how to account for detailed balance
-    #    0 - don't do explicit rescaling, so it is used with Boltzmann factor hopping probability scaling
-    #    1 - do excplicit velocity rescaling
-    # - params["do_reverse"] : how to handle the nuclear velocities when hop is frustrated
-    #    0 - keep as they are, don't change
-    #    1 - reverse the velocities
-    # - params["dt_nucl"] : nuclear time step in fs
-    # - params["Temperature"] : Temperature of the environment, K
-    # - params["print_tsh_probabilities"] : Print hopping probabilities matrix
-    #    0 - don't print,  1 - print
-    # - params["check_tsh_probabilities"] : Run-time sanity test of the dt_nucl,
-    #    0 - don't check,  1 - check 
-    # - params["use_boltz_factor"] : whether to scale the hopping probabilities by the Boltzmann factor
 
     # Parameters to internal variables - for convenience
     tsh_method = params["tsh_method"]
@@ -361,13 +283,39 @@ def surface_hopping_nbra(mol, el, ham, rnd, params):
     nstates = el[0].nstates  # how many electronic DOF
     num_SH_traj = params["num_SH_traj"]
 
+
+
+    if len(mol)!=len(ham):
+        print "Error in surface_hopping_nbra: The size of the ensemble of Nuclear objects (",len(mol),") should be the same\
+              as the length of the ensemble of Hamiltonian objects (", len(ham),")\n"             
+        sys.exit(0)
+
+    if len(mol)!= ninit * nstates_init:
+        print "Error in surface_hopping_nbra: The size of the ensemble of Nuclear objects (",len(mol),") should be the same\
+              as the product of nconfig (",ninit,") and the number of initial excitations (", nstates_init,")\n"             
+        sys.exit(0)
+
+    if len(el)!= ninit * nstates_init * num_SH_traj:
+        print "Error in surface_hopping_nbra: The size of the ensemble of Electronic objects (",len(el),") should be the same\
+              as the product of nconfig (",ninit,"),  the number of initial excitations (", nstates_init,"), and the \
+              number of surface hopping trajectories per run (",num_SH_traj,")\n"     
+        sys.exit(0)
+
+
     g = MATRIX(nstates,nstates) # initialize a matrix of hopping probability
 
+    # For all initial geometries
     for iconf in xrange(ninit):
+
+        # For all initial excitations
         for i_ex in xrange(nstates_init):
             i = iconf*nstates_init + i_ex
-            for itraj in xrange(num_SH_traj): # all stochastic SH realizations
+
+            # Run many stochastic SH realizations
+            for itraj in xrange(num_SH_traj): 
+
                 iel = iconf*nstates_init*num_SH_traj + i_ex*num_SH_traj + itraj
+
                 #Compute hopping probabilities
                 if tsh_method == 1: # FSSH
                     compute_hopping_probabilities_fssh(mol[i], el[iel], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
@@ -377,12 +325,13 @@ def surface_hopping_nbra(mol, el, ham, rnd, params):
                     compute_hopping_probabilities_mssh(mol[i], el[iel], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
                 else:
                     print "Warning in surface_hopping: tsh_method can be 1, 2, or 3. Other values are not defined"
-            # output hopping probability
+
+                # output hopping probability
                 if print_prob == 1:
                     print "hopping probability matrix is:"
                     print g.show_matrix()
 
-            # check elements of g matrix are less than 1 or not.
+                # check elements of g matrix are less than 1 or not.
                 if check_prob == 1:
                     for st in xrange(nstates):
                         for st1 in xrange(nstates):
@@ -394,12 +343,22 @@ def surface_hopping_nbra(mol, el, ham, rnd, params):
                 # Everything else - change of electronic state and velocities rescaling/reversal happens here
                 el[iel].istate = hop(el[iel].istate, mol[i], ham[i], ksi, g, do_rescaling, rep, do_reverse)
 
-    # Nothing to return - mol, ham, and el objects are modified accordingly
+
 
 def surface_hopping_cpa(mol, el, ham, rnd, params):
-    ## This function performs surface hopping with Boltzmann factor used to 
-    # rescale hopping probabilities in lieu of explicit velocity rescaling
+    """
 
+    This function performs surface hopping with Boltzmann factor used to 
+    rescale hopping probabilities in lieu of explicit velocity rescaling
+
+    Args:
+        SeeAlso: `surface_hopping`
+     
+    Returns:
+        SeeAlso: `surface_hopping`
+    
+    """
+ 
     # Update parameters
     params["do_rescaling"] = 0      # No explicit velocity rescaling
 
@@ -411,15 +370,24 @@ def surface_hopping_cpa(mol, el, ham, rnd, params):
 
     # rep and do_reverse are irrelevant
 
-
     # Call actual calculations 
-    surface_hopping_nbra(mol, el, ham, rnd, params)
+    surface_hopping(mol, el, ham, rnd, params)
 
 
 
 def surface_hopping_cpa2(mol, el, ham, rnd, params):
-    ## This function performs surface hopping with velocity rescaling according to 
-    # total energy conservation (but not along the derivative coupling vectors)
+    """
+
+    This function performs surface hopping with velocity rescaling according to 
+    total energy conservation (but not along the derivative coupling vectors)
+
+    Args:
+        SeeAlso: `surface_hopping`
+     
+    Returns:
+        SeeAlso: `surface_hopping`
+
+    """
 
     # Update parameters
     params["do_rescaling"] = 1      # Explicit velocity rescaling
@@ -434,8 +402,8 @@ def surface_hopping_cpa2(mol, el, ham, rnd, params):
                                     # no derivative couplings will be needed - we don't have them
                                     # !!! This option makes do_reverse not relevant - so
                                     # we can set it to any value
-    # do_reverse becomes irrelevant
 
+    # do_reverse becomes irrelevant
 
     # Call actual calculations 
     surface_hopping(mol, el, ham, rnd, params)
@@ -444,26 +412,39 @@ def surface_hopping_cpa2(mol, el, ham, rnd, params):
 
 
 def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse, boltz_opt=1):
+    """The Python implementation of the instantaneous decoherence at attempted hops algorithm
 
-    ##
-    # This function implements the decoherence correction 
-    # \param[in]       Coeff [ CMATRIX or Electronic ] An object containig electronic DOFs. 
-    # \param[in]      old_st [ integer ] The state index before hop  
-    # \param[in]      new_st [ integer ] The state index after hop 
-    # \param[in]       E_old [ float ] The energy of the initial state, before hop 
-    # \param[in]       E_new [ float ] The energy of the final state, after hop 
-    # \param[in]           T [ float ] The Temperature of nuclear DOF  
-    # \param[in]         ksi [ float ] A random number uniformly distributed in the range of (0.0, 1.0) 
-    # \param[in] do_collapse [ 0 or 1 ] The flag turning the decoherence (at the IDA level on/off). 1 - include decoherence, 0 - do not include decoherence 
-    # \param[in] boltz_opt [0, 1, or 2] How to determine if the hop may be frustrated:
-    #              0 - all proposed hops are accepted - no rejection based on energies
-    #              1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
-    #              2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
-    #              3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
+    This function takes care of a single act of decoherence/hop
 
-    # The function returns:
-    # res [ integer ] - index of the final state, after IDA is applied (or not)
-    # C [CMATRIX or Electronic] - the updated state of the electronic DOF, in the same data type as the input
+    Args:
+        Coeff ( CMATRIX(N, 1) or Electronic ): An object containig electronic DOFs (basis wavefunctions amplitudes). 
+            Here, N would be the number of electronic states in the dynamical basis
+        old_st ( int ): The state index before hop  
+        new_st ( int ): The state index after hop 
+        E_old ( double ): The energy of the initial state, before hop [ units: a.u. ]
+        E_new ( double ): The energy of the final state, after hop [ units: a.u. ]
+        T ( double ): The Temperature of nuclear DOF [ units: K]
+        ksi ( double ): A random number uniformly distributed in the range of [0.0, 1.0]
+        do_collapse ( int ): The flag turning the decoherence (at the IDA level on/off):
+
+            - 0: do not include decoherence 
+            - 1: include decoherence
+
+        boltz_opt ( int ): The proposed hop acceptance criterion: 
+
+            - 0: all proposed hops are accepted - no rejection based on energies
+            - 1: proposed hops are accepted with min{ 1, exp(-dE/kT) } probability, where 
+                dE = E_new - E_old  [ default ]
+            - 2: proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
+            - 3: generalization of "1", but actually it should be changed in case there are many degenerate levels
+
+    Returns:
+        tuple: ( res, C): where:
+        
+            * res ( int ): index of the final state, after IDA is applied (or not)
+            * C ( CMATRIX(N, 1) or Electronic ): the updated state of the electronic DOF, in the same data type as the input
+
+    """
 
     res = old_st
 
@@ -520,6 +501,7 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse, boltz_opt=1
         C.istate = res # return res
         
         return res, C
+
 
 
 def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
@@ -605,8 +587,6 @@ def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
         return C
 
         
-
-
 
 def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz_opt=1):
     """
