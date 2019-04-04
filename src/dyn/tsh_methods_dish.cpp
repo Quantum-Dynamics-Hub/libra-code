@@ -24,6 +24,57 @@ namespace liblibra{
 namespace libdyn{
 
 
+void project_out(CMATRIX& Coeff, int i){
+    /** Projects the state `i` out of a coherent superposition of states
+
+    Args:
+        Coeff ( CMATRIX(N, 1) ): amplitudes of the electronic states in
+            a coherent superposition from which we will project a state out
+        i ( int ): The index of the state to be projected out
+
+    Returns:
+        None: but changes the input variable `Coeff`
+
+   */ 
+
+    int nstates = Coeff.n_rows;
+    
+    complex<double> ci; ci = Coeff.get(i,0);
+    double pi; pi = (std::conj(ci) * ci).real();
+    double nrm = 1.0 - pi;
+
+    if(nrm<=0.0){ nrm = 0.0; }
+    if(nrm>0.0){  nrm = 1.0/sqrt(nrm); }
+
+    Coeff.scale(-1, 0, nrm);
+    Coeff.set(i, 0, complex<double>(0.0, 0.0));
+}
+
+
+void collapse(CMATRIX& Coeff, int i){
+    /** Collapse the wfc but such that to preserve the phase!
+
+    Args:
+        Coeff ( CMATRIX(N, 1) ): amplitudes of the electronic states in
+            a coherent superposition which we are going to collapse
+        i ( int ): The index of the state onto which the supeposition will be collapsed
+
+    Returns:
+        None: but changes the input variable `Coeff`
+
+    */ 
+
+    Coeff *= 0.0;
+
+    complex<double> ci; ci = Coeff.get(i,0);
+    double pi; pi = (std::conj(ci) * ci).real();
+
+    if(pi>0.0){   Coeff.set(i, 0, ci/sqrt(pi)); }     
+    else{  Coeff.set(i, 0, complex<double>(1.0, 0.0) ); }
+
+}
+
+
 MATRIX coherence_intervals(CMATRIX& Coeff, MATRIX& rates){
 /**
   This function computes the time-dependent (and population-dependent) coherence intervals

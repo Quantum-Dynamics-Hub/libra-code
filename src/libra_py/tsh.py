@@ -439,7 +439,7 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse, boltz_opt=1
             - 3: generalization of "1", but actually it should be changed in case there are many degenerate levels
 
     Returns:
-        tuple: ( res, C): where:
+        tuple: ( res, C ): where:
         
             * res ( int ): index of the final state, after IDA is applied (or not)
             * C ( CMATRIX(N, 1) or Electronic ): the updated state of the electronic DOF, in the same data type as the input
@@ -505,22 +505,27 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse, boltz_opt=1
 
 
 def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
+    """
 
-    ##
-    # This function implements the simplified decay of mixing algorithm for decoherence correction
-    # Reference: Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114
-    #
-    # \param[in]       Coeff [ CMATRIX or Electronic ] An object containig electronic DOFs. 
-    # \param[in]          dt [ float ] The integration timestep. Units = a.u. of time
-    # \param[in]      act_st [ integer ] The active state index
-    # \param[in]       En    [ list of floats ] Energies of the states. Units = Ha
-    # \param[in]        Ekin [ float ] The classical kinetic energy of nuclei. Units = Ha
-    # \param[in]     C_param [ float ] The method parameter, typically set to 1.0 Ha
-    # \param[in]   eps_param [ float ] The method parameter, typically set to 0.1 Ha
+    Python implementation of the simplified decay of mixing algorithm for decoherence correction
 
-    # The function returns:
-    # C [CMATRIX or Electronic] - the updated state of the electronic DOF, in the same data type as the input
+    Reference: Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114
 
+    Args:
+        Coeff ( CMATRIX(N, 1) or Electronic ): An object containig electronic DOFs (basis wavefunctions amplitudes). 
+            Here, N would be the number of electronic states in the dynamical basis
+        dt ( double ): Nuclear integration time-step [ units: a.u. ]
+        act_st ( int ): The current active state index
+        En ( list of doubles ): Energies of the states [ units: Ha ]
+        Ekin ( double ): The classical kinetic energy of nuclei [ units: Ha ]
+        C_param ( double ): The method parameter [ units: None, default: 1.0]
+        eps_param ( double ): The method parameter [ units: Ha, default: 0.1 Ha ]
+
+    Returns:
+        ( CMATRIX(N, 1) or Electronic ): C : 
+            the updated state of the electronic DOF, in the same data type as the input
+
+    """
 
     # In case the electronic DOF are given in the form of CMATRIX
     if type(Coeff).__name__ == "CMATRIX":
@@ -583,31 +588,45 @@ def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
         C.q[act_st] = C.q[act_st] * sclf
         C.p[act_st] = C.p[act_st] * sclf
 
-
         return C
-
         
 
 def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz_opt=1):
-    """
-    A simplified version for the CPA-like hopping
+    """A simplified version for the CPA-like hopping
 
-    Coeff (CMATRIX(nstates, 1) ) object with the amplitudes of all states
-    Hvib (CMATRIX(nstates, nstates) )  object containing the vibronic Hamiltonian 
-    istate (int) the index of the initial state
-    sh_method (int) selector of the TSH method: 0 - MSSH, 1 - FSSH, 2 - GFSH
-    do_collapse (int) flag to turn on the decoherence via ID-A: 0 - no decoherence, 1 - decoherence via ID-A
-    ksi, ksi2 (float in [0, 1]) random numbers cotrolling the execution of SH
-    dt (float) time interval for the surface hopping (in a.u.)
-    T (float) temperature in K
+    Args:
+        Coeff ( CMATRIX(nstates, 1) ): amplitudes of all states
+        Hvib ( CMATRIX(nstates, nstates) ): vibronic Hamiltonian 
+        istate ( int ): the index of the initial state
+        sh_method ( int ): selector of the TSH method:
 
-    boltz_opt [0, 1, 2, or 3] How to determine if the hop may be frustrated:
-               0 - all proposed hops are accepted - no rejection based on energies
-               1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
-               2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
-               3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
+            - 0: MSSH
+            - 1: FSSH
+            - 2: GFSH
 
-    Returns: the index (int) of a new state 
+        do_collapse ( int ): flag to turn on the decoherence via ID-A:
+
+            - 0 - no decoherence
+            - 1 - decoherence via ID-A
+
+        ksi ( double ):random number in interval [0.0, 1.0] cotrolling the execution of SH
+        ksi2 ( double ):random number in interval [0.0, 1.0] cotrolling the execution of SH
+        dt ( double ): the time interval for the surface hopping [ units: a.u. ]
+        T ( double ): temperature [ units: K ]
+
+        boltz_opt ( int ): The selector of the proposed hop acceptance algorithm:
+
+            - 0: all proposed hops are accepted - no rejection based on energies
+            - 1: proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
+            - 2: proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
+            - 3: generalization of "1", but actually it should be changed in case there are many degenerate levels
+
+    Returns: 
+        tuple: ( istate, Coeff1 ): where:
+        
+            * istate ( int ): index of the final state, after the hop
+            * Coeff1 ( CMATRIX(N, 1) ): the updated state of the electronic DOF
+           
 
     """
     g = 0.0
@@ -637,9 +656,15 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz
 
 
 def project_out(Coeff, i):
-    """
-      Projects the state i out of a coherent superposition of states
-      i   [int]  The index of the state to be projected out
+    """Projects the state `i` out of a coherent superposition of states
+
+    Args:
+        Coeff ( CMATRIX(N, 1) ): amplitudes of the electronic states in
+            a coherent superposition from which we will project a state out
+        i ( int ): The index of the state to be projected out
+
+    Returns:
+        None: but changes the input variable `Coeff`
 
     """
     nstates = Coeff.num_of_rows
@@ -658,8 +683,16 @@ def project_out(Coeff, i):
 
 
 def collapse(Coeff, i):   
-    """ 
-    Collapse the wfc but such that to preserve the phase!
+    """Collapse the wfc but such that to preserve the phase!
+
+    Args:
+        Coeff ( CMATRIX(N, 1) ): amplitudes of the electronic states in
+            a coherent superposition which we are going to collapse
+        i ( int ): The index of the state onto which the supeposition will be collapsed
+
+    Returns:
+        None: but changes the input variable `Coeff`
+
     """
     Coeff *= 0.0
 
@@ -671,28 +704,37 @@ def collapse(Coeff, i):
         Coeff.set(i, 0, 1.0+0.0j)
 
 
+
+
 def dish_py(Coeff, istate, t_m, tau_m, Hvib, boltz_opt, T, ksi1, ksi2):
     """
     Decoherence-induced surface hopping (DISH)
     Reference: Jaeger, H. M.; Fischer, S.; Prezhdo, O. V. Decoherence-Induced Surface Hopping. J. Chem. Phys. 2012, 137, 22A545.
 
-    Coeff  [CMATRIX, N x 1]   Amplitudes of electronic states
-    istate [int]          Initial state
-    t_m    [MATRIX, N x 1]    Matrix of the times each state resides in a coherence interval since the last decoherence event
-    tau_m  [MATRIX, N x 1]    Matrix of the coherence intervals for each electronic state
-    Hvib   [CMATRIx, N x N]   Energies 
-    boltz_opt [0, 1, 2, or 3] How to determine if the hop may be frustrated:
-               0 - all proposed hops are accepted - no rejection based on energies
-               1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
-               2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
-               3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
-    T      [double]  The temperature of the system [K]
-    ksi1   [double]  A random number from a uniform distribution on the [0,1] interval
-    ksi2   [double]  Another random number from a uniform distribution on the [0,1] interval
+    Args: 
+        Coeff ( CMATRIX(N, 1) ): Amplitudes of electronic states
+        istate ( int ): Initial state index
+        t_m ( MATRIX(N, 1) ): Matrix of the times each state resides in a coherence interval since the last decoherence event [ units: a.u. ]
+        tau_m  ( MATRIX(N, 1) ): Matrix of the coherence intervals for each electronic state [ units: a.u. ]
+        Hvib ( CMATRIX(N, N) ): Vibronic Hamiltonian matrix [ units: Ha ]
+        boltz_opt ( int ): The selector of the proposed hop acceptance algorithm:
 
-    The function modifies  Coeff and t_m variables
+            - 0: all proposed hops are accepted - no rejection based on energies
+            - 1: proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
+            - 2: proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
+            - 3: generalization of "1", but actually it should be changed in case there are many degenerate levels
+
+
+        T ( double ): temperature [ units: K ]
+        ksi ( double ):random number in interval [0.0, 1.0] cotrolling the execution of SH
+        ksi2 ( double ):random number in interval [0.0, 1.0] cotrolling the execution of SH
+
+
     Returns: 
-     - the index of the electronic state after the "hop" (old state index or a new one)
+        int: fstat: the index of the electronic state after the "hop" (old state index or a new one)
+
+    Note: 
+        The function also modifies the `Coeff` and `t_m` variables
 
     """
 

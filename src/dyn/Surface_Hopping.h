@@ -249,7 +249,8 @@ Electronic msdm(Electronic& Coeff, double dt, int act_st, MATRIX& decoh_rates);
 
 
 ///================  In tsh_methods_dish.cpp  ===================================
-
+void project_out(CMATRIX& Coeff, int i);
+void collapse(CMATRIX& Coeff, int i);
 MATRIX coherence_intervals(CMATRIX& Coeff, MATRIX& rates);
 int dish(Electronic& el, MATRIX& t_m, const MATRIX& tau_m, const CMATRIX& Hvib,
           int use_boltz_flag, double Ekin, double T, double ksi1, double ksi2);

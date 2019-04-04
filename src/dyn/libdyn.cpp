@@ -364,6 +364,9 @@ void export_decoherence_objects(){
 
   //================== DISH =======================
 
+  void (*expt_project_out_v1)(CMATRIX& Coeff, int i) = &project_out;
+  void (*expt_collapse_v1)(CMATRIX& Coeff, int i) = &collapse;
+
   MATRIX (*expt_coherence_intervals_v1)(CMATRIX& Coeff, MATRIX& rates) = &coherence_intervals;
 
   int (*expt_dish_v1)(Electronic& el, MATRIX& t_m, const MATRIX& tau_m, const CMATRIX& Hvib,
@@ -372,6 +375,9 @@ void export_decoherence_objects(){
   int (*expt_dish_v2)(Electronic& el, Nuclear& mol, Hamiltonian& ham, 
           MATRIX& t_m, const MATRIX& tau_m, int use_boltz_flag, double T, double ksi1, double ksi2) = &dish;
 
+
+  def("project_out", expt_project_out_v1);
+  def("collapse", expt_collapse_v1);
   def("coherence_intervals", expt_coherence_intervals_v1);
   def("dish", expt_dish_v1);
   def("dish", expt_dish_v2);
