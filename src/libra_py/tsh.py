@@ -39,7 +39,8 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 import units
 import probabilities
-import common_utils as comn
+#import common_utils as comn
+import util.libutil as comn
 
 
 
@@ -263,7 +264,7 @@ def surface_hopping(mol, el, ham, rnd, params):
     default_params = { "tsh_method":0, "rep":1, "do_rescaling":1, "do_reverse":1,
                        "dt_nucl":1.0, "Temperature":300.0, "print_tsh_probabilities":0,
                        "check_tsh_probabilities":1, "use_boltz_factor":0,
-                       "nconfig":1, "excitations_init":[0], "num_SH_traj"  }
+                       "nconfig":1, "excitations_init":[0], "num_SH_traj":1  }
     comn.check_input(params, default_params, critical_params)
 
 

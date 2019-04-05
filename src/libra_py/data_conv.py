@@ -27,7 +27,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import common_utils as comn
+#import common_utils as comn
+import util.libutil as comn
 
 
 def transform_data(X, params):

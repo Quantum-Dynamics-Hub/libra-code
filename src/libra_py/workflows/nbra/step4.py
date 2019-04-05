@@ -50,7 +50,9 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import libra_py.common_utils as comn
+#import libra_py.common_utils as comn
+import util.libutil as comn
+
 import libra_py.data_read as data_read
 import decoherence_times as dectim
 import libra_py.tsh as tsh

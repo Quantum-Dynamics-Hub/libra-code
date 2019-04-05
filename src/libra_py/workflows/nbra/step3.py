@@ -39,7 +39,8 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import mapping
-import libra_py.common_utils as comn
+#import libra_py.common_utils as comn
+import util.libutil as comn
 import libra_py.tsh as tsh
 import libra_py.units as units
 import libra_py.hungarian as hungarian

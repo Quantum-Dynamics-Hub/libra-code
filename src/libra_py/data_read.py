@@ -26,8 +26,9 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-import common_utils as comn
 
+#import common_utils as comn
+import util.libutil as comn
 
     
 def get_matrix(nrows, ncols, filename_re, filename_im, act_sp):

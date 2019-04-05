@@ -56,7 +56,7 @@ void export_util_objects(){
   def("split_line", expt_split_line_v2);  
 
 
-  void (*expt_check_input_v1)(boost::python::dict& params, boost::python::dict& default_params, boost::python::list critical_params) = &check_input;
+  void (*expt_check_input_v1)(boost::python::dict params, boost::python::dict default_params, boost::python::list critical_params) = &check_input;
   def("check_input", expt_check_input_v1);  
  
   //std::string int2str(int inp);

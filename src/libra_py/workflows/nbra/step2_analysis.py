@@ -28,7 +28,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 #from libra_py import *
-import libra_py.common_utils as comn
+#import libra_py.common_utils as comn
+import util.libutil as comn
 
 
 def takeFirst(elem):

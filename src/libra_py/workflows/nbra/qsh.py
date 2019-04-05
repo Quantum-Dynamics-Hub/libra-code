@@ -32,7 +32,9 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 
-import libra_py.common_utils as comn
+#import libra_py.common_utils as comn
+import util.libutil as comn
+
 import libra_py.units as units
 import libra_py.influence_spectrum as influence_spectrum
 import libra_py.data_stat as data_stat

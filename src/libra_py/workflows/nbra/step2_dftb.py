@@ -28,7 +28,8 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 from libra_py import DFTB_methods
 from libra_py import units
-import libra_py.common_utils as comn
+#import libra_py.common_utils as comn
+import util.libutil as comn
 
 
 

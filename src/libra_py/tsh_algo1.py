@@ -37,7 +37,8 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 import tsh
 import tsh_stat
-import common_utils as comn
+#import common_utils as comn
+import util.libutil as comn
 import units
 
 
