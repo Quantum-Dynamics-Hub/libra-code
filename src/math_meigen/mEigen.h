@@ -115,6 +115,8 @@ void exp_matrix(CMATRIX& res, CMATRIX& S, complex<double> dt);
 void FullPivLU_decomposition(MATRIX& A, MATRIX& P, MATRIX& L, MATRIX& U, MATRIX& Q);
 void FullPivLU_decomposition(CMATRIX& A, CMATRIX& P, CMATRIX& L, CMATRIX& U, CMATRIX& Q);
 
+void JacobiSVD_decomposition(CMATRIX& A, CMATRIX& U, CMATRIX& S, CMATRIX& V);
+void BDCSVD_decomposition(CMATRIX& A, CMATRIX& U, CMATRIX& S, CMATRIX& V);
 
 ///=========== Look in: mEigen_linsolve.cpp ==================
 ///< Solver for a system of linear equations (iterative schemes)
