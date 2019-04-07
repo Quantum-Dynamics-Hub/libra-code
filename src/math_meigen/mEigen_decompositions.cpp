@@ -182,7 +182,7 @@ void JacobiSVD_decomposition(CMATRIX& A, CMATRIX& U, CMATRIX& S, CMATRIX& V){
 
   u = svd.matrixU();
   s = svd.singularValues();
-  v = svd.matrixU();
+  v = svd.matrixV();
 
   for(i=0;i<N;i++){
 
@@ -234,7 +234,7 @@ void BDCSVD_decomposition(CMATRIX& A, CMATRIX& U, CMATRIX& S, CMATRIX& V){
 
   u = svd.matrixU();
   s = svd.singularValues();
-  v = svd.matrixU();
+  v = svd.matrixV();
 
   for(i=0;i<N;i++){
 
