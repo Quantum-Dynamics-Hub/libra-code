@@ -14,7 +14,7 @@
 #include <Eigen/Eigenvalues>
 #include <Eigen/Core>
 #include "mEigen.h"
-
+#include <cmath>
 
 /// liblibra namespace
 namespace liblibra{
@@ -107,13 +107,13 @@ void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh, 
 
 void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh){
 
-  sqrt_matrix(S, S_half, S_i_half, thresh, 1);
+  sqrt_matrix(S, S_half, S_i_half, thresh, 0);
 
 }
 
 void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half){
 
-  sqrt_matrix(S, S_half, S_i_half, -1.0, 1);
+  sqrt_matrix(S, S_half, S_i_half, -1.0, 0);
 
 }
 
@@ -146,7 +146,7 @@ void exp_matrix(CMATRIX& res, CMATRIX& S, complex<double> dt, int do_phase_corre
   if(do_phase_correction){   correct_phase(C);  }
 
   
-  for(i=0;i<sz;i++){ res.M[i*sz+i]= exp(dt * Seig->get(i,i)); }
+  for(i=0;i<sz;i++){ res.M[i*sz+i]= std::exp(dt * Seig->get(i,i)); }
 
   // Convert to the original basis
   res = (*C) * res * ((*C).H());
@@ -158,7 +158,7 @@ void exp_matrix(CMATRIX& res, CMATRIX& S, complex<double> dt, int do_phase_corre
 
 
 void exp_matrix(CMATRIX& res, CMATRIX& S, complex<double> dt){
-  exp_matrix(res,S, dt, 1);
+  exp_matrix(res,S, dt, 0);
 }
 
 
