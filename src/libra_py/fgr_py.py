@@ -66,7 +66,7 @@ def run_NEFGRL_populations(omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, pa
                 - 2: CAV
                 - 3: CD
                 - 4: W0
-                - 5: Marcus
+                - 5: C0
 
             * **params["dyn_type"]** ( int ): flag that selects:
 
@@ -123,21 +123,20 @@ def run_NEFGRL_populations(omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, pa
     for step in xrange(nsteps):
         t = step*dt
 
-        if do_output:
-            f = open(filename, "a")
-            f.write("%8.5f  %8.5f  %8.5f \n" % (t, k, P))
-            f.close()
-
-        time.append(t)
-        rate.append(k)
-        pop.append(P)
-
- 
         # k = k(t')
         k = NEFGRL_rate(t, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, dyn_type, dtau)
         
         summ += k * dt; 
         P = math.exp(-summ)  # exp(- int dt' k(t'))
+
+        if do_output:
+            f = open(filename, "a")
+            f.write("%8.5f  %8.5f  %8.5f \n" % (t, k, P))
+            f.close()
+        
+        time.append(t)
+        rate.append(k)
+        pop.append(P)
 
     return time, rate, pop
 
@@ -261,6 +260,5 @@ def run_NEFRG_acf(t, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, params):
 
 
     return _tau, _argg_re, _argg_im, _lin_re, _lin_im, _C_re, _C_im, _int_re, _int_im
-
 
 

@@ -27,12 +27,12 @@ fs = units.fs2au
 method = 0
 tmax = 40.0
 dt = 0.10
-dtau = dt/20.0
-dyn_type = 1 # 0 - Condon, 1 - non-Condon
+dtau = dt/50.0
+dyn_type = 0 # 0 - Condon, 1 - non-Condon
 
 gamma = 0.1
 
-nomega = 500
+nomega = 200
 w_c = 1.0
 dw = 15.0*w_c/float(nomega)
 
@@ -52,6 +52,7 @@ for w_DA in [0.0]: #, 2.0]:   # Donor-Acceptor energy gap
             for etha in [0.5]: #, 1.0, 2.0]:  # friction
                 i4 += 1
 
+                print "------------------"
                 print "w_DA = ", w_DA
                 print "s = ", s
                 print "beta = ", beta
@@ -82,13 +83,14 @@ for w_DA in [0.0]: #, 2.0]:   # Donor-Acceptor energy gap
                 U = MATRIX(ndof, ndof)
                 omega_nm = normal_modes(omega, coeff, U)
                 #print "U = "; U.show_matrix()
+                #print "omega_nm = ", Cpp2Py(omega_nm)
 
                 dE = params["omega_DA"]
 
                 print "Omega = ", params["omega"][0]
                 print "Er = ", params["Er"]
                 y0 = eq_shift(params["Er"], params["omega"][0])
-                print "y0 = ", y0
+                #print "y0 = ", y0
 
                 req_nm = compute_req(omega, coeff, y0, U)
                 #print "req_nm = ", Cpp2Py(req_nm)
@@ -100,7 +102,10 @@ for w_DA in [0.0]: #, 2.0]:   # Donor-Acceptor energy gap
                 #print "shift_NE = ", Cpp2Py(shift_NE)
 
                 V = coupling_Condon(gamma, dE, params["Er"], y0)
-                print "V = ", V
+                #print "V = ", V
+
+
+                #V = Py2Cpp_double(gamma) error
 
                 ###=== Test 1 : Regular execution type ===
                 ### Results are printed out only once the entire calculations is completed

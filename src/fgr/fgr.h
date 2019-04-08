@@ -62,34 +62,34 @@ vector<double> LVC2GOA_req(vector<double>& omega_nm, vector<double>& d1, vector<
 
 
 ///=============== In fgr.cpp ============================
-
-complex<double> Integrand_NE_exact(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta);
-complex<double> Linear_NE_exact(double tp, double tau, double gamma, double omega, double shift, double req, double beta);
+    
+complex<double> Integrand_NE_exact(double tp, double tau, double omega_DA, double omega, double req, double shift, double beta);
+complex<double> Linear_NE_exact(double tp, double tau, double gamma, double omega, double req, double shift, double beta);
 complex<double> ACF_NE_exact(double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
                              vector<double>& req_nm, vector<double>& shift_NE, double beta, int type);
 
-complex<double> Integrand_NE_LSC(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta);
-complex<double> Linear_NE_LSC(double tp, double tau, double gamma, double omega, double shift, double req, double beta);
+complex<double> Integrand_NE_LSC(double tp, double tau, double omega_DA, double omega, double req, double shift, double beta);
+complex<double> Linear_NE_LSC(double tp, double tau, double gamma, double omega, double req, double shift, double beta);
 complex<double> ACF_NE_LSC(double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
                            vector<double>& req_nm, vector<double>& shift_NE, double beta, int type);
 
-complex<double> Integrand_NE_CAV(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta);
-complex<double> Linear_NE_CAV(double tp, double tau, double gamma, double omega, double shift, double req, double beta);
+complex<double> Integrand_NE_CAV(double tp, double tau, double omega_DA, double omega, double req, double shift, double beta);
+complex<double> Linear_NE_CAV(double tp, double tau, double gamma, double omega, double req, double shift, double beta);
 complex<double> ACF_NE_CAV(double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
                            vector<double>& req_nm, vector<double>& shift_NE, double beta, int type);
 
-complex<double> Integrand_NE_CD(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta);
-complex<double> Linear_NE_CD(double tp, double tau, double gamma, double omega, double shift, double req, double beta);
+complex<double> Integrand_NE_CD(double tp, double tau, double omega_DA, double omega, double req, double shift, double beta);
+complex<double> Linear_NE_CD(double tp, double tau, double gamma, double omega, double req, double shift, double beta);
 complex<double> ACF_NE_CD(double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
                           vector<double>& req_nm, vector<double>& shift_NE, double beta, int type);
 
-complex<double> Integrand_NE_W0(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta);
-complex<double> Linear_NE_W0(double tp, double tau, double gamma, double omega, double shift, double req, double beta);
+complex<double> Integrand_NE_W0(double tp, double tau, double omega_DA, double omega, double req, double shift, double beta);
+complex<double> Linear_NE_W0(double tp, double tau, double gamma, double omega, double req, double shift, double beta);
 complex<double> ACF_NE_W0(double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
                           vector<double>& req_nm, vector<double>& shift_NE, double beta, int type);
 
-complex<double> Integrand_NE_Marcus(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta);
-complex<double> Linear_NE_Marcus(double tp, double tau, double gamma, double omega, double shift, double req, double beta);
+complex<double> Integrand_NE_Marcus(double tp, double tau, double omega_DA, double omega, double req, double shift, double beta);
+complex<double> Linear_NE_Marcus(double tp, double tau, double gamma, double omega, double req, double shift, double beta);
 complex<double> ACF_NE_Marcus(double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
                               vector<double>& req_nm, vector<double>& shift_NE, double beta, int type);
 

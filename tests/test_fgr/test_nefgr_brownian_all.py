@@ -25,15 +25,15 @@ fs = units.fs2au
 
 tmax = 40.0
 dt = 0.20
-dtau = dt/20.0
+dtau = dt/50.0
 
 gamma = 0.1
-nomega = 500
+nomega = 500 #200
 w_c = 1.0
 dw = 15.0*w_c/float(nomega)
 
 
-for dyn_type in [0, 1]:  # Condon vs. non-Condon
+for dyn_type in [0, 1]:  # Condon vs. non-Condon 
     for method in [0, 1, 2, 3, 4, 5]:  #  All methods
         
         i1 = -1
@@ -48,7 +48,8 @@ for dyn_type in [0, 1]:  # Condon vs. non-Condon
                     i4 = -1
                     for etha in [0.5]: #, 1.0, 2.0]:  # friction
                         i4 += 1
-        
+                        
+                        print "----------------------"
                         print "w_DA = ", w_DA
                         print "s = ", s
                         print "beta = ", beta

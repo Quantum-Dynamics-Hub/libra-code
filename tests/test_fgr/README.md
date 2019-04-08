@@ -18,7 +18,7 @@
 ##  Example 1
    * Uncomment section under "Test2"  (uncommented by default), set up parameters
    * ```python test_nefgr_brownian.py```
-   * ```gnuplot nefgr_brownian.plt```
+   * ```gnuplot plot_nefgr_brownian.plt```
 
 ##  Example 2
    * Uncomment section under "Test3", comment the one under "Test2" (uncommented by default), set up parameters
@@ -33,7 +33,7 @@
 ##  Example 4
    * Uncomment section under "Test2"  (uncommented by default), set up parameters
    * ```python test_nefgr_fulvene.py```
-   * ```gnuplot nefgr_fulvene.plt```
+   * ```gnuplot plot_nefgr_fulvene.plt```
 
 
 
