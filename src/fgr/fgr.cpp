@@ -1,4 +1,5 @@
 /*********************************************************************************
+* Copyright (C) 2019 Xiang Sun, Alexey V. Akimov
 * Copyright (C) 2018 Alexey V. Akimov
 *
 * This code is partially based on the code of Xiang Sun:
@@ -28,7 +29,7 @@ namespace libfgr{
 
 
 
-complex<double> Integrand_NE_exact(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta){
+complex<double> Integrand_NE_exact(double tp, double tau, double omega_DA, double omega, double req, double shift, double beta){
 /**
 */
   double re, im;
@@ -38,13 +39,13 @@ complex<double> Integrand_NE_exact(double tp, double tau, double omega_DA, doubl
   double pref = omega*req*req*0.5;
 
   re = -pref*(1.0-cos(wt))/tanh(0.5*wb);
-  im = omega_DA*tau - pref*sin(wt) - omega*req*shift*(sin(wtp) - sin(wtp - wt));
+  im = -pref*sin(wt) - omega*req*shift*(sin(wtp) - sin(wtp - wt));
 
   return complex<double>(re, im);
 }
 
 
-complex<double> Linear_NE_exact(double tp, double tau, double gamma, double omega, double shift, double req, double beta){
+complex<double> Linear_NE_exact(double tp, double tau, double gamma, double omega, double req, double shift, double beta){
 /**
 */
   double re, im;
@@ -89,12 +90,13 @@ complex<double> ACF_NE_exact(double tp, double tau, double omega_DA, double V,
     int n_omega = omega_nm.size();
     complex<double> argg(0.0, 0.0);
     complex<double> ampl(0.0, 0.0);
+    argg = complex<double>(0.0, omega_DA * tau);
 
     for(int w=0; w<n_omega; w++){
-      argg += Integrand_NE_exact(tp, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta); 
+      argg += Integrand_NE_exact(tp, tau, omega_DA, omega_nm[w], req_nm[w], shift_NE[w], beta); 
 
       if(type==1){
-          ampl += Linear_NE_exact(tp, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta);
+          ampl += Linear_NE_exact(tp, tau, gamma_nm[w], omega_nm[w], req_nm[w], shift_NE[w], beta);
       }
     }
 
@@ -112,15 +114,15 @@ complex<double> ACF_NE_exact(double tp, double tau, double omega_DA, double V,
 
 
 
-complex<double> Integrand_NE_LSC(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta){
+complex<double> Integrand_NE_LSC(double tp, double tau, double omega_DA, double omega, double req, double shift, double beta){
 /**
 */
 
-  return Integrand_NE_exact(tp, tau, omega_DA, omega, shift, req, beta);
+  return Integrand_NE_exact(tp, tau, omega_DA, omega, req, shift, beta);
 
 }
 
-complex<double> Linear_NE_LSC(double tp, double tau, double gamma, double omega, double shift, double req, double beta){
+complex<double> Linear_NE_LSC(double tp, double tau, double gamma, double omega, double req, double shift, double beta){
 /**
 */
   double re, im;
@@ -163,12 +165,13 @@ complex<double> ACF_NE_LSC(double tp, double tau, double omega_DA, double V,
     int n_omega = omega_nm.size();
     complex<double> argg(0.0, 0.0);
     complex<double> ampl(0.0, 0.0);
+    argg = complex<double>(0.0, omega_DA*tau);
 
     for(int w=0; w<n_omega; w++){
-      argg += Integrand_NE_LSC(tp, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta); 
+      argg += Integrand_NE_LSC(tp, tau, omega_DA, omega_nm[w], req_nm[w], shift_NE[w], beta); 
 
       if(type==1){
-          ampl += Linear_NE_LSC(tp, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta);
+          ampl += Linear_NE_LSC(tp, tau, gamma_nm[w], omega_nm[w], req_nm[w], shift_NE[w], beta);
       }
     }
 
@@ -186,7 +189,7 @@ complex<double> ACF_NE_LSC(double tp, double tau, double omega_DA, double V,
 
 
 
-complex<double> Integrand_NE_CAV(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta){
+complex<double> Integrand_NE_CAV(double tp, double tau, double omega_DA, double omega, double req, double shift, double beta){
 /**
 */
   double re, im;
@@ -194,13 +197,13 @@ complex<double> Integrand_NE_CAV(double tp, double tau, double omega_DA, double 
   double wtp = omega*tp;
 
   re = -(req*req/beta)*(1.0-cos(wt));
-  im = omega_DA*tau - omega*req*req*0.5*sin(wt) - omega*req*shift * (sin(wtp) + sin(wt - wtp));
+  im = - omega*req*req*0.5*sin(wt) - omega*req*shift * (sin(wtp) + sin(wt - wtp));
 
   return complex<double>(re, im);
 }
 
 
-complex<double> Linear_NE_CAV(double tp, double tau, double gamma, double omega, double shift, double req, double beta){
+complex<double> Linear_NE_CAV(double tp, double tau, double gamma, double omega, double req, double shift, double beta){
 /**
 */
   double re, im;
@@ -239,12 +242,13 @@ complex<double> ACF_NE_CAV(double tp, double tau, double omega_DA, double V,
     int n_omega = omega_nm.size();
     complex<double> argg(0.0, 0.0);
     complex<double> ampl(0.0, 0.0);
+    argg = complex<double>(0.0, omega_DA*tau);
 
     for(int w=0; w<n_omega; w++){
-      argg += Integrand_NE_CAV(tp, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta); 
+      argg += Integrand_NE_CAV(tp, tau, omega_DA, omega_nm[w], req_nm[w], shift_NE[w], beta); 
 
       if(type==1){
-          ampl += Linear_NE_CAV(tp, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta);
+          ampl += Linear_NE_CAV(tp, tau, gamma_nm[w], omega_nm[w], req_nm[w], shift_NE[w], beta);
       }
     }
 
@@ -264,7 +268,7 @@ complex<double> ACF_NE_CAV(double tp, double tau, double omega_DA, double V,
 
 
 
-complex<double> Integrand_NE_CD(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta){
+complex<double> Integrand_NE_CD(double tp, double tau, double omega_DA, double omega, double req, double shift, double beta){
 /**
 */
   double re, im;
@@ -273,12 +277,12 @@ complex<double> Integrand_NE_CD(double tp, double tau, double omega_DA, double o
   double prefactor = 0.5*omega*req*req*wt;
 
   re = -(req*req/beta)*(1.0-cos(wt));
-  im = omega_DA*tau - prefactor - omega*req*shift * (sin(wtp) + sin(wt - wtp));
+  im = - prefactor - omega*req*shift * (sin(wtp) + sin(wt - wtp));
 
   return complex<double>(re, im);
 }
 
-complex<double> Linear_NE_CD(double tp, double tau, double gamma, double omega, double shift, double req, double beta){
+complex<double> Linear_NE_CD(double tp, double tau, double gamma, double omega, double req, double shift, double beta){
 /**
 */
   double re, im;
@@ -316,12 +320,13 @@ complex<double> ACF_NE_CD(double tp, double tau, double omega_DA, double V,
     int n_omega = omega_nm.size();
     complex<double> argg(0.0, 0.0);
     complex<double> ampl(0.0, 0.0);
-
+    argg = complex<double>(0.0, omega_DA*tau);
+            
     for(int w=0; w<n_omega; w++){
-      argg += Integrand_NE_CD(tp, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta); 
+      argg += Integrand_NE_CD(tp, tau, omega_DA, omega_nm[w], req_nm[w], shift_NE[w], beta); 
 
       if(type==1){
-          ampl += Linear_NE_CD(tp, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta);
+          ampl += Linear_NE_CD(tp, tau, gamma_nm[w], omega_nm[w], req_nm[w], shift_NE[w], beta);
       }
     }
 
@@ -339,7 +344,7 @@ complex<double> ACF_NE_CD(double tp, double tau, double omega_DA, double V,
 
 
 
-complex<double> Integrand_NE_W0(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta){
+complex<double> Integrand_NE_W0(double tp, double tau, double omega_DA, double omega, double req, double shift, double beta){
 /**
 */
   double re, im;
@@ -347,12 +352,12 @@ complex<double> Integrand_NE_W0(double tp, double tau, double omega_DA, double o
   double prefactor = 0.5*omega*req*req*wt;
 
   re = -( prefactor / tanh(0.5*beta*omega) ) * wt*wt*0.5;
-  im = omega_DA*tau - prefactor - omega*req*shift * cos(omega*tp) * wt;
+  im = - prefactor - omega*req*shift * cos(omega*tp) * wt;
 
   return complex<double>(re, im);
 }
 
-complex<double> Linear_NE_W0(double tp, double tau, double gamma, double omega, double shift, double req, double beta){
+complex<double> Linear_NE_W0(double tp, double tau, double gamma, double omega, double req, double shift, double beta){
 /**
 */
   double re, im;
@@ -390,12 +395,13 @@ complex<double> ACF_NE_W0(double tp, double tau, double omega_DA, double V,
     int n_omega = omega_nm.size();
     complex<double> argg(0.0, 0.0);
     complex<double> ampl(0.0, 0.0);
-
+    argg = complex<double>(0.0, omega_DA*tau);
+            
     for(int w=0; w<n_omega; w++){
-      argg += Integrand_NE_W0(tp, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta); 
+      argg += Integrand_NE_W0(tp, tau, omega_DA, omega_nm[w], req_nm[w], shift_NE[w], beta); 
 
       if(type==1){
-          ampl += Linear_NE_W0(tp, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta);
+          ampl += Linear_NE_W0(tp, tau, gamma_nm[w], omega_nm[w], req_nm[w], shift_NE[w], beta);
       }
     }
 
@@ -413,7 +419,7 @@ complex<double> ACF_NE_W0(double tp, double tau, double omega_DA, double V,
 
 
 
-complex<double> Integrand_NE_Marcus(double tp, double tau, double omega_DA, double omega, double shift, double req, double beta){
+complex<double> Integrand_NE_C0(double tp, double tau, double omega_DA, double omega, double req, double shift, double beta){
 /**
   omega -  frequency of the normal mode [a.u.] 
   tp    -  [a.u.]
@@ -426,13 +432,13 @@ complex<double> Integrand_NE_Marcus(double tp, double tau, double omega_DA, doub
   double prefactor = 0.5*omega*req*req*wt;
 
   re = -prefactor * tau/beta;
-  im = omega_DA*tau  -prefactor - omega*req*shift * cos(omega*tp)*wt;
+  im = -prefactor - omega*req*shift * cos(omega*tp)*wt;
 
   return complex<double>(re, im);
 }
 
                                  
-complex<double> Linear_NE_Marcus(double tp, double tau, double gamma, double omega, double shift, double req, double beta){
+complex<double> Linear_NE_C0(double tp, double tau, double gamma, double omega, double req, double shift, double beta){
 /**
   omega -  frequency of the normal mode [a.u.] 
   tp    -  [a.u.]
@@ -450,7 +456,7 @@ complex<double> Linear_NE_Marcus(double tp, double tau, double gamma, double ome
   return gamma*gamma*complex<double>(re, im);
 }
 
-complex<double> ACF_NE_Marcus(double tp, double tau, double omega_DA, double V,
+complex<double> ACF_NE_C0(double tp, double tau, double omega_DA, double V,
                               vector<double>& omega_nm, vector<double>& gamma_nm,
                               vector<double>& req_nm, vector<double>& shift_NE, 
                               double beta, int type){
@@ -473,12 +479,13 @@ complex<double> ACF_NE_Marcus(double tp, double tau, double omega_DA, double V,
     int n_omega = omega_nm.size();
     complex<double> argg(0.0, 0.0);
     complex<double> ampl(0.0, 0.0);
-
+    argg = complex<double>(0.0, omega_DA*tau);
+            
     for(int w=0; w<n_omega; w++){
-      argg += Integrand_NE_Marcus(tp, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta); 
+      argg += Integrand_NE_C0(tp, tau, omega_DA, omega_nm[w], req_nm[w], shift_NE[w], beta); 
 
       if(type==1){
-          ampl += Linear_NE_Marcus(tp, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta);
+          ampl += Linear_NE_C0(tp, tau, gamma_nm[w], omega_nm[w], req_nm[w], shift_NE[w], beta);
       }
     }
 
@@ -525,7 +532,7 @@ double NEFGRL_rate(double tp, double omega_DA, double V,
                         2 - CAV
                         3 - CD
                         4 - W0
-                        5 - Marcus
+                        5 - C0
   \param[in] beta       - inverse thermal energy [unitless]
 
   Returns: the instantaneous rate at a given time
@@ -545,12 +552,12 @@ double NEFGRL_rate(double tp, double omega_DA, double V,
     if(tau<=tp){
 
       switch(method){
-        case 0: {  C = ACF_NE_exact(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
-        case 1: {  C = ACF_NE_LSC(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
-        case 2: {  C = ACF_NE_CAV(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
-        case 3: {  C = ACF_NE_CD(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
-        case 4: {  C = ACF_NE_W0(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
-        case 5: {  C = ACF_NE_Marcus(tp, tau, omega_DA, V, omega_nm, gamma_nm, shift_NE, req_nm, beta, type);    } break;
+        case 0: {  C = ACF_NE_exact(tp, tau, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, beta, type);    } break;
+        case 1: {  C = ACF_NE_LSC(tp, tau, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, beta, type);    } break;
+        case 2: {  C = ACF_NE_CAV(tp, tau, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, beta, type);    } break;
+        case 3: {  C = ACF_NE_CD(tp, tau, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, beta, type);    } break;
+        case 4: {  C = ACF_NE_W0(tp, tau, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, beta, type);    } break;
+        case 5: {  C = ACF_NE_C0(tp, tau, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, beta, type);    } break;
         default: {
           cout<<"Method "<<method<<" is not available. Please choose from the following options:\n";
           cout<<"0 - Exact\n";
@@ -558,7 +565,7 @@ double NEFGRL_rate(double tp, double omega_DA, double V,
           cout<<"2 - CAV\n";
           cout<<"3 - CD\n";
           cout<<"4 - W0\n";
-          cout<<"5 - Marcus\n";
+          cout<<"5 - C0\n";
           cout<<"Exiting now...\n";
           exit(0);
         }// default
@@ -600,7 +607,7 @@ MATRIX NEFGRL_population(double omega_DA, double V,
                         2 - CAV
                         3 - CD
                         4 - W0
-                        5 - Marcus
+                        5 - C0
   \param[in]   tmax     - time since the initial photoexcitation [a.u. of time]
   \param[in]     dt     - integration timestep for the trajectory [a.u. of time]
   \param[in]   beta     - hbar*omega_cutoff / kB*T inverse "temperature" [unitless]

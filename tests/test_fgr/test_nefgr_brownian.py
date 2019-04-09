@@ -1,4 +1,5 @@
 #*********************************************************************************
+#* Copyright (C) 2019 Xiang Sun, Alexey V. Akimov
 #* Copyright (C) 2018 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
@@ -25,10 +26,10 @@ import fgr_py
 fs = units.fs2au
 
 method = 0
-tmax = 40.0
-dt = 0.10
-dtau = dt/20.0
-dyn_type = 1 # 0 - Condon, 1 - non-Condon
+tmax = 20.0
+dt = 0.20
+dtau = dt/50.0
+dyn_type = 0 # 0 - Condon, 1 - non-Condon
 
 gamma = 0.1
 
@@ -40,7 +41,7 @@ dw = 15.0*w_c/float(nomega)
 
 
 i1 = -1
-for w_DA in [0.0]: #, 2.0]:   # Donor-Acceptor energy gap
+for w_DA in [0.0]: #[0.0, 2.0]:   # Donor-Acceptor energy gap
     i1 += 1
     i2 = -1
     for s in [-1.0]: # -1.0, 1.0, 3.0]:   # Noneq. initial shift of primary mode
