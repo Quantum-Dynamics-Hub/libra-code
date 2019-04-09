@@ -80,10 +80,28 @@ int randperm(int size,int of_size,vector<int>& result);
 
 double RANDOM(double a,double b);
 
-MATRIX exp_(MATRIX& ,double);
-MATRIX exp1_(MATRIX&,double);
-MATRIX3x3 exp_(MATRIX3x3& ,double);
+// === exp(x*dt) via eigendecomposition ====
+MATRIX3x3 exp_(MATRIX3x3&, double);
+MATRIX exp_(MATRIX&, double);
+CMATRIX exp_(CMATRIX&, complex<double>);
+
+// === exp(x*dt) via Taylor sum ====
+MATRIX exp_2(MATRIX& x, double dt, int nterms, double max_tol);
+MATRIX exp_2(MATRIX& x, double dt, int nterms);
+MATRIX exp_2(MATRIX& x, double dt);
+
+CMATRIX exp_2(CMATRIX& x, complex<double> dt, int nterms, double max_tol);
+CMATRIX exp_2(CMATRIX& x, complex<double> dt, int nterms);
+CMATRIX exp_2(CMATRIX& x, complex<double> dt);
+
+
+// ==== exp(x*dt)*sinh(x*t)/(x*t) via eigendecomposition =====
 MATRIX3x3 exp1_(MATRIX3x3&,double);
+MATRIX exp1_(MATRIX&,double);
+
+
+
+
 
 
 int merge_sort(vector< pair<int,double> >&, vector< pair<int,double> >&);
