@@ -302,6 +302,18 @@ def run(H_vib, params):
 
             * **params["T"]** ( double ): temperature of nuclear/electronic dynamics [in K, default: 300.0]
             * **params["ntraj"]** ( int ): the number of stochastic surface hopping trajectories [default: 1]
+            * **params["tdse_Ham"]** ( int ): option to select either the regular (input) or Boltzmann-corrected
+                Hamiltonian:
+
+                - 0 - regular [ default ]
+                - 1 - Boltzmann-corrected 
+
+            * **params["Hvib_type"]** ( int ): option to select if the Hvib is a diabatic or an adiabatic
+                Hamiltonian:
+
+                - 0 - diabatic
+                - 1 - adiabatic  [ default ]
+
             * **params["sh_method"]** ( int ): selects the algorithm to compute surface hopping probabilities 
                 Options:
 
@@ -354,8 +366,9 @@ def run(H_vib, params):
 
     
     critical_params = [ "nsteps" ] 
-    default_params = { "T":300.0, "ntraj":1, 
-                       "sh_method":1, "decoherence_constants": 0, "decoherence_method":0, "dt":41.0, "Boltz_opt":3,
+    default_params = { "T":300.0, "ntraj":1,
+                       "tdse_Ham":0, "sh_method":1, "decoherence_constants": 0, "decoherence_method":0, "dt":41.0, "Boltz_opt":3,
+                       "Hvib_type":1,
                        "istate":0, "init_times":[0], "outfile":"_out.txt" }
     comn.check_input(params, default_params, critical_params)
 
@@ -373,6 +386,7 @@ def run(H_vib, params):
     T = params["T"]
     bolt_opt = params["Boltz_opt"]
     dt = params["dt"]
+    tdse_Ham = params["tdse_Ham"]
 
     res = MATRIX(nsteps, 3*nstates+5)
 
@@ -441,9 +455,15 @@ def run(H_vib, params):
                     Tr = idata*(nitimes*ntraj) + it_indx*(ntraj) + tr
 
                     #============== Propagation: TD-SE and surface hopping ==========
-        
                     # Coherent evolution amplitudes
-                    propagate_electronic(dt, Coeff[Tr], H_vib[idata][it+i])   # propagate the electronic DOFs
+                    Heff = None 
+
+                    if tdse_Ham==0:
+                        Heff = H_vib[idata][it+i]
+                    elif tdse_Ham==1:
+                        Heff = tsh.Boltz_corr_Ham(H_vib[idata][it+i], Coeff[Tr], params["T"], params["Hvib_type"])
+
+                    propagate_electronic(dt, Coeff[Tr], Heff)   # propagate the electronic DOFs
 
         
                     # Surface hopping 
@@ -461,12 +481,12 @@ def run(H_vib, params):
                             do_collapse = 0
                             Coeff[Tr] = msdm(Coeff[Tr], dt, istate[Tr], decoh_rates)
                     
-                        istate[Tr], Coeff[Tr] = tsh.hopping(Coeff[Tr], H_vib[idata][it+i], istate[Tr], params["sh_method"], do_collapse, ksi, ksi2, dt, T, bolt_opt)
+                        istate[Tr], Coeff[Tr] = tsh.hopping(Coeff[Tr], Heff, istate[Tr], params["sh_method"], do_collapse, ksi, ksi2, dt, T, bolt_opt)
                     
                     elif params["decoherence_method"] in [3]:  # DISH
                     
                         tau_m[Tr] = coherence_intervals(Coeff[Tr], decoh_rates)
-                        istate[Tr] = tsh.dish_py(Coeff[Tr], istate[Tr], t_m[Tr], tau_m[Tr], H_vib[idata][it+i], bolt_opt, T, ksi, ksi2)
+                        istate[Tr] = tsh.dish_py(Coeff[Tr], istate[Tr], t_m[Tr], tau_m[Tr], Heff, bolt_opt, T, ksi, ksi2)
                         t_m[Tr] += dt
 
         

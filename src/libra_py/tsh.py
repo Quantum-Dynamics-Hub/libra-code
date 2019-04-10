@@ -790,3 +790,65 @@ def dish_py(Coeff, istate, t_m, tau_m, Hvib, boltz_opt, T, ksi1, ksi2):
 
     return fstate;
 
+
+
+def Boltz_corr_Ham(H, Coeff, T, case=1):
+    """
+
+    This function implements the computation of the
+    effective Hamiltonian used in the Boltzmann-corrected Ehrenfest
+    method of Bastida et al.
+
+    Ref: Bastida, A.; Cruz, C.; Zuniga, J.; Requena, A.; Miguel, B.
+    "A modified Ehrenfest method that achieves Boltzmann quantum state populations"
+    Chem. Phys. Lett. 2006, 417, 53-57
+
+    Args:
+        H ( CMATRIX(N,N) ): original vibronic Hamiltonian [units: a.u.]
+        Coeff ( CMATRIX(N,1) ): amplitudes of the basis states 
+        T ( double ): bath temperature [ units: K]
+        case ( int ): selection of the type of the Hamiltonian
+ 
+            - 0: diabatic Hamiltonian  H_ij = |i>E_i<i|  + |i> V_ij <j|
+            - 1: adiabatic Hamiltonian  H_ij = |i>E_i<i|  - i hbar |i> d_ij <j| [ default ]
+
+    Returns:
+        CMATRIX(N,N) : the effective Hamiltonian to be used in the calculations
+       
+    """
+    
+    sz = H.num_of_cols    
+    kT = units.kB * T    
+    
+    
+    #============= Step 1 ===================
+    # Compute the absolute values of the state amplitudes
+    rho = MATRIX(sz,1)    
+    for i in xrange(sz):
+        rho.set(i, 0, abs(Coeff.get(i,0)) )
+    
+    #============= Step 2 ===================
+    # Include the thermal factors, the Hcorr matrix is no longer symmetric
+    Hcorr = CMATRIX(H)    
+    for j in xrange(sz):
+        for k in xrange(sz):
+            if j!=k:                
+                dE = H.get(k,k).real - H.get(j,j).real
+                corr = math.sqrt(2.0 / (1.0 + math.exp(-dE/kT)) )                                
+                Hcorr.scale(j,k, corr)
+                
+    #============= Step 3 ===================
+    # Symmetrize the thermally-corrected Hamiltonian
+    Hcorr2 = CMATRIX(sz,sz)
+    for j in xrange(sz):
+        for k in xrange(j+1,sz):
+            if case==0:  # diabatic - original Bastida
+                hkj = rho.get(k)*Hcorr.get(j,k) + rho.get(j)*Hcorr.get(k,j)
+            elif case==1: # adiabatic - changed Bastida
+                hkj = rho.get(k)*Hcorr.get(j,k) + rho.get(j)*Hcorr.get(k,j)
+            
+            Hcorr2.set(k,j, hkj)
+            Hcorr2.set(j,k, hkj)
+            
+    return Hcorr2
+    
