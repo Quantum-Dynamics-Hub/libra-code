@@ -1,4 +1,5 @@
 #*********************************************************************************
+#* Copyright (C) 2019 Xiang Sun, Alexey V. Akimov
 #* Copyright (C) 2018 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
@@ -23,9 +24,9 @@ from libra_py import units
 import fgr_py
 fs = units.fs2au
 
-tmax = 40.0
+tmax = 20.0
 dt = 0.20
-dtau = dt/20.0
+dtau = dt/50.0
 
 gamma = 0.1
 nomega = 500
@@ -37,7 +38,7 @@ for dyn_type in [0, 1]:  # Condon vs. non-Condon
     for method in [0, 1, 2, 3, 4, 5]:  #  All methods
         
         i1 = -1
-        for w_DA in [0.0]: #, 2.0]:   # Donor-Acceptor energy gap
+        for w_DA in [0.0]: #[0.0, 2.0]:   # Donor-Acceptor energy gap
             i1 += 1
             i2 = -1
             for s in [-1.0]: # -1.0, 1.0, 3.0]:   # Noneq. initial shift of primary mode
@@ -48,7 +49,8 @@ for dyn_type in [0, 1]:  # Condon vs. non-Condon
                     i4 = -1
                     for etha in [0.5]: #, 1.0, 2.0]:  # friction
                         i4 += 1
-        
+
+                        print "-----------------------"
                         print "w_DA = ", w_DA
                         print "s = ", s
                         print "beta = ", beta

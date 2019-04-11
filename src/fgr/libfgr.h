@@ -1,4 +1,5 @@
 /*********************************************************************************
+* Copyright (C) 2019 Xiang Sun, Alexey V. Akimov
 * Copyright (C) 2018 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License

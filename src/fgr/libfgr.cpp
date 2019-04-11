@@ -1,4 +1,5 @@
 /*********************************************************************************
+* Copyright (C) 2019 Xiang Sun, Alexey V. Akimov
 * Copyright (C) 2018 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
@@ -84,9 +85,9 @@ void export_fgr_objects(){
 
 
   complex<double> (*expt_Integrand_NE_exact_v1)
-  (double tp, double tau, double omega_DA, double omega, double shift, double req, double beta) = &Integrand_NE_exact;
+  (double tp, double tau, double omega_DA, double omega, double req, double shift, double beta) = &Integrand_NE_exact;
   complex<double> (*expt_Linear_NE_exact_v1)
-  (double tp, double tau, double gamma, double omega, double shift, double req, double beta) = &Linear_NE_exact;
+  (double tp, double tau, double gamma, double omega, double req, double shift, double beta) = &Linear_NE_exact;
   complex<double> (*expt_ACF_NE_exact_v1)
   (double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
    vector<double>& req_nm, vector<double>& shift_NE, double beta, int type) = ACF_NE_exact;
@@ -97,9 +98,9 @@ void export_fgr_objects(){
 
 
   complex<double> (*expt_Integrand_NE_LSC_v1)
-  (double tp, double tau, double omega_DA, double omega, double shift, double req, double beta) = &Integrand_NE_LSC;
+  (double tp, double tau, double omega_DA, double omega, double req, double shift, double beta) = &Integrand_NE_LSC;
   complex<double> (*expt_Linear_NE_LSC_v1)
-  (double tp, double tau, double gamma, double omega, double shift, double req, double beta) = &Linear_NE_LSC;
+  (double tp, double tau, double gamma, double omega, double req, double shift, double beta) = &Linear_NE_LSC;
   complex<double> (*expt_ACF_NE_LSC_v1)
   (double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
    vector<double>& req_nm, vector<double>& shift_NE, double beta, int type) = ACF_NE_LSC;
@@ -110,9 +111,9 @@ void export_fgr_objects(){
 
 
   complex<double> (*expt_Integrand_NE_CAV_v1)
-  (double tp, double tau, double omega_DA, double omega, double shift, double req, double beta) = &Integrand_NE_CAV;
+  (double tp, double tau, double omega_DA, double omega, double req, double shift, double beta) = &Integrand_NE_CAV;
   complex<double> (*expt_Linear_NE_CAV_v1)
-  (double tp, double tau, double gamma, double omega, double shift, double req, double beta) = &Linear_NE_CAV;
+  (double tp, double tau, double gamma, double omega, double req, double shift, double beta) = &Linear_NE_CAV;
   complex<double> (*expt_ACF_NE_CAV_v1)
   (double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
    vector<double>& req_nm, vector<double>& shift_NE, double beta, int type) = ACF_NE_CAV;
@@ -123,9 +124,9 @@ void export_fgr_objects(){
 
 
   complex<double> (*expt_Integrand_NE_CD_v1)
-  (double tp, double tau, double omega_DA, double omega, double shift, double req, double beta) = &Integrand_NE_CD;
+  (double tp, double tau, double omega_DA, double omega, double req, double shift, double beta) = &Integrand_NE_CD;
   complex<double> (*expt_Linear_NE_CD_v1)
-  (double tp, double tau, double gamma, double omega, double shift, double req, double beta) = &Linear_NE_CD;
+  (double tp, double tau, double gamma, double omega, double req, double shift, double beta) = &Linear_NE_CD;
   complex<double> (*expt_ACF_NE_CD_v1)
   (double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
    vector<double>& req_nm, vector<double>& shift_NE, double beta, int type) = ACF_NE_CD;
@@ -136,9 +137,9 @@ void export_fgr_objects(){
 
 
   complex<double> (*expt_Integrand_NE_W0_v1)
-  (double tp, double tau, double omega_DA, double omega, double shift, double req, double beta) = &Integrand_NE_W0;
+  (double tp, double tau, double omega_DA, double omega, double req, double shift, double beta) = &Integrand_NE_W0;
   complex<double> (*expt_Linear_NE_W0_v1)
-  (double tp, double tau, double gamma, double omega, double shift, double req, double beta) = &Linear_NE_W0;
+  (double tp, double tau, double gamma, double omega, double req, double shift, double beta) = &Linear_NE_W0;
   complex<double> (*expt_ACF_NE_W0_v1)
   (double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
    vector<double>& req_nm, vector<double>& shift_NE, double beta, int type) = ACF_NE_W0;
@@ -148,17 +149,17 @@ void export_fgr_objects(){
   def("ACF_NE_W0", expt_ACF_NE_W0_v1);
 
 
-  complex<double> (*expt_Integrand_NE_Marcus_v1)
-  (double tp, double tau, double omega_DA, double omega, double shift, double req, double beta) = &Integrand_NE_Marcus;
-  complex<double> (*expt_Linear_NE_Marcus_v1)
-  (double tp, double tau, double gamma, double omega, double shift, double req, double beta) = &Linear_NE_Marcus;
-  complex<double> (*expt_ACF_NE_Marcus_v1)
+  complex<double> (*expt_Integrand_NE_C0_v1)
+  (double tp, double tau, double omega_DA, double omega, double req, double shift, double beta) = &Integrand_NE_C0;
+  complex<double> (*expt_Linear_NE_C0_v1)
+  (double tp, double tau, double gamma, double omega, double req, double shift, double beta) = &Linear_NE_C0;
+  complex<double> (*expt_ACF_NE_C0_v1)
   (double tp, double tau, double omega_DA, double V, vector<double>& omega_nm, vector<double>& gamma_nm,
-   vector<double>& req_nm, vector<double>& shift_NE, double beta, int type) = ACF_NE_Marcus;
+   vector<double>& req_nm, vector<double>& shift_NE, double beta, int type) = ACF_NE_C0;
 
-  def("Integrand_NE_Marcus", expt_Integrand_NE_Marcus_v1);
-  def("Linear_NE_Marcus", expt_Linear_NE_Marcus_v1);
-  def("ACF_NE_Marcus", expt_ACF_NE_Marcus_v1);
+  def("Integrand_NE_C0", expt_Integrand_NE_C0_v1);
+  def("Linear_NE_C0", expt_Linear_NE_C0_v1);
+  def("ACF_NE_C0", expt_ACF_NE_C0_v1);
 
 
   double (*expt_NEFGRL_rate_v1)

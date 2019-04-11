@@ -1,5 +1,6 @@
 #*********************************************************************************
-#* Copyright (C) 2018-2019 Alexey V. Akimov
+#* Copyright (C) 2019 Xiang Sun, Alexey V. Akimov
+#* Copyright (C) 2018 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -66,7 +67,7 @@ def run_NEFGRL_populations(omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, pa
                 - 2: CAV
                 - 3: CD
                 - 4: W0
-                - 5: Marcus
+                - 5: C0
 
             * **params["dyn_type"]** ( int ): flag that selects:
 
@@ -123,6 +124,12 @@ def run_NEFGRL_populations(omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, pa
     for step in xrange(nsteps):
         t = step*dt
 
+        # k = k(t')
+        k = NEFGRL_rate(t, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, dyn_type, dtau)
+
+        summ += k * dt;
+        P = math.exp(-summ)  # exp(- int dt' k(t'))
+
         if do_output:
             f = open(filename, "a")
             f.write("%8.5f  %8.5f  %8.5f \n" % (t, k, P))
@@ -132,12 +139,6 @@ def run_NEFGRL_populations(omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, pa
         rate.append(k)
         pop.append(P)
 
- 
-        # k = k(t')
-        k = NEFGRL_rate(t, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, method, beta, dyn_type, dtau)
-        
-        summ += k * dt; 
-        P = math.exp(-summ)  # exp(- int dt' k(t'))
 
     return time, rate, pop
 
@@ -211,23 +212,23 @@ def run_NEFRG_acf(t, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, params):
 
         for w in range(nomega):
             if method==0:
-                argg = argg + Integrand_NE_exact(t, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta)
-                lin = lin + Linear_NE_exact(t, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta)
+                argg = argg + Integrand_NE_exact(t, tau, omega_DA, omega_nm[w], req_nm[w], shift_NE[w], beta)
+                lin = lin + Linear_NE_exact(t, tau, gamma_nm[w], omega_nm[w], req_nm[w], shift_NE[w], beta)
             elif method==1:
-                argg = argg + Integrand_NE_LSC(t, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta)
-                lin = lin + Linear_NE_LSC(t, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta)
+                argg = argg + Integrand_NE_LSC(t, tau, omega_DA, omega_nm[w], req_nm[w], shift_NE[w], beta)
+                lin = lin + Linear_NE_LSC(t, tau, gamma_nm[w], omega_nm[w], req_nm[w], shift_NE[w], beta)
             elif method==2:
-                argg = argg + Integrand_NE_CAV(t, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta)
-                lin = lin + Linear_NE_CAV(t, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta)
+                argg = argg + Integrand_NE_CAV(t, tau, omega_DA, omega_nm[w], req_nm[w], shift_NE[w], beta)
+                lin = lin + Linear_NE_CAV(t, tau, gamma_nm[w], omega_nm[w], req_nm[w], shift_NE[w], beta)
             elif method==3:
-                argg = argg + Integrand_NE_CD(t, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta)
-                lin = lin + Linear_NE_CD(t, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta)
+                argg = argg + Integrand_NE_CD(t, tau, omega_DA, omega_nm[w], req_nm[w], shift_NE[w], beta)
+                lin = lin + Linear_NE_CD(t, tau, gamma_nm[w], omega_nm[w], req_nm[w], shift_NE[w], beta)
             elif method==4:
-                argg = argg + Integrand_NE_W0(t, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta)
-                lin = lin + Linear_NE_W0(t, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta)
+                argg = argg + Integrand_NE_W0(t, tau, omega_DA, omega_nm[w], req_nm[w], shift_NE[w], beta)
+                lin = lin + Linear_NE_W0(t, tau, gamma_nm[w], omega_nm[w], req_nm[w], shift_NE[w], beta)
             elif method==5:
-                argg = argg + Integrand_NE_Marcus(t, tau, omega_DA, omega_nm[w], shift_NE[w], req_nm[w], beta)
-                lin = lin + Linear_NE_Marcus(t, tau, gamma_nm[w], omega_nm[w], shift_NE[w], req_nm[w], beta)
+                argg = argg + Integrand_NE_C0(t, tau, omega_DA, omega_nm[w], req_nm[w], shift_NE[w], beta)
+                lin = lin + Linear_NE_C0(t, tau, gamma_nm[w], omega_nm[w], req_nm[w], shift_NE[w], beta)
 
 
         C = 0.0+0.0j
