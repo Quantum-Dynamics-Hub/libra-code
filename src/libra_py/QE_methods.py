@@ -600,6 +600,54 @@ def read_md_data_xyz(filename, PT, dt):
 
 
 
+def read_md_data_xyz2(filename, PT):
+    """Read in the MD trajectory stored in an XYZ format
+    This version does not compute velocities - only gets coordinates
+
+    Args:
+        filename ( string ): the name of the xyz file that contains an MD data
+        PT ( dict{ string:float } ): definition of the masses of different atomic species [masses in amu, where 1 is the mass of H]
+
+    Returns:
+        tuple: (R, E), where:
+
+        * R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps [Bohr]
+        * E (list of ndof/3): atom names (elements) of all atoms         
+
+    """
+
+    f = open(filename, "r")
+    A = f.readlines()
+    f.close()
+
+    nlines = len(A)  # the number of lines in the file
+    nat = int(float(A[0].split()[0])) # the number of atoms
+    nsteps = int(nlines/(nat+2)) 
+
+
+    #========== Read the raw coordinates and assign masses ==========
+    R = MATRIX(3*nat, nsteps) # coordinates
+    E = []
+
+    for t in xrange(nsteps):
+
+        # ========== Coordinates =========
+        for i in xrange(nat):        
+            xyz_str = A[t*(nat+2)+2+i].split()
+
+            name = xyz_str[0]
+            R.set(3*i+0, t, float(xyz_str[1]) * units.Angst )
+            R.set(3*i+1, t, float(xyz_str[2]) * units.Angst )
+            R.set(3*i+2, t, float(xyz_str[3]) * units.Angst )
+
+            if t==0:
+                E.append(name)
+
+    return R, E
+
+
+
+
 def read_md_data_cell(filename):
     """Read in the QE MD unit cell vectors stored in an XML file
 
