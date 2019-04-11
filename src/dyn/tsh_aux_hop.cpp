@@ -234,7 +234,7 @@ int hop(int initstate, MATRIX& g, double ksi){
     if(i==0){left = 0.0; right = g.get(initstate,i)/nrm; }
     else{  left = right; right = right + g.get(initstate,i)/nrm; }
  
-    if((left<ksi) && (ksi<=right)){  finstate = i;  }
+    if((left<=ksi) && (ksi<=right)){  finstate = i;  }
   }
 
   if(finstate==-1){
