@@ -662,6 +662,10 @@ def run(params):
         # Run the QE calculations       
         run_qe(params, t, dirname0, dirname1)
 
+#            os.system( "%s < x0.exp.in > x0.exp.out" % ( EXE_EXPORT ) )
+        #"%s/curr0/x0.export/index.xml" % wd0
+#    wd = params["wd"]
+
         
         if curr_index>=start_indx:
 

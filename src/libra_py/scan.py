@@ -85,7 +85,7 @@ def make_path_xyz(R0, R1, E, s0=0.0, s1=1.0, npts=2, S0=0.0, S1=1.0):
             s = S0 + pt * ds
             t = (s - s0)/(s1 - s0)
 
-            r = R0.get(dof, pt) + (R1.get(dof, pt) - R0.get(dof, pt)) *  t
+            r = R0.get(dof, 0) + (R1.get(dof, 0) - R0.get(dof, 0)) *  t
 
             R.set(dof, pt, r)
 
@@ -93,7 +93,7 @@ def make_path_xyz(R0, R1, E, s0=0.0, s1=1.0, npts=2, S0=0.0, S1=1.0):
     xyz = ""
     for pt in xrange(Npts):
         xyz = xyz + "%i\n" % (nat)
-        xyz = xyz + "%i\n" % (pt)
+        xyz = xyz + "Frame %i\n" % (pt)
         for at in xrange(nat):
             x = R.get(3*at+0, pt) / units.Angst
             y = R.get(3*at+1, pt) / units.Angst
