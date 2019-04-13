@@ -120,6 +120,7 @@ def run_qe(params, t, dirname0, dirname1):
         os.system( "mv %s.%d.out %s/%s" % (prefix0,t, wd, dirname0) )
         os.system( "mv *.wfc* %s/%s" % (wd, dirname0) )
         os.system( "mv x0.export %s/%s" % (wd, dirname0) ) # "x0" - corresponds to x0 as a prefix in input files
+        os.system( "mv x0.save %s/%s" % (wd, dirname0) ) # "x0" - corresponds to x0 as a prefix in input files
                                                                         
     # Perform the soc calculation on its own, or in addition to the regular one
     if nac_method == 2 or nac_method == 3:
@@ -135,6 +136,7 @@ def run_qe(params, t, dirname0, dirname1):
         os.system( "mv %s.%d.out %s/%s" % (prefix1,t, wd, dirname1) )
         os.system( "mv *.wfc* %s/%s" % (wd, dirname1) )
         os.system( "mv x1.export %s/%s" % (wd, dirname1) ) # "x1" - corresponds to x1 as a prefix in input files
+        os.system( "mv x1.save %s/%s" % (wd, dirname1) ) # "x1" - corresponds to x1 as a prefix in input files
 
     print "The time to run the QE calculations = ", tim.stop(); 
 
@@ -603,6 +605,7 @@ def run(params):
     nac_method = params["nac_method"]
     compute_Hprime = params["compute_Hprime"]
     verbosity = params["verbosity"]
+    
 
     if verbosity>0:
         print "Starting trajectory.run"
@@ -661,10 +664,6 @@ def run(params):
 
         # Run the QE calculations       
         run_qe(params, t, dirname0, dirname1)
-
-#            os.system( "%s < x0.exp.in > x0.exp.out" % ( EXE_EXPORT ) )
-        #"%s/curr0/x0.export/index.xml" % wd0
-#    wd = params["wd"]
 
         
         if curr_index>=start_indx:
@@ -749,8 +748,22 @@ def run(params):
             
             if verbosity>1:
                 print "old files deleted, new have become old"
-             
-            
+       
+      
+        # Move the index files to the results directory, just don't copy the very last one - it is a repetition
+        #if t<stop_indx:
+        if nac_method == 0 or nac_method == 1 or nac_method==3:
+            # The input file template defined in params["prefix0"] should have   prefix = 'x0' !
+            os.system("cp %s/curr0/x0.export/index.xml %s/x0_index_%i.xml" % (wd, rd, t))
+            os.system("cp %s/curr0/x0.save/data-file-schema.xml %s/x0_data-file-schema_%i.xml" % (wd, rd, t))
+            os.system("cp %s/curr0/%s.%d.out %s/%s.%d.out" % (wd, params["prefix0"], t, rd, params["prefix0"], t))
+        if nac_method == 2 or nac_method == 3:
+            # The input file template defined in params["prefix1"] should have   prefix = 'x1' !
+            os.system("cp %s/curr1/x1.export/index.xml %s/x1_index_%i.xml" % (wd, rd, t))
+            os.system("cp %s/curr1/x1.save/data-file-schema.xml %s/x1_data-file-schema_%i.xml" % (wd, rd, t))
+            os.system("cp %s/curr1/%s.%d.out %s/%s.%d.out" % (wd, params["prefix1"], t, rd, params["prefix1"], t))
+      
+    
         # ACHTUNG!!! Restoring wfc makes some complications, so we might need to destroy wfc objects
         # after each round of operations and create new objects from the beginning - thia may be safer!
 
@@ -760,6 +773,8 @@ def run(params):
             print "End of step t=", t
 
         t = t + 1
+
+
 
 
 

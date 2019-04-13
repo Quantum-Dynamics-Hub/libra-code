@@ -51,10 +51,11 @@ def make_path_xyz(R0, R1, E, s0=0.0, s1=1.0, npts=2, S0=0.0, S1=1.0):
         S1 ( double ): mapping of the actual final point onto the line of search [ default: 1.0 ]
 
     Returns:
-        tuple: ( R, xyz ), where:
+        tuple: ( R, xyz, s_axis), where:
 
             * R ( MATRIX(3*nat, Npts) ): coordinates of all points on the scan path [ Bohr ]
             * xyz ( string ): the xyz file content with all the points [ Angstrom ]
+            * s_axis ( list of Npts doubles): values of the "reaction" coordinate
         
     """
 
@@ -78,11 +79,17 @@ def make_path_xyz(R0, R1, E, s0=0.0, s1=1.0, npts=2, S0=0.0, S1=1.0):
     # Allocate memory
     R = MATRIX(ndof, Npts)
 
+    s_axis = []
+
     # Compute the mapping
     for pt in xrange(Npts):
+
+        s = S0 + pt * ds        
+        s_axis.append(s) 
+
         for dof in xrange(ndof):
         
-            s = S0 + pt * ds
+
             t = (s - s0)/(s1 - s0)
 
             r = R0.get(dof, 0) + (R1.get(dof, 0) - R0.get(dof, 0)) *  t
@@ -100,5 +107,5 @@ def make_path_xyz(R0, R1, E, s0=0.0, s1=1.0, npts=2, S0=0.0, S1=1.0):
             z = R.get(3*at+2, pt) / units.Angst
             xyz = xyz + "%s  %8.5f  %8.5f  %8.5f \n" % (E[at], x, y, z)
  
-    return R, xyz
+    return R, xyz, s_axis
  
