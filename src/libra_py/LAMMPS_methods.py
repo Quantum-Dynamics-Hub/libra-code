@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2018 Mahsa Mofidi, Alexey V. Akimov
+#* Copyright (C) 2018-2019 Mahsa Mofidi, Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -8,6 +8,13 @@
 #* or <http://www.gnu.org/licenses/>.
 #*
 #*********************************************************************************/
+"""
+.. module:: LAMMPS_methods
+   :platform: Unix, Windows
+   :synopsis: This module implements various functions for computing with LAMMPS
+.. moduleauthor:: Alexey V. Akimov
+
+"""
 
 import os
 import math
@@ -23,24 +30,39 @@ def compute_dynmat(lmp, filename, atoms, dr, opt=1):
     """
     The function to return the dynamic matrix for a system using LAMMPS
 
-    To use this code, one needs to have pylammps installed
+    Note: 
+        To use this code, one needs to have pylammps installed
 
-    lmp  - is lammps.lammps() object - you need to create if first
-    filename (string) LAMMPS input filename defining the system and the interactions
-    (importantly! assuming everything is in ATOMIC UNITS - "units electron"). Furthermore,
-    this file should define the minimization procedure e.g. "minimize  0.0 1.0e-8 1000 100000"
-    atoms (list of integers) indices of the atoms for which to compute Hessian
-    dr (double) the magnitude of the displacement
+    Args:
+        lmp ( lammps.lammps() object ): an instance of PyLAMMPS - you need to create if first
+        filename ( string ): LAMMPS input filename defining the system and the interactions
+            (importantly! assuming everything is in ATOMIC UNITS - "units electron"). Furthermore,
+            this file should define the minimization procedure e.g. "minimize  0.0 1.0e-8 1000 100000"
+        atoms ( list of integers ): indices of the atoms for which to compute Hessian
+        dr ( double ): the magnitude of the displacement [ units: Bohr ]
 
     Returns: 
-    D (MATRIX(ndof, ndof)) - a sub-block of a dynamic matrix (Hessian/sqrt(m_ij))
-    H (MATRIX(ndof, ndof)) - a sub-block of a Hessian matrix
-    r (MATRIX(ndof, 1)) - coordinates of all atoms
-    M (MATRIX(ndof, 1)) - masses of all atoms
-    E (list of ndof ints) - types of atoms - later can be mapped to atom names
-    opt (int) - flag to use all atoms or only the pupplied sub-set
-       opt = 0 - use all atoms
-       opt = 1 - use only the supplied subset (default)
+        tuple: ( D, H, R, M, E ), where:
+
+            * D ( MATRIX(ndof, ndof) ): a sub-block of a dynamic matrix (Hessian/sqrt(m_ij)) 
+            * H ( MATRIX(ndof, ndof) ): a sub-block of a Hessian matrix [ units: a.u.]
+            * r ( MATRIX(ndof, 1) ): coordinates of all atoms [ units: Bohr ]
+            * M ( MATRIX(ndof, 1) ): masses of all atoms [ units: a.u. ]
+            * E ( list of ndof ints ): types of atoms - later can be mapped to atom names
+            * opt ( int ): flag to use all atoms or only the pupplied sub-set
+
+                - opt = 0: use all atoms
+                - opt = 1: use only the supplied subset [ default ]
+
+        Example:
+            >> import lammps 
+            >> lmp = lammps.lammps()
+            >> D, H, R, M, E = compute_dynmat(lmp, "in.lammps", [0,1,2], 1e-3)
+            >> print "Atom types are:", E
+            >> print "Masses are:"; M.show_matrix()
+            >> print "Coordinates are:"; R.show_matrix()
+            >> print "Hessian matrix is:"; H.show_matrix()
+            >> print "Dynamical matrix is:"; D.show_matrix()
     """
 
     # run infile all at once
@@ -129,18 +151,6 @@ def compute_dynmat(lmp, filename, atoms, dr, opt=1):
 
 
 """
-#Example of usage:
-
-import lammps 
-lmp = lammps.lammps()
-
-D, H, R, M, E = compute_dynmat(lmp, "in.lammps", [0,1,2], 1e-3)
-
-print "Atom types are:", E
-print "Masses are:"; M.show_matrix()
-print "Coordinates are:"; R.show_matrix()
-print "Hessian matrix is:"; H.show_matrix()
-print "Dynamical matrix is:"; D.show_matrix()
 
 """
 

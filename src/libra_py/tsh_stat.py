@@ -441,13 +441,19 @@ def ave_pop(denmat_sh, denmat_se):
 
 
 def ave_en(denmat_sh, denmat_se, Hvib):
-# 
-# \param[in] denmat_sh (list of CMATRIX(nst_in, nst_in)) Vector with the density matrix (diagonal in SH) for each trajectory
-# \param[in] denmat_se (list of CMATRIX(nst_in,nst_in)) Vector with the SE density matrix for each trajectory 
-# \param[in] Hvib (list of CMATRIX(nst_in,nst_in)) Hvib for each trajectory
-#
-#  Returns: Ensemble averaged SH and SE energies (double, for each)
-#  
+    """Computes ensemble averaged SH and SE energies
+
+    Args:
+        denmat_sh ( list of CMATRIX(nst_in, nst_in) ): SE density matrices (diagonal) for each trajectory
+        denmat_se ( list of CMATRIX(nst_in,nst_in) ): SE density matrices for each trajectory 
+        Hvib ( list of CMATRIX(nst_in,nst_in) ): Hvib for each trajectory [units: arbitrary]
+
+    Returns: 
+        (double, double): ave_en_sh, ave_en_se, where:
+
+            * ave_en_sh ( double ): SH-averaged energy [ units: same as Hvib ]
+            * ave_en_se ( double ): SE-averaged energy [ units: same as Hvib ]
+    """
 
     ntraj = len(denmat_sh)
     nst_out = denmat_sh[0].num_of_cols
@@ -467,7 +473,18 @@ def ave_en(denmat_sh, denmat_se, Hvib):
 
 
 def amplitudes2denmat(coeffs):
-# \param[in] coeffs (list of CMATRIX(nstates, 1)) wavefunction amplitudes for all trajectories
+    """
+ 
+    Converts the wavefunction amplitudes for all trajectories to the corresponding 
+        density matrices
+
+    Args:
+        coeffs ( list of CMATRIX(nstates, 1) ): wavefunction amplitudes for all trajectories
+
+    Returns:
+        ( list of CMATRIX(nstates, nstate) ): density matrices for all trajectory
+
+    """
 
     ntraj = len(coeffs)
     denmat = []
@@ -478,9 +495,17 @@ def amplitudes2denmat(coeffs):
     return denmat
 
 
+
 def denmat2prob(P):
-# \param[in] P (CMATRIX) Density matrix
-#
+    """Convert the density matrix to the populations
+
+    Args:
+        P ( CMATRIX(N, N) ): Density matrix
+
+    Returns:
+        ( list of doubles ): populations of all states
+
+    """
     nst = P.num_of_cols
     prob = [0.0] * nst
 
