@@ -108,15 +108,23 @@ def init_ext_hamiltonians(ntraj, nnucl, nel, verbose=0):
 
 
 def init_systems(ntraj, U, filename, format, verbose=0):
-    ##
-    # This function creates a list of System objects and loads the content into them
-    # 
-    # \param[in] ntraj The number of trajectories in the ensemble
-    # \param[in] U Is the Universe object 
-    # \param[in] filename The name of the file containing molecular structure
-    # \param[in] A string defining the file format (see LoadMolecule for more details)
-    # \param[in] verbose The parameter controlling the amount of debug printing: 0 (default)
-    # - no printing, 1 - print info
+    """
+    This function creates a list of System objects and loads the content into them
+
+    Args:
+        ntraj ( int ): The number of trajectories in the ensemble
+        U ( Universe object ): The container of the fundamental parameters of atoms
+        filename ( string ): The file containg the atomistic system 
+        format ( string ): The format of the file to load (see LoadMolecule for possible formats)
+        verbose ( int ): The parameter controlling the amount of debug printing: 
+
+            - 0: no printing [ default ]
+            - 1: do print info
+
+    Returns:
+        (list of ntraj System objects): the ensemble of the objects defining the replicas of the system
+
+    """
 
     syst = []
     for tr in xrange(ntraj):
@@ -136,20 +144,28 @@ def init_systems(ntraj, U, filename, format, verbose=0):
 
 
 def init_systems2(ntraj, filename, format, rnd, T, sigma, data_file="elements.dat", verbose=0):
-    ##
-    # This function creates a list of System objects and loads the content into them, it also randomizes
-    # the original input from the coordinate file (by adding coordinate displacements and setting velocities)
-    # 
-    # \param[in] ntraj The number of trajectories in the ensemble
-    # \param[in] filename The name of the file containing molecular structure
-    # \param[in] format A string defining the file format (see LoadMolecule for more details)
-    # \param[in] rnd   Random number generator object
-    # \param[in] T     Target temperature used to initialize momenta of atoms. units: K
-    # \param[in] sigma The magnitude of a random displacement of each atom from its center, units: Bohr
-    # \param[in] data_file The file containing information about elements.
-    # \param[in] verbose The parameter controlling the amount of debug printing: 0 (default)
-    # - no printing, 1 - print info
+    """
+    This function creates a list of System objects and loads the content into them, it also randomizes
+    the original input from the coordinate file (by adding coordinate displacements and setting velocities)
 
+    Args:
+        ntraj ( int ): The number of trajectories in the ensemble
+        U ( Universe object ): The container of the fundamental parameters of atoms
+        filename ( string ): The file containg the atomistic system 
+        format ( string ): The format of the file to load (see LoadMolecule for possible formats)
+        rnd ( Random object ): random number generator object
+        T ( double ): Target temperature used to initialize momenta of atoms. [ units: K ]
+        sigma ( double ): The magnitude of a random displacement of each atom from its center [ units: Bohr ]
+        data_file ( double ): The file containing information about elements [ default: "elements.dat" ]
+        verbose ( int ): The parameter controlling the amount of debug printing: 
+
+            - 0: no printing [ default ]
+            - 1: do print info
+
+    Returns:
+        (list of ntraj System objects): the ensemble of the objects defining the replicas of the system
+
+    """
 
     # Create Universe and populate it
     U = Universe();   LoadPT.Load_PT(U, data_file, 0)
@@ -186,13 +202,23 @@ def init_systems2(ntraj, filename, format, rnd, T, sigma, data_file="elements.da
 
                       
 def init_mm_Hamiltonians(syst, ff, verbose=0):
-    ##
-    # This function creates a list of MM Hamiltonians and bind them to the corresponding systems
-    # 
-    # \param[in] syst The list of System objects 
-    # \param[in] ff The Force Field object
-    # \param[in] verbose The parameter controlling the amount of debug printing: 0 (default)
-    # - no printing, 1 - print info
+    """
+
+    This function creates a list of MM Hamiltonians and bind them to the corresponding systems
+    
+    Args:
+        syst ( list of ntraj System objects ): self-explanatory
+        ff ( ForceField object ): defines which force fields to construct for all systems
+        verbose ( int ): The parameter controlling the amount of debug printing: 
+
+            - 0: no printing [ default ]
+            - 1: do print info
+
+    Returns:
+        (list of ntraj Hamiltonian_Atomistic objects): the ensemble of the objects defining
+        the MM Hamiltonians that are also bound to the provided systems.
+
+    """
 
     ntraj = len(syst)
     ham = []
@@ -216,6 +242,7 @@ def init_mm_Hamiltonians(syst, ff, verbose=0):
             print "Energy = ", ham.H(0,0), " a.u."
 
     return ham
+
 
 
 

@@ -7,4 +7,6 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 #***********************************************************/
 
-__all__ = ["nbra" ]
+__all__ = [ "nbra",
+            "librax"
+          ]
