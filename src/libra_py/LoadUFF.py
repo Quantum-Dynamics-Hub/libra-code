@@ -140,7 +140,7 @@ def Load_UFF(force_field, ff_file="uff.dat"):
             atom_record.set(ff)
             res = force_field.Add_Atom_Record(atom_record)
             
-            print "load type", ff.Atom_ff_type
+            #print "load type", ff.Atom_ff_type
 
         if m2!=None:
             ff_par["sigma_comb_rule"] = a[m2.start('FF_sigma_rule_value'):m2.end('FF_sigma_rule_value')]
