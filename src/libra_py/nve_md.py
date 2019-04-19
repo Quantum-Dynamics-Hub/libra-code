@@ -31,6 +31,30 @@ import LoadUFF
 
 ##############################################################
 
+def syst2xyz(syst):
+    """
+
+    This function generates the xyz string representing the system
+
+    Args:
+        syst ( System object ): the chemical system
+ 
+    Returns:
+        string:  res:  the coordinates of the system in an xyz format
+
+    """
+     
+    nat = syst.Number_of_atoms
+    res = " %i \n\n" % (nat)
+    for i in xrange(nat):
+        x = syst.Atoms[i].Atom_RB.rb_cm.x
+        y = syst.Atoms[i].Atom_RB.rb_cm.y
+        z = syst.Atoms[i].Atom_RB.rb_cm.z
+        res = res + "%s  %5.3f %5.3f %5.3f\n" % (syst.Atoms[i].Atom_element, x, y, z)
+
+    return res    
+
+
 def nve_md_init(syst, mol, el, ham):
     """
 
