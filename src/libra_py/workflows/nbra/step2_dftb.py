@@ -136,12 +136,12 @@ def do_step(i, params):
 
     # Extract the sub-matrix of interest
     H_sub = CMATRIX(ao_sz, mo_sz)
-    pop_submatrix(Hi[0], H_sub, ao_act_sp, mo_act_sp)  # list element #0 = gamma-point
+    pop_submatrix(Hi[0], H_sub, ao_act_sp, mo_act_sp)  # last element #0 = gamma-point
 
     # Get the orbitals
     Ei = CMATRIX(mo_sz, mo_sz)
     MOi = CMATRIX(ao_sz, mo_sz)
-    solve_eigen(H_sub, Si[0], Ei, MOi, 0)     # list element #0 = gamma-point
+    solve_eigen(H_sub, Si[0], Ei, MOi, 0)     # last element #0 = gamma-point
     
     return Ei, MOi, Hi, Si
 
