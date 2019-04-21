@@ -216,9 +216,9 @@ def convert_Landry_Subotnik2model1(m, Er, w, eps):
     
     """
 
-    k = 0.5*m*w*2
+    k = 0.5*m*w*w
     x0 = math.sqrt(Er / k)
-    D = -e
+    D = -eps
 
     return k, x0, D
 
