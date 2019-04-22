@@ -8,16 +8,17 @@
 #* or <http://www.gnu.org/licenses/>.          
 #***********************************************************************************
 """
-.. module:: tsh_algo1
+.. module:: tsh_algo2
    :platform: Unix, Windows
    :synopsis: This module implements the function for many-trajectories TSH hopping
+       and also applied a thermostat
 .. moduleauthor:: Alexey V. Akimov
 
 """
 
 __author__ = "Alexey V. Akimov"
 __copyright__ = "Copyright 2019 Alexey V. Akimov"
-__credits__ = ["Alexey V. Akimov", "Kosuke Sato"]
+__credits__ = ["Alexey V. Akimov"]
 __license__ = "GNU-3"
 __version__ = "1.0"
 __maintainer__ = "Alexey V. Akimov"
@@ -73,6 +74,8 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
 
             * **dyn_params["dt"]** ( double ): the nuclear and electronic integration
                 timestep [ units: a.u. of time, default: 1.0 ]
+ 
+            * **dyn_params["BATH_params"]** ( Dictionary ): 
 
         compute_model ( PyObject ): the pointer to the Python function that performs the Hamiltonian calculations
         rnd ( Random ): random numbers generator object
@@ -130,6 +133,7 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     rep = dyn_params["rep"]
     dt = dyn_params["dt"]
     nsteps = dyn_params["nsteps"]
+    BATH_params = dyn_params["BATH_params"]
 
 
     ndia = Cdia.num_of_rows
@@ -163,14 +167,60 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
 
 
     Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh_stat.compute_etot_tsh(ham, p, Cdia, Cadi, states, iM, rep) 
-    
+
+    # Thermostats
+    therms = []
+
+    for tr in xrange(ntraj):
+        therms.append( Thermostat( BATH_params ) )
+        therms[tr].set_Nf_t(nnucl)
+        therms[tr].set_Nf_r(0)
+        therms[tr].set_Nf_b(0)
+        therms[tr].init_nhc()   
+
+        
     # Do the propagation
     for i in xrange(nsteps):
+
+        for tr in xrange(ntraj):
+            # Rescale momenta
+            scl = therms[tr].vel_scale(0.25*dt)
+            p.scale(-1, tr, scl)
+
+            # Update thermostat variables
+            ekin = 0.0
+            for dof in xrange(nnucl):
+                ekin = ekin + 0.5 * iM.get(dof, 0) * p.get(dof, tr)**2
+
+            therms[tr].propagate_nhc(0.5*dt, ekin, 0.0, 0.0)
+
+            # Rescale momenta
+            scl = therms[tr].vel_scale(0.25*dt)
+            p.scale(-1, tr, scl)
+
 
         if rep==0:
             tsh1(dt, q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)
         elif rep==1:
             tsh1(dt, q, p, iM,  Cadi, states, ham, compute_model, model_params, dyn_params, rnd, 1, 1)
+
+
+        for tr in xrange(ntraj):
+            # Rescale momenta
+            scl = therms[tr].vel_scale(0.25*dt)
+            p.scale(-1, tr, scl)
+
+            # Update thermostat variables
+            ekin = 0.0
+            for dof in xrange(nnucl):
+                ekin = ekin + 0.5 * iM.get(dof, 0) * p.get(dof, tr)**2
+
+            therms[tr].propagate_nhc(0.5*dt, ekin, 0.0, 0.0)
+
+            # Rescale momenta
+            scl = therms[tr].vel_scale(0.25*dt)
+            p.scale(-1, tr, scl)
+
 
 
 
@@ -211,57 +261,3 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     return obs_T, obs_q, obs_p, obs_Ekin, obs_Epot, obs_Etot, obs_dEkin, obs_dEpot, obs_dEtot, obs_Cadi, obs_Cdia, obs_dm_adi, obs_dm_dia, obs_pop, obs_states
 
 
-
-def probabilities_1D_scattering(q, states, nst, params):
-    """Computes the scattering probabilities in 1D
-
-    Args:
-        _q ( MATRIX(nnucl, ntraj) ): coordinates of the "classical" particles [units: Bohr]
-        states ( intList, or list of ntraj ints ): the quantum state of each trajectory
-        nst ( int ): the number of possible quantum states in the problem
-        params ( dictionary ): parameters of the simulation, should contain
- 
-            * **params["act_dof"]** ( int ): index of the nuclear DOF that is considered active (scattering coord)
-            * **params["left_boundary"] ( double ): the beginning of the reflected particles counter [units: Bohr]
-            * **params["right_boundary"] ( double ): the beginning of the transmitted particles counter [units: Bohr]
-
-    Returns:
-        tuple: ( pop_refl, pop_transm ): where
-
-            * pop_refl ( MATRIX(nst, 1) ): probabilities of reflection on each state
-            * pop_transm ( MATRIX(nst, 1) ): probabilities of transmission on each state
-
-    """
-
-    critical_params = [  ] 
-    default_params = {"act_dof":0, "left_boundary":-10.0, "right_boundary":10.0 }
-    comn.check_input(params, default_params, critical_params)
-
-
-    act_dof = params["act_dof"]
-    left_boundary = params["left_boundary"]
-    right_boundary = params["right_boundary"]
-
-
-    ntraj = len(states)
-
-    pop_transm = MATRIX(nst, 1)  # transmitted
-    pop_refl = MATRIX(nst, 1)    # reflected
-
-    ntransm, nrefl = 0.0, 0.0
-    for traj in xrange(ntraj):
-
-        if q.get(act_dof, traj) < left_boundary:
-            pop_refl.add(states[traj], 0, 1.0)
-            nrefl += 1.0
-
-        if q.get(act_dof, traj) > right_boundary:
-            pop_transm.add(states[traj], 0, 1.0)
-            ntransm += 1.0         
-
-    ntot = ntransm + nrefl 
-    if ntot > 0.0:
-        pop_transm = pop_transm / ntot
-        pop_refl = pop_refl / ntot
-
-    return pop_refl, pop_transm
