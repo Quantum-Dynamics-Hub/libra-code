@@ -1,41 +1,36 @@
 #*********************************************************************************
-#* Copyright (C) 2016 Ekadashi Pradhan, Alexey V. Akimov
+#* Copyright (C) 2016-2019 Ekadashi Pradhan, Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
 #* the License, or (at your option) any later version.
 #* See the file LICENSE in the root directory of this distribution
 #* or <http://www.gnu.org/licenses/>.
-#*^M
-#*********************************************************************************/^M
+#*
+#*********************************************************************************/
+"""
+.. module:: create_input_qe
+   :platform: Unix, Windows
+   :synopsis: This module implements the functions which prepare QE input with different occupation schemes
+.. moduleauthor:: Ekadashi Pradhan, Alexey V. Akimov
 
-## \file create_qe_input.py
-# This module implements the functions which prepare QE input with different occupation schemes
-#
+"""
 
 import os
 import sys
 import math
-
-##sys.path.insert(1,os.environ["libra_calculators_path"])
-##sys.path.insert(1,os.environ["libra_mmath_path"])
-
-##from libcalculators import *
-##from libmmath import *
-
-
 if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+# TODO: Get rid of import *
+
 from libra_py import *
 
 
-
-
-#
 def read_qe_inp_templ(inp_filename):
+    """
 ##
 # Reading and storing template input file for QE calculations. The input file is essentially a
 # normal input file, but we store only the constant section (control option), not the
@@ -43,6 +38,7 @@ def read_qe_inp_templ(inp_filename):
 #
 # \param[in] inp_filename The name of the initial input file, which will serve as a template
 #
+    """
 
     f = open(inp_filename,"r")
     templ = f.readlines()
@@ -142,11 +138,18 @@ def excitation_to_qe_occ(params, state):
 
 
 def print_occupations(occ):
-##
-# This function transforms the list of occupations into a formatted
-# text. The format is consistent with QE input
-# \param[in] occ Occupation scheme representing an excitation (list of floats/integers)
-#
+    """
+
+    This function transforms the list of occupations into a formatted
+    text. The format is consistent with the QE input
+
+    Args:
+        occ ( list of floats ): Occupation numbers 
+
+    Returns:
+        string: line: a multiline text that contains the occupation numbers
+            suitable for QE input
+    """
     
     #line = "OCCUPATIONS\n"
     line = ""
@@ -179,28 +182,42 @@ def write_qe_input(ex_st, label, mol, params,occ,occ_alp,occ_bet,restart_flag):
     HOMO = params["nel"]/2 - 1 # It must be integer, This is HOMO index
     excitation = params["excitations"][ex_st]
     qe_inp = "x%i.scf_wrk.in" % ex_st
+    nspin = params["nspin"]
 
     qe_inp_templ = params["qe_inp_templ"][ex_st]
     cell_dm = params["alat"]
     pp = qe_inp.split('.')
-    pfx = pp[0]
-    g = open(qe_inp, "w")     
+    prefix = pp[0]
+    f = open(qe_inp, "w")     
 
     # Write control parameters section
     for a in qe_inp_templ:
         aa = a.split()
-        if len(aa) >0 and aa[0] == "prefix":
-            a = "  prefix = '%s',\n"%pfx
-        if len(aa) >0 and aa[0] == "&ELECTRONS" and restart_flag==11:
-            a = "&ELECTRONS \n startingwfc = 'file', \n startingpot = 'file', \n"
-        if len(aa) >0 and aa[0] == "&ELECTRONS" and restart_flag==10:
-            a = "&ELECTRONS \n"
-        if len(aa) >0 and aa[0] == "electron_maxstep" and restart_flag>9:
-            #a = " electron_maxstep = 2, \n "
-            a = " electron_maxstep = %i, \n "%params["scf_itr"]
 
-        g.write(a)
-    g.write("\n")
+        # Make sure the content of input files is consistent with the file names
+        if len(aa) > 0:
+            if aa[0] == "prefix":
+                a = "  prefix = '%s',\n" % (prefix)
+
+        # Force the calculations to re-use existing files
+        if len(aa) > 0:
+            if aa[0] == "&ELECTRONS" and restart_flag==11:
+                a = "&ELECTRONS \n"
+                a = a + " startingwfc = 'file', \n"
+                a = a + " startingpot = 'file', \n"
+
+        if len(aa) > 0:
+            if aa[0] == "&ELECTRONS" and restart_flag==10:
+                a = "&ELECTRONS \n"
+
+        # Change the number of max SCF iterations in the input file
+        if len(aa) > 0:
+            if aa[0] == "electron_maxstep" and restart_flag > 9:
+                a = " electron_maxstep = %i, \n " % (params["scf_itr"])
+
+
+        f.write(a)
+    f.write("\n")
 
     # Write atom name and coordinatess
     Natoms = len(label)
@@ -211,48 +228,63 @@ def write_qe_input(ex_st, label, mol, params,occ,occ_alp,occ_bet,restart_flag):
         x = B_to_A*mol.q[3*k]
         y = B_to_A*mol.q[3*k+1]
         z = B_to_A*mol.q[3*k+2]
-        g.write("%s    %12.7f    %12.7f    %12.7f  \n"  % (atms, x, y, z) )
+        f.write("%s    %12.7f    %12.7f    %12.7f  \n"  % (atms, x, y, z) )
 
-####################################################
-#  Give conditional statement, if 
-#  if flag1 == -1:
-#      generate occupation number using fermi population
-#  elif flag1 == 0:
-#      continue the general sequence of writing input file       
-####################################################
+
+    ####################################################
+    #  Give conditional statement, if 
+    #  if flag1 == -1:
+    #      generate occupation number using fermi population
+    #  elif flag1 == 0:
+    #      continue the general sequence of writing input file       
+    ####################################################
 
     # Write occupation
-    g.write(""+'\n')
-    g.write("OCCUPATIONS"+'\n')
+    f.write("\nOCCUPATIONS\n")
+
     # Single excitations with no spin-polarization
+    if nspin <= 1:
+        f.write(print_occupations(occ))
+        f.write("\n")
 
-    if params["nspin"] <= 1:
-        g.write(print_occupations(occ))
-        g.write(""+'\n')
     # Single excitations with spin-polarization 
-    if params["nspin"] >1:
-        g.write(print_occupations(occ_alp))
-        g.write(""+'\n')
-        g.write(print_occupations(occ_bet))
-        
-    g.close()
+    if nspin >1:
+        f.write(print_occupations(occ_alp))
+        f.write("\n")
+        f.write(print_occupations(occ_bet))        
+    f.close()
 
-def write_qe_input_first(filename,occ,occ_alp,occ_bet,nspin,params,restart_flag):
-##
-# Creates QE inputs for the very first step, used in main.py
-# \param[in] filename QE input filename to be written.
-# \param[in] occ a list of occupation numbers of the total orbitals (doubly degenerate)
-# \param[in] occ_alp a list of occupation numbers of the alpha orbitals
-# \param[in] occ_bet a list of occupation numbers of the beta orbitals
-# \param[in] nspin Spin-polarization index: 1 for spin restricted and 2 for spin unrestricted calculation
-# \param[in] params The general control parameters (dictionary)
-# \param[in] restart_flag index 10 is used at this point for the very first iteration, 11 for consecutive
-#            steps where restart from the previous wavefunction and density is performed.
 
+def write_qe_input_first(filename, occ, occ_alp, occ_bet, nspin, params, restart_flag):
+    """
+
+    Creates the QE input file for the very first step
+
+    Args:
+    filename ( string ): QE input filename to be written
+    occ ( list of doubles ): occupation numbers of the orbitals in non-polarized case (doubly degenerate)
+    occ_alp ( list of doubles ): occupation numbers of the alpha orbitals (in spin-polarized case)
+    occ_bet ( list of doubles ): occupation numbers of the beta orbitals (in spin-polarized case)
+    nspin ( int ): selection of the spin-polarization method:
+
+        * 1: spin restricted (non-polarized)
+        * 2: spin unrestricted (polarized)
+
+    params ( dictionary ): General control parameters 
+    restart_flag ( int ): 
+        index 10 is used at this point for the very first iteration
+        index 11 is used for consecutive steps where restart from the
+        previous wavefunction and density is performed.
+
+    """
+ 
     f = open(filename,"r+")
     a = f.readlines()
-    N = len(a)
     f.close()
+
+    N = len(a)  # number of lines
+
+    # Now re-write the file
     f = open(filename, "w")
     for i in range(0,N):
         s = a[i].split()
@@ -260,28 +292,30 @@ def write_qe_input_first(filename,occ,occ_alp,occ_bet,nspin,params,restart_flag)
             i_alp = i+1
     a[i_alp:N] = []
 
+
     for i in range(0,i_alp):
         aa = a[i].split()
         if len(aa) >0 and aa[0] == "&ELECTRONS" and restart_flag==11:
             a[i] = "&ELECTRONS \n startingwfc = 'file', \n startingpot = 'file', \n"
         if len(aa) >0 and aa[0] == "&ELECTRONS" and restart_flag==10:
             a[i] = "&ELECTRONS \n"
-        if len(aa) >0 and aa[0] == "electron_maxstep" and restart_flag>9:
+        if len(aa) >0 and aa[0] == "electron_maxstep" and restart_flag > 9:
             #a = " electron_maxstep = 2, \n "
-            a[i] = " electron_maxstep = %i, \n "%params["scf_itr"]
+            a[i] = " electron_maxstep = %i, \n " % (params["scf_itr"])
 
         f.write(a[i])
+
 
     # Write occupation
     # Single excitations with no spin-polarization
     if nspin <= 1:
         f.write(print_occupations(occ))
-        f.write(""+'\n')
+        f.write("\n")
+
     # Single excitations with spin-polarization 
     if nspin >1:
-        print "occ_alp=",occ_alp,"occ_bet=",occ_bet
         f.write(print_occupations(occ_alp))
-        f.write(""+'\n')
+        f.write("\n")
         f.write(print_occupations(occ_bet))
 
     f.close()

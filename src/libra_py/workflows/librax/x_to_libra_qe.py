@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2016 Ekadashi Pradhan, Kosuke Sato, Alexey V. Akimov
+#* Copyright (C) 2016-2019 Ekadashi Pradhan, Kosuke Sato, Alexey V. Akimov
 #* 
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -8,12 +8,16 @@
 #* or <http://www.gnu.org/licenses/>.
 #*
 #*********************************************************************************/
+"""
+.. module:: x_to_libra
+   :platform: Unix, Windows
+   :synopsis: This module implements the functions that extract parameters from the QE output file:
+       atomic forces , molecular energies, molecular orbitals, and atomic basis information.
+       The forces are used for simulating Classical MD on Libra and the others for 
+       calculating time-averaged energies and Non-Adiabatic Couplings(NACs).
+.. moduleauthor:: Ekadashi Pradhan, Kosuke Sato, Alexey V. Akimov
 
-## \file gamess_to_libra.py 
-# This module implements the functions that extract parameters from the gamess output file:
-# atomic forces , molecular energies, molecular orbitals, and atomic basis information.
-# The forces are used for simulating Classical MD on Libra 
-# and the others for calculating time-averaged energies and Non-Adiabatic Couplings(NACs).
+"""
 
 import os
 import sys
@@ -24,6 +28,11 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+import util.libutil as comn
+from libra_py import QE_methods
+from libra_py import units
+
+### TODO: Get rid of  import *
 from extract_qe import *
 from overlap import *
 from hamiltonian_el import *
@@ -32,32 +41,63 @@ from misc import *
 from spin_indx import *
 
 
+def exe_espresso(i, params={}):
+    """
 
-def exe_espresso(i):
-##
-# Function for executing calculations using Quantum Espresso
-# once the calculations are finished, all the temporary data are
-# deleted
-# \param[in] inp The name of the input file
-# \param[in] out The name of the output file
-#
-    inp = "x%i.scf_wrk.in" % i # e.g. "x0.scf_wrk.in"
-    out = "x%i.scf.out" % i    # e.g. "x0.scf.out"
-    inexp = "x%i.exp.in" % i   # e.g. "x0.exp.in"
-    outexp = "x%i.exp.out" % i # e.g "x0.exp.out"
+    This function runs necessary QE calculations for the input ```i``` as defined by the "params" dictionary
 
-    os.system("srun pw.x < %s > %s" % (inp,out))
-    os.system("srun pw_export.x < %s > %s" % (inexp,outexp))
+    Args:
+        i ( int ): index of the input  file
 
-    # Delete scratch directory and unecessary files
-    #os.system("rm *.dat *.wfc* *.igk* *.mix*")
-    #os.system("rm -r *.save") # not sure if we  need to remove this directory
+            The input files expected should be called:
+            x%i.scf_wrk.in  and x%i.exp.in
+
+            The output files will be:
+            x%i.scf.out  and x%i.exp.out
+        
+        params ( dictionary ): A dictionary containing important simulation parameters
+
+            * **params["BATCH_SYSTEM"]** ( string ): the name of the job submission command
+                use "srun" if run calculations on SLURM system or "mpirun" if run on PBS system
+                [default: "srun"]
+            * **params["NP"]** ( int ): the number of nodes on which execute calculations
+                [default: 1]
+            * **params["EXE"]** ( string ): the name of the program to be executed. This may be 
+                the absolute path to the QE (pw.x) binary
+            * **params["EXE_EXPORT"]** ( string ): the name of the program that converts the binary files
+                with the QE wavefunctions to the text format (pw_export.x). The name includes the 
+                absolute path to the binary
+
+    """
+
+    # Now try to get parameters from the input
+    critical_params = [ "EXE", "EXE_EXPORT" ] 
+    default_params = { "BATCH_SYSTEM":None, "NP":1 }
+    comn.check_input(params, default_params, critical_params)
+
+
+    EXE = params["EXE"]
+    EXE_EXPORT = params["EXE_EXPORT"]
+    BATCH_SYSTEM = params["BATCH_SYSTEM"]
+    NP = params["NP"]
+
+    # Run calculations
+    if BATCH_SYSTEM==None or BATCH_SYSTEM=="None":
+        os.system( "%s < x%i.scf_wrk.in > x%i.scf.out" % ( EXE, i, i) )
+        os.system( "%s < x%i.exp.in > x%i.exp.out    " % ( EXE_EXPORT, i, i ) )
+    else:
+        os.system( "%s -n %s %s < x%i.scf_wrk.in > x%i.scf.out" % (BATCH_SYSTEM,NP,EXE, i, i) )
+        os.system( "%s -n %s %s < x%i.exp.in > x%i.exp.out    " % (BATCH_SYSTEM,NP,EXE_EXPORT, i, i) )
+
 
 
 
 def qe_to_libra(params, E, sd_basis, label, mol, suff, active_space):
-    ## 
-    # Finds the keywords and their patterns and extracts the parameters
+    """
+
+    Finds the keywords and their patterns and extracts the parameters
+
+    Args:
     # \param[in] params :  contains input parameters , in the directory form
     # \param[in, out] E  :  molecular energies at "t" old, will be updated (MATRIX object)
     # \param[in] sd_basis :  basis of Slater determinants at "t" old (list of CMATRIX object)
@@ -80,19 +120,35 @@ def qe_to_libra(params, E, sd_basis, label, mol, suff, active_space):
     #
     # Used in: md.py/run_MD
 
-    nstates = len(params["excitations"])
+    Returns:
+    
+    # Grad: Grad[k][i] - i-th projection of the gradient w.r.t. to k-th nucleus (i = 0, 1, 2)
+    # data: a dictionary containing transition dipole moments
+    # E_mol: the matrix of N-el orbital (total) energies at t+dt/2 in the reduced (active) space
+    # D_mol: the matrix of the NACs computed with SD orbitals at t+dt/2 in the reduced (active) space
+    # E2: the matrix of the N-el energies at t+dt (present state)
+    # sd_basis2: the list of reduced SD (active space orbitals), representing all computed states
+    # all_grads: the gradients on all atoms for all excited states, such that all_grads[i][n] is a VECTOR object containing the gradient on the atom n for the i-th excited state
 
-    sd_basis2 = SDList()    # this is a list of SD objects. Eeach represents a Slater Determinant
-    all_grads = [] # this will be a list of lists of VECTOR objects
-    E2 = MATRIX(nstates,nstates)
+    #return E_mol, D_mol, E2, sd_basis2, all_grads
+
+    """
+
+    nstates = len(params["excitations"])
     nspin = params["nspin"]
     nel = params["nel"]
+
+
+    sd_basis2 = SDList()    # this is a list of SD objects. Eeach represents a Slater Determinant
+    all_grads = []          # this will be a list of lists of VECTOR objects
+    E2 = MATRIX(nstates,nstates)
     HOMO = nel/2 + nel%2 -1
     
     #======== Run QE calculations and get the info at time step t+dt ========
     
     for ex_st in xrange(nstates): # for each excited configuration
                                   # run a separate set of QE calculations
+
         #idx = params["excitations"][ex_st]
         ###########################################
         #write_qe_input(ex_st,label,mol,params)
@@ -112,6 +168,7 @@ def qe_to_libra(params, E, sd_basis, label, mol, suff, active_space):
         #    flag1, tot_ene, label, R, grads, mo_pool_alp, mo_pool_bet, norb, nel, nat, alat, occ_a, occ_b = qe_extract("x%i.scf.out" % ex_st, flag, active_space, ex_st,nspin)
 
         #occ_alp,occ_bet = excitation_occ(params)
+
         excitation = params["excitations"][ex_st]
         occ, occ_alp, occ_bet = excitation_to_qe_occ(params, excitation)
         status = -1
@@ -174,8 +231,6 @@ def qe_to_libra(params, E, sd_basis, label, mol, suff, active_space):
     P21 = SD_overlap(sd_basis2, sd_basis)
 
 
-
-
     ### TO DO: In the following section, we need to avoid computing NAC matrices in the full
     # basis. We will need the information on cropping, in order to avoid computations that 
     # we do not need (the results are discarded anyways)
@@ -211,16 +266,5 @@ def qe_to_libra(params, E, sd_basis, label, mol, suff, active_space):
     E = MATRIX(E2)  # update energy
                     # the returned energy E_mol is at t+dt/2
 
-    # Returned data:
-    # 
-    # Grad: Grad[k][i] - i-th projection of the gradient w.r.t. to k-th nucleus (i = 0, 1, 2)
-    # data: a dictionary containing transition dipole moments
-    # E_mol: the matrix of N-el orbital (total) energies at t+dt/2 in the reduced (active) space
-    # D_mol: the matrix of the NACs computed with SD orbitals at t+dt/2 in the reduced (active) space
-    # E2: the matrix of the N-el energies at t+dt (present state)
-    # sd_basis2: the list of reduced SD (active space orbitals), representing all computed states
-    # all_grads: the gradients on all atoms for all excited states, such that all_grads[i][n] is a VECTOR object containing the gradient on the atom n for the i-th excited state
-
-    #return E_mol, D_mol, E2, sd_basis2, all_grads
     return E_mol, D_mol, S_mol, E2, sd_basis2, all_grads
 

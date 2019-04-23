@@ -167,18 +167,21 @@ def qe_extract_coordinates(inp_str, alat, flag):
 
 
 def qe_extract_gradients(inp_str,  flag):
-    ##
-    # Extracts atomic labels, nuclear charges, and coordinates of all atoms
-    # from the the list of input lines
-    # each input line is assumed to have the format:   
-    # atom    1 type  1   force =     0.00679795    0.03542284    0.02666430
-    # atom    2 type  1   force =    -0.00865430   -0.03138108   -0.02321979
-    # ...
+    """
+
+    Extracts atomic labels, nuclear charges, and coordinates of all atoms
+    from the the list of input lines
+    each input line is assumed to have the format:   
+
+    atom    1 type  1   force =     0.00679795    0.03542284    0.02666430
+    atom    2 type  1   force =    -0.00865430   -0.03138108   -0.02321979
+    ...
 
     # \param[in] inp_str  Strings containing the info for all atoms
     # \param[in] flag Controls printing options
     # grads - returned list of nuclear gradient (VECTOR objects)
     #
+    """
 
     grads = []
     Ry_to_Ha = 0.5
@@ -266,6 +269,7 @@ def fermi_pop(e,nel,nspin,kT,el_st):
     #occ_new = [item[1] for item in pop_fermi]
     return occ_new #[item[1] for item in pop_fermi]
 
+
 def qe_extract_eigenvalues(filename,nel):
     ##
     # This function reads pw.exp output files and extracts MO
@@ -301,6 +305,7 @@ def qe_extract_eigenvalues(filename,nel):
         eig_val.append(float(fa[0]))
 
     return eig_val
+
 
 def gen_new_occ(ex_st,nel):
 #def extract_orb_energy(HOMO):
@@ -377,33 +382,14 @@ def extract_ene_force(filename):
             tot_ene = Ry_to_Ha*float(s[4]) # so convert energy into atomic units
     return tot_ene,iforce
 
-def exe_espresso(i):
-##
-# Function for executing calculations using Quantum Espresso
-# once the calculations are finished, all the temporary data are
-# deleted
-# \param[in] inp The name of the input file
-# \param[in] out The name of the output file
-#
-    inp = "x%i.scf_wrk.in" % i # e.g. "x0.scf_wrk.in"
-    out = "x%i.scf.out" % i    # e.g. "x0.scf.out"
-    inexp = "x%i.exp.in" % i   # e.g. "x0.exp.in"
-    outexp = "x%i.exp.out" % i # e.g "x0.exp.out"
-
-    os.system("srun pw.x < %s > %s" % (inp,out))
-    os.system("srun pw_export.x < %s > %s" % (inexp,outexp))
-
-    # Delete scratch directory and unecessary files
-    #os.system("rm *.dat *.wfc* *.igk* *.mix*")
-    #os.system("rm -r *.save") # not sure if we  need to remove this directory
-
-
 
 def robust_cal_extract(filename, ex_st, nel, flag_a, flag_b):
     write_qe_input(filename, nel,flag_a, flag_b)
     exe_espresso(ex_st)
     tot_ene,iforce = extract_ene_force(filename)
     return tot_ene, iforce
+
+
  
 def check_convergence(filename):
 
