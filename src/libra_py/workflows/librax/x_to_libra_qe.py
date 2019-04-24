@@ -91,6 +91,99 @@ def exe_espresso(i, params={}):
 
 
 
+ 
+def check_convergence(filename):
+    """
+    This function checks the QE output file and looks for the 
+    indicator of a successful SCF convergence
+
+    Args:
+        filename ( string ): name of the file to be examined
+
+    Returns:
+        Boolean: the status of the convergence
+
+    """
+
+    f_out = open(filename, "r")
+    A = f_out.readlines()
+    f_out.close()
+
+    status = False
+
+    for a in A:
+        s = a.split()
+
+        # Line says "convergence has been achieved in -- iterations"
+        if len(s) >=4:
+            if s[0] == "convergence" and s[3] == "achieved":
+                status = True
+
+    return status
+
+
+
+def run_delta_scf_qe(excitation):
+    """
+    This function runs QE calculations then based on the obtained orbital energies,
+    it updates the occupation numbers, updates the input file of QE and continues the
+    SCF (with fixed occupations) iterations until convergence is achieved.
+
+    Args: 
+        excitation ( "excitation" object ): represented the Slater Determinant of interest
+        nspin  
+    """
+
+    nspin = params["nspin"]
+    nel = params["nel"]
+    occ, occ_alp, occ_bet = excitation_to_qe_occ(params, excitation)
+
+    status = -1       # when 0, we are done
+    restart_flag = 0  # when 1, we need to restart
+    coount = 0        # how many times we attempt to do the restarts
+
+    while status != 0:
+        coount = coount + 1
+
+        write_qe_input_first("x%i.scf_wrk.in"%ex_st,occ,occ_alp,occ_bet,nspin,params,restart_flag)
+        exe_espresso(ex_st)
+
+        is_converged = check_convergence("x%i.scf.out" % ex_st) # returns 0 if SCF converges, 1 if not converges
+
+        # We are done - just read the files
+        if is_converged:
+            res = qe_extract("x%i.scf.out" % ex_st, active_space, ex_st, nspin, flag)
+                 
+            tot_ene = res[0]
+            label = res[1]
+            R = res[2]
+            grads = res[3]
+            mo_pool_alp = res[4]
+            mo_pool_bet = res[5]
+            params["norb"] = res[6]
+            params["nel"] = res[7]
+            params["nat"] = res[8]
+            params["alat"] = res[9]
+
+        else:
+            if coount==1:
+                restart_flag = 10
+            else:
+                restart_flag = 11
+
+            if params["nspin"] == 2:
+                en_alp = qe_extract_eigenvalues("x%i.save/K00001/eigenval1.xml"%ex_st,nel)
+                en_bet = qe_extract_eigenvalues("x%i.save/K00001/eigenval2.xml"%ex_st,nel)
+                occ_alp = fermi_pop(en_alp,nel,params["nspin"],params["electronic_smearing"],ex_st)
+                occ_bet = fermi_pop(en_bet,nel,params["nspin"],params["electronic_smearing"],0)
+
+            elif params["nspin"] == 1:
+                en_orb = qe_extract_eigenvalues("x%i.save/K00001/eigenval.xml"%ex_st,nel)
+                occ = fermi_pop(en_orb,nel,params["nspin"],params["electronic_smearing"])
+
+
+
+
 
 def qe_to_libra(params, E, sd_basis, label, mol, suff, active_space):
     """

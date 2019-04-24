@@ -390,27 +390,6 @@ def robust_cal_extract(filename, ex_st, nel, flag_a, flag_b):
     return tot_ene, iforce
 
 
- 
-def check_convergence(filename):
-
-    f_out = open(filename, "r")
-    A = f_out.readlines()
-    f_out.close()
-
-    status = 1 # 0 is okay, non-zero is somethig else
-    nlines = len(A)
-
-    for a in A:
-        s = a.split()
-        # Line says "convergence has been achieved in -- iterations"
-        if len(s) > 0 and s[0] == "convergence"  and s[3] == "achieved":
-            status = 0
-       # if len(s) > 0 and s[0] == "Forces" and s[1] == "acting":
-       #     status = 0
-
-    return status
-
-
 def qe_extract_info(filename, ex_st, flag): 
 ##
 # This function reads Quantum Espresso output and extracts 

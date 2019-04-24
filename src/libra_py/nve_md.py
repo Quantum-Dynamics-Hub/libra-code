@@ -131,6 +131,11 @@ def nve_md_step(syst, mol, el, ham, params):
         
             * **params["dt"]** ( double ): integration timestep [ units: a.u., default: 20.0 ]
             * **params["integrator"]** ( string ): The rigid-body MD integrator [ default: "DLML" ]
+            * **params["fixed_fragment_translation"]** ( list of ints ): the indices (starting from 0)
+                of the fragments whose translational DOFs are frozen [ default: empty ]
+            * **params["fixed_fragment_rotation"]** ( list of ints ): the indices (starting from 0)
+                of the fragments whose rotational DOFs are frozen [ default: empty ]
+
 
     Returns: 
         (double, double, double): E_kin, E_pot, E_tot:
@@ -154,32 +159,43 @@ def nve_md_step(syst, mol, el, ham, params):
 
     #=== Setup parameters =======
     critical_params = [ ] 
-    default_params = {"dt":20.0, "integrator":"DLML" }
+    default_params = {"dt":20.0, "integrator":"DLML", "fixed_fragment_translation":[], 
+                      "fixed_fragment_rotation":[]
+                     }
     comn.check_input(params, default_params, critical_params)
+
     dt = params["dt"]
     integrator = params["integrator"]
+    fixed_tr = params["fixed_fragment_translation"]
+    fixed_rot = params["fixed_fragment_rotation"]
 
 
     # 1. propagate rotational and translational DOF for 0.5 of dt
     ekin = 0.0
     for n in xrange(syst.Number_of_fragments):
         # Linear momentum propagation:
-        syst.Fragments[n].Group_RB.apply_force(0.5*dt)
+        if n not in fixed_tr:
+            syst.Fragments[n].Group_RB.apply_force(0.5*dt)
+
         # Angular momentum propagation:
-        syst.Fragments[n].Group_RB.apply_torque(0.5*dt)        
+        if n not in fixed_rot:
+            syst.Fragments[n].Group_RB.apply_torque(0.5*dt)        
+
         ekin += (syst.Fragments[n].Group_RB.ekin_tr() + syst.Fragments[n].Group_RB.ekin_rot() )
 
     # 2. propagate rotational and translational coordinates of all fragments for dt
     ps = 0.0
     for n in xrange(syst.Number_of_fragments):
         # Propagate translational DOFs 
-        syst.Fragments[n].Group_RB.shift_position(dt * syst.Fragments[n].Group_RB.rb_p * syst.Fragments[n].Group_RB.rb_iM);
+        if n not in fixed_tr:
+            syst.Fragments[n].Group_RB.shift_position(dt * syst.Fragments[n].Group_RB.rb_p * syst.Fragments[n].Group_RB.rb_iM);
  
         # Propagate rotational DOFs
-        if integrator=="Jacobi":
-            syst.Fragments[n].Group_RB.propagate_exact_rb(dt)
-        elif integrator=="DLML":
-            ps = syst.Fragments[n].Group_RB.propagate_dlml(dt)
+        if n not in fixed_rot:
+            if integrator=="Jacobi":
+                syst.Fragments[n].Group_RB.propagate_exact_rb(dt)
+            elif integrator=="DLML":
+                ps = syst.Fragments[n].Group_RB.propagate_dlml(dt)
 
     # 3. update atomic positions
     for n in xrange(syst.Number_of_fragments):
@@ -198,9 +214,12 @@ def nve_md_step(syst, mol, el, ham, params):
     ekin = 0.0
     for n in xrange(syst.Number_of_fragments):
         # Linear momentum propagation:
-        syst.Fragments[n].Group_RB.apply_force(0.5*dt)
+        if n not in fixed_tr:
+            syst.Fragments[n].Group_RB.apply_force(0.5*dt)
+
         # Angular momentum propagation:
-        syst.Fragments[n].Group_RB.apply_torque(0.5*dt)        
+        if n not in fixed_rot:
+            syst.Fragments[n].Group_RB.apply_torque(0.5*dt)        
         ekin += (syst.Fragments[n].Group_RB.ekin_tr() + syst.Fragments[n].Group_RB.ekin_rot() )
 
     etot = ekin+epot
@@ -241,13 +260,21 @@ def optimize_syst(syst, params):
             SeeAlso: is ```nve_md_step``` 
             * **params["dt"]** ( double ): integration timestep [ units: a.u., default: 20.0 ]
             * **params["integrator"]** ( string ): The rigid-body MD integrator [ default: "DLML" ]
+            * **params["fixed_fragment_translation"]** ( list of ints ): the indices (starting from 0)
+                of the fragments whose translational DOFs are frozen [ default: empty ]
+            * **params["fixed_fragment_rotation"]** ( list of ints ): the indices (starting from 0)
+                of the fragments whose rotational DOFs are frozen [ default: empty ]
+
 
 
     """
 
     critical_params = [ ] 
     default_params = {"elements_file":"elements.dat", "cooling_out1":False, "cooling_out2":False,
-                      "anneal_schedule":[[20.0, 100, 10]] }
+                      "anneal_schedule":[[20.0, 100, 10]],
+                      "fixed_fragment_translation":[], 
+                      "fixed_fragment_rotation":[]
+                     }
     comn.check_input(params, default_params, critical_params)
     
     elements_file = params["elements_file"]

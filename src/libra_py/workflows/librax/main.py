@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2016 Kosuke Sato, Alexey V. Akimov
+#* Copyright (C) 2016-2019 Kosuke Sato, Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -9,11 +9,13 @@
 #*
 #*********************************************************************************/
 
-## \file main.py
-# This module sets initial parameters from GAMESS output, creates initial system, 
-# and executes runMD script.
-# 
-# It returns the data from runMD for debugging the code.
+"""
+.. module:: main
+   :platform: Unix, Windows
+   :synopsis: This module initialized the calculations and starts the calculations
+.. moduleauthor:: Kosuke Sato, Alexey V. Akimov
+
+"""
 
 import os
 import sys
@@ -25,8 +27,8 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
+import util.libutil as comn
 from libra_py import *
-
 
 from create_input_gms import *
 from create_input_qe import *
@@ -42,13 +44,30 @@ import include_mm
 
 
 
-
 def construct_active_space(params):
     """
-     This function constructs the active space using:
-     params[\"excitations\"] - a list of user-provided excitations to include in the TD-SE basis
-     params[\"nel\"] - the number of electrons in the system - used to determine the index of HOMO
+
+    This function constructs the active space for NA-MD calculations
+
+    Args:
+        params ( dictionary ): the execution control parameters, including:
+
+            * **params["excitations"]** ( list of "excitation" objects ): the dynamical basis
+                in the NA-MD calculations 
+            * **params["nel"] ( int ): the number of electrons in the system.
+                It is used to determine the index of HOMO
+    Returns:
+        list of integers: the indices of the orbitals that are used to construct the excitations 
+            included in the dynamical basis and therefore constitute the active space.
+            Returning [-1] means the active space can not be constructed for given number of electrons
+            and the list of excitations
     """
+
+    # Now try to get parameters from the input
+    critical_params = [ "nel", "excitations" ] 
+    default_params = {  }
+    comn.check_input(params, default_params, critical_params)
+
 
     active_space = []
     homo = params["nel"]/2 +  params["nel"] % 2  # the index of HOMO starting from 1 (not 0!)
@@ -59,7 +78,7 @@ def construct_active_space(params):
     max_to = 0
     for ex in params["excitations"]:
 
-        if min_from>ex.from_orbit[0]:
+        if min_from > ex.from_orbit[0]:
             min_from = ex.from_orbit[0]
             if min_from+homo <= 0:
                 print "Error in construct_active_space: Reconsider the basis of your excitations."
@@ -67,7 +86,7 @@ def construct_active_space(params):
                 print "You are trying to excite from the orbital that is below the lowest possible orbital."                                   
                 return [-1]
 
-        if max_to<ex.to_orbit[0]:
+        if max_to < ex.to_orbit[0]:
             max_to = ex.to_orbit[0]
 
 
@@ -82,8 +101,10 @@ def construct_active_space(params):
 
 def sanity_check(params):
     """ 
-        This functions runs some sanity check - 
-        some parameters require specific values of other parameters 
+
+    This functions runs some sanity check - 
+    some parameters require specific values of other parameters 
+
     """
 
     ## What happens if you run NVT simulations
@@ -98,11 +119,24 @@ def sanity_check(params):
             sys.exit(0)
 
 
-
-
 def main(params):
-    ##
-    # Finds the keywords and their patterns and extracts the parameters
+    """    
+
+    Finds the keywords and their patterns and extracts the parameters
+
+    Args:
+        params ( dictionary ): control parameters
+
+        * **params["dt_nucl"]** ( double ): time step for nuclear dynamics [ units: a.u.; default: 41.0 ]
+        * **params["excitations"]** ( list of "excitation" objects ): the dynamical basis
+            in the NA-MD calculations 
+        * **params["excitations_init"]** ( list of ints ): the indices of the initial excitations to
+            consider. Index 0 usually corresponds to the ground state
+
+        * **params["tsh_method"]** ( int ): the selector if the NA-MD method
+
+
+
     # \param[in] params  A list of  input parameters from {gms,qe}_run.py 
     #### Returned data:
     #### test_data - the output data for debugging, in the form of dictionary
@@ -112,7 +146,14 @@ def main(params):
     # and executes run_MD function where NA-MD calculation is done.
     #
     # Used in:  run.py
-    #params["nel"] = 10
+    """
+
+    # Now try to get parameters from the input
+    critical_params = [ "excitations" ] 
+    default_params = { "dt_nucl":41.0,   }
+    comn.check_input(params, default_params, critical_params)
+
+
     dt_nucl = params["dt_nucl"]
     nstates = len(params["excitations"])
     nstates_init = len(params["excitations_init"])
