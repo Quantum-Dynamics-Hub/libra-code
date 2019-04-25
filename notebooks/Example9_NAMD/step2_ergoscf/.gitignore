@@ -1,0 +1,6 @@
+.ipynb_checkpoints
+*.txt
+*.bin
+*.out
+*.xyz
+*.mtx
