@@ -25,13 +25,13 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-from libra_py import ERGOSCF_methods
+from libra_py import ERGO_methods
 from libra_py import units
 import util.libutil as comn
 
 
 
-def do_step(i, params):
+def do_step(i, params, run):
     """
 
     Runs a single-point SCF calculation for a given geometry along a trajectory
@@ -40,82 +40,104 @@ def do_step(i, params):
         i ( int ): index of the time step to be used from the trajectory file
         params ( dictionary ): the control parameters of the simulation
         
-        * **params["EXE"]** ( string ): path to the ERGOSCF executable [ default: ergo ]
-        * **params["mo_active_space"]** ( list of ints or None ): indices of the MOs we care about 
-            The indexing starts from 0, not 1! If set to None - all MOs will be returned. [default: None]
-        * **params["md_file"]** ( string ): the name of the xyz file containing the trajectory - the 
-            file should be in the general xyz format. [default: "md.xyz"]
- 
+            * **params["EXE"]** ( string ): path to the ERGOSCF executable [ default: ergo ]
+            * **params["mo_active_space"]** ( list of ints or None ): indices of the MOs we care about 
+                The indexing starts from 0, not 1! If set to None - all MOs will be returned. [default: None]
+            * **params["md_file"]** ( string ): the name of the xyz file containing the trajectory - the 
+                file should be in the general xyz format. [default: "md.xyz"]
+        run (Python function ): the function that defines the ErgoSCF input generation - the user 
+            has to define all the control parameters in it, to be able to run the ErgoSCF calculations
+
+            Example:
+
+                In the example below, the outermost quotes should be tripled 
+
+                Note: the function should follw the signature shown here
+
+                def run(EXE, COORDS):
+                    inp = "#!bin/sh
+                %s << EOINPUT > /dev/null
+                spin_polarization = 0
+                molecule_inline
+                %sEOF
+                basis = "STO-3G"
+                use_simple_starting_guess=1
+                scf.create_mtx_files_F = 1
+                scf.create_mtx_file_S = 1
+                XC.sparse_mode = 1
+                run "LDA"
+                EOINPUT
+                " % (EXE, COORDS)
+                    return inp
+
+
     Returns:
-        tuple: (Ei, MOi, Hi, Si), where:
+        tuple: (E, MO), where:
         
-            * Ei ( CMATRIX(M, M) ), the matrix of the converged Hamiltonian eigenvalues (at given geometry)
+            * E ( CMATRIX(M, M) ), the matrix of the converged Hamiltonian eigenvalues (at given geometry)
                 Here, M = len(params["mo_active_space"]) - we output only the MO energies that are of interest to us
 
-            * MOi ( CMATRIX(A, M) ), the matrix of the converged Hamiltonian eigenvalues (at given geometry)
+            * MO ( CMATRIX(A, M) ), the matrix of the converged Hamiltonian eigenvalues (at given geometry)
                 Here, M = len(params["mo_active_space"]) - we output only the MO energies that are of interest to us.
                 A - is the number of AOs in this calculation
 
-            * Hi (list of CMATRIX(A, A) ): the Hamiltonian matrices in the AO basis, for each k-point
-
-            * Si (list of CMATRIX(A, A) ): the overlap matrices in the AO basis, for each k-point
 
     """
-
 
     # Now try to get parameters from the input
     critical_params = [ ] 
     default_params = { "EXE":"ergo",  "mo_active_space":None,  "md_file":"md.xyz"    }
     comn.check_input(params, default_params, critical_params)
-
     
     # Get the parameters
     EXE = params["EXE"]
     md_file = params["md_file"]
 
+        
+    # Make an input file for SP calculations     
+    R = ERGO_methods.xyz_traj2gen_sp(md_file, i)
+
+    # Run SCF calculations
+    command = run(EXE, R)
+    os.system("%s" % (command))
     
-    # Make an input file for SP calculations 
-    ERGOSCF_methods.xyz_traj2gen_sp(md_file, i)
-
-    # Run SCF calculations and generate the charge density for a converged calculations
-    # The file x1.gen is used as a geometry
-    os.system("cp %s dftb_in.hsd" % scf_in_file )
-    os.system( "%s" % EXE )
-
-    # Just generate the Hamiltonian corresponding to the converged density matrix
-    os.system("cp %s dftb_in.hsd" % hs_in_file )
-    os.system( "%s" % EXE )
-
-    # Get the Hamiltonian    
-    Hi = DFTB_methods.get_dftb_matrices("hamsqr1.dat")
-    Si = DFTB_methods.get_dftb_matrices("oversqr.dat")
-
-
+    # Get the last Fock matrix 
+    last_indx, last_filename = ERGO_methods.find_last_file("F_matrix_", ".mtx")
+    F = ERGO_methods.get_mtx_matrices(last_filename)    
+    S = ERGO_methods.get_mtx_matrices("S_matrix.mtx")
+    
+        
     # Get the dimensions
-    ao_sz = Hi[0].num_of_cols
-    mo_sz = ao_sz
+    ao_sz = F.num_of_cols        
     ao_act_sp = range(0, ao_sz)
-    mo_act_sp = range(0, mo_sz)
-
-    if params["mo_active_space"] != None:
-        mo_sz = len(params["mo_active_space"])
-        mo_act_sp = list(params["mo_active_space"])
-
-
-    # Extract the sub-matrix of interest
-    H_sub = CMATRIX(ao_sz, mo_sz)
-    pop_submatrix(Hi[0], H_sub, ao_act_sp, mo_act_sp)  # last element #0 = gamma-point
-
-    # Get the orbitals
-    Ei = CMATRIX(mo_sz, mo_sz)
-    MOi = CMATRIX(ao_sz, mo_sz)
-    solve_eigen(H_sub, Si[0], Ei, MOi, 0)     # last element #0 = gamma-point
     
-    return Ei, MOi, Hi, Si
+    mo_sz = ao_sz
+    mo_act_sp = range(0, mo_sz)
+    
+    if params["mo_active_space"] != None:
+        mo_sz = len(params["mo_active_space"])        
+        mo_act_sp = list(params["mo_active_space"])
+    
+    
+    # Solve the eigenvalue problem with the converged Fock matrix
+    # get the converged MOs
+    E = CMATRIX(ao_sz, ao_sz)
+    MO = CMATRIX(ao_sz, mo_sz)
+    solve_eigen(F, S, E, MO, 0)  
+
+    # Extract the E sub-matrix
+    E_sub = CMATRIX(mo_sz, mo_sz)
+    pop_submatrix(E, E_sub, mo_act_sp, mo_act_sp)  
+    
+    # Extract the MO sub-matrix
+    MO_sub = CMATRIX(ao_sz, mo_sz)
+    pop_submatrix(MO, MO_sub, ao_act_sp, mo_act_sp)  
+    
+    return E_sub, MO_sub
 
 
 
-def do_ovlp(i, params):
+def do_ovlp(i, params, run):
     """
 
     Compute the overlap matrix in the AO basis for two geometries, i and i+1
@@ -124,22 +146,34 @@ def do_ovlp(i, params):
         i ( int ): index of the time step to be used from the trajectory file
         params ( dictionary ): the control parameters of the simulation
         
-        * **params["EXE"]** ( string ): path to the DFTB+ executable [ default: dftb+ ]
-        * **params["md_file"]** ( string ): the name of the xyz file containing the trajectory - the 
-            file should be in the xyz format produced by the DFTB+ program. [default: "md.xyz"]
-        * **params["ovlp_gen_file"]** ( string ): the name of the .gen file that is listed in the 
-            DFTB+ input file and contains the geometry of the system at two time steps
-            (the content of this file will be updated for every i value). [default: "x2.gen" ]
-        * **params["syst_spec"]** ( string ): the string that is a part of the DFTB+ .gen file and defines
-            whether the system is a non-periodic/cluster ("C") or periodic ("S"). [default: "C"]
-        * **params["ovlp_in_file"]** ( string ): the name of the file containing the template for running 
-            calculations that construct H and S matrices and print them out by the DFTB+ calculations.  
+            * **params["EXE"]** ( string ): path to the ERGOSCF executable [ default: ergo ]
+            * **params["md_file"]** ( string ): the name of the xyz file containing the trajectory - the 
+                file should be in the general xyz format. [default: "md.xyz"]
 
-            - It should use the geometry file defined by params["ovlp_gen_file"]. 
-            - It should have the section: "WriteHS = Yes" to initialize the writing of the H and S matrices
- 
-            [default: "dftb_in_overlaps.hsd"]
+        run (Python function ): the function that defines the ErgoSCF input generation - the user 
+            has to define all the control parameters in it, to be able to run the ErgoSCF calculations
 
+            Example:
+
+                In the example below, the outermost quotes should be tripled 
+
+                Note: the function should follw the signature shown here
+
+                def run(EXE, COORDS):
+                    inp = "#!bin/sh
+                %s << EOINPUT > /dev/null
+                spin_polarization = 0
+                molecule_inline
+                %sEOF
+                basis = "STO-3G"
+                use_simple_starting_guess=1
+                scf.create_mtx_files_F = 1
+                scf.create_mtx_file_S = 1
+                XC.sparse_mode = 1
+                run "LDA"
+                EOINPUT
+                " % (EXE, COORDS)
+                    return inp
 
     Returns:
         CMATRIX(A, A): the matrix of the AO overlaps for two geometries, where A - is the size of the AO basis
@@ -148,43 +182,34 @@ def do_ovlp(i, params):
 
     # Now try to get parameters from the input
     critical_params = [ ] 
-    default_params = { "EXE":"dftb+",
-                       "md_file":"md.xyz", "ovlp_gen_file":"x2.gen", "syst_spec":"C" ,
-                       "ovlp_in_file":"dftb_in_overlaps.hsd"
-                     }
+    default_params = { "EXE":"ergo", "md_file":"md.xyz"   }
     comn.check_input(params, default_params, critical_params)
     
     # Get the parameters
     EXE = params["EXE"]
     md_file = params["md_file"]
-    ovlp_gen_file = params["ovlp_gen_file"]
-    syst_spec = params["syst_spec"]
-    ovlp_in_file = params["ovlp_in_file"]
-
+    
         
     # Make an input file for the overlap calculations 
-    DFTB_methods.xyz_traj2gen_ovlp(md_file, ovlp_gen_file, i, i+1, syst_spec)
+    R = ERGO_methods.xyz_traj2gen_ovlp(md_file, i, i+1)
     
-    # Run SCF calculations and generate the charge density for a converged calculations
-    # The file x2.gen is used as a geometry
-    os.system("cp %s dftb_in.hsd" % ovlp_in_file)
-    os.system( "%s" % EXE )
-
-    # Get the Hamiltonian    
-    Sbig = DFTB_methods.get_dftb_matrices("oversqr.dat")
-    norbs = Sbig[0].num_of_cols/2
+    # Run SCF calculations
+    command = run(EXE, R)
+    os.system("%s" % (command))
     
+    # Get the overlap matrix
+    S = ERGO_methods.get_mtx_matrices("S_matrix.mtx")
+        
+    norbs = S.num_of_cols/2    
     act_sp1 = range(0,norbs)
     act_sp2 = range(norbs,2*norbs)
-    S = CMATRIX(norbs, norbs)
-    pop_submatrix(Sbig[0], S, act_sp1, act_sp2)
+    S_sub = CMATRIX(norbs, norbs)
+    pop_submatrix(S, S_sub, act_sp1, act_sp2)
     
-    return S
-    
-    
+    return S_sub    
 
     
-def run_step2(params):
+def run_step2(params, run1, run2):
     """
     
     Calculate the overlaps, transition dipole moments, and vibronic Hamiltonian matrix elements in the AO basis
@@ -212,11 +237,11 @@ def run_step2(params):
 
 
     # Compute
-    E_curr, U_curr, Hao_curr, Sao_curr = do_step(isnap, params)
+    E_curr, U_curr = do_step(isnap, params, run1)
     
     for i in xrange(isnap+1, fsnap-1):
-        E_next, U_next, Hao_next, Sao_next = do_step(i, params)
-        S = do_ovlp(i, params)
+        E_next, U_next = do_step(i, params, run1)
+        S = do_ovlp(i, params, run2)
 
         S.real().show_matrix("res/AOS_%i_re" % (i) )
         
@@ -224,9 +249,9 @@ def run_step2(params):
         Hvib = 0.5*(E_curr + E_next) - (0.5j/dt) * ( TDM - TDM.H() )
 
         # Overlaps
-        s = 0.5 * (U_curr.H() * Sao_curr[0] * U_curr  +  U_next.H() * Sao_next[0] * U_next)
-        s.real().show_matrix("res/S_%i_re" % (i) )
-        s.imag().show_matrix("res/S_%i_im" % (i) )
+        #s = 0.5 * (U_curr.H() * Sao_curr[0] * U_curr  +  U_next.H() * Sao_next[0] * U_next)
+        #s.real().show_matrix("res/S_%i_re" % (i) )
+        #s.imag().show_matrix("res/S_%i_im" % (i) )
 
 
         # Time-overlaps

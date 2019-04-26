@@ -33,6 +33,34 @@ import util.libutil as comn
 import units
 
 
+def find_last_file(prefix, suffix):
+    """
+
+    This functions searches for the last file in a series of files named
+    `prefix`%i`suffix`, for instance "A1.txt", "A2.txt", "A3.txt", etc.
+
+    Args:
+        prefix ( string ): the prefix of the filenames 
+        suffix ( string ): the suffix of the filenames 
+
+    Return:
+        (int, string): (i, filename), where:
+
+            * i : the largest index of the existing  file
+            * filename : the name of the last existing file
+
+    """
+    stop = False
+    i = 1
+    while stop==False:
+        exists = os.path.isfile('%s%i%s' % (prefix, i, suffix))
+        if exists:
+            i = i + 1
+        else:
+            stop = True
+            
+    return i-1, '%s%i%s' % (prefix, i-1, suffix)
+
 
 def get_mtx_matrices(filename, act_sp1=None, act_sp2=None):
     """Get the matrices printed out by the DFTB+
@@ -55,80 +83,57 @@ def get_mtx_matrices(filename, act_sp1=None, act_sp2=None):
     
     # Copy the content of the file to a temporary location
     f = open(filename, "r")
-    A = f.readlines()
+    A = f.readlines()    
     f.close()    
 
-    for a in A:
+    sz = len(A)       
+    start = 0
+    for i in xrange(sz):
+        if A[i][0]!="%":
+            start = i        
+            break
         
-
-
-    norbs = int(float(A[1].split()[1]))
-    nkpts = int(float(A[1].split()[2]))
-
-
+    # Initialize the matrix dimentions
+    tmp = A[start].split()    
+    N = int(float(tmp[0]))
+    M = int(float(tmp[1]))
+        
+    
     # Determine the dimensions of the output matrices
+    nstates1, nstates2 = -1, -1
+    
     if act_sp1==None:
-        nstates1 = norbs
+        nstates1 = N
         act_sp1 = range(0, nstates1)
     else:
         nstates1 = len(act_sp1)
 
     if act_sp2==None:
-        nstates2 = norbs
+        nstates2 = N
         act_sp2 = range(0, nstates2)
     else:
         nstates2 = len(act_sp2)
-
-           
-    # Output variables    
-    X = []
-    
-    # For each k-point
-    for ikpt in xrange(nkpts):
-
-        # Write just the matrix data into a temporary files
-        # This procedure is made fault-resistant, to avoid wrong working 
-        # when some of the matrix elements printed out are nonsense.
-        B = A[5+ikpt*norbs : 5+(1+ikpt)*norbs]
         
-        f1 = open(filename+"_tmp", "w")  
-        for i in xrange(norbs):
+    X = CMATRIX(N,M)    
+        
+    for n in xrange(start+1, sz):
+        tmp = A[n].split()        
+                
+        if len(tmp)==3:
+            i = int(float(tmp[0])) - 1
+            j = int(float(tmp[1])) - 1
+            x = float(tmp[2])
+        
             
-            tmp = B[i].split()
-            line = ""            
-            for j in xrange(norbs): 
-                z = 0.0
-                if tmp[j]=="NaN":
-                    z = 0.0
-                else:
-                    try:
-                        z = float(tmp[j])
-                    except ValueError:
-                        z = 0.0
-                        pass
-                    except TypeError:
-                        z = 0.0
-                        pass                    
-                line = line + "%10.8f  " % (z)
-            line = line + "\n"
+            X.set(i,j, x*(1.0+0.0j))
+            X.set(j,i, x*(1.0+0.0j))
 
-            f1.write(line)
-        f1.close()
-                 
-        # Read in the temporary file - get the entire matrix 
-        x = MATRIX(norbs, norbs);  
-        x.Load_Matrix_From_File(filename+"_tmp")        
+            
+    # Extract the sub-matrix of interest
+    x_sub = CMATRIX(nstates1, nstates2)
+    pop_submatrix(X, x_sub, act_sp1, act_sp2)
         
-        # Extract the sub-matrix of interest
-        x_sub = MATRIX(nstates1, nstates2)
-        pop_submatrix(x, x_sub, act_sp1, act_sp2)
-
-        # Add the resulting matrices to the returned result
-        X.append( CMATRIX(x_sub) )    
-        
-    return X
-
-
+    return x_sub
 
 
 def xyz_traj2gen_sp(infile, md_iter):

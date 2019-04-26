@@ -43,31 +43,31 @@ def do_step(i, params):
         i ( int ): index of the time step to be used from the trajectory file
         params ( dictionary ): the control parameters of the simulation
         
-        * **params["EXE"]** ( string ): path to the DFTB+ executable [ default: dftb+ ]
-        * **params["mo_active_space"]** ( list of ints or None ): indices of the MOs we care about 
-            The indexing starts from 0, not 1! If set to None - all MOs will be returned. [default: None]
-        * **params["md_file"]** ( string ): the name of the xyz file containing the trajectory - the 
-            file should be in the xyz format produced by the DFTB+ program. [default: "md.xyz"]
-        * **params["sp_gen_file"]** ( string ): the name of the .gen file that is listed in the 
-            DFTB+ input file and contains the geometry of the system (the content of this file will be 
-            updated for every i value). [default: "x1.gen" ]
-        * **params["syst_spec"]** ( string ): the string that is a part of the DFTB+ .gen file and defines
-            whether the system is a non-periodic/cluster ("C") or periodic ("S"). [default: "C"]
-        * **params["scf_in_file"]** ( string ): the name of the file containing the template for running regular
-            SCF calculations for a single-point DFTB+ calculations. 
+            * **params["EXE"]** ( string ): path to the DFTB+ executable [ default: dftb+ ]
+            * **params["mo_active_space"]** ( list of ints or None ): indices of the MOs we care about 
+                The indexing starts from 0, not 1! If set to None - all MOs will be returned. [default: None]
+            * **params["md_file"]** ( string ): the name of the xyz file containing the trajectory - the 
+                file should be in the xyz format produced by the DFTB+ program. [default: "md.xyz"]
+            * **params["sp_gen_file"]** ( string ): the name of the .gen file that is listed in the 
+                DFTB+ input file and contains the geometry of the system (the content of this file will be 
+                updated for every i value). [default: "x1.gen" ]
+            * **params["syst_spec"]** ( string ): the string that is a part of the DFTB+ .gen file and defines
+                whether the system is a non-periodic/cluster ("C") or periodic ("S"). [default: "C"]
+            * **params["scf_in_file"]** ( string ): the name of the file containing the template for running regular
+                SCF calculations for a single-point DFTB+ calculations. 
  
-            - It should use the geometry file defined by params["sp_gen_file"]. 
+                - It should use the geometry file defined by params["sp_gen_file"]. 
 
-            [default: "dftb_in_ham1.hsd"]
+                [default: "dftb_in_ham1.hsd"]
 
-        * **params["hs_in_file"]** ( string ): the name of the file containing the template for running 
-            calculations that construct H and S matrices and print them out by the DFTB+ calculations.  
-
-            - It should use the geometry file defined by params["sp_gen_file"]. 
-            - It should have the section: "ReadInitialCharges = Yes" to use the previously-converged charge density
-            - It should have the section: "WriteHS = Yes" to initialize the writing of the H and S matrices
- 
-            [default: "dftb_in_ham2.hsd"]
+            * **params["hs_in_file"]** ( string ): the name of the file containing the template for running 
+                calculations that construct H and S matrices and print them out by the DFTB+ calculations.  
+        
+                - It should use the geometry file defined by params["sp_gen_file"]. 
+                - It should have the section: "ReadInitialCharges = Yes" to use the previously-converged charge density
+                - It should have the section: "WriteHS = Yes" to initialize the writing of the H and S matrices
+        
+                [default: "dftb_in_ham2.hsd"]
 
     Returns:
         tuple: (Ei, MOi, Hi, Si), where:
@@ -156,21 +156,21 @@ def do_ovlp(i, params):
         i ( int ): index of the time step to be used from the trajectory file
         params ( dictionary ): the control parameters of the simulation
         
-        * **params["EXE"]** ( string ): path to the DFTB+ executable [ default: dftb+ ]
-        * **params["md_file"]** ( string ): the name of the xyz file containing the trajectory - the 
-            file should be in the xyz format produced by the DFTB+ program. [default: "md.xyz"]
-        * **params["ovlp_gen_file"]** ( string ): the name of the .gen file that is listed in the 
-            DFTB+ input file and contains the geometry of the system at two time steps
-            (the content of this file will be updated for every i value). [default: "x2.gen" ]
-        * **params["syst_spec"]** ( string ): the string that is a part of the DFTB+ .gen file and defines
-            whether the system is a non-periodic/cluster ("C") or periodic ("S"). [default: "C"]
-        * **params["ovlp_in_file"]** ( string ): the name of the file containing the template for running 
-            calculations that construct H and S matrices and print them out by the DFTB+ calculations.  
-
-            - It should use the geometry file defined by params["ovlp_gen_file"]. 
-            - It should have the section: "WriteHS = Yes" to initialize the writing of the H and S matrices
- 
-            [default: "dftb_in_overlaps.hsd"]
+            * **params["EXE"]** ( string ): path to the DFTB+ executable [ default: dftb+ ]
+            * **params["md_file"]** ( string ): the name of the xyz file containing the trajectory - the 
+                file should be in the xyz format produced by the DFTB+ program. [default: "md.xyz"]
+            * **params["ovlp_gen_file"]** ( string ): the name of the .gen file that is listed in the 
+                DFTB+ input file and contains the geometry of the system at two time steps
+                (the content of this file will be updated for every i value). [default: "x2.gen" ]
+            * **params["syst_spec"]** ( string ): the string that is a part of the DFTB+ .gen file and defines
+                whether the system is a non-periodic/cluster ("C") or periodic ("S"). [default: "C"]
+            * **params["ovlp_in_file"]** ( string ): the name of the file containing the template for running 
+                calculations that construct H and S matrices and print them out by the DFTB+ calculations.  
+        
+                - It should use the geometry file defined by params["ovlp_gen_file"]. 
+                - It should have the section: "WriteHS = Yes" to initialize the writing of the H and S matrices
+        
+                [default: "dftb_in_overlaps.hsd"]
 
 
     Returns:
@@ -224,11 +224,11 @@ def run_step2(params):
     Args:
         params ( dictionary ): the control parameters of the simulation
         
-        * **params["dt"]** ( double ): nuclear dynamics timestep - as encoded in the trajectory [ units: a.u., default: 41.0 ]
-        * **params["isnap"]** ( int ): initial frame  [ default: 0 ]
-        * **params["fsnap"]** ( int ): final frame  [ default: 1 ]
-
-        SeeAlso:  the description of the parameters in ```do_ovlp(i, params)``` and in ```do_step(i, params)```
+            * **params["dt"]** ( double ): nuclear dynamics timestep - as encoded in the trajectory [ units: a.u., default: 41.0 ]
+            * **params["isnap"]** ( int ): initial frame  [ default: 0 ]
+            * **params["fsnap"]** ( int ): final frame  [ default: 1 ]
+        
+            SeeAlso:  the description of the parameters in ```do_ovlp(i, params)``` and in ```do_step(i, params)```
 
     """
 
