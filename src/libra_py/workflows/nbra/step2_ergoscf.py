@@ -208,6 +208,12 @@ def do_ovlp(i, params, run):
     
     return S_sub    
 
+
+def clean():
+    os.system("rm ergoscf.out")
+    os.system("rm density.bin")
+    os.system("rm F_matrix_*.mtx")
+
     
 def run_step2(params, run1, run2):
     """
@@ -237,10 +243,15 @@ def run_step2(params, run1, run2):
 
 
     # Compute
+    clean()
     E_curr, U_curr = do_step(isnap, params, run1)
     
-    for i in xrange(isnap+1, fsnap-1):
+    for i in xrange(isnap+1, fsnap-1):         
+
+        clean()
         E_next, U_next = do_step(i, params, run1)
+
+        clean()
         S = do_ovlp(i, params, run2)
 
         S.real().show_matrix("res/AOS_%i_re" % (i) )
