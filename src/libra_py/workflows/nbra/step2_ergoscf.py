@@ -166,9 +166,8 @@ def do_ovlp(i, params, run):
                 molecule_inline
                 %sEOF
                 basis = "STO-3G"
-                use_simple_starting_guess=1
-                scf.create_mtx_files_F = 1
                 scf.create_mtx_file_S = 1
+                scf.create_mtx_files_S_and_quit = 1
                 XC.sparse_mode = 1
                 run "LDA"
                 EOINPUT
@@ -201,6 +200,17 @@ def do_ovlp(i, params, run):
     S = ERGO_methods.get_mtx_matrices("S_matrix.mtx")
         
     norbs = S.num_of_cols/2    
+
+    """
+    BEWARE: The following orbital ordering works only with the 
+    folllowing changes in the ErgoSCF code:
+
+    ergo_scripted.cc
+    const int skip_sort_shells = 1;  /** AVA on 4/28/2019 */
+
+    Great thanks to Elias Rudberg for this suggestion!
+    """
+
     act_sp1 = range(0,norbs)
     act_sp2 = range(norbs,2*norbs)
     S_sub = CMATRIX(norbs, norbs)
