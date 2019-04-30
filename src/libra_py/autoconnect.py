@@ -222,6 +222,37 @@ def autoconnect(R, MaxCoord, params):
 
 
 
+def find_undercoordinated_atoms(res, MaxCoord):
+    """
+
+    Args:
+        res ( list of lists [ res[i][0], res[0][1] ] ), where 
+            * res[i][0] ( int ): index of the atom
+            * res[i][1] ( list of ints ): indices of the atoms that are connected to res[i][0]
+
+            This would typically be the first output of the ```autoconnect``` function
+
+        MaxCoord ( list of ints ): Maximal coorination numbers of each atom 
+
+    Returns: 
+        (list):  out, such that:
+
+            out[i][0] - is the index of the i-th undercoordinated atom
+            out[i][1] - is the number of dangling bonds on the i-th atom
+
+    """
+
+    nat = len(MaxCoord)  # the total number of atoms
+    out = []
+
+    for i in xrange(nat):
+        diff = MaxCoord[i] - len(res[i][1])
+        if  diff > 0:
+            out.append([i, diff])
+
+    return out
+
+
 def example_1():
 
     rnd = Random()

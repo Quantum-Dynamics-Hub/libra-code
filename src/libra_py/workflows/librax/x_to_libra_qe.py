@@ -33,13 +33,14 @@ from libra_py import QE_methods
 from libra_py import units
 
 ### TODO: Get rid of  import *
+"""
 from extract_qe import *
 from overlap import *
 from hamiltonian_el import *
 from create_input_qe import *
 from misc import *
 from spin_indx import *
-
+"""
 
 def exe_espresso(i, params={}):
     """

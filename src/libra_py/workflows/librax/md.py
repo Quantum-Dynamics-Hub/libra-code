@@ -24,6 +24,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from libra_py import *
 
+"""
 from create_input_gms import *
 from create_input_qe import *
 from create_input_g09 import *
@@ -34,6 +35,8 @@ from hamiltonian_vib import *
 import print_results
 import include_mm
 #import print_results_qe # This module isn't defined yet.
+
+"""
 
 ##############################################################
 

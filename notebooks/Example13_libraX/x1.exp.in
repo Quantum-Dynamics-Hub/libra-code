@@ -1,0 +1,10 @@
+&inputpp
+  prefix = 'x1',
+  outdir = './',
+  pseudo_dir = '/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/notebooks/Example13_libraX/PP/',
+  psfile(1) = 'C.pbe-n-rrkjus_psl.1.0.0.UPF',
+  psfile(2) = 'H.pbe-rrkjus_psl.1.0.0.UPF',
+  single_file = .FALSE.,
+  ascii = .TRUE.,
+  uspp_spsi = .FALSE.,
+/

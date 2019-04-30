@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2016 Alexey V. Akimov
+#* Copyright (C) 2016-2019 Ekadashi Pradhan, Kosuke Sato, Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -9,9 +9,14 @@
 #*
 #*********************************************************************************/
 
-## \file defaults.py
-# This module implements the functions that set up default parameters for different
-# types of simulations
+"""
+.. module:: defaults
+   :platform: Unix, Windows
+   :synopsis: This module implements the functions that set up default parameters for
+       various types of simulations
+.. moduleauthor:: Ekadashi Pradhan, Kosuke Sato, Alexey V. Akimov
+
+"""
 
 import os
 import sys
@@ -25,16 +30,21 @@ from libra_py import *
 
 
 def set_defaults(params, interface, recipe=""):
-## 
-# \param[in, out] params (dictionary) A dictionary of the parameters for simulaions. You pass an empty
-# (or not) dictionary to this function, and it will populate the dictionary with the default
-# values, depending on type of interface you about to use (controlled by the "interface" argument)
-# and the type of simulation you want to use (controlled by the "recipe")
-# \param[in] interface (string) A type of Libra-X interface you are going to use in the calculations
-# Options are: "QE", "GAMESS"
-# \param[in] recipe (string) The flag controlling specific selection of settings for a specific
-# type of simulations (recipe) you want to perform.
-# Options (yet to be defined): ""
+    """
+
+    Args:
+        params ( dictionary ): The dictionary of the parameters for simulaions. You pass an empty
+            (or not) dictionary to this function, and it will populate the dictionary with the default
+            values, depending on type of interface you are about to use (controlled by the "interface" 
+            argument) and the type of simulation you want to use (controlled by the "recipe")
+
+        interface ( string ): The type of Libra-X interface you are going to use in the calculations
+            Options are: "QE", "GAMESS"
+
+        recipe ( string ): The flag controlling specific selection of settings for a specific
+            type of simulations (recipe) you want to perform. [ default: ""]
+
+    """
 
     if interface=="GAMESS" or interface=="QE" or interface=="G09":
         params["interface"] = interface
@@ -43,8 +53,8 @@ def set_defaults(params, interface, recipe=""):
         print "Error in set_defaults: The interface ", interface, " is not known"
         sys.exit(0)
 
-    # Set up general parameters for both QE and GAMESS runs
 
+    # Set up general parameters for both QE and GAMESS runs
 
     ##### select directories where the results will be printed out. #####
     cwd = os.getcwd()

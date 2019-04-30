@@ -28,8 +28,9 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 import util.libutil as comn
-from libra_py import *
 
+"""
+from libra_py import *
 from create_input_gms import *
 from create_input_qe import *
 from create_input_g09 import *
@@ -41,7 +42,7 @@ from spin_indx import *
 from extract_qe import *
 from extract_g09 import *
 import include_mm
-
+"""
 
 
 def construct_active_space(params):
