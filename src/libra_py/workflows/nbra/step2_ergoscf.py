@@ -45,6 +45,9 @@ def do_step(i, params, run):
                 The indexing starts from 0, not 1! If set to None - all MOs will be returned. [default: None]
             * **params["md_file"]** ( string ): the name of the xyz file containing the trajectory - the 
                 file should be in the general xyz format. [default: "md.xyz"]
+            * **params["HOMO-LUMO-only"]** ( int ): a flag to decide to use only HOMO and LUMO orbitals as read from 
+                the ErgoSCF output. This is the option to really go with the linear-scaling costs [ default: 0 ]
+
         run (Python function ): the function that defines the ErgoSCF input generation - the user 
             has to define all the control parameters in it, to be able to run the ErgoSCF calculations
 
@@ -86,12 +89,13 @@ def do_step(i, params, run):
 
     # Now try to get parameters from the input
     critical_params = [ ] 
-    default_params = { "EXE":"ergo",  "mo_active_space":None,  "md_file":"md.xyz"    }
+    default_params = { "EXE":"ergo",  "mo_active_space":None,  "md_file":"md.xyz", "HOMO-LUMO-only":0  }
     comn.check_input(params, default_params, critical_params)
     
     # Get the parameters
     EXE = params["EXE"]
     md_file = params["md_file"]
+    HL_only = params["HOMO-LUMO-only"]
 
         
     # Make an input file for SP calculations     
@@ -101,6 +105,7 @@ def do_step(i, params, run):
     command = run(EXE, R)
     os.system("%s" % (command))
     
+
     # Get the last Fock matrix 
     last_indx, last_filename = ERGO_methods.find_last_file("F_matrix_", ".mtx")
     F = ERGO_methods.get_mtx_matrices(last_filename)    
@@ -175,7 +180,13 @@ def do_ovlp(i, params, run):
                     return inp
 
     Returns:
-        CMATRIX(A, A): the matrix of the AO overlaps for two geometries, where A - is the size of the AO basis
+        (CMATRIX(A, A), CMATRIX(A, A), CMATRIX(A, A)): (S11, S22, S12), where: 
+
+            * S11 - the matrices of the AO overlaps for the first geometry with itself (normal AO overlaps)
+            * S22 - the matrices of the AO overlaps for the second geometry with itself (normal AO overlaps)
+            * S12 - the matrices of the AO overlaps for the two geometries at the adjacent geometries (for TDM)
+
+            where A - is the size of the AO basis
 
     """
 
@@ -213,10 +224,16 @@ def do_ovlp(i, params, run):
 
     act_sp1 = range(0,norbs)
     act_sp2 = range(norbs,2*norbs)
-    S_sub = CMATRIX(norbs, norbs)
-    pop_submatrix(S, S_sub, act_sp1, act_sp2)
+
+    S11 = CMATRIX(norbs, norbs)
+    S12 = CMATRIX(norbs, norbs)
+    S22 = CMATRIX(norbs, norbs)
+
+    pop_submatrix(S, S11, act_sp1, act_sp1)
+    pop_submatrix(S, S12, act_sp1, act_sp2)
+    pop_submatrix(S, S22, act_sp2, act_sp2)
     
-    return S_sub    
+    return S11, S12, S22
 
 
 def clean():
@@ -236,13 +253,15 @@ def run_step2(params, run1, run2):
         * **params["dt"]** ( double ): nuclear dynamics timestep - as encoded in the trajectory [ units: a.u., default: 41.0 ]
         * **params["isnap"]** ( int ): initial frame  [ default: 0 ]
         * **params["fsnap"]** ( int ): final frame  [ default: 1 ]
+        * **params["HOMO-LUMO-only"]** ( int ): a flag to decide to use only HOMO and LUMO orbitals as read from 
+            the ErgoSCF output. This is the option to really go with the linear-scaling costs [ default: 0 ]
 
         SeeAlso:  the description of the parameters in ```do_ovlp(i, params)``` and in ```do_step(i, params)```
 
     """
 
     critical_params = [ ] 
-    default_params = { "dt":1.0*units.fs2au,  "isnap":0, "fsnap":1  }
+    default_params = { "dt":1.0*units.fs2au,  "isnap":0, "fsnap":1, "HOMO-LUMO-only":0  }
     comn.check_input(params, default_params, critical_params)
 
 
@@ -254,38 +273,36 @@ def run_step2(params, run1, run2):
 
     # Compute
     clean()
-    E_curr, U_curr = do_step(isnap, params, run1)
+    E_prev, U_prev = do_step(isnap, params, run1)
     
-    for i in xrange(isnap+1, fsnap-1):         
+    for i in xrange(isnap+1, fsnap):         
 
         clean()
-        E_next, U_next = do_step(i, params, run1)
+        E_curr, U_curr = do_step(i, params, run1)
 
         clean()
-        S = do_ovlp(i, params, run2)
+        S11, S22, S12 = do_ovlp(i-1, params, run2)
 
-        S.real().show_matrix("res/AOS_%i_re" % (i) )
         
-        TDM = U_curr.H() * S * U_next
-        Hvib = 0.5*(E_curr + E_next) - (0.5j/dt) * ( TDM - TDM.H() )
+        TDM = U_prev.H() * S12 * U_curr
+        Hvib = 0.5*(E_prev + E_curr) - (0.5j/dt) * ( TDM - TDM.H() )
 
         # Overlaps
-        #s = 0.5 * (U_curr.H() * Sao_curr[0] * U_curr  +  U_next.H() * Sao_next[0] * U_next)
-        #s.real().show_matrix("res/S_%i_re" % (i) )
-        #s.imag().show_matrix("res/S_%i_im" % (i) )
+        s = 0.5 * (U_prev.H() * S11 * U_prev  +  U_curr.H() * S22 * U_curr)
+        s.real().show_matrix("res/S_%i_re" % (i-1) )
+        s.imag().show_matrix("res/S_%i_im" % (i-1) )
 
 
         # Time-overlaps
-        TDM.real().show_matrix("res/St_%i_re" % (i) )
-        TDM.imag().show_matrix("res/St_%i_im" % (i) )
+        TDM.real().show_matrix("res/St_%i_re" % (i-1) )
+        TDM.imag().show_matrix("res/St_%i_im" % (i-1) )
                 
         # Vibronic Hamiltonians
-        Hvib.real().show_matrix("res/hvib_%i_re" % (i) )
-        Hvib.imag().show_matrix("res/hvib_%i_im" % (i) )
-
+        Hvib.real().show_matrix("res/hvib_%i_re" % (i-1) )
+        Hvib.imag().show_matrix("res/hvib_%i_im" % (i-1) )
         
         # Current becomes the old 
-        E_curr = CMATRIX(E_next)
-        U_curr = CMATRIX(U_next)
+        E_prev = CMATRIX(E_curr)
+        U_prev = CMATRIX(U_curr)
         
 
