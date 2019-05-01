@@ -21,6 +21,41 @@
 import os
 import sys
 import time
+import re
+
+
+def substitute(filename_template, out_filename, params):
+    """
+
+    Make a copy of a template file but with some variables replaced
+
+    Args:
+        filename_template ( string ): the name of the file that serves as a template
+        out_filename ( string ): the name of the output (result) file
+        params ( dictionary ): the keys of this dictionary should are the strings 
+            (more generally regular expressions) looked for, the values - are the strings
+            with which found regexes will be substituted.
+
+    Returns:
+        None: but creates the out_filename files
+
+    """
+
+    f = open(filename_template,"r")
+    A = f.readlines()
+    f.close()
+
+    f_out = open("%s" % (out_filename), "w")
+
+    for a in A:        
+        b = a
+        for key in params.keys():
+            b = re.sub(key, params[key], b)
+
+        f_out.write(b)
+    f_out.close()
+
+
 
 def make_submit(Nstart,Nend,job_dir,submit_templ):
     """    
