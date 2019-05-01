@@ -227,13 +227,20 @@ def run_step2(params):
             * **params["dt"]** ( double ): nuclear dynamics timestep - as encoded in the trajectory [ units: a.u., default: 41.0 ]
             * **params["isnap"]** ( int ): initial frame  [ default: 0 ]
             * **params["fsnap"]** ( int ): final frame  [ default: 1 ]
+            * **params["out_dir"]** ( string ): the path to the directory that will collect all the results
+                If the directory doesn't exist, it will be created  [ default: "res" ]
         
             SeeAlso:  the description of the parameters in ```do_ovlp(i, params)``` and in ```do_step(i, params)```
+
+    Returns:
+        None: but generates the files (S, St, and hvib) indexed in the range [isnap, fsnap), for 
+        instance, if isnap = 0, fsnap = 3, we will have files hvib_0, hvib_1, hvib_2
+
 
     """
 
     critical_params = [ ] 
-    default_params = { "dt":1.0*units.fs2au,  "isnap":0, "fsnap":1  }
+    default_params = { "dt":1.0*units.fs2au,  "isnap":0, "fsnap":1 , "out_dir":"res" }
     comn.check_input(params, default_params, critical_params)
 
 
@@ -241,37 +248,45 @@ def run_step2(params):
     dt = params["dt"]
     isnap = params["isnap"]
     fsnap = params["fsnap"]
+    out_dir = params["out_dir"]
+
+
+    # Create <out_dir> directory if it does not exist yet
+    if os.path.isdir(out_dir):
+        pass
+    else:
+        os.system("mkdir %s" % out_dir)
 
 
     # Compute
-    E_curr, U_curr, Hao_curr, Sao_curr = do_step(isnap, params)
+    E_prev, U_prev, Hao_prev, Sao_prev = do_step(isnap, params)
     
     for i in xrange(isnap+1, fsnap-1):
-        E_next, U_next, Hao_next, Sao_next = do_step(i, params)
+        E_curr, U_curr, Hao_curr, Sao_curr = do_step(i, params)
         S = do_ovlp(i, params)
 
-        S.real().show_matrix("res/AOS_%i_re" % (i) )
+        #S.real().show_matrix("res/AOS_%i_re" % (i) )
         
-        TDM = U_curr.H() * S * U_next
-        Hvib = 0.5*(E_curr + E_next) - (0.5j/dt) * ( TDM - TDM.H() )
+        TDM = U_prev.H() * S * U_curr
+        Hvib = 0.5*(E_prev + E_curr) - (0.5j/dt) * ( TDM - TDM.H() )
 
         # Overlaps
-        s = 0.5 * (U_curr.H() * Sao_curr[0] * U_curr  +  U_next.H() * Sao_next[0] * U_next)
-        s.real().show_matrix("res/S_%i_re" % (i) )
-        s.imag().show_matrix("res/S_%i_im" % (i) )
+        s = 0.5 * (U_prev.H() * Sao_prev[0] * U_prev  +  U_curr.H() * Sao_curr[0] * U_curr)
+        s.real().show_matrix("%s/S_%i_re" % (out_dir, i-1) )
+        s.imag().show_matrix("%s/S_%i_im" % (out_dir, i-1) )
 
 
         # Time-overlaps
-        TDM.real().show_matrix("res/St_%i_re" % (i) )
-        TDM.imag().show_matrix("res/St_%i_im" % (i) )
+        TDM.real().show_matrix("%s/St_%i_re" % (out_dir, i-1) )
+        TDM.imag().show_matrix("%s/St_%i_im" % (out_dir, i-1) )
                 
         # Vibronic Hamiltonians
-        Hvib.real().show_matrix("res/hvib_%i_re" % (i) )
-        Hvib.imag().show_matrix("res/hvib_%i_im" % (i) )
+        Hvib.real().show_matrix("%s/hvib_%i_re" % (out_dir, i-1) )
+        Hvib.imag().show_matrix("%s/hvib_%i_im" % (out_dir, i-1) )
 
         
         # Current becomes the old 
-        E_curr = CMATRIX(E_next)
-        U_curr = CMATRIX(U_next)
+        E_prev = CMATRIX(E_curr)
+        U_prev = CMATRIX(U_curr)
         
 
