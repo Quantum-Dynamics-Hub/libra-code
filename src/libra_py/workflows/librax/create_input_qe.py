@@ -25,19 +25,21 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 # TODO: Get rid of import *
-
-from libra_py import *
+#from libra_py import *
+import util.libutil as comn
 
 
 def read_qe_inp_templ(inp_filename):
     """
-##
-# Reading and storing template input file for QE calculations. The input file is essentially a
-# normal input file, but we store only the constant section (control option), not the
-# coordinates. The latter will be updated at each iteration using the propagated objects
-#
-# \param[in] inp_filename The name of the initial input file, which will serve as a template
-#
+
+    Reading and storing template input file for QE calculations. The input file is essentially a
+    normal input file, but we store only the constant section (control option), not the
+    coordinates. The latter will be updated at each iteration using the propagated objects
+
+    Args:
+        inp_filename ( string ): The name of the initial input file, which will serve as a template
+
+
     """
 
     f = open(inp_filename,"r")
@@ -69,18 +71,24 @@ def read_qe_inp_templ(inp_filename):
 
 
 
+def excitation_to_qe_occ(norb, nel, state):
+    """
 
-def excitation_to_qe_occ(params, state):
-##
-# This function converts the Libra "excitation" object to the QE occupation scheme
-# \param[in] params Control parameters
-# \param[in] state The excitation to convert into QE format
-#
-# Returns a list of occupation numbers of the alpha, beta, and total (doubly degenerate) orbitals
+    This function converts Libra "excitation" objects to the QE occupation scheme
 
+    Args:
+        norb ( int ): the number of KS orbitals to consider
+        nel ( int ): the number of electrons to distribute among these orbitals
+        state ( Libra.excitation object ): the excitation representing Slater determinant
 
-    norb = params["norb"] # the number of KS orbitals
-    nel = params["nel"]    # the number of electrons
+    Returns:
+        (list, list, list): (occ, occ_alp, occ_bet):
+
+            * occ ( list of doubles ): total occupation of the orbitals (2 is max, for non-spin-polarized)
+            * occ_alp ( list of doubles ): occupations of alpha orbitals (for spin-polarized)
+            * occ_bet ( list of doubles ): occupations of beta orbitals (for spin-polarized)
+
+    """
 
     # Number of occupied alpha and beta orbitals
     nocc_alp = nel/2  # integer division!
@@ -122,8 +130,6 @@ def excitation_to_qe_occ(params, state):
         sys.exit(0)
 
 
-    # So far we only look at the non-spin-polarized case, so lets compute the
-    # total occupation numbers
     occ = [0.0]*norb
     occ_alp = [0.0]*norb
     occ_bet = [0.0]*norb
@@ -253,6 +259,7 @@ def write_qe_input(ex_st, label, mol, params,occ,occ_alp,occ_bet,restart_flag):
         f.write("\n")
         f.write(print_occupations(occ_bet))        
     f.close()
+
 
 
 def write_qe_input_first(filename, occ, occ_alp, occ_bet, nspin, params, restart_flag):

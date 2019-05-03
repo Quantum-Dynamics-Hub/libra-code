@@ -31,6 +31,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+import util.libutil as comn
 import units
 import regexlib as rgl
 
@@ -57,6 +58,71 @@ def cryst2cart(a1,a2,a3,r):
         x[i] = a1[i]*r[0] + a2[i]*r[1] + a3[i]*r[2]
 
     return x
+
+
+
+def read_qe_schema(filename, verbose=0):
+    """
+
+    This functions reads an ASCII/XML format file containing basic info about the QE run
+
+    Args:
+        filename ( string ): This is the name of the file we will be read [ usually: "x0.save/data-file-schema.xml"]
+        verbose ( int ): The flag controlling the amout of extra output:
+        
+            * 0 - no extra output (default)
+            * 1 - print extra stuff
+  
+    Returns: 
+        dictionary: ( info ): the dictionary containaining the descritive information about the QE calculations and the system
+
+            It contains the following info:
+
+            * **info["conv"]** ( int ): the number of steps to converge SCF, 0 - means no convergence
+            * **info["etot"]** ( double ): the total energy (electronic + nuclear) [ units: Ha ]
+            * **info["nbnd"]** ( int ): the number of bands 
+            * **info["nelec"]** ( int ): the number of electrons
+            * **info["efermi"]** ( double ): the Fermi energy [ units: Ha ] 
+
+    """
+
+    #critical_params = [  ] 
+    #default_params = { }
+    #comn.check_input(params, default_params, critical_params)
+
+    ctx = Context(filename)  #("x.save/data-file-schema.xml")
+    ctx.set_path_separator("/")
+     
+
+    info = {}
+
+    info["conv"] = int(float( ctx.get("output/convergence_info/scf_conv/n_scf_steps", 0.0) )) # 0 means not converged
+    info["etot"] = float( ctx.get("output/total_energy/etot",0.0) )   # total energy
+    info["nbnd"] = int(float( ctx.get("output/band_structure/nbnd",0.0) ))  
+    info["nelec"] = int(float( ctx.get("output/band_structure/nelec",0.0) )) 
+    info["efermi"] = float( ctx.get("output/band_structure/fermi_energy",0.0) )
+
+
+    dctx = Context()
+    atoms = ctx.get_child("input", dctx).get_child("atomic_structure", dctx).get_child("atomic_positions", dctx).get_children("atom")
+    nat = len(atoms)
+
+    R = MATRIX(3*nat, 1) # coordinates
+    L = []  # labels
+
+    for i in xrange(nat):        
+        xyz_str = atoms[i].get("", "").split(' ')
+        name = atoms[i].get("<xmlattr>/name", "X")
+        L.append(name)
+        R.set(3*i+0, 0, float(xyz_str[0]) )
+        R.set(3*i+1, 0, float(xyz_str[1]) )
+        R.set(3*i+2, 0, float(xyz_str[2]) )
+
+    info["coords"] = R
+    info["atom_labels"] = L
+
+
+    return info
 
 
 

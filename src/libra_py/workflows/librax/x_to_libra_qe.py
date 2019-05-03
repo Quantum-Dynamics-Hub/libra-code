@@ -32,6 +32,8 @@ import util.libutil as comn
 from libra_py import QE_methods
 from libra_py import units
 
+import create_input_qe
+
 ### TODO: Get rid of  import *
 """
 from extract_qe import *
@@ -146,7 +148,7 @@ def run_delta_scf_qe(excitation):
     while status != 0:
         coount = coount + 1
 
-        write_qe_input_first("x%i.scf_wrk.in"%ex_st,occ,occ_alp,occ_bet,nspin,params,restart_flag)
+        write_qe_input_first("x%i.scf_wrk.in" % (ex_st) , occ,occ_alp,occ_bet,nspin,params,restart_flag)
         exe_espresso(ex_st)
 
         is_converged = check_convergence("x%i.scf.out" % ex_st) # returns 0 if SCF converges, 1 if not converges
@@ -173,8 +175,8 @@ def run_delta_scf_qe(excitation):
                 restart_flag = 11
 
             if params["nspin"] == 2:
-                en_alp = qe_extract_eigenvalues("x%i.save/K00001/eigenval1.xml"%ex_st,nel)
-                en_bet = qe_extract_eigenvalues("x%i.save/K00001/eigenval2.xml"%ex_st,nel)
+                en_alp = qe_extract_eigenvalues("x%i.save/K00001/eigenval1.xml" % (ex_st), nel)
+                en_bet = qe_extract_eigenvalues("x%i.save/K00001/eigenval2.xml" % (ex_st), nel)
                 occ_alp = fermi_pop(en_alp,nel,params["nspin"],params["electronic_smearing"],ex_st)
                 occ_bet = fermi_pop(en_bet,nel,params["nspin"],params["electronic_smearing"],0)
 
@@ -270,7 +272,7 @@ def qe_to_libra(params, E, sd_basis, label, mol, suff, active_space):
         coount = 0
         while status != 0: #for i in xrange(5):
             coount = coount + 1
-            write_qe_input(ex_st,label,mol,params,occ,occ_alp,occ_bet,restart_flag)
+            create_input_qe.write_qe_input(ex_st,label,mol,params,occ,occ_alp,occ_bet,restart_flag)
             exe_espresso(ex_st)
             status = check_convergence("x%i.scf.out" % ex_st) # returns 0 if SCF converges, 1 if not converges
             if status == 0:
