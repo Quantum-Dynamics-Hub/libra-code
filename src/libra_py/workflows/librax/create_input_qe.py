@@ -262,13 +262,14 @@ def write_qe_input(ex_st, label, mol, params,occ,occ_alp,occ_bet,restart_flag):
 
 
 
-def write_qe_input_first(filename, occ, occ_alp, occ_bet, nspin, params, restart_flag):
+def write_qe_input_first(filename1, filename2, occ, occ_alp, occ_bet, nspin, scf_iter, restart_flag):
     """
 
     Creates the QE input file for the very first step
 
     Args:
-    filename ( string ): QE input filename to be written
+    filename1 ( string ): the QE input filename that is used as a reference (template)
+    filename2 ( string ): the QE input filename that will be produced
     occ ( list of doubles ): occupation numbers of the orbitals in non-polarized case (doubly degenerate)
     occ_alp ( list of doubles ): occupation numbers of the alpha orbitals (in spin-polarized case)
     occ_bet ( list of doubles ): occupation numbers of the beta orbitals (in spin-polarized case)
@@ -277,22 +278,22 @@ def write_qe_input_first(filename, occ, occ_alp, occ_bet, nspin, params, restart
         * 1: spin restricted (non-polarized)
         * 2: spin unrestricted (polarized)
 
-    params ( dictionary ): General control parameters 
+    scf_iter ( int ): The number of SCF iterations to do in the QE calculations
     restart_flag ( int ): 
-        index 10 is used at this point for the very first iteration
-        index 11 is used for consecutive steps where restart from the
-        previous wavefunction and density is performed.
+        * 0: don't change the number of max SCF iterations
+        * 1: DO change the number of max SCF iterations, but don't use the previous wfc and potential
+        * 2: DO change the number of max SCF iterations, and DO use the previous wfc and potential
 
     """
  
-    f = open(filename,"r+")
+    f = open(filename1,"r")
     a = f.readlines()
     f.close()
 
     N = len(a)  # number of lines
 
     # Now re-write the file
-    f = open(filename, "w")
+    i_alp = 0
     for i in range(0,N):
         s = a[i].split()
         if len(s)>0 and s[0] =="OCCUPATIONS":
@@ -300,18 +301,17 @@ def write_qe_input_first(filename, occ, occ_alp, occ_bet, nspin, params, restart
     a[i_alp:N] = []
 
 
+    f = open(filename2, "w")
     for i in range(0,i_alp):
         aa = a[i].split()
-        if len(aa) >0 and aa[0] == "&ELECTRONS" and restart_flag==11:
+        if len(aa) >0 and aa[0] == "&ELECTRONS" and restart_flag==2:
             a[i] = "&ELECTRONS \n startingwfc = 'file', \n startingpot = 'file', \n"
-        if len(aa) >0 and aa[0] == "&ELECTRONS" and restart_flag==10:
+        if len(aa) >0 and aa[0] == "&ELECTRONS" and restart_flag==1:
             a[i] = "&ELECTRONS \n"
-        if len(aa) >0 and aa[0] == "electron_maxstep" and restart_flag > 9:
+        if len(aa) >0 and aa[0] == "electron_maxstep" and restart_flag > 0:
             #a = " electron_maxstep = 2, \n "
-            a[i] = " electron_maxstep = %i, \n " % (params["scf_itr"])
-
+            a[i] = " electron_maxstep = %i, \n " % (scf_iter) 
         f.write(a[i])
-
 
     # Write occupation
     # Single excitations with no spin-polarization
@@ -320,7 +320,7 @@ def write_qe_input_first(filename, occ, occ_alp, occ_bet, nspin, params, restart
         f.write("\n")
 
     # Single excitations with spin-polarization 
-    if nspin >1:
+    if nspin > 1:
         f.write(print_occupations(occ_alp))
         f.write("\n")
         f.write(print_occupations(occ_bet))

@@ -83,12 +83,14 @@ def read_qe_schema(filename, verbose=0):
             * **info["nbnd"]** ( int ): the number of bands 
             * **info["nelec"]** ( int ): the number of electrons
             * **info["efermi"]** ( double ): the Fermi energy [ units: Ha ] 
+            * **info["alat"]** ( double ): lattice constant [ units: Bohr ] 
+            * **info["nat"]** ( int ): the number of atoms
+            * **info["coords"]** ( MATRIX(3*nat, 1) ): the atomic coordinates [ units: Bohr ]
+            * **info["atom_labels"]** ( list of nat strings ): the atomic names
+            * **info["forces"]** ( MATRIX(3*nat, 1) ): the atomic forces [ units: Ha/Bohr ]
 
     """
 
-    #critical_params = [  ] 
-    #default_params = { }
-    #comn.check_input(params, default_params, critical_params)
 
     ctx = Context(filename)  #("x.save/data-file-schema.xml")
     ctx.set_path_separator("/")
@@ -104,8 +106,13 @@ def read_qe_schema(filename, verbose=0):
 
 
     dctx = Context()
+    alat = ctx.get_child("input", dctx).get_child("atomic_structure",dctx).get("<xmlattr>/alat", "X")
+    info["alat"] = float(alat)
+
     atoms = ctx.get_child("input", dctx).get_child("atomic_structure", dctx).get_child("atomic_positions", dctx).get_children("atom")
     nat = len(atoms)
+
+    info["nat"] = nat
 
     R = MATRIX(3*nat, 1) # coordinates
     L = []  # labels
@@ -120,6 +127,32 @@ def read_qe_schema(filename, verbose=0):
 
     info["coords"] = R
     info["atom_labels"] = L
+
+
+    #===== Get the forces =======
+    pool1 = ctx.get_child("output", dctx).get_child("forces", dctx).get("", "").split(' ')
+    pool2 = []
+    for it in pool1:
+        tmp = it.split('\n')
+        for a in tmp:
+            pool2.append(a)
+        
+    forces = []
+    for a in pool2:
+        if a is not '\n' and a is not '':        
+            forces.append(float(a))
+
+    if len(forces) % 3 != 0:
+        print "In read_qe_schema: Something is wrong with reading forces\n";
+        sys.exit(0)
+        
+    nat = len(forces)/3
+    F = MATRIX(3*nat, 1) # forces
+
+    for i in xrange(3*nat):        
+        F.set(i, 0, forces[i])
+
+    info["forces"] = F
 
 
     return info

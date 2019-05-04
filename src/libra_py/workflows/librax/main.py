@@ -45,18 +45,16 @@ import include_mm
 """
 
 
-def construct_active_space(params):
+def construct_active_space(nel, excitations):
     """
 
     This function constructs the active space for NA-MD calculations
 
     Args:
-        params ( dictionary ): the execution control parameters, including:
+        nel ( int ): the number of electrons in our system
+        excitations ( list of Libra.excitation objects ): the objects representing the Slater
+            Determinats (excitations)
 
-            * **params["excitations"]** ( list of "excitation" objects ): the dynamical basis
-                in the NA-MD calculations 
-            * **params["nel"] ( int ): the number of electrons in the system.
-                It is used to determine the index of HOMO
     Returns:
         list of integers: the indices of the orbitals that are used to construct the excitations 
             included in the dynamical basis and therefore constitute the active space.
@@ -64,20 +62,14 @@ def construct_active_space(params):
             and the list of excitations
     """
 
-    # Now try to get parameters from the input
-    critical_params = [ "nel", "excitations" ] 
-    default_params = {  }
-    comn.check_input(params, default_params, critical_params)
-
-
     active_space = []
-    homo = params["nel"]/2 +  params["nel"] % 2  # the index of HOMO starting from 1 (not 0!)
+    homo = nel/2 +  nel % 2  # the index of HOMO starting from 1 (not 0!)
 
     # Find the lowest orbital from which excitation occurs and find the highest orbital to where
     # electron is sent
     min_from = 0
     max_to = 0
-    for ex in params["excitations"]:
+    for ex in excitations:
 
         if min_from > ex.from_orbit[0]:
             min_from = ex.from_orbit[0]
@@ -95,8 +87,6 @@ def construct_active_space(params):
     # excitations)
     active_space = range(min_from + homo, max_to + homo + 1)
 
-    # Returning [-1] means the active space can not be constructed for given number of electrons
-    # and the list of excitations
     return active_space
 
 
