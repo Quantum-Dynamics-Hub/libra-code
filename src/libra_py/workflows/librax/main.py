@@ -28,6 +28,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 import util.libutil as comn
+from libra_py import QE_methods
 
 """
 from libra_py import *
@@ -43,6 +44,12 @@ from extract_qe import *
 from extract_g09 import *
 import include_mm
 """
+
+
+import x_to_libra_qe
+import create_input_qe
+import extract_qe
+import md
 
 
 def construct_active_space(nel, excitations):
@@ -153,6 +160,10 @@ def main(params):
     # nspin = params["nspin"]  This parameter is used only in Libra-QE interface.
     uff = params["ff"]
 
+    kT = params["electronic_smearing"]  
+
+
+
     num_SH_traj = 1
     if SH_type >= 1: # calculate no SH probs.  
         num_SH_traj = params["num_SH_traj"]
@@ -178,16 +189,6 @@ def main(params):
 
     ################# Step 0: Use the initial file to create a working input file ###############
 
-    if params["interface"]=="GAMESS": 
-        os.system("cp %s %s" %(params["gms_inp0"], params["gms_inp"]))
-
-    elif params["interface"]=="G09": 
-        os.system("cp %s %s" %(params["g09_inp0"], params["g09_inp"]))
-
-    elif params["interface"]=="QE":
-        for ex_st in xrange(nstates):
-            os.system("cp x%i.scf.in x%i.scf_wrk.in" % (ex_st, ex_st))
-
     #### Step 1: Read initial input, run first calculation, and initialize the "global" variables ####
     #t = Timer()
     #t.start()
@@ -199,6 +200,7 @@ def main(params):
     
     if params["interface"]=="GAMESS":
 
+        os.system("cp %s %s" %(params["gms_inp0"], params["gms_inp"]))
         params["gms_inp_templ"] = read_gms_inp_templ(params["gms_inp"])
         exe_gamess(params)
         label, Q, R, grads, E, c, ao, params["nel"] = gms_extract(params["gms_out"],params["excitations"],params["min_shift"],active_space,params["debug_gms_unpack"])
@@ -216,6 +218,7 @@ def main(params):
             all_grads.append(copy.deepcopy(grads)) # newly defined
 
     elif params["interface"]=="G09":
+        os.system("cp %s %s" %(params["g09_inp0"], params["g09_inp"]))
         params["g09_inp_templ"] = read_g09_inp_templ(params["g09_inp"])
         exe_g09(params)
         #while not os.path.exists(params["g09_out"]):
@@ -237,55 +240,106 @@ def main(params):
             sd_basis.append(sd)
             all_grads.append(copy.deepcopy(grads)) # newly defined
 
+
     elif params["interface"]=="QE":
-        params["qe_inp_templ"] = []
+
+        info = None
+
+        # AVA: params["qe_inp_templ"] = []
         for ex_st in xrange(nstates): # modify here #
 
-            params["qe_inp_templ"].append( read_qe_inp_templ("x%i.scf_wrk.in" % ex_st) )
-            exe_espresso(ex_st)
-            flag = 0
+            print "Starting excitation %i" % (ex_st)
+
+            # Copy the orignal input files into working ones, which will be modified
+            # so that we don't screw up the original files if something goes wrong
+            os.system("cp x%i.scf.in x%i.scf_wrk.in" % (ex_st, ex_st))
+            # AVA: params["qe_inp_templ"].append( read_qe_inp_templ("x%i.scf_wrk.in" % ex_st) )
+
+            print "Starting QE calculations"
+            x_to_libra_qe.exe_espresso(ex_st, params)
+            status = x_to_libra_qe.check_convergence("x%i.scf.out" % (ex_st))
+
+            print "Status = ", status
+
+            # AVA: flag = 0
 
             # Basically, here we automatically determine the position of HOMO and will construct
             # the active space before actually using it
             if ex_st==0:
-                tot_ene, params["norb"], params["nel"], params["nat"], params["alat"], icoord, iforce = qe_extract_info("x%i.scf.out" % ex_st, ex_st, flag)
-                active_space = construct_active_space(params)
+                info = QE_methods.read_qe_schema("x0.save/data-file-schema.xml")
+                # AVA: tot_ene, params["norb"], params["nel"], params["nat"], params["alat"], icoord, iforce = qe_extract_info("x%i.scf.out" % ex_st, ex_st, flag)
+                active_space = construct_active_space(info["nelec"], params["excitations"] )
 
-    ###########################################
 
             excitation = params["excitations"][ex_st]
             nspin = params["nspin"]
-            nel = params["nel"]
-            occ, occ_alp, occ_bet = excitation_to_qe_occ(params, excitation)
-            status = -1
-            restart_flag = 0
-            coount = 0
-            while status != 0: #for i in xrange(5):
-                coount = coount + 1
-                write_qe_input_first("x%i.scf_wrk.in"%ex_st,occ,occ_alp,occ_bet,nspin,params,restart_flag)
-                exe_espresso(ex_st)
-                status = check_convergence("x%i.scf.out" % ex_st) # returns 0 if SCF converges, 1 if not converges
-                if status == 0:
-                    tot_ene, label, R, grads, mo_pool_alp, mo_pool_bet, params["norb"], params["nel"], params["nat"], params["alat"] = qe_extract("x%i.scf.out" % ex_st, active_space, ex_st, nspin, flag)
+            nel = info["nelec"]
+            norbs = info["nbnd"]/nspin  # the number of orbitals per spin channel
 
-                else:
-                    if coount==1:
-                        restart_flag = 10
-                    else:
-                        restart_flag = 11
+            # AVA: occ, occ_alp, occ_bet = excitation_to_qe_occ(params, excitation)
+            occ, occ_alp, occ_bet = create_input_qe.excitation_to_qe_occ(norbs, nel, excitation)
 
-                    if params["nspin"] == 2:
-                        en_alp = qe_extract_eigenvalues("x%i.save/K00001/eigenval1.xml"%ex_st,nel)
-                        en_bet = qe_extract_eigenvalues("x%i.save/K00001/eigenval2.xml"%ex_st,nel)
-                        occ_alp = fermi_pop(en_alp,nel,params["nspin"],params["electronic_smearing"],ex_st)
-                        occ_bet = fermi_pop(en_bet,nel,params["nspin"],params["electronic_smearing"],0)
+            print "Occupation numbers :", occ, occ_alp, occ_bet
 
-                    elif params["nspin"] == 1:
-                        en_orb = qe_extract_eigenvalues("x%i.save/K00001/eigenval.xml"%ex_st,nel)
-                        occ = fermi_pop(en_orb,nel,params["nspin"],params["electronic_smearing"])
+            # In the case we didn't converge, lets do the iterations with the occupation numbers
+            cnt = 0
+            restart_flag = 1   #  1 - change scf_iter, 2 - change scf_iter + restart from the previous pot and wfc    
+
+            while status == False:                 
+                print  "In the while loop count = %i" % (cnt) 
+
+                create_input_qe.write_qe_input_first("x%i.scf_wrk.in" % (ex_st), "x%i.scf_wrk.in" % (ex_st),
+                                         occ, occ_alp, occ_bet, nspin, params["scf_iter"], restart_flag)
+
+                # AVA:  write_qe_input_first("x%i.scf_wrk.in"%ex_st,occ,occ_alp,occ_bet,nspin,params,restart_flag)
+
+                print "starting QE"
+                x_to_libra_qe.exe_espresso(ex_st, params)
+                status = x_to_libra_qe.check_convergence("x%i.scf.out" % (ex_st))
+
+                print "Status = ", status
+
+
+                if cnt >= 0:  
+                    restart_flag = 2
+
+                nbnd = info["nbnd"]
+
+                if nspin == 1:
+                    info1, all_e = QE_methods.read_qe_index("x%i.export/index.xml" % (ex_st), range(1, nbnd + 1), 0)
+
+                    bnds = []
+                    for i in xrange(nbnd):                    
+                        bnds.append(all_e[0].get(i,i).real)
+                    occ = extract_qe.excited_populations(bnds, info["nelec"], nspin, kT, 1)
+
+                    print "Updated occ = ", occ
+
+
+                elif nspin == 2:
+                    nbnd = info["nbnd"]
+                    info1, all_e = QE_methods.read_qe_index("x%i.export/index.xml" % (ex_st), range(1, nbnd/2 + 1), 0)
+
+                    bnds_alp, bnds_bet = [], []
+                    for i in xrange(nbnd/2):                    
+                        bnds_alp.append(all_e[0].get(i,i).real)
+                        bnds_bet.append(all_e[1].get(i,i).real)
+                    occ_alp = extract_qe.excited_populations(bnds_alp, info["nelec"], nspin, kT, 1)
+                    occ_bet = extract_qe.excited_populations(bnds_bet, info["nelec"], nspin, kT, 1)
+
+                    print "Energies = ", bnds_alp, bnds_bet
+                    print "Updated occ = ", occ_alp, occ_bet
+
 
 
     ###########################################
+        print "All is done"
+        sys.exit(0)
+
+        """   AVA: temporarily comment for debug
+            tot_ene, label, R, grads, mo_pool_alp, mo_pool_bet, params["norb"], params["nel"], params["nat"], params["alat"] = qe_extract("x%i.scf.out" % ex_st, active_space, ex_st, nspin, flag)
+
+
 
             homo = params["nel"]/2 +  params["nel"] % 2
             #t.start()
@@ -300,6 +354,7 @@ def main(params):
             all_grads.append(grads)
             e.set(ex_st, ex_st, tot_ene)
 
+        """
 
     # Now, clone the single-trajectory variables, to initialize the bunch of such parameters
     # for all trajectories
@@ -403,10 +458,10 @@ def main(params):
                 el.append(Electronic(nstates,i_ex))
 
 
-    #sys.exit(0) # debug
+    sys.exit(0) # debug
     # set list of SH state trajectories
     print "run MD"
-    run_MD(syst,el,ao_list,e_list,sd_basis_list,params,label_list, Q_list, active_space)
+    md.run_MD(syst,el,ao_list,e_list,sd_basis_list,params,label_list, Q_list, active_space)
     print "MD is done"
 
 
