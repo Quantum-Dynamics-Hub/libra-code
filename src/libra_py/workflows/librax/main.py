@@ -298,7 +298,8 @@ def main(params):
                 status = x_to_libra_qe.check_convergence("x%i.scf.out" % (ex_st))
 
                 print "Status = ", status
-
+                info = QE_methods.read_qe_schema("x%i.save/data-file-schema.xml" % (ex_st), 0)
+                print "Energy = ", info["etot"]
 
                 if cnt >= 0:  
                     restart_flag = 2
@@ -331,6 +332,7 @@ def main(params):
                     print "Updated occ = ", occ_alp, occ_bet
 
 
+                cnt = cnt + 1
 
     ###########################################
         print "All is done"

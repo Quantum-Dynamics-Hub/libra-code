@@ -55,10 +55,15 @@ def excited_populations(e, nel, nspin, kT, el_st):
             * 2 - spin-polarized calculations.
 
         kT  ( int ): the electronic energy (smearing constant) [ units: Ha]
-        el_st ( int ): electronic state index; different fractional scheme for different electronic states.
+        el_st ( int ): electronic state index: different fractional scheme for different electronic states.
 
     Returns:
-        # \params[out] occ_new  List of fermi population of the MOs
+        (list of doubles): occ_new: occupation numbers of the given MOs
+
+    TODO:
+        This implementation is crappy and it won't work in most cases, other than a few HOMO->LUMO transitions
+        Needs to be generalized!
+
     """
 
 
@@ -66,7 +71,7 @@ def excited_populations(e, nel, nspin, kT, el_st):
     norbs = len(e)  # Total number of MOs in the active space    
     etol = 1e-10
 
-    a = MATRIX(norbs,norbs)
+
     if el_st==0: # For S0 
         el_scheme = [0] # el_scheme is the fractional Fermi occupation scheme
                         # el_scheme is a list of integers representing indexes for orbitals
@@ -84,27 +89,34 @@ def excited_populations(e, nel, nspin, kT, el_st):
     
 
 
+    a = MATRIX(norbs,norbs)
     occ_tot = []
+
     for ia in el_scheme: # in el_scheme [-1,0,1], first element for N-1, second for N, and third for N+1 electrons.
+
         for i in xrange(norbs):
-            for j in xrange(norbs):
-                if i==j:
-                    a.set(i,j, e[i])
-                else:
-                    a.set(i,j, 0.0)
-        if nspin == 2:  # For spin-polarized calculations.
-            Nel = nel/2 + nel%2 + ia # Number of electrons in the alpha or beta spin orbital
-            degen = 1.0 # One orbital can have 1 electrons, in this case of spin-polarization
+            a.set(i,i, e[i])
+
+        if nspin == 2:                 # For spin-polarized calculations.
+            Nel = nel/2 + nel%2 + ia   # Number of electrons in the alpha or beta spin orbital
+            degen = 1.0                # One orbital can have 1 electrons, in this case of spin-polarization
 
         if nspin == 1:  # For non-polarized calculations
-            Nel = nel + ia # Total number of electrons.
-            degen = 2.0 # One orbital can have 2 electrons, in case of non-polarized calculations
+            Nel = nel + ia             # Total number of electrons.
+            degen = 2.0                # One orbital can have 2 electrons, in case of non-polarized calculations
+
 
         bnds = order_bands(a)
 
         pop_fermi = populate_bands(Nel, degen, kT, etol, 1, bnds)  # 1 - use the fractional occ numbers
-        occ_tot.append([item[1] for item in pop_fermi]) 
 
+
+        tmp = []
+        for item in pop_fermi:
+            tmp.append(item[1])
+        occ_tot.append(tmp) 
+
+        #AVAL occ_tot.append([item[1] for item in pop_fermi]) 
 
 
     occ_new = []

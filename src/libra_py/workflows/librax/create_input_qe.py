@@ -161,7 +161,7 @@ def print_occupations(occ):
     line = ""
     count = 0
     for f in occ:
-        line = line + "%12.8f " % f 
+        line = line + "%15.12f " % f 
         count = count +1
         if count % 10 ==0:
             line = line + "\n"
@@ -286,7 +286,7 @@ def write_qe_input_first(filename1, filename2, occ, occ_alp, occ_bet, nspin, scf
 
     """
  
-    f = open(filename1,"r")
+    f = open(filename2,"r")
     a = f.readlines()
     f.close()
 
