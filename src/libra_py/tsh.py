@@ -843,7 +843,7 @@ def Boltz_corr_Ham(H, Coeff, T, case=1):
     for j in xrange(sz):
         for k in xrange(j+1,sz):
             if case==0:  # diabatic - original Bastida
-                hkj = rho.get(k)*Hcorr.get(j,k) + rho.get(j)*Hcorr.get(k,j)
+                hkj = rho.get(k)*Hcorr.get(j,k) - rho.get(j)*Hcorr.get(k,j)
             elif case==1: # adiabatic - changed Bastida
                 hkj = rho.get(k)*Hcorr.get(j,k) + rho.get(j)*Hcorr.get(k,j)
             

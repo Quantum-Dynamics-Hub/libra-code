@@ -127,7 +127,7 @@ def do_step(i, params, run):
     # Solve the eigenvalue problem with the converged Fock matrix
     # get the converged MOs
     E = CMATRIX(ao_sz, ao_sz)
-    MO = CMATRIX(ao_sz, mo_sz)
+    MO = CMATRIX(ao_sz, ao_sz)
     solve_eigen(F, S, E, MO, 0)  
 
     # Extract the E sub-matrix
