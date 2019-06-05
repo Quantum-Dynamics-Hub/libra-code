@@ -214,7 +214,7 @@ def decoherence_times(Hvib, verbosity=0):
     return decoh_times, decoh_rates
 
 
-def decoherence_times_ave(Hvib, itimes, nsteps, verbosity=0):
+def decoherence_times_ave_old(Hvib, itimes, nsteps, verbosity=0):
     """
 
     Compute the matrix of decoherence times from the time-series data 
@@ -282,5 +282,101 @@ def decoherence_times_ave(Hvib, itimes, nsteps, verbosity=0):
         decoh_rates.show_matrix()
 
     return decoh_times, decoh_rates
+
+
+
+def decoherence_times_ave(Hvib, itimes, nsteps, verbosity=0):
+    """
+
+    Compute the matrix of decoherence times from the time-series data 
+    that consists of vereral data sets
+
+    Ref: Akimov, A. V; Prezhdo O. V. J. Phys. Chem. Lett. 2013, 4, 3857  
+
+
+    Args:
+        Hvib ( list of lists of CMATRIX objects ):
+            Vibronic Hamiltonians along the trajectory for different data sets (adiabatic MDs),
+            and potential different sections of the time-range
+            where Hvib[idata][istep] is a CMATRIX object that represents a vibronic Hamiltonian
+            from the data set ```idata``` at the time step ```istep```. 
+
+        itimes ( list if ints ): initial times for averaging. The number ```itimes[idata]``` tells 
+            which datapoint (timestep) of the time-series Hvib[idata] consider the beginning of 
+            the range that will be used to compute gap fluctuations
+
+        nsteps ( int ): the length of the time-steps to consider in the calculations for each data set
+
+    Returns:
+        tuple:  ( decoh_times, decoh_rates ), where
+
+            * decoh_times ( MATRIX(N,N) ): the matrix of decoherence times, diagonal elements are
+                set to very large number which corresponds to no decoherence of a state with itself.
+                This value is computed based on gaps averaged over several data sets. [ units: a.u. ]
+
+            * decoh_rates ( MATRIX(N,N) ): the matrix of decoherence rates, diagonal elements are
+                set to zero which corresponds to no decoherence of a state with itself, the off-diagonal
+                elements are equal to inverse of the off-diagonal matrix elements of ```decoh_times```.
+                This value is computed based on gaps averaged over several data sets. [ units: a.u.^-1 ]
+
+    """
+
+
+    # Compute energy gaps
+    ndata = len(Hvib)
+    nitimes = len(itimes)
+    nstates = Hvib[0][0].num_of_cols
+
+    # Compute a concatenated list of gap magnitudes for all sub-trajectories    
+    dE = []
+    for step in xrange(0, nsteps):
+        dEij = MATRIX(nstates, nstates)
+
+        for i in xrange(nstates):
+            for j in xrange(i+1, nstates):
+
+                deij = 0.0
+                for idata in xrange(ndata):
+                    for it_indx in xrange(nitimes): 
+                        it = itimes[it_indx]
+
+                        deij = math.fabs(Hvib[idata][it+step].get(i,i).real - Hvib[idata][it+step].get(j,j).real)
+                dEij.set(i,j, deij)
+                dEij.set(j,i, deij)
+
+        dE.append(dEij)
+
+
+    # Compute the statistics of the obtained data set
+    dE_ave, dE_std, dE_dw_bound, dE_up_bound = data_stat.mat_stat(dE)
+
+
+    decoh_times = MATRIX(nstates, nstates)   
+
+    for a in xrange(nstates):
+        for b in xrange(nstates):
+            if a==b:
+                decoh_times.set(a,a, 1.0e+10)
+            else:
+                de = dE_std.get(a,b)
+                if de>0.0:
+                      tau = math.sqrt(12.0/5.0) / de
+                      decoh_times.set(a,b, tau)
+
+    decoh_rates = decoherence_times2rates(decoh_times)
+
+    if verbosity>0:
+        print "Decoherence times matrix (a.u. of time):"
+        decoh_times.show_matrix()
+
+        print "Decoherence times matrix (fs):"
+        tmp = decoh_times * units.au2fs
+        tmp.show_matrix()
+
+        print "Decoherence rates matrix (a.u.^-1):"
+        decoh_rates.show_matrix()
+
+    return decoh_times, decoh_rates
+
 
 
