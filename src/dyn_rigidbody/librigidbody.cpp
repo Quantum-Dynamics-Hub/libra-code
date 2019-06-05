@@ -59,11 +59,12 @@ void export_RigidBody_objects(){
   int (RigidBody::*apply_force1)(double)      = &RigidBody::apply_force;
   int (RigidBody::*apply_force2)(MATRIX3x3&)  = &RigidBody::apply_force;
 
-  void (RigidBody::*Rotate1)(MATRIX3x3&) = &RigidBody::Rotate;
-  void (RigidBody::*Rotate2)(QUATERNION& quat) = &RigidBody::Rotate;
-  void (RigidBody::*Rotate3)(QUATERNION& quat, VECTOR& pivot) = &RigidBody::Rotate;
-  void (RigidBody::*Rotate4)(double phi, VECTOR& dir) = &RigidBody::Rotate;
-  void (RigidBody::*Rotate5)(double phi, VECTOR& dir, VECTOR& pivot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate1)(MATRIX3x3& rot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate2)(MATRIX3x3& rot, VECTOR& pivot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate3)(QUATERNION& rot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate4)(QUATERNION& rot, VECTOR& pivot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate5)(double phi, VECTOR& dir) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate6)(double phi, VECTOR& dir, VECTOR& pivot) = &RigidBody::Rotate;
 
   void (RigidBody::*expt_Rotate_I_v1)(double,VECTOR&)   = &RigidBody::Rotate_I;
 
@@ -169,10 +170,11 @@ void export_RigidBody_objects(){
       .def("Rotate_e_y",&RigidBody::Rotate_e_y,"rotate arond y axis in rigid body coordinate system")
       .def("Rotate_e_z",&RigidBody::Rotate_e_z,"rotate arond z axis in rigid body coordinate system")
       .def("Rotate",Rotate1,"arbitrary rotation of RB, rotation is defined by the transformation matrix")
-      .def("Rotate",Rotate2,"arbitrary rotation of RB, rotation is defined by the quaternion")
-      .def("Rotate",Rotate3,"")
-      .def("Rotate",Rotate4,"")
+      .def("Rotate",Rotate2,"arbitrary rotation of RB, rotation is defined by the transformation matrix")
+      .def("Rotate",Rotate3,"arbitrary rotation of RB, rotation is defined by the quaternion")
+      .def("Rotate",Rotate4,"arbitrary rotation of RB, rotation is defined by the quaternion")
       .def("Rotate",Rotate5,"")
+      .def("Rotate",Rotate6,"")
 
 
       .def("Rotate_I",expt_Rotate_I_v1, 

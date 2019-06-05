@@ -124,6 +124,28 @@ void RigidBody::Rotate(MATRIX3x3& R){
   set_orientation(rb_A_I_to_e);
 }
 
+
+void RigidBody::Rotate(MATRIX3x3& R, VECTOR& pivot){
+/**
+  \brief Arbitrary rotation in the body frame, parameterized by a matrix
+
+  Warning: Matrix R should be a valid (unitary, with norm = 1) rotation matrix
+
+  \param[in] R Rotation matrix
+  \param[in] pivot the pivot point coordinates
+
+*/
+
+  rb_A_I_to_e = R*rb_A_I_to_e;
+  set_orientation(rb_A_I_to_e);
+
+  rb_cm = R.T()*(rb_cm - pivot) + pivot;
+
+}
+
+
+
+
 void RigidBody::Rotate(QUATERNION& quat){
 /**
   \brief Arbitrary rotation in the body frame, parameterized by a quaternion

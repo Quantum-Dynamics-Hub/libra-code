@@ -251,11 +251,13 @@ public:
   void Rotate_e_y(double);
   void Rotate_e_z(double);
 
-  void Rotate(MATRIX3x3&);
-  void Rotate(QUATERNION&);
+  void Rotate(MATRIX3x3& rot);
+  void Rotate(MATRIX3x3& rot, VECTOR& pivot);
+  void Rotate(QUATERNION& rot);
   void Rotate(QUATERNION& quat, VECTOR& pivot);
-  void Rotate(double,VECTOR&);
+  void Rotate(double phi,VECTOR& dir);
   void Rotate(double phi,VECTOR& dir, VECTOR& pivot);
+
 
   void Rotate_I(double,VECTOR&);
 
