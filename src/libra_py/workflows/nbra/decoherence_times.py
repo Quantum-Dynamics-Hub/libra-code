@@ -329,23 +329,21 @@ def decoherence_times_ave(Hvib, itimes, nsteps, verbosity=0):
 
     # Compute a concatenated list of gap magnitudes for all sub-trajectories    
     dE = []
-    for step in xrange(0, nsteps):
-        dEij = MATRIX(nstates, nstates)
+    for idata in xrange(ndata):
+        for it_indx in xrange(nitimes):
+            it = itimes[it_indx]
 
-        for i in xrange(nstates):
-            for j in xrange(i+1, nstates):
+            for step in xrange(nsteps):
+                dEij = MATRIX(nstates, nstates)
 
-                deij = 0.0
-                for idata in xrange(ndata):
-                    for it_indx in xrange(nitimes): 
-                        it = itimes[it_indx]
+                for i in xrange(nstates):
+                    for j in xrange(i+1, nstates):
 
                         deij = math.fabs(Hvib[idata][it+step].get(i,i).real - Hvib[idata][it+step].get(j,j).real)
-                dEij.set(i,j, deij)
-                dEij.set(j,i, deij)
+                        dEij.set(i,j, deij)
+                        dEij.set(j,i, deij)
 
-        dE.append(dEij)
-
+                dE.append(dEij)
 
     # Compute the statistics of the obtained data set
     dE_ave, dE_std, dE_dw_bound, dE_up_bound = data_stat.mat_stat(dE)
