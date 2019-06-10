@@ -333,6 +333,8 @@ def decoherence_times_ave(Hvib, itimes, nsteps, verbosity=0):
         for it_indx in xrange(nitimes):
             it = itimes[it_indx]
 
+            #========== Fluctuations for a given sub-trajectory ===========
+            de = []
             for step in xrange(nsteps):
                 dEij = MATRIX(nstates, nstates)
 
@@ -343,9 +345,20 @@ def decoherence_times_ave(Hvib, itimes, nsteps, verbosity=0):
                         dEij.set(i,j, deij)
                         dEij.set(j,i, deij)
 
-                dE.append(dEij)
+                de.append(dEij)
+
+            #============== Averages for this sub-trajectory ==================
+            # we only care about dE_ave, other outputs are not used here
+            dE_ave, dE_std, dE_dw_bound, dE_up_bound = data_stat.mat_stat(de)
+
+            #============== Subtract the sub-trajectory-specific average =============
+            for step in xrange(nsteps):
+                dE.append( de[step] - dE_ave)
+
 
     # Compute the statistics of the obtained data set
+    # the dE_ave should be zero, considering the transformations above
+    # we only care about dE_std, other outputs are not used here
     dE_ave, dE_std, dE_dw_bound, dE_up_bound = data_stat.mat_stat(dE)
 
 
