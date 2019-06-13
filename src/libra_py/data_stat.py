@@ -482,3 +482,33 @@ def compute_density(X, Y, minx, maxx, dx):
     return nX, nY
 
 
+
+def bootstrapping(X, nB, rnd):
+    """Bootstrapping the sample
+
+    Args:
+        X ( list of N int/double ): the original sample
+
+        nB ( int ): the number of bootstrapping cycles
+
+    Returns: 
+    
+    """
+
+    N = len(X) 
+
+    # Actual re-sampling
+    sample = MATRIX(N, nB)
+    for samp in xrange(nB):
+        for n in xrange(N):
+            i = int(rnd.uniform(0, N))
+            sample.set(n, samp, X[i])
+
+    # Average over 
+    sample = MATRIX(N, nB)
+    
+
+
+
+
+

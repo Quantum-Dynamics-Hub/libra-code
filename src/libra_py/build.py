@@ -666,3 +666,41 @@ def add_atom_to_system(syst, coords, MaxCoords, Nx,Ny,Nz, a,b,c, shift, elt, mas
 
                 i = i + 1
 
+
+
+def make_system(R, E, step, U):
+    """
+    This function creates a chemical system (System) oject from the 
+    corrdinates and atom labels provided. All atoms of the system
+    are made into a single group.
+
+    Args:
+        R ( MATRIX(ndof, nsteps) ): molecular coordinates at different times
+            The convention is R.get(dof, step) is the coordinate of the ```dof```-th 
+            degree of freedom and ```step```-th timestep.
+            Note: ndof = 3*natoms. [ a.u. = Bohrs ]
+        E ( list of ```natoms``` strings): atomic labels
+        step ( int ): selector of the timestep for which we want to construct the system
+        U ( Universe object ): Universe
+
+    Returns:
+        System : the chemical system with the coordinates of all atoms at a given time. All atoms
+            are grouped together into a single rigid body    
+
+    """
+    
+    ndof = R.num_of_rows
+    nat = ndof/3
+    
+    syst = System()
+    for at in xrange(nat):
+        x = R.get(3*at+0, step)
+        y = R.get(3*at+1, step)
+        z = R.get(3*at+2, step)
+        
+        syst.CREATE_ATOM( Atom(U, {"Atom_element":E[at], "Atom_cm_x":x, "Atom_cm_y":y, "Atom_cm_z":z }  )  )
+    
+    syst.GROUP_ATOMS(range(1, nat+1), 1)
+    syst.init_fragments()
+        
+    return syst
