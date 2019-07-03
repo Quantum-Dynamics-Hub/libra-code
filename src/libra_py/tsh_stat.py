@@ -495,6 +495,34 @@ def amplitudes2denmat(coeffs):
     return denmat
 
 
+def pops2denmat(pops):
+    """
+ 
+    Converts the populations (vector) of all states for all trajectories to the corresponding 
+        density matrices (matrix). This is just a convenience function
+
+    Args:
+        pops ( list of CMATRIX(nstates, 1) ): state populations for all trajectories
+
+    Returns:
+        ( list of CMATRIX(nstates, nstate) ): density matrices for all trajectory
+
+    """
+
+    ntraj = len(pops)
+    nstates = pops[0].num_of_rows
+    denmat = []
+
+    for tr in xrange(ntraj):
+        denmat.append( CMATRIX(nstates, nstates) )
+        for i in xrange(nstates):
+            denmat[tr].set(i,i, pops[tr].get(i,0))
+
+    return denmat
+
+
+
+
 
 def denmat2prob(P):
     """Convert the density matrix to the populations

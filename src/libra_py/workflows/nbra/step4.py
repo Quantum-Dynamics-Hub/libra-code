@@ -258,6 +258,88 @@ def traj_statistics(i, Coeff, istate, Hvib, itimes):
 
 
 
+def traj_statistics2(i, Pop, istate, Hvib, itimes):
+    """Compute the averages over the TSH-ensembles
+
+    Args:
+        i ( int ): timestep index, counting since the beginning of the current sub-trajectory
+        Pop ( list of ntraj CMATRIX(nstates, 1) object ): the qunatum populations for all trajectories
+            (data sets/initial times/stochastic realizations)
+
+        istate ( list of ntraj integers ): indices of the active states for each trajectory 
+            (data sets/initial times/stochastic realizations)
+
+        Hvib ( list of lists of CMATRIX(nstates,nstates) ): Hamiltonians for all data sets 
+            and all (not just a sub-set of data!) timesteps
+        itimes ( list of ints ): indices of the NA-MD starting points (in the global data indexing scale)
+
+    Returns: 
+        MATRIX(1, 3*nstates+4): the trajectory (and initial-condition)-averaged observables,
+            the assumed format is: 
+
+            First state info        ...          N-st state info All-states-related data
+
+            E(0), P_SE(0), P_SH(0), ...,   E(nst-1), P_SE(nst-1), P_SH(nst-1), <E*P_SE>, <E*P_SH>, sum{P_SE}, sum{P_SH}
+    
+    """
+
+    #================ Dimensions ==================
+    Ntraj = len(Pop)                 # total number of trajectory = data set size x number of init times x number of SH trajectories
+    nstates = Pop[0].num_of_rows     # the number of states
+    ndata = len(Hvib)                # how many data sets
+    nitimes = len(itimes)            # how many initial times
+    ntraj = Ntraj/(ndata * nitimes)  # how many stochastic SH trajectories per data set/initial condition
+
+
+    # Update SE-derived density matrices
+    denmat_se = tsh_stat.pops2denmat(Pop)   # list of Ntraj CMATRIX(nstates,nstates) elements 
+
+    # Update the SH-derived density matrices
+    denmat_sh = []
+    H_vib = []
+    H_vib_ave = CMATRIX(nstates,nstates)  # Hvib averaged over the data sets/initial times
+
+    for idata in xrange(ndata):
+        for it_indx in xrange(nitimes):
+            it = itimes[it_indx]
+
+            H_vib_ave = H_vib_ave + Hvib[idata][it+i]
+
+            for tr in xrange(ntraj):                
+                Tr = idata*(nitimes*ntraj) + it_indx*(ntraj) + tr
+
+                denmat_sh.append(CMATRIX(nstates, nstates))
+                denmat_sh[Tr].set(istate[Tr],istate[Tr], 1.0, 0.0)
+                H_vib.append(CMATRIX(Hvib[idata][it+i]))   
+
+    H_vib_ave *= (1.0/float(ndata * nitimes))
+
+    # Update TSH-ensemble-averaged SE and SH populations 
+    ave_pop_sh, ave_pop_se = tsh_stat.ave_pop(denmat_sh, denmat_se)
+    ave_en_sh,  ave_en_se  = tsh_stat.ave_en(denmat_sh, denmat_se, H_vib)
+
+    # Save the computed data into a matrix to be output
+    res = MATRIX(1, 3*nstates+4) 
+   
+    tot_sh, tot_se = 0.0, 0.0
+    for j in xrange(nstates):
+        res.set(0, 3*j+0, H_vib_ave.get(j,j).real)   # Energy of the state j
+        res.set(0, 3*j+1, ave_pop_se.get(j,j).real)  # SE population
+        res.set(0, 3*j+2, ave_pop_sh.get(j,j).real)  # SH population
+
+        tot_se += ave_pop_se.get(j,j).real
+        tot_sh += ave_pop_sh.get(j,j).real
+
+    res.set(0, 3*nstates+0, ave_en_se)  # Average SE energy
+    res.set(0, 3*nstates+1, ave_en_sh)  # Average SH energy
+    res.set(0, 3*nstates+2, tot_se)     # Total SE population
+    res.set(0, 3*nstates+3, tot_sh)     # Total SH population
+
+    return res
+
+
+
+
 def printout(t, res, outfile):
     """This function does a simple output of a matrix columns to a file
 
@@ -325,6 +407,11 @@ def run(H_vib, params):
 
                 - 0 - pre-compute the parameters from the trajectory data before NA-MD run [ default ]
                 - 1 - use the provided parameters ..seealso:: ```params["decoherence_times"]``` and ```params["decoherence_rates"]```
+                - 20 - use the time-dependent decoherence times as in DISH paper. This is different from
+                    option 0 in that these numbers depend on the state amplitudes. Dephasing times are computed as in 0.
+                - 21 - use the time-dependent decoherence times as in DISH paper. This is different from
+                    option 0 in that these numbers depend on the state amplitudes. Dephasing times are computed as in 1.
+
 
             * **params["decoherence_times"]** ( MATRIX(nstates,nstates) ): decoherence times for all 
                 pairs of states. This should be provided if ``` params["decoherence_constants"] == 1``` the dimensions should be
@@ -393,19 +480,20 @@ def run(H_vib, params):
 
     #========== Compute PARAMETERS  ===============
     # Decoherence times
-    tau, decoh_rates = None, None
+    # these are actually the dephasing rates!
+    tau, dephasing_rates = None, None
 
-    if params["decoherence_constants"] == 0:
-        tau, decoh_rates = dectim.decoherence_times_ave(H_vib, params["init_times"], nsteps, 1) 
+    if params["decoherence_constants"] == 0 or params["decoherence_constants"]==20:
+        tau, dephasing_rates = dectim.decoherence_times_ave(H_vib, params["init_times"], nsteps, 1) 
 
-    elif params["decoherence_constants"] == 1:
+    elif params["decoherence_constants"] == 1 or params["decoherence_constants"]==21:
         if params["decoherence_times"].num_of_cols != nstates:
             print "Error: dimensions of the input decoherence times matrix are not consistent with \
                    the dimensions of the Hamiltonian matrices (the number of states). Exiting...\n" 
             sys.exit(0)
         else:
             tau = MATRIX(params["decoherence_times"])
-            decoh_rates = dectim.decoherence_times2rates(tau)
+            dephasing_rates = dectim.decoherence_times2rates(tau)
 
 
 
@@ -478,14 +566,14 @@ def run(H_vib, params):
                         elif params["decoherence_method"]==1:  # ID-A, taken care of in the tsh.hopping
                             do_collapse = 1
                         elif params["decoherence_method"]==2:  # MSDM
-                            do_collapse = 0
-                            Coeff[Tr] = msdm(Coeff[Tr], dt, istate[Tr], decoh_rates)
+                            do_collapse = 0                            
+                            Coeff[Tr] = msdm(Coeff[Tr], dt, istate[Tr], dephasing_rates)
                     
                         istate[Tr], Coeff[Tr] = tsh.hopping(Coeff[Tr], Heff, istate[Tr], params["sh_method"], do_collapse, ksi, ksi2, dt, T, bolt_opt)
                     
                     elif params["decoherence_method"] in [3]:  # DISH
                     
-                        tau_m[Tr] = coherence_intervals(Coeff[Tr], decoh_rates)
+                        tau_m[Tr] = coherence_intervals(Coeff[Tr], dephasing_rates)
                         istate[Tr] = tsh.dish_py(Coeff[Tr], istate[Tr], t_m[Tr], tau_m[Tr], Heff, bolt_opt, T, ksi, ksi2)
                         t_m[Tr] += dt
 

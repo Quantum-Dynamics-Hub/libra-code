@@ -36,7 +36,7 @@ import step4
 
 
 
-def Belyaev_Lebedev(Hvib, dt):
+def Belyaev_Lebedev(Hvib, params):
     """
     Computes the Landau-Zener hopping probabilities based on the energy levels
     according to: 
@@ -50,12 +50,34 @@ def Belyaev_Lebedev(Hvib, dt):
     1) The estimation of d^2E_ij / dt^2 is based on the 3-point Lagrange interpolation
     2) This is done within the NBRA
 
-    Parameters:
-    Hvib [list of CMATRIX] - vibronic Hamiltonians along the trajectory
-    dt [double, a.u.] - time distance between the adjacent data points
+    Args:
+        Hvib (list of CMATRIX(nstates,nstates) ):  vibronic Hamiltonians along the trajectory
+        params ( dictionary ): control parameters
+
+            * **params["dt"]** ( double ): time distance between the adjacent data points [ units: a.u., defaut: 41.0 ]
+            * **params["T"]** ( double ): temperature of the nuclear sub-system [ units: K, default: 300.0 ]
+            * **params["Boltz_opt"]** ( int ): option to select a probability of hopping acceptance [default: 3]
+                Options:
+
+                - 0 - all proposed hops are accepted - no rejection based on energies
+                - 1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
+                - 2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
+                - 3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
+
      
     """
 
+    # Control parameters
+    critical_params = [  ]
+    default_params = { "T":300.0, "Boltz_opt":3, "dt":41.0 }
+    comn.check_input(params, default_params, critical_params)
+
+    boltz_opt = params["Boltz_opt"]
+    T = params["T"]
+    dt = params["dt"]
+
+
+    # Data dimensions 
     nsteps = len(Hvib)
     nstates= Hvib[0].num_of_cols
 
@@ -69,14 +91,17 @@ def Belyaev_Lebedev(Hvib, dt):
     P(i,j) - the convention is: the probability to go from j to i
     This will make the Markov state propagation more convenient
     """
+
     P = []
     P.append( MATRIX(nstates, nstates) )
     for i in xrange(nstates):    
         P[0].set(i,i, 1.0)
 
     for n in xrange(1, nsteps-1):
-        # Find the minima of the |E_i - E_j| for all pair of i and j    
         P.append(MATRIX(nstates, nstates))
+ 
+        # Belyaev-Lebedev probabilities
+        # Find the minima of the |E_i - E_j| for all pair of i and j    
         for i in xrange(nstates):             # target
             for j in xrange(i+1, nstates):    # source 
 
@@ -88,27 +113,44 @@ def Belyaev_Lebedev(Hvib, dt):
                     denom = dE[n-1].get(i,j) - 2.0*dE[n].get(i,j) + dE[n+1].get(i,j) 
                     if denom > 0.0:
                         argg = (dE[n].get(i,j)**3) / denom
-                        p = math.exp(-2.0*math.pi*dt*math.sqrt(argg) )
+                        p = math.exp(-0.5*math.pi*dt*math.sqrt(argg) )
                 else:
-                    p = 0.0
+                    p = 0.0   # no transitions is not a minimum
 
                 P[n].set(i,j, p)
                 P[n].set(j,i, p)
 
+        
+        # Optionally, can correct transition probabilitieis to 
+        # account for Boltzmann factor
+        for i in xrange(nstates):        # target
+            for j in xrange(nstates):    # source 
 
-        # Compute the probability of staying on the same state
-        for j in xrange(nstates):         # source
-            # Compute total probabilities to leave state j
-            tot = 0.0
-            for i in xrange(nstates):     # target
                 if i!=j:
-                    tot += P[n].get(i,j)
 
-            # Normalize probabilities if needed
-            if tot>1.0:
-                for i in xrange(nstates):        
-                    P[n].scale(i,j, (1.0/tot))
-                tot = 1.0
+                    E_new = Hvib[n].get(i,i).real  # target
+                    E_old = Hvib[n].get(j,j).real  # source
+                    bf = 1.0
+                    if E_new > E_old:
+                        bf = tsh.boltz_factor(E_new, E_old, T, boltz_opt)
+                        if bf>1.0:
+                            print "Error: Boltzmann scaling factor can not be larger 1.0 = ",bf ;
+                            #sys.exit(0)
+                        P[n].scale(i,j, bf)
+
+
+        # Compute the probability of staying on the same state j (source)
+        # P(j,j) = 1 - sum_(i!=j) { P(i,j) }
+        #
+        # The convention is:
+        # P(i,j) - the probability to go from j to i
+
+        for j in xrange(nstates): # for all source states            
+
+            tot = 0.0  # Total probability to leave state j
+            for i in xrange(nstates):     # all target states
+                if i!=j:                  # but j
+                    tot += P[n].get(i,j)
 
             # Compute the probability to stay on state j
             P[n].set(j,j, 1.0 - tot)
@@ -118,8 +160,17 @@ def Belyaev_Lebedev(Hvib, dt):
     for i in xrange(nstates):    
         P[nsteps-1].set(i,i, 1.0)
 
+
+
             
     return P
+
+
+#        # Normalize probabilities if needed
+#        if tot>1.0:
+#            for i in xrange(nstates):        
+#            P[n].scale(i,j, (1.0/tot))
+#            tot = 1.0
 
 
 def run(H_vib, params):
@@ -167,18 +218,18 @@ def run(H_vib, params):
     nitimes = len(itimes)
 
     for idata in xrange(ndata):
-        p = Belyaev_Lebedev(H_vib[idata], dt)
+        p = Belyaev_Lebedev(H_vib[idata], params)
         P.append(p)
 
 
     #========== Initialize the DYNAMICAL VARIABLES  ===============
-    # TD-SE coefficients and active state indices
-    Coeff, istate = [], []
+    # State populations and active state indices
+    Pop, istate = [], []
 
     for tr in xrange(ntraj):
         istate.append(params["istate"])
-        Coeff.append(CMATRIX(nstates, 1)); 
-        Coeff[tr].set(params["istate"], 1.0, 0.0)
+        Pop.append(CMATRIX(nstates, 1)); 
+        Pop[tr].set(params["istate"], 1.0, 0.0)
 
 
     #=============== Entering the DYNAMICS ========================
@@ -186,7 +237,8 @@ def run(H_vib, params):
 
         #============== Analysis of the Dynamics  =================
         # Compute the averages
-        res_i = step4.traj_statistics(i, Coeff, istate, H_vib, itimes)
+        #res_i = step4.traj_statistics(i, Coeff, istate, H_vib, itimes)
+        res_i = step4.traj_statistics2(i, Pop, istate, H_vib, itimes)
 
         # Print out into a file
         step4.printout(i*dt, res_i, params["outfile"])
@@ -197,9 +249,9 @@ def run(H_vib, params):
 
 
         #=============== Propagation ==============================
-        for idata in xrange(ndata):   # over all MD trajectories (data sets)
+        for idata in xrange(ndata):   # over all data sets (MD trajectories)
 
-            for it_indx in xrange(nitimes): # over all initial times
+            for it_indx in xrange(nitimes): # over all initial times within each MD trajectory
 
                 it = itimes[it_indx]
 
@@ -209,9 +261,10 @@ def run(H_vib, params):
 
                     #============== Propagation: TD-SE and surface hopping ==========
         
-                    # Coherent evolution amplitudes
-                    #propagate_electronic(dt, Coeff[Tr], H_vib[idata][it+i])   # propagate the electronic DOFs
-                    Coeff[Tr] = CMATRIX(P[idata][i].T()) * Coeff[Tr]
+                    # Evolve Markov process.
+                    # The convention is:
+                    # P(i,j) - the probability to go from j to i
+                    Pop[Tr] = CMATRIX(P[idata][i]) * Pop[Tr]
 
         
                     # Surface hopping 
