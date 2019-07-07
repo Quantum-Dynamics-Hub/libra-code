@@ -95,6 +95,11 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
             * obs_dm_dia ( list of `nsteps` CMATRIX(ndia, ndia) ): ensemble-averaged density matrix in diabatic basis
             * obs_pop ( list of `nsteps` MATRIX(nadi, 1) ): ensemble-averaged TSH populations of adiabatic states
             * obs_states ( list of `nsteps` of lists of `ntraj` ints):  # indices of the quantum states of each trajectory
+            * obs_hvib_adi ( list of `ntraj` lists, each being a list of `nsteps` objects CMATRIX(nadi, nadi) ): trajectory-resolved
+                vibronic Hamiltonians for each timestep in the adiabatic representation
+            * obs_hvib_dia ( list of `ntraj` lists, each being a list of `nsteps` objects CMATRIX(ndia, ndia) ): trajectory-resolved
+                vibronic Hamiltonians for each timestep in the diabatic representation
+
               
     """
 
@@ -114,7 +119,8 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     obs_dm_dia = []  # average SE-based density matrix in diabatic basis
     obs_pop = []  # average SH-based populations adiabatic basis
     obs_states = []  # indices of the quantum states of each trajectory
-    #obs_ind = []  # ??
+    obs_hvib_adi = []  # vibronic Hamiltonians for each trajectory in adiabatic rep.
+    obs_hvib_dia = []  # vibronic Hamiltonians for each trajectory in diabatic rep.
     
     
     # Create copies of the input dynamical variables, so we could run several run_test 
@@ -136,6 +142,11 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     nadi = Cadi.num_of_rows
     nnucl= q.num_of_rows
     ntraj= q.num_of_cols
+
+    for tr in xrange(ntraj):
+        obs_hvib_adi.append([])
+        obs_hvib_dia.append([])
+
 
     # ======= Hierarchy of Hamiltonians =======
     ham = nHamiltonian(ndia, nadi, nnucl)
@@ -189,7 +200,8 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
         for tr in xrange(ntraj):
             ind = ind + ham1[tr].get_ordering_adi()[0]
         ind = ind/float(ntraj)
-        
+
+         
         
         obs_T.append(i*dt) 
         obs_q.append(MATRIX(q))
@@ -206,9 +218,16 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
         obs_dm_dia.append(CMATRIX(dm_dia))
         obs_pop.append(MATRIX(pops))
         obs_states.append(list(states))
-        #obs_ind.append(ind)
+
+        # Energies
+        for tr in xrange(ntraj):        
+            obs_hvib_adi[tr].append( CMATRIX(ham1[tr].get_hvib_adi()) )
+            obs_hvib_dia[tr].append( CMATRIX(ham1[tr].get_hvib_dia()) )
+
+
         
-    return obs_T, obs_q, obs_p, obs_Ekin, obs_Epot, obs_Etot, obs_dEkin, obs_dEpot, obs_dEtot, obs_Cadi, obs_Cdia, obs_dm_adi, obs_dm_dia, obs_pop, obs_states
+    return obs_T, obs_q, obs_p, obs_Ekin, obs_Epot, obs_Etot, obs_dEkin, obs_dEpot, obs_dEtot, \
+           obs_Cadi, obs_Cdia, obs_dm_adi, obs_dm_dia, obs_pop, obs_states, obs_hvib_adi, obs_hvib_dia
 
 
 
