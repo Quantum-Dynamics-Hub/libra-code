@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015-2018 Alexey V. Akimov
+* Copyright (C) 2015-2019 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -22,234 +22,6 @@ namespace liblibra{
 
 /// libdyn namespace
 namespace libdyn{
-
-
-int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
-         nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd,
-         int do_reordering, int do_phase_correction){
-
-/**
-  \brief One step of the TSH algorithm for electron-nuclear DOFs for one trajectory
-
-  \param[in] Integration time step
-  \param[in,out] q [Ndof x Ntraj] nuclear coordinates. Change during the integration.
-  \param[in,out] p [Ndof x Ntraj] nuclear momenta. Change during the integration.
-  \param[in] invM [Ndof  x 1] inverse nuclear DOF masses. 
-  \param[in,out] C [nadi x 1] or [ndia x 1] matrix containing the electronic coordinates
-  \param[in] state is the index of the currently occupied state (active state)
-  \param[in] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) - its internal variables
-  (well, actually the variables it points to) are changed during the compuations
-  \param[in] py_funct Python function object that is called when this algorithm is executed. The called Python function does the necessary 
-  computations to update the diabatic Hamiltonian matrix (and derivatives), stored externally.
-  \param[in] params The Python object containing any necessary parameters passed to the "py_funct" function when it is executed.
-  \param[in] params1 The Python dictionary containing the control parameters passed to this function
-  \param[in] rnd The Random number generator object
-
-  Return: the index of the active state at the end of the propagation.
-
-*/
-
-
-
-  /**
-    Setup the default values of the control parameters:
-  */
-
-  int rep = 1;                ///< The representation to run the Ehrenfest : 0 - diabatic, 1 - adiabatic
-  int rep_sh = 1;             ///< The representation to run the SH : 0 - diabatic, 1 - adiabatic
-  int tsh_method = 0;         ///< Formula for computing SH probabilities: 0 - FSSH, 1 - GFSH, 2 - MSSH
-  int use_boltz_factor = 0;   ///< Whether to scale the SH probabilities by the Boltzmann factor: 0 - do not scale, 1 - scale
-  double Temperature = 300.0; ///< Temperature of the system
-  int do_reverse = 1;         ///< 0 - do not revert momenta at the frustrated hops, 1 - do revert the momenta
-  int vel_rescale_opt = 0;    ///< How to rescale momenta if the hops are successful:
-                              ///<   0 - rescale along the directions of derivative couplings
-                              ///<   1 - rescale in the diabatic basis - don't care about the velocity directions, just a uniform rescaling,
-                              ///<   2 - do not rescale, as in the NBRA.
-
-
-  /**
-    Extract the parameters from the input dictionary
-  */
-
-  std::string key;
-  for(int i=0;i<len(params1.values());i++){
-    key = extract<std::string>(params1.keys()[i]);
-
-    if(key=="rep") { rep = extract<int>(params1.values()[i]); }
-    else if(key=="rep_sh") { rep_sh = extract<int>(params1.values()[i]);  }
-    else if(key=="tsh_method") { tsh_method = extract<int>(params1.values()[i]);  }
-    else if(key=="use_boltz_factor") { use_boltz_factor = extract<int>(params1.values()[i]);  }
-    else if(key=="Temperature") { Temperature = extract<double>(params1.values()[i]);  }
-    else if(key=="do_reverse") { do_reverse = extract<int>(params1.values()[i]);  }
-    else if(key=="vel_rescale_opt") { vel_rescale_opt = extract<int>(params1.values()[i]);  }
-  }
-
-
-  CMATRIX* Uprev; 
-  CMATRIX* X;
-  vector<int> perm_t; 
-  complex<double> one(1.0, 0.0);
-
-  int ndof = q.n_rows;
-  int dof;
-  int int_state; // internal index of physical state "state"
-  
-
-  int nst = 0;
-  if(rep==0){  nst = ham.ndia;  }
-  else if(rep==1){  nst = ham.nadi;  }
-
-  CMATRIX cstate(nst, 1);
-  cstate.set(state, 0, complex<double>(1.0, 0.0));
-
- 
-  //============== Electronic propagation ===================
-  if(rep==0){  
-    ham.compute_nac_dia(p, invM);
-    ham.compute_hvib_dia();
-  }
-  else if(rep==1){  
-    int_state = ham.get_ordering_adi()[state];
-
-    ham.compute_nac_adi(p, invM); 
-    ham.compute_hvib_adi();
-  }
-
-  propagate_electronic(0.5*dt, C, ham, rep);   
-
-  //============== Nuclear propagation ===================
-
-  cstate *= 0.0;
-  cstate.set(int_state, 0, one);
-    
-       if(rep==0){  p = p + ham.forces_dia(cstate).real() * 0.5*dt;  }
-  else if(rep==1){  p = p + ham.forces_adi(cstate).real() * 0.5*dt;  }
-
-
-  for(dof=0; dof<ndof; dof++){  
-    q.add(dof, 0,  invM.get(dof,0) * p.get(dof,0) * dt ); 
-  }
-
-
-  if(do_reordering){
-    if(rep==1){
-      Uprev = new CMATRIX(ham.nadi, ham.nadi);
-      *Uprev = ham.get_basis_transform();  
-    }
-  }
-
-  ham.compute_diabatic(py_funct, bp::object(q), params);
-  ham.compute_adiabatic(1);
-
-
-  // Only for adiabatic representation
-  if(rep==1){
-
-    // Reordering, if needed
-    if(do_reordering){
-      X = new CMATRIX(ham.nadi, ham.nadi);
-      *X = (*Uprev).H() * ham.get_basis_transform();
-
-      perm_t = get_reordering(*X);
-      ham.update_ordering(perm_t);
-      cstate.permute_rows(perm_t);
-
-      delete Uprev;
-      delete X;
-    }// reorderng
-
-    if(do_phase_correction){
-        CMATRIX* phases; phases = new CMATRIX(ham.nadi, 1); 
-
-        // Phase correction in U, NAC, and Hvib
-        *phases = ham.update_phases(*Uprev);
-
-        // Phase correction in Cadi
-        phase_correct_ampl(&C, phases);
-
-    }// phase correction
-  }// adiabatic
-
-
-  cstate *= 0.0;
-  cstate.set(int_state, 0, one);
-
-       if(rep==0){  p = p + ham.forces_dia(cstate).real() * 0.5*dt;  }
-  else if(rep==1){  p = p + ham.forces_adi(cstate).real() * 0.5*dt;  }
-
-  //============== Electronic propagation ===================
-  if(rep==0){  
-    ham.compute_nac_dia(p, invM);
-    ham.compute_hvib_dia();
-  }
-  else if(rep==1){  
-    ham.compute_nac_adi(p, invM); 
-    ham.compute_hvib_adi();
-  }
-
-  propagate_electronic(0.5*dt, C, ham, rep);   
-
-
-  //============== Begin the TSH part ===================
-
-  MATRIX g(nst,nst); /// the matrix of hopping probability
-
-  /// Depending on the basis, select which 
-  CMATRIX D(nst,1);
-
-  if(rep==0){   // Propagation in the diabatic basis
-    if(rep_sh==0){  D = C; }  // SH in the diabatic basis
-    else if(rep_sh==1){ ham.ampl_dia2adi(C, D);  } // SH in the adiabatic basis
-  }
-  else if(rep==1){   // Propagation in the adiabatic basis
-    if(rep_sh==0){  ham.ampl_adi2dia(D, C); }  // SH in the diabatic basis
-    else if(rep_sh==1){ D = C;  } // SH in the adiabatic basis
-  }
-
-
-  /// Compute hopping probabilities
-  if(tsh_method == 0){ // FSSH
-    g = compute_hopping_probabilities_fssh(D, ham, rep_sh, dt, use_boltz_factor, Temperature);
-  }
-  else if(tsh_method == 1){ // GFSH
-    g = compute_hopping_probabilities_gfsh(D, ham, rep_sh, dt, use_boltz_factor, Temperature);
-  }
-  else if(tsh_method == 2){ // MSSH
-    g = compute_hopping_probabilities_mssh(D);
-  }
-  else{
-    cout<<"Error in tsh0: tsh_method can be 0, 1, or 2. Other values are not defined\n";
-    cout<<"Exiting...\n";
-    exit(0);
-  }
-
-  /// Attempt to hop
-  double ksi = rnd.uniform(0.0,1.0);  /// generate random number 
-  int new_state = hop(int_state, g, ksi); /// Proposed hop in the internal indexing space
-
-  /// Check whether the proposed hop should be accepted.
-  /// If this it is: the nuclear momenta will be re-scaled
-  int_state = apply_transition0(p, invM, ham, int_state, new_state, vel_rescale_opt, do_reverse, 1);
-
-  /// Convert back to the physical index
-  perm_t = ham.get_ordering_adi(); 
-  state = inverse_permutation(perm_t)[ int_state ];
-
-  return state;
-
-}
-
-
-int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
-         nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd){
-
-  const int do_reordering = 1;
-  const int do_phase_correction = 1;
-
-  return tsh0(dt, q, p, invM, C, state, ham, py_funct, params, params1, rnd, do_reordering, do_phase_correction);
-
-}
-
 
 
 
@@ -286,6 +58,7 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>
 
   int rep = 1;                ///< The representation to run the Ehrenfest : 0 - diabatic, 1 - adiabatic
   int rep_sh = 1;             ///< The representation to run the SH : 0 - diabatic, 1 - adiabatic
+  int rep_lz = 0;             ///< The representation to compute LZ probabilitieis: 0 - diabatic, 1- adiabatic 
   int tsh_method = 0;         ///< Formula for computing SH probabilities: 0 - FSSH, 1 - GFSH, 2 - MSSH
   int use_boltz_factor = 0;   ///< Whether to scale the SH probabilities by the Boltzmann factor: 0 - do not scale, 1 - scale
   double Temperature = 300.0; ///< Temperature of the system
@@ -307,6 +80,7 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>
 
     if(key=="rep") { rep = extract<int>(params1.values()[i]); }
     else if(key=="rep_sh") { rep_sh = extract<int>(params1.values()[i]);  }
+    else if(key=="rep_lz") { rep_lz = extract<int>(params1.values()[i]);  }
     else if(key=="tsh_method") { tsh_method = extract<int>(params1.values()[i]);  }
     else if(key=="use_boltz_factor") { use_boltz_factor = extract<int>(params1.values()[i]);  }
     else if(key=="Temperature") { Temperature = extract<double>(params1.values()[i]);  }
@@ -324,6 +98,7 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>
   CMATRIX* X;
   vector<int> perm_t; 
   CMATRIX states(nst, ntraj); // CMATRIX version of "act_states"
+  vector<MATRIX> prev_ham_dia(ntraj, MATRIX(nst, nst));
 
   vector<int> nucl_stenc_x(ndof, 0); for(i=0;i<ndof;i++){  nucl_stenc_x[i] = i; }
   vector<int> nucl_stenc_y(1, 0); 
@@ -339,6 +114,12 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>
   vector<int> istates(ntraj,0); 
   vector<int> fstates(ntraj,0); 
 
+
+  if(tsh_method == 3){
+    for(traj=0; traj<ntraj; traj++){
+      prev_ham_dia[traj] = ham.children[traj]->get_ham_dia().real();  
+    }
+  }
  
   //============== Electronic propagation ===================
   // Update NACs and Hvib for all trajectories
@@ -504,8 +285,13 @@ void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>
     else if(tsh_method == 2){ // MSSH
       g = compute_hopping_probabilities_mssh(coeff);
     }
+    else if(tsh_method == 3){ // LZ
+      pop_submatrix(p, p_traj, nucl_stenc_x, nucl_stenc_y);
+      g = compute_hopping_probabilities_lz(ham.children[traj], rep_lz, p_traj, invM, prev_ham_dia[traj]);
+    }
+
     else{
-      cout<<"Error in tsh0: tsh_method can be 0, 1, or 2. Other values are not defined\n";
+      cout<<"Error in tsh1: tsh_method can be 0, 1, 2, or 3. Other values are not defined\n";
       cout<<"Exiting...\n";
       exit(0);
     }

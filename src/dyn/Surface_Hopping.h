@@ -42,6 +42,10 @@ using namespace libnuclear;
 using namespace libelectronic;
 using namespace libensemble;
 
+///================  In tsh_prob_lz.cpp  ===================================
+
+MATRIX compute_hopping_probabilities_lz(nHamiltonian* ham, int rep, MATRIX& p, const MATRIX& invM, MATRIX& prev_ham_dia);
+MATRIX compute_hopping_probabilities_lz(nHamiltonian& ham, int rep, MATRIX& p, const MATRIX& invM, MATRIX& prev_ham_dia);
 
 ///================  In tsh_prob_fssh.cpp  ===================================
 
@@ -207,13 +211,13 @@ boost::python::list hop(int ntraj, boost::python::list initstate, boost::python:
 
 
 ///================  In tsh_methods_tsh.cpp  ===================================
-
+/*
 int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
          nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd,
          int do_reordering, int do_phase_correction);
 int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
          nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd);
-
+*/
 void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
          nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd, 
          int do_reordering, int do_phase_correction);

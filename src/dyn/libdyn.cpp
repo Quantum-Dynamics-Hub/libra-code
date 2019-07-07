@@ -97,6 +97,16 @@ void export_Ehrenfest_objects(){
 }
 
 
+void export_LZ_hopping_probabilities_objects(){
+
+
+  MATRIX (*expt_compute_hopping_probabilities_lz_v1)
+  (nHamiltonian& ham, int rep, MATRIX& p, const MATRIX& invM, MATRIX& prev_ham_dia) = &compute_hopping_probabilities_lz;
+
+  def("compute_hopping_probabilities_lz",expt_compute_hopping_probabilities_lz_v1);
+
+}
+
 void export_FSSH_hopping_probabilities_objects(){
 
 
@@ -405,6 +415,7 @@ void export_Dyn_objects(){
   export_Verlet_objects();
   export_Ehrenfest_objects();
 
+  export_LZ_hopping_probabilities_objects();
   export_FSSH_hopping_probabilities_objects();
   export_GFSH_hopping_probabilities_objects();
   export_MSSH_hopping_probabilities_objects();
@@ -443,7 +454,7 @@ void export_Dyn_objects(){
   void (*expt_propagate_ensemble_v1)(double dt,Ensemble& ens,int opt) = &propagate_ensemble;
   def("propagate_ensemble", expt_propagate_ensemble_v1);
 
-
+/*
   int (*expt_tsh0_v1)
   (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state, nHamiltonian& ham, 
    bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd, 
@@ -453,6 +464,7 @@ void export_Dyn_objects(){
    bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd) = &tsh0;
   def("tsh0", expt_tsh0_v1);
   def("tsh0", expt_tsh0_v2);
+*/
 
   void (*expt_tsh1_v1)
   (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& states, nHamiltonian& ham,

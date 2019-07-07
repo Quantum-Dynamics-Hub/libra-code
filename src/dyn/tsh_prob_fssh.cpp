@@ -134,6 +134,111 @@ MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX* Hvib, double 
 }// fssh
 
 
+MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX* Hvib, CMATRIX* dSdt, double dt, int use_boltz_factor,double T){
+/**
+  \brief This function computes the surface hopping probabilities according to Tully's FSSH prescription. 
+  Also: this version allows the basis change in the course of time
+  The surface-hopping probabilities may be Boltzmann-corrected
+
+  See more details in:
+  (1) Tully, J. C. Molecular Dynamics with Electronic Transitions. J. Chem. Phys. 1990, 93, 1061–1071. - the original paper
+  (2) Fabiano, E.; Keal, T. W.; Thiel, W. Implementation of Surface Hopping Molecular Dynamics Using Semiempirical Methods. Chem. Phys. 2008, 349, 334–347.
+  Here, we generalized the formula, so it works equally well for both diabatic and adiabatic representations
+  (3) Akimov, A. V. Libra: An Open-Source “Methodology Discovery” Library for Quantum and Classical Dynamics Simulations.
+  J. Comput. Chem. 2016, 37, 1626–1649.
+
+  \param[in] Coeff - [ndia x 1] or a [nadi x 1] matrix of electronic basis states amplitudes in a superposition
+  \param[in] Hvib - [ndia x ndia] or a [nadi x nadi] vibronic Hamiltonian matrix
+  \param[in] dSdt - [ndia x ndia] or a [nadi x nadi] time derivative of the basis functions overlap matrix (including the reordering)
+  \param[in] dt - the interval of the time step for which we compute the hopping probability
+  \param[in] use_boltz_factor A flag to select the Boltzmann scaling in lieu of hop rejection/velocity rescaling scheme
+  \param[in] T nuclear temperature - used in the Boltzmann factor - only if use_boltz_factor is set to 1
+
+  Returns: A matrix with the hopping probabilities between all pairs of states is returned
+
+*/
+  const double kb = 3.166811429e-6; // Hartree/K
+  int i,j,k;
+  double sum,g_ij,argg;
+
+  int nstates = Coeff.n_rows;
+  MATRIX g(nstates,nstates);
+
+  CMATRIX denmat(nstates, nstates);   
+  
+  denmat = Coeff * Coeff.H();
+
+  // Now calculate the hopping probabilities
+  for(i=0;i<nstates;i++){
+    sum = 0.0;
+    double a_ii = denmat.get(i,i).real(); 
+
+    for(j=0;j<nstates;j++){
+
+      if(i!=j){ 
+        /**
+          dc/dt = -(i/hbar) * Hvib * c
+          (dc/dt)^+ = i/hbar * c^+ * Hvib^+
+
+          rho = c * c^+
+
+          Then
+          drho/dt = i/hbar * (rho*Hvib - Hvib*rho) + 
+
+          The diagonal element:
+           
+          drho_ii/dt = (i/hbar) *sum_a { rho_ia * Hvib_ai - Hvib_ia * rho_ai}
+
+          Then:  P(i->*) = -(drho_ii / rho_ii ) * dt  - probability of leaving state i
+
+          Then:  P(i->a) = - (dt/rho_ii) * Re[ (i/hbar) *sum_a { rho_ia * Hvib_ai - Hvib_ia * rho_ai} ] 
+
+          = (dt/(hbar*rho_ii)) * Im[ rho_ia * Hvib_ai - Hvib_ia * rho_ai ] 
+
+          Or:
+
+          P(i->j) = (dt/(hbar*rho_ii)) * Im[ rho_ij * Hvib_ji - Hvib_ij * rho_ji ] 
+
+        */
+
+        double imHaij = ( denmat.get(i,j) * Hvib->get(j,i) - Hvib->get(i,j) * denmat.get(j,i) ).imag(); 
+
+        if(a_ii<1e-8){ g_ij = 0.0; }  // avoid division by zero
+        else{
+          g_ij = dt*imHaij/a_ii;  // This is a general case -
+
+          if(use_boltz_factor){
+
+            if(Hvib->get(j,j).real() > Hvib->get(i,i).real()){
+              argg = -(Hvib->get(j,j).real() - Hvib->get(i,i).real())/(kb*T);        
+              if(argg<500.0){ g_ij = g_ij * std::exp(argg); }
+            }
+
+          }// if use_boltz_factor
+
+
+          if(g_ij<0.0){  g_ij = 0.0; }
+
+        }// else
+
+        g.set(i,j,g_ij);
+        sum = sum + g_ij;
+      }
+      else{ g.set(i,j,0.0); }
+
+    }// for j
+
+    g.set(i,i,1.0 - sum);
+
+  }// for i
+
+  return g;
+
+}// fssh
+
+
+
+
 MATRIX compute_hopping_probabilities_fssh(CMATRIX& Coeff, CMATRIX* Hvib, double dt){
 /**
   \brief This function computes the surface hopping probabilities according to Tully's FSSH prescription. 
