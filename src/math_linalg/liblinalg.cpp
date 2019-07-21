@@ -400,10 +400,9 @@ void export_CMATRIX(){
       .def(vector_indexing_suite< CMATRIXMap >())
   ;
 
-
+  /*
   vector<int> (*expt_get_reordering_v1)(CMATRIX& X) = &get_reordering;
   def("get_reordering", expt_get_reordering_v1);
-
 
   vector<int> (*expt_compute_signature_v1)(CMATRIX& Ref, CMATRIX& X) = &compute_signature;
   vector<int> (*expt_compute_signature_v2)(CMATRIX& X) = &compute_signature;
@@ -415,7 +414,7 @@ void export_CMATRIX(){
   void (*expt_correct_phase_v2)(CMATRIX& X) = &correct_phase;
   def("correct_phase", expt_correct_phase_v1);
   def("correct_phase", expt_correct_phase_v2);
-
+  */
 
 
 

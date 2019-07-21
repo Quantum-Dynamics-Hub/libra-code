@@ -204,7 +204,7 @@ void inv_matrix(MATRIX& S, MATRIX& S_inv, double thresh, int do_phase_correction
   // Find the eigenvalues of the the S matrix
   libmeigen::solve_eigen(S, *Seig, *C, 0);  // S * C = C * Seig  ==>  S = C * Seig * C.H()
 
-  if(do_phase_correction){   correct_phase(C);  }
+  //if(do_phase_correction){   correct_phase(C);  }
 
 
   for(i=0;i<sz;i++){
@@ -284,7 +284,7 @@ void inv_matrix(CMATRIX& S, CMATRIX& S_inv, double thresh, int do_phase_correcti
   // Find the eigenvalues of the the S matrix
   libmeigen::solve_eigen(S, *Seig, *C, 0);  // S * C = C * Seig  ==>  S = C * Seig * C.H()
 
-  if(do_phase_correction){   correct_phase(C);  }
+  //if(do_phase_correction){   correct_phase(C);  }
 
   // Diagonal form of the S^{-1} matrix
   S_inv = complex<double>(0.0,0.0);  // S^{-1}

@@ -71,7 +71,7 @@ void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh, 
   // Find the eigenvalues of the the S matrix
   solve_eigen(S, *Seig, *C, 0);  // S * C = C * Seig  ==>  S = C * Seig * C.H()
 
-  if(do_phase_correction){   correct_phase(C);  }
+  //if(do_phase_correction){   correct_phase(C);  }
 
   // Diagonal form of the S^{-1/2} and S^{1/2} matrices
   S_i_half = complex<double>(0.0,0.0);  // S^{-1/2}
@@ -143,7 +143,7 @@ void exp_matrix(CMATRIX& res, CMATRIX& S, complex<double> dt, int do_phase_corre
   // Find the eigenvalues of the the S matrix
   solve_eigen(S, *Seig, *C, 0);  // S * C = C * Seig  ==>  S = C * Seig * C.H()
 
-  if(do_phase_correction){   correct_phase(C);  }
+  //if(do_phase_correction){   correct_phase(C);  }
 
   
   for(i=0;i<sz;i++){ res.M[i*sz+i]= std::exp(dt * Seig->get(i,i)); }

@@ -72,7 +72,20 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
             * **dyn_params["nsteps"]** ( int ): the number of NA-MD steps to do [ default: 1 ]
 
             * **dyn_params["dt"]** ( double ): the nuclear and electronic integration
-                timestep [ units: a.u. of time, default: 1.0 ]
+                timestep [ units: a.u. of time, default: 41.0 ]
+
+            * **dyn_params["state_tracking_algo"]** ( int ): the algorithm to keep track of the states' identities
+ 
+                - 0: no state tracking
+                - 1: Sato
+                - 2: using the mincost, Munkres-Kuhn [ default: 2 ]
+
+            * **dyn_params["do_phase_correction"]** ( int ): the algorithm to correct phases on adiabatic states
+ 
+                - 0: no phase correction
+                - 1: accurding to Akimov [ default: 1 ]
+
+
 
         compute_model ( PyObject ): the pointer to the Python function that performs the Hamiltonian calculations
         rnd ( Random ): random numbers generator object
@@ -132,11 +145,18 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     iM = MATRIX(_iM)
     Cdia = CMATRIX(_Cdia)
     Cadi = CMATRIX(_Cadi)
-    
-    rep = dyn_params["rep"]
-    dt = dyn_params["dt"]
-    nsteps = dyn_params["nsteps"]
 
+
+    # Parameters and dimensions
+    critical_params = [ ] 
+    default_params = { "rep":1, "nsteps":1, "dt":1.0*units.fs2au, "do_phase_correction":1, "state_tracking_algo":2,
+                       "MK_alpha":0.0, "MK_verbosity":0 }
+    comn.check_input(dyn_params, default_params, critical_params)
+    
+
+    rep = dyn_params["rep"]
+    nsteps = dyn_params["nsteps"]
+    dt = dyn_params["dt"]
 
     ndia = Cdia.num_of_rows
     nadi = Cadi.num_of_rows
@@ -179,10 +199,9 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     for i in xrange(nsteps):
 
         if rep==0:
-            tsh1(dt, q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)
+            tsh1(q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)
         elif rep==1:
-            tsh1(dt, q, p, iM,  Cadi, states, ham, compute_model, model_params, dyn_params, rnd, 1, 1)
-
+            tsh1(q, p, iM,  Cadi, states, ham, compute_model, model_params, dyn_params, rnd)
 
 
         #=========== Properties ==========

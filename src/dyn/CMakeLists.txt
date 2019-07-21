@@ -49,7 +49,7 @@ TARGET_LINK_LIBRARIES(dyn      gwp_stat ensemble_stat
                       electronic_stat 
                       nuclear_stat 
                       hamiltonian_stat
-                      linalg_stat meigen_stat specialfunctions_stat ${ext_libs} )
+                      linalg_stat meigen_stat util_stat specialfunctions_stat ${ext_libs} )
 
 TARGET_LINK_LIBRARIES(dyn_stat      gwp_stat ensemble_stat 
                       wfcgrid_stat 
@@ -57,7 +57,7 @@ TARGET_LINK_LIBRARIES(dyn_stat      gwp_stat ensemble_stat
                       electronic_stat 
                       nuclear_stat 
                       hamiltonian_stat
-                      linalg_stat meigen_stat specialfunctions_stat ${ext_libs} )
+                      linalg_stat meigen_stat util_stat specialfunctions_stat ${ext_libs} )
 
 
 

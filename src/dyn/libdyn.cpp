@@ -395,6 +395,28 @@ void export_decoherence_objects(){
 
 }
 
+void export_permutation_objects(){
+ 
+  vector<int> (*expt_get_permutation_v1)(vector<vector<int> >& inp) = &get_permutation;
+  vector<int> (*expt_Munkres_Kuhn_minimize_v1)(MATRIX& _X, int verbosity) = &Munkres_Kuhn_minimize;
+  vector<int> (*expt_Munkres_Kuhn_maximize_v1)(MATRIX& _X, int verbosity) = &Munkres_Kuhn_maximize;
+
+  def("get_permutation", expt_get_permutation_v1);  
+  def("Munkres_Kuhn_minimize", expt_Munkres_Kuhn_minimize_v1);  
+  def("Munkres_Kuhn_maximize", expt_Munkres_Kuhn_maximize_v1);  
+
+
+  vector<int> (*expt_get_reordering_v1)(CMATRIX& time_overlap) = &get_reordering;
+  MATRIX (*expt_make_cost_mat_v1)(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha) = &make_cost_mat;
+  vector<int> (*expt_Munkres_Kuhn_v1)(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha, int verbosity) = &Munkres_Kuhn;
+
+  def("get_reordering", expt_get_reordering_v1);  
+  def("make_cost_mat", expt_make_cost_mat_v1);  
+  def("Munkres_Kuhn", expt_Munkres_Kuhn_v1);  
+
+}
+
+
 void export_Dyn_objects(){
 /** 
   \brief Exporter of libdyn classes and functions
@@ -426,7 +448,7 @@ void export_Dyn_objects(){
 
   export_decoherence_objects();
 
-
+  export_permutation_objects();
 
 
 
@@ -467,14 +489,9 @@ void export_Dyn_objects(){
 */
 
   void (*expt_tsh1_v1)
-  (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& states, nHamiltonian& ham,
-   bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd, 
-   int do_reordering, int do_phase_correction) = &tsh1;
-  void (*expt_tsh1_v2)
-  (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& states, nHamiltonian& ham,
+  (MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& states, nHamiltonian& ham,
    bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd) = &tsh1;
   def("tsh1", expt_tsh1_v1);
-  def("tsh1", expt_tsh1_v2);
 
 
   void (*expt_tsh2_v1)

@@ -282,7 +282,7 @@ def compute_dm(ham, Cdia, Cadi, rep, lvl):
 
             S = ham.get_ovlp_dia(indx)
             U = ham.get_basis_transform(indx)     
-            correct_phase(U)
+            # correct_phase(U) 7/20/2019 - I don't think this does anything
             su = S * U
             dm_dia = dm_dia + su * dm_tmp * su.H()
     

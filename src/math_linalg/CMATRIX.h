@@ -206,6 +206,7 @@ public:
                  
 };
 
+/*
 vector<int> get_reordering(CMATRIX& X);
 vector<int> compute_signature(CMATRIX& Ref, CMATRIX& X);
 vector<int> compute_signature(CMATRIX& X);
@@ -213,7 +214,7 @@ void correct_phase(CMATRIX& Ref, CMATRIX& X);
 void correct_phase(CMATRIX& Ref, CMATRIX* X);
 void correct_phase(CMATRIX& X);
 void correct_phase(CMATRIX* X);
-
+*/
 
 
 

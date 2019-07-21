@@ -218,11 +218,8 @@ int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
 int tsh0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, int state,
          nHamiltonian& ham, bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd);
 */
-void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
-         nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd, 
-         int do_reordering, int do_phase_correction);
-void tsh1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
-         nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd);
+void tsh1(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
+          nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd);
 
 
 ///================  In tsh_methods_tsh2.cpp  ===================================
@@ -261,6 +258,18 @@ int dish(Electronic& el, MATRIX& t_m, const MATRIX& tau_m, const CMATRIX& Hvib,
 int dish(Electronic& el, Nuclear& mol, Hamiltonian& ham, 
           MATRIX& t_m, const MATRIX& tau_m, int use_boltz_flag, double T, double ksi1, double ksi2);
 
+
+
+///================  In tsh_hungarian.cpp  =================================
+vector<int> get_permutation(vector<vector<int> >& inp);
+vector<int> Munkres_Kuhn_minimize(MATRIX& _X, int verbosity);
+vector<int> Munkres_Kuhn_maximize(MATRIX& _X, int verbosity);
+
+///================  In tsh_state_tracking.cpp  =================================
+vector<int> get_reordering(CMATRIX& time_overlap);
+MATRIX make_cost_mat(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha);
+vector<int> Munkres_Kuhn(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha, int verbosity);
+vector<int> get_stochastic_reordering(CMATRIX& time_overlap, Random& rnd);
 
 }// namespace libdyn
 }// liblibra

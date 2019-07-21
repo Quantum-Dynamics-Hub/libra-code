@@ -254,19 +254,19 @@ def step5(M, path_row_0, path_col_0, Rcov, Ccov):
 
     while(not done):
 
-      #print path
-
-      r = find_star_in_col(M, path[path_count-1][1])
-      if(r>-1):
-          path_count += 1
-          path.append([ r, path[path_count-2][1] ])      
-      else:
-          done = True
-
-      if(not done):
-          c = find_prime_in_row(M, path[path_count-1][0])
-          path_count += 1
-          path.append([ path[path_count-2][0], c])      
+        #print path
+      
+        r = find_star_in_col(M, path[path_count-1][1])
+        if(r>-1):
+            path_count += 1
+            path.append([ r, path[path_count-2][1] ])      
+        else:
+            done = True
+      
+        if(not done):
+            c = find_prime_in_row(M, path[path_count-1][0])
+            path_count += 1
+            path.append([ path[path_count-2][0], c])      
 
 
     augment_path(M, path)
