@@ -1,0 +1,105 @@
+/*********************************************************************************
+* Copyright (C) 2015-2017 Alexey V. Akimov
+*
+* This file is distributed under the terms of the GNU General Public License
+* as published by the Free Software Foundation, either version 2 of
+* the License, or (at your option) any later version.
+* See the file LICENSE in the root directory of this distribution
+* or <http://www.gnu.org/licenses/>.
+*
+*********************************************************************************/
+/**
+  \file Wfcgrid_Dynamics1.cpp
+  \brief The file implements the propagators for numerical solution of TD-SE on the grid
+    
+*/
+
+#include "Wfcgrid.h"
+#include "../../math_meigen/libmeigen.h"
+
+/// liblibra namespace
+namespace liblibra{
+
+
+/// libdyn namespace
+namespace libdyn{
+
+/// libwfcgrid namespace
+namespace libwfcgrid{
+
+using namespace libmeigen;
+
+
+
+void Wfcgrid::absorb_1D(double dL,vector<double>& Pops_l,vector<double>& Pops_r){
+/**
+  \brief Absorbing potential near the boundaries for 1D wavefunction
+  \param[in] dL the length of the absorbing layer
+  \param[out] Pops_l Population in the left trapping region (absorbing layer)
+  \param[out] Pops_r Population in the right trapping region (absorbing layer)
+*/
+  int i;
+  int nL = dL/dx;  // how many points from each boundary to set to zero
+
+  if(Pops_l.size()<nstates){ Pops_l = vector<double>(nstates,0.0);  } // Population in the left trapping region
+  if(Pops_r.size()<nstates){ Pops_r = vector<double>(nstates,0.0);  }
+
+  for(int nst=0;nst<nstates;nst++){
+
+    // On the left
+    for(i=0;i<=nL;i++){
+      Pops_l[nst] += dx*real(std::conj(PSI[nst].M[i])*PSI[nst].M[i]);
+      PSI[nst].M[i] = 0.0;
+    }
+
+    // On the right
+    for(i=0;i<=nL;i++){
+      Pops_r[nst] += dx*real(std::conj(PSI[nst].M[(Nx-1-i)])*PSI[nst].M[(Nx-1-i)]);
+      PSI[nst].M[Nx-1-i] = 0.0;
+    }
+
+  }// for st
+
+
+  // Update reciprocal part
+  // PSI(r)->PSI(k)=reciPSI
+  ft_1D(PSI,reciPSI,1,xmin,kxmin,dx);
+
+}
+
+
+boost::python::list Wfcgrid::absorb_1D(double dL){
+/**
+  \brief Absorbing potential near the boundaries for 1D wavefunction - Python-friendly
+  \param[in] dL the length of the absorbing layer
+  Return value - the list of 2 lists, res, such that
+  res[0] Population in the left trapping region (absorbing layer)
+  res[1] Population in the right trapping region (absorbing layer)
+*/
+
+
+  vector<double> Pops_l(nstates,0.0);
+  vector<double> Pops_r(nstates,0.0);
+
+  boost::python::list p_l, p_r, res;
+
+  absorb_1D(dL, Pops_l, Pops_r);
+
+  for(int i=0;i<nstates;i++){
+    p_l.append(Pops_l[i]);
+    p_r.append(Pops_r[i]);
+  }
+  res.append(p_l);
+  res.append(p_r);
+
+  return res;
+
+}// absorb_1D
+
+
+
+
+}// namespace libwfcgrid
+}// namespace libdyn
+}// liblibra
+

@@ -32,6 +32,104 @@ namespace libwfcgrid{
 
 //--------------------- General ---------------------
 
+int compute_imapping(vector<int>& inp, vector<int>& npts){
+/**
+
+  By giving the index of the point along each dimension, we want to compute 
+  the index of the point in the overall scheme
+
+  The formula is like:
+
+  1D: i = i_0 
+  2D: i = i_0*n_1 + i_1
+  3D: i = i_0*n_1*n_2 + i_1*n_2 + i_2 
+
+  ...
+
+*/
+
+  if(inp.size()!=npts.size()){
+    cout<<"ERROR in compute_imapping: inp.size()= "<<inp.size()<<" but npts.size()= "<<npts.size()<<endl;
+    cout<<"Exiting now...\n";
+    exit(0);
+  }
+
+  int ndof = npts.size();
+
+  int i = inp[0];
+  for(int dof=1; dof<ndof; dof++){    
+    i *= npts[dof];
+    i += inp[dof]; 
+  }
+  
+  return i;
+}
+
+vector<vector<int> > compute_mapping(vector<vector<int> >& inp, vector<int>& npts){
+/**
+     The ordering is like this...
+
+     DOF0      DOF1 ...  Index
+
+                x         0
+      x         x         1
+                x         2
+ 
+                x         3
+      x         x         4
+                x         5
+
+                x         6
+      x         x         7
+                x         8
+
+*/
+
+
+  int sz,i,ipt;
+  sz = inp.size();             // how many vectors are in
+
+  if(sz==0){                   // starting with an empty container
+      
+    vector<vector<int> > res; 
+
+    for(ipt=0; ipt<npts[0]; ipt++){ // all points along a given dimension
+
+      vector<int> res_i(1, ipt);
+      res.push_back(res_i);      
+    }
+    return compute_mapping(res, npts);
+  }
+  else{
+  
+    int lvl = inp[0].size();     // level is the same as the length of each vector
+
+    if (lvl<npts.size()){
+
+      vector<vector<int> > res; 
+ 
+      for(i=0; i<sz; i++){  // take each initial input vectors
+   
+          vector<int> res_i = inp[i];
+          res_i.push_back(0);
+
+          for(ipt=0; ipt<npts[lvl]; ipt++){ // all points along a given dimension
+            res_i[lvl] = ipt; 
+            res.push_back(res_i);
+          }// for ipt
+      
+      }// for i
+
+      return compute_mapping(res, npts);
+
+    }
+    else{  return inp; }
+  }
+
+}
+
+
+
 int find_grid_size(double xmin,double xmax, double dx){
 /**
   \brief Compute the minimal number of points that is a power of 2 and

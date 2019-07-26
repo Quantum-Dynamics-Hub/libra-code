@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015-2017 Alexey V. Akimov
+* Copyright (C) 2019 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -9,47 +9,34 @@
 *
 *********************************************************************************/
 /**
-  \file libdyn.h
+  \file libwfcgrid2.h
   \brief The file describes Python export function
     
 */
 
-#ifndef LIBDYN_H
-#define LIBDYN_H
+#ifndef LIB_WFCGRID2_H
+#define LIB_WFCGRID2_H
 
 
-// Dynamics classes
-#include "nuclear/libnuclear.h"
-#include "Dynamics.h"
-//#include "../dyn_rigidbody/librigidbody.h"
-#include "electronic/libelectronic.h"
-#include "thermostat/libthermostat.h"
-#include "barostat/libbarostat.h"
-#include "wfcgrid/libwfcgrid.h"
-#include "wfcgrid2/libwfcgrid2.h"
-#include "ensemble/libensemble.h"
-#include "gwp/libgwp.h"
-
-// General dynamics
-#include "Energy_and_Forces.h"
-#include "Surface_Hopping.h"
-#include "Dynamics_Nuclear.h"
-#include "Dynamics_Ensemble.h"
-
+#include "Wfcgrid2.h"
 
 /// liblibra namespace
 namespace liblibra{
 
-
 /// libdyn namespace
 namespace libdyn{
 
+/// libwfcgrid namespace
+namespace libwfcgrid2{
 
-void export_Dyn_objects();
+
+void export_Wfcgrid2_objects();
 
 
+}// namespace libwfcgrid2
 }// namespace libdyn
 }// liblibra
 
-#endif // LIBDYN_H
 
+
+#endif// LIB_WFCGRID2_H

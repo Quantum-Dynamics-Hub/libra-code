@@ -33,6 +33,7 @@ using namespace libelectronic;
 using namespace libthermostat;
 using namespace libbarostat;
 using namespace libwfcgrid;
+using namespace libwfcgrid2;
 using namespace libensemble;
 using namespace libgwp;
 
@@ -430,6 +431,7 @@ void export_Dyn_objects(){
   export_Thermostat_objects();
   export_Barostat_objects();
   export_Wfcgrid_objects();
+  export_Wfcgrid2_objects();
   export_Ensemble_objects();
   export_gwp_objects();
 

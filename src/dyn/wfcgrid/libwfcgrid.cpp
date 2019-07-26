@@ -37,6 +37,12 @@ void export_Wfcgrid_objects(){
 
 */
 
+  vector<vector<int> > (*expt_compute_mapping_v1)(vector<vector<int> >& inp, vector<int>& npts) = &compute_mapping;
+  def("compute_mapping", expt_compute_mapping_v1);
+
+  int (*expt_compute_imapping_v1)(vector<int>& inp, vector<int>& npts) = compute_imapping;
+  def("compute_imapping", expt_compute_imapping_v1);
+
 
   boost::python::list (Wfcgrid::*expt_absorb_1D)(double dL) = &Wfcgrid::absorb_1D;
 
