@@ -19,6 +19,9 @@ ADD_SUBDIRECTORY("barostat")
 MESSAGE("Going into subdirectory wfcgrid...")
 ADD_SUBDIRECTORY("wfcgrid")
 
+MESSAGE("Going into subdirectory wfcgrid2...")
+ADD_SUBDIRECTORY("wfcgrid2")
+
 MESSAGE("Going into subdirectory ensemble...")
 ADD_SUBDIRECTORY("ensemble")
 
@@ -45,19 +48,21 @@ ADD_LIBRARY(dyn_stat STATIC ${DYN_SRC})
 #
 TARGET_LINK_LIBRARIES(dyn      gwp_stat ensemble_stat 
                       wfcgrid_stat 
+                      wfcgrid2_stat 
                       barostat_stat thermostat_stat 
                       electronic_stat 
                       nuclear_stat 
                       hamiltonian_stat
-                      linalg_stat meigen_stat specialfunctions_stat ${ext_libs} )
+                      linalg_stat meigen_stat util_stat specialfunctions_stat ${ext_libs} )
 
 TARGET_LINK_LIBRARIES(dyn_stat      gwp_stat ensemble_stat 
                       wfcgrid_stat 
+                      wfcgrid2_stat 
                       barostat_stat thermostat_stat 
                       electronic_stat 
                       nuclear_stat 
                       hamiltonian_stat
-                      linalg_stat meigen_stat specialfunctions_stat ${ext_libs} )
+                      linalg_stat meigen_stat util_stat specialfunctions_stat ${ext_libs} )
 
 
 

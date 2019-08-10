@@ -62,6 +62,8 @@ void extract_2D(vector< vector<double> >& in, vector< vector<double> >& out, int
 void extract_2D(vector< vector<double> >& in, vector< vector<double> >& out, vector<int>& templ,int shift);
 
 
+void check_input(boost::python::dict params, boost::python::dict default_params, boost::python::list critical_params);
+
 
 }// libutil
 

@@ -1,0 +1,66 @@
+# This is the file to compute AO overlaps between two distinct geometries
+# 
+
+Geometry = GenFormat {
+   <<< "x2.gen"
+}
+
+Driver = { }	       			
+
+
+Hamiltonian = DFTB {
+  SCC = Yes
+  SlaterKosterFiles = Type2FileNames {
+    Prefix = "/mnt/c/cygwin/home/Alexey-user/Soft/dftb/sk/3ob-3-1/"
+    Separator = "-"
+    Suffix = ".skf"
+  }
+  MaxAngularMomentum = {
+    N = "p"
+    O = "p"
+    C = "p"
+    H = "s"
+  }
+  Dispersion = SlaterKirkwood {
+    PolarRadiusCharge = HybridDependentPol {
+      C = {
+        CovalentRadius [Angstrom] = 0.6
+        HybridPolarisations [Angstrom^3,Angstrom,] = {
+	  1.382 1.382 1.382 1.064 0.000 0.000   3.8 3.8 3.8 3.8 3.8 3.8   2.50
+	}
+      }
+      H = {
+	CovalentRadius [Angstrom] = 0.6
+	HybridPolarisations [Angstrom^3,Angstrom,] = {
+	  0.386 0.386 0.000 0.000 0.000 0.000   3.5 3.5 3.5 3.5 3.5 3.5   0.80
+	}
+      }
+      N = {
+	CovalentRadius [Angstrom] = 0.6
+	HybridPolarisations [Angstrom^3,Angstrom,] = {
+	  1.030 1.030 1.090 1.090 0.000 0.000   3.8 3.8 3.8 3.8 3.8 3.8   2.82
+	}
+      }
+      O = {
+	CovalentRadius [Angstrom] = 0.6
+	HybridPolarisations [Angstrom^3,Angstrom,] = {
+	  0.560 0.560 0.000 0.000 0.000 0.000   3.8 3.8 3.8 3.8 3.8 3.8   3.15
+	}
+      }
+    }
+  }
+}
+
+
+Options = {
+#  WriteAutotestTag = Yes
+  WriteHS = Yes
+#  WriteEigenvectors = Yes
+}
+
+Analysis = {
+}
+
+ParserOptions = {
+  ParserVersion = 4
+}

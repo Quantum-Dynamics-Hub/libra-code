@@ -32,6 +32,104 @@ namespace libwfcgrid{
 
 //--------------------- General ---------------------
 
+int compute_imapping(vector<int>& inp, vector<int>& npts){
+/**
+
+  By giving the index of the point along each dimension, we want to compute 
+  the index of the point in the overall scheme
+
+  The formula is like:
+
+  1D: i = i_0 
+  2D: i = i_0*n_1 + i_1
+  3D: i = i_0*n_1*n_2 + i_1*n_2 + i_2 
+
+  ...
+
+*/
+
+  if(inp.size()!=npts.size()){
+    cout<<"ERROR in compute_imapping: inp.size()= "<<inp.size()<<" but npts.size()= "<<npts.size()<<endl;
+    cout<<"Exiting now...\n";
+    exit(0);
+  }
+
+  int ndof = npts.size();
+
+  int i = inp[0];
+  for(int dof=1; dof<ndof; dof++){    
+    i *= npts[dof];
+    i += inp[dof]; 
+  }
+  
+  return i;
+}
+
+vector<vector<int> > compute_mapping(vector<vector<int> >& inp, vector<int>& npts){
+/**
+     The ordering is like this...
+
+     DOF0      DOF1 ...  Index
+
+                x         0
+      x         x         1
+                x         2
+ 
+                x         3
+      x         x         4
+                x         5
+
+                x         6
+      x         x         7
+                x         8
+
+*/
+
+
+  int sz,i,ipt;
+  sz = inp.size();             // how many vectors are in
+
+  if(sz==0){                   // starting with an empty container
+      
+    vector<vector<int> > res; 
+
+    for(ipt=0; ipt<npts[0]; ipt++){ // all points along a given dimension
+
+      vector<int> res_i(1, ipt);
+      res.push_back(res_i);      
+    }
+    return compute_mapping(res, npts);
+  }
+  else{
+  
+    int lvl = inp[0].size();     // level is the same as the length of each vector
+
+    if (lvl<npts.size()){
+
+      vector<vector<int> > res; 
+ 
+      for(i=0; i<sz; i++){  // take each initial input vectors
+   
+          vector<int> res_i = inp[i];
+          res_i.push_back(0);
+
+          for(ipt=0; ipt<npts[lvl]; ipt++){ // all points along a given dimension
+            res_i[lvl] = ipt; 
+            res.push_back(res_i);
+          }// for ipt
+      
+      }// for i
+
+      return compute_mapping(res, npts);
+
+    }
+    else{  return inp; }
+  }
+
+}
+
+
+
 int find_grid_size(double xmin,double xmax, double dx){
 /**
   \brief Compute the minimal number of points that is a power of 2 and
@@ -73,7 +171,7 @@ CMATRIX init_grid(double xmin,double xmax, double dx){
 
 //------------------ 1D specific --------------------------
 
-void init_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double dx, int nstates, int occ_state){
+void init_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double dx, int nstates, int occ_state, complex<double> scl){
 /**
   \brief Initialize a Gaussian wavepacket on a 1D grid
   \param[out] wfc Is a list of complex matrices (vectors), each containing numerical wavefunction for different electronic state
@@ -84,7 +182,25 @@ void init_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double d
   \param[in] nstates The number of electronic states for which to initialize the wavefunction
   \param[in] occ_state Index of the occupied electronic state on which the wavepacket is initialized
 
-  G(x) = [ (1/(2.0*pi*dx^2))^(1/4) ] * exp(-((x-x_)/(2*dx))^2 + i*((x-x_)/dx)*px_)
+  G(x) = [ (1/(2.0*pi*dx^2))^(1/4) ] * exp(-((x-x_)/(2*dx))^2 + i*(x-x_)*px_)
+
+  P(x) = |G(x)|^2 = [ (1/(2.0*pi*dx^2)^2) ] * exp( -(x-x_)^2/(2*dx^2) )
+
+  That is according to: https://en.wikipedia.org/wiki/Normal_distribution,  
+  dx - corresponds to standard deviation (in the classical distribution)
+  dx^2 - variance (in the classical distribution)
+
+  That is, this wavepacket would correspond to the probability density (classical coordinates)
+  that are generated like this:
+
+  x_i = x_ * dx * rnd.normal()
+
+
+  Other connections:     
+  2*a = 1/2*dx^2 =>  a = 1/(2*dx)^2 , where a is such that:  alpha/2 = a + i*b, where a and b are defined in:
+
+  (1) Heller, E. J. Guided Gaussian Wave Packets. Acc. Chem. Res. 2006, 39, 127–134.  
+  (2) Akimov, A. V.; Prezhdo, O. V. Formulation of Quantized Hamiltonian Dynamics in Terms of Natural Variables. J. Chem. Phys. 2012, 137, 224115.
 
 */
 
@@ -109,9 +225,9 @@ void init_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double d
         double deltx = 0.5*(X.M[nx].real() - x_)/dx;
 
         double c1 = -deltx*deltx;
-        double c2 = 2.0* px_* deltx;
+        double c2 = px_*(X.M[nx].real() - x_);
 
-        wfc[st].M[nx*1+0] = nrm * exp(c1) * (cos(c2)+one*sin(c2));
+        wfc[st].M[nx*1+0] = scl * nrm * exp(c1) * (cos(c2)+one*sin(c2));
       }
       else{ wfc[st].M[nx*1+0] = 0.0; }
 
@@ -119,6 +235,140 @@ void init_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double d
   }// for nx
 
 }// init_gauss_1D
+
+
+void init_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double dx, int nstates, int occ_state){
+
+  complex<double> one(1.0, 0.0);
+  init_gauss_1D(wfc, X, x_, px_, dx, nstates, occ_state, one); 
+
+}
+
+
+void add_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double dx, int nstates, int occ_state, complex<double> weight){
+/**
+  \brief Adds a Gaussian wavepacket with a given weight to a 1D grid
+
+  \param[out] wfc Is a list of complex matrices (vectors), each containing numerical wavefunction for different electronic state
+  \param[in] X is the complex matrix(vector) containing the grid points
+  \param[in] x_ Position of the center of the Gaussian wavepacket
+  \param[in] px_ Momentum of the Gaussian wavepacket
+  \param[in] dx Spread (distribution width) of the spatial component of the Gaussian wavepacket
+  \param[in] nstates The number of electronic states for which to initialize the wavefunction
+  \param[in] occ_state Index of the occupied electronic state on which the wavepacket is initialized
+
+  G(x) = [ (1/(2.0*pi*dx^2))^(1/4) ] * exp(-((x-x_)/(2*dx))^2 + i*(x-x_)*px_)
+
+  P(x) = |G(x)|^2 = [ (1/(2.0*pi*dx^2)^2) ] * exp( -(x-x_)^2/(2*dx^2) )
+
+  That is according to: https://en.wikipedia.org/wiki/Normal_distribution,  
+  dx - corresponds to standard deviation (in the classical distribution)
+  dx^2 - variance (in the classical distribution)
+
+  That is, this wavepacket would correspond to the probability density (classical coordinates)
+  that are generated like this:
+
+  x_i = x_ * dx * rnd.normal()
+
+
+  Other connections:     
+  2*a = 1/2*dx^2 =>  a = 1/(2*dx)^2 , where a is such that:  alpha/2 = a + i*b, where a and b are defined in:
+
+  (1) Heller, E. J. Guided Gaussian Wave Packets. Acc. Chem. Res. 2006, 39, 127–134.  
+  (2) Akimov, A. V.; Prezhdo, O. V. Formulation of Quantized Hamiltonian Dynamics in Terms of Natural Variables. J. Chem. Phys. 2012, 137, 224115.
+
+*/
+
+  // Get the size of the 1D grid
+  int Nx = X.n_elts; 
+
+  // The memory should be allocated already
+  // wfc = vector<CMATRIX>(nstates,CMATRIX(Nx,1));
+
+  // Constants
+  const double nrm = pow((1.0/(2.0*M_PI*dx*dx)),0.25);
+  const complex<double> one(0.0, 1.0);
+
+
+  // Copute wfc values at the grid points
+  for(int nx=0;nx<Nx;nx++){ 
+
+    for(int st=0;st<nstates;st++){
+      if(st==occ_state){
+
+        double deltx = 0.5*(X.M[nx].real() - x_)/dx;
+
+        double c1 = -deltx*deltx;
+        double c2 = px_*(X.M[nx].real() - x_);
+
+        wfc[st].M[nx*1+0] += weight * nrm * exp(c1) * (cos(c2)+one*sin(c2));
+      }
+      else{ wfc[st].M[nx*1+0] += 0.0; }
+
+    }// for st
+  }// for nx
+
+}// init_gauss_1D
+
+
+
+
+void add_ho_1D(vector<CMATRIX>& wfc, CMATRIX& X, int nu, double x_, double px_, complex<double> weight, int occ_state, int alpha){
+/**
+  \brief Adds a moving! Harmonic Oscillator (HO) with a given weight to a 1D grid wavefunction
+
+  \param[out] wfc Is a list of complex matrices (vectors), each containing numerical wavefunction for different electronic state
+  \param[in] X is the complex matrix(vector) containing the grid points
+  \param[in] nu Quantum number of the HO basis function
+  \param[in] x_ Position of the center of the HO basis function
+  \param[in] px_ Momentum of the HO basis wavepacket 
+  \param[in] weight The weight with which the basis function is added to the grid
+  \param[in] occ_state Index of the electronic state to which the wavepacket is added
+  \param[in] alpha The parameter related to the reference HO Hamiltonian:  alpha = sqrt(k*mu/hbar^2)
+             Where:  H = -hbar^2 /(2*mu) d^2/dx^2  + 1/2 * k * (x-x_)^2 
+
+
+  This function adds:
+
+  weight * HO_nu(x-x_) * exp(i*px_*(x-x_))
+
+  HO_nu(x) = N_nu * H_nu(sqrt(alpha) * (x)) * exp(-1/2 * alpha * x^2 ) 
+
+  N_nu = 1/sqrt(2^nu * nu!)  * (alpha/pi)^(1/4) - normalization factor
+
+  H_nu(ksi):  H_{nu+1}(ksi) - 2 ksi*H_{nu}(ksi) + 2*nu *H_{nu-1}(ksi) = 0  - Hermite polynomial
+
+*/
+
+  // Get the size of the 1D grid
+  int Nx = X.n_elts; 
+
+  // Allocate memory, if not yet done
+  // wfc = vector<CMATRIX>(nstates,CMATRIX(Nx,1));
+
+  // Constants
+  const double nrm = (1.0/sqrt(pow(2.0, nu) * FACTORIAL(nu)) ) * pow((alpha/M_PI),0.25);
+  const complex<double> one(0.0, 1.0);
+
+  double H, dH;
+
+  // Copute wfc values at the grid points
+  for(int nx=0;nx<Nx;nx++){ 
+    
+    double ksi = sqrt(alpha) * (X.M[nx].real() - x_);
+    HERMITE(nu, ksi, H, dH);
+
+    double c2 = px_*(X.M[nx].real() - x_);
+
+    wfc[occ_state].M[nx] += weight * nrm *  H * exp(-0.5*ksi*ksi) * (cos(c2)+one*sin(c2));
+
+  }// for nx
+
+}// init_ho_1D
+
+
+
+
 
 
 void print_1D(CMATRIX& X,vector<CMATRIX>& PSI,string prefix, int frame){
@@ -230,8 +480,8 @@ void init_gauss_2D(vector<CMATRIX>& wfc,
   \param[in] occ_state Index of the occupied electronic state on which the wavepacket is initialized
 
   G(x,y) = G(x)*G(y)
-  G(x) = [ (1/(2.0*pi*dx^2))^(1/4) ] * exp(-((x-x_)/(2*dx))^2 + i*((x-x_)/dx)*px_)
-  G(y) = [ (1/(2.0*pi*dy^2))^(1/4) ] * exp(-((y-y_)/(2*dy))^2 + i*((y-y_)/dy)*py_)
+  G(x) = [ (1/(2.0*pi*dx^2))^(1/4) ] * exp(-((x-x_)/(2*dx))^2 + i*(x-x_)*px_)
+  G(y) = [ (1/(2.0*pi*dy^2))^(1/4) ] * exp(-((y-y_)/(2*dy))^2 + i*(y-y_)*py_)
 
 */
 

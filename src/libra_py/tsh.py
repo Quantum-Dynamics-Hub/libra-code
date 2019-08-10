@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2016-2018 Kosuke Sato, Alexey V. Akimov                                                   
+#* Copyright (C) 2016-2019 Kosuke Sato, Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -7,21 +7,24 @@
 #* See the file LICENSE in the root directory of this distribution   
 #* or <http://www.gnu.org/licenses/>.          
 #***********************************************************************************
-## \file tsh.py 
-# This module implements the generic function for TSH calculations as well as some
-# customized versions of TSH
-#
-# The module contain the following functions:
-#
-#   compute_etot(ham, p, Cdia, Cadi, states, iM, rep)
-#   hop_py(initstate, g, ksi)
-#   set_random_state(prob, ksi)
-#   compute_sh_statistics(nstates, istate)
-#   avarage_populations(el)
-#   surface_hopping(mol, el, ham, rnd, params)
-#   surface_hopping_cpa(mol, el, ham, rnd, params)
-#   surface_hopping_cpa2(mol, el, ham, rnd, params)
-#   ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse)
+"""
+.. module:: tsh
+   :platform: Unix, Windows
+   :synopsis: This module implements the generic function for TSH calculations as well as some
+       customized versions of TSH recipes
+.. moduleauthor:: Kosuke Sato, Alexey V. Akimov
+
+"""
+
+__author__ = "Alexey V. Akimov, Kosuke Sato"
+__copyright__ = "Copyright 2016-2019 Kosuke Sato, Alexey V. Akimov"
+__credits__ = ["Alexey V. Akimov", "Kosuke Sato"]
+__license__ = "GNU-3"
+__version__ = "1.0"
+__maintainer__ = "Alexey V. Akimov"
+__email__ = "alexvakimov@gmail.com"
+__url__ = "https://quantum-dynamics-hub.github.io/libra/index.html"
+
 
 
 import os
@@ -34,15 +37,11 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+import units
+import probabilities
+#import common_utils as comn
+import util.libutil as comn
 
-__author__ = "Alexey V. Akimov, Kosuke Sato"
-__copyright__ = "Copyright 2016-2018 Kosuke Sato, Alexey V. Akimov"
-__credits__ = ["Alexey V. Akimov", "Kosuke Sato"]
-__license__ = "GNU-3"
-__version__ = "1.0"
-__maintainer__ = "Alexey V. Akimov"
-__email__ = "alexvakimov@gmail.com"
-__url__ = "https://quantum-dynamics-hub.github.io/libra/index.html"
 
 
 def sample(x, mean_x, sigma_x, rnd):  
@@ -50,10 +49,16 @@ def sample(x, mean_x, sigma_x, rnd):
     This function generates ntraj ndof-dimensional vectors sampled from a 
     normal distribution with a given mean and variance
 
-    \param[out] x [ndof x ntraj, MATRIX] The vectors of variables of a given meaning 
-    \param[in] mean_x [ndof x 1, MATRIX] The mean of the ndof-dimensional vector (component-wise)
-    \param[in] sigma_x [ndof x 1, MATRIX] The variance width for each component
-    \param[in] rnd [Random] The random number generator
+    Args: 
+        x ( MATRIX(ndof, ntraj) ): Each column of the matrix corresponds to 
+            a vector of certain properties (e.g. coordinates, momenta, of all DOFs) for 
+            a given trajectory (element of ensemble)
+        mean_x ( MATRIX(ndof, 1) ):  The mean of the ndof-dimensional vector (component-wise)
+        sigma_x ( MATRIX(ndof, 1) ): The variance width for each component
+        rnd ( Random ): The random number generator object
+
+    Returns:
+        None: but changes the matrix ```x```
 
     """
     nr, nc = x.num_of_rows, x.num_of_cols
@@ -63,236 +68,22 @@ def sample(x, mean_x, sigma_x, rnd):
 
 
 
-
-
-def compute_etot(ham, p, Cdia, Cadi, iM, rep):
-    """
-    Ehrenfest potential energy
-
-    This function computes the average kinetic, potential, and total
-    energies for an ensemble of trajectories
-
-    \param[in] ham  nHamiltonian object that handles many trajectories
-    \param[in] p [ndof x ntraj, MATRIX] nuclear momenta 
-    \param[in] Cdia [ndia x ntraj, CMATRIX] electronic DOFs in diabatic basis
-    \param[in] Cadi [nadi x ntraj, CMATRIX] electronic DOFs in adiabatic basis
-    \param[in] iM [ndof x 1, MATRIX] inverse masses for all nuclear DOFs
-    \param[in] rep  The selector of the representation that is of current interest.
-    Options: 0 - diabatic, 1 - adiabatic
-
-    Returns: average kinetic, potential, total energdies, and their fluctuations (6 variables in total)
-
-    """
-
-    ntraj = p.num_of_cols
-    ndof = p.num_of_rows
-
-    epot, ekin = [], []    
-    Epot, Ekin = 0.0, 0.0
-
-    nst = 1
-    if rep==0:
-        nst = Cdia.num_of_rows
-    elif rep==1:
-        nst = Cadi.num_of_rows
-
-
-    C = CMATRIX(nst, 1)
-
-    for traj in xrange(ntraj):
-
-        if rep==0:
-            pop_submatrix(Cdia, C, Py2Cpp_int(range(0,nst)), Py2Cpp_int([traj]))    
-            epot.append( ham.Ehrenfest_energy_dia(C, Py2Cpp_int([0,traj])).real )
-            Epot = Epot + epot[traj]
-        elif rep==1:
-            pop_submatrix(Cadi, C, Py2Cpp_int(range(0,nst)), Py2Cpp_int([traj]))    
-            epot.append( ham.Ehrenfest_energy_adi(C, Py2Cpp_int([0,traj])).real )
-            Epot = Epot + epot[traj]
-
-        tmp = 0.0
-        for dof in xrange(ndof):
-            tmp = tmp + 0.5 * iM.get(dof, 0) * (p.get(dof, traj) ** 2)
-        ekin.append(tmp)
-        Ekin = Ekin + ekin[traj]
-
-    Ekin = Ekin / float(ntraj)
-    Epot = Epot / float(ntraj)
-    Etot = Ekin + Epot
-
-    # Variances:
-    dEkin, dEpot = 0.0, 0.0
-    for traj in xrange(ntraj):
-        dEkin = dEkin + (ekin[traj] - Ekin)**2
-        dEpot = dEpot + (epot[traj] - Epot)**2
-
-    dEtot = dEkin + dEpot
-
-    dEkin = math.sqrt(dEkin/ float(ntraj))
-    dEpot = math.sqrt(dEpot/ float(ntraj))
-    dEtot = math.sqrt(dEtot/ float(ntraj))
-    
-
-    return Ekin, Epot, Etot, dEkin, dEpot, dEtot
-
-
-
-
-def compute_etot_tsh(ham, p, Cdia, Cadi, act_states, iM, rep):
-    """
-    Adiabatic potential energy
-
-    This function computes the average kinetic, potential, and total
-    energies for an ensemble of trajectories
-
-    \param[in] ham  nHamiltonian object that handles many trajectories
-    \param[in] p [ndof x ntraj, MATRIX] nuclear momenta 
-    \param[in] Cdia [ndia x ntraj, CMATRIX] electronic DOFs in diabatic basis
-    \param[in] Cadi [nadi x ntraj, CMATRIX] electronic DOFs in adiabatic basis
-    \param[in] act_states vector<int> of the length ntraj
-    \param[in] iM [ndof x 1, MATRIX] inverse masses for all nuclear DOFs
-    \param[in] rep  The selector of the representation that is of current interest.
-    Options: 0 - diabatic, 1 - adiabatic
-
-    Returns: average kinetic, potential, total energdies, and their fluctuations (6 variables in total)
-
-    """
-
-    ntraj = p.num_of_cols
-    ndof = p.num_of_rows
-
-    epot, ekin = [], []    
-    Epot, Ekin = 0.0, 0.0
-
-    nst = 1
-    if rep==0:
-        nst = Cdia.num_of_rows
-    elif rep==1:
-        nst = Cadi.num_of_rows
-
-
-    C = CMATRIX(nst, 1)
-    states = CMATRIX(nst, ntraj)
-
-    tsh_indx2vec(ham, states, act_states)
-
-    for traj in xrange(ntraj):
-
-        pop_submatrix(states, C, Py2Cpp_int(range(0,nst)), Py2Cpp_int([traj]))      
-
-        if rep==0:
-            epot.append( ham.Ehrenfest_energy_dia(C, Py2Cpp_int([0,traj])).real )
-            Epot = Epot + epot[traj]
-        elif rep==1:
-            epot.append( ham.Ehrenfest_energy_adi(C, Py2Cpp_int([0,traj])).real )
-            Epot = Epot + epot[traj]
-
-        tmp = 0.0
-        for dof in xrange(ndof):
-            tmp = tmp + 0.5 * iM.get(dof, 0) * (p.get(dof, traj) ** 2)
-        ekin.append(tmp)
-        Ekin = Ekin + ekin[traj]
-
-    Ekin = Ekin / float(ntraj)
-    Epot = Epot / float(ntraj)
-    Etot = Ekin + Epot
-
-    # Variances:
-    dEkin, dEpot = 0.0, 0.0
-    for traj in xrange(ntraj):
-        dEkin = dEkin + (ekin[traj] - Ekin)**2
-        dEpot = dEpot + (epot[traj] - Epot)**2
-
-    dEtot = dEkin + dEpot
-
-    dEkin = math.sqrt(dEkin/ float(ntraj))
-    dEpot = math.sqrt(dEpot/ float(ntraj))
-    dEtot = math.sqrt(dEtot/ float(ntraj))
-    
-
-    return Ekin, Epot, Etot, dEkin, dEpot, dEtot
-
-
-
-
-def compute_dm(ham, Cdia, Cadi, rep, lvl):
-    """
-    Compute the trajectory-averaged density matrices in diabatic
-    or adiabatic representations
-
-    \param[in] ham [nHamitltionian] The Hamiltonian that handles this set of trajectories
-    \param[in] Cdia [ndia x ntraj, CMATRIX] diabatic amplitudes of all trjectories
-    \param[in] Cadi [nadi x ntraj, CMATRIX] adiabatic amplitudes of all trjectories
-    \param[in] rep [0 or 1] selector of which representation if the main (being propagated)
-    E.g. if rep = 0 - that means we propagate the diabatic coefficients, that is the calculation 
-    of the diabatic density matrix is straightforward but we need to involve some transformations 
-    to the the adiabatic density matrix
-    \param[in] lvl [0 or 1] The level of the Hamiltonian that treats the transformations:
-    0 - ham is the actual Hamiltonian to use (use with single trajectory),
-    1 - ham is the parent of the Hamiltonians to use (use with multiple trajectories)
-
-    """
-
-    ntraj = Cdia.num_of_cols
-    ndia = Cdia.num_of_rows
-    nadi = Cadi.num_of_rows
-
-   
-    dm_dia, dm_adi = CMATRIX(ndia, ndia), CMATRIX(nadi, nadi)
-
-
-    for traj in xrange(ntraj):
-        indx = None
-        if lvl==0:
-            indx = Py2Cpp_int([0])
-        elif lvl==1:
-            indx = Py2Cpp_int([0,traj])
-
-    
-        if rep==0:
-            S = ham.get_ovlp_dia(indx)
-            U = ham.get_basis_transform(indx) 
-            #correct_phase(U)
-    
-            dm_tmp = S * Cdia.col(traj) * Cdia.col(traj).H() * S
-            dm_dia = dm_dia + dm_tmp
-            dm_adi = dm_adi + U.H() * dm_tmp * U
-       
-    
-        elif rep==1:
-            c = Cadi.col(traj)
-            M = ham.get_ordering_adi(Py2Cpp_int([0, traj]))
-            iM = inverse_permutation(M)
-
-            c.permute_rows(iM)
-            dm_tmp = c * c.H()
-            dm_adi = dm_adi + dm_tmp
-
-            S = ham.get_ovlp_dia(indx)
-            U = ham.get_basis_transform(indx)     
-            correct_phase(U)
-            su = S * U
-            dm_dia = dm_dia + su * dm_tmp * su.H()
-    
-    dm_dia = dm_dia / float(ntraj)        
-    dm_adi = dm_adi / float(ntraj)
-
-    return dm_dia, dm_adi
-
-
-
-
-
 def hop_py(initstate, g, ksi):
-    ##
-    # This function implements a simple surface hopping procedure
-    # \param[in]   initstate [ integer ] The state index before hop  
-    # \param[in]           g [ MATRIX ] The surface hopping matrix, the element g(i,j) contains the probability for a i->j transition
-    # \param[in]         ksi [ float ] A random number uniformly distributed in the range of (0.0, 1.0) 
+    """
+    The Python implementation of the stochastic hopping procedure
 
-    # The function returns:
-    # finstate  [ integer ] The index of the final state after hop
+    Args:
+        initstate ( int ): The index of the initial state, before hop  
+        g ( MATRIX(N, N) ): The surface hopping matrix, the element g(i,j) 
+            contains the probability for a i->j transition. Here, N - is the 
+            total number of states considered in the transitions
+        ksi ( double ): A random number uniformly distributed in the range of (0.0, 1.0) 
+            Essentially, it determines the outcome of the procedure
 
+    Returns: 
+        int: finstate: The index of the final state after hop
+
+    """
 
     nstates = g.num_of_cols
     finstate = initstate;
@@ -313,15 +104,21 @@ def hop_py(initstate, g, ksi):
     return finstate
 
 
+
 def set_random_state(prob, ksi):
-    ##
-    # This function implements a simple random state selection procedure. Each state is selected with a given probability
-    # \param[in]   prob [ list of floats ] The probabilities of all states 
-    # \param[in]   ksi [ float ] A random number uniformly distributed in the range of (0.0, 1.0) 
+    """
+    This function implements a simple random state selection procedure. 
+    Each state is selected with a given probability
 
-    # The function returns:
-    # finstate  [ integer ] The index of the selected state
+    Args:
+        prob ( list of N doubles ): The probabilities of all N states 
+        ksi ( double ): A random number uniformly distributed in the range of (0.0, 1.0).
+            It determines the outcome of this function.
 
+    Returns:
+        integer: finstate: The index of the selected state
+
+    """
 
     nstates = len(prob)
     finstate = 0;
@@ -342,288 +139,134 @@ def set_random_state(prob, ksi):
     return finstate
 
 
-def compute_sh_statistics(nstates, istate):
-    ##
-    # This function computes the SH statistics for an ensemble of trajectories
-    # \param[in]   nstates [ integer ] The number of allowed quantum state
-    # \param[in]   istate [ list of integers ] The list containing the info about the index of quantum state in which each trajectory is found
-    # The length of the list is equal to the number of trajectories. Each element of the list is the state index (integer)
-
-    # The function returns:
-    # coeff_sh [ list of integers ] The list containing the average population of each quantum state. The length of the list is equal to the 
-    # total number of quantum states considered
 
 
-    num_sh_traj = len(istate)
-    f = 1.0/float(num_sh_traj)
+def boltz_factor(E_new, E_old, T, boltz_opt):
+    """
+    Compute the Boltzmann scaling factor, but only if we consider a hop up in energy
 
-    coeff_sh = MATRIX(nstates, 1)
+    Args: 
+        E_new ( double ): the energy of the proposed (new) state [units: a.u.]
+        E_old ( double ): the energy of the current (old) state [units: a.u.]
+        T ( double ): temperature of the bath [units: K]
+        boltz_opt ( int ): the proposed hop acceptance criterion
 
-    for i in xrange(num_sh_traj):
-        st = istate[i]
-        coeff_sh.set(st, coeff_sh.get(st) + f)
- 
-    return coeff_sh
+            * 0: all hops are accepted
+            * 1: hops are accepted according to the Boltzmann ratio of the final and initial states
+            * 2: hops are accepted according to the classical Maxwell-Boltzmann distribution
+            * 3: hops are accepted based on the quantum probability of the final state
 
+    Returns:
+        double: boltz_f: the probability of the proposed hop acceptance
 
-def update_sh_pop( states , nstates):
-    ##
-    # states - is a vector of state index of each trajectory
-    #  so len(states) - the number of trajectories 
-    #  and states[j] - the state of the trajectory j
-    # nstates - the number of the states possible
-    #
-    # Returns the SH-based population of all states
+    """
 
-    pops = [0.0] * nstates
-    ntraj = len(states)
+    dE = (E_new - E_old)
+    boltz_f = 1.0 
 
-    incr = 1.0/float(ntraj)
+    if boltz_opt==0:
+        boltz_f = 1.0
 
-    for j in xrange(ntraj): # for all trajectories
-        pops[ states[j] ] += incr
+    elif boltz_opt==1:
+        if dE > 0.0:
+            argg = dE/(units.kB*T)
+            if argg > 50.0:
+                boltz_f = 0.0
+            else:
+                boltz_f = math.exp(-argg)
 
-    return pops
+    elif boltz_opt==2:
+        if dE > 0.0:
+            boltz_f = probabilities.Boltz_cl_prob_up(dE, T)
 
+    elif boltz_opt==3:
+        if dE > 0.0:
+            boltz_f = probabilities.Boltz_quant_prob([0.0, dE], T)[1]
 
-
-    
-
-def avarage_populations(el):
-    ##
-    # This function computes the SH statistics for an ensemble of trajectories
-    # \param[in]   el [ list of Electronic ] The list containing electronic DOF variables for all trajectories in ensemble.
-    # The length of the list determines the number of trajectories in ensemble
-
-    # The function returns:
-    # sh_pops [ list of float ] The list containing the average population of each quantum state based on the statistics of the
-    # discrete states in which each trajectory resides. 
-    # se_pops [ list of float ] The list containing the average population of each quantum state based on the amplitudes of all quantum states
-    # as obtained from the TD-SE solution. 
-    # rho [CMATRIX] The matrix containing trajectory-averaged SE populations and coherences.
-
-    #The length of the list is equal to the total number of quantum states considered
-
-    ntraj = len(el)        # the total number of trajectories
-    nstat = el[0].nstates  # the number of quantum states, assume that all objects in the "el" list 
-                           # are similar
-
-    sh_pops = [0.0] * nstat   # average SH populations of all states
-    se_pops = [0.0] * nstat   # average SE populations of all states
-    rho = CMATRIX(nstat, nstat) # trajectory-averaged density matrix
-
-    f = 1.0/float(ntraj)
-    for traj in xrange(ntraj): # for all trajectories
-        sh_pops[ el[traj].istate ] += f
-
-        for st1 in xrange(nstat):
-            se_pops[ st1 ] += f * el[traj].rho(st1,st1).real
-
-            for st2 in xrange(nstat):
-                rho.set(st1, st2, rho.get(st1,st2) + f * el[traj].rho(st1,st2) )
-
-    return sh_pops, se_pops, rho
-
-
-def ave_pop(denmat_sh, denmat_se):
-# 
-# \param[in] denmat_sh (list of CMATRIX(nst_in, nst_in)) Vector with the density matrix (diagonal in SH) for each trajectory
-# \param[in] denmat_se (list of CMATRIX(nst_in,nst_in)) Vector with the SE density matrix for each trajectory 
-#
-#  Returns: Ensemble averaged SH and SE density matrices (CMATRIX(nst_out, nst_out) each) 
-#  
-
-    ntraj = len(denmat_sh)
-    nst_out = denmat_sh[0].num_of_cols
-
-    ave_pop_sh = CMATRIX(nst_out, nst_out)
-    ave_pop_se = CMATRIX(nst_out, nst_out)
-    den = 1.0/float(ntraj)
-
-    for i in xrange(ntraj):
-        ave_pop_se = ave_pop_se + den * denmat_se[i]   # SE
-        ave_pop_sh = ave_pop_sh + den * denmat_sh[i]   # SH
-
-
-    return ave_pop_sh, ave_pop_se
-
-
-
-def ave_en(denmat_sh, denmat_se, Hvib):
-# 
-# \param[in] denmat_sh (list of CMATRIX(nst_in, nst_in)) Vector with the density matrix (diagonal in SH) for each trajectory
-# \param[in] denmat_se (list of CMATRIX(nst_in,nst_in)) Vector with the SE density matrix for each trajectory 
-# \param[in] Hvib (list of CMATRIX(nst_in,nst_in)) Hvib for each trajectory
-#
-#  Returns: Ensemble averaged SH and SE energies (double, for each)
-#  
-
-    ntraj = len(denmat_sh)
-    nst_out = denmat_sh[0].num_of_cols
-
-    ave_en_sh = 0.0
-    ave_en_se = 0.0
-    den = 1.0/float(ntraj)
-
-    for i in xrange(ntraj):
-        ave_en_se =  den * (denmat_se[i].real() * Hvib[i].real() ).tr()  # SE
-        ave_en_sh =  den * (denmat_sh[i].real() * Hvib[i].real() ).tr()  # SH
-
-    return ave_en_sh, ave_en_se
-
-
-
-
-
-def amplitudes2denmat(coeffs):
-# \param[in] coeffs (list of CMATRIX(nstates, 1)) wavefunction amplitudes for all trajectories
-
-    ntraj = len(coeffs)
-    denmat = []
-
-    for tr in xrange(ntraj):
-        denmat.append( coeffs[tr] * coeffs[tr].H() )
-
-    return denmat
-
-
-def denmat2prob(P):
-# \param[in] P (CMATRIX) Density matrix
-#
-    nst = P.num_of_cols
-    prob = [0.0] * nst
-
-    for i in xrange(nst):
-        prob[i] = P.get(i,i).real
-
-    return prob
-
-
+    return boltz_f
 
 
 
 def surface_hopping(mol, el, ham, rnd, params):
-    ## This function perform generic surface hopping
-    # \param[in,out] mol a list containing Nuclear objects
-    # \param[in,out] el  a list containing Electronic objects
-    # \param[in,out] ham a list containing Hamiltonian objects
-    # \param[in] rnd     a random number generator object. It is important that
-    # we use the same (global) object every time this function is called. If we
-    # create it here and use - the statistical properties will be very poor, because 
-    # every new "random" number will be not far from the common seed value
-    # \param[in] params  a dictionary containing control parameters, specifically:
-    #
-    # - params["tsh_method"] : choose hopping probability calculation scheme
-    #    1 - FSSH, 2 - GFSH, 3 - MSSH
-    # - params["rep"] : choose the representation for velocity rescaling
-    #    0 - diabatic, 1 - adiabatic
-    # - params["do_rescaling"] : choose how to account for detailed balance
-    #    0 - don't do explicit rescaling, so it is used with Boltzmann factor hopping probability scaling
-    #    1 - do excplicit velocity rescaling
-    # - params["do_reverse"] : how to handle the nuclear velocities when hop is frustrated
-    #    0 - keep as they are, don't change
-    #    1 - reverse the velocities
-    # - params["dt_nucl"] : nuclear time step in fs
-    # - params["Temperature"] : Temperature of the environment, K
-    # - params["print_tsh_probabilities"] : Print hopping probabilities matrix
-    #    0 - don't print,  1 - print
-    # - params["check_tsh_probabilities"] : Run-time sanity test of the dt_nucl, 
-    #    0 - don't check,  1 - check
-    # - params["use_boltz_factor"] : whether to scale the hopping probabilities by the Boltzmann factor
-    #    0 - don't scale,  1 - scale
+    """This function performs either generic or NBRA-type surface hopping
+
+    Here, the number of nuclear objects and that of electronic ones may be not equal.
+    Each trajectory evolves both nuclear and electronic DOFs, as appropriate 
+    for the most general TSH recipe, but one can execute multiple TSH realizations per
+    selected-electron-nuclear dynamics
+
+    Args:
+        mol ( list of Nuclear objects ): variables that contains classical DOFs for each trajectory
+        el ( list of Electronic objects ): variables that contains quantum DOFs for each trajectory
+        ham ( list of Hamiltonian objects ): variables that control energy/forces calculations for each trajectory
+        rnd ( Random object ): a random number generator object. It is important that
+            we use the same (global) object every time this function is called. If we
+            create it here and use - the statistical properties will be very poor, because 
+            every new "random" number will be not far from the common seed value     
+        params ( dictionary): control parameters, specifically:
+        
+            * **params["tsh_method"]** ( int ): choose the hopping probability calculation scheme
+
+                - 1: FSSH  [default]
+                - 2: GFSH
+                - 3: MSSH
+
+            * **params["rep"]** ( int ): choose the representation for velocity rescaling
+
+                - 0: diabatic (uniform rescaling) 
+                - 1: adiabatic (need the derivative couplings) [default]
+
+            * **params["do_rescaling"]** ( int ): choose how to account for detailed balance
+
+                - 0: don't do explicit rescaling, so it is used with Boltzmann factor hopping probability scaling
+                - 1: do the excplicit velocity rescaling [default]
+
+            * **params["do_reverse"]** ( int ): how to handle the nuclear velocities when hop is frustrated
+
+                - 0: keep as they are, don't change
+                - 1: reverse the velocities [default]
+
+            * **params["dt_nucl"]** ( double): nuclear time step [ units: fs, default: 1.0 TODO: check units ]
+            * **params["Temperature"]** ( double ): Temperature of the environment [ units: K, default: 300.0 ]
+            * **params["print_tsh_probabilities"]** ( int ): Print hopping probabilities matrix
+
+                - 0: don't print [default]
+                - 1: print
+
+            * **params["check_tsh_probabilities"]** ( int ): Run-time sanity test of the dt_nucl, 
+
+                - 0: don't check
+                - 1: check [default]
+
+            * **params["use_boltz_factor"]** ( int ): whether to scale the hopping probabilities by the Boltzmann factor
+
+                - 0: don't scale [default]
+                - 1: scale
+
+            * **params["nconfig"]** ( int ): how many distinct initial nuclear geometries
+            * **params["excitations_init"] ( list of ints ): indices of excited states to which 
+                each initial geometry may be excited, multiplies the total number of distinct
+                electron-nuclear evolutions
+            * **params["num_SH_traj"]** ( int ): the number of electronic evolutions per initial 
+                geometry per initial excitation
 
 
-    # Parameters to internal variables - for convenience
-    tsh_method = params["tsh_method"]
-    rep = params["rep"]
-    do_rescaling = params["do_rescaling"]
-    do_reverse = params["do_reverse"]
-    dt_nucl = params["dt_nucl"]
-    Temperature = params["Temperature"]
-    print_prob = params["print_tsh_probabilities"]
-    check_prob = params["check_tsh_probabilities"]
-    use_boltz_factor = params["use_boltz_factor"]
-    
+    Returns:
+        None: but the following variables are changed
 
-    # Parameters characterizing the system and the ensemble
-    if len(el)!=len(mol):
-        print "Error in surface_hopping: The size of the ensemble of Electronic objects (",len(el),") should be the same\
-              as the length of the ensemble of Nuclear objects (", len(mol),")\n"             
-    if len(el)!=len(ham):
-        print "Error in surface_hopping: The size of the ensemble of Electronic objects (",len(el),") should be the same\
-              as the length of the ensemble of Hamiltonian objects (", len(mol),")\n"             
+        * mol
+        * el
+        * ham
 
-    ntraj = len(el)          # this is the number of trajectories in an ensemble
-    nstates = el[0].nstates  # how many electronic DOF
+    """
 
+    critical_params = [  ] 
+    default_params = { "tsh_method":0, "rep":1, "do_rescaling":1, "do_reverse":1,
+                       "dt_nucl":1.0, "Temperature":300.0, "print_tsh_probabilities":0,
+                       "check_tsh_probabilities":1, "use_boltz_factor":0,
+                       "nconfig":1, "excitations_init":[0], "num_SH_traj":1  }
+    comn.check_input(params, default_params, critical_params)
 
-
-
-    g = MATRIX(nstates,nstates) # initialize a matrix of hopping probability
-
-    for i in xrange(ntraj):
-
-        #Compute hopping probabilities
-        if tsh_method == 1: # FSSH
-            compute_hopping_probabilities_fssh(mol[i], el[i], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
-        elif tsh_method == 2: # GFSH
-            compute_hopping_probabilities_gfsh(mol[i], el[i], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
-        elif tsh_method == 3: # MSSH
-            compute_hopping_probabilities_mssh(mol[i], el[i], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
-        else:
-            print "Warning in surface_hopping: tsh_method can be 1, 2, or 3. Other values are not defined"
-
-
-        # output hopping probability
-        if print_prob == 1:
-            print "hopping probability matrix is:"
-            print g.show_matrix()
-
-        # check elements of g matrix are less than 1 or not.
-        if check_prob == 1:
-            for st in xrange(nstates):
-                for st1 in xrange(nstates):
-                    if g.get(st,st1) > 1:
-                        print "g(%d,%d) is %f, larger than 1; better to decrease dt_nucl" %(st,st1,g.get(st,st1))
-
-        # Attempt to hop
-        ksi = rnd.uniform(0.0,1.0) # generate random number for every trajectory   
-
-        # Everything else - change of electronic state and velocities rescaling/reversal happens here     
-        el[i].istate = hop(el[i].istate, mol[i], ham[i], ksi, g, do_rescaling, rep, do_reverse)
-
-
-    # Nothing to return - mol, ham, and el objects are modified accordingly
-
-def surface_hopping_nbra(mol, el, ham, rnd, params):
-    ## This function performs surface hopping under neglect of back-reaction approximation.
-    # Here, the number of nuclear objects and that of electronic ones are not equal.
-    # \param[in,out] mol a list containing Nuclear objects
-    # \param[in,out] el  a list containing Electronic objects
-    # \param[in,out] ham a list containing Hamiltonian objects
-    # \param[in] rnd     a random number generator object. It is important that
-    # we use the same (global) object every time this function is called. If we
-    # create it here and use - the statistical properties will be very poor, because
-    # every new "random" number will be not far from the common seed value
-    # \param[in] params  a dictionary containing control parameters, specifically:
-    #
-    # - params["tsh_method"] : choose hopping probability calculation scheme
-    #    1 - FSSH, 2 - GFSH, 3 - MSSH
-    # - params["rep"] : choose the representation for velocity rescaling
-    #    0 - diabatic, 1 - adiabatic
-    # - params["do_rescaling"] : choose how to account for detailed balance
-    #    0 - don't do explicit rescaling, so it is used with Boltzmann factor hopping probability scaling
-    #    1 - do excplicit velocity rescaling
-    # - params["do_reverse"] : how to handle the nuclear velocities when hop is frustrated
-    #    0 - keep as they are, don't change
-    #    1 - reverse the velocities
-    # - params["dt_nucl"] : nuclear time step in fs
-    # - params["Temperature"] : Temperature of the environment, K
-    # - params["print_tsh_probabilities"] : Print hopping probabilities matrix
-    #    0 - don't print,  1 - print
-    # - params["check_tsh_probabilities"] : Run-time sanity test of the dt_nucl,
-    #    0 - don't check,  1 - check 
-    # - params["use_boltz_factor"] : whether to scale the hopping probabilities by the Boltzmann factor
 
     # Parameters to internal variables - for convenience
     tsh_method = params["tsh_method"]
@@ -641,13 +284,39 @@ def surface_hopping_nbra(mol, el, ham, rnd, params):
     nstates = el[0].nstates  # how many electronic DOF
     num_SH_traj = params["num_SH_traj"]
 
+
+
+    if len(mol)!=len(ham):
+        print "Error in surface_hopping_nbra: The size of the ensemble of Nuclear objects (",len(mol),") should be the same\
+              as the length of the ensemble of Hamiltonian objects (", len(ham),")\n"             
+        sys.exit(0)
+
+    if len(mol)!= ninit * nstates_init:
+        print "Error in surface_hopping_nbra: The size of the ensemble of Nuclear objects (",len(mol),") should be the same\
+              as the product of nconfig (",ninit,") and the number of initial excitations (", nstates_init,")\n"             
+        sys.exit(0)
+
+    if len(el)!= ninit * nstates_init * num_SH_traj:
+        print "Error in surface_hopping_nbra: The size of the ensemble of Electronic objects (",len(el),") should be the same\
+              as the product of nconfig (",ninit,"),  the number of initial excitations (", nstates_init,"), and the \
+              number of surface hopping trajectories per run (",num_SH_traj,")\n"     
+        sys.exit(0)
+
+
     g = MATRIX(nstates,nstates) # initialize a matrix of hopping probability
 
+    # For all initial geometries
     for iconf in xrange(ninit):
+
+        # For all initial excitations
         for i_ex in xrange(nstates_init):
             i = iconf*nstates_init + i_ex
-            for itraj in xrange(num_SH_traj): # all stochastic SH realizations
+
+            # Run many stochastic SH realizations
+            for itraj in xrange(num_SH_traj): 
+
                 iel = iconf*nstates_init*num_SH_traj + i_ex*num_SH_traj + itraj
+
                 #Compute hopping probabilities
                 if tsh_method == 1: # FSSH
                     compute_hopping_probabilities_fssh(mol[i], el[iel], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
@@ -657,12 +326,13 @@ def surface_hopping_nbra(mol, el, ham, rnd, params):
                     compute_hopping_probabilities_mssh(mol[i], el[iel], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
                 else:
                     print "Warning in surface_hopping: tsh_method can be 1, 2, or 3. Other values are not defined"
-            # output hopping probability
+
+                # output hopping probability
                 if print_prob == 1:
                     print "hopping probability matrix is:"
                     print g.show_matrix()
 
-            # check elements of g matrix are less than 1 or not.
+                # check elements of g matrix are less than 1 or not.
                 if check_prob == 1:
                     for st in xrange(nstates):
                         for st1 in xrange(nstates):
@@ -674,12 +344,22 @@ def surface_hopping_nbra(mol, el, ham, rnd, params):
                 # Everything else - change of electronic state and velocities rescaling/reversal happens here
                 el[iel].istate = hop(el[iel].istate, mol[i], ham[i], ksi, g, do_rescaling, rep, do_reverse)
 
-    # Nothing to return - mol, ham, and el objects are modified accordingly
+
 
 def surface_hopping_cpa(mol, el, ham, rnd, params):
-    ## This function performs surface hopping with Boltzmann factor used to 
-    # rescale hopping probabilities in lieu of explicit velocity rescaling
+    """
 
+    This function performs surface hopping with Boltzmann factor used to 
+    rescale hopping probabilities in lieu of explicit velocity rescaling
+
+    Args:
+        SeeAlso: `surface_hopping`
+     
+    Returns:
+        SeeAlso: `surface_hopping`
+    
+    """
+ 
     # Update parameters
     params["do_rescaling"] = 0      # No explicit velocity rescaling
 
@@ -691,15 +371,24 @@ def surface_hopping_cpa(mol, el, ham, rnd, params):
 
     # rep and do_reverse are irrelevant
 
-
     # Call actual calculations 
-    surface_hopping_nbra(mol, el, ham, rnd, params)
+    surface_hopping(mol, el, ham, rnd, params)
 
 
 
 def surface_hopping_cpa2(mol, el, ham, rnd, params):
-    ## This function performs surface hopping with velocity rescaling according to 
-    # total energy conservation (but not along the derivative coupling vectors)
+    """
+
+    This function performs surface hopping with velocity rescaling according to 
+    total energy conservation (but not along the derivative coupling vectors)
+
+    Args:
+        SeeAlso: `surface_hopping`
+     
+    Returns:
+        SeeAlso: `surface_hopping`
+
+    """
 
     # Update parameters
     params["do_rescaling"] = 1      # Explicit velocity rescaling
@@ -714,8 +403,8 @@ def surface_hopping_cpa2(mol, el, ham, rnd, params):
                                     # no derivative couplings will be needed - we don't have them
                                     # !!! This option makes do_reverse not relevant - so
                                     # we can set it to any value
-    # do_reverse becomes irrelevant
 
+    # do_reverse becomes irrelevant
 
     # Call actual calculations 
     surface_hopping(mol, el, ham, rnd, params)
@@ -723,40 +412,45 @@ def surface_hopping_cpa2(mol, el, ham, rnd, params):
 
 
 
+def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse, boltz_opt=1):
+    """The Python implementation of the instantaneous decoherence at attempted hops algorithm
 
+    This function takes care of a single act of decoherence/hop
 
+    Args:
+        Coeff ( CMATRIX(N, 1) or Electronic ): An object containig electronic DOFs (basis wavefunctions amplitudes). 
+            Here, N would be the number of electronic states in the dynamical basis
+        old_st ( int ): The state index before hop  
+        new_st ( int ): The state index after hop 
+        E_old ( double ): The energy of the initial state, before hop [ units: a.u. ]
+        E_new ( double ): The energy of the final state, after hop [ units: a.u. ]
+        T ( double ): The Temperature of nuclear DOF [ units: K]
+        ksi ( double ): A random number uniformly distributed in the range of [0.0, 1.0]
+        do_collapse ( int ): The flag turning the decoherence (at the IDA level on/off):
 
+            - 0: do not include decoherence 
+            - 1: include decoherence
 
-def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse):
+        boltz_opt ( int ): The proposed hop acceptance criterion: 
 
-    ##
-    # This function implements the decoherence correction 
-    # \param[in]       Coeff [ CMATRIX or Electronic ] An object containig electronic DOFs. 
-    # \param[in]      old_st [ integer ] The state index before hop  
-    # \param[in]      new_st [ integer ] The state index after hop 
-    # \param[in]       E_old [ float ] The energy of the initial state, before hop 
-    # \param[in]       E_new [ float ] The energy of the final state, after hop 
-    # \param[in]           T [ float ] The Temperature of nuclear DOF  
-    # \param[in]         ksi [ float ] A random number uniformly distributed in the range of (0.0, 1.0) 
-    # \param[in] do_collapse [ 0 or 1 ] The flag turning the decoherence (at the IDA level on/off). 1 - include decoherence, 0 - do not include decoherence 
+            - 0: all proposed hops are accepted - no rejection based on energies
+            - 1: proposed hops are accepted with min{ 1, exp(-dE/kT) } probability, where 
+                dE = E_new - E_old  [ default ]
+            - 2: proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
+            - 3: generalization of "1", but actually it should be changed in case there are many degenerate levels
 
-    # The function returns:
-    # res [ integer ] - index of the final state, after IDA is applied (or not)
-    # C [CMATRIX or Electronic] - the updated state of the electronic DOF, in the same data type as the input
+    Returns:
+        tuple: ( res, C ): where:
+        
+            * res ( int ): index of the final state, after IDA is applied (or not)
+            * C ( CMATRIX(N, 1) or Electronic ): the updated state of the electronic DOF, in the same data type as the input
 
-    kb = 3.166811429e-6  # Hartree/K
+    """
+
     res = old_st
-    dE = (E_new - E_old)
 
-    # Compute the Boltzmann scaling factor, but only if we consider a hop up in energy
-    boltz_f = 1.0   
-    if dE > 0.0:
-        argg = dE/(kb*T)
-        if argg > 50.0:
-            boltz_f = 0.0
-        else:
-            boltz_f = math.exp(-argg)
-
+    dE = E_new - E_old
+    boltz_f = boltz_factor(E_new, E_old, T, boltz_opt)
 
     # In case the electronic DOF are given in the form of CMATRIX
     if type(Coeff).__name__ == "CMATRIX":
@@ -766,7 +460,7 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse):
         if dE>0.0:
         
             if ksi<boltz_f:
-                res = new_st  # accepted hop
+                res = new_st  # we've got enough kinetic energy - accept the hop
                 
                 # Collapse the wavefunction to the new state 
                 if do_collapse:
@@ -790,15 +484,18 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse):
         
             if ksi<boltz_f:
                 res = new_st  # accepted hop
+         
                 # Collapse the wavefunction to the new state                                                                                                           
-                for st in xrange(C.nstates):
-                    C.q[st], C.p[st] = 0.0, 0.0
-                C.q[new_st], C.p[new_st] = 1.0, 0.0
+                if do_collapse:
+                    for st in xrange(C.nstates):
+                        C.q[st], C.p[st] = 0.0, 0.0
+                    C.q[new_st], C.p[new_st] = 1.0, 0.0
             else:
                 # Unsuccessful hop - collapse wfc back to the original state^M                                                                                         
-                for st in xrange(C.nstates):
-                    C.q[st], C.p[st] = 0.0, 0.0
-                C.q[old_st], C.p[old_st] = 1.0, 0.0
+                if do_collapse:
+                    for st in xrange(C.nstates):
+                        C.q[st], C.p[st] = 0.0, 0.0
+                    C.q[old_st], C.p[old_st] = 1.0, 0.0
         else:
             res = new_st
         
@@ -807,25 +504,29 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse):
         return res, C
 
 
+
 def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
+    """
 
-    ##
-    # This function implements the simplified decay of mixing algorithm for decoherence correction
-    # Reference: Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114
-    #
-    # \param[in]       Coeff [ CMATRIX or Electronic ] An object containig electronic DOFs. 
-    # \param[in]          dt [ float ] The integration timestep. Units = a.u. of time
-    # \param[in]      act_st [ integer ] The active state index
-    # \param[in]       En    [ list of floats ] Energies of the states. Units = Ha
-    # \param[in]        Ekin [ float ] The classical kinetic energy of nuclei. Units = Ha
-    # \param[in]     C_param [ float ] The method parameter, typically set to 1.0 Ha
-    # \param[in]   eps_param [ float ] The method parameter, typically set to 0.1 Ha
+    Python implementation of the simplified decay of mixing algorithm for decoherence correction
 
-    # The function returns:
-    # C [CMATRIX or Electronic] - the updated state of the electronic DOF, in the same data type as the input
+    Reference: Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114
 
-    kb = 3.166811429e-6  # Hartree/K
-   
+    Args:
+        Coeff ( CMATRIX(N, 1) or Electronic ): An object containig electronic DOFs (basis wavefunctions amplitudes). 
+            Here, N would be the number of electronic states in the dynamical basis
+        dt ( double ): Nuclear integration time-step [ units: a.u. ]
+        act_st ( int ): The current active state index
+        En ( list of doubles ): Energies of the states [ units: Ha ]
+        Ekin ( double ): The classical kinetic energy of nuclei [ units: Ha ]
+        C_param ( double ): The method parameter [ units: None, default: 1.0]
+        eps_param ( double ): The method parameter [ units: Ha, default: 0.1 Ha ]
+
+    Returns:
+        ( CMATRIX(N, 1) or Electronic ): C : 
+            the updated state of the electronic DOF, in the same data type as the input
+
+    """
 
     # In case the electronic DOF are given in the form of CMATRIX
     if type(Coeff).__name__ == "CMATRIX":
@@ -888,27 +589,45 @@ def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
         C.q[act_st] = C.q[act_st] * sclf
         C.p[act_st] = C.p[act_st] * sclf
 
-
         return C
-
         
 
+def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz_opt=1):
+    """A simplified version for the CPA-like hopping
 
+    Args:
+        Coeff ( CMATRIX(nstates, 1) ): amplitudes of all states
+        Hvib ( CMATRIX(nstates, nstates) ): vibronic Hamiltonian 
+        istate ( int ): the index of the initial state
+        sh_method ( int ): selector of the TSH method:
 
-def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T):
-    """
-    A simplified version for the CPA-like hopping
+            - 0: MSSH
+            - 1: FSSH
+            - 2: GFSH
 
-    Coeff (CMATRIX(nstates, 1) ) object with the amplitudes of all states
-    Hvib (CMATRIX(nstates, nstates) )  object containing the vibronic Hamiltonian 
-    istate (int) the index of the initial state
-    sh_method (int) selector of the TSH method: 0 - MSSH, 1 - FSSH
-    do_collapse (int) flag to turn on the decoherence via ID-A: 0 - no decoherence, 1 - decoherence via ID-A
-    ksi, ksi2 (float in [0, 1]) random numbers cotrolling the execution of SH
-    dt (float) time interval for the surface hopping (in a.u.)
-    T (float) temperature in K
+        do_collapse ( int ): flag to turn on the decoherence via ID-A:
 
-    Returns: the index (int) of a new state 
+            - 0 - no decoherence
+            - 1 - decoherence via ID-A
+
+        ksi ( double ):random number in interval [0.0, 1.0] cotrolling the execution of SH
+        ksi2 ( double ):random number in interval [0.0, 1.0] cotrolling the execution of SH
+        dt ( double ): the time interval for the surface hopping [ units: a.u. ]
+        T ( double ): temperature [ units: K ]
+
+        boltz_opt ( int ): The selector of the proposed hop acceptance algorithm:
+
+            - 0: all proposed hops are accepted - no rejection based on energies
+            - 1: proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
+            - 2: proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
+            - 3: generalization of "1", but actually it should be changed in case there are many degenerate levels
+
+    Returns: 
+        tuple: ( istate, Coeff1 ): where:
+        
+            * istate ( int ): index of the final state, after the hop
+            * Coeff1 ( CMATRIX(N, 1) ): the updated state of the electronic DOF
+           
 
     """
     g = 0.0
@@ -916,17 +635,220 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T):
         g = compute_hopping_probabilities_mssh(Coeff)
     elif sh_method==1:
         g = compute_hopping_probabilities_fssh(Coeff, Hvib, dt)
+    elif sh_method==2:
+        g = compute_hopping_probabilities_gfsh(Coeff, Hvib, dt)
+
 
     old_st = istate
     new_st = hop(istate, g, ksi)
+
+    Coeff1 = CMATRIX(Coeff)
 
     if new_st != old_st:
         E_old = Hvib.get(old_st,old_st).real
         E_new = Hvib.get(new_st,new_st).real
 
         # ID-A decoherence                
-        istate, Coeff1 = ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi2, do_collapse)
+        istate, Coeff1 = ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi2, do_collapse, boltz_opt)
 
 
-    return istate #, Coeff1
+    return istate, Coeff1
+    
+
+
+def project_out(Coeff, i):
+    """Projects the state `i` out of a coherent superposition of states
+
+    Args:
+        Coeff ( CMATRIX(N, 1) ): amplitudes of the electronic states in
+            a coherent superposition from which we will project a state out
+        i ( int ): The index of the state to be projected out
+
+    Returns:
+        None: but changes the input variable `Coeff`
+
+    """
+    nstates = Coeff.num_of_rows
+    
+    ci = Coeff.get(i,0)
+    pi = (ci.conjugate() * ci).real
+    nrm = 1.0 - pi
+    if nrm<0.0:
+        nrm = 0.0
+    if nrm>0.0:
+        nrm = 1.0/math.sqrt(nrm)
+
+    Coeff.scale(-1, 0, nrm)
+    Coeff.set(i, 0, 0.0+0.0j)
+
+
+
+def collapse(Coeff, i):   
+    """Collapse the wfc but such that to preserve the phase!
+
+    Args:
+        Coeff ( CMATRIX(N, 1) ): amplitudes of the electronic states in
+            a coherent superposition which we are going to collapse
+        i ( int ): The index of the state onto which the supeposition will be collapsed
+
+    Returns:
+        None: but changes the input variable `Coeff`
+
+    """
+    Coeff *= 0.0
+
+    ci = Coeff.get(i,0)
+    pi = (ci.conjugate() * ci).real
+    if pi>0.0:
+        Coeff.set(i, 0, ci/math.sqrt(pi))     
+    else:
+        Coeff.set(i, 0, 1.0+0.0j)
+
+
+
+
+def dish_py(Coeff, istate, t_m, tau_m, Hvib, boltz_opt, T, ksi1, ksi2):
+    """
+    Decoherence-induced surface hopping (DISH)
+    Reference: Jaeger, H. M.; Fischer, S.; Prezhdo, O. V. Decoherence-Induced Surface Hopping. J. Chem. Phys. 2012, 137, 22A545.
+
+    Args: 
+        Coeff ( CMATRIX(N, 1) ): Amplitudes of electronic states
+        istate ( int ): Initial state index
+        t_m ( MATRIX(N, 1) ): Matrix of the times each state resides in a coherence interval since the last decoherence event [ units: a.u. ]
+        tau_m  ( MATRIX(N, 1) ): Matrix of the coherence intervals for each electronic state [ units: a.u. ]
+        Hvib ( CMATRIX(N, N) ): Vibronic Hamiltonian matrix [ units: Ha ]
+        boltz_opt ( int ): The selector of the proposed hop acceptance algorithm:
+
+            - 0: all proposed hops are accepted - no rejection based on energies
+            - 1: proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
+            - 2: proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
+            - 3: generalization of "1", but actually it should be changed in case there are many degenerate levels
+
+
+        T ( double ): temperature [ units: K ]
+        ksi ( double ):random number in interval [0.0, 1.0] cotrolling the execution of SH
+        ksi2 ( double ):random number in interval [0.0, 1.0] cotrolling the execution of SH
+
+
+    Returns: 
+        int: fstat: the index of the electronic state after the "hop" (old state index or a new one)
+
+    Note: 
+        The function also modifies the `Coeff` and `t_m` variables
+
+    """
+
+    fstate = istate
+
+    nstates = Coeff.num_of_rows
+    dm = Coeff * Coeff.H()     # density matrix
+
+    i = 0
+    has_decoherence = False   # set to True if we have encountered a decoherence event
+
+    while i<nstates and not has_decoherence:
+
+        # The state i has evolved coherently for longer than the coherence interval
+        # so it has to experience a decoherence event 
+        if t_m.get(i) >= tau_m.get(i):
+            # There are essentially two outcomes when the decoherence takes place:
+
+            if ksi1 < dm.get(i,i).real:  
+                # One: we collapse the wavefunction onto the state i with the probability 
+                # given by the population of that state
+
+                # Now, lets determine if the hop is possible based on the energy conservation
+                # considerations 
+                boltz_f = boltz_factor(Hvib.get(i,i).real, Hvib.get(istate, istate).real, T, boltz_opt)
+ 
+                if ksi2 < boltz_f:
+                    #  Now, decide about decoherence         
+                    collapse(Coeff, i)      # Here is the actuall collapse
+                    fstate = i
+                else:
+                    project_out(Coeff, i)       # Project out of the state
+                    fstate = istate
+
+            # The below section is not present in the DISH implementation in PYXAID
+            # but this is not how it should be done according to the paper of Jaeger et al.
+            # so this implementation does follow the algorithm outlined in the paper
+            else:
+                # Second: project the system out of that state
+                project_out(Coeff, i)   # Project out of the state
+                fstate = istate
+
+            # Reset the time axis for state i (only for this state)
+            # other states still reside in a coherent superposition
+            t_m.set(i, 0.0)
+
+            # Set the flag that we have attempted a decoherence event
+            # so we done with DISH at this point in time
+            has_decoherence = True
+
+        i = i + 1
+
+    return fstate;
+
+
+
+def Boltz_corr_Ham(H, Coeff, T, case=1):
+    """
+
+    This function implements the computation of the
+    effective Hamiltonian used in the Boltzmann-corrected Ehrenfest
+    method of Bastida et al.
+
+    Ref: Bastida, A.; Cruz, C.; Zuniga, J.; Requena, A.; Miguel, B.
+    "A modified Ehrenfest method that achieves Boltzmann quantum state populations"
+    Chem. Phys. Lett. 2006, 417, 53-57
+
+    Args:
+        H ( CMATRIX(N,N) ): original vibronic Hamiltonian [units: a.u.]
+        Coeff ( CMATRIX(N,1) ): amplitudes of the basis states 
+        T ( double ): bath temperature [ units: K]
+        case ( int ): selection of the type of the Hamiltonian
+ 
+            - 0: diabatic Hamiltonian  H_ij = |i>E_i<i|  + |i> V_ij <j|
+            - 1: adiabatic Hamiltonian  H_ij = |i>E_i<i|  - i hbar |i> d_ij <j| [ default ]
+
+    Returns:
+        CMATRIX(N,N) : the effective Hamiltonian to be used in the calculations
+       
+    """
+    
+    sz = H.num_of_cols    
+    kT = units.kB * T    
+    
+    
+    #============= Step 1 ===================
+    # Compute the absolute values of the state amplitudes
+    rho = MATRIX(sz,1)    
+    for i in xrange(sz):
+        rho.set(i, 0, abs(Coeff.get(i,0)) )
+    
+    #============= Step 2 ===================
+    # Include the thermal factors, the Hcorr matrix is no longer symmetric
+    Hcorr = CMATRIX(H)    
+    for j in xrange(sz):
+        for k in xrange(sz):
+            if j!=k:                
+                dE = H.get(k,k).real - H.get(j,j).real
+                corr = math.sqrt(2.0 / (1.0 + math.exp(-dE/kT)) )                                
+                Hcorr.scale(j,k, corr)
+                
+    #============= Step 3 ===================
+    # Symmetrize the thermally-corrected Hamiltonian
+    Hcorr2 = CMATRIX(sz,sz)
+    for j in xrange(sz):
+        for k in xrange(j+1,sz):
+            if case==0:  # diabatic - original Bastida
+                hkj = rho.get(k)*Hcorr.get(j,k) - rho.get(j)*Hcorr.get(k,j)
+            elif case==1: # adiabatic - changed Bastida
+                hkj = rho.get(k)*Hcorr.get(j,k) + rho.get(j)*Hcorr.get(k,j)
+            
+            Hcorr2.set(k,j, hkj)
+            Hcorr2.set(j,k, hkj)
+            
+    return Hcorr2
     

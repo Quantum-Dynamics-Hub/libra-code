@@ -22,11 +22,8 @@ namespace libdata{
 DATA::DATA(vector<double> d){
 
 //  Data = d;
-   if(Data.size()>0){ Data.clear(); }
-   for(int i=0;i<d.size();i++){
-   Data.push_back(d[i]);
-   }
-
+  if(Data.size()>0){ Data.clear(); }
+  for(int i=0;i<d.size();i++){  Data.push_back(d[i]);  }
 
   is_ave = 0;
   is_var = 0;
@@ -35,9 +32,9 @@ DATA::DATA(vector<double> d){
   is_mse = 0;
   is_rmse= 0;
 
-  is_min = 0;
+  is_min_val = 0;
   is_min_indx = 0;
-  is_max = 0;
+  is_max_val = 0;
   is_max_indx = 0;
 
   scale_factor = 1.0;  is_scale_factor = 1;
@@ -47,12 +44,8 @@ DATA::DATA(vector<double> d){
 
 DATA::DATA(int sz,double* d){
 
-  if(Data.size()>0){
-     Data.clear();
-  }
-  for(int i=0;i<sz;i++){
-     Data.push_back(d[i]);
-  }
+  if(Data.size()>0){   Data.clear(); }
+  for(int i=0;i<sz;i++){  Data.push_back(d[i]); }
 
   is_ave = 0;
   is_var = 0;
@@ -61,14 +54,13 @@ DATA::DATA(int sz,double* d){
   is_mse = 0;
   is_rmse= 0;
 
-  is_min = 0;
+  is_min_val = 0;
   is_min_indx = 0;
-  is_max = 0;
+  is_max_val = 0;
   is_max_indx = 0;
 
   scale_factor = 1.0;  is_scale_factor = 1;
   shift_amount = 0.0;  is_shift_amount = 1;
-
 
 }
 
@@ -77,9 +69,7 @@ DATA::DATA(boost::python::list obj){
    int sz = len(obj);
    double tmp;
 
-   if(Data.size()>0){
-      Data.clear();
-   }
+   if(Data.size()>0){    Data.clear(); }
 
    for(int i=0;i<sz;i++){
       tmp = boost::python::extract<double>(obj[i]);
@@ -93,9 +83,9 @@ DATA::DATA(boost::python::list obj){
   is_mse = 0;
   is_rmse= 0;
 
-  is_min = 0;
+  is_min_val = 0;
   is_min_indx = 0;
-  is_max = 0;
+  is_max_val = 0;
   is_max_indx = 0;
 
   scale_factor = 1.0;  is_scale_factor = 1;
@@ -122,36 +112,33 @@ DATA::DATA(const DATA& d){
   is_mse = 0;
   is_rmse= 0;
 
-  is_min = 0;
+  is_min_val = 0;
   is_min_indx = 0;
-  is_max = 0;
+  is_max_val = 0;
   is_max_indx = 0;
 
   scale_factor = 1.0;  is_scale_factor = 1;
   shift_amount = 0.0;  is_shift_amount = 1;
 
+  if(Data.size()>0){ Data.clear(); }
+  for(int i=0;i<d.Data.size();i++){
+    Data.push_back(d.Data[i]);
+  }
 
+  if(d.is_ave){ ave = d.ave; is_ave = 1; }
+  if(d.is_var){ var = d.var; is_var = 1; }
+  if(d.is_sd) { sd  = d.sd;  is_sd = 1;  }
+  if(d.is_se) { se  = d.se;  is_se = 1;  }
+  if(d.is_mse){ mse = d.mse; is_mse = 1; }
+  if(d.is_rmse){rmse= d.rmse;is_rmse=1;  }
 
+  if(d.is_min_val){ min_val = d.min_val; is_min_val = 1; }
+  if(d.is_min_indx){min_indx = d.min_indx; is_min_indx = 1; }
+  if(d.is_max_val){ max_val = d.max_val; is_max_val = 1; }
+  if(d.is_max_indx){max_indx = d.max_indx; is_max_indx = 1; }
 
-   if(Data.size()>0){ Data.clear(); }
-   for(int i=0;i<d.Data.size();i++){
-   Data.push_back(d.Data[i]);
-   }
-
-   if(d.is_ave){ ave = d.ave; is_ave = 1; }
-   if(d.is_var){ var = d.var; is_var = 1; }
-   if(d.is_sd) { sd  = d.sd;  is_sd = 1;  }
-   if(d.is_se) { se  = d.se;  is_se = 1;  }
-   if(d.is_mse){ mse = d.mse; is_mse = 1; }
-   if(d.is_rmse){rmse= d.rmse;is_rmse=1;  }
-
-   if(d.is_min){ min = d.min; is_min = 1; }
-   if(d.is_min_indx){min_indx = d.min_indx; is_min_indx = 1; }
-   if(d.is_max){ max = d.max; is_max = 1; }
-   if(d.is_max_indx){max_indx = d.max_indx; is_max_indx = 1; }
-
-   if(d.is_scale_factor){ scale_factor = d.scale_factor; is_scale_factor = 1; }
-   if(d.is_shift_amount){ shift_amount = d.shift_amount; is_shift_amount = 1; }
+  if(d.is_scale_factor){ scale_factor = d.scale_factor; is_scale_factor = 1; }
+  if(d.is_shift_amount){ shift_amount = d.shift_amount; is_shift_amount = 1; }
 
 }
 
@@ -164,56 +151,49 @@ DATA& DATA::operator=(const DATA& d){
   is_mse = 0;
   is_rmse= 0;
 
-  is_min = 0;
+  is_min_val = 0;
   is_min_indx = 0;
-  is_max = 0;
+  is_max_val = 0;
   is_max_indx = 0;
 
   scale_factor = 1.0;  is_scale_factor = 1;
   shift_amount = 0.0;  is_shift_amount = 1;
 
+  if(Data.size()>0){ Data.clear(); }
+  for(int i=0;i<d.Data.size();i++){  Data.push_back(d.Data[i]); }
 
+  if(d.is_ave){ ave = d.ave; is_ave = 1; }
+  if(d.is_var){ var = d.var; is_var = 1; }
+  if(d.is_sd) { sd  = d.sd;  is_sd = 1;  }
+  if(d.is_se) { se  = d.se;  is_se = 1;  }
+  if(d.is_mse){ mse = d.mse; is_mse = 1; }
+  if(d.is_rmse){rmse= d.rmse;is_rmse=1;  }
 
+  if(d.is_min_val){ min_val = d.min_val; is_min_val = 1; }
+  if(d.is_min_indx){min_indx = d.min_indx; is_min_indx = 1; }
+  if(d.is_max_val){ max_val = d.max_val; is_max_val = 1; }
+  if(d.is_max_indx){max_indx = d.max_indx; is_max_indx = 1; }
 
-   if(Data.size()>0){ Data.clear(); }
-   for(int i=0;i<d.Data.size();i++){
-   Data.push_back(d.Data[i]);
-   }
+  if(d.is_scale_factor){ scale_factor = d.scale_factor; is_scale_factor = 1; }
+  if(d.is_shift_amount){ shift_amount = d.shift_amount; is_shift_amount = 1; }
 
-
-   if(d.is_ave){ ave = d.ave; is_ave = 1; }
-   if(d.is_var){ var = d.var; is_var = 1; }
-   if(d.is_sd) { sd  = d.sd;  is_sd = 1;  }
-   if(d.is_se) { se  = d.se;  is_se = 1;  }
-   if(d.is_mse){ mse = d.mse; is_mse = 1; }
-   if(d.is_rmse){rmse= d.rmse;is_rmse=1;  }
-
-   if(d.is_min){ min = d.min; is_min = 1; }
-   if(d.is_min_indx){min_indx = d.min_indx; is_min_indx = 1; }
-   if(d.is_max){ max = d.max; is_max = 1; }
-   if(d.is_max_indx){max_indx = d.max_indx; is_max_indx = 1; }
-
-   if(d.is_scale_factor){ scale_factor = d.scale_factor; is_scale_factor = 1; }
-   if(d.is_shift_amount){ shift_amount = d.shift_amount; is_shift_amount = 1; }
-
-   return *this;
+  return *this;
 }
 int operator == (const DATA& d1, const DATA& d2){
 
-   int res = (d1.Data.size()==d2.Data.size());
+  int res = (d1.Data.size()==d2.Data.size());
 
-   if(res){  for(int i=0;i<d1.Data.size();i++){  if(d1.Data[i]!=d2.Data[i]) { res = 0; }  }    }
-   return res;
+  if(res){  for(int i=0;i<d1.Data.size();i++){  if(d1.Data[i]!=d2.Data[i]) { res = 0; }  }    }
+  return res;
 }
 
 int operator != (const DATA& d1, const DATA& d2){
 
-   int res = (d1.Data.size()!=d2.Data.size());
+  int res = (d1.Data.size()!=d2.Data.size());
 
-   if(!res){ for(int i=0;i<d1.Data.size();i++){  if(d1.Data[i]!=d2.Data[i]){ res = 1; }   }    }
-   return res;
+  if(!res){ for(int i=0;i<d1.Data.size();i++){  if(d1.Data[i]!=d2.Data[i]){ res = 1; }   }    }
+  return res;
 }
-
 
 
 int DATA::PutData(vector<double>& out){
@@ -229,6 +209,7 @@ int DATA::GetData(vector<double>& inp){
 
   return 0;
 }
+
 int DATA::Calculate_Estimators(double& Ave, double& Var, double& Sd,double& Se, double& Mse, double& Mae,double& Rmse){
   int i;
   ave = 0.0;
@@ -271,31 +252,47 @@ int DATA::Calculate_Estimators(double& Ave, double& Var, double& Sd,double& Se, 
   return 0;
 }
 
+int DATA::Calculate_Estimators(){
+  double Ave, Var, Sd, Se, Mse, Mae, Rmse;
+
+  return Calculate_Estimators(Ave, Var, Sd, Se, Mse, Mae, Rmse);
+}
+
+
 int DATA::Calculate_MiniMax(double& Min_Val,int& Min_Indx,double& Max_Val,int& Max_Indx){
 
   int sz = Data.size();
 
 
-  min = max = Data[0];
+  min_val = max_val = Data[0];
   min_indx = max_indx = 0;
 
   for(int i=1;i<sz;i++){
-      if(Data[i]<min) { min = Data[i]; min_indx = i; }
-      if(Data[i]>max) { max = Data[i]; max_indx = i; }
+      if(Data[i]<min_val) { min_val = Data[i]; min_indx = i; }
+      if(Data[i]>max_val) { max_val = Data[i]; max_indx = i; }
   }
 
-  Min_Val  = min;
+  Min_Val  = min_val;
   Min_Indx = min_indx;
 
-  Max_Val  = max;
+  Max_Val  = max_val;
   Max_Indx = max_indx;
 
-  is_min      = 1;
-  is_max      = 1;
+  is_min_val  = 1;
+  is_max_val  = 1;
   is_min_indx = 1;
   is_max_indx = 1;
 
   return 0;
+}
+
+
+int DATA::Calculate_MiniMax(){
+  double Min_Val,Max_Val;
+  int Min_Indx, Max_Indx;
+
+  return Calculate_MiniMax(Min_Val, Min_Indx, Max_Val, Max_Indx);  
+
 }
 
 int DATA::Calculate_Distribution(vector<double>& Interval,vector<double>& Density,vector<double>& Cumulative){
@@ -384,16 +381,16 @@ int DATA::LinearTransformData(double sc_fact,double sh){
   if(is_se) {  se  = sc_fact * se;   }
   if(is_mse){  mse = sc_fact * sc_fact * mse; }
   if(is_rmse){ rmse= sc_fact * rmse; }
-  if(is_min&&is_max&&is_min_indx&&is_max_indx){
-     if(sc_fact>=0.0) { min = min*sc_fact + sh;
-                        max = max*sc_fact + sh;
+  if(is_min_val && is_max_val && is_min_indx && is_max_indx){
+     if(sc_fact>=0.0) { min_val = min_val*sc_fact + sh;
+                        max_val = max_val*sc_fact + sh;
                       }
      else{              double tmp;
                         int itmp;
-                        tmp = min;
+                        tmp = min_val;
                         itmp = min_indx;
-                        min = sc_fact*max + sh;
-                        max = sc_fact*tmp + sh;
+                        min_val = sc_fact*max_val + sh;
+                        max_val = sc_fact*tmp + sh;
                         min_indx = max_indx;
                         max_indx = itmp;
      }// else
@@ -411,18 +408,18 @@ int DATA::ScaleData(double sc_fact){
 
 int DATA::ScaleData(double low, double upp){
 
-  if(is_min&&is_max){
+  if(is_min_val && is_max_val){
   }else{
    double a,b;
    int i,j;
    this->Calculate_MiniMax(a,i,b,j);
   }
-  if(min==max){
+  if(min_val==max_val){
     // Do nothing since in this case this operation is not defined
   }else{
     // Do rescaling and shifting
-    double sc_factor = ((upp-low)/(max-min));
-    double sh = (low - min*sc_factor);
+    double sc_factor = ((upp-low)/(max_val-min_val));
+    double sh = (low - min_val*sc_factor);
 
     this->LinearTransformData(sc_factor,sh);
 

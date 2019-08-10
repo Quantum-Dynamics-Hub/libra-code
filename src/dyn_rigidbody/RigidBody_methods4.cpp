@@ -124,6 +124,28 @@ void RigidBody::Rotate(MATRIX3x3& R){
   set_orientation(rb_A_I_to_e);
 }
 
+
+void RigidBody::Rotate(MATRIX3x3& R, VECTOR& pivot){
+/**
+  \brief Arbitrary rotation in the body frame, parameterized by a matrix
+
+  Warning: Matrix R should be a valid (unitary, with norm = 1) rotation matrix
+
+  \param[in] R Rotation matrix
+  \param[in] pivot the pivot point coordinates
+
+*/
+
+  rb_A_I_to_e = R*rb_A_I_to_e;
+  set_orientation(rb_A_I_to_e);
+
+  rb_cm = R.T()*(rb_cm - pivot) + pivot;
+
+}
+
+
+
+
 void RigidBody::Rotate(QUATERNION& quat){
 /**
   \brief Arbitrary rotation in the body frame, parameterized by a quaternion
@@ -137,7 +159,26 @@ void RigidBody::Rotate(QUATERNION& quat){
   set_orientation(rb_A_I_to_e);
 }
 
-void RigidBody::Rotate_e(double phi,VECTOR& dir){
+
+void RigidBody::Rotate(QUATERNION& quat, VECTOR& pivot){
+/**
+  \brief Arbitrary rotation in the body frame, parameterized by a quaternion
+
+  \param[in] quaternion Rotation quaternion
+  \param[in] pivot the pivot point coordinates
+*/
+
+  MATRIX3x3 R;
+  QUATERNION_TO_MATRIX(quat,R);
+  rb_A_I_to_e = R*rb_A_I_to_e;
+  set_orientation(rb_A_I_to_e);
+
+  rb_cm = R.T()*(rb_cm - pivot) + pivot;
+}
+
+
+
+void RigidBody::Rotate(double phi,VECTOR& dir){
 /**
   \brief Arbitrary rotation in the body frame, parameterized by a rotation axis and angle
 
@@ -153,6 +194,28 @@ void RigidBody::Rotate_e(double phi,VECTOR& dir){
   QUATERNION quat(cs,si*u.x,si*u.y,si*u.z);
   Rotate(quat);
 }
+
+
+void RigidBody::Rotate(double phi,VECTOR& dir, VECTOR& pivot){
+/**
+  \brief Arbitrary rotation in the body frame, parameterized by a rotation axis, pivot point, and angle
+
+  The rotation axis and angle define a quaternion, which is then applied to produce rotation
+
+  \param[in] phi the rotation angle
+  \param[in] dir the rotation axis, direction
+  \param[in] pivot the pivot point coordinates
+*/
+
+  double cs = cos(0.5*phi);
+  double si = sin(0.5*phi);
+  VECTOR u = dir.unit();
+  QUATERNION quat(cs,si*u.x,si*u.y,si*u.z);
+  Rotate(quat, pivot);
+  
+}
+
+
 
 
 

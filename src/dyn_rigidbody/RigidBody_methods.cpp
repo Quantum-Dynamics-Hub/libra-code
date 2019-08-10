@@ -17,8 +17,12 @@
 
 #include "RigidBody.h"
 
+#include "../math_meigen/libmeigen.h"
+
 /// liblibra namespace
 namespace liblibra{
+
+using namespace libmeigen;
 
 
 /// librigidbody namespace
@@ -71,9 +75,32 @@ void RigidBody::calc_inertia_tensors(int sz, double* m, VECTOR* r){
 
 void RigidBody::calc_orientations(int sz, double* m, VECTOR* r){
   //!!!math: rb_I_I = rb_A_I_to_e_T * rb_I_e * rb_A_I_to_e
-  rb_I_I.eigen(rb_I_e, rb_A_I_to_e_T, MAX_NO); is_rb_I_e = is_rb_A_I_to_e_T = 1;
+  MATRIX H(3,3); MATRIX E(3,3); MATRIX C(3,3);
+  H.set(0,0, rb_I_I.xx); H.set(0,1, rb_I_I.xy); H.set(0,2, rb_I_I.xz);
+  H.set(1,0, rb_I_I.yx); H.set(1,1, rb_I_I.yy); H.set(1,2, rb_I_I.yz);
+  H.set(2,0, rb_I_I.zx); H.set(2,1, rb_I_I.zy); H.set(2,2, rb_I_I.zz);  
+
+  // H * C = C * E
+  //solve_eigen_nosort(H, E, C, 0);
+  solve_eigen(H, E, C, 0);
+
+  //rb_I_I.eigen(rb_I_e, rb_A_I_to_e_T, MAX_NO); 
+
+  rb_I_e.xx = E.get(0,0);
+  rb_I_e.yy = E.get(1,1);
+  rb_I_e.zz = E.get(2,2);
   rb_I_e.xy = rb_I_e.xz = rb_I_e.yx = rb_I_e.yz = rb_I_e.zx = rb_I_e.zy = 0.0;
-  rb_A_I_to_e = rb_A_I_to_e_T.T();                    is_rb_A_I_to_e = 1;
+
+  rb_A_I_to_e_T.xx = C.get(0,0);  rb_A_I_to_e_T.xy = C.get(0,1); rb_A_I_to_e_T.xz = C.get(0,2);
+  rb_A_I_to_e_T.yx = C.get(1,0);  rb_A_I_to_e_T.yy = C.get(1,1); rb_A_I_to_e_T.yz = C.get(1,2);
+  rb_A_I_to_e_T.zx = C.get(2,0);  rb_A_I_to_e_T.zy = C.get(2,1); rb_A_I_to_e_T.zz = C.get(2,2);
+
+  is_rb_I_e = is_rb_A_I_to_e_T = 1;
+
+
+  rb_A_I_to_e = rb_A_I_to_e_T.T(); //inverse(); //T(); 
+  is_rb_A_I_to_e = 1;
+
   MATRIX_TO_QUATERNION(rb_A_I_to_e,rb_L);             is_rb_L = 1;
 
 }

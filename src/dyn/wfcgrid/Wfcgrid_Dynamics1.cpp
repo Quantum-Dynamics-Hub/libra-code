@@ -377,7 +377,7 @@ void Wfcgrid::update_propagator_K_1D(double dt,double m0){
 }// update_propagator_K_1D
 
 
-void Wfcgrid::update_propagator_K_2D(double dt,double m0){
+void Wfcgrid::update_propagator_K_2D(double dt,double m1, double m2){
 /**
   \brief Update reciprocal-space propagators for 2D grid
   \param[in] dt Integration time
@@ -392,7 +392,7 @@ void Wfcgrid::update_propagator_K_2D(double dt,double m0){
 
       double kx_ = Kx->M[nx].real();
       double ky_ = Ky->M[ny].real();
-      double argg = -(2.0*M_PI*M_PI/m0)*(kx_*kx_ + ky_*ky_)*dt;
+      double argg = -(2.0*M_PI*M_PI)*((kx_*kx_/m1) + (ky_*ky_/m2))*dt;
 
       complex<double> scl(std::cos(argg),std::sin(argg));
 
@@ -404,6 +404,12 @@ void Wfcgrid::update_propagator_K_2D(double dt,double m0){
 
 }// update_propagator_K_2D
 
+
+void Wfcgrid::update_propagator_K_2D(double dt,double m0){
+
+  update_propagator_K_2D(dt, m0, m0);
+
+}
 
 
 

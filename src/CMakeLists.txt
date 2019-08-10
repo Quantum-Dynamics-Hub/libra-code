@@ -112,6 +112,10 @@ MESSAGE("Going into subdirectory montecarlo...")
 ADD_SUBDIRECTORY("montecarlo")
 
 
+MESSAGE("Going into subdirectory fgr...")
+ADD_SUBDIRECTORY("fgr")
+
+
 MESSAGE("Going into subdirectory ivr...")
 ADD_SUBDIRECTORY("ivr")
 
@@ -153,6 +157,7 @@ TARGET_LINK_LIBRARIES(libra_core
                       scripts_stat
                       converters_stat
                       montecarlo_stat
+                      fgr_stat
                       ivr_stat
                       dyn_stat
                       common_types_stat                    
@@ -180,6 +185,7 @@ TARGET_LINK_LIBRARIES(libra_core_stat
                       scripts_stat
                       converters_stat
                       montecarlo_stat
+                      fgr_stat
                       ivr_stat
                       dyn_stat
                       common_types_stat
@@ -204,7 +210,9 @@ TARGET_LINK_LIBRARIES(libra_core_stat
 #  Copy python files
 #
 add_custom_target(copy-libra-py ALL
+    COMMAND cmake -E remove_directory ${CMAKE_BINARY_DIR}/src/libra_py
     COMMAND cmake -E copy_directory ${CMAKE_SOURCE_DIR}/src/libra_py ${CMAKE_BINARY_DIR}/src/libra_py
+    COMMAND cmake -E copy ${CMAKE_SOURCE_DIR}/src/util/__init__.py ${CMAKE_BINARY_DIR}/src/util/__init__.py
 )
 
 add_custom_target(copy-libra-params ALL

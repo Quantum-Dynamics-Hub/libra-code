@@ -1,0 +1,63 @@
+&CONTROL
+  calculation = 'scf',
+  pseudo_dir = '/mnt/c/cygwin/home/Alexey-user/Programming/Project_libra/notebooks/Example13_libraX/PP/',
+  outdir = './',
+  prefix = 'x0',
+  tprnfor = .true.
+  disk_io = 'low',
+  wf_collect = .true.,
+/
+
+&SYSTEM
+  ibrav = 0,
+  celldm(1) = 1.89 ,
+  nat = 6,
+  ntyp = 2,
+  nspin = 1,
+  nbnd = 16,
+  ecutwfc = 30,
+  tot_charge = 0.0,
+  starting_magnetization(1) = 0.01
+  occupations = 'from_input',
+  smearing = 'gaussian',
+  degauss = 0.005,
+  nosym = .true.,
+/
+
+&ELECTRONS
+  electron_maxstep = 20,
+  conv_thr = 1.D-5,
+  mixing_beta = 0.45,
+/
+
+&IONS
+  ion_dynamics = 'verlet',
+  ion_temperature = 'andersen',
+  tempw = 300.00 ,
+  nraise = 1,
+/
+
+
+ATOMIC_SPECIES
+ C  12.01  C.pbe-n-rrkjus_psl.1.0.0.UPF
+ H  1.008  H.pbe-rrkjus_psl.1.0.0.UPF
+
+K_POINTS gamma
+                               
+CELL_PARAMETERS
+     8.0000000    0.0000000    0.0000000
+     0.0000000    8.0000000    0.0000000
+     0.0000000    0.0000000    8.0000000
+ 
+ATOMIC_POSITIONS (alat)
+C       -5.047523021   2.317625988   0.017915882
+C       -3.714758896   2.308898183  -0.006014030
+H       -5.636066916   1.548102154  -0.486674268
+H       -5.607334822   3.094667810   0.543216740
+H       -3.154576154   1.532030421  -0.531188956
+H       -3.126350191   3.078385445   0.498614633
+
+OCCUPATIONS
+2.000 2.000 2.000 2.000 2.000 2.000 0.000 0.000 0.000 0.000
+0.000 0.000 0.000 0.000 0.000 0.000
+

@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2018 Brendan A. Smith, Alexey V. Akimov                                                   
+#* Copyright (C) 2018-2019 Brendan A. Smith, Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -7,12 +7,14 @@
 #* See the file LICENSE in the root directory of this distribution   
 #* or <http://www.gnu.org/licenses/>.          
 #***********************************************************************************
-## \file Libra.py 
-#
-#  Original Libra models - well, they are not necessarily introduced here for the 
-#  first time, but these are the models I define for the internal test purposes
-#
-#
+"""
+.. module:: models_Martens
+   :platform: Unix, Windows
+   :synopsis: This module implements Eckart barrier potentials as used by Martens
+.. moduleauthor:: Brendan A. Smith, Alexey V. Akimov
+
+"""
+
 import os
 import sys
 import math
@@ -22,12 +24,18 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
+#import common_utils as comn
+import util.libutil as comn
+import units
+
+
 
 class tmp:
     pass    
 
-def Martens1(q, params):
+def model1(q, params):
     """
+
     The first of the two model potential described by L. Wang, C.C. Martens, 
     and Y. Zheng, "Entangled trajectory molecular dynamics in 
     multidimensional systems: Two-dimensional quantum tunneling through 
@@ -35,17 +43,33 @@ def Martens1(q, params):
 
     This potential has seperable dof
 
-    # Define system specific parameters 
-    Va = barrier height     = 0.00625    
-    Vb = harmonic potential = 0.0106
+    Args:
+        q ( MATRIX(2,1) ): coordinates of the particle, ndof = 2 
+        params ( dictionary ): model parameters
 
-    Sdia = 1.0
-    Ddia = 0.0
+            * **params["Va"]** ( double ): barrier height [ default: 0.00625, units: Ha]
+            * **params["Vb"]** ( double ): harmonic potential term [ default: 0.0106, units: Ha/Bohr^2]
+
+    Returns:       
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(1,1) ): diabatic Hamiltonian 
+            * obj.ovlp_dia ( CMATRIX(1,1) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of 2 CMATRIX(1,1) objects ): 
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of 2 CMATRIX(1,1) objects ): derivative coupling in the diabatic basis [ zero ]
+
     """
 
     # Define potential specific constants
-    Va = 0.00625
-    Vb = 0.0106
+    critical_params = [ ] 
+    default_params = {"Va":0.00625, "Vb":0.0106 }
+    comn.check_input(params, default_params, critical_params)
+
+
+    Va = params["Va"]
+    Vb = params["Vb"]
+
 
     # Hdia and Sdia are ndia x ndia in dimension
     Hdia = CMATRIX(1,1)
@@ -88,8 +112,10 @@ def Martens1(q, params):
 
     return obj
 
+
 def model2(q, params):
     """
+
     The second of the two model potential described by L. Wang, C.C. Martens, 
     and Y. Zheng, "Entangled trajectory molecular dynamics in 
     multidimensional systems: Two-dimensional quantum tunneling through 
@@ -99,18 +125,35 @@ def model2(q, params):
 
     Hdia = Va*sech^2*(2q1) + 0.5*Vb*[q2 - Vc(q1^2 - 1)]^2
 
-    Va = barrier height     = 0.00625    
-    Vb = harmonic potential = 0.0106
-    Vc = coupling constant  = 0.4  
+    Args:
+        q ( MATRIX(2,1) ): coordinates of the particle, ndof = 2 
+        params ( dictionary ): model parameters
 
-    Sdia = 1.0
-    Ddia = 0.0
+            * **params["Va"]** ( double ): barrier height [ default: 0.00625, units: Ha]
+            * **params["Vb"]** ( double ): harmonic potential term [ default: 0.0106, units: Ha/Bohr^2]
+            * **params["Vc"]** ( double ): coupling term [ default: 0.4, units: Bohr^2]
+
+    Returns:       
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(1,1) ): diabatic Hamiltonian 
+            * obj.ovlp_dia ( CMATRIX(1,1) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of 2 CMATRIX(1,1) objects ): 
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of 2 CMATRIX(1,1) objects ): derivative coupling in the diabatic basis [ zero ]
+
+
     """
 
     # Define potential specific constants
-    Va = 0.00625    
-    Vb = 0.0106
-    Vc = 0.4    
+    critical_params = [ ] 
+    default_params = {"Va":0.00625, "Vb":0.0106, "Vc":0.4 }
+    comn.check_input(params, default_params, critical_params)
+
+    Va = params["Va"]
+    Vb = params["Vb"]
+    Vc = params["Vc"]
+
 
     # Hdia and Sdia are ndia x ndia in dimension
     Hdia = CMATRIX(1,1)

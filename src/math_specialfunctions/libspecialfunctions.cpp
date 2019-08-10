@@ -60,18 +60,57 @@ void export_SpecialFunctions_objects(){
 
   def("randperm", randperm);
 
-  MATRIX (*expt_exp__v1)(MATRIX&, double) = &exp_;
-  MATRIX3x3 (*expt_exp__v2)(MATRIX3x3&, double) = &exp_;
-  MATRIX (*expt_exp1__v1)(MATRIX&, double) = &exp1_;
-  MATRIX3x3 (*expt_exp1__v2)(MATRIX3x3&, double) = &exp1_;
+  MATRIX3x3 (*expt_exp__v1)(MATRIX3x3&, double) = &exp_;
+  MATRIX (*expt_exp__v2)(MATRIX&, double) = &exp_;
+  CMATRIX (*expt_exp__v3)(CMATRIX&, complex<double>) = &exp_;
 
   def("exp_", expt_exp__v1);
   def("exp_", expt_exp__v2);
+  def("exp_", expt_exp__v3);
+
+
+  CMATRIX (*expt_exp_2_v1)(CMATRIX& x, complex<double> dt, int nterms, double max_tol) = &exp_2;
+  CMATRIX (*expt_exp_2_v2)(CMATRIX& x, complex<double> dt, int nterms) = &exp_2;
+  CMATRIX (*expt_exp_2_v3)(CMATRIX& x, complex<double> dt) = &exp_2;
+
+  MATRIX (*expt_exp_2_v4)(MATRIX& x, double dt, int nterms, double max_tol) = &exp_2;
+  MATRIX (*expt_exp_2_v5)(MATRIX& x, double dt, int nterms) = &exp_2;
+  MATRIX (*expt_exp_2_v6)(MATRIX& x, double dt) = &exp_2;
+
+  def("exp_2", expt_exp_2_v1);
+  def("exp_2", expt_exp_2_v2);
+  def("exp_2", expt_exp_2_v3);
+  def("exp_2", expt_exp_2_v4);
+  def("exp_2", expt_exp_2_v5);
+  def("exp_2", expt_exp_2_v6);
+
+
+  MATRIX (*expt_exp1__v1)(MATRIX&, double) = &exp1_;
+  MATRIX3x3 (*expt_exp1__v2)(MATRIX3x3&, double) = &exp1_;
+
   def("exp1_", expt_exp1__v1);
   def("exp1_", expt_exp1__v2);
 
   boost::python::list (*expt_merge_sort_v1)(boost::python::list) = &merge_sort;
   def("merge_sort", expt_merge_sort_v1); 
+
+
+  MATRIX (*expt_mean_v1)(MATRIX& X) = &mean;
+  CMATRIX (*expt_mean_v2)(CMATRIX& X) = &mean;
+  def("mean", expt_mean_v1); 
+  def("mean", expt_mean_v2); 
+
+  MATRIX (*expt_deviation_v1)(MATRIX& X) = &deviation;
+  CMATRIX (*expt_deviation_v2)(CMATRIX& X) = &deviation;
+  def("deviation", expt_deviation_v1); 
+  def("deviation", expt_deviation_v2); 
+
+  MATRIX (*expt_covariance_v1)(MATRIX& X) = &covariance;
+  CMATRIX (*expt_covariance_v2)(CMATRIX& X) = &covariance;
+  def("covariance", expt_covariance_v1); 
+  def("covariance", expt_covariance_v2); 
+
+
 
 }
 

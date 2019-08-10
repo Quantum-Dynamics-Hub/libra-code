@@ -26,6 +26,7 @@
 #include "thermostat/libthermostat.h"
 #include "barostat/libbarostat.h"
 #include "wfcgrid/libwfcgrid.h"
+#include "wfcgrid2/libwfcgrid2.h"
 #include "ensemble/libensemble.h"
 #include "gwp/libgwp.h"
 

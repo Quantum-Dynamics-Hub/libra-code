@@ -41,12 +41,18 @@ namespace libwfcgrid{
 
 //--------------------- General ---------------------
 
+vector<vector<int> > compute_mapping(vector<vector<int> >& inp, vector<int>& npts);
+int compute_imapping(vector<int>& inp, vector<int>& npts);
 int find_grid_size(double xmin,double xmax, double dx);
 CMATRIX init_grid(double xmin,double xmax, double dx);
 
 
 //------------------- 1D specific -------------------
+void init_gauss_1D(vector<CMATRIX>& wfc, CMATRIX& X, double x_, double p_, double dx, int nstates, int occ_state, complex<double> scl);
 void init_gauss_1D(vector<CMATRIX>& wfc, CMATRIX& X, double x_, double p_, double dx, int nstates, int occ_state);
+void add_gauss_1D(vector<CMATRIX>& wfc,CMATRIX& X,double x_,double px_,double dx, int nstates, int occ_state, complex<double> weight);
+
+void add_ho_1D(vector<CMATRIX>& wfc, CMATRIX& X, int nu, double x_, double px_, complex<double> weight, int occ_state, int alpha);
 
 void print_1D(CMATRIX& X, vector<CMATRIX>& PSI,string filename);
 void print_1D(CMATRIX& X, vector<CMATRIX>& PSI,string prefix, int frame);

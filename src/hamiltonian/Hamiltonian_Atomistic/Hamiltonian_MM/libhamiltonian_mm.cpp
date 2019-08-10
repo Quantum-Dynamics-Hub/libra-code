@@ -45,7 +45,7 @@ void export_Hamiltonian_MM_objects(){
 */
 
 
-  export_forcefield_objects();
+  //export_forcefield_objects();
 
 
   void (Interaction_N_Body::*expt_set_coords_v1)(VECTOR& r_, int indx) = &Interaction_N_Body::set_coords;

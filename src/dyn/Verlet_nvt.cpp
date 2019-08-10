@@ -152,14 +152,7 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ha
     p.scale(-1, traj, therm[traj].vel_scale(0.5*dt));
   }
   
-  for(traj=0; traj<ntraj; traj++){
-    t2[0] = traj;  t3[1] = traj;
-    f = ham.forces_adi(Cadi, t3).real();
-    push_submatrix(F, f, t1, t2);
-  }
-
-
-  p = p + F * 0.5*dt;
+  p = p + ham.forces_adi(act_state).real() * 0.5 * dt;
 
   // For efficiency, switch to the element-wise multiplication
   for(traj=0; traj<ntraj; traj++){
@@ -195,14 +188,15 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ha
     therm[traj].propagate_nhc(dt, ekin, 0.0, 0.0);
   }
 
-
+/*
   for(traj=0; traj<ntraj; traj++){
     t2[0] = traj;  t3[1] = traj;
     f = ham.forces_adi(Cadi, t3).real();
     push_submatrix(F, f, t1, t2);
   }
+*/
 
-  p = p + F * 0.5*dt;
+  p = p + ham.forces_adi(act_state).real() * 0.5 * dt;
 
   for(traj=0; traj<ntraj; traj++){
     p.scale(-1, traj, therm[traj].vel_scale(0.5*dt));
@@ -283,22 +277,12 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& P, MATRIX& invM, nHamiltonian& ha
 
 
   P = P * therm.vel_scale(0.5*dt);
-  
-  for(traj=0; traj<ntraj; traj++){
-    t2[0] = traj;  t3[1] = traj;
-    f = ham.forces_adi(Cadi, t3).real();
-    push_submatrix(F, f, t1, t2);
-  }
-
-
-  P = P + F * 0.5*dt;
+  P = P + ham.forces_adi(act_state).real() * 0.5 * dt;
 
   // For efficiency, switch to the element-wise multiplication
   for(traj=0; traj<ntraj; traj++){
     for(dof=0; dof<ndof; dof++){  
-
       q.add(dof, traj,  invM.get(dof,0) * P.get(dof,traj) * dt ); 
-
     }
   }
 
@@ -328,14 +312,7 @@ void Verlet1_nvt(double dt, MATRIX& q, MATRIX& P, MATRIX& invM, nHamiltonian& ha
   therm.propagate_nhc(dt, ekin, 0.0, 0.0);
 
 
-
-  for(traj=0; traj<ntraj; traj++){
-    t2[0] = traj;  t3[1] = traj;
-    f = ham.forces_adi(Cadi, t3).real();
-    push_submatrix(F, f, t1, t2);
-  }
-
-  P = P + F * 0.5*dt;
+  P = P + ham.forces_adi(act_state).real() * 0.5 * dt;
   P = P * therm.vel_scale(0.5*dt);
 
 

@@ -258,16 +258,119 @@ void Wfcgrid::init_wfc_1D(double x0, double px0, double dx0, int init_state){
   \param[in] dx0 Spread (distribution width) of the spatial component of the Gaussian wavepacket
   \param[in] init_state Index of the electronic state on which the wavepacket is initialized
 
-   G(x) = [ (1/(2.0*pi*dx0^2))^(1/4) ] * exp(-((x-x0)/(2*dx0))^2 + i*((x-x0)/dx0)*px0)
+   G(x) = [ (1/(2.0*pi*dx0^2))^(1/4) ] * exp(-((x-x0)/(2*dx0))^2 + i*(x-x0)*px0)
 
 */
 
   init_gauss_1D(PSI, *X, x0, px0, dx0, nstates, init_state);
 
+  // PSI(r)->PSI(k)=reciPSI
+  ft_1D(PSI,reciPSI,1,xmin,kxmin,dx);
+
+
   cout<<"Wavefunction is initialized\n";
 
 
 }// init_wavefunction
+
+
+void Wfcgrid::init_wfc_1D(vector<double>& x0, vector<double>& px0, vector<double>& dx0, vector<int>& init_state, vector<complex<double> >& weights){
+/**
+  \brief Initialize 1D wavefunction - taken as moving Gaussian wavepacket
+  \param[in] x0 Position of the center of the Gaussian wavepacket
+  \param[in] px0 Momentum of the Gaussian wavepacket
+  \param[in] dx0 Spread (distribution width) of the spatial component of the Gaussian wavepacket
+  \param[in] init_state Index of the electronic state on which the wavepacket is initialized
+
+   G(x) = [ (1/(2.0*pi*dx0^2))^(1/4) ] * exp(-((x-x0)/(2*dx0))^2 + i*(x-x0)*px0)
+*/
+
+  int sz = x0.size();
+//  init_gauss_1D(PSI, *X, x0[0], px0[0], dx0[0], nstates, init_state[0], weights[0]);
+
+  // PSI should be already allocated by this point
+  for(int i=0; i<sz; i++){
+    add_gauss_1D(PSI, *X, x0[i], px0[i], dx0[i], nstates, init_state[i], weights[i]);
+  }
+   
+
+  // PSI(r)->PSI(k)=reciPSI
+  ft_1D(PSI,reciPSI,1,xmin,kxmin,dx);
+
+  cout<<"Wavefunction is initialized\n";
+
+}
+
+
+void Wfcgrid::init_wfc_1D_HO(vector<int>& init_state, vector<int>& nu, 
+                             vector<complex<double> >& weights,
+                             vector<double>& x0, vector<double>& px0, vector<double>& alpha ){
+/**
+  \brief Initialize 1D wavefunction as a superposition of moving Harmonic oscillator eigenstates
+
+  \param[in] init_state Index of the electronic state to which the wavepacket is added
+  \param[in] nu Vibrational quantum number of the HO basis function
+  \param[in] weight The weight with which the basis function is added to the grid
+  \param[in] x0 Position of the center of the HO basis function
+  \param[in] px0 Momentum of the HO basis wavepacket 
+  \param[in] alpha The parameter related to the reference HO Hamiltonian:  alpha = sqrt(k*mu/hbar^2)
+             Where:  H = -hbar^2 /(2*mu) d^2/dx^2  + 1/2 * k * (x-x_)^2 
+
+*/
+
+  int sz = x0.size();
+  cout<<"Initialize the wfc as a superposition of "<<sz<<" Harmonic Oscillators\n";
+
+  // PSI should be already allocated by this point
+  for(int i=0; i<sz; i++){
+    cout<<"===== Oscillator "<<i<<" ======\n";
+    cout<<"add it to the electronic state = "<<init_state[i]<<endl;
+    cout<<"vibrational quantum number, nu = "<<nu[i]<<endl;
+    cout<<"add it with the weight, w = "<<weights[i]<<endl;
+    cout<<"coordinate, x0 = "<<x0[i]<<endl;
+    cout<<"momentum, px0 = "<<px0[i]<<endl;
+    cout<<"exponent, alpha = "<<alpha[i]<<endl;
+
+    add_ho_1D(PSI, *X, nu[i], x0[i], px0[i], weights[i], init_state[i], alpha[i]);
+  }
+
+  normalize_wfc_1D();
+   
+  // PSI(r)->PSI(k)=reciPSI
+  ft_1D(PSI,reciPSI,1,xmin,kxmin,dx);
+
+  cout<<"Wavefunction is initialized\n";
+
+}
+
+
+
+
+
+void Wfcgrid::init_wfc_1D_ARB(bp::object py_funct, bp::object params){
+/**
+  \brief Initialize a 1D wavefunction according the external Python function
+
+  \param[in] py_funct - the name of the Python-defined function. Expectations is that the 
+  function returns a complex-values result for different states
+  \param[in] params - parameters of that function
+
+*/
+  
+  CMATRIX res(nstates, 1);
+
+  for(int nx=0; nx<Nx; nx++){
+    res = bp::extract< CMATRIX >( py_funct(real(X->M[nx]), params) );
+    for(int i=0; i<nstates; i++){  PSI[i].M[nx] = res.get(nx);  }
+  }
+   
+  // PSI(r)->PSI(k)=reciPSI
+  ft_1D(PSI,reciPSI,1,xmin,kxmin,dx);
+
+  cout<<"Wavefunction is initialized\n";
+
+}
+
 
 
 void Wfcgrid::init_wfc_2D(double x0, double y0, double px0, double py0, double dx0, double dy0, int init_state){
@@ -283,12 +386,16 @@ void Wfcgrid::init_wfc_2D(double x0, double y0, double px0, double py0, double d
 
   G(x,y) = G(x)*G(y), 
   where
-  G(x) = [ (1/(2.0*pi*dx0^2))^(1/4) ] * exp(-((x-x0)/(2*dx0))^2 + i*((x-x0)/dx0)*px0)
-  G(y) = [ (1/(2.0*pi*dy0^2))^(1/4) ] * exp(-((y-y0)/(2*dy0))^2 + i*((y-y0)/dy0)*py0)
+  G(x) = [ (1/(2.0*pi*dx0^2))^(1/4) ] * exp(-((x-x0)/(2*dx0))^2 + i*(x-x0)*px0)
+  G(y) = [ (1/(2.0*pi*dy0^2))^(1/4) ] * exp(-((y-y0)/(2*dy0))^2 + i*(y-y0)*py0)
 
 */
 
   init_gauss_2D(PSI, *X, x0, px0, dx0,    *Y, y0, py0, dy0,  nstates, init_state);
+
+  // PSI(r)->PSI(k)=reciPSI
+  ft_2D(PSI,reciPSI,1,xmin,ymin,kxmin,kymin,dx,dy);
+
 
   cout<<"Wavefunction is initialized\n";
 
@@ -391,13 +498,49 @@ void Wfcgrid::print_reci_wfc_1D(std::string prefix, int snap, int state){
 
   for(int nx=0;nx<Nx;nx++){
 
-    out<<real(Kx->M[nx])<<"  "<<real(std::conj(reciPSI[state].M[nx])*reciPSI[state].M[nx])<<endl;
+    out<<real(2.0*M_PI*Kx->M[nx])<<"  "<<real(std::conj(reciPSI[state].M[nx])*reciPSI[state].M[nx])<<endl;
 
   }// for nx
 
   out.close();
 
 }// print_wfc_1D
+
+
+void Wfcgrid::print_reci_wfc_2D(std::string prefix, int snap, int state){
+/**
+  \brief Prints 2D wavefunction (in k-representation, reciprocal space) into a file
+  \param[in] prefix The prefix of the filenames to which the wfc will be printed out
+  \param[in] snap This is the integer indexing the printed out wavefunction - e.g. convenient for printing wfc at different times
+  \param[in] state The wavefunction projection on this state will be printed out
+  
+  for 2D profile on XY plane 
+*/
+
+  std::string filename, snaps, states;
+  stringstream ss(stringstream::in | stringstream::out);
+  stringstream ss1(stringstream::in | stringstream::out);
+
+  ss  << snap;   ss  >> snaps;
+  ss1 << state;  ss1 >> states;
+
+
+  filename = prefix+".state"+states+".frame"+snaps;
+  ofstream out(filename.c_str(),ios::out);
+
+
+  for(int nx=0;nx<Nx;nx++){
+    for(int ny=0;ny<Ny;ny++){
+
+      out<<real(2.0*M_PI*Kx->M[nx])<<"  "<<real(2.0*M_PI*Ky->M[ny])<<"  "<<real(std::conj(reciPSI[state].M[nx*Ny+ny])*reciPSI[state].M[nx*Ny+ny])<<endl;
+
+    }// for ny
+    out<<"\n";
+  }// for nx
+
+  out.close();
+}
+
 
 void Wfcgrid::print_complex_matrix_1D(CMATRIX& CM, std::string filename){
 /**
@@ -409,7 +552,7 @@ void Wfcgrid::print_complex_matrix_1D(CMATRIX& CM, std::string filename){
   ofstream out(filename.c_str(),ios::out);
 
   for(int nx=0;nx<Nx;nx++){
-    out<<real(X->M[nx])<<"  "<<real(Kx->M[nx])<<"  "<<CM.M[nx].real()<<"   "<<CM.M[nx].imag()<<endl;
+    out<<real(X->M[nx])<<"  "<<real(2.0*M_PI*Kx->M[nx])<<"  "<<CM.M[nx].real()<<"   "<<CM.M[nx].imag()<<endl;
   }// for nx
 
   out.close();
@@ -618,6 +761,346 @@ void Wfcgrid::flux_1D(double xf,vector<double>& res, double m0){
 
 
 
+double Wfcgrid::get_x_1D(){
+/**
+  Compute expectation value of coordinate of a 1D wavefunction: <psi|x|psi> / <psi|psi>
+*/
+
+  double res; res = 0.0;
+  double norm; norm = 0.0;
+
+  for(int nst=0;nst<nstates;nst++){        
+    for(int nst1=0;nst1<nstates;nst1++){        
+
+      for(int nx=0;nx<Nx;nx++){
+   
+        double d = real(std::conj(PSI[nst].M[nx]) * PSI[nst1].M[nx] );
+
+        norm += d; 
+        res += d * real(X->M[nx]);
+
+      }// for nx
+
+    }// for nst1
+  }// for nst
+
+  res = res / norm;
+
+  return res;
+
+}
+
+
+double Wfcgrid::get_pow_x_1D(double n){
+/**
+  Compute expectation value of a power of coordinate x^n a 1D wavefunction: <psi|x^n|psi> / <psi|psi>
+*/
+
+  double res; res = 0.0;
+  double norm; norm = 0.0;
+
+  for(int nst=0;nst<nstates;nst++){        
+    for(int nst1=0;nst1<nstates;nst1++){        
+
+      for(int nx=0;nx<Nx;nx++){
+   
+        double d = real(std::conj(PSI[nst].M[nx]) * PSI[nst1].M[nx] );
+
+        norm += d; 
+        res += d * pow(real(X->M[nx]), n);
+
+      }// for nx
+
+    }// for nst1
+  }// for nst
+
+  res = res / norm;
+
+  return res;
+
+}
+
+
+
+
+double Wfcgrid::get_px_1D(){
+/**
+  Compute the expectation value of momentum of a 1D wavefunction: <psi|-i*hbar*d/dx |psi> / <psi|psi>
+*/
+
+  double res; res = 0.0;
+  double norm; norm = 0.0;
+
+  for(int nst=0;nst<nstates;nst++){        
+    for(int nst1=0;nst1<nstates;nst1++){        
+
+      for(int nx=0;nx<Nx;nx++){
+
+        norm += real(std::conj(PSI[nst].M[nx]) * PSI[nst1].M[nx] );  
+        res += real(Kx->M[nx]) * real( std::conj(reciPSI[nst].M[nx]) * reciPSI[nst1].M[nx] );
+
+      }// for nx
+
+    }// for nst1
+  }// for nst
+ 
+  norm *= dx;
+  res *= (2.0*M_PI/((double)Nx*dx));
+  res = res / norm;
+
+  return res;
+
+}
+
+
+
+double Wfcgrid::get_pow_px_1D(int n){
+/**
+  Compute the expectation value of power of momentum of a 1D wavefunction: <psi|(-i*hbar*d/dx)^n|psi> / <psi|psi>
+*/
+
+  double res; res = 0.0;
+  double norm; norm = 0.0;
+
+  for(int nst=0;nst<nstates;nst++){        
+    for(int nst1=0;nst1<nstates;nst1++){        
+
+      for(int nx=0;nx<Nx;nx++){
+
+        norm += real(std::conj(PSI[nst].M[nx]) * PSI[nst1].M[nx] );  
+        res += pow(real(Kx->M[nx]), n) * real( std::conj(reciPSI[nst].M[nx]) * reciPSI[nst1].M[nx] );
+
+      }// for nx
+
+    }// for nst1
+  }// for nst
+ 
+  norm *= dx;
+  res *= (pow(2.0*M_PI, n)/((double)Nx*dx));
+  res = res / norm;
+
+  return res;
+
+}
+
+
+
+
+
+
+double Wfcgrid::get_x_2D(){
+/**
+  Compute expectation value of x coordinate of a 2D wavefunction: <psi|x|psi> / <psi|psi>
+*/
+
+  double res; res = 0.0;
+  double norm; norm = 0.0;
+
+  for(int nst=0;nst<nstates;nst++){        
+    for(int nst1=0;nst1<nstates;nst1++){        
+
+      for(int nx=0;nx<Nx;nx++){
+        for(int ny=0;ny<Ny;ny++){
+   
+          double d = real(std::conj(PSI[nst].M[nx*Ny+ny]) * PSI[nst1].M[nx*Ny+ny] );
+
+          norm += d; 
+          res += d * real(X->M[nx]);
+      
+        }// for ny
+      }// for nx
+
+    }// for nst1
+  }// for nst
+
+  res = res / norm;
+
+  return res;
+
+}
+
+
+double Wfcgrid::get_y_2D(){
+/**
+  Compute expectation value of y coordinate of a 2D wavefunction: <psi|y|psi> / <psi|psi>
+*/
+
+  double res; res = 0.0;
+  double norm; norm = 0.0;
+
+  for(int nst=0;nst<nstates;nst++){        
+    for(int nst1=0;nst1<nstates;nst1++){        
+
+      for(int nx=0;nx<Nx;nx++){
+        for(int ny=0;ny<Ny;ny++){
+   
+          double d = real(std::conj(PSI[nst].M[nx*Ny+ny]) * PSI[nst1].M[nx*Ny+ny] );
+
+          norm += d; 
+          res += d * real(Y->M[ny]);
+      
+        }// for ny
+      }// for nx
+
+    }// for nst1
+  }// for nst
+
+  res = res / norm;
+
+  return res;
+
+}
+
+
+
+double Wfcgrid::get_px_2D(){
+/**
+  Compute the expectation value of x component of momentum of a 2D wavefunction: <psi|-i*hbar*d/dx |psi> / <psi|psi>
+*/
+
+  double res; res = 0.0;
+  double norm; norm = 0.0;
+
+  for(int nst=0;nst<nstates;nst++){        
+    for(int nst1=0;nst1<nstates;nst1++){        
+
+      for(int nx=0;nx<Nx;nx++){
+        for(int ny=0;nx<Ny;ny++){
+
+          norm += real(std::conj(PSI[nst].M[nx*Ny+ny]) * PSI[nst1].M[nx*Ny+ny] );  
+          res += real(Kx->M[nx]) * real( std::conj(reciPSI[nst].M[nx*Ny+ny]) * reciPSI[nst1].M[nx*Ny+ny] );
+
+        }// for ny
+      }// for nx
+
+    }// for nst1
+  }// for nst
+ 
+  norm *= (dx * dy);
+  res *= (2.0*M_PI/((double)Nx*dx));
+  res *= (2.0*M_PI/((double)Ny*dy));
+
+  res = res / norm;
+
+  return res;
+
+
+}
+
+
+
+double Wfcgrid::get_py_2D(){
+/**
+  Compute the expectation value of y component of momentum of a 2D wavefunction: <psi|-i*hbar*d/dy |psi> / <psi|psi>
+*/
+
+  double res; res = 0.0;
+  double norm; norm = 0.0;
+
+  for(int nst=0;nst<nstates;nst++){        
+    for(int nst1=0;nst1<nstates;nst1++){        
+
+      for(int nx=0;nx<Nx;nx++){
+        for(int ny=0;nx<Ny;ny++){
+
+          norm += real(std::conj(PSI[nst].M[nx*Ny+ny]) * PSI[nst1].M[nx*Ny+ny] );  
+          res += real(Ky->M[ny]) * real( std::conj(reciPSI[nst].M[nx*Ny+ny]) * reciPSI[nst1].M[nx*Ny+ny] );
+
+        }// for ny
+      }// for nx
+
+    }// for nst1
+  }// for nst
+ 
+  norm *= (dx * dy);
+  res *= (2.0*M_PI/((double)Nx*dx));
+  res *= (2.0*M_PI/((double)Ny*dy));
+
+  res = res / norm;
+
+  return res;
+
+
+}
+
+
+double Wfcgrid::norm_1D(){
+/**
+  Compute the norm of the 1D wavefunction: <psi|psi>
+*/
+
+  double norm; norm = 0.0;
+
+  for(int nst=0;nst<nstates;nst++){        
+    for(int nst1=0;nst1<nstates;nst1++){        
+
+      for(int nx=0;nx<Nx;nx++){
+
+        norm += real(std::conj(PSI[nst].M[nx]) * PSI[nst1].M[nx] );  
+
+      }// for nx
+
+    }// for nst1
+  }// for nst
+
+  norm *= dx;
+
+  return norm;
+
+
+}
+
+
+void Wfcgrid::normalize_wfc_1D(){
+/**
+ *   Normalize the wavefunction
+ *   */
+
+  double sqrt_norm = sqrt( norm_1D() );
+
+  for(int nst=0;nst<nstates;nst++){
+    for(int nx=0;nx<Nx;nx++){
+
+      PSI[nst].M[nx] /= sqrt_norm;
+
+      }// for nx
+  }// for nst
+
+}
+
+
+double Wfcgrid::e_kin_1D(double m0){
+/**
+  Compute kinetic energy for 1D wavefunction: <psi|T|psi> / <psi|psi>
+*/
+  double res; res = 0.0;
+  double norm; norm = 0.0;
+
+  for(int nst=0;nst<nstates;nst++){        
+    for(int nst1=0;nst1<nstates;nst1++){        
+
+      for(int nx=0;nx<Nx;nx++){
+
+        norm += real(std::conj(PSI[nst].M[nx]) * PSI[nst1].M[nx] );  
+        res += real(Kx->M[nx]) * real(Kx->M[nx]) * real(std::conj(reciPSI[nst].M[nx]) * reciPSI[nst1].M[nx] );
+
+      }// for nx
+
+    }// for nst1
+  }// for nst
+
+  norm *= dx;
+  res *= (1.0/((double)Nx*dx));
+  res *= (2.0*M_PI*M_PI/m0);
+
+  res = res/norm;
+
+  return res;
+
+
+}// e_kin_1D
+
+
 double Wfcgrid::e_pot_1D(){
 /**
   Compute potential energy for 1D wavefunction: <psi|V|psi> / <psi|psi>
@@ -625,18 +1108,20 @@ double Wfcgrid::e_pot_1D(){
   double res; res = 0.0;
   double norm; norm = 0.0;
 
-  for(int nx=0;nx<Nx;nx++){
-    for(int nst=0;nst<nstates;nst++){        
 
-      norm += real(std::conj(PSI[nst].M[nx]) * PSI[nst].M[nx] );  
+  for(int nst=0;nst<nstates;nst++){        
+    for(int nst1=0;nst1<nstates;nst1++){               
 
-      for(int nst1=0;nst1<nstates;nst1++){               
-        res += real(std::conj(PSI[nst].M[nx]) * H[nst][nst1].M[nx] * PSI[nst1].M[nx] );                                                        
-      }// for nst1
+      for(int nx=0;nx<Nx;nx++){
 
-    }// for nst
+        norm += real(std::conj(PSI[nst].M[nx]) * PSI[nst1].M[nx] ); 
+        res += real(std::conj(PSI[nst].M[nx]) * H[nst][nst1].M[nx] * PSI[nst1].M[nx] ); 
 
-  }// for nx
+      }// for nx
+
+    }// for nst1
+  }// for nst
+
 
   res = res / norm;
 
@@ -646,31 +1131,6 @@ double Wfcgrid::e_pot_1D(){
 }// e_pot_1D
 
 
-double Wfcgrid::e_kin_1D(double m0){
-/**
-  Compute kinetic energy for 1D wavefunction: <psi|T|psi> / <psi|psi>
-*/
-  double hbar = 1.0;
-  double res; res = 0.0;
-  double norm; norm = 0.0;
-
-  for(int nx=0;nx<Nx;nx++){
-    for(int nst=0;nst<nstates;nst++){        
-
-      norm += real(std::conj(PSI[nst].M[nx]) * PSI[nst].M[nx] );  
-      res += real(Kx->M[nx]) * real(Kx->M[nx]) * real(std::conj(reciPSI[nst].M[nx]) * reciPSI[nst].M[nx] );
-
-    }// for nst
-
-  }// for nx
-
-  res *= (1.0/((double)Nx*dx));
-  res *= (2.0*M_PI*M_PI*(hbar/m0)/(norm*dx));
-
-  return res;
-
-
-}// e_kin_1D
 
 double Wfcgrid::e_tot_1D(double m0){
 /**
@@ -680,8 +1140,134 @@ double Wfcgrid::e_tot_1D(double m0){
   
   return res;
 
-
 }// e_tot_1D
+
+
+
+
+double Wfcgrid::norm_2D(){
+/**
+  Compute the norm for 2D wavefunction: <psi|psi> 
+  
+*/
+
+  double norm; norm = 0.0;
+
+  for(int nst=0;nst<nstates;nst++){
+    for(int nst1=0;nst1<nstates;nst1++){     
+
+      for(int nx=0;nx<Nx;nx++){
+        for(int ny=0;ny<Ny;ny++){
+          
+          norm += real(std::conj(PSI[nst].M[nx*Ny+ny])*PSI[nst1].M[nx*Ny+ny]);
+
+        }// for ny
+      }// for nx
+
+    }// for nst1
+  }// for nst 
+
+  norm *= (dx * dy);
+
+  return norm;
+
+
+}// e_norm_2D
+
+
+double Wfcgrid::e_kin_2D(double m1, double m2){
+/**
+  Compute kinetic energy for 2D wavefunction: <psi|T|psi> / <psi|psi>
+  
+*/
+
+
+  double res_x; res_x = 0.0;
+  double res_y; res_y = 0.0;
+  double norm; norm = 0.0;
+  double tmp;
+
+  for(int nst=0;nst<nstates;nst++){
+    for(int nst1=0;nst1<nstates;nst1++){     
+
+      for(int nx=0;nx<Nx;nx++){
+        for(int ny=0;ny<Ny;ny++){
+          
+          norm += real(std::conj(PSI[nst].M[nx*Ny+ny])*PSI[nst1].M[nx*Ny+ny]);
+
+          double e1 = real(Kx->M[nx]) * real(Kx->M[nx]);
+          double e2 = real(Ky->M[ny]) * real(Ky->M[ny]);
+          tmp = real( std::conj(reciPSI[nst].M[nx*Ny+ny]) * reciPSI[nst1].M[nx*Ny+ny]);
+
+          res_x += e1 * tmp; 
+          res_y += e2 * tmp; 
+
+
+        }// for ny
+      }// for nx
+
+    }// for nst1
+  }// for nst 
+
+  double res = res_x / m1 + res_y / m2;
+
+  norm *= (dx * dy);
+  res *= (1.0/((double)Nx*dx));
+  res *= (1.0/((double)Ny*dy));
+  res *= (2.0*M_PI*M_PI);
+
+  res = res / norm;
+
+  return res;
+
+
+}// e_kin_2D
+
+
+
+double Wfcgrid::e_pot_2D(){
+/**
+  Compute potential energy for 2D wavefunction: <psi|V|psi> / <psi|psi>
+  
+*/
+
+
+  double res; res = 0.0;
+  double norm; norm = 0.0;
+
+  for(int nst=0;nst<nstates;nst++){
+    for(int nst1=0;nst1<nstates;nst1++){     
+
+      for(int nx=0;nx<Nx;nx++){
+        for(int ny=0;ny<Ny;ny++){
+          
+          norm += real(std::conj(PSI[nst].M[nx*Ny+ny])*PSI[nst1].M[nx*Ny+ny]);
+          res += real(std::conj(PSI[nst].M[nx*Ny+ny]) * H[nst][nst1].M[nx*Ny+ny] * PSI[nst1].M[nx*Ny+ny] ); 
+
+        }// for ny
+      }// for nx
+
+    }// for nst1
+  }// for nst 
+
+
+  res = res / norm;
+
+  return res;
+
+
+}// e_pot_2D
+
+
+double Wfcgrid::e_tot_2D(double m1, double m2){
+/**
+  Compute total energy for 2D wavefunction: <psi|T+V|psi> / <psi|psi>
+*/
+  double res = e_kin_2D(m1, m2) + e_pot_2D();
+  
+  return res;
+
+}// e_tot_2D
 
 
 

@@ -1,5 +1,6 @@
 #*********************************************************************************
-#* Copyright (C) 2016 Alexey V. Akimov
+#* Copyright (C) 2018-2019 Brendan A. Smith, Alexey V. Akimov
+#* Copyright (C) 2016-2017 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -8,23 +9,50 @@
 #* or <http://www.gnu.org/licenses/>.
 #*
 #*********************************************************************************/
-## \file QE_methods.py
-# This module implements functions for dealing with the outputs from QE (Quantum Espresso) package
+"""
+.. module:: QE_methods
+   :platform: Unix, Windows
+   :synopsis: This module implements functions for dealing with the outputs from QE (Quantum Espresso) package
+
+.. moduleauthor:: 
+       Alexey V. Akimov 
+       Brendan A. Smith
+  
+"""
+
 
 import os
 import sys
 import math
+import re
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+import util.libutil as comn
+import units
+import regexlib as rgl
 
 def cryst2cart(a1,a2,a3,r):
-# auxiliary function
-# convert vertor <r> in crystal (alat) coordinates with the cell defined by
-# vectors a1, a2, a3, to the Cartesian coordinate xyz
+    """Crystal to Cartesian coordinate conversion 
+
+    An auxiliary function that convert vector <r> in crystal (alat) 
+    coordinates with the cell defined by vectors a1, a2, a3, to the
+    Cartesian coordinate xyz
+
+    Args:
+        a1 ( [double, double, double] ): one of the unit cell/periodicty vectors
+        a2 ( [double, double, double] ): one of the unit cell/periodicty vectors
+        a3 ( [double, double, double] ): one of the unit cell/periodicty vectors
+        r ( [double, double, double] ): Crystal (fractional) coordinates of the atom
+
+
+    Returns:
+        [double, double, double]: the Cartesian coordinates of an atom
+
+    """
     x = [0.0,0.0,0.0]
     for i in [0,1,2]:
         x[i] = a1[i]*r[0] + a2[i]*r[1] + a3[i]*r[2]
@@ -33,20 +61,150 @@ def cryst2cart(a1,a2,a3,r):
 
 
 
-def read_qe_index(filename, orb_list, verbose=0):
-##
-#  This functions reads an ASCII/XML format file containing wavefunction
-#  and returns the coefficients of the plane waves that constitute the
-#  wavefunction
-#
-#  \param[in] filename This is the name of the file we will be reading to construct a wavefunction
-#  \param[in] upper_tag This is the name of the upper-level tag
-#  \param[in] orb_list The list containing the indices of the orbitals which we want to consider
-#   (indexing is starting with 1, not 0!)
-#  
-# Returns: a diagonal matrix (complex-valued) of orbital energies - only for those that are of interest
-# in Ha = a.u. of energy
+def read_qe_schema(filename, verbose=0):
+    """
 
+    This functions reads an ASCII/XML format file containing basic info about the QE run
+
+    Args:
+        filename ( string ): This is the name of the file we will be read [ usually: "x0.save/data-file-schema.xml"]
+        verbose ( int ): The flag controlling the amout of extra output:
+        
+            * 0 - no extra output (default)
+            * 1 - print extra stuff
+  
+    Returns: 
+        dictionary: ( info ): the dictionary containaining the descritive information about the QE calculations and the system
+
+            It contains the following info:
+
+            * **info["conv"]** ( int ): the number of steps to converge SCF, 0 - means no convergence
+            * **info["etot"]** ( double ): the total energy (electronic + nuclear) [ units: Ha ]
+            * **info["nbnd"]** ( int ): the number of bands 
+            * **info["nelec"]** ( int ): the number of electrons
+            * **info["efermi"]** ( double ): the Fermi energy [ units: Ha ] 
+            * **info["alat"]** ( double ): lattice constant [ units: Bohr ] 
+            * **info["nat"]** ( int ): the number of atoms
+            * **info["coords"]** ( MATRIX(3*nat, 1) ): the atomic coordinates [ units: Bohr ]
+            * **info["atom_labels"]** ( list of nat strings ): the atomic names
+            * **info["forces"]** ( MATRIX(3*nat, 1) ): the atomic forces [ units: Ha/Bohr ]
+
+    """
+
+
+    ctx = Context(filename)  #("x.save/data-file-schema.xml")
+    ctx.set_path_separator("/")
+     
+
+    info = {}
+
+    info["conv"] = int(float( ctx.get("output/convergence_info/scf_conv/n_scf_steps", 0.0) )) # 0 means not converged
+    info["etot"] = float( ctx.get("output/total_energy/etot",0.0) )   # total energy
+    info["nbnd"] = int(float( ctx.get("output/band_structure/nbnd",0.0) ))  
+    info["nelec"] = int(float( ctx.get("output/band_structure/nelec",0.0) )) 
+    info["efermi"] = float( ctx.get("output/band_structure/fermi_energy",0.0) )
+
+
+    dctx = Context()
+    alat = ctx.get_child("input", dctx).get_child("atomic_structure",dctx).get("<xmlattr>/alat", "X")
+    info["alat"] = float(alat)
+
+    atoms = ctx.get_child("input", dctx).get_child("atomic_structure", dctx).get_child("atomic_positions", dctx).get_children("atom")
+    nat = len(atoms)
+
+    info["nat"] = nat
+
+    R = MATRIX(3*nat, 1) # coordinates
+    L = []  # labels
+
+    for i in xrange(nat):        
+        xyz_str = atoms[i].get("", "").split(' ')
+        name = atoms[i].get("<xmlattr>/name", "X")
+        L.append(name)
+        R.set(3*i+0, 0, float(xyz_str[0]) )
+        R.set(3*i+1, 0, float(xyz_str[1]) )
+        R.set(3*i+2, 0, float(xyz_str[2]) )
+
+    info["coords"] = R
+    info["atom_labels"] = L
+
+
+    #===== Get the forces =======
+    pool1 = ctx.get_child("output", dctx).get_child("forces", dctx).get("", "").split(' ')
+    pool2 = []
+    for it in pool1:
+        tmp = it.split('\n')
+        for a in tmp:
+            pool2.append(a)
+        
+    forces = []
+    for a in pool2:
+        if a is not '\n' and a is not '':        
+            forces.append(float(a))
+
+    if len(forces) % 3 != 0:
+        print "In read_qe_schema: Something is wrong with reading forces\n";
+        sys.exit(0)
+        
+    nat = len(forces)/3
+    F = MATRIX(3*nat, 1) # forces
+
+    for i in xrange(3*nat):        
+        F.set(i, 0, forces[i])
+
+    info["forces"] = F
+
+
+    return info
+
+
+
+def read_qe_index(filename, orb_list, verbose=0):
+    """
+
+    This functions reads an ASCII/XML format file containing wavefunction
+    and returns the coefficients of the plane waves that constitute the
+    wavefunction
+
+    Args:
+        filename ( string ): This is the name of the file we will be reading to construct a wavefunction
+        orb_list ( list of ints ): The indices of the orbitals which we want to consider. Orbitals indexing 
+            at 1, not 0
+        verbose ( int ): The flag controlling the amout of extra output:
+        
+            * 0 - no extra output (default)
+            * 1 - print extra stuff
+  
+    Returns: 
+        tuple: ( info, all_e ), where:
+
+            * info ( dictionary ): contains all the descritive information about the QE calculations and the system
+
+                It contains the following info:
+
+                * **info["nspin"]** ( int ): the type of calculations: 1 - non-polarized, 2 - polarized, 4 - non-collinear
+                * **info["nk"]** ( int ): the number of k-points
+                * **info["nbnd"]** ( int ): the number of orbitals in each k-point
+                * **info["efermi"]** ( double ): the Fermi energy [units: a.u.]
+                * **info["alat"]** ( double ): lattice constant, a [units: Bohr]
+                * **info["omega"]** ( double ): unit cell volume [units: Bohr^3]
+                * **info["tpiba"]** ( double ): reciprocal cell size, 2*pi/a [units: Bohr^-1]
+                * **info["tpiba2"]** ( double ): squared reciprocal cell size, (2*pi/a)^2 [units: Bohr^-2]
+                * **info["a1"]** ( VECTOR ): direct lattice vector 1 [units: Bohr]
+                * **info["a2"]** ( VECTOR ): direct lattice vector 2 [units: Bohr]
+                * **info["a3"]** ( VECTOR ): direct lattice vector 3 [units: Bohr]
+                * **info["b1"]** ( VECTOR ): reciprocal lattice vector 1 [units: Bohr^-1]
+                * **info["b2"]** ( VECTOR ): reciprocal lattice vector 2 [units: Bohr^-1]
+                * **info["b3"]** ( VECTOR ): reciprocal lattice vector 3 [units: Bohr^-1]
+                * **info["weights"]** ( list ): weights of all the k-points in evaluating the integrals
+                * **info["k"]** ( list of VECTOR objects ): coordinates of the k-points [units: tpiba]
+
+            all_e ( list of CMATRIX(norb, norb) objects ): orbital energies for all the k-points, such that
+                all_e[k] is a diagonal matrix (complex-valued) of orbital energies - only for those that are of interest
+                Here, norb = len(orb_list) and the matrix will only contain numbers that correspond to orbitals defined
+                in the orb_list argument [units: a.u.]
+
+    """
 
     Ry2Ha = 0.5 # conversion factor
    
@@ -166,13 +324,38 @@ def read_qe_index(filename, orb_list, verbose=0):
 
 
 def read_qe_wfc_info(filename, verbose=0):
-##
-#  This functions reads an ASCII/XML format file containing wavefunction
-#  and returns the some descriptors
-#
-#  \param[in] filename This is the name of the file we will be reading to construct a wavefunction
-#  
-   
+    """
+
+    This functions reads an ASCII/XML format file containing wavefunction
+    and returns some descriptors
+
+    Args:
+        filename ( string ): This is the name of the file we will be reading to construct a wavefunction
+        verbose ( int ): The flag controlling the amout of extra output:
+        
+            * 0 - no extra output (default)
+            * 1 - print extra stuff
+  
+    Returns: 
+        dictionary: a dictionary object that will contain key-value pairs with the descriptors
+
+            * res["ngw"] ( int ): the number of plane waves needed to represent the orbital
+            * res["igwx"] ( int ): the number of the G points = plane waves needed to
+                represent the orbital for given k-point. Use this number when working with multiple k-points
+            
+            * res["nbnd"] ( int ): the number of bands (orbitals)
+            * res["nspin"] ( int ): the desriptor of the spin-polarisation in the calculation 
+
+                - 1: unpolarized
+                - 2: polarized 
+                - 4: non-collinear 
+
+            * res["gamma_only"]: ( string = "T" or "F" ): T - use the Gamma-point storae trick, F otherwise
+            * res["ik"] ( int ): index of the k point wfc
+            * res["nk"] ( int ): the number of k-points in the wfc
+        
+    """   
+
     ctx = Context(filename)  #("x.export/wfc.1")
     ctx.set_path_separator("/")
     print "path=", ctx.get_path()
@@ -201,12 +384,22 @@ def read_qe_wfc_info(filename, verbose=0):
 
 
 def read_qe_wfc_grid(filename, verbose=0):
-##
-#  This functions reads an ASCII/XML format file containing grid of G-points for given k-point
-#  and returns a list of VECTOR objects
-#
-#  \param[in] filename This is the name of the file we will be reading to construct a wavefunction
-#     
+    """
+
+    This functions reads an ASCII/XML format file containing grid of G-points for given k-point
+    and returns a list of VECTOR objects
+
+    Args:
+        filename ( string ): This is the name of the file we will be reading to construct a wavefunction
+        verbose ( int ): The flag controlling the amout of extra output:
+        
+            * 0 - no extra output (default)
+            * 1 - print extra stuff
+  
+    Returns: 
+        VectorList = list of VECTOR objects: the definitions of all G points in the present calculation
+
+    """
 
     ctx = Context(filename)  #("x.export/grid.1")
     ctx.set_path_separator("/")
@@ -235,15 +428,25 @@ def read_qe_wfc_grid(filename, verbose=0):
 
 
 def read_qe_wfc(filename, orb_list, verbose=0):
-##
-#  This functions reads an ASCII/XML format file containing wavefunction
-#  and returns the coefficients of the plane waves that constitute the
-#  wavefunction
-#
-#  \param[in] filename This is the name of the file we will be reading to construct a wavefunction
-#  \param[in] orb_list The list containing the indices of the orbitals which we want to consider
-#   (indexing is starting with 1, not 0!)
-#     
+    """
+
+    This functions reads an ASCII/XML format file containing wavefunction
+    and returns the coefficients of the plane waves that constitute the wavefunction
+
+    Args:
+        filename ( string ): This is the name of the file we will be reading to construct a wavefunction
+        orb_list ( list of ints ): The indices of the orbitals which we want to consider. Orbitals indexing 
+            at 1, not 0
+        verbose ( int ): The flag controlling the amout of extra output:
+        
+            * 0 - no extra output (default)
+            * 1 - print extra stuff
+  
+    Returns: 
+        CMATRIX(ngw,norbs): The plane-wave expansion coefficients for all orbitals
+
+    """
+
 
     ctx = Context(filename)  #("x.export/wfc.1")
     ctx.set_path_separator("/")
@@ -341,18 +544,279 @@ def read_qe_wfc(filename, orb_list, verbose=0):
 
 
 
+def read_md_data(filename):
+    """Read in the QE MD data stored in an XML file
+
+    Args:
+        filename (string): the name of the xml file that contains an MD data
+            this function is specifically tailored for the QE output format
+
+    Returns:
+        tuple: (R, V, A, M, E), where:
+
+        * R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps [Bohr]
+        * V ( MATRIX(ndof x nsteps-1) ): velocities of all DOFs for all mid-timesteps [a.u. of velocity]
+        * A ( MATRIX(ndof x nsteps-1) ): accelerations of all DOFs for all mid-timesteps [a.u. of acceleration]
+        * M ( MATRIX(ndof x 1) ): masses of all DOFs [a.u. of mass]
+        * E (list of ndof/3): atom names (elements) of all atoms 
+
+    """
+
+    # Default (empty) context object
+    dctx = Context()
+
+    ctx = Context(filename)      
+    ctx.set_path_separator("/")
+    steps = ctx.get_children("step")   
+    nsteps = len(steps)
+    atoms = steps[0].get_child("atomic_structure",dctx).get_child("atomic_positions", dctx).get_children("atom")
+    nat = len(atoms)
+    dt = float(ctx.get_child("input", dctx).get_child("ion_control", dctx).get_child("md", dctx).get_child("timestep", dctx).get("",""))
+    specs = ctx.get_child("input", dctx).get_child("atomic_species", dctx).get_children("species")
+    nspecs = len(specs)
+
+    #========== Masses of elements =============
+    PT = {} 
+    for i in xrange(nspecs):
+        name = specs[i].get("<xmlattr>/name", "X")
+        mass = specs[i].get("mass", 1.0)
+        PT.update({name:mass*units.amu})
+
+
+    #========== Read the raw coordinates and assign masses ==========
+    D = MATRIX(3*nat, nsteps) # coordinates
+    f = MATRIX(3*nat, nsteps)
+    M = MATRIX(3*nat, 1)
+    E = []
+
+    for t in xrange(nsteps):
+
+        # ========== Coordinates =========
+        atoms = steps[t].get_child("atomic_structure",dctx).get_child("atomic_positions", dctx).get_children("atom")
+
+        for i in xrange(nat):        
+            xyz_str = atoms[i].get("", "").split(' ')
+            name = atoms[i].get("<xmlattr>/name", "X")
+            D.set(3*i+0, t, float(xyz_str[0]) )
+            D.set(3*i+1, t, float(xyz_str[1]) )
+            D.set(3*i+2, t, float(xyz_str[2]) )
+
+            #=========== And masses ==========
+            if t==0:
+                M.set(3*i+0, 0, PT[name])
+                M.set(3*i+1, 0, PT[name])
+                M.set(3*i+2, 0, PT[name])
+                E.append(name)
+
+        # ========== Forces  =========
+        frcs = steps[t].get("forces","").split('\n')
+        sz = len(frcs)
+        cnt = 0
+        for i in xrange(sz):        
+            xyz_str = frcs[i].split()  
+            if len(xyz_str)==3:
+                f.set(3*cnt+0, t, float(xyz_str[0]) )
+                f.set(3*cnt+1, t, float(xyz_str[1]) )
+                f.set(3*cnt+2, t, float(xyz_str[2]) )
+                cnt = cnt + 1                 
+        
+    #====== Compute velocities and coordinates at the mid-points ========
+    R = MATRIX(3*nat, nsteps-1)
+    V = MATRIX(3*nat, nsteps-1)
+    A = MATRIX(3*nat, nsteps-1)
+
+    for t in xrange(nsteps-1):
+        for i in xrange(3*nat):    
+            R.set(i, t, 0.5*(D.get(i, t+1) + D.get(i, t)) )
+            V.set(i, t, (0.5/dt)*(D.get(i, t+1) - D.get(i, t)) )
+            A.set(i, t, 0.5*(f.get(i, t+1) + f.get(i, t)) / M.get(i) )
+
+    return R, V, A, M, E
+
+
+
+def read_md_data_xyz(filename, PT, dt):
+    """Read in the MD trajectory stored in an XYZ format
+
+    Args:
+        filename ( string ): the name of the xyz file that contains an MD data
+        PT ( dict{ string:float } ): definition of the masses of different atomic species [masses in amu, where 1 is the mass of H]
+        dt ( double ): MD nuclear integration time step [a.u. of time]
+
+    Returns:
+        tuple: (R, V, M, E), where:
+
+        * R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps [Bohr]
+        * V ( MATRIX(ndof x nsteps-1) ): velocities of all DOFs for all mid-timesteps [a.u. of velocity]
+        * M ( MATRIX(ndof x 1) ): masses of all DOFs [a.u. of mass]
+        * E (list of ndof/3): atom names (elements) of all atoms         
+
+    """
+
+    f = open(filename, "r")
+    A = f.readlines()
+    f.close()
+
+    nlines = len(A)  # the number of lines in the file
+    nat = int(float(A[0].split()[0])) # the number of atoms
+    nsteps = int(nlines/(nat+2)) - 1 
+
+
+    #========== Read the raw coordinates and assign masses ==========
+    D = MATRIX(3*nat, nsteps) # coordinates
+    M = MATRIX(3*nat, 1)
+    E = []
+
+    for t in xrange(nsteps):
+
+        # ========== Coordinates =========
+        for i in xrange(nat):        
+            xyz_str = A[t*(nat+2)+2+i].split()
+
+            name = xyz_str[0]
+            D.set(3*i+0, t, float(xyz_str[1]) * units.Angst )
+            D.set(3*i+1, t, float(xyz_str[2]) * units.Angst )
+            D.set(3*i+2, t, float(xyz_str[3]) * units.Angst )
+
+            #=========== And masses ==========
+            if t==0:
+                M.set(3*i+0, 0, PT[name]*units.amu)
+                M.set(3*i+1, 0, PT[name]*units.amu)
+                M.set(3*i+2, 0, PT[name]*units.amu)
+                E.append(name)
+
+
+    #====== Compute velocities and coordinates at the mid-points ========
+    R = MATRIX(3*nat, nsteps-1)
+    V = MATRIX(3*nat, nsteps-1)
+
+    for t in xrange(nsteps-1):
+        for i in xrange(3*nat):    
+            R.set(i, t, 0.5*(D.get(i, t+1) + D.get(i, t)) )
+            V.set(i, t, (0.5/dt)*(D.get(i, t+1) - D.get(i, t)) )
+
+    return R, V, M, E
+
+
+
+def read_md_data_xyz2(filename, PT):
+    """Read in the MD trajectory stored in an XYZ format
+    This version does not compute velocities - only gets coordinates
+
+    Args:
+        filename ( string ): the name of the xyz file that contains an MD data
+        PT ( dict{ string:float } ): definition of the masses of different atomic species [masses in amu, where 1 is the mass of H]
+
+    Returns:
+        tuple: (R, E), where:
+
+        * R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps [Bohr]
+        * E (list of ndof/3): atom names (elements) of all atoms         
+
+    """
+
+    f = open(filename, "r")
+    A = f.readlines()
+    f.close()
+
+    nlines = len(A)  # the number of lines in the file
+    nat = int(float(A[0].split()[0])) # the number of atoms
+    nsteps = int(nlines/(nat+2)) 
+
+
+    #========== Read the raw coordinates and assign masses ==========
+    R = MATRIX(3*nat, nsteps) # coordinates
+    E = []
+
+    for t in xrange(nsteps):
+
+        # ========== Coordinates =========
+        for i in xrange(nat):        
+            xyz_str = A[t*(nat+2)+2+i].split()
+
+            name = xyz_str[0]
+            R.set(3*i+0, t, float(xyz_str[1]) * units.Angst )
+            R.set(3*i+1, t, float(xyz_str[2]) * units.Angst )
+            R.set(3*i+2, t, float(xyz_str[3]) * units.Angst )
+
+            if t==0:
+                E.append(name)
+
+    return R, E
+
+
+
+
+def read_md_data_cell(filename):
+    """Read in the QE MD unit cell vectors stored in an XML file
+
+    Args:
+        filename (string): the name of the xml file that contains an MD data
+            this function is specifically tailored for the QE output format
+
+    Returns:
+        MATRIX(9 x nsteps): cell coordinates for all timesteps, in the format [Bohr]: 
+                 
+            C(0,0) = a1.x    C(0,1) = a1.y    C(0,2) = a1.z
+            C(1,0) = a2.x    C(1,1) = a2.y    C(1,2) = a2.z
+            C(2,0) = a3.x    C(2,1) = a3.y    C(2,2) = a3.z
+
+    """
+
+    # Default (empty) context object
+    dctx = Context()
+
+    ctx = Context(filename)      
+    ctx.set_path_separator("/")
+    steps = ctx.get_children("step")   
+    nsteps = len(steps)
+
+    #========== Read the raw coordinates and assign masses ==========
+    C = MATRIX(9, nsteps)     # cell parameters
+
+
+    for t in xrange(nsteps):
+
+        # ========== Cell =========
+        cell = steps[t].get_child("atomic_structure",dctx).get_child("cell", dctx)
+
+        a1_str = cell.get("a1", "").split(' ')
+        a2_str = cell.get("a2", "").split(' ')
+        a3_str = cell.get("a3", "").split(' ')
+
+        C.set(0, t, float(a1_str[0]) );  C.set(1, t, float(a1_str[1]) );   C.set(2, t, float(a1_str[2]) );        
+        C.set(3, t, float(a2_str[0]) );  C.set(4, t, float(a2_str[1]) );   C.set(5, t, float(a2_str[2]) );        
+        C.set(6, t, float(a3_str[0]) );  C.set(7, t, float(a3_str[1]) );   C.set(8, t, float(a3_str[2]) );        
+        
+    return C
+
+
+
 
 def out2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt):
     """
-    out_filename - name of the file which contains the MD trajectory
-    templ_filename - name of the template file for input generation, should not contain atomic positions!
-    prefix - is the prefix of the files generated at output
-    wd - working directory - will be created 
-    t0 and t1 - define the starting and final frames
-    dt - defines the spacing between frames which are written
-    this is defined as a difference between written configuration indexes:
-    so if dt = 5, the following frames will be written: 0,5,10,15, etc...
+ 
+    Converts a QE output file with an MD trajectory to a bunch of input files
+    for SCF calculations. These input files all have the same control settings,
+    but differ in atomic coordinates
+    
+    Args:
+        out_filename ( string ): name of the file which contains the MD trajectory
+        templ_filename ( string ): name of the template file for input generation
+            should not contain atomic positions! 
+
+        prefix ( string ): the prefix of the files generated as the output
+        wd ( string ): working directory where all files will be created/processed - will be created 
+        t0 ( int ): defines the starting timestep to process (not all the MD timesteps may be precessed)
+        tmax ( int ): defines the maximal timestep to process (not all the MD timesteps may be precessed)
+        dt ( int ):  defines the spacing between frames which are written this is defined as a 
+            difference between written configuration indexes. So if dt = 5, the following frames
+            will be written: 0,5,10,15, etc...
+
+    Returns:
+        None: but will create a bunch of new input files in the created working directory
     """
+
     verbose = 0
     # Read the template file
     f_templ = open(templ_filename,"r")
@@ -469,17 +933,28 @@ def out2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt):
 
 def out2pdb(out_filename,T,dt,pdb_prefix):
     """
-    out_filename - name of the file which contains the MD trajectory
-    this file is the QE MD trajectory output
-    The function will convert this output file into pdb file (containing trajectory)
-    No more than T steps from the out_filename file will be used
-    dt - the difference of indexes of the frames which are written consequetively
-    such that if you dt = 5 it will write frames 0,5,10,15,etc. with 0 - being the input configuration
 
-    Example of usage:
-    > out2pdb.convert("x.md.out",250,25,"snaps/snap_")
-    This will create MD snapshots at times 0 (input configuration), 25 (25-th nuclear configuration), 50, etc.
-    the files will be collcted in the folder /snaps and named snap_0.pdb, snap_25.pdb, snap_50.pdb, etc.
+    Converts a QE output file with an MD trajectory to a bunch of pdb files
+    
+    Args:
+        out_filename ( string ): name of the file which contains the MD trajectory.
+            This file is the QE MD trajectory output
+        T ( int ): defines the maximal timestep to process (not all the MD timesteps may be precessed)
+        dt ( int ):  defines the spacing between frames which are written this is defined as a 
+            difference between written configuration indexes. So if dt = 5, the following frames
+            will be written: 0,5,10,15, etc...
+
+    Returns:
+        None: but will create a bunch of new pdb files with the trajectory info, including the unit cell params.
+
+
+    Example:
+
+        >>> QE_methods.out2pdb("x.md.out",250,25,"snaps/snap_")
+
+       This will create MD snapshots at times 0 (input configuration), 25 (25-th nuclear configuration), 50, etc.
+       the files will be collcted in the folder /snaps and named snap_0.pdb, snap_25.pdb, snap_50.pdb, etc.
+
     """
 
     dt = dt - 1
@@ -645,18 +1120,30 @@ def out2pdb(out_filename,T,dt,pdb_prefix):
 
 def out2xyz(out_filename,T,dt,xyz_filename):
     """
-    out_filename - name of the file which contains the MD trajectory
-    this file is the QE MD trajectory output
-    The function will convert this output file into xyz file (containing trajectory)
+  
+    This function converts the QE output file into a .xyz trajectory file. 
     No more than T steps from the out_filename file will be used
-    dt - number of steps between output frames, so dt = 5 will output frames 0, 5, 10, 15, etc.
-    xyz_filename - is the prefix of the file to which the result is written
 
-    Example of usage:
-    > out2xyz.convert("x.md.out",250,25,"snaps/traj.xyz")
-    This will create the MD trajectory file in .xyz format with the snapshots takes at times 0
-    (input configuration), 25 (25-th nuclear configuration), 50, etc.
-    the snapshots will written in the file trahj.xyz in the folder /snaps 
+    Args: 
+        out_filename ( string ): name of the file which contains the MD trajectory.
+            This file is the QE MD trajectory output
+        T ( int ): defines the maximal timestep to process (not all the MD timesteps may be precessed)
+        dt ( int ):  defines the spacing between frames which are written this is defined as a 
+            difference between written configuration indexes. So if dt = 5, the following frames
+            will be written: 0,5,10,15, etc...
+        xyz_filename ( string ): the name of the file to which the resulting .xyz trajectory will be written
+
+    Returns:
+        None: but will create a .xyz file with the trajectory.
+
+    Example:
+
+        >>> QE_methods.out2xyz("x.md.out",250,25,"snaps/traj.xyz")
+
+        This will create the MD trajectory file in .xyz format with the snapshots takes at times 0
+        (input configuration), 25 (25-th nuclear configuration), 50, etc.
+        the snapshots will written in the file trahj.xyz in the folder /snaps 
+
     """
 
 #    dt = dt - 1
@@ -786,14 +1273,27 @@ def out2xyz(out_filename,T,dt,xyz_filename):
 
 def xyz2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt):
     """
-    out_filename - name of the file which contains the xyz (MD) trajectory
-    templ_filename - name of the template file for input generation, should not contain atomic positions!
-    prefix - is the prefix of the files generated at output
-    wd - working directory - will be created 
-    t0 and t1 - define the starting and final frames
-    dt - defines the spacing between frames which are written
-    this is defined as a difference between written configuration indexes:
-    so if dt = 5, the following frames will be written: 0,5,10,15, etc...
+
+    Converts a xyz trajectory file with an MD trajectory to a bunch of input files
+    for SCF calculations. These input files all have the same control settings,
+    but differ in atomic coordinates
+    
+    Args:
+        out_filename ( string ): name of the file which contains the MD trajectory (in xyz format)
+        templ_filename ( string ): name of the template file for input generation
+            should not contain atomic positions! 
+
+        wd ( string ): working directory where all files will be created/processed - will be created 
+        prefix ( string ): the prefix of the files generated as the output
+        t0 ( int ): defines the starting timestep to process (not all the MD timesteps may be precessed)
+        tmax ( int ): defines the maximal timestep to process (not all the MD timesteps may be precessed)
+        dt ( int ):  defines the spacing between frames which are written this is defined as a 
+            difference between written configuration indexes. So if dt = 5, the following frames
+            will be written: 0,5,10,15, etc...
+
+    Returns:
+        None: but will create a bunch of new input files in the created working directory
+
     """
     verbose = 0
     # Read the template file
@@ -873,6 +1373,125 @@ def xyz2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt):
                 start = 0
             at_line = at_line + 1
 
-
     f.close()
+
+
+
+
+def get_QE_normal_modes(filename, verbosity=0):
+    """
+
+    This function reads the QE phonon calculations output files
+    to get the key information for further normal modes visualization
+    or other types of calculations related to normal modes  
+ 
+    Args:  
+        filename ( string ): the name of a .dyn file produced by QE code
+        verbosity ( int ) to control the amount of printouts
+
+            * 0 - no extra output (default)
+            * 1 - print extra stuff
+  
+    Returns: 
+        tuple: (Elts, R, U), where:
+
+        * Elts ( list of nat string ): labels of all atoms, nat - is the number of atoms
+        * R ( MATRIX(3*nat x 1) ): coordinates of all atoms [Angstrom]
+        * U ( MATRIX(ndof x ndof) ): eigenvectors, defining the normal modes
+
+    Example:
+        >>> get_QE_normal_modes("silicon.dyn1", 1)     # verbose output
+        >>> get_QE_normal_modes("Cs4SnBr6_T200.dyn1")  # not verbose output
+
+    """
+
+    #========= Read in the file and determine the key dimensions =======
+    f   = open(filename,'r')
+    A = f.readlines()
+    f.close()
+
+    tmp = A[2].split()
+    nspec =  int(float(tmp[0]))  # number of types of atoms (species)
+    nat = int(float(tmp[1]))     # number of atoms
+    if verbosity>0:
+        print "%i atoms of %i types" % (nat, nspec)
+
+
+    #============= Determine the types of atoms ===============
+    pfreq_indx = '(?P<freq_indx>'+rgl.INT+')'
+    pAtom_type = '(?P<Atom_type>'+rgl.INT+')'+rgl.SP
+    pAtom_type2 = '(?P<Atom_type2>'+rgl.INT+')'+rgl.SP
+    PHRASE1 = '\'(?P<Atom_element>[a-zA-Z]+)\s+\''+rgl.SP
+
+    last_index = 0
+    E = {}
+    for a in A:        
+        m1 = re.search(pAtom_type + PHRASE1 + rgl.pX_val,a)
+        if m1!=None:           
+            ind = int(float(a[m1.start('Atom_type'):m1.end('Atom_type')]))
+            elt = a[m1.start('Atom_element'):m1.end('Atom_element')]
+            E.update({ind:elt})
+            last_index = A.index(a)
+    if verbosity>0:
+        print "atom type index - element type mapping: ", E
+
+
+    #============= Get the coordinates ========================
+    R = MATRIX(3*nat, 1)
+    Elts = []
+
+    cnt = 0
+    for i in range(last_index+1, last_index+1+nat):    
+        tmp = A[i].split()
+        ind = int(float(tmp[1]))
+        x = float(tmp[2])
+        y = float(tmp[3])
+        z = float(tmp[4])
+
+        Elts.append(E[ind])
+        R.set(3*cnt+0, 0, x)
+        R.set(3*cnt+1, 0, y)
+        R.set(3*cnt+2, 0, z)
+        cnt = cnt + 1
+
+    if verbosity>0:
+        print "Your system's elements = \n", Elts
+    if verbosity>1:
+        print "Your system's coordinates = \n"; R.show_matrix()
+
+
+    #=========== Now look for frequencies ===============
+    ndof = 3*nat
+    U = MATRIX(ndof, ndof)
+
+    pattern = 'freq \(\s+' + pfreq_indx + '\) \=\s+' + rgl.pX_val + '\[THz\] \=\s+' + rgl.pY_val + '\[cm\-1\]\s+'
+    sz = len(A)
+    cnt = 0
+    for i in xrange(sz):        
+        m1 = re.search(pattern, A[i])
+        if m1!=None:
+            ind = A[i][m1.start('freq_indx'):m1.end('freq_indx')] 
+            freq1 = A[i][m1.start('X_val'):m1.end('X_val')] 
+            freq2 = A[i][m1.start('Y_val'):m1.end('Y_val')] 
+            #print ind, freq1, freq2
+ 
+            for j in xrange(nat):
+                tmp = A[i+j+1].split()
+                x = float(tmp[1])
+                y = float(tmp[3])
+                z = float(tmp[5])
+
+                U.set(3*j+0, cnt, x)
+                U.set(3*j+1, cnt, y)
+                U.set(3*j+2, cnt, z)
+                
+            i = i + nat
+            cnt = cnt + 1
+
+    if verbosity>1:
+        print "Eigenvectors = \n"; U.show_matrix()
+
+    return Elts, R, U
+   
+
 

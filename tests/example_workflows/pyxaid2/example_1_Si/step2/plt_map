@@ -1,0 +1,44 @@
+#
+set terminal pngcairo font "arial,24" size 800, 600 enhanced rounded truecolor
+
+set lmargin at screen 0.15
+set rmargin at screen 0.80
+set bmargin at screen 0.20
+set tmargin at screen 0.85
+
+set nokey
+#set palette rgbformulae 22,13,-31
+set palette rgbformulae 7,5,15
+
+# 3D pictures, colored by z-value 
+#set auto
+#set parametric
+#set pm3d implicit at s
+
+# 2D pictures, colored by z-value
+#set contour
+set pm3d map
+set pm3d interpolate 0,0  # first - y axis, second - x axis
+set pm3d explicit at b
+
+
+set output "NAC_MAP_IM_ORBITAL.png"
+set xlabel "Orbtial index: 0 = HOMO"  offset  0.0, 0.5
+set ylabel "Orbtial index: 0 = HOMO"  offset -0.5, 0.0
+set label "NAC (meV)" at 9, 12
+set border 31 lw 5
+# Recall: minband of active space == 0
+# If minband of active space == HOMO-1, HOMO = 1
+# Indexing starts from 0 here
+HOMO = 2
+set xrange [-HOMO:HOMO+1]
+set yrange [-HOMO:HOMO+1]
+
+set cbrange[0:25]
+set xtics 1
+set ytics 1
+splot "ave_Ham_im.dat" using ($1-HOMO):($2-HOMO):($3*1000),\
+
+#set output "NAC_MAP_RE_ORBITAL.png"
+#splot "ave_Ham_re.dat" using ($1-HOMO):($2-HOMO):($3*1000),\
+

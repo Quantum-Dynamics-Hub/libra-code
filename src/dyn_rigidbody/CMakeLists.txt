@@ -14,7 +14,7 @@ ADD_LIBRARY(rigidbody_stat STATIC ${RB_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(rigidbody      linalg_stat specialfunctions_stat io_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(rigidbody_stat linalg_stat specialfunctions_stat io_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(rigidbody      linalg_stat meigen_stat specialfunctions_stat io_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(rigidbody_stat linalg_stat meigen_stat specialfunctions_stat io_stat ${ext_libs})
 
 

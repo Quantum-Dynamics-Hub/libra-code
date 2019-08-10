@@ -280,6 +280,40 @@ void nHamiltonian::check_cmatrix_list(bp::object obj, std::string matrix_name, i
 
 
 
+
+void nHamiltonian::add_branches(int target_level, vector<nHamiltonian*>& res){
+/**
+*/ 
+
+  if(level==target_level){  res.push_back(this);  }
+  else{
+
+    int sz = children.size();
+    for(int i; i<sz; i++){   children[i]->add_branches(target_level, res);   }
+
+  }
+
+}
+
+vector<nHamiltonian*> nHamiltonian::get_branches(int target_level){
+/**
+  An auxiliary function to traverse the entire tree to return the pointers to the 
+  sub-Hamiltonian of the given level.
+
+  The tree traversal is done according to: the leftmost-first principle
+
+*/ 
+
+  vector<nHamiltonian*> res;
+
+  add_branches(target_level, res);
+
+  return res;
+
+}
+
+
+
 }// namespace libhamiltonian_generic
 }// namespace libhamiltonian
 }// liblibra

@@ -1,0 +1,37 @@
+#   This file is to generate the Hamiltonian for the previously-converged charge density
+#
+
+Geometry = GenFormat {
+   <<< "x1.gen"
+}
+
+Driver = { }	       			
+
+
+Hamiltonian = DFTB {
+  ReadInitialCharges = Yes
+  SCC = Yes
+  SlaterKosterFiles = Type2FileNames {
+    Prefix = "/mnt/c/cygwin/home/Alexey-user/Soft/dftb/sk/3ob-3-1/"
+    Separator = "-"
+    Suffix = ".skf"
+  }
+  MaxAngularMomentum = {
+    O = "p"
+    C = "p"
+  }
+}
+
+
+Options = {
+#  WriteAutotestTag = Yes
+  WriteHS = Yes
+#  WriteEigenvectors = Yes
+}
+
+Analysis = {
+}
+
+ParserOptions = {
+  ParserVersion = 4
+}

@@ -1149,47 +1149,7 @@ int randperm(int size,int of_size,vector<int>& result){
   return 0;
 }
 
-MATRIX exp_(MATRIX& x,double dt){
-  // This function calculates exp(x*dt)
-  // C.T() * x * C = D
 
-  int sz = x.n_cols;
-
-  MATRIX res(sz,sz);
-  MATRIX C(sz,sz);
-  MATRIX D(sz,sz);
-
-  libmeigen::solve_eigen(x, D, C, 0);
-
-  D.M[0] = exp(dt*D.M[0]);
-  D.M[4] = exp(dt*D.M[4]);
-  D.M[8] = exp(dt*D.M[8]);
-
-  res = C * D * C.T();
-  return res;
-}
-
-MATRIX exp1_(MATRIX& x,double dt){
-  // This function calculates exp(x*dt)*sinh(x*t)/(x*t)
-  // where 1/x is x^-1
-  // C.T() * x * C = D
-  int sz = x.n_cols;
-
-  MATRIX res(sz,sz);
-  MATRIX C(sz,sz);
-  MATRIX D(sz,sz);
-
-  libmeigen::solve_eigen(x, D, C, 0);
-
-
-  D.M[0] = exp(dt*D.M[0])*sinh_(dt*D.M[0]);
-  D.M[4] = exp(dt*D.M[4])*sinh_(dt*D.M[4]);
-  D.M[8] = exp(dt*D.M[8])*sinh_(dt*D.M[8]);
-
-  res = C * D * C.T();
-
-  return res;
-}
 
 MATRIX3x3 exp_(MATRIX3x3& x,double dt){
   // This function calculates exp(x*dt)
@@ -1219,6 +1179,197 @@ MATRIX3x3 exp_(MATRIX3x3& x,double dt){
 
   return res3x3;
 }
+
+
+MATRIX exp_(MATRIX& x, double dt){
+/**
+  This function computes exp(x*dt) for a given matrix x via:  C * x * C.T() = D
+
+  \param[in] x input matrix
+  \param[in] dt scaling factor
+
+*/
+
+  if(x.n_cols != x.n_rows){
+    cout<<"Error in libspecialfunctions::exp_ : the input matrix is not square\n"; exit(0); 
+  }
+
+  int i,j;
+ 
+  // Let us first diagonalize the input matrix x
+  int sz = x.n_cols;  
+  MATRIX* evec; evec = new MATRIX(sz, sz);  *evec = 0.0;
+  MATRIX* eval; eval = new MATRIX(sz, sz);  *eval = 0.0;
+  MATRIX res(sz,sz);
+
+  // Find the eigenvalues of the the S matrix
+  libmeigen::solve_eigen(x, *eval, *evec, 0);  // x * evec = evec * eval  ==>  x = evec * eval * evec.T()
+
+  for(i=0;i<sz;i++){ res.M[i*sz+i]= std::exp(dt * eval->get(i,i)); }
+
+  // Convert to the original basis
+  res = (*evec) * res * ((*evec).T());
+
+  delete eval;
+  delete evec;
+
+  return res;
+}
+
+
+CMATRIX exp_(CMATRIX& x, complex<double> dt){
+/**
+  This function computes exp(x*dt) for a given matrix x via:  C.T() * x * C = D
+
+  \param[in] x input matrix
+  \param[in] dt scaling factor
+
+*/
+
+  if(x.n_cols != x.n_rows){
+    cout<<"Error in libspecialfunctions::exp_ : the input matrix is not square\n"; exit(0); 
+  }
+
+  int i,j;
+ 
+  // Let us first diagonalize the input matrix x
+  int sz = x.n_cols;  
+  CMATRIX* evec; evec = new CMATRIX(sz, sz);  *evec = complex<double>(0.0, 0.0);
+  CMATRIX* eval; eval = new CMATRIX(sz, sz);  *eval = complex<double>(0.0,0.0);
+  CMATRIX res(sz,sz);
+
+  // Find the eigenvalues of the the S matrix
+  libmeigen::solve_eigen(x, *eval, *evec, 0);  // x * evec = evec * eval  ==>  x = evec * eval * evec.H()
+
+  for(i=0;i<sz;i++){ res.M[i*sz+i]= std::exp(dt * eval->get(i,i)); }
+
+  // Convert to the original basis
+  res = (*evec) * res * ((*evec).H());
+
+  delete eval;
+  delete evec;
+
+  return res;
+}
+
+
+
+MATRIX exp_2(MATRIX& x, double dt, int nterms, double max_tol){
+/**
+  This function computes exp(x*dt) for a given matrix x via the Taylor series sum
+
+  \param[in] x input matrix
+  \param[in] dt scaling factor
+
+*/
+
+  if(x.n_cols != x.n_rows){
+    cout<<"Error in libspecialfunctions::exp_ : the input matrix is not square\n"; exit(0); 
+  }
+
+  int sz = x.n_cols;  
+  MATRIX tmp(sz,sz);
+  MATRIX res(sz,sz);
+
+  res.identity();
+  tmp.identity();
+  double err = 1e+10;
+  
+  int n = 1;
+  while(n < (nterms+1) && err > max_tol){
+
+    tmp = x * tmp;
+    tmp *= (dt/(double)n);
+    res += tmp;
+
+    err = tmp.max_elt();
+    n++;
+  }
+
+
+  if(err > max_tol){
+      cout<<"Error in exp_2(MATRIX...): The the sum has not converged to the defined tolerance of "<<max_tol
+          <<" in "<<nterms<<" iterations.\nExiting now...\n";
+      exit(0);
+  }
+
+  return res;
+}
+
+
+MATRIX exp_2(MATRIX& x, double dt, int nterms){
+
+  return exp_2(x, dt, nterms, 0.0);
+
+}
+
+MATRIX exp_2(MATRIX& x, double dt){
+
+  return exp_2(x, dt, 1000, 0.0);
+
+}
+
+
+
+
+CMATRIX exp_2(CMATRIX& x, complex<double> dt, int nterms, double max_tol){
+/**
+  This function computes exp(x*dt) for a given matrix x via the Taylor series sum
+
+  \param[in] x input matrix
+  \param[in] dt scaling factor
+
+*/
+
+  if(x.n_cols != x.n_rows){
+    cout<<"Error in libspecialfunctions::exp_ : the input matrix is not square\n"; exit(0); 
+  }
+
+  int sz = x.n_cols;  
+  CMATRIX tmp(sz,sz);
+  CMATRIX res(sz,sz);
+
+  res.identity();
+  tmp.identity();
+  double err = 1e+10;
+  
+  int n = 1;
+  while(n < (nterms+1) && err > max_tol){
+
+    tmp = x * tmp;
+    tmp *= (dt/(double)n);
+    res += tmp;
+
+    err = abs(tmp.max_elt());
+    n++;
+  }
+
+  if(err > max_tol){
+      cout<<"Error in exp_2(CMATRIX...): The the sum has not converged to the defined tolerance of "<<max_tol
+          <<" in "<<nterms<<" iterations.\nExiting now...\n";
+      exit(0);
+  }
+
+
+  return res;
+}
+
+
+CMATRIX exp_2(CMATRIX& x, complex<double> dt, int nterms){
+
+  return exp_2(x, dt, nterms, 0.0);
+
+}
+
+CMATRIX exp_2(CMATRIX& x, complex<double> dt){
+
+  return exp_2(x, dt, 1000, 0.0);
+
+}
+
+
+
+
 
 MATRIX3x3 exp1_(MATRIX3x3& x,double dt){
   // This function calculates exp(x*dt)*sinh(x*t)/(x*t)
@@ -1251,6 +1402,28 @@ MATRIX3x3 exp1_(MATRIX3x3& x,double dt){
 
 }
 
+
+MATRIX exp1_(MATRIX& x,double dt){
+  // This function calculates exp(x*dt)*sinh(x*t)/(x*t)
+  // where 1/x is x^-1
+  // C.T() * x * C = D
+  int sz = x.n_cols;
+
+  MATRIX res(sz,sz);
+  MATRIX C(sz,sz);
+  MATRIX D(sz,sz);
+
+  libmeigen::solve_eigen(x, D, C, 0);
+
+
+  D.M[0] = exp(dt*D.M[0])*sinh_(dt*D.M[0]);
+  D.M[4] = exp(dt*D.M[4])*sinh_(dt*D.M[4]);
+  D.M[8] = exp(dt*D.M[8])*sinh_(dt*D.M[8]);
+
+  res = C * D * C.T();
+
+  return res;
+}
 
 
 //============================ Random number generators =================

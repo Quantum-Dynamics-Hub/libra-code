@@ -68,6 +68,8 @@ class nHamiltonian{
   void check_cmatrix(bp::object obj, std::string matrix_name, int nrows, int ncols);
   void check_cmatrix_list(bp::object obj, std::string matrix_name, int nrows, int ncols, int length);
 
+  void add_branches(int target_level, vector<nHamiltonian*>& res);
+
 public:
 
   int level;                        ///< level in the tree hierarchy
@@ -222,6 +224,21 @@ public:
   int cum_phase_corr_mem_status;
 
 
+  /**     
+     All the computation control parameters 
+  **/
+  int eigen_algo;  ///< eigensolver algorithm used to convert diabatic to adiabatic basis 
+                   /// 0 - generalized eigensolver (may reorder states) [default]
+                   /// 1 - eigensolver without reordering (assumes diabatic basis is orthonormaly)
+
+  double phase_corr_ovlp_tol;  /// phase correction overlap tolerance, we only compute phase corrections 
+                               /// if the time overlaps are above (in magnitude) this value, otherwise
+                               /// we assume that uncommon state reordering (adiabatic state switching) 
+                               /// has happened (which may occur in the stochastic state tracking method)
+                               /// then, we don't apply the phase correction since it doesn't make sense
+
+
+
   /**
      
      All the basic methods: constructor, destructor, getters, setters, etc.
@@ -242,6 +259,7 @@ public:
   void add_child(nHamiltonian& child);  ///< Associate an existing Hamiltonian with the present one
                                         ///< to become its child
   vector<int> get_full_id();            ///< Entire path of the note in the tree
+  vector<nHamiltonian*> get_branches(int target_level);
 
 
   void init_all(int lvl);
@@ -421,15 +439,18 @@ public:
 
   ///< In nHamiltonian_compute_forces.cpp
 
-  CMATRIX forces_adi(CMATRIX& ampl_adi);  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
-  CMATRIX forces_adi(CMATRIX& ampl_adi, vector<int>& id_);  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
-  CMATRIX forces_dia(CMATRIX& ampl_dia);  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
-  CMATRIX forces_dia(CMATRIX& ampl_dia, vector<int>& id_);  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
-
   vector<CMATRIX> forces_tens_adi(CMATRIX& ampl_adi); // 
   vector<CMATRIX> forces_tens_adi(CMATRIX& ampl_adi, vector<int>& id_); // 
   vector<CMATRIX> forces_tens_dia(CMATRIX& ampl_dia); // 
   vector<CMATRIX> forces_tens_dia(CMATRIX& ampl_dia, vector<int>& id_); // 
+
+  CMATRIX forces_adi(CMATRIX& ampl_adi);  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
+  CMATRIX forces_adi(CMATRIX& ampl_adi, vector<int>& id_);  // -dE/dR in the adiabatic basis, assuming Cadi = Cadi(t)
+  CMATRIX forces_adi(vector<int>& act_states);   // -dE/dR in the adiabatic basis for several trajectories
+  CMATRIX forces_adi(int act_state);   // -dE/dR in the adiabatic basis for several trajectories, all in the same state
+
+  CMATRIX forces_dia(CMATRIX& ampl_dia);  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
+  CMATRIX forces_dia(CMATRIX& ampl_dia, vector<int>& id_);  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
 
 
   ///< In nHamiltonian_compute_nac.cpp
@@ -487,8 +508,12 @@ typedef std::vector<nHamiltonian> nHamiltonianList;  ///< data type for keeping 
 
 
 ///< In nHamiltonian_compute adiabatic
+CMATRIX compute_phase_corrections1(CMATRIX& S, double tol);
+CMATRIX compute_phase_corrections1(CMATRIX& U, CMATRIX& U_prev, double tol);
+
 CMATRIX compute_phase_corrections(CMATRIX& S);
 CMATRIX compute_phase_corrections(CMATRIX& U, CMATRIX& U_prev);
+
 
 
 ///< In nHamiltonian_compute_ETHD.cpp

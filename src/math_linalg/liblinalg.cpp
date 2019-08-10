@@ -400,10 +400,9 @@ void export_CMATRIX(){
       .def(vector_indexing_suite< CMATRIXMap >())
   ;
 
-
+  /*
   vector<int> (*expt_get_reordering_v1)(CMATRIX& X) = &get_reordering;
   def("get_reordering", expt_get_reordering_v1);
-
 
   vector<int> (*expt_compute_signature_v1)(CMATRIX& Ref, CMATRIX& X) = &compute_signature;
   vector<int> (*expt_compute_signature_v2)(CMATRIX& X) = &compute_signature;
@@ -415,7 +414,7 @@ void export_CMATRIX(){
   void (*expt_correct_phase_v2)(CMATRIX& X) = &correct_phase;
   def("correct_phase", expt_correct_phase_v1);
   def("correct_phase", expt_correct_phase_v2);
-
+  */
 
 
 
@@ -600,16 +599,21 @@ void export_FT(){
   void (*expt_cft1_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx) = &cft1;
   void (*expt_inv_cft1_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx) = &inv_cft1;
 
-  void (*expt_cft2_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk) = &cft2;
-  void (*expt_inv_cft2_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk) = &inv_cft2;
+//  The functions below are commented because the inv_CFT[ CFT ] is not the identity, perhaps because dk 
+//  would need to satisfy some additional conditions
+//  void (*expt_cft2_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk) = &cft2;
+//  void (*expt_inv_cft2_v1)(CMATRIX& in,CMATRIX& out,double xmin,double kmin,double dx,double dk) = &inv_cft2;
 
 
   def("cft", expt_cft_v1);
   def("cft", expt_cft1_v1);
-  def("cft", expt_cft2_v1);
   def("inv_cft", expt_inv_cft_v1);
   def("inv_cft", expt_inv_cft1_v1);
-  def("inv_cft", expt_inv_cft2_v1);
+
+//  The function below are commented because the inv_CFT[ CFT ] is not the identity, perhaps because dk 
+//  would need to satisfy some additional conditions
+//  def("cft", expt_cft2_v1);
+//  def("inv_cft", expt_inv_cft2_v1);
 
 
   void (*expt_cft1_2D_v1)(CMATRIX& in, CMATRIX& out,double xmin,double ymin, double kxmin, double kymin, double dx, double dy) = &cft1_2D;
@@ -727,14 +731,16 @@ void export_linalg_objects(){
   ;
 
 
-  export_permutations();
-
-  export_VECTOR();
-  export_QUATERNION();
-  export_MATRIX3x3();
-
   export_MATRIX();
   export_CMATRIX();
+
+  export_VECTOR();
+  export_MATRIX3x3();
+  export_QUATERNION();
+
+  export_FT();
+  export_permutations();
+
 
 
   void (*expt_MATRIX_TO_QUATERNION_v1)(MATRIX&,QUATERNION&) = &MATRIX_TO_QUATERNION;

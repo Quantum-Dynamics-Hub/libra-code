@@ -15,7 +15,7 @@ ADD_LIBRARY(qobjects_stat STATIC ${QOBJECTS_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(qobjects      molint_stat linalg_stat meigen_stat specialfunctions_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(qobjects_stat molint_stat linalg_stat meigen_stat specialfunctions_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(qobjects      util_stat molint_stat linalg_stat meigen_stat specialfunctions_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(qobjects_stat util_stat molint_stat linalg_stat meigen_stat specialfunctions_stat ${ext_libs})
 
 

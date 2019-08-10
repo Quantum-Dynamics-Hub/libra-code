@@ -27,11 +27,17 @@ namespace libdata{
 void export_Data_objects(){
 
 
-int (DATA::*ScaleData1)(double)                = &DATA::ScaleData;
-int (DATA::*ScaleData2)(double,double)         = &DATA::ScaleData;
+  int (DATA::*ScaleData1)(double)                = &DATA::ScaleData;
+  int (DATA::*ScaleData2)(double,double)         = &DATA::ScaleData;
 
-boost::python::list (DATA::*expt_Calculate_Distribution)(boost::python::list Interval) = &DATA::Calculate_Distribution;
+  boost::python::list (DATA::*expt_Calculate_Distribution_v1)
+  (boost::python::list Interval) = &DATA::Calculate_Distribution;
 
+  int (DATA::*expt_Calculate_Distribution_v2)
+  (vector<double>&,vector<double>&,vector<double>&) = &DATA::Calculate_Distribution;
+
+  int (DATA::*expt_Calculate_Estimators_v1)() = &DATA::Calculate_Estimators;
+  int (DATA::*expt_Calculate_MiniMax_v1)() = &DATA::Calculate_MiniMax;
 
   class_<DATA>("DATA",init<>())
       .def(init<boost::python::list>())
@@ -47,6 +53,9 @@ boost::python::list (DATA::*expt_Calculate_Distribution)(boost::python::list Int
       .def("ShiftData", &DATA::ShiftData)
       .def("NormalizeData",  &DATA::NormalizeData)
 
+      .def("PutData", &DATA::PutData)
+      .def("GetData", &DATA::GetData)
+
       .def_readwrite("Data",&DATA::Data)
 
       .def_readwrite("ave",&DATA::ave)
@@ -57,16 +66,17 @@ boost::python::list (DATA::*expt_Calculate_Distribution)(boost::python::list Int
       .def_readwrite("mae",&DATA::mae)
       .def_readwrite("rmse",&DATA::rmse)
 
-      .def_readwrite("min",&DATA::min)
+      .def_readwrite("min_val",&DATA::min_val)
       .def_readwrite("min_indx",&DATA::min_indx)
-      .def_readwrite("max",&DATA::max)
+      .def_readwrite("max_val",&DATA::max_val)
       .def_readwrite("max_indx",&DATA::max_indx)
 
       .def_readwrite("scale_factor",&DATA::scale_factor)
       .def_readwrite("shift_amount",&DATA::shift_amount)
 
-
-      .def("Calculate_Distribution",expt_Calculate_Distribution)
+      .def("Calculate_Distribution",expt_Calculate_Distribution_v1)
+      .def("Calculate_Estimators",expt_Calculate_Estimators_v1)
+      .def("Calculate_MiniMax",expt_Calculate_MiniMax_v1)
        
   ;
 

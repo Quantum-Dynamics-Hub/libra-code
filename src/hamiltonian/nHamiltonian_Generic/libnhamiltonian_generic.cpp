@@ -193,6 +193,12 @@ void export_nhamiltonian_generic_objects(){
   = &nHamiltonian::forces_adi;
   CMATRIX (nHamiltonian::*expt_forces_adi_v2)(CMATRIX& ampl_adi, vector<int>& id_)
   = &nHamiltonian::forces_adi;  
+  CMATRIX (nHamiltonian::*expt_forces_adi_v3)(vector<int>& act_states)
+  = &nHamiltonian::forces_adi;
+  CMATRIX (nHamiltonian::*expt_forces_adi_v4)(int act_state)
+  = &nHamiltonian::forces_adi;
+
+
   CMATRIX (nHamiltonian::*expt_forces_dia_v1)(CMATRIX& ampl_dia)
   = &nHamiltonian::forces_dia;  
   CMATRIX (nHamiltonian::*expt_forces_dia_v2)(CMATRIX& ampl_dia, vector<int>& id_)
@@ -254,6 +260,10 @@ void export_nhamiltonian_generic_objects(){
       .def_readwrite("ndia", &nHamiltonian::ndia)
       .def_readwrite("nadi", &nHamiltonian::nadi)
       .def_readwrite("nnucl", &nHamiltonian::nnucl)
+
+      .def_readwrite("eigen_algo", &nHamiltonian::eigen_algo)
+      .def_readwrite("phase_corr_ovlp_tol", &nHamiltonian::phase_corr_ovlp_tol)
+
 
       .def("set_levels", &nHamiltonian::set_levels)
       .def("add_child", &nHamiltonian::add_child)
@@ -403,6 +413,9 @@ void export_nhamiltonian_generic_objects(){
 
       .def("forces_adi", expt_forces_adi_v1)
       .def("forces_adi", expt_forces_adi_v2)
+      .def("forces_adi", expt_forces_adi_v3)
+      .def("forces_adi", expt_forces_adi_v4)
+
       .def("forces_dia", expt_forces_dia_v1)
       .def("forces_dia", expt_forces_dia_v2)
 
@@ -454,12 +467,17 @@ void export_nhamiltonian_generic_objects(){
 
 
 
-  CMATRIX (*expt_compute_phase_corrections_v1)
-  (CMATRIX& S) = &compute_phase_corrections;
-  CMATRIX (*expt_compute_phase_corrections_v2)
-  (CMATRIX& U, CMATRIX& U_prev) = &compute_phase_corrections;
+  CMATRIX (*expt_compute_phase_corrections1_v1)(CMATRIX& S, double tol) = &compute_phase_corrections1;
+  CMATRIX (*expt_compute_phase_corrections1_v2)(CMATRIX& U, CMATRIX& U_prev, double tol) = &compute_phase_corrections1;
+
+  CMATRIX (*expt_compute_phase_corrections_v1)(CMATRIX& S) = &compute_phase_corrections;
+  CMATRIX (*expt_compute_phase_corrections_v2)(CMATRIX& U, CMATRIX& U_prev) = &compute_phase_corrections;
+
+  def("compute_phase_corrections1", expt_compute_phase_corrections1_v1);
+  def("compute_phase_corrections1", expt_compute_phase_corrections1_v2);
   def("compute_phase_corrections", expt_compute_phase_corrections_v1);
   def("compute_phase_corrections", expt_compute_phase_corrections_v2);
+
 
 
   double (*expt_ETHD_energy_v1)(const MATRIX& q, const MATRIX& invM) = &ETHD_energy;

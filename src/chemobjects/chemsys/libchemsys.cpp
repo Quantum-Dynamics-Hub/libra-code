@@ -54,6 +54,8 @@ void (System::*print_ent4)(std::string,boost::python::list,int,std::string) = &S
 void (System::*print_xyz1)(std::string,int) = &System::print_xyz;
 void (System::*print_xyz2)(std::string,int,std::string,int) = &System::print_xyz;
 
+std::string (System::*expt_get_xyz_v1)(int fold,std::string pbc_type,int frame) = &System::get_xyz;
+
 int (System::*expt_Find_Angle_v1)(int,int) = &System::Find_Angle;
 int (System::*expt_Find_Angle_v2)(int,int,int) = &System::Find_Angle;
 
@@ -64,10 +66,12 @@ void (System::*expt_init_fragment_velocities_v2)(double Temp,VECTOR TOT_P,VECTOR
 void (System::*expt_init_atom_velocities_v1)(double Temp, Random& rnd) = &System::init_atom_velocities;
 void (System::*expt_init_atom_velocities_v2)(double Temp,VECTOR TOT_P, Random& rnd) = &System::init_atom_velocities;
 
-void (System::*expt_ROTATE_FRAGMENT_v1)(double, VECTOR, int) = &System::ROTATE_FRAGMENT;
-void (System::*expt_ROTATE_FRAGMENT_v2)(double, VECTOR, int, VECTOR) = &System::ROTATE_FRAGMENT;
-void (System::*expt_ROTATE_FRAGMENT_v3)(double, VECTOR, int, int) = &System::ROTATE_FRAGMENT;
-
+void (System::*expt_ROTATE_FRAGMENT_v1)(double phi, VECTOR dir, int Gr) = &System::ROTATE_FRAGMENT;
+void (System::*expt_ROTATE_FRAGMENT_v2)(double phi, VECTOR dir, int Gr, VECTOR pivot) = &System::ROTATE_FRAGMENT;
+void (System::*expt_ROTATE_FRAGMENT_v3)(double phi, VECTOR dir, int Gr, int center_indx) = &System::ROTATE_FRAGMENT;
+void (System::*expt_ROTATE_FRAGMENT_v4)(MATRIX3x3& rot, int Gr) = &System::ROTATE_FRAGMENT;
+void (System::*expt_ROTATE_FRAGMENT_v5)(MATRIX3x3& rot, int Gr, VECTOR pivot) = &System::ROTATE_FRAGMENT;
+void (System::*expt_ROTATE_FRAGMENT_v6)(MATRIX3x3& rot, int Gr, int center_indx) = &System::ROTATE_FRAGMENT;
 
 
   class_<System>("System",init<>())
@@ -197,6 +201,9 @@ void (System::*expt_ROTATE_FRAGMENT_v3)(double, VECTOR, int, int) = &System::ROT
       .def("ROTATE_FRAGMENT", expt_ROTATE_FRAGMENT_v1)
       .def("ROTATE_FRAGMENT", expt_ROTATE_FRAGMENT_v2)
       .def("ROTATE_FRAGMENT", expt_ROTATE_FRAGMENT_v3)
+      .def("ROTATE_FRAGMENT", expt_ROTATE_FRAGMENT_v4)
+      .def("ROTATE_FRAGMENT", expt_ROTATE_FRAGMENT_v5)
+      .def("ROTATE_FRAGMENT", expt_ROTATE_FRAGMENT_v6)
       .def("ROTATE_MOLECULE", &System::ROTATE_MOLECULE)
 
 
@@ -300,6 +307,8 @@ void (System::*expt_ROTATE_FRAGMENT_v3)(double, VECTOR, int, int) = &System::ROT
 
       .def("print_xyz",print_xyz1)
       .def("print_xyz",print_xyz2)
+
+      .def("get_xyz", expt_get_xyz_v1);
 
   ;
 

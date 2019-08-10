@@ -1,0 +1,13 @@
+.ipynb_checkpoints
+*.txt
+*.tag
+*.bin
+*.out
+*.xyz
+*.dat
+*.dat_tmp
+
+dftb_in.hsd
+dftb_pin.hsd
+*.gen
+res

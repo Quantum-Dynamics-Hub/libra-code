@@ -226,7 +226,7 @@ void System::TRANSLATE_MOLECULE(double amount,VECTOR direction,int Mol){
   }// if v!=-1
 }
 
-void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr){
+void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction, int Gr){
 /**
   \param[in] degree_amount The magnitude of rotation, in degrees
   \param[in] direction The vector definining the axis of rotation. in the external coordinate system
@@ -239,26 +239,45 @@ void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr){
 */
 
 
-  MATRIX3x3 R;
   double phi = M_PI*degree_amount/180.0; // Convert to the radians
-  double cs = cos(0.5*phi);
-  double si = sin(0.5*phi);
   VECTOR u = direction.unit();
-  QUATERNION quat(cs,si*u.x,si*u.y,si*u.z);
-  QUATERNION_TO_MATRIX(quat,R);
 
   int v = get_fragment_index_by_fragment_id(Gr);
   if(v!=-1){
-    Fragments[v].Group_RB.Rotate_I(degree_amount, direction);
-//    rotate_atoms_of_fragment(v,R);
+    Fragments[v].Group_RB.Rotate(phi, direction);
     update_atoms_for_fragment(v);
   }
+
   // Molecule orientation does not change because the center of mass of the
   // fragment v does not change
 
 }
 
-void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, VECTOR center){
+
+void System::ROTATE_FRAGMENT(MATRIX3x3& rot, int Gr){
+/**
+  \param[in] rot The rotation matrix to be applied
+  \param[in] Gr The ID (not index!) of the group/fragment to be rotated
+
+  Simplest manipulation
+  Rotates the fragment with the fragment ID "int Gr" on amount and direction defined by the 
+  rotation matrix. Rotation is around the fragment's center of mass
+*/
+
+
+  int v = get_fragment_index_by_fragment_id(Gr);
+  if(v!=-1){
+    Fragments[v].Group_RB.Rotate(rot);
+    update_atoms_for_fragment(v);
+  }
+
+  // Molecule orientation does not change because the center of mass of the
+  // fragment v does not change
+
+}
+
+
+void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction, int Gr, VECTOR center){
 /**
   \param[in] degree_amount The magnitude of rotation, in degrees
   \param[in] direction The vector definining the axis of rotation in the external coordinate system
@@ -271,28 +290,43 @@ void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, VECT
   around the axis given by "VECTOR direction" around the center given by "center"
 */
 
+  double phi = M_PI*degree_amount/180.0; // Convert to the radians
+  VECTOR u = direction.unit();
+
   int v = get_fragment_index_by_fragment_id(Gr);
-
-  VECTOR dir; dir = center - Fragments[v].Group_RB.rb_cm;
-  double amount = dir.length();
-
-  // Translate the fragment's center of mass to the "center" point
-  TRANSLATE_FRAGMENT(amount, dir,Gr);
-
-  // Rotate the fragment around new center of mass
-  ROTATE_FRAGMENT(degree_amount, direction, Gr);
-
-  // Translate the fragment's center of mass back to the original position
-  TRANSLATE_FRAGMENT(-amount, dir,Gr);
+  if(v!=-1){
+    Fragments[v].Group_RB.Rotate(phi, direction, center);
+    update_atoms_for_fragment(v);
+  }
 
 }
+
+void System::ROTATE_FRAGMENT(MATRIX3x3& rot, int Gr, VECTOR center){
+/**
+  \param[in] rot The rotation matrix to be applied
+  \param[in] Gr The ID (not index!) of the group/fragment to be rotated
+  \param[in] center The vector defining the center of the rotating coordinate system
+
+  Simplest manipulation
+  Rotates the fragment with the fragment ID "int Gr" on amount amount and direction defined by the 
+  rotation matrix. Rotation is around the center given by "center"
+*/
+
+  int v = get_fragment_index_by_fragment_id(Gr);
+  if(v!=-1){
+    Fragments[v].Group_RB.Rotate(rot, center);
+    update_atoms_for_fragment(v);
+  }
+
+}
+
 
 void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, int center_indx){
 /**
   \param[in] degree_amount The magnitude of rotation, in degrees
   \param[in] direction The vector definining the axis of rotation. The magnitude of this vector does not matter.
   \param[in] Gr The ID (not index!) of the group/fragment to be rotated
-  \param[in] center The index of the atom around which the rotation occurs 
+  \param[in] center_indx The index of the atom around which the rotation occurs 
 
   Simplest manipulation
   Rotates the fragment with the fragment ID "int Gr" on amount of "double amount"
@@ -313,9 +347,42 @@ void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, int 
   dir = Atoms[center_indx].Atom_RB.rb_cm - Fragments[v].Group_RB.rb_cm;
 
   // Translate the fragment's center of mass back to the original position
+  TRANSLATE_FRAGMENT(-amount, dir, Gr);
+
+}
+
+
+
+void System::ROTATE_FRAGMENT(MATRIX3x3& rot, int Gr, int center_indx){
+/**
+  \param[in] rot The rotation matrix to be applied
+  \param[in] Gr The ID (not index!) of the group/fragment to be rotated
+  \param[in] center_indx The index of the atom around which the rotation occurs 
+
+  Simplest manipulation
+  Rotates the fragment with the fragment ID "int Gr" on amount and direction defined
+  by the rotation matrix "rot". Rotation is around the position of the atoms with 
+  index "center_indx".
+*/
+
+  int v = get_fragment_index_by_fragment_id(Gr);
+
+  VECTOR dir; dir = Atoms[center_indx].Atom_RB.rb_cm - Fragments[v].Group_RB.rb_cm;
+  double amount = dir.length();
+
+  // Translate the fragment's center of mass to the "center" point
+  TRANSLATE_FRAGMENT(amount, dir, Gr);
+
+  // Rotate the fragment around new center of mass
+  ROTATE_FRAGMENT(rot, Gr);
+
+  dir = Atoms[center_indx].Atom_RB.rb_cm - Fragments[v].Group_RB.rb_cm;
+
+  // Translate the fragment's center of mass back to the original position
   TRANSLATE_FRAGMENT(-amount, dir,Gr);
 
 }
+
 
 
 

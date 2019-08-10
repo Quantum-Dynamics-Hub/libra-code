@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2016 Kosuke Sato, Alexey V. Akimov
+#* Copyright (C) 2016-2019 Kosuke Sato, Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -8,8 +8,13 @@
 #* or <http://www.gnu.org/licenses/>.
 #*
 #*********************************************************************************/
-## \file init_ensembles.py
-# This module implements the functions that allocate memory for various objects
+"""
+.. module:: init_ensembles
+   :platform: Unix, Windows
+   :synopsis: This module implements functions that allocate memory for ensembles of trajectories
+.. moduleauthor:: Alexey V. Akimov
+
+"""
 
 import os
 import sys
@@ -19,23 +24,39 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-
 import LoadMolecule
 import LoadPT
 
 
-
-
 def init_ext_hamiltonians(ntraj, nnucl, nel, verbose=0):
-    ##
-    # This function allocates memory for matrices (external objects). The function
-    # also creates an array of External_Hamiltonian objects and bind them to the external matrices
-    # 
-    # \param[in] ntraj The number of trajectories in the ensemble
-    # \param[in] nnucl The number of nuclear DOF ( usually, = 3* Number_of_atoms)
-    # \param[in] nel The number of electronic DOF
-    # \param[in] verbose The parameter controlling the amount of debug printing: 0 (default)
-    # - no printing, 1 - print info
+    """
+
+    This function allocates memory for matrices (external objects). The function
+    also creates an array of External_Hamiltonian objects and bind them to the external matrices
+
+    Args:
+        ntraj ( int ): The number of trajectories in the ensemble
+        nnucl ( int ): The number of nuclear DOF ( usually, = 3* Number_of_atoms)
+        nel ( int ): The number of electronic DOF ( usually the number of electronic states)
+        verbose ( int ): The parameter controlling the amount of debug printing: 
+
+            - 0: no printing [ default ]
+            - 1: do print info
+    Returns:
+        tuple: (ham, ham_adi, d1ham_adi, ham_vib), where:
+
+            * ham ( list of ntraj External_Hamiltonian objects ): "External Hamiltonian" objects,
+                one per trajectory. These are the "controller" objects that organize the flow of
+                computations and store the results in the matrices bound to them.
+            * ham_adi ( list of ntraj MATRIX(nel, nel) ): Electronic Hamiltonian matrices 
+                coupled to the ham objects
+            * d1ham_adi ( list ntraj lists of nnucl MATRIX(nel, nel) objects ): derivatives of 
+                electronic Hamiltonians w.r.t. nuclear DOFs for each trajectory. Also coupled to 
+                the ham objects for the corresponding trajectories.
+            * ham_vib ( list of ntraj CMATRIX(nel, nel) ): Vibronic Hamiltonian matrices 
+                coupled to the ham objects
+     
+    """
 
     # Create an list of External Hamiltonian objects
     ham = []
@@ -83,24 +104,27 @@ def init_ext_hamiltonians(ntraj, nnucl, nel, verbose=0):
                 print "d1ham_adi[",k,"]= ", d1ham_adi[i][k]
             print "ham_vib = ", ham_vib[i]
 
-    # Returned values:
-    # ham - list of External_Hamiltonian objects
-    # ham_adi - list of corresponding matrices
-    # d1ham_adi - list of the lists containing derivative matrices
-    # ham_vib - list of matrices containing vibronic Hamiltonians 
     return ham, ham_adi, d1ham_adi, ham_vib
 
 
 def init_systems(ntraj, U, filename, format, verbose=0):
-    ##
-    # This function creates a list of System objects and loads the content into them
-    # 
-    # \param[in] ntraj The number of trajectories in the ensemble
-    # \param[in] U Is the Universe object 
-    # \param[in] filename The name of the file containing molecular structure
-    # \param[in] A string defining the file format (see LoadMolecule for more details)
-    # \param[in] verbose The parameter controlling the amount of debug printing: 0 (default)
-    # - no printing, 1 - print info
+    """
+    This function creates a list of System objects and loads the content into them
+
+    Args:
+        ntraj ( int ): The number of trajectories in the ensemble
+        U ( Universe object ): The container of the fundamental parameters of atoms
+        filename ( string ): The file containg the atomistic system 
+        format ( string ): The format of the file to load (see LoadMolecule for possible formats)
+        verbose ( int ): The parameter controlling the amount of debug printing: 
+
+            - 0: no printing [ default ]
+            - 1: do print info
+
+    Returns:
+        (list of ntraj System objects): the ensemble of the objects defining the replicas of the system
+
+    """
 
     syst = []
     for tr in xrange(ntraj):
@@ -120,20 +144,28 @@ def init_systems(ntraj, U, filename, format, verbose=0):
 
 
 def init_systems2(ntraj, filename, format, rnd, T, sigma, data_file="elements.dat", verbose=0):
-    ##
-    # This function creates a list of System objects and loads the content into them, it also randomizes
-    # the original input from the coordinate file (by adding coordinate displacements and setting velocities)
-    # 
-    # \param[in] ntraj The number of trajectories in the ensemble
-    # \param[in] filename The name of the file containing molecular structure
-    # \param[in] format A string defining the file format (see LoadMolecule for more details)
-    # \param[in] rnd   Random number generator object
-    # \param[in] T     Target temperature used to initialize momenta of atoms. units: K
-    # \param[in] sigma The magnitude of a random displacement of each atom from its center, units: Bohr
-    # \param[in] data_file The file containing information about elements.
-    # \param[in] verbose The parameter controlling the amount of debug printing: 0 (default)
-    # - no printing, 1 - print info
+    """
+    This function creates a list of System objects and loads the content into them, it also randomizes
+    the original input from the coordinate file (by adding coordinate displacements and setting velocities)
 
+    Args:
+        ntraj ( int ): The number of trajectories in the ensemble
+        U ( Universe object ): The container of the fundamental parameters of atoms
+        filename ( string ): The file containg the atomistic system 
+        format ( string ): The format of the file to load (see LoadMolecule for possible formats)
+        rnd ( Random object ): random number generator object
+        T ( double ): Target temperature used to initialize momenta of atoms. [ units: K ]
+        sigma ( double ): The magnitude of a random displacement of each atom from its center [ units: Bohr ]
+        data_file ( double ): The file containing information about elements [ default: "elements.dat" ]
+        verbose ( int ): The parameter controlling the amount of debug printing: 
+
+            - 0: no printing [ default ]
+            - 1: do print info
+
+    Returns:
+        (list of ntraj System objects): the ensemble of the objects defining the replicas of the system
+
+    """
 
     # Create Universe and populate it
     U = Universe();   LoadPT.Load_PT(U, data_file, 0)
@@ -170,13 +202,23 @@ def init_systems2(ntraj, filename, format, rnd, T, sigma, data_file="elements.da
 
                       
 def init_mm_Hamiltonians(syst, ff, verbose=0):
-    ##
-    # This function creates a list of MM Hamiltonians and bind them to the corresponding systems
-    # 
-    # \param[in] syst The list of System objects 
-    # \param[in] ff The Force Field object
-    # \param[in] verbose The parameter controlling the amount of debug printing: 0 (default)
-    # - no printing, 1 - print info
+    """
+
+    This function creates a list of MM Hamiltonians and bind them to the corresponding systems
+    
+    Args:
+        syst ( list of ntraj System objects ): self-explanatory
+        ff ( ForceField object ): defines which force fields to construct for all systems
+        verbose ( int ): The parameter controlling the amount of debug printing: 
+
+            - 0: no printing [ default ]
+            - 1: do print info
+
+    Returns:
+        (list of ntraj Hamiltonian_Atomistic objects): the ensemble of the objects defining
+        the MM Hamiltonians that are also bound to the provided systems.
+
+    """
 
     ntraj = len(syst)
     ham = []
@@ -203,16 +245,24 @@ def init_mm_Hamiltonians(syst, ff, verbose=0):
 
 
 
+
 def init_mols(syst, ntraj, nnucl, verbose=0):
-    ##
-    # This function creates a list of Nuclear objects and initializes them by extracting info from the
-    # provided systems - in "syst"
-    # 
-    # \param[in] syst The list of chemsystem objects with the information about nuclear DOF
-    # \param[in] ntraj The number of trajectories in the ensemble
-    # \param[in] nnucl The number of nuclear DOF ( usually, = 3* Number_of_atoms)
-    # \param[in] verbose The parameter controlling the amount of debug printing: 0 (default)
-    # - no printing, 1 - print info
+    """
+
+    This function creates a list of Nuclear objects and initializes 
+    them by extracting info from the provided systems - in "syst"
+
+    Args:
+        ntraj ( int ): The number of trajectories in the ensemble
+        nnucl ( int ): The number of nuclear DOF ( usually, = 3* Number_of_atoms)
+        verbose ( int ): The parameter controlling the amount of debug printing: 
+
+            - 0: no printing [ default ]
+            - 1: do print info
+    Returns:
+        (list of ntraj Nuclear objects): mol: self-explanatory
+
+    """
 
     # Initialize nuclear variables
     mol = []
@@ -228,20 +278,26 @@ def init_mols(syst, ntraj, nnucl, verbose=0):
             for k in xrange(syst[i].Number_of_atoms):
                 print "mol[%d][%d]=%f,%f,%f"%(i,k,mol[i].q[3*k+0],mol[i].q[3*k+1],mol[i].q[3*k+2])
 
-    # Returned values:
-    # mol - the list of the "Nuclear" objects for given set of systems
     return mol
 
 
 def init_therms(ntraj, nnucl, params, verbose=0):
-    ##
-    # This function creates a list of Thermostat objects and initializes according to the given parameters
-    #
-    # \param[in] ntraj The number of trajectories in the ensemble
-    # \param[in] nnucl The number of nuclear DOF ( usually, = 3* Number_of_atoms)
-    # \param[in] verbose The parameter controlling the amount of debug printing: 0 (default)
-    # - no printing, 1 - print info
+    """
 
+    This function creates a list of Thermostat objects and initializes 
+    them according to given parameters
+
+    Args:
+        ntraj ( int ): The number of trajectories in the ensemble
+        nnucl ( int ): The number of nuclear DOF ( usually, = 3* Number_of_atoms)
+        verbose ( int ): The parameter controlling the amount of debug printing: 
+
+            - 0: no printing [ default ]
+            - 1: do print info
+    Returns:
+        (list of ntraj Thermostat objects): therm: self-explanatory
+
+    """
 
     # Initialize Thermostat object    
     therm = []
@@ -259,7 +315,5 @@ def init_therms(ntraj, nnucl, params, verbose=0):
     if verbose==1:
         print "therm =",therm 
 
-    # Returned values:
-    # therm - the list of thermostat objects
     return therm
 

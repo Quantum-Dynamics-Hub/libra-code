@@ -133,23 +133,17 @@ void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, b
   }
 
 
-  vector<int> t1(ndof, 0); for(int i=0;i<ndof;i++){  t1[i] = i; }
-  vector<int> t2(1,0);
-  vector<int> t3(2,0);
+//  vector<int> t1(ndof, 0); for(int i=0;i<ndof;i++){  t1[i] = i; }
+//  vector<int> t2(1,0);
+//  vector<int> t3(2,0);
 
-  CMATRIX Cadi(nadi,1); Cadi.set(act_state,0, 1.0,0.0);
-  MATRIX F(ndof, ntraj);
-  MATRIX f(ndof, 1);
+//  CMATRIX Cadi(nadi,1); Cadi.set(act_state,0, 1.0,0.0);
+//  MATRIX F(ndof, ntraj);
+//  MATRIX f(ndof, 1);
 
   
-  for(traj=0; traj<ntraj; traj++){
-    t2[0] = traj;  t3[1] = traj;
-    f = ham.forces_adi(Cadi, t3).real();
-    push_submatrix(F, f, t1, t2);
-  }
 
-
-  p = p + F * 0.5*dt;
+  p = p + ham.forces_adi(act_state).real() * 0.5 * dt;
 
   // For efficiency, switch to the element-wise multiplication
   for(traj=0; traj<ntraj; traj++){
@@ -176,16 +170,8 @@ void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, b
     exit(0);
   }
 
+  p = p + ham.forces_adi(act_state).real() * 0.5 * dt;
 
-
-
-  for(traj=0; traj<ntraj; traj++){
-    t2[0] = traj;  t3[1] = traj;
-    f = ham.forces_adi(Cadi, t3).real();
-    push_submatrix(F, f, t1, t2);
-  }
-
-  p = p + F * 0.5*dt;
 
 
 

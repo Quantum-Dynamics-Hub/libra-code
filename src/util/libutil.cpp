@@ -54,6 +54,10 @@ void export_util_objects(){
   void (*expt_split_line_v2)(std::string line,vector<std::string>& arr,char delim) = &split_line;
   def("split_line", expt_split_line_v1);  
   def("split_line", expt_split_line_v2);  
+
+
+  void (*expt_check_input_v1)(boost::python::dict params, boost::python::dict default_params, boost::python::list critical_params) = &check_input;
+  def("check_input", expt_check_input_v1);  
  
   //std::string int2str(int inp);
   //int find_section(vector<std::string>& A,std::string marker_beg,std::string marker_end,int min_line,int max_line,int& beg,int& end);
