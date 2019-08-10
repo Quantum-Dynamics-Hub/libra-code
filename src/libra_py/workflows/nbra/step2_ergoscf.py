@@ -214,7 +214,7 @@ def do_ovlp(i, params, run):
 
     """
     BEWARE: The following orbital ordering works only with the 
-    folllowing changes in the ErgoSCF code:
+    following changes in the ErgoSCF code:
 
     ergo_scripted.cc
     const int skip_sort_shells = 1;  /** AVA on 4/28/2019 */

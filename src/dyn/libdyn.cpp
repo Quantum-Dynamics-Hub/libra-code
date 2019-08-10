@@ -496,6 +496,12 @@ void export_Dyn_objects(){
   def("tsh1", expt_tsh1_v1);
 
 
+  void (*expt_tsh1b_v1)
+  (MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& states, nHamiltonian& ham,
+   bp::object py_funct, bp::object params,  boost::python::dict params1, Random& rnd) = &tsh1b;
+  def("tsh1b", expt_tsh1b_v1);
+
+
   void (*expt_tsh2_v1)
   (double dt, MATRIX& q, MATRIX& p, MATRIX& invM, vector<int>& act_states, nHamiltonian& ham,
    bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd) = &tsh2;

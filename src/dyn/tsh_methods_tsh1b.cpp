@@ -25,7 +25,7 @@ namespace libdyn{
 
 
 
-void tsh1(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
+void tsh1b(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
           nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd){
 
 /**
@@ -219,7 +219,12 @@ void tsh1(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_state
         }
 
 
-        ham.children[traj]->update_ordering(perm_t, 1);
+        //ham.children[traj]->update_ordering(perm_t, 1);
+
+        
+        // Switch the active states
+        act_states[traj] = perm_t[ act_states[traj] ];
+        
         
         el_stenc_y[0] = traj;
         CMATRIX x(ham.nadi, 1); 
@@ -265,7 +270,8 @@ void tsh1(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_state
 
 
   // Update the Ehrenfest forces for all trajectories
-  tsh_indx2vec(ham, states, act_states);
+  //tsh_indx2vec(ham, states, act_states);
+
   if(rep==0){  p = p + ham.Ehrenfest_forces_dia(states, 1).real() * 0.5*dt;  }
   else if(rep==1){  p = p + ham.Ehrenfest_forces_adi(states, 1).real() * 0.5*dt;  }  
 
@@ -305,7 +311,7 @@ void tsh1(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_state
 
   /// Compute the proposed multi-trajectory states
   //istates = tsh_vec2indx(states);  /// starting (non-phisical!) states
-  tsh_physical2internal(ham, istates, act_states);
+//  tsh_physical2internal(ham, istates, act_states);
 
 
   for(traj=0; traj<ntraj; traj++){
@@ -337,15 +343,15 @@ void tsh1(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_state
 
     /// Attempt to hop
     double ksi = rnd.uniform(0.0,1.0);  /// generate random number 
-    fstates[traj] = hop(istates[traj], g, ksi); /// Proposed hop
+    fstates[traj] = hop(act_states[traj], g, ksi); /// Proposed hop
   }// for traj
 
 
   // Hop acceptance/rejection - velocity rescaling
-  istates = apply_transition1(p, invM, ham, istates, fstates, vel_rescale_opt, do_reverse, 1); // non-physical states
+  act_states = apply_transition1(p, invM, ham, act_states, fstates, vel_rescale_opt, do_reverse, 1); // non-physical states
 
   // Convert from the internal indexing to the physical
-  tsh_internal2physical(ham, istates, act_states);
+  // tsh_internal2physical(ham, istates, act_states);
 
 
 /*

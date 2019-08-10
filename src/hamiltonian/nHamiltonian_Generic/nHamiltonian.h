@@ -224,6 +224,21 @@ public:
   int cum_phase_corr_mem_status;
 
 
+  /**     
+     All the computation control parameters 
+  **/
+  int eigen_algo;  ///< eigensolver algorithm used to convert diabatic to adiabatic basis 
+                   /// 0 - generalized eigensolver (may reorder states) [default]
+                   /// 1 - eigensolver without reordering (assumes diabatic basis is orthonormaly)
+
+  double phase_corr_ovlp_tol;  /// phase correction overlap tolerance, we only compute phase corrections 
+                               /// if the time overlaps are above (in magnitude) this value, otherwise
+                               /// we assume that uncommon state reordering (adiabatic state switching) 
+                               /// has happened (which may occur in the stochastic state tracking method)
+                               /// then, we don't apply the phase correction since it doesn't make sense
+
+
+
   /**
      
      All the basic methods: constructor, destructor, getters, setters, etc.
@@ -493,8 +508,12 @@ typedef std::vector<nHamiltonian> nHamiltonianList;  ///< data type for keeping 
 
 
 ///< In nHamiltonian_compute adiabatic
+CMATRIX compute_phase_corrections1(CMATRIX& S, double tol);
+CMATRIX compute_phase_corrections1(CMATRIX& U, CMATRIX& U_prev, double tol);
+
 CMATRIX compute_phase_corrections(CMATRIX& S);
 CMATRIX compute_phase_corrections(CMATRIX& U, CMATRIX& U_prev);
+
 
 
 ///< In nHamiltonian_compute_ETHD.cpp

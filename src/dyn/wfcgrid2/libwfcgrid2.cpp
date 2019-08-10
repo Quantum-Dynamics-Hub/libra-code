@@ -120,6 +120,14 @@ void export_Wfcgrid2_objects(){
 
       .def("imap", &Wfcgrid2::imap)
 
+      /**  Wfcgrid2_direct    */
+      .def("direct_allocate_tmp_vars", &Wfcgrid2::direct_allocate_tmp_vars)
+      .def("direct_propagate_adi2", &Wfcgrid2::direct_propagate_adi2)
+      .def("direct_propagate_adi1", &Wfcgrid2::direct_propagate_adi1)
+      .def("direct_propagate_dia2", &Wfcgrid2::direct_propagate_dia2)
+      .def("direct_propagate_dia1", &Wfcgrid2::direct_propagate_dia1)
+
+
       /**  Wfcgrid2_initialize    */
       .def("add_wfc_Gau", expt_add_wfc_Gau_v1)
       .def("add_wfc_HO", expt_add_wfc_HO_v1)

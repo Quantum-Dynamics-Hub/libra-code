@@ -195,7 +195,8 @@ vector<int> get_stochastic_reordering(CMATRIX& time_overlap, Random& rnd){
     vector<int> used;  // already utilized options
     MATRIX g(1, sz);   // switching probabilities
 
-    for(i=0;i<sz-1;i++){ // all starting states (at time t)
+    // was sz - 1 - not sure why
+    for(i=0;i<sz;i++){ // all starting states (at time t)
 
         // Make a list of the states that can still participate
         // in the reordering
@@ -206,37 +207,28 @@ vector<int> get_stochastic_reordering(CMATRIX& time_overlap, Random& rnd){
         }
 
 
-        if(sz-i>1){
+        int act_st_sz = active_states.size(); // should be equal to sz - i
+
+        if(act_st_sz > 1){
  
-            MATRIX g(1,sz-i);
-            for(j=0;j<sz-i;j++){ // all target states
+            MATRIX g(1, act_st_sz);
+            for(j=0; j<act_st_sz; j++){ // all target states
 
                 int indx = active_states[j];
                 g.set(0,j, (S.get(i,indx)*std::conj(S.get(i,indx))).real() );
             }
  
-            /*
-            // Exclude those which we have already assigned
-            if(is_in_vector(j,used)){   
-                g.set(0,j, 0.0); 
-            }
-
-            // For others - compute probabilities. Note: the probabilities will
-            // be normalized in the hop function, so at this point we only need the
-            // relative magnitudes
-            else{  
-                g.set(0,j, (S.get(i,j)*std::conj(S.get(i,j))).real() );      
-            }
-            */
-
-        //}// for j
-
             // Now stochastically determine the states re-assignment
             double ksi = rnd.uniform(0.0, 1.0);
+
             target = hop(0, g, ksi);    // internal (active states') state index
+            if(target > act_st_sz-1){
+                cout<<"ERROR: target = "<<target<<" is larger than max possible value = "<<act_st_sz-1<<endl;
+                exit(0);
+            }
             target = active_states[target]; // actual state index
         }
-        else if(sz-i==1){
+        else if(act_st_sz == 1){
             target = active_states[0];
         }
 

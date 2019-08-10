@@ -66,7 +66,7 @@ double Wfcgrid2::e_kin(vector<double>& mass, int rep){
   
 */
   int idof, ipt;
-  double k, kfactor;
+  double k, kfactor, kfactor2;
   double res; res = 0.0;
   double nrm; nrm = 0.0;
 
@@ -88,9 +88,23 @@ double Wfcgrid2::e_kin(vector<double>& mass, int rep){
     else if(rep==1){
       res += kfactor * (reciPSI_adi[npt1].H() * reciPSI_adi[npt1]).get(0,0).real();
       nrm += (PSI_adi[npt1].H() * PSI_adi[npt1]).get(0,0).real();
+
     }
 
   }// for npt1
+
+
+/*
+      kfactor2 = 0.0;  
+
+      for(idof=0; idof<ndof; idof++){
+        ipt = gmap[npt1][idof];
+        k = kgrid[idof]->get(ipt);
+        kfactor2 += k*NAC1[npt1][idof]/mass[idof];
+      } 
+*/
+
+
 
   for(idof=0; idof<ndof; idof++){
     res *= dk[idof];

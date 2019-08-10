@@ -212,6 +212,7 @@ def reflection(case):
         U.yx = 0.0; U.yy = 1.0; U.yz = 0.0;
         U.zx = 0.0; U.zy = 0.0; U.zz = 1.0;
 
+
     elif case==1:
         # x - > -x, y -> y, z -> z
         U.xx =-1.0; U.xy = 0.0; U.xz = 0.0;
@@ -230,6 +231,7 @@ def reflection(case):
         U.yx = 0.0; U.yy = 1.0; U.yz = 0.0;
         U.zx = 0.0; U.zy = 0.0; U.zz =-1.0;
 
+
     elif case==4:
         # x - > -x, y -> -y, z -> z
         U.xx =-1.0; U.xy = 0.0; U.xz = 0.0;
@@ -247,6 +249,7 @@ def reflection(case):
         U.xx = 1.0; U.xy = 0.0; U.xz = 0.0;
         U.yx = 0.0; U.yy =-1.0; U.yz = 0.0;
         U.zx = 0.0; U.zy = 0.0; U.zz =-1.0;
+
 
     elif case==7:
         # x - > -x, y -> -y, z -> -z
@@ -367,6 +370,8 @@ def remove_rotation(S0, S1, verbose=0):
 
     Q0 = QUATERNION()
     Q1 = QUATERNION()
+    Q2 = QUATERNION()
+    U = MATRIX3x3()
 
     MATRIX_TO_QUATERNION(S0.Fragments[0].Group_RB.rb_A_I_to_e, Q0);
     MATRIX_TO_QUATERNION(S1.Fragments[0].Group_RB.rb_A_I_to_e, Q1);
@@ -388,24 +393,64 @@ def remove_rotation(S0, S1, verbose=0):
         mes = []
         indices = []
 
-#        for i in xrange(0,8):            # reflections
-#            for j in xrange(0,6):        # permutations
-        for i in [0]:            # reflections
-            for j in [0]:        # permutations
+        for i in xrange(0,8):            # reflections
+            for j in xrange(0,6):        # permutations
+#        for i in [0]:            # reflections
+#            for j in [0]:        # permutations
 
-    
+
+                #Q2 = Q0 * Q1.inverse()
+                #QUATERNION_TO_MATRIX(Q2, U);
+
+
                 P = reflection(i) * permutation2(j)  # reflection(i) *
                 #P = permutation2(j) * reflection(i)
                 A1 = S1.Fragments[0].Group_RB.rb_A_I_to_e * P    
-                U = S0.Fragments[0].Group_RB.rb_A_I_to_e * A1.inverse()
+                U = S0.Fragments[0].Group_RB.rb_A_I_to_e * A1.T() #A1.inverse()
+
+                """
+                dU = A1
+                print "%8.5f  %8.5f  %8.5f " % (dU.xx, dU.xy, dU.xz)
+                print "%8.5f  %8.5f  %8.5f " % (dU.yx, dU.yy, dU.yz)
+                print "%8.5f  %8.5f  %8.5f " % (dU.zx, dU.zy, dU.zz)
+
+                dU = S0.Fragments[0].Group_RB.rb_A_I_to_e
+                print "%8.5f  %8.5f  %8.5f " % (dU.xx, dU.xy, dU.xz)
+                print "%8.5f  %8.5f  %8.5f " % (dU.yx, dU.yy, dU.yz)
+                print "%8.5f  %8.5f  %8.5f " % (dU.zx, dU.zy, dU.zz)
+
+                dU = S0.Fragments[0].Group_RB.rb_A_I_to_e * S0.Fragments[0].Group_RB.rb_A_I_to_e_T
+                print "%8.5f  %8.5f  %8.5f " % (dU.xx, dU.xy, dU.xz)
+                print "%8.5f  %8.5f  %8.5f " % (dU.yx, dU.yy, dU.yz)
+                print "%8.5f  %8.5f  %8.5f " % (dU.zx, dU.zy, dU.zz)
+
+                dU = A1 * A1.T()
+                print "%8.5f  %8.5f  %8.5f " % (dU.xx, dU.xy, dU.xz)
+                print "%8.5f  %8.5f  %8.5f " % (dU.yx, dU.yy, dU.yz)
+                print "%8.5f  %8.5f  %8.5f " % (dU.zx, dU.zy, dU.zz)
+
+                dU = (U*U.T() - I)
+                print "%8.5f  %8.5f  %8.5f " % (dU.xx, dU.xy, dU.xz)
+                print "%8.5f  %8.5f  %8.5f " % (dU.yx, dU.yy, dU.yz)
+                print "%8.5f  %8.5f  %8.5f " % (dU.zx, dU.zy, dU.zz)
+
+                print "%8.5f  %8.5f  %8.5f " % (U.xx, U.xy, U.xz)
+                print "%8.5f  %8.5f  %8.5f " % (U.yx, U.yy, U.yz)
+                print "%8.5f  %8.5f  %8.5f " % (U.zx, U.zy, U.zz)
+                """
+
 
                 if math.fabs(U.Determinant()) < 1e-10:
                     print "WARNING: 1) Problems with inversion: ", U.Determinant()
                     sys.exit(0)
 
                 dU = (U*U.T() - I)
-                if (dU * dU.T()).tr() > 1e-3:
+                if (dU * dU.T()).tr() > 1e-10:
                     print "WARNING: 2) Problems with inversion: ", (dU * dU.T()).tr()
+                    print "%8.5f  %8.5f  %8.5f " % (dU.xx, dU.xy, dU.xz)
+                    print "%8.5f  %8.5f  %8.5f " % (dU.yx, dU.yy, dU.yz)
+                    print "%8.5f  %8.5f  %8.5f " % (dU.zx, dU.zy, dU.zz)
+
                     sys.exit(0)
 
                 s = System(S1)
@@ -440,12 +485,16 @@ def remove_rotation(S0, S1, verbose=0):
 
         if verbose > 0:
             print "Selected transformation = ", mes_indx, indices[mes_indx]
-    
+
+        #QUATERNION_TO_MATRIX(Q2, U);
+
         # Apply the rotation with the correct permutation    
         P = reflection(indices[mes_indx][0]) * permutation2(indices[mes_indx][1])   
         #P = permutation2(indices[mes_indx][1]) * reflection(indices[mes_indx][0])    
         A1 = S1.Fragments[0].Group_RB.rb_A_I_to_e * P    
-        U = S0.Fragments[0].Group_RB.rb_A_I_to_e * A1.inverse()
+        U = S0.Fragments[0].Group_RB.rb_A_I_to_e * A1.T()  #A1.inverse()
+
+
         S1.ROTATE_FRAGMENT(U, 1)
 
         if verbose > 0:

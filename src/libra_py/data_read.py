@@ -255,3 +255,38 @@ def get_data_from_file(filename, xindx, yindx, xminval=None, xmaxval=None, yminv
     return X, Y
 
 
+
+
+def get_data_from_file2(filename, cols):
+    """Read in the numeric data stored in a file as columns into Python lists
+
+    Args:
+        filename ( string ): The name of the data file
+        cols ( list of ints ): the indices of the columns to read
+
+    Returns:
+        (list of lists): data
+
+    """
+
+    f = open(filename,"r")
+    A = f.readlines()
+    f.close()
+
+    sz = len(cols)
+    res = []
+    for i in xrange(sz):
+        res.append([])
+
+    for a in A:
+        tmp = a.split()
+
+        for i in xrange(sz):
+
+            x = float(tmp[ cols[i] ])
+            res[i].append(x)
+
+    return res
+
+
+

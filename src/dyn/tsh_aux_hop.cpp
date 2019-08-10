@@ -230,12 +230,18 @@ int hop(int initstate, MATRIX& g, double ksi){
   double nrm = 0.0;
   for(i=0;i<nstates;i++){  nrm += g.get(initstate, i);  }
 
-  for(i=0;i<nstates;i++){
-    if(i==0){left = 0.0; right = g.get(initstate,i)/nrm; }
-    else{  left = right; right = right + g.get(initstate,i)/nrm; }
- 
-    if((left<=ksi) && (ksi<=right)){  finstate = i;  }
+  if(nrm>0.0){
+
+      for(i=0;i<nstates;i++){    
+          if(i==0){left = 0.0; right = g.get(initstate,i)/nrm; }
+          else{  left = right; right = right + g.get(initstate,i)/nrm; }
+
+         if((left<=ksi) && (ksi<=right)){  finstate = i;  }    
+      }
+
   }
+  else{  finstate = initstate; }  // probability to hop to any other states is zero
+                                  // so stay on the original state
 
   if(finstate==-1){
     std::cout<<"Something is wrong in the hop(...) function\nExiting now...\n";

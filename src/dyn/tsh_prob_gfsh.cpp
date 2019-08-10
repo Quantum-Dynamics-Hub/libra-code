@@ -96,10 +96,12 @@ MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX* Hvib, double 
         if(a[i]<1e-12){  g.set(i,j,0.0); }  // since the initial population is almost zero, so no need for hops
         else{
 
-          g.set(i,j,  dt*(a_dot[j]/a[i]) * a_dot[i] / norm);  
+          if( fabs(norm) > 1e-12 ){
+            g.set(i,j,  dt*(a_dot[j]/a[i]) * a_dot[i] / norm);  
+          }
  
           if(g.get(i,j)<0.0){  // since norm is negative, than this condition means that a_dot[i] and a_dot[j] have same signs
-                                // which is bad - so no transitions are assigned
+                               // which is bad - so no transitions are assigned
             g.set(i,j,0.0);
           }
           else{  // here we have opposite signs of a_dot[i] and a_dot[j], but this is not enough yet
@@ -127,6 +129,8 @@ MATRIX compute_hopping_probabilities_gfsh(CMATRIX& Coeff, CMATRIX* Hvib, double 
     }// for j
 
     g.set(i,i, 1.0 - sumg);  // probability to stay in state i
+
+    if(g.get(i,i)<0.0){  g.set(i,i, 0.0); }
 
   }// for i
 

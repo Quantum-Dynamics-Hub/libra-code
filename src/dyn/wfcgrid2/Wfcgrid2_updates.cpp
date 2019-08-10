@@ -34,7 +34,7 @@ void Wfcgrid2::update_Hamiltonian(bp::object py_funct, bp::object params, int re
   \param[in] py_funct the Python function to be called to compute the Hamiltonian matrix
   in a given representation
   \param[in] params the parameters fed into the Python function that performs the calculations
-  \param[in] rep representation to use: 0 - diabatic, 1 - adiabatic
+  \param[in] rep representation: 0 - diabatic, 1 - adiabatic
 
   This function recomputes the Hamiltonian for all points
   working in atomic units: hbar = 1
@@ -57,35 +57,32 @@ void Wfcgrid2::update_Hamiltonian(bp::object py_funct, bp::object params, int re
     // Call the Python function with such arguments
     bp::object obj = py_funct(bp::object(q), params);  
 
+
     if(rep==0){
 
       // Try to extract the diabatic Hamiltonian
       has_attr = (int)hasattr(obj,"ham_dia");
-      if(has_attr){
-        Hdia[npt1] = extract<CMATRIX>(obj.attr("ham_dia")); 
-      } 
-      else{
-        cout<<"ERROR in Wfcgrid2::update_Hamiltonian: The object returned by Python function should have \"ham_dia\" attribute of the CMATRIX type\n";
-        cout<<"Exiting now...\n";
-        exit(0);
-      }
+      if(has_attr){  Hdia[npt1] = extract<CMATRIX>(obj.attr("ham_dia"));    } 
 
     }// rep == 0
 
     else if(rep==1){
 
-      // Try to extract the diabatic Hamiltonian
+      // Try extract the adiabatic Hamiltonian
       has_attr = (int)hasattr(obj,"ham_adi");
+      if(has_attr){   Hadi[npt1] = extract<CMATRIX>(obj.attr("ham_adi"));    } 
+
+      // Try extract the derivative couplings in adiabatic representation
+      has_attr = (int)hasattr(obj,"dc1_adi");        
       if(has_attr){
-        Hadi[npt1] = extract<CMATRIX>(obj.attr("ham_adi")); 
-      } 
-      else{
-        cout<<"ERROR in Wfcgrid2::update_Hamiltonian: The object returned by Python function should have \"ham_adi\" attribute of the CMATRIX type\n";
-        cout<<"Exiting now...\n";
-        exit(0);
+        vector<CMATRIX> _dc1_adi(ndof, CMATRIX(nstates,nstates));
+        _dc1_adi = extract<CMATRIXList>(obj.attr("dc1_adi"));    
+
+        for(idof=0; idof<ndof; idof++){  NAC1[npt1][idof] = _dc1_adi[idof];  }
       }
 
     }// rep == 1
+
 
   }// for allgrid points
 

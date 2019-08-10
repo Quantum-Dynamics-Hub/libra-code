@@ -45,7 +45,7 @@ void nHamiltonian::update_ordering(vector<int>& perm_t, int lvl){
     //ordering_adi[0] = perm_t;
 
 
-    
+
     // Apply the re-ordering to all the underlying properties:
     if(basis_transform_mem_status){
       basis_transform->permute_cols(perm_t);
@@ -87,7 +87,6 @@ void nHamiltonian::update_ordering(vector<int>& perm_t, int lvl){
         d2ham_adi[i]->permute_rows(perm_t);
       }
     }
-
 
 
   }// level==lvl
@@ -216,7 +215,7 @@ void nHamiltonian::apply_phase_corrections(CMATRIX& phase_corr){
 }
 
 
-CMATRIX compute_phase_corrections(CMATRIX& S){
+CMATRIX compute_phase_corrections1(CMATRIX& S, double tol){
 /**
   Compute the phase correction of one set of eigenvectors (new) with respect to 
   another one (reference).
@@ -247,7 +246,10 @@ CMATRIX compute_phase_corrections(CMATRIX& S){
     f = S.get(i,i);
     double af = sqrt( std::norm(f) );
 
-    if(af > 0.0){   phase_corr.set(i, 0, f / af);     }
+    // If the overlap is very small, it means we might have switched
+    // the state adiabatically, in which case the phase correction does 
+    // not make sense
+    if(af > 1e-3){   phase_corr.set(i, 0, f / af);     }
 
   }// for i
 
@@ -255,8 +257,13 @@ CMATRIX compute_phase_corrections(CMATRIX& S){
 
 }
 
+CMATRIX compute_phase_corrections(CMATRIX& S){
 
-CMATRIX compute_phase_corrections(CMATRIX& U, CMATRIX& U_prev){
+  return compute_phase_corrections1(S, 1e-3);
+}
+
+
+CMATRIX compute_phase_corrections1(CMATRIX& U, CMATRIX& U_prev, double tol){
 /**
   Compute the cumulative phase correction of one set of eigenvectors with respect to 
   the previous one (that may be already phase-corrected).
@@ -290,13 +297,19 @@ CMATRIX compute_phase_corrections(CMATRIX& U, CMATRIX& U_prev){
     f = (U_prev.col(i).H() * U.col(i) ).get(0);
     double af = std::norm(f);
 
-    if(af > 0.0){   phase_corr.set(i, 0, f / af);        }
+    if(af > tol){   phase_corr.set(i, 0, f / af);        }
 
 //    cout<<"In compute_phase_corrections.. i = "<<i<<" f= "<<f<<" af = "<<af<<" phase_corr = "<<phase_corr.get(i)<<endl;
 
   }// for i
 
   return phase_corr;
+
+}
+
+CMATRIX compute_phase_corrections(CMATRIX& U, CMATRIX& U_prev){
+
+  return compute_phase_corrections1(U, U_prev, 1e-3);
 
 }
 
@@ -326,13 +339,13 @@ CMATRIX nHamiltonian::update_phases(CMATRIX& U_prev, int lvl){
     *cum_phase_corr_prev = *cum_phase_corr;
   
     // Compute cumulative phase corrections
-    *cum_phase_corr = compute_phase_corrections(*basis_transform, U_prev);
+    *cum_phase_corr = compute_phase_corrections1(*basis_transform, U_prev, phase_corr_ovlp_tol);
 
     // Update the wavefunction and wavefunction-dependent properties with 
     // the new phase corrections    
     apply_phase_corrections(cum_phase_corr, lvl);
 
-    // Compute the phase corrction to the evolving amplitudes
+    // Compute the phase correction to the evolving amplitudes
     CMATRIX ampl_corr(nadi, 1);
 
     for(int i=0;i<nadi; i++){
@@ -425,8 +438,12 @@ void nHamiltonian::compute_adiabatic(int der_lvl, int lvl){
       basis_transform->set(0,0, 1.0, 0.0);
     }
     else{   
-      solve_eigen(ham_dia, ovlp_dia, ham_adi, basis_transform, 0);  
-//      if(ndia == nadi){      correct_phase(basis_transform);    }
+      if(eigen_algo==0){
+          solve_eigen(ham_dia, ovlp_dia, ham_adi, basis_transform, 0);  
+      }
+      else if(eigen_algo==1){
+          solve_eigen_nosort(ham_dia, ham_adi, basis_transform, 0);       ///< references
+      }
     }
 
     if(der_lvl>=1){

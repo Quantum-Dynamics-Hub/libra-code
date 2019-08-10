@@ -61,6 +61,11 @@ class Wfcgrid2{
 
   //void print_complex_matrix_1D(CMATRIX& CM, std::string filename);
 
+  /// For direct integrator:
+  vector<CMATRIX> PSI_dia_past;      ///< wavefunction at time t-dt:    list of Npts matrices  nstates x 1
+  vector<CMATRIX> PSI_adi_past;      ///< wavefunction at time t-dt:    list of Npts matrices  nstates x 1
+
+
 public:
 
   // ndof-D Grid
@@ -107,6 +112,7 @@ public:
   vector<CMATRIX> reciPSI_adi;   ///< same as PSI but in Fourier (reciprocal) space with 1.0*kmin 
 
 
+
 /*
   vector<CMATRIX> DtreciPSI; ///< d/dt * reciPSI - time derivative of PSI in reciprocal space 
   vector<CMATRIX> DxPSI;     ///< d/dx * PSI in real space (up to a factor) - nstates x Nx x Ny
@@ -118,6 +124,8 @@ public:
   /// Hamiltonian and Propagator
   vector<CMATRIX> Hdia;      ///<  diabatic Hamiltoninans for all the Npts points
   vector<CMATRIX> Hadi;      ///<  adiabatic Hamiltoninans for all the Npts points
+  vector< vector<CMATRIX> > NAC1;  ///<  1-st order NACS: NAC1[ipt][alpha].get(i,j) = <psi_i| nabla_alpha | psi_j> 
+  vector< vector<CMATRIX> > NAC2;  ///<  2-nd order NACS: NAC2[ipt][alpha].get(i,j) = <psi_i| nabla_alpha^2 | psi_j> 
   vector<CMATRIX> U;         ///<  |adi> = |dia> * U : diabatic-to-adiabatic transformation for all the Npts points
   vector<CMATRIX> expH;      ///<  exponent of the diabatic Hamiltoninans for all the Npts points
   vector<CMATRIX> expK;      ///<  exponent of the kinetik energy propagator for all the Npts points
@@ -126,6 +134,15 @@ public:
   ///=============== In the Wfcgrid2.cpp ====================
   ///< Grid constructor
   Wfcgrid2(vector<double>& rmin_, vector<double>& rmax_, vector<double>& dr_, int nstates_); ///< constructor for n-D wavefunction
+
+
+  ///=============== In the Wfcgrid2_direct.cpp ====================
+  void direct_allocate_tmp_vars(double rep);
+  void direct_propagate_adi2(double dt, vector<double>& mass);
+  void direct_propagate_adi1(double dt, vector<double>& mass);
+  void direct_propagate_dia2(double dt, vector<double>& mass);
+  void direct_propagate_dia1(double dt, vector<double>& mass);
+
 
 
   ///=============== In the Wfcgrid2_initialize.cpp ====================

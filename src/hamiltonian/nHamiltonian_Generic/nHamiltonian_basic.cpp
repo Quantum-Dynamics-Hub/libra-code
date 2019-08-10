@@ -82,6 +82,10 @@ nHamiltonian::nHamiltonian(int ndia_, int nadi_, int nnucl_){
   cum_phase_corr = NULL;       cum_phase_corr_mem_status = 0;
 
 
+  /**  Control parameters  */
+  eigen_algo = 0;
+
+
   ndia = ndia_;                   
   nadi = nadi_;
   nnucl = nnucl_;

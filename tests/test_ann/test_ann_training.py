@@ -32,29 +32,38 @@ p1.Derivs = [ 0.0,0.0 ]
 print p1
 
 p2 = patt()
-p2.Input = [1,0]
-p2.Output = [0]
+p2.Input = [0.5,0.0]
+p2.Output = [0.0]
 p2.Derivs = [ 0.0,0.0 ]
 print p2
 
 p3 = patt()
-p3.Input = [0,1]
-p3.Output = [0]
+p3.Input = [0.0,0.5]
+p3.Output = [0.0]
 p3.Derivs = [ 0.0,0.0 ]
 print p3
 
 p4 = patt()
-p4.Input = [1,1]
-p4.Output = [1]
+p4.Input = [0.5,0.5]
+p4.Output = [0.5]
 p4.Derivs = [ 0.0,0.0 ]
 print p4
 
-training_set = [ p1,p2,p3,p4 ]
+training_set = [ p1,p4] # p2,p3,p4 ]
 
+
+num_of_patterns = 4
+epoch_size = 4
+rperm = intList()
+for i in xrange(10):
+    randperm(epoch_size,num_of_patterns,rperm)
+    print Cpp2Py(rperm)
+
+#sys.exit(0)
 
 print "\nTest 1: Running setup from other test..."
 ANN = NeuralNetwork()
-ANN.CreateANN([2,2,1])
+ANN.CreateANN([2, 2, 2, 1])
 
 
 #print ANN.B
@@ -64,10 +73,11 @@ ANN.CreateANN([2,2,1])
 #sys.exit()
 
 ANN.SetTrainingData(training_set,1)  # 0 - means we don't really use info about derivatives, 1 - we use it, but we have to use 1
-ANN.NormalizeAndScaleTrainingData(1,1,[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5])
+#ANN.NormalizeAndScaleTrainingData(1,1,[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5])
 #ANN.NormalizeAndTransformTrainingData(1,1)
-#ANN.ScaleTrainingData(1,1)
+ANN.ScaleTrainingData(1,1)
 
+#sys.exit()
 
 print "\nTest2: Now set configuration"
 print "class ann_config_class():"
@@ -82,13 +92,14 @@ class ann_config_class():
 ann_config = ann_config_class()
 ann_config.learning_method = "BackProp"  # all options: RProp, BackProp, QuickProp, ConjGradProp
 ann_config.learning_rate = 0.01
-ann_config.epoch_size = 1
-ann_config.momentum_term = 0.05
+ann_config.epoch_size = 2
+ann_config.momentum_term = 0.0
 ann_config.grad_weight = 0.0
 ann_config.norm_exp = 0.5
-ann_config.iterations_in_cycle = 10000
+ann_config.iterations_in_cycle = 1000
 ANN.set(ann_config)
 
+#sys.exit()
 
 print "\nTest3: Start training process"
 print" ANN.ANNTrain()"
@@ -101,7 +112,7 @@ print "Each list contains 5 elements: the instantaneous error for given channel,
 ANN.LearningHistory("hist.txt","original")
 
 print "\nTest5: Continue training in loop"
-for i in range(0,25):
+for i in range(0,50):
     ANN.ANNTrain()
     ANN.LearningHistory("hist1.txt","original")
     ANN.ExportANN("ann"+str(i))    

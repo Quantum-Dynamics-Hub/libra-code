@@ -261,6 +261,10 @@ void export_nhamiltonian_generic_objects(){
       .def_readwrite("nadi", &nHamiltonian::nadi)
       .def_readwrite("nnucl", &nHamiltonian::nnucl)
 
+      .def_readwrite("eigen_algo", &nHamiltonian::eigen_algo)
+      .def_readwrite("phase_corr_ovlp_tol", &nHamiltonian::phase_corr_ovlp_tol)
+
+
       .def("set_levels", &nHamiltonian::set_levels)
       .def("add_child", &nHamiltonian::add_child)
       .def("get_full_id", &nHamiltonian::get_full_id)
@@ -463,12 +467,17 @@ void export_nhamiltonian_generic_objects(){
 
 
 
-  CMATRIX (*expt_compute_phase_corrections_v1)
-  (CMATRIX& S) = &compute_phase_corrections;
-  CMATRIX (*expt_compute_phase_corrections_v2)
-  (CMATRIX& U, CMATRIX& U_prev) = &compute_phase_corrections;
+  CMATRIX (*expt_compute_phase_corrections1_v1)(CMATRIX& S, double tol) = &compute_phase_corrections1;
+  CMATRIX (*expt_compute_phase_corrections1_v2)(CMATRIX& U, CMATRIX& U_prev, double tol) = &compute_phase_corrections1;
+
+  CMATRIX (*expt_compute_phase_corrections_v1)(CMATRIX& S) = &compute_phase_corrections;
+  CMATRIX (*expt_compute_phase_corrections_v2)(CMATRIX& U, CMATRIX& U_prev) = &compute_phase_corrections;
+
+  def("compute_phase_corrections1", expt_compute_phase_corrections1_v1);
+  def("compute_phase_corrections1", expt_compute_phase_corrections1_v2);
   def("compute_phase_corrections", expt_compute_phase_corrections_v1);
   def("compute_phase_corrections", expt_compute_phase_corrections_v2);
+
 
 
   double (*expt_ETHD_energy_v1)(const MATRIX& q, const MATRIX& invM) = &ETHD_energy;
