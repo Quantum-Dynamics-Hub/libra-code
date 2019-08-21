@@ -61,8 +61,8 @@ def decoherence_times2rates(tau):
     nstates = tau.num_of_cols
     decoh_rates = MATRIX(nstates, nstates)
 
-    for i in xrange(nstates):
-        for j in xrange(nstates):
+    for i in range(0,nstates):
+        for j in range(0,nstates):
             if i==j:
                 decoh_rates.set(i,i, 0.0)
             else:
@@ -91,11 +91,11 @@ def energy_gaps(Hvib):
     nstates = Hvib[0].num_of_cols
     
     dE = []
-    for step in xrange(0, nsteps):
+    for step in range(0, nsteps):
         dEij = MATRIX(nstates, nstates)
 
-        for i in xrange(nstates):
-            for j in xrange(i+1, nstates):
+        for i in range(0,nstates):
+            for j in range(i+1, nstates):
 
                 deij = math.fabs(Hvib[step].get(i,i).real - Hvib[step].get(j,j).real)
                 dEij.set(i,j, deij)
@@ -134,15 +134,15 @@ def energy_gaps_ave(Hvib, itimes, nsteps):
     nstates = Hvib[0][0].num_of_cols
     
     dE = []
-    for step in xrange(0, nsteps):
+    for step in range(0, nsteps):
         dEij = MATRIX(nstates, nstates)
 
-        for i in xrange(nstates):
-            for j in xrange(i+1, nstates):
+        for i in range(0,nstates):
+            for j in range(i+1, nstates):
 
                 deij = 0.0
-                for idata in xrange(ndata):
-                    for it_indx in xrange(nitimes): 
+                for idata in range(0, ndata):
+                    for it_indx in range(0, nitimes): 
                         it = itimes[it_indx]
 
                         deij = deij + math.fabs(Hvib[idata][it+step].get(i,i).real - Hvib[idata][it+step].get(j,j).real)
@@ -188,8 +188,8 @@ def decoherence_times(Hvib, verbosity=0):
     nstates = Hvib[0].num_of_cols
     decoh_times = MATRIX(nstates, nstates)
 
-    for a in xrange(nstates):
-        for b in xrange(nstates):
+    for a in range(0,nstates):
+        for b in range(0,nstates):
             if a==b:
                 decoh_times.set(a,a, 1.0e+10)
             else:
@@ -201,14 +201,14 @@ def decoherence_times(Hvib, verbosity=0):
     decoh_rates = decoherence_times2rates(decoh_times)
 
     if verbosity>0:
-        print "Decoherence times matrix (a.u. of time):"
+        print("Decoherence times matrix (a.u. of time):")
         decoh_times.show_matrix()
 
-        print "Decoherence times matrix (fs):"
+        print("Decoherence times matrix (fs):")
         tmp = decoh_times * units.au2fs
         tmp.show_matrix()
 
-        print "Decoherence rates matrix (a.u.^-1):"
+        print("Decoherence rates matrix (a.u.^-1):")
         decoh_rates.show_matrix()
 
     return decoh_times, decoh_rates
@@ -258,8 +258,8 @@ def decoherence_times_ave_old(Hvib, itimes, nsteps, verbosity=0):
     nstates = Hvib[0][0].num_of_cols
     decoh_times = MATRIX(nstates, nstates)   
 
-    for a in xrange(nstates):
-        for b in xrange(nstates):
+    for a in range(0,nstates):
+        for b in range(0,nstates):
             if a==b:
                 decoh_times.set(a,a, 1.0e+10)
             else:
@@ -271,14 +271,14 @@ def decoherence_times_ave_old(Hvib, itimes, nsteps, verbosity=0):
     decoh_rates = decoherence_times2rates(decoh_times)
 
     if verbosity>0:
-        print "Decoherence times matrix (a.u. of time):"
+        print("Decoherence times matrix (a.u. of time):")
         decoh_times.show_matrix()
 
-        print "Decoherence times matrix (fs):"
+        print("Decoherence times matrix (fs):")
         tmp = decoh_times * units.au2fs
         tmp.show_matrix()
 
-        print "Decoherence rates matrix (a.u.^-1):"
+        print("Decoherence rates matrix (a.u.^-1):")
         decoh_rates.show_matrix()
 
     return decoh_times, decoh_rates
@@ -329,17 +329,17 @@ def decoherence_times_ave(Hvib, itimes, nsteps, verbosity=0):
 
     # Compute a concatenated list of gap magnitudes for all sub-trajectories    
     dE = []
-    for idata in xrange(ndata):
-        for it_indx in xrange(nitimes):
+    for idata in range(0,ndata):
+        for it_indx in range(0,nitimes):
             it = itimes[it_indx]
 
             #========== Fluctuations for a given sub-trajectory ===========
             de = []
-            for step in xrange(nsteps):
+            for step in range(0,nsteps):
                 dEij = MATRIX(nstates, nstates)
 
-                for i in xrange(nstates):
-                    for j in xrange(i+1, nstates):
+                for i in range(0,nstates):
+                    for j in range(i+1, nstates):
 
                         deij = math.fabs(Hvib[idata][it+step].get(i,i).real - Hvib[idata][it+step].get(j,j).real)
                         dEij.set(i,j, deij)
@@ -352,7 +352,7 @@ def decoherence_times_ave(Hvib, itimes, nsteps, verbosity=0):
             dE_ave, dE_std, dE_dw_bound, dE_up_bound = data_stat.mat_stat(de)
 
             #============== Subtract the sub-trajectory-specific average =============
-            for step in xrange(nsteps):
+            for step in range(0,nsteps):
                 dE.append( de[step] - dE_ave)
 
 
@@ -364,8 +364,8 @@ def decoherence_times_ave(Hvib, itimes, nsteps, verbosity=0):
 
     decoh_times = MATRIX(nstates, nstates)   
 
-    for a in xrange(nstates):
-        for b in xrange(nstates):
+    for a in range(0,nstates):
+        for b in range(0, nstates):
             if a==b:
                 decoh_times.set(a,a, 1.0e+10)
             else:
@@ -377,14 +377,14 @@ def decoherence_times_ave(Hvib, itimes, nsteps, verbosity=0):
     decoh_rates = decoherence_times2rates(decoh_times)
 
     if verbosity>0:
-        print "Decoherence times matrix (a.u. of time):"
+        print("Decoherence times matrix (a.u. of time):")
         decoh_times.show_matrix()
 
-        print "Decoherence times matrix (fs):"
+        print("Decoherence times matrix (fs):")
         tmp = decoh_times * units.au2fs
         tmp.show_matrix()
 
-        print "Decoherence rates matrix (a.u.^-1):"
+        print("Decoherence rates matrix (a.u.^-1):")
         decoh_rates.show_matrix()
 
     return decoh_times, decoh_rates

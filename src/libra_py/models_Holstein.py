@@ -24,9 +24,8 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-#import common_utils as comn
 import util.libutil as comn
-import units
+from . import units
 
 
 class tmp:
@@ -80,13 +79,13 @@ def Holstein_uncoupled(q, params):
     obj.d1ham_dia = CMATRIXList()
     obj.dc1_dia = CMATRIXList()
 
-    for i in xrange(N):
+    for i in range(0,N):
         obj.d1ham_dia.append( CMATRIX(N,N) )
         obj.dc1_dia.append( CMATRIX(N,N) )
 
 
     #=========== Energies & Derivatives ===============
-    for i in xrange(N-1):
+    for i in range(0,N-1):
         obj.ham_dia.set(i,i+1, -V)
         obj.ham_dia.set(i+1,i, -V)
 
@@ -96,17 +95,17 @@ def Holstein_uncoupled(q, params):
 
 
     Epot = 0.0
-    for i in xrange(N):
+    for i in range(0,N):
         x = q.get(i);  Epot += x*x
     Epot = 0.5*k*Epot
 
-    for i in xrange(N):
+    for i in range(0,N):
         x = q.get(i);
         obj.ham_dia.set(i,i, Epot + alpha*x*(1.0+0.0j))
 
 
-    for i in xrange(N):
-        for n in xrange(N):
+    for i in range(0,N):
+        for n in range(0,N):
             x = q.get(n);
 
             if(n==0):

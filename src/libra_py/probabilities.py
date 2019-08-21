@@ -27,7 +27,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import units
+from . import units
 
 
 def Boltz_quant_prob(E, T):
@@ -54,11 +54,11 @@ def Boltz_quant_prob(E, T):
     Z = 0.0  # partition function
     prob = []
 
-    for n in xrange(nstates):
+    for n in range(0,nstates):
         prob.append(math.exp(-E[n]*b))
         Z += prob[n]
     
-    for n in xrange(nstates):
+    for n in range(0,nstates):
         prob[n] = prob[n] / Z
 
     return prob
@@ -91,7 +91,7 @@ def Boltz_cl_prob_up(E, T):
 
     D = ERF(x) - math.sqrt(4.0/math.pi) * x * math.exp(-x*x)
     if D>1.0 or D<0.0:
-        print "D = ", D
+        print("D = ", D)
         sys.exit(0)
     res = 1.0 - D
 
@@ -124,7 +124,7 @@ def HO_prob(E, qn, T):
  
     res = 1.0
     prob = []
-    for i in xrange(n_freqs):
+    for i in range(0,n_freqs):
         xi = math.exp(-E[i]/(units.kB*T))        
         prob.append(math.pow(xi, qn[i])*(1.0 - xi))
         res = res * prob[i]
@@ -156,7 +156,7 @@ def HO_prob_up(E, qn, T):
  
     res = 1.0
     prob = []
-    for i in xrange(n_freqs):
+    for i in range(0,n_freqs):
         xi = math.exp(-E[i]*qn[i]/(units.kB*T))
         prob.append(xi)
         res = res * prob[i]

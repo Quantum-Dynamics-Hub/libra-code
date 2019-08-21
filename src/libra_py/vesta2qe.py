@@ -49,11 +49,11 @@ def exclude(lab, R, min_dist, a,b,c,alp,bet,gam, out_file):
     sz = len(R)
     exclude_list = []
 
-    for i in xrange(sz):
+    for i in range(0,sz):
 
         if i not in exclude_list:
         
-            for j in xrange(i+1, sz):
+            for j in range(i+1, sz):
 
                 for t1 in [-1.0, 0.0, 1.0]:
                     for t2 in [-1.0, 0.0, 1.0]:
@@ -73,7 +73,7 @@ def exclude(lab, R, min_dist, a,b,c,alp,bet,gam, out_file):
 #    print exclude_list
 
     types = []
-    for i in xrange(sz):
+    for i in range(0,sz):
         if i not in exclude_list:
             if lab[i] not in types:
                 types.append(lab[i])
@@ -103,7 +103,7 @@ def exclude(lab, R, min_dist, a,b,c,alp,bet,gam, out_file):
     f.write("%18.10f%16.10f%16.10f\n" % (T3.x, T3.y, T3.z))
     f.write("\nATOMIC_POSITIONS Angstrom\n")
 
-    for i in xrange(sz):
+    for i in range(0,sz):
         if i not in exclude_list:
             r = M * R[i]
             f.write("%2s%16.10f%16.10f%16.10f\n" % (lab[i], r.get(0), r.get(1), r.get(2)))
@@ -160,7 +160,7 @@ def parse_vesta(in_file, out_file, min_dist):
 
     a,b,c, alp, bet, gam = 0.0, 0.0, 0.0,  0.0, 0.0, 0.0
 
-    for i in xrange(sz): 
+    for i in range(0,sz): 
         m1 = re.search(pCell_keyword,A[i])
 
         if m1!=None: 
@@ -193,7 +193,7 @@ def parse_vesta(in_file, out_file, min_dist):
 
     at_label, at_occ, at_coord = [], [], []
 
-    for i in xrange(sz): 
+    for i in range(0,sz): 
         m1 = re.search(pSTRUC_keyword,A[i])
 
         if m1!=None: 

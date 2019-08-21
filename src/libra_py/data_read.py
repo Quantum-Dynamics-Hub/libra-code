@@ -275,13 +275,13 @@ def get_data_from_file2(filename, cols):
 
     sz = len(cols)
     res = []
-    for i in xrange(sz):
+    for i in range(0,sz):
         res.append([])
 
     for a in A:
         tmp = a.split()
 
-        for i in xrange(sz):
+        for i in range(0,sz):
 
             x = float(tmp[ cols[i] ])
             res[i].append(x)

@@ -27,13 +27,13 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import units
-import build
-import QE_methods
-import normal_modes
-import LoadPT
-import LoadMolecule
-import nve_md
+from . import units
+from . import build
+from . import QE_methods
+from . import normal_modes
+from . import LoadPT
+from . import LoadMolecule
+from . import nve_md
 
 
 def permutation1(case):
@@ -276,7 +276,7 @@ def measure(S0, S1):
     """
     nat = S0.Number_of_atoms
     res, dot = 0.0, 0.0
-    for n in xrange(nat):
+    for n in range(0,nat):
         
         dr0 = S0.Atoms[n].Atom_RB.rb_cm -  S0.Fragments[0].Group_RB.rb_cm 
         dr1 = S1.Atoms[n].Atom_RB.rb_cm -  S1.Fragments[0].Group_RB.rb_cm 
@@ -309,7 +309,7 @@ def measure2(S0, S1):
     """
     nat = S0.Number_of_atoms
     res, dot = 0.0, 0.0
-    for n in xrange(nat):
+    for n in range(0,nat):
         
         dr = S0.Atoms[n].Atom_RB.rb_cm - S1.Atoms[n].Atom_RB.rb_cm       
         dot = dot + dr.length2()
@@ -377,24 +377,23 @@ def remove_rotation(S0, S1, verbose=0):
     MATRIX_TO_QUATERNION(S1.Fragments[0].Group_RB.rb_A_I_to_e, Q1);
 
     if verbose > 0:
-        print "Q0 = ", Q0.Lt, Q0.Lx, Q0.Ly, Q0.Lz
-        print "Q1 = ", Q1.Lt, Q1.Lx, Q1.Ly, Q1.Lz
+        print("Q0 = ", Q0.Lt, Q0.Lx, Q0.Ly, Q0.Lz)
+        print("Q1 = ", Q1.Lt, Q1.Lx, Q1.Ly, Q1.Lz)
 
     # If one of the bodies is totally-symmetric, don't do anything
     # bacause we can't e sure about the directions
     if Q0.vect().length2() * Q1.vect().length2() > 1e-15:
          
         if verbose > 0:       
-            #print "Measure before rotation = ", measure(S0, S1)
-            print "Measure before rotation = ", measure2(S0, S1)
+            print("Measure before rotation = ", measure2(S0, S1) )
 
         # Lets consider all possible axes permutations and compute the
         # alignment measure for each one
         mes = []
         indices = []
 
-        for i in xrange(0,8):            # reflections
-            for j in xrange(0,6):        # permutations
+        for i in range(0,8):            # reflections
+            for j in range(0,6):        # permutations
 #        for i in [0]:            # reflections
 #            for j in [0]:        # permutations
 
@@ -441,15 +440,15 @@ def remove_rotation(S0, S1, verbose=0):
 
 
                 if math.fabs(U.Determinant()) < 1e-10:
-                    print "WARNING: 1) Problems with inversion: ", U.Determinant()
+                    print("WARNING: 1) Problems with inversion: ", U.Determinant() )
                     sys.exit(0)
 
                 dU = (U*U.T() - I)
                 if (dU * dU.T()).tr() > 1e-10:
-                    print "WARNING: 2) Problems with inversion: ", (dU * dU.T()).tr()
-                    print "%8.5f  %8.5f  %8.5f " % (dU.xx, dU.xy, dU.xz)
-                    print "%8.5f  %8.5f  %8.5f " % (dU.yx, dU.yy, dU.yz)
-                    print "%8.5f  %8.5f  %8.5f " % (dU.zx, dU.zy, dU.zz)
+                    print("WARNING: 2) Problems with inversion: ", (dU * dU.T()).tr())
+                    print("%8.5f  %8.5f  %8.5f " % (dU.xx, dU.xy, dU.xz))
+                    print("%8.5f  %8.5f  %8.5f " % (dU.yx, dU.yy, dU.yz))
+                    print("%8.5f  %8.5f  %8.5f " % (dU.zx, dU.zy, dU.zz))
 
                     sys.exit(0)
 
@@ -457,15 +456,15 @@ def remove_rotation(S0, S1, verbose=0):
                 s.ROTATE_FRAGMENT(U, 1)
     
                 if verbose > 1:
-                    print "%8.5f  %8.5f  %8.5f " % (U.xx, U.xy, U.xz)
-                    print "%8.5f  %8.5f  %8.5f " % (U.yx, U.yy, U.yz)
-                    print "%8.5f  %8.5f  %8.5f " % (U.zx, U.zy, U.zz)
+                    print("%8.5f  %8.5f  %8.5f " % (U.xx, U.xy, U.xz) )
+                    print("%8.5f  %8.5f  %8.5f " % (U.yx, U.yy, U.yz) )
+                    print("%8.5f  %8.5f  %8.5f " % (U.zx, U.zy, U.zz) )
                 
                 mes.append( measure2(S0, s) )
                 indices.append( [i, j] )
 
                 if verbose > 0:
-                    print "Measure after reflection %i and permutaiton %i = " % (i, j), mes[6*i+j]
+                    print( "Measure after reflection %i and permutaiton %i = " % (i, j), mes[6*i+j] )
 
 
                 # Rotate the system S1 back to its original configuration
@@ -476,7 +475,7 @@ def remove_rotation(S0, S1, verbose=0):
         # two configurations is the best
         mes_indx, min_dist, max_dot = 0, mes[0][0], mes[0][1]
         sz = len(mes)
-        for i in xrange(1,sz):
+        for i in range(1,sz):
             if mes[i][0] < min_dist and mes[i][1] > max_dot:
                 min_dist = mes[i][0]
                 max_dot = mes[i][1]
@@ -484,7 +483,7 @@ def remove_rotation(S0, S1, verbose=0):
 
 
         if verbose > 0:
-            print "Selected transformation = ", mes_indx, indices[mes_indx]
+            print("Selected transformation = ", mes_indx, indices[mes_indx] )
 
         #QUATERNION_TO_MATRIX(Q2, U);
 
@@ -498,9 +497,9 @@ def remove_rotation(S0, S1, verbose=0):
         S1.ROTATE_FRAGMENT(U, 1)
 
         if verbose > 0:
-            print "Measure after rotation = ", measure2(S0, S1)
+            print("Measure after rotation = ", measure2(S0, S1) )
             MATRIX_TO_QUATERNION(S1.Fragments[0].Group_RB.rb_A_I_to_e, Q1);
-            print "Q1(updated) = ", Q1.Lt, Q1.Lx, Q1.Ly, Q1.Lz
+            print("Q1(updated) = ", Q1.Lt, Q1.Lx, Q1.Ly, Q1.Lz)
 
 
 def process_xyz(filename, PT, itime, ftime, verbose=0):
@@ -529,12 +528,12 @@ def process_xyz(filename, PT, itime, ftime, verbose=0):
     nat = ndof/3
     nsteps = R.num_of_cols
     if verbose>0:
-        print "nsteps = ", nsteps
-        print "ndos = ", ndof
+        print("nsteps = ", nsteps)
+        print("ndos = ", ndof)
 
     # Setup masses
     M = MATRIX(ndof, 1)
-    for at in xrange(nat):    
+    for at in range(0,nat):    
         M.set(3*at+0, 0, PT[E[at]])
         M.set(3*at+1, 0, PT[E[at]])
         M.set(3*at+2, 0, PT[E[at]])
@@ -569,7 +568,7 @@ def process_xyz(filename, PT, itime, ftime, verbose=0):
     xyz0 = ""
     xyz = ""
     nframes = len(Systems)
-    for frame in xrange(nframes):
+    for frame in range(0,nframes):
 
         # To xyz - before
         xyz1 = nve_md.syst2xyz(Systems[frame])
@@ -586,10 +585,10 @@ def process_xyz(filename, PT, itime, ftime, verbose=0):
 
     # Convert the Systems into R
     R  = MATRIX(ndof, nframes)
-    for frame in xrange(nframes):    
+    for frame in range(0,nframes):    
 
         # To MATRIX
-        for at in xrange(nat):    
+        for at in range(0,nat):    
             R.set(3*at+0, frame, Systems[frame].Atoms[at].Atom_RB.rb_cm.x)
             R.set(3*at+1, frame, Systems[frame].Atoms[at].Atom_RB.rb_cm.y)
             R.set(3*at+2, frame, Systems[frame].Atoms[at].Atom_RB.rb_cm.z)

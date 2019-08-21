@@ -49,9 +49,9 @@ def get_reordering(time_overlap):
 
     """
 
-    print "ERROR in libra_py.unavoided.get_reordering(...)"
-    print "The implementation contained a bug. It is now re-implemented in C++\
-          with the bug fixed. Please use the C++ version. Exiting..."
+    print("ERROR in libra_py.unavoided.get_reordering(...)")
+    print("The implementation contained a bug. It is now re-implemented in C++\
+          with the bug fixed. Please use the C++ version. Exiting...")
     sys.exit(0)
     
 
@@ -61,7 +61,7 @@ def get_reordering(time_overlap):
     perm = range(sz)  # original permutation
     
 
-    for col in xrange(sz):
+    for col in range(0,sz):
 
         indx = -1
         val = 0.0+0.0j
@@ -144,18 +144,18 @@ class TestUnavoided(unittest.TestCase):
         a,b,c = _test_setup()
 
         perm_a = get_reordering(a)
-        print "Input matrix "; a.show_matrix()
-        print "Permutation = ", perm_a
+        print("Input matrix "); a.show_matrix()
+        print("Permutation = ", perm_a)
         self.assertEqual(perm_a, [0,1,2,3])
 
         perm_b = get_reordering(b)
-        print "Input matrix "; b.show_matrix()
-        print "Permutation = ", perm_b
+        print("Input matrix "); b.show_matrix()
+        print("Permutation = ", perm_b)
         self.assertEqual(perm_b, [0,2,3,1])
 
         perm_c = get_reordering(c)
-        print "Input matrix "; c.show_matrix()
-        print "Permutation = ", perm_c
+        print("Input matrix "); c.show_matrix()
+        print("Permutation = ", perm_c)
         self.assertEqual(perm_c, [1,2,0,3])
 
 

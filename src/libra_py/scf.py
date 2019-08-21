@@ -22,8 +22,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import data_outs
-import pdos
+from . import data_outs
+from . import pdos
 
 def takeSecond(elem):
     return elem[1]
@@ -52,8 +52,8 @@ def spectrum(ham, T_file = "T_mo.dat", spec_file = "spectrum.txt"):
     Tao_y = MATRIX(nao, nao)
     Tao_z = MATRIX(nao, nao)
 
-    for a in xrange(nao):
-        for b in xrange(nao):
+    for a in range(0,nao):
+        for b in range(0,nao):
             mu = transition_dipole_moment(bas[a], bas[b])
             Tao_x.set(a,b, mu.x)
             Tao_y.set(a,b, mu.y)
@@ -66,8 +66,8 @@ def spectrum(ham, T_file = "T_mo.dat", spec_file = "spectrum.txt"):
     Tmo = MATRIX(nmo, nmo)
 
     res = []
-    for i in xrange(homo+1):   # All unoccupied orbitals
-        for j in xrange(i+1, nmo):   #  All occupied orbitals
+    for i in range(0,homo+1):   # All unoccupied orbitals
+        for j in range(i+1, nmo):   #  All occupied orbitals
             dE = E.get(j,j)-E.get(i,i)
             X = Tmo_x.get(i,j)
             Y = Tmo_y.get(i,j)

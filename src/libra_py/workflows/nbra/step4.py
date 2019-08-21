@@ -54,7 +54,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 import util.libutil as comn
 
 import libra_py.data_read as data_read
-import decoherence_times as dectim
+from . import decoherence_times as dectim
 import libra_py.tsh as tsh
 import libra_py.tsh_stat as tsh_stat
 import libra_py.units as units
@@ -206,7 +206,7 @@ def traj_statistics(i, Coeff, istate, Hvib, itimes):
     nstates = Coeff[0].num_of_rows   # the number of states
     ndata = len(Hvib)                # how many data sets
     nitimes = len(itimes)            # how many initial times
-    ntraj = Ntraj/(ndata * nitimes)  # how many stochastic SH trajectories per data set/initial condition
+    ntraj = int(Ntraj/(ndata * nitimes))  # how many stochastic SH trajectories per data set/initial condition
 
 
     # Update SE-derived density matrices
@@ -217,13 +217,13 @@ def traj_statistics(i, Coeff, istate, Hvib, itimes):
     H_vib = []
     H_vib_ave = CMATRIX(nstates,nstates)  # Hvib averaged over the data sets/initial times
 
-    for idata in xrange(ndata):
-        for it_indx in xrange(nitimes):
+    for idata in range(0,ndata):
+        for it_indx in range(0,nitimes):
             it = itimes[it_indx]
 
             H_vib_ave = H_vib_ave + Hvib[idata][it+i]
 
-            for tr in xrange(ntraj):                
+            for tr in range(0,ntraj):                
                 Tr = idata*(nitimes*ntraj) + it_indx*(ntraj) + tr
 
                 denmat_sh.append(CMATRIX(nstates, nstates))
@@ -240,7 +240,7 @@ def traj_statistics(i, Coeff, istate, Hvib, itimes):
     res = MATRIX(1, 3*nstates+4) 
    
     tot_sh, tot_se = 0.0, 0.0
-    for j in xrange(nstates):
+    for j in range(0,nstates):
         res.set(0, 3*j+0, H_vib_ave.get(j,j).real)   # Energy of the state j
         res.set(0, 3*j+1, ave_pop_se.get(j,j).real)  # SE population
         res.set(0, 3*j+2, ave_pop_sh.get(j,j).real)  # SH population
@@ -299,13 +299,13 @@ def traj_statistics2(i, Pop, istate, Hvib, itimes):
     H_vib = []
     H_vib_ave = CMATRIX(nstates,nstates)  # Hvib averaged over the data sets/initial times
 
-    for idata in xrange(ndata):
-        for it_indx in xrange(nitimes):
+    for idata in range(0,ndata):
+        for it_indx in range(0,nitimes):
             it = itimes[it_indx]
 
             H_vib_ave = H_vib_ave + Hvib[idata][it+i]
 
-            for tr in xrange(ntraj):                
+            for tr in range(0,ntraj):                
                 Tr = idata*(nitimes*ntraj) + it_indx*(ntraj) + tr
 
                 denmat_sh.append(CMATRIX(nstates, nstates))
@@ -322,7 +322,7 @@ def traj_statistics2(i, Pop, istate, Hvib, itimes):
     res = MATRIX(1, 3*nstates+4) 
    
     tot_sh, tot_se = 0.0, 0.0
-    for j in xrange(nstates):
+    for j in range(0,nstates):
         res.set(0, 3*j+0, H_vib_ave.get(j,j).real)   # Energy of the state j
         res.set(0, 3*j+1, ave_pop_se.get(j,j).real)  # SE population
         res.set(0, 3*j+2, ave_pop_sh.get(j,j).real)  # SH population
@@ -357,7 +357,7 @@ def printout(t, res, outfile):
     N = res.num_of_cols
 
     line = "%8.5f " % (t)
-    for i in xrange(N):
+    for i in range(0,N):
         line = line + " %8.5f " % (res.get(0,i))
     line = line + " \n"
 
@@ -488,8 +488,8 @@ def run(H_vib, params):
 
     elif params["decoherence_constants"] == 1 or params["decoherence_constants"]==21:
         if params["decoherence_times"].num_of_cols != nstates:
-            print "Error: dimensions of the input decoherence times matrix are not consistent with \
-                   the dimensions of the Hamiltonian matrices (the number of states). Exiting...\n" 
+            print("Error: dimensions of the input decoherence times matrix are not consistent with \
+                   the dimensions of the Hamiltonian matrices (the number of states). Exiting...\n")
             sys.exit(0)
         else:
             tau = MATRIX(params["decoherence_times"])
@@ -504,7 +504,7 @@ def run(H_vib, params):
     # Coherence times and coherence intervals for DISH
     t_m, tau_m = [], []
 
-    for tr in xrange(Ntraj):
+    for tr in range(0,Ntraj):
         istate.append(params["istate"])
         Coeff.append(CMATRIX(nstates, 1)); 
         Coeff[tr].set(params["istate"], 1.0, 0.0)
@@ -516,7 +516,7 @@ def run(H_vib, params):
     f = open(params["outfile"],"w"); f.close()
 
     #=============== Entering the DYNAMICS ========================
-    for i in xrange(nsteps):  # over all evolution times
+    for i in range(0,nsteps):  # over all evolution times
 
 
         #============== Analysis of the Dynamics  =================
@@ -528,17 +528,17 @@ def run(H_vib, params):
 
         # Update the overal results matrix
         res.set(i,0, i*dt)
-        push_submatrix(res, res_i, Py2Cpp_int([i]), Py2Cpp_int(range(1,3*nstates+5)) )
+        push_submatrix(res, res_i, Py2Cpp_int([i]), Py2Cpp_int( list(range(1,3*nstates+5)) ) )
 
 
         #=============== Propagation ==============================
-        for idata in xrange(ndata):   # over all MD trajectories (data sets)
+        for idata in range(0,ndata):   # over all MD trajectories (data sets)
 
-            for it_indx in xrange(nitimes): # over all initial times
+            for it_indx in range(0,nitimes): # over all initial times
 
                 it = params["init_times"][it_indx]
 
-                for tr in xrange(ntraj):  # over all stochastic trajectories
+                for tr in range(0,ntraj):  # over all stochastic trajectories
 
                     Tr = idata*(nitimes*ntraj) + it_indx*(ntraj) + tr
 

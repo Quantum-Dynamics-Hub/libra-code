@@ -35,10 +35,10 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 #import common_utils as comn
 import util.libutil as comn
-import units
-import data_stat
-import acf
-import ft
+from . import units
+from . import data_stat
+from . import acf
+from . import ft
 
 
 
@@ -114,17 +114,17 @@ def recipe1(data, params):
     elif data_type==1:
         T, norm_acf, raw_acf = acf.acf_vec( data_new , dt, acf_type)
     else:
-        print "Error: data_type = ", data_type, " is not known\n";
+        print("Error: data_type = ", data_type, " is not known\n")
         sys.exit(0)
 
 
     sz = len(T)
-    for it in xrange(sz):
+    for it in range(0,sz):
         T[it] = T[it]/units.fs2au  # convert to fs
 
     if do_output:
         f = open(acf_filename,"w")
-        for it in xrange(sz):
+        for it in range(0,sz):
             f.write("%8.5f  %8.5f  %8.5f  \n" % (T[it] , norm_acf[it], raw_acf[it]))
         f.close()
 
@@ -134,13 +134,13 @@ def recipe1(data, params):
     sz = len(W)
 
     J2 = []
-    for iw in xrange(sz):
+    for iw in range(0,sz):
         W[iw] = W[iw]/units.inv_cm2Ha
         J2.append( (1.0/(2.0*math.pi))*J[iw]*J[iw] )
 
     if do_output:
         f = open(spectrum_filename,"w")
-        for iw in xrange(sz):
+        for iw in range(0,sz):
             f.write("%8.5f  %8.5f  %8.5f\n" % (W[iw], J[iw], J2[iw] ) )
         f.close()
 
@@ -210,7 +210,7 @@ def compute_mat_elt(X, a, b, params):
     nsteps = len(X)    
     sz = X[0].num_of_rows
     data_ab = []
-    for n in xrange(nsteps):
+    for n in range(0,nsteps):
         xi = MATRIX(1,1)
         xi.set(0,0, X[n].get(a,b))
         data_ab.append(xi)   
@@ -242,11 +242,11 @@ def compute_mat_elt(X, a, b, params):
     #==== Compute the intensities and normalized intensities, do the output =========
     freqs = []
     norm = 0.0
-    for i in xrange(nfreqs):
+    for i in range(0,nfreqs):
         indx = out[szo-i][0]
         norm = norm + abs(J[indx])
        
-    for i in xrange(nfreqs):
+    for i in range(0,nfreqs):
         indx = out[szo-i][0]
         freqs.append( [W[indx], J[indx], J[indx]/norm ] )
 
@@ -306,24 +306,24 @@ def compute_all(X, params):
     # Split the X array into two arrays - real and imaginary parts
     X_re, X_im = [], []
     nsteps = len(X)
-    for step in xrange(nsteps):
+    for step in range(0,nsteps):
         X_re.append(X[step].real())
         X_im.append(X[step].imag())
 
     # Do the calculations for each matrix element
     nstates = X[0].num_of_cols   
 
-    freqs = [ [ [] for i in xrange(nstates)] for j in xrange(nstates)]
-    T = [ [ [] for i in xrange(nstates)] for j in xrange(nstates)]
-    norm_acf = [ [ [] for i in xrange(nstates)] for j in xrange(nstates)]
-    raw_acf = [ [ [] for i in xrange(nstates)] for j in xrange(nstates)]
-    W = [ [ [] for i in xrange(nstates)] for j in xrange(nstates)]
-    J = [ [ [] for i in xrange(nstates)] for j in xrange(nstates)]
-    J2 = [ [ [] for i in xrange(nstates)] for j in xrange(nstates)]
+    freqs = [ [ [] for i in range(0,nstates)] for j in range(0,nstates)]
+    T = [ [ [] for i in range(0,nstates)] for j in range(0,nstates)]
+    norm_acf = [ [ [] for i in range(0,nstates)] for j in range(0,nstates)]
+    raw_acf = [ [ [] for i in range(0,nstates)] for j in range(0,nstates)]
+    W = [ [ [] for i in range(0,nstates)] for j in range(0,nstates)]
+    J = [ [ [] for i in range(0,nstates)] for j in range(0,nstates)]
+    J2 = [ [ [] for i in range(0,nstates)] for j in range(0,nstates)]
 
  
-    for i in xrange(nstates):
-        for j in xrange(nstates):
+    for i in range(0,nstates):
+        for j in range(0,nstates):
             if i == j:
                 freqs[i][j], T[i][j],  norm_acf[i][j],  raw_acf[i][j],  W[i][j], J[i][j], J2[i][j] = compute_mat_elt(X_re, i, j, params_re)
             else:
@@ -342,7 +342,7 @@ class TestDatautils(unittest.TestCase):
         """Tests find_maxima(s, verbose=0, filename="run.log") """
         s = MATRIX(6,1)
         slst = [4.0, 20.0, -50.0, 42.0, -2.0]
-        for i in xrange(len(slst)):
+        for i in range(0,len(slst)):
             s.set(i, slst[i])
           
         out = find_maxima(s)
@@ -372,7 +372,7 @@ class TestDatautils(unittest.TestCase):
         x10 = [0.0, 1.0,  -3.0, 3.0]
 
         X = []
-        for i in xrange(4):
+        for i in range(0,4):
             m = MATRIX(2,2)
             m.set(0,0, x00[i]); m.set(0,1, x01[i]);
             m.set(1,0, x10[i]); m.set(1,1, x11[i]);
@@ -420,7 +420,7 @@ if __name__ == '__main__':
     w3 = 850.0 * units.inv_cm2Ha
     wspan = 2000.0 * units.inv_cm2Ha
 
-    for it in xrange(1000):
+    for it in range(0,1000):
         t = it * dt
         d = MATRIX(3,1)
         d.set(0, 0, math.sin(w1*t) )
@@ -433,7 +433,7 @@ if __name__ == '__main__':
 
     # Test case: 3 frequences
     data = []
-    for it in xrange(1000):
+    for it in range(0,1000):
         t = it * dt
         data.append( VECTOR(math.sin(w1*t), math.cos(w2*t), math.sin(w3*t)) )
     

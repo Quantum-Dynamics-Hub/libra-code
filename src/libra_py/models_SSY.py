@@ -25,7 +25,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 #import common_utils as comn
 import util.libutil as comn
-import units
+from . import units
 
 
 class tmp:
@@ -74,8 +74,8 @@ def SSY(q, params):
 
     ndof = q.num_of_rows  # the number of nuclear DOFs
     if ndof != 2:
-        print "Error: The SSY Hamiltonian takes 2 nuclear DOFs only. Given = ", ndof
-        print "Exiting..."
+        print("Error: The SSY Hamiltonian takes 2 nuclear DOFs only. Given = ", ndof)
+        print("Exiting...")
         sys.exit(0)
 
 
@@ -85,7 +85,7 @@ def SSY(q, params):
     obj.d1ham_dia = CMATRIXList()
     obj.dc1_dia = CMATRIXList()
 
-    for i in xrange(2):
+    for i in range(0,2):
         obj.d1ham_dia.append( CMATRIX(2,2) )
         obj.dc1_dia.append( CMATRIX(2,2) )
 

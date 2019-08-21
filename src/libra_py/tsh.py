@@ -37,10 +37,10 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import units
-import probabilities
-#import common_utils as comn
 import util.libutil as comn
+from . import units
+from . import probabilities
+
 
 
 
@@ -90,7 +90,7 @@ def hop_py(initstate, g, ksi):
 
     left, right = 0.0, 0.0
 
-    for i in xrange(nstates):
+    for i in range(0,nstates):
       if i==0:
           left = 0.0
           right = g.get(initstate,i)
@@ -125,7 +125,7 @@ def set_random_state(prob, ksi):
 
     left, right = 0.0, 0.0
 
-    for i in xrange(nstates):
+    for i in range(0,nstates):
       if i==0:
           left = 0.0
           right = prob[i]
@@ -287,33 +287,33 @@ def surface_hopping(mol, el, ham, rnd, params):
 
 
     if len(mol)!=len(ham):
-        print "Error in surface_hopping_nbra: The size of the ensemble of Nuclear objects (",len(mol),") should be the same\
-              as the length of the ensemble of Hamiltonian objects (", len(ham),")\n"             
+        print( "Error in surface_hopping_nbra: The size of the ensemble of Nuclear objects (",len(mol),") should be the same\
+              as the length of the ensemble of Hamiltonian objects (", len(ham),")\n")
         sys.exit(0)
 
     if len(mol)!= ninit * nstates_init:
-        print "Error in surface_hopping_nbra: The size of the ensemble of Nuclear objects (",len(mol),") should be the same\
-              as the product of nconfig (",ninit,") and the number of initial excitations (", nstates_init,")\n"             
+        print("Error in surface_hopping_nbra: The size of the ensemble of Nuclear objects (",len(mol),") should be the same\
+              as the product of nconfig (",ninit,") and the number of initial excitations (", nstates_init,")\n")
         sys.exit(0)
 
     if len(el)!= ninit * nstates_init * num_SH_traj:
-        print "Error in surface_hopping_nbra: The size of the ensemble of Electronic objects (",len(el),") should be the same\
+        print("Error in surface_hopping_nbra: The size of the ensemble of Electronic objects (",len(el),") should be the same\
               as the product of nconfig (",ninit,"),  the number of initial excitations (", nstates_init,"), and the \
-              number of surface hopping trajectories per run (",num_SH_traj,")\n"     
+              number of surface hopping trajectories per run (",num_SH_traj,")\n")
         sys.exit(0)
 
 
     g = MATRIX(nstates,nstates) # initialize a matrix of hopping probability
 
     # For all initial geometries
-    for iconf in xrange(ninit):
+    for iconf in range(0,ninit):
 
         # For all initial excitations
-        for i_ex in xrange(nstates_init):
+        for i_ex in range(0,nstates_init):
             i = iconf*nstates_init + i_ex
 
             # Run many stochastic SH realizations
-            for itraj in xrange(num_SH_traj): 
+            for itraj in range(0,num_SH_traj): 
 
                 iel = iconf*nstates_init*num_SH_traj + i_ex*num_SH_traj + itraj
 
@@ -325,19 +325,19 @@ def surface_hopping(mol, el, ham, rnd, params):
                 elif tsh_method == 3: # MSSH
                     compute_hopping_probabilities_mssh(mol[i], el[iel], ham[i], g, dt_nucl, use_boltz_factor, Temperature)
                 else:
-                    print "Warning in surface_hopping: tsh_method can be 1, 2, or 3. Other values are not defined"
+                    print("Warning in surface_hopping: tsh_method can be 1, 2, or 3. Other values are not defined")
 
                 # output hopping probability
                 if print_prob == 1:
-                    print "hopping probability matrix is:"
-                    print g.show_matrix()
+                    print("hopping probability matrix is:")
+                    g.show_matrix()
 
                 # check elements of g matrix are less than 1 or not.
                 if check_prob == 1:
-                    for st in xrange(nstates):
-                        for st1 in xrange(nstates):
+                    for st in range(0,nstates):
+                        for st1 in range(0,nstates):
                             if g.get(st,st1) > 1:
-                                print "g(%d,%d) is %f, larger than 1; better to decrease dt_nucl" %(st,st1,g.get(st,st1))
+                                print("g(%d,%d) is %f, larger than 1; better to decrease dt_nucl" %(st,st1,g.get(st,st1)) )
                 
                 # Attempt to hop
                 ksi = rnd.uniform(0.0,1.0) # generate random number for every trajectory
@@ -487,13 +487,13 @@ def ida_py(Coeff, old_st, new_st, E_old, E_new, T, ksi, do_collapse, boltz_opt=1
          
                 # Collapse the wavefunction to the new state                                                                                                           
                 if do_collapse:
-                    for st in xrange(C.nstates):
+                    for st in range(0,C.nstates):
                         C.q[st], C.p[st] = 0.0, 0.0
                     C.q[new_st], C.p[new_st] = 1.0, 0.0
             else:
                 # Unsuccessful hop - collapse wfc back to the original state^M                                                                                         
                 if do_collapse:
-                    for st in xrange(C.nstates):
+                    for st in range(0,C.nstates):
                         C.q[st], C.p[st] = 0.0, 0.0
                     C.q[old_st], C.p[old_st] = 1.0, 0.0
         else:
@@ -537,7 +537,7 @@ def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
 
         # First - update all the coefficients for the non-active states        
         N = Coeff.num_of_elts 
-        for i in xrange(N):
+        for i in range(0,N):
             if i != act_st:    
                 itau = ( En[i] - En[act_st] ) / ( C_param + (eps_param/Ekin) )
                 sclf = math.exp(-dt*itau)
@@ -568,7 +568,7 @@ def sdm_py(Coeff, dt, act_st, En, Ekin, C_param = 1.0, eps_param = 0.1):
         # First - update all the coefficients for the non-active states        
         N = C.nstates 
         new_norm = 0.0
-        for i in xrange(N):
+        for i in range(0,N):
             if i != act_st:    
                 itau = ( En[i] - En[act_st] ) / ( C_param + (eps_param/Ekin) )
                 sclf = math.exp(-dt*itau)
@@ -824,14 +824,14 @@ def Boltz_corr_Ham(H, Coeff, T, case=1):
     #============= Step 1 ===================
     # Compute the absolute values of the state amplitudes
     rho = MATRIX(sz,1)    
-    for i in xrange(sz):
+    for i in range(0,sz):
         rho.set(i, 0, abs(Coeff.get(i,0)) )
     
     #============= Step 2 ===================
     # Include the thermal factors, the Hcorr matrix is no longer symmetric
     Hcorr = CMATRIX(H)    
-    for j in xrange(sz):
-        for k in xrange(sz):
+    for j in range(0,sz):
+        for k in range(0,sz):
             if j!=k:                
                 dE = H.get(k,k).real - H.get(j,j).real
                 corr = math.sqrt(2.0 / (1.0 + math.exp(-dE/kT)) )                                
@@ -840,8 +840,8 @@ def Boltz_corr_Ham(H, Coeff, T, case=1):
     #============= Step 3 ===================
     # Symmetrize the thermally-corrected Hamiltonian
     Hcorr2 = CMATRIX(sz,sz)
-    for j in xrange(sz):
-        for k in xrange(j+1,sz):
+    for j in range(0,sz):
+        for k in range(j+1,sz):
             if case==0:  # diabatic - original Bastida
                 hkj = rho.get(k)*Hcorr.get(j,k) - rho.get(j)*Hcorr.get(k,j)
             elif case==1: # adiabatic - changed Bastida

@@ -26,8 +26,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-from regexlib import *
-import units
+from .regexlib import *
+from . import units
 
 
 def Load_Molecule(univ,syst,mol_file,format, verbosity=0):
@@ -140,11 +140,11 @@ def Load_Molecule(univ,syst,mol_file,format, verbosity=0):
 #            atm.Atom_is_C60_CT       = int(a[m1.start('Atom_C60'):m1.end('Atom_C60')])
 
             if verbosity>0:
-                print "CREATE_ATOM "
+                print("CREATE_ATOM ")
             syst.CREATE_ATOM( Atom(univ,atom_dict)  ) 
     
     #--------- Create bonds ------------------
-    print len(B)
+    print(len(B))
     for b in B:
         m2 = re.search(Bond_Record,b)
         lst = []
@@ -155,7 +155,7 @@ def Load_Molecule(univ,syst,mol_file,format, verbosity=0):
         i = 1   
         while i < len(lst):
             if verbosity>0:
-                print 'LINK_ATOMS ',lst[0][0], ' and ', lst[i][0],'...'
+                print('LINK_ATOMS ',lst[0][0], ' and ', lst[i][0],'...')
             syst.LINK_ATOMS(int(float(lst[0][0])),int(float(lst[i][0])))
             i = i + 1
 
@@ -165,7 +165,7 @@ def Load_Molecule(univ,syst,mol_file,format, verbosity=0):
         m3 = re.search(Fragment_Record,fr)        
         lst = []
         if m3!=None:
-            print m3.group()
+            print(m3.group())
             lst = compINT.findall(m3.group())
 
             gr_atoms = []
@@ -175,7 +175,7 @@ def Load_Molecule(univ,syst,mol_file,format, verbosity=0):
                 i = i + 1
 #            if len(gr_atoms)>0:
             if verbosity>0:
-                print "GROUP_ATOMS",gr_atoms," to form fragment with Group_id = ",j
+                print("GROUP_ATOMS",gr_atoms," to form fragment with Group_id = ",j)
             syst.GROUP_ATOMS(gr_atoms,j)
 #            syst.show_fragments()
             j = j + 1

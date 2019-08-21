@@ -91,8 +91,8 @@ def autoconnect(R, MaxCoord, params):
     N = len(R)
 
     if len(MaxCoord) != N:
-        print "Error: The length of the MaxCoord list should be the same as the lenght of the R list!"
-        print "Exiting now..."
+        print("Error: The length of the MaxCoord list should be the same as the lenght of the R list!")
+        print("Exiting now...")
         sys.exit(0)
 
  
@@ -102,7 +102,7 @@ def autoconnect(R, MaxCoord, params):
 
 
     if pbc_opt not in ["a", "b", "c", "ab", "ac", "bc", "abc","none"]:
-        print "Error: pbc_opt ", pbc_opt, " is not recognized"
+        print("Error: pbc_opt ", pbc_opt, " is not recognized")
         sys.exit(0)
     
     transl_a = [0.0]
@@ -147,19 +147,20 @@ def autoconnect(R, MaxCoord, params):
                                   )
     
     if verbosity==1:
-        print "Pairs of atoms separated no more than by Rcut"
-        print unsorted_pairs
-        print "Formatted printout:"
+        print("Pairs of atoms separated no more than by Rcut")
+        print(unsorted_pairs)
+        print("Formatted printout:")
         for it in unsorted_pairs:
-            print "Atoms %5i and %5i are separated by %8.5f. Periodic translation applied = [%8.5f, %8.5f, %8.5f] " \
-            % (mapping[it[0]][0], mapping[it[0]][1], it[1], periodicity[it[0]][0], periodicity[it[0]][1], periodicity[it[0]][2] )
-
-        print "Pairs of atoms separated no more than by Rcut, sorted by the distance"
-        print sorted_pairs
-        print "Formatted printout:"
+            print(F"Atoms {mapping[it[0]][0]} and {mapping[it[0]][1]} are separated by\
+                  {it[1]:8.5f}. Periodic translation applied = {periodicity[it[0]][0]:8.5f},\
+                  {periodicity[it[0]][1]:8.5f}, {periodicity[it[0]][2]:8.5f} )" )
+        print("Pairs of atoms separated no more than by Rcut, sorted by the distance")
+        print(sorted_pairs)
+        print("Formatted printout:")
         for it in sorted_pairs:
-            print "Atoms %5i and %5i are separated by %8.5f. Periodic translation applied = [%8.5f, %8.5f, %8.5f] " \
-            % (mapping[it[0]][0], mapping[it[0]][1], it[1], periodicity[it[0]][0], periodicity[it[0]][1], periodicity[it[0]][2] )
+            print(F"Atoms {mapping[it[0]][0]} and {mapping[it[0]][1]} are separated by\
+                  {it[1]:8.5f}. Periodic translation applied = {periodicity[it[0]][0]:8.5f},\
+                  {periodicity[it[0]][1]:8.5f}, {periodicity[it[0]][2]:8.5f} )" )
 
 
 
@@ -167,7 +168,7 @@ def autoconnect(R, MaxCoord, params):
     act_coord = [0]*N   # actual coordination numbers
     num_sat = 0         # the number of valence-saturated atoms
     res = []
-    for i in xrange(N):
+    for i in range(0,N):
         res.append([i,[]])
 
     # Now lets pick the pairs with the minimal distance, depending on the option...
@@ -200,7 +201,7 @@ def autoconnect(R, MaxCoord, params):
                     act_coord[j] += 1
 
     # Order the indices of the atoms to which each atom is connected (for testing and convenience)    
-    for i in xrange(N):
+    for i in range(0,N):
         res[i][1] = sorted(res[i][1])
    
 
@@ -213,9 +214,9 @@ def autoconnect(R, MaxCoord, params):
 
 
     if verbosity==1:
-        print "res = " , res
-        print "Formatted output:"
-        print line
+        print("res = ", res)
+        print("Formatted output:")
+        print(line)
 
  
     return res, line, unsorted_pairs_out
@@ -245,7 +246,7 @@ def find_undercoordinated_atoms(res, MaxCoord):
     nat = len(MaxCoord)  # the total number of atoms
     out = []
 
-    for i in xrange(nat):
+    for i in range(0,nat):
         diff = MaxCoord[i] - len(res[i][1])
         if  diff > 0:
             out.append([i, diff])
@@ -260,7 +261,7 @@ def example_1():
     R = []
     MaxCoord = []
 
-    for i in xrange(N):
+    for i in range(0,N):
         if rnd.uniform(0.0, 1.0)<0.5:
             MaxCoord.append(3)
         else:
@@ -268,10 +269,10 @@ def example_1():
         R.append(VECTOR(rnd.normal(), rnd.normal(), rnd.normal()))
     Rcut = 3.0
 
-    print "Runing   autoconnect(R, MaxCoord, Rcut, 0, 1)  with : "
-    print "R = ", R
-    print "MaxCoord = ", MaxCoord
-    print "Rcut = ", Rcut
+    print("Runing   autoconnect(R, MaxCoord, Rcut, 0, 1)  with : ")
+    print("R = ", R)
+    print("MaxCoord = ", MaxCoord)
+    print("Rcut = ", Rcut)
     
     autoconnect(R, MaxCoord, {"Rcut":Rcut, "opt":0, "verbosity":1})
 
@@ -311,7 +312,7 @@ class TestAutoconnect(unittest.TestCase):
         self.assertEqual(res, [[0, [1,2]], [1, [0,2]], [2, [0,1]] ] )
 
         res, lines = autoconnect(R, MaxCoord, {"Rcut":0.5})          
-        print res
+        print(res)
         self.assertEqual(res, [ [0, []], [1, [2]], [2, [1]] ] )
 
 

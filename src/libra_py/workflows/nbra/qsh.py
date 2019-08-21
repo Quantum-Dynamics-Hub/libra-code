@@ -96,10 +96,10 @@ def compute_freqs(H_vib, params):
     
     # Ok, now we have the function - sum of sines, so let's compute the standard deviation
     # This is a silly method - just do it numerically
-    dev = [ [ 0.0 for i in xrange(nstates)] for j in xrange(nstates)]
+    dev = [ [ 0.0 for i in range(0,nstates)] for j in range(0,nstates)]
         
-    for i in xrange(nstates):
-        for j in xrange(nstates):
+    for i in range(0,nstates):
+        for j in range(0,nstates):
 
             # Adjust the number of frequencies
             nfreqs = params["nfreqs"]            
@@ -108,10 +108,10 @@ def compute_freqs(H_vib, params):
 
             # Compute the variation of the QSH terms
             fu_ave, fu2_ave = 0.0, 0.0
-            for r in xrange(1000000):
+            for r in range(0,1000000):
 
                 fu = 0.0
-                for k in xrange(nfreqs):
+                for k in range(0,nfreqs):
                     fu = fu + freqs[i][j][k][2] * math.sin(conv*freqs[i][j][k][0]*r*dt)
 
                 fu_ave = fu_ave + fu
@@ -158,21 +158,21 @@ def compute_qs_Hvib(Nfreqs, freqs, t,
     Hvib_stoch_re = MATRIX(nstates,nstates)
     Hvib_stoch_im = MATRIX(nstates,nstates)
 
-    fu = [ [ 0.0 for i in xrange(nstates)] for j in xrange(nstates)]
+    fu = [ [ 0.0 for i in range(0,nstates)] for j in range(0,nstates)]
 
-    for i in xrange(nstates):
-        for j in xrange(nstates):
+    for i in range(0,nstates):
+        for j in range(0,nstates):
             # Adjust the number of frequencies
             nfreqs = Nfreqs
             if len(freqs[i][j]) < Nfreqs:
                 nfreqs = len(freqs[i][j])
 
-            for k in xrange(nfreqs):
+            for k in range(0,nfreqs):
                 fu[i][j] = fu[i][j] + freqs[i][j][k][2] * math.sin(conv*freqs[i][j][k][0]*t)
 
 
-    for i in xrange(nstates):
-        for j in xrange(nstates):
+    for i in range(0,nstates):
+        for j in range(0,nstates):
             if i==j:
                 xab = H_vib_re_ave.get(i,j) + H_vib_re_std.get(i,j) * (fu[i][j]/dev[i][j] ) 
                 if xab < dw_Hvib_re.get(i,j):
@@ -248,7 +248,7 @@ def run(H_vib, params):
     ndata = len(H_vib)
     nstates = H_vib[0][0].num_of_cols
     output_set_paths = []
-    for i in xrange(ndata): 
+    for i in range(0,ndata): 
         output_set_paths.append( "QSH_%s" % (i) )
 
     # Check the input parameters and setup defaults
@@ -272,7 +272,7 @@ def run(H_vib, params):
 
     qsh_H_vib = []
 
-    for idata in xrange(ndata):   # over all MD trajectories (data sets)
+    for idata in range(0,ndata):   # over all MD trajectories (data sets)
         
         #======== Split complex-valued matrices into real and imaginary sets ============
 
@@ -280,7 +280,7 @@ def run(H_vib, params):
         H_vib_im = []  # list of MATRIX
 
         nsteps0 = len(H_vib[idata])   
-        for i in xrange(nsteps0):
+        for i in range(0,nsteps0):
             H_vib_re.append(H_vib[idata][i].real())
             H_vib_im.append(H_vib[idata][i].imag())
 
@@ -295,7 +295,7 @@ def run(H_vib, params):
         
         #============= Output the resulting QSH Hamiltonians ===========================
         Hvib = []
-        for i in xrange(nsteps):
+        for i in range(0,nsteps):
             # compute QSH Hvib at time t_i = i * dt
             qs_Hvib = compute_qs_Hvib(nfreqs, freqs, i*dt, H_vib_re_ave, H_vib_re_std, dw_Hvib_re, 
                             up_Hvib_re, H_vib_im_ave, H_vib_im_std, dw_Hvib_im, up_Hvib_im,  dev)

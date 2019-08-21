@@ -15,7 +15,6 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-from libra_py import *
 
 
 def get_value(params,key,default,typ):
@@ -42,8 +41,8 @@ def get_value(params,key,default,typ):
         pass  # All is ok
     else: 
         str_val = default
-        print "Warning: Parameter with key = %s does not exist in dictionary" % key
-        print "Using the default value of %s" % default
+        print("Warning: Parameter with key = %s does not exist in dictionary" % key)
+        print("Using the default value of %s" % default)
 
     # Convert string to desired data type
     if typ=="s":
@@ -88,12 +87,12 @@ def split_orbitals_energies(C, E):
 
     stenc1, stenc2 = [], []
 
-    for i in xrange(N_mo_adi):
+    for i in range(0,N_mo_adi):
         stenc1.append(2*i)
         stenc2.append(2*i+1)
 
-    pop_submatrix(C, C_alp, range(0, N_pw), stenc1 )
-    pop_submatrix(C, C_bet, range(0, N_pw), stenc2 )
+    pop_submatrix(C, C_alp, list(range(0, N_pw)), stenc1 )
+    pop_submatrix(C, C_bet, list(range(0, N_pw)), stenc2 )
 
     pop_submatrix(E, E_alp, stenc1, stenc1)
     pop_submatrix(E, E_bet, stenc2, stenc2)
@@ -121,13 +120,13 @@ def merge_orbitals(Ca, Cb):
     N_mo_b = Cb.num_of_cols
 
     if npw_a != npw_b:
-        print "Error: The number of rows of the two matrices should be equal"
+        print("Error: The number of rows of the two matrices should be equal")
         sys.exit(0)
 
     C = CMATRIX(npw_a, N_mo_a + N_mo_b)
 
-    push_submatrix(C, Ca, range(0,npw_a), range(0,N_mo_a));
-    push_submatrix(C, Cb, range(0,npw_a), range(N_mo_a, N_mo_a + N_mo_b));
+    push_submatrix(C, Ca, list(range(0,npw_a)), list(range(0,N_mo_a)) )
+    push_submatrix(C, Cb, list(range(0,npw_a)), list(range(N_mo_a, N_mo_a + N_mo_b)) )
 
     return C
 
@@ -212,13 +211,13 @@ def post_process(coeff, ene, issoc):
 
         # Construct spin-Orbtial matrix of size (2*N_pw,2*N_ks_orb)
         C = CMATRIX(2*N_pw, 2*N_ks_orb)
-        push_submatrix(C, c_a, range(0,N_pw), range(0,N_ks_orb) )
-        push_submatrix(C, c_b, range(N_pw,2*N_pw), range(N_ks_orb,2*N_ks_orb) )
+        push_submatrix(C, c_a, list(range(0,N_pw)), list(range(0,N_ks_orb)) )
+        push_submatrix(C, c_b, list(range(N_pw,2*N_pw)), list(range(N_ks_orb,2*N_ks_orb)) )
 
         # Same with energies:
         E = CMATRIX(2*N_ks_orb, 2*N_ks_orb)
-        push_submatrix(E, e_a, range(0,N_ks_orb), range(0,N_ks_orb) )
-        push_submatrix(E, e_b, range(N_ks_orb,2*N_ks_orb), range(N_ks_orb,2*N_ks_orb) )
+        push_submatrix(E, e_a, list(range(0,N_ks_orb)), list(range(0,N_ks_orb)) )
+        push_submatrix(E, e_b, list(range(N_ks_orb,2*N_ks_orb)), list(range(N_ks_orb,2*N_ks_orb)) )
 
 
     elif issoc==0:  # no SOC
@@ -230,13 +229,13 @@ def post_process(coeff, ene, issoc):
 
             # Construct spin-Orbtial matrix of size (N_pw,2*N_ks_orb)
             C = CMATRIX(N_pw, 2*N_ks_orb)
-            push_submatrix(C, coeff[0], range(0,N_pw), range(0,N_ks_orb) ) 
-            push_submatrix(C, coeff[0], range(0,N_pw), range(N_ks_orb,2*N_ks_orb) )
+            push_submatrix(C, coeff[0], list(range(0,N_pw)), list(range(0,N_ks_orb)) ) 
+            push_submatrix(C, coeff[0], list(range(0,N_pw)), list(range(N_ks_orb,2*N_ks_orb)) )
  
             # Construct energy matrix of size (2*N_ks_orb,2*N_ks_orb):
             E = CMATRIX(2*N_ks_orb, 2*N_ks_orb)
-            push_submatrix(E, ene[0], range(0,N_ks_orb), range(0,N_ks_orb) )
-            push_submatrix(E, ene[0], range(N_ks_orb,2*N_ks_orb), range(N_ks_orb,2*N_ks_orb) )
+            push_submatrix(E, ene[0], list(range(0,N_ks_orb)), list(range(0,N_ks_orb)) )
+            push_submatrix(E, ene[0], list(range(N_ks_orb,2*N_ks_orb)), list(range(N_ks_orb,2*N_ks_orb)) )
 
 
         elif len(coeff)==2:  # spin-polarized (or 2-k points, non-polarized case, beware!)
@@ -246,13 +245,13 @@ def post_process(coeff, ene, issoc):
 
             # Construct spin-Orbtial matrix of size (N_pw,2*N_ks_orb)
             C = CMATRIX(N_pw, 2*N_ks_orb)
-            push_submatrix(C, coeff[0], range(0,N_pw), range(0,N_ks_orb) )
-            push_submatrix(C, coeff[1], range(0,N_pw), range(N_ks_orb,2*N_ks_orb) )
+            push_submatrix(C, coeff[0], list(range(0,N_pw)), list(range(0,N_ks_orb)) )
+            push_submatrix(C, coeff[1], list(range(0,N_pw)), list(range(N_ks_orb,2*N_ks_orb)) )
 
             # Same with energies:
             E = CMATRIX(2*N_ks_orb, 2*N_ks_orb)
-            push_submatrix(E, ene[0], range(0,N_ks_orb), range(0,N_ks_orb) )
-            push_submatrix(E, ene[1], range(N_ks_orb,2*N_ks_orb), range(N_ks_orb,2*N_ks_orb) )
+            push_submatrix(E, ene[0], list(range(0,N_ks_orb)), list(range(0,N_ks_orb)) )
+            push_submatrix(E, ene[1], list(range(N_ks_orb,2*N_ks_orb)), list(range(N_ks_orb,2*N_ks_orb)) )
 
 
     return C, E
@@ -281,12 +280,12 @@ def orthogonalize_orbitals(C):
     S = C.H() * C  # overlap matrix
 
     # Test is S is invertabile
-    print "\nTesting if S is invertabile\n"
-    print FullPivLU_rank_invertible(S)
-    print "Det = ", FullPivLU_det(S)
+    print("\nTesting if S is invertabile\n")
+    print(FullPivLU_rank_invertible(S))
+    print("Det = ", FullPivLU_det(S))
     is_inv = FullPivLU_rank_invertible(S)
     if is_inv[1] != 1:
-        print "Error, S is not invertible, Exiting Program" 
+        print("Error, S is not invertible, Exiting Program")
         sys.exit(0)
 
     S_half = CMATRIX(S.num_of_rows, S.num_of_cols)

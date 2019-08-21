@@ -50,9 +50,9 @@ def step1(X):
 
     n = X.num_of_cols
 
-    for i in xrange(n):
+    for i in range(0,n):
         res = X.min_row_elt(i)
-        for j in xrange(n):
+        for j in range(0,n):
             X.add(i, j, -res[1])  
 
     return 2
@@ -66,8 +66,8 @@ def step2(X, M, Rcov, Ccov):
 
     n = X.num_of_cols
 
-    for i in xrange(n):
-        for j in xrange(n):
+    for i in range(0,n):
+        for j in range(0,n):
             if math.fabs(X.get(i,j))<1e-10 and Rcov[i]==0 and Ccov[j]==0:
                 M[i][j] = 1
                 Rcov[i] = 1
@@ -77,7 +77,7 @@ def step2(X, M, Rcov, Ccov):
     Before we go on to Step 3, we uncover all rows and columns so that we can use the
     cover vectors to help us count the number of starred zeros
     """
-    for i in xrange(n):
+    for i in range(0,n):
         Rcov[i] = 0
         Ccov[i] = 0
     
@@ -93,13 +93,13 @@ def step3(M, Ccov):
 
     n = len(M)
 
-    for i in xrange(n):
-        for j in xrange(n):
+    for i in range(0,n):
+        for j in range(0,n):
             if M[i][j]==1:
                 Ccov[j] = 1
 
     colcount = 0
-    for i in xrange(n):
+    for i in range(0,n):
         colcount += Ccov[i]
 
     step = 4
@@ -140,7 +140,7 @@ def find_star_in_row(M, row):
     n = len(M)
 
     col = -1
-    for i in xrange(n):
+    for i in range(0,n):
         if M[row][i] == 1:
             col = i
 
@@ -150,7 +150,7 @@ def find_star_in_col(M, col):
     n = len(M)
 
     row = -1
-    for i in xrange(n):
+    for i in range(0,n):
         if M[i][col] == 1:
             row = i
 
@@ -161,7 +161,7 @@ def find_prime_in_row(M, row):
     n = len(M)
 
     col = -1
-    for i in xrange(n):
+    for i in range(0,n):
         if M[row][i] == 2:
             col = i
 
@@ -220,7 +220,7 @@ def augment_path(M, path):
 def clear_covers(Rcov, Ccov):
 
     n = len(Rcov)
-    for i in xrange(n):
+    for i in range(0,n):
         Rcov[i] = 0
         Ccov[i] = 0
 
@@ -229,8 +229,8 @@ def erase_primes(M):
 
     n = len(M)
 
-    for i in xrange(n):
-        for j in xrange(n):
+    for i in range(0,n):
+        for j in range(0,n):
             if M[i][j]==2:
                 M[i][j] = 0
 
@@ -282,8 +282,8 @@ def find_smallest(X, Rcov, Ccov):
     n = X.num_of_cols
     minval = 1.0e+25
 
-    for i in xrange(n):
-        for j in xrange(n):
+    for i in range(0,n):
+        for j in range(0,n):
             if(Rcov[i]==0 and Ccov[j]==0):
                 if minval>X.get(i,j):
                     minval = X.get(i,j)
@@ -303,8 +303,8 @@ def step6(X, Rcov, Ccov):
 
     n = X.num_of_cols
 
-    for i in xrange(n):
-        for j in xrange(n):
+    for i in range(0,n):
+        for j in range(0,n):
     
             if Rcov[i]==1:
                 X.add(i,j, minval)
@@ -319,8 +319,8 @@ def compute_assignment(M):
     res = []
     n = len(M)
 
-    for i in xrange(n):
-        for j in xrange(n):
+    for i in range(0,n):
+        for j in range(0,n):
             if M[i][j] == 1:
                 res.append([i,j])
     return res
@@ -329,11 +329,11 @@ def show_M(M):
 
     n = len(M)
 
-    for i in xrange(n):
+    for i in range(0,n):
         res = ""
-        for j in xrange(n):
+        for j in range(0,n):
             res = res + " %3i " % M[i][j]
-        print res
+        print(res)
  
 
 def minimize(_X, verbosity=0):
@@ -346,12 +346,12 @@ def minimize(_X, verbosity=0):
     Rcov = intList()
     Ccov = intList()
 
-    for i in xrange(n):
+    for i in range(0,n):
         Rcov.append(0)
         Ccov.append(0)
 
         Mi = intList() 
-        for j in xrange(n):
+        for j in range(0,n):
             Mi.append(0)
         M.append(Mi)
 
@@ -366,52 +366,52 @@ def minimize(_X, verbosity=0):
     while(not done):
 
         if verbosity > 0:
-            print "** Iteration %3i **" % (iter_)
+            print("** Iteration %3i **" % (iter_))
         iter_ += 1
 
         if step==1:
             if verbosity > 0:
-                print "Step 1"
+                print("Step 1")
             step = step1(X)
 
         elif step==2:
             if verbosity > 0:
-                print "Step 2"
+                print("Step 2")
             step = step2(X, M, Rcov, Ccov)
 
         elif step==3:
             if verbosity > 0:
-                print "Step 3"
+                print("Step 3")
             step, colcount = step3(M, Ccov)
 
         elif step==4:
             if verbosity > 0:
-                print "Step 4"
+                print("Step 4")
             step, path_row_0, path_col_0 = step4(X, M, Rcov, Ccov)
 
         elif step==5:
             if verbosity > 0:
-                print "Step 5"
+                print("Step 5")
             step, path = step5(M, path_row_0, path_col_0, Rcov, Ccov)
 
         elif step==6:
             if verbosity > 0:
-                print "Step 6"
+                print("Step 6")
             step = step6(X, Rcov, Ccov)
 
         elif step==7:
             res = compute_assignment(M)
             if verbosity > 0:
-                print "Done"
-                print res
+                print("Done")
+                print(res)
             done = True
 
         if verbosity > 0:
-            print "X = "; X.show_matrix()    
-            print "M = "; show_M(M)
-            print "Ccov = ", Cpp2Py(Ccov)
-            print "Rcov = ", Cpp2Py(Rcov)       
-            print "============================"
+            print("X = "); X.show_matrix()    
+            print("M = "); show_M(M)
+            print("Ccov = ", Cpp2Py(Ccov))
+            print("Rcov = ", Cpp2Py(Rcov))
+            print("============================")
 
     return res    
 
@@ -427,13 +427,13 @@ def maximize(_X, verbosity=0):
     X = MATRIX(_X)
     n = X.num_of_cols
     maxval = 0.0
-    for i in xrange(n):
-        for j in xrange(n):
+    for i in range(0,n):
+        for j in range(0,n):
             if X.get(i,j)>maxval:
                 maxval = X.get(i,j)
 
-    for i in xrange(n):
-        for j in xrange(n):
+    for i in range(0,n):
+        for j in range(0,n):
             X.scale(i,j, -1.0)
             X.add(i,j, maxval + 1e-5)
 
@@ -507,14 +507,14 @@ class TestHungarian(unittest.TestCase):
         S, X, a,b,c,d = _test_setup()
 
         P = minimize(S)
-        print "Input matrix "; S.show_matrix()
-        print "Assignment map = ", P
+        print("Input matrix "); S.show_matrix()
+        print("Assignment map = ", P)
         for p in P:
             self.assertIn(p, [[0,2],[1,1],[2,0]])
 
         P = minimize(X)
-        print "Input matrix "; X.show_matrix()
-        print "Assignment map = ", P
+        print("Input matrix "); X.show_matrix()
+        print("Assignment map = ", P)
         for p in P:
             self.assertIn(p, [[0,3],[1,2],[2,1],[3,0]])
 
@@ -524,26 +524,26 @@ class TestHungarian(unittest.TestCase):
         S, X, a,b,c,d = _test_setup()
 
         P = maximize(a)
-        print "Input matrix "; a.show_matrix()
-        print "Assignment map = ", P
+        print("Input matrix "); a.show_matrix()
+        print("Assignment map = ", P)
         for p in P:
             self.assertIn(p, [[0,0],[1,1],[2,2],[3,3]])
 
         P = maximize(b)
-        print "Input matrix "; b.show_matrix()
-        print "Assignment map = ", P
+        print("Input matrix "); b.show_matrix()
+        print("Assignment map = ", P)
         for p in P:
             self.assertIn(p, [[0,0],[1,2],[2,3],[3,1]])
 
         P = maximize(c)
-        print "Input matrix "; c.show_matrix()
-        print "Assignment map = ", P
+        print("Input matrix "); c.show_matrix()
+        print("Assignment map = ", P)
         for p in P:
             self.assertIn(p, [[0,1],[1,2],[2,0],[3,3]])
 
         P = maximize(d)
-        print "Input matrix "; d.show_matrix()
-        print "Assignment map = ", P
+        print("Input matrix "); d.show_matrix()
+        print("Assignment map = ", P)
         for p in P:
             self.assertIn(p, [[0,0],[1,1],[2,3],[3,2],[4,4],[5,7],[6,5],[7,6]])
 

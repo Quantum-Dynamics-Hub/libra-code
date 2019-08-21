@@ -32,8 +32,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import units
-import data_stat
+from . import units
+from . import data_stat
 
 
 def acf_mat(data, dt, opt=0):
@@ -68,9 +68,9 @@ def acf_mat(data, dt, opt=0):
     autocorr = []
     ndof = data[0].num_of_rows
 
-    for i in xrange(sz):
+    for i in range(0,sz):
         total = 0.0
-        for j in xrange(sz-i):
+        for j in range(0,sz-i):
             total += (data[j].T()*data[j+i]).get(0)   # scalar product
         if opt==0:
             autocorr.append( total/((sz-i)*ndof) )  # less bias, chemistry adopted
@@ -125,9 +125,9 @@ def acf_vec(data, dt, opt=0):
     autocorr = []
     ndof = 3.0
 
-    for i in xrange(sz):
+    for i in range(0,sz):
         total = 0.0
-        for j in xrange(sz-i):
+        for j in range(0,sz-i):
             total += data[j]*data[j+i]  # scalar product
         if opt==0:
             autocorr.append( total/((sz-i)*ndof) )  # less bias, chemistry adopted

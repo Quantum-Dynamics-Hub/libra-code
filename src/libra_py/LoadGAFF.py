@@ -97,7 +97,7 @@ def Load_GAFF(force_field,  ff_file1 = "data/force_fields/gaff/gaff_types.dat",
 
 
 #-------------- Atoms ------------------------------------
-    print "Loading atom types...\n"
+    print("Loading atom types...\n")
     f   = open(ff_file1,'r')
     A = f.readlines()
     f.close()
@@ -128,7 +128,7 @@ def Load_GAFF(force_field,  ff_file1 = "data/force_fields/gaff/gaff_types.dat",
             atom_record.set(ff)
             res = force_field.Add_Atom_Record(atom_record)
             
-            print "load type", ff.Atom_ff_type
+            print("load type", ff.Atom_ff_type)
 
         if m2!=None:
 #            ff = atomrecord()
@@ -165,7 +165,7 @@ def Load_GAFF(force_field,  ff_file1 = "data/force_fields/gaff/gaff_types.dat",
 
 
 #-------------- Bonds ------------------------------------
-    print "Loading bonds...\n"
+    print("Loading bonds...\n")
     f   = open(ff_file2,'r')
     A = f.readlines()
     f.close()
@@ -189,7 +189,7 @@ def Load_GAFF(force_field,  ff_file1 = "data/force_fields/gaff/gaff_types.dat",
 
 
 #----------------- Angles -------------------------------------
-    print "Loading angles...\n"
+    print("Loading angles...\n")
     f   = open(ff_file3,'r')
     A = f.readlines()
     f.close()
@@ -213,7 +213,7 @@ def Load_GAFF(force_field,  ff_file1 = "data/force_fields/gaff/gaff_types.dat",
 
 
 #----------------- Dihedrals -------------------------------------
-    print "Loading dihedral...\n"
+    print("Loading dihedral...\n")
     f   = open(ff_file4,'r')
     A = f.readlines()
     f.close()

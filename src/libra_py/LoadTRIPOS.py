@@ -106,7 +106,7 @@ def Load_TRIPOS(force_field, ff_file1 = "data/force_fields/tripos/tripos.dat",
 
 
 #-------------- Atoms ------------------------------------
-    print "Loading atom types...\n"
+    print("Loading atom types...\n")
     f   = open(ff_file1,'r')
     A = f.readlines()
     f.close()
@@ -134,7 +134,7 @@ def Load_TRIPOS(force_field, ff_file1 = "data/force_fields/tripos/tripos.dat",
             atom_record.set(ff)
             res = force_field.Add_Atom_Record(atom_record)
             
-            print "load type", ff.Atom_ff_type
+            print("load type", ff.Atom_ff_type)
 
         if m2!=None:
             ff_par["sigma_comb_rule"] = a[m2.start('FF_sigma_rule_value'):m2.end('FF_sigma_rule_value')]
@@ -157,7 +157,7 @@ def Load_TRIPOS(force_field, ff_file1 = "data/force_fields/tripos/tripos.dat",
 
 
 #-------------- Bonds ------------------------------------
-    print "Loading bonds...\n"
+    print("Loading bonds...\n")
     f   = open(ff_file2,'r')
     A = f.readlines()
     f.close()
@@ -181,7 +181,7 @@ def Load_TRIPOS(force_field, ff_file1 = "data/force_fields/tripos/tripos.dat",
 
 
 #----------------- Angles -------------------------------------
-    print "Loading angles...\n"
+    print("Loading angles...\n")
     f   = open(ff_file3,'r')
     A = f.readlines()
     f.close()
@@ -205,7 +205,7 @@ def Load_TRIPOS(force_field, ff_file1 = "data/force_fields/tripos/tripos.dat",
 
 
 #----------------- Dihedrals -------------------------------------
-    print "Loading dihedral...\n"
+    print("Loading dihedrals...\n")
     f   = open(ff_file4,'r')
     A = f.readlines()
     f.close()

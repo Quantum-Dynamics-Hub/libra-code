@@ -26,7 +26,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 #import common_utils as comn
 import util.libutil as comn
-import units
+from . import units
 
 
 class tmp:
@@ -94,7 +94,7 @@ def LVC(q, params):
     obj.d1ham_dia = CMATRIXList()
     obj.dc1_dia = CMATRIXList()
 
-    for i in xrange(ndof):
+    for i in range(0,ndof):
         obj.d1ham_dia.append( CMATRIX(2,2) )
         obj.dc1_dia.append( CMATRIX(2,2) )
 
@@ -103,7 +103,7 @@ def LVC(q, params):
     obj.ham_dia.set(0,0, params["Delta1"]*(1.0+0.0j))
     obj.ham_dia.set(1,1, params["Delta2"]*(1.0+0.0j))
 
-    for n in xrange(ndof):
+    for n in range(0,ndof):
         # Diagonal bath
         x = 0.5*m[n]*w[n]*w[n]*q.get(n,0)*q.get(n,0)*(1.0+0.0j) 
         obj.ham_dia.add(0,0, x)

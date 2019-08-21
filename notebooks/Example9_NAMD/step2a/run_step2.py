@@ -16,7 +16,7 @@ from libra_py import QE_methods
 from libra_py.workflows.nbra import step2
 
 
-print os.getcwd()
+print( os.getcwd())
 
 
 
@@ -196,5 +196,5 @@ hpc_utils.distribute(0,tot_nsteps,nsteps_per_job,"submit_templ.slm",["x0.exp.in"
 os.chdir("../")
 
 
-print os.getcwd()
+print( os.getcwd())
 

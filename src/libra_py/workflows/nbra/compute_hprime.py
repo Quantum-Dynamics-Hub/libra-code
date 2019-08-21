@@ -26,7 +26,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-#from libra_py import *
+
 
 def compute_hprime_dia(es, info, filename):
     """Computes the matrix elements of transition dipole  moments
@@ -70,7 +70,7 @@ def compute_hprime_dia(es, info, filename):
     b3    = info["b3"]
 
     g = MATRIX(len(grid),3)
-    for i in xrange(len(grid)):
+    for i in range(0,len(grid)):
         g.set(i,0,grid[i].x)
         g.set(i,1,grid[i].y)
         g.set(i,2,grid[i].z)
@@ -138,8 +138,8 @@ def hprime_py(es, info, filename):
     g_sz = len(grid)
     npw  = coeff.num_of_rows
 
-    print "g_sz  = ", g_sz
-    print "npw   = ", npw 
+    print("g_sz  = ", g_sz)
+    print("npw   = ", npw)
     
     scl1 = (1.0+0.0j)
     scl2 = 2.0*(0.0+1.0j)
@@ -153,15 +153,16 @@ def hprime_py(es, info, filename):
 
 
     N = coeff.num_of_cols 
-    Hx = CMATRIX(N/2,N/2); Hy = CMATRIX(N/2,N/2); Hz = CMATRIX(N/2,N/2);
-    for g in xrange(g_sz):
+    sz = int(N/2)
+    Hx = CMATRIX(sz, sz); Hy = CMATRIX(sz, sz); Hz = CMATRIX(sz, sz)
+    for g in range(0,g_sz):
 
         gx = scl1*(grid[g].x*b1.x + grid[g].y*b2.x + grid[g].z*b3.x)
         gy = scl1*(grid[g].x*b1.y + grid[g].y*b2.y + grid[g].z*b3.y)
         gz = scl1*(grid[g].x*b1.z + grid[g].y*b2.z + grid[g].z*b3.z)
 
-        for i in xrange(N/2):  
-            for j in xrange(N/2):
+        for i in range(0, sz):  
+            for j in range(0, sz):
 
                 tmp  = coeff.H().get(i,g) * coeff.get(g,j)
             

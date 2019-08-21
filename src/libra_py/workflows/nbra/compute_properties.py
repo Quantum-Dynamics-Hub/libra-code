@@ -15,9 +15,8 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-from libra_py import *
+from libra_py import QE_utils
 
-from utils import*
 
 def compute_properties_dia_gamma(params, es_curr, es_next, curr_index):
     """
@@ -38,8 +37,8 @@ def compute_properties_dia_gamma(params, es_curr, es_next, curr_index):
     Ea_curr = es_curr["E_dia"]
     Ea_next = es_next["E_dia"]
 
-    rd = get_value(params,"rd",os.getcwd()+"../../res","s")   # of where the files will be printed out
-    dt = get_value(params,"dt","41.34145","f") # time step in a.u - rescale NAC if actual dt is different
+    rd = QE_utils.get_value(params,"rd",os.getcwd()+"../../res","s")   # of where the files will be printed out
+    dt = QE_utils.get_value(params,"dt","41.34145","f") # time step in a.u - rescale NAC if actual dt is different
 
     S  = Ca_curr.H() * Ca_curr
     St = Ca_curr.H() * Ca_next

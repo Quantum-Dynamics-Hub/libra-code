@@ -24,9 +24,9 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import util.libutil as comn
-import units
-import LoadPT
-import LoadUFF
+from . import units
+from . import LoadPT
+from . import LoadUFF
 
 
 ##############################################################
@@ -46,7 +46,7 @@ def syst2xyz(syst):
      
     nat = syst.Number_of_atoms
     res = " %i \n\n" % (nat)
-    for i in xrange(nat):
+    for i in range(0,nat):
         x = syst.Atoms[i].Atom_RB.rb_cm.x
         y = syst.Atoms[i].Atom_RB.rb_cm.y
         z = syst.Atoms[i].Atom_RB.rb_cm.z
@@ -96,7 +96,7 @@ def nve_md_init(syst, mol, el, ham):
 
     # 2. compute kinetic energy
     E_kin = 0.0
-    for n in xrange(syst.Number_of_fragments):
+    for n in range(0,syst.Number_of_fragments):
         E_kin += (syst.Fragments[n].Group_RB.ekin_tr() + syst.Fragments[n].Group_RB.ekin_rot() )
 
     # 3. Compute forces and potential energy
@@ -172,7 +172,7 @@ def nve_md_step(syst, mol, el, ham, params):
 
     # 1. propagate rotational and translational DOF for 0.5 of dt
     ekin = 0.0
-    for n in xrange(syst.Number_of_fragments):
+    for n in range(0,syst.Number_of_fragments):
         # Linear momentum propagation:
         if n not in fixed_tr:
             syst.Fragments[n].Group_RB.apply_force(0.5*dt)
@@ -185,7 +185,7 @@ def nve_md_step(syst, mol, el, ham, params):
 
     # 2. propagate rotational and translational coordinates of all fragments for dt
     ps = 0.0
-    for n in xrange(syst.Number_of_fragments):
+    for n in range(0,syst.Number_of_fragments):
         # Propagate translational DOFs 
         if n not in fixed_tr:
             syst.Fragments[n].Group_RB.shift_position(dt * syst.Fragments[n].Group_RB.rb_p * syst.Fragments[n].Group_RB.rb_iM);
@@ -198,7 +198,7 @@ def nve_md_step(syst, mol, el, ham, params):
                 ps = syst.Fragments[n].Group_RB.propagate_dlml(dt)
 
     # 3. update atomic positions
-    for n in xrange(syst.Number_of_fragments):
+    for n in range(0,syst.Number_of_fragments):
         syst.update_atoms_for_fragment(n)
 
     # 4. compute potential energy and forces on atoms
@@ -212,7 +212,7 @@ def nve_md_step(syst, mol, el, ham, params):
 
     # 6. propagate rotational and translational momenta for another 0.5 of dt
     ekin = 0.0
-    for n in xrange(syst.Number_of_fragments):
+    for n in range(0,syst.Number_of_fragments):
         # Linear momentum propagation:
         if n not in fixed_tr:
             syst.Fragments[n].Group_RB.apply_force(0.5*dt)
@@ -299,7 +299,7 @@ def optimize_syst(syst, params):
 
     syst.determine_functional_groups(1)  # 
     syst.init_fragments()
-    atlst1 = range(1,syst.Number_of_atoms+1)
+    atlst1 = list(range(1,syst.Number_of_atoms+1))
 
 
     # Creating Hamiltonian
@@ -337,12 +337,12 @@ def optimize_syst(syst, params):
         ncycles = anneal_item[1]
         nsteps = anneal_item[2]
 
-        for i in xrange(ncycles):  # the number of cycles 
+        for i in range(0,ncycles):  # the number of cycles 
             if cooling_out2:
                 syst.set_atomic_q(mol.q)  # mol -> syst - probably not needed
                 syst.print_xyz("_mol_cooling.xyz",i)
 
-            for j in xrange(nsteps):                
+            for j in range(0,nsteps):                
                 ekin, epot, etot = nve_md_step(syst, mol, el, ham, params1)  # the number of steps 
 
 

@@ -30,7 +30,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import util.libutil as comn
-import units
+from . import units
 
 
 def find_last_file(prefix, suffix):
@@ -88,7 +88,7 @@ def get_mtx_matrices(filename, act_sp1=None, act_sp2=None):
 
     sz = len(A)       
     start = 0
-    for i in xrange(sz):
+    for i in range(0,sz):
         if A[i][0]!="%":
             start = i        
             break
@@ -104,19 +104,19 @@ def get_mtx_matrices(filename, act_sp1=None, act_sp2=None):
     
     if act_sp1==None:
         nstates1 = N
-        act_sp1 = range(0, nstates1)
+        act_sp1 = list(range(0, nstates1))
     else:
         nstates1 = len(act_sp1)
 
     if act_sp2==None:
         nstates2 = N
-        act_sp2 = range(0, nstates2)
+        act_sp2 = list(range(0, nstates2))
     else:
         nstates2 = len(act_sp2)
         
     X = CMATRIX(N,M)    
         
-    for n in xrange(start+1, sz):
+    for n in range(start+1, sz):
         tmp = A[n].split()        
                 
         if len(tmp)==3:
@@ -162,7 +162,7 @@ def xyz_traj2gen_sp(infile, md_iter):
 
     # Make up the output file
     line = ""
-    for i in xrange(nat):
+    for i in range(0,nat):
         ln_indx = (nat+2)*md_iter + (i + 2)
         tmp = A[ln_indx].split()
 
@@ -204,7 +204,7 @@ def xyz_traj2gen_ovlp(infile, md_iter1, md_iter2):
 
     # Make up the output file
     line = ""
-    for i in xrange(nat):
+    for i in range(0,nat):
         ln_indx = (nat+2)*md_iter1 + (i + 2)
         tmp = A[ln_indx].split()
 
@@ -214,7 +214,7 @@ def xyz_traj2gen_ovlp(infile, md_iter1, md_iter2):
         z = float(tmp[3])
         line = line + " %s %15.8f  %15.8f  %15.8f\n" % (at, x, y, z)
 
-    for i in xrange(nat):
+    for i in range(0,nat):
         ln_indx = (nat+2)*md_iter2 + (i + 2)
         tmp = A[ln_indx].split()
 

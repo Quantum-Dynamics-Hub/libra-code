@@ -38,7 +38,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import mapping
+from . import mapping
 #import libra_py.common_utils as comn
 import util.libutil as comn
 import libra_py.tsh as tsh
@@ -70,10 +70,10 @@ def get_Lowdin(S):
           
     """
 
-    nstates = S.num_of_cols/2  # division by 2 because it is a super-matrix
+    nstates = int(S.num_of_cols/2)  # division by 2 because it is a super-matrix
 
-    alp = range(0,nstates)
-    bet = range(nstates, 2*nstates)
+    alp = list(range(0,nstates))
+    bet = list(range(nstates, 2*nstates))
 
     S_aa = CMATRIX(nstates, nstates)
     S_bb = CMATRIX(nstates, nstates)
@@ -83,11 +83,11 @@ def get_Lowdin(S):
 
     is_inv = FullPivLU_rank_invertible(S_aa)
     if is_inv[1] != 1:
-        print "Error, S_aa is not invertible, Exiting Program";  sys.exit(0)
+        print("Error, S_aa is not invertible, Exiting Program");  sys.exit(0)
 
     is_inv = FullPivLU_rank_invertible(S_bb)
     if is_inv[1] != 1:
-        print "Error, S_bb is not invertible, Exiting Program";  sys.exit(0)
+        print("Error, S_bb is not invertible, Exiting Program");  sys.exit(0)
 
     S_aa_half = CMATRIX(nstates,nstates)
     S_aa_i_half = CMATRIX(nstates,nstates)
@@ -137,10 +137,10 @@ def apply_normalization(S, St):
     """
 
     nsteps = len(St)
-    nstates = St[0].num_of_cols/2  # division by 2 because it is a super-matrix
+    nstates = int(St[0].num_of_cols/2)  # division by 2 because it is a super-matrix
     
-    alp = range(0,nstates)
-    bet = range(nstates, 2*nstates)
+    alp = list(range(0,nstates))
+    bet = list(range(nstates, 2*nstates))
 
     St_aa = CMATRIX(nstates,nstates);  St_ab = CMATRIX(nstates,nstates);
     St_ba = CMATRIX(nstates,nstates);  St_bb = CMATRIX(nstates,nstates);
@@ -189,8 +189,8 @@ def make_cost_mat(orb_mat_inp, en_mat_inp, alpha):
     nstates = orb_mat_inp.num_of_cols
     cost_mat = MATRIX(nstates, nstates)
 
-    for a in xrange(nstates):
-        for b in xrange(nstates):
+    for a in range(0,nstates):
+        for b in range(0,nstates):
 
             s = orb_mat_inp.get(a,b)
             s2 = (s*s.conjugate()).real
@@ -230,22 +230,22 @@ def apply_state_reordering(St, E, params):
     comn.check_input(params, default_params, critical_params)
 
     nsteps = len(St)
-    nstates = St[0].num_of_cols/2 # division by 2 because it is a super-matrix
+    nstates = int(St[0].num_of_cols/2) # division by 2 because it is a super-matrix
 
-    alp = range(0,nstates)
-    bet = range(nstates, 2*nstates)
+    alp = list(range(0,nstates))
+    bet = list(range(nstates, 2*nstates))
 
     # Initialize the cumulative permutation as the identity permutation
     perm_cum_aa = intList() # cumulative permutation for alpha spatial orbitals
     perm_cum_bb = intList() # cumulative permutation for beta  spatial orbtials
-    for a in xrange(nstates):
+    for a in range(0,nstates):
         perm_cum_aa.append(a)
         perm_cum_bb.append(a)
 
     # Current permutation
     perm_t_aa = intList() 
     perm_t_bb = intList()
-    for a in xrange(nstates):
+    for a in range(0,nstates):
         perm_t_aa.append(a)
         perm_t_bb.append(a)
 
@@ -347,8 +347,8 @@ def do_phase_corr(cum_phase1, St, cum_phase2, phase_i):
     nstates = St.num_of_rows
 
     ### Correct the TDM matrix ###
-    for a in xrange(nstates):
-        for b in xrange(nstates):
+    for a in range(0,nstates):
+        for b in range(0,nstates):
             fab = cum_phase1.get(a) * cum_phase2.get(b).conjugate() * phase_i.get(b).conjugate()
             St.scale(a,b, fab)
 
@@ -372,15 +372,15 @@ def apply_phase_correction(St):
     """
 
     nsteps = len(St)
-    nstates = St[0].num_of_cols/2  # division by 2 because it is a super-matrix
+    nstates = int(St[0].num_of_cols/2)  # division by 2 because it is a super-matrix
 
-    alp = range(0,nstates)
-    bet = range(nstates, 2*nstates)
+    alp = list(range(0,nstates))
+    bet = list(range(nstates, 2*nstates))
 
     ### Initiate the cumulative phase correction factors ###    
     cum_phase_aa = CMATRIX(nstates,1)  # F(n-1)  cumulative phase
     cum_phase_bb = CMATRIX(nstates,1)  # F(n-1)  cumulative phase
-    for a in xrange(nstates):
+    for a in range(0,nstates):
         cum_phase_aa.set(a, 0, 1.0+0.0j)
         cum_phase_bb.set(a, 0, 1.0+0.0j)
 
@@ -412,7 +412,7 @@ def apply_phase_correction(St):
         push_submatrix(St[i], St_ba, bet, alp);   push_submatrix(St[i], St_bb, bet, bet)
 
         ### Update the cumulative phase correction factors for diag. blocks ###
-        for a in xrange(nstates):
+        for a in range(0,nstates):
             cum_phase_aa.scale(a, 0, phase_i_aa.get(a))
             cum_phase_bb.scale(a, 0, phase_i_bb.get(a))
 
@@ -436,8 +436,8 @@ def sac_matrices(coeff, basis, S_ks):
     n_phi = len(coeff[0])
 
     P2C = CMATRIX(n_phi, n_chi)
-    for j in xrange(n_chi):
-        for i in xrange(n_phi):
+    for j in range(0,n_chi):
+        for i in range(0,n_phi):
             P2C.set(i,j,coeff[j][i]*(1.0+0.0j) )
 
     # Compute the overlaps of the SDs:
@@ -446,11 +446,11 @@ def sac_matrices(coeff, basis, S_ks):
 
     # Normalize the Chi wavefunctions #
     norm = (P2C.H() * Ssd * P2C).real()
-    for i in xrange(n_chi):
+    for i in range(0,n_chi):
         if norm.get(i,i) > 0.0:
             P2C.scale(-1, i, 1.0/math.sqrt(norm.get(i,i)) )
         else:
-            print "Error in CHI normalizaiton: some combination gives zero norm\n"
+            print("Error in CHI normalizaiton: some combination gives zero norm\n")
             sys.exit(0)
 
     return P2C
@@ -482,14 +482,14 @@ def scale_H_vib(hvib, en_gap, dNAC, sc_nac_method):
     # Do the scaling
     nrows = hvib[0].num_of_rows
     ncols = hvib[0].num_of_cols   
-    for i in xrange(traj_len):
+    for i in range(0,traj_len):
 
         prev_gap = hvib[i].get(1,1) - hvib[i].get(0,0)
         shift = en_gap - prev_gap 
 
         # Scale the energy gap, by adding the scaling factors to all excited states
         # This is to keep the ground state enegy equal to 0.0 by definition
-        for j in xrange(1,ncols):
+        for j in range(1,ncols):
             hvib[i].add(j, j, shift)
 
         if sc_nac_method == 0:
@@ -503,7 +503,7 @@ def scale_H_vib(hvib, en_gap, dNAC, sc_nac_method):
 
         elif sc_nac_method == 1:
             # Scales nacs by the inverse of the change in energy gap
-            for j in xrange(1,ncols):
+            for j in range(1,ncols):
                 scl_nac = prev_gap / (shift + prev_gap)
                 hvib[i].scale(0, j, scl_nac)
                 hvib[i].scale(j, 0, scl_nac)
@@ -715,10 +715,10 @@ def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
     #====== Generic sanity checks ===============
     if do_output:
         if(ndata) != len(params["output_set_paths"]):
-            print "Error: The number of output sets paths should be the same as the number of data sets\n"
-            print "ndata = ", ndata
-            print "len(params[\"output_set_paths\"]) = ", len(params["output_set_paths"])
-            print "Exiting...\n"
+            print("Error: The number of output sets paths should be the same as the number of data sets\n")
+            print("ndata = ", ndata)
+            print("len(params[\"output_set_paths\"]) = ", len(params["output_set_paths"]))
+            print("Exiting...\n")
             sys.exit(0)
 
 
@@ -726,7 +726,7 @@ def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
     #====== Calculations  ===============
     H_vib = []
 
-    for idata in xrange(ndata):
+    for idata in range(0,ndata):
 
         # 1. Do the KS orbitals orthogonalization 
         if do_orthogonalization > 0:
@@ -742,7 +742,7 @@ def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
        
         
         Hvib = []
-        for i in xrange(nsteps):
+        for i in range(0,nsteps):
         
             # 4. Construct the Hvib in the basis of Slater determinants (SDs)
             hvib_sd = compute_Hvib(params["SD_basis"], St_dia_ks[idata][i], E_dia_ks[idata][i], params["SD_energy_corr"], dt) 
@@ -755,7 +755,7 @@ def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
 
         if do_output:
             # Output the resulting Hamiltonians
-            for i in xrange(nsteps):
+            for i in range(0,nsteps):
                 re_filename = params["output_set_paths"][idata] + params["Hvib_re_prefix"] + str(i) + params["Hvib_re_suffix"]
                 im_filename = params["output_set_paths"][idata] + params["Hvib_im_prefix"] + str(i) + params["Hvib_im_suffix"]        
                 Hvib[i].real().show_matrix(re_filename)
@@ -776,8 +776,8 @@ def map_Hvib(H, basis, dE):
     H_vib  = mapping.energy_mat_arb(basis, H, dE)
 
     nstates = len(basis)
-    for i in xrange(nstates):
-        for j in xrange(nstates):
+    for i in range(0,nstates):
+        for j in range(0,nstates):
 
             res = delta(Py2Cpp_int(basis[i]), Py2Cpp_int(basis[j]) )
 
@@ -815,8 +815,8 @@ def pyxaid2libra(Hvib_pyxaid, params):
     H = CMATRIX(2*norbs, 2*norbs)
     s = CMATRIX(norbs, norbs)
     s.identity()
-    alp = range(0, norbs)
-    bet = range(norbs, 2*norbs)
+    alp = list(range(0, norbs))
+    bet = list(range(norbs, 2*norbs))
 
     push_submatrix(S, s, alp, alp)
     push_submatrix(S, s, alp, bet)
@@ -826,10 +826,10 @@ def pyxaid2libra(Hvib_pyxaid, params):
     #====== Generic sanity checks ===============
     if do_output:
         if(ndata) != len(params["output_set_paths"]):
-            print "Error: The number of output sets paths should be the same as the number of data sets\n"
-            print "ndata = ", ndata
-            print "len(params[\"output_set_paths\"]) = ", len(params["output_set_paths"])
-            print "Exiting...\n"
+            print("Error: The number of output sets paths should be the same as the number of data sets\n")
+            print("ndata = ", ndata)
+            print("len(params[\"output_set_paths\"]) = ", len(params["output_set_paths"]) )
+            print("Exiting...\n")
             sys.exit(0)
 
 
@@ -837,10 +837,10 @@ def pyxaid2libra(Hvib_pyxaid, params):
     #====== Calculations  ===============
     H_vib = []
 
-    for idata in xrange(ndata):
+    for idata in range(0,ndata):
 
         Hvib = []
-        for i in xrange(nsteps):
+        for i in range(0,nsteps):
         
             # 1. Construct the Hvib in the basis of Slater determinants (SDs)            
             push_submatrix(H, Hvib_pyxaid[idata][i], alp, alp)
@@ -857,7 +857,7 @@ def pyxaid2libra(Hvib_pyxaid, params):
 
         if do_output:
             # Output the resulting Hamiltonians
-            for i in xrange(nsteps):
+            for i in range(0,nsteps):
                 re_filename = params["output_set_paths"][idata] + params["Hvib_re_prefix"] + str(i) + params["Hvib_re_suffix"]
                 im_filename = params["output_set_paths"][idata] + params["Hvib_im_prefix"] + str(i) + params["Hvib_im_suffix"]        
                 Hvib[i].real().show_matrix(re_filename)

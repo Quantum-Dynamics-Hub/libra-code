@@ -32,7 +32,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 #import common_utils as comn
 import util.libutil as comn
-import units
+from . import units
 
 def run_NEFGRL_populations(omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, params):
     """
@@ -121,7 +121,7 @@ def run_NEFGRL_populations(omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, pa
         f = open(filename, "w"); f.close()
 
 
-    for step in xrange(nsteps):
+    for step in range(0,nsteps):
         t = step*dt
 
         # k = k(t')
@@ -206,7 +206,7 @@ def run_NEFRG_acf(t, omega_DA, V, omega_nm, gamma_nm, req_nm, shift_NE, params):
 
     integ = 0.0+0.0j
 
-    for step in xrange(nsteps):
+    for step in range(0,nsteps):
         tau = step*dtau
         argg, lin = 0.0+0.0j, 0.0+0.0j 
 

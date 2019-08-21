@@ -44,7 +44,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import units
+from . import units
 
 
 def covariance_matrix(X, M, flag):
@@ -70,7 +70,7 @@ def covariance_matrix(X, M, flag):
 
     # To speed-up the calculations, minimize the number of sqrt calls
     sM = MATRIX(ndof, 1)
-    for i in xrange(ndof):
+    for i in range(0,ndof):
         sM.set(i, math.sqrt(M.get(i)) )
 
     K = None
@@ -81,8 +81,8 @@ def covariance_matrix(X, M, flag):
         K = covariance(dX)
 
     # Compute the covariance matrix
-    for i in xrange(ndof):
-        for j in xrange(ndof):
+    for i in range(0,ndof):
+        for j in range(0,ndof):
             mij = sM.get(i) * sM.get(j)
             K.scale(i,j, 0.5*mij)
 
@@ -136,11 +136,11 @@ def visualize_modes(E, R, U, M, w, params):
             dt = 2.0*math.pi * params["nperiods"] / ( w.get(mode) * params["nsteps"])
 
         f = open(filename, "w") 
-        for t in xrange(params["nsteps"]):
+        for t in range(0,params["nsteps"]):
             f.write("%i\n" % (nat))
             f.write("step %i = \n" % (t) )
  
-            for at in xrange(nat): 
+            for at in range(0,nat): 
                 x = (R.get(3*at+0, 0) + (U.get(3*at+0, mode)/math.sqrt(M.get(3*at+0))) * math.sin(w.get(mode) * t*dt) * scl)/units.Angst
                 y = (R.get(3*at+1, 0) + (U.get(3*at+1, mode)/math.sqrt(M.get(3*at+1))) * math.sin(w.get(mode) * t*dt) * scl)/units.Angst
                 z = (R.get(3*at+2, 0) + (U.get(3*at+2, mode)/math.sqrt(M.get(3*at+2))) * math.sin(w.get(mode) * t*dt) * scl)/units.Angst
@@ -191,22 +191,22 @@ def compute_cov(R, V, A, M, E, params):
     verbosity = params["verbosity"]
 
     if verbosity>0:
-        print "========= Normal modes calculations according to: ============================="    
-        print "Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics\
-        or Monte Carlo Simulation. J. Chem. Phys. 2003, 120, 1-4.\n"
+        print("========= Normal modes calculations according to: =============================")
+        print("Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics\
+        or Monte Carlo Simulation. J. Chem. Phys. 2003, 120, 1-4.\n")
 
     ndof = R.num_of_rows
     nat = ndof/3
     cov_flag = params["cov_flag"]
     
     if verbosity>0:
-        print "Computing covariance matrix of positions\n"; 
+        print("Computing covariance matrix of positions\n")
     K_r = CMATRIX(covariance_matrix(R, M, cov_flag))
     if verbosity>0:
-        print "Computing covariance matrix of velocities\n"; 
+        print("Computing covariance matrix of velocities\n")
     K_v = CMATRIX(covariance_matrix(V, M, cov_flag))
     if verbosity>0:
-        print "Computing covariance matrix of accelerations\n"; 
+        print("Computing covariance matrix of accelerations\n")
     K_a = CMATRIX(covariance_matrix(A, M, cov_flag))
 
     w_r = CMATRIX(ndof, ndof);  U_r = CMATRIX(ndof, ndof)
@@ -214,66 +214,66 @@ def compute_cov(R, V, A, M, E, params):
     w_a = CMATRIX(ndof, ndof);  U_a = CMATRIX(ndof, ndof)
 
     if verbosity>0:
-        print "Eigenvalue solver for covariance matrix of positions\n"
+        print("Eigenvalue solver for covariance matrix of positions\n")
     solve_eigen_nosort(K_r, w_r, U_r, 0)
     if verbosity>0:
-        print "Eigenvalue solver for covariance matrix of velocities\n"
+        print("Eigenvalue solver for covariance matrix of velocities\n")
     solve_eigen_nosort(K_v, w_v, U_v, 0)
     if verbosity>0:
-        print "Eigenvalue solver for covariance matrix of accelerations\n"
+        print("Eigenvalue solver for covariance matrix of accelerations\n")
     solve_eigen_nosort(K_a, w_a, U_a, 0)
 
     if verbosity>1:
-        print "K_r:"; K_r.show_matrix()
-        print "K_r eigenvalues:";  w_r.show_matrix()
-        print "K_r eigenvectors:"; U_r.show_matrix()
+        print("K_r:"); K_r.show_matrix()
+        print("K_r eigenvalues:");  w_r.show_matrix()
+        print("K_r eigenvectors:"); U_r.show_matrix()
 
-        print "K_v:"; K_v.show_matrix()
-        print "K_v eigenvalues:";  w_v.show_matrix()
-        print "K_v eigenvectors:"; U_v.show_matrix()
+        print("K_v:"); K_v.show_matrix()
+        print("K_v eigenvalues:");  w_v.show_matrix()
+        print("K_v eigenvectors:"); U_v.show_matrix()
 
-        print "K_a:"; K_a.show_matrix()
-        print "K_a eigenvalues:";  w_a.show_matrix()
-        print "K_a eigenvectors:"; U_a.show_matrix()
+        print("K_a:"); K_a.show_matrix()
+        print("K_a eigenvalues:");  w_a.show_matrix()
+        print("K_a eigenvectors:"); U_a.show_matrix()
 
 
     w = MATRIX(ndof, 1)      
-    for dof in xrange(ndof):
+    for dof in range(0,ndof):
         if w_r.get(dof, dof).real>0.0:
             w.set(dof, 0,  math.sqrt( math.fabs( w_v.get(dof, dof).real/w_r.get(dof, dof).real) )  )
         else:
             w.set(dof, 0, 0.0)
     w_inv_cm = w / units.inv_cm2Ha
     if verbosity>0:
-        print "Angular frequencies (derived from w_v/w_r)"
+        print("Angular frequencies (derived from w_v/w_r)")
         w_inv_cm.show_matrix()
 
 
     w2 = MATRIX(ndof, 1)      
-    for dof in xrange(ndof):
-        if w_r.get(dof, dof)>0.0:
+    for dof in range(0,ndof):
+        if w_r.get(dof, dof).real>0.0:
             w2.set(dof, 0,  math.pow( math.fabs( w_a.get(dof, dof).real/w_r.get(dof, dof).real ) , 0.25)  )
         else:
             w2.set(dof, 0, 0.0)
     w2_inv_cm = w2 / units.inv_cm2Ha
     if verbosity>0:
-        print "Angular frequencies (derived from w_a/w_r)"
+        print("Angular frequencies (derived from w_a/w_r)")
         w2_inv_cm.show_matrix()
 
     if params["visualize"]==1:
         if verbosity>0:
-            print "Visualizing modes based on velocities covariance\n" 
+            print("Visualizing modes based on velocities covariance\n")
         prefix = params["prefix"]
         params.update({"prefix": prefix+"_velocity"})
         visualize_modes(E, R, U_v.real(), M, w, params);
 
         if verbosity>0:
-            print "Visualizing modes based on accelerations covariance\n" 
+            print("Visualizing modes based on accelerations covariance\n")
         params.update({"prefix": prefix+"_acceleration"})
         visualize_modes(E, R, U_a.real(), M, w2, params);
 
     if verbosity>0:
-        print "========= Done with the Normal modes calculations =============================" 
+        print("========= Done with the Normal modes calculations =============================")
 
     return w, w_inv_cm, U_v.real(),  w2, w2_inv_cm, U_a.real()
 
@@ -316,63 +316,63 @@ def compute_cov1(R, V, M, E, params):
     verbosity = params["verbosity"]
 
     if verbosity>0:
-        print "========= Normal modes calculations according to: ============================="    
-        print "Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics\
-        or Monte Carlo Simulation. J. Chem. Phys. 2003, 120, 1-4.\n"
+        print("========= Normal modes calculations according to: =============================")
+        print("Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics\
+        or Monte Carlo Simulation. J. Chem. Phys. 2003, 120, 1-4.\n")
 
     ndof = R.num_of_rows
     nat = ndof/3
     cov_flag = params["cov_flag"]
     
     if verbosity>0:
-        print "Computing covariance matrix of positions\n"; 
+        print("Computing covariance matrix of positions\n") 
     K_r = CMATRIX(covariance_matrix(R, M, cov_flag))
     if verbosity>0:
-        print "Computing covariance matrix of velocities\n"; 
+        print("Computing covariance matrix of velocities\n")
     K_v = CMATRIX(covariance_matrix(V, M, cov_flag))
 
     w_r = CMATRIX(ndof, ndof);  U_r = CMATRIX(ndof, ndof)
     w_v = CMATRIX(ndof, ndof);  U_v = CMATRIX(ndof, ndof)
 
     if verbosity>0:
-        print "Eigenvalue solver for covariance matrix of positions\n"
+        print("Eigenvalue solver for covariance matrix of positions\n")
     solve_eigen_nosort(K_r, w_r, U_r, 0)
     if verbosity>0:
-        print "Eigenvalue solver for covariance matrix of velocities\n"
+        print("Eigenvalue solver for covariance matrix of velocities\n")
     solve_eigen_nosort(K_v, w_v, U_v, 0)
 
     if verbosity>1:
-        print "K_r:"; K_r.show_matrix()
-        print "K_r eigenvalues:";  w_r.show_matrix()
-        print "K_r eigenvectors:"; U_r.show_matrix()
+        print("K_r:"); K_r.show_matrix()
+        print("K_r eigenvalues:");  w_r.show_matrix()
+        print("K_r eigenvectors:"); U_r.show_matrix()
 
-        print "K_v:"; K_v.show_matrix()
-        print "K_v eigenvalues:";  w_v.show_matrix()
-        print "K_v eigenvectors:"; U_v.show_matrix()
+        print("K_v:"); K_v.show_matrix()
+        print("K_v eigenvalues:");  w_v.show_matrix()
+        print("K_v eigenvectors:"); U_v.show_matrix()
 
 
     w = MATRIX(ndof, 1)      
-    for dof in xrange(ndof):
+    for dof in range(0,ndof):
         if w_r.get(dof, dof).real>0.0:
             w.set(dof, 0,  math.sqrt( math.fabs( w_v.get(dof, dof).real/w_r.get(dof, dof).real) )  )
         else:
             w.set(dof, 0, 0.0)
     w_inv_cm = w / units.inv_cm2Ha
     if verbosity>0:
-        print "Angular frequencies (derived from w_v/w_r)"
+        print("Angular frequencies (derived from w_v/w_r)")
         w_inv_cm.show_matrix()
 
 
     if params["visualize"]==1:
         if verbosity>0:
-            print "Visualizing modes based on velocities covariance\n" 
+            print("Visualizing modes based on velocities covariance\n")
         prefix = params["prefix"]
         params.update({"prefix": prefix+"_velocity"})
         visualize_modes(E, R, U_v.real(), M, w, params);
 
 
     if verbosity>0:
-        print "========= Done with the Normal modes calculations =============================" 
+        print("========= Done with the Normal modes calculations =============================")
 
     return w, w_inv_cm, U_v.real()
 
@@ -417,16 +417,16 @@ def compute_cov2(R, A, M, E, T, params):
     verbosity = params["verbosity"]
 
     if verbosity>0:
-        print "========= Normal modes calculations according to: ============================="
-        print "Pereverzev, A.; Sewell, T. D. Obtaining the Hessian from the Force Covariance Matrix:\
-        Application to Crystalline Explosives PETN and RDX. J. Chem. Phys. 2015, 142, 134110.\n" 
+        print("========= Normal modes calculations according to: =============================")
+        print("Pereverzev, A.; Sewell, T. D. Obtaining the Hessian from the Force Covariance Matrix:\
+        Application to Crystalline Explosives PETN and RDX. J. Chem. Phys. 2015, 142, 134110.\n")
     
     ndof = R.num_of_rows
     nat = ndof/3
     cov_flag = params["cov_flag"]
 
     if verbosity>0:
-        print "Computing covariance matrix of accelerations\n"
+        print("Computing covariance matrix of accelerations\n")
     K_a = None
     if cov_flag==0:
         K_a = CMATRIX(covariance(A))
@@ -438,30 +438,30 @@ def compute_cov2(R, A, M, E, T, params):
     K_a *= (1.0/(k*T))
 
     if verbosity>0:
-        print "Eigenvalue solver for covariance matrix of accelerations\n";
+        print("Eigenvalue solver for covariance matrix of accelerations\n")
     w_a = CMATRIX(ndof, ndof);  U_a = CMATRIX(ndof, ndof)
     solve_eigen_nosort(K_a, w_a, U_a, 0)
 
     if verbosity>1:
-        print "K_a:"; K_a.show_matrix()
-        print "K_a eigenvalues:";  w_a.show_matrix()
-        print "K_a eigenvectors:"; U_a.show_matrix()
+        print("K_a:"); K_a.show_matrix()
+        print("K_a eigenvalues:");  w_a.show_matrix()
+        print("K_a eigenvectors:"); U_a.show_matrix()
 
     w = MATRIX(ndof, 1)      
-    for dof in xrange(ndof):
+    for dof in range(0,ndof):
         if w_a.get(dof, dof).real>0.0:
             w.set(dof, 0,  math.sqrt(w_a.get(dof, dof).real) ) 
     w_inv_cm = w / units.inv_cm2Ha
     if verbosity>0:
-        print "Frequencies (cm^-1)";  w_inv_cm.show_matrix()
+        print("Frequencies (cm^-1)");  w_inv_cm.show_matrix()
 
     if params["visualize"]>0:
         if verbosity>0:
-            print "Visualizing modes based on accelerations covariance matrix\n" 
+            print("Visualizing modes based on accelerations covariance matrix\n")
         visualize_modes(E, R, U_a.real(), M, w, params);
 
     if verbosity>0:
-        print "========= Done with the Normal modes calculations ============================="
+        print("========= Done with the Normal modes calculations =============================")
 
     return w_a, w_inv_cm, U_a.real()
 
@@ -503,7 +503,7 @@ def compute_dynmat(R, D, M, E, params):
     verbosity = params["verbosity"]
 
     if verbosity>0:
-        print "========= Normal modes calculations using the provided dynamical matrix ============================="
+        print("========= Normal modes calculations using the provided dynamical matrix =============================")
     
     ndof = M.num_of_rows
     nat = ndof/3
@@ -513,26 +513,26 @@ def compute_dynmat(R, D, M, E, params):
     solve_eigen_nosort(D, w_a, U_a, 0)
 
     if verbosity>1:
-        print "Dynamic matrix:"; D.show_matrix()
-        print "Its eigenvalues:";  w_a.show_matrix()
-        print "Its eigenvectors:"; U_a.show_matrix()
+        print("Dynamic matrix:"); D.show_matrix()
+        print("Its eigenvalues:");  w_a.show_matrix()
+        print("Its eigenvectors:"); U_a.show_matrix()
 
 
     w = MATRIX(ndof, 1)      
-    for dof in xrange(ndof):
+    for dof in range(0,ndof):
         if w_a.get(dof, dof)>0.0:
             w.set(dof, 0,  math.sqrt(w_a.get(dof, dof)) )            
     w_inv_cm = w / units.inv_cm2Ha
     if verbosity>0:
-        print "Frequencies (cm^-1)";  w_inv_cm.show_matrix()
+        print("Frequencies (cm^-1)");  w_inv_cm.show_matrix()
 
     if params["visualize"]>0:
         if verbosity>0:
-            print "Visualizing modes based on dynamic matrix\n" 
+            print("Visualizing modes based on dynamic matrix\n")
         visualize_modes(E, R, U_a, M, w, params);
 
     if verbosity>0:
-        print "========= Done with the Normal modes calculations ============================="
+        print("========= Done with the Normal modes calculations =============================")
 
     return w, w_inv_cm, U_a
  
@@ -559,7 +559,7 @@ def get_xyz(E, R, M, U, mode):
     natoms = len(E)
     res = "%3i\nComment\n" % (natoms)
     
-    for i in xrange(natoms):
+    for i in range(0,natoms):
         x,y,z = R.get(3*i,0), R.get(3*i+1,0), R.get(3*i+2,0)        
         ux = U.get(3*i+0, mode)/math.sqrt(M.get(3*i+0))
         uy = U.get(3*i+1, mode)/math.sqrt(M.get(3*i+1))
@@ -589,7 +589,7 @@ def get_xyz2(E, R, U, mode):
     natoms = len(E)
     res = "%3i\nComment\n" % (natoms)
     
-    for i in xrange(natoms):
+    for i in range(0,natoms):
         x,y,z = R.get(3*i,0), R.get(3*i+1,0), R.get(3*i+2,0)        
         ux, uy, uz = U.get(3*i+0, mode), U.get(3*i+1, mode), U.get(3*i+2, mode)
         

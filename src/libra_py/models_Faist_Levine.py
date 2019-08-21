@@ -25,8 +25,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-from units import Angst
-from units import ev2au
+from .units import Angst
+from .units import ev2au
 
 class tmp:
     pass    
@@ -183,8 +183,8 @@ def Faist_Levine(q, params):
     ndof = q.num_of_rows  # the number of nuclear DOFs
 
     if ndof != 1:
-        print "Error: The Faist-Levine Hamiltonian takes 1 nuclear DOFs only. Given = ", ndof
-        print "Exiting..."
+        print("Error: The Faist-Levine Hamiltonian takes 1 nuclear DOFs only. Given = ", ndof)
+        print("Exiting...")
         sys.exit(0)
 
     A_cov = params["A_cov"]
@@ -208,7 +208,7 @@ def Faist_Levine(q, params):
     obj.d1ham_dia = CMATRIXList()
     obj.dc1_dia = CMATRIXList()
 
-    for i in xrange(1):
+    for i in range(0,1):
         obj.d1ham_dia.append( CMATRIX(2,2) )
         obj.dc1_dia.append( CMATRIX(2,2) )
 

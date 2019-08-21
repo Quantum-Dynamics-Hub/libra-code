@@ -27,8 +27,6 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-#from libra_py import *
-#import libra_py.common_utils as comn
 import util.libutil as comn
 
 
@@ -69,10 +67,10 @@ def compute_oscillator_strengths(Hvib, Hprime_x, Hprime_y, Hprime_z, params):
 
 
     res = []
-    for istep in xrange(nsteps):             # All data points
+    for istep in range(0,nsteps):             # All data points
  
-        for i in xrange(homo+1):            # All occupied orbitals
-            for j in xrange(homo+1, nmo):   # All unoccupied orbitals
+        for i in range(0,homo+1):            # All occupied orbitals
+            for j in range(homo+1, nmo):   # All unoccupied orbitals
 
                 dE = Hvib[istep].get(j,j).real - Hvib[istep].get(i,i).real  # >= 0.0
 

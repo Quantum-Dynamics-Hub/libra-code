@@ -90,7 +90,7 @@ def sd2indx(inp,nbasis, do_sort=True):
 
     spat = [0] * sz
 
-    for i in xrange(sz):
+    for i in range(0,sz):
 
         # alpha
         if inp[i] > 0: 
@@ -164,7 +164,7 @@ def energy_mat_arb(SD, e, dE):
     E = CMATRIX(n,n)
   
     E0 = 0.0 #energy_arb(SD[0], e) + dE[0]*(1.0+0.0j)
-    for i in xrange(n):
+    for i in range(0,n):
         E.set(i,i, energy_arb(SD[i], e) + dE[i]*(1.0+0.0j) - E0 )
 
     return E
@@ -192,8 +192,8 @@ def orbs2spinorbs(s):
 
     sz = s.num_of_cols
     zero = CMATRIX(sz, sz)    
-    act_sp1 = range(0, sz)
-    act_sp2 = range(sz, 2*sz)
+    act_sp1 = list(range(0, sz))
+    act_sp2 = list(range(sz, 2*sz))
     
     S = CMATRIX(2*sz, 2*sz)
 
@@ -232,8 +232,8 @@ def ovlp_arb(SD1, SD2, S):
     sd2 = sd2indx(SD2,nbasis)
     s = CMATRIX(len(sd1),len(sd2))
 
-    for i in xrange(len(sd1)):
-        for j in xrange(len(sd2)):
+    for i in range(0,len(sd1)):
+        for j in range(0,len(sd2)):
 
             # The overlap is non-zero only if the orbitals
             # are occupied with the same-spin electrons. 
@@ -270,8 +270,8 @@ def ovlp_mat_arb(SD1, SD2, S):
     N, M = len(SD1), len(SD2)
     res = CMATRIX(N,M)
 
-    for n in xrange(N):
-        for m in xrange(M):
+    for n in range(0,N):
+        for m in range(0,M):
             res.set(n,m, ovlp_arb(SD1[n], SD2[m], S))
 
     return res

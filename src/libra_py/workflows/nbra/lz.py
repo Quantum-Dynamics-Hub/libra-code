@@ -31,8 +31,8 @@ import util.libutil as comn
 import libra_py.units as units
 import libra_py.probabilities as prob
 import libra_py.tsh as tsh
-import decoherence_times
-import step4
+from . import decoherence_times
+from . import step4
 
 
 
@@ -94,16 +94,16 @@ def Belyaev_Lebedev(Hvib, params):
 
     P = []
     P.append( MATRIX(nstates, nstates) )
-    for i in xrange(nstates):    
+    for i in range(0,nstates):    
         P[0].set(i,i, 1.0)
 
-    for n in xrange(1, nsteps-1):
+    for n in range(1, nsteps-1):
         P.append(MATRIX(nstates, nstates))
  
         # Belyaev-Lebedev probabilities
         # Find the minima of the |E_i - E_j| for all pair of i and j    
-        for i in xrange(nstates):             # target
-            for j in xrange(i+1, nstates):    # source 
+        for i in range(0,nstates):             # target
+            for j in range(i+1, nstates):      # source 
 
                 # Interpolation is based on the 3-points Lagrange interpolant
                 # http://mathworld.wolfram.com/LagrangeInterpolatingPolynomial.html 
@@ -123,8 +123,8 @@ def Belyaev_Lebedev(Hvib, params):
         
         # Optionally, can correct transition probabilitieis to 
         # account for Boltzmann factor
-        for i in xrange(nstates):        # target
-            for j in xrange(nstates):    # source 
+        for i in range(0,nstates):        # target
+            for j in range(0,nstates):    # source 
 
                 if i!=j:
 
@@ -134,7 +134,7 @@ def Belyaev_Lebedev(Hvib, params):
                     if E_new > E_old:
                         bf = tsh.boltz_factor(E_new, E_old, T, boltz_opt)
                         if bf>1.0:
-                            print "Error: Boltzmann scaling factor can not be larger 1.0 = ",bf ;
+                            print("Error: Boltzmann scaling factor can not be larger 1.0 = ",bf)
                             #sys.exit(0)
                         P[n].scale(i,j, bf)
 
@@ -145,10 +145,10 @@ def Belyaev_Lebedev(Hvib, params):
         # The convention is:
         # P(i,j) - the probability to go from j to i
 
-        for j in xrange(nstates): # for all source states            
+        for j in range(0,nstates): # for all source states            
 
             tot = 0.0  # Total probability to leave state j
-            for i in xrange(nstates):     # all target states
+            for i in range(0,nstates):     # all target states
                 if i!=j:                  # but j
                     tot += P[n].get(i,j)
 
@@ -157,7 +157,7 @@ def Belyaev_Lebedev(Hvib, params):
 
 
     P.append( MATRIX(nstates, nstates) )
-    for i in xrange(nstates):    
+    for i in range(0,nstates):    
         P[nsteps-1].set(i,i, 1.0)
 
 
@@ -217,7 +217,7 @@ def run(H_vib, params):
     itimes = [0]
     nitimes = len(itimes)
 
-    for idata in xrange(ndata):
+    for idata in range(0,ndata):
         p = Belyaev_Lebedev(H_vib[idata], params)
         P.append(p)
 
@@ -226,14 +226,14 @@ def run(H_vib, params):
     # State populations and active state indices
     Pop, istate = [], []
 
-    for tr in xrange(ntraj):
+    for tr in range(0,ntraj):
         istate.append(params["istate"])
         Pop.append(CMATRIX(nstates, 1)); 
         Pop[tr].set(params["istate"], 1.0, 0.0)
 
 
     #=============== Entering the DYNAMICS ========================
-    for i in xrange(nsteps):  # over all evolution times
+    for i in range(0,nsteps):  # over all evolution times
 
         #============== Analysis of the Dynamics  =================
         # Compute the averages
@@ -249,13 +249,13 @@ def run(H_vib, params):
 
 
         #=============== Propagation ==============================
-        for idata in xrange(ndata):   # over all data sets (MD trajectories)
+        for idata in range(0,ndata):   # over all data sets (MD trajectories)
 
-            for it_indx in xrange(nitimes): # over all initial times within each MD trajectory
+            for it_indx in range(0,nitimes): # over all initial times within each MD trajectory
 
                 it = itimes[it_indx]
 
-                for tr in xrange(ntraj):  # over all stochastic trajectories
+                for tr in range(0,ntraj):  # over all stochastic trajectories
 
                     Tr = idata*(nitimes*ntraj) + it_indx*(ntraj) + tr
 

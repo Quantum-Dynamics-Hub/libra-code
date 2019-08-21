@@ -25,9 +25,10 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+import util.libutil as comn
 from libra_py import ERGO_methods
 from libra_py import units
-import util.libutil as comn
+
 
 
 
@@ -114,10 +115,10 @@ def do_step(i, params, run):
         
     # Get the dimensions
     ao_sz = F.num_of_cols        
-    ao_act_sp = range(0, ao_sz)
+    ao_act_sp = list(range(0, ao_sz))
     
     mo_sz = ao_sz
-    mo_act_sp = range(0, mo_sz)
+    mo_act_sp = list(range(0, mo_sz))
     
     if params["mo_active_space"] != None:
         mo_sz = len(params["mo_active_space"])        
@@ -210,7 +211,7 @@ def do_ovlp(i, params, run):
     # Get the overlap matrix
     S = ERGO_methods.get_mtx_matrices("S_matrix.mtx")
         
-    norbs = S.num_of_cols/2    
+    norbs = int(S.num_of_cols/2)
 
     """
     BEWARE: The following orbital ordering works only with the 
@@ -222,8 +223,8 @@ def do_ovlp(i, params, run):
     Great thanks to Elias Rudberg for this suggestion!
     """
 
-    act_sp1 = range(0,norbs)
-    act_sp2 = range(norbs,2*norbs)
+    act_sp1 = list(range(0,norbs))
+    act_sp2 = list(range(norbs,2*norbs))
 
     S11 = CMATRIX(norbs, norbs)
     S12 = CMATRIX(norbs, norbs)
@@ -289,7 +290,7 @@ def run_step2(params, run1, run2):
     clean()
     E_prev, U_prev = do_step(isnap, params, run1)
     
-    for i in xrange(isnap+1, fsnap):         
+    for i in range(isnap+1, fsnap):         
 
         clean()
         E_curr, U_curr = do_step(i, params, run1)

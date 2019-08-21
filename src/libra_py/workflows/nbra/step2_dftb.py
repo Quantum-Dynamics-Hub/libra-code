@@ -28,9 +28,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 from libra_py import DFTB_methods
 from libra_py import units
-#import libra_py.common_utils as comn
 import util.libutil as comn
-
 
 
 
@@ -118,32 +116,40 @@ def do_step(i, params):
     os.system("cp %s dftb_in.hsd" % hs_in_file )
     os.system( "%s" % EXE )
 
-    # Get the Hamiltonian    
-    Hi = DFTB_methods.get_dftb_matrices("hamsqr1.dat")
-    Si = DFTB_methods.get_dftb_matrices("oversqr.dat")
 
-
+    # [0] is because we extract just the gamma-point
+    F = DFTB_methods.get_dftb_matrices("hamsqr1.dat")
+    S = DFTB_methods.get_dftb_matrices("oversqr.dat")
+    
+        
     # Get the dimensions
-    ao_sz = Hi[0].num_of_cols
+    ao_sz = F[0].num_of_cols        
+    ao_act_sp = list(range(0, ao_sz))
+    
     mo_sz = ao_sz
-    ao_act_sp = range(0, ao_sz)
-    mo_act_sp = range(0, mo_sz)
-
+    mo_act_sp = list(range(0, mo_sz))
+    
     if params["mo_active_space"] != None:
-        mo_sz = len(params["mo_active_space"])
+        mo_sz = len(params["mo_active_space"])        
         mo_act_sp = list(params["mo_active_space"])
 
 
-    # Extract the sub-matrix of interest
-    H_sub = CMATRIX(ao_sz, mo_sz)
-    pop_submatrix(Hi[0], H_sub, ao_act_sp, mo_act_sp)  # last element #0 = gamma-point
+    # Solve the eigenvalue problem with the converged Fock matrix
+    # get the converged MOs
+    E = CMATRIX(ao_sz, ao_sz)
+    MO = CMATRIX(ao_sz, ao_sz)
+    solve_eigen(F[0], S[0], E, MO, 0)  
 
-    # Get the orbitals
-    Ei = CMATRIX(mo_sz, mo_sz)
-    MOi = CMATRIX(ao_sz, mo_sz)
-    solve_eigen(H_sub, Si[0], Ei, MOi, 0)     # last element #0 = gamma-point
+    # Extract the E sub-matrix
+    E_sub = CMATRIX(mo_sz, mo_sz)
+    pop_submatrix(E, E_sub, mo_act_sp, mo_act_sp)  
     
-    return Ei, MOi, Hi, Si
+    # Extract the MO sub-matrix
+    MO_sub = CMATRIX(ao_sz, mo_sz)
+    pop_submatrix(MO, MO_sub, ao_act_sp, mo_act_sp)  
+
+    
+    return E_sub, MO_sub, F, S
 
 
 
@@ -204,10 +210,10 @@ def do_ovlp(i, params):
 
     # Get the Hamiltonian    
     Sbig = DFTB_methods.get_dftb_matrices("oversqr.dat")
-    norbs = Sbig[0].num_of_cols/2
+    norbs = int(Sbig[0].num_of_cols/2)
     
-    act_sp1 = range(0,norbs)
-    act_sp2 = range(norbs,2*norbs)
+    act_sp1 = list(range(0,norbs))
+    act_sp2 = list(range(norbs,2*norbs))
     S = CMATRIX(norbs, norbs)
     pop_submatrix(Sbig[0], S, act_sp1, act_sp2)
     
@@ -261,7 +267,7 @@ def run_step2(params):
     # Compute
     E_prev, U_prev, Hao_prev, Sao_prev = do_step(isnap, params)
     
-    for i in xrange(isnap+1, fsnap-1):
+    for i in range(isnap+1, fsnap-1):
         E_curr, U_curr, Hao_curr, Sao_curr = do_step(i, params)
         S = do_ovlp(i, params)
 

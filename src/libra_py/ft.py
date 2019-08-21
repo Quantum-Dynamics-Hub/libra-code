@@ -56,7 +56,7 @@ def ft(X, wspan, dw, dt):
     J = [0.0] * npoints   # FT
     W = [0.0] * npoints   # frequencies
 
-    for iw in xrange(npoints):
+    for iw in range(0,npoints):
         w = iw * dw
 
         J[iw] = 1.0  # corresponds to it = 0
@@ -102,11 +102,11 @@ def py_cft(X, dt):
     C = [0.0] * N   # FT
     S = [0.0] * N   # FT
 
-    for iw in xrange(N):
+    for iw in range(0,N):
         w = iw * dw
 
         C[iw], S[iw] = 0.0, 0.0
-        for it in xrange(N):
+        for it in range(0,N):
             t = it * dt            
             C[iw] += math.cos(w * t)*X[it]   
             S[iw] -= math.sin(w * t)*X[it]

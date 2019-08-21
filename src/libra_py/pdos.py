@@ -52,10 +52,10 @@ def convolve(X0, Y0, dx0, dx, var):
     """
 
     mult = int(dx0/dx)     # making grid mult times bigger
-    print "multiplication factor is = ", mult
-    print "original grid spacing = ", dx0
-    print "new grid spacing = ", dx
-    print "gaussian variance = ", var
+    print("multiplication factor is = ", mult)
+    print("original grid spacing = ", dx0)
+    print("new grid spacing = ", dx)
+    print("gaussian variance = ", var)
         
     # Prepare arrays
     N0    = Y0.num_of_rows     # how many original grid points
@@ -66,23 +66,23 @@ def convolve(X0, Y0, dx0, dx, var):
     Y = MATRIX(N, nproj)       # new Y axes
 
 
-    for i in xrange(N):
+    for i in range(0,N):
         X.set(i,0, X0.get(0,0) + i*dx)
 
 
     area = var*math.sqrt(2.0*math.pi)  # area under Gaussian of type exp( -(x - x0)^2 / 2*var^2 ) 
     alp = 0.5/(var**2)
 
-    for j in xrange(nproj):  
+    for j in range(0,nproj):  
 
-        for i0 in xrange(N0):   # all initial grid points
+        for i0 in range(0,N0):   # all initial grid points
             x0 = X0.get(i0, 0)
             y0 = Y0.get(i0, j)
 
             area0 = dx0*y0      # initial area
             w = area0/area
 
-            for i in xrange(N):
+            for i in range(0,N):
                 x = X.get(i, 0)
                 Y.add(i,j, w*math.exp(-alp*(x0-x)**2))
 

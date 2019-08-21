@@ -26,8 +26,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import LoadPT
-import units
+from . import LoadPT
+from . import units
 
 
 def read_xyz(filename, inp_units=1, out_units=0):
@@ -104,7 +104,7 @@ def make_xyz(L, R, inp_units=0, out_units=1):
     res = "%i\n" % (nat)
     res = res + "\n"
 
-    for i in xrange(nat):
+    for i in range(0,nat):
         res = res + "%s   %12.8f  %12.8f  %12.8f \n" % (L[i], R[i].x/units.Angst, R[i].y/units.Angst, R[i].z/units.Angst)
     return res
 
@@ -225,9 +225,9 @@ def generate_replicas_xyz(tv1, tv2, tv3, rep1, rep2, rep3 , filename, outfile, i
 
     tmp = A[0].split()
     Natoms = int(float(tmp[0]))
-    f = open(outfile, "w")
-    f.write("%i \n" % int(len(transl) * Natoms))
-    f.write(A[1][:-1] + "\n")
+    f = open(outfile, "w+")
+    f.write(F"{int(len(transl) * Natoms):i} \n")
+    f.write(F"{A[1][:-1]:s} \n")
 
     L = [] 
     coords = []
@@ -245,7 +245,7 @@ def generate_replicas_xyz(tv1, tv2, tv3, rep1, rep2, rep3 , filename, outfile, i
                 dy = T[0]*tv1[1] + T[1]*tv2[1] + T[2]*tv3[1]
                 dz = T[0]*tv1[2] + T[1]*tv2[2] + T[2]*tv3[2]
 
-                f.write("%s  %8.5f  %8.5f  %8.5f \n" % (tmp[0], x+dx, y+dy, z+dz ) )
+                f.write(F"{tmp[0]:s} {x+dx:8.5f}  {y+dy:8.5f}  {z+dz:8.5f} \n")
 
                 L.append(tmp[0])
                 coords.append(VECTOR(x+dx, y+dy, z+dz))
@@ -296,11 +296,11 @@ def generate_replicas_xyz2(L, R, tv1, tv2, tv3, Nx, Ny, Nz, inp_units=0, out_uni
     lab, newR = [], []
     scl = units.length_converter(inp_units, out_units)
 
-    for i in xrange(nat):
+    for i in range(0,nat):
 
-        for nx in range(Nx):
-            for ny in range(Ny):
-                for nz in range(Nz):
+        for nx in range(0,Nx):
+            for ny in range(0,Ny):
+                for nz in range(0,Nz):
                  
                     # Now apply PBC
                     r = VECTOR(R[i] + nx * tv1 + ny * tv2 + nz * tv3) * scl
@@ -353,7 +353,7 @@ def crop_sphere_xyz(infile, outfile, Rcut):
 
     tmp = A[0].split()
     Natoms = int(float(tmp[0]))
-    print A[1][:-1]
+    print(A[1][:-1])
 
     # Read coordinates and compute COM
     L = []
@@ -392,7 +392,7 @@ def crop_sphere_xyz(infile, outfile, Rcut):
 
     # Print resulting coordinates
     f1 = open(outfile,"w")
-    f1.write("%5i\n" % Nat)
+    f1.write(F"{Nat:5i}\n")
     f1.write(A[1])
 
 
@@ -401,7 +401,7 @@ def crop_sphere_xyz(infile, outfile, Rcut):
     for i in indx:
         coords.append(VECTOR(R[i][0], R[i][1], R[i][2]))
         lab.append(L[i])
-        f1.write("%s  %12.6f  %12.6f  %12.6f \n" % (L[i], R[i][0], R[i][1], R[i][2]) )
+        f1.write(F"{L[i]}  {R[i][0]:12.6f}  {R[i][1]:12.6f}  {R[i][2]:12.6f} \n")
 
     f1.close()
 
@@ -585,7 +585,7 @@ def add_atoms_to_system(syst, L, R, scl, mass, univ_file):
     LoadPT.Load_PT(U, univ_file, 0)
 
     sz = len(R)
-    for i in xrange(sz):
+    for i in range(0,sz):
 
         syst.CREATE_ATOM( Atom(U,  {"Atom_element":L[i],"Atom_cm_x":R[i].x,"Atom_cm_y":R[i].y,"Atom_cm_z":R[i].z})  )
 
@@ -647,9 +647,9 @@ def add_atom_to_system(syst, coords, MaxCoords, Nx,Ny,Nz, a,b,c, shift, elt, mas
     i = 0
 
     out_units = 0 # internal units in System objects are atomic units
-    for nx in xrange(Nx):
-        for ny in xrange(Ny):
-            for nz in xrange(Nz):
+    for nx in range(0,Nx):
+        for ny in range(0,Ny):
+            for nz in range(0,Nz):
              
                 R = VECTOR(nx * a + ny * b + nz * c + shift) * units.length_converter(inp_units, out_units)
                 coords.append(R)
@@ -693,7 +693,7 @@ def make_system(R, E, step, U):
     nat = ndof/3
     
     syst = System()
-    for at in xrange(nat):
+    for at in range(0,nat):
         x = R.get(3*at+0, step)
         y = R.get(3*at+1, step)
         z = R.get(3*at+2, step)

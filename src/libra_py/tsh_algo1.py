@@ -35,11 +35,10 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import tsh
-import tsh_stat
-#import common_utils as comn
 import util.libutil as comn
-import units
+from . import tsh
+from . import tsh_stat
+from . import units
 
 
 def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute_model, rnd):
@@ -73,6 +72,10 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
 
             * **dyn_params["dt"]** ( double ): the nuclear and electronic integration
                 timestep [ units: a.u. of time, default: 41.0 ]
+
+            * **dyn_params["tsh_version"]** ( int ): 
+                - 1:  tsh1(q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)
+                - 2:  tsh1b(q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)                        
 
             * **dyn_params["state_tracking_algo"]** ( int ): the algorithm to keep track of the states' identities
  
@@ -150,20 +153,21 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     # Parameters and dimensions
     critical_params = [ ] 
     default_params = { "rep":1, "nsteps":1, "dt":1.0*units.fs2au, "do_phase_correction":1, "state_tracking_algo":2,
-                       "MK_alpha":0.0, "MK_verbosity":0 }
+                       "MK_alpha":0.0, "MK_verbosity":0, "tsh_version":1 }
     comn.check_input(dyn_params, default_params, critical_params)
     
 
     rep = dyn_params["rep"]
     nsteps = dyn_params["nsteps"]
     dt = dyn_params["dt"]
+    tsh_version = dyn_params["tsh_version"]
 
     ndia = Cdia.num_of_rows
     nadi = Cadi.num_of_rows
     nnucl= q.num_of_rows
     ntraj= q.num_of_cols
 
-    for tr in xrange(ntraj):
+    for tr in range(0,ntraj):
         obs_hvib_adi.append([])
         obs_hvib_dia.append([])
 
@@ -173,7 +177,7 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     ham.init_all(2)
 
     ham1 = [] 
-    for tr in xrange(ntraj):
+    for tr in range(0,ntraj):
         ham1.append( nHamiltonian(ndia, nadi, nnucl) )        
         ham1[tr].init_all(2)
         ham.add_child(ham1[tr])
@@ -196,12 +200,18 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh_stat.compute_etot_tsh(ham, p, Cdia, Cadi, states, iM, rep) 
     
     # Do the propagation
-    for i in xrange(nsteps):
+    for i in range(0,nsteps):
 
         if rep==0:
-            tsh1(q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)
+            if tsh_version==1:
+                tsh1(q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)
+            elif tsh_version==2:
+                tsh1b(q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)
         elif rep==1:
-            tsh1(q, p, iM,  Cadi, states, ham, compute_model, model_params, dyn_params, rnd)
+            if tsh_version==1:
+                tsh1(q, p, iM,  Cadi, states, ham, compute_model, model_params, dyn_params, rnd)
+            elif tsh_version==2:
+                tsh1b(q, p, iM,  Cadi, states, ham, compute_model, model_params, dyn_params, rnd)
 
 
         #=========== Properties ==========
@@ -216,7 +226,7 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     
 
         ind = 0.0
-        for tr in xrange(ntraj):
+        for tr in range(0,ntraj):
             ind = ind + ham1[tr].get_ordering_adi()[0]
         ind = ind/float(ntraj)
 
@@ -239,7 +249,7 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
         obs_states.append(list(states))
 
         # Energies
-        for tr in xrange(ntraj):        
+        for tr in range(0,ntraj):        
             obs_hvib_adi[tr].append( CMATRIX(ham1[tr].get_hvib_adi()) )
             obs_hvib_dia[tr].append( CMATRIX(ham1[tr].get_hvib_dia()) )
 
@@ -287,7 +297,7 @@ def probabilities_1D_scattering(q, states, nst, params):
     pop_refl = MATRIX(nst, 1)    # reflected
 
     ntransm, nrefl = 0.0, 0.0
-    for traj in xrange(ntraj):
+    for traj in range(0,ntraj):
 
         if q.get(act_dof, traj) < left_boundary:
             pop_refl.add(states[traj], 0, 1.0)

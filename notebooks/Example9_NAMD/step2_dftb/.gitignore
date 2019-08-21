@@ -6,8 +6,10 @@
 *.xyz
 *.dat
 *.dat_tmp
+*.gen
 
 dftb_in.hsd
 dftb_pin.hsd
 *.gen
 res
+res2

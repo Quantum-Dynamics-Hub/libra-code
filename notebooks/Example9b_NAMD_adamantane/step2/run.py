@@ -45,7 +45,7 @@ EOINPUT
     return inp
 
 
-params = {"EXE":"/mnt/c/cygwin/home/Alexey-user/Soft/ergo-3.7/source/ergo", "md_file":"../step1/md.xyz",
+params = {"EXE":"/mnt/c/cygwin/home/Alexey-user/Soft/ergo-3.8/source/ergo", "md_file":"../step1/md.xyz",
           "isnap":0, "fsnap":5000, "dt": 1.0 * units.fs2au
          }
 

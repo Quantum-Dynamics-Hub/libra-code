@@ -38,8 +38,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import units
-import probabilities
+from . import units
+from . import probabilities
 
 
 def compute_etot(ham, p, Cdia, Cadi, iM, rep):
@@ -86,19 +86,19 @@ def compute_etot(ham, p, Cdia, Cadi, iM, rep):
 
     C = CMATRIX(nst, 1)
 
-    for traj in xrange(ntraj):
+    for traj in range(0,ntraj):
 
         if rep==0:
-            pop_submatrix(Cdia, C, Py2Cpp_int(range(0,nst)), Py2Cpp_int([traj]))    
+            pop_submatrix(Cdia, C, Py2Cpp_int(list(range(0,nst))), Py2Cpp_int([traj]))    
             epot.append( ham.Ehrenfest_energy_dia(C, Py2Cpp_int([0,traj])).real )
             Epot = Epot + epot[traj]
         elif rep==1:
-            pop_submatrix(Cadi, C, Py2Cpp_int(range(0,nst)), Py2Cpp_int([traj]))    
+            pop_submatrix(Cadi, C, Py2Cpp_int(list(range(0,nst))), Py2Cpp_int([traj]))    
             epot.append( ham.Ehrenfest_energy_adi(C, Py2Cpp_int([0,traj])).real )
             Epot = Epot + epot[traj]
 
         tmp = 0.0
-        for dof in xrange(ndof):
+        for dof in range(0,ndof):
             tmp = tmp + 0.5 * iM.get(dof, 0) * (p.get(dof, traj) ** 2)
         ekin.append(tmp)
         Ekin = Ekin + ekin[traj]
@@ -109,7 +109,7 @@ def compute_etot(ham, p, Cdia, Cadi, iM, rep):
 
     # Variances:
     dEkin, dEpot = 0.0, 0.0
-    for traj in xrange(ntraj):
+    for traj in range(0,ntraj):
         dEkin = dEkin + (ekin[traj] - Ekin)**2
         dEpot = dEpot + (epot[traj] - Epot)**2
 
@@ -172,9 +172,9 @@ def compute_etot_tsh(ham, p, Cdia, Cadi, act_states, iM, rep):
 
     tsh_indx2vec(ham, states, act_states)
 
-    for traj in xrange(ntraj):
+    for traj in range(0,ntraj):
 
-        pop_submatrix(states, C, Py2Cpp_int(range(0,nst)), Py2Cpp_int([traj]))      
+        pop_submatrix(states, C, Py2Cpp_int(list(range(0,nst))), Py2Cpp_int([traj]))      
 
         if rep==0:
             epot.append( ham.Ehrenfest_energy_dia(C, Py2Cpp_int([0,traj])).real )
@@ -184,7 +184,7 @@ def compute_etot_tsh(ham, p, Cdia, Cadi, act_states, iM, rep):
             Epot = Epot + epot[traj]
 
         tmp = 0.0
-        for dof in xrange(ndof):
+        for dof in range(0,ndof):
             tmp = tmp + 0.5 * iM.get(dof, 0) * (p.get(dof, traj) ** 2)
         ekin.append(tmp)
         Ekin = Ekin + ekin[traj]
@@ -195,7 +195,7 @@ def compute_etot_tsh(ham, p, Cdia, Cadi, act_states, iM, rep):
 
     # Variances:
     dEkin, dEpot, dEtot = 0.0, 0.0, 0.0
-    for traj in xrange(ntraj):
+    for traj in range(0,ntraj):
         dEkin = dEkin + (ekin[traj] - Ekin)**2
         dEpot = dEpot + (epot[traj] - Epot)**2
         dEtot = dEtot + (ekin[traj] + epot[traj] - Etot)**2
@@ -253,7 +253,7 @@ def compute_dm(ham, Cdia, Cadi, rep, lvl):
     dm_dia, dm_adi = CMATRIX(ndia, ndia), CMATRIX(nadi, nadi)
 
 
-    for traj in xrange(ntraj):
+    for traj in range(0,ntraj):
         indx = None
         if lvl==0:
             indx = Py2Cpp_int([0])
@@ -318,7 +318,7 @@ def compute_sh_statistics(nstates, istate):
 
     coeff_sh = MATRIX(nstates, 1)
 
-    for i in xrange(ntraj):
+    for i in range(0,ntraj):
         st = istate[i]
         coeff_sh.add(st, 0, f)
  
@@ -353,7 +353,7 @@ def update_sh_pop(istate, nstates):
 
     incr = 1.0/float(ntraj)
 
-    for j in xrange(ntraj): # for all trajectories
+    for j in range(0,ntraj): # for all trajectories
         pops[ istate[j] ] += incr
 
     return pops
@@ -393,13 +393,13 @@ def avarage_populations(el):
     rho = CMATRIX(nstat, nstat) # trajectory-averaged density matrix
 
     f = 1.0/float(ntraj)
-    for traj in xrange(ntraj): # for all trajectories
+    for traj in range(0,ntraj): # for all trajectories
         sh_pops[ el[traj].istate ] += f
 
-        for st1 in xrange(nstat):
+        for st1 in range(0,nstat):
             se_pops[ st1 ] += f * el[traj].rho(st1,st1).real
 
-            for st2 in xrange(nstat):
+            for st2 in range(0,nstat):
                 rho.set(st1, st2, rho.get(st1,st2) + f * el[traj].rho(st1,st2) )
 
     return sh_pops, se_pops, rho
@@ -431,7 +431,7 @@ def ave_pop(denmat_sh, denmat_se):
     ave_pop_se = CMATRIX(nst_out, nst_out)
     den = 1.0/float(ntraj)
 
-    for i in xrange(ntraj):
+    for i in range(0,ntraj):
         ave_pop_se = ave_pop_se + den * denmat_se[i]   # SE
         ave_pop_sh = ave_pop_sh + den * denmat_sh[i]   # SH
 
@@ -462,7 +462,7 @@ def ave_en(denmat_sh, denmat_se, Hvib):
     ave_en_se = 0.0
     den = 1.0/float(ntraj)
 
-    for i in xrange(ntraj):
+    for i in range(0,ntraj):
         ave_en_se =  ave_en_se + den * (denmat_se[i].real() * Hvib[i].real() ).tr()  # SE
         ave_en_sh =  ave_en_sh + den * (denmat_sh[i].real() * Hvib[i].real() ).tr()  # SH
 
@@ -489,7 +489,7 @@ def amplitudes2denmat(coeffs):
     ntraj = len(coeffs)
     denmat = []
 
-    for tr in xrange(ntraj):
+    for tr in range(0,ntraj):
         denmat.append( coeffs[tr] * coeffs[tr].H() )
 
     return denmat
@@ -513,9 +513,9 @@ def pops2denmat(pops):
     nstates = pops[0].num_of_rows
     denmat = []
 
-    for tr in xrange(ntraj):
+    for tr in range(0,ntraj):
         denmat.append( CMATRIX(nstates, nstates) )
-        for i in xrange(nstates):
+        for i in range(0,nstates):
             denmat[tr].set(i,i, pops[tr].get(i,0))
 
     return denmat
@@ -537,7 +537,7 @@ def denmat2prob(P):
     nst = P.num_of_cols
     prob = [0.0] * nst
 
-    for i in xrange(nst):
+    for i in range(0,nst):
         prob[i] = P.get(i,i).real
 
     return prob

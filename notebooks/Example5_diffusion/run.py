@@ -90,15 +90,15 @@ def run_diffusion(T, rnd, params, nsteps, nat):
 
     # Statistics
     r = VECTORList()
-    for at in xrange(nat):
+    for at in range(0, nat):
         r.append(VECTOR(0.0, 0.0, 0.0))
  
     time, MSD, D = [], [], []
     t = 0
-    for n in xrange(nsteps):
+    for n in range(0, nsteps):
         # Compute the msd
         msd = 0.0        
-        for at in xrange(nat):
+        for at in range(0, nat):
             msd = msd + r[at].length2()
         msd = msd/float(nat)
         
@@ -107,7 +107,7 @@ def run_diffusion(T, rnd, params, nsteps, nat):
         D.append(msd/(t+1.0))
 
         # Do all the hops
-        for at in xrange(nat):
+        for at in range(0, nat):
             r[at] = lattice_hop(r[at], T, params, rnd)
 
         t = t + 1.0
@@ -126,7 +126,7 @@ def run_T_scan(T_vals, rnd, params, nsteps, nat):
         # Process data
         sz = len(time)
         ln_time, ln_MSD = [], []
-        for i in xrange(sz):
+        for i in range(0, sz):
             if time[i]>0.0 and MSD[i]>0.0:
                 ln_time.append(math.log(time[i]))
                 ln_MSD.append(math.log(MSD[i]))

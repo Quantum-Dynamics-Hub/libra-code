@@ -29,8 +29,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import units
-import regexlib as rgl
+from . import units
+from . import regexlib as rgl
 
 
 def get_energy_forces(filename, nat):
@@ -68,13 +68,13 @@ def get_energy_forces(filename, nat):
     
     # Lets look for what we need
     sz = len(A)
-    for i in xrange(sz):    
+    for i in range(0,sz):    
         tmp = A[i].split()
         
         #=========== Look for forces =============
         if len(tmp)==2:
             if tmp[0]=="Total" and tmp[1]=="Forces":
-                for j in xrange(i+1, i+1+nat):
+                for j in range(i+1, i+1+nat):
                     ind = j - i - 1 
                     tmp1 = A[j].split()
                     x = float(tmp1[0])
@@ -129,13 +129,13 @@ def get_dftb_matrices(filename, act_sp1=None, act_sp2=None):
     # Determine the dimensions of the output matrices
     if act_sp1==None:
         nstates1 = norbs
-        act_sp1 = range(0, nstates1)
+        act_sp1 = list(range(0, nstates1))
     else:
         nstates1 = len(act_sp1)
 
     if act_sp2==None:
         nstates2 = norbs
-        act_sp2 = range(0, nstates2)
+        act_sp2 = list(range(0, nstates2))
     else:
         nstates2 = len(act_sp2)
 
@@ -144,7 +144,7 @@ def get_dftb_matrices(filename, act_sp1=None, act_sp2=None):
     X = []
     
     # For each k-point
-    for ikpt in xrange(nkpts):
+    for ikpt in range(0,nkpts):
 
         # Write just the matrix data into a temporary files
         # This procedure is made fault-resistant, to avoid wrong working 
@@ -152,11 +152,11 @@ def get_dftb_matrices(filename, act_sp1=None, act_sp2=None):
         B = A[5+ikpt*norbs : 5+(1+ikpt)*norbs]
         
         f1 = open(filename+"_tmp", "w")  
-        for i in xrange(norbs):
+        for i in range(0,norbs):
             
             tmp = B[i].split()
             line = ""            
-            for j in xrange(norbs): 
+            for j in range(0,norbs): 
                 z = 0.0
                 if tmp[j]=="NaN":
                     z = 0.0
@@ -216,7 +216,7 @@ def xyz_traj2gen_sp(infile, outfile, md_iter, sys_type):
     nat = int( float(A[0].split()[0] ) )
     at_types = []
 
-    for i in xrange(nat):
+    for i in range(0,nat):
         at_typ = A[i+2].split()[0]   # atom type
         if at_typ not in at_types:
             at_types.append(at_typ)
@@ -229,7 +229,7 @@ def xyz_traj2gen_sp(infile, outfile, md_iter, sys_type):
         line = line + " %s " % (typ)
     line = line + "\n"
 
-    for i in xrange(nat):
+    for i in range(0,nat):
         ln_indx = (nat+2)*md_iter + (i + 2)
         tmp = A[ln_indx].split()
 
@@ -277,7 +277,7 @@ def xyz_traj2gen_ovlp(infile, outfile, md_iter1, md_iter2, sys_type):
     nat = int( float(A[0].split()[0] ) )
     at_types = []
 
-    for i in xrange(nat):
+    for i in range(0,nat):
         at_typ = A[i+2].split()[0]   # atom type
         if at_typ not in at_types:
             at_types.append(at_typ)
@@ -291,7 +291,7 @@ def xyz_traj2gen_ovlp(infile, outfile, md_iter1, md_iter2, sys_type):
     line = line + "\n"
 
 
-    for i in xrange(nat):
+    for i in range(0,nat):
         ln_indx = (nat+2)*md_iter1 + (i + 2)
         tmp = A[ln_indx].split()
 
@@ -303,7 +303,7 @@ def xyz_traj2gen_ovlp(infile, outfile, md_iter1, md_iter2, sys_type):
         z = float(tmp[3])
         line = line + " %5i %3i  %15.8f  %15.8f  %15.8f\n" % (at_indx, typ_indx, x, y, z)
 
-    for i in xrange(nat):
+    for i in range(0,nat):
         ln_indx = (nat+2)*md_iter2 + (i + 2)
         tmp = A[ln_indx].split()
 

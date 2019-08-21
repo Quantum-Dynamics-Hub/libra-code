@@ -76,16 +76,16 @@ def transform_data(X, params):
     sh2 = CMATRIX(nstates, nstates) # zero
     scl = CMATRIX(nstates, nstates) # all elements are 1
 
-    for i in xrange(nstates):
-        for j in xrange(nstates):
+    for i in range(0,nstates):
+        for j in range(0,nstates):
             scl.set(i,j, 1.0+0.0j)
 
     critical_params = [  ] 
     default_params = { "shift1":sh1, "shift2":sh2, "scale":scl  }
     comn.check_input(params, default_params, critical_params)
 
-    for idata in xrange(ndata):
-        for istep in xrange(nsteps):
+    for idata in range(0,ndata):
+        for istep in range(0,nsteps):
 
             tmp = CMATRIX(X[idata][istep])
             tmp = tmp + params["shift1"]
@@ -120,8 +120,8 @@ def unit_conversion(X, scaling_factor):
     shi = CMATRIX(nst, nst);                             
 
     # Default ones
-    for i in xrange(nst):
-        for j in xrange(nst):
+    for i in range(0,nst):
+        for j in range(0,nst):
             scl.set(i,j, scaling_factor*(1.0+0.0j))
             shi.set(i,j, (0.0+0.0j))        
     transform_data(X, {"shift2":shi, "scale":scl }) 
@@ -153,8 +153,8 @@ def scale_NAC(X, a, b, scaling_factor):
     shi = CMATRIX(nst, nst);                             
 
     # Default ones
-    for i in xrange(nst):
-        for j in xrange(nst):
+    for i in range(0,nst):
+        for j in range(0,nst):
             scl.set(i,j, 1.0+0.0j)
             shi.set(i,j, 0.0+0.0j)        
     scl.set(a,b, scaling_factor)
@@ -187,8 +187,8 @@ def scale_NACs(X, scaling_factor):
     shi = CMATRIX(nst, nst);                             
 
     # Default ones
-    for i in xrange(nst):
-        for j in xrange(nst):
+    for i in range(0,nst):
+        for j in range(0,nst):
             if i!=j:
                 scl.set(i,j, scaling_factor*(1.0+0.0j))
             else:
@@ -224,12 +224,12 @@ def scissor(X, a, dE):
     shi = CMATRIX(nst, nst);                             
 
     # Default ones
-    for i in xrange(nst):
-        for j in xrange(nst):
+    for i in range(0,nst):
+        for j in range(0,nst):
             scl.set(i,j, 1.0+0.0j)
             shi.set(i,j, 0.0+0.0j)        
 
-    for i in xrange(a, nst):
+    for i in range(a, nst):
         shi.add(i,i, dE)
 
     transform_data(X, {"shift2":shi, "scale":scl }) 
@@ -260,7 +260,7 @@ def unpack1(H, i, j, component=2):
     """
     sz = len(H)
     res = []
-    for k in xrange(sz):
+    for k in range(0,sz):
         if component==0:
             res.append( H[k].get(i,j).real )
         elif component==1:
@@ -296,7 +296,7 @@ def unpack2(H, i, component=2):
     sz = H.num_of_rows
 
     res = []
-    for k in xrange(sz):
+    for k in range(0,sz):
         if component==0:
             res.append( H.get(k,i).real )
         elif component==1:
@@ -323,7 +323,7 @@ def list2MATRIX(data):
     N = len(data)
     res = MATRIX(N,1)
     
-    for n in xrange(N):
+    for n in range(0,N):
         res.set(n, 0, data[n])
 
     return res

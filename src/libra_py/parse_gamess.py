@@ -59,8 +59,8 @@ def name2no(name):
         res = all_names.index(lname) 
 
     else:
-        print "Error in name2no function: The element ", name, " is not defined"
-        print "Possible values are: ", all_names
+        print("Error in name2no function: The element ", name, " is not defined")
+        print("Possible values are: ", all_names)
         sys.exit(0)
 
     return res
@@ -113,7 +113,7 @@ def parse_gamess_basis(filename):
             if symb == "L":
                 sprims = []
                 pprims = []
-                for j in xrange(nprim):
+                for j in range(0,nprim):
                     i = i + 1
                     line = lines[i]
                     words = line.split()
@@ -123,7 +123,7 @@ def parse_gamess_basis(filename):
                 basis[atno].append(("P",pprims))
             else:
                 prims = []
-                for j in xrange(nprim):
+                for j in range(0,nprim):
                     i = i + 1
                     line = lines[i]
                     words = line.split()

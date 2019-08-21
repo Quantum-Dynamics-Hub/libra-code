@@ -52,16 +52,16 @@ def show_matrix_pyplot(X, set_diag_to_zero=0):
 
     ncol, nrow = X.num_of_cols, X.num_of_rows
     x, y = [], []
-    for i in xrange(ncol):
+    for i in range(0,ncol):
         x.append(i)
-    for i in xrange(nrow):
+    for i in range(0,nrow):
         y.append(i)
 
     
     z = []    
-    for i in xrange(nrow):
+    for i in range(0,nrow):
         z_i = []
-        for j in xrange(ncol):
+        for j in range(0,ncol):
             val = X.get(i,j)
             if set_diag_to_zero==1:
                 if i==j:
@@ -96,8 +96,8 @@ def show_matrix_splot(X, filename, set_diag_to_zero=0):
     ncol, nrow = X.num_of_cols, X.num_of_rows
 
     line = ""
-    for i in xrange(nrow):
-        for j in xrange(ncol):
+    for i in range(0,nrow):
+        for j in range(0,ncol):
             val = X.get(i,j)
             if set_diag_to_zero==1:
                 if i==j:
@@ -126,7 +126,7 @@ def printout(t, pops, Hvib, outfile):
 
     line = "%8.5f " % (t)
     P, E = 0.0, 0.0
-    for state in xrange(nstates):
+    for state in range(0,nstates):
         p, e = pops.get(state,0), Hvib.get(state, state).real
         P += p
         E += p*e
@@ -147,7 +147,7 @@ def add_printout(i, pop, filename):
     line = "step= %4i " % i    
 
     tot_pop = 0.0
-    for st in xrange(pop.num_of_cols):
+    for st in range(0,pop.num_of_cols):
         pop_o = pop.get(st,st).real
         tot_pop = tot_pop + pop_o
         line = line + " P(%4i)= %8.5f " % (st, pop_o)

@@ -38,19 +38,20 @@ MESSAGE("Looking for Boost libraries...")
 FIND_PACKAGE(Boost REQUIRED)
 IF(Boost_FOUND)
   MESSAGE("Success!")
-  INCLUDE_DIRECTORIES("${Boost_INCLUDE_DIRS}")
+  INCLUDE_DIRECTORIES("${Boost_INCLUDE_DIRS}")  
   SET(Boost_USE_STATIC_LIBS OFF)
   SET(Boost_USE_MULTITHREADED OFF)
   SET(Boost_USE_STATIC_RUNTIME OFF)
-  FIND_PACKAGE(Boost COMPONENTS python regex) # it seems that it is important to find sub-packages too!!!
+  #FIND_PACKAGE(Boost COMPONENTS python27 regex) # it seems that it is important to find sub-packages too!!!
+  FIND_PACKAGE(Boost COMPONENTS python37 regex) # it seems that it is important to find sub-packages too!!!
 ELSEIF(NOT Boost_FOUND)
   MESSAGE(FATAL_ERROR "Unable to find correct Boost version. Did you set BOOST_ROOT?")
 ENDIF()
 
 MESSAGE("Found Boost libraries directory: ")
-MESSAGE(${Boost_LIBRARIES})
+MESSAGE("${Boost_LIBRARIES}")
 MESSAGE("Found Boost include directory: ")
-MESSAGE(${Boost_INCLUDE_DIRS})
+MESSAGE("${Boost_INCLUDE_DIRS}")
 
 
 #
@@ -61,7 +62,8 @@ MESSAGE("Advice: If this search fails, try setting cache variables: -DPYTHON_LIB
 MESSAGE("Hint to self: -DPYTHON_INCLUDE_DIR=/home/Alexey_2/Soft/Python-2.6.7/bin/include/python2.6 -DPYTHON_LIBRARY=/home/Alexey_2/Soft/Python-2.6.7/bin/bin")
 
 # For Linux and Cygwin
-FIND_PACKAGE(PythonLibs 2.7.5 REQUIRED)
+#FIND_PACKAGE(PythonLibs 2.7 REQUIRED)
+FIND_PACKAGE(PythonLibs 3.7 REQUIRED)
 
 IF(PYTHONLIBS_FOUND)
   MESSAGE("Success!")

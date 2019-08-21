@@ -24,8 +24,9 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-import LoadMolecule
-import LoadPT
+
+from . import LoadMolecule
+from . import LoadPT
 
 
 def init_ext_hamiltonians(ntraj, nnucl, nel, verbose=0):
@@ -60,7 +61,7 @@ def init_ext_hamiltonians(ntraj, nnucl, nel, verbose=0):
 
     # Create an list of External Hamiltonian objects
     ham = []
-    for i in xrange(ntraj):
+    for i in range(0,ntraj):
         ham_i = Hamiltonian_Extern(nel, nnucl) 
         ham_i.set_rep(1)            # adiabatic representation
         ham_i.set_adiabatic_opt(0)  # use the externally-computed 
@@ -72,7 +73,7 @@ def init_ext_hamiltonians(ntraj, nnucl, nel, verbose=0):
     ham_adi = []; d1ham_adi = []; ham_vib = []
 
 
-    for i in xrange(ntraj):
+    for i in range(0,ntraj):
         # create external matrix for adiabatic Hamiltonian
         ham_adi_i = MATRIX(nel, nel)
         ham_adi.append(ham_adi_i)
@@ -81,7 +82,7 @@ def init_ext_hamiltonians(ntraj, nnucl, nel, verbose=0):
 
         # create external matrices for the derivatives
         d1ham_adi_i= MATRIXList()
-        for k in xrange(nnucl):
+        for k in range(0,nnucl):
             tmp = MATRIX(nel, nel)
             d1ham_adi_i.append(tmp)
         d1ham_adi.append(d1ham_adi_i)
@@ -95,14 +96,14 @@ def init_ext_hamiltonians(ntraj, nnucl, nel, verbose=0):
         ham[i].bind_ham_vib(ham_vib[i])
 
     if verbose==1:
-        print "Addresses of the working matrices"
-        for i in xrange(ntraj):
-            print "%i th Hamiltonian is" % i
-            print "ham_adi = ", ham_adi[i]
-            print "d1ham_adi = ", d1ham_adi[i]
-            for k in xrange(nnucl):
-                print "d1ham_adi[",k,"]= ", d1ham_adi[i][k]
-            print "ham_vib = ", ham_vib[i]
+        print("Addresses of the working matrices")
+        for i in range(0,ntraj):
+            print("%i th Hamiltonian is" % i)
+            print("ham_adi = ", ham_adi[i])
+            print("d1ham_adi = ", d1ham_adi[i])
+            for k in range(0,nnucl):
+                print("d1ham_adi[",k,"]= ", d1ham_adi[i][k])
+            print("ham_vib = ", ham_vib[i])
 
     return ham, ham_adi, d1ham_adi, ham_vib
 
@@ -127,18 +128,18 @@ def init_systems(ntraj, U, filename, format, verbose=0):
     """
 
     syst = []
-    for tr in xrange(ntraj):
+    for tr in range(0,ntraj):
         syst.append( System() )
         LoadMolecule.Load_Molecule(U, syst[tr], filename, format)
         syst[tr].determine_functional_groups(0)  # do not assign rings
         syst[tr].init_fragments()
 
         if tr==0 and verbose==1:
-            print "Number of atoms in the system = ", syst[tr].Number_of_atoms
-            print "Number of bonds in the system = ", syst[tr].Number_of_bonds
-            print "Number of angles in the system = ", syst[tr].Number_of_angles
-            print "Number of dihedrals in the system = ", syst[tr].Number_of_dihedrals
-            print "Number of impropers in the system = ", syst[tr].Number_of_impropers
+            print("Number of atoms in the system = ", syst[tr].Number_of_atoms)
+            print("Number of bonds in the system = ", syst[tr].Number_of_bonds)
+            print("Number of angles in the system = ", syst[tr].Number_of_angles)
+            print("Number of dihedrals in the system = ", syst[tr].Number_of_dihedrals)
+            print("Number of impropers in the system = ", syst[tr].Number_of_impropers)
 
     return syst
 
@@ -171,11 +172,11 @@ def init_systems2(ntraj, filename, format, rnd, T, sigma, data_file="elements.da
     U = Universe();   LoadPT.Load_PT(U, data_file, 0)
     syst = []
 
-    for tr in xrange(ntraj):
+    for tr in range(0, ntraj):
         syst.append( System() )
         LoadMolecule.Load_Molecule(U, syst[tr], filename, format)
 
-        for at in xrange(syst[tr].Number_of_atoms):
+        for at in range(0, syst[tr].Number_of_atoms):
             # Random shift
             shift = VECTOR(sigma*rnd.normal(), sigma*rnd.normal(), sigma*rnd.normal() )
 
@@ -191,11 +192,11 @@ def init_systems2(ntraj, filename, format, rnd, T, sigma, data_file="elements.da
         syst[tr].init_fragments()
 
         if tr==0 and verbose==1:
-            print "Number of atoms in the system = ", syst[tr].Number_of_atoms
-            print "Number of bonds in the system = ", syst[tr].Number_of_bonds
-            print "Number of angles in the system = ", syst[tr].Number_of_angles
-            print "Number of dihedrals in the system = ", syst[tr].Number_of_dihedrals
-            print "Number of impropers in the system = ", syst[tr].Number_of_impropers
+            print("Number of atoms in the system = ", syst[tr].Number_of_atoms)
+            print("Number of bonds in the system = ", syst[tr].Number_of_bonds)
+            print("Number of angles in the system = ", syst[tr].Number_of_angles)
+            print("Number of dihedrals in the system = ", syst[tr].Number_of_dihedrals)
+            print("Number of impropers in the system = ", syst[tr].Number_of_impropers)
 
     return syst
 
@@ -224,7 +225,7 @@ def init_mm_Hamiltonians(syst, ff, verbose=0):
     ham = []
 
     # Creating Hamiltonian and initialize it
-    for tr in xrange(ntraj):
+    for tr in range(0,ntraj):
         ham.append( Hamiltonian_Atomistic(1, 3*syst[tr].Number_of_atoms) )
         ham[tr].set_Hamiltonian_type("MM")
 
@@ -237,9 +238,9 @@ def init_mm_Hamiltonians(syst, ff, verbose=0):
         ham[tr].compute(); 
 
         if tr==0 and verbose==1:
-            print "Printing the Hamiltonian info for the first trajectory"
+            print("Printing the Hamiltonian info for the first trajectory")
             ham[tr].show_interactions_statistics()
-            print "Energy = ", ham.H(0,0), " a.u."
+            print("Energy = ", ham.H(0,0), " a.u.")
 
     return ham
 
@@ -266,7 +267,7 @@ def init_mols(syst, ntraj, nnucl, verbose=0):
 
     # Initialize nuclear variables
     mol = []
-    for i in xrange(ntraj):
+    for i in range(0,ntraj):
         mol.append(Nuclear(nnucl))
         syst[i].extract_atomic_q(mol[i].q)
         syst[i].extract_atomic_p(mol[i].p)
@@ -274,9 +275,9 @@ def init_mols(syst, ntraj, nnucl, verbose=0):
         syst[i].extract_atomic_mass(mol[i].mass)
 
         if verbose==1:
-            print i,"mol=",mol[i]
-            for k in xrange(syst[i].Number_of_atoms):
-                print "mol[%d][%d]=%f,%f,%f"%(i,k,mol[i].q[3*k+0],mol[i].q[3*k+1],mol[i].q[3*k+2])
+            print(i,"mol=",mol[i])
+            for k in range(0,syst[i].Number_of_atoms):
+                print("mol[%d][%d]=%f,%f,%f"%(i,k,mol[i].q[3*k+0],mol[i].q[3*k+1],mol[i].q[3*k+2]) )
 
     return mol
 
@@ -301,7 +302,7 @@ def init_therms(ntraj, nnucl, params, verbose=0):
 
     # Initialize Thermostat object    
     therm = []
-    for i in xrange(ntraj):
+    for i in range(0,ntraj):
         therm_i = Thermostat({"nu_therm":params["nu_therm"], 
                               "NHC_size":params["NHC_size"], 
                               "Temperature":params["Temperature"], 
@@ -313,7 +314,7 @@ def init_therms(ntraj, nnucl, params, verbose=0):
         therm.append(therm_i)
 
     if verbose==1:
-        print "therm =",therm 
+        print("therm =",therm)
 
     return therm
 

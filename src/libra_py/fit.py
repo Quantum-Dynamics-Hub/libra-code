@@ -114,7 +114,7 @@ def fit_exp(X,Y, x0=0.0, verbose=0, linreg_opt=0):
     linx = [0.0] * sz
     liny = [0.0] * sz
 
-    for i in xrange(sz):
+    for i in range(0,sz):
         linx[i] = X[i] - x0
         liny[i] = math.log(Y[i])
 
@@ -126,13 +126,13 @@ def fit_exp(X,Y, x0=0.0, verbose=0, linreg_opt=0):
 
     # Compute prediction
     predy = [0.0] * sz
-    for i in xrange(sz):
+    for i in range(0,sz):
         predy[i] = A * math.exp(-B*X[i])
 
     if verbose:
-        print "Fitting data to the expression Y = A * exp(-B*(X-x0))"
-        print "With parameters: x0 = ", x0
-        print "Fitting parameters: A = ", A, " B = ", B, " 1/B = ", 1.0/B
+        print("Fitting data to the expression Y = A * exp(-B*(X-x0))")
+        print("With parameters: x0 = ", x0)
+        print("Fitting parameters: A = ", A, " B = ", B, " 1/B = ", 1.0/B)
 
     return predy, A, B
 
@@ -186,7 +186,7 @@ def fit_gau(X,Y, x0=0.0, verbose=0, linreg_opt=0):
     linx = [0.0] * sz
     liny = [0.0] * sz
 
-    for i in xrange(sz):
+    for i in range(0,sz):
         linx[i] = (X[i] - x0)**2
         liny[i] = math.log(Y[i])
 
@@ -198,13 +198,13 @@ def fit_gau(X,Y, x0=0.0, verbose=0, linreg_opt=0):
 
     # Compute prediction
     predy = [0.0] * sz
-    for i in xrange(sz):
+    for i in range(0,sz):
         predy[i] = A * math.exp(-B*(X[i] - x0)**2)
 
     if verbose:
-        print "Fitting data to the expression Y = A * exp(-B*(X-x0)**2)"
-        print "With parameters: x0 = ", x0
-        print "Fitting parameters: A = ", A, " B = ", B, " sqrt(B) = ", math.sqrt(B), " 1/B = ", 1.0/B, " sqrt(1.0/B) = ", math.sqrt(1.0/B)
+        print("Fitting data to the expression Y = A * exp(-B*(X-x0)**2)")
+        print("With parameters: x0 = ", x0)
+        print("Fitting parameters: A = ", A, " B = ", B, " sqrt(B) = ", math.sqrt(B), " 1/B = ", 1.0/B, " sqrt(1.0/B) = ", math.sqrt(1.0/B) )
 
     return predy, A, B
 
@@ -225,7 +225,7 @@ if __name__ == '__main__':
 
 
     f = open("relax_and_fit.txt","w")
-    for i in xrange(len(X)):
+    for i in range(0,len(X)):
         f.write("%8.5f  %8.5f  %8.5f\n" % ( X[i],Y[i],Ypred[i]) )
     f.close()
 

@@ -174,7 +174,7 @@ def Load_MMFF94(force_field,
 
 
 #-------------- Atoms ------------------------------------
-    print "Loading atom types...\n"
+    print("Loading atom types...\n")
     f   = open(ff_file11,'r')
     A1 = f.readlines()
     f.close()
@@ -229,7 +229,7 @@ def Load_MMFF94(force_field,
             atom_record = Atom_Record()
             atom_record.set(ff)
             res = force_field.Add_Atom_Record(atom_record)                       
-            print "load type", ff.Atom_ff_type
+            print("load type", ff.Atom_ff_type)
 
         if m2!=None:
             ff_par["sigma_comb_rule"] = a[m2.start('FF_sigma_rule_value'):m2.end('FF_sigma_rule_value')]
@@ -276,7 +276,7 @@ def Load_MMFF94(force_field,
 
 
 #-------------- Bonds ------------------------------------
-    print "Loading bonds...\n"
+    print("Loading bonds...\n")
     f   = open(ff_file21,'r')
     A1 = f.readlines()
     f.close()
@@ -318,7 +318,7 @@ def Load_MMFF94(force_field,
             bond_record.set(ff)
             res = force_field.Add_Bond_Record(bond_record)
 
-    print "Setting parameters for rule-based calculations"
+    print("Setting parameters for rule-based calculations")
     for a in A3:
         m1 = re.search(MMFF94_Bond_Type_Record3,a)     
         # Note that the meaning of patterns is different from that of variables!!!
@@ -333,7 +333,7 @@ def Load_MMFF94(force_field,
             bond_record.set(ff)
 #            bond_record.show_info()
             res = force_field.Add_Bond_Record(bond_record)
-            print res
+            print(res)
 
 
 
@@ -343,7 +343,7 @@ def Load_MMFF94(force_field,
 
 
 #----------------- Angles -------------------------------------
-    print "Loading angles and stretch-bending...\n"
+    print("Loading angles and stretch-bending...\n")
     f   = open(ff_file31,'r')
     A1 = f.readlines()
     f.close()
@@ -396,7 +396,7 @@ def Load_MMFF94(force_field,
 
 
 #----------------- Dihedrals -------------------------------------
-    print "Loading dihedral...\n"
+    print("Loading dihedral...\n")
     f   = open(ff_file4,'r')
     A = f.readlines()
     f.close()
@@ -427,7 +427,7 @@ def Load_MMFF94(force_field,
 
 
 #----------------- Out-of-plane -------------------------------------
-    print "Loading oop...\n"
+    print("Loading oop...\n")
     f   = open(ff_file5,'r')
     A = f.readlines()
     f.close()

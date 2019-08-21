@@ -19,5 +19,4 @@ __all__ = ["compute_hprime",
            "step2_ergoscf",
            "step3",
            "step4",
-           "utils",
           ]

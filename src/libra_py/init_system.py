@@ -24,7 +24,8 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-import LoadPT  # for Load_PT
+
+from . import LoadPT  # for Load_PT
 
 
 def init_system(label, R, g, rnd, T, sigma, df, data_file="elements.dat"):
@@ -50,22 +51,22 @@ def init_system(label, R, g, rnd, T, sigma, df, data_file="elements.dat"):
     syst = System()
 
     sz = len(label)
-    for i in xrange(sz):
+    for i in range(0,sz):
         atom_dict = {"Atom_element": label[i]}
 
         if df:
-            print "CREATE_ATOM ",atom_dict["Atom_element"]
+            print("CREATE_ATOM ",atom_dict["Atom_element"])
 
         at = Atom(U, atom_dict)
         r = VECTOR( R[i].x + sigma*rnd.normal(), R[i].y + sigma*rnd.normal(), R[i].z + sigma*rnd.normal() )
-        print r, r.x, r.y, r.z
+        print(r, r.x, r.y, r.z)
         at.Atom_RB.set_position( r )
         at.Atom_RB.set_force( VECTOR(-g[i].x, -g[i].y, -g[i].z) )
         at.is_Atom_RB = 1
         syst.CREATE_ATOM(at)
 
     if df:
-        print "Number of atoms in the system = ", syst.Number_of_atoms
+        print("Number of atoms in the system = ", syst.Number_of_atoms)
         syst.show_atoms()
 
     # Initialize random velocity at T(K) using normal distribution

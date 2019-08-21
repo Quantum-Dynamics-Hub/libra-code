@@ -232,7 +232,7 @@ def compute_Hvib_sd(ham_old, ham_cur, orb, SD_basis, dt):
     # Compute energies in the SD basis:
     sd_bas_size = len(SD_basis)
     Esd = CMATRIX(sd_bas_size, sd_bas_size)
-    for I in xrange(sd_bas_size):
+    for I in range(0,sd_bas_size):
         e = 0.0
         
         for i in SD_basis[I]:

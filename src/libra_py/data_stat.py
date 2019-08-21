@@ -46,7 +46,7 @@ def vec_average(data):
     ave = VECTOR()
     sz = len(data)
 
-    for i in xrange(sz):
+    for i in range(0,sz):
         ave = ave + data[i] 
 
     ave = ave/float(sz)
@@ -89,7 +89,7 @@ def mat_average(data):
     ave = MATRIX(ndof, 1)
 
     sz = len(data)
-    for i in xrange(sz):
+    for i in range(0,sz):
         ave = ave + data[i] 
 
     ave = ave/float(sz)
@@ -161,13 +161,13 @@ def find_maxima(data, params):
 
     max_indxs = []
     sz = len(data)
-    for i in xrange(1, sz-1):
+    for i in range(1, sz-1):
         if data[i] > data[i-1] and data[i] > data[i+1]:
             max_indxs.append(i)
 
     inp = []
     sz = len(max_indxs)
-    for i in xrange(sz):
+    for i in range(0,sz):
         inp.append( [ max_indxs[i], data[max_indxs[i]] ] )
 
     out = merge_sort(inp)  # largest in the end
@@ -175,7 +175,7 @@ def find_maxima(data, params):
     if do_output:
         lgfile = open(logname, "a")
         lgfile.write("Found maxima of the data:\n")
-        for i in xrange(sz):
+        for i in range(0,sz):
             lgfile.write("maximum index = %3i  index of the datapoint = %8.5f  data value = %8.5f \n" % (i, out[sz-1-i][0], out[sz-1-i][1]) )
         lgfile.close()    
     
@@ -205,14 +205,14 @@ def scalar_stat(data):
     res = 0.0
 
     #===== Average ====
-    for i in xrange(N):
+    for i in range(0,N):
         res = res + data[i]
     res = res / float(N)
 
     #===== Std ========
     res2 = 0.0
     
-    for i in xrange(N):
+    for i in range(0,N):
         res2 = res2 + (data[i] - res)**2
     res2 = math.sqrt( res2 / float(N) )
 
@@ -241,7 +241,7 @@ def mat_stat(X):
     res = MATRIX(X[0]); res *= 0.0
 
     #===== Average ====
-    for i in xrange(N):
+    for i in range(0,N):
         res = res + X[i]
     res = res / float(N)
 
@@ -249,11 +249,11 @@ def mat_stat(X):
     #===== Std ========
     res2 = MATRIX(X[0]); res2 *= 0.0
 
-    for a in xrange(res2.num_of_rows):
-        for b in xrange(res2.num_of_cols):
+    for a in range(0,res2.num_of_rows):
+        for b in range(0,res2.num_of_cols):
         
             tmp = 0.0
-            for i in xrange(N):
+            for i in range(0,N):
                 tmp = tmp + (X[i].get(a,b) - res.get(a,b))**2
             tmp = math.sqrt( tmp / float(N) )
 
@@ -264,13 +264,13 @@ def mat_stat(X):
     dw_bound = MATRIX(X[0]); dw_bound *= 0.0
 
 
-    for a in xrange(res2.num_of_rows):
-        for b in xrange(res2.num_of_cols):
+    for a in range(0,res2.num_of_rows):
+        for b in range(0,res2.num_of_cols):
 
             up_bound.set(a,b, X[0].get(a,b))
             dw_bound.set(a,b, X[0].get(a,b))
 
-            for i in xrange(N):
+            for i in range(0,N):
                 xab = X[i].get(a,b)
                 if xab > up_bound.get(a,b):
                     up_bound.set(a,b, xab)
@@ -301,7 +301,7 @@ def cmat_stat(X):
     res = CMATRIX(X[0]); res *= 0.0
 
     #===== Average ====
-    for i in xrange(N):
+    for i in range(0,N):
         res = res + X[i]
     res = res / float(N)
 
@@ -309,11 +309,11 @@ def cmat_stat(X):
     #===== Std ========
     res2 = CMATRIX(X[0]); res2 *= 0.0
 
-    for a in xrange(res2.num_of_rows):
-        for b in xrange(res2.num_of_cols):
+    for a in range(0,res2.num_of_rows):
+        for b in range(0,res2.num_of_cols):
         
             tmp = 0.0+0.0j
-            for i in xrange(N):
+            for i in range(0,N):
                 dx = X[i].get(a,b) - res.get(a,b)
                 tmp = tmp + (dx.conjugate() * dx)
             tmp = math.sqrt( tmp / float(N) )
@@ -352,10 +352,10 @@ def cmat_stat2(X, opt):
 
 
     #===== Average ====
-    for idata in xrange(ndata):
+    for idata in range(0,ndata):
 
-        for i in xrange(N):
-            for j in xrange(N):
+        for i in range(0,N):
+            for j in range(0,N):
  
                 if opt == 0:
                     res.add(i,j, X[idata].get(i,j))
@@ -378,8 +378,8 @@ def cmat_stat2(X, opt):
 
     res = res / float(ndata)
 
-    for i in xrange(N):
-        for j in xrange(N):
+    for i in range(0,N):
+        for j in range(0,N):
 
             if opt == 2:
                 re = math.sqrt( res.get(i,j).real )
@@ -416,7 +416,7 @@ def cmat_distrib(X, i, j, component, xmin, xmax, dx):
     #============= Extract the data ===========    
     ndata = len(X)
     y = []
-    for idata in xrange(ndata):
+    for idata in range(0,ndata):
         if component==0:
             y.append( X[idata].get(i,j).real )
         elif component==1:
@@ -461,21 +461,21 @@ def compute_density(X, Y, minx, maxx, dx):
     nX, nY, cnt = [], [], []
     max_pts = int((maxx - minx)/dx) + 1
 
-    for n in xrange(max_pts):
+    for n in range(0,max_pts):
         nX.append(minx + n * dx)
         nY.append(0.0)
         cnt.append(0.0)
 
     # Compute the frequencies
     sz = len(X)
-    for n in xrange(sz):
+    for n in range(0,sz):
         indx = int((X[n] - minx)/dx)
 
         if indx>0 and indx<max_pts:
             nY[indx] = nY[indx] + Y[n]
             cnt[indx] = cnt[indx] + 1.0
 
-    for n in xrange(max_pts):
+    for n in range(0,max_pts):
         if cnt[n]>0.0:
             nY[n] = nY[n]/cnt[n]
               
@@ -499,8 +499,8 @@ def bootstrapping(X, nB, rnd):
 
     # Actual re-sampling
     sample = MATRIX(N, nB)
-    for samp in xrange(nB):
-        for n in xrange(N):
+    for samp in range(0,nB):
+        for n in range(0,N):
             i = int(rnd.uniform(0, N))
             sample.set(n, samp, X[i])
 

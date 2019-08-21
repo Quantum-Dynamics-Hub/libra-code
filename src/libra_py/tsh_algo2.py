@@ -36,11 +36,10 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-import tsh
-import tsh_stat
-#import common_utils as comn
 import util.libutil as comn
-import units
+from . import tsh
+from . import tsh_stat
+from . import units
 
 
 def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute_model, rnd):
@@ -129,10 +128,18 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     iM = MATRIX(_iM)
     Cdia = CMATRIX(_Cdia)
     Cadi = CMATRIX(_Cadi)
+
+    # Parameters and dimensions
+    critical_params = [ ] 
+    default_params = { "rep":1, "nsteps":1, "dt":1.0*units.fs2au, "do_phase_correction":1, "state_tracking_algo":2,
+                       "MK_alpha":0.0, "MK_verbosity":0, "tsh_version":1 }
+    comn.check_input(dyn_params, default_params, critical_params)
     
+
     rep = dyn_params["rep"]
-    dt = dyn_params["dt"]
     nsteps = dyn_params["nsteps"]
+    dt = dyn_params["dt"]
+    tsh_version = dyn_params["tsh_version"]
     BATH_params = dyn_params["BATH_params"]
 
 
@@ -146,7 +153,7 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     ham.init_all(2)
 
     ham1 = [] 
-    for tr in xrange(ntraj):
+    for tr in range(0,ntraj):
         ham1.append( nHamiltonian(ndia, nadi, nnucl) )        
         ham1[tr].init_all(2)
         ham.add_child(ham1[tr])
@@ -171,7 +178,7 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     # Thermostats
     therms = []
 
-    for tr in xrange(ntraj):
+    for tr in range(0,ntraj):
         therms.append( Thermostat( BATH_params ) )
         therms[tr].set_Nf_t(nnucl)
         therms[tr].set_Nf_r(0)
@@ -180,16 +187,16 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
 
         
     # Do the propagation
-    for i in xrange(nsteps):
+    for i in range(0,nsteps):
 
-        for tr in xrange(ntraj):
+        for tr in range(0,ntraj):
             # Rescale momenta
             scl = therms[tr].vel_scale(0.25*dt)
             p.scale(-1, tr, scl)
 
             # Update thermostat variables
             ekin = 0.0
-            for dof in xrange(nnucl):
+            for dof in range(0,nnucl):
                 ekin = ekin + 0.5 * iM.get(dof, 0) * p.get(dof, tr)**2
 
             therms[tr].propagate_nhc(0.5*dt, ekin, 0.0, 0.0)
@@ -200,19 +207,25 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
 
 
         if rep==0:
-            tsh1(dt, q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)
+            if tsh_version==1:
+                tsh1(q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)
+            elif tsh_version==2:
+                tsh1b(q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)
         elif rep==1:
-            tsh1(dt, q, p, iM,  Cadi, states, ham, compute_model, model_params, dyn_params, rnd, 1, 1)
+            if tsh_version==1:
+                tsh1(q, p, iM,  Cadi, states, ham, compute_model, model_params, dyn_params, rnd)
+            elif tsh_version==2:
+                tsh1b(q, p, iM,  Cadi, states, ham, compute_model, model_params, dyn_params, rnd)
 
 
-        for tr in xrange(ntraj):
+        for tr in range(0,ntraj):
             # Rescale momenta
             scl = therms[tr].vel_scale(0.25*dt)
             p.scale(-1, tr, scl)
 
             # Update thermostat variables
             ekin = 0.0
-            for dof in xrange(nnucl):
+            for dof in range(0,nnucl):
                 ekin = ekin + 0.5 * iM.get(dof, 0) * p.get(dof, tr)**2
 
             therms[tr].propagate_nhc(0.5*dt, ekin, 0.0, 0.0)
@@ -236,7 +249,7 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     
 
         ind = 0.0
-        for tr in xrange(ntraj):
+        for tr in range(0,ntraj):
             ind = ind + ham1[tr].get_ordering_adi()[0]
         ind = ind/float(ntraj)
         

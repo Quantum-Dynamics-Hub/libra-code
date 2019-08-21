@@ -142,8 +142,8 @@ def compute_dynmat(lmp, filename, atoms, dr, opt=1):
 
     H = (0.5/dr)*H
 
-    for i in xrange(ndof):
-        for j in xrange(ndof):
+    for i in range(0,ndof):
+        for j in range(0,ndof):
             D.set(i,j, H.get(i,j)/math.sqrt(M.get(i)*M.get(j)))
 
     return D, H, R, M, E

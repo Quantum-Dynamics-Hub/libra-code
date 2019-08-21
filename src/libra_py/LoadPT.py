@@ -94,7 +94,7 @@ def Load_PT(U,pt_file, verbose=0):
             res = U.Add_Element_To_Periodic_Table(elt_record)
  
             if verbose==1:
-                print "load element", elem.Elt_name
+                print("load element", elem.Elt_name)
                 elt_record.show_info()
 
 

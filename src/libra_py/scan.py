@@ -28,7 +28,8 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-import units
+
+from . import units
 
 def make_path_xyz(R0, R1, E, s0=0.0, s1=1.0, npts=2, S0=0.0, S1=1.0):
     """
@@ -61,20 +62,20 @@ def make_path_xyz(R0, R1, E, s0=0.0, s1=1.0, npts=2, S0=0.0, S1=1.0):
 
     # Sanity check:
     if s1<=s0:
-        print "Error: s0 (%5.3f) should be larger than s1(%5.3f)! Exiting...\n" % (s0, s1);
+        print("Error: s0 (%5.3f) should be larger than s1(%5.3f)! Exiting...\n" % (s0, s1))
         sys.exit(0)
 
     # Determine the number of points in the the actual path:
     ndof = R0.num_of_rows
-    nat = ndof / 3
+    nat = int(ndof / 3)
 
-    print "ndof = ", ndof
-    print "nat = ", nat
+    print("ndof = ", ndof)
+    print("nat = ", nat)
 
     ds = (s1-s0)/float(npts)
     Npts = int(abs((S1 - S0))/ds) + 1
-    print "ds = ", ds
-    print "Npts = ", Npts
+    print("ds = ", ds)
+    print("Npts = ", Npts)
     
     # Allocate memory
     R = MATRIX(ndof, Npts)
@@ -82,12 +83,12 @@ def make_path_xyz(R0, R1, E, s0=0.0, s1=1.0, npts=2, S0=0.0, S1=1.0):
     s_axis = []
 
     # Compute the mapping
-    for pt in xrange(Npts):
+    for pt in range(0,Npts):
 
         s = S0 + pt * ds        
         s_axis.append(s) 
 
-        for dof in xrange(ndof):
+        for dof in range(0,ndof):
         
 
             t = (s - s0)/(s1 - s0)
@@ -98,10 +99,10 @@ def make_path_xyz(R0, R1, E, s0=0.0, s1=1.0, npts=2, S0=0.0, S1=1.0):
 
     # Create the xyz file
     xyz = ""
-    for pt in xrange(Npts):
+    for pt in range(0,Npts):
         xyz = xyz + "%i\n" % (nat)
         xyz = xyz + "Frame %i\n" % (pt)
-        for at in xrange(nat):
+        for at in range(0,nat):
             x = R.get(3*at+0, pt) / units.Angst
             y = R.get(3*at+1, pt) / units.Angst
             z = R.get(3*at+2, pt) / units.Angst

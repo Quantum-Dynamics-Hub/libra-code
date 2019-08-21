@@ -68,7 +68,7 @@ def Beswick_Jortner(q, params):
     d1ham_dia = CMATRIXList();
     dc1_dia = CMATRIXList();
 
-    for i in xrange(2):
+    for i in range(0,2):
         d1ham_dia.append( CMATRIX(1,1) )
         dc1_dia.append( CMATRIX(1,1) )
 
