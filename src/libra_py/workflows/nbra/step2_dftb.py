@@ -210,14 +210,15 @@ def do_ovlp(i, params):
 
     # Get the Hamiltonian    
     Sbig = DFTB_methods.get_dftb_matrices("oversqr.dat")
-    norbs = int(Sbig[0].num_of_cols/2)
     
-    act_sp1 = list(range(0,norbs))
-    act_sp2 = list(range(norbs,2*norbs))
-    S = CMATRIX(norbs, norbs)
-    pop_submatrix(Sbig[0], S, act_sp1, act_sp2)
+    # Old code snippet - keep here for now
+    #norbs = int(Sbig[0].num_of_cols/2)   
+    #act_sp1 = list(range(0,norbs))
+    #act_sp2 = list(range(norbs,2*norbs))
+    #S = CMATRIX(norbs, norbs)
+    #pop_submatrix(Sbig[0], S, act_sp1, act_sp2)    
     
-    return S
+    return Sbig[0]
     
     
 
