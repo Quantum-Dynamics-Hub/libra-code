@@ -65,6 +65,39 @@ def Boltz_quant_prob(E, T):
 
 
 
+def Boltz_cl_prob(E, T):
+    """
+
+    Computes the normalized classical Boltzmann probability distribution function 
+
+    Args: 
+        E ( double ): the minimum energy level [in a.u.]
+        T ( double ): temperature [K]
+
+    Returns:
+        double: The probability to have kinetic energy greater than a given threshold value at
+            given temperature
+
+    See Also:
+        This is essentially a Maxwell-Boltzmann distribution in the energy scale
+        Used this: http://mathworld.wolfram.com/MaxwellDistribution.html
+
+    """
+ 
+    x = math.sqrt(E/(units.kB * T))
+    res = 1.0
+
+    D = (2.0/(math.sqrt(math.pi) * units.kB * T)) * x * math.exp(-x)
+    if D>1.0 or D<0.0:
+        print("D = ", D)
+        sys.exit(0)
+    res = D
+
+    return res
+
+
+
+
 def Boltz_cl_prob_up(E, T):
     """
 
