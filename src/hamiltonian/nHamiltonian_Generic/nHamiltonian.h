@@ -402,6 +402,7 @@ public:
 
   void add_ethd3_dia(const MATRIX& q, const MATRIX& invM, double alp, int der_lvl);
   void add_ethd3_adi(const MATRIX& q, const MATRIX& invM, double alp, int der_lvl);
+  void add_ethd3_adi(const MATRIX& q, const MATRIX& p, const MATRIX& invM, double alp, double bet, int der_lvl);
 
 
 
@@ -523,7 +524,13 @@ MATRIX ETHD_forces(const MATRIX& q, const MATRIX& invM);
 
 ///< In nHamiltonian_compute_ETHD3.cpp
 double ETHD3_energy(const MATRIX& q, const MATRIX& invM, double alp);
-MATRIX ETHD3_forces(const MATRIX& q, const MATRIX& invM, double alp);
+double ETHD3_energy(const MATRIX& q, const MATRIX& p, const MATRIX& invM, double alp, double bet);
+
+MATRIX ETHD3_forces(const MATRIX& q, const MATRIX& invM, double alp);                                // -dH_{ETHD3}/dQ
+MATRIX ETHD3_forces(const MATRIX& q, const MATRIX& p, const MATRIX& invM, double alp, double bet);   // -dH_{ETHD3}/dQ
+
+MATRIX ETHD3_friction(const MATRIX& q, const MATRIX& p, const MATRIX& invM, double alp, double bet); // dH_{ETHD3}/dP
+
 
 
 

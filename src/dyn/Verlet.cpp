@@ -123,11 +123,13 @@ void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, b
 
   //============= Extract optional parameters: needed for some execution scenarios =============
   double ETHD3_alpha = 1.0;
+  double ETHD3_beta = 1.0;
   std::string key;
   boost::python::dict d = (boost::python::dict)params;
   for(int i=0;i<len(d.values());i++){
     key = extract<std::string>(d.keys()[i]);
     if(key=="ETHD3_alpha") { ETHD3_alpha = extract<double>(d.values()[i]);   }
+    if(key=="ETHD3_beta") { ETHD3_beta = extract<double>(d.values()[i]);   }
     if(key=="ham_rep") { ham_rep = extract<int>(d.values()[i]);   }
     if(key=="act_state"){ act_state = extract<int>(d.values()[i]); }
   }
@@ -138,12 +140,18 @@ void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, b
 //  vector<int> t3(2,0);
 
 //  CMATRIX Cadi(nadi,1); Cadi.set(act_state,0, 1.0,0.0);
-//  MATRIX F(ndof, ntraj);
+  MATRIX gamma(ndof, ntraj);
 //  MATRIX f(ndof, 1);
 
   
 
   p = p + ham.forces_adi(act_state).real() * 0.5 * dt;
+
+
+  if(entanglement_opt==22){
+    gamma = ETHD3_friction(q, p, invM, ETHD3_alpha, ETHD3_beta);
+  }
+
 
   // For efficiency, switch to the element-wise multiplication
   for(traj=0; traj<ntraj; traj++){
@@ -151,8 +159,13 @@ void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, b
 
       q.add(dof, traj,  invM.get(dof,0) * p.get(dof,traj) * dt ); 
 
+      if(entanglement_opt==22){
+        q.add(dof, traj,  invM.get(dof,0) * gamma.get(dof,traj) * dt ); 
+      }
+
     }
   }
+
 
   if(ham_rep==0){
     ham.compute_diabatic(py_funct, bp::object(q), params, 1);
@@ -165,6 +178,7 @@ void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, b
   if(entanglement_opt==0){    /* Nothing to do */   }
   else if(entanglement_opt==1){   ham.add_ethd_adi(q, invM, 1);  }
   else if(entanglement_opt==2){   ham.add_ethd3_adi(q, invM, ETHD3_alpha, 1);  }
+  else if(entanglement_opt==22){  ham.add_ethd3_adi(q, p, invM, ETHD3_alpha, ETHD3_beta, 1);  }
   else{
     cout<<"ERROR in Verlet1: The entanglement option = "<<entanglement_opt<<" is not avaialable\n";
     exit(0);

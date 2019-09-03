@@ -248,6 +248,8 @@ void export_nhamiltonian_generic_objects(){
 
   void (nHamiltonian::*expt_add_ethd3_dia_v1)(const MATRIX& q, const MATRIX& invM, double alp, int der_lvl) = &nHamiltonian::add_ethd3_dia;
   void (nHamiltonian::*expt_add_ethd3_adi_v1)(const MATRIX& q, const MATRIX& invM, double alp, int der_lvl) = &nHamiltonian::add_ethd3_adi;
+  void (nHamiltonian::*expt_add_ethd3_adi_v2)(const MATRIX& q, const MATRIX& p, const MATRIX& invM, double alp, double bet, int der_lvl) 
+  = &nHamiltonian::add_ethd3_adi;
 
 
 
@@ -439,6 +441,7 @@ void export_nhamiltonian_generic_objects(){
 
       .def("add_ethd3_dia", expt_add_ethd3_dia_v1)
       .def("add_ethd3_adi", expt_add_ethd3_adi_v1)
+      .def("add_ethd3_adi", expt_add_ethd3_adi_v2)
 
 
 
@@ -488,10 +491,16 @@ void export_nhamiltonian_generic_objects(){
 
 
   double (*expt_ETHD3_energy_v1)(const MATRIX& q, const MATRIX& invM, double alp) = &ETHD3_energy;
+  double (*expt_ETHD3_energy_v2)(const MATRIX& q, const MATRIX& p, const MATRIX& invM, double alp, double bet) = &ETHD3_energy;
   MATRIX (*expt_ETHD3_forces_v1)(const MATRIX& q, const MATRIX& invM, double alp) = &ETHD3_forces;
+  MATRIX (*expt_ETHD3_forces_v2)(const MATRIX& q, const MATRIX& p, const MATRIX& invM, double alp, double bet) = &ETHD3_forces;
+  MATRIX (*expt_ETHD3_friction_v1)(const MATRIX& q, const MATRIX& p, const MATRIX& invM, double alp, double bet) = &ETHD3_friction;
 
   def("ETHD3_energy", expt_ETHD3_energy_v1);
+  def("ETHD3_energy", expt_ETHD3_energy_v2);
   def("ETHD3_forces", expt_ETHD3_forces_v1);
+  def("ETHD3_forces", expt_ETHD3_forces_v2);
+  def("ETHD3_friction", expt_ETHD3_friction_v1);
 
 
 }
