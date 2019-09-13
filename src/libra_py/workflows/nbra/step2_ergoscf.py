@@ -41,13 +41,23 @@ def do_step(i, params, run):
         i ( int ): index of the time step to be used from the trajectory file
         params ( dictionary ): the control parameters of the simulation
         
-            * **params["EXE"]** ( string ): path to the ERGOSCF executable [ default: ergo ]
-            * **params["mo_active_space"]** ( list of ints or None ): indices of the MOs we care about 
-                The indexing starts from 0, not 1! If set to None - all MOs will be returned. [default: None]
+            * **params["EXE"]** ( string ): path to the ErgoSCF executable [ default: ergo ]
             * **params["md_file"]** ( string ): the name of the xyz file containing the trajectory - the 
                 file should be in the general xyz format. [default: "md.xyz"]
-            * **params["HOMO-LUMO-only"]** ( int ): a flag to decide to use only HOMO and LUMO orbitals as read from 
-                the ErgoSCF output. This is the option to really go with the linear-scaling costs [ default: 0 ]
+            * **params["mo_active_space"]** ( list of ints or None ): indices of the MOs we care about 
+                The indexing starts from 0, not 1! If set to None - all MOs will be returned. [default: None]
+            * **params["mo_indexing_convention"]** ( string ): orbital indexing convention:
+                - "rel" : relative, with respect to the HOMO position: HOMO = 0, HOMO-1 = -1, LUMO = 1, etc. [default]
+                - "abs" : absolute, with respect to all possible MOs of the system 
+            * **params["direct_MO"]** ( int ): a flag to decide to use orbitals as read from 
+                the ErgoSCF output:
+                - 0 : read in the Fock matrices and diagonalize them internally
+                - 1 : read the MOs produced by ErgoSCF, this is the option to really go 
+                    with the linear-scaling costs [ default ]
+            * **params["spinpolarized"]** ( int ): whether the ErgoSCF calculations (and hence the
+                following post-processing) are done withing the restricted or unrestricted formulation:
+                - 0 : non-spin-polarized (restricted) [ default ] 
+                - 1 : spin-polarized (unrestricted)
 
         run (Python function ): the function that defines the ErgoSCF input generation - the user 
             has to define all the control parameters in it, to be able to run the ErgoSCF calculations
@@ -76,69 +86,139 @@ def do_step(i, params, run):
 
 
     Returns:
-        tuple: (E, MO), where:
+        (list, list): (E_sub, MO_sub), where:
         
-            * E ( CMATRIX(M, M) ), the matrix of the converged Hamiltonian eigenvalues (at given geometry)
-                Here, M = len(params["mo_active_space"]) - we output only the MO energies that are of interest to us
-
-            * MO ( CMATRIX(A, M) ), the matrix of the converged Hamiltonian eigenvalues (at given geometry)
+            * E_sub ( list of CMATRIX(M, M) ): the matrix of the converged Hamiltonian eigenvalues (at given geometry)
+                Here, M = len(params["mo_active_space"]) - we output only the MO energies that are of interest to us.
+                E_sub[0] is the alpha component (for both restricted and unrestricted calculations)
+                E_sub[1] is the beta component (only for the unrestricted calculations)
+                       
+            * MO_sub ( list of CMATRIX(A, M) ): the matrix of the converged Hamiltonian eigenvalues (at given geometry)
                 Here, M = len(params["mo_active_space"]) - we output only the MO energies that are of interest to us.
                 A - is the number of AOs in this calculation
+                MO_sub[0] is the alpha component (for both restricted and unrestricted calculations)
+                MO_sub[1] is the beta component (only for the unrestricted calculations)
 
 
     """
 
     # Now try to get parameters from the input
     critical_params = [ ] 
-    default_params = { "EXE":"ergo",  "mo_active_space":None,  "md_file":"md.xyz", "HOMO-LUMO-only":0  }
+    default_params = { "EXE":"ergo",  "md_file":"md.xyz",
+                       "mo_active_space":None, "mo_indexing_convention":"rel",
+                       "direct_MO":1,  "spinpolarized":0
+                     }
     comn.check_input(params, default_params, critical_params)
     
     # Get the parameters
     EXE = params["EXE"]
     md_file = params["md_file"]
-    HL_only = params["HOMO-LUMO-only"]
+    mo_indexing_convention = params["mo_indexing_convention"]
+    direct_MO = params["direct_MO"]
+    spinpolarized = params["spinpolarized"]
 
-        
+    if direct_MO==1 and mo_indexing_convention=="abs":
+        print("WARNING in step2_ergoscf.do_step: \
+               Cannot use the direct_MO = 1 with the mo_indexing_convention=\"abs\"\
+               Resetting mo_indexing_convention to =\"rel\" ")
+        mo_indexing_convention = "rel"
+
+                
     # Make an input file for SP calculations     
     R = ERGO_methods.xyz_traj2gen_sp(md_file, i)
 
     # Run SCF calculations
     command = run(EXE, R)
     os.system("%s" % (command))
-    
 
-    # Get the last Fock matrix 
-    last_indx, last_filename = ERGO_methods.find_last_file("F_matrix_", ".mtx")
-    F = ERGO_methods.get_mtx_matrices(last_filename)    
-    S = ERGO_methods.get_mtx_matrices("S_matrix.mtx")
-    
-        
-    # Get the dimensions
-    ao_sz = F.num_of_cols        
-    ao_act_sp = list(range(0, ao_sz))
-    
-    mo_sz = ao_sz
-    mo_act_sp = list(range(0, mo_sz))
-    
-    if params["mo_active_space"] != None:
-        mo_sz = len(params["mo_active_space"])        
-        mo_act_sp = list(params["mo_active_space"])
-    
-    
-    # Solve the eigenvalue problem with the converged Fock matrix
-    # get the converged MOs
-    E = CMATRIX(ao_sz, ao_sz)
-    MO = CMATRIX(ao_sz, ao_sz)
-    solve_eigen(F, S, E, MO, 0)  
+    # Read in the common info
+    S = ERGO_methods.get_mtx_matrices("S_matrix.mtx")    
 
-    # Extract the E sub-matrix
-    E_sub = CMATRIX(mo_sz, mo_sz)
-    pop_submatrix(E, E_sub, mo_act_sp, mo_act_sp)  
     
-    # Extract the MO sub-matrix
-    MO_sub = CMATRIX(ao_sz, mo_sz)
-    pop_submatrix(MO, MO_sub, ao_act_sp, mo_act_sp)  
+    E_sub, MO_sub = [], []
+
+    if direct_MO == 0:
+
+        # Get the dimensions
+        ao_sz = S.num_of_cols        
+        ao_act_sp = list(range(0, ao_sz))
+      
+        mo_sz = ao_sz
+        mo_act_sp = list(range(0, mo_sz))
     
+        if params["mo_active_space"] != None:
+            mo_sz = len(params["mo_active_space"])        
+            mo_act_sp = list(params["mo_active_space"])
+
+        if spinpolarized==0:
+
+            # Get the last Fock matrix 
+            last_indx, last_filename = ERGO_methods.find_last_file("F_matrix_", ".mtx")
+            F = ERGO_methods.get_mtx_matrices(last_filename)    
+                
+            # Solve the eigenvalue problem with the converged Fock matrix
+            # get the converged MOs
+            E = CMATRIX(ao_sz, ao_sz)
+            MO = CMATRIX(ao_sz, ao_sz)
+            solve_eigen(F, S, E, MO, 0)  
+
+            # Extract the E sub-matrix
+            e_sub = CMATRIX(mo_sz, mo_sz)
+            pop_submatrix(E, e_sub, mo_act_sp, mo_act_sp)           
+            E_sub.append(e_sub)
+    
+            # Extract the MO sub-matrix
+            mo_sub = CMATRIX(ao_sz, mo_sz)
+            pop_submatrix(MO, mo_sub, ao_act_sp, mo_act_sp)  
+            MO_sub.append(mo_sub)
+
+        elif spinpolarized==1:
+
+            for suff in ["alpha", "beta"]:
+
+                # Get the last Fock matrix 
+                last_indx, last_filename = ERGO_methods.find_last_file(F"F_matrix_{suff}_", ".mtx")
+                F = ERGO_methods.get_mtx_matrices(last_filename)    
+                
+                # Solve the eigenvalue problem with the converged Fock matrix
+                # get the converged MOs
+                E = CMATRIX(ao_sz, ao_sz)
+                MO = CMATRIX(ao_sz, ao_sz)
+                solve_eigen(F, S, E, MO, 0)  
+
+                # Extract the E sub-matrix
+                e_sub = CMATRIX(mo_sz, mo_sz)
+                pop_submatrix(E, e_sub, mo_act_sp, mo_act_sp)           
+                E_sub.append(e_sub)
+    
+                # Extract the MO sub-matrix
+                mo_sub = CMATRIX(ao_sz, mo_sz)
+                pop_submatrix(MO, mo_sub, ao_act_sp, mo_act_sp)  
+                MO_sub.append(mo_sub)
+
+
+
+    elif direct_MO == 1:
+
+        if spinpolarized==0:
+            [e_a], [nocc, nvirt] = ERGO_methods.read_spectrum_restricted() 
+            E = ERGO_methods.energies(e_a, nocc, nvirt, params["mo_active_space"])
+            E_sub.append(E)
+
+            [mo_a] = ERGO_methods.read_mo_restricted(nocc, nvirt, params["mo_active_space"]) 
+            MO_sub.append(mo_a)
+
+        elif spinpolarized==1:
+            [e_a, e_b], [nocc, nvirt] = ERGO_methods.read_spectrum_unrestricted() 
+            Ea = ERGO_methods.energies(e_a, nocc, nvirt, params["mo_active_space"])
+            Eb = ERGO_methods.energies(e_b, nocc, nvirt, params["mo_active_space"])
+            E_sub.append(Ea)
+            E_sub.append(Eb)
+
+            [mo_a, mo_b] = ERGO_methods.read_mo_unrestricted(nocc, nvirt, params["mo_active_space"]) 
+            MO_sub.append(mo_a)
+            MO_sub.append(mo_b)
+
     return E_sub, MO_sub
 
 
@@ -210,7 +290,10 @@ def do_ovlp(i, params, run):
     
     # Get the overlap matrix
     S = ERGO_methods.get_mtx_matrices("S_matrix.mtx")
-        
+
+    # In this function we run the calculation for a super-system 
+    # (a dimer of the actual chemical one), so the number of orbitals is 
+    # defined like this:
     norbs = int(S.num_of_cols/2)
 
     """
@@ -254,10 +337,26 @@ def run_step2(params, run1, run2):
         * **params["dt"]** ( double ): nuclear dynamics timestep - as encoded in the trajectory [ units: a.u., default: 41.0 ]
         * **params["isnap"]** ( int ): initial frame  [ default: 0 ]
         * **params["fsnap"]** ( int ): final frame  [ default: 1 ]
-        * **params["HOMO-LUMO-only"]** ( int ): a flag to decide to use only HOMO and LUMO orbitals as read from 
-            the ErgoSCF output. This is the option to really go with the linear-scaling costs [ default: 0 ]
         * **params["out_dir"]** ( string ): the path to the directory that will collect all the results
             If the directory doesn't exist, it will be created  [ default: "res" ]
+
+        * **params["EXE"]** ( string ): path to the ErgoSCF executable [ default: ergo ]
+        * **params["md_file"]** ( string ): the name of the xyz file containing the trajectory - the 
+            file should be in the general xyz format. [default: "md.xyz"]
+        * **params["mo_active_space"]** ( list of ints or None ): indices of the MOs we care about 
+            The indexing starts from 0, not 1! If set to None - all MOs will be returned. [default: None]
+        * **params["mo_indexing_convention"]** ( string ): orbital indexing convention:
+            - "rel" : relative, with respect to the HOMO position: HOMO = 0, HOMO-1 = -1, LUMO = 1, etc. [default]
+            - "abs" : absolute, with respect to all possible MOs of the system 
+        * **params["direct_MO"]** ( int ): a flag to decide to use orbitals as read from 
+            the ErgoSCF output:
+            - 0 : read in the Fock matrices and diagonalize them internally
+            - 1 : read the MOs produced by ErgoSCF, this is the option to really go 
+                with the linear-scaling costs [ default ]
+        * **params["spinpolarized"]** ( int ): whether the ErgoSCF calculations (and hence the
+            following post-processing) are done withing the restricted or unrestricted formulation:
+            - 0 : non-spin-polarized (restricted) [ default ] 
+            - 1 : spin-polarized (unrestricted)
 
         SeeAlso:  the description of the parameters in ```do_ovlp(i, params)``` and in ```do_step(i, params)```
 
@@ -268,7 +367,11 @@ def run_step2(params, run1, run2):
     """
 
     critical_params = [ ] 
-    default_params = { "dt":1.0*units.fs2au,  "isnap":0, "fsnap":1, "HOMO-LUMO-only":0 , "out_dir":"res" }
+    default_params = { "dt":1.0*units.fs2au,  "isnap":0, "fsnap":1, "out_dir":"res",
+                       "EXE":"ergo",  "md_file":"md.xyz",
+                       "mo_active_space":None, "mo_indexing_convention":"rel",
+                       "direct_MO":1,  "spinpolarized":0
+                     }
     comn.check_input(params, default_params, critical_params)
 
 
@@ -277,6 +380,7 @@ def run_step2(params, run1, run2):
     isnap = params["isnap"]
     fsnap = params["fsnap"]
     out_dir = params["out_dir"]
+    spinpolarized = params["spinpolarized"]
 
 
     # Create <out_dir> directory if it does not exist yet
@@ -298,26 +402,43 @@ def run_step2(params, run1, run2):
         clean()
         S11, S22, S12 = do_ovlp(i-1, params, run2)
 
-        
-        TDM = U_prev.H() * S12 * U_curr
-        Hvib = 0.5*(E_prev + E_curr) - (0.5j/dt) * ( TDM - TDM.H() )
-
-        # Overlaps
-        s = 0.5 * (U_prev.H() * S11 * U_prev  +  U_curr.H() * S22 * U_curr)
-        s.real().show_matrix("%s/S_%i_re" % (out_dir, i-1) )
-        s.imag().show_matrix("%s/S_%i_im" % (out_dir, i-1) )
+        spins = []
+        if spinpolarized==0:
+            spins = [0]
+        elif spinpolarized==1:
+            spins = [0, 1]
 
 
-        # Time-overlaps
-        TDM.real().show_matrix("%s/St_%i_re" % (out_dir, i-1) )
-        TDM.imag().show_matrix("%s/St_%i_im" % (out_dir, i-1) )
-                
-        # Vibronic Hamiltonians
-        Hvib.real().show_matrix("%s/hvib_%i_re" % (out_dir, i-1) )
-        Hvib.imag().show_matrix("%s/hvib_%i_im" % (out_dir, i-1) )
+        # Calculations and print out
+        for spin in spins:
+
+            TDM = U_prev[spin].H() * S12 * U_curr[spin]
+            Hvib = 0.5*(E_prev[spin] + E_curr[spin]) - (0.5j/dt) * ( TDM - TDM.H() )
+
+            # Overlaps
+            s = 0.5 * (U_prev[spin].H() * S11 * U_prev[spin]  +  U_curr[spin].H() * S22 * U_curr[spin])
+            s.real().show_matrix(F"{out_dir}/S_{spin}{spin}_{i-1}_re" )
+            s.imag().show_matrix(F"{out_dir}/S_{spin}{spin}_{i-1}_im" )
+
+            # Time-overlaps
+            TDM.real().show_matrix(F"{out_dir}/St_{spin}{spin}_{i-1}_re" )
+            TDM.imag().show_matrix(F"{out_dir}/St_{spin}{spin}_{i-1}_im" )
+            
+            # Vibronic Hamiltonians
+            Hvib.real().show_matrix(F"{out_dir}/hvib_{spin}{spin}_{i-1}_re" )
+            Hvib.imag().show_matrix(F"{out_dir}/hvib_{spin}{spin}_{i-1}_im" )
+
         
         # Current becomes the old 
-        E_prev = CMATRIX(E_curr)
-        U_prev = CMATRIX(U_curr)
-        
+        if spinpolarized==0:
+            E_prev[0] = CMATRIX(E_curr[0])
+            U_prev[0] = CMATRIX(U_curr[0])
+
+        elif spinpolarized==1:
+            E_prev[0] = CMATRIX(E_curr[0])
+            U_prev[0] = CMATRIX(U_curr[0])
+
+            E_prev[1] = CMATRIX(E_curr[1])
+            U_prev[1] = CMATRIX(U_curr[1])
+
 

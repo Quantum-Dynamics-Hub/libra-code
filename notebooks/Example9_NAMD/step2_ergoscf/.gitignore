@@ -4,4 +4,7 @@
 *.out
 *.xyz
 *.mtx
+*.gab
 res
+restricted_*
+unrestricted_*

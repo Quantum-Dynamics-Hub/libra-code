@@ -690,7 +690,7 @@ def make_system(R, E, step, U):
     """
     
     ndof = R.num_of_rows
-    nat = ndof/3
+    nat = int(ndof/3)
     
     syst = System()
     for at in range(0,nat):
@@ -700,7 +700,7 @@ def make_system(R, E, step, U):
         
         syst.CREATE_ATOM( Atom(U, {"Atom_element":E[at], "Atom_cm_x":x, "Atom_cm_y":y, "Atom_cm_z":z }  )  )
     
-    syst.GROUP_ATOMS(range(1, nat+1), 1)
+    syst.GROUP_ATOMS(list(range(1, nat+1)), 1)
     syst.init_fragments()
         
     return syst

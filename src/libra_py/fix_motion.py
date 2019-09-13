@@ -525,7 +525,7 @@ def process_xyz(filename, PT, itime, ftime, verbose=0):
 
     # Determine dimensions
     ndof = R.num_of_rows
-    nat = ndof/3
+    nat = int(ndof/3)
     nsteps = R.num_of_cols
     if verbose>0:
         print("nsteps = ", nsteps)
