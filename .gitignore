@@ -3,7 +3,7 @@ tmp
 *.pyc
 *.png
 *.bin
-_build
+_build*
 *.xyz
 *.out
 *.cube
