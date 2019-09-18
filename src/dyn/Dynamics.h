@@ -58,6 +58,10 @@ void Ehrenfest2(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C,
 void Ehrenfest2(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, 
                 nHamiltonian& ham, bp::object py_funct, bp::object params, int rep);
 
+// Dynamics.coo
+void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
+              nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd);
+
 
 
 }// namespace libdyn

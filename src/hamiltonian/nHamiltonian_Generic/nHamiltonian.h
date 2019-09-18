@@ -452,6 +452,9 @@ public:
 
   CMATRIX forces_dia(CMATRIX& ampl_dia);  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
   CMATRIX forces_dia(CMATRIX& ampl_dia, vector<int>& id_);  // -dE/dR in the diabatic basis, assuming Cdia = Cdia(t)
+  CMATRIX forces_dia(vector<int>& act_states);   // -dE/dR in the diabatic basis for several trajectories
+  CMATRIX forces_dia(int act_state);   // -dE/dR in the diabatic basis for several trajectories, all in the same state
+
 
 
   ///< In nHamiltonian_compute_nac.cpp

@@ -110,6 +110,37 @@ def make_xyz(L, R, inp_units=0, out_units=1):
 
 
 
+def make_xyz_mat(E, R):
+    """
+
+    This function returns a string in the xyz format with X, Y, Z
+    where X,Y,Z are the coordinates
+
+    Args:
+        E ( list of ndof/3 string ): atom names (elements) of all atoms
+        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps
+
+    Returns: 
+        string: A string representing an xyz file
+
+    """
+
+    natoms = len(E)
+    nsteps = R.num_of_cols
+    res = ""
+
+    for step in range(nsteps):
+        res = res + "%3i\nStep = %6i\n" % (natoms, step)
+
+        for i in range(0,natoms):
+            x,y,z = R.get(3*i, step), R.get(3*i+1, step), R.get(3*i+2, step)                            
+            res = res + "%s  %5.3f  %5.3f  %5.3f\n" % (E[i], x,y,z)
+
+    return res
+
+
+
+
 def read_xyz_crystal(filename, a,b,c, inp_units=0, out_units=0):
     """Read an xyz file with atomic coordinates given in fractional lattice vector units
 

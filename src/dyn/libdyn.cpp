@@ -514,6 +514,12 @@ void export_Dyn_objects(){
 
 
 
+  void (*expt_compute_dynamics_v1)
+  (MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
+   nHamiltonian& ham, bp::object py_funct, bp::object params, 
+   boost::python::dict params1, Random& rnd) = &compute_dynamics;
+  def("compute_dynamics", expt_compute_dynamics_v1);
+
 
 }// export_Dyn_objects()
 

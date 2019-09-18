@@ -154,6 +154,23 @@ void nHamiltonian::compute_diabatic(bp::object py_funct, bp::object q, bp::objec
       check_cmatrix(obj, "ovlp_dia", ndia, ndia);
       *ovlp_dia = extract<CMATRIX>(obj.attr("ovlp_dia"));   
     }
+
+
+    has_attr=0;
+    has_attr = (int)hasattr(obj,"nac_dia");        
+    if(has_attr){    
+
+      check_cmatrix(obj, "nac_dia", ndia, ndia);
+      *nac_dia = extract<CMATRIX>(obj.attr("nac_dia"));    
+    }
+
+    has_attr=0;
+    has_attr = (int)hasattr(obj,"hvib_dia");        
+    if(has_attr){    
+
+      check_cmatrix(obj, "hvib_dia", ndia, ndia);
+      *hvib_dia = extract<CMATRIX>(obj.attr("hvib_dia"));    
+    }
     
     has_attr=0;
     has_attr = (int)hasattr(obj,"dc1_dia");        

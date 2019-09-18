@@ -307,6 +307,82 @@ CMATRIX nHamiltonian::forces_dia(CMATRIX& ampl_dia, vector<int>& id_){
 
 
 
+CMATRIX nHamiltonian::forces_dia(vector<int>& act_states){
+/**
+  Get a matrix of diabatic Forces:  ndof x ntraj
+
+  Each column contains the force for given trajectory (in the diabatic state given by the "act_states")
+  Each raw corresponds to the nuclear DOF
+
+  This is a convenience function: meant to extract the children forces
+
+*/
+
+  int ntraj = act_states.size();
+  int ndof = nnucl;
+
+  vector<int> t1(ndof, 0); for(int dof=0;dof<ndof;dof++){  t1[dof] = dof; }
+  vector<int> t2(1,0);
+  vector<int> traj_id(2,0);
+
+  CMATRIX F(ndof, ntraj);
+  CMATRIX f(ndof, 1);
+  CMATRIX Cdia(nadi,1); 
+
+  for(int traj=0; traj<ntraj; traj++){
+    t2[0] = traj;  
+    traj_id[0] = 0;  traj_id[1] = traj;
+
+    Cdia.set(act_states[traj],0, 1.0,0.0);
+    f = forces_dia(Cdia, traj_id);
+
+    push_submatrix(F, f, t1, t2);
+  }
+
+  return F;
+
+}
+
+
+CMATRIX nHamiltonian::forces_dia(int act_state){
+/**
+  Get a matrix of diabatic Forces:  ndof x ntraj
+
+  Each column contains the force for given trajectory (in the diabatic state given by the "act_state")
+  Each raw corresponds to the nuclear DOF
+
+  This is a convenience function: meant to extract the children forces
+
+*/
+
+  int ntraj = children.size();
+  int ndof = nnucl;
+
+  vector<int> t1(ndof, 0); for(int dof=0;dof<ndof;dof++){  t1[dof] = dof; }
+  vector<int> t2(1,0);
+  vector<int> traj_id(2,0);
+
+  CMATRIX F(ndof, ntraj);
+  CMATRIX f(ndof, 1);
+  CMATRIX Cdia(nadi,1); 
+
+  for(int traj=0; traj<ntraj; traj++){
+    t2[0] = traj;  
+    traj_id[0] = 0;  traj_id[1] = traj;
+
+    Cdia.set(act_state, 0, 1.0,0.0);
+    f = forces_dia(Cdia, traj_id);
+
+    push_submatrix(F, f, t1, t2);
+  }
+
+  return F;
+
+}
+
+
+
+
 
 
 

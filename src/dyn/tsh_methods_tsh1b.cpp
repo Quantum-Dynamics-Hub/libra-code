@@ -56,6 +56,11 @@ void tsh1b(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_stat
   */
 
   int rep = 1;                ///< The representation to run the Ehrenfest : 0 - diabatic, 1 - adiabatic
+  int ham_rep = 0;            ///< The representation of the Hamiltonian update: 0 - diabatic, 1 - adiabatic
+                              ///< this is the representation in which the computed properties are assumed to be
+                              ///< For instance, we may have set it to 1, to read the adiabatic energies and couplings,
+                              ///< to bypass the diabatic-to-adiabatic transformation, which may be useful in some atomistic
+                              ///< calculations, or with the NBRA
   int rep_sh = 1;             ///< The representation to run the SH : 0 - diabatic, 1 - adiabatic
   int rep_lz = 0;             ///< The representation to compute LZ probabilitieis: 0 - diabatic, 1- adiabatic 
   int tsh_method = 0;         ///< Formula for computing SH probabilities: 0 - FSSH, 1 - GFSH, 2 - MSSH
@@ -88,6 +93,7 @@ void tsh1b(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_stat
     key = extract<std::string>(params1.keys()[i]);
 
     if(key=="rep") { rep = extract<int>(params1.values()[i]); }
+    else if(key=="ham_rep") { ham_rep = extract<int>(params1.values()[i]);   }
     else if(key=="rep_sh") { rep_sh = extract<int>(params1.values()[i]);  }
     else if(key=="rep_lz") { rep_lz = extract<int>(params1.values()[i]);  }
     else if(key=="tsh_method") { tsh_method = extract<int>(params1.values()[i]);  }
@@ -192,8 +198,19 @@ void tsh1b(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_stat
   }// rep == 1
 
 
+  /*
   ham.compute_diabatic(py_funct, bp::object(q), params, 1);
   ham.compute_adiabatic(1, 1);
+  */
+
+  if(ham_rep==0){
+    ham.compute_diabatic(py_funct, bp::object(q), params, 1);
+    ham.compute_adiabatic(1, 1);
+  }
+  else if(ham_rep==1){
+    ham.compute_adiabatic(py_funct, bp::object(q), params, 1);
+  }
+
 
 
   if(rep==1){
