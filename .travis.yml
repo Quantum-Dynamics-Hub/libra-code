@@ -32,10 +32,8 @@ addons:
 
 # Build your code e.g. by calling make
 script:
-  - cd docs
-  - travis_wait 30 doxygen Doxyfile
-  - cd SphinxDoc/source
-  - travis_wait 30 make html
+  - cd docs/SphinxDoc/source
+  - make html
 
 
 
