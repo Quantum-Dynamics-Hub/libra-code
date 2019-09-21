@@ -43,7 +43,7 @@ install:
   - conda install cmake
   - conda install git
   - conda activate test-environment
-  - python setup.py install
+  #- python setup.py install
   
   # Packages to build Python docs
   - pip install sphinx
@@ -65,6 +65,9 @@ script:
   - cd _build3
   - cmake ../
   - make copy-libra-py
+  - cd ../
+  - export PYTHONPATH=_build3/src:$PYTHONPATH
+  - export LD_LIBRARY_PATH=_build3/src:$LD_LIBRARY_PATH
   - cd docs/SphinxDoc
   - make html
 
