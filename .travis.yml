@@ -68,7 +68,7 @@ script:
   - mkdir _build3
   - cd _build3
   - cmake -DBOOST_ROOT=$HOME/miniconda2/envs/py37 ../  
-  - make
+  - make -j`nproc`
   #- make copy-libra-py
   - export PYTHONPATH=$(pwd)/src:$PYTHONPATH
   - export LD_LIBRARY_PATH=$(pwd)/src:$LD_LIBRARY_PATH
