@@ -20,6 +20,7 @@ addons:
       - doxygen-latex
       - doxygen-gui
       - graphviz
+      - sphinx
 
 # Build your code e.g. by calling make
 script:
