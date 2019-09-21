@@ -70,10 +70,9 @@ script:
   - cd _build3
   - cmake -DBOOST_ROOT=$HOME/miniconda2/envs/py37 ../  
   - make copy-libra-py
-  - cd ../
-  - export PYTHONPATH=_build3/src:$PYTHONPATH
-  - export LD_LIBRARY_PATH=_build3/src:$LD_LIBRARY_PATH
-  - cd docs/SphinxDoc
+  - export PYTHONPATH=$HOME/_build3/src:$PYTHONPATH
+  - export LD_LIBRARY_PATH=$HOME/_build3/src:$LD_LIBRARY_PATH
+  - cd ../docs/SphinxDoc
   - make html
 
 
