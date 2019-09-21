@@ -17,7 +17,9 @@ python:
   - 3.7
 
 install:
+  # Packages to build Python docs
   - pip install sphinx
+  - pip install recommonmark
 
 # Install dependencies
 addons:
