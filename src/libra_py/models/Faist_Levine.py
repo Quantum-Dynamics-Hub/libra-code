@@ -25,8 +25,8 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-from .units import Angst
-from .units import ev2au
+from libra_py.units import Angst
+from libra_py.units import ev2au
 
 class tmp:
     pass    

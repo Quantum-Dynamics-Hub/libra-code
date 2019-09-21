@@ -24,7 +24,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 import util.libutil as comn
-from . import units
+import libra_py.units as units
 
 
 class tmp:

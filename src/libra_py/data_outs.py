@@ -155,3 +155,129 @@ def add_printout(i, pop, filename):
     f.write(line)
     f.close()
 
+
+
+
+
+
+def add_intlist2file(filename, t, X):
+    """
+    This function appends a new line of type: [t, X[0], X[1], ... X[sz-1] ] to a file. 
+    Where sz = len(X)
+
+    Args:
+        filename ( string ): the name of the file to where the data will be printed out
+        t ( float ): usually the time marker for the output
+        X ( list of ints ): object containing the data to be printed out
+
+    Returns:
+        None: but updates the existing file
+
+    """
+            
+    f = open(filename, "a")
+    
+    line = "%5.3f" % (t)
+    for x in X:        
+        line = line + " %5i" % (x)
+    line = line + "\n"
+    
+    f.write(line)
+    f.close()
+
+    
+def add_doublelist2file(filename, t, X):
+    """
+    This function appends a new line of type: [t, X[0], X[1], ... X[sz-1] ] to a file. 
+    Where sz = len(X)
+
+    Args:
+        filename ( string ): the name of the file to where the data will be printed out
+        t ( float ): usually the time marker for the output
+        X ( list of floats ): object containing the data to be printed out
+
+    Returns:
+        None: but updates the existing file
+
+    """
+            
+    f = open(filename, "a")
+    
+    line = "%5.3f" % (t)
+    for x in X:        
+        line = line + " %8.5f" % (x)
+    line = line + "\n"
+    
+    f.write(line)
+    f.close()    
+
+
+    
+def add_matrix2file(filename, t, X):
+    """
+    This function appends a new line of type: 
+    [t, X(0,0), X(0, 1), ... , X(0, ncols-1), X(1, 0), X(1, 1), ..., X(1, ncols-1), ... ] to a file. 
+    Where ncols - the number of columns of the matrix X
+
+    Args:
+        filename ( string ): the name of the file to where the data will be printed out
+        t ( float ): usually the time marker for the output
+        X ( MATRIX(N, M) ): object containing the data to be printed out
+
+    Returns:
+        None: but updates the existing file
+
+    """
+
+    
+    nrows = X.num_of_rows
+    ncols = X.num_of_cols
+    
+    f = open(filename, "a")
+    
+    line = "%5.3f" % (t)
+    for a in xrange(nrows):
+        for b in xrange(ncols):
+            line = line + " %8.5f" % (X.get(a,b))
+    line = line + "\n"
+    
+    f.write(line)
+    f.close()
+    
+
+
+def add_cmatrix2file(filename, t, X):
+    """
+    This function appends a new line of type: 
+    [t, X(0,0).real, X(0,0).imag, X(0, 1).real, X(0, 1).imag, ... , X(0, ncols-1).real, X(0, ncols-1).imag,
+        X(1,0).real, X(1,0).imag, X(1, 1).real, X(1, 1).imag, ... , X(1, ncols-1).real, X(1, ncols-1).imag,
+      ... ] to a file. 
+    Where ncols - the number of columns of the matrix X
+
+    Args:
+        filename ( string ): the name of the file to where the data will be printed out
+        t ( float ): usually the time marker for the output
+        X ( CMATRIX(N, M) ): object containing the data to be printed out
+
+    Returns:
+        None: but updates the existing file
+
+    """
+
+    
+    nrows = X.num_of_rows
+    ncols = X.num_of_cols
+    
+    f = open(filename, "a")
+    
+    line = "%5.3f" % (t)
+    for a in xrange(nrows):
+        for b in xrange(ncols):
+            line = line + " %8.5f %8.5f" % (X.get(a,b).real, X.get(a,b).imag)
+    line = line + "\n"
+    
+    f.write(line)
+    f.close()
+
+
+

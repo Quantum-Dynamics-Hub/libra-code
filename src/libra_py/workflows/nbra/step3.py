@@ -39,7 +39,6 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 from . import mapping
-#import libra_py.common_utils as comn
 import util.libutil as comn
 import libra_py.tsh as tsh
 import libra_py.units as units
@@ -54,9 +53,12 @@ def get_Lowdin(S):
     Args: 
         S ( CMATRIX(2N, 2N) ): is a matrix of MO overlaps. It has a block structure as:
 
-                (S_aa, S_ab)
-            S = (          )
-                (S_ba, S_bb)
+            .. math::
+                S = 
+                \\begin{vmatrix}
+                S_{aa}  & S_{ab} \\\
+                S_{ba}  & S_{bb}
+                \\end{vmatrix}
 
             Here, S_xy are the overlaps of the MOs for spin channels x and y (alpha, beta) - only
             spatial components of the orbitals are taken into account here.
@@ -112,9 +114,12 @@ def apply_normalization(S, St):
     Args: 
         S ( CMATRIX(2N, 2N) ): is a matrix of MO overlaps S_ij = <i|j>. It has a block structure as:
 
-                (S_aa, S_ab)
-            S = (          )
-                (S_ba, S_bb)
+            .. math::
+                S = 
+                \\begin{vmatrix}
+                S_{aa}  & S_{ab} \\\
+                S_{ba}  & S_{bb}
+                \\end{vmatrix}
 
             Here, S_xy are the overlaps of the MOs for spin channels x and y (alpha, beta) - only
             spatial components of the orbitals are taken into account here.
@@ -122,9 +127,12 @@ def apply_normalization(S, St):
 
         St ( CMATRIX(2N, 2N) ): the transition density matrix St_ij = <i|d/dt|j>. It has a block structure as:
 
-                 (St_aa, St_ab)
-            St = (            )
-                 (St_ba, St_bb)
+            .. math::
+                St = 
+                \\begin{vmatrix}
+                St_{aa}  & St_{ab} \\\
+                St_{ba}  & St_{bb}
+                \\end{vmatrix}
 
             Here, St_xy are the transition density matrix for spin channels x and y (alpha, beta) - only
             spatial components of the orbitals are taken into account here.
@@ -362,9 +370,13 @@ def apply_phase_correction(St):
         St ( list of CMATRIX(N,N) ): St_ij[n] = <i(n)|j(n+1)> transition density matrix for 
             the timestep n, where N is the number of spin-orbitals in the active space. 
             Spin-orbitals, not just orbitals! So it is composed as:
-                  ( St_aa    St_ab  )
-            St =  (                 )
-                  ( St_ba    St_bb  )
+
+            .. math::
+                St = 
+                \\begin{vmatrix}
+                St_{aa}  & St_{ab} \\\
+                St_{ba}  & St_{bb}
+                \\end{vmatrix}
 
     Returns: 
         None: but changes the input St matrices
@@ -459,22 +471,26 @@ def sac_matrices(coeff, basis, S_ks):
 def scale_H_vib(hvib, en_gap, dNAC, sc_nac_method):
     """
     This function scales the energies and NACs in the vibrionic Hamiltonian
-    in the Chi basis.   
-    hvib   [list of CMATRIX objects] = CMATRIXlist of vibronic hamiltonians in the Chi basis
-    en_gap [float]  = The desired energy gap (E_1 - E_0), for the Chi basis
-    dNAC   [list of lists of (list, float)] = The scaling terms by which specific nacs will 
-                                              be scaled datatype = list of lists of (list, float)
+    in the Chi basis. 
 
-                                                         [  [ [i,j], val ], ...  ]          
+    Args:   
+        hvib ( list of CMATRIX objects ): 
+            CMATRIXlist of vibronic hamiltonians in the Chi basis
+        en_gap ( float ): The desired energy gap (E_1 - E_0), for the Chi basis
+        dNAC ( list of lists of (list, float) ):
+            The scaling terms by which specific nacs will 
+            be scaled datatype = list of lists of (list, float)
 
-                                             n and n+1 are the col (and thereby row) indicies of 
-                                             the nacs to be scaled by the value val 
-    sc_nac_method [int] = The method used to scale NACs in the Chi basis, chosen by the user.
-                          If sc_nac_method = 1, then the NACs are scaled by the ivnerse of the
-                          magnitude of the change in energy, according to Lin et al.
+            [  [ [i,j], val ], ...  ]          
 
-                          Reference:
-                          Lin, Y. & Akimov, A. V. J. Phys. Chem. A (2016) 
+            n and n+1 are the col (and thereby row) indicies of 
+            the nacs to be scaled by the value val 
+        sc_nac_method ( int ): The method used to scale NACs in the Chi basis, 
+            chosen by the user.
+            If sc_nac_method = 1, then the NACs are scaled by the ivnerse of the
+            magnitude of the change in energy, according to Lin et al.
+
+            Reference: Lin, Y. & Akimov, A. V. J. Phys. Chem. A (2016) 
     """
 
     traj_len = len(hvib)

@@ -7,7 +7,9 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 #***********************************************************/
 
-__all__ = ["acf",
+__all__ = ["models",
+           "workflows",
+           "acf",
            "autoconnect",
            "build",
            "data_conv",
@@ -32,14 +34,6 @@ __all__ = ["acf",
            "LoadPT",
            "LoadTRIPOS",
            "LoadUFF",
-           "models_Faist_Levine",
-           "models_Henon_Heiles",
-           "models_Holstein",
-           "models_Libra",
-           "models_LVC",
-           "models_Martens",
-           "models_SSY",
-           "models_Tully",
            "namd",
            "normal_modes",
            "nve_md",
@@ -57,7 +51,6 @@ __all__ = ["acf",
            "tsh_stat",
            "unavoided",
            "units",
-           "vesta2qe",
-           "workflows",
+           "vesta2qe"
           ]
 

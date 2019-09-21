@@ -127,9 +127,9 @@ def get_Hvib2(params):
             * **params["data_set_paths"]** ( list of strings ):
                 define the paths of the directories where the vibronic Hamiltonian files for
                 different data sets (e.g. independent MD trajectories) are located. 
-            .. note::
-                In addition, requires parameters described in
-                :func:`libra_py.workflows.nbra.step4.getHvib`
+                .. note::
+                    In addition, requires parameters described in
+                    :func:`libra_py.workflows.nbra.step4.getHvib`
 
     Returns:
         list of lists of CMATRIX: Hvib: 

@@ -1,10 +1,9 @@
-# Libra Reference 
 
 This page contains a list of what you can do with Libra, with the links to corresponding examples
 
 _______
 
-# By the task required
+# Libra usage: By the task required
 
 
 ## 1. Reading and visualizing MD trajectories
@@ -25,7 +24,7 @@ _______
 
 _______
 
-# By the module/functions used
+# Libra usage: By the module/functions used
 
 ## 1. libra_core
 

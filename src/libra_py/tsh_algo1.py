@@ -41,9 +41,12 @@ from . import tsh_stat
 from . import units
 
 
+
 def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute_model, rnd):
     """
-
+  
+    This function is similar to the one above, but it stores the computed properties in files
+   
     Args: 
         _q ( MATRIX(nnucl, ntraj) ): coordinates of the "classical" particles [units: Bohr]
         _p ( MATRIX(nnucl, ntraj) ): momenta of the "classical" particles [units: a.u. of momenta]
@@ -53,6 +56,8 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
         states ( intList, or list of ntraj ints ): the quantum state of each trajectory
         model_params ( dictionary ): contains the selection of a model and the parameters 
             for that model Hamiltonian
+
+
         dyn_params ( dictionary ): parameters controlling the execution of the dynamics
             Can contain:
       
@@ -62,20 +67,60 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
                 - 0: diabatic representation
                 - 1: adiabatic representation [default: 1]
 
+            * **dyn_params["ham_rep"]** (int): The representation of the Hamiltonian update: 
+
+                - 0: diabatic
+                - 1: adiabatic
+                              
+                This is the representation in which the computed properties are assumed to be
+                For instance, we may have set it to 1, to read the adiabatic energies and couplings,
+                to bypass the diabatic-to-adiabatic transformation, which may be useful in some atomistic
+                calculations, or with the NBRA
+
             * **dyn_params["rep_sh"]** ( int ): selects the representation which is 
                 used to perform surface hopping
 
                 - 0: diabatic representation
                 - 1: adiabatic representation [default: 1]
 
-            * **dyn_params["nsteps"]** ( int ): the number of NA-MD steps to do [ default: 1 ]
+            * **dyn_params["rep_lz"]** ( int ): The representation to compute LZ probabilitieis:
+ 
+                - 0: diabatic
+                - 1: adiabatic 
+
+            * **dyn_params["tsh_method"]** ( int ): Formula for computing SH probabilities: 
+   
+                - 0: FSSH
+                - 1: GFSH 
+                - 2: MSSH
+
+            * **dyn_params["use_boltz_factor"]** ( int ): Whether to scale the SH probabilities
+                by the Boltzmann factor: 
+ 
+                - 0: do not scale
+                - 1: scale
+
+            * **dyn_params["Temperature"]** ( double ): Temperature of the system
+
+            * **dyn_params["do_reverse"]** ( int ): what to do with velocities on frustrated hops:
+
+                - 0: do not revert momenta at the frustrated hops
+                - 1: do revert the momenta
+
+            * **dyn_params["vel_rescale_opt"]** ( int ): How to rescale momenta if the hops are successful:
+
+                - 0: rescale along the directions of derivative couplings
+                - 1: rescale in the diabatic basis - don't care about the
+                    velocity directions, just a uniform rescaling,
+                - 2: do not rescale, as in the NBRA.
 
             * **dyn_params["dt"]** ( double ): the nuclear and electronic integration
                 timestep [ units: a.u. of time, default: 41.0 ]
 
-            * **dyn_params["tsh_version"]** ( int ): 
-                - 1:  tsh1(q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)
-                - 2:  tsh1b(q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)                        
+            * **dyn_params["do_phase_correction"]** ( int ): the algorithm to correct phases on adiabatic states
+ 
+                - 0: no phase correction
+                - 1: according to our phase correction algorithm [ default: 1 ]
 
             * **dyn_params["state_tracking_algo"]** ( int ): the algorithm to keep track of the states' identities
  
@@ -83,18 +128,50 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
                 - 1: Sato
                 - 2: using the mincost, Munkres-Kuhn [ default: 2 ]
 
-            * **dyn_params["do_phase_correction"]** ( int ): the algorithm to correct phases on adiabatic states
- 
-                - 0: no phase correction
-                - 1: accurding to Akimov [ default: 1 ]
+            * **dyn_params["MK_alpha"]** ( double ): Munkres-Kuhn alpha 
+                (selects the range of orbitals included in reordering) [default: 0.0]
+
+            * **dyn_params["MK_verbosity"]** ( double ): Munkres-Kuhn verbosity: 
+
+                - 0: no extra output [ default ]
+                - 1: print details
 
 
+            * **dyn_params["nsteps"]** ( int ): the number of NA-MD steps to do [ default: 1 ]
+
+            * **dyn_params["tsh_version"]** ( int ): 
+                - 1:  tsh1(q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)
+                - 2:  tsh1b(q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd) [ default ]
+
+            * **dyn_params["output_level"]** ( int ): controls what info to return as the result of this function
+
+                - -1: all return values are None
+                - 0: also, all return values are none 
+                - 1: 1-D info - energies, SE and SH populations averaged over ensemble vs. time [ default ]
+                - 2: 2-D info - coordinates, momenta, SE amplitudes, and SH states populations 
+                    for each individual trajectory vs. time 
+                - 3: 3-D info - St, Hvib_adi, Hvib_dia matrices (energies, couplings, etc.) for each
+                    individual trajectory vs. time 
+
+
+            * **dyn_params["file_output_level"]** ( int ): controls what info to print out into files
+
+                - -1: print nothing at all 
+                - 0: 0-D info - just the parameters of the simulation [ default ]
+                - 1: 1-D info - energies, SE and SH populations averaged over ensemble vs. time 
+                - 2: 2-D info - coordinates, momenta, SE amplitudes, and SH states populations 
+                    for each individual trajectory vs. time 
+                - 3: 3-D info - St, Hvib_adi, Hvib_dia matrices (energies, couplings, etc.) for each
+                    individual trajectory vs. time 
+            
 
         compute_model ( PyObject ): the pointer to the Python function that performs the Hamiltonian calculations
         rnd ( Random ): random numbers generator object
 
+
+
     Returns:
-        tuple: ( obs_T, obs_q, obs_p, obs_Ekin, obs_Epot, obs_Etot, obs_dEkin, obs_dEpot, obs_dEtot, obs_Cadi, obs_Cdia, obs_dm_adi, obs_dm_dia, obs_pops ), where
+        tuple: with the elements of the tuple listed below.
 
             * obs_T ( list of `nsteps` doubles ): time [units: a.u.]
             * obs_q ( list of `nsteps` MATRIX(nnucl, ntraj) ): coordinates of all trajectories [ units: Bohr ]
@@ -115,33 +192,18 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
                 vibronic Hamiltonians for each timestep in the adiabatic representation
             * obs_hvib_dia ( list of `ntraj` lists, each being a list of `nsteps` objects CMATRIX(ndia, ndia) ): trajectory-resolved
                 vibronic Hamiltonians for each timestep in the diabatic representation
+            * obs_St ( list of `ntraj` lists, each being a list of `nsteps` objects CMATRIX(nadi, nadi) ): trajectory-resolved
+                time-overlaps of the adiabatic wavefunctions
 
-              
+
+        Note: the elements are None, if they are excluded by the input optinos
+
     """
 
-    
-    obs_T = [] # time
-    obs_q = [] # coordinates of all trajectories
-    obs_p = [] # momenta of all trajectories
-    obs_Ekin = []  # average kinetic energy 
-    obs_Epot = []  # average potential energy 
-    obs_Etot = []  # average total energy 
-    obs_dEkin = []  # kinetic energy fluctuation
-    obs_dEpot = []  # potential energy fluctuation
-    obs_dEtot = []  # total energy fluctuation
-    obs_Cadi = []  # average TD-SE amplitudes in the adiabatic basis
-    obs_Cdia = []  # average TD-SE amplitudes in the diabatic basis
-    obs_dm_adi = []  # average SE-based density matrix in adiabatic basis
-    obs_dm_dia = []  # average SE-based density matrix in diabatic basis
-    obs_pop = []  # average SH-based populations adiabatic basis
-    obs_states = []  # indices of the quantum states of each trajectory
-    obs_hvib_adi = []  # vibronic Hamiltonians for each trajectory in adiabatic rep.
-    obs_hvib_dia = []  # vibronic Hamiltonians for each trajectory in diabatic rep.
-    
-    
-    # Create copies of the input dynamical variables, so we could run several run_test 
+        
+    # Create copies of the input dynamical variables, so we could run several such
     # functions with the same input variables without worries that they will be altered
-    # inside of the run_test
+    # inside of each other
 
     q = MATRIX(_q)
     p = MATRIX(_p)
@@ -151,35 +213,106 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
 
 
     # Parameters and dimensions
-    critical_params = [ ] 
+    critical_params = [ "prefix" ] 
     default_params = { "rep":1, "nsteps":1, "dt":1.0*units.fs2au, "do_phase_correction":1, "state_tracking_algo":2,
-                       "MK_alpha":0.0, "MK_verbosity":0, "tsh_version":1 }
+                       "MK_alpha":0.0, "MK_verbosity":0, "file_output_level":1, "tsh_version":2 }
     comn.check_input(dyn_params, default_params, critical_params)
-    
-
+        
+    prefix = dyn_params["prefix"]    
     rep = dyn_params["rep"]
     nsteps = dyn_params["nsteps"]
-    dt = dyn_params["dt"]
     tsh_version = dyn_params["tsh_version"]
-
+    dt = dyn_params["dt"]
+    tol = dyn_params["tol"]
+    output_level = dyn_params["output_level"]
+    file_output_level = dyn_params["file_output_level"]
+    
     ndia = Cdia.num_of_rows
     nadi = Cadi.num_of_rows
     nnucl= q.num_of_rows
     ntraj= q.num_of_cols
 
-    for tr in range(0,ntraj):
-        obs_hvib_adi.append([])
-        obs_hvib_dia.append([])
 
+
+    obs_T = None
+    obs_q, obs_p = None, None
+    obs_Ekin, obs_Epot, obs_Etot = None, None, None
+    obs_dEkin, obs_dEpot, obs_dEtot = None, None, None
+    obs_Cadi, obs_Cdia = None, None 
+    obs_dm_adi, obs_dm_dia = None, None
+    obs_pop, obs_states = None, None
+    obs_hvib_adi, obs_hvib_dia, obs_St = None, None, None
+         
+    if output_level>=1:
+        obs_T = [] # time
+        obs_Ekin = []  # average kinetic energy 
+        obs_Epot = []  # average potential energy 
+        obs_Etot = []  # average total energy 
+        obs_dEkin = []  # kinetic energy fluctuation
+        obs_dEpot = []  # potential energy fluctuation
+        obs_dEtot = []  # total energy fluctuation
+        obs_dm_adi = []  # average SE-based density matrix in adiabatic basis
+        obs_dm_dia = []  # average SE-based density matrix in diabatic basis
+        obs_pop = []  # average SH-based populations adiabatic basis
+
+    if output_level>=2:
+        obs_q = [] # coordinates of all trajectories
+        obs_p = [] # momenta of all trajectories
+        obs_Cadi = []  # average TD-SE amplitudes in the adiabatic basis
+        obs_Cdia = []  # average TD-SE amplitudes in the diabatic basis
+        obs_states = []  # indices of the quantum states of each trajectory
+
+    if output_level>=3:
+        obs_hvib_adi = []  # vibronic Hamiltonians for each trajectory in adiabatic rep.
+        obs_hvib_dia = []  # vibronic Hamiltonians for each trajectory in diabatic rep.
+        obs_St = [] # time-overlaps for each trajectory in the adiabatic rep.
+
+
+    # Create an output directory, if not present    
+    if file_output_level>=0:
+        if not os.path.isdir(prefix):
+            os.mkdir(prefix)
+            
+        # Simulation parameters                    
+        f = open("%s/_dyn_params.txt" % (prefix),"w")
+        f.write( str(dyn_params) );  f.close()
+    
+        f = open("%s/_model_params.txt" % (prefix),"w")
+        f.write( str(model_params) );  f.close()    
+
+    # Ensemble-resolved info (so 1D)
+    if file_output_level >= 1:
+        f = open("%s/energies.txt" % (prefix), "w"); f.close()   # average kinetic, potential, and total energies and their fluctuations                                                                
+        f = open("%s/D_adi.txt" % (prefix), "w"); f.close()      # average SE-based density matrix in adiabatic basis
+        f = open("%s/D_dia.txt" % (prefix), "w"); f.close()      # average SE-based density matrix in diabatic basis
+        f = open("%s/SH_pop.txt" % (prefix), "w"); f.close()     # average SH-based populations adiabatic basis
+    
+    # Trajectory-resolved 1D info (so 2D)
+    if file_output_level >= 2:
+        f = open("%s/q.txt" % (prefix), "w"); f.close()          # coordinates of all trajectories
+        f = open("%s/p.txt" % (prefix), "w"); f.close()          # momenta of all trajectories    
+        f = open("%s/C_adi.txt" % (prefix), "w"); f.close()      # TD-SE amplitudes in the adiabatic basis
+        f = open("%s/C_dia.txt" % (prefix), "w"); f.close()      # TD-SE amplitudes in the diabatic basis    
+        f = open("%s/states.txt" % (prefix), "w"); f.close()     # indices of the quantum states of each trajectory
+
+    if file_output_level >= 3:    
+        # Trajectory-resolved 2D info (so 3D)
+        for tr in xrange(ntraj):
+            f = open("%s/Hvib_adi_%i.txt" % (prefix, tr), "w"); f.close()   # vibronic Hamiltonians for each trajectory in adiabatic rep. 
+            f = open("%s/Hvib_dia_%i.txt" % (prefix, tr), "w"); f.close()   # vibronic Hamiltonians for each trajectory in diabatic rep. 
+            f = open("%s/St_%i.txt" % (prefix, tr), "w"); f.close()   # time-overlaps along each trajectory 
+        
 
     # ======= Hierarchy of Hamiltonians =======
     ham = nHamiltonian(ndia, nadi, nnucl)
     ham.init_all(2)
+    ham.phase_corr_ovlp_tol = tol
 
     ham1 = [] 
-    for tr in range(0,ntraj):
+    for tr in xrange(ntraj):
         ham1.append( nHamiltonian(ndia, nadi, nnucl) )        
         ham1[tr].init_all(2)
+        ham1[tr].phase_corr_ovlp_tol = tol
         ham.add_child(ham1[tr])
         
 
@@ -187,7 +320,10 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     ham.compute_diabatic(compute_model, q, model_params, 1)
     ham.compute_adiabatic(1, 1); 
     ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
-
+    
+    U = []
+    for tr in xrange(ntraj):
+        U.append(ham1[tr].get_basis_transform())
 
     if rep==0:
         ham.compute_nac_dia(p, iM, 0, 1);  
@@ -197,11 +333,77 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
         ham.compute_hvib_adi(1); 
 
 
-    Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh_stat.compute_etot_tsh(ham, p, Cdia, Cadi, states, iM, rep) 
-    
+                
     # Do the propagation
-    for i in range(0,nsteps):
+    for i in xrange(nsteps):
+    
+        #============ Compute and output properties ===========        
+        if rep==0:
+            ham.ampl_dia2adi(Cdia, Cadi, 0, 1)
+        elif rep==1:
+            ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
 
+        dm_dia, dm_adi = tsh_stat.compute_dm(ham, Cdia, Cadi, rep, 1)        
+        Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh_stat.compute_etot_tsh(ham, p, Cdia, Cadi, states, iM, rep)
+        pops = tsh_stat.compute_sh_statistics(nadi, states)
+        
+            
+        # Memory output
+        if output_level>=1:
+            obs_T.append(i*dt) 
+            obs_Ekin.append(Ekin)
+            obs_Epot.append(Epot)
+            obs_Etot.append(Etot)
+            obs_dEkin.append(dEkin)
+            obs_dEpot.append(dEpot)
+            obs_dEtot.append(dEtot)
+            obs_dm_adi.append(CMATRIX(dm_adi))
+            obs_dm_dia.append(CMATRIX(dm_dia))
+            obs_pop.append(MATRIX(pops))
+
+        # File output
+        if file_output_level >= 1:
+            add_doublelist2file("%s/energies.txt" % (prefix), i*dt, [Ekin, Epot, Etot, dEkin, dEpot, dEtot] )
+            add_cmatrix2file("%s/D_adi.txt" % (prefix), i*dt, dm_adi )
+            add_cmatrix2file("%s/D_dia.txt" % (prefix), i*dt, dm_dia )
+            add_matrix2file("%s/SH_pop.txt" % (prefix), i*dt, pops )
+
+
+        # Memory output
+        if output_level>=2:
+            obs_q.append(MATRIX(q))
+            obs_p.append(MATRIX(p))        
+            obs_Cadi.append(CMATRIX(Cadi))
+            obs_Cdia.append(CMATRIX(Cdia))
+            obs_states.append(list(states))
+
+        # File output
+        if file_output_level >= 2:        
+            add_matrix2file("%s/q.txt" % (prefix), i*dt, q )
+            add_matrix2file("%s/p.txt" % (prefix), i*dt, p )
+            add_cmatrix2file("%s/C_adi.txt" % (prefix), i*dt, Cadi )
+            add_cmatrix2file("%s/C_dia.txt" % (prefix), i*dt, Cdia )
+            add_intlist2file("%s/states.txt" % (prefix), i*dt, states )        
+    
+        for tr in xrange(ntraj):            
+            x = ham1[tr].get_basis_transform()
+            St = U[tr] * x.H()             
+            U[tr] = CMATRIX(x)
+
+            # Memory output            
+            if output_level >= 3:
+                obs_hvib_adi[tr].append( CMATRIX(ham1[tr].get_hvib_adi()) )
+                obs_hvib_dia[tr].append( CMATRIX(ham1[tr].get_hvib_dia()) )
+                obs_St[tr].append( CMATRIX(St) )
+
+            # File output
+            if file_output_level >= 3:
+                add_cmatrix2file("%s/St_%i.txt" % (prefix, tr), i*dt, St)
+                add_cmatrix2file("%s/Hvib_adi_%i.txt" % (prefix, tr), i*dt, ham1[tr].get_hvib_adi())
+                add_cmatrix2file("%s/Hvib_dia_%i.txt" % (prefix, tr), i*dt, ham1[tr].get_hvib_dia())
+
+
+        #============ Propagate ===========        
         if rep==0:
             if tsh_version==1:
                 tsh1(q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)
@@ -211,52 +413,13 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
             if tsh_version==1:
                 tsh1(q, p, iM,  Cadi, states, ham, compute_model, model_params, dyn_params, rnd)
             elif tsh_version==2:
-                tsh1b(q, p, iM,  Cadi, states, ham, compute_model, model_params, dyn_params, rnd)
+                tsh1b(q, p, iM,  Cadi, states, ham, compute_model, model_params, dyn_params, rnd)            
 
 
-        #=========== Properties ==========
-        if rep==0:
-            ham.ampl_dia2adi(Cdia, Cadi, 0, 1)
-        elif rep==1:
-            ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
-
-        dm_dia, dm_adi = tsh_stat.compute_dm(ham, Cdia, Cadi, rep, 1)
-        Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh_stat.compute_etot_tsh(ham, p, Cdia, Cadi, states, iM, rep)
-        pops = tsh_stat.compute_sh_statistics(nadi, states)
-    
-
-        ind = 0.0
-        for tr in range(0,ntraj):
-            ind = ind + ham1[tr].get_ordering_adi()[0]
-        ind = ind/float(ntraj)
-
-         
-        
-        obs_T.append(i*dt) 
-        obs_q.append(MATRIX(q))
-        obs_p.append(MATRIX(p))
-        obs_Ekin.append(Ekin)
-        obs_Epot.append(Epot)
-        obs_Etot.append(Etot)
-        obs_dEkin.append(dEkin)
-        obs_dEpot.append(dEpot)
-        obs_dEtot.append(dEtot)
-        obs_Cadi.append(CMATRIX(Cadi))
-        obs_Cdia.append(CMATRIX(Cdia))
-        obs_dm_adi.append(CMATRIX(dm_adi))
-        obs_dm_dia.append(CMATRIX(dm_dia))
-        obs_pop.append(MATRIX(pops))
-        obs_states.append(list(states))
-
-        # Energies
-        for tr in range(0,ntraj):        
-            obs_hvib_adi[tr].append( CMATRIX(ham1[tr].get_hvib_adi()) )
-            obs_hvib_dia[tr].append( CMATRIX(ham1[tr].get_hvib_dia()) )
 
 
-        
     return obs_T, obs_q, obs_p, obs_Ekin, obs_Epot, obs_Etot, obs_dEkin, obs_dEpot, obs_dEtot, \
-           obs_Cadi, obs_Cdia, obs_dm_adi, obs_dm_dia, obs_pop, obs_states, obs_hvib_adi, obs_hvib_dia
+           obs_Cadi, obs_Cdia, obs_dm_adi, obs_dm_dia, obs_pop, obs_states, obs_hvib_adi, obs_hvib_dia, obs_St
 
 
 

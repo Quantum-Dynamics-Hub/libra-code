@@ -31,18 +31,20 @@ def Beswick_Jortner(q, params):
     """
     Implementation of the Henon-Heiles potential
 
-    \param[in] q [ndof x 1, MATRIX] coordinate of the particle, ndof = 2 
+    Args:
+        q ( MATRIX(ndof, 1) ): coordinate of the particle, ndof = 2 
                These DOFs are as follows:
                q[0] = r - C-N distance
                q[1] = R - the distance between I and the center of mass of CN diatomics
-    \param[in] params [dictionary] parameters of the model
+        params ( dictionary ): parameters of the model
 
     References:
-    (1) A. Beswick and J. Jortner, Chern. Phys. 1977, 24, 1 
-    (2) Brown, R. C.; Heller, E. J. Classical Trajectory Approach to Photodissociation: The Wigner Method. 
-    J. Chem. Phys. 1981, 75, 186–188.
+        (1) A. Beswick and J. Jortner, Chern. Phys. 1977, 24, 1 
+        (2) Brown, R. C.; Heller, E. J. Classical Trajectory Approach to Photodissociation: The Wigner Method. 
+        J. Chem. Phys. 1981, 75, 186–188.
 
     """
+
     eV = 0.036749309 #  Ha
     Angst = 1.889725989  # Bohr
 
