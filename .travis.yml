@@ -11,6 +11,15 @@ env:
   global:
     - GH_REPO_REF: github.com/Quantum-Dynamics-Hub/libra-code.git
 
+
+language: python
+python:
+  - 3.5
+  - 3.7
+
+install:
+  - pip install sphinx
+
 # Install dependencies
 addons:
   apt:
@@ -20,7 +29,6 @@ addons:
       - doxygen-latex
       - doxygen-gui
       - graphviz
-      - sphinx
 
 # Build your code e.g. by calling make
 script:
