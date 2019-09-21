@@ -30,9 +30,7 @@ install:
   #  fi
   - wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
   - sh ./Miniconda2-latest-Linux-x86_64.sh -b -p $HOME/miniconda2
-  - source .bashrc
-  #- bash miniconda.sh -b -p $HOME/miniconda
-  #- source "$HOME/miniconda/etc/profile.d/conda.sh"
+  - source "$HOME/miniconda2/etc/profile.d/conda.sh"
   #- hash -r
   - conda config --set always_yes yes  # --set changeps1 no
   - conda update -q conda
@@ -66,7 +64,7 @@ addons:
 
 # Build your code e.g. by calling make
 script:
-  - ls
+  - ls -a
   - pwd
   - mkdir _build3
   - cd _build3
