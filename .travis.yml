@@ -17,6 +17,34 @@ python:
   - 3.7
 
 install:
+  # Miniconda
+  - sudo apt-get update
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - source "$HOME/miniconda/etc/profile.d/conda.sh"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+
+  # Replace dep1 dep2 ... with your dependencies
+  - conda create -q -n test-environment python=3.7
+  - conda install python=3.7
+  - conda install conda-build
+  - conda install gcc_linux-64
+  - conda install gxx_linux-64
+  - conda install make
+  - conda install boost
+  - conda install cmake
+  - conda install git
+  - conda activate test-environment
+  - python setup.py install
+  
   # Packages to build Python docs
   - pip install sphinx
   - pip install recommonmark
@@ -33,6 +61,10 @@ addons:
 
 # Build your code e.g. by calling make
 script:
+  - mkdir _build3
+  - cd _build3
+  - cmake ../
+  - make copy-libra-py
   - cd docs/SphinxDoc
   - make html
 
