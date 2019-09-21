@@ -11,10 +11,9 @@ env:
   global:
     - GH_REPO_REF: github.com/Quantum-Dynamics-Hub/libra-code.git
 
-
 language: python
+
 python:
-  - 3.5
   - 3.7
 
 install:
@@ -32,7 +31,7 @@ addons:
 
 # Build your code e.g. by calling make
 script:
-  - cd docs/SphinxDoc/source
+  - cd docs/SphinxDoc
   - make html
 
 
