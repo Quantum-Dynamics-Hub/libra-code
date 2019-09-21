@@ -64,14 +64,13 @@ addons:
 
 # Build your code e.g. by calling make
 script:
-  - ls -a
   - pwd
   - mkdir _build3
   - cd _build3
   - cmake -DBOOST_ROOT=$HOME/miniconda2/envs/py37 ../  
   - make copy-libra-py
-  - export PYTHONPATH=$HOME/_build3/src:$PYTHONPATH
-  - export LD_LIBRARY_PATH=$HOME/_build3/src:$LD_LIBRARY_PATH
+  - export PYTHONPATH=$(pwd)/src:$PYTHONPATH
+  - export LD_LIBRARY_PATH=$(pwd)/src:$LD_LIBRARY_PATH
   - cd ../docs/SphinxDoc
   - make html
 
