@@ -45,4 +45,6 @@ deploy:
   local_dir: $TRAVIS_BUILD_DIR/docs/SphinxDoc/build/html
   github_token: $GITHUB_TOKEN # Set in travis-ci.org dashboard
   on:
-    branch: master
+    branch: 
+      - master
+      - devel
