@@ -236,8 +236,8 @@ def add_matrix2file(filename, t, X):
     f = open(filename, "a")
     
     line = "%5.3f" % (t)
-    for a in xrange(nrows):
-        for b in xrange(ncols):
+    for a in range(nrows):
+        for b in range(ncols):
             line = line + " %8.5f" % (X.get(a,b))
     line = line + "\n"
     
@@ -271,8 +271,8 @@ def add_cmatrix2file(filename, t, X):
     f = open(filename, "a")
     
     line = "%5.3f" % (t)
-    for a in xrange(nrows):
-        for b in xrange(ncols):
+    for a in range(nrows):
+        for b in range(ncols):
             line = line + " %8.5f %8.5f" % (X.get(a,b).real, X.get(a,b).imag)
     line = line + "\n"
     
@@ -280,4 +280,34 @@ def add_cmatrix2file(filename, t, X):
     f.close()
 
 
+
+def list2bin(x, name):
+    """
+    Converts a list of doubles into binary file    
+    
+    """
+    sz = len(x)
+    X = MATRIX(sz,1)
+    
+    for i in xrange(sz):
+        X.set(i,0, x[i])
+    
+    X.bin_dump(name+"_%i" % (sz))
+
+
+def bin2list(name, sz):
+    """
+    Read in a binary file into a matrix and then
+    convert it to a Python list
+    
+    """
+    
+    X = MATRIX(sz, 1)
+    X.bin_load(name+"_%i" % (sz))
+        
+    x = []
+    for i in xrange(sz):
+        x.append(X.get(i,0))
+    
+    return x
 

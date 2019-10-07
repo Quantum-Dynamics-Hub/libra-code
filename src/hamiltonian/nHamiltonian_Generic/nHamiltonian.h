@@ -254,15 +254,17 @@ public:
   ~nHamiltonian();    
 
   ///< Tree management utilities
-
   void set_levels(int lvl_);            ///< Updates node levels downstream
+  void add_new_children(int _ndia, int _nadi, int _nnucl, int nchildren);
   void add_child(nHamiltonian& child);  ///< Associate an existing Hamiltonian with the present one
                                         ///< to become its child
   vector<int> get_full_id();            ///< Entire path of the note in the tree
   vector<nHamiltonian*> get_branches(int target_level);
 
 
-  void init_all(int lvl);
+  void init_all(int der_lvl);
+  void init_all(int der_lvl, int lvl);
+
 
   ///< Setters:
   // Diabatic

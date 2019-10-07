@@ -190,14 +190,22 @@ nHamiltonian::~nHamiltonian(){
 }
 
 
-void nHamiltonian::init_all(int lvl){ 
+void nHamiltonian::init_all(int der_lvl){ 
+
+  init_all(der_lvl, 0);
+
+}
+
+void nHamiltonian::init_all(int der_lvl, int lvl){ 
 /**
   This function will allocate memory for all the variables - in case, we don't need to 
   set them up in Python. This may lead to a simpler and cleaner Python code and may
   also be a bit more efficient in terms of performance
 */
 
-  if(lvl>=0){
+  if(level==lvl){
+
+  if(der_lvl>=0){
     init_ovlp_dia();
     init_ham_dia();
     init_nac_dia();
@@ -211,7 +219,7 @@ void nHamiltonian::init_all(int lvl){
     init_cum_phase_corr();
   }
 
-  if(lvl>=1){
+  if(der_lvl>=1){
     init_dc1_dia();
     init_d1ham_dia();
 
@@ -219,9 +227,26 @@ void nHamiltonian::init_all(int lvl){
     init_d1ham_adi();
   }
 
-  if(lvl>=2){
+  if(der_lvl>=2){
     init_d2ham_dia();
     init_d2ham_adi();
+  }
+
+
+  }// level == lvl
+
+  else if(lvl>level){
+  
+    for(int i=0;i<children.size();i++){
+      children[i]->init_all(der_lvl, lvl);
+    }
+
+  }// lvl >level
+
+  else{
+    cout<<"WARNING in nHamiltonian::init_all\n"; 
+    cout<<"Can not run evaluation of function in the parent Hamiltonian from the\
+     child node\n";    
   }
 
 
@@ -259,6 +284,29 @@ void nHamiltonian::add_child(nHamiltonian& child){
   child.set_levels(level+1);
 
 }
+
+
+void nHamiltonian::add_new_children(int _ndia, int _nadi, int _nnucl, int nchildren){
+/**
+  This function creates the sub-Hamiltonians of a given one and makes them children of 
+  the current-level Hamiltonian
+*/
+ 
+  int starting_indx = children.size();
+
+  for(int i=0; i<nchildren; i++){
+
+    children.push_back( new nHamiltonian(_ndia, _nadi, _nnucl) );
+
+    children[starting_indx + i]->id = starting_indx + i;
+    children[starting_indx + i]->parent = this;
+    children[starting_indx + i]->set_levels(level+1);
+
+  }
+
+}
+
+
 
 vector<int> nHamiltonian::get_full_id(){
 

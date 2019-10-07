@@ -27,6 +27,7 @@
 #include "Energy_and_Forces.h"
 #include "electronic/libelectronic.h"
 #include "Dynamics.h"
+#include "dyn_control_params.h"
 
 
 /// liblibra namespace
@@ -35,243 +36,8 @@ namespace liblibra{
 /// libdyn namespace
 namespace libdyn{
 
-struct dyn_control_params{
 
-  /**
-    The representation to run the Ehrenfest : 0 - diabatic, 1 - adiabatic
-  */
-  int rep;
-
-
-  /** 
-   The representation of the Hamiltonian update: 0 - diabatic, 1 - adiabatic
-   this is the representation in which the computed properties are assumed to be
-   for instance, we may have set it to 1, to read the adiabatic energies and couplings,
-   to bypass the diabatic-to-adiabatic transformation, which may be useful in some atomistic
-   calculations, or with the NBRA
-  */
-  int ham_rep;
-
-
-  /**
-   The representation to run the SH : 0 - diabatic, 1 - adiabatic
-  */
-  int rep_sh;
-
-
-  /** 
-    The representation to compute LZ probabilitieis: 0 - diabatic, 1- adiabatic 
-  */
-  int rep_lz;
-
-
-  /** 
-    Formula for computing SH probabilities: 0 - FSSH, 1 - GFSH, 2 - MSSH
-  */
-  int tsh_method;
-
-
-  /** 
-    How to compute forces in the dynamics: 
-      0 - don't compute forces at all - e.g. we do not really need them
-      1 - state-specific  as in the TSH or adiabatic (including adiabatic excited states)
-      2 - Ehrenfest
-  */
-  int force_method;
-
-  /** 
-    How to update NACs and vibronic Hamiltonian before electronic TD-SE propagation
-      0 - don't update them (e.g. for simplest NAC)
-      1 - update according to changed momentum and existing derivative couplings
-  */
-  int nac_update_method;
-
-
-  /** 
-    In which representation to copute forces: 
-      0 - diabatic
-      1 - adiabatic
-  */
-  int rep_force;
-
-
-  /**
-    Whether to scale the SH probabilities by the Boltzmann factor: 0 - do not scale, 1 - scale                            
-  */
-  int use_boltz_factor;
-
-  
-  /**
-    Temperature of the system
-  */ 
-  double Temperature;
-
-
-  /** 
-    Do not revert momenta at the frustrated hops, 1 - do revert the momenta
-  */
-  int do_reverse;
-
-
-  /** 
-    How to rescale momenta if the hops are successful:
-      0 - rescale along the directions of derivative couplings
-      1 - rescale in the diabatic basis - don't care about the velocity directions, just a uniform rescaling,
-      2 - do not rescale, as in the NBRA.  
-  */
-  int vel_rescale_opt;
-
-
-  /** 
-    integration timestep [units: a.u., default: 41 a.u. = 1 fs]
-  */
-  double dt;
-
-  /** 
-    Option to perform the phase correction: 0 - no, 1 - yes (default)
-  */
-  int do_phase_correction;
-
-
-  /** 
-    State tracking algorithm:
-      0 - no state tracking
-      1 - method of Kosuke Sato (may fail by getting trapped into an infinite loop)
-      2 - Munkres-Kuhn (Hungarian) algorithm (default)
-  */
-  int state_tracking_algo;
-
-  /** 
-    Munkres-Kuhn alpha (selects the range of orbitals included in reordering) [default: 0.0]
-  */
-  double MK_alpha;
-
-  /**
-    Munkres-Kuhn verbosity: 0 - no extra output (default), 1 - details
-  */
-  int MK_verbosity;
-
-
-  /**
-    Active electronic state used in the adiabatic MD: 0 - ground state, 1 - first excited, and so on
-  */
-  int act_state; 
-
-
-  /**
-    A selector of a method to couple the trajectories in this ensemble:
-      0 - no coupling, 1 - ETHD, 2 - ETHD3 (experimental), 22 - another flavor of ETHD3 (experimental)
-  */
-  int entanglement_opt;
-
-
-  /**
-    Gaussian exponents that dresses up the trajectories in the ETHD3 method
-    in the coordinate space, that is   ~exp(-alpha*(R-R0)^2 )
-  */
-  double ETHD3_alpha;
-
-
-  /**
-    Gaussian exponents that dresses up the trajectories in the ETHD3 method
-    in the momentum space, that is   ~exp(-beta*(P-P0)^2 )
-  */
-  double ETHD3_beta;
-
-
-
-};
-
-void set_defaults(dyn_control_params& prms){
-/**
-
-  This function initializes the default values of control parameters
-
-*/
-
-  prms.rep = 1;
-  prms.ham_rep = 0;
-  prms.rep_sh = 1;
-  prms.rep_lz = 0;
-  prms.tsh_method = 0;
-  prms.force_method = 1;
-  prms.nac_update_method = 1;
-  prms.rep_force = 1;
-  prms.use_boltz_factor = 0;
-  prms.Temperature = 300.0;
-  prms.do_reverse = 1;
-  prms.vel_rescale_opt = 0;
-  prms.dt = 41.0;
-  prms.do_phase_correction = 1;
-  prms.state_tracking_algo = 2;
-  prms.MK_alpha = 0.0;
-  prms.MK_verbosity = 0;
-
-  prms.act_state = 0; 
-
-  prms.entanglement_opt = 0;
-  prms.ETHD3_alpha = 1.0;
-  prms.ETHD3_beta = 1.0;
-
-
-}
-
-void set_parameters(dyn_control_params& prms, boost::python::dict params){
-/**
-  Extract the parameters from the input dictionary
-*/
-
-  std::string key;
-  for(int i=0;i<len(params.values());i++){
-    key = extract<std::string>(params.keys()[i]);
-
-
-    if(key=="rep") { prms.rep = extract<int>(params.values()[i]); }
-    else if(key=="ham_rep") { prms.ham_rep = extract<int>(params.values()[i]);   }
-    else if(key=="rep_sh") { prms.rep_sh = extract<int>(params.values()[i]);  }
-    else if(key=="rep_lz") { prms.rep_lz = extract<int>(params.values()[i]);  }
-    else if(key=="tsh_method") { prms.tsh_method = extract<int>(params.values()[i]);  }
-    else if(key=="force_method") { prms.force_method = extract<int>(params.values()[i]);  }
-    else if(key=="nac_update_method") { prms.nac_update_method = extract<int>(params.values()[i]);  }
-    else if(key=="rep_force") { prms.rep_force = extract<int>(params.values()[i]);  }
-    else if(key=="use_boltz_factor") { prms.use_boltz_factor = extract<int>(params.values()[i]);  }
-    else if(key=="Temperature") { prms.Temperature = extract<double>(params.values()[i]);  }
-    else if(key=="do_reverse") { prms.do_reverse = extract<int>(params.values()[i]);  }
-    else if(key=="vel_rescale_opt") { prms.vel_rescale_opt = extract<int>(params.values()[i]);  }
-
-    else if(key=="dt") { prms.dt = extract<double>(params.values()[i]);  }
-
-    // Phase correction
-    else if(key=="do_phase_correction") { prms.do_phase_correction = extract<int>(params.values()[i]);  }
-
-    // State tracking options
-    else if(key=="state_tracking_algo"){  prms.state_tracking_algo = extract<int>(params.values()[i]);  }
-    else if(key=="MK_alpha") { prms.MK_alpha = extract<double>(params.values()[i]);  }
-    else if(key=="MK_verbosity") { prms.MK_verbosity = extract<int>(params.values()[i]);  }
-
-    // Adiabatic dynamics 
-    else if(key=="act_state"){ prms.act_state = extract<int>(params.values()[i]); }
-
-    // Trajectory coupling
-    else if(key=="entanglement_opt"){ prms.entanglement_opt = extract<int>(params.values()[i]); }
-    else if(key=="ETHD3_alpha") { prms.ETHD3_alpha = extract<double>(params.values()[i]);   }
-    else if(key=="ETHD3_beta") { prms.ETHD3_beta = extract<double>(params.values()[i]);   }
-
-
-  }
-
-}
-
-void sanity_check(dyn_control_params& prms){
-
-  if(prms.state_tracking_algo==0 || prms.state_tracking_algo==1 ||
-     prms.state_tracking_algo==2 || prms.state_tracking_algo==3){ ; ; }
-  else{
-    cout<<"Error in tsh1: state_tracking_algo = "<<prms.state_tracking_algo<<" is not allowed\n";
-    exit(0);
-  }
-
-}
+namespace bp = boost::python;
 
 
 MATRIX aux_get_forces(dyn_control_params& prms, nHamiltonian& ham, vector<int>& act_states, CMATRIX& amplitudes){
@@ -325,8 +91,17 @@ MATRIX aux_get_forces(dyn_control_params& prms, nHamiltonian& ham, vector<int>& 
 }
 
 
+MATRIX aux_get_forces(bp::dict params, nHamiltonian& ham, vector<int>& act_states, CMATRIX& amplitudes){
 
-void allocate_tmp(CMATRIX** Uprev, nHamiltonian& ham){
+  dyn_control_params prms;
+  prms.set_parameters(params);
+
+  return aux_get_forces(prms, ham, act_states, amplitudes);
+  
+}
+
+
+void aux_get_transforms(CMATRIX** Uprev, nHamiltonian& ham){
 
   // For adiabatic representation only:
   // Save the previous orbitals info - in case we need to
@@ -334,9 +109,7 @@ void allocate_tmp(CMATRIX** Uprev, nHamiltonian& ham){
 
   int ntraj = ham.children.size();
 
-  Uprev = new CMATRIX*[ntraj];
   for(int traj=0; traj<ntraj; traj++){
-    Uprev[traj] = new CMATRIX(ham.nadi, ham.nadi);
     *Uprev[traj] = ham.children[traj]->get_basis_transform();  
   }
 
@@ -419,62 +192,39 @@ void do_phase_correction(dyn_control_params& prms, nHamiltonian& ham,
 }
 
 void update_Hamiltonian_q(dyn_control_params& prms, MATRIX& q, nHamiltonian& ham, 
-                          vector<int>& act_states, CMATRIX& C, 
-                          bp::object py_funct, bp::object params, Random& rnd){
+                          bp::object py_funct, bp::object model_params){
 
   /**
     Update of the vibronic Hamiltonian in response to changed q
   */
 
-  CMATRIX** Uprev; 
-  int ntraj = C.n_cols;    
-  int traj;
-
-
-  //============ Update the Hamiltonian object =============
-  // In case, we may need phase correction & state reordering
-  // prepare the temporary files
-  if(prms.rep==1){      
-    if(prms.do_phase_correction || prms.state_tracking_algo >0){
-      allocate_tmp(Uprev, ham);
-    }
-  }// rep == 1
-
-
   //------ Update the internals of the Hamiltonian object --------
   // We call the external function that would do the calculations
-  if(prms.rep==0){      
-    if(prms.ham_rep==0){
-      ham.compute_diabatic(py_funct, bp::object(q), params, 1);
+  if(prms.rep_tdse==0){      
+    if(prms.rep_ham==0){
+      ham.compute_diabatic(py_funct, bp::object(q), model_params, 1);
     }
   }
-  if(prms.rep==1){      
-    if(prms.ham_rep==0){
-      ham.compute_diabatic(py_funct, bp::object(q), params, 1);
+  if(prms.rep_tdse==1){      
+    if(prms.rep_ham==0){
+      ham.compute_diabatic(py_funct, bp::object(q), model_params, 1);
       ham.compute_adiabatic(1, 1);
     }
-    else if(prms.ham_rep==1){
-      ham.compute_adiabatic(py_funct, bp::object(q), params, 1);
+    else if(prms.rep_ham==1){
+      ham.compute_adiabatic(py_funct, bp::object(q), model_params, 1);
     }
   }
 
+}
 
-  // Apply phase correction and state reordering as needed
-  if(prms.rep==1){
-    if(prms.state_tracking_algo > 0){
-      do_reordering(prms, ham, act_states, C, Uprev, rnd);
-    }
 
-    if(prms.do_phase_correction){
-      do_phase_correction(prms, ham, act_states, C, Uprev);
-    }
+void update_Hamiltonian_q(bp::dict prms, MATRIX& q, nHamiltonian& ham, 
+                          bp::object py_funct, bp::object model_params){
 
-    if(prms.do_phase_correction || prms.state_tracking_algo >0 ){
-      for(traj=0; traj<ntraj; traj++){  delete Uprev[traj]; }
-      delete Uprev;
-    }
+  dyn_control_params _prms;
+  _prms.set_parameters(prms);
 
-  }// rep == 1
+  update_Hamiltonian_q(_prms, q, ham, py_funct, model_params);
 
 }
 
@@ -487,7 +237,7 @@ void update_Hamiltonian_p(dyn_control_params& prms, nHamiltonian& ham,
   */
 
   // Update NACs and Hvib for all trajectories
-  if(prms.rep==0){  
+  if(prms.rep_tdse==0){  
 
     if(prms.nac_update_method==0){ ;;  }
     else if(prms.nac_update_method==1){
@@ -495,25 +245,37 @@ void update_Hamiltonian_p(dyn_control_params& prms, nHamiltonian& ham,
       ham.compute_hvib_dia(1);
     }
   }
-  else if(prms.rep==1){  
+  else if(prms.rep_tdse==1){  
 
     if(prms.nac_update_method==0){ ;;  }
     else if(prms.nac_update_method==1){
       ham.compute_nac_adi(p, invM, 0, 1); 
       ham.compute_hvib_adi(1);
     }
-
   }
+}
+
+
+void update_Hamiltonian_p(bp::dict prms, nHamiltonian& ham, MATRIX& p, MATRIX& invM){
+
+  dyn_control_params _prms;
+  _prms.set_parameters(prms);
+
+  update_Hamiltonian_p(_prms, ham, p, invM);
 
 }
 
 
-CMATRIX transform_amplitudes(dyn_control_params& prms, CMATRIX& C, nHamiltonian& ham){
+
+CMATRIX transform_amplitudes(int rep_in, int rep_out, CMATRIX& C, nHamiltonian& ham){
 /**
   This function converts the amplitudes from one representation to another
 
   The reason: we may be solving TD-SE (computing forces) in one representation
   but compute the hopping probabilities in another one.
+
+  This function assumes we already have the basis transformation matrix in ham object 
+  computed/updated
 
 */
 
@@ -526,23 +288,23 @@ CMATRIX transform_amplitudes(dyn_control_params& prms, CMATRIX& C, nHamiltonian&
   /// C - the basis in which the electron-nuclear propagation is done
   /// Coeff - the basis in which SH is done
 
-  if(prms.rep==0){   // Propagation in the diabatic basis (C - is diabatic)
-    if(prms.rep_sh==0){ Coeff = C; }  // SH in the diabatic basis (Coeff - diabatic)
-    else if(prms.rep_sh==1){  ham.ampl_dia2adi(C, Coeff, 0, 1);  } // SH in the adiabatic basis (Coeff - adiabatic)
+  if(rep_in==0){                  // Input in the diabatic basis
+    if(rep_out==0){ Coeff = C; }  // Output in the diabatic basis too
+    else if(rep_out==1){  ham.ampl_dia2adi(C, Coeff, 0, 1);  } // Output in the adiabatic basis
   }
-  else if(prms.rep==1){   // Propagation in the adiabatic basis (C - is adiabatic)
-    if(prms.rep_sh==0){  ham.ampl_adi2dia(Coeff, C, 0, 1); }  // SH in the diabatic basis (Coeff - diabatic)
-    else if(prms.rep_sh==1){ Coeff = C;  } // SH in the adiabatic basis (Coeff - adiabatic)
+  else if(rep_in==1){   // Input in the adiabatic basis 
+    if(rep_out==0){  ham.ampl_adi2dia(Coeff, C, 0, 1); }  // Output in the diabatic basis 
+    else if(rep_out==1){ Coeff = C;  } // Output in the diabatic basis too
   }
 
   return Coeff;
 }
 
 
+
 void do_surface_hopping(dyn_control_params& prms,
               MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
-              nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, 
-              vector<MATRIX>& prev_ham_dia, Random& rnd){
+              nHamiltonian& ham, vector<MATRIX>& prev_ham_dia, Random& rnd){
 
 
   int ndof = q.n_rows;
@@ -591,7 +353,7 @@ void do_surface_hopping(dyn_control_params& prms,
     }
 
     else{
-      cout<<"Error in tsh1: tsh_method can be 0, 1, 2, or 3. Other values are not defined\n";
+      cout<<"Error in tsh1: tsh_method can be -1, 0, 1, 2, or 3. Other values are not defined\n";
       cout<<"Exiting...\n";
       exit(0);
     }
@@ -605,11 +367,23 @@ void do_surface_hopping(dyn_control_params& prms,
   //======== Decide whether to accept the proposed hops and if so what to do with the nuclei 
   act_states = apply_transition1(p, invM, ham, act_states, fstates, prms.vel_rescale_opt, prms.do_reverse, 1); 
 
+}
+
+
+void do_surface_hopping(bp::dict prms,
+              MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
+              nHamiltonian& ham, vector<MATRIX>& prev_ham_dia, Random& rnd){
+
+  dyn_control_params _prms;
+  _prms.set_parameters(prms);
+
+  do_surface_hopping(_prms, q, p, invM, C, act_states, ham, prev_ham_dia, rnd);
 
 }
 
+
 void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
-              nHamiltonian& ham, bp::object py_funct, bp::object params, boost::python::dict params1, Random& rnd){
+              nHamiltonian& ham, bp::object py_funct, bp::dict params, bp::dict dyn_params, Random& rnd){
 
 /**
   \brief One step of the TSH algorithm for electron-nuclear DOFs for one trajectory
@@ -633,19 +407,18 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int
 
 */
 
+  dyn_control_params prms;
+  prms.set_parameters(dyn_params);
+
+
   int ndof = q.n_rows;
   int ntraj = q.n_cols;
   int nst = C.n_rows;    
   int traj, dof;
 
-
-  dyn_control_params prms;
-  set_defaults(prms);
-  set_parameters(prms, params1);
-  sanity_check(prms);
-
-
+  CMATRIX** Uprev; 
   vector<MATRIX> prev_ham_dia(ntraj, MATRIX(nst, nst));
+
 
   if(prms.tsh_method == 3){
     for(traj=0; traj<ntraj; traj++){
@@ -653,10 +426,25 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int
     }
   }
 
+  //============ Update the Hamiltonian object =============
+  // In case, we may need phase correction & state reordering
+  // prepare the temporary files
+  if(prms.rep_tdse==1){      
+    if(prms.do_phase_correction || prms.state_tracking_algo > 0){
+
+      Uprev = new CMATRIX*[ntraj];
+      for(traj=0; traj<ntraj; traj++){  Uprev[traj] = new CMATRIX(nst, nst);  }
+
+      aux_get_transforms(Uprev, ham);
+    }
+  }// rep == 1
+
+
+
  
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
-  propagate_electronic(0.5*prms.dt, C, ham.children, prms.rep);   
+  propagate_electronic(0.5*prms.dt, C, ham.children, prms.rep_tdse);   
 
   //============== Nuclear propagation ===================
  
@@ -669,9 +457,29 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int
     }
   }
 
+
   // Recompute the matrices at the new geometry and apply any
   // necessary fixes 
-  update_Hamiltonian_q(prms, q, ham, act_states, C, py_funct, params, rnd);
+  update_Hamiltonian_q(prms, q, ham, py_funct, params);
+
+
+
+  // Apply phase correction and state reordering as needed
+  if(prms.rep_tdse==1){
+    if(prms.state_tracking_algo > 0){
+      do_reordering(prms, ham, act_states, C, Uprev, rnd);
+    }
+
+    if(prms.do_phase_correction){
+      do_phase_correction(prms, ham, act_states, C, Uprev);
+    }
+
+    if(prms.do_phase_correction || prms.state_tracking_algo >0 ){
+      for(traj=0; traj<ntraj; traj++){  delete Uprev[traj]; }  delete Uprev;
+    }
+
+  }// rep_tdse == 1
+
 
   // Update the Ehrenfest forces for all trajectories
   //tsh_indx2vec(ham, states, act_states);
@@ -682,7 +490,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
   update_Hamiltonian_p(prms, ham, p, invM);
-  propagate_electronic(0.5*prms.dt, C, ham.children, prms.rep);   
+  propagate_electronic(0.5*prms.dt, C, ham.children, prms.rep_tdse);   
 
 
 
@@ -690,11 +498,12 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int
 
   // To be able to compute transition probabilities, compute the corresponding amplitudes
   CMATRIX Coeff(nst,ntraj); 
-  Coeff = transform_amplitudes(prms, C, ham);
+  Coeff = transform_amplitudes(prms.rep_tdse, prms.rep_sh, C, ham);
 
   // Use them to do the hopping
-  do_surface_hopping(prms, q, p, invM, Coeff, act_states, ham, py_funct, params, params1, prev_ham_dia, rnd);
-
+  if(prms.tsh_method >=0){
+    do_surface_hopping(prms, q, p, invM, Coeff, act_states, ham, prev_ham_dia, rnd);
+  }
 
 }
 

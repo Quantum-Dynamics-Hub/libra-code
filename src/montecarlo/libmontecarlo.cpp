@@ -19,8 +19,8 @@
 #include <stdlib.h>
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-using namespace boost::python;
-namespace bp = boost::python;
+
+
 
 /// liblibra namespace
 namespace liblibra{
@@ -30,7 +30,8 @@ using namespace liblinalg;
 /// libmontecarlo namespace
 namespace libmontecarlo{
 
-
+using namespace boost::python;
+namespace bp = boost::python;
 
 void export_montecarlo_objects(){
 /** 

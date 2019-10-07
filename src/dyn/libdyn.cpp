@@ -417,6 +417,44 @@ void export_permutation_objects(){
 
 }
 
+void export_dyn_control_params_objects(){
+
+  // Arbitrary wavefunction
+  void (dyn_control_params::*expt_sanity_check_v1)(boost::python::dict params) = &dyn_control_params::set_parameters;
+  void (dyn_control_params::*expt_set_parameters_v1)(boost::python::dict params) = &dyn_control_params::set_parameters;
+
+
+  class_<dyn_control_params>("dyn_control_params",init<>())
+      .def("__copy__", &generic__copy__<dyn_control_params>)
+      .def("__deepcopy__", &generic__deepcopy__<dyn_control_params>)
+
+      .def_readwrite("rep_tdse", &dyn_control_params::rep_tdse)
+      .def_readwrite("rep_ham", &dyn_control_params::rep_ham)
+      .def_readwrite("rep_sh", &dyn_control_params::rep_sh)
+      .def_readwrite("rep_lz", &dyn_control_params::rep_lz)
+      .def_readwrite("tsh_method", &dyn_control_params::tsh_method)
+      .def_readwrite("force_method", &dyn_control_params::force_method)
+      .def_readwrite("nac_update_method", &dyn_control_params::nac_update_method)
+      .def_readwrite("rep_force", &dyn_control_params::rep_force)
+      .def_readwrite("use_boltz_factor", &dyn_control_params::use_boltz_factor)
+      .def_readwrite("Temperature", &dyn_control_params::Temperature)
+      .def_readwrite("do_reverse", &dyn_control_params::do_reverse)
+      .def_readwrite("vel_rescale_opt", &dyn_control_params::vel_rescale_opt)
+      .def_readwrite("dt", &dyn_control_params::dt)
+      .def_readwrite("do_phase_correction", &dyn_control_params::do_phase_correction)
+      .def_readwrite("state_tracking_algo", &dyn_control_params::state_tracking_algo)
+      .def_readwrite("MK_alpha", &dyn_control_params::MK_alpha)
+      .def_readwrite("MK_verbosity", &dyn_control_params::MK_verbosity)
+      .def_readwrite("entanglement_opt", &dyn_control_params::entanglement_opt)
+      .def_readwrite("ETHD3_alpha", &dyn_control_params::ETHD3_alpha)
+      .def_readwrite("ETHD3_beta", &dyn_control_params::ETHD3_beta)
+
+
+      .def("sanity_check", expt_sanity_check_v1)
+      .def("set_parameters", expt_set_parameters_v1)
+  ;
+}
+
 
 void export_Dyn_objects(){
 /** 
@@ -452,6 +490,7 @@ void export_Dyn_objects(){
 
   export_permutation_objects();
 
+  export_dyn_control_params_objects();
 
 
   double (*expt_compute_kinetic_energy_v1)(MATRIX& p, MATRIX& invM) = &compute_kinetic_energy;
@@ -513,11 +552,54 @@ void export_Dyn_objects(){
   def("tsh2a", expt_tsh2a_v1);
 
 
+  //============= Dynamics.cpp ======================
+
+  void (*expt_update_Hamiltonian_q_v1)
+  (dyn_control_params& prms, MATRIX& q, nHamiltonian& ham, 
+   bp::object py_funct, bp::object model_params) = &update_Hamiltonian_q;
+
+  void (*expt_update_Hamiltonian_q_v2)
+  (bp::dict prms, MATRIX& q, nHamiltonian& ham, 
+   bp::object py_funct, bp::object model_params) = &update_Hamiltonian_q;
+
+  def("update_Hamiltonian_q", expt_update_Hamiltonian_q_v1);
+  def("update_Hamiltonian_q", expt_update_Hamiltonian_q_v2);
+
+
+  void (*expt_update_Hamiltonian_p_v1)
+  (dyn_control_params& prms, nHamiltonian& ham, MATRIX& p, MATRIX& invM) = &update_Hamiltonian_p;
+
+  void (*expt_update_Hamiltonian_p_v2)
+  (bp::dict prms, nHamiltonian& ham, MATRIX& p, MATRIX& invM) = &update_Hamiltonian_p;
+
+  def("update_Hamiltonian_p", expt_update_Hamiltonian_p_v1);
+  def("update_Hamiltonian_p", expt_update_Hamiltonian_p_v2);
+
+
+  CMATRIX (*expt_transform_amplitudes_v1)
+  (int rep_in, int rep_out, CMATRIX& C, nHamiltonian& ham) = &transform_amplitudes;
+
+  def("transform_amplitudes", expt_transform_amplitudes_v1);
+
+
+  void (*expt_do_surface_hopping_v1)
+  (dyn_control_params& prms, MATRIX& q, MATRIX& p, MATRIX& invM,
+   CMATRIX& C, vector<int>& act_states, nHamiltonian& ham, 
+   vector<MATRIX>& prev_ham_dia, Random& rnd) = &do_surface_hopping;
+
+  void (*expt_do_surface_hopping_v2)
+  (bp::dict prms, MATRIX& q, MATRIX& p, MATRIX& invM, 
+   CMATRIX& C, vector<int>& act_states, nHamiltonian& ham,
+   vector<MATRIX>& prev_ham_dia, Random& rnd) = &do_surface_hopping;
+
+  def("do_surface_hopping", expt_do_surface_hopping_v1);
+  def("do_surface_hopping", expt_do_surface_hopping_v2);
+
 
   void (*expt_compute_dynamics_v1)
   (MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
-   nHamiltonian& ham, bp::object py_funct, bp::object params, 
-   boost::python::dict params1, Random& rnd) = &compute_dynamics;
+   nHamiltonian& ham, bp::object py_funct, bp::dict model_params, 
+   bp::dict dyn_params, Random& rnd) = &compute_dynamics;
   def("compute_dynamics", expt_compute_dynamics_v1);
 
 

@@ -19,8 +19,6 @@
 #include <stdlib.h>
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-using namespace boost::python;
-namespace bp = boost::python;
 
 /// liblibra namespace
 namespace liblibra{
@@ -29,6 +27,9 @@ using namespace liblinalg;
 
 /// libopt namespace
 namespace libopt{
+
+using namespace boost::python;
+namespace bp = boost::python;
 
 
 

@@ -215,7 +215,7 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     # Parameters and dimensions
     critical_params = [ "prefix" ] 
     default_params = { "rep":1, "nsteps":1, "dt":1.0*units.fs2au, "do_phase_correction":1, "state_tracking_algo":2,
-                       "MK_alpha":0.0, "MK_verbosity":0, "file_output_level":1, "tsh_version":2 }
+                       "MK_alpha":0.0, "MK_verbosity":0, "file_output_level":1, "tsh_version":2, "tol":1e-3 }
     comn.check_input(dyn_params, default_params, critical_params)
         
     prefix = dyn_params["prefix"]    
@@ -309,7 +309,7 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     ham.phase_corr_ovlp_tol = tol
 
     ham1 = [] 
-    for tr in xrange(ntraj):
+    for tr in range(ntraj):
         ham1.append( nHamiltonian(ndia, nadi, nnucl) )        
         ham1[tr].init_all(2)
         ham1[tr].phase_corr_ovlp_tol = tol
@@ -322,7 +322,7 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
     ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
     
     U = []
-    for tr in xrange(ntraj):
+    for tr in range(ntraj):
         U.append(ham1[tr].get_basis_transform())
 
     if rep==0:
@@ -335,7 +335,7 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
 
                 
     # Do the propagation
-    for i in xrange(nsteps):
+    for i in range(nsteps):
     
         #============ Compute and output properties ===========        
         if rep==0:
@@ -385,7 +385,7 @@ def run_tsh(_q, _p, _iM, _Cdia, _Cadi, states, model_params, dyn_params, compute
             add_cmatrix2file("%s/C_dia.txt" % (prefix), i*dt, Cdia )
             add_intlist2file("%s/states.txt" % (prefix), i*dt, states )        
     
-        for tr in xrange(ntraj):            
+        for tr in range(ntraj):            
             x = ham1[tr].get_basis_transform()
             St = U[tr] * x.H()             
             U[tr] = CMATRIX(x)

@@ -22,7 +22,6 @@
 #include "../math_linalg/liblinalg.h"
 #include "../io/libio.h"
 
-namespace bp = boost::python;
 
 
 /// liblibra namespace
@@ -34,6 +33,7 @@ using namespace libio;
 /// libopt namespace 
 namespace libopt{
 
+namespace bp = boost::python;
 
 MATRIX grad_descent(bp::object grad_function, MATRIX& dof, bp::object funct_params, double grad_tol, double step_size, int max_steps);
 

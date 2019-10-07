@@ -23,7 +23,6 @@
 #include "../math_random/librandom.h"
 #include "../io/libio.h"
 
-namespace bp = boost::python;
 
 
 /// liblibra namespace
@@ -36,6 +35,7 @@ using namespace libio;
 /// libmontecarlo namespace 
 namespace libmontecarlo{
 
+namespace bp = boost::python;
 
 vector<MATRIX> metropolis_gau(Random& rnd, bp::object target_distribution, MATRIX& dof, bp::object distribution_params, 
                               int sample_size, int start_sampling, double gau_var);

@@ -257,6 +257,9 @@ void export_nhamiltonian_generic_objects(){
   = &nHamiltonian::add_ethd3_adi;
 
 
+  void (nHamiltonian::*expt_init_all_v1)(int der_lvl) = &nHamiltonian::init_all;
+  void (nHamiltonian::*expt_init_all_v2)(int der_lvl, int lvl) = &nHamiltonian::init_all;
+
 
 
   class_<nHamiltonian>("nHamiltonian",init<int,int,int>())
@@ -274,9 +277,11 @@ void export_nhamiltonian_generic_objects(){
 
       .def("set_levels", &nHamiltonian::set_levels)
       .def("add_child", &nHamiltonian::add_child)
+      .def("add_new_children", &nHamiltonian::add_new_children)
       .def("get_full_id", &nHamiltonian::get_full_id)
 
-      .def("init_all", &nHamiltonian::init_all)
+      .def("init_all", expt_init_all_v1)
+      .def("init_all", expt_init_all_v2)
 
       .def("init_ovlp_dia", &nHamiltonian::init_ovlp_dia)
       .def("set_ovlp_dia_by_ref", &nHamiltonian::set_ovlp_dia_by_ref)

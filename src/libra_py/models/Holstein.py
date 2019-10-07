@@ -147,3 +147,81 @@ def get_Holstein_set1():
 
     return params
    
+
+
+
+
+
+def Holstein2(q, params, full_id):
+    """   
+    n-state model 
+
+    H_nn = E_n + 0.5*k*(x-x_n)^2 
+        
+    H_n,n+1 = H_n+1,n = V, 
+    H_n,m = 0, otherwise
+
+    Args: 
+        q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1
+        params ( dictionary ): model parameters
+
+            * **params["E_n"]** ( list of doubles ):  [ default: [0.0, 0.001, 0.001, 0.001], units: Ha]
+            * **params["x_n"]** ( list of doubles ):  [ default: [0.0, 1.0, 1.0, 1.0], units: Bohr]
+            * **params["k_n"]** ( list of doubles ):  [ default: [0.001, 0.001, 0.001, 0.001], units: Ha/Bohr^2]
+            * **params["V"]**   ( double ):  [ default: 0.001, units: Ha]
+
+    Returns:       
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(4,4) ): diabatic Hamiltonian 
+            * obj.ovlp_dia ( CMATRIX(4,4) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of 1 CMATRIX(4,4) objects ): 
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of 1 CMATRIX(4,4) objects ): derivative coupling in the diabatic basis [ zero ]
+ 
+    """
+
+    critical_params = ["E_n", "x_n", "k_n" ] 
+    default_params = { "V":0.001 }
+    comn.check_input(params, default_params, critical_params)
+
+    E_n = params["E_n"]
+    x_n = params["x_n"]
+    k_n = params["k_n"]
+    V = params["V"]
+    
+    n = len(E_n)
+
+    Hdia = CMATRIX(n,n)
+    Sdia = CMATRIX(n,n)
+    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(n,n) )
+    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(n,n) )
+  
+    Id = Cpp2Py(full_id)
+    indx = Id[-1]
+
+    x = q.col(indx).get(0)
+    
+    Sdia.identity()    
+    
+    for i in xrange(n):
+        Hdia.set(i,i,  (E_n[i] + 0.5*k_n[i]*(x - x_n[i])**2) * (1.0+0.0j) )
+    
+    for i in xrange(n-1):
+        Hdia.set(i,i+1,  V * (1.0+0.0j) )
+        Hdia.set(i+1,i,  V * (1.0+0.0j) )    
+    
+    for k in [0]:
+        #  d Hdia / dR_0
+        for i in xrange(n):
+            d1ham_dia[k].set(i,i, (k_n[i] * (x - x_n[i]))*(1.0+0.0j) )    
+            
+                    
+    obj = tmp()
+    obj.ham_dia = Hdia
+    obj.ovlp_dia = Sdia
+    obj.d1ham_dia = d1ham_dia
+    obj.dc1_dia = dc1_dia
+
+    return obj
+

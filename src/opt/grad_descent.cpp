@@ -16,8 +16,6 @@
 
 #include "opt.h"
 
-namespace bp = boost::python;
-
 
 /// liblibra namespace
 namespace liblibra{
@@ -28,6 +26,7 @@ using namespace libio;
 /// libopt namespace 
 namespace libopt{
 
+namespace bp = boost::python;
 
 MATRIX grad_descent(bp::object grad_function, MATRIX& dof, bp::object funct_params, double grad_tol, double step_size, int max_steps){
 /**
