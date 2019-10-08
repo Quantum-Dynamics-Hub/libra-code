@@ -88,7 +88,7 @@ class dyn_control_params{
 
 
   /** 
-    In which representation to copute forces: 
+    In which representation to compute forces: 
       0 - diabatic
       1 - adiabatic
   */

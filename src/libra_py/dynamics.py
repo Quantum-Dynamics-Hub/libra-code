@@ -412,6 +412,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, model_params, dyn_params, c
                 - 0: diabatic representation
                 - 1: adiabatic representation [ default ]
 
+
             * **dyn_params["rep_ham"]** (int): The representation of the Hamiltonian update: 
 
                 - 0: diabatic   [ default ]
@@ -422,50 +423,81 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, model_params, dyn_params, c
                 to bypass the diabatic-to-adiabatic transformation, which may be useful in some atomistic
                 calculations, or with the NBRA
 
+
             * **dyn_params["rep_sh"]** ( int ): selects the representation which is 
                 used to perform surface hopping
 
                 - 0: diabatic representation
                 - 1: adiabatic representation [ default ]
 
+
             * **dyn_params["rep_lz"]** ( int ): The representation to compute LZ probabilitieis:
  
-                - 0: diabatic
+                - 0: diabatic [ default ] 
                 - 1: adiabatic 
+
 
             * **dyn_params["tsh_method"]** ( int ): Formula for computing SH probabilities: 
    
+                - -1: adiabatic - no hops [ default ]
                 - 0: FSSH
                 - 1: GFSH 
                 - 2: MSSH
 
+
+            * **dyn_params["force_method"]** ( int ): How to compute forces in the dynamics: 
+
+                - 0: don't compute forces at all - e.g. we do not really need them
+                - 1: state-specific  as in the TSH or adiabatic (including adiabatic excited states) [ default ]
+                - 2: Ehrenfest
+
+
+            * **dyn_params["nac_update_method"]** ( int ): How to update NACs and vibronic Hamiltonian before
+               electronic TD-SE propagation:
+
+                - 0: don't update them (e.g. for simplest NAC)
+                - 1: update according to changed momentum and existing derivative couplings [ default ]
+
+
+            * **dyn_params["rep_force"]** ( int ): In which representation to compute forces: 
+
+                - 0: diabatic
+                - 1: adiabatic [ default ]
+
+
             * **dyn_params["use_boltz_factor"]** ( int ): Whether to scale the SH probabilities
                 by the Boltzmann factor: 
  
-                - 0: do not scale
-                - 1: scale
+                - 0: do not scale [ default ]
+                - 1: scale 
 
-            * **dyn_params["Temperature"]** ( double ): Temperature of the system
+
+            * **dyn_params["Temperature"]** ( double ): Temperature of the system [ default: 300 K ]
+
 
             * **dyn_params["do_reverse"]** ( int ): what to do with velocities on frustrated hops:
 
                 - 0: do not revert momenta at the frustrated hops
-                - 1: do revert the momenta
+                - 1: do revert the momenta [ default ]
 
             * **dyn_params["vel_rescale_opt"]** ( int ): How to rescale momenta if the hops are successful:
 
                 - 0: rescale along the directions of derivative couplings
                 - 1: rescale in the diabatic basis - don't care about the
-                    velocity directions, just a uniform rescaling,
+                    velocity directions, just a uniform rescaling [ default ]
                 - 2: do not rescale, as in the NBRA.
 
-            * **dyn_params["dt"]** ( double ): the nuclear and electronic integration
-                timestep [ units: a.u. of time, default: 41.0 ]
 
             * **dyn_params["do_phase_correction"]** ( int ): the algorithm to correct phases on adiabatic states
  
                 - 0: no phase correction
                 - 1: according to our phase correction algorithm [ default: 1 ]
+
+
+            * **dyn_params["tol"]** ( double ): the minimal value of the time-overlap for considering 
+                phase corrections - no correction applied if the time-overlap is smaller in magnitude than 
+                this parameter [ default: 1e-3 ]
+ 
 
             * **dyn_params["state_tracking_algo"]** ( int ): the algorithm to keep track of the states' identities
  
@@ -473,8 +505,10 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, model_params, dyn_params, c
                 - 1: Sato
                 - 2: using the mincost, Munkres-Kuhn [ default: 2 ]
 
+
             * **dyn_params["MK_alpha"]** ( double ): Munkres-Kuhn alpha 
                 (selects the range of orbitals included in reordering) [default: 0.0]
+
 
             * **dyn_params["MK_verbosity"]** ( double ): Munkres-Kuhn verbosity: 
 
@@ -482,17 +516,37 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, model_params, dyn_params, c
                 - 1: print details
 
 
+            * **dyn_params["entanglement_opt"]** ( int ): A selector of a method to couple the trajectories in this ensemble:
+
+                - 0: no coupling across trajectories [ default ]
+                - 1: ETHD
+                - 2: ETHD3 (experimental)
+                - 22: another flavor of ETHD3 (experimental)
+
+            * **dyn_params["ETHD3_alpha"]** ( double ): Gaussian exponents that dresses up the trajectories in the ETHD3 method
+                in the coordinate space, that is   ~exp(-alpha*(R-R0)^2 ) [ default: 0.0 ]
+
+
+            * **dyn_params["ETHD3_beta"]** ( double ): Gaussian exponents that dresses up the trajectories in the ETHD3 method
+                in the coordinate space, that is   ~exp(-alpha*(P-P0)^2 ) [ default: 0.0 ]
+
+
+            * **dyn_params["dt"]** ( double ): the nuclear and electronic integration
+                timestep [ units: a.u. of time, default: 41.0 ]
+
+
             * **dyn_params["nsteps"]** ( int ): the number of NA-MD steps to do [ default: 1 ]
 
-            * **dyn_params["tsh_version"]** ( int ): 
-                - 1:  tsh1(q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd)
-                - 2:  tsh1b(q, p, iM,  Cdia, states, ham, compute_model, model_params, dyn_params, rnd) [ default ]
+
+            * **dyn_params["prefix"]** ( string ): the name of the folder to be created by this function. 
+                All the data files will be created in that folder
+
 
             * **dyn_params["output_level"]** ( int ): controls what info to return as the result of this function
 
-                - -1: all return values are None
+                - -1: all return values are None [ default ]
                 - 0: also, all return values are none 
-                - 1: 1-D info - energies, SE and SH populations averaged over ensemble vs. time [ default ]
+                - 1: 1-D info - energies, SE and SH populations averaged over ensemble vs. time
                 - 2: 2-D info - coordinates, momenta, SE amplitudes, and SH states populations 
                     for each individual trajectory vs. time 
                 - 3: 3-D info - St, Hvib_adi, Hvib_dia matrices (energies, couplings, etc.) for each
@@ -501,8 +555,8 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, model_params, dyn_params, c
 
             * **dyn_params["file_output_level"]** ( int ): controls what info to print out into files
 
-                - -1: print nothing at all 
-                - 0: 0-D info - just the parameters of the simulation [ default ]
+                - -1: print nothing at all [ default ]
+                - 0: 0-D info - just the parameters of the simulation
                 - 1: 1-D info - energies, SE and SH populations averaged over ensemble vs. time 
                 - 2: 2-D info - coordinates, momenta, SE amplitudes, and SH states populations 
                     for each individual trajectory vs. time 
@@ -563,11 +617,15 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, model_params, dyn_params, c
 
 
     # Parameters and dimensions
-    critical_params = [ "prefix" ] 
-    default_params = { "rep_tdse":1,
-                       "rep_ham":0,
-                       "nsteps":1, "dt":1.0*units.fs2au, "do_phase_correction":1, "state_tracking_algo":2,
-                       "MK_alpha":0.0, "MK_verbosity":0, "file_output_level":1, "tsh_version":2, "tol":1e-3 
+    critical_params = [  ] 
+    default_params = { "rep_tdse":1, "rep_ham":0, "rep_sh":1, "rep_lz":0, "tsh_method":-1,
+                       "force_method":1, "nac_update_method":1, "rep_force":1,
+                       "use_boltz_factor":0, "Temperature":300.0, "do_reverse":1, "vel_rescale_opt":1,
+                       "do_phase_correction":1, "tol":1e-3,
+                       "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0, 
+                       "entanglement_opt":0, "ETHD3_alpha":0.0, "ETHD3_beta":0.0, 
+                       "dt":1.0*units.fs2au, "nsteps":1, 
+                       "output_level":-1, "file_output_level":-1, "prefix":"tmp"
                      }
 
     comn.check_input(dyn_params, default_params, critical_params)
@@ -575,7 +633,6 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, model_params, dyn_params, c
     prefix = dyn_params["prefix"]    
     rep_tdse = dyn_params["rep_tdse"]
     nsteps = dyn_params["nsteps"]
-    tsh_version = dyn_params["tsh_version"]
     dt = dyn_params["dt"]
     tol = dyn_params["tol"]
     output_level = dyn_params["output_level"]

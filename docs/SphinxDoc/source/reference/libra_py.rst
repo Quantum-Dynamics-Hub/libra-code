@@ -16,6 +16,8 @@ libra_py
    libra_py/data_read.rst
    libra_py/data_stat.rst
    libra_py/DFTB_methods.rst
+   libra_py/dynamics.rst
+   libra_py/dynamics_recipes.rst
    libra_py/ERGO_methods.rst
    libra_py/fgr_py.rst
    libra_py/fit.rst
