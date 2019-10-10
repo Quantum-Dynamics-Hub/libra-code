@@ -365,11 +365,15 @@ void export_decoherence_objects(){
   CMATRIX (*expt_msdm_v1)
   (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates) = &msdm;
 
-  Electronic (*expt_msdm_v2)
+  CMATRIX (*expt_msdm_v2)
+  (CMATRIX& Coeff, double dt, vector<int>& act_st, MATRIX& decoh_rates) = &msdm;
+
+  Electronic (*expt_msdm_v3)
   (Electronic& Coeff, double dt, int act_st, MATRIX& decoh_rates) = &msdm;
 
   def("msdm", expt_msdm_v1);
   def("msdm", expt_msdm_v2);
+  def("msdm", expt_msdm_v3);
 
 
 
@@ -448,6 +452,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("entanglement_opt", &dyn_control_params::entanglement_opt)
       .def_readwrite("ETHD3_alpha", &dyn_control_params::ETHD3_alpha)
       .def_readwrite("ETHD3_beta", &dyn_control_params::ETHD3_beta)
+      .def_readwrite("decoherence_algo", &dyn_control_params::decoherence_algo)
 
 
       .def("sanity_check", expt_sanity_check_v1)

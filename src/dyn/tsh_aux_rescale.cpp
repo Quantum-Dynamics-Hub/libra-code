@@ -53,6 +53,9 @@ int apply_transition0(MATRIX& p, MATRIX& invM, nHamiltonian& ham,
   else if(vel_rescale_opt==1){
     new_state = rescale_velocities_diabatic(p, invM, ham, fstate, istate, do_rescale);
   }
+  else if(vel_rescale_opt==-1){
+    new_state = fstate;  // accept all hops
+  }
 
   return new_state;
 
@@ -78,6 +81,9 @@ int apply_transition0(MATRIX& p, MATRIX& invM, nHamiltonian* ham,
   }
   else if(vel_rescale_opt==1){
     new_state = rescale_velocities_diabatic(p, invM, ham, fstate, istate, do_rescale);
+  }
+  else if(vel_rescale_opt==-1){
+    new_state = fstate; // accept all hops
   }
 
   return new_state;

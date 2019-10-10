@@ -31,7 +31,7 @@ CMATRIX msdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
     This function implements the experimental modification (by Alexey Akimov) of the simplified decay of 
     mixing algorithm for decoherence correction ( Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114)
     
-    \param[in]       Coeff [ CMATRIX ] An object containig electronic DOFs. 
+    \param[in]       Coeff [ CMATRIX(nadi, 1) ] An object containig electronic DOFs. 
     \param[in]          dt [ float ] The integration timestep. Units = a.u. of time
     \param[in]      act_st [ integer ] The active state index
     \param[in]      decoh_rates [ MATRIX ] The matrix of decoherence (pure dephasing) rates between all pairs of states
@@ -44,12 +44,15 @@ CMATRIX msdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
     double kb = 3.166811429e-6;  // Hartree/K
     double sclf;
 
+
     CMATRIX C(Coeff);
+
 
     // Population of the active state
     double p_aa_old = (std::conj(C.get(act_st)) * C.get(act_st)).real();
 
     if(p_aa_old>1.0){
+      /*
       cout<<"=== Place 1 =====\n";
       cout<<"Error in CMATRIX msdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates):\n";
       cout<<"active state is larger than 1: p_aa_old = "<< p_aa_old << endl;
@@ -59,7 +62,9 @@ CMATRIX msdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
       cout<<"decoh_rates = \n"; decoh_rates.show_matrix();
       cout<<"initial total pop = "<<(Coeff.H() * Coeff).get(0,0).real();
       exit(0);
+     */
     }
+
 
     if(p_aa_old>0.0){
 
@@ -132,8 +137,48 @@ CMATRIX msdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
       exit(0);
     }
 
-        
+
     return C;
+
+}
+
+
+CMATRIX msdm(CMATRIX& Coeff, double dt, vector<int>& act_st, MATRIX& decoh_rates){
+    /**
+    \brief Modified Simplified Decay of Mixing (MSDM) method.
+    This function implements the experimental modification (by Alexey Akimov) of the simplified decay of 
+    mixing algorithm for decoherence correction ( Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114)
+    
+    \param[in]       Coeff [ CMATRIX(nadi, ntraj) ] An object containig electronic DOFs. 
+    \param[in]          dt [ float ] The integration timestep. Units = a.u. of time
+    \param[in]      act_st [ integer ] The active state index
+    \param[in]      decoh_rates [ MATRIX ] The matrix of decoherence (pure dephasing) rates between all pairs of states
+
+    The function returns:
+    # C [ CMATRIX ] - the updated state of the electronic DOF, in the same data type as the input
+
+    */
+
+  int nadi = Coeff.n_rows;
+  int ntraj = Coeff.n_cols;
+  int i, traj;
+
+
+  vector<int> stenc_x(nadi, 0); for(i=0;i<nadi;i++){  stenc_x[i] = i; }
+  vector<int> stenc_y(1, 0); 
+
+  CMATRIX coeff(nadi, 1);
+  CMATRIX res(nadi, ntraj);
+ 
+  for(traj=0; traj<ntraj; traj++){
+
+    stenc_y[0] = traj;
+    pop_submatrix(Coeff, coeff, stenc_x, stenc_y);
+    coeff = msdm(coeff, dt, act_st[traj], decoh_rates);
+    push_submatrix(res, coeff, stenc_x, stenc_y);
+
+  }// for traj
+  return res;
 
 }
 

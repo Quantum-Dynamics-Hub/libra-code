@@ -252,6 +252,7 @@ Electronic sdm(Electronic& Coeff, double dt, int act_st, vector<double>& En, dou
 ///================  In tsh_methods_msdm.cpp  ===================================
 
 CMATRIX msdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates);
+CMATRIX msdm(CMATRIX& Coeff, double dt, vector<int>& act_st, MATRIX& decoh_rates);
 Electronic msdm(Electronic& Coeff, double dt, int act_st, MATRIX& decoh_rates);
 
 

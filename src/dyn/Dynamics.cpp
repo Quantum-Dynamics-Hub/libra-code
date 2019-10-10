@@ -365,8 +365,10 @@ void do_surface_hopping(dyn_control_params& prms,
   }// for traj
 
   //======== Decide whether to accept the proposed hops and if so what to do with the nuclei 
+
   act_states = apply_transition1(p, invM, ham, act_states, fstates, prms.vel_rescale_opt, prms.do_reverse, 1); 
 
+  
 }
 
 
@@ -499,6 +501,13 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int
   // To be able to compute transition probabilities, compute the corresponding amplitudes
   CMATRIX Coeff(nst,ntraj); 
   Coeff = transform_amplitudes(prms.rep_tdse, prms.rep_sh, C, ham);
+
+
+  // MSDM decoherence corrections
+  if(prms.decoherence_algo==0){
+    MATRIX dr(*prms.decoh_rates);
+    Coeff = msdm(Coeff, prms.dt, act_states, dr);
+  }
 
   // Use them to do the hopping
   if(prms.tsh_method >=0){

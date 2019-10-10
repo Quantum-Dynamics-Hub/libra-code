@@ -19,10 +19,14 @@
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include "../math_linalg/liblinalg.h"
+
 
 /// liblibra namespace
 namespace liblibra{
 
+
+using namespace liblinalg;
 
 /// libdyn namespace
 namespace libdyn{
@@ -173,10 +177,29 @@ class dyn_control_params{
   double ETHD3_beta;
 
 
+  /**
+    Selector of the method to incorporate decoherence:
+   -1 - no decoherence
+    0 - MSDM
+    1 - ID-A
+    2 - DISH
+  */
+  double decoherence_algo;
+
+
+  /**
+    Dephasing rates
+  */
+  MATRIX* decoh_rates;
+
+
 
 
   dyn_control_params();
-  dyn_control_params(const dyn_control_params& x){  *this = x; }
+  dyn_control_params(const dyn_control_params& x){ 
+    *this = x;
+    decoh_rates = new MATRIX( *x.decoh_rates );  
+  }
  ~dyn_control_params() { ;; }
 
   void sanity_check();

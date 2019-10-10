@@ -386,7 +386,7 @@ def init_amplitudes(q, Cdia, Cadi, dyn_params, compute_model, model_params, tran
 
 
 
-def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, model_params, dyn_params, compute_model, rnd):
+def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _model_params, _dyn_params, compute_model, rnd):
     """
   
     This function is similar to the one above, but it stores the computed properties in files
@@ -482,10 +482,10 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, model_params, dyn_params, c
 
             * **dyn_params["vel_rescale_opt"]** ( int ): How to rescale momenta if the hops are successful:
 
-                - 0: rescale along the directions of derivative couplings
-                - 1: rescale in the diabatic basis - don't care about the
-                    velocity directions, just a uniform rescaling [ default ]
-                - 2: do not rescale, as in the NBRA.
+                - -1: do not rescale, as in the NBRA [ default ]
+                - 0: rescale in the diabatic basis - don't care about the
+                    velocity directions, just a uniform rescaling 
+                - 1: rescale along the directions of derivative couplings
 
 
             * **dyn_params["do_phase_correction"]** ( int ): the algorithm to correct phases on adiabatic states
@@ -604,6 +604,9 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, model_params, dyn_params, c
     # functions with the same input variables without worries that they will be altered
     # inside of each other
 
+    model_params = dict(_model_params)
+    dyn_params = dict(_dyn_params)
+
     q = MATRIX(_q)
     p = MATRIX(_p)
     iM = MATRIX(_iM)
@@ -620,7 +623,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, model_params, dyn_params, c
     critical_params = [  ] 
     default_params = { "rep_tdse":1, "rep_ham":0, "rep_sh":1, "rep_lz":0, "tsh_method":-1,
                        "force_method":1, "nac_update_method":1, "rep_force":1,
-                       "use_boltz_factor":0, "Temperature":300.0, "do_reverse":1, "vel_rescale_opt":1,
+                       "use_boltz_factor":0, "Temperature":300.0, "do_reverse":1, "vel_rescale_opt":-1,
                        "do_phase_correction":1, "tol":1e-3,
                        "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0, 
                        "entanglement_opt":0, "ETHD3_alpha":0.0, "ETHD3_beta":0.0, 
@@ -721,6 +724,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, model_params, dyn_params, c
     ham = nHamiltonian(ndia, nadi, nnucl)
     ham.add_new_children(ndia, nadi, nnucl, ntraj)
     ham.init_all(2,1)
+    model_params.update({"timestep":0})
     
     update_Hamiltonian_q(dyn_params, q, ham, compute_model, model_params)
     update_Hamiltonian_p(dyn_params, ham, p, iM)  
@@ -810,7 +814,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, model_params, dyn_params, c
 
 
         #============ Propagate ===========        
-
+        model_params.update({"timestep":i})
         if rep_tdse==0:
             compute_dynamics(q, p, iM, Cdia, states, ham, compute_model, model_params, dyn_params, rnd)
         elif rep_tdse==1:
