@@ -13,6 +13,17 @@
    :synopsis: This module implements a wrapper function for doing Ehrenfest/TSH/Verlet/etc. dynamics
 .. moduleauthor:: Alexey V. Akimov
 
+  List of functions:
+  
+  init_nuclear_dyn_var(Q, P, M, params, rnd)
+  init_electronic_dyn_var(params, rnd)
+  init_amplitudes(q, Cdia, Cadi, dyn_params, compute_model, model_params, transform_direction=0)
+
+  run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _dyn_params, compute_model, _model_params, rnd)
+  generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
+  run_multiple_sets(init_cond, _dyn_params, compute_model, _model_params, _init_nucl, _init_elec, rnd)
+
+
 """
 
 __author__ = "Alexey V. Akimov"
@@ -350,7 +361,7 @@ def init_amplitudes(q, Cdia, Cadi, dyn_params, compute_model, model_params, tran
 
         dyn_params ( Python dictionary ): control of the dynamics
         compute_model ( Python function ): the function that does the calculations
-        model_params ( Python dictionary ): control of the computational model
+        model_params ( Python dictionary ): parameters of the computational model
 
         transform_direction ( int ): type of transformation
 
@@ -386,7 +397,7 @@ def init_amplitudes(q, Cdia, Cadi, dyn_params, compute_model, model_params, tran
 
 
 
-def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _model_params, _dyn_params, compute_model, rnd):
+def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _dyn_params, compute_model, _model_params, rnd):
     """
   
     This function is similar to the one above, but it stores the computed properties in files
@@ -397,10 +408,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _model_params, _dyn_params,
         _iM ( MATRIX(nnucl, 1) ): masses of classical particles [units: a.u.^-1]
         _Cdia ( CMATRIX(ndia, ntraj) ): amplitudes of the diabatic basis states
         _Cadi ( CMATRIX(nadi, ntraj) ): amplitudes of the adiabatic basis states
-        states ( intList, or list of ntraj ints ): the quantum state of each trajectory
-        model_params ( dictionary ): contains the selection of a model and the parameters 
-            for that model Hamiltonian
-
+        _states ( intList, or list of ntraj ints ): the quantum state of each trajectory
 
         dyn_params ( dictionary ): parameters controlling the execution of the dynamics
             Can contain:
@@ -516,6 +524,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _model_params, _dyn_params,
                 - 1: print details
 
 
+
             * **dyn_params["entanglement_opt"]** ( int ): A selector of a method to couple the trajectories in this ensemble:
 
                 - 0: no coupling across trajectories [ default ]
@@ -529,6 +538,18 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _model_params, _dyn_params,
 
             * **dyn_params["ETHD3_beta"]** ( double ): Gaussian exponents that dresses up the trajectories in the ETHD3 method
                 in the coordinate space, that is   ~exp(-alpha*(P-P0)^2 ) [ default: 0.0 ]
+
+
+            * **dyn_params["decoherence_algo"]** ( int ): selector of the method to incorporate decoherence:
+
+                - -1: no decoherence [ default ]
+                - 0: MSDM
+                - 1: ID-A (not yet present)
+                - 2: DISH (not yet present)
+
+            * **dyn_params["decoh_rates"]** ( MATRIX(ntates, nstates) ): the matrix of dephasing rates [ units: a.u. of time ^-1 ]
+
+
 
 
             * **dyn_params["dt"]** ( double ): the nuclear and electronic integration
@@ -565,6 +586,10 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _model_params, _dyn_params,
             
 
         compute_model ( PyObject ): the pointer to the Python function that performs the Hamiltonian calculations
+
+        _model_params ( dictionary ): contains the selection of a model and the parameters 
+            for that model Hamiltonian
+
         rnd ( Random ): random numbers generator object
 
 
@@ -593,9 +618,12 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _model_params, _dyn_params,
                 vibronic Hamiltonians for each timestep in the diabatic representation
             * obs_St ( list of `ntraj` lists, each being a list of `nsteps` objects CMATRIX(nadi, nadi) ): trajectory-resolved
                 time-overlaps of the adiabatic wavefunctions
+            * obs_U ( list of `ntraj` lists, each being a list of `nsteps` objects CMATRIX(ndia, nadi) ): trajectory-resolved
+                diabatic-to-adiabatic transformation matrix
 
 
-        Note: the elements are None, if they are excluded by the input optinos
+        .. note::
+          the elements are None, if they are excluded by the input optinos
 
     """
 
@@ -618,6 +646,8 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _model_params, _dyn_params,
     for i in range(len(_states)):
         states.append(_states[i])
 
+    DR = MATRIX(len(_states), len(_states))
+
 
     # Parameters and dimensions
     critical_params = [  ] 
@@ -627,6 +657,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _model_params, _dyn_params,
                        "do_phase_correction":1, "tol":1e-3,
                        "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0, 
                        "entanglement_opt":0, "ETHD3_alpha":0.0, "ETHD3_beta":0.0, 
+                       "decoherence_alho":-1, "decoherence_rates":DR,
                        "dt":1.0*units.fs2au, "nsteps":1, 
                        "output_level":-1, "file_output_level":-1, "prefix":"tmp"
                      }
@@ -658,7 +689,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _model_params, _dyn_params,
     obs_Cadi, obs_Cdia = None, None 
     obs_dm_adi, obs_dm_dia = None, None
     obs_pop, obs_states = None, None
-    obs_hvib_adi, obs_hvib_dia, obs_St = None, None, None
+    obs_hvib_adi, obs_hvib_dia, obs_St, obs_U = None, None, None, None
          
     if output_level>=1:
         obs_T = [] # time
@@ -683,6 +714,13 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _model_params, _dyn_params,
         obs_hvib_adi = []  # vibronic Hamiltonians for each trajectory in adiabatic rep.
         obs_hvib_dia = []  # vibronic Hamiltonians for each trajectory in diabatic rep.
         obs_St = [] # time-overlaps for each trajectory in the adiabatic rep.
+        obs_U = []  # dia-to-adia transformation matrices for each trajectory
+
+        for tr in range(ntraj):
+            obs_hvib_adi.append([])
+            obs_hvib_dia.append([])
+            obs_St.append([])
+            obs_U.append([])
 
 
     # Create an output directory, if not present    
@@ -718,6 +756,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _model_params, _dyn_params,
             f = open("%s/Hvib_adi_%i.txt" % (prefix, tr), "w"); f.close()   # vibronic Hamiltonians for each trajectory in adiabatic rep. 
             f = open("%s/Hvib_dia_%i.txt" % (prefix, tr), "w"); f.close()   # vibronic Hamiltonians for each trajectory in diabatic rep. 
             f = open("%s/St_%i.txt" % (prefix, tr), "w"); f.close()   # time-overlaps along each trajectory 
+            f = open("%s/basis_transform_%i.txt" % (prefix, tr), "w"); f.close() # dia-to-adi transformationfor each trajectory. 
         
 
     # ======= Hierarchy of Hamiltonians =======
@@ -728,6 +767,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _model_params, _dyn_params,
     
     update_Hamiltonian_q(dyn_params, q, ham, compute_model, model_params)
     update_Hamiltonian_p(dyn_params, ham, p, iM)  
+
 
     U = []
     for tr in range(ntraj):
@@ -803,14 +843,15 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _model_params, _dyn_params,
             if output_level >= 3:
                 obs_hvib_adi[tr].append( CMATRIX(ham.get_hvib_adi(Py2Cpp_int([0, tr])) ) )
                 obs_hvib_dia[tr].append( CMATRIX(ham.get_hvib_dia(Py2Cpp_int([0, tr])) ) )
-
                 obs_St[tr].append( CMATRIX(St) )
+                obs_U[tr].append( CMATRIX(x) )
 
             # File output
             if file_output_level >= 3:
                 data_outs.add_cmatrix2file("%s/St_%i.txt" % (prefix, tr), i*dt, St)
                 data_outs.add_cmatrix2file("%s/Hvib_adi_%i.txt" % (prefix, tr), i*dt, ham.get_hvib_adi(Py2Cpp_int([0, tr])) )
                 data_outs.add_cmatrix2file("%s/Hvib_dia_%i.txt" % (prefix, tr), i*dt, ham.get_hvib_dia(Py2Cpp_int([0, tr])) )
+                data_outs.add_cmatrix2file("%s/basis_transform_%i.txt" % (prefix, tr), i*dt, CMATRIX(x) )
 
 
         #============ Propagate ===========        
@@ -822,8 +863,156 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _model_params, _dyn_params,
 
  
 
-
     return obs_T, obs_q, obs_p, obs_Ekin, obs_Epot, obs_Etot, obs_dEkin, obs_dEpot, obs_dEtot, \
-           obs_Cadi, obs_Cdia, obs_dm_adi, obs_dm_dia, obs_pop, obs_states, obs_hvib_adi, obs_hvib_dia, obs_St
+           obs_Cadi, obs_Cdia, obs_dm_adi, obs_dm_dia, obs_pop, obs_states, obs_hvib_adi, obs_hvib_dia, obs_St, obs_U
+
+
+
+
+def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd):
+    """
+    This function initializes electronic variables and Hamiltonians for a given set of 
+    nuclear variables (those are needed, not initialized here) and then runs the calculations 
+    on multiple trajectories
+
+    Args:
+        q ( MATRIX(ndof, ntraj) ): the coordinates for all DOFs for all trajectories [ units: a.u.]
+        p ( MATRIX(ndof, ntraj) ): the momenta for all DOFs for all trajectories [ units: a.u. ]
+        iM ( MATRIX(ndof, 1) ): masses of all nuclear DOFs - same for all trajectories [ units: a.u. ]
+
+        _dyn_params ( dictionary ): control parameters for running the dynamics
+            see the documentation of the :func:`libra_py.dynamics.run_dynamics` function
+
+        compute_model ( PyObject ): the pointer to the Python function that performs the Hamiltonian calculations
+
+        _model_params ( dictionary ): contains the selection of a model and the parameters 
+            for that model Hamiltonian. In addition to all the parameters, should contain the 
+            key
+
+            * **_model_params["model0"]** ( int ): the selection of the model to be used to compute diabatic-to-adiabatic
+                transformation. The particular value chosen here depends on the way the `compute_model` functions is defined
+
+               :Note: the function selected should be able to generate the transformation matrix.
+
+        _init_elec ( dictionary ): control parameters for initialization of electronic variables
+            see the documentation of the :func:`libra_py.dynamics.init_electronic_dyn_var` function
+
+        rnd ( Random ): random numbers generator object
+
+    Returns:
+        tuple : tuple returned by the :func:`libra_py.dynamics.run_dynamics` function
+
+
+
+    """
+
+
+    critical_params = [ "model0" ] 
+    default_params = {  }
+    comn.check_input(_model_params, default_params, critical_params)
+
+
+    # Internal parameters
+    nnucl, ntraj = q.num_of_rows, q.num_of_cols
+
+    # Initialize electronic variables - either diabatic or adiabatic
+    Cdia, Cadi, states = init_electronic_dyn_var(_init_elec, rnd)
+    ndia, nadi = Cdia.num_of_rows, Cadi.num_of_rows
+
+
+    # In case the initial conditions rep and the propagation rep are different,
+    # compute the diabatic-to-adiabatic transformation matrices and
+    # transform the amplitudes accordingly
+    ham = nHamiltonian(ndia, nadi, nnucl)
+    ham.add_new_children(ndia, nadi, nnucl, ntraj)
+    ham.init_all(2,1)     
+
+    if _init_elec["rep"]==0:
+        if _dyn_params["rep_tdse"]==1:
+            model_params = dict(_model_params)
+            model_params.update({"model":_model_params["model0"]})
+            update_Hamiltonian_q({"rep_tdse":1, "rep_ham":0}, q, ham, compute_model, model_params )
+
+            Cadi = transform_amplitudes(0, 1, Cdia, ham) 
+
+    elif _init_elec["rep"]==1:    
+        if _dyn_params["rep_tdse"]==0:
+            model_params = dict(_model_params)
+            model_params.update({"model":_model_params["model0"]})
+            update_Hamiltonian_q({"rep_tdse":1, "rep_ham":0}, q, ham, compute_model, model_params )
+
+            Cdia = transform_amplitudes(1, 0, Cdia, ham) 
+
+    res = run_dynamics(q, p, iM, Cdia, Cadi, states, _dyn_params, compute_model, _model_params, rnd)
+
+
+    return res
+
+
+
+def run_multiple_sets(init_cond, _dyn_params, compute_model, _model_params, _init_nucl, _init_elec, rnd):
+    """
+    This function runs a series of NA-MD calculations for (potentially) different initial 
+    conditions and returns an object that contains results for each of the 
+    runs, and/or just stores the results into the corresponding folders.
+    
+    Args:
+
+      init_cond ( list of 3-element lists ): mean coordinates and momenta as well as the masses of all DOFs
+
+          The format is this:
+          init_cond = 
+            init_cond[0] = [q0, p0, M0 ]  <- 0-th set of initial variables
+            init_cond[1] = [q1, p1, M1 ]  <- 1-st set of initial variables
+            ...                           etc.
+            init_cond[N] = [qN, pN, MN ]
+          
+          Here, q0 = [q00, q01, ... q0<ndof>], same for p0 and M0
+
+      _dyn_params ( dictionary ): control parameters for running the dynamics
+          see the documentation of the :func:`libra_py.dynamics.run_dynamics` function
+
+      compute_model ( PyObject ): the pointer to the Python function that performs the Hamiltonian calculations
+
+      _model_params ( dictionary ): contains the selection of a model and the parameters 
+          for that model Hamiltonian. In addition to all the parameters, should contain the 
+          key
+
+          * **_model_params["model0"]** ( int ): the selection of the model to be used to compute diabatic-to-adiabatic
+          transformation. The particular value chosen here depends on the way the `compute_model` functions is defined
+
+              :Note: the function selected should be able to generate the transformation matrix.
+
+      _init_nucl ( dictionary ): control parameters for initialization of nuclear variables
+          see the documentation of the :func:`libra_py.dynamics.init_nuclear_dyn_var` function
+
+      _init_elec ( dictionary ): control parameters for initialization of electronic variables
+          see the documentation of the :func:`libra_py.dynamics.init_electronic_dyn_var` function
+
+      rnd ( Random ): random numbers generator object
+    
+    Returns:
+        list : each element of the list is a tuple returned by the
+            :func:`libra_py.dynamics.run_dynamics` function
+
+    """
+
+    
+    output_prefix = _dyn_params["prefix"]
+    dyn_params = dict(_dyn_params)
+            
+    res = []
+    for icond_indx, icond in enumerate(init_cond):
+        
+        q0, p0, M0 = icond[0], icond[1], icond[2]  # each one is a ndof-elements list
+        q, p, iM = init_nuclear_dyn_var(q0, p0, M0, _init_nucl, rnd)
+
+        dyn_params.update({"prefix":F"{output_prefix}_{icond_indx}"})
+
+        res_i = generic_recipe(q, p, iM, dyn_params, compute_model, _model_params, _init_elec, rnd)        
+        res.append(res_i)
+    
+    return res
+
 
 

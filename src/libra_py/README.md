@@ -1,3 +1,37 @@
+# Principles of function's arguments ordering:
+
+ Function arguments list:
+
+ 1. dynamical variables or DOFs properties
+ 2. parameters controlling dynamics 
+ 3. function to compute Hamiltonians
+ 4. parameters of the Hamiltonian function
+ 5. parameters controlling the initialization
+ 6. random object
+ 7. additional variables that can be setup to default values
+
+
+ For the dynamical variables:
+
+ 1. dynamical variables 
+ 2. DOF properties
+
+ Within each group, when applies:
+
+ 1. nuclear DOFs
+ 2. electronic DOFs
+
+
+ Again, whithin each group when applies:
+
+ 1. continuous variables
+ 2. discrete variables
+
+
+
+
+
+
 # Description of the modules
 
 ## acf_matrix.py  - Calculation of ACF of a given data set with data elements of the type MATRIX.
