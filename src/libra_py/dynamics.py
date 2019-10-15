@@ -52,6 +52,7 @@ from . import data_outs
 from . import tsh
 from . import tsh_stat
 from . import tsh_algo1
+from . import dynamics_io
 
 
 def init_nuclear_dyn_var(Q, P, M, params, rnd):
@@ -795,10 +796,9 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _dyn_params, compute_model,
         elif force_method in [2]:
             Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh_stat.compute_etot(ham, p, Cdia, Cadi, iM, rep_tdse)
 
-        
             
         # Memory output
-        if output_level>=1:
+        if output_level >= 1:
             obs_T.append(i*dt) 
             obs_Ekin.append(Ekin)
             obs_Epot.append(Epot)
@@ -810,16 +810,8 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _dyn_params, compute_model,
             obs_dm_dia.append(CMATRIX(dm_dia))
             obs_pop.append(MATRIX(pops))
 
-        # File output
-        if file_output_level >= 1:
-            data_outs.add_doublelist2file("%s/energies.txt" % (prefix), i*dt, [Ekin, Epot, Etot, dEkin, dEpot, dEtot] )
-            data_outs.add_cmatrix2file("%s/D_adi.txt" % (prefix), i*dt, dm_adi )
-            data_outs.add_cmatrix2file("%s/D_dia.txt" % (prefix), i*dt, dm_dia )
-            data_outs.add_matrix2file("%s/SH_pop.txt" % (prefix), i*dt, pops )
-
-
         # Memory output
-        if output_level>=2:
+        if output_level >= 2:
             obs_q.append(MATRIX(q))
             obs_p.append(MATRIX(p))        
             obs_Cadi.append(CMATRIX(Cadi))
@@ -827,12 +819,9 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _dyn_params, compute_model,
             obs_states.append(list(states))
 
         # File output
-        if file_output_level >= 2:        
-            data_outs.add_matrix2file("%s/q.txt" % (prefix), i*dt, q )
-            data_outs.add_matrix2file("%s/p.txt" % (prefix), i*dt, p )
-            data_outs.add_cmatrix2file("%s/C_adi.txt" % (prefix), i*dt, Cadi )
-            data_outs.add_cmatrix2file("%s/C_dia.txt" % (prefix), i*dt, Cdia )
-            data_outs.add_intlist2file("%s/states.txt" % (prefix), i*dt, states )        
+        res12 = q, p, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Cadi, Cdia, dm_adi, dm_dia, pops, states
+        dynamics_io.print_results12(i, dt, res12, prefix, file_output_level)
+
     
         for tr in range(ntraj):
             x = ham.get_basis_transform(Py2Cpp_int([0, tr]) )            
@@ -846,12 +835,9 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _dyn_params, compute_model,
                 obs_St[tr].append( CMATRIX(St) )
                 obs_U[tr].append( CMATRIX(x) )
 
-            # File output
-            if file_output_level >= 3:
-                data_outs.add_cmatrix2file("%s/St_%i.txt" % (prefix, tr), i*dt, St)
-                data_outs.add_cmatrix2file("%s/Hvib_adi_%i.txt" % (prefix, tr), i*dt, ham.get_hvib_adi(Py2Cpp_int([0, tr])) )
-                data_outs.add_cmatrix2file("%s/Hvib_dia_%i.txt" % (prefix, tr), i*dt, ham.get_hvib_dia(Py2Cpp_int([0, tr])) )
-                data_outs.add_cmatrix2file("%s/basis_transform_%i.txt" % (prefix, tr), i*dt, CMATRIX(x) )
+            # File output   
+            res3 = ham.get_hvib_adi(Py2Cpp_int([0, tr])), ham.get_hvib_dia(Py2Cpp_int([0, tr])), St, U[tr]
+            dynamics_io.print_results3(i, dt, res3, prefix, file_output_level, tr)
 
 
         #============ Propagate ===========        
