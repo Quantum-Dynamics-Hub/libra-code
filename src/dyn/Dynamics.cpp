@@ -46,6 +46,7 @@ MATRIX aux_get_forces(dyn_control_params& prms, nHamiltonian& ham, vector<int>& 
   */
 
   int ndof = ham.nnucl;
+  int nst = ham.nadi;
   int ntraj = act_states.size();
 
   MATRIX F(ndof, ntraj);
@@ -63,12 +64,20 @@ MATRIX aux_get_forces(dyn_control_params& prms, nHamiltonian& ham, vector<int>& 
 
     if(prms.rep_force==0){  
       // Diabatic 
-      F = ham.forces_dia(act_states).real();
+      //F = ham.forces_dia(act_states).real();
+
+      CMATRIX _amplitudes(nst, ntraj);          // CMATRIX version of "act_states"
+      tsh_indx2vec(ham, _amplitudes, act_states);
+      F = ham.Ehrenfest_forces_dia(_amplitudes, 1).real();
     }
 
     else if(prms.rep_force==1){  
       // Adiabatic 
-      F = ham.forces_adi(act_states).real();
+      //F = ham.forces_adi(act_states).real();
+
+      CMATRIX _amplitudes(nst, ntraj);          // CMATRIX version of "act_states"
+      tsh_indx2vec(ham, _amplitudes, act_states);
+      F = ham.Ehrenfest_forces_adi(_amplitudes, 1).real();
     }
 
   }// TSH && adiabatic
@@ -146,6 +155,9 @@ void do_reordering(dyn_control_params& prms, nHamiltonian& ham,
     if(prms.state_tracking_algo==3){
         perm_t = get_stochastic_reordering(*St, rnd);
     }
+
+
+    //ham.children[traj]->update_ordering(perm_t, 1);
 
     // Switch the active states
     act_states[traj] = perm_t[ act_states[traj] ];
