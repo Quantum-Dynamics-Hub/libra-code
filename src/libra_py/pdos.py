@@ -159,7 +159,7 @@ def QE_pdos(prefix, emin, emax, de, projections, Ef, outfile, do_convolve, de_ne
 
                                 e = float(tmp[0])
                                 if e<emin or e>emax:
-                                        pass
+                                    pass
                                 else:
                                     state_indx = int(math.floor((e - emin)/de))
                                     dosa.add(state_indx, proj_indx, float(tmp[1]))
