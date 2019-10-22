@@ -165,7 +165,7 @@ def distribute(Nmin,Nmax,max_steps,submit_templ,exp_files,prefixes,do_submit):
     j = 0  # job index
     Nstart = 0
     Nend = max_steps-1
-    njobs = (Nmax -1 - Nmin)/max_steps
+    njobs = int( (Nmax -1 - Nmin)/max_steps )
 
     while j<njobs:
         job(Nstart,Nend+1,"job%d" % j,prefixes) # add 1 to avoid merging adjacent runs

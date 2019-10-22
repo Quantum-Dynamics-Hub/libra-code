@@ -127,9 +127,9 @@ def get_Hvib2(params):
             * **params["data_set_paths"]** ( list of strings ):
                 define the paths of the directories where the vibronic Hamiltonian files for
                 different data sets (e.g. independent MD trajectories) are located. 
-                .. note::
-                    In addition, requires parameters described in
-                    :func:`libra_py.workflows.nbra.step4.getHvib`
+            .. note::
+                In addition, requires parameters described in
+                :func:`libra_py.workflows.nbra.step4.getHvib`
 
     Returns:
         list of lists of CMATRIX: Hvib: 
@@ -288,7 +288,7 @@ def traj_statistics2(i, Pop, istate, Hvib, itimes):
     nstates = Pop[0].num_of_rows     # the number of states
     ndata = len(Hvib)                # how many data sets
     nitimes = len(itimes)            # how many initial times
-    ntraj = Ntraj/(ndata * nitimes)  # how many stochastic SH trajectories per data set/initial condition
+    ntraj = int(Ntraj/(ndata * nitimes))  # how many stochastic SH trajectories per data set/initial condition
 
 
     # Update SE-derived density matrices

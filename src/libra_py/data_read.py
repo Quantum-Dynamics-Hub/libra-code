@@ -70,8 +70,8 @@ def get_matrix(nrows, ncols, filename_re, filename_im, act_sp):
     x_re = MATRIX(nstates, nstates);
     x_im = MATRIX(nstates, nstates);
 
-    pop_submatrix(X_re, x_re, act_sp, act_sp)
-    pop_submatrix(X_im, x_im, act_sp, act_sp)
+    pop_submatrix(X_re, x_re, list(act_sp), list(act_sp))
+    pop_submatrix(X_im, x_im, list(act_sp), list(act_sp))
 
     return CMATRIX(x_re, x_im)
 
@@ -287,7 +287,6 @@ def get_data_from_file2(filename, cols):
             res[i].append(x)
 
     return res
-
 
 
 
