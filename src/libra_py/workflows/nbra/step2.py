@@ -107,8 +107,8 @@ def run(params):
 
     rd = params["rd"]
 
-    start_indx =  params["start_indx"] 
-    stop_indx = params["stop_indx"] 
+    start_indx = int(params["start_indx"]) 
+    stop_indx  = int(params["stop_indx"]) 
     dt = params["dt"]
     wd = params["wd"]
     nac_method = params["nac_method"]
@@ -265,6 +265,9 @@ def run(params):
             # The input file template defined in params["prefix0"] should have   prefix = 'x0' !
             os.system("cp %s/curr0/x0.export/index.xml %s/x0_index_%i.xml" % (wd, rd, t))
             os.system("cp %s/curr0/x0.save/data-file-schema.xml %s/x0_data-file-schema_%i.xml" % (wd, rd, t))
+            os.system("cp %s/curr0/x0.save/charge-density.dat %s/x0_charge-density_%i.dat" % (wd, rd, t))
+            os.system("cp %s/curr0/x0.save/wfcdw1.dat %s/x0_wfcdw1_%i.dat" % (wd, rd, t))
+            os.system("cp %s/curr0/x0.save/wfcup1.dat %s/x0_wfcup1_%i.dat" % (wd, rd, t))
             os.system("cp %s/curr0/%s.%d.out %s/%s.%d.out" % (wd, params["prefix0"], t, rd, params["prefix0"], t))
         if nac_method == 2 or nac_method == 3:
             # The input file template defined in params["prefix1"] should have   prefix = 'x1' !

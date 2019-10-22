@@ -201,7 +201,7 @@ def run(H_vib, params):
     rnd = Random()
 
     ndata = len(H_vib)
-    nsteps = len(H_vib[0])
+    nsteps = params["nsteps"]
     nstates= H_vib[0][0].num_of_cols
     dt = params["dt"]
     do_output = params["do_output"]
@@ -214,7 +214,7 @@ def run(H_vib, params):
 
     #===== Precompute hopping probabilities ===
     P = []
-    itimes = [0]
+    itimes = params["init_times"]
     nitimes = len(itimes)
 
     for idata in range(0,ndata):
@@ -225,8 +225,9 @@ def run(H_vib, params):
     #========== Initialize the DYNAMICAL VARIABLES  ===============
     # State populations and active state indices
     Pop, istate = [], []
+    Ntraj = ndata * nitimes * ntraj
 
-    for tr in range(0,ntraj):
+    for tr in range(0,Ntraj):
         istate.append(params["istate"])
         Pop.append(CMATRIX(nstates, 1)); 
         Pop[tr].set(params["istate"], 1.0, 0.0)
@@ -245,7 +246,7 @@ def run(H_vib, params):
 
         # Update the overal results matrix
         res.set(i,0, i*dt)
-        push_submatrix(res, res_i, Py2Cpp_int([i]), Py2Cpp_int(range(1,3*nstates+5)) )
+        push_submatrix(res, res_i, Py2Cpp_int(list([i])), Py2Cpp_int(list(range(1,3*nstates+5))) )
 
 
         #=============== Propagation ==============================
