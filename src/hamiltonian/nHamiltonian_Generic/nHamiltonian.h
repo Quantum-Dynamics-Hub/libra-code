@@ -413,6 +413,7 @@ public:
   void update_ordering(vector<int>& perm_t, int lvl);
   void update_ordering(vector<int>& perm_t);
 
+/*
   void apply_phase_corrections(CMATRIX* phase_corr, int lvl);
   void apply_phase_corrections(CMATRIX& phase_corr, int lvl);
   void apply_phase_corrections(CMATRIX* phase_corr);
@@ -420,7 +421,7 @@ public:
 
   CMATRIX update_phases(CMATRIX& U_prev, int lvl);
   CMATRIX update_phases(CMATRIX& U_prev);
-
+*/
 
   void compute_adiabatic(int der_lvl, int lvl);
   void compute_adiabatic(int der_lvl);
@@ -514,12 +515,9 @@ typedef std::vector<nHamiltonian> nHamiltonianList;  ///< data type for keeping 
 
 
 ///< In nHamiltonian_compute adiabatic
-CMATRIX compute_phase_corrections1(CMATRIX& S, double tol);
-CMATRIX compute_phase_corrections1(CMATRIX& U, CMATRIX& U_prev, double tol);
+/*
 
-CMATRIX compute_phase_corrections(CMATRIX& S);
-CMATRIX compute_phase_corrections(CMATRIX& U, CMATRIX& U_prev);
-
+*/
 
 
 ///< In nHamiltonian_compute_ETHD.cpp

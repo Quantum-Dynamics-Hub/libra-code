@@ -100,6 +100,41 @@ class dyn_control_params{
 
 
   /**
+    Options to control the acceptance of the proposed hops:
+      0 - accept all
+
+      10 - based on adiabatic energy
+      11 - based on diabatic energy
+
+      20 - derivative coupling vectors
+      21 - difference of state-specific forces
+
+      31 - quantum Boltzmann
+      32 - Maxwell-Boltzmann
+      33 - updated quantum Boltzmann
+  */
+  int hop_acceptance_algo;
+
+
+  /**
+    Options to control momenta changes upon successful or frustrated hops:
+
+      0 - don't rescale
+
+      100 - based on adiabatic energy, don't reverse on frustrated hops
+      101 - based on adiabatic energy, reverse on frustrated hops
+      110 - based on diabatic energy, don't reverse on frustrated hops
+      111 - based on diabatic energy, reverse on frustrated hops
+
+      200 - along derivative coupling vectors, don't reverse on frustrated hops
+      201 - along derivative coupling vectors, reverse on frustrated hops
+      210 - along difference of state-specific forces, don't reverse on frustrated hops
+      211 - along difference of state-specific forces, reverse on frustrated hops
+  */
+  int momenta_rescaling_algo;
+
+
+  /**
     Whether to scale the SH probabilities by the Boltzmann factor: 0 - do not scale, 1 - scale                            
   */
   int use_boltz_factor;
@@ -138,10 +173,19 @@ class dyn_control_params{
 
 
   /** 
+    The minimal magnutude of the matrix element for which we'll be computing the phase correction
+    If the overlap is zero, then we don't really care about the phase, but if it is not, then this
+    parameter sets out threshold for when we do.  Default: 1e-3
+  */
+  double phase_correction_tol;
+
+
+  /** 
     State tracking algorithm:
       0 - no state tracking
       1 - method of Kosuke Sato (may fail by getting trapped into an infinite loop)
       2 - Munkres-Kuhn (Hungarian) algorithm (default)
+      3 - stochastic reordering
   */
   int state_tracking_algo;
 
@@ -179,19 +223,89 @@ class dyn_control_params{
 
   /**
     Selector of the method to incorporate decoherence:
-   -1 - no decoherence
-    0 - MSDM
-    1 - ID-A
-    2 - DISH
+
+     -1 - no decoherence [default]
+      0 - SDM and alike
+      1 - instantaneous decoherence options (ID-S, ID-A, ID-C)
+      2 - DISH
   */
   double decoherence_algo;
 
 
   /**
-    Dephasing rates
+    Dephasing rates provided by user
   */
   MATRIX* decoh_rates;
 
+
+  /**
+    Type of dephasing times/rates calculation:
+
+      0 - use the rates read out from the input  [default]
+      1 - use the energy-based decoherence method (EDC)    
+  */  
+  int decoherence_times_type;
+
+
+  /**
+    An empirical parameter used in the EDC method: [default = 1.0 Ha]
+  */ 
+  double decoherence_C_param;
+
+
+  /**
+    An empirical parameter used in the EDC method: [default = 0.1 Ha]
+  */ 
+  double decoherence_eps_param;
+
+
+  /**
+    A flag to apply the dephasing-informed approach of Sifain et al 
+    to correct dephasing times: 
+
+      0 - don't apply [default]
+      1 - use it 
+  */
+  int dephasing_informed; 
+
+  
+  /**
+    A matrix that contains the averaged moduli of the energy gaps:
+    E_ij = <|E_i - E_j|>
+    It is needed when dephasing_informed option is used
+  */
+  MATRIX* ave_gaps;
+
+
+  /**
+    Option to control the instantaneous decoherence methodology,
+    only used with decoherence_algo == 1
+
+      0 - ID-S
+      1 - ID-A [default]
+      2 - ID-C - consistent ID - an experimental algorithm
+  */
+  int instantaneous_decoherence_variant;
+
+
+  /**
+    How to collapse wavefunction amplitudes in the decoherence schemes:
+      0 - by rescaling the magnitude of the amplitude vector elements, but preserving "phase" [ default ]
+      1 - by resetting the amplitudes to 1.0+0.0j. This option changes phase 
+
+  */
+  int collapse_option;
+
+  /**
+    Ensemble: which ensemble to use: 0 - NVE, 1 - NVT
+  */
+  int ensemble;
+
+  
+  /**
+    Thermostat parameters 
+  */
+  bp::dict thermostat_params;
 
 
 

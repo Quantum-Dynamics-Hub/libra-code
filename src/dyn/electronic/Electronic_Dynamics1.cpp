@@ -300,6 +300,127 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib){
 }// propagate_electronic
 
 
+
+void propagate_electronic_rot(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
+/**
+  \brief Propagate electronic DOF using sequential rotations in the MMTS variables
+
+  Methodologically: This version is based on the Hamiltonian formulation of TD-SE
+  This propagator is good for general Hamiltonian - diabatic of adiabatic
+  iL = iL_qp + iL_qq + iL_pp
+  iL_qp = sum_i,j {}
+
+  API: A free function that takes Electronic object as the input and modifies it
+
+  \param[in] dt The integration time step (also the duration of propagation)
+  \param[in,out] Coeff(nst, nst) The reference to the Electronic object containing the electronic DOF
+  \param[in] Hvib The reference to the vibronic Hamiltonian matrix
+
+  This is the Python-friendly function
+*/ 
+
+
+  int i,j;
+  double qi,pi, qj, pj;
+
+  double dt_half = 0.5*dt;
+
+  if(Coeff.n_cols!=1){
+    cout<<"ERROR in propagate_electronic_rot: The number of columns in the input amplitudes vector\
+          should be 1, but "<<Coeff.n_cols<<" is given \n";
+    exit(0);
+  }
+  if(Hvib.n_cols!=Hvib.n_rows){
+    cout<<"ERROR in propagate_electronic_rot: The number of columns and rows of the input Hamiltonian\
+          should be equal to each other, but the numbers are: \n";
+    cout<<"num_of_rows = "<<Hvib.n_rows<<"\n";
+    cout<<"num_of_cols = "<<Hvib.n_cols<<"\n";
+    exit(0);
+  }
+  if(Hvib.n_cols!=Coeff.n_rows){
+    cout<<"ERROR in propagate_electronic_rot: The number of columns of the input Hamiltonian\
+          should be equal to the number of rows of the amplitudes vector, but what is given: \n";
+    cout<<"Coeff.num_of_rows = "<<Coeff.n_rows<<"\n";
+    cout<<"Hvib.num_of_cols = "<<Hvib.n_cols<<"\n";
+    exit(0);
+  }
+
+
+  int nstates = Coeff.n_rows;
+
+  //------------- Phase evolution (adiabatic) ---------------- 
+  // exp(iL_qp * dt/2)
+  for(i=0;i<nstates;i++){
+    for(j=0;j<nstates;j++){
+
+      qi = Coeff.get(i,0).real();  pi = Coeff.get(i,0).imag();
+      qj = Coeff.get(j,0).real();  pj = Coeff.get(j,0).imag();
+
+      rotate(pj, qi, dt_half*Hvib.get(i,j).real());
+
+      Coeff.set(i,0, complex<double>(qi, pi));
+      Coeff.set(j,0, complex<double>(qj, pj));
+
+    }// for j
+  }// for i
+
+  //------------- Population transfer (adiabatic) ----------------
+  // exp((iL_qq + iL_pp) * dt/2)
+  for(i=0;i<nstates;i++){
+    for(j=i+1;j<nstates;j++){
+
+      qi = Coeff.get(i,0).real();  pi = Coeff.get(i,0).imag();
+      qj = Coeff.get(j,0).real();  pj = Coeff.get(j,0).imag();
+
+      rotate(qj, qi, dt_half*Hvib.get(i,j).imag());
+      rotate(pj, pi, dt_half*Hvib.get(i,j).imag());
+
+      Coeff.set(i,0, complex<double>(qi, pi));
+      Coeff.set(j,0, complex<double>(qj, pj));
+
+
+    }// for j
+  }// for i
+
+  // exp((iL_qq + iL_pp) * dt/2)
+  for(i=nstates-1;i>=0;i--){
+    for(j=nstates-1;j>i;j--){
+
+      qi = Coeff.get(i,0).real();  pi = Coeff.get(i,0).imag();
+      qj = Coeff.get(j,0).real();  pj = Coeff.get(j,0).imag();
+
+      rotate(qj, qi, dt_half*Hvib.get(i,j).imag());
+      rotate(pj, pi, dt_half*Hvib.get(i,j).imag());
+
+      Coeff.set(i,0, complex<double>(qi, pi));
+      Coeff.set(j,0, complex<double>(qj, pj));
+
+    }// for j
+  }// for i
+
+
+  //------------- Phase evolution (adiabatic) ----------------
+  // exp(iL_qp * dt/2)
+  for(i=nstates-1;i>=0;i--){
+    for(j=nstates-1;j>=0;j--){
+
+      qi = Coeff.get(i,0).real();  pi = Coeff.get(i,0).imag();
+      qj = Coeff.get(j,0).real();  pj = Coeff.get(j,0).imag();
+
+      rotate(pj, qi, dt_half*Hvib.get(i,j).real());
+
+      Coeff.set(i,0, complex<double>(qi, pi));
+      Coeff.set(j,0, complex<double>(qj, pj));
+
+    }// for j
+  }// for i
+
+
+}// propagate_electronic_rot
+
+
+
+
 void propagate_electronic_eig(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
 /**
   Solves the time-dependent Schrodinger equation:
@@ -800,10 +921,34 @@ void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep){
 
     CMATRIX Hvib(ham.nadi, ham.nadi);  Hvib = ham.get_hvib_adi(); 
 
+    propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
+  }
+
+}
+
+void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonian& ham, int rep){
+
+  if(rep==0){  // diabatic
+
+    CMATRIX Hvib(ham.ndia, ham.ndia);  Hvib = ham.get_hvib_dia();
+    CMATRIX Sdia(ham.ndia, ham.ndia);  Sdia = ham.get_ovlp_dia();
+
+    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+
+  }
+
+  else if(rep==1){  // adiabatic
+
+    CMATRIX Hvib(ham.nadi, ham.nadi);  Hvib = ham.get_hvib_adi(); 
+
+    Hvib = projector.H() * Hvib * projector;
+
+    //propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
     propagate_electronic(dt, C, Hvib);  // in this case C - adiabatic coeffs
   }
 
 }
+
 
 void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep){
 
@@ -819,11 +964,47 @@ void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep){
   else if(rep==1){  // adiabatic
 
     CMATRIX Hvib(ham->nadi, ham->nadi);  Hvib = ham->get_hvib_adi(); 
+    propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
 
-    propagate_electronic(dt, C, Hvib);  // in this case C - adiabatic coeffs
   }
 
 }
+
+void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonian* ham, int rep){
+
+  if(rep==0){  // diabatic
+
+    CMATRIX Hvib(ham->ndia, ham->ndia);  Hvib = ham->get_hvib_dia();
+    CMATRIX Sdia(ham->ndia, ham->ndia);  Sdia = ham->get_ovlp_dia();
+
+    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+
+  }
+
+  else if(rep==1){  // adiabatic
+
+    CMATRIX Hvib(ham->nadi, ham->nadi);  Hvib = ham->get_hvib_adi(); 
+
+//    cout<<"Before propagate: "<<(C.H() * C).tr()<<endl;
+//    cout<<"Hvib = "; Hvib.show_matrix();
+
+
+    Hvib = projector.H() * Hvib * projector;
+
+//    cout<<"Hvib(transformed) = "; Hvib.show_matrix();
+//    cout<<"Projector = "; projector.show_matrix();
+//    cout<<"C(before) = "; C.show_matrix();
+
+   // propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
+    propagate_electronic_eig(dt, C, Hvib);  // in this case C - adiabatic coeffs
+
+//    cout<<"After propagate: "<<(C.H() * C).tr()<<endl;
+//    cout<<"C(after) = "; C.show_matrix();
+  }
+
+}
+
+
 
 
 void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep){
@@ -851,6 +1032,33 @@ void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int
 
 }
 
+void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vector<nHamiltonian*>& ham, int rep){
+
+  if(C.n_cols!=ham.size()){
+    cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep): \n";
+    cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<ham.size()<<"\n";
+    cout<<"Exiting...\n";
+    exit(0);
+  }
+
+  int nst = C.n_rows;
+  int ntraj = C.n_cols;
+  
+  CMATRIX ctmp(nst, 1);
+
+  for(int traj=0; traj<ntraj; traj++){
+    ctmp = C.col(traj);
+    propagate_electronic(dt, ctmp, projector[traj], ham[traj], rep);
+
+    // Insert the propagated result back
+    for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }
+
+  }
+
+}
+
+
+
 
 void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level){
 
@@ -872,6 +1080,35 @@ void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int
   for(int traj=0; traj<ntraj; traj++){
     ctmp = C.col(traj);
     propagate_electronic(dt, ctmp, branches[traj], rep);
+
+    // Insert the propagated result back
+    for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }
+
+  }
+
+}
+
+
+void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, nHamiltonian& ham, int rep, int level){
+
+  vector<nHamiltonian*> branches; 
+  branches = ham.get_branches(level);
+
+  if(C.n_cols!=branches.size()){
+    cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level): \n";
+    cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<branches.size()<<"\n";
+    cout<<"Exiting...\n";
+    exit(0);
+  }
+
+  int nst = C.n_rows;
+  int ntraj = C.n_cols;
+  
+  CMATRIX ctmp(nst, 1);
+
+  for(int traj=0; traj<ntraj; traj++){
+    ctmp = C.col(traj);
+    propagate_electronic(dt, ctmp, projector[traj], branches[traj], rep);
 
     // Insert the propagated result back
     for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }

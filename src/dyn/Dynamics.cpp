@@ -39,77 +39,6 @@ namespace libdyn{
 
 namespace bp = boost::python;
 
-
-MATRIX aux_get_forces(dyn_control_params& prms, nHamiltonian& ham, vector<int>& act_states, CMATRIX& amplitudes){
-  /**
-    Compute the force depending on the method used
-  */
-
-  int ndof = ham.nnucl;
-  int nst = ham.nadi;
-  int ntraj = act_states.size();
-
-  MATRIX F(ndof, ntraj);
-
-  if(prms.force_method==0){  
-
-    // Don't compute forces at all - e.g. in NBRA
-
-  }// NBRA
-
-  else if(prms.force_method==1){  
-
-    // TSH or adiabatic (including excited states)
-    // state-specific forces
-
-    if(prms.rep_force==0){  
-      // Diabatic 
-      //F = ham.forces_dia(act_states).real();
-
-      CMATRIX _amplitudes(nst, ntraj);          // CMATRIX version of "act_states"
-      tsh_indx2vec(ham, _amplitudes, act_states);
-      F = ham.Ehrenfest_forces_dia(_amplitudes, 1).real();
-    }
-
-    else if(prms.rep_force==1){  
-      // Adiabatic 
-      //F = ham.forces_adi(act_states).real();
-
-      CMATRIX _amplitudes(nst, ntraj);          // CMATRIX version of "act_states"
-      tsh_indx2vec(ham, _amplitudes, act_states);
-      F = ham.Ehrenfest_forces_adi(_amplitudes, 1).real();
-    }
-
-  }// TSH && adiabatic
-
-  else if(prms.force_method==2){  
-
-    if(prms.rep_force==0){  
-      // Diabatic 
-      F = ham.Ehrenfest_forces_dia(amplitudes, 1).real();
-    }
-
-    else if(prms.rep_force==1){  
-      // Adiabatic 
-      F = ham.Ehrenfest_forces_adi(amplitudes, 1).real();
-    }
-  
-  }// Ehrenfest
-
-  return F;
-}
-
-
-MATRIX aux_get_forces(bp::dict params, nHamiltonian& ham, vector<int>& act_states, CMATRIX& amplitudes){
-
-  dyn_control_params prms;
-  prms.set_parameters(params);
-
-  return aux_get_forces(prms, ham, act_states, amplitudes);
-  
-}
-
-
 void aux_get_transforms(CMATRIX** Uprev, nHamiltonian& ham){
 
   // For adiabatic representation only:
@@ -125,85 +54,8 @@ void aux_get_transforms(CMATRIX** Uprev, nHamiltonian& ham){
 }
 
 
-
-void do_reordering(dyn_control_params& prms, nHamiltonian& ham,
-                   vector<int>& act_states, CMATRIX& C, CMATRIX** Uprev, Random& rnd){
-
-  // Reordering, if needed
-
-  int ntraj = ham.children.size();
-  int nst = ham.nadi;
-
-  vector<int> perm_t; 
-  vector<int> el_stenc_x(nst, 0); for(int i=0;i<nst;i++){  el_stenc_x[i] = i; }
-  vector<int> el_stenc_y(1, 0); 
-
-  CMATRIX* St;   St = new CMATRIX(ham.nadi, ham.nadi);
-
-
-  for(int traj=0; traj<ntraj; traj++){
-    *St = (*Uprev[traj]).H() * ham.children[traj]->get_basis_transform();
-
-
-    if(prms.state_tracking_algo==1){
-        perm_t = get_reordering(*St);
-    }
-    else if(prms.state_tracking_algo==2){
-        CMATRIX Eadi = ham.children[traj]->get_ham_adi();
-        perm_t = Munkres_Kuhn(*St, Eadi, prms.MK_alpha, prms.MK_verbosity);
-    }
-    if(prms.state_tracking_algo==3){
-        perm_t = get_stochastic_reordering(*St, rnd);
-    }
-
-
-    //ham.children[traj]->update_ordering(perm_t, 1);
-
-    // Switch the active states
-    act_states[traj] = perm_t[ act_states[traj] ];
-          
-    el_stenc_y[0] = traj;
-    CMATRIX x(ham.nadi, 1); 
-    x = C.col(traj);
-    x.permute_rows(perm_t);
-    push_submatrix(C, x, el_stenc_x, el_stenc_y);
-
-  }// for trajectories
-
-  delete St;
-
-}
-
-void do_phase_correction(dyn_control_params& prms, nHamiltonian& ham, 
-                         vector<int>& act_states, CMATRIX& C, CMATRIX** Uprev){
-
-  CMATRIX* phases; phases = new CMATRIX(ham.nadi, 1); 
-
-  int ntraj = ham.children.size();
-  int nst = ham.nadi;
-
-  vector<int> el_stenc_x(nst, 0); for(int i=0;i<nst;i++){  el_stenc_x[i] = i; }
-  vector<int> el_stenc_y(1, 0); 
-
-  for(int traj=0; traj<ntraj; traj++){
-
-    // Phase correction in U, NAC, and Hvib
-    *phases = ham.children[traj]->update_phases(*Uprev[traj], 1);
-
-    // Phase correction in Cadi
-    el_stenc_y[0] = traj;
-    CMATRIX x(ham.nadi, 1); 
-    x = C.col(traj);
-    phase_correct_ampl(&x, phases);
-    push_submatrix(C, x, el_stenc_x, el_stenc_y);
-
-  }// for traj
-
-  delete phases;
-
-}
-
-void update_Hamiltonian_q(dyn_control_params& prms, MATRIX& q, nHamiltonian& ham, 
+void update_Hamiltonian_q(dyn_control_params& prms, MATRIX& q, vector<CMATRIX>& projectors,
+                          nHamiltonian& ham, 
                           bp::object py_funct, bp::object model_params){
 
   /**
@@ -227,16 +79,45 @@ void update_Hamiltonian_q(dyn_control_params& prms, MATRIX& q, nHamiltonian& ham
     }
   }
 
+
 }
 
 
-void update_Hamiltonian_q(bp::dict prms, MATRIX& q, nHamiltonian& ham, 
+void update_Hamiltonian_q(bp::dict prms, MATRIX& q, vector<CMATRIX>& projectors,
+                          nHamiltonian& ham, 
                           bp::object py_funct, bp::object model_params){
 
   dyn_control_params _prms;
   _prms.set_parameters(prms);
 
-  update_Hamiltonian_q(_prms, q, ham, py_funct, model_params);
+  update_Hamiltonian_q(_prms, q, projectors, ham, py_funct, model_params);
+
+}
+
+
+void update_Hamiltonian_q_ethd(dyn_control_params& prms, MATRIX& q, MATRIX& p, vector<CMATRIX>& projectors,
+                          nHamiltonian& ham, 
+                          bp::object py_funct, bp::object model_params, MATRIX& invM){
+
+  if(prms.entanglement_opt==0){    /* Nothing to do */   }
+  else if(prms.entanglement_opt==1){   ham.add_ethd_adi(q, invM, 1);  }
+  else if(prms.entanglement_opt==2){   ham.add_ethd3_adi(q, invM, prms.ETHD3_alpha, 1);  }
+  else if(prms.entanglement_opt==22){  ham.add_ethd3_adi(q, p, invM, prms.ETHD3_alpha, prms.ETHD3_beta, 1);  }
+  else{
+    cout<<"ERROR in update_Hamiltonian_q_ethd: The entanglement option = "<<prms.entanglement_opt<<" is not avaialable\n";
+    exit(0);
+  }
+
+}
+
+void update_Hamiltonian_q_ethd(bp::dict prms, MATRIX& q, MATRIX& p, vector<CMATRIX>& projectors,
+                          nHamiltonian& ham, 
+                          bp::object py_funct, bp::object model_params, MATRIX& invM){
+
+  dyn_control_params _prms;
+  _prms.set_parameters(prms);
+
+  update_Hamiltonian_q_ethd(_prms, q, p, projectors, ham, py_funct, model_params, invM);
 
 }
 
@@ -300,13 +181,39 @@ CMATRIX transform_amplitudes(int rep_in, int rep_out, CMATRIX& C, nHamiltonian& 
   /// C - the basis in which the electron-nuclear propagation is done
   /// Coeff - the basis in which SH is done
 
-  if(rep_in==0){                  // Input in the diabatic basis
-    if(rep_out==0){ Coeff = C; }  // Output in the diabatic basis too
-    else if(rep_out==1){  ham.ampl_dia2adi(C, Coeff, 0, 1);  } // Output in the adiabatic basis
+  // Input in the diabatic basis
+  if(rep_in==0){                  
+ 
+    // Output in the diabatic basis too
+    if(rep_out==0){ 
+      Coeff = C; 
+    }
+
+    // Output in the adiabatic basis
+    else if(rep_out==1){  
+
+      ham.ampl_dia2adi(C, Coeff, 0, 1);  
+
+    }
+
   }
-  else if(rep_in==1){   // Input in the adiabatic basis 
-    if(rep_out==0){  ham.ampl_adi2dia(Coeff, C, 0, 1); }  // Output in the diabatic basis 
-    else if(rep_out==1){ Coeff = C;  } // Output in the diabatic basis too
+
+  // Input in the adiabatic basis 
+  else if(rep_in==1){   
+
+    // Output in the diabatic basis 
+    if(rep_out==0){  
+
+      ham.ampl_adi2dia(Coeff, C, 0, 1); 
+
+    } 
+
+    // Output in the diabatic basis too
+    else if(rep_out==1){ 
+
+      Coeff = C;  
+
+    } 
   }
 
   return Coeff;
@@ -314,89 +221,278 @@ CMATRIX transform_amplitudes(int rep_in, int rep_out, CMATRIX& C, nHamiltonian& 
 
 
 
-void do_surface_hopping(dyn_control_params& prms,
-              MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
-              nHamiltonian& ham, vector<MATRIX>& prev_ham_dia, Random& rnd){
 
+
+void rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse){
+/**
+  Rescale momenta p along the vector t such that the total energy is conserved
+
+  or reverse the momentum along the vector t
+
+*/
+  int dof;
+  int ndof = p.n_rows;
+
+  // According to Fabiano
+  double a_ij = 0.0;
+  double b_ij = 0.0;
+  double c_ij = E_old - E_new;
+    
+  for(dof=0; dof< ndof; dof++){  
+
+    a_ij += t.get(dof, 0) * t.get(dof, 0) * invM.get(dof, 0); 
+    b_ij += p.get(dof, 0) * t.get(dof, 0) * invM.get(dof, 0); 
+
+  }// for dof
+ 
+  a_ij *= 0.5;
+
+  double det = b_ij*b_ij + 4.0*a_ij*c_ij;
+
+  // Calculate the scaling factor and new state
+  double gamma_ij = 0.0;
+
+  if(det<0.0){  // Frustrated hops!
+
+    if(fabs(a_ij)>1e-100){  // only consider reversals, if the couplings are sizable
+      if(do_reverse){     gamma_ij = b_ij / a_ij;}
+      else{ gamma_ij = 0.0;  }
+    }
+    else{ gamma_ij = 0.0;  }
+
+  }
+  else{    // Accepted hops!
+
+    if(fabs(a_ij)>1e-100){  // only consider reversals, if the couplings are sizable
+      if(b_ij<0){ gamma_ij = 0.5*(b_ij + sqrt(det))/a_ij; }
+      else{       gamma_ij = 0.5*(b_ij - sqrt(det))/a_ij; }
+    }
+    else{ gamma_ij = 0.0;  }
+
+  }
+
+  //Rescale velocities and do the hop
+  p -= gamma_ij * t;
+
+}
+
+
+
+
+
+void handle_hops_nuclear(dyn_control_params& prms,
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
+       nHamiltonian& ham, vector<int>& new_states, vector<int>& old_states){
+/**
+  This function changes the nuclear dynamical variables after successful or frustrated hops
+
+  options:
+  0 - don't rescale
+
+  100 - based on adiabatic energy, don't reverse on frustrated hops
+  101 - based on adiabatic energy, reverse on frustrated hops
+  110 - based on diabatic energy, don't reverse on frustrated hops
+  111 - based on diabatic energy, reverse on frustrated hops
+
+  200 - along derivative coupling vectors, don't reverse on frustrated hops
+  201 - along derivative coupling vectors, reverse on frustrated hops
+  210 - along difference of state-specific forces, don't reverse on frustrated hops
+  211 - along difference of state-specific forces, reverse on frustrated hops
+
+*/
 
   int ndof = q.n_rows;
   int ntraj = q.n_cols;
   int nst = C.n_rows;    
   int traj, dof, i;
 
-
-  vector<int> nucl_stenc_x(ndof, 0); for(i=0;i<ndof;i++){  nucl_stenc_x[i] = i; }
-  vector<int> nucl_stenc_y(1, 0); 
-  vector<int> el_stenc_x(nst, 0); for(i=0;i<nst;i++){  el_stenc_x[i] = i; }
-  vector<int> el_stenc_y(1, 0); 
-  vector<int> full_id(2,0);
+  MATRIX p_tr(ndof, 1);
+  CMATRIX hvib(nst, nst);
+  CMATRIX nac(nst, nst);
+  CMATRIX df(nst, nst);
 
 
-  MATRIX g(nst,nst); /// the matrix of hopping probability
-  MATRIX p_traj(ndof, 1);
-  CMATRIX coeff(nst, 1);
-  vector<int> fstates(ntraj,0); 
+  if(prms.momenta_rescaling_algo==0){  // Don't rescale at all
+    ; ;
+  }// algo = 0
 
-  //============== Begin the TSH part ===================
+  else if(prms.momenta_rescaling_algo==100 || prms.momenta_rescaling_algo==101){  // rescale momenta uniformly based on adiabatic energies
 
-  // Proposed hops probabilities
-  for(traj=0; traj<ntraj; traj++){
+    for(traj=0; traj<ntraj; traj++){
 
-    nucl_stenc_y[0] = traj;
-    el_stenc_y[0] = traj;
-    full_id[1] = traj;
+      int old_st = old_states[traj];
+      int new_st = new_states[traj];
 
-    pop_submatrix(C, coeff, el_stenc_x, el_stenc_y);
+      p_tr = p.col(traj);
 
-    if(prms.tsh_method == 0){ // FSSH
-      g = compute_hopping_probabilities_fssh(coeff, ham.children[traj], prms.rep_sh,
-                                   prms.dt, prms.use_boltz_factor, prms.Temperature);
+      double T_i = compute_kinetic_energy(p_tr, invM); // initial kinetic energy
+
+      hvib = ham.children[traj]->get_ham_adi();
+      hvib = projectors[traj].H() * hvib * projectors[traj];
+        
+      double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
+      double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
+      double T_f = T_i + E_i - E_f;             // predicted final kinetic energy
+
+
+      double scl_fac = 1.0;
+
+      if(T_f>=0.0){  scl_fac = std::sqrt(T_f/T_i);   }
+      else{
+        if(prms.momenta_rescaling_algo==100){  scl_fac = 1.0; }
+        else if(prms.momenta_rescaling_algo==101){  scl_fac = -1.0; }
+      }      
+
+      for(dof = 0; dof < ndof; dof++){   p.scale(dof, traj, scl_fac);  }
+
     }
-    else if(prms.tsh_method == 1){ // GFSH
-      g = compute_hopping_probabilities_gfsh(coeff, ham.children[traj], prms.rep_sh,
-                                   prms.dt, prms.use_boltz_factor, prms.Temperature);
+  }// algo = 100 || 101
+
+  else if(prms.momenta_rescaling_algo==110 || prms.momenta_rescaling_algo==111){  // rescale momenta uniformly based on diabatic energies
+
+    for(traj=0; traj<ntraj; traj++){
+
+      int old_st = old_states[traj];
+      int new_st = new_states[traj];
+
+      p_tr = p.col(traj);
+      double T_i = compute_kinetic_energy(p_tr, invM); // initial kinetic energy
+      double E_i = ham.children[traj]->get_ham_dia().get(old_st, old_st).real();  // initial potential energy
+      double E_f = ham.children[traj]->get_ham_dia().get(new_st, new_st).real();  // final potential energy  
+      double T_f = T_i + E_i - E_f;             // predicted final kinetic energy
+
+      double scl_fac = 1.0;
+
+      if(T_f>=0.0){  scl_fac = std::sqrt(T_f/T_i);   }
+      else{
+        if(prms.momenta_rescaling_algo==110){  scl_fac = 1.0; }
+        else if(prms.momenta_rescaling_algo==111){  scl_fac = -1.0; }
+      }      
+
+      for(dof = 0; dof < ndof; dof++){   p.scale(dof, traj, scl_fac);  }
+
     }
-    else if(prms.tsh_method == 2){ // MSSH
-      g = compute_hopping_probabilities_mssh(coeff);
-    }
-    else if(prms.tsh_method == 3){ // LZ
-      pop_submatrix(p, p_traj, nucl_stenc_x, nucl_stenc_y);
-      g = compute_hopping_probabilities_lz(ham.children[traj], prms.rep_lz, p_traj, invM, prev_ham_dia[traj]);
-    }
+  }// algo = 110 || algo = 111
 
-    else{
-      cout<<"Error in tsh1: tsh_method can be -1, 0, 1, 2, or 3. Other values are not defined\n";
-      cout<<"Exiting...\n";
-      exit(0);
-    }
 
-    //============== Compute the potential states after the proposed hops =======================
-    double ksi = rnd.uniform(0.0,1.0);             /// generate random number 
-    fstates[traj] = hop(act_states[traj], g, ksi); /// Proposed hop
+  else if(prms.momenta_rescaling_algo==200 || prms.momenta_rescaling_algo==201){  // rescale momenta along the derivative coupling vector
 
-  }// for traj
+    MATRIX dNAC(ndof, 1);
+    int do_reverse;
 
-  //======== Decide whether to accept the proposed hops and if so what to do with the nuclei 
+    if(prms.momenta_rescaling_algo==200){ do_reverse = 0; }
+    else if(prms.momenta_rescaling_algo==201){ do_reverse = 1; }
 
-  act_states = apply_transition1(p, invM, ham, act_states, fstates, prms.vel_rescale_opt, prms.do_reverse, 1); 
+    for(traj=0; traj<ntraj; traj++){
 
-  
+      int old_st = old_states[traj];
+      int new_st = new_states[traj];
+
+      hvib = ham.children[traj]->get_ham_adi();
+      hvib = projectors[traj].H() * hvib * projectors[traj];
+
+      double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
+      double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
+
+      for(dof = 0; dof < ndof; dof++){
+        nac = ham.children[traj]->get_dc1_adi(dof);
+        nac = projectors[traj].H() * nac * projectors[traj];
+
+        dNAC.set(dof, 0, nac.get(old_st, new_st).real() );
+      }
+
+      p_tr = p.col(traj);       
+      rescale_along_vector(E_i, E_f, p_tr, invM, dNAC, do_reverse); 
+
+      for(dof = 0; dof < ndof; dof++){   p.set(dof, traj, p_tr.get(dof, 0));     }
+
+    }// for traj
+
+  }// algo = 200 || 201
+
+  else if(prms.momenta_rescaling_algo==210 || prms.momenta_rescaling_algo==211 ){  // rescale momenta along the difference in forces
+
+    MATRIX dF(ndof, 1);
+/*
+    MATRIX Fi(ndof, ntraj);
+    MATRIX Ff(ndof, ntraj);
+    CMATRIX _ampl_i(nst, ntraj);     // CMATRIX version of "initial_states"
+    CMATRIX _ampl_f(nst, ntraj);     // CMATRIX version of "proposed_states"
+
+
+    tsh_indx2vec(ham, _ampl_i, old_states);
+    Fi = ham.Ehrenfest_forces_adi(_ampl_i, 1).real();
+
+    tsh_indx2vec(ham, _ampl_f, new_states);
+    Ff = ham.Ehrenfest_forces_adi(_ampl_f, 1).real();
+
+*/
+
+    int do_reverse;
+
+    if(prms.momenta_rescaling_algo==210){ do_reverse = 0; }
+    else if(prms.momenta_rescaling_algo==211){ do_reverse = 1; }
+
+
+
+    for(traj=0; traj<ntraj; traj++){
+
+      int old_st = old_states[traj];
+      int new_st = new_states[traj];
+
+      hvib = ham.children[traj]->get_ham_adi();
+      hvib = projectors[traj].H() * hvib * projectors[traj];
+      double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
+      double E_f = hvib.get(new_st, new_st).real();  // final potential energy        
+
+      for(dof = 0; dof < ndof; dof++){
+
+        df = ham.children[traj]->get_d1ham_adi(dof);
+        df = projectors[traj].H() * df * projectors[traj];
+        dF.set(dof, 0, df.get(old_st, old_st).real() - df.get(new_st, new_st).real());
+
+      }
+
+      p_tr = p.col(traj);       
+      rescale_along_vector(E_i, E_f, p_tr, invM, dF, do_reverse); 
+
+      for(dof = 0; dof < ndof; dof++){   p.set(dof, traj, p_tr.get(dof, 0));     }
+      
+    }// for traj
+
+  }// algo = 210 || 211
+
+
 }
 
 
-void do_surface_hopping(bp::dict prms,
-              MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
-              nHamiltonian& ham, vector<MATRIX>& prev_ham_dia, Random& rnd){
 
-  dyn_control_params _prms;
-  _prms.set_parameters(prms);
+//vector<CMATRIX> compute_St(nHamiltonian& ham, CMATRIX** Uprev){
+vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev){
+/**
+  This function computes the time-overlap matrices for all trajectories
 
-  do_surface_hopping(_prms, q, p, invM, C, act_states, ham, prev_ham_dia, rnd);
+*/
+
+  int nst = ham.nadi;
+  int ntraj = ham.children.size();
+
+  vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
+
+  for(int traj=0; traj<ntraj; traj++){
+    //St[traj] = (*Uprev[traj]).H() * ham.children[traj]->get_basis_transform();
+    St[traj] = Uprev[traj].H() * ham.children[traj]->get_basis_transform();
+  }
+
+  return St;
 
 }
 
 
-void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
+
+
+void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
+              vector<int>& act_states,              
               nHamiltonian& ham, bp::object py_funct, bp::dict params, bp::dict dyn_params, Random& rnd){
 
 /**
@@ -406,7 +502,11 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int
   \param[in,out] q [Ndof x Ntraj] nuclear coordinates. Change during the integration.
   \param[in,out] p [Ndof x Ntraj] nuclear momenta. Change during the integration.
   \param[in] invM [Ndof  x 1] inverse nuclear DOF masses. 
-  \param[in,out] C [nadi x ntraj]  or [ndia x ntraj] matrix containing the electronic coordinates
+  \param[in,out] C [nadi x ntraj]  or [ndia x ntraj] matrix containing the electronic coordinates. The amplitudes
+   are assumed to be dynamically-consistent
+  \param[in,out] projectors [ntraj CMATRIX(nadi, nadi)] - the projector matrices that account for the state tracking and 
+  phase correction. These matrices should be considered as the dynamical varibles, similar to quantum amplitudes. Except
+  their evolution does not necessarily follow from some equations of motion, but rather from various ad hoc schemes.
   \param[in,out] act_states - vector of ntraj indices of the physical states in which each of the trajectories
   initially is (active states). 
   \param[in] ham Is the Hamiltonian object that works as a functor (takes care of all calculations of given type) 
@@ -430,8 +530,22 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int
   int nst = C.n_rows;    
   int traj, dof;
 
-  CMATRIX** Uprev; 
+  vector<CMATRIX> Uprev;
+  vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
+  vector<CMATRIX> Eadi(ntraj, CMATRIX(nst, nst));  
+  vector<MATRIX> decoherence_rates(ntraj, MATRIX(nst, nst)); 
+  vector<double> Ekin(ntraj, 0.0);  
   vector<MATRIX> prev_ham_dia(ntraj, MATRIX(nst, nst));
+  MATRIX gamma(ndof, ntraj);
+  MATRIX p_traj(ndof, 1);
+  vector<int> t1(ndof, 0); for(dof=0;dof<ndof;dof++){  t1[dof] = dof; }
+  vector<int> t2(1,0);
+
+
+  vector<Thermostat> therm;
+  if(prms.ensemble==1){  
+    therm = vector<Thermostat>(ntraj, Thermostat(prms.thermostat_params));
+  }
 
 
   if(prms.tsh_method == 3){
@@ -446,85 +560,182 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int
   if(prms.rep_tdse==1){      
     if(prms.do_phase_correction || prms.state_tracking_algo > 0){
 
-      Uprev = new CMATRIX*[ntraj];
-      for(traj=0; traj<ntraj; traj++){  Uprev[traj] = new CMATRIX(nst, nst);  }
+      Uprev = vector<CMATRIX>(ntraj, CMATRIX(nst, nst));
 
-      aux_get_transforms(Uprev, ham);
+      for(traj=0; traj<ntraj; traj++){
+        Uprev[traj] = ham.children[traj]->get_basis_transform();  
+      }
+      
     }
   }// rep == 1
-
 
 
  
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
-  propagate_electronic(0.5*prms.dt, C, ham.children, prms.rep_tdse);   
+  propagate_electronic(0.5*prms.dt, C, projectors, ham.children, prms.rep_tdse);   
 
   //============== Nuclear propagation ===================
+
+  // NVT dynamics
+  if(prms.ensemble==1){  
+    for(traj=0; traj<ntraj; traj++){
+      p.scale(-1, traj, therm[traj].vel_scale(0.5*prms.dt));
+    }
+  }
  
-  p = p + aux_get_forces(prms, ham, act_states, C) * 0.5 * prms.dt;
+  p = p + aux_get_forces(prms, C, projectors, act_states, ham) * 0.5 * prms.dt;
+
+
+
+  if(prms.entanglement_opt==22){
+    gamma = ETHD3_friction(q, p, invM, prms.ETHD3_alpha, prms.ETHD3_beta);
+  }
 
   // Update coordinates of nuclei for all trajectories
   for(traj=0; traj<ntraj; traj++){
     for(dof=0; dof<ndof; dof++){  
       q.add(dof, traj,  invM.get(dof,0) * p.get(dof,traj) * prms.dt ); 
+
+      if(prms.entanglement_opt==22){
+        q.add(dof, traj,  invM.get(dof,0) * gamma.get(dof,traj) * prms.dt ); 
+      }
+
     }
   }
 
 
   // Recompute the matrices at the new geometry and apply any
   // necessary fixes 
-  update_Hamiltonian_q(prms, q, ham, py_funct, params);
+  update_Hamiltonian_q(prms, q, projectors, ham, py_funct, params);
+  update_Hamiltonian_q_ethd(prms, q, p, projectors, ham, py_funct, params, invM);
 
 
 
   // Apply phase correction and state reordering as needed
   if(prms.rep_tdse==1){
-    if(prms.state_tracking_algo > 0){
-      do_reordering(prms, ham, act_states, C, Uprev, rnd);
-    }
 
-    if(prms.do_phase_correction){
-      do_phase_correction(prms, ham, act_states, C, Uprev);
-    }
+    if(prms.state_tracking_algo > 0 || prms.do_phase_correction){
 
-    if(prms.do_phase_correction || prms.state_tracking_algo >0 ){
-      for(traj=0; traj<ntraj; traj++){  delete Uprev[traj]; }  delete Uprev;
-    }
+      St = compute_St(ham, Uprev);    
+      Eadi = get_Eadi(ham);           // these are raw properties
+      update_projectors(prms, projectors, Eadi, St, rnd);
 
+    }
   }// rep_tdse == 1
 
 
-  // Update the Ehrenfest forces for all trajectories
-  //tsh_indx2vec(ham, states, act_states);
+  // NVT dynamics
+  if(prms.ensemble==1){  
 
-  p = p + aux_get_forces(prms, ham, act_states, C) * 0.5 * prms.dt;
+    for(traj=0; traj<ntraj; traj++){
+      t2[0] = traj; 
+      pop_submatrix(p, p_traj, t1, t2);
+      double ekin = compute_kinetic_energy(p_traj, invM);
+      therm[traj].propagate_nhc(prms.dt, ekin, 0.0, 0.0);
+    }
+
+  }
+
+
+  p = p + aux_get_forces(prms, C, projectors, act_states, ham) * 0.5 * prms.dt;
+
+  // NVT dynamics
+  if(prms.ensemble==1){  
+    for(traj=0; traj<ntraj; traj++){
+      p.scale(-1, traj, therm[traj].vel_scale(0.5*prms.dt));
+    }
+  }
 
 
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
   update_Hamiltonian_p(prms, ham, p, invM);
-  propagate_electronic(0.5*prms.dt, C, ham.children, prms.rep_tdse);   
+  propagate_electronic(0.5*prms.dt, C, projectors, ham.children, prms.rep_tdse);   
 
 
 
   //============== Begin the TSH part ===================
 
   // To be able to compute transition probabilities, compute the corresponding amplitudes
+  // This transformation is between diabatic and raw adiabatic representations
   CMATRIX Coeff(nst,ntraj); 
   Coeff = transform_amplitudes(prms.rep_tdse, prms.rep_sh, C, ham);
 
+  if(prms.rep_tdse==0){
+    // If we solve TD-SE in the diabatic rep, C (when transformed to adiabatic basis by the code above)
+    // returned is in the raw representation, so we need to make it dynamically-consistent
 
-  // MSDM decoherence corrections
+    Coeff = raw_to_dynconsyst(Coeff, projectors);
+  }
+  else if(prms.rep_tdse==1){ 
+    // If we solve TD-SE in the adiabatic rep, C is already dynamically-consistent
+    ;;
+  }
+
+
+
+  //================= Update decoherence rates & times ================
+  //MATRIX decoh_rates(*prms.decoh_rates);
+
+  if(prms.decoherence_algo==0 || prms.decoherence_algo==2 ){
+
+    // Just use the plain times given from the input, usually the
+    // mSDM formalism
+    if(prms.decoherence_times_type==0){
+      for(traj=0; traj<ntraj; traj++){   decoherence_rates[traj] = *prms.decoh_rates;   }
+    }
+
+    // Compute the dephasing rates according the original energy-based formalism
+    else if(prms.decoherence_times_type==1){
+      Eadi = get_Eadi(ham); 
+      Ekin = compute_kinetic_energies(p, invM);
+      decoherence_rates = edc_rates(Eadi, Ekin, prms.decoherence_C_param, prms.decoherence_eps_param);       
+    }
+
+    //== Optionally, apply the dephasing-informed correction ==
+    if(prms.dephasing_informed==1){
+      Eadi = get_Eadi(ham); 
+      MATRIX ave_gaps(*prms.ave_gaps);
+      dephasing_informed_correction(decoherence_rates, Eadi, ave_gaps);
+    }
+
+  }
+  
+
+
+  //============ Apply decoherence corrections ==================
+  // SDM and alike methods
   if(prms.decoherence_algo==0){
-    MATRIX dr(*prms.decoh_rates);
-    Coeff = msdm(Coeff, prms.dt, act_states, dr);
+    Coeff = sdm(Coeff, prms.dt, act_states, decoherence_rates);
   }
-
-  // Use them to do the hopping
+ 
+ 
+  //========= Use the resulting amplitudes to do the hopping =======
   if(prms.tsh_method >=0){
-    do_surface_hopping(prms, q, p, invM, Coeff, act_states, ham, prev_ham_dia, rnd);
-  }
+
+    // Compute hopping probabilities
+    vector<MATRIX> g( hop_proposal_probabilities(prms, q, p, invM, Coeff, projectors, ham, prev_ham_dia) );
+
+
+    // Propose new discrete states    
+    vector<int> prop_states( propose_hops(g, act_states, rnd) );
+
+    // Decide if to accept the transitions (and then which)
+    vector<int> old_states(act_states);
+    act_states = accept_hops(prms, q, p, invM, Coeff, projectors, ham, prop_states, act_states, rnd);
+
+    // Velocity rescaling
+    handle_hops_nuclear(prms, q, p, invM, Coeff, projectors, ham, act_states, old_states);
+
+    if(prms.decoherence_algo==1){
+      // Instantaneous decoherence 
+      instantaneous_decoherence(Coeff, act_states, prop_states, old_states, 
+          prms.instantaneous_decoherence_variant, prms.collapse_option);
+    }
+        
+  }// tsh_method >=0
+
 
 }
 

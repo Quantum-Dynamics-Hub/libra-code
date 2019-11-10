@@ -630,13 +630,18 @@ def hopping(Coeff, Hvib, istate, sh_method, do_collapse, ksi, ksi2, dt, T, boltz
            
 
     """
+
+    prms = dyn_control_params()
+    prms.set_parameters({"dt":dt,  "use_boltz_factor":boltz_opt, "Temperature":T })
+
     g = 0.0
     if sh_method==0:
-        g = compute_hopping_probabilities_mssh(Coeff)
+        #g = compute_hopping_probabilities_mssh(Coeff)
+        g = hopping_probabilities_mssh(prms, Coeff, Hvib)
     elif sh_method==1:
-        g = compute_hopping_probabilities_fssh(Coeff, Hvib, dt)
+        g = hopping_probabilities_fssh(prms, Coeff, Hvib)
     elif sh_method==2:
-        g = compute_hopping_probabilities_gfsh(Coeff, Hvib, dt)
+        g = hopping_probabilities_gfsh(prms, Coeff, Hvib)
 
 
     old_st = istate

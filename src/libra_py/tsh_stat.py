@@ -42,7 +42,7 @@ from . import units
 from . import probabilities
 
 
-def compute_etot(ham, p, Cdia, Cadi, iM, rep):
+def compute_etot(ham, p, Cdia, Cadi, projectors, iM, rep):
     """Computes the Ehrenfest potential energy
 
     This function computes the average kinetic, potential, and total
@@ -53,6 +53,7 @@ def compute_etot(ham, p, Cdia, Cadi, iM, rep):
         p ( MATRIX(ndof, ntraj) ): nuclear momenta of multiple trajectories
         Cdia ( CMATRIX(ndia, ntraj) ): amplitudes of diabatic states in the TD wavefunction expansion
         Cadi ( CMATRIX(ndia, ntraj) ): amplitudes of adiabatic states in the TD wavefunction expansion
+        projectors ( list of CMATRIX(nst, nst)): dynamically-consistent corrections
         iM ( MATRIX(ndof, 1) ): inverse masses for all nuclear DOFs
         rep ( int ): The selector of the representation that is of current interest.
 
@@ -93,7 +94,9 @@ def compute_etot(ham, p, Cdia, Cadi, iM, rep):
             epot.append( ham.Ehrenfest_energy_dia(C, Py2Cpp_int([0,traj])).real )
             Epot = Epot + epot[traj]
         elif rep==1:
+
             pop_submatrix(Cadi, C, Py2Cpp_int(list(range(0,nst))), Py2Cpp_int([traj]))    
+            C = projectors[traj] * C  # dyn-const -> raw
             epot.append( ham.Ehrenfest_energy_adi(C, Py2Cpp_int([0,traj])).real )
             Epot = Epot + epot[traj]
 
@@ -125,7 +128,7 @@ def compute_etot(ham, p, Cdia, Cadi, iM, rep):
 
 
 
-def compute_etot_tsh(ham, p, Cdia, Cadi, act_states, iM, rep):
+def compute_etot_tsh(ham, p, Cdia, Cadi, projectors, act_states, iM, rep):
     """Compute the adiabatic potential energy
 
     This function computes the average kinetic, potential, and total
@@ -135,7 +138,8 @@ def compute_etot_tsh(ham, p, Cdia, Cadi, act_states, iM, rep):
         ham ( nHamiltonian ): object that handles Hamiltonian-related calculations with many trajectories
         p ( MATRIX(ndof, ntraj) ): nuclear momenta of multiple trajectories
         Cdia ( CMATRIX(ndia, ntraj) ): amplitudes of diabatic states in the TD wavefunction expansion
-        Cadi ( CMATRIX(ndia, ntraj) ): amplitudes of adiabatic states in the TD wavefunction expansion
+        Cadi ( CMATRIX(nadi, ntraj) ): amplitudes of adiabatic states in the TD wavefunction expansion
+        projectors ( list of CMATRIX(nst, nst)): dynamically-consistent corrections
         iM ( MATRIX(ndof, 1) ): inverse masses for all nuclear DOFs
         rep ( int ): The selector of the representation that is of current interest.
 
@@ -170,7 +174,8 @@ def compute_etot_tsh(ham, p, Cdia, Cadi, act_states, iM, rep):
     C = CMATRIX(nst, 1)
     states = CMATRIX(nst, ntraj)
 
-    tsh_indx2vec(ham, states, act_states)
+    #tsh_indx2vec(ham, states, act_states)
+    states = tsh_indx2ampl(act_states, nst)
 
     for traj in range(0,ntraj):
 
@@ -180,6 +185,10 @@ def compute_etot_tsh(ham, p, Cdia, Cadi, act_states, iM, rep):
             epot.append( ham.Ehrenfest_energy_dia(C, Py2Cpp_int([0,traj])).real )
             Epot = Epot + epot[traj]
         elif rep==1:
+            # C is supposed to be a dyn-consistent amplitudes, so we'd need to convert
+            # the Hamiltonian into it, but since the Ehrenfest energy is invariant w.r.t. 
+            # the choice of raw/dynamically-consystent rep, we better convert C
+            C = projectors[traj] * C  # dyn-const -> raw
             epot.append( ham.Ehrenfest_energy_adi(C, Py2Cpp_int([0,traj])).real )
             Epot = Epot + epot[traj]
 
@@ -210,7 +219,7 @@ def compute_etot_tsh(ham, p, Cdia, Cadi, act_states, iM, rep):
 
 
 
-def compute_dm(ham, Cdia, Cadi, rep, lvl):
+def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl):
     """
 
     Compute the trajectory-averaged density matrices in diabatic
@@ -220,6 +229,7 @@ def compute_dm(ham, Cdia, Cadi, rep, lvl):
         ham ( nHamiltonian ): object that handles Hamiltonian-related calculations with many trajectories
         Cdia ( CMATRIX(ndia, ntraj) ): amplitudes of diabatic states in the TD wavefunction expansion
         Cadi ( CMATRIX(ndia, ntraj) ): amplitudes of adiabatic states in the TD wavefunction expansion
+        projectors ( list of CMATRIX(nst, nst)): dynamically-consistent corrections   
         rep ( int ): a selector of which representation is considered main (being propagated)
             E.g. if rep = 0 - that means we propagate the diabatic coefficients, that is the calculation 
             of the diabatic density matrix is straightforward, but we need to involve some transformations 
@@ -264,7 +274,6 @@ def compute_dm(ham, Cdia, Cadi, rep, lvl):
         if rep==0:
             S = ham.get_ovlp_dia(indx)
             U = ham.get_basis_transform(indx) 
-            #correct_phase(U)
     
             dm_tmp = S * Cdia.col(traj) * Cdia.col(traj).H() * S
             dm_dia = dm_dia + dm_tmp
@@ -273,10 +282,10 @@ def compute_dm(ham, Cdia, Cadi, rep, lvl):
     
         elif rep==1:
             c = Cadi.col(traj)
-            M = ham.get_ordering_adi(Py2Cpp_int([0, traj]))
-            iM = inverse_permutation(M)
+            #M = ham.get_ordering_adi(Py2Cpp_int([0, traj]))
+            #iM = inverse_permutation(M)
 
-            c.permute_rows(iM)
+            #c.permute_rows(iM)
             dm_tmp = c * c.H()
             dm_adi = dm_adi + dm_tmp
 

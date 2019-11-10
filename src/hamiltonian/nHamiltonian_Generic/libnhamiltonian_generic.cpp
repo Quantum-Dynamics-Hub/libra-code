@@ -121,13 +121,13 @@ void export_nhamiltonian_generic_objects(){
 
   void (nHamiltonian::*expt_update_ordering_v1)(vector<int>& perm_t, int lvl) = &nHamiltonian::update_ordering;
   void (nHamiltonian::*expt_update_ordering_v2)(vector<int>& perm_t) = &nHamiltonian::update_ordering;
-
+/*
   void (nHamiltonian::*expt_apply_phase_corrections_v1)(CMATRIX& phase_corr, int lvl) = &nHamiltonian::apply_phase_corrections;
   void (nHamiltonian::*expt_apply_phase_corrections_v2)(CMATRIX& phase_corr) = &nHamiltonian::apply_phase_corrections;
 
   CMATRIX (nHamiltonian::*expt_update_phases_v1)(CMATRIX& phases, int lvl) = &nHamiltonian::update_phases;
   CMATRIX (nHamiltonian::*expt_update_phases_v2)(CMATRIX& phases) = &nHamiltonian::update_phases;
-
+*/
 
 
 
@@ -398,10 +398,10 @@ void export_nhamiltonian_generic_objects(){
 
       .def("update_ordering", expt_update_ordering_v1)
       .def("update_ordering", expt_update_ordering_v2)
-      .def("apply_phase_corrections", expt_apply_phase_corrections_v1)
-      .def("apply_phase_corrections", expt_apply_phase_corrections_v2)
-      .def("update_phases", expt_update_phases_v1)
-      .def("update_phases", expt_update_phases_v2)
+//      .def("apply_phase_corrections", expt_apply_phase_corrections_v1)
+//      .def("apply_phase_corrections", expt_apply_phase_corrections_v2)
+//      .def("update_phases", expt_update_phases_v1)
+//      .def("update_phases", expt_update_phases_v2)
 
 
       .def("compute_adiabatic", expt_compute_adiabatic_v1)
@@ -483,6 +483,7 @@ void export_nhamiltonian_generic_objects(){
 
 
 
+/*
   CMATRIX (*expt_compute_phase_corrections1_v1)(CMATRIX& S, double tol) = &compute_phase_corrections1;
   CMATRIX (*expt_compute_phase_corrections1_v2)(CMATRIX& U, CMATRIX& U_prev, double tol) = &compute_phase_corrections1;
 
@@ -493,7 +494,7 @@ void export_nhamiltonian_generic_objects(){
   def("compute_phase_corrections1", expt_compute_phase_corrections1_v2);
   def("compute_phase_corrections", expt_compute_phase_corrections_v1);
   def("compute_phase_corrections", expt_compute_phase_corrections_v2);
-
+*/
 
 
   double (*expt_ETHD_energy_v1)(const MATRIX& q, const MATRIX& invM) = &ETHD_energy;

@@ -117,13 +117,13 @@ void nHamiltonian::update_ordering(vector<int>& perm_t){
 }
 
 
-
+/**
 
 void nHamiltonian::apply_phase_corrections(CMATRIX* phase_corr, int lvl){
-/**
-  phase_corr - CMATRIX(nadi, 1) - the changes of cumulative phases of all eigenvectors. 
+
+//  phase_corr - CMATRIX(nadi, 1) - the changes of cumulative phases of all eigenvectors. 
   
-*/
+
 
   int i, j;
   complex<double> fji;
@@ -215,121 +215,25 @@ void nHamiltonian::apply_phase_corrections(CMATRIX& phase_corr){
 }
 
 
-CMATRIX compute_phase_corrections1(CMATRIX& S, double tol){
-/**
-  Compute the phase correction of one set of eigenvectors (new) with respect to 
-  another one (reference).
-
-  S = <psi(ref)|psi(new)> - N x N matrix, where N is the number of states
-
-  Result - N x 1 matrix of the phase correction factors. 
-
-  To obtain the phase-corrected wavefunction, multiply the new wavefunctions
-  by the complex-conjugated factors:
-
-  |psi_i(new, phase-corrected)> = phase_corr.get(i,0).conjugate() * |psi_i(new)>
-
 */
 
-  int i;
-  complex<double> f;
-  int nc = S.n_cols;
 
-  CMATRIX phase_corr(nc, 1);
-
-  // Default values
-  for(i=0;i<nc; i++){  phase_corr.set(i, 0, 1.0, 0.0); }
-
-  // Compute phase corrections  
-  for(i=0; i<nc; i++){
-
-    f = S.get(i,i);
-    double af = sqrt( std::norm(f) );
-
-    // If the overlap is very small, it means we might have switched
-    // the state adiabatically, in which case the phase correction does 
-    // not make sense
-    if(af > 1e-3){   phase_corr.set(i, 0, f / af);     }
-
-  }// for i
-
-  return phase_corr;
-
-}
-
-CMATRIX compute_phase_corrections(CMATRIX& S){
-
-  return compute_phase_corrections1(S, 1e-3);
-}
-
-
-CMATRIX compute_phase_corrections1(CMATRIX& U, CMATRIX& U_prev, double tol){
 /**
-  Compute the cumulative phase correction of one set of eigenvectors with respect to 
-  the previous one (that may be already phase-corrected).
-
-  U - the |psi(t')>
-  U_prev = |psi(t)>
-
-  t' > t
-
-  Result - N x 1 matrix of the phase correction factors. 
-
-  To obtain the phase-corrected wavefunction, multiply the new wavefunctions
-  by the complex-conjugated factors:
-
-  |psi_i(new, phase-corrected)> = phase_corr.get(i,0).conjugate() * |psi_i(new)>
-
-*/
-
-  int i;
-  complex<double> f;
-  int nc = U.n_cols;
-
-  CMATRIX phase_corr(nc, 1);
-
-  // Default values
-  for(i=0;i<nc; i++){  phase_corr.set(i, 0, 1.0, 0.0); }
-
-  // Compute phase corrections  
-  for(i=0; i<nc; i++){
-
-    f = (U_prev.col(i).H() * U.col(i) ).get(0);
-    double af = std::norm(f);
-
-    if(af > tol){   phase_corr.set(i, 0, f / af);        }
-
-//    cout<<"In compute_phase_corrections.. i = "<<i<<" f= "<<f<<" af = "<<af<<" phase_corr = "<<phase_corr.get(i)<<endl;
-
-  }// for i
-
-  return phase_corr;
-
-}
-
-CMATRIX compute_phase_corrections(CMATRIX& U, CMATRIX& U_prev){
-
-  return compute_phase_corrections1(U, U_prev, 1e-3);
-
-}
-
-
-
 
 CMATRIX nHamiltonian::update_phases(CMATRIX& U_prev, int lvl){
-/**
-  This function computes the phase corrections to all current eigenvectors
-  w.r.t. those in U_prev.
-  It also applies the correction to the present eigenvectors. 
-  Finally, this function computes the phases by which the adiabatic amplitudes 
-  should be updated and returns these corrections as a column-vector.
-  
-  basis_transform - the |psi(t')>
-  U_prev = |psi(t)>
 
-  t' > t
+//  This function computes the phase corrections to all current eigenvectors
+//  w.r.t. those in U_prev.
+//  It also applies the correction to the present eigenvectors. 
+//  Finally, this function computes the phases by which the adiabatic amplitudes 
+//  should be updated and returns these corrections as a column-vector.
+//  
+//  basis_transform - the |psi(t')>
+//  U_prev = |psi(t)>
+//
+//  t' > t
 
-*/
+
 
   if(lvl==level){
 
@@ -380,7 +284,7 @@ CMATRIX nHamiltonian::update_phases(CMATRIX& U_prev){
 
   return update_phases(U_prev, 0);
 }
-
+*/
 
 
 

@@ -41,12 +41,15 @@ dyn_control_params::dyn_control_params(){
   force_method = 1;
   nac_update_method = 1;
   rep_force = 1;
+  hop_acceptance_algo = 0;
+  momenta_rescaling_algo = 0;
   use_boltz_factor = 0;
   Temperature = 300.0;
   do_reverse = 1;
   vel_rescale_opt = 0;
   dt = 41.0;
   do_phase_correction = 1;
+  phase_correction_tol = 1e-3; 
   state_tracking_algo = 2;
   MK_alpha = 0.0;
   MK_verbosity = 0;
@@ -57,6 +60,16 @@ dyn_control_params::dyn_control_params(){
 
   decoherence_algo = -1; 
   decoh_rates = NULL;
+  decoherence_times_type = 0;
+  decoherence_C_param = 1.0;
+  decoherence_eps_param = 0.1;
+  dephasing_informed = 0;
+  ave_gaps = NULL;
+  instantaneous_decoherence_variant = 1; 
+  collapse_option = 0;
+
+  ensemble = 0;
+  thermostat_params = bp::dict();
 
 }
 
@@ -94,6 +107,8 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="force_method") { force_method = bp::extract<int>(params.values()[i]);  }
     else if(key=="nac_update_method") { nac_update_method = bp::extract<int>(params.values()[i]);  }
     else if(key=="rep_force") { rep_force = bp::extract<int>(params.values()[i]);  }
+    else if(key=="hop_acceptance_algo") { hop_acceptance_algo = bp::extract<int>(params.values()[i]);  }
+    else if(key=="momenta_rescaling_algo"){ momenta_rescaling_algo = bp::extract<int>(params.values()[i]);  }
     else if(key=="use_boltz_factor") { use_boltz_factor = bp::extract<int>(params.values()[i]);  }
     else if(key=="Temperature") { Temperature = bp::extract<double>(params.values()[i]);  }
     else if(key=="do_reverse") { do_reverse = bp::extract<int>(params.values()[i]);  }
@@ -103,6 +118,7 @@ void dyn_control_params::set_parameters(bp::dict params){
 
     // Phase correction
     else if(key=="do_phase_correction") { do_phase_correction = bp::extract<int>(params.values()[i]);  }
+    else if(key=="phase_correction_tol") { phase_correction_tol = bp::extract<double>(params.values()[i]);  }
 
     // State tracking options
     else if(key=="state_tracking_algo"){  state_tracking_algo = bp::extract<int>(params.values()[i]);  }
@@ -110,7 +126,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="MK_verbosity") { MK_verbosity = bp::extract<int>(params.values()[i]);  }
 
     // Trajectory coupling
-    else if(key=="entanglement_opt"){ entanglement_opt = bp::extract<int>(params.values()[i]); }
+    else if(key=="entangelment_opt"){ entanglement_opt = bp::extract<int>(params.values()[i]); }
     else if(key=="ETHD3_alpha") { ETHD3_alpha = bp::extract<double>(params.values()[i]);   }
     else if(key=="ETHD3_beta") { ETHD3_beta = bp::extract<double>(params.values()[i]);   }
 
@@ -119,8 +135,6 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="decoh_rates"){ 
 
       MATRIX x( bp::extract<MATRIX>(params.values()[i]) );
-
-
       decoh_rates = new MATRIX(x.n_rows, x.n_cols);      
       for(int a=0;a<x.n_rows;a++){
         for(int b=0;b<x.n_cols;b++){
@@ -130,6 +144,30 @@ void dyn_control_params::set_parameters(bp::dict params){
 
     }
 
+    else if(key=="decoherence_times_type"){ decoherence_times_type = bp::extract<int>(params.values()[i]); }
+    else if(key=="decoherence_C_param"){ decoherence_C_param = bp::extract<double>(params.values()[i]); }
+    else if(key=="decoherence_eps_param"){ decoherence_eps_param = bp::extract<double>(params.values()[i]); }
+    else if(key=="dephasing_informed"){ dephasing_informed = bp::extract<int>(params.values()[i]); }
+
+    else if(key=="ave_gaps"){ 
+
+      MATRIX x( bp::extract<MATRIX>(params.values()[i]) );
+      ave_gaps = new MATRIX(x.n_rows, x.n_cols);      
+      for(int a=0;a<x.n_rows;a++){
+        for(int b=0;b<x.n_cols;b++){
+          ave_gaps->set(a, b, x.get(a,b));
+        }
+      } 
+
+    }
+    else if(key=="instantaneous_decoherence_variant"){ 
+      instantaneous_decoherence_variant = bp::extract<int>(params.values()[i]);
+    }
+    else if(key=="collapse_option"){ collapse_option = bp::extract<int>(params.values()[i]); }
+
+
+    else if(key=="ensemble"){ ensemble = bp::extract<int>(params.values()[i]); }    
+    else if(key=="thermostat_params"){ thermostat_params = bp::extract<bp::dict>(params.values()[i]); }    
 
 
   }

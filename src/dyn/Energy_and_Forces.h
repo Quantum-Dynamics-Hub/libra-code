@@ -29,10 +29,10 @@
 #include "nuclear/libnuclear.h"
 #include "electronic/libelectronic.h"
 #include "ensemble/libensemble.h"
+#include "dyn_control_params.h"
 
 /// liblibra namespace
 namespace liblibra{
-
 
 using namespace libhamiltonian;
 
@@ -44,7 +44,25 @@ using namespace libelectronic;
 using namespace libensemble;
 
 
+
 double compute_kinetic_energy(MATRIX& p, MATRIX& invM);
+vector<double> compute_kinetic_energies(MATRIX& p, MATRIX& invM);
+
+
+
+CMATRIX raw_to_dynconsyst(CMATRIX& amplitudes, vector<CMATRIX>& projectors);
+CMATRIX dynconsyst_to_raw(CMATRIX& amplitudes, vector<CMATRIX>& projectors);
+
+CMATRIX tsh_indx2ampl(vector<int>& res, int nstates);
+MATRIX aux_get_forces(dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, vector<int>& act_states, 
+                      nHamiltonian& ham);
+MATRIX aux_get_forces(bp::dict prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, vector<int>& act_states, 
+                      nHamiltonian& ham);
+
+vector<CMATRIX> get_Eadi(nHamiltonian& ham);
+
+
+
 double compute_kinetic_energy(Nuclear* mol);
 double compute_kinetic_energy(Nuclear& mol);
 double compute_kinetic_energy(Ensemble& ens);
@@ -57,7 +75,6 @@ double compute_forces(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt);
 double compute_forces(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt);
 double compute_forces(Ensemble& ens,int opt);
 
-void compute_energies(Ensemble* ens, double& Epot, double& Ekin, double& Etot,int opt);
 
 
 }// namespace libdyn

@@ -22,7 +22,14 @@
 #include "../hamiltonian/libhamiltonian.h"
 #include "../io/libio.h"
 #include "thermostat/Thermostat.h"
+
+#include "dyn_decoherence.h"
 #include "dyn_control_params.h"
+#include "dyn_hop_acceptance.h"
+#include "dyn_hop_proposal.h"
+#include "dyn_methods.h"
+#include "dyn_projectors.h"
+
 
 
 /// liblibra namespace
@@ -37,47 +44,25 @@ namespace libdyn{
 
 using namespace libthermostat;
 
-
-// Verlet.cpp
-void Verlet0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params);
-void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params);
-void Verlet1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, int entanglement_opt);
-
-// Verlet_nvt.cpp
-void Verlet0_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, Thermostat& therm);
-void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, vector<Thermostat>& therm);
-void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, int entanglement_opt, vector<Thermostat>& therm);
-void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, Thermostat& therm);
-void Verlet1_nvt(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, nHamiltonian& ham, bp::object py_funct, bp::object params, int entanglement_opt, Thermostat& therm);
-
-
-// Ehrenfest.cpp
-void Ehrenfest0(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham, bp::object py_funct, bp::object params, int rep);
-void Ehrenfest1(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, nHamiltonian& ham, bp::object py_funct, bp::object params, int rep);
-void Ehrenfest2(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, 
-                nHamiltonian& ham, bp::object py_funct, bp::object params, int rep, int do_reordering, int do_phase_correction);
-void Ehrenfest2(double dt, MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, 
-                nHamiltonian& ham, bp::object py_funct, bp::object params, int rep);
-
 //========== Dynamics.cpp ===================
-
-MATRIX aux_get_forces(dyn_control_params& prms, nHamiltonian& ham, vector<int>& act_states, CMATRIX& amplitudes);
-MATRIX aux_get_forces(bp::dict params, nHamiltonian& ham, vector<int>& act_states, CMATRIX& amplitudes);
 
 void aux_get_transforms(CMATRIX** Uprev, nHamiltonian& ham);
 
-void do_reordering(dyn_control_params& prms, nHamiltonian& ham,
-                   vector<int>& act_states, CMATRIX& C, CMATRIX** Uprev, Random& rnd);
 
-
-void do_phase_correction(dyn_control_params& prms, nHamiltonian& ham, 
-                         vector<int>& act_states, CMATRIX& C, CMATRIX** Uprev);
-
-
-void update_Hamiltonian_q(dyn_control_params& prms, MATRIX& q, nHamiltonian& ham, 
+void update_Hamiltonian_q(dyn_control_params& prms, MATRIX& q, vector<CMATRIX>& projectors,
+                          nHamiltonian& ham, 
                           bp::object py_funct, bp::object model_params);
-void update_Hamiltonian_q(bp::dict prms, MATRIX& q, nHamiltonian& ham, 
+void update_Hamiltonian_q(bp::dict prms, MATRIX& q, vector<CMATRIX>& projectors,
+                          nHamiltonian& ham, 
                           bp::object py_funct, bp::object model_params);
+
+void update_Hamiltonian_q_ethd(dyn_control_params& prms, MATRIX& q, MATRIX& p, vector<CMATRIX>& projectors,
+                          nHamiltonian& ham, 
+                          bp::object py_funct, bp::object model_params, MATRIX& invM);
+void update_Hamiltonian_q_ethd(bp::dict prms, MATRIX& q, MATRIX& p, vector<CMATRIX>& projectors,
+                          nHamiltonian& ham, 
+                          bp::object py_funct, bp::object model_params, MATRIX& invM);
+
 
 
 void update_Hamiltonian_p(dyn_control_params& prms, nHamiltonian& ham, MATRIX& p, MATRIX& invM);
@@ -87,16 +72,12 @@ void update_Hamiltonian_p(bp::dict prms, nHamiltonian& ham, MATRIX& p, MATRIX& i
 CMATRIX transform_amplitudes(int rep_in, int rep_out, CMATRIX& C, nHamiltonian& ham);
 
 
-void do_surface_hopping(dyn_control_params& prms,
-              MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
-              nHamiltonian& ham, vector<MATRIX>& prev_ham_dia, Random& rnd);
-void do_surface_hopping(bp::dict prms,
-              MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
-              nHamiltonian& ham, vector<MATRIX>& prev_ham_dia, Random& rnd);
+//vector<CMATRIX> compute_St(nHamiltonian& ham, CMATRIX** Uprev);
+vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev);
 
 
 
-void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
+void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, vector<int>& act_states, 
               nHamiltonian& ham, bp::object py_funct, bp::dict model_params, bp::dict dyn_params, Random& rnd);
 
 

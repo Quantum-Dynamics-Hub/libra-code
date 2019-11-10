@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015-2017 Alexey V. Akimov
+* Copyright (C) 2015-2019 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -57,6 +57,267 @@ double compute_kinetic_energy(MATRIX& p, MATRIX& invM){
   return Ekin;
 
 }
+
+vector<double> compute_kinetic_energies(MATRIX& p, MATRIX& invM){
+/**
+  \brief Compute trajectory-resolved kinetic energies of nuclear DOFs
+
+  \param[in] p [ndof x ntraj] Momenta of ntraj replicas of the system with ndof 
+  nuclear DOFs
+  \param[in] invM [ndof x 1] Matrix of inverted masses of all DOFs
+
+  This is the classical nuclear kinetic energy
+*/
+  int ndof = p.n_rows;
+  int ntraj = p.n_cols;
+
+  vector<double> Ekin(ntraj, 0.0);
+  
+  for(int traj=0; traj < ntraj; traj++){    
+
+    double sum = 0.0;
+
+    for(int dof=0; dof < ndof; dof++){ 
+      sum += p.get(dof, traj) * invM.get(dof, 0) * p.get(dof, traj);
+    }
+    sum *= 0.5;
+
+    Ekin[traj] = sum;
+
+  }// for traj
+
+  return Ekin;
+
+}
+
+
+
+
+
+CMATRIX raw_to_dynconsyst(CMATRIX& amplitudes, vector<CMATRIX>& projectors){
+/**
+  This function converts the amplitudes from the raw ones to the dynamically-consistent
+
+  |dyn_cons> = |raw> * P, so
+
+  |Psi> = |raw> * C_raw = |dyn_cons> * C_dyn_cons 
+
+  Then:
+  |raw> * C_raw = |raw> * P * C_dyn_cons 
+
+   So: C_raw = P * C_dyn_cons 
+   and
+       C_dyn_cons = P.H() * C_raw
+
+
+*/
+  int nst = amplitudes.n_rows;
+  int ntraj = amplitudes.n_cols;
+ 
+  CMATRIX tmp(nst, 1);
+  CMATRIX res(nst, ntraj);
+
+  vector<int> x_stenc(1, 0);
+  vector<int> y_stenc(nst,0); for(int i=0; i<nst; i++){ y_stenc[i] = i; }
+
+  if(projectors.size() != ntraj){  
+    cout<<"ERROR in raw_to_dynconsyst: the dimensions do not agree\n";
+    exit(0);
+  }
+
+
+  for(int traj = 0; traj < ntraj; traj++){
+
+    x_stenc[0] = traj;
+    pop_submatrix(amplitudes, tmp, y_stenc, x_stenc);
+
+    tmp = projectors[traj].H() * tmp;
+
+    push_submatrix(res, tmp, y_stenc, x_stenc);
+
+  }
+
+  return res;
+
+}
+
+CMATRIX dynconsyst_to_raw(CMATRIX& amplitudes, vector<CMATRIX>& projectors){
+/**
+  This function converts the amplitudes from the dynamically-consistent to raw form
+
+  |dyn_cons> = |raw> * P, so
+
+  |Psi> = |raw> * C_raw = |dyn_cons> * C_dyn_cons 
+
+  Then:
+  |raw> * C_raw = |raw> * P * C_dyn_cons 
+
+   So: C_raw = P * C_dyn_cons 
+   and
+       C_dyn_cons = P.H() * C_raw
+
+*/
+  int nst = amplitudes.n_rows;
+  int ntraj = amplitudes.n_cols;
+
+  CMATRIX tmp(nst, 1);
+  CMATRIX res(nst, ntraj);
+
+  vector<int> x_stenc(1, 0);
+  vector<int> y_stenc(nst,0); for(int i=0; i<nst; i++){ y_stenc[i] = i; }
+
+  if(projectors.size() != ntraj){  
+    cout<<"ERROR in raw_to_dynconsyst: the dimensions do not agree\n";
+    exit(0);
+  }
+
+
+  for(int traj = 0; traj < ntraj; traj++){
+
+    x_stenc[0] = traj;
+    pop_submatrix(amplitudes, tmp, y_stenc, x_stenc);
+
+    tmp = projectors[traj] * tmp;
+
+    push_submatrix(res, tmp, y_stenc, x_stenc);
+
+  }
+
+  return res;
+
+}
+
+
+
+CMATRIX tsh_indx2ampl(vector<int>& res, int nstates){
+/**
+  Convert the active state index to the vector with occupation numbers
+  This is done for 1 or many trajectories
+*/
+
+  int ntraj = res.size();
+  CMATRIX ampl(nstates, ntraj);
+
+  
+  for(int traj = 0; traj < ntraj; traj++){
+
+    ampl.set(res[traj], traj, complex<double>(1.0, 0.0));
+
+  }
+
+  return ampl;
+
+}
+
+
+
+MATRIX aux_get_forces(dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, vector<int>& act_states, 
+                      nHamiltonian& ham){
+
+  /**
+    Compute the force depending on the method used
+  */
+
+  int ndof = ham.nnucl;
+  int nst = ham.nadi;
+  int ntraj = act_states.size();
+
+  MATRIX F(ndof, ntraj);
+  CMATRIX _amplitudes(nst, ntraj);          // CMATRIX version of "act_states"
+
+  if(prms.force_method==0){  
+
+    // Don't compute forces at all - e.g. in NBRA
+
+  }// NBRA
+
+  else if(prms.force_method==1){  
+
+    // TSH or adiabatic (including excited states)
+    // state-specific forces
+
+    if(prms.rep_force==0){  
+      // Diabatic 
+      //F = ham.forces_dia(act_states).real();
+
+      _amplitudes = tsh_indx2ampl(act_states, nst);
+      F = ham.Ehrenfest_forces_dia(_amplitudes, 1).real();
+    }
+
+    else if(prms.rep_force==1){  
+      // Adiabatic 
+      //F = ham.forces_adi(act_states).real();
+
+      _amplitudes = tsh_indx2ampl(act_states, nst);
+
+      // Since the Hamiltonians are given in the "raw" format 
+      // and because the Ehrenfest forces (including adiabatic)
+      // are invariant w.r.t. representation, we can simply use the "raw"
+      // format amplitudes
+      _amplitudes = dynconsyst_to_raw(_amplitudes, projectors);
+
+      F = ham.Ehrenfest_forces_adi(_amplitudes, 1).real();
+    }
+
+  }// TSH && adiabatic
+
+  else if(prms.force_method==2){  
+
+    if(prms.rep_force==0){  
+      // Diabatic 
+      F = ham.Ehrenfest_forces_dia(amplitudes, 1).real();
+    }
+
+    else if(prms.rep_force==1){  
+      // Adiabatic 
+
+      // Since the Hamiltonians are given in the "raw" format 
+      // and because the Ehrenfest forces (including adiabatic)
+      // are invariant w.r.t. representation, we can simply use the "raw"
+      // format amplitudes
+      CMATRIX _amplitudes(nst, ntraj); 
+      _amplitudes = dynconsyst_to_raw(amplitudes, projectors);
+
+      F = ham.Ehrenfest_forces_adi(_amplitudes, 1).real();
+    }
+  
+  }// Ehrenfest
+
+  return F;
+}
+
+
+MATRIX aux_get_forces(bp::dict params, CMATRIX& amplitudes, vector<CMATRIX>& projectors, vector<int>& act_states, 
+                      nHamiltonian& ham){
+
+  dyn_control_params prms;
+  prms.set_parameters(params);
+
+  return aux_get_forces(prms, amplitudes, projectors, act_states, ham);
+  
+}
+
+
+
+vector<CMATRIX> get_Eadi(nHamiltonian& ham){
+
+  int nst = ham.nadi;
+  int ntraj = ham.children.size();
+
+  vector<CMATRIX> Eadi(ntraj, CMATRIX(nst, nst));
+
+  for(int traj=0; traj<ntraj; traj++){
+    Eadi[traj] = ham.children[traj]->get_ham_adi(); 
+  }
+
+  return Eadi;
+
+}
+
+
+
+
+
 
 
 double compute_kinetic_energy(Nuclear* mol){
@@ -358,6 +619,9 @@ void compute_energies(Ensemble* ens, double& Epot, double& Ekin, double& Etot,in
   Etot = Ekin + Epot;
 
 }
+
+
+
 
 
 }// namespace libdyn

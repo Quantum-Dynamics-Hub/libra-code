@@ -101,6 +101,10 @@ void export_Electronic_objects(){
   def("propagate_electronic", expt_propagate_electronic_v6);
   def("propagate_electronic", expt_propagate_electronic_v7);
 
+
+  void (*expt_propagate_electronic_rot_v1)(double dt,CMATRIX& Coeff, CMATRIX& Hvib) = &propagate_electronic_rot;
+  def("propagate_electronic_rot", expt_propagate_electronic_v1);
+
   void (*expt_propagate_electronic_nonHermitian_v1)(double dt,CMATRIX& Coeff, CMATRIX& Hvib) = &propagate_electronic_nonHermitian;
   def("propagate_electronic_nonHermitian", expt_propagate_electronic_nonHermitian_v1);
 
