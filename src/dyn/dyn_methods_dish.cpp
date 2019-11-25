@@ -16,6 +16,8 @@
 
 #include "Surface_Hopping.h"
 #include "Energy_and_Forces.h"
+#include "dyn_decoherence.h"
+
 
 /// liblibra namespace
 namespace liblibra{
@@ -24,118 +26,175 @@ namespace liblibra{
 namespace libdyn{
 
 
-void dish(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<int>& act_states,
-          nHamiltonian& ham, bp::object py_funct, bp::dict params, bp::dict dyn_params, Random& rnd){
+vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval, Random& rnd){
 /**
-  \brief Decoherence-induced surface hopping (DISH)
-  Reference: Jaeger, H. M.; Fischer, S.; Prezhdo, O. V. Decoherence-Induced Surface Hopping. J. Chem. Phys. 2012, 137, 22A545.
+  For each trajectory, check which adiabatic states have evolved longer than decoherence times.
+  In the case that multiple states have done this, we select only one randomly.
+  
+  coherence_time - MATRIX(nst, ntraj) - for each state is how long has that state resided in a coherence evolution
+  coherence_interval - MATRIX(1, ntraj) - for each trajectory - what is the longest coherence time in the system
 
-  This function actually combines 
+  Return:
+  For each trajectory:
+  The selection of the states which will experience decoherence events (collapse or projection out)
+  -1 means that no basis states have experienced the decoherence event for this trajectory
 
-  \param[in,out] q - coordinates of nuclei
-  \param[in,out] Cadi - amplitudes of the adiabatic states
-  \param[in,out] t_m A matrix N x 1 of the times each state resides in a coherence interval
-   (since the last decoherence event)
-  \param[in] tau_m A matrix N x 1 of the coherence intervals for each electronic state
-  \param[in] Hvib The matrix of vibronic Hamiltonian - we need the energies
-  \param[in] use_boltz_flag  if set to 1, the hopping probabilities will be re-scaled by the 
-  Boltzmann factor. This is need in neglect of back-reaction approximation (NBRA) calculations, 
-  when no 
-  \param[in] Ekin Kinetic energy of nuclei
-  \param[in] T is the temperature of the system
-  \param[in] ksi1 a is random number from a uniform distribution on the [0,1] interval
-  \param[in] ksi2 a is random number from a uniform distribution on the [0,1] interval
-
-  The function modifies  el and t_m variables
-  Returns: the index of the electronic state after potential hop
 */
 
-  dyn_control_params prms;
-  prms.set_parameters(dyn_params);
+  int i,traj;
+  int ntraj = coherence_time.n_cols;
+  int nst = coherence_time.n_rows; 
 
-/*
+  /// By default, set the indices of the states that "experience" decoherence events to -1
+  /// In the analysis, if we encounter the index of -1, we'll know that no decoherence has happened
+  /// and will simply continue the coherent evolution.
+  vector<int> res(ntraj, -1); 
 
+  for(traj=0; traj < ntraj; traj++){
 
-  int ndof = q.n_rows;
-  int ntraj = q.n_cols;
-  int nst = Cadi.n_rows;    
-  int traj, dof;
+    vector<int> which_decohere; /// which basis states shall experience the decoherence event
 
+    /// Determine all basis states that may decohere at this point
+    for(i=0;i<nst;i++){
 
-  const double kb = 3.166811429e-6; // Hartree/K   
-  int i,j; 
-  int has_decoherence = 0; /// set to 1 if we have already encountered a decoherence event
-
-  for(i=0;i<nst && !has_decoherence;i++){
-
-    /// The state i has evolved coherently for longer than the coherence interval
-    /// so it has to experience a decoherence event 
-    if(t_m.get(i) >= tau_m.get(i) ) { 
-
-
-    for(traj=0; traj<ntraj; traj++){
-      prev_ham_dia[traj] = ham.children[traj]->get_ham_dia().real();  
+      /// The state i has evolved coherently for longer than the coherence interval
+      /// so it has to experience a decoherence event 
+      if(coherence_time.get(i, traj) >= coherence_interval.get(i, traj) ) { 
+        which_decohere.push_back(i);
+      }
     }
 
+    if(which_decohere.size()>0){
 
-      /// There are essentially two outcomes when the decoherence takes place:
-      /// One: we collapse the wavefunction onto the state i with the probability 
-      /// given by the population of that state
+      /// Select only one of the basis states that will be experience the decoherence event.
+      vector<int> selection(1,0);
+      randperm(which_decohere.size(), 1, selection);
+      res[traj] = selection[0];
+    }
 
-      if(ksi1 < el.rho(i,i).real()){ 
+  }// for traj
 
-        /// Now, lets determine if the hop is possible based on the energy conservation
-        /// considerations 
+  return res;
 
-        int can_hop = 0;
+}
 
-        double E_i = ham.Hvib(el.istate, el.istate).real();/// initial potential energy
-        double E_f = ham.Hvib(i,i).real();                 /// proposed potential energy
-        double dE = E_f - E_i;
 
-        /// In leu of hop rejection use Boltzmann factors: for NBRA simulations
-        if(use_boltz_flag==1){
-          double bf = 1.0;
-          if(dE>0){  bf = exp(-dE/(kb*T)); }  /// hop to higher energy state is difficult
-          if(ksi2<bf){ can_hop = 1; }  /// hop is allowed thermally
+vector<int> dish_hop_proposal(vector<int>& act_states, CMATRIX& Coeff, 
+  MATRIX& coherence_time, vector<MATRIX>& decoherence_rates, Random& rnd){
 
+    int i,traj;
+    int nst = Coeff.n_rows; 
+    int ntraj = Coeff.n_cols;
+
+
+    /// Update coherence intervals 
+    MATRIX coherence_interval(nst, ntraj); // for DISH
+    coherence_interval = coherence_intervals(Coeff, decoherence_rates);
+ 
+    /// Determine which states may experience decoherence event
+    /// If the decohered_states[traj] == -1, this means no basis states on the trajectory traj
+    /// have experienced the decoherence event, othervise the variable will contain an index of 
+    /// such state for each trajectory
+    vector<int> decohered_states( decoherence_event(coherence_time, coherence_interval, rnd) );
+
+
+    /// By default, the proposed states are assumed to be the current ones
+    vector<int> proposed_states(act_states);
+
+
+    for(traj=0; traj < ntraj; traj++){
+
+      int istate = decohered_states[traj];
+
+      /// Exclude the situation when no decoherence event have occured (-1)
+      /// in those cases we of course do not want to preject out those states
+      if(istate>-1){
+
+        /// No matter what happens with the wavefunctions, the cohrence interval 
+        /// is reset for the decohered state, since the state has experienced decoherence event
+        coherence_time.set(decohered_states[traj], traj, 0.0);
+
+
+        /// Propose new discrete states: if the state that experiences decoherence is selected
+        /// with the probability given by its SE population, it is considered a proposed hopping state
+        /// If it is not selected - the current active states become the proposed states (hop to the same state)
+        /// If no decoherence event has happened for a trajectory, the proposed states are set to be the current ones
+        /// (also hop to the same state)
+        /// The hops to the same states are generally excluded in the following states - so it would be the
+        /// standard coherent evolution without hopping
+        double prob = (std::conj(Coeff.get(istate, traj)) * Coeff.get(istate, traj) ).real();
+        double ksi = rnd.uniform(0.0, 1.0);
+
+        if(ksi<=prob){   
+          proposed_states[traj] = decohered_states[traj];   
         }
-        /// Regular energy-conservation based criterion
         else{   
-          /// Predicted final kinetic energy is positive - hop is possible
-          double Ekin = compute_kinetic_energy(mol); // initial kinetic energy
-          if(Ekin - dE > 0.0){  can_hop = 1; }
+          /// Project out the decohered states if they aren't selected
+          project_out(Coeff, traj, decohered_states[traj]); 
         }
-          
-        /// Now, decide about decoherence         
-        if(can_hop){     el.collapse(i, 1);  } /// Here is the actuall collapse
-        else{ el.project_out(i); }
 
-      }
+      }// istate > -1
+    
+    }// for traj
 
-      /// Second: project the system out of that state otherwise
-      else{  el.project_out(i);   }
+    return proposed_states;
 
+}
 
-      /// Reset the time axis for state i (only for this state)
-      /// other states still reside in a coherent superposition
-      t_m.set(i, 0.0);
-
-      /// Set the flag that we have attempted a decoherence event
-      /// so we done with DISH at this point in time
-      has_decoherence = 1;
-
-
-    }// t_m[i]>=1.0/tau_m
-      
-  }// for i
-
-  return el.istate;
+void dish_project_out_collapse(vector<int>& old_states, vector<int>& proposed_states, vector<int>& new_states, 
+  CMATRIX& Coeff, MATRIX& coherence_time, int collapse_option){
+/**
+  To handle projections after the attempted hop: 
 */
 
-} // dish
+  int ntraj = old_states.size();
 
+  for(int traj=0; traj < ntraj; traj++){
 
+    if(proposed_states[traj] != old_states[traj]){
+      /// Attempted non-trivial hops
+
+      if(new_states[traj] == proposed_states[traj]){
+        /// Successfull hop - collapse onto this new state
+        collapse(Coeff, traj, new_states[traj], collapse_option); 
+      }
+      else{
+        /// Attempted hop was unsuccessful - project out the proposed state
+        project_out(Coeff, traj, proposed_states[traj]); 
+      }
+
+    }
+    else{
+      /// Coherent evolution
+    }
+
+/*
+    if(new_states[traj] == old_states[traj]){   
+        /// No transition occured
+
+      if(proposed_states[traj] == old_states[traj]){    
+        /// No attempted transition
+        ; ; 
+      }
+      else if(proposed_states[traj] != old_states[traj]){    
+        /// Attempted the hop, but didn't accept it - project out the proposed_state
+        project_out(Coeff, traj, proposed_states[traj]); 
+        coherence_time.set(proposed_states[traj], traj, 0.0);
+      }
+
+    }
+
+    else if(new_states[traj] != old_states[traj]){   
+      /// The transition to a new state has been accepted - collapse wfc
+      /// onto this new state
+      collapse(Coeff, traj, new_states[traj], collapse_option); 
+      coherence_time.set(proposed_states[traj], traj, 0.0);
+    }
+*/
+
+  }// for traj
+
+}
 
 
 }// namespace libdyn

@@ -458,6 +458,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 - 0: FSSH
                 - 1: GFSH 
                 - 2: MSSH
+                - 3: DISH
 
 
             * **dyn_params["force_method"]** ( int ): How to compute forces in the dynamics: 
@@ -551,12 +552,10 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
                 - -1: no decoherence [ default ]
                 - 0: MSDM
-                - 1: ID-A (not yet present)
-                - 2: DISH (not yet present)
+                - 1: ID-A
+
 
             * **dyn_params["decoh_rates"]** ( MATRIX(ntates, nstates) ): the matrix of dephasing rates [ units: a.u. of time ^-1 ]
-
-
 
 
             * **dyn_params["dt"]** ( double ): the nuclear and electronic integration

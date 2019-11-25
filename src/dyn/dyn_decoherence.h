@@ -55,6 +55,7 @@ void dephasing_informed_correction(MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& a
 void dephasing_informed_correction(vector<MATRIX>& decoh_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps);
 
 MATRIX coherence_intervals(CMATRIX& Coeff, MATRIX& rates);
+MATRIX coherence_intervals(CMATRIX& Coeff, vector<MATRIX>& rates);
 
 
 ///================  In dyn_methods_dish.cpp  ===================================

@@ -353,33 +353,32 @@ vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
 
     pop_submatrix(C, coeff, el_stenc_x, el_stenc_y);
 
+    Hvib = ham.children[traj]->get_hvib_adi();
+
+    //Transform Hamiltonian to the dynamically-consistent form:
+    Hvib = projectors[traj].H() * Hvib * projectors[traj];
+
+
     if(prms.tsh_method == 0){ // FSSH
-      //g[traj] = compute_hopping_probabilities_fssh(coeff, ham.children[traj], prms.rep_sh,
-      //                             prms.dt, prms.use_boltz_factor, prms.Temperature);
-
-      Hvib = ham.children[traj]->get_hvib_adi();
-
-      //Transform Hamiltonian to the dynamically-consistent form:
-      Hvib = projectors[traj].H() * Hvib * projectors[traj];
 
       g[traj] = hopping_probabilities_fssh(prms, coeff, Hvib);
 
     }
     else if(prms.tsh_method == 1){ // GFSH
+
       g[traj] = hopping_probabilities_gfsh(prms, coeff, Hvib);
 
-      //g[traj] = compute_hopping_probabilities_gfsh(coeff, ham.children[traj], prms.rep_sh,
-      //                            prms.dt, prms.use_boltz_factor, prms.Temperature);
     }
     else if(prms.tsh_method == 2){ // MSSH
 
       g[traj] = hopping_probabilities_mssh(prms, coeff, Hvib);
 
-      //g[traj] = compute_hopping_probabilities_mssh(coeff);
     }
     else if(prms.tsh_method == 3){ // LZ
+
       pop_submatrix(p, p_traj, nucl_stenc_x, nucl_stenc_y);
       g[traj] = compute_hopping_probabilities_lz(ham.children[traj], prms.rep_lz, p_traj, invM, prev_ham_dia[traj]);
+
     }
 
     else{

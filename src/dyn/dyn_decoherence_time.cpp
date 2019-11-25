@@ -163,8 +163,7 @@ MATRIX coherence_intervals(CMATRIX& Coeff, MATRIX& rates){
   //denmat = (Coeff * Coeff.H() ).conj();
   denmat = Coeff * Coeff.H();
 
-  MATRIX tau_m(nstates, 1); tau_m *= 0.0;
-  
+  MATRIX tau_m(nstates, 1);   
 
   for(int i=0;i<nstates;i++){
 
@@ -177,8 +176,8 @@ MATRIX coherence_intervals(CMATRIX& Coeff, MATRIX& rates){
 
     }// for j
 
-    if(summ>0.0){   tau_m.set(i, 1.0/summ); }
-    else        {   tau_m.set(i, 1.0e+25);  } // infinite coherence interval
+    if(summ>0.0){   tau_m.set(i, 0, 1.0/summ); }
+    else        {   tau_m.set(i, 0, 1.0e+25);  } // infinite coherence interval
     
      
   }// for i
@@ -187,6 +186,59 @@ MATRIX coherence_intervals(CMATRIX& Coeff, MATRIX& rates){
 
   return tau_m;
 }
+
+
+MATRIX coherence_intervals(CMATRIX& Coeff, vector<MATRIX>& rates){
+/**
+  This function computes the time-dependent (and population-dependent) coherence intervals
+  (the time after which different states should experience a decoherence event)
+  as described by Eq. 11 in:
+  Jaeger, H. M.; Fischer, S.; Prezhdo, O. V. Decoherence-Induced Surface Hopping. J. Chem. Phys. 2012, 137, 22A545.
+
+  1/tau_i  (t) =  sum_(j!=i)^nstates {  rho_ii(t) * rate_ij }
+
+
+  \param[in] Coeff - CMATRIX(nstates, ntraj) Amplitudes of the electronic states
+  \param[in] rates - ntraj matrices of nstates x nstates - Matrices containing the 
+  decoherence rates (inverse of the decoherence time for each given pair of states) for each trajectory
+
+  Returns: A matrix of the coherence intervals for each state for each trajectory
+
+*/
+  int i, traj;
+  int nstates = Coeff.n_rows; 
+  int ntraj = Coeff.n_cols;
+
+  if(ntraj!=rates.size()){
+    cout<<"ERROR in coherence_intervals: the ntraj dimensions do not agree for Coeff and rates\n";
+    cout<<"ntraj = "<<ntraj<<endl;
+    cout<<"rates.size() = "<<rates.size()<<endl;
+    cout<<"Exiting...\n";
+    exit(0);
+  }
+
+  MATRIX res(nstates, ntraj);
+  CMATRIX coeff(nstates, 1);
+  MATRIX tau_m(nstates, 1);
+
+  vector<int> stenc_x(nstates, 0); for(i=0;i<nstates;i++){  stenc_x[i] = i; }
+  vector<int> stenc_y(1, 0); 
+
+  for(traj=0; traj<ntraj; traj++){
+
+    stenc_y[0] = traj;
+    pop_submatrix(Coeff, coeff, stenc_x, stenc_y);
+
+    tau_m = coherence_intervals(coeff, rates[traj]);
+
+    push_submatrix(res, tau_m, stenc_x, stenc_y);
+
+  }
+
+  return res;
+}
+
+
 
 
 

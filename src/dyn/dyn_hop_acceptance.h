@@ -35,6 +35,7 @@ namespace bp = boost::python;
 namespace libdyn{
 
 int can_rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t);
+void rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse);
 
 vector<double> Boltz_quant_prob(vector<double>& E, double T);
 double Boltz_cl_prob(double E, double T);

@@ -62,6 +62,64 @@ int can_rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM
 
 
 
+void rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse){
+/**
+  Rescale momenta p along the vector t such that the total energy is conserved
+
+  or reverse the momentum along the vector t
+
+*/
+  int dof;
+  int ndof = p.n_rows;
+
+  // According to Fabiano
+  double a_ij = 0.0;
+  double b_ij = 0.0;
+  double c_ij = E_old - E_new;
+    
+  for(dof=0; dof< ndof; dof++){  
+
+    a_ij += t.get(dof, 0) * t.get(dof, 0) * invM.get(dof, 0); 
+    b_ij += p.get(dof, 0) * t.get(dof, 0) * invM.get(dof, 0); 
+
+  }// for dof
+ 
+  a_ij *= 0.5;
+
+  double det = b_ij*b_ij + 4.0*a_ij*c_ij;
+
+  // Calculate the scaling factor and new state
+  double gamma_ij = 0.0;
+
+  if(det<0.0){  // Frustrated hops!
+
+    if(fabs(a_ij)>1e-100){  // only consider reversals, if the couplings are sizable
+      if(do_reverse){     gamma_ij = b_ij / a_ij;}
+      else{ gamma_ij = 0.0;  }
+    }
+    else{ gamma_ij = 0.0;  }
+
+  }
+  else{    // Accepted hops!
+
+    if(fabs(a_ij)>1e-100){  // only consider reversals, if the couplings are sizable
+      if(b_ij<0){ gamma_ij = 0.5*(b_ij + sqrt(det))/a_ij; }
+      else{       gamma_ij = 0.5*(b_ij - sqrt(det))/a_ij; }
+    }
+    else{ gamma_ij = 0.0;  }
+
+  }
+
+  //Rescale velocities and do the hop
+  p -= gamma_ij * t;
+
+}
+
+
+
+
+
+
 vector<double> Boltz_quant_prob(vector<double>& E, double T){
     /**
 

@@ -34,6 +34,16 @@ namespace libdyn{
 
 
 ///================  In dyn_methods_dish.cpp  ===================================
+
+vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval, Random& rnd);
+
+vector<int> dish_hop_proposal(vector<int>& act_states, CMATRIX& Coeff, 
+  MATRIX& coherence_time, vector<MATRIX>& decoherence_rates, Random& rnd);
+
+void dish_project_out_collapse(vector<int>& old_states, vector<int>& proposed_states, vector<int>& new_states, 
+  CMATRIX& Coeff, MATRIX& coherence_time, int collapse_option);
+
+
 /*
 int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi);
 int dish(Electronic& el, MATRIX& t_m, const MATRIX& tau_m, const CMATRIX& Hvib,

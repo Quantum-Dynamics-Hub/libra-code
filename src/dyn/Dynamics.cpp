@@ -223,61 +223,6 @@ CMATRIX transform_amplitudes(int rep_in, int rep_out, CMATRIX& C, nHamiltonian& 
 
 
 
-void rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse){
-/**
-  Rescale momenta p along the vector t such that the total energy is conserved
-
-  or reverse the momentum along the vector t
-
-*/
-  int dof;
-  int ndof = p.n_rows;
-
-  // According to Fabiano
-  double a_ij = 0.0;
-  double b_ij = 0.0;
-  double c_ij = E_old - E_new;
-    
-  for(dof=0; dof< ndof; dof++){  
-
-    a_ij += t.get(dof, 0) * t.get(dof, 0) * invM.get(dof, 0); 
-    b_ij += p.get(dof, 0) * t.get(dof, 0) * invM.get(dof, 0); 
-
-  }// for dof
- 
-  a_ij *= 0.5;
-
-  double det = b_ij*b_ij + 4.0*a_ij*c_ij;
-
-  // Calculate the scaling factor and new state
-  double gamma_ij = 0.0;
-
-  if(det<0.0){  // Frustrated hops!
-
-    if(fabs(a_ij)>1e-100){  // only consider reversals, if the couplings are sizable
-      if(do_reverse){     gamma_ij = b_ij / a_ij;}
-      else{ gamma_ij = 0.0;  }
-    }
-    else{ gamma_ij = 0.0;  }
-
-  }
-  else{    // Accepted hops!
-
-    if(fabs(a_ij)>1e-100){  // only consider reversals, if the couplings are sizable
-      if(b_ij<0){ gamma_ij = 0.5*(b_ij + sqrt(det))/a_ij; }
-      else{       gamma_ij = 0.5*(b_ij - sqrt(det))/a_ij; }
-    }
-    else{ gamma_ij = 0.0;  }
-
-  }
-
-  //Rescale velocities and do the hop
-  p -= gamma_ij * t;
-
-}
-
-
-
 
 
 void handle_hops_nuclear(dyn_control_params& prms,
@@ -530,6 +475,10 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   int nst = C.n_rows;    
   int traj, dof;
 
+  MATRIX coherence_time(nst, ntraj); // for DISH
+  MATRIX coherence_interval(nst, ntraj); // for DISH
+  vector<int> project_out_states(ntraj); // for DISH
+
   vector<CMATRIX> Uprev;
   vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
   vector<CMATRIX> Eadi(ntraj, CMATRIX(nst, nst));  
@@ -678,7 +627,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   //================= Update decoherence rates & times ================
   //MATRIX decoh_rates(*prms.decoh_rates);
 
-  if(prms.decoherence_algo==0 || prms.decoherence_algo==2 ){
+  if(prms.decoherence_algo==0 || prms.decoherence_algo==2 || prms.tsh_method==3){
 
     // Just use the plain times given from the input, usually the
     // mSDM formalism
@@ -712,11 +661,11 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
  
  
   //========= Use the resulting amplitudes to do the hopping =======
-  if(prms.tsh_method >=0){
+  // FSSH, GFSH or MSSH
+  if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2){
 
     // Compute hopping probabilities
     vector<MATRIX> g( hop_proposal_probabilities(prms, q, p, invM, Coeff, projectors, ham, prev_ham_dia) );
-
 
     // Propose new discrete states    
     vector<int> prop_states( propose_hops(g, act_states, rnd) );
@@ -734,7 +683,48 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
           prms.instantaneous_decoherence_variant, prms.collapse_option);
     }
         
-  }// tsh_method >=0
+  }// tsh_method = 0, 1, 2
+
+
+  // DISH
+  else if(prms.tsh_method == 3 ){
+
+    /// Advance coherence times
+    coherence_time.add(-1, -1, prms.dt);
+
+    vector<int> prop_states( dish_hop_proposal(act_states, Coeff, coherence_time, decoherence_rates, rnd) );
+
+    /// Decide if to accept the transitions (and then which)
+    vector<int> old_states(act_states);
+    act_states = accept_hops(prms, q, p, invM, Coeff, projectors, ham, prop_states, act_states, rnd);
+
+    /// Velocity rescaling
+    handle_hops_nuclear(prms, q, p, invM, Coeff, projectors, ham, act_states, old_states);
+
+
+    dish_project_out_collapse(old_states, prop_states, act_states, Coeff, coherence_time, prms.collapse_option);
+
+
+
+  }// tsh_method = 3
+
+
+  /// Convert the temporary amplitudes Coeff to the actual variables C
+  if(prms.rep_tdse==0){
+    // If we solve TD-SE in the diabatic rep, C (when transformed to adiabatic basis by the code above)
+    // returned is in the raw representation, so we need to make it dynamically-consistent
+
+    Coeff = dynconsyst_to_raw(Coeff, projectors);
+  }
+  else if(prms.rep_tdse==1){ 
+    // If we solve TD-SE in the adiabatic rep, C is already dynamically-consistent
+    ;;
+  }
+
+  // Need the inverse
+  //Coeff = transform_amplitudes(prms.rep_tdse, prms.rep_sh, C, ham);
+
+  C = Coeff;
 
 
 }

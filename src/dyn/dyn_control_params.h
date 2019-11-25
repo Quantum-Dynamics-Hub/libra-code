@@ -70,7 +70,12 @@ class dyn_control_params{
 
 
   /** 
-    Formula for computing SH probabilities: -1 - adiabatic, 0 - FSSH, 1 - GFSH, 2 - MSSH
+    Surface hopping mthodology: 
+    -1 - adiabatic (no need to compute)
+     0 - FSSH
+     1 - GFSH
+     2 - MSSH
+     3 - DISH
   */
   int tsh_method;
 
@@ -227,7 +232,6 @@ class dyn_control_params{
      -1 - no decoherence [default]
       0 - SDM and alike
       1 - instantaneous decoherence options (ID-S, ID-A, ID-C)
-      2 - DISH
   */
   double decoherence_algo;
 

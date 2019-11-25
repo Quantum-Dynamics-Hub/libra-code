@@ -147,6 +147,10 @@ void export_dyn_decoherence_objects(){
   MATRIX (*expt_coherence_intervals_v1)(CMATRIX& Coeff, MATRIX& rates) = &coherence_intervals;
   def("coherence_intervals", expt_coherence_intervals_v1);
 
+  MATRIX (*expt_coherence_intervals_v2)(CMATRIX& Coeff, vector<MATRIX>& rates) = &coherence_intervals;
+  def("coherence_intervals", expt_coherence_intervals_v2);
+
+
 
 
   //================== DISH =======================
@@ -173,6 +177,10 @@ void export_dyn_hop_acceptance_objects(){
   int (*expt_can_rescale_along_vector_v1)
   (double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t) = &can_rescale_along_vector;
   def("can_rescale_along_vector", expt_can_rescale_along_vector_v1);
+
+  void (*expt_rescale_along_vector_v1)
+  (double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse) = &rescale_along_vector;
+  def("rescale_along_vector", expt_rescale_along_vector_v1);
 
   vector<double> (*expt_Boltz_quant_prob_v1)
   (vector<double>& E, double T) = &Boltz_quant_prob;
@@ -237,6 +245,27 @@ void export_dyn_hop_proposal_objects(){
 
 }
 
+
+void export_dyn_methods_objects(){
+
+  vector<int> (*expt_decoherence_event_v1)
+  (MATRIX& coherence_time, MATRIX& coherence_interval, Random& rnd) = &decoherence_event;
+  def("decoherence_event", expt_decoherence_event_v1);
+
+
+  vector<int> (*expt_dish_hop_proposal_v1)
+  (vector<int>& act_states, CMATRIX& Coeff, 
+  MATRIX& coherence_time, vector<MATRIX>& decoherence_rates, Random& rnd) = &dish_hop_proposal;
+  def("dish_hop_proposal", expt_dish_hop_proposal_v1);
+
+  void (*expt_dish_project_out_collapse_v1)
+  (vector<int>& old_states, vector<int>& proposed_states, vector<int>& new_states, 
+  CMATRIX& Coeff, MATRIX& coherence_time, int collapse_option) = &dish_project_out_collapse;
+  def("dish_project_out_collapse", expt_dish_project_out_collapse_v1);
+
+
+
+}
 
 void export_dyn_projectors_objects(){
 
@@ -377,6 +406,7 @@ void export_Dyn_objects(){
   export_dyn_decoherence_objects();
   export_dyn_hop_acceptance_objects();
   export_dyn_hop_proposal_objects();
+  export_dyn_methods_objects();
   export_dyn_projectors_objects();
 
   
