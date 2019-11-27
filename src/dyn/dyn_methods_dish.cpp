@@ -164,8 +164,12 @@ void dish_project_out_collapse(vector<int>& old_states, vector<int>& proposed_st
       }
 
     }
-    else{
-      /// Coherent evolution
+    else{  /// proposed_states[traj] == old_states[traj]
+      /// Trivial hop = the proposed transition is to the starting state
+      /// Just collapse onto that state
+
+      collapse(Coeff, traj, old_states[traj], collapse_option); 
+
     }
 
 /*
