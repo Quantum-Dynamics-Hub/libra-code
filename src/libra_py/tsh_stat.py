@@ -514,7 +514,7 @@ def pops2denmat(pops):
         pops ( list of CMATRIX(nstates, 1) ): state populations for all trajectories
 
     Returns:
-        ( list of CMATRIX(nstates, nstate) ): density matrices for all trajectory
+        ( list of CMATRIX(nstates, nstate) ): density matrices for all trajectories
 
     """
 

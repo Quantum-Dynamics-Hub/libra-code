@@ -110,10 +110,36 @@ def Belyaev_Lebedev(Hvib, params):
                 p = 0.0
                 if (dE[n-1].get(i,j)>dE[n].get(i,j) and dE[n].get(i,j)<dE[n+1].get(i,j)):
                     
-                    denom = dE[n-1].get(i,j) - 2.0*dE[n].get(i,j) + dE[n+1].get(i,j) 
+                    denom = dE[n-1].get(i,j) - 2.0*dE[n].get(i,j) + dE[n+1].get(i,j)                  
                     if denom > 0.0:
-                        argg = (dE[n].get(i,j)**3) / denom
-                        p = math.exp(-0.5*math.pi*dt*math.sqrt(argg) )
+                        t_min = 0.5*(dE[n-1].get(i,j) - dE[n+1].get(i,j))*dt/denom
+
+                        if t_min<-dt or t_min > dt:
+                            print("Error determining t_min in the interpolation!\n")
+                            print("Exiting...\n")
+                            sys.exit(0)
+
+                        gap_min = 0.5*(t_min*(t_min - dt)*dE[n-1].get(i,j) 
+                          - 2.0*(t_min + dt)*(t_min - dt)*dE[n].get(i,j) + 
+                                       t_min*(t_min + dt)*dE[n+1].get(i,j) )/(dt*dt)
+
+                        if gap_min<0.0:
+                            print("Error: the extrapolated gap is negative!\n")
+                            print("Exiting...\n")
+                            sys.exit(0)
+
+                        if gap_min > dE[n-1].get(i,j) or gap_min > dE[n+1].get(i,j):
+                            print("Error: the extrapolated gap is larger than the bounding values!\n")
+                            print("Exiting...\n")
+                            sys.exit(0)
+
+                        second_deriv = denom/(dt*dt)
+
+                        #argg = (dE[n].get(i,j)**3) / denom
+
+                        argg = (gap_min**3) / second_deriv
+
+                        p = math.exp(-0.5*math.pi*math.sqrt(argg) )
                 else:
                     p = 0.0   # no transitions is not a minimum
 
@@ -239,7 +265,8 @@ def run(H_vib, params):
         #============== Analysis of the Dynamics  =================
         # Compute the averages
         #res_i = step4.traj_statistics(i, Coeff, istate, H_vib, itimes)
-        res_i = step4.traj_statistics2(i, Pop, istate, H_vib, itimes)
+        #res_i = step4.traj_statistics2(i, Pop, istate, H_vib, itimes)
+        res_i = step4.traj_statistics2_fast(i, Pop, istate, H_vib, itimes)
 
         # Print out into a file
         step4.printout(i*dt, res_i, params["outfile"])

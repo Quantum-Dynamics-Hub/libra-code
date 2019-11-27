@@ -340,6 +340,105 @@ def traj_statistics2(i, Pop, istate, Hvib, itimes):
 
 
 
+def traj_statistics2_fast(i, Pop, istate, Hvib, itimes):
+    """Compute the averages over the TSH-ensembles
+
+    This version is optimized by removing all the dancing around data 
+    and doing the direct calculations asap - no intermediate massive memory allocation!
+
+    Args:
+        i ( int ): timestep index, counting since the beginning of the current sub-trajectory
+        Pop ( list of ntraj CMATRIX(nstates, 1) object ): the quantum populations for all trajectories
+            (data sets/initial times/stochastic realizations)
+
+        istate ( list of ntraj integers ): indices of the active states for each trajectory 
+            (data sets/initial times/stochastic realizations)
+
+        Hvib ( list of lists of CMATRIX(nstates,nstates) ): Hamiltonians for all data sets 
+            and all (not just a sub-set of data!) timesteps
+        itimes ( list of ints ): indices of the NA-MD starting points (in the global data indexing scale)
+
+    Returns: 
+        MATRIX(1, 3*nstates+4): the trajectory (and initial-condition)-averaged observables,
+            the assumed format is: 
+
+            First state info        ...          N-st state info All-states-related data
+
+            E(0), P_SE(0), P_SH(0), ...,   E(nst-1), P_SE(nst-1), P_SH(nst-1), <E*P_SE>, <E*P_SH>, sum{P_SE}, sum{P_SH}
+    
+    """
+
+    #================ Dimensions ==================
+    Ntraj = len(Pop)                 # total number of trajectory = data set size x number of init times x number of SH trajectories
+    nstates = Pop[0].num_of_rows     # the number of states
+    ndata = len(Hvib)                # how many data sets
+    nitimes = len(itimes)            # how many initial times
+    ntraj = int(Ntraj/(ndata * nitimes))  # how many stochastic SH trajectories per data set/initial condition
+
+
+    E_adi_ave =  MATRIX(nstates, 1) # E for each state averaged over the data sets/initial times
+    ave_pop_sh = MATRIX(nstates, 1) # SH populations averaged over the data sets/initial times
+    ave_pop_se = MATRIX(nstates, 1) # SE populations averaged over the data sets/initial times
+    ave_en_sh = 0.0  # SH-population-weighted energy
+    ave_en_se = 0.0  # SE-population-weighted energy
+
+
+    # Temporary
+    ene = MATRIX(nstates, 1)
+    pop = MATRIX(nstates, 1)
+
+    for idata in range(0,ndata):
+        for it_indx in range(0,nitimes):
+            it = itimes[it_indx]
+
+            for st in range(nstates):
+                ene.set(st, 0, Hvib[idata][it+i].get(st, st).real )
+
+            E_adi_ave += ene
+
+            for tr in range(0,ntraj):                
+                Tr = idata*(nitimes*ntraj) + it_indx*(ntraj) + tr
+
+                ave_pop_sh.add(istate[Tr], 0, 1.0) 
+                ave_en_sh += ene.get(istate[Tr], 0)
+
+                pop = Pop[Tr].real()
+                ave_pop_se += pop
+                ave_en_se += (ene.T() * pop).get(0,0)
+                
+
+    nrm1 = (1.0/float(ndata * nitimes))
+    nrm2 = nrm1/float(ntraj)
+
+    E_adi_ave *= nrm1
+    ave_pop_sh *= nrm2
+    ave_pop_se *= nrm2
+    ave_en_sh *= nrm2
+    ave_en_se *= nrm2
+
+
+    # Save the computed data into a matrix to be output
+    res = MATRIX(1, 3*nstates+4) 
+   
+    tot_sh, tot_se = 0.0, 0.0
+    for j in range(0,nstates):
+        res.set(0, 3*j+0, E_adi_ave.get(j,0))   # Energy of the state j
+        res.set(0, 3*j+1, ave_pop_se.get(j,0))  # SE population
+        res.set(0, 3*j+2, ave_pop_sh.get(j,0))  # SH population
+
+        tot_se += ave_pop_se.get(j,0)
+        tot_sh += ave_pop_sh.get(j,0)
+
+    res.set(0, 3*nstates+0, ave_en_se)  # Average SE energy
+    res.set(0, 3*nstates+1, ave_en_sh)  # Average SH energy
+    res.set(0, 3*nstates+2, tot_se)     # Total SE population
+    res.set(0, 3*nstates+3, tot_sh)     # Total SH population
+
+    return res
+
+
+
+
 def printout(t, res, outfile):
     """This function does a simple output of a matrix columns to a file
 
