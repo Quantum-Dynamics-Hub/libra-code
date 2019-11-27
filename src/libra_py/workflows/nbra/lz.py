@@ -56,7 +56,7 @@ def Belyaev_Lebedev(Hvib, params):
 
             * **params["dt"]** ( double ): time distance between the adjacent data points [ units: a.u., defaut: 41.0 ]
             * **params["T"]** ( double ): temperature of the nuclear sub-system [ units: K, default: 300.0 ]
-            * **params["Boltz_opt"]** ( int ): option to select a probability of hopping acceptance [default: 3]
+            * **params["Boltz_opt_BL"]** ( int ): option to select a probability of hopping acceptance [default: 1]
                 Options:
 
                 - 0 - all proposed hops are accepted - no rejection based on energies
@@ -69,10 +69,10 @@ def Belyaev_Lebedev(Hvib, params):
 
     # Control parameters
     critical_params = [  ]
-    default_params = { "T":300.0, "Boltz_opt":3, "dt":41.0 }
+    default_params = { "T":300.0, "Boltz_opt_BL":1, "dt":41.0 }
     comn.check_input(params, default_params, critical_params)
 
-    boltz_opt = params["Boltz_opt"]
+    boltz_opt = params["Boltz_opt_BL"]
     T = params["T"]
     dt = params["dt"]
 
@@ -191,7 +191,6 @@ def Belyaev_Lebedev(Hvib, params):
             
     return P
 
-
 #        # Normalize probabilities if needed
 #        if tot>1.0:
 #            for i in xrange(nstates):        
@@ -205,23 +204,44 @@ def run(H_vib, params):
     probabilities, all within the NBRA. The probabilities are implemented according to
     the Belyaev-Lebedev work.
 
-    ===== Modeling params ===== 
+    Args:
+        params ( dictionary ): control parameters
 
-    params["dt"]             [double, a.u.] - time distance between the adjacent data points
-    params["ntraj"]          [int] - how many stochastic trajectories to use in the ensemble
-    params["istate"]         [int] - index of the starting state (within those used in the active_space - see above)
-    params["do_output"]      [string] - wheather to print out the results into a file
-    params["outfile"]        [string] - the name of the file, where all the results will be printed out
-    params["T"]              [double, K] - temperature of the simulation
+        * **params["dt"]** ( double ) : time distance between the adjacent data points [ units: a.u.; default: 41.0 a.u.]
+        * **params["ntraj"]** ( int ) : how many stochastic trajectories to use in the ensemble [ defult: 1]
+        * **params["nsteps"]** ( int ) : how nuclear steps in the trajectory to be computed [ defult: 1]
+        * **params["istate"]** ( int ) : index of the starting state (within those used in the active_space) [ default: 0]
+        * **params["Boltz_opt"]** ( int ) : option to control the acceptance of the proposed hops 
+            Options:
+
+            - 0 - all proposed hops are accepted - no rejection based on energies
+            - 1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach) [ default ]
+            - 2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
+            - 3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
+
+        * **params["Boltz_opt_BL"]** ( int ) : what type of hop acceptance scheme to incorporate into the BL probabilities 
+            Options:
+
+            - 0 - all proposed hops are accepted - no rejection based on energies [ default ]
+            - 1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach) 
+            - 2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
+            - 3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
+        
+        * **params["T"]** ( double ) : temperature of the nuclei - affects the acceptance probabilities [ units: K, default: 300.0 K]
+        * **params["do_output"]** ( Boolean ) : wheather to print out the results into a file [ default: True ]
+        * **params["outfile"]** ( string ) : the name of the file, where all the results will be printed out [ default: "_out.txt" ]
+        * **params["do_return"]** ( Boolean ) : wheather to construct the big matrix with all the result [ default: True ]
+        * **params["evolve_Markov"]** ( Boolean ) : wheather to propagate the "SE" populations via Markov chain [ default: True ]
+        * **params["evolve_TSH"]** ( Boolean ) : wheather to propagate the "SH" populations via TSH with many trajectories [ default: True ]
 
     """
 
 
     critical_params = [  ]
-    default_params = { "T":300.0, "ntraj":1000, "nsteps":1,"istate":0, 
-                       "sh_method":1, "decoherence_method":0, "dt":41.0, 
-                       "Boltz_opt":3,
-                       "do_output":False, "outfile":"_out.txt" }
+    default_params = { "dt":41.0, "ntraj":1, "nsteps":1, "istate":0, 
+                       "Boltz_opt":1, "Boltz_opt_BL":1, "T":300.0,
+                       "do_output":True, "outfile":"_out.txt", "do_return":True,
+                       "evolve_Markov":True, "evolve_TSH":True }
     comn.check_input(params, default_params, critical_params)
     
     rnd = Random()
@@ -231,9 +251,12 @@ def run(H_vib, params):
     nstates= H_vib[0][0].num_of_cols
     dt = params["dt"]
     do_output = params["do_output"]
+    do_return = params["do_return"]
     ntraj = params["ntraj"]
     boltz_opt = params["Boltz_opt"]
     T = params["T"]
+    evolve_Markov = params["evolve_Markov"]
+    evolve_TSH = params["evolve_TSH"]
 
 
     res = MATRIX(nsteps, 3*nstates+5)
@@ -269,12 +292,13 @@ def run(H_vib, params):
         res_i = step4.traj_statistics2_fast(i, Pop, istate, H_vib, itimes)
 
         # Print out into a file
-        step4.printout(i*dt, res_i, params["outfile"])
+        if do_output==True:
+            step4.printout(i*dt, res_i, params["outfile"])
 
         # Update the overal results matrix
         res.set(i,0, i*dt)
-        push_submatrix(res, res_i, Py2Cpp_int(list([i])), Py2Cpp_int(list(range(1,3*nstates+5))) )
-
+        if do_return==True:
+            push_submatrix(res, res_i, Py2Cpp_int(list([i])), Py2Cpp_int(list(range(1,3*nstates+5))) )
 
         #=============== Propagation ==============================
         for idata in range(0,ndata):   # over all data sets (MD trajectories)
@@ -289,31 +313,33 @@ def run(H_vib, params):
 
                     #============== Propagation: TD-SE and surface hopping ==========
         
-                    # Evolve Markov process.
+                    # Evolve the Markov process.
                     # The convention is:
                     # P(i,j) - the probability to go from j to i
-                    Pop[Tr] = CMATRIX(P[idata][i]) * Pop[Tr]
+                    if evolve_Markov==True:
+                        Pop[Tr] = CMATRIX(P[idata][i]) * Pop[Tr]
 
-        
-                    # Surface hopping 
-                    ksi  = rnd.uniform(0.0, 1.0)
-                    ksi1 = rnd.uniform(0.0, 1.0)
 
-                    
-                    # Proposed hop:
-                    st_new = tsh.hop_py(istate[Tr], P[idata][i].T(), ksi)  
+                    if evolve_TSH==True:        
 
-                    # Accept the proposed hop with the Boltzmann probability
-                    E_new = H_vib[idata][i].get(st_new,st_new).real
-                    E_old = H_vib[idata][i].get(istate[Tr], istate[Tr]).real
-                    de = E_new - E_old
-                    
-                    if de>0.0:
-                        bf = tsh.boltz_factor(E_new, E_old, T, boltz_opt)
-                        if ksi1 < bf:
-                            istate[Tr] = st_new                  
-                    else:
-                        istate[Tr] = st_new
+                        # Surface hopping 
+                        ksi  = rnd.uniform(0.0, 1.0)
+                        
+                        # Proposed hop:
+                        st_new = tsh.hop_py(istate[Tr], P[idata][i].T(), ksi)  
+                        
+                        # Accept the proposed hop with the Boltzmann probability
+                        E_new = H_vib[idata][i].get(st_new,st_new).real
+                        E_old = H_vib[idata][i].get(istate[Tr], istate[Tr]).real
+                        de = E_new - E_old
+                        
+                        if de>0.0:
+                            bf = tsh.boltz_factor(E_new, E_old, T, boltz_opt)
+                            ksi  = rnd.uniform(0.0, 1.0)
+                            if ksi < bf:
+                                istate[Tr] = st_new                  
+                        else:
+                            istate[Tr] = st_new
         
     return res
 
