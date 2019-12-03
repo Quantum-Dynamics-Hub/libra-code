@@ -59,28 +59,36 @@ def Belyaev_Lebedev(Hvib, params):
             * **params["Boltz_opt_BL"]** ( int ): option to select a probability of hopping acceptance [default: 1]                
                 Options:
 
-                - 0 - all proposed hops are accepted - no rejection based on energies
-                - 1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
-                - 2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
-                - 3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
+                    - 0 - all proposed hops are accepted - no rejection based on energies
+                    - 1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)
+                    - 2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
+                    - 3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
 
             * **params["gap_min_exception"]** ( int ): option to handle the situation when extrapolated gap minimum is negative
                 Options:
- 
-                - 0 - set to zero [ default ]
-                - 1 - use the mid-point gap
+
+                    - 0 - set to zero [ default ]
+                    - 1 - use the mid-point gap
+
+            * **params["target_space"]** ( int ): how to select the space of target states for each source state
+                Options:
+
+                    - 0 - only adjacent states [ default ]
+                    - 1 - all states available
+
      
     """
 
     # Control parameters
     critical_params = [  ]
-    default_params = { "T":300.0, "Boltz_opt_BL":1, "dt":41.0, "gap_min_exception":0 }
+    default_params = { "T":300.0, "Boltz_opt_BL":1, "dt":41.0, "gap_min_exception":0, "target_space":0 }
     comn.check_input(params, default_params, critical_params)
 
     boltz_opt = params["Boltz_opt_BL"]
     T = params["T"]
     dt = params["dt"]
     gap_min_exception = params["gap_min_exception"]
+    target_space = params["target_space"]
 
 
     # Data dimensions 
@@ -98,7 +106,6 @@ def Belyaev_Lebedev(Hvib, params):
     This will make the Markov state propagation more convenient
     """
 
-    scl = 1.0/(nstates - 1.0)
 
     P = []
     P.append( MATRIX(nstates, nstates) )
@@ -113,16 +120,49 @@ def Belyaev_Lebedev(Hvib, params):
         # Find the minima of the |E_i - E_j| for all pair of i and j    
         for j in range(0, nstates):      # source 
 
-            for i in range(0,nstates):   # target
+
+            # By doing this, we'll consider the transitions to only adjacent states
+            targets = []
+
+            if target_space == 0:
+                # Target states are only the states adjacent to the source state
+
+                if j == 0:
+                    targets = [1]
+                elif j == nstates - 1:
+                    targets = [nstates - 2]
+                else:
+                    targets = [j-1, j+1]
+
+            elif target_space == 1:
+                # All states can be the potential targets
+
+                targets = range(0, nstates)
+
+
+
+
+            # with how many other states, does the current (source) state has minima?
+            # apparently, this can not be more than 2
+            count = 0  
+            
+
+            #for i in targets:   # targets 
+            for i in targets:
 
                 # Interpolation is based on the 3-points Lagrange interpolant
                 # http://mathworld.wolfram.com/LagrangeInterpolatingPolynomial.html 
                 p = 0.0
 
                 if (dE[n-1].get(i,j)>dE[n].get(i,j) and dE[n].get(i,j)<dE[n+1].get(i,j)):
-                    
+
+                                        
                     denom = dE[n-1].get(i,j) - 2.0*dE[n].get(i,j) + dE[n+1].get(i,j)                  
                     if denom > 0.0:
+
+                        count = count + 1   # Located a minimum 
+
+
                         t_min = 0.5*(dE[n-1].get(i,j) - dE[n+1].get(i,j))*dt/denom
 
                         if t_min<-dt or t_min > dt:
@@ -173,17 +213,31 @@ def Belyaev_Lebedev(Hvib, params):
                     p = 0.0   # no transitions is not a minimum
 
 
-                if i!=j:
+                if i!=j:  # needed so we don't override the diagonal parts which we increment
+                    P[n].set(i,j, p)    # Probability to go j->i
+                    P[n].add(j,j, -p)   # Probability to stay on state j
 
-                    P[n].add(i,j, scl*p)         # Probability to go j->i
-                    P[n].add(j,j, scl*(1.0-p))   # Probability to stay on state j
                     
-
                 else:
                     pass #  Don't do anything for the diagonal terms
                          #  They are updated together with the off-diagonal ones
 
+            # Normalization
+            scl = 1.0   # if no minima determined, most transitions probabilities will be 0
+                        # but the probability to stay on the source state should be 1 still
+            if count>0: 
+                scl = 1.0/float(count)
+
        
+            # Diagonal terms
+            P[n].scale(j,j, scl)   # Probability to stay on state j
+            P[n].add(j,j, 1.0)     # Probability to stay on state j
+
+            # Off-diagonal terms:
+            for i in targets:
+                if i!=j:
+                    P[n].scale(i,j, scl)
+
 
     P.append( MATRIX(nstates, nstates) )
     for i in range(0,nstates):    
