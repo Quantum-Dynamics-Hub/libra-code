@@ -56,7 +56,7 @@ def Belyaev_Lebedev(Hvib, params):
 
             * **params["dt"]** ( double ): time distance between the adjacent data points [ units: a.u., defaut: 41.0 ]
             * **params["T"]** ( double ): temperature of the nuclear sub-system [ units: K, default: 300.0 ]
-            * **params["Boltz_opt_BL"]** ( int ): option to select a probability of hopping acceptance [default: 1]
+            * **params["Boltz_opt_BL"]** ( int ): option to select a probability of hopping acceptance [default: 1]                
                 Options:
 
                 - 0 - all proposed hops are accepted - no rejection based on energies
@@ -64,17 +64,23 @@ def Belyaev_Lebedev(Hvib, params):
                 - 2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
                 - 3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
 
+            * **params["gap_min_exception"]** ( int ): option to handle the situation when extrapolated gap minimum is negative
+                Options:
+ 
+                - 0 - set to zero [ default ]
+                - 1 - use the mid-point gap
      
     """
 
     # Control parameters
     critical_params = [  ]
-    default_params = { "T":300.0, "Boltz_opt_BL":1, "dt":41.0 }
+    default_params = { "T":300.0, "Boltz_opt_BL":1, "dt":41.0, "gap_min_exception":0 }
     comn.check_input(params, default_params, critical_params)
 
     boltz_opt = params["Boltz_opt_BL"]
     T = params["T"]
     dt = params["dt"]
+    gap_min_exception = params["gap_min_exception"]
 
 
     # Data dimensions 
@@ -92,6 +98,8 @@ def Belyaev_Lebedev(Hvib, params):
     This will make the Markov state propagation more convenient
     """
 
+    scl = 1.0/(nstates - 1.0)
+
     P = []
     P.append( MATRIX(nstates, nstates) )
     for i in range(0,nstates):    
@@ -100,14 +108,17 @@ def Belyaev_Lebedev(Hvib, params):
     for n in range(1, nsteps-1):
         P.append(MATRIX(nstates, nstates))
  
+
         # Belyaev-Lebedev probabilities
         # Find the minima of the |E_i - E_j| for all pair of i and j    
-        for i in range(0,nstates):             # target
-            for j in range(i+1, nstates):      # source 
+        for j in range(0, nstates):      # source 
+
+            for i in range(0,nstates):   # target
 
                 # Interpolation is based on the 3-points Lagrange interpolant
                 # http://mathworld.wolfram.com/LagrangeInterpolatingPolynomial.html 
                 p = 0.0
+
                 if (dE[n-1].get(i,j)>dE[n].get(i,j) and dE[n].get(i,j)<dE[n+1].get(i,j)):
                     
                     denom = dE[n-1].get(i,j) - 2.0*dE[n].get(i,j) + dE[n+1].get(i,j)                  
@@ -124,9 +135,10 @@ def Belyaev_Lebedev(Hvib, params):
                                        t_min*(t_min + dt)*dE[n+1].get(i,j) )/(dt*dt)
 
                         if gap_min<0.0:
-                            print("Error: the extrapolated gap is negative!\n")
-                            print("Exiting...\n")
-                            sys.exit(0)
+                            if gap_min_exception==0:
+                                gap_min = 0.0
+                            elif gap_min_exception==1:
+                                gap_min = dE[n].get(i,j)
 
                         if gap_min > dE[n-1].get(i,j) or gap_min > dE[n+1].get(i,j):
                             print("Error: the extrapolated gap is larger than the bounding values!\n")
@@ -135,67 +147,51 @@ def Belyaev_Lebedev(Hvib, params):
 
                         second_deriv = denom/(dt*dt)
 
-                        #argg = (dE[n].get(i,j)**3) / denom
-
                         argg = (gap_min**3) / second_deriv
 
                         p = math.exp(-0.5*math.pi*math.sqrt(argg) )
+
+
+                        # Optionally, can correct transition probabilitieis to 
+                        # account for Boltzmann factor
+                        if i!=j:
+
+                            E_new = Hvib[n].get(i,i).real  # target
+                            E_old = Hvib[n].get(j,j).real  # source
+                            bf = 1.0
+                            if E_new > E_old:
+                                # Notice how we use gap_min rather than E_new - E_old in this case
+                                bf = tsh.boltz_factor(gap_min, 0.0, T, boltz_opt)
+
+                            if bf>1.0:
+                                print("Error: Boltzmann scaling factor can not be larger 1.0 = ",bf)
+                                sys.exit(0)
+                            else:
+                                p = p * bf
+                                 
                 else:
                     p = 0.0   # no transitions is not a minimum
 
-                P[n].set(i,j, p)
-                P[n].set(j,i, p)
-
-        
-        # Optionally, can correct transition probabilitieis to 
-        # account for Boltzmann factor
-        for i in range(0,nstates):        # target
-            for j in range(0,nstates):    # source 
 
                 if i!=j:
 
-                    E_new = Hvib[n].get(i,i).real  # target
-                    E_old = Hvib[n].get(j,j).real  # source
-                    bf = 1.0
-                    if E_new > E_old:
-                        bf = tsh.boltz_factor(E_new, E_old, T, boltz_opt)
-                        if bf>1.0:
-                            print("Error: Boltzmann scaling factor can not be larger 1.0 = ",bf)
-                            #sys.exit(0)
-                        P[n].scale(i,j, bf)
+                    P[n].add(i,j, scl*p)         # Probability to go j->i
+                    P[n].add(j,j, scl*(1.0-p))   # Probability to stay on state j
+                    
 
+                else:
+                    pass #  Don't do anything for the diagonal terms
+                         #  They are updated together with the off-diagonal ones
 
-        # Compute the probability of staying on the same state j (source)
-        # P(j,j) = 1 - sum_(i!=j) { P(i,j) }
-        #
-        # The convention is:
-        # P(i,j) - the probability to go from j to i
-
-        for j in range(0,nstates): # for all source states            
-
-            tot = 0.0  # Total probability to leave state j
-            for i in range(0,nstates):     # all target states
-                if i!=j:                  # but j
-                    tot += P[n].get(i,j)
-
-            # Compute the probability to stay on state j
-            P[n].set(j,j, 1.0 - tot)
-
+       
 
     P.append( MATRIX(nstates, nstates) )
     for i in range(0,nstates):    
         P[nsteps-1].set(i,i, 1.0)
 
-
-
             
     return P
 
-#        # Normalize probabilities if needed
-#        if tot>1.0:
-#            for i in xrange(nstates):        
-#            P[n].scale(i,j, (1.0/tot))
-#            tot = 1.0
 
 
 def run(H_vib, params):

@@ -74,6 +74,8 @@ params["istate"]             = 24                    # The index of the starting
 params["init_times"]         = [0]                   # starting points for sub-trajectories
 params["do_output"]          = True                  # request to print the results into a file
 params["do_return"]          = False                 # request to not store the date in the operating memory
+params["gap_min_exception"]  = 0                     # set the minimal gap to zero if the extrapolated gap is negative
+
 
 # For running NA-MD
 Hvib = step4.get_Hvib2(params)      # get the Hvib for all data sets, Hvib is a lists of lists
