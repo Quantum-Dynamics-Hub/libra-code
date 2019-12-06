@@ -75,7 +75,7 @@ params["init_times"]         = [0]                   # starting points for sub-t
 params["do_output"]          = True                  # request to print the results into a file
 params["do_return"]          = False                 # request to not store the date in the operating memory
 params["gap_min_exception"]  = 0                     # set the minimal gap to zero if the extrapolated gap is negative
-params["target_space"]       = 0                     # hop to adjacet states only
+params["target_space"]       = 1                     # hop to all states
 
 
 # For running NA-MD

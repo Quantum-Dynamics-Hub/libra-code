@@ -73,15 +73,15 @@ def Belyaev_Lebedev(Hvib, params):
             * **params["target_space"]** ( int ): how to select the space of target states for each source state
                 Options:
 
-                    - 0 - only adjacent states [ default ]
-                    - 1 - all states available
+                    - 0 - only adjacent states 
+                    - 1 - all states available [ default ]
 
      
     """
 
     # Control parameters
     critical_params = [  ]
-    default_params = { "T":300.0, "Boltz_opt_BL":1, "dt":41.0, "gap_min_exception":0, "target_space":0 }
+    default_params = { "T":300.0, "Boltz_opt_BL":1, "dt":41.0, "gap_min_exception":0, "target_space":1 }
     comn.check_input(params, default_params, critical_params)
 
     boltz_opt = params["Boltz_opt_BL"]
@@ -144,25 +144,20 @@ def Belyaev_Lebedev(Hvib, params):
 
             # with how many other states, does the current (source) state has minima?
             # apparently, this can not be more than 2
-            count = 0  
+            normalization = 0.0
             
-
             #for i in targets:   # targets 
             for i in targets:
 
                 # Interpolation is based on the 3-points Lagrange interpolant
                 # http://mathworld.wolfram.com/LagrangeInterpolatingPolynomial.html 
-                p = 0.0
 
                 if (dE[n-1].get(i,j)>dE[n].get(i,j) and dE[n].get(i,j)<dE[n+1].get(i,j)):
 
                                         
                     denom = dE[n-1].get(i,j) - 2.0*dE[n].get(i,j) + dE[n+1].get(i,j)                  
                     if denom > 0.0:
-
-                        count = count + 1   # Located a minimum 
-
-
+                       
                         t_min = 0.5*(dE[n-1].get(i,j) - dE[n+1].get(i,j))*dt/denom
 
                         if t_min<-dt or t_min > dt:
@@ -198,6 +193,7 @@ def Belyaev_Lebedev(Hvib, params):
 
                             E_new = Hvib[n].get(i,i).real  # target
                             E_old = Hvib[n].get(j,j).real  # source
+
                             bf = 1.0
                             if E_new > E_old:
                                 # Notice how we use gap_min rather than E_new - E_old in this case
@@ -206,38 +202,22 @@ def Belyaev_Lebedev(Hvib, params):
                             if bf>1.0:
                                 print("Error: Boltzmann scaling factor can not be larger 1.0 = ",bf)
                                 sys.exit(0)
-                            else:
-                                p = p * bf
+
+
+                            P[n].set(i,j, p*bf)      # Probability to go j->i
+                            normalization = normalization + p*bf
                                  
-                else:
-                    p = 0.0   # no transitions is not a minimum
 
+            if normalization<1.0:
+                P[n].set(j,j, 1.0 - normalization)
+            else:
+                P[n].add(j,j, 0.0)
 
-                if i!=j:  # needed so we don't override the diagonal parts which we increment
-                    P[n].set(i,j, p)    # Probability to go j->i
-                    P[n].add(j,j, -p)   # Probability to stay on state j
-
-                    
-                else:
-                    pass #  Don't do anything for the diagonal terms
-                         #  They are updated together with the off-diagonal ones
-
-            # Normalization
-            scl = 1.0   # if no minima determined, most transitions probabilities will be 0
-                        # but the probability to stay on the source state should be 1 still
-            if count>0: 
-                scl = 1.0/float(count)
-
+                scl = 1.0/normalization
+                P[n].scale(-1, j, scl)
+ 
+               
        
-            # Diagonal terms
-            P[n].scale(j,j, scl)   # Probability to stay on state j
-            P[n].add(j,j, 1.0)     # Probability to stay on state j
-
-            # Off-diagonal terms:
-            for i in targets:
-                if i!=j:
-                    P[n].scale(i,j, scl)
-
 
     P.append( MATRIX(nstates, nstates) )
     for i in range(0,nstates):    
