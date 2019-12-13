@@ -65,6 +65,8 @@
 #include "qchem_tools/libqchem_tools.h"
 #include "solvers/libsolvers.h"
 
+#include "integrators/libintegrators.h"
+
 
 #include "montecarlo/libmontecarlo.h"
 #include "opt/libopt.h"

@@ -139,6 +139,10 @@ MESSAGE("Going into subdirectory solvers...")
 ADD_SUBDIRECTORY("solvers")
 
 
+MESSAGE("Going into subdirectory integrators...")
+ADD_SUBDIRECTORY("integrators")
+
+
 
 #
 #  Source files and headers in this directory
@@ -152,6 +156,7 @@ ADD_LIBRARY(libra_core_stat STATIC ${LIBRA_SRC})
 
 
 TARGET_LINK_LIBRARIES(libra_core
+                      integrators_stat
                       solvers_stat
                       qchem_tools_stat
                       scripts_stat
@@ -180,6 +185,7 @@ TARGET_LINK_LIBRARIES(libra_core
 
 
 TARGET_LINK_LIBRARIES(libra_core_stat
+                      integrators_stat
                       solvers_stat
                       qchem_tools_stat
                       scripts_stat
