@@ -28,6 +28,10 @@ ADD_SUBDIRECTORY("ensemble")
 MESSAGE("Going into subdirectory gwp...")
 ADD_SUBDIRECTORY("gwp")
 
+MESSAGE("Going into subdirectory heom...")
+ADD_SUBDIRECTORY("heom")
+
+
 
 #
 #  Source files and headers in this directory
@@ -46,7 +50,9 @@ ADD_LIBRARY(dyn_stat STATIC ${DYN_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(dyn      gwp_stat ensemble_stat 
+TARGET_LINK_LIBRARIES(dyn      
+                      heom_stat
+                      gwp_stat ensemble_stat 
                       wfcgrid_stat 
                       wfcgrid2_stat 
                       barostat_stat thermostat_stat 
@@ -55,7 +61,9 @@ TARGET_LINK_LIBRARIES(dyn      gwp_stat ensemble_stat
                       hamiltonian_stat
                       linalg_stat meigen_stat util_stat specialfunctions_stat ${ext_libs} )
 
-TARGET_LINK_LIBRARIES(dyn_stat      gwp_stat ensemble_stat 
+TARGET_LINK_LIBRARIES(dyn_stat
+                      heom_stat
+                      gwp_stat ensemble_stat 
                       wfcgrid_stat 
                       wfcgrid2_stat 
                       barostat_stat thermostat_stat 

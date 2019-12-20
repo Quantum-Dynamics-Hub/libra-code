@@ -36,6 +36,7 @@ using namespace libwfcgrid;
 using namespace libwfcgrid2;
 using namespace libensemble;
 using namespace libgwp;
+using namespace libheom;
 
 using namespace libthermostat;
 
@@ -401,6 +402,7 @@ void export_Dyn_objects(){
   export_Wfcgrid2_objects();
   export_Ensemble_objects();
   export_gwp_objects();
+  export_heom_objects();
 
   export_dyn_control_params_objects();
   export_dyn_decoherence_objects();

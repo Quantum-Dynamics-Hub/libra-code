@@ -29,6 +29,7 @@
 #include "wfcgrid2/libwfcgrid2.h"
 #include "ensemble/libensemble.h"
 #include "gwp/libgwp.h"
+#include "heom/libheom.h"
 
 // General dynamics
 #include "Energy_and_Forces.h"

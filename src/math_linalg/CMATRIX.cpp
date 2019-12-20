@@ -207,10 +207,15 @@ double CMATRIX::NonOrtogonality_Measure(){
 complex<double> CMATRIX::max_elt(){
 /** Finds the maximal (in absolute value) element and its position  */
 
+  int max_indx = 0;
   double x = abs(M[0]);
   double y;
-  for(int i=0;i<n_elts;i++){  y = abs(M[i]); if(y>=x){ x = y; } }
-  return x;
+  for(int i=0;i<n_elts;i++){  
+    y = abs(M[i]); 
+    if(y>=x){ x = y; max_indx = i; } 
+  }
+
+  return M[max_indx];
 
 }
 

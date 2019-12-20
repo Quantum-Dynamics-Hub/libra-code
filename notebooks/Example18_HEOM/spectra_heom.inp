@@ -1,0 +1,7 @@
+2                                 !! nquant
+10                                !! LL
+0                                 !! KK
+1.d-6                             !! tolerance
+0.1d-15                           !! dt (s)
+1.d-12                            !! tim_tot (s)
+x
