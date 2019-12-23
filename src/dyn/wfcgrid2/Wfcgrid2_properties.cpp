@@ -254,7 +254,7 @@ CMATRIX Wfcgrid2::get_pow_p(int rep, int n){
     res *= dk[idof];
     nrm *= dr[idof];
   }
-  res *= pow((2.0*M_PI*M_PI), n);
+  res *= pow((2.0*M_PI), n);
 
   res = res / nrm;
 

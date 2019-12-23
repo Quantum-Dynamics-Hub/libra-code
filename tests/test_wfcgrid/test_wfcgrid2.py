@@ -80,13 +80,19 @@ wfc.update_reciprocal(rep)
 
 wfc.update_Hamiltonian(harmonic, {"k": k}, rep)
 
-print "Norm = ", wfc.norm(rep)
-print "Ekin = ", wfc.e_kin(masses, rep)
-print "Expected kinetic energy = ", 0.5*alphas[0]/(2.0*masses[0])
-print "Epot = ", wfc.e_pot(rep)
-print "Expected potential energy = ", (0.5*k/alphas[0])*(0.5 + nu[0])
-print "Etot = ", wfc.e_tot(masses, rep)
-print "Expected total energy = ", omega*(0.5 + nu[0])
+print( "Norm = ", wfc.norm(rep) )
+print( "Ekin = ", wfc.e_kin(masses, rep) )
+print( "Expected kinetic energy = ", 0.5*alphas[0]/(2.0*masses[0]) )
+print( "Epot = ", wfc.e_pot(rep) )
+print( "Expected potential energy = ", (0.5*k/alphas[0])*(0.5 + nu[0]) )
+print( "Etot = ", wfc.e_tot(masses, rep) )
+print( "Expected total energy = ", omega*(0.5 + nu[0]) )
+
+p2 = wfc.get_pow_p(0, 2);
+print( "p2 = ", p2.get(0).real )
+print( "p2/2*m = ", p2.get(0).real/(2.0 * masses[0]) )
+
+
 
 
 """
@@ -103,9 +109,9 @@ for n in [0, 1, 2, 3, 10, 20]:
     wfc.update_reciprocal(rep)
     wfc.update_Hamiltonian(harmonic, {"k": k}, rep)
 
-    print "========== State %i ==============" % (n)
-    print "Etot = ", wfc.e_tot(masses, rep)
-    print "Expected total energy = ", omega*(0.5 + nu[0])
+    print( "========== State %i ==============" % (n) )
+    print( "Etot = ", wfc.e_tot(masses, rep) )
+    print( "Expected total energy = ", omega*(0.5 + nu[0]) )
 
 
 
@@ -125,7 +131,7 @@ wfc.update_Hamiltonian(harmonic, {"k": k}, rep)
 wfc.update_propagator_H(0.5*dt)
 wfc.update_propagator_K(dt, masses)
 
-for step in xrange(nsteps):
+for step in range(nsteps):
     wfc.SOFT_propagate()
     q = wfc.get_pow_q(0, 1).get(0).real
     p = wfc.get_pow_p(0, 1).get(0).real
@@ -139,7 +145,7 @@ for step in xrange(nsteps):
 
     p0_dia = Ddia.get(0,0).real
     p0_adi = Dadi.get(0,0).real
-    print "step= ", step, " Ekin= ", wfc.e_kin(masses, rep), " Epot= ", wfc.e_pot(rep), " Etot= ", wfc.e_tot(masses, rep), " q= ", q, " p= ", p, " p0_dia= ", p0_dia, " p0_adi= ", p0_adi
+    print( "step= ", step, " Ekin= ", wfc.e_kin(masses, rep), " Epot= ", wfc.e_pot(rep), " Etot= ", wfc.e_tot(masses, rep), " q= ", q, " p= ", p, " p0_dia= ", p0_dia, " p0_adi= ", p0_adi )
             
 
 
