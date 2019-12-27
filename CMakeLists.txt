@@ -14,17 +14,6 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT("libra")
 
 #
-#  Cmake configuration
-#
-IF(NOT CMAKE_BUILD_TYPE)
-  #SET(CMAKE_BUILD_TYPE "DEBUG")
-  SET(CMAKE_BUILD_TYPE "RELEASE")
-  #SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
-  #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
-  SET(CMAKE_CXX_FLAGS "-fPIC -O2 -fpermissive -w -g")
-ENDIF()
-
-#
 #  User-defined Find modules
 #
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
@@ -42,7 +31,6 @@ IF(Boost_FOUND)
   SET(Boost_USE_STATIC_LIBS OFF)
   SET(Boost_USE_MULTITHREADED OFF)
   SET(Boost_USE_STATIC_RUNTIME OFF)
-  #FIND_PACKAGE(Boost COMPONENTS python27 regex) # it seems that it is important to find sub-packages too!!!
   FIND_PACKAGE(Boost COMPONENTS python37 regex) # it seems that it is important to find sub-packages too!!!
 ELSEIF(NOT Boost_FOUND)
   MESSAGE(FATAL_ERROR "Unable to find correct Boost version. Did you set BOOST_ROOT?")
@@ -62,7 +50,6 @@ MESSAGE("Advice: If this search fails, try setting cache variables: -DPYTHON_LIB
 MESSAGE("Hint to self: -DPYTHON_INCLUDE_DIR=/home/Alexey_2/Soft/Python-2.6.7/bin/include/python2.6 -DPYTHON_LIBRARY=/home/Alexey_2/Soft/Python-2.6.7/bin/bin")
 
 # For Linux and Cygwin
-#FIND_PACKAGE(PythonLibs 2.7 REQUIRED)
 FIND_PACKAGE(PythonLibs 3.7 REQUIRED)
 
 IF(PYTHONLIBS_FOUND)
@@ -92,6 +79,15 @@ ELSE()
   MESSAGE(FATAL_ERROR "CMakeLists.txt has not been tested/written for your compiler.")
 ENDIF()
 
+
+#
+#  Cmake configuration
+#
+MESSAGE("Setting up the CMake configuration...")
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE "RELEASE")
+  SET(CMAKE_CXX_FLAGS "-fPIC -O2 -fpermissive -w -g -I ${Boost_INCLUDE_DIRS}")
+ENDIF()
 
 
 #
