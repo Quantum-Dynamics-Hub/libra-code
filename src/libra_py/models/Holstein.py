@@ -204,16 +204,16 @@ def Holstein2(q, params, full_id):
     
     Sdia.identity()    
     
-    for i in xrange(n):
+    for i in range(n):
         Hdia.set(i,i,  (E_n[i] + 0.5*k_n[i]*(x - x_n[i])**2) * (1.0+0.0j) )
     
-    for i in xrange(n-1):
+    for i in range(n-1):
         Hdia.set(i,i+1,  V * (1.0+0.0j) )
         Hdia.set(i+1,i,  V * (1.0+0.0j) )    
     
     for k in [0]:
         #  d Hdia / dR_0
-        for i in xrange(n):
+        for i in range(n):
             d1ham_dia[k].set(i,i, (k_n[i] * (x - x_n[i]))*(1.0+0.0j) )    
             
                     

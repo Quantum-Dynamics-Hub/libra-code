@@ -80,6 +80,14 @@ void export_Wfcgrid2_objects(){
   (bp::object py_funct, bp::object params, int rep) = &Wfcgrid2::add_wfc_ARB;
 
 
+  // Auxiliary functions
+  int (*expt_points_on_same_line_v1)
+  (int idof, vector<int>& pt1, vector<int>& pt2) = &points_on_same_line;
+
+  def("points_on_same_line", expt_points_on_same_line_v1);
+
+
+
 
   class_<Wfcgrid2>("Wfcgrid2",init<vector<double>&, vector<double>&, vector<double>&, int>())
       .def(init<const Wfcgrid2&>())
@@ -119,6 +127,12 @@ void export_Wfcgrid2_objects(){
       .def_readwrite("expK", &Wfcgrid2::expK)
 
       .def("imap", &Wfcgrid2::imap)
+
+      /**  Wfcgrid2_ColbertMiller    */
+      .def("T_PSI", &Wfcgrid2::T_PSI)
+      .def("T_PSI_adi", &Wfcgrid2::T_PSI_adi)
+      .def("T_PSI_dia", &Wfcgrid2::T_PSI_dia)
+
 
       /**  Wfcgrid2_direct    */
       .def("direct_allocate_tmp_vars", &Wfcgrid2::direct_allocate_tmp_vars)

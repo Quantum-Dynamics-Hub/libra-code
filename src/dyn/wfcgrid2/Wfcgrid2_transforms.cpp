@@ -106,7 +106,7 @@ void Wfcgrid2::update_reciprocal(int rep){
 
       ///< Internal output to reciPSI
       for(ipt=0; ipt<npts[0]; ipt++){
-        for(ipt=0; ipt<npts[0]; ipt++){
+        for(ipt2=0; ipt2<npts[1]; ipt2++){
 
           point[0] = ipt;
           point[1] = ipt2;

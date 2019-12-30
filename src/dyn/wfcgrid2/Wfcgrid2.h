@@ -44,6 +44,10 @@ CMATRIX HO(vector<double>& x, vector<double>& x0, vector<double>& px0,
            vector<double>& alpha, int init_state, int nstates, vector<int>& nu, complex<double> scl);
 
 
+///=============== In the Wfcgrid2_ColbertMiller.cpp ==================
+int points_on_same_line(int idof, vector<int>& pt1, vector<int>& pt2);
+
+
 // N-D grid wavefunction
 class Wfcgrid2{
 /**
@@ -135,6 +139,11 @@ public:
   ///< Grid constructor
   Wfcgrid2(vector<double>& rmin_, vector<double>& rmax_, vector<double>& dr_, int nstates_); ///< constructor for n-D wavefunction
 
+
+  ///=============== In the Wfcgrid2_ColbertMiller.cpp ===============
+  vector<CMATRIX> T_PSI(vector<CMATRIX>& inp_psi, vector<int>& bc_type, vector<double>& mass, complex<double> scaling);
+  vector<CMATRIX> T_PSI_adi(vector<int>& bc_type, vector<double>& mass, complex<double> scaling);
+  vector<CMATRIX> T_PSI_dia(vector<int>& bc_type, vector<double>& mass, complex<double> scaling);
 
   ///=============== In the Wfcgrid2_direct.cpp ====================
   void direct_allocate_tmp_vars(double rep);
