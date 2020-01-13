@@ -80,6 +80,14 @@ void export_Wfcgrid2_objects(){
   (bp::object py_funct, bp::object params, int rep) = &Wfcgrid2::add_wfc_ARB;
 
 
+  MATRIX (Wfcgrid2::*expt_get_pops_v1)
+  (int rep) = &Wfcgrid2::get_pops;
+
+  MATRIX (Wfcgrid2::*expt_get_pops_v2)
+  (int rep, vector<double>& bmin, vector<double>& bmax) = &Wfcgrid2::get_pops;
+
+
+
   // Auxiliary functions
   int (*expt_points_on_same_line_v1)
   (int idof, vector<int>& pt1, vector<int>& pt2) = &points_on_same_line;
@@ -87,6 +95,27 @@ void export_Wfcgrid2_objects(){
   def("points_on_same_line", expt_points_on_same_line_v1);
 
 
+  void (*expt_dvr0_v1)
+  (MATRIX& T, int npts, double rmin, double rmax, double mass) = &dvr0;
+  def("dvr0", expt_dvr0_v1);
+
+  void (*expt_dvr1_v1)
+  (MATRIX& T, int npts, double dr, double mass) = &dvr1;
+  def("dvr1", expt_dvr1_v1);
+
+  void (*expt_dvr2_v1)
+  (MATRIX& T, int npts, double dr, double mass) = &dvr2;
+  def("dvr2", expt_dvr2_v1);
+
+/*
+  vector<CMATRIX> (*expt_expV_v1)
+  (vector<CMATRIX>& V, complex<double> dt) = &expV;
+  def("expV", expt_expV_v1);
+
+  vector<CMATRIX> (*expt_expV_diag_v1)
+  (vector<CMATRIX>& V, complex<double> dt) = &expV_diag;
+  def("expV_diag", expt_expV_diag_v1);
+*/
 
 
   class_<Wfcgrid2>("Wfcgrid2",init<vector<double>&, vector<double>&, vector<double>&, int>())
@@ -122,9 +151,12 @@ void export_Wfcgrid2_objects(){
 
       .def_readwrite("Hdia", &Wfcgrid2::Hdia)
       .def_readwrite("Hadi", &Wfcgrid2::Hadi)
+      .def_readwrite("NAC1", &Wfcgrid2::NAC1)
+      .def_readwrite("NAC2", &Wfcgrid2::NAC2)
       .def_readwrite("U",    &Wfcgrid2::U)
       .def_readwrite("expH", &Wfcgrid2::expH)
       .def_readwrite("expK", &Wfcgrid2::expK)
+
 
       .def("imap", &Wfcgrid2::imap)
 
@@ -132,6 +164,26 @@ void export_Wfcgrid2_objects(){
       .def("T_PSI", &Wfcgrid2::T_PSI)
       .def("T_PSI_adi", &Wfcgrid2::T_PSI_adi)
       .def("T_PSI_dia", &Wfcgrid2::T_PSI_dia)
+      .def("operator_T", &Wfcgrid2::operator_T)
+      .def("expT_PSI", &Wfcgrid2::expT_PSI)
+      .def("Colbert_Miller_SOFT", &Wfcgrid2::Colbert_Miller_SOFT)
+
+      .def("nubla_PSI", &Wfcgrid2::nubla_PSI)
+      .def("nubla_PSI_adi", &Wfcgrid2::nubla_PSI_adi)
+      .def("nubla_PSI_dia", &Wfcgrid2::nubla_PSI_dia)
+
+      .def("V_PSI", &Wfcgrid2::V_PSI)
+      .def("V_PSI_adi", &Wfcgrid2::V_PSI_adi)
+      .def("V_PSI_dia", &Wfcgrid2::V_PSI_dia)
+
+      .def("H_PSI_adi", &Wfcgrid2::H_PSI_adi)
+      .def("H_PSI_dia", &Wfcgrid2::H_PSI_dia)
+
+      .def("Colbert_Miller_propagate_adi1", &Wfcgrid2::Colbert_Miller_propagate_adi1)
+      .def("Colbert_Miller_propagate_adi2", &Wfcgrid2::Colbert_Miller_propagate_adi2)
+      .def("Colbert_Miller_propagate_dia1", &Wfcgrid2::Colbert_Miller_propagate_dia1)
+      .def("Colbert_Miller_propagate_dia2", &Wfcgrid2::Colbert_Miller_propagate_dia2)
+
 
 
       /**  Wfcgrid2_direct    */
@@ -155,6 +207,8 @@ void export_Wfcgrid2_objects(){
       .def("get_pow_q",         &Wfcgrid2::get_pow_q)
       .def("get_pow_p",         &Wfcgrid2::get_pow_p)
       .def("get_den_mat",       &Wfcgrid2::get_den_mat)
+      .def("get_pops",          expt_get_pops_v1)
+      .def("get_pops",          expt_get_pops_v2)
 
       /**  Wfcgrid2_SOFT    */
       .def("update_propagator_H", &Wfcgrid2::update_propagator_H)

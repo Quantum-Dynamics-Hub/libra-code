@@ -272,28 +272,138 @@ CMATRIX Wfcgrid2::get_den_mat(int rep){
   
 */
 
-  double nrm; nrm = 0.0;
-
   CMATRIX res(nstates, nstates);  
 
   for(int npt1=0; npt1<Npts; npt1++){
 
     if(rep==0){
       res += (PSI_dia[npt1] * PSI_dia[npt1].H());
-      nrm += (PSI_dia[npt1].H() * PSI_dia[npt1]).get(0,0).real();
     }
     else if(rep==1){
       res += (PSI_adi[npt1] * PSI_adi[npt1].H());
-      nrm += (PSI_adi[npt1].H() * PSI_adi[npt1]).get(0,0).real();
     }
 
   }// for npt1
 
-  res = res / nrm;
+  return res;
+
+}
+
+
+
+MATRIX Wfcgrid2::get_pops(int rep){
+/**
+  Compute the populations of all states in a given representation
+
+  Out:  CMATRIX(nstates, 1)
+  
+*/
+
+  int istate;
+  double pop_i;
+
+  MATRIX res(nstates, 1);  
+
+  for(int npt1=0; npt1<Npts; npt1++){
+
+    if(rep==0){
+
+      for(istate=0; istate<nstates; istate++){
+          pop_i = (PSI_dia[npt1].get(istate, 0) * std::conj(PSI_dia[npt1].get(istate, 0))).real(); 
+          res.add(istate, 0,  pop_i);
+      }
+    }
+    else if(rep==1){
+
+      for(istate=0; istate<nstates; istate++){
+          pop_i = (PSI_adi[npt1].get(istate, 0) * std::conj(PSI_adi[npt1].get(istate, 0))).real(); 
+          res.add(istate, 0,  pop_i);
+      }
+    }
+
+  }// for npt1
+
+  double dV = 1.0;
+  for(int idof=0; idof<ndof; idof++){  dV *= dr[idof];  }
+
+  res *= dV;
 
   return res;
 
 }
+
+
+
+
+MATRIX Wfcgrid2::get_pops(int rep, vector<double>& bmin, vector<double>& bmax){
+/**
+  Compute the populations of all states in a given representation
+
+  Only the points that belong to a multidimensional box given by bmin and bmax parameters are
+  included in the corresponding populations
+
+  Out:  CMATRIX(nstates, 1)
+  
+*/
+
+  int istate, idof;
+  double pop_i;
+  vector<int> pt;
+
+  MATRIX res(nstates, 1);  
+   
+  int maxdim = ndof;
+  if(bmin.size() < maxdim) { maxdim = bmin.size(); }
+
+  for(int npt1=0; npt1<Npts; npt1++){
+
+    pt = gmap[npt1];
+
+
+    int is_included = 1;
+
+    for(idof=0; idof<maxdim && is_included; idof++){
+
+      double coord = rgrid[idof]->get(pt[idof]);
+
+      if(coord < bmin[idof]  || coord > bmax[idof] ){  is_included = 0; }    
+
+    }
+
+
+    if(is_included){
+
+      if(rep==0){    
+     
+        for(istate=0; istate<nstates; istate++){
+            pop_i = (PSI_dia[npt1].get(istate, 0) * std::conj(PSI_dia[npt1].get(istate, 0))).real(); 
+            res.add(istate, 0,  pop_i);
+        }
+      }
+      else if(rep==1){
+     
+        for(istate=0; istate<nstates; istate++){
+            pop_i = (PSI_adi[npt1].get(istate, 0) * std::conj(PSI_adi[npt1].get(istate, 0))).real(); 
+            res.add(istate, 0,  pop_i);
+        }
+      }
+
+    }// if is_included
+
+  }// for npt1
+
+  double dV = 1.0;
+  for(int idof=0; idof<ndof; idof++){  dV *= dr[idof];  }
+
+  res *= dV;
+
+
+  return res;
+
+}
+
+
+
 
 
 

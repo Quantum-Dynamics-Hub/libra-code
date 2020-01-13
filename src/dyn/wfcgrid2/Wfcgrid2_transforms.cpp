@@ -251,12 +251,8 @@ void Wfcgrid2::normalize(int rep){
   
 
   for(int npt=0; npt<Npts; npt++){
-    if(rep==0){
-      PSI_dia[npt] *= nrm;
-    }
-    else if(rep==1){
-      PSI_adi[npt] *= nrm;
-    }
+    if(rep==0){        PSI_dia[npt] *= nrm;   }
+    else if(rep==1){   PSI_adi[npt] *= nrm;   }
   }
 
 }

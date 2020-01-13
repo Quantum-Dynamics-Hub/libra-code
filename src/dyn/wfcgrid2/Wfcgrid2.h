@@ -47,6 +47,12 @@ CMATRIX HO(vector<double>& x, vector<double>& x0, vector<double>& px0,
 ///=============== In the Wfcgrid2_ColbertMiller.cpp ==================
 int points_on_same_line(int idof, vector<int>& pt1, vector<int>& pt2);
 
+void dvr0(MATRIX& T, int npts, double rmin, double rmax, double mass);
+void dvr1(MATRIX& T, int npts, double dr, double mass);
+void dvr2(MATRIX& T, int npts, double dr, double mass);
+
+//vector<CMATRIX> expV(vector<CMATRIX>& V, complex<double> dt);
+//vector<CMATRIX> expV_diag(vector<CMATRIX>& V, complex<double> dt);
 
 // N-D grid wavefunction
 class Wfcgrid2{
@@ -142,8 +148,31 @@ public:
 
   ///=============== In the Wfcgrid2_ColbertMiller.cpp ===============
   vector<CMATRIX> T_PSI(vector<CMATRIX>& inp_psi, vector<int>& bc_type, vector<double>& mass, complex<double> scaling);
+
   vector<CMATRIX> T_PSI_adi(vector<int>& bc_type, vector<double>& mass, complex<double> scaling);
   vector<CMATRIX> T_PSI_dia(vector<int>& bc_type, vector<double>& mass, complex<double> scaling);
+
+  vector<CMATRIX> expT_PSI(double dt, vector<double>& mass, int nterms);
+
+  CMATRIX operator_T(vector<int>& bc_type, vector<double>& mass, complex<double> scaling);
+
+  void Colbert_Miller_SOFT(CMATRIX& expT, vector<CMATRIX>& expV, int opt);
+
+  vector<CMATRIX> nubla_PSI(int idof, vector<CMATRIX>& inp_psi, complex<double> scaling);
+  vector<CMATRIX> nubla_PSI_adi(int idof, complex<double> scaling);
+  vector<CMATRIX> nubla_PSI_dia(int idof, complex<double> scaling);
+
+  vector<CMATRIX> V_PSI(vector<CMATRIX>& V, vector<CMATRIX>& inp_psi, complex<double> scaling);
+  vector<CMATRIX> V_PSI_adi(complex<double> scaling);
+  vector<CMATRIX> V_PSI_dia(complex<double> scaling);
+
+  vector<CMATRIX> H_PSI_adi(vector<double>& mass);
+  vector<CMATRIX> H_PSI_dia(vector<double>& mass);
+
+  void Colbert_Miller_propagate_adi1(double dt, vector<double>& mass);
+  void Colbert_Miller_propagate_adi2(double dt, vector<double>& mass);
+  void Colbert_Miller_propagate_dia1(double dt, vector<double>& mass);
+  void Colbert_Miller_propagate_dia2(double dt, vector<double>& mass);
 
   ///=============== In the Wfcgrid2_direct.cpp ====================
   void direct_allocate_tmp_vars(double rep);
@@ -171,6 +200,9 @@ public:
   CMATRIX get_pow_p(int rep, int n);
 
   CMATRIX get_den_mat(int rep);
+
+  MATRIX get_pops(int rep);
+  MATRIX get_pops(int rep, vector<double>& bmin, vector<double>& bmax);
 
 
   ///=============== In the Wfcgrid2_SOFT.cpp ====================  

@@ -326,10 +326,10 @@ void Wfcgrid2::direct_propagate_dia2(double dt, vector<double>& mass){
         pt2[idof] += 2;
         npt2 = imap(pt2);
 
-        xi_n_p2 = PSI_adi[npt2]; 
+        xi_n_p2 = PSI_dia[npt2]; 
       }
 
-      xi_n = PSI_adi[npt1];
+      xi_n = PSI_dia[npt1];
 
       if(ipt-2 < 0){  xi_n_m2 *= 0.0; }
       else{ 
@@ -337,7 +337,7 @@ void Wfcgrid2::direct_propagate_dia2(double dt, vector<double>& mass){
         pt2[idof] -= 2;
         npt2 = imap(pt2);
 
-        xi_n_m2 = PSI_adi[npt2]; 
+        xi_n_m2 = PSI_dia[npt2]; 
       }
 
       
@@ -408,10 +408,10 @@ void Wfcgrid2::direct_propagate_dia1(double dt, vector<double>& mass){
         pt2[idof] += 2;
         npt2 = imap(pt2);
 
-        xi_n_p2 = PSI_adi[npt2]; 
+        xi_n_p2 = PSI_dia[npt2]; 
       }
 
-      xi_n = PSI_adi[npt1];
+      xi_n = PSI_dia[npt1];
 
       if(ipt-2 < 0){  xi_n_m2 *= 0.0; }
       else{ 
@@ -419,7 +419,7 @@ void Wfcgrid2::direct_propagate_dia1(double dt, vector<double>& mass){
         pt2[idof] -= 2;
         npt2 = imap(pt2);
 
-        xi_n_m2 = PSI_adi[npt2]; 
+        xi_n_m2 = PSI_dia[npt2]; 
       }
 
       
@@ -430,7 +430,7 @@ void Wfcgrid2::direct_propagate_dia1(double dt, vector<double>& mass){
 
     /** =============== Forth terms ================ */
 
-    PSI_tmp[npt1] -= eye * dt * Hdia[npt1] * PSI_adi[npt1];
+    PSI_tmp[npt1] -= eye * dt * Hdia[npt1] * PSI_dia[npt1];
 
   }// for npt1
 

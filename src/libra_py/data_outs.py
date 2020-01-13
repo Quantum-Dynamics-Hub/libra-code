@@ -165,7 +165,7 @@ def list2bin(x, name):
     sz = len(x)
     X = MATRIX(sz,1)
     
-    for i in xrange(sz):
+    for i in range(sz):
         X.set(i,0, x[i])
     
     X.bin_dump(name+"_%i" % (sz))
@@ -182,7 +182,7 @@ def bin2list(name, sz):
     X.bin_load(name+"_%i" % (sz))
         
     x = []
-    for i in xrange(sz):
+    for i in range(sz):
         x.append(X.get(i,0))
     
     return x

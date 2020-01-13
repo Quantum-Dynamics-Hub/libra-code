@@ -10,7 +10,9 @@
 #*********************************************************************************/
 """
 
- This example demonstrates the functions of the class Wfcgrid2
+ This example demonstrates the Colbert-Miller approach to computing
+
+ <psi|T|psi> matrix elements as implemented in the class Wfcgrid2
        
    defined in:   dyn/wfcgrid2/Wfcgrid2.h
 

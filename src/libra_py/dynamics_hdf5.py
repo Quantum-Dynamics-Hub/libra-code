@@ -47,26 +47,89 @@ from . import units
 from . import data_read
 
 
+class mem_saver:
+    """
+    This class is needed for saving variables into a dictionary
+
+    Example of usage:
+    
+        x = mem_saver(["q", "p"])
+
+        x.add_data("q", 1.0)
+        x.add_data("q", -1.0)
+
+        print(x.data["q"])
+
+    """
+
+
+    def __init__(self, _keywords):
+        self.keywords = list(_keywords)
+
+        self.data = {}        
+        for keyword in self.keywords:
+            self.data[keyword] = []
+
+    def add_data(self, keyword, _data):
+        if keyword in self.keywords:
+            self.data[keyword].append(_data)
+   
+
+
+
 
 class hdf5_saver:
 
-    def __init__(self, _filename):
+    def __init__(self, _filename, _keywords=[]):
         """
         The constructor of the class objects
 
         Args:
             _filename ( string ): the name of the HDF5 file to be created
+            _keywords ( list of strings ): the names of the data to be added, if the 
+                the `data_name` argument in any of the `save_*` functions doesn't exist 
+                in the provided list of keywords, the data will not be actually saved into
+                the HDF5 file
 
         Example:
             saver = hdf5_saver("data.hdf")
 
         """
 
+        self.keywords = list(_keywords)
+
         self.filename = _filename
+        self.use_compression = 1
+        self.c_compression_level = 4
+        self.r_compression_level = 4
+        self.i_compression_level = 9
 
         with h5py.File(self.filename, "w") as f:
             g = f.create_group("default")
             g.create_dataset("data", data=[])
+
+
+
+    def add_keywords(self, _keywords):
+
+        for keyword in _keywords:
+ 
+            if keyword not in self.keywords:
+                self.keywords.append(keyword)
+
+
+
+    def set_compression_level(self, _use_compression, _compression_level):
+        """
+        To control how much of data compression we want to exercise
+
+        """
+
+        self.use_compression = _use_compression;
+        self.c_compression_level = _compression_level[0]
+        self.r_compression_level = _compression_level[1]
+        self.i_compression_level = _compression_level[2]
+
 
 
     def add_dataset(self, data_set_name, dim, data_type):
@@ -96,26 +159,36 @@ class hdf5_saver:
             g.attrs["dim"] = dim
             g.attrs["data_type"] = data_type
 
-            if data_type == "C":            
-                g.create_dataset("data", dim, dtype=complex, maxshape=dim, compression="gzip", compression_opts = 4)
-            elif data_type == "R":            
-                g.create_dataset("data", dim, dtype=float, maxshape=dim, compression="gzip", compression_opts = 4)
-            elif data_type == "I":            
-                g.create_dataset("data", dim, dtype=int, maxshape=dim, compression="gzip", compression_opts = 9)
+            if self.use_compression==1:
 
+                if data_type == "C":            
+                    g.create_dataset("data", dim, dtype=complex, maxshape=dim, compression="gzip", compression_opts = self.c_compression_level)
+                elif data_type == "R":            
+                    g.create_dataset("data", dim, dtype=float, maxshape=dim, compression="gzip", compression_opts = self.r_compression_level)
+                elif data_type == "I":            
+                    g.create_dataset("data", dim, dtype=int, maxshape=dim, compression="gzip", compression_opts = self.i_compression_level)
+
+            else:
+                if data_type == "C":            
+                    g.create_dataset("data", dim, dtype=complex, maxshape=dim)
+                elif data_type == "R":            
+                    g.create_dataset("data", dim, dtype=float, maxshape=dim)
+                elif data_type == "I":            
+                    g.create_dataset("data", dim, dtype=int, maxshape=dim)
 
 
     def save_scalar(self, istep, data_name, data):
 
-        with h5py.File(self.filename, "a") as f:
-            f[F"{data_name}/data"][istep] = data
+        if data_name in self.keywords:
+            with h5py.File(self.filename, "a") as f:
+                f[F"{data_name}/data"][istep] = data
 
 
     def save_multi_scalar(self, istep, iscal, data_name, data):
 
-        with h5py.File(self.filename, "a") as f:
-            f[F"{data_name}/data"][istep, iscal] = data
-
+        if data_name in self.keywords:
+            with h5py.File(self.filename, "a") as f:
+                f[F"{data_name}/data"][istep, iscal] = data
 
 
     
@@ -138,13 +211,15 @@ class hdf5_saver:
            
         """
 
-        nx, ny = data.num_of_rows, data.num_of_cols
+        if data_name in self.keywords:
 
-        with h5py.File(self.filename, "a") as f:
+            nx, ny = data.num_of_rows, data.num_of_cols
 
-            for i in range(nx):
-                for j in range(ny):
-                    f[F"{data_name}/data"][istep, i, j] = data.get(i, j)
+            with h5py.File(self.filename, "a") as f:
+      
+                for i in range(nx):
+                    for j in range(ny):
+                        f[F"{data_name}/data"][istep, i, j] = data.get(i, j)
 
 
 
@@ -167,13 +242,15 @@ class hdf5_saver:
            
         """
 
-        nx, ny = data.num_of_rows, data.num_of_cols
+        if data_name in self.keywords:
 
-        with h5py.File(self.filename, "a") as f:
+            nx, ny = data.num_of_rows, data.num_of_cols
 
-            for i in range(nx):
-                for j in range(ny):
-                    f[F"{data_name}/data"][istep, imatrix, i, j] = data.get(i, j)
+            with h5py.File(self.filename, "a") as f:
+
+                for i in range(nx):
+                    for j in range(ny):
+                        f[F"{data_name}/data"][istep, imatrix, i, j] = data.get(i, j)
 
 
 
@@ -390,5 +467,114 @@ def heom_save_hdf5_3D(saver, i, denmat):
         saver.save_matrix(i, "denmat", denmat) 
 
 
+
+
+
+
+#===================== Exact calculations output ====================
+
+
+def exact_init_hdf5(saver, hdf5_output_level, _nsteps, _ndof, _nstates, _ngrid):
+
+
+    if hdf5_output_level>=1:
+
+        # Time axis (integer steps)
+        saver.add_dataset("timestep", (_nsteps,) , "I")  
+
+        # Time axis
+        saver.add_dataset("time", (_nsteps,) , "R")  
+        
+        # Kinetic energy in diabatic representation
+        saver.add_dataset("Ekin_dia", (_nsteps,) , "R")  
+
+        # Kinetic energy in adiabatic representation
+        saver.add_dataset("Ekin_adi", (_nsteps,) , "R")  
+
+        # Potential energy in diabatic representation
+        saver.add_dataset("Epot_dia", (_nsteps,) , "R")  
+
+        # Potential energy in adiabatic representation
+        saver.add_dataset("Epot_adi", (_nsteps,) , "R")  
+
+        # Total energy in diabatic representation
+        saver.add_dataset("Etot_dia", (_nsteps,) , "R")  
+
+        # Total energy in adiabatic representation
+        saver.add_dataset("Etot_adi", (_nsteps,) , "R")  
+
+        # Wavefunction norm in diabatic representation
+        saver.add_dataset("norm_dia", (_nsteps,) , "R")  
+
+        # Wavefunction norm in adiabatic representation
+        saver.add_dataset("norm_adi", (_nsteps,) , "R")  
+
+
+    if hdf5_output_level>=2:
+
+        # Diabatic populations
+        saver.add_dataset("pop_dia", (_nsteps, _nstates, 1), "R") 
+
+        # Adiabatic populations
+        saver.add_dataset("pop_adi", (_nsteps, _nstates, 1), "R") 
+
+
+        # All coordinates computed in diabatic rep
+        saver.add_dataset("q_dia", (_nsteps, _ndof, 1), "C") 
+
+        # All coordinates computed in adiabatic rep
+        saver.add_dataset("q_adi", (_nsteps, _ndof, 1), "C") 
+
+        # All momenta computed in diabatic rep
+        saver.add_dataset("p_dia", (_nsteps, _ndof, 1), "C") 
+
+        # All momenta computed in adiabatic rep
+        saver.add_dataset("p_adi", (_nsteps, _ndof, 1), "C") 
+
+
+        # Higher moments computed in diabatic rep
+        saver.add_dataset("q2_dia", (_nsteps, _ndof, 1), "C") 
+
+        # Higher moments computed in adiabatic rep
+        saver.add_dataset("q2_adi", (_nsteps, _ndof, 1), "C") 
+
+        # Higher moments computed in diabatic rep
+        saver.add_dataset("p2_dia", (_nsteps, _ndof, 1), "C") 
+
+        # Higher moments computed in adiabatic rep
+        saver.add_dataset("p2_adi", (_nsteps, _ndof, 1), "C") 
+
+
+
+
+    if hdf5_output_level>=3:
+
+        # Density matrix computed in diabatic rep
+        saver.add_dataset("denmat_dia", (_nsteps, _nstates, _nstates), "C") 
+
+        # Density matrix computed in adiabatic rep
+        saver.add_dataset("denmat_adi", (_nsteps, _nstates, _nstates), "C") 
+
+
+    if hdf5_output_level>=4:
+
+        # Wavefunction in diabatic rep
+        saver.add_dataset("PSI_dia", (_nsteps, _ngrid, _nstates, 1), "C") 
+
+        # Wavefunction in adiabatic rep
+        saver.add_dataset("PSI_adi", (_nsteps, _ngrid, _nstates, 1), "C") 
+
+        # Reciprocal wavefunction in diabatic rep
+        saver.add_dataset("reciPSI_dia", (_nsteps, _ngrid, _nstates, 1), "C") 
+
+        # Reciprocal wavefunction in adiabatic rep
+        saver.add_dataset("reciPSI_adi", (_nsteps, _ngrid, _nstates, 1), "C") 
+
+
+
+def exact_init_custom_hdf5(saver, _nsteps, _ncustom_pops, _nstates):
+
+    # Custom populations indx
+    saver.add_dataset("custom_pops", (_nsteps, _ncustom_pops, _nstates, 1), "R") 
 
 
