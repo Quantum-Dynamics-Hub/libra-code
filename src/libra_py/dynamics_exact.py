@@ -312,7 +312,9 @@ def run_dynamics(wfc, params, model_params, savers):
             save_data_txt(step, wfc, savers["txt_saver"], params)
             
         if savers["mem_saver"] != None:            
-            save_data_mem(step, wfc, savers["mem_saver"], params)
+            prms = dict(params)
+            prms["hdf5_output_level"] = prms["mem_output_level"]
+            save_data_hdf5(step, wfc, savers["mem_saver"], prms)
     
         #================ Integration ==================
     
@@ -427,9 +429,6 @@ def run_relaxation(_params, _potential, model_params):
         dynamics_hdf5.exact_init_hdf5(hdf5_saver, hdf5_output_level, nsteps, ndof, nstates, ngrid)
         dynamics_hdf5.exact_init_custom_hdf5(hdf5_saver, nsteps, ncustom_pops, nstates)  # boxed populations on adiabatic/diabatic states
 
-
-
-
     #====== TXT ========
     txt_saver = None
     if params["txt_output_level"] > 0:
@@ -437,8 +436,15 @@ def run_relaxation(_params, _potential, model_params):
     
     #====== MEM =========
     mem_saver = None
-    if params["mem_output_level"] > 0:
+    mem_output_level = params["mem_output_level"]
+
+    if mem_output_level > 0:
         mem_saver =  dynamics_hdf5.mem_saver(properties_to_save)
+        dynamics_hdf5.exact_init_hdf5(mem_saver, mem_output_level, nsteps, ndof, nstates, ngrid)
+        dynamics_hdf5.exact_init_custom_hdf5(mem_saver, nsteps, ncustom_pops, nstates)  # boxed populations on adiabatic/diabatic states
+
+
+
                          
     savers = {"hdf5_saver":hdf5_saver, "txt_saver":txt_saver, "mem_saver":mem_saver }
     
@@ -453,6 +459,7 @@ def run_relaxation(_params, _potential, model_params):
     
     
     if mem_saver != None:        
+        mem_saver.save_data( F"{prefix}/mem_data.hdf", properties_to_save, "w")
         return mem_saver
 
         
@@ -722,7 +729,7 @@ def plot_hdf5(plot_params):
         plt.ylabel('Population')
     
         if "pop_adi" in properties_to_save and t != None:
-            nstates = f["pop_adi"].attrs['dim'][1]                        
+            nstates = f["pop_adi/data"].shape[1] #.attrs['dim'][1]                        
             for i in range(nstates):        
                 if i in which_adi_states:
                     Pi = list(f["pop_adi/data"][:, i, 0])                
@@ -736,7 +743,7 @@ def plot_hdf5(plot_params):
         plt.ylabel('Population')
     
         if "pop_dia" in properties_to_save and t != None:
-            nstates = f["pop_dia"].attrs['dim'][1]                        
+            nstates = f["pop_dia/data"].shape[1] #.attrs['dim'][1]                        
             for i in range(nstates):
                 if i in which_dia_states:
                     Pi = list(f["pop_dia/data"][:, i, 0])                            
@@ -801,7 +808,7 @@ def plot_hdf5(plot_params):
         plt.ylabel('Momentum, a.u.')   
     
         if "q_dia" in properties_to_save and "p_dia" in properties_to_save:                                
-            ndof = f["q_dia"].attrs['dim'][1]                        
+            ndof = f["q_dia/data"].shape[1] #.attrs['dim'][1]                        
     
             for idof in range(ndof):
                 if idof in which_dofs:

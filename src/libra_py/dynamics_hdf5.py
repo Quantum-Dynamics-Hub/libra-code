@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2019 Alexey V. Akimov                                                   
+#* Copyright (C) 2019-2020 Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 2 of                                   
@@ -14,7 +14,30 @@
    Uniquely to this module, all the read/write operations involve HDF5 files
 .. moduleauthor:: Alexey V. Akimov
 
+  List of classes:
+
+      class mem_saver
+      class hdf5_saver
+
   List of functions:
+
+      # TSH
+      def init_hdf5(saver, hdf5_output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia)
+      def save_hdf5_1D(saver, i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot)
+      def save_hdf5_2D(saver, i, states)
+      def save_hdf5_3D(saver, i, pops, dm_adi, dm_dia, q, p, Cadi, Cdia)
+      def save_hdf5_4D(saver, i, tr, hvib_adi, hvib_dia, St, U, projector)
+
+      # HEOM
+      def heom_init_hdf5(saver, hdf5_output_level, _nsteps, _nquant)
+      def heom_save_hdf5_1D(saver, i, dt)
+      def heom_save_hdf5_3D(saver, i, denmat)
+
+      # Exact
+      def exact_init_hdf5(saver, hdf5_output_level, _nsteps, _ndof, _nstates, _ngrid)
+      def exact_init_custom_hdf5(saver, _nsteps, _ncustom_pops, _nstates)
+
+
 
   
 """
@@ -63,19 +86,168 @@ class mem_saver:
     """
 
 
-    def __init__(self, _keywords):
-        self.keywords = list(_keywords)
-
-        self.data = {}        
+    def __init__(self, _keywords=[]):
+        """
+        Initializes an object that would store the data
+        in different formats - the temporary and the numpy-consistent
+        
+        """
+        
+        # Names of the data sets
+        self.keywords = list(_keywords)  
+        
+        # "Raw" data - elements could be of whatever data type
+        self.data = {}  
+        
+        # "Numpy" data - elements are numpy arrays
+        self.np_data = {}
+        
+        
+        # Only initialize the "raw" data, don't touch the numpy
         for keyword in self.keywords:
-            self.data[keyword] = []
+            self.data[keyword] = []            
 
-    def add_data(self, keyword, _data):
+            
+    def add_data(self, data_name, _data):
+        """
+        To collect arbitrary data
+        
+        Args:
+            data_name (string): the name of the data set
+            _data (anything): the data to be added
+        
+        
+        This function simply appends the data elements
+        to the prepared lists. There is no restriction on the 
+        data type for the elements added
+        """
         if keyword in self.keywords:
-            self.data[keyword].append(_data)
-   
+            self.data[data_name].append(_data)
+
+                        
+    def add_dataset(self, data_name, shape, dtype):
+        """
+        To initialize the numpy arrays to hold the data
+        
+        Args:
+            data_name (string): the name of the data set
+            shape (tuple of ints): the dimensions of the numpy array
+            dtype (one of ["I", "R", or "C"]: the tye of data to be stored in the array
+            
+        """
+        if data_name in self.keywords:
+            pass
+        else:
+            self.keywords.append(data_name)
 
 
+        if dtype=="I":
+            self.np_data[data_name] = np.empty(shape, int)
+            
+        elif dtype=="R":
+            self.np_data[data_name] = np.empty(shape, float)            
+            
+        elif dtype=="C":
+            self.np_data[data_name] = np.empty(shape, complex)            
+            
+        else:
+            print(F"ERROR: the dtype = {dtype} is not allowed in add_dataset")
+                
+    
+              
+    def save_scalar(self, istep, data_name, _data):
+        """
+        Saves a scalar to 1D array
+        """
+
+        if data_name in self.keywords and data_name in self.np_data.keys():
+            self.np_data[data_name][istep] = _data
+            
+            
+    def save_multi_scalar(self, istep, iscal, data_name, _data):
+        """
+        Saves a sacalar to 2D array
+        """
+
+        if data_name in self.keywords and data_name in self.np_data.keys():            
+            self.np_data[data_name][istep, iscal] = _data
+
+        
+    def save_matrix(self, istep, data_name, _data):
+        """          
+        Saves a matrix to a 3D array
+        
+        Args:
+
+          istep ( int ) :  index of the timestep for the data
+          data_name ( string ) : how to call this data set internally
+          _data ( (C)MATRIX(nx, ny) ) : the actual data to save          
+           
+        """
+
+        if data_name in self.keywords and data_name in self.np_data.keys():
+
+            nx, ny = _data.num_of_rows, _data.num_of_cols
+
+            for i in range(nx):
+                for j in range(ny):
+                    self.np_data[data_name][istep, i, j] = _data.get(i, j)
+
+
+    def save_multi_matrix(self, istep, imatrix, data_name, _data):
+        """          
+        Saves one of a series of matrices
+
+        Args:
+        
+          istep ( int ) :  index of the timestep for the data
+          data_name ( string ) : how to call this data set internally
+          data ( (C)MATRIX(nx, ny) ) : the actual data to save
+           
+        """
+
+        if data_name in self.keywords and data_name in self.np_data.keys():
+
+            nx, ny = _data.num_of_rows, _data.num_of_cols
+
+            for i in range(nx):
+                for j in range(ny):
+                    self.np_data[data_name][istep, imatrix, i, j] = _data.get(i, j)
+                        
+
+    
+    def save_data(self, filename, data_names, mode):
+        """
+        To save the numpy data into HDF5 files
+        
+        Args:
+            filename (string): the name of the HDF5 file where to save the res
+            data_names (list of strings): the list of the names of the data sets to save
+            mode ("w" or "a"): whether to overwrite the file or to append to it
+        
+        """
+
+        print("In mem_saver.save_data()")
+        print("data_name = ", data_names)        
+        print("keywords = ", self.keywords)
+        print("keys = ", self.np_data.keys() )
+
+        #for key in self.np_data.keys():
+        #    print(key, self.np_data[key] )
+  
+        
+        with h5py.File(filename, mode) as f:
+            
+            for data_name in data_names:                
+                if data_name in self.np_data.keys():
+
+                    print(F"Saving the dataset named {data_name}/data")
+                                                        
+                    g = f.create_group(data_name)                                                            
+                    g.create_dataset("data", data = self.np_data[data_name])
+                    
+                else:
+                    print(F"{data_name} is not in the list {self.np_data.keys()}" )
 
 
 class hdf5_saver:
@@ -108,6 +280,8 @@ class hdf5_saver:
             g = f.create_group("default")
             g.create_dataset("data", data=[])
 
+        print("HDF5 saver is initialized...")
+        print(F"the datasets that can be saved are: {self.keywords}")
 
 
     def add_keywords(self, _keywords):
@@ -199,15 +373,6 @@ class hdf5_saver:
           istep ( int ) :  index of the timestep for the data
           data_name ( string ) : how to call this data set internally
           data ( (C)MATRIX(nx, ny) ) : the actual data to save
-          mode ( string ): how to operate on the data file
- 
-              "w" : use when calling this function for the first time - the data set will be initialized
-              "a" : append - just update the existing dataset, use when calling the function for the following times
-
-          data_type ( int ):
- 
-               0 : real-valued
-               1 : complex-valued
            
         """
 
@@ -230,15 +395,6 @@ class hdf5_saver:
           istep ( int ) :  index of the timestep for the data
           data_name ( string ) : how to call this data set internally
           data ( (C)MATRIX(nx, ny) ) : the actual data to save
-          mode ( string ): how to operate on the data file
- 
-              "w" : use when calling this function for the first time - the data set will be initialized
-              "a" : append - just update the existing dataset, use when calling the function for the following times
-
-          data_type ( int ):
- 
-               0 : real-valued
-               1 : complex-valued
            
         """
 
@@ -254,9 +410,13 @@ class hdf5_saver:
 
 
 
+#===================== TSH calculations output ====================
 
 def init_hdf5(saver, hdf5_output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
+    """
+    saver - can be either hdf5_saver or mem_saver
 
+    """
 
     if hdf5_output_level>=1:
 
@@ -336,98 +496,121 @@ def init_hdf5(saver, hdf5_output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
 
 
 
+
+
+
 def save_hdf5_1D(saver, i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot):
-        # Timestep 
-        saver.save_scalar(i, "timestep", i) 
+    """
+    saver - can be either hdf5_saver or mem_saver
 
-        # Actual time
-        saver.save_scalar(i, "time", dt*i)  
+    """
 
-        # Average kinetic energy
-        saver.save_scalar(i, "Ekin_ave", Ekin)  
+    # Timestep 
+    saver.save_scalar(i, "timestep", i) 
 
-        # Average potential energy
-        saver.save_scalar(i, "Epot_ave", Epot)  
+    # Actual time
+    saver.save_scalar(i, "time", dt*i)  
 
-        # Average total energy
-        saver.save_scalar(i, "Etot_ave", Etot)  
+    # Average kinetic energy
+    saver.save_scalar(i, "Ekin_ave", Ekin)  
 
-        # Fluctuation of average kinetic energy
-        saver.save_scalar(i, "dEkin_ave", dEkin)  
+    # Average potential energy
+    saver.save_scalar(i, "Epot_ave", Epot)  
 
-        # Fluctuation of average potential energy
-        saver.save_scalar(i, "dEpot_ave", dEpot)  
+    # Average total energy
+    saver.save_scalar(i, "Etot_ave", Etot)  
 
-        # Fluctuation average total energy
-        saver.save_scalar(i, "dEtot_ave", dEtot)  
+    # Fluctuation of average kinetic energy
+    saver.save_scalar(i, "dEkin_ave", dEkin)  
+
+    # Fluctuation of average potential energy
+    saver.save_scalar(i, "dEpot_ave", dEpot)  
+
+    # Fluctuation average total energy
+    saver.save_scalar(i, "dEtot_ave", dEtot)  
+
 
 
 def save_hdf5_2D(saver, i, states):
+    """
+    saver - can be either hdf5_saver or mem_saver
 
-        # Trajectory-resolved instantaneous adiabatic states
-        # Format: saver.add_dataset("states", (_nsteps, _ntraj), "I")        
-        ntraj = len(states)
-        for itraj in range(ntraj):
-            saver.save_multi_scalar(i, itraj, "states", states[itraj])
+    """
+
+
+    # Trajectory-resolved instantaneous adiabatic states
+    # Format: saver.add_dataset("states", (_nsteps, _ntraj), "I")        
+    ntraj = len(states)
+    for itraj in range(ntraj):
+        saver.save_multi_scalar(i, itraj, "states", states[itraj])
 
 
 
 
 def save_hdf5_3D(saver, i, pops, dm_adi, dm_dia, q, p, Cadi, Cdia):
-        # Average adiabatic SH populations
-        # Format: saver.add_dataset("SH_pop", (_nsteps, _nadi, 1), "R") 
-        saver.save_matrix(i, "SH_pop", pops) 
+    """
+    saver - can be either hdf5_saver or mem_saver
+
+    """
+
+    # Average adiabatic SH populations
+    # Format: saver.add_dataset("SH_pop", (_nsteps, _nadi, 1), "R") 
+    saver.save_matrix(i, "SH_pop", pops) 
 
 
-        # Average adiabatic density matrices
-        # Format: saver.add_dataset("D_adi", (_nsteps, _nadi, _nadi), "C") 
-        saver.save_matrix(i, "D_adi", dm_adi) 
+    # Average adiabatic density matrices
+    # Format: saver.add_dataset("D_adi", (_nsteps, _nadi, _nadi), "C") 
+    saver.save_matrix(i, "D_adi", dm_adi) 
 
-        # Average diabatic density matrices
-        # Format: saver.add_dataset("D_dia", (_nsteps, _ndia, _ndia), "C") 
-        saver.save_matrix(i, "D_dia", dm_dia) 
+    # Average diabatic density matrices
+    # Format: saver.add_dataset("D_dia", (_nsteps, _ndia, _ndia), "C") 
+    saver.save_matrix(i, "D_dia", dm_dia) 
 
 
-        # Trajectory-resolved coordinates
-        # Format: saver.add_dataset("q", (_nsteps, _ntraj, _dof), "R") 
-        saver.save_matrix(i, "q", q.T()) 
+    # Trajectory-resolved coordinates
+    # Format: saver.add_dataset("q", (_nsteps, _ntraj, _dof), "R") 
+    saver.save_matrix(i, "q", q.T()) 
 
-        # Trajectory-resolved momenta
-        # Format: saver.add_dataset("p", (_nsteps, _ntraj, _dof), "R") 
-        saver.save_matrix(i, "p", p.T()) 
+    # Trajectory-resolved momenta
+    # Format: saver.add_dataset("p", (_nsteps, _ntraj, _dof), "R") 
+    saver.save_matrix(i, "p", p.T()) 
 
-        # Trajectory-resolved adiabatic TD-SE amplitudes
-        # Format: saver.add_dataset("C_adi", (_nsteps, _ntraj, _nadi), "C") 
-        saver.save_matrix(i, "Cadi", Cadi.T()) 
+    # Trajectory-resolved adiabatic TD-SE amplitudes
+    # Format: saver.add_dataset("C_adi", (_nsteps, _ntraj, _nadi), "C") 
+    saver.save_matrix(i, "Cadi", Cadi.T()) 
 
-        # Trajectory-resolved diabatic TD-SE amplitudes
-        # Format: saver.add_dataset("C_dia", (_nsteps, _ntraj, _ndia), "C") 
-        saver.save_matrix(i, "Cdia", Cdia.T()) 
+    # Trajectory-resolved diabatic TD-SE amplitudes
+    # Format: saver.add_dataset("C_dia", (_nsteps, _ntraj, _ndia), "C") 
+    saver.save_matrix(i, "Cdia", Cdia.T()) 
+
 
 
 def save_hdf5_4D(saver, i, tr, hvib_adi, hvib_dia, St, U, projector):
+    """
+    saver - can be either hdf5_saver or mem_saver
 
-        # Trajectory-resolved vibronic Hamiltoninans in the adiabatic representation
-        # Format: saver.add_dataset("hvib_adi", (_nsteps, _ntraj, _nadi, _nadi), "C") 
-        saver.save_multi_matrix(i, tr, "hvib_adi", hvib_adi) 
+    """
+
+    # Trajectory-resolved vibronic Hamiltoninans in the adiabatic representation
+    # Format: saver.add_dataset("hvib_adi", (_nsteps, _ntraj, _nadi, _nadi), "C") 
+    saver.save_multi_matrix(i, tr, "hvib_adi", hvib_adi) 
 
 
-        # Trajectory-resolved vibronic Hamiltoninans in the diabatic representation
-        # Format: saver.add_dataset("hvib_dia", (_nsteps, _ntraj, _ndia, _ndia), "C") 
-        saver.save_multi_matrix(i, tr, "hvib_dia", hvib_dia) 
+    # Trajectory-resolved vibronic Hamiltoninans in the diabatic representation
+    # Format: saver.add_dataset("hvib_dia", (_nsteps, _ntraj, _ndia, _ndia), "C") 
+    saver.save_multi_matrix(i, tr, "hvib_dia", hvib_dia) 
 
-        # Trajectory-resolved time-overlaps of the adiabatic states
-        # Format: saver.add_dataset("St", (_nsteps, _ntraj, _nadi, _nadi), "C") 
-        saver.save_multi_matrix(i, tr, "St", St) 
+    # Trajectory-resolved time-overlaps of the adiabatic states
+    # Format: saver.add_dataset("St", (_nsteps, _ntraj, _nadi, _nadi), "C") 
+    saver.save_multi_matrix(i, tr, "St", St) 
 
-        # Trajectory-resolved diabatic-to-adiabatic transformation matrices 
-        # Format: saver.add_dataset("basis_transform", (_nsteps, _ntraj, _ndia, _nadi), "C") 
-        saver.save_multi_matrix(i, tr, "basis_transform", U) 
+    # Trajectory-resolved diabatic-to-adiabatic transformation matrices 
+    # Format: saver.add_dataset("basis_transform", (_nsteps, _ntraj, _ndia, _nadi), "C") 
+    saver.save_multi_matrix(i, tr, "basis_transform", U) 
 
-        # Trajectory-resolved projector matrices (from the raw adiabatic to consistent adiabatic)
-        # Format: saver.add_dataset("projector", (_nsteps, _ntraj, _nadi, _nadi), "C") 
-        saver.save_multi_matrix(i, tr, "projector", projector) 
-
+    # Trajectory-resolved projector matrices (from the raw adiabatic to consistent adiabatic)
+    # Format: saver.add_dataset("projector", (_nsteps, _ntraj, _nadi, _nadi), "C") 
+    saver.save_multi_matrix(i, tr, "projector", projector) 
 
 
 
@@ -453,26 +636,23 @@ def heom_init_hdf5(saver, hdf5_output_level, _nsteps, _nquant):
 
 
 def heom_save_hdf5_1D(saver, i, dt):
-        # Timestep 
-        saver.save_scalar(i, "timestep", i) 
+    # Timestep 
+    saver.save_scalar(i, "timestep", i) 
 
-        # Actual time
-        saver.save_scalar(i, "time", dt*i)  
+    # Actual time
+    saver.save_scalar(i, "time", dt*i)  
 
 
 
 def heom_save_hdf5_3D(saver, i, denmat):
-        # Average adiabatic density matrices
-        # Format: saver.add_dataset("denmat", (_nsteps, _nquant, _nquant), "C") 
-        saver.save_matrix(i, "denmat", denmat) 
-
-
+    # Average adiabatic density matrices
+    # Format: saver.add_dataset("denmat", (_nsteps, _nquant, _nquant), "C") 
+    saver.save_matrix(i, "denmat", denmat) 
 
 
 
 
 #===================== Exact calculations output ====================
-
 
 def exact_init_hdf5(saver, hdf5_output_level, _nsteps, _ndof, _nstates, _ngrid):
 

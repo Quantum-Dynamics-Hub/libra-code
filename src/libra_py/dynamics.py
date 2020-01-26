@@ -579,6 +579,12 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 - 3: 3-D info - St, Hvib_adi, Hvib_dia matrices (energies, couplings, etc.) for each
                     individual trajectory vs. time 
 
+            * **dyn_params["mem_output_level"]** ( int ): controls what info to return as the result of this function
+
+                Same meaning and output as with hdf5_output_level, except all the variables are first stored in memory
+                (while the calcs are running) and then they are written into the HDF5 file at the end of the calculations.
+                This is a much faster version of hdf5 saver. 
+
 
         compute_model ( PyObject ): the pointer to the Python function that performs the Hamiltonian calculations
 
@@ -648,6 +654,12 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
 
     # Parameters and dimensions
+    properties_to_save = [ "timestep", "time", "Ekin_ave", "Epot_ave", "Etot_ave", 
+                           "dEkin_ave", "dEpot_ave", "dEtot_ave", "states", "SH_pop",
+                           "D_adi", "D_dia", "q", "p", "Cadi", "Cdia", "hvib_adi", "hvib_dia",
+                           "St", "basis_transform", "projector"
+                         ] 
+
     critical_params = [  ] 
     default_params = { "rep_tdse":1, "rep_ham":0, "rep_sh":1, "rep_lz":0, "tsh_method":-1,
                        "force_method":1, "nac_update_method":1, "rep_force":1,
@@ -661,7 +673,9 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                        "ave_gaps":AG, "instantaneous_decoherence_variant":1, "collapse_option":0,
                        "ensemble":0, "thermostat_params":{},
                        "dt":1.0*units.fs2au, "nsteps":1, 
-                       "hdf5_output_level":-1, "prefix":"out"
+                       "hdf5_output_level":-1, "prefix":"out", "properties_to_save":properties_to_save,
+                       "mem_output_level":-1,
+                       "use_compression":0, "compression_level":[0,0,0]
                      }
 
     comn.check_input(dyn_params, default_params, critical_params)
@@ -672,9 +686,13 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     dt = dyn_params["dt"]
     tol = dyn_params["tol"]
     hdf5_output_level = dyn_params["hdf5_output_level"]
+    mem_output_level = dyn_params["mem_output_level"]
     do_phase_correction = dyn_params["do_phase_correction"]
     state_tracking_algo = dyn_params["state_tracking_algo"]
     force_method = dyn_params["force_method"]
+    properties_to_save = dyn_params["properties_to_save"]
+    use_compression = dyn_params["use_compression"]
+    compression_level = dyn_params["compression_level"]
     
     ndia = Cdia.num_of_rows
     nadi = Cadi.num_of_rows
@@ -682,21 +700,33 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     ntraj= q.num_of_cols
 
 
+
+    # Create an output directory, if not present    
+    if not os.path.isdir(prefix):
+        os.mkdir(prefix)
+        
+    # Simulation parameters                    
+    f = open(F"{prefix}/_dyn_params.txt","w")
+    f.write( str(dyn_params) );  f.close()
+    
+    f = open(F"{prefix}/_model_params.txt","w")
+    f.write( str(model_params) );  f.close()    
+
+
+    #====== HDF5 =========
     saver = None
     if hdf5_output_level>=0:
-        # Create an output directory, if not present    
-        if not os.path.isdir(prefix):
-            os.mkdir(prefix)
-            
-        # Simulation parameters                    
-        f = open(F"{prefix}/_dyn_params.txt","w")
-        f.write( str(dyn_params) );  f.close()
-    
-        f = open(F"{prefix}/_model_params.txt","w")
-        f.write( str(model_params) );  f.close()    
-
-        saver = dynamics_hdf5.hdf5_saver(F"{prefix}/data.hdf")
+        saver = dynamics_hdf5.hdf5_saver(F"{prefix}/data.hdf", properties_to_save)
+        saver.set_compression_level(use_compression, compression_level)
         dynamics_hdf5.init_hdf5(saver, hdf5_output_level, nsteps, ntraj, nnucl, nadi, ndia)
+
+
+    #====== MEM =========
+    mem_saver = None
+    if dyn_params["mem_output_level"] > 0:
+        mem_saver =  dynamics_hdf5.mem_saver(properties_to_save)
+        dynamics_hdf5.init_hdf5(mem_saver, mem_output_level, nsteps, ntraj, nnucl, nadi, ndia)
+
 
 
 
@@ -744,12 +774,21 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
         if hdf5_output_level>=1:
             dynamics_hdf5.save_hdf5_1D(saver, i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot)
+        if mem_output_level>=1:
+            dynamics_hdf5.save_hdf5_1D(mem_saver, i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot)
+
 
         if hdf5_output_level>=2:
             dynamics_hdf5.save_hdf5_2D(saver, i, states)
+        if mem_output_level>=2:
+            dynamics_hdf5.save_hdf5_2D(mem_saver, i, states)
+
 
         if hdf5_output_level>=3: 
             dynamics_hdf5.save_hdf5_3D(saver, i, pops, dm_adi, dm_dia, q, p, Cadi, Cdia)
+        if mem_output_level>=3: 
+            dynamics_hdf5.save_hdf5_3D(mem_saver, i, pops, dm_adi, dm_dia, q, p, Cadi, Cdia)
+
 
 
         for tr in range(ntraj):
@@ -760,8 +799,13 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
             if hdf5_output_level>=4: 
                 hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
                 hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
-
                 dynamics_hdf5.save_hdf5_4D(saver, i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr])
+
+            if mem_output_level>=4: 
+                hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
+                hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
+                dynamics_hdf5.save_hdf5_4D(mem_saver, i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr])
+
 
 
 
@@ -772,7 +816,10 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
         elif rep_tdse==1:
             compute_dynamics(q, p, iM, Cadi, projectors, states, ham, compute_model, model_params, dyn_params, rnd)
 
- 
+
+    if mem_saver!=None:
+        mem_saver.save_data( F"{prefix}/mem_data.hdf", properties_to_save, "w")
+        return mem_saver
 
 
 

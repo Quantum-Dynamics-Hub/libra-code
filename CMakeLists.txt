@@ -19,28 +19,6 @@ PROJECT("libra")
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 
 
-#
-#  Boost library
-#
-
-MESSAGE("Looking for Boost libraries...")
-FIND_PACKAGE(Boost REQUIRED)
-IF(Boost_FOUND)
-  MESSAGE("Success!")
-  INCLUDE_DIRECTORIES("${Boost_INCLUDE_DIRS}")  
-  SET(Boost_USE_STATIC_LIBS OFF)
-  SET(Boost_USE_MULTITHREADED OFF)
-  SET(Boost_USE_STATIC_RUNTIME OFF)
-  FIND_PACKAGE(Boost COMPONENTS python37 regex) # it seems that it is important to find sub-packages too!!!
-ELSEIF(NOT Boost_FOUND)
-  MESSAGE(FATAL_ERROR "Unable to find correct Boost version. Did you set BOOST_ROOT?")
-ENDIF()
-
-MESSAGE("Found Boost libraries directory: ")
-MESSAGE("${Boost_LIBRARIES}")
-MESSAGE("Found Boost include directory: ")
-MESSAGE("${Boost_INCLUDE_DIRS}")
-
 
 #
 #  Python library
@@ -65,6 +43,34 @@ MESSAGE("Found  Python libraries directory: ")
 MESSAGE(${PYTHON_LIBRARIES})
 MESSAGE("Found Python include directory: ")
 MESSAGE(${PYTHON_INCLUDE_DIRS})
+
+
+
+
+#
+#  Boost library
+#
+
+MESSAGE("Looking for Boost libraries...")
+SET(Boost_NO_BOOST_CMAKE TRUE) # to fix the problem of finding python37 libs
+SET(Boost_USE_STATIC_LIBS=OFF)
+SET(Boost_USE_MULTITHREADED=OFF)
+SET(Boost_USE_STATIC_RUNTIME=OFF)
+
+
+FIND_PACKAGE(Boost REQUIRED)
+IF(Boost_FOUND)
+  MESSAGE("Success!")
+  INCLUDE_DIRECTORIES("${Boost_INCLUDE_DIRS}")  
+  FIND_PACKAGE(Boost COMPONENTS python37 regex) # it seems that it is important to find sub-packages too!!!
+ELSEIF(NOT Boost_FOUND)
+  MESSAGE(FATAL_ERROR "Unable to find correct Boost version. Did you set BOOST_ROOT?")
+ENDIF()
+
+MESSAGE("Found Boost libraries directory: ")
+MESSAGE("${Boost_LIBRARIES}")
+MESSAGE("Found Boost include directory: ")
+MESSAGE("${Boost_INCLUDE_DIRS}")
 
 
 #

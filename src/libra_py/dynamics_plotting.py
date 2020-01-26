@@ -299,7 +299,8 @@ def plot_dyn(plot_params):
             
             #========= State indices =========
             
-            ntraj = f["states"].attrs["dim"][0]            
+            #ntraj = f["states"].attrs["dim"][0]            
+            ntraj = f["time/data"].shape[0]
 
             plt.figure(num=None, figsize=(24, 24), dpi=300, frameon=False)        
                         
@@ -319,8 +320,8 @@ def plot_dyn(plot_params):
         if output_level>=3:
           
             #========= SH, adi SE and dia SE populations =========
-            nadi = f["D_adi"].attrs['dim'][1]
-            ndia = f["D_dia"].attrs['dim'][1]
+            nadi = f["D_adi/data"].shape[1] #attrs['dim'][1]
+            ndia = f["D_dia/data"].shape[1] #attrs['dim'][1]
 
             plt.figure(num=None, figsize=(24, 8), dpi=300, frameon=False)        
 
@@ -370,8 +371,8 @@ def plot_dyn(plot_params):
         if output_level>=3:
             
             #========= Coordinates =========
-            ntraj = f["q"].attrs['dim'][1]
-            ndof = f["q"].attrs['dim'][2]
+            ntraj = f["q/data"].shape[1] #attrs['dim'][1]
+            ndof = f["q/data"].shape[2] #attrs['dim'][2]
         
 
             plt.figure(num=None, figsize=(24, 12), dpi=300, frameon=False)        
@@ -409,9 +410,9 @@ def plot_dyn(plot_params):
             
         if output_level>=4:            
 
-            ntraj = f["hvib_adi"].attrs['dim'][1]
-            nadi = f["hvib_adi"].attrs['dim'][2]
-            ndia = f["hvib_dia"].attrs['dim'][2]
+            ntraj = f["hvib_adi/data"].shape[1] #attrs['dim'][1]
+            nadi = f["hvib_adi/data"].shape[2] #attrs['dim'][2]
+            ndia = f["hvib_dia/data"].shape[2] # attrs['dim'][2]
 
             #============== Adiabatic energies =============
             plt.figure(num=None, figsize=(24, 12), dpi=300, frameon=False)        
@@ -448,8 +449,8 @@ def plot_dyn(plot_params):
             
         if output_level>=4:            
 
-            ntraj = f["St"].attrs['dim'][1]
-            nadi = f["St"].attrs['dim'][2]            
+            ntraj = f["St/data"].shape[1] #attrs['dim'][1]
+            nadi = f["St/data"].shape[2] #attrs['dim'][2]            
 
             #============== St diagonal matrix elements =============
             plt.figure(num=None, figsize=(24, 12), dpi=300, frameon=False)        
@@ -486,9 +487,9 @@ def plot_dyn(plot_params):
 
         if output_level>=4:            
 
-            ntraj = f["basis_transform"].attrs['dim'][1]
-            ndia  = f["basis_transform"].attrs['dim'][2]            
-            nadi  = f["basis_transform"].attrs['dim'][3]            
+            ntraj = f["basis_transform/data"].shape[1] #attrs['dim'][1]
+            ndia  = f["basis_transform/data"].shape[2] #attrs['dim'][2]            
+            nadi  = f["basis_transform/data"].shape[3] #attrs['dim'][3]            
 
             #============== dia-to-adia transformation matrix =============
             plt.figure(num=None, figsize=(24, 24), dpi=300, frameon=False)        
