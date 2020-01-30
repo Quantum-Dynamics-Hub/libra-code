@@ -11,17 +11,16 @@
 .. module:: dynamics_exact
    :platform: Unix, Windows
    :synopsis: This module implements functions for doing exact on-the-grid dynamics and for their visualization
+       List of functions:
+           * init_wfc(params, _potential, model_params )
+           * save_data_hdf5(step, wfc, saver, params)
+           * save_data_mem(step, wfc, saver, params)
+           * run_dynamics(wfc, params, model_params, savers)
+           * run_relaxation(_params, _potential, model_params)
+           * plot_mem(res, _params, model_params, plot_params)
+           * plot_hdf5(plot_params)
+
 .. moduleauthor:: Alexey V. Akimov
-
-  List of functions:
-
-  def init_wfc(params, _potential, model_params ):
-  def save_data_hdf5(step, wfc, saver, params):  
-  def save_data_mem(step, wfc, saver, params):
-  def run_dynamics(wfc, params, model_params, savers):
-  def run_relaxation(_params, _potential, model_params):
-  def plot_mem(res, _params, model_params, plot_params):
-  def plot_hdf5(plot_params):
 
 """
 

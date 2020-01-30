@@ -11,18 +11,15 @@
 .. module:: dynamics
    :platform: Unix, Windows
    :synopsis: This module implements a wrapper function for doing Ehrenfest/TSH/Verlet/etc. dynamics
+       List of functions:  
+           * init_nuclear_dyn_var(Q, P, M, params, rnd)
+           * init_electronic_dyn_var(params, rnd)
+           * init_amplitudes(q, Cdia, Cadi, dyn_params, compute_model, model_params, transform_direction=0)
+           * run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _dyn_params, compute_model, _model_params, rnd)
+           * generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
+           * run_multiple_sets(init_cond, _dyn_params, compute_model, _model_params, _init_nucl, _init_elec, rnd)
+
 .. moduleauthor:: Alexey V. Akimov
-
-  List of functions:
-  
-  init_nuclear_dyn_var(Q, P, M, params, rnd)
-  init_electronic_dyn_var(params, rnd)
-  init_amplitudes(q, Cdia, Cadi, dyn_params, compute_model, model_params, transform_direction=0)
-
-  run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _dyn_params, compute_model, _model_params, rnd)
-  generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
-  run_multiple_sets(init_cond, _dyn_params, compute_model, _model_params, _init_nucl, _init_elec, rnd)
-
 
 """
 

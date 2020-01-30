@@ -16,39 +16,26 @@ language: python
 python:
   - 3.7
 
+
+before_install:
+    # Additional info about the build
+  - uname -a
+  - df -h
+  - ulimit -a
+
+    # Install the Python environment
+  - source devtools/travis-ci/before_install.sh
+  - python -V
+
+
 install:
-  # Packages to build Python docs
-  - pip install sphinx
-  - pip install recommonmark
 
-  # Miniconda
-  - sudo apt-get update
-  #- if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-  #    wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-  #  else
-  #    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-  #  fi
-  - wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
-  - sh ./Miniconda2-latest-Linux-x86_64.sh -b -p $HOME/miniconda2
-  - source "$HOME/miniconda2/etc/profile.d/conda.sh"
-  #- hash -r
-  - conda config --set always_yes yes  # --set changeps1 no
-  - conda update -q conda
-  # Useful for debugging any issues with conda
-  #- conda info -a
-
-  # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n py37 python=3.7
-  #- conda create -n py37
+    # Create test environment for package
+  - python devtools/scripts/create_conda_env.py -n=py37 -p=$PYTHON_VER devtools/conda-envs/py37_env.yaml
+    # Activate the test environment
   - conda activate py37
-  - conda install -y python=3.7
-  - conda install -y conda-build
-  - conda install -y gcc_linux-64
-  - conda install -y gxx_linux-64
-  - conda install -y make
-  - conda install -y boost
-  - conda install -y cmake
-  - conda install -y git
+    # Build and install package
+  - python setup.py develop --no-deps
 
   
 

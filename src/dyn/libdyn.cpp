@@ -295,6 +295,17 @@ void export_dyn_projectors_objects(){
   def("update_projectors", expt_update_projectors_v1);  
 
 
+  CMATRIX (*expt_raw_to_dynconsyst_v1)
+  (CMATRIX& amplitudes, vector<CMATRIX>& projectors) = &raw_to_dynconsyst;
+  def("raw_to_dynconsyst", expt_raw_to_dynconsyst_v1);
+
+  CMATRIX (*expt_dynconsyst_to_raw_v1)
+  (CMATRIX& amplitudes, vector<CMATRIX>& projectors) = &dynconsyst_to_raw;
+  def("dynconsyst_to_raw", expt_dynconsyst_to_raw_v1);
+
+
+
+
 }
 
 void export_LZ_hopping_probabilities_objects(){
@@ -331,15 +342,6 @@ void export_Energy_Forces_objects(){
 
   vector<double> (*expt_compute_kinetic_energies_v1)(MATRIX& p, MATRIX& invM) = &compute_kinetic_energies;
   def("compute_kinetic_energies",expt_compute_kinetic_energies_v1);
-
-
-  CMATRIX (*expt_raw_to_dynconsyst_v1)
-  (CMATRIX& amplitudes, vector<CMATRIX>& projectors) = &raw_to_dynconsyst;
-  def("raw_to_dynconsyst", expt_raw_to_dynconsyst_v1);
-
-  CMATRIX (*expt_dynconsyst_to_raw_v1)
-  (CMATRIX& amplitudes, vector<CMATRIX>& projectors) = &dynconsyst_to_raw;
-  def("dynconsyst_to_raw", expt_dynconsyst_to_raw_v1);
 
   CMATRIX (*expt_tsh_indx2ampl_v1)(vector<int>& res, int nstates) = &tsh_indx2ampl;
   def("tsh_indx2ampl", expt_tsh_indx2ampl_v1);

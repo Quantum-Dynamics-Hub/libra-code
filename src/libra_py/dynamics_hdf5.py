@@ -11,34 +11,33 @@
 .. module:: dynamics_hdf5
    :platform: Unix, Windows
    :synopsis: This module implements the read/write functions specifically designed to work with the dynamics module
-   Uniquely to this module, all the read/write operations involve HDF5 files
+       Uniquely to this module, all the read/write operations involve HDF5 files
+
+       List of classes:
+
+           * class mem_saver
+           * class hdf5_saver
+
+       List of functions:
+
+           # TSH
+           * init_hdf5(saver, hdf5_output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia)
+           * save_hdf5_1D(saver, i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot)
+           * save_hdf5_2D(saver, i, states)
+           * save_hdf5_3D(saver, i, pops, dm_adi, dm_dia, q, p, Cadi, Cdia)
+           * save_hdf5_4D(saver, i, tr, hvib_adi, hvib_dia, St, U, projector)
+
+           # HEOM
+           * heom_init_hdf5(saver, hdf5_output_level, _nsteps, _nquant)
+           * heom_save_hdf5_1D(saver, i, dt)
+           * heom_save_hdf5_3D(saver, i, denmat)
+
+           # Exact
+           * exact_init_hdf5(saver, hdf5_output_level, _nsteps, _ndof, _nstates, _ngrid)
+           * exact_init_custom_hdf5(saver, _nsteps, _ncustom_pops, _nstates)
+
+
 .. moduleauthor:: Alexey V. Akimov
-
-  List of classes:
-
-      class mem_saver
-      class hdf5_saver
-
-  List of functions:
-
-      # TSH
-      def init_hdf5(saver, hdf5_output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia)
-      def save_hdf5_1D(saver, i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot)
-      def save_hdf5_2D(saver, i, states)
-      def save_hdf5_3D(saver, i, pops, dm_adi, dm_dia, q, p, Cadi, Cdia)
-      def save_hdf5_4D(saver, i, tr, hvib_adi, hvib_dia, St, U, projector)
-
-      # HEOM
-      def heom_init_hdf5(saver, hdf5_output_level, _nsteps, _nquant)
-      def heom_save_hdf5_1D(saver, i, dt)
-      def heom_save_hdf5_3D(saver, i, denmat)
-
-      # Exact
-      def exact_init_hdf5(saver, hdf5_output_level, _nsteps, _ndof, _nstates, _ngrid)
-      def exact_init_custom_hdf5(saver, _nsteps, _ncustom_pops, _nstates)
-
-
-
   
 """
 

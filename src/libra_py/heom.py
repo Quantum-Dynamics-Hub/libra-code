@@ -11,12 +11,13 @@
 .. module:: heom
    :platform: Unix, Windows
    :synopsis: This module implements a wrapper function for doing HEOM dynamics
+       The code is a translation/refactoring of the Fortran code or Amber Jain & Joe Subotnik
+       https://github.com/subotnikgroup/HEOM_Amber
+
+       List of functions:
+           * run_dynamics(dyn_params, Ham, rho_init)
+
 .. moduleauthor:: Alexey V. Akimov
-
-  The code is a translation/refactoring of the Fortran code or Amber Jain & Joe Subotnik
-  https://github.com/subotnikgroup/HEOM_Amber
-
-  List of functions:
   
 
 

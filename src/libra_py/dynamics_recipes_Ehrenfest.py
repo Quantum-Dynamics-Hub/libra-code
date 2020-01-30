@@ -11,16 +11,15 @@
 .. module:: dynamics_recipes_Ehrenfest
    :platform: Unix, Windows
    :synopsis: This module implements a number of predefined simulations runs of the Ehrenfest dynamics
+       Contains:
+           * Ehrenfest_dia0_dia_diah(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
+           * Ehrenfest_adi0_dia_diah(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
+           * Ehrenfest_dia0_adi_adih(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
+           * Ehrenfest_adi0_adi_adih(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
+           * Ehrenfest_dia0_adi_diah(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
+           * Ehrenfest_adi0_adi_diah(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
+
 .. moduleauthor:: Alexey V. Akimov
-
-Contains:
-
-  Ehrenfest_dia0_dia_diah(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
-  Ehrenfest_adi0_dia_diah(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
-  Ehrenfest_dia0_adi_adih(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
-  Ehrenfest_adi0_adi_adih(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
-  Ehrenfest_dia0_adi_diah(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
-  Ehrenfest_adi0_adi_diah(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
 
 
 """

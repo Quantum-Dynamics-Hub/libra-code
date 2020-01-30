@@ -21,13 +21,19 @@ def get_value(params,key,default,typ):
     """
     Function to extract parameter from the dictionary
 
-    \param[in] params A dictionary containing important simulation parameters
-    \param[in] key The name of the variable that we wish to extract from the params
-               dictionary 
-    \param[in] default The default value assigned to a dictionary key 
-    \param[in] typ The data type assigned to a value that is extracted from the dictionary
+    Args:
+
+        params ( dict ) : A dictionary containing important simulation parameters
+        key (string) : The name of the variable that we wish to extract from the params
+            dictionary
+
+        default (various types): The default value assigned to a dictionary key 
+        typ (string): The data type assigned to a value that is extracted from the dictionary
   
-    Returns: a value from the params dictionary that is of type "typ"
+    Returns: 
+
+        various types: a value from the params dictionary that is of type `typ`
+
     """
 
     # Try to get value from the dictionary
@@ -133,71 +139,83 @@ def merge_orbitals(Ca, Cb):
 
 
 def post_process(coeff, ene, issoc):
-
     """
-    issoc = 0 - no SOC, = 1 - SOC
+    Post-processing of the data extracted from QE output files
 
-    In SOC case (spinor):
+    Args:
+        coeff (list of CMATRIX): PW coefficients for orbitals, potentially spin-resolved
 
-        coeff[0] - a N_pw x 2*N matrix of type:   (psi_0^alp, psi_0^bet, ... psi_{N-1}^alp, psi_{N-1}^bet) 
-                   where each psi_ is a colum of the PW coefficients for given KS orbital (spatial component 
-                   for each spin)
+        ene (list of CMATRIX):energies of KS orbitals, potentially spin-resolved
 
-        ene[0] -   a 2*N x 2*N matrix of energies coming in pairs:  e_{2*i} = e_{2*i+1}, because these are the 
-                   energies of the same orbital, just its different spin components
+        issoc (int): flag to indicate whether the orbitals are 2-component spinors (with SOC) or 
+            regular KS orbitals, one per spin channel
+              
+            - 0 : no SOC
+            - 1 : yes SOC
 
+    Returns: 
+
+    (list[0], list[1]), where :
+ 
+        No-SOC case: list[0] = list[1]           
+        SOC case: 2 lists, where list[0] = alpha components, list[1] = beta components
+
+    Notes:
+  
+        In SOC case (spinor):
+
+            coeff[0] - a N_pw x 2*N matrix of type:   (psi_0^alp, psi_0^bet, ... psi_{N-1}^alp, psi_{N-1}^bet) 
+                where each psi is a colum of the PW coefficients for given KS orbital (spatial component for each spin)
+
+            ene[0] - a 2*N x 2*N matrix of energies coming in pairs:  e_{2*i} = e_{2*i+1}, because these are the 
+                energies of the same orbital, just its different spin components
    
-        We then split the coeff[0] matrix into a pair of N_pw x N matrices that represent alpha and beta
-        spatial components of the wavefunction, separately
 
-        However, the number of <b>spin<\b>-orbitals will be twice that of the N,
-        so we need to construct new matrices with spin-orbitals.
+            We then split the coeff[0] matrix into a pair of N_pw x N matrices that represent alpha and beta
+            spatial components of the wavefunction, separately
 
-        So that we have both psi_i = (psi_i_alp, psi_i_bet) and psi_{i+N} = (psi_i_bet, psi_i_alp)
-        pairs of spin-orbitals (this is needed to represent the indistinguishable nature of electrons)
-        i = 0,...N-1, where N - is the number of pairs of read spinors  = N_adi_ks_orb
+            However, the number of <b>spin<\b>-orbitals will be twice that of the N,
+            so we need to construct new matrices with spin-orbitals.
+
+            So that we have both psi_i = (psi_i_alp, psi_i_bet) and psi_{i+N} = (psi_i_bet, psi_i_alp)
+            pairs of spin-orbitals (this is needed to represent the indistinguishable nature of electrons)
+            i = 0,...N-1, where N - is the number of pairs of read spinors  = N_adi_ks_orb
 
 
     In non-SOC case (spin-polarized):
-    We directly get a pair of N_pw x N_mo_dia matrices that represent alpha and beta spatial components of the wavefunction
+
+        We directly get a pair of N_pw x N_mo_dia matrices that represent alpha and beta spatial components of the wavefunction
 
         coeff[0] - a N_pw x N matrix of type:   (psi_0^alp, ... psi_{N-1}^alp) 
         coeff[1] - a N_pw x N matrix of type:   (psi_0^bet, ... psi_{N-1}^bet) 
 
-                   where each psi_ is a colum of the PW coefficients for given KS orbital (spatial component 
+                   where each psi is a colum of the PW coefficients for given KS orbital (spatial component 
                    for each spin)
         ene[0] -   a N x N matrix of alpha KS orbital energies
         ene[1] -   a N x N matrix of beta KS orbital energies
 
 
+        Eventually:
 
-    Eventually:
+        "alpha-block"        "beta-block"
 
-                "alpha-block"        "beta-block"
+        C_adi[0] = (psi_0^alp,... psi_{N-1}^alp,  psi_N^alp, ... psi_{2N-1}^alp)     alpha-components of spinors 
+        C_adi[1] = (psi_0^bet,... psi_{N-1}^bet,  psi_N^bet, ... psi_{2N-1}^bet)     beta-components of spinors
 
-    C_adi[0] = (psi_0^alp,... psi_{N-1}^alp,  psi_N^alp, ... psi_{2N-1}^alp)     alpha-components of spinors 
-    C_adi[1] = (psi_0^bet,... psi_{N-1}^bet,  psi_N^bet, ... psi_{2N-1}^bet)     beta-components of spinors
-
-                  ^                              ^
-                  |______________________________|
-                                |
         same energies in SOC case or non-polarized non-SOC
         different energies in spin-polarized non-SOC
         
 
-    Also:  psi_0^alp = psi_N^bet  and psi_0^bet = psi_N^alp, and so on
+        Also:  psi_0^alp = psi_N^bet  and psi_0^bet = psi_N^alp, and so on
 
-             | E^alpha-block          0         |
-    E_adi =  |                                  |
-             |      0             E^beta-block  |
+            | E^alpha-block          0         |
+            E_adi =  |                                  |
+            |      0             E^beta-block  |
 
-    E^alpha-block  = E^beta-block (SOC or non-polarized non-SOC)
-    E^alpha-block != E^beta-block (spin-polarized non-SOC)
+        E^alpha-block  = E^beta-block (SOC or non-polarized non-SOC)
+        E^alpha-block != E^beta-block (spin-polarized non-SOC)
 
-    Returns:  No-SOC case: 2 lists, where list[0] = list[1]
-           
-              SOC case: 2 lists, where list[0] = alpha components
-                                       list[1] = beta components
+
     """
 
     C, E = None, None
@@ -271,10 +289,17 @@ def orthogonalize_orbitals(C):
 
     U = S^{-1/2}, where S = C^+ * C
 
-    \param[in] C A matrix of size  N_pw x N_mo (just alpha or beta orbitals) 
 
-    Returns: A matrix of size  N_pw x N_mo (just alpha or beta orbitals), where
-             the overlap matrix constructed using this matrix is the identity matrix    
+    Args: 
+
+        C ( CMATRIX(N_pw, N_mo) ): just alpha or beta orbitals
+
+
+    Returns: 
+
+        CMATRIX(N_pw, N_mo):  just alpha or beta orbitals, where
+            the overlap matrix constructed using this matrix is the identity matrix    
+
     """
 
     S = C.H() * C  # overlap matrix
@@ -298,7 +323,7 @@ def orthogonalize_orbitals(C):
     return C_tilda
 
 
-def orthogonalize_orbitals2(Ca,Cb):
+def orthogonalize_orbitals2(Ca, Cb):
     """
     Ca and Cb = N_pw x N_mo   - represent the spin-components
     of the adiabatic states
@@ -313,13 +338,20 @@ def orthogonalize_orbitals2(Ca,Cb):
 
     C_tilda^+  * C_tilda = I, you'll find that
 
-    U = S^{-1/2}, where S = Ca^+ * Ca + Cb^+ * Cb
+    U = S^{-1/2}, where $S = Ca^+ * Ca + Cb^+ * Cb$
 
-    \param[in] Ca and Cb Matricies of size N_pw x N_mo - represent 
-               the spin-components of the adiabatic states
 
-    Returns: Two matricies of size N_pw x N_mo where the overlap matrix 
-             constructed using this matrix is the identity matrix  
+    Args:
+
+        Ca ( CMATRIX(N_pw, N_mo) ): alpha-component of the adiabatic states
+
+        Cb ( CMATRIX(N_pw, N_mo) ): beta-component of the adiabatic states
+
+    Returns: 
+
+        ( CMATRIX(N_pw, N_mo) , CMATRIX(N_pw, N_mo) ): Two matricies where the overlap matrix 
+            constructed using this matrix is the identity matrix  
+
     """
 
     S = Ca.H() * Ca + Cb.H() * Cb  # overlap matrix

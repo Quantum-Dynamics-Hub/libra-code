@@ -50,9 +50,6 @@ vector<double> compute_kinetic_energies(MATRIX& p, MATRIX& invM);
 
 
 
-CMATRIX raw_to_dynconsyst(CMATRIX& amplitudes, vector<CMATRIX>& projectors);
-CMATRIX dynconsyst_to_raw(CMATRIX& amplitudes, vector<CMATRIX>& projectors);
-
 CMATRIX tsh_indx2ampl(vector<int>& res, int nstates);
 MATRIX aux_get_forces(dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, vector<int>& act_states, 
                       nHamiltonian& ham);

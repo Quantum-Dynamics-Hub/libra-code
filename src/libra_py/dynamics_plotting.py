@@ -11,9 +11,12 @@
 .. module:: dynamics_plotting
    :platform: Unix, Windows
    :synopsis: This module implements the functions to read the HDF5 files with the results of the dynamical calculations
-.. moduleauthor:: Alexey V. Akimov
+       List of functions:
+           * plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, dx, plot_params)
+           * plot_dyn(plot_params)
+           * plot_dyn_old(res)
 
-  List of functions:
+.. moduleauthor:: Alexey V. Akimov
   
 """
 

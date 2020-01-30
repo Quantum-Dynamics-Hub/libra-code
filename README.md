@@ -1,4 +1,8 @@
 # Libra
+==========================
+[//]: # (Badges)
+[![Build Status](https://travis-ci.org/Quantum-Dynamics-Hub/libra-code.svg?branch=master)](https://travis-ci.org/Quantum-Dynamics-Hub/libra-code)
+
 
 This is the main page of the computational chemistry methodology discovery library, Libra
 The program website is [here](https://quantum-dynamics-hub.github.io/libra/index.html)

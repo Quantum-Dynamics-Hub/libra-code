@@ -43,6 +43,10 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
   vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd);
 
 
+CMATRIX raw_to_dynconsyst(CMATRIX& amplitudes, vector<CMATRIX>& projectors);
+CMATRIX dynconsyst_to_raw(CMATRIX& amplitudes, vector<CMATRIX>& projectors);
+
+
 }// namespace libdyn
 }// liblibra
 

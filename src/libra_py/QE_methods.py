@@ -12,31 +12,29 @@
 """
 .. module:: QE_methods
    :platform: Unix, Windows
-   :synopsis: This module implements functions for dealing with the outputs from QE (Quantum Espresso) package
+   :synopsis: This module implements functions for dealing with the outputs from QE (Quantum Espresso) package.
+       This package contains the following functions:
+           * cryst2cart(a1,a2,a3,r)
+           * read_qe_schema(filename, verbose=0)
+           * read_qe_index(filename, orb_list, verbose=0)
+           * read_qe_wfc_info(filename, verbose=0)
+           * read_qe_wfc_grid(filename, verbose=0)
+           * read_qe_wfc(filename, orb_list, verbose=0)
+           * read_md_data(filename)
+           * read_md_data_xyz(filename, PT, dt)
+           * read_md_data_xyz2(filename, PT)   
+           * read_md_data_cell(filename)
+           * out2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt)
+           * out2pdb(out_filename,T,dt,pdb_prefix)
+           * out2xyz(out_filename,T,dt,xyz_filename)
+           * xyz2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt)
+           * get_QE_normal_modes(filename, verbosity=0)
+           * run_qe(params, t, dirname0, dirname1)
+           * read_info(params)
+           * read_all(params)
+           * read_wfc_grid(params)
 
-   cryst2cart(a1,a2,a3,r)
-   read_qe_schema(filename, verbose=0)
-   read_qe_index(filename, orb_list, verbose=0)
-   read_qe_wfc_info(filename, verbose=0)
-   read_qe_wfc_grid(filename, verbose=0)
-   read_qe_wfc(filename, orb_list, verbose=0)
-   read_md_data(filename)
-   read_md_data_xyz(filename, PT, dt)
-   read_md_data_xyz2(filename, PT)   
-   read_md_data_cell(filename)
-   out2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt)
-   out2pdb(out_filename,T,dt,pdb_prefix)
-   out2xyz(out_filename,T,dt,xyz_filename)
-   xyz2inp(out_filename,templ_filename,wd,prefix,t0,tmax,dt)
-   get_QE_normal_modes(filename, verbosity=0)
-   run_qe(params, t, dirname0, dirname1)
-   read_info(params)
-   read_all(params)
-   read_wfc_grid(params)
-
-.. moduleauthor:: 
-       Alexey V. Akimov 
-       Brendan A. Smith
+.. moduleauthor:: Alexey V. Akimov,  Brendan A. Smith
   
 """
 

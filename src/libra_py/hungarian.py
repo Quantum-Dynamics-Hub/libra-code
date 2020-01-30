@@ -9,20 +9,26 @@
 #*
 #*********************************************************************************/
 """
- The implementation of the code is based on the instructions from:
- http://csclab.murraystate.edu/~bob.pilgrim/445/munkres.html
+.. module:: hungarian
+   :platform: Unix, Windows
+   :synopsis: 
+       This module implements the Munkres-Kuhn algorithm for the assignment problem
+       The implementation of the code is based on the instructions from:
+       http://csclab.murraystate.edu/~bob.pilgrim/445/munkres.html
 
- References
+       References:
 
- 1. http://www.public.iastate.edu/~ddoty/HungarianAlgorithm.html
- 2. Harold W. Kuhn. The Hungarian Method for the assignment problem.
-    *Naval Research Logistics Quarterly*, 2:83-97, 1955.
- 3. Harold W. Kuhn. Variants of the Hungarian method for assignment
-    problems. *Naval Research Logistics Quarterly*, 3: 253-258, 1956.
- 4. Munkres, J. Algorithms for the Assignment and Transportation Problems.
-    *Journal of the Society of Industrial and Applied Mathematics*,
-    5(1):32-38, March, 1957.
- 5. http://en.wikipedia.org/wiki/Hungarian_algorithm
+           1. http://www.public.iastate.edu/~ddoty/HungarianAlgorithm.html
+           2. Harold W. Kuhn. The Hungarian Method for the assignment problem.
+               *Naval Research Logistics Quarterly*, 2:83-97, 1955.
+           3. Harold W. Kuhn. Variants of the Hungarian method for assignment
+               problems. *Naval Research Logistics Quarterly*, 3: 253-258, 1956.
+           4. Munkres, J. Algorithms for the Assignment and Transportation Problems.
+               *Journal of the Society of Industrial and Applied Mathematics*,
+               5(1):32-38, March, 1957.
+           5. http://en.wikipedia.org/wiki/Hungarian_algorithm
+
+.. moduleauthor:: Alexey V. Akimov
 
 """
 

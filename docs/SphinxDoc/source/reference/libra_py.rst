@@ -17,6 +17,10 @@ libra_py
    libra_py/data_stat.rst
    libra_py/DFTB_methods.rst
    libra_py/dynamics.rst
+   libra_py/dynamics_exact.rst
+   libra_py/dynamics_hdf5.rst
+   libra_py/dynamics_io.rst
+   libra_py/dynamics_plotting.rst
    libra_py/dynamics_recipes_Ehrenfest.rst
    libra_py/ERGO_methods.rst
    libra_py/fgr_py.rst
@@ -47,8 +51,6 @@ libra_py
    libra_py/scan.rst
    libra_py/scf.rst
    libra_py/tsh.rst
-   libra_py/tsh_algo1.rst
-   libra_py/tsh_algo2.rst
    libra_py/tsh_stat.rst
    libra_py/unavoided.rst
    libra_py/units.rst

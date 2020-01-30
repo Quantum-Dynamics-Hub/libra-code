@@ -11,22 +11,21 @@
 .. module:: dynamics_io
    :platform: Unix, Windows
    :synopsis: This module implements the read/write functions specifically designed to work with the dynamics module
+       List of functions:
+
+           * add_intlist2file(filename, t, X)
+           * add_doublelist2file(filename, t, X)
+           * add_matrix2file(filename, t, X)
+           * add_cmatrix2file(filename, t, X)
+           * file2intlist(filename)
+           * file2doublelist(filename)
+           * file2matrix(filename, nrows, ncols)
+           * file2matrix(filename, nrows, ncols)
+           * print_results12(i, dt, res, prefix, file_output_level)
+           * print_results3(i, dt, res, prefix, file_output_level, tr)
+           * read_results(prefix, file_output_level, nadi, ndia, ndof, ntraj)
+
 .. moduleauthor:: Alexey V. Akimov
-
-  List of functions:
-
-  * add_intlist2file(filename, t, X)
-  * add_doublelist2file(filename, t, X)
-  * add_matrix2file(filename, t, X)
-  * add_cmatrix2file(filename, t, X)
-  * file2intlist(filename)
-  * file2doublelist(filename)
-  * file2matrix(filename, nrows, ncols)
-  * file2matrix(filename, nrows, ncols)
-
-  * print_results12(i, dt, res, prefix, file_output_level)
-  * print_results3(i, dt, res, prefix, file_output_level, tr)
-  * read_results(prefix, file_output_level, nadi, ndia, ndof, ntraj)
   
 """
 

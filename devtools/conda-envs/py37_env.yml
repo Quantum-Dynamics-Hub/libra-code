@@ -1,0 +1,25 @@
+name: py37
+channels:
+dependencies:
+    # Base depends
+  - python
+  - pip
+  - conda-build
+  - gcc_linux-64
+  - gxx_linux-64
+  - make
+  - boost
+  - cmake
+
+    # Testing
+  - pytest
+  - pytest-cov
+  - codecov
+
+    # Pip-only installs
+  #- pip:
+  #  - codecov
+
+  # Dependencies
+  - numpy
+  - matplotlib

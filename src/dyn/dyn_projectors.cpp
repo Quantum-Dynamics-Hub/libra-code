@@ -396,6 +396,103 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
 
 
 
+CMATRIX raw_to_dynconsyst(CMATRIX& amplitudes, vector<CMATRIX>& projectors){
+/**
+  This function converts the amplitudes from the raw ones to the dynamically-consistent
+
+  |dyn_cons> = |raw> * P, so
+
+  |Psi> = |raw> * C_raw = |dyn_cons> * C_dyn_cons 
+
+  Then:
+  |raw> * C_raw = |raw> * P * C_dyn_cons 
+
+   So: C_raw = P * C_dyn_cons 
+   and
+       C_dyn_cons = P.H() * C_raw
+
+
+*/
+  int nst = amplitudes.n_rows;
+  int ntraj = amplitudes.n_cols;
+ 
+  CMATRIX tmp(nst, 1);
+  CMATRIX res(nst, ntraj);
+
+  vector<int> x_stenc(1, 0);
+  vector<int> y_stenc(nst,0); for(int i=0; i<nst; i++){ y_stenc[i] = i; }
+
+  if(projectors.size() != ntraj){  
+    cout<<"ERROR in raw_to_dynconsyst: the dimensions do not agree\n";
+    exit(0);
+  }
+
+
+  for(int traj = 0; traj < ntraj; traj++){
+
+    x_stenc[0] = traj;
+    pop_submatrix(amplitudes, tmp, y_stenc, x_stenc);
+
+    tmp = projectors[traj].H() * tmp;
+
+    push_submatrix(res, tmp, y_stenc, x_stenc);
+
+  }
+
+  return res;
+
+}
+
+CMATRIX dynconsyst_to_raw(CMATRIX& amplitudes, vector<CMATRIX>& projectors){
+/**
+  This function converts the amplitudes from the dynamically-consistent to raw form
+
+  |dyn_cons> = |raw> * P, so
+
+  |Psi> = |raw> * C_raw = |dyn_cons> * C_dyn_cons 
+
+  Then:
+  |raw> * C_raw = |raw> * P * C_dyn_cons 
+
+   So: C_raw = P * C_dyn_cons 
+   and
+       C_dyn_cons = P.H() * C_raw
+
+*/
+  int nst = amplitudes.n_rows;
+  int ntraj = amplitudes.n_cols;
+
+  CMATRIX tmp(nst, 1);
+  CMATRIX res(nst, ntraj);
+
+  vector<int> x_stenc(1, 0);
+  vector<int> y_stenc(nst,0); for(int i=0; i<nst; i++){ y_stenc[i] = i; }
+
+  if(projectors.size() != ntraj){  
+    cout<<"ERROR in raw_to_dynconsyst: the dimensions do not agree\n";
+    exit(0);
+  }
+
+
+  for(int traj = 0; traj < ntraj; traj++){
+
+    x_stenc[0] = traj;
+    pop_submatrix(amplitudes, tmp, y_stenc, x_stenc);
+
+    tmp = projectors[traj] * tmp;
+
+    push_submatrix(res, tmp, y_stenc, x_stenc);
+
+  }
+
+  return res;
+
+}
+
+
+
+
+
 }// namespace libdyn
 }// liblibra
 
