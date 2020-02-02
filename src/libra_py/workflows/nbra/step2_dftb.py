@@ -1,5 +1,5 @@
 #***********************************************************
-# * Copyright (C) 2020 Brendan Smith, Alexey V. Akimov
+# * Copyright (C) 2019 Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
@@ -96,7 +96,8 @@ def do_step(snap, params):
                        "md_file":"md.xyz", "sp_gen_file":"x1.gen", "syst_spec":"C" ,
                        "scf_in_file":"dftb_in_ham1.hsd",
                        "hs_in_file":"dftb_in_ham2.hsd",
-                       "do_tddftb":False                     
+                       "do_tddftb":False,                     
+                       "use_single_particle_en":False
                      }
 
     comn.check_input(params, default_params, critical_params)
@@ -109,6 +110,7 @@ def do_step(snap, params):
     scf_in_file = params["scf_in_file"]
     hs_in_file = params["hs_in_file"]
     do_tddftb = params["do_tddftb"]
+    use_single_particle_en = params["use_single_particle_en"]
     
     # Make an input file for SP calculations 
     DFTB_methods.xyz_traj2gen_sp(md_file, sp_gen_file, snap, syst_spec)
@@ -119,23 +121,25 @@ def do_step(snap, params):
     os.system( "%s" % EXE )
 
     if do_tddftb == True:
-        # We need to go into the TRA.dat file and extract the energies
-        # First, check to see if the TRA.dat file is there
 
-        if os.path.isfile('TRA.DAT'):
-            print ("Found TRA.DAT")
+        # We have chosen to perform a td-dftb calculation for our given system.
+        # We need to go into the file EXC.dat file and extract the energies.
+        # First, check to see if the EXC.dat file is even there.
+
+        if os.path.isfile('EXC.DAT'):
+            print ("Found EXC.DAT")
         else:
-            print ("\nCannot find the file TRA.DAT")
+            print ("\nCannot find the file EXC.DAT")
             path = os.getcwd()
             print ("Hint: Current working directory is:")
             print (path)
-            print ("Is this where you expect the file TRA.DAT to be found?")
+            print ("Is this where you expect the file EXC.DAT to be found?")
             print ("Check your dftb_in.hsd file to see if excited states calculation is enabled")
             print ("Exiting program\n")
             sys.exit(0)
 
-        energies = []
-        f  = open("TRA.DAT")
+        config_en = []
+        f  = open("EXC.DAT")
         A  = f.readlines()
         sz = len(A)
         f.close()
@@ -145,19 +149,35 @@ def do_step(snap, params):
             if not b:
                 continue
             else:
-                if b[0] == "Energy":
-                    #print (b)
-                    energies.append(float(b[2]))
- 
-        E = CMATRIX(len(energies),len(energies))       
-        for i in range(len(energies)):
-            E.set(i,i,energies[i])
+                if b[0].replace('.', '', 1).isdigit():
+
+                    if use_single_particle_en == True:
+
+                        # We are choosing to use the single particle energies that approximate the
+                        # multi-configurational energy. Such a single particle energy is the single
+                        # particle transition with the largest coefficient in the multi-configurational 
+                        # transition.
+                        config_en.append(float(b[6]))
+
+                    else:
+              
+                        # Use the multi-configurational energy.
+                        config_en.append(float(b[0]))
+
+        print (config_en)
+        num_configs = len(config_en)
+        E = CMATRIX(num_configs,num_configs)       
+        for i in range(num_configs):
+            E.set(i,i,config_en[i])
 
         # For now, only return E
         return E, None, None, None
 
 
     else:
+
+        # Here, we just use the energies of the bands themselves. This corresponds to the single particle picture
+
         # Just generate the Hamiltonian corresponding to the converged density matrix
         os.system("cp %s dftb_in.hsd" % hs_in_file )
         os.system( "%s" % EXE )
