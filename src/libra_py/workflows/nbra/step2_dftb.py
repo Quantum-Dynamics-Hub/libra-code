@@ -11,9 +11,10 @@
 .. module:: step2_dftb
    :platform: Unix, Windows
    :synopsis: This module implements functions for doing NAC calculaitons in the 1-electron
-       basis of KS orbitals, with the DFTB+ package
+       basis of KS orbitals, with the DFTB+ package. It also implements functions for obtaining
+       TD-DFTB energies with the DFTB+ package.
 
-.. moduleauthor:: Alexey V. Akimov
+.. moduleauthors:: Brendan Smith, Alexey V. Akimov
 
 """
 
@@ -32,13 +33,13 @@ import util.libutil as comn
 
 
 
-def do_step(i, params):
+def do_step(snap, params):
     """
 
     Runs a single-point SCF calculation for a given geometry along a trajectory
 
     Args:
-        i ( int ): index of the time step to be used from the trajectory file
+        snap ( int ): index of the time step to be used from the trajectory file
         params ( dictionary ): the control parameters of the simulation
         
             * **params["EXE"]** ( string ): path to the DFTB+ executable [ default: dftb+ ]
@@ -67,6 +68,10 @@ def do_step(i, params):
         
                 [default: "dftb_in_ham2.hsd"]
 
+            * **params["do_tddftb"]** ( bool ): if True, compute and read TD-DFTB energies 
+                                                if False, compute single-prticle energies
+                [default: False]
+
     Returns:
         tuple: (Ei, MOi, Hi, Si), where:
         
@@ -90,10 +95,12 @@ def do_step(i, params):
                        "mo_active_space":None,
                        "md_file":"md.xyz", "sp_gen_file":"x1.gen", "syst_spec":"C" ,
                        "scf_in_file":"dftb_in_ham1.hsd",
-                       "hs_in_file":"dftb_in_ham2.hsd"
+                       "hs_in_file":"dftb_in_ham2.hsd",
+                       "do_tddftb":False,                     
+                       "use_single_particle_en":False
                      }
-    comn.check_input(params, default_params, critical_params)
 
+    comn.check_input(params, default_params, critical_params)
     
     # Get the parameters
     EXE = params["EXE"]
@@ -102,64 +109,119 @@ def do_step(i, params):
     syst_spec = params["syst_spec"]
     scf_in_file = params["scf_in_file"]
     hs_in_file = params["hs_in_file"]
-
+    do_tddftb = params["do_tddftb"]
+    use_single_particle_en = params["use_single_particle_en"]
     
     # Make an input file for SP calculations 
-    DFTB_methods.xyz_traj2gen_sp(md_file, sp_gen_file, i, syst_spec)
+    DFTB_methods.xyz_traj2gen_sp(md_file, sp_gen_file, snap, syst_spec)
 
     # Run SCF calculations and generate the charge density for a converged calculations
     # The file x1.gen is used as a geometry
     os.system("cp %s dftb_in.hsd" % scf_in_file )
     os.system( "%s" % EXE )
 
-    # Just generate the Hamiltonian corresponding to the converged density matrix
-    os.system("cp %s dftb_in.hsd" % hs_in_file )
-    os.system( "%s" % EXE )
+    if do_tddftb == True:
+
+        # We have chosen to perform a td-dftb calculation for our given system.
+        # We need to go into the file EXC.dat file and extract the energies.
+        # First, check to see if the EXC.dat file is even there.
+
+        if os.path.isfile('EXC.DAT'):
+            print ("Found EXC.DAT")
+        else:
+            print ("\nCannot find the file EXC.DAT")
+            path = os.getcwd()
+            print ("Hint: Current working directory is:")
+            print (path)
+            print ("Is this where you expect the file EXC.DAT to be found?")
+            print ("Check your dftb_in.hsd file to see if excited states calculation is enabled")
+            print ("Exiting program\n")
+            sys.exit(0)
+
+        config_en = []
+        f  = open("EXC.DAT")
+        A  = f.readlines()
+        sz = len(A)
+        f.close()
+
+        for i in range(sz):
+            b = A[i].strip().split()
+            if not b:
+                continue
+            else:
+                if b[0].replace('.', '', 1).isdigit():
+
+                    if use_single_particle_en == True:
+
+                        # We are choosing to use the single particle energies that approximate the
+                        # multi-configurational energy. Such a single particle energy is the single
+                        # particle transition with the largest coefficient in the multi-configurational 
+                        # transition.
+                        config_en.append(float(b[6]))
+
+                    else:
+              
+                        # Use the multi-configurational energy.
+                        config_en.append(float(b[0]))
+
+        print (config_en)
+        num_configs = len(config_en)
+        E = CMATRIX(num_configs,num_configs)       
+        for i in range(num_configs):
+            E.set(i,i,config_en[i])
+
+        # For now, only return E
+        return E, None, None, None
 
 
-    # [0] is because we extract just the gamma-point
-    F = DFTB_methods.get_dftb_matrices("hamsqr1.dat")
-    S = DFTB_methods.get_dftb_matrices("oversqr.dat")
-    
+    else:
+
+        # Here, we just use the energies of the bands themselves. This corresponds to the single particle picture
+
+        # Just generate the Hamiltonian corresponding to the converged density matrix
+        os.system("cp %s dftb_in.hsd" % hs_in_file )
+        os.system( "%s" % EXE )
+
+        # [0] is because we extract just the gamma-point
+        F = DFTB_methods.get_dftb_matrices("hamsqr1.dat")
+        S = DFTB_methods.get_dftb_matrices("oversqr.dat")   
         
-    # Get the dimensions
-    ao_sz = F[0].num_of_cols        
-    ao_act_sp = list(range(0, ao_sz))
+        # Get the dimensions
+        ao_sz = F[0].num_of_cols        
+        ao_act_sp = list(range(0, ao_sz))
     
-    mo_sz = ao_sz
-    mo_act_sp = list(range(0, mo_sz))
+        mo_sz = ao_sz
+        mo_act_sp = list(range(0, mo_sz))
     
-    if params["mo_active_space"] != None:
-        mo_sz = len(params["mo_active_space"])        
-        mo_act_sp = list(params["mo_active_space"])
+        if params["mo_active_space"] != None:
+            mo_sz = len(params["mo_active_space"])        
+            mo_act_sp = list(params["mo_active_space"])
 
+        # Solve the eigenvalue problem with the converged Fock matrix
+        # get the converged MOs
+        E = CMATRIX(ao_sz, ao_sz)
+        MO = CMATRIX(ao_sz, ao_sz)
+        solve_eigen(F[0], S[0], E, MO, 0)  
 
-    # Solve the eigenvalue problem with the converged Fock matrix
-    # get the converged MOs
-    E = CMATRIX(ao_sz, ao_sz)
-    MO = CMATRIX(ao_sz, ao_sz)
-    solve_eigen(F[0], S[0], E, MO, 0)  
-
-    # Extract the E sub-matrix
-    E_sub = CMATRIX(mo_sz, mo_sz)
-    pop_submatrix(E, E_sub, mo_act_sp, mo_act_sp)  
+        # Extract the E sub-matrix
+        E_sub = CMATRIX(mo_sz, mo_sz)
+        pop_submatrix(E, E_sub, mo_act_sp, mo_act_sp)  
     
-    # Extract the MO sub-matrix
-    MO_sub = CMATRIX(ao_sz, mo_sz)
-    pop_submatrix(MO, MO_sub, ao_act_sp, mo_act_sp)  
-
+        # Extract the MO sub-matrix
+        MO_sub = CMATRIX(ao_sz, mo_sz)
+        pop_submatrix(MO, MO_sub, ao_act_sp, mo_act_sp)  
     
-    return E_sub, MO_sub, F, S
+        return E_sub, MO_sub, F, S
 
 
 
-def do_ovlp(i, params):
+def do_ovlp(snap, params):
     """
 
     Compute the overlap matrix in the AO basis for two geometries, i and i+1
 
     Args:
-        i ( int ): index of the time step to be used from the trajectory file
+        snap ( int ): index of the time step to be used from the trajectory file
         params ( dictionary ): the control parameters of the simulation
         
             * **params["EXE"]** ( string ): path to the DFTB+ executable [ default: dftb+ ]
@@ -201,7 +263,7 @@ def do_ovlp(i, params):
 
         
     # Make an input file for the overlap calculations 
-    DFTB_methods.xyz_traj2gen_ovlp(md_file, ovlp_gen_file, i, i+1, syst_spec)
+    DFTB_methods.xyz_traj2gen_ovlp(md_file, ovlp_gen_file, snap, snap+1, syst_spec)
     
     # Run SCF calculations and generate the charge density for a converged calculations
     # The file x2.gen is used as a geometry
@@ -224,8 +286,11 @@ def do_ovlp(i, params):
     
 def run_step2(params):
     """
-    
+      
     Calculate the overlaps, transition dipole moments, and vibronic Hamiltonian matrix elements in the AO basis
+
+    Currently under development 1/30/2020 - This function is currently not compatable with the parameters 
+                                            "get_midpoint_energy" or "do_tddftb".
 
     Args:
         params ( dictionary ): the control parameters of the simulation
@@ -299,7 +364,7 @@ def run_step2(params):
 def run_step2_lz(params):
     """
     
-    Calculate the overlaps, transition dipole moments, and vibronic Hamiltonian matrix elements in the AO basis
+    Calculate the diagonal vibronic Hamiltonian matrix elements (energies) in the AO basis and (optionally) the TD-DFTB energies 
 
     Args:
         params ( dictionary ): the control parameters of the simulation
@@ -309,18 +374,20 @@ def run_step2_lz(params):
             * **params["fsnap"]** ( int ): final frame  [ default: 1 ]
             * **params["out_dir"]** ( string ): the path to the directory that will collect all the results
                 If the directory doesn't exist, it will be created  [ default: "res" ]
+            * **params["get_midpoint_energy"]** ( bool ): if True, compute and read energies as Hvib = 0.5*(E_prev + E_curr) (As is done in Pyxaid NBRA)
+                                                   if False, compute and read energies at everytime timestep  Hvib = E_curr
         
-            SeeAlso:  the description of the parameters in ```do_ovlp(i, params)``` and in ```do_step(i, params)```
+            SeeAlso:  the description of the parameters in ```do_step(i, params)```
 
     Returns:
-        None: but generates the files (S, St, and hvib) indexed in the range [isnap, fsnap), for 
-        instance, if isnap = 0, fsnap = 3, we will have files hvib_0, hvib_1, hvib_2
-
+        None: but generates the files (hvib) indexed in the range [isnap, fsnap), for 
+        instance, if isnap = 0, fsnap = 3, we will have files hvib_0, hvib_1, hvib_2.
+        Only diagonal elements of the matrix are populated. 
 
     """
 
     critical_params = [ ]
-    default_params = { "dt":1.0*units.fs2au,  "isnap":0, "fsnap":1 , "out_dir":"res" }
+    default_params = { "dt":1.0*units.fs2au,  "isnap":0, "fsnap":1 , "out_dir":"res", "get_midpoint_energy":True }
     comn.check_input(params, default_params, critical_params)
 
 
@@ -329,7 +396,7 @@ def run_step2_lz(params):
     isnap = params["isnap"]
     fsnap = params["fsnap"]
     out_dir = params["out_dir"]
-
+    get_midpoint_energy = params["get_midpoint_energy"]
 
     # Create <out_dir> directory if it does not exist yet
     if os.path.isdir(out_dir):
@@ -337,18 +404,26 @@ def run_step2_lz(params):
     else:
         os.system("mkdir %s" % out_dir)
 
+    if get_midpoint_energy == True:
 
-    # Compute
-    E_prev, U_prev, Hao_prev, Sao_prev = do_step(isnap, params)
+        E_prev, U_prev, Hao_prev, Sao_prev = do_step(isnap, params)
+        for i in range(isnap+1, fsnap):
 
-    for i in range(isnap+1, fsnap):
-        E_curr, U_curr, Hao_curr, Sao_curr = do_step(i, params)
-        Hvib = 0.5*(E_prev + E_curr)
+            E_curr, U_curr, Hao_curr, Sao_curr = do_step(i, params)      
+            Hvib = 0.5*(E_prev + E_curr)
+  
+            Hvib = E_curr
+            # Vibronic Hamiltonians - Diag. elements only
+            Hvib.real().show_matrix("%s/hvib_%i_re" % (out_dir, i-1) )
 
-        # Vibronic Hamiltonians - Diag. elements only, but imag. needed for post-processing
-        Hvib.real().show_matrix("%s/hvib_%i_re" % (out_dir, i-1) )
-        Hvib.imag().show_matrix("%s/hvib_%i_im" % (out_dir, i-1) )
+            # Current becomes the old 
+            E_prev = CMATRIX(E_curr) 
 
-        # Current becomes the old 
-        E_prev = CMATRIX(E_curr)
+    else:
+        for i in range(isnap, fsnap-1):
+
+            E_curr, U_curr, Hao_curr, Sao_curr = do_step(i, params)
+            Hvib = E_curr
+            # Vibronic Hamiltonians - Diag. elements only
+            Hvib.real().show_matrix("%s/hvib_%i_re" % (out_dir, i) )
 
