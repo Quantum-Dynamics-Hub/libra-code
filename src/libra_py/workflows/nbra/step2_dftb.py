@@ -1,4 +1,5 @@
 #***********************************************************
+# * Copyright (C) 2019-2020 Brendan Smith and Alexey V. Akimov
 # * Copyright (C) 2019 Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
@@ -68,9 +69,14 @@ def do_step(snap, params):
         
                 [default: "dftb_in_ham2.hsd"]
 
-            * **params["do_tddftb"]** ( bool ): if True, compute and read TD-DFTB energies 
-                                                if False, compute single-prticle energies
-                [default: False]
+            * **params["do_tddftb"]** ( bool ): the parameter to control the type of energies to use in the 
+                calculations. The DFTB+ input files should be setup accordingly
+
+                - True : compute and read TD-DFTB energies. In this case, only the first entry of the returned
+                    results ( energies ) is meaningful. Other properties are just None for now
+
+                - False : compute and read only the single-prticle energies [ default ]
+
 
     Returns:
         tuple: (Ei, MOi, Hi, Si), where:
@@ -127,25 +133,24 @@ def do_step(snap, params):
         # First, check to see if the EXC.dat file is even there.
 
         if os.path.isfile('EXC.DAT'):
-            print ("Found EXC.DAT")
+            print("Found EXC.DAT")
         else:
-            print ("\nCannot find the file EXC.DAT")
-            path = os.getcwd()
-            print ("Hint: Current working directory is:")
-            print (path)
-            print ("Is this where you expect the file EXC.DAT to be found?")
-            print ("Check your dftb_in.hsd file to see if excited states calculation is enabled")
-            print ("Exiting program\n")
+            print("\nCannot find the file EXC.DAT")
+            print(F"Hint: Current working directory is: {os.getcwd()}")
+            print("Is this where you expect the file EXC.DAT to be found?")
+            print("Check your dftb_in.hsd file to see if excited states calculation is enabled")
+            print("Exiting program...\n")
             sys.exit(0)
 
         config_en = []
         f  = open("EXC.DAT")
         A  = f.readlines()
-        sz = len(A)
         f.close()
 
+        sz = len(A)
         for i in range(sz):
             b = A[i].strip().split()
+
             if not b:
                 continue
             else:
@@ -167,6 +172,7 @@ def do_step(snap, params):
         print (config_en)
         num_configs = len(config_en)
         E = CMATRIX(num_configs,num_configs)       
+
         for i in range(num_configs):
             E.set(i,i,config_en[i])
 
