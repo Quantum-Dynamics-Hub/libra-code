@@ -92,7 +92,7 @@ ENDIF()
 MESSAGE("Setting up the CMake configuration...")
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE "RELEASE")
-  SET(CMAKE_CXX_FLAGS "-fPIC -O2 -fpermissive -w -g -I ${Boost_INCLUDE_DIRS}")
+  SET(CMAKE_CXX_FLAGS "-fPIC -O2 -fpermissive -w -g -I ${Boost_INCLUDE_DIRS} -fopenmp")
 ENDIF()
 
 

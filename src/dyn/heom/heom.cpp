@@ -581,19 +581,33 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
     CMATRIX dRHO((nn_tot+1)*nquant, nquant);
     CMATRIX drho(nquant, nquant);
     vector<CMATRIX> rho_unpacked(nn_tot+1, CMATRIX(nquant, nquant));
+    vector<CMATRIX> drho_unpacked(nn_tot+1, CMATRIX(nquant, nquant));
 
     unpack_rho(rho_unpacked, RHO);
 
+
+    vector< vector<int> > sub_x_all(nn_tot+1, vector<int>(nquant, 0));
+    for(n=1; n<=nn_tot; n++){
+        for(i = 0; i<nquant; i++){    sub_x_all[n][i] = n*nquant + i;  }
+    }
+
+
+    #pragma omp parallel for
     for(n=1; n<=nn_tot; n++){
 
-        for(i = 0; i<nquant; i++){    sub_x[i] = n*nquant + i;  }
+        //for(i = 0; i<nquant; i++){    sub_x[i] = n*nquant + i;  }
         
-        drho = compute_deriv_n(n, rho_unpacked, Ham, eta, temperature, 
+        drho_unpacked[n] = compute_deriv_n(n, rho_unpacked, Ham, eta, temperature, 
           gamma_matsubara, c_matsubara,  nn, KK, zero, map_nplus,  map_nneg);
 
-        push_submatrix(dRHO, drho, sub_x, sub_y );
+        //push_submatrix(dRHO, drho, sub_x_all[n], sub_y );
 
     }
+
+    for(n=1; n<=nn_tot; n++){
+        push_submatrix(dRHO, drho_unpacked[n], sub_x_all[n], sub_y );
+    }
+
 
     return dRHO;
 

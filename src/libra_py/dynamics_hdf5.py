@@ -613,42 +613,6 @@ def save_hdf5_4D(saver, i, tr, hvib_adi, hvib_dia, St, U, projector):
 
 
 
-#===================== HEOM output ====================
-
-
-def heom_init_hdf5(saver, hdf5_output_level, _nsteps, _nquant):
-
-    if hdf5_output_level>=1:
-
-        # Time axis (integer steps)
-        saver.add_dataset("timestep", (_nsteps,) , "I")  
-
-        # Time axis
-        saver.add_dataset("time", (_nsteps,) , "R")  
-        
-
-    if hdf5_output_level>=3:
-
-        # System's density matrix
-        saver.add_dataset("denmat", (_nsteps, _nquant, _nquant), "C") 
-
-
-
-def heom_save_hdf5_1D(saver, i, dt):
-    # Timestep 
-    saver.save_scalar(i, "timestep", i) 
-
-    # Actual time
-    saver.save_scalar(i, "time", dt*i)  
-
-
-
-def heom_save_hdf5_3D(saver, i, denmat):
-    # Average adiabatic density matrices
-    # Format: saver.add_dataset("denmat", (_nsteps, _nquant, _nquant), "C") 
-    saver.save_matrix(i, "denmat", denmat) 
-
-
 
 
 #===================== Exact calculations output ====================
