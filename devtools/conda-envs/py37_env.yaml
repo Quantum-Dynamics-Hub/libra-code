@@ -15,6 +15,7 @@ dependencies:
   - doxygen
   - sphinx
   - sphinx_rtd_theme
+  - recommonmark
 
     # Testing
   - pytest
