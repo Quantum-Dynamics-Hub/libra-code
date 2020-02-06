@@ -16,24 +16,24 @@
 .. module:: step4
    :platform: Unix, Windows
    :synopsis: This module implements functions for running TSH calculations within the NBRA
-
-
-   Example:    
+       Example:    
 
        # Regular NBRA-NA-MD:
+
        >>> import step4
-       >>> 
        >>> Hvib = step4.get_Hvib2(params)  # get the Hvib for all data sets
        >>> step4.transform_data(Hvib, {})  # default parameters don't change data
        >>> step4.run(Hvib, params)         # this ```params``` could be the same or different from the above
 
        # On-the-fly QSH-NA-MD:
+
        >>> import step4
        >>> import qsh
        >>> Hvib = qsh.run(qsh_params)      # generate the QSH Hvib data sets, see the ```qsh.run()``` for 
        >>>                                 # the description of the ```qsh_params``` parameters
        >>> step4.transform_data(Hvib, {})  # default parameters don't change data
        >>> step4.run(Hvib, params)         # 
+
 
 .. moduleauthor:: Brendan A. Smith, Wei Li, Alexey V. Akimov
 

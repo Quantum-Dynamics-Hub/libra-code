@@ -7,7 +7,7 @@
 #* See the file LICENSE in the root directory of this distribution   
 #* or <http://www.gnu.org/licenses/>.          
 #***********************************************************************************
-## \file models_ICN.py 
+## \file models_Beswick_Jortner.py 
 #
 # This module implements the Beswick-Jortner potential describing dissociation of ICN molecule
 # or collinear interaction of I and CN

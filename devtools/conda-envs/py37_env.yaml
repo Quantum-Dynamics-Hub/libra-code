@@ -11,6 +11,11 @@ dependencies:
   - boost
   - cmake
 
+  # Docs
+  - doxygen
+  - sphinx
+  - sphinx_rtd_theme
+
     # Testing
   - pytest
   - pytest-cov

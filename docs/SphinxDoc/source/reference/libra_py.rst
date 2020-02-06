@@ -5,6 +5,7 @@ libra_py
    :maxdepth: 2
    :caption: Contents:
 
+   libra_py/dynamics.rst
    libra_py/models.rst
    libra_py/workflows.rst
 
@@ -14,14 +15,10 @@ libra_py
    libra_py/data_conv.rst
    libra_py/data_outs.rst
    libra_py/data_read.rst
+   libra_py/data_savers.rst
    libra_py/data_stat.rst
    libra_py/DFTB_methods.rst
-   libra_py/dynamics.rst
-   libra_py/dynamics_exact.rst
-   libra_py/dynamics_hdf5.rst
-   libra_py/dynamics_io.rst
    libra_py/dynamics_plotting.rst
-   libra_py/dynamics_recipes_Ehrenfest.rst
    libra_py/ERGO_methods.rst
    libra_py/fgr_py.rst
    libra_py/fit.rst
