@@ -1,5 +1,5 @@
 #***********************************************************
-# * Copyright (C) 2016-2018 Alexey V. Akimov
+# * Copyright (C) 2016-2020 Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
@@ -7,20 +7,19 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 #***********************************************************/
 
-__all__ = ["models",
+__all__ = ["dynamics",
+           "models",
            "workflows",
            "acf",
            "autoconnect",
            "build",
            "data_conv",
+           "data_io",
            "data_outs",
            "data_read",
+           "data_savers",
            "data_stat",
            "DFTB_methods",
-           "dynamics",
-           "dynamics_exact",
-           "dynamics_hdf5",
-           "dynamics_io",
            "dynamics_plotting",
            "dynamics_recipes_Ehrenfest",
            "ERGO_methods",
