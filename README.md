@@ -1,6 +1,5 @@
 # Libra
-==========================
-[//]: # (Badges)
+
 [![Build Status](https://travis-ci.org/Quantum-Dynamics-Hub/libra-code.svg?branch=master)](https://travis-ci.org/Quantum-Dynamics-Hub/libra-code)
 
 

@@ -22,6 +22,15 @@ matrix:
       env: PYTHON_VER=3.7
 
 
+# Install dependencies
+addons:
+  apt:
+    packages:
+      - doxygen
+      - doxygen-doc
+      - doxygen-latex
+      - doxygen-gui
+      - graphviz
 
 before_install:
     # Additional info about the build
@@ -41,26 +50,12 @@ install:
     # Activate the test environment
   - conda activate py37
     # Build and install package
-  - python setup.py develop --no-deps
+    #- python setup.py develop --no-deps
 
-  
-
-# Install dependencies
-addons:
-  apt:
-    packages:
-      - doxygen
-      - doxygen-doc
-      - doxygen-latex
-      - doxygen-gui
-      - graphviz
-
-# Build your code e.g. by calling make
-script:
   - pwd
   - mkdir _build3
   - cd _build3
-  - cmake -DBOOST_ROOT=$HOME/miniconda2/envs/py37 ../  
+  - cmake -DBOOST_ROOT=$HOME/miniconda3/envs/py37 ../  
   - make -j`nproc`
   #- make copy-libra-py
   - export PYTHONPATH=$(pwd)/src:$PYTHONPATH
@@ -68,7 +63,7 @@ script:
   - cd ../docs/SphinxDoc
   - make html
 
-
+  
 
 # Deploy using travis builtin GitHub Pages support
 deploy:
