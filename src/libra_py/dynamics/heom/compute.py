@@ -37,6 +37,7 @@ import os
 import sys
 import math
 import copy
+import time
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -91,7 +92,7 @@ def run_dynamics(dyn_params, Ham, rho_init):
                        "use_compression":0, "compression_level":[0,0,0],
                        "hdf5_output_level":0, "prefix":"out", 
                        "txt_output_level":0, "mem_output_level":3,
-
+                       "num_threads":1
                      }
 
     comn.check_input(params, default_params, critical_params)
@@ -163,6 +164,7 @@ def run_dynamics(dyn_params, Ham, rho_init):
     #============== Propagation =============
 
     unpack_rho(rho_unpacked, rho)
+    start = time.time()
     for step in range(params["nsteps"]):
 
         save.save_heom_data(_savers, step, print_freq, params, rho_unpacked)
@@ -174,6 +176,9 @@ def run_dynamics(dyn_params, Ham, rho_init):
             pack_rho(rho_unpacked, rho)
 
         rho = RK4(rho, params["dt"], compute_heom_derivatives, params)
+
+    end = time.time()
+    print(F"Calculations took {end - start} seconds")
 
 
     # For the mem_saver - store all the results into HDF5 format only at the end of the simulation    

@@ -534,6 +534,7 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
     
     */
 
+    int n_threads = 1;
     int i, n;
     int nquant = RHO.n_cols;
     int nn_tot = int(RHO.n_rows / nquant) - 1;
@@ -568,6 +569,8 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
       if(key=="map_nneg"){  map_nneg = extract< intList3 >(prms.values()[i]); }
       if(key=="zero"){  zero = extract< intList >(prms.values()[i]); }
 
+      if(key=="num_threads"){ n_threads = extract<int>(prms.values()[i]); }
+
     }
 
 
@@ -591,17 +594,13 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
         for(i = 0; i<nquant; i++){    sub_x_all[n][i] = n*nquant + i;  }
     }
 
-
-    #pragma omp parallel for
-    for(n=1; n<=nn_tot; n++){
-
-        //for(i = 0; i<nquant; i++){    sub_x[i] = n*nquant + i;  }
-        
-        drho_unpacked[n] = compute_deriv_n(n, rho_unpacked, Ham, eta, temperature, 
-          gamma_matsubara, c_matsubara,  nn, KK, zero, map_nplus,  map_nneg);
-
-        //push_submatrix(dRHO, drho, sub_x_all[n], sub_y );
-
+    #pragma omp parallel num_threads(n_threads)
+    {
+        #pragma omp for
+        for(n=1; n<=nn_tot; n++){
+            drho_unpacked[n] = compute_deriv_n(n, rho_unpacked, Ham, eta, temperature, 
+                gamma_matsubara, c_matsubara,  nn, KK, zero, map_nplus,  map_nneg);
+        }
     }
 
     for(n=1; n<=nn_tot; n++){
