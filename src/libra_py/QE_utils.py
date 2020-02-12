@@ -83,7 +83,7 @@ def split_orbitals_energies(C, E):
     """
 
     N_pw = C.num_of_rows
-    N_mo_adi = C.num_of_cols/2   # C.num_of_cols has to be even
+    N_mo_adi = int(C.num_of_cols/2)   # C.num_of_cols has to be even
 
     C_alp = CMATRIX(N_pw, N_mo_adi)
     C_bet = CMATRIX(N_pw, N_mo_adi)

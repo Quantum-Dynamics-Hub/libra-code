@@ -202,7 +202,7 @@ def run(params):
                             print( "Computing various properies of the spin-diabatic (non-relativistic) KS orbitals using a single K-point")
 
                         # Compute various properties of the spin-diabatic (non-relativistic) KS orbitals at a single K-point 
-                        compute_properties.compute_properties_dia_gamma(params, es_curr, es_next, curr_index)
+                        compute_properties.compute_properties_onekpt(params, es_curr, es_next, curr_index)
 
                     else: 
 
@@ -211,7 +211,10 @@ def run(params):
                             print( "Computing various properies of the spin-diabatic (non-relativistic) KS orbitals using multiple K-points")
                             print( "Warning: This capabilitiy is under development and not fully tested")
 
-                        compute_properties.compute_properties_general(params, es_curr, es_next, curr_index)
+                        print ("This capability is temporarily disabled. Please use only a single K-point for now")
+                        print ("Exiting now")
+                        sys.exit(0)
+                        #compute_properties.compute_properties_general(params, es_curr, es_next, curr_index)
            
                     if compute_Hprime == True:
 
@@ -237,7 +240,8 @@ def run(params):
                         print( "Computing various properies of the spin-adiabatic (relativistic) KS orbitals using a single K-point")
 
                     # Compute various properties of the spin-adiabatic (relativistic) KS orbitals at a single K-point              
-                    compute_properties.compute_properties_adi_gamma(params, es_curr, es_next, curr_index)
+                    compute_properties.compute_properties_onekpt(params, es_curr, es_next, curr_index)
+                    #compute_properties.compute_properties_adi_gamma(params, es_curr, es_next, curr_index)
 
                 else:
                     print( "Multiple k-points scheme with SOC is not yet implemented")
