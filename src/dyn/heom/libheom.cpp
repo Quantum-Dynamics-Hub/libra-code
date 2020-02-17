@@ -88,11 +88,23 @@ void export_heom_objects(){
   (vector<CMATRIX>& rho, double tolerance) = &filter;
   def("filter", expt_filter_v1);
 
+
+  vector<CMATRIX> (*expt_initialize_el_phonon_couplings_v1)
+  (int nquant) = &initialize_el_phonon_couplings;
+  def("initialize_el_phonon_couplings", expt_initialize_el_phonon_couplings_v1);
+
+  complex<double> (*expt_compute_matsubara_sum_v1)
+  (vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK) = &compute_matsubara_sum;
+  def("compute_matsubara_sum", expt_compute_matsubara_sum_v1);
+
   CMATRIX (*expt_compute_deriv_n_v1)
-  (int n, vector<CMATRIX>& rho, CMATRIX& Ham, double eta, double temperature,
+  (int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRIX>& projectors,
+   double eta, double temperature,
    vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara,
+   int do_truncate, int do_scale,
    vector< vector< vector<int> > >& nn, int KK, vector<int>& zero,
-   vector< vector< vector<int> > >& map_nplus, vector< vector< vector<int> > >& map_nneg) = &compute_deriv_n;
+   vector< vector< vector<int> > >& map_nplus, vector< vector< vector<int> > >& map_nneg        
+  ) = &compute_deriv_n;
   def("compute_deriv_n", expt_compute_deriv_n_v1);
 
 

@@ -358,15 +358,77 @@ vector<int> filter(vector<CMATRIX>& rho, double tolerance){
 }
 
 
+vector<CMATRIX> initialize_el_phonon_couplings(int nquant){
+/**
+  Compute the matrices  Q_m = |m><m| - the simplest type of the coupling of electrons to phonons
 
-CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, 
+*/
+
+  vector<CMATRIX> projectors(nquant+1, CMATRIX(nquant, nquant));
+
+  for(int m=1; m<=nquant; m++){
+
+    projectors[m] = 0.0;
+    projectors[m].set(m-1,m-1, complex<double>(1.0, 0.0));  // matrix |m><m|
+  }
+
+  return projectors;
+
+}
+
+
+complex<double> compute_matsubara_sum(vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK){
+/**
+  Compute the sum of the c/gamma terms over all Matsubara frequencies
+*/
+
+  complex<double> matsubara_sum(0.0, 0.0);
+  for(int k=0; k<=KK; k++){
+    matsubara_sum += c_matsubara[k]/gamma_matsubara[k];
+  }
+
+  return matsubara_sum;
+
+}
+
+
+CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRIX>& el_phon_coupl,
         double eta, double temperature,
         vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara,
+        int do_truncate, int do_scale,
         vector< vector< vector<int> > >& nn, int KK, vector<int>& zero,
-        vector< vector< vector<int> > >& map_nplus, vector< vector< vector<int> > >& map_nneg){
+        vector< vector< vector<int> > >& map_nplus, vector< vector< vector<int> > >& map_nneg        
+        ){
 /**
 
    Compute drho_n/dt = ...     !! Eq. 15, JCP 131, 094502 (2009)
+
+   Parameters:
+    n : the order of the auxiliary matrix
+    rho : density matrices (including the auxiliary ones) of the system
+    Ham : system's Hamiltonian 
+    projectors : the matrices that describe how each electronic phonon is coupled to various electronic states
+       in the simplest picture, when a phonon k is coupled to electronic state m, the matrix projectors[k] will 
+       contain 1.0 at the element (m,m) and zeroes everywhere else. You can of course define more general situations
+       when one phonon is coupled to many states (and perhaps to their coherences)
+    eta : reorganization energy [a.u.]
+    temperature : bath temperature [ K ] 
+    gamma_matsubara : Matsubara frequencies
+    c_matsubara : expansion coefficients of the autocorrelation function in the Matsubara terms
+    do_truncate : a flag to control the Ihizaki-Tanimura scheme for truncation -  JPSJ 74 3131, 2005
+      0 - don't truncate 
+      1 - do truncate 
+    do_scale : a flag to control the scaled HEOM approach from JCP 130, 084105 (2009)
+      0 - don't use scaling
+      1 - do use scaling
+    nn : the mapping of the variables
+    KK : the number of Matsubara terms
+    zero : mask to discard some of the matrices
+    map_nplus : mapping of the rho_n+ matrices
+    map_minus : mapping of the rho_n- matrices
+    
+    
+   
 
 */
 
@@ -385,6 +447,7 @@ CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham,
   vector< vector<int> > nvec_plus(nquant, vector<int>(KK, 0) );
   vector< vector<int> > nvec_neg(nquant, vector<int>(KK, 0) );
 
+  double scaling_factor = 1.0;
   complex<double> iota(0.0, 1.0);
   double kB = boltzmann/hartree;
  
@@ -392,83 +455,83 @@ CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham,
   m=n;
   nvec = index_int2vec(nn, m, nquant, KK);
 
+  //=============== Liouvillian =====================
   drho_n_dt = -iota * ( Ham * rho[n] - rho[n] * Ham ); 
 
 
   if(zero[n]==0){  // matrix at n is not filtered out
 
-      for(m=1; m<=nquant; m++){
-        for(k=0; k<=KK; k++){
-          drho_n_dt -= nvec[m][k] * gamma_matsubara[k] * rho[n];
-        }// for k
-      } // for m
-
-
-      complex<double> matsubara_sum(0.0, 0.0);
+    //============= Friction ======================
+    for(m=1; m<=nquant; m++){
       for(k=0; k<=KK; k++){
-        matsubara_sum += c_matsubara[k]/gamma_matsubara[k];
+        drho_n_dt -= nvec[m][k] * gamma_matsubara[k] * rho[n];
+      }// for k
+    } // for m
+
+       
+    if(do_truncate==1){
+      // Ihizaki-Tanimura scheme for truncation
+      // JPSJ 74 3131, 2005
+      complex<double> matsubara_sum = compute_matsubara_sum(gamma_matsubara, c_matsubara, KK);
+      double pref = eta * kB * temperature/gamma_matsubara[0] - std::real(matsubara_sum);
+      
+      for(m=1; m<=nquant; m++){         
+        commut = el_phon_coupl[m] * rho[n] - rho[n] * el_phon_coupl[m];
+        commut = el_phon_coupl[m] * commut - commut * el_phon_coupl[m];
+        drho_n_dt -= pref *commut;
       }
 
-      double pref = eta * kB * temperature/gamma_matsubara[0] - std::real(matsubara_sum);
+    }// if 
+  }// zero[n] ==0
 
-      for(m=1; m<=nquant; m++){
-
-        mat_tmp=0.0;
-        //mat_tmp.set(m,m, complex<double>(1.0, 0.0));  // matrix |m><m|
-        mat_tmp.set(m-1,m-1, complex<double>(1.0, 0.0));  // matrix |m><m|
-
-        commut = mat_tmp * rho[n] - rho[n] * mat_tmp;
-        commut = mat_tmp * commut - commut * mat_tmp;
-
-        drho_n_dt -= pref *commut;
-
-      } // for m
-  }// if 
+  
 
 
   for(m=1; m<=nquant; m++){
+    for(k=0; k<=KK; k++){
+      nplus = map_nplus[m][k][n];
 
-      mat_tmp=0.0;
-      //mat_tmp.set(m,m, complex<double>(1.0, 0.0));  // matrix |m><m|
-      mat_tmp.set(m-1,m-1, complex<double>(1.0, 0.0));  // matrix |m><m|
+      if(nplus > 0 && nplus <= nn_tot){
+        if(zero[nplus]==0){
 
-      mat_tmp2=0.0;
-
-      for(k=0; k<=KK; k++){
-
-        nplus = map_nplus[m][k][n];
-
-        if(nplus> 0 && nplus<=nn_tot){
-
-          if(zero[nplus]==0){
-            drho_n_dt -=  iota*( mat_tmp * rho[nplus] - rho[nplus] * mat_tmp) * sqrt((nvec[m][k]+1.0)*abs(c_matsubara[k]));
+          scaling_factor = 1.0;          
+          if(do_scale==1){
+            // Scaled HEOM approach from JCP 130, 084105 (2009)
+            scaling_factor = sqrt((nvec[m][k]+1.0)*abs(c_matsubara[k]));
           }
 
-        }// if 
-      }// for k
+          drho_n_dt -=  iota*( el_phon_coupl[m] * rho[nplus] - rho[nplus] * el_phon_coupl[m]) * scaling_factor;
+
+        }// zero[nplus] == 0
+      }// if 
+
+    }// for k
   } // for m
 
 
   for(m=1; m<=nquant; m++){
+    for(k=0; k<=KK; k++){
+      nminus = map_nneg[m][k][n];
 
-      mat_tmp=0.0;
-      //mat_tmp.set(m,m, complex<double>(1.0, 0.0));  // matrix |m><m|
-      mat_tmp.set(m-1,m-1, complex<double>(1.0, 0.0));  // matrix |m><m|
+      if(nminus > 0 && nminus <= nn_tot){
 
-      for(k=0; k<=KK; k++){
+        if(zero[nminus]==0){
 
-        nminus = map_nneg[m][k][n];
-        if(nminus>0 && nminus<=nn_tot){
+          term1 = c_matsubara[k] * el_phon_coupl[m] * rho[nminus];
+          term2 = std::conj(c_matsubara[k]) * rho[nminus] * el_phon_coupl[m];
 
-          if(zero[nminus]==0){
-            term1 = c_matsubara[k] * mat_tmp * rho[nminus];
-            term2 = std::conj(c_matsubara[k]) * rho[nminus] * mat_tmp;
 
-            drho_n_dt -= iota * (term1 - term2) * nvec[m][k] * sqrt(nvec[m][k]/std::real(c_matsubara[k]) );
+          scaling_factor = 1.0;
+          if(do_scale==1){
+            // Scaled HEOM approach from JCP 130, 084105 (2009)
+            scaling_factor =  sqrt(nvec[m][k]/abs(c_matsubara[k]));
           }
 
-        }// if 
-      }// for k 
+           drho_n_dt -= iota * (term1 - term2) * nvec[m][k] * scaling_factor;
+
+        }// if
+      }// if 
+    }// for k 
   }// for m
 
 
@@ -547,8 +610,13 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
 
     vector<double> gamma_matsubara;
     vector< complex<double> > c_matsubara;
+    int do_truncate = 1;
+    int do_scale = 1;
     intList3 nn, map_nplus, map_nneg;
     intList zero;
+
+    vector<CMATRIX> el_phon_couplings; 
+    int el_phon_couplings_status = 0; // whether we have read them
 
     
     std::string key;
@@ -563,6 +631,13 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
 
       if(key=="gamma_matsubara"){  gamma_matsubara = extract< doubleList >(prms.values()[i]); }
       if(key=="c_matsubara"){  c_matsubara = extract< complexList >(prms.values()[i]); }
+      if(key=="do_truncate"){  do_truncate = extract< int >(prms.values()[i]); }
+      if(key=="do_scale"){  do_scale = extract< int >(prms.values()[i]); }
+
+      if(key=="el_phon_couplings"){  
+        el_phon_couplings = extract< CMATRIXList >(prms.values()[i]); 
+        el_phon_couplings_status = 1;
+      }
 
       if(key=="nn"){  nn = extract< intList3 >(prms.values()[i]); }
       if(key=="map_nplus"){  map_nplus = extract< intList3 >(prms.values()[i]); }
@@ -574,7 +649,9 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
     }
 
 
-
+    if(el_phon_couplings_status==0){
+      el_phon_couplings = initialize_el_phonon_couplings(nquant);
+    }
 
     vector<int> sub_x(nquant, 0);
     vector<int> sub_y(nquant, 0);
@@ -598,8 +675,8 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
     {
         #pragma omp for
         for(n=1; n<=nn_tot; n++){
-            drho_unpacked[n] = compute_deriv_n(n, rho_unpacked, Ham, eta, temperature, 
-                gamma_matsubara, c_matsubara,  nn, KK, zero, map_nplus,  map_nneg);
+            drho_unpacked[n] = compute_deriv_n(n, rho_unpacked, Ham, el_phon_couplings, eta, temperature, 
+                gamma_matsubara, c_matsubara,  do_truncate, do_scale, nn, KK, zero, map_nplus,  map_nneg);
         }
     }
 
@@ -644,7 +721,7 @@ void setup_bath(bp::dict prms, vector<double>& gamma_matsubara, vector< complex<
   c_matsubara = vector< complex<double> >(KK+1, complex<double>(0.0, 0.0) );
   gamma_matsubara = vector<double>(KK+1, 0.0 );
 
-  gamma_matsubara[0] = gamma ;
+  gamma_matsubara[0] = gamma;
   c_matsubara[0] = 0.5*eta*gamma * ( 1.0/tan( 0.5 * gamma/kT )*one - iota );
 
   for(k=1; k<=KK; k++){
@@ -652,7 +729,7 @@ void setup_bath(bp::dict prms, vector<double>& gamma_matsubara, vector< complex<
     gamma_matsubara[k] = 2.0*k*M_PI*kT;
 
     double g = gamma_matsubara[k];
-    c_matsubara[k] = 2*eta*gamma*kT * g/(g*g - gamma*gamma);
+    c_matsubara[k] = 2*eta*kT * (gamma* g/(g*g - gamma*gamma));
   }
 
 

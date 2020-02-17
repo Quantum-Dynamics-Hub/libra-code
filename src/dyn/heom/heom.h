@@ -67,11 +67,18 @@ void compute_map(int nquant, int KK, int LL,
 
 vector<int> filter(vector<CMATRIX>& rho, double tolerance);
 
-CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, 
+
+vector<CMATRIX> initialize_el_phonon_couplings(int nquant);
+
+complex<double> compute_matsubara_sum(vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK);
+
+CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRIX>& projectors,
         double eta, double temperature,
         vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara,
+        int do_truncate, int do_scale,
         vector< vector< vector<int> > >& nn, int KK, vector<int>& zero,
-        vector< vector< vector<int> > >& map_nplus, vector< vector< vector<int> > >& map_nneg);
+        vector< vector< vector<int> > >& map_nplus, vector< vector< vector<int> > >& map_nneg        
+        );
 
 
 void unpack_rho(vector<CMATRIX>& rho_unpacked, CMATRIX& RHO);
