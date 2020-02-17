@@ -1938,7 +1938,7 @@ def read_wfc_grid(params):
 
         if orthogonalize==1:
             print( "Do internal orbital orthogonalization")
-            coeff_curr[0] = orthogonalize_orbitals(coeff_curr[0])
+            coeff_curr[0] = QE_utils.orthogonalize_orbitals(coeff_curr[0])
 
             id1 = CMATRIX(coeff_curr[0].num_of_cols, coeff_curr[0].num_of_cols)
             id1.identity()

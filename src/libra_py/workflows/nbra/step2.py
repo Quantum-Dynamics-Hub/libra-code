@@ -154,7 +154,7 @@ def run(params):
     os.system("mkdir %s" % wd)  
     while t<=stop_indx:
 
-        if verbosity>1:
+        if verbosity>0:
             print( ">>>>>>>>>>>>>>>>>>>>  t= ", t, " <<<<<<<<<<<<<<<<<<<<<")
 
             print( "stop_indx", stop_indx)
@@ -162,12 +162,12 @@ def run(params):
 
         dirname = ""
         if t==start_indx:
-           if verbosity>1:
+           if verbosity>0:
                print( "Starting first point in this batch")
            dirname0, dirname1 = "curr0", "curr1"
 
         if t>start_indx:
-           if verbosity>1:
+           if verbosity>0:
                print( "Continuing with other points in this batch")
            dirname0, dirname1 = "next0", "next1"
 
@@ -188,62 +188,88 @@ def run(params):
             es_curr, es_next = QE_methods.read_wfc_grid(params) 
 
             # Finally,  using the current and the next wavefunctions to compute the properties of interest
-            # non-relativistic, non-spin-polarized case
+
+            # For the non-relativistic and either spin or non-spin-polarized case
+
             if nac_method == 0 or nac_method == 1 or nac_method == 3:
+                if ( info0["nspin"]==1 and info0["nk"]==1 ) or ( info0["nspin"]==2 and info0["nk"] == 2) : # Non-SOC case
 
-                if info0["nspin"]==1 or info0["nspin"]==2:  # non SOC case
+                    # Only one k-point. For the spin-polarized case, the beta orbtials are as if they were computed using 2 K-points
+                    # (nk = 2). However, they are not. This is just the QE format for expressing alpha and beta orbitals at a single K-point 
+                    #if info0["nk"]==1 or info0["nk"] == 2:  
 
-                    if info0["nk"]==1 or info0["nk"] == 2: # Only one k-point
+                    if verbosity>0:
+                        print( "Computing various properies of the spin-diabatic (non-relativistic) KS orbitals using a single K-point")
 
-                        H_nosoc = compute_properties.compute_properties_dia_gamma(params, es_curr, es_next, curr_index)
+                    # Compute various properties of the spin-diabatic (non-relativistic) KS orbitals at a single K-point 
+                    compute_properties.compute_properties_onekpt(params, es_curr, es_next, curr_index)
 
-                    else: 
-                        compute_properties.compute_properties_general(params, es_curr, es_next, curr_index)
+                else: 
+
+                    # Compute various properies of the spin-diabatic (non-relativistic) KS orbitals using multiple K-point
+                    if verbosity>0:
+                        print( "Computing various properies of the spin-diabatic (non-relativistic) KS orbitals using multiple K-points")
+                        print( "Warning: This capabilitiy is under development and not fully tested")
+
+                    print ("This capability is temporarily disabled. Please use only a single K-point for now")
+                    print ("Exiting now")
+                    sys.exit(0)
+                    #compute_properties.compute_properties_general(params, es_curr, es_next, curr_index)
            
-                    if compute_Hprime == True:
-                        compute_hprime.compute_hprime_dia(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
-                        #compute_hprime.hprime_py(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
+                if compute_Hprime == True:
+
+                    # Compute the transition dipole moment along the nuclear trajectory
+                    if verbosity>0:
+                        print( "Computing the transition dipole moment along the nuclear trajectory")
+                        print( "Warning: This capabilitiy is under development and not fully tested")
+
+                    # C++ implementation
+                    compute_hprime.compute_hprime_dia(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
+
+                    # Python implementation
+                    #compute_hprime.hprime_py(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
                
 
+            # For the relativistic case
             if nac_method == 2 or nac_method == 3:
 
-                if info1["nk"]==1: # Only one k-point
-               
-                    H_soc = compute_properties.compute_properties_adi_gamma(params, es_curr, es_next, curr_index)
+                # Only one k-point
+                if info1["nk"]==1:
+
+                    if verbosity>0:
+                        print( "Computing various properies of the spin-adiabatic (relativistic) KS orbitals using a single K-point")
+
+                    # Compute various properties of the spin-adiabatic (relativistic) KS orbitals at a single K-point              
+                    compute_properties.compute_properties_onekpt(params, es_curr, es_next, curr_index)
+                    #compute_properties.compute_properties_adi_gamma(params, es_curr, es_next, curr_index)
 
                 else:
                     print( "Multiple k-points scheme with SOC is not yet implemented")
                     sys.exit(0)
 
             
-            # spin-polarized case
+            # Checking if spin-adiabtic and spin-diabatic cases were using the same sized P\plane wave basis
             if  nac_method == 3:
-                # check whether the adiabatic and diabatic basis have the same number of plane waves
+
+                print( "nac_method == 3: Entering check for whether the adiabatic and diabatic basis have the same number of plane waves")
+             
+                # Check whether the adiabatic and diabatic basis have the same number of plane waves
                 # the reason why I used the read_qe_wfc_info is because I will need the ngw 
                 # to check the consistency 
                 # But the read_qe_index does not read it, so in order to avoid the changes in the Libra code, 
                 # I use the read_qe_wfc_info.
+
                 info_wfc0 = QE_methods.read_qe_wfc_info("%s/curr0/x0.export/wfc.1" % wd,0)
                 info_wfc1 = QE_methods.read_qe_wfc_info("%s/curr1/x1.export/wfc.1" % wd,0)
 
                 if info_wfc0["ngw"] != info_wfc1["ngw"]:
-                    print( "Error: the number of plane waves if diabatic and adiabatic functions should be equal")
+                    print( "Error: The number of plane waves of diabatic and adiabatic functions should be equal")
                     sys.exit(0)
-
-
+                else:
+                    print( "Pass: The number of plane waves of diabatic and adiabatic functions are equal")
+ 
                 params1 = {"do_orth": 0, "root_directory": rd, "curr_index": curr_index, "print_overlaps": 1, "dt": dt}
                 compute_ovlps(coeff_curr0, coeff_next0, coeff_curr1, coeff_next1, e_curr0, e_next0, e_curr1, e_next1, params1)
-
-            """
-            if nac_method == 0 or nac_method == 1 or nac_method == 3:
-            
-                H_nosoc.real().show_matrix("%s/0_Ham_%d_re" % (rd, curr_index) )
-                H_nosoc.imag().show_matrix("%s/0_Ham_%d_im" % (rd, curr_index) )
-            
-            if nac_method == 2 or nac_method == 3:
-                H_soc.real().show_matrix("%s/0_Ham_soc_%d_re" % (rd, curr_index) )
-                H_soc.imag().show_matrix("%s/0_Ham_soc_%d_im" % (rd, curr_index) )
-            """
 
             #-----------------------------------------------------------------
 
@@ -256,7 +282,7 @@ def run(params):
                 os.system("rm -rf %s/curr1" % wd )
                 os.system("mv %s/next1 %s/curr1" % (wd, wd) )
             
-            if verbosity>1:
+            if verbosity>0:
                 print( "old files deleted, new have become old")
        
       
@@ -269,6 +295,10 @@ def run(params):
             os.system("cp %s/curr0/%s.%d.out %s/%s.%d.out" % (wd, params["prefix0"], t, rd, params["prefix0"], t))
 
             if pdos_flg == 1:
+                print ("Entering pdos_flag == 1: Outputting files necessary for computing pDOS calculations with projwfc.x")
+                print ("Warning: Crashes at this point may result from QE versioning. This flag is currently compatable with QE v6.2.1")
+                print ("Warning: This flag is tested only for non-relativisitic cases")
+
                 os.system("cp %s/curr0/x0.save/charge-density.dat %s/x0_charge-density_%i.dat" % (wd, rd, t))
                 os.system("cp %s/curr0/x0.save/wfcdw1.dat %s/x0_wfcdw1_%i.dat" % (wd, rd, t))
                 os.system("cp %s/curr0/x0.save/wfcup1.dat %s/x0_wfcup1_%i.dat" % (wd, rd, t))
@@ -289,11 +319,5 @@ def run(params):
             print( "End of step t=", t)
 
         t = t + 1
-
-
-
-
-
-
 
 
