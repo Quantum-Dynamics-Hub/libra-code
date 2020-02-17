@@ -190,44 +190,44 @@ def run(params):
             # Finally,  using the current and the next wavefunctions to compute the properties of interest
 
             # For the non-relativistic and either spin or non-spin-polarized case
-            if nac_method == 0 or nac_method == 1 or nac_method == 3:
 
-                if info0["nspin"]==1 or info0["nspin"]==2:  # non SOC case
+            if nac_method == 0 or nac_method == 1 or nac_method == 3:
+                if ( info0["nspin"]==1 and info0["nk"]==1 ) or ( info0["nspin"]==2 and info0["nk"] == 2) : # Non-SOC case
 
                     # Only one k-point. For the spin-polarized case, the beta orbtials are as if they were computed using 2 K-points
                     # (nk = 2). However, they are not. This is just the QE format for expressing alpha and beta orbitals at a single K-point 
-                    if info0["nk"]==1 or info0["nk"] == 2:  
+                    #if info0["nk"]==1 or info0["nk"] == 2:  
 
-                        if verbosity>0:
-                            print( "Computing various properies of the spin-diabatic (non-relativistic) KS orbitals using a single K-point")
+                    if verbosity>0:
+                        print( "Computing various properies of the spin-diabatic (non-relativistic) KS orbitals using a single K-point")
 
-                        # Compute various properties of the spin-diabatic (non-relativistic) KS orbitals at a single K-point 
-                        compute_properties.compute_properties_onekpt(params, es_curr, es_next, curr_index)
+                    # Compute various properties of the spin-diabatic (non-relativistic) KS orbitals at a single K-point 
+                    compute_properties.compute_properties_onekpt(params, es_curr, es_next, curr_index)
 
-                    else: 
+                else: 
 
-                        # Compute various properies of the spin-diabatic (non-relativistic) KS orbitals using multiple K-point
-                        if verbosity>0:
-                            print( "Computing various properies of the spin-diabatic (non-relativistic) KS orbitals using multiple K-points")
-                            print( "Warning: This capabilitiy is under development and not fully tested")
+                    # Compute various properies of the spin-diabatic (non-relativistic) KS orbitals using multiple K-point
+                    if verbosity>0:
+                        print( "Computing various properies of the spin-diabatic (non-relativistic) KS orbitals using multiple K-points")
+                        print( "Warning: This capabilitiy is under development and not fully tested")
 
-                        print ("This capability is temporarily disabled. Please use only a single K-point for now")
-                        print ("Exiting now")
-                        sys.exit(0)
-                        #compute_properties.compute_properties_general(params, es_curr, es_next, curr_index)
+                    print ("This capability is temporarily disabled. Please use only a single K-point for now")
+                    print ("Exiting now")
+                    sys.exit(0)
+                    #compute_properties.compute_properties_general(params, es_curr, es_next, curr_index)
            
-                    if compute_Hprime == True:
+                if compute_Hprime == True:
 
-                        # Compute the transition dipole moment along the nuclear trajectory
-                        if verbosity>0:
-                            print( "Computing the transition dipole moment along the nuclear trajectory")
-                            print( "Warning: This capabilitiy is under development and not fully tested")
+                    # Compute the transition dipole moment along the nuclear trajectory
+                    if verbosity>0:
+                        print( "Computing the transition dipole moment along the nuclear trajectory")
+                        print( "Warning: This capabilitiy is under development and not fully tested")
 
-                        # C++ implementation
-                        compute_hprime.compute_hprime_dia(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
+                    # C++ implementation
+                    compute_hprime.compute_hprime_dia(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
 
-                        # Python implementation
-                        #compute_hprime.hprime_py(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
+                    # Python implementation
+                    #compute_hprime.hprime_py(es_curr, info0, "%s/0_Hprime_%d" % (rd, curr_index) )
                
 
             # For the relativistic case

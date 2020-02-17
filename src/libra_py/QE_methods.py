@@ -1945,7 +1945,7 @@ def read_wfc_grid(params):
             if abs( (coeff_curr[0].H() * coeff_curr[0] - id1).max_elt() ) > 1e-5:
                 print( "Error\n")
                 sys.exit(0)
-      
+
 
         C_dia_curr, E_dia_curr = QE_utils.post_process(coeff_curr, e_curr, 0)
         res_curr["Coeff_dia"] = C_dia_curr
@@ -1973,7 +1973,6 @@ def read_wfc_grid(params):
         params_soc["nac_method"] = 2
         info_curr, e_curr, coeff_curr, grid_curr = read_all(params_soc)
 
-
         if orthogonalize==1:
             print( "Do internal orbital orthogonalization")
             coeff_curr[0] = QE_utils.orthogonalize_orbitals(coeff_curr[0])
@@ -1989,6 +1988,7 @@ def read_wfc_grid(params):
         res_curr["E_adi"] = E_adi_curr
         res_curr["grid"] = grid_curr
 
+       
         #====== Next electronic structure ===========
         params_soc["prefix"] = "next1/x1.export"
         params_soc["nac_method"] = 2
