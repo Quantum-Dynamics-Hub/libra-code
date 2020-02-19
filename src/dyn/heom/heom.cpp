@@ -26,6 +26,205 @@ namespace libheom{
 using namespace liblinalg;
 
 
+vector< vector<int> > gen_next_level(vector<int>& parent){
+    /**
+    parent = ( n10, n11, ... , n1K    ...     nM0, nM1, ... , nMK)
+
+    This function generates the vectors of integers our of a given vector
+    by incrementing every element of the original (parent) vector by 1
+ 
+    The result is the list of the resulting children vectors 
+
+    */
+
+    int d = parent.size();  // shall be M * (K+1)
+
+    vector< vector<int> > children;
+
+    for(int i=0;i<d; i++){
+        children.push_back( parent );
+        children[i][i] += 1;
+    }
+
+    return children;
+}
+
+
+vector< vector<int> > gen_next_level2(vector< vector<int> >& parents){
+    /**
+    This function is similar to gen_next_level, except it takes a list of
+    parent vectors of integers and generates the list of the children for 
+    all of the parent inputs.
+    */
+
+    vector< vector<int> > next_level;
+
+    int d = parents.size();
+    for(int i=0;i<d; i++){
+    
+        vector< vector<int> > children = gen_next_level(parents[i]);
+
+        int num_children = children.size();
+
+        for(int j=0;j<num_children; j++){
+            next_level.push_back(children[j]);
+        }
+    }
+
+    return next_level;
+}
+
+
+int is_equal(vector<int>& vec1, vector<int>& vec2){
+
+  int res = 1; 
+  int sz1 = vec1.size();
+  int sz2 = vec2.size();
+
+  if(sz1!=sz2){ res = 0; }
+  else{
+    for(int i=0; i<sz1; i++){
+      if(vec1[i] != vec2[i]){ res = 0; break; }
+    }
+  }
+  return res;
+}
+
+int is_included(vector<int>& vec1, vector<vector<int> >& vec){
+
+  int res = 0;
+  for(int i=0; i<vec.size(); i++){
+    if(is_equal(vec1, vec[i])){ res = 1; break; }
+  }
+  return res;
+}
+
+void gen_hierarchy(int d, int max_tier, int verbosity,
+                   vector< vector<int> >& all_vectors, 
+                   vector< vector<int> >& vec_plus, 
+                   vector< vector<int> >& vec_minus){
+    /**
+
+    d  - is the size of the simplex, in HEOM it will be taken as nquant * (KK+1)
+
+    max_tier - is the maximal tier of the vectors to be generated, the tier is
+    devined by the sum of the vector elements
+
+    all_vectors - a list of the d-dimensional vectors of ints 
+
+    vec_plus : vec_plus[n][k] - index of the vector for which k-th element is +1 of that of the n-th vector
+
+    vec_minus : vec_minus[n][k] - index of the vector for which k-th element is -1 of that of the n-th vector
+
+    The vec_minus and vec_plus contain -1 for the situation when there is no such a vector included in 
+    the current hierarchy structure
+ 
+    */
+
+    int i, j, k;
+
+ 
+    vector< vector<int> > all_coordinates; //  for each vector - the coordinates are (L, i)
+    vector<int> tier_nums; // the number of the nodes for the tier up to a given one
+
+    vector< vector<int> > parents(1, vector<int>(d, 0));
+
+    for(int tier=0; tier<=max_tier; tier++){
+
+        int iparent = 0;
+        int num_parents = parents.size();
+
+        for(i=0; i<num_parents; i++){
+            if( !is_included(parents[i], all_vectors) ){
+                all_vectors.push_back( parents[i] );
+                vector<int> coord(2,0);
+                coord[0] = tier;
+                coord[1] = iparent;
+                all_coordinates.push_back( coord );
+                iparent += 1;
+            }// not yet included
+        }// for i
+
+        tier_nums.push_back( all_vectors.size() ) ;
+
+        vector< vector<int> > new_parents = gen_next_level2(parents);
+        parents.resize(new_parents.size());
+        parents = new_parents;
+
+    }// for tier
+
+    //#==============================================
+
+
+    int num_nodes = all_vectors.size();
+    vec_plus = vector< vector<int> >(num_nodes, vector<int>(d, -1)); 
+    vec_minus = vector< vector<int> >(num_nodes, vector<int>(d, -1)); 
+
+
+    for(i=0; i<num_nodes; i++){
+        int L = all_coordinates[i][0];
+        int ipos = all_coordinates[i][1];
+
+        for(k=0; k<d; k++){
+            vector<int> np = all_vectors[i];
+            np[k] += 1;
+
+            int max_range = max_tier;
+            if(L<max_tier){
+                max_range = tier_nums[L+1];
+            }
+
+            for(j = tier_nums[L]; j < max_range; j++){
+                if(np == all_vectors[j]){
+                    vec_plus[i][k] = j;
+                }
+            }
+        }// for k
+
+        for(k=0; k<d; k++){
+            vector<int> nm = all_vectors[i];
+            nm[k] -= 1;
+
+            int min_range = 0;
+            if(L>=2){
+                min_range = tier_nums[L-2];
+            }
+            for(j=min_range; j<tier_nums[L-1]; j++){
+                if(nm == all_vectors[j]){
+                    vec_minus[i][k] = j;
+                }
+            }
+        }// for k
+    }// for i
+
+
+    if(verbosity>0){
+        cout<<"Number of nodes = "<<num_nodes<<endl;
+        cout<<"Tier nums: \n";
+        for(i=0; i<tier_nums.size(); i++){
+            cout<<"Tier "<<i<<" nums = "<<tier_nums[i]<<endl;
+        }
+    }
+
+    if(verbosity>1){
+        for(i=0; i<num_nodes; i++){
+
+            cout<<"index= "<<i<<" ";
+    
+            cout<<" vector=["; for(j=0;j<d;j++){ cout<<all_vectors[i][j]<<","; } cout<<"] ";
+
+            cout<<" coordinates=["<<all_coordinates[i][0]<<","<<all_coordinates[i][1]<<"] ";
+
+            cout<<" vec_plus=["; for(j=0;j<d;j++){ cout<<vec_plus[i][j]<<","; } cout<<"] ";
+
+            cout<<" vec_minus=["; for(j=0;j<d;j++){ cout<<vec_minus[i][j]<<","; } cout<<"] ";
+
+            cout<<"\n";
+        }
+    }
+
+}
+
 
 int compute_nn_tot(int nquant, int KK, int LL){
 /**
@@ -521,13 +720,13 @@ CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRI
           term2 = std::conj(c_matsubara[k]) * rho[nminus] * el_phon_coupl[m];
 
 
-          scaling_factor = 1.0;
+          scaling_factor = nvec[m][k];
           if(do_scale==1){
             // Scaled HEOM approach from JCP 130, 084105 (2009)
             scaling_factor =  sqrt(nvec[m][k]/abs(c_matsubara[k]));
-          }
+          } 
 
-           drho_n_dt -= iota * (term1 - term2) * nvec[m][k] * scaling_factor;
+           drho_n_dt -= iota * (term1 - term2) * scaling_factor;
 
         }// if
       }// if 
@@ -538,6 +737,179 @@ CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRI
   return drho_n_dt;
 
 }
+
+
+
+
+CMATRIX compute_deriv_n_new(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRIX>& el_phon_coupl,
+        double eta, double temperature,
+        vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara,
+        int do_truncate, int do_scale,
+        vector<int>& nonzero,
+        vector< vector<int> >& nvectors, 
+        vector< vector<int> >& vec_plus, vector< vector<int> >& vec_minus        
+        ){
+/**
+
+   Compute drho_n/dt = ...     !! Eq. 15, JCP 131, 094502 (2009)
+
+   Parameters:
+    n : the index of the ADOs
+    rho : density matrices (including the auxiliary ones) of the system
+    Ham : system's Hamiltonian 
+    projectors : the matrices that describe how each electronic phonon is coupled to various electronic states
+       in the simplest picture, when a phonon k is coupled to electronic state m, the matrix projectors[k] will 
+       contain 1.0 at the element (m,m) and zeroes everywhere else. You can of course define more general situations
+       when one phonon is coupled to many states (and perhaps to their coherences)
+    eta : reorganization energy [a.u.]
+    temperature : bath temperature [ K ] 
+    gamma_matsubara : Matsubara frequencies
+    c_matsubara : expansion coefficients of the autocorrelation function in the Matsubara terms
+    do_truncate : a flag to control the Ihizaki-Tanimura scheme for truncation -  JPSJ 74 3131, 2005
+      0 - don't truncate 
+      1 - do truncate 
+    do_scale : a flag to control the scaled HEOM approach from JCP 130, 084105 (2009)
+      0 - don't use scaling
+      1 - do use scaling
+
+    adm_list : the list of the indices of all non-zero auxiliary density matrices (ADMs)
+    nvectors : the multi-index vectors
+    vec_plus : mapping of the rho_n+ matrices
+    vec_minus : mapping of the rho_n- matrices
+
+ 
+    
+    
+   
+
+*/
+
+  int nn_tot = rho.size();
+  int nquant = rho[0].n_cols;
+
+  int KK = gamma_matsubara.size() - 1; // KK+1 is the number of Matsubara freqs.
+
+  int m,k,d,nplus,nminus;
+  CMATRIX drho_n_dt(nquant, nquant);
+  CMATRIX commut(nquant, nquant);
+  CMATRIX term1(nquant, nquant);
+  CMATRIX term2(nquant, nquant);
+  CMATRIX mat_tmp(nquant, nquant);
+  CMATRIX mat_tmp2(nquant, nquant);
+
+  vector< vector<int> > nvec(nquant, vector<int>(KK+1, 0) );
+  vector< vector<int> > nvec_plus(nquant, vector<int>(KK, 0) );
+  vector< vector<int> > nvec_neg(nquant, vector<int>(KK, 0) );
+
+  double scaling_factor = 1.0;
+  complex<double> iota(0.0, 1.0);
+  double kB = boltzmann/hartree;
+ 
+
+  //=============== Liouvillian =====================
+  drho_n_dt = -iota * ( Ham * rho[n] - rho[n] * Ham ); 
+
+
+  //============= Friction ======================
+  complex<double> pref; 
+
+  for(k=0; k<=KK; k++){
+
+    int sum_over_m = 0;
+    for(m=0; m<nquant; m++){
+      sum_over_m += nvectors[n][m*(KK+1) + k];
+    }
+
+    pref +=  sum_over_m * gamma_matsubara[k];
+  }// for k
+
+  drho_n_dt -=  pref * rho[n];
+
+     
+/*
+  if(do_truncate==1){
+    // Ihizaki-Tanimura scheme for truncation
+    // JPSJ 74 3131, 2005
+    complex<double> matsubara_sum = compute_matsubara_sum(gamma_matsubara, c_matsubara, KK);
+    double pref = eta * kB * temperature/gamma_matsubara[0] - std::real(matsubara_sum);
+    
+    for(m=1; m<=nquant; m++){         
+      commut = el_phon_coupl[m] * rho[n] - rho[n] * el_phon_coupl[m];
+      commut = el_phon_coupl[m] * commut - commut * el_phon_coupl[m];
+      drho_n_dt -= pref *commut;
+    }
+
+  }// if 
+*/
+
+  //===================== rho_n_plus terms ================
+
+  for(m=0; m<nquant; m++){
+
+    if(do_scale==1){
+
+      // Scaled HEOM approach from JCP 130, 084105 (2009)
+      // scaling_factor = sqrt((nvec[m][k]+1.0)*abs(c_matsubara[k]));
+
+    }
+ 
+    else{
+
+      CMATRIX sum_rho_over_k(nquant, nquant);
+
+      for(k=0; k<=KK; k++){
+        nplus = vec_plus[n][m*(KK+1) + k];
+
+        if(nplus!=-1 && nonzero[nplus]){
+          sum_rho_over_k  += rho[nplus];
+        }
+
+      }// for k
+
+      drho_n_dt -=  iota*( el_phon_coupl[m] * sum_rho_over_k - sum_rho_over_k * el_phon_coupl[m]);
+
+    }// else - no scaling
+
+  }// for m
+
+
+  //===================== rho_n_minus terms ================
+
+  for(m=0; m<nquant; m++){
+
+    if(do_scale==1){
+
+      // Scaled HEOM approach from JCP 130, 084105 (2009)
+      // scaling_factor =  sqrt(nvec[m][k]/abs(c_matsubara[k]));
+
+    }
+ 
+    else{
+
+      CMATRIX sum1_c_rho_over_k(nquant, nquant);
+      CMATRIX sum2_c_rho_over_k(nquant, nquant);
+
+      for(k=0; k<=KK; k++){
+        nminus = vec_minus[n][m*(KK+1) + k];
+
+        if(nminus!=-1 && nonzero[nminus]){
+          sum1_c_rho_over_k  += (c_matsubara[k] * double(nvectors[n][m*(KK+1) + k])) * rho[nminus];
+          sum2_c_rho_over_k  += (std::conj(c_matsubara[k]) * double(nvectors[n][m*(KK+1) + k])) * rho[nminus];
+        }
+
+      }// for k
+
+      drho_n_dt -=  iota*( el_phon_coupl[m] * sum1_c_rho_over_k - sum2_c_rho_over_k * el_phon_coupl[m]);
+
+    }// else - no scaling
+
+  }// for m
+
+
+  return drho_n_dt;
+
+}
+
 
 
 

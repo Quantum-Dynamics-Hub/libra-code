@@ -41,6 +41,16 @@ namespace libdyn{
 namespace libheom{
 
 ///=============== In the heom.cpp ====================
+vector< vector<int> > gen_next_level(vector<int>& parent);
+vector< vector<int> > gen_next_level2(vector< vector<int> >& parents);
+int is_equal(vector<int>& vec1, vector<int>& vec2);
+int is_included(vector<int>& vec1, vector<vector<int> >& vec);
+void gen_hierarchy(int d, int max_tier, int verbosity,
+                   vector< vector<int> >& all_vectors, 
+                   vector< vector<int> >& vec_plus, 
+                   vector< vector<int> >& vec_minus);
+
+
 
 int compute_nn_tot(int nquant, int KK, int LL);
 

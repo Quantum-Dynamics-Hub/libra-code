@@ -34,6 +34,34 @@ void export_heom_objects(){
 /** 
   \brief Exporter of libheom classes and functions
 */
+ 
+  vector< vector<int> > (*expt_gen_next_level_v1)
+  (vector<int>& parent) = &gen_next_level;
+  def("gen_next_level", expt_gen_next_level_v1);
+
+  vector< vector<int> > (*expt_gen_next_level2_v1)
+  (vector< vector<int> >& parents) = &gen_next_level2;
+  def("gen_next_level2", expt_gen_next_level2_v1);
+
+  int (*expt_is_equal_v1)
+  (vector<int>& vec1, vector<int>& vec2) = &is_equal;
+  def("is_equal", expt_is_equal_v1);
+
+  int (*expt_is_included_v1)
+  (vector<int>& vec1, vector<vector<int> >& vec) = is_included;
+  def("is_included", expt_is_included_v1);
+
+  void (*expt_gen_hierarchy_v1)
+  (int d, int max_tier, int verbosity,
+   vector< vector<int> >& all_vectors,  
+   vector< vector<int> >& vec_plus, 
+   vector< vector<int> >& vec_minus) = &gen_hierarchy;
+  def("gen_hierarchy", expt_gen_hierarchy_v1);
+
+
+
+
+
 
   int (*expt_compute_nn_tot_v1)(int nquant, int KK, int LL) = &compute_nn_tot;
   def("compute_nn_tot", expt_compute_nn_tot_v1);
