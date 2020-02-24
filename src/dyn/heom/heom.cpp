@@ -1282,8 +1282,13 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
     {
         #pragma omp for
         for(int n1=0; n1<nn_nonzero; n1++){
+            /*
             n = adm_list[n1];
             drho_unpacked[n] = compute_deriv_n_new(n, rho_unpacked, Ham, el_phon_couplings, eta, temperature, 
+                gamma_matsubara, c_matsubara, truncation_scheme, truncation_prefactor, do_scale, nonzero, nvec, nvec_plus, nvec_minus);
+            */
+
+            drho_unpacked[adm_list[n1]] = compute_deriv_n_new(adm_list[n1], rho_unpacked, Ham, el_phon_couplings, eta, temperature, 
                 gamma_matsubara, c_matsubara, truncation_scheme, truncation_prefactor, do_scale, nonzero, nvec, nvec_plus, nvec_minus);
         }
     }
