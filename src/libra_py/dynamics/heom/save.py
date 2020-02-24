@@ -142,7 +142,7 @@ def save_heom_data(_savers, step, print_freq, params, rho_unpacked):
         
     # Save properties
     if _savers["hdf5_saver"] != None:            
-        save_heom_hdf5(step, _savers["hdf5_saver"], params, rho_unpacked[1])
+        save_heom_hdf5(step, _savers["hdf5_saver"], params, rho_unpacked[0])
         
     if _savers["txt_saver"] != None:            
         pass
@@ -150,6 +150,6 @@ def save_heom_data(_savers, step, print_freq, params, rho_unpacked):
     if _savers["mem_saver"] != None:            
         prms = dict(params)
         prms["hdf5_output_level"] = prms["mem_output_level"]
-        save_heom_hdf5(step, _savers["mem_saver"], prms, rho_unpacked[1])
+        save_heom_hdf5(step, _savers["mem_saver"], prms, rho_unpacked[0])
 
     

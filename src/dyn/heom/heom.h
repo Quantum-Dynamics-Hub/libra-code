@@ -58,13 +58,10 @@ vector<int> allocate_1D(int sz1);
 vector< vector<int> > allocate_2D(int sz1, int sz2);
 vector< vector< vector<int> > > allocate_3D(int sz1, int sz2, int sz3);
 
-
 void compute_nn(int nquant, int KK, int LL, vector<int>& map_sum, 
                 vector< vector< vector<int> > >& nn);
-
 void compute_nn_sum_L(int nquant, int KK, int L, int& n_beg, int& n_end, 
                       vector< vector< vector<int> > >& nn);
-
 
 vector< vector<int> > index_int2vec(vector< vector< vector<int> > >& nn, int n, int nquant, int KK);
 int sum2D(vector< vector<int> >& nvec);
@@ -76,9 +73,11 @@ void compute_map(int nquant, int KK, int LL,
 
 
 vector<int> filter(vector<CMATRIX>& rho, double tolerance);
+vector<int> filter2(vector<CMATRIX>& rho, vector<int>& adm_list, double tolerance, int do_zeroing);
 
 
 vector<CMATRIX> initialize_el_phonon_couplings(int nquant);
+vector<CMATRIX> initialize_el_phonon_couplings2(int nquant);
 
 complex<double> compute_matsubara_sum(vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK);
 
@@ -90,12 +89,27 @@ CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRI
         vector< vector< vector<int> > >& map_nplus, vector< vector< vector<int> > >& map_nneg        
         );
 
+CMATRIX compute_deriv_n_new(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRIX>& el_phon_coupl,
+        double eta, double temperature,
+        vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara,
+        int truncation_scheme, complex<double> truncation_prefactor, int do_scale, vector<int>& nonzero,
+        vector< vector<int> >& nvectors, vector< vector<int> >& vec_plus, vector< vector<int> >& vec_minus        
+        );
+
 
 void unpack_rho(vector<CMATRIX>& rho_unpacked, CMATRIX& RHO);
+void unpack_mtx(vector<CMATRIX>& rho_unpacked, CMATRIX& RHO);
+
 void pack_rho(vector<CMATRIX>& rho_unpacked, CMATRIX& RHO);
+void pack_mtx(vector<CMATRIX>& rho_unpacked, CMATRIX& RHO);
+
+void scale_rho(vector<CMATRIX>& rho, vector<CMATRIX>& rho_scaled, bp::dict prms);
+void inv_scale_rho(vector<CMATRIX>& rho, vector<CMATRIX>& rho_scaled, bp::dict prms);
+
 CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms);
 
-void setup_bath(bp::dict params, vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara);
+void setup_bath(int KK, double eta, double gamma, double temperature,
+                vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara);
 
 
 

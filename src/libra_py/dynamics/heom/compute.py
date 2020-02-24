@@ -49,6 +49,104 @@ import util.libutil as comn
 import libra_py.units as units
 from . import save
 
+def aux_print_matrices(step, x):
+    print(F"= step = {step} =")
+    nmat = len(x)
+    nrows = x[0].num_of_rows
+    ncols = x[0].num_of_cols
+    for imat in range(nmat):
+        print(F"== imat = {imat} ==")                 
+        for row in range(nrows):
+            line = ""
+            for col in range(ncols):
+                line = line + F"{x[imat].get(row, col)}  "
+            print(line)
+
+
+def update_filters(rho_scaled, params, aux_memory):
+    """
+
+    This function takes the current ADMs hierarchy, computes the corresponding time-derivatives
+    (based on the input params["adm_list"]), then it updates the params["adm_list"] to indicate 
+    the equations for which the |dADM/dt (max element)| is larger than a given threshold, 
+    params["adm_deriv_tolerance"].
+
+    This function also runs over all ADMs to determine those which have |ADM (max element)| larger 
+    than the params["adm_tolerance"]. This will determine the update of the params["nonzero"] lists.
+    The ADMs that are determined to be "zero" (discarded until later) can also be set to 0.0, the 
+    option controlled by params["do_zeroing"].
+    In the end, the variable `rho` is updated with the correspondingly updated variables
+
+    aux_memory should have allocated:
+    - rho_unpacked_scaled
+    - drho_unpacked_scaled
+
+    """
+
+     
+    unpack_mtx(aux_memory["rho_unpacked_scaled"], rho_scaled)
+
+    drho_scaled = compute_heom_derivatives(rho_scaled, params)
+    unpack_mtx(aux_memory["drho_unpacked_scaled"], drho_scaled)
+
+    # Filtering of the derivatives - defines the active EOMs, params["adm_list"]
+    trash = filter2(aux_memory["drho_unpacked_scaled"], params["adm_list"], params["adm_deriv_tolerance"], 0)
+
+    # Filtering of the densities - defines the list of nonzero derivatives, params["nonzero"]
+    params["nonzero"] = filter2(aux_memory["rho_unpacked_scaled"], trash, params["adm_tolerance"], params["do_zeroing"])
+
+    pack_mtx(aux_memory["rho_unpacked_scaled"], rho_scaled)
+
+
+
+
+
+def transform_adm(rho, rho_scaled, aux_memory, params, direction):
+    """
+    aux_memory should have allocated:
+    - rho_unpacked
+    - rho_unpacked_scaled
+
+    direction:
+     1 :  raw -> scaled
+    -1 :  scaled -> raw
+
+    """
+
+    nn_tot = len(aux_memory["rho_unpacked"])
+
+    # Forward
+    if direction == 1:  
+
+        unpack_mtx(aux_memory["rho_unpacked"], rho)
+
+        if params["do_scale"]==0:
+            for n in range(nn_tot):
+                aux_memory["rho_unpacked_scaled"][n] = CMATRIX(aux_memory["rho_unpacked"][n])
+        
+        elif params["do_scale"]==1:
+            scale_rho(aux_memory["rho_unpacked"], aux_memory["rho_unpacked_scaled"], params)
+
+        pack_mtx(aux_memory["rho_unpacked_scaled"], rho_scaled)
+
+
+    # Backward
+    elif direction == -1:  
+
+        unpack_mtx(aux_memory["rho_unpacked_scaled"], rho_scaled)
+
+        # We want to save only actual ADMs so we need to convert the
+        # scaled one back to the unscaled
+        if params["do_scale"]==0:
+            for n in range(nn_tot):
+                aux_memory["rho_unpacked"][n] = CMATRIX(aux_memory["rho_unpacked_scaled"][n])
+
+        elif params["do_scale"]==1:
+            # rho_unpacked_scaled -> rho_unpacked
+            inv_scale_rho(aux_memory["rho_unpacked"], aux_memory["rho_unpacked_scaled"], params)
+
+        pack_mtx(aux_memory["rho_unpacked"], rho)
+        
 
 def run_dynamics(dyn_params, Ham, rho_init):
 
@@ -106,7 +204,7 @@ def run_dynamics(dyn_params, Ham, rho_init):
 
             =============== Algorithmic parameters ================
 
-            * **dyn_params["do_truncate"]** ( int )
+            * **dyn_params["truncation_scheme"]** ( int )
                 How to truncate the HEOM equations. Options are:
 
                 - 0 : no truncation
@@ -221,13 +319,14 @@ def run_dynamics(dyn_params, Ham, rho_init):
                        "gamma": 1.0/(0.1 * units.ps2au),
                        "eta": 2.0 * 50.0 * units.inv_cm2Ha,
                        "temperature": 300.0,
-                       "el_phon_couplings":initialize_el_phonon_couplings(Ham.num_of_cols),
+                       "el_phon_couplings":initialize_el_phonon_couplings2(Ham.num_of_cols),
 
                        "dt":0.1*units.fs2au, "nsteps":10, 
                        "verbosity":-1, "progress_frequency":0.1,
 
-                       "do_truncate":1, "do_scale":1,
-                       "tolerance":1e-6, "filter_after_steps":10,
+                       "truncation_scheme":1, "do_scale":0,
+                       "adm_tolerance":1e-6,  "adm_deriv_tolerance":1e-12,
+                       "filter_after_steps":1, "do_zeroing":0,
                        "num_threads":1,
 
                        "prefix":"out", 
@@ -252,31 +351,29 @@ def run_dynamics(dyn_params, Ham, rho_init):
 
     KK = dyn_params["KK"]    
     LL = dyn_params["LL"] 
-
-
-    nn_tot = compute_nn_tot(nquant, KK, LL)
     
-    nn = allocate_3D(nquant+1, KK+1, nn_tot+1)
-    map_nplus = allocate_3D(nquant+1, KK+1, nn_tot+1)
-    map_nneg = allocate_3D(nquant+1, KK+1, nn_tot+1)
-    zero = allocate_1D(nn_tot+1)
-    map_sum = allocate_1D(LL+1)
+    all_vectors = intList2()
+    vec_plus = intList2()
+    vec_minus = intList2()
+                    
+    gen_hierarchy(nquant * (KK+1), LL, params["verbosity"], all_vectors, vec_plus, vec_minus)
+    params.update( { "nvec":all_vectors, "nvec_plus":vec_plus, "nvec_minus":vec_minus } )
 
-    compute_nn(nquant, KK, LL, map_sum, nn);
-    compute_map(nquant, KK, LL, nn, map_nplus, map_nneg);
-
-    if params["verbosity"]>=0:
-        print(F"nn_tot = {nn_tot}")
+    nn_tot = len(all_vectors)
 
 
-    params.update( { "nn":nn, "zero":zero, "map_nplus":map_nplus, "map_nneg":map_nneg } )
+    all_indices = []
+    init_nonzero = []
+    for n in range(nn_tot):
+        all_indices.append(n)
+        init_nonzero.append(1)
 
 
     #============ Bath update =====================
     gamma_matsubara = doubleList()
     c_matsubara = complexList()
 
-    setup_bath(params, gamma_matsubara, c_matsubara)
+    setup_bath(KK, params["eta"], params["gamma"], params["temperature"], gamma_matsubara, c_matsubara)
     params.update({ "gamma_matsubara": gamma_matsubara, "c_matsubara":c_matsubara  } )
 
     if params["verbosity"]>=1:
@@ -285,19 +382,57 @@ def run_dynamics(dyn_params, Ham, rho_init):
 
     #============= Initialization ============
 
-    rho = CMATRIX((nn_tot+1)*nquant, nquant)  # all rho matrices stacked on top of each other
-    rho_unpacked = CMATRIXList()
+    rho = CMATRIX((nn_tot)*nquant, nquant)  # all rho matrices stacked on top of each other
+    rho_scaled = CMATRIX((nn_tot)*nquant, nquant)  # all rho matrices stacked on top of each other
+    #drho = CMATRIX((nn_tot)*nquant, nquant)  # all rho matrices stacked on top of each other
 
-    for n in range(nn_tot+1):
-        rho_unpacked.append( CMATRIX(nquant, nquant))
-
+    aux_memory = {"rho_unpacked" : CMATRIXList(),
+                  "rho_unpacked_scaled" : CMATRIXList(),
+                  "drho_unpacked" : CMATRIXList(), 
+                  "drho_unpacked_scaled" : CMATRIXList() 
+                 }
+    for n in range(nn_tot):
+        aux_memory["rho_unpacked"].append( CMATRIX(nquant, nquant))
+        aux_memory["rho_unpacked_scaled"].append( CMATRIX(nquant, nquant))
+        aux_memory["drho_unpacked"].append( CMATRIX(nquant, nquant))
+        aux_memory["drho_unpacked_scaled"].append( CMATRIX(nquant, nquant))
 
     # Initial conditions
-    x_ = Py2Cpp_int(list(range(nquant, 2*nquant))) 
+    x_ = Py2Cpp_int(list(range(nquant))) 
     y_ = Py2Cpp_int(list(range(nquant))) 
     push_submatrix(rho, rho_init, x_, y_)
 
+    #unpack_mtx(aux_memory["rho_unpacked"], rho)
 
+
+    #========== Scale working ADMs ====================
+    if params["verbosity"]>=2 and params["do_scale"]==1:
+        print("Scaling factors")
+        for n in range(nn_tot):
+            for m in range(nquant):
+                for k in range(KK+1):
+                    n_mk = all_vectors[n][m*(KK+1)+k]
+                    scl = 1.0/math.sqrt( FACTORIAL(n_mk) * FAST_POW(abs(c_matsubara[k]), n_mk))
+                    print(F" n={n} m={m} k={k}  scaling_factor={scl}")
+        
+    # raw -> scaled
+    transform_adm(rho, rho_scaled, aux_memory, params, 1)
+
+    #========== Filter scaled ADMs ======================    
+    params.update({ "nonzero": Py2Cpp_int(init_nonzero), "adm_list": Py2Cpp_int( all_indices ) } )
+    update_filters(rho_scaled, params, aux_memory)
+
+
+
+    if params["verbosity"]>=2:
+        print("nonzero = ", Cpp2Py(params["nonzero"]))
+        print("adm_list = ", Cpp2Py(params["adm_list"]))
+
+        if params["verbosity"]>=3:
+            print("ADMs")
+            aux_print_matrices(0, aux_memory["rho_unpacked"])
+            print("Scaled ADMs")
+            aux_print_matrices(0, aux_memory["rho_unpacked_scaled"])
 
 
     # Initialize savers
@@ -305,19 +440,47 @@ def run_dynamics(dyn_params, Ham, rho_init):
 
     #============== Propagation =============
 
-    unpack_rho(rho_unpacked, rho)
+
     start = time.time()
     for step in range(params["nsteps"]):
 
-        save.save_heom_data(_savers, step, print_freq, params, rho_unpacked)
+        #================ Saving and printout ===================
+        # scaled -> raw
+        transform_adm(rho, rho_scaled, aux_memory, params, -1)
+
+        # Save the variables
+        save.save_heom_data(_savers, step, print_freq, params, aux_memory["rho_unpacked"])
 
 
-        if step % params["filter_after_steps"] == 1:
-            unpack_rho(rho_unpacked, rho)
-            params["zero"] = filter(rho_unpacked, params["tolerance"]);
-            pack_rho(rho_unpacked, rho)
+        if step%print_freq==0:
+            print(F" step= {step}")
 
-        rho = RK4(rho, params["dt"], compute_heom_derivatives, params)
+            if params["verbosity"]>=3:
+                print("nonzero = ", Cpp2Py(params["nonzero"]))
+                print("adm_list = ", Cpp2Py(params["adm_list"]))
+
+            if params["verbosity"]>=4:
+                print("ADMs")
+                aux_print_matrices(0, aux_memory["rho_unpacked"])
+                print("Scaled ADMs")
+                aux_print_matrices(0, aux_memory["rho_unpacked_scaled"])
+
+
+
+        
+        #============== Update the list of active equations = Filtering  ============
+        if step % params["filter_after_steps"] == 0:
+
+            # To assess which equations to discard, lets estimate the time-derivatives of rho
+            # for all the matrices                        
+            params["adm_list"] = Py2Cpp_int( all_indices )
+
+            update_filters(rho_scaled, params, aux_memory)
+ 
+
+        #================= Propagation for one timestep ==================================       
+        rho_scaled = RK4(rho_scaled, params["dt"], compute_heom_derivatives, params)
+
 
     end = time.time()
     print(F"Calculations took {end - start} seconds")

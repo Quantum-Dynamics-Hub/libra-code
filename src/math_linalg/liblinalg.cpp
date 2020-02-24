@@ -184,6 +184,101 @@ void export_base_matrix(){
 }
 
 
+
+void export_IMATRIX(){
+
+  export_base_matrix< int >();
+
+  void (IMATRIX::*expt_max_col_elt_v1)(int, int&, int&) = &IMATRIX::max_col_elt;
+  boost::python::list (IMATRIX::*expt_max_col_elt_v2)(int) = &IMATRIX::max_col_elt;
+
+  void (IMATRIX::*expt_min_col_elt_v1)(int, int&, int&) = &IMATRIX::min_col_elt;
+  boost::python::list (IMATRIX::*expt_min_col_elt_v2)(int) = &IMATRIX::min_col_elt;
+
+  void (IMATRIX::*expt_max_row_elt_v1)(int, int&, int&) = &IMATRIX::max_row_elt;
+  boost::python::list (IMATRIX::*expt_max_row_elt_v2)(int) = &IMATRIX::max_row_elt;
+
+  void (IMATRIX::*expt_min_row_elt_v1)(int, int&, int&) = &IMATRIX::min_row_elt;
+  boost::python::list (IMATRIX::*expt_min_row_elt_v2)(int) = &IMATRIX::min_row_elt;
+
+  void (IMATRIX::*expt_set_v1)(int, int) = &IMATRIX::set;
+  void (IMATRIX::*expt_set_v2)(int, double) = &IMATRIX::set;
+  void (IMATRIX::*expt_set_v3)(int, int, int) = &IMATRIX::set;
+  void (IMATRIX::*expt_set_v4)(int, int, double) = &IMATRIX::set;
+
+
+  class_< IMATRIX, boost::python::bases<base_matrix< int > > >("IMATRIX",init<>())
+      .def(init<int,int>())
+      .def(init<const IMATRIX&>())
+//      .def(init<const base_matrix<complex<double> >&>())
+      .def("__copy__", &generic__copy__<IMATRIX>) 
+      .def("__deepcopy__", &generic__deepcopy__<IMATRIX>)
+
+      /// Setters and getters
+      .def("set", expt_set_v1)
+      .def("set", expt_set_v2)
+      .def("set", expt_set_v3)
+      .def("set", expt_set_v4)
+
+
+/*
+
+      /// Initializations
+//      .def("diag", &IMATRIX::diag)
+//      .def("identity", &IMATRIX::identity)
+      .def("load_identity", &IMATRIX::load_identity)
+
+      .def("Init",&IMATRIX::Init)
+      .def("InitSquareMatrix",&IMATRIX::InitSquareMatrix)
+      .def("Init_Unit_Matrix",&IMATRIX::Init_Unit_Matrix)
+      .def("Load_Matrix_From_File",&IMATRIX::Load_Matrix_From_File)
+
+
+      /// Returning matrix derivatives
+      .def("T", &IMATRIX::T)         // return a transposed matrix
+      .def("col", &IMATRIX::col)     // return given column of the matrix 
+      .def("row", &IMATRIX::row)     // return given row of the matrix 
+
+      /// Properties of the matrix
+      .def("max_elt", &IMATRIX::max_elt)
+      .def("FindMaxNondiagonalElement", &IMATRIX::FindMaxNondiagonalElement)
+      .def("max_nondiagonal", &IMATRIX::max_nondiagonal)
+      .def("max_col_elt", expt_max_col_elt_v1)
+      .def("max_col_elt", expt_max_col_elt_v2)
+      .def("min_col_elt", expt_min_col_elt_v1)
+      .def("min_col_elt", expt_min_col_elt_v2)
+      .def("max_row_elt", expt_max_row_elt_v1)
+      .def("max_row_elt", expt_max_row_elt_v2)
+      .def("min_row_elt", expt_min_row_elt_v1)
+      .def("min_row_elt", expt_min_row_elt_v2)
+
+
+       /// Type-specific (returning this datatype) operator overloads 
+      .def(self+self)
+      .def(self+int())
+      .def(self-self)
+      .def(self-int())
+      .def(self*self)
+      .def(self*int())
+      .def(int()*self)
+      .def(self/int())
+*/
+  ;
+
+  class_< IMATRIXList >("IMATRIXList")
+      .def(vector_indexing_suite< IMATRIXList >())
+  ;
+
+  class_< IMATRIXMap >("IMATRIXMap")
+      .def(vector_indexing_suite< IMATRIXMap >())
+  ;
+
+
+}
+
+
+
+
 void export_MATRIX(){
 
   // It is important to wrap the base class - or the derived class wrapping won't work
@@ -376,7 +471,13 @@ void export_CMATRIX(){
       .def(self*self)
       .def(self*int())
       .def(self*double())
-      .def(self*complex<double>())
+      .def(self*complex<double>())    
+/*
+      .def(MATRIX()*self)
+      .def(self*MATRIX())
+      .def(IMATRIX()*self)
+      .def(self*IMATRIX())
+*/
 
       .def(int()*self)
       .def(double()*self)
@@ -399,24 +500,6 @@ void export_CMATRIX(){
   class_< CMATRIXMap >("CMATRIXMap")
       .def(vector_indexing_suite< CMATRIXMap >())
   ;
-
-  /*
-  vector<int> (*expt_get_reordering_v1)(CMATRIX& X) = &get_reordering;
-  def("get_reordering", expt_get_reordering_v1);
-
-  vector<int> (*expt_compute_signature_v1)(CMATRIX& Ref, CMATRIX& X) = &compute_signature;
-  vector<int> (*expt_compute_signature_v2)(CMATRIX& X) = &compute_signature;
-  def("compute_signature", expt_compute_signature_v1);
-  def("compute_signature", expt_compute_signature_v2);
-
-
-  void (*expt_correct_phase_v1)(CMATRIX& Ref, CMATRIX& X) = &correct_phase;
-  void (*expt_correct_phase_v2)(CMATRIX& X) = &correct_phase;
-  def("correct_phase", expt_correct_phase_v1);
-  def("correct_phase", expt_correct_phase_v2);
-  */
-
-
 
 
 }
@@ -731,6 +814,7 @@ void export_linalg_objects(){
   ;
 
 
+  export_IMATRIX();
   export_MATRIX();
   export_CMATRIX();
 

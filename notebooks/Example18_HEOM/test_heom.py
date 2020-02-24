@@ -17,7 +17,6 @@ KK = 0
 nn_tot = compute_nn_tot(nquant, KK, LL)
 print(F"nn_tot = {nn_tot}")
 
-
 nn = allocate_3D(nquant+1, KK+1, nn_tot+1)
 map_nplus = allocate_3D(nquant+1, KK+1, nn_tot+1)
 map_nneg = allocate_3D(nquant+1, KK+1, nn_tot+1)

@@ -22,6 +22,7 @@
 #include <complex>
 #include "base_matrix.h"
 #include "MATRIX.h"
+#include "IMATRIX.h"
 
 /// liblibra 
 namespace liblibra{
@@ -61,8 +62,13 @@ public:
   ///< Create the complex-valued matrix from two tables: one for real, one for imaginary components
   CMATRIX(vector<vector<double> >& re_part,vector<vector<double> >& im_part); 
 
+  ///< Create the complex-valued matrix (with zero imaginary components) from an int-valued matrix
+  CMATRIX(IMATRIX& re_part);  
+  CMATRIX(const IMATRIX& re_part);  
+
   ///< Create the complex-valued matrix (with zero imaginary components) from a real-valued matrix
   CMATRIX(MATRIX& re_part);  
+  CMATRIX(const MATRIX& re_part);  
 
   ///< Create the complex-valued matrix from two real-valued matrices: one for real, one for imaginary components
   CMATRIX(MATRIX& re_part,MATRIX& im_part); 
@@ -195,6 +201,12 @@ public:
   friend CMATRIX operator*(int f, const CMATRIX& ob);
   friend CMATRIX operator*(double f, const CMATRIX& ob);
   friend CMATRIX operator*(complex<double> f, const CMATRIX& ob);
+
+//  friend CMATRIX operator*(const MATRIX& mtx1, const CMATRIX& mtx2);
+//  friend CMATRIX operator*(const CMATRIX& mtx1, const MATRIX& mtx2);
+//  friend CMATRIX operator*(const IMATRIX& mtx1, const CMATRIX& mtx2);
+//  friend CMATRIX operator*(const CMATRIX& mtx1, const IMATRIX& mtx2);
+
 
   void operator*=(complex<double> f);
   void operator/=(complex<double> f);

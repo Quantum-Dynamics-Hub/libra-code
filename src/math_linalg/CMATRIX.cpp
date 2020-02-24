@@ -57,6 +57,39 @@ CMATRIX::CMATRIX(vector<vector<double> >& re_part,vector<vector<double> >& im_pa
  
 }
 
+CMATRIX::CMATRIX(IMATRIX& re_part){
+
+  n_rows = re_part.n_rows;
+  n_cols = re_part.n_cols;
+  n_elts = n_rows * n_cols;
+
+  M = new complex<double>[n_elts];
+  int n = 0;
+  for(int i=0;i<n_rows;i++){ 
+    for(int j=0;j<n_cols;j++){
+      M[n] = complex<double>((double)re_part.get(i,j), 0.0); n++;
+    }
+  }
+
+}
+
+CMATRIX::CMATRIX(const IMATRIX& re_part){
+
+  n_rows = re_part.n_rows;
+  n_cols = re_part.n_cols;
+  n_elts = n_rows * n_cols;
+
+  M = new complex<double>[n_elts];
+  int n = 0;
+  for(int i=0;i<n_rows;i++){ 
+    for(int j=0;j<n_cols;j++){
+      M[n] = complex<double>((double)re_part.get(i,j), 0.0); n++;
+    }
+  }
+
+}
+
+
 CMATRIX::CMATRIX(MATRIX& re_part){
 
   n_rows = re_part.n_rows;
@@ -72,6 +105,26 @@ CMATRIX::CMATRIX(MATRIX& re_part){
   }
 
 }
+
+
+CMATRIX::CMATRIX(const MATRIX& re_part){
+
+  n_rows = re_part.n_rows;
+  n_cols = re_part.n_cols;
+  n_elts = n_rows * n_cols;
+
+  M = new complex<double>[n_elts];
+  int n = 0;
+  for(int i=0;i<n_rows;i++){ 
+    for(int j=0;j<n_cols;j++){
+      M[n] = complex<double>(re_part.get(i,j), 0.0); n++;
+    }
+  }
+
+}
+
+
+
 
 CMATRIX::CMATRIX(MATRIX& re_part,MATRIX& im_part){
 
@@ -491,6 +544,29 @@ CMATRIX operator*(complex<double> f, const CMATRIX& ob){
   return res;
 }
 
+
+/*
+CMATRIX operator*(const MATRIX& mtx1, const CMATRIX& mtx2){
+  CMATRIX res(mtx1); res = res * mtx2;
+  return res;
+}
+
+CMATRIX operator*(const CMATRIX& mtx1, const MATRIX& mtx2){  
+  CMATRIX res(mtx1); res = res * CMATRIX(mtx2);  
+  return res;
+}
+
+
+CMATRIX operator*(const IMATRIX& mtx1, const CMATRIX& mtx2){
+  CMATRIX res(mtx1); res = res * mtx2;
+  return res;
+}
+
+CMATRIX operator*(const CMATRIX& mtx1, const IMATRIX& mtx2){
+  CMATRIX res(mtx1); res = res * CMATRIX(mtx2);
+  return res;
+}
+*/
 
 void CMATRIX::operator*=(complex<double> f){ 
   for(int i=0; i<n_elts; i++){  M[i] *= f;  }

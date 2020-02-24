@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2019 Alexey V. Akimov
+* Copyright (C) 2019-2020 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 2 of
@@ -17,6 +17,7 @@
 
 #include "heom.h"
 #include "../../math_linalg/liblinalg.h"
+#include "../../math_specialfunctions/libspecialfunctions.h"
 #include "libheom.h"
 
 namespace liblibra{
@@ -24,6 +25,7 @@ namespace libdyn{
 namespace libheom{
 
 using namespace liblinalg;
+using namespace libspecialfunctions;
 
 
 vector< vector<int> > gen_next_level(vector<int>& parent){
@@ -556,6 +558,37 @@ vector<int> filter(vector<CMATRIX>& rho, double tolerance){
   return zero;
 }
 
+vector<int> filter2(vector<CMATRIX>& rho, vector<int>& adm_list, double tolerance, int do_zeroing){
+/**
+   Gives the list of indices for the density matrices which are assumed to
+   be non-zero, also returns the list of flags for whether a given ADM is non-zero
+
+   Shi, Chen, Nan, Xu, Yan, JCP 130, 084105 (2009)
+*/
+
+  int nn_tot = rho.size(); 
+  vector<int> nonzero(nn_tot, 0);  
+  adm_list.clear();
+
+  for(int n=0; n<nn_tot; n++){
+
+    if( abs(rho[n].max_elt() ) > tolerance ){
+      nonzero[n] = 1;
+      adm_list.push_back(n);
+    }
+    else{   
+      if(do_zeroing==1){
+        rho[n] = 0.0;  
+      }
+    }
+
+  }// for n
+
+  return nonzero;
+}
+
+
+
 
 vector<CMATRIX> initialize_el_phonon_couplings(int nquant){
 /**
@@ -574,6 +607,27 @@ vector<CMATRIX> initialize_el_phonon_couplings(int nquant){
   return projectors;
 
 }
+
+
+vector<CMATRIX> initialize_el_phonon_couplings2(int nquant){
+/**
+  Compute the matrices  Q_m = |m><m| - the simplest type of the coupling of electrons to phonons
+
+*/
+
+  vector<CMATRIX> projectors(nquant, CMATRIX(nquant, nquant));
+
+  for(int m=0; m<nquant; m++){
+
+    projectors[m] = 0.0;
+    projectors[m].set(m,m, complex<double>(1.0, 0.0));  // matrix |m><m|
+  }
+
+  return projectors;
+
+}
+
+
 
 
 complex<double> compute_matsubara_sum(vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK){
@@ -742,12 +796,10 @@ CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRI
 
 
 CMATRIX compute_deriv_n_new(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRIX>& el_phon_coupl,
-        double eta, double temperature,
+        double eta, double temperature, 
         vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara,
-        int do_truncate, int do_scale,
-        vector<int>& nonzero,
-        vector< vector<int> >& nvectors, 
-        vector< vector<int> >& vec_plus, vector< vector<int> >& vec_minus        
+        int truncation_scheme, complex<double> truncation_prefactor, int do_scale, vector<int>& nonzero,
+        vector< vector<int> >& nvectors, vector< vector<int> >& vec_plus, vector< vector<int> >& vec_minus        
         ){
 /**
 
@@ -777,11 +829,7 @@ CMATRIX compute_deriv_n_new(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CM
     vec_plus : mapping of the rho_n+ matrices
     vec_minus : mapping of the rho_n- matrices
 
- 
-    
-    
-   
-
+  
 */
 
   int nn_tot = rho.size();
@@ -797,78 +845,81 @@ CMATRIX compute_deriv_n_new(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CM
   CMATRIX mat_tmp(nquant, nquant);
   CMATRIX mat_tmp2(nquant, nquant);
 
-  vector< vector<int> > nvec(nquant, vector<int>(KK+1, 0) );
-  vector< vector<int> > nvec_plus(nquant, vector<int>(KK, 0) );
-  vector< vector<int> > nvec_neg(nquant, vector<int>(KK, 0) );
+  CMATRIX sum_rho_over_k(nquant, nquant);
+  CMATRIX sum1_c_rho_over_k(nquant, nquant);
+  CMATRIX sum2_c_rho_over_k(nquant, nquant);
 
   double scaling_factor = 1.0;
   complex<double> iota(0.0, 1.0);
   double kB = boltzmann/hartree;
  
 
-  //=============== Liouvillian =====================
-  drho_n_dt = -iota * ( Ham * rho[n] - rho[n] * Ham ); 
+  if(nonzero[n]==1){
+    //=============== Liouvillian =====================
+    drho_n_dt = -iota * ( Ham * rho[n] - rho[n] * Ham ); 
 
 
-  //============= Friction ======================
-  complex<double> pref; 
+    //============= Friction ======================
+    complex<double> pref; 
 
-  for(k=0; k<=KK; k++){
+    for(k=0; k<=KK; k++){
+      int sum_over_m = 0;
+      for(m=0; m<nquant; m++){  sum_over_m += nvectors[n][m*(KK+1) + k];  }
+      pref +=  sum_over_m * gamma_matsubara[k];
+    }// for k
+    drho_n_dt -=  pref * rho[n];
 
-    int sum_over_m = 0;
-    for(m=0; m<nquant; m++){
-      sum_over_m += nvectors[n][m*(KK+1) + k];
-    }
 
-    pref +=  sum_over_m * gamma_matsubara[k];
-  }// for k
+    //============= Truncation ======================     
+    if(truncation_scheme==1 || truncation_scheme==2 || 
+       truncation_scheme==3 || truncation_scheme==4){
+      // All the following options take the same functional form, except for 
+      // the prefactor is computed differently
+      // 1 - according to Schulten, with real part of Matsubara terms
+      // 2 - according to Schulten, but with full Matsubara terms
+      // 3 - according to Shi, with real part of Matsubara terms
+      // 4 - according to Shi, but with full Matsubara terms
 
-  drho_n_dt -=  pref * rho[n];
+      // Ihizaki-Tanimura scheme for truncation
+      // JPSJ 74 3131, 2005
+      //complex<double> pref(eta * kB * temperature/gamma_matsubara[0], 0.0);
 
-     
-/*
-  if(do_truncate==1){
-    // Ihizaki-Tanimura scheme for truncation
-    // JPSJ 74 3131, 2005
-    complex<double> matsubara_sum = compute_matsubara_sum(gamma_matsubara, c_matsubara, KK);
-    double pref = eta * kB * temperature/gamma_matsubara[0] - std::real(matsubara_sum);
-    
-    for(m=1; m<=nquant; m++){         
-      commut = el_phon_coupl[m] * rho[n] - rho[n] * el_phon_coupl[m];
-      commut = el_phon_coupl[m] * commut - commut * el_phon_coupl[m];
-      drho_n_dt -= pref *commut;
-    }
+      // Taking the real part in the line below is really important! otherwise, the result
+      // is quite erratic
+      //pref -= std::real( compute_matsubara_sum(gamma_matsubara, c_matsubara, KK) );
+      
+      for(m=0; m<nquant; m++){         
+        commut = el_phon_coupl[m] * rho[n] - rho[n] * el_phon_coupl[m];
+        commut = el_phon_coupl[m] * commut - commut * el_phon_coupl[m];
+        drho_n_dt -= truncation_prefactor *commut;
+      }
+    }// if 
 
-  }// if 
-*/
+  }// not filtered out
+
 
   //===================== rho_n_plus terms ================
 
   for(m=0; m<nquant; m++){
 
-    if(do_scale==1){
+    sum_rho_over_k = 0.0;
+    for(k=0; k<=KK; k++){
 
-      // Scaled HEOM approach from JCP 130, 084105 (2009)
-      // scaling_factor = sqrt((nvec[m][k]+1.0)*abs(c_matsubara[k]));
+      nplus = vec_plus[n][m*(KK+1) + k];
+      if(nplus!=-1){ 
+        if(nonzero[nplus]==1){
 
-    }
- 
-    else{
+          scaling_factor = 1.0;
+          if(do_scale==1){ // Scaled HEOM approach from JCP 130, 084105 (2009)
+            scaling_factor = sqrt((nvectors[nplus][m*(KK+1) + k] + 1.0 )*fabs(c_matsubara[k]));
+          } 
 
-      CMATRIX sum_rho_over_k(nquant, nquant);
+          sum_rho_over_k  += scaling_factor * rho[nplus];  
 
-      for(k=0; k<=KK; k++){
-        nplus = vec_plus[n][m*(KK+1) + k];
-
-        if(nplus!=-1 && nonzero[nplus]){
-          sum_rho_over_k  += rho[nplus];
-        }
-
-      }// for k
-
-      drho_n_dt -=  iota*( el_phon_coupl[m] * sum_rho_over_k - sum_rho_over_k * el_phon_coupl[m]);
-
-    }// else - no scaling
+        }// not filtered out
+      }// a valid entry 
+    }// for k
+    drho_n_dt -=  iota*( el_phon_coupl[m] * sum_rho_over_k - sum_rho_over_k * el_phon_coupl[m]);
 
   }// for m
 
@@ -876,32 +927,33 @@ CMATRIX compute_deriv_n_new(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CM
   //===================== rho_n_minus terms ================
 
   for(m=0; m<nquant; m++){
+    sum1_c_rho_over_k = 0.0;  
+    sum2_c_rho_over_k = 0.0;
 
-    if(do_scale==1){
+    for(k=0; k<=KK; k++){
+      nminus = vec_minus[n][m*(KK+1) + k];
 
-      // Scaled HEOM approach from JCP 130, 084105 (2009)
-      // scaling_factor =  sqrt(nvec[m][k]/abs(c_matsubara[k]));
+      if(nminus!=-1){
+        if(nonzero[nminus]==1){
 
-    }
- 
-    else{
+          scaling_factor = double(nvectors[n][m*(KK+1) + k]);
+          if(do_scale==1){ // Scaled HEOM approach from JCP 130, 084105 (2009)
 
-      CMATRIX sum1_c_rho_over_k(nquant, nquant);
-      CMATRIX sum2_c_rho_over_k(nquant, nquant);
+            double denom = fabs(c_matsubara[k]);
+            if(denom > 1e-50){
+              scaling_factor = sqrt( nvectors[nminus][m*(KK+1) + k] / denom );
+            }
+            else{  scaling_factor = 0.0; }
 
-      for(k=0; k<=KK; k++){
-        nminus = vec_minus[n][m*(KK+1) + k];
+          } 
 
-        if(nminus!=-1 && nonzero[nminus]){
-          sum1_c_rho_over_k  += (c_matsubara[k] * double(nvectors[n][m*(KK+1) + k])) * rho[nminus];
-          sum2_c_rho_over_k  += (std::conj(c_matsubara[k]) * double(nvectors[n][m*(KK+1) + k])) * rho[nminus];
-        }
+          sum1_c_rho_over_k  += scaling_factor * c_matsubara[k] * rho[nminus];
+          sum2_c_rho_over_k  += scaling_factor * std::conj(c_matsubara[k]) * rho[nminus];
+        }// not filtered out
+      }// a valid entry
 
-      }// for k
-
-      drho_n_dt -=  iota*( el_phon_coupl[m] * sum1_c_rho_over_k - sum2_c_rho_over_k * el_phon_coupl[m]);
-
-    }// else - no scaling
+    }// for k
+    drho_n_dt -=  iota*( el_phon_coupl[m] * sum1_c_rho_over_k - sum2_c_rho_over_k * el_phon_coupl[m]);
 
   }// for m
 
@@ -909,7 +961,6 @@ CMATRIX compute_deriv_n_new(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CM
   return drho_n_dt;
 
 }
-
 
 
 
@@ -938,6 +989,33 @@ void unpack_rho(vector<CMATRIX>& rho_unpacked, CMATRIX& RHO){
 
 }
 
+
+void unpack_mtx(vector<CMATRIX>& rho_unpacked, CMATRIX& RHO){
+/**
+    RHO = CMATRIX(num_adm * nquant , nquant)
+*/
+
+    int i, n;
+    int nquant = RHO.n_cols;
+    int num_adm = int(RHO.n_rows / nquant);
+
+    if(rho_unpacked.size() != num_adm ) {   cout<<"ERROR in unpack_rho: \n"; exit(0); }
+    
+    vector<int> sub_x(nquant, 0);
+    vector<int> sub_y(nquant, 0);
+    for(i = 0; i < nquant; i++){    sub_y[i] = i;  }
+
+    
+    for(n = 0; n < num_adm; n++){
+
+      for(i = 0; i<nquant; i++){    sub_x[i] = n*nquant + i;  }
+      pop_submatrix(RHO, rho_unpacked[n], sub_x, sub_y );
+        
+    }
+
+}
+
+
 void pack_rho(vector<CMATRIX>& rho_unpacked, CMATRIX& RHO){
 
     int i, n;
@@ -961,31 +1039,149 @@ void pack_rho(vector<CMATRIX>& rho_unpacked, CMATRIX& RHO){
 }
 
 
+
+void pack_mtx(vector<CMATRIX>& rho_unpacked, CMATRIX& RHO){
+
+    int i, n;
+    int nquant = RHO.n_cols;
+    int num_adm = int(RHO.n_rows / nquant);
+
+    if(rho_unpacked.size() != num_adm) {   cout<<"ERROR in pack_rho: \n"; exit(0); }
+    
+
+    vector<int> sub_x(nquant, 0);
+    vector<int> sub_y(nquant, 0);
+    for(i = 0; i<nquant; i++){    sub_y[i] = i;  }
+
+    
+    for(n = 0; n < num_adm; n++){
+
+      for(i = 0; i < nquant; i++){    sub_x[i] = n*nquant + i;  }
+      push_submatrix(RHO, rho_unpacked[n], sub_x, sub_y );
+        
+    }
+}
+
+
+void scale_rho(vector<CMATRIX>& rho, vector<CMATRIX>& rho_scaled, bp::dict prms){
+
+
+    vector< complex<double> > c_matsubara;
+    intList2 nvec;
+
+    int i, n,m,k;
+    std::string key;
+
+    for(i=0;i<len(prms.values());i++){
+
+      key = extract<std::string>(prms.keys()[i]);
+
+      if(key=="nvec"){  nvec = extract< intList2 >(prms.values()[i]); }
+      if(key=="c_matsubara"){  c_matsubara = extract< complexList >(prms.values()[i]); }
+
+    }
+
+    int nn_tot = rho.size();
+    int nquant = rho[0].n_cols;
+    int KK = c_matsubara.size() - 1; 
+
+
+    for(n=0; n<nn_tot; n++){
+
+      double scaling_factor = 1.0;
+
+      for(m=0; m<nquant; m++){
+        for(k=0; k<=KK; k++){
+
+          int nn = nvec[n][m*(KK+1) + k];
+          scaling_factor *= FACTORIAL( nn );
+          scaling_factor *= FAST_POW( fabs(c_matsubara[k]), nn);          
+        }// for k
+      }// for m
+
+      rho_scaled[n] = rho[n] * sqrt(1.0/scaling_factor);
+   
+    }// for n
+
+}
+
+
+void inv_scale_rho(vector<CMATRIX>& rho, vector<CMATRIX>& rho_scaled, bp::dict prms){
+
+
+    vector< complex<double> > c_matsubara;
+    intList2 nvec;
+
+    int i, n,m,k;
+    std::string key;
+
+    for(i=0;i<len(prms.values());i++){
+
+      key = extract<std::string>(prms.keys()[i]);
+
+      if(key=="nvec"){  nvec = extract< intList2 >(prms.values()[i]); }
+      if(key=="c_matsubara"){  c_matsubara = extract< complexList >(prms.values()[i]); }
+
+    }
+
+    int nn_tot = rho.size();
+    int nquant = rho[0].n_cols;
+    int KK = c_matsubara.size() - 1; 
+
+
+    for(n=0; n<nn_tot; n++){
+
+      double scaling_factor = 1.0;
+
+      for(m=0; m<nquant; m++){
+        for(k=0; k<=KK; k++){
+
+          int nn = nvec[n][m*(KK+1) + k];
+          scaling_factor *= FACTORIAL( nn );
+          scaling_factor *= FAST_POW( fabs(c_matsubara[k]), nn);          
+        }// for k
+      }// for m
+
+      rho[n] = rho_scaled[n] * sqrt(scaling_factor);
+   
+    }// for n
+
+}
+
+
+
+
 CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
     /**
 
-    RHO - CMATRIX((nn_tot+1)*nquant, nquant) - all the density matrices stacked together in a super-column
+    RHO - CMATRIX((nn_tot)*nquant, nquant) - all the density matrices stacked together in a super-column
     prms - Python dict - control parameters
     
     */
 
     int n_threads = 1;
+    int truncation_scheme = 1;
+    int do_scale = 1;
+
+
     int i, n;
     int nquant = RHO.n_cols;
-    int nn_tot = int(RHO.n_rows / nquant) - 1;
+    int nn_tot = int(RHO.n_rows / nquant);
 
 
     CMATRIX Ham(nquant, nquant);
     double eta = 0.0;
+    double gamma = 0.0;
     double temperature = 300.0;
-    int KK;
+    int KK; KK = 0;
 
     vector<double> gamma_matsubara;
     vector< complex<double> > c_matsubara;
-    int do_truncate = 1;
-    int do_scale = 1;
-    intList3 nn, map_nplus, map_nneg;
-    intList zero;
+    intList2 nvec, nvec_plus, nvec_minus;
+    intList zero, nonzero, adm_list;
+
+    adm_list = vector<int>(nn_tot, 0);
+    for(i=0;i<nn_tot; i++){ adm_list[i] = i; }
 
     vector<CMATRIX> el_phon_couplings; 
     int el_phon_couplings_status = 0; // whether we have read them
@@ -996,96 +1192,123 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
 
       key = extract<std::string>(prms.keys()[i]);
 
+      if(key=="KK"){  KK = extract< int >(prms.values()[i]); }
       if(key=="Ham"){  Ham = extract<CMATRIX>(prms.values()[i]); }
       if(key=="eta"){  eta = extract<double>(prms.values()[i]); }
+      if(key=="gamma"){  gamma = extract<double>(prms.values()[i]); }
       if(key=="temperature"){  temperature = extract<double>(prms.values()[i]); }
-      if(key=="KK"){  KK = extract< int >(prms.values()[i]); }
-
       if(key=="gamma_matsubara"){  gamma_matsubara = extract< doubleList >(prms.values()[i]); }
       if(key=="c_matsubara"){  c_matsubara = extract< complexList >(prms.values()[i]); }
-      if(key=="do_truncate"){  do_truncate = extract< int >(prms.values()[i]); }
+      if(key=="truncation_scheme"){  truncation_scheme = extract< int >(prms.values()[i]); }
       if(key=="do_scale"){  do_scale = extract< int >(prms.values()[i]); }
-
       if(key=="el_phon_couplings"){  
         el_phon_couplings = extract< CMATRIXList >(prms.values()[i]); 
         el_phon_couplings_status = 1;
       }
-
-      if(key=="nn"){  nn = extract< intList3 >(prms.values()[i]); }
-      if(key=="map_nplus"){  map_nplus = extract< intList3 >(prms.values()[i]); }
-      if(key=="map_nneg"){  map_nneg = extract< intList3 >(prms.values()[i]); }
-      if(key=="zero"){  zero = extract< intList >(prms.values()[i]); }
+      if(key=="nvec"){  nvec = extract< intList2 >(prms.values()[i]); }
+      if(key=="nvec_plus"){  nvec_plus = extract< intList2 >(prms.values()[i]); }
+      if(key=="nvec_minus"){ nvec_minus = extract< intList2 >(prms.values()[i]); }
+      if(key=="nonzero"){  nonzero = extract< intList >(prms.values()[i]); }
+      if(key=="adm_list"){  adm_list = extract< intList >(prms.values()[i]); }
 
       if(key=="num_threads"){ n_threads = extract<int>(prms.values()[i]); }
 
     }
 
-
     if(el_phon_couplings_status==0){
-      el_phon_couplings = initialize_el_phonon_couplings(nquant);
+      el_phon_couplings = initialize_el_phonon_couplings2(nquant);
     }
 
-    vector<int> sub_x(nquant, 0);
-    vector<int> sub_y(nquant, 0);
+    complex<double> truncation_prefactor(0.0, 0.0);
+    complex<double> iota(0.0, 1.0);
+    double kB = boltzmann/hartree;
 
-    for(i = 0; i<nquant; i++){    sub_y[i] = i;  }
+    if(truncation_scheme==1 || truncation_scheme==2){
+      // Ihizaki-Tanimura scheme for truncation
+      // JPSJ 74 3131, 2005
 
-    CMATRIX dRHO((nn_tot+1)*nquant, nquant);
+      truncation_prefactor = complex<double>(eta * kB * temperature/gamma_matsubara[0], 0.0);
+
+      if(truncation_scheme==1){
+        // 1 - according to Schulten, with real part of Matsubara terms
+        // Taking the real part in the line below is really important! otherwise, the result
+        // is quite erratic
+        truncation_prefactor -= std::real( compute_matsubara_sum(gamma_matsubara, c_matsubara, KK) );
+      }
+
+      if(truncation_scheme==2){
+        // 2 - according to Schulten, but with full Matsubara terms
+        // But this is how it is supposed to be
+        truncation_prefactor -= compute_matsubara_sum(gamma_matsubara, c_matsubara, KK);
+      }
+    }
+
+    if(truncation_scheme==3 || truncation_scheme==4){
+      // 3 - according to Shi, with real part of Matsubara terms
+      // 4 - according to Shi, but with full Matsubara terms
+
+      // This is a bit unoptimized approach to call the bath setups here
+      int more = 200;
+      int KK_ext = KK + more;
+      vector<double> gamma_matsubara_ext;
+      vector< complex<double> > c_matsubara_ext;
+      setup_bath(KK_ext, eta, gamma, temperature, gamma_matsubara_ext, c_matsubara_ext);
+
+      complex<double> sum_KK; sum_KK = compute_matsubara_sum(gamma_matsubara, c_matsubara, KK);
+      complex<double> sum_KK_ext; sum_KK_ext = compute_matsubara_sum(gamma_matsubara_ext, c_matsubara_ext, KK+more);
+
+      if(truncation_scheme==3){
+        truncation_prefactor = sum_KK_ext - sum_KK;
+      }
+
+      if(truncation_scheme==4){
+        truncation_prefactor = std::real( sum_KK_ext - sum_KK);
+      }
+
+
+    }
+
+
+    CMATRIX dRHO(nn_tot*nquant, nquant);
     CMATRIX drho(nquant, nquant);
-    vector<CMATRIX> rho_unpacked(nn_tot+1, CMATRIX(nquant, nquant));
-    vector<CMATRIX> drho_unpacked(nn_tot+1, CMATRIX(nquant, nquant));
+    vector<CMATRIX> rho_unpacked(nn_tot, CMATRIX(nquant, nquant));
+    vector<CMATRIX> drho_unpacked(nn_tot, CMATRIX(nquant, nquant));
 
-    unpack_rho(rho_unpacked, RHO);
+    unpack_mtx(rho_unpacked, RHO);
 
-
-    vector< vector<int> > sub_x_all(nn_tot+1, vector<int>(nquant, 0));
-    for(n=1; n<=nn_tot; n++){
-        for(i = 0; i<nquant; i++){    sub_x_all[n][i] = n*nquant + i;  }
-    }
+    int nn_nonzero = adm_list.size();
 
     #pragma omp parallel num_threads(n_threads)
     {
         #pragma omp for
-        for(n=1; n<=nn_tot; n++){
-            drho_unpacked[n] = compute_deriv_n(n, rho_unpacked, Ham, el_phon_couplings, eta, temperature, 
-                gamma_matsubara, c_matsubara,  do_truncate, do_scale, nn, KK, zero, map_nplus,  map_nneg);
+        for(int n1=0; n1<nn_nonzero; n1++){
+            n = adm_list[n1];
+            drho_unpacked[n] = compute_deriv_n_new(n, rho_unpacked, Ham, el_phon_couplings, eta, temperature, 
+                gamma_matsubara, c_matsubara, truncation_scheme, truncation_prefactor, do_scale, nonzero, nvec, nvec_plus, nvec_minus);
         }
     }
 
-    for(n=1; n<=nn_tot; n++){
-        push_submatrix(dRHO, drho_unpacked[n], sub_x_all[n], sub_y );
-    }
 
+    pack_mtx(drho_unpacked, dRHO);
 
     return dRHO;
 
 }
 
 
-void setup_bath(bp::dict prms, vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara){
+void setup_bath(int KK, double eta, double gamma, double temperature,
+                vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara){
+/** 
+  KK - (KK+1) is the number of Matsubara frequencies
+  eta - reorganization energy of the bath [Ha]
+  gamma - the system-bath interaction frequency [a.u.]
+  temperature - the bath temperature [K]
+*/
 
   int k, i;
 
   complex<double> one(1.0, 0.0);
   complex<double> iota(0.0, 1.0);
-
-  int KK = 0;
-  double eta = 0.0;
-  double gamma = 0.0;
-  double temperature = 300.0;
-
-  std::string key;
-  for(i=0;i<len(prms.values());i++){
-
-    key = extract<std::string>(prms.keys()[i]);
-
-    if(key=="KK"){  KK = extract< int >(prms.values()[i]); }
-    if(key=="eta"){  eta = extract<double>(prms.values()[i]); }
-    if(key=="gamma"){  gamma = extract<double>(prms.values()[i]); }
-    if(key=="temperature"){  temperature = extract<double>(prms.values()[i]); }
-
-
-  }
 
   double kB = boltzmann/hartree;
   double kT = kB * temperature;

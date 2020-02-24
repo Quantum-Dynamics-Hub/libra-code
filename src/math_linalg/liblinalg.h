@@ -19,8 +19,9 @@
 
 #include "permutations.h"
 #include "base_matrix.h"  
-#include "CMATRIX.h"
+#include "IMATRIX.h"                               
 #include "MATRIX.h"                               
+#include "CMATRIX.h"
 #include "MATRIX3x3.h" 
 #include "QUATERNION.h"  
 #include "VECTOR.h"
