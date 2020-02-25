@@ -70,6 +70,61 @@ def ft(X, wspan, dw, dt):
     return W, J
 
 
+
+def ft2(X, wmin, wmax, dw, dt):  
+    """Discrete Fourier transform
+
+    We do have a number of FT and FFT functions in the Libra core, but
+    this one may be also convenient to have
+
+    Args:
+        X ( list of floats ): data time-series
+        wmin ( float ): the minimal value of frequencies we want to compute
+        wmax ( float ): the minimal value of frequencies we want to compute
+        dw ( float ): is the distance between the nearby points on the frequency scale
+        dt ( float ): is the time step
+
+    Returns: 
+        tuple: (W, J): where
+
+            W ( list of npoints doubles): frequencies               
+            J ( list of npoints doubles): amplitudes of the complex-transform
+            I ( list of npoints doubles): intensities
+
+    """
+
+    ############### based on the code from Pyxaid ###################
+    sz=len(X)    # the # of input points
+    npoints = int((wmax-wmin)/dw)   # the # of output points    
+
+    J_re = [0.0] * npoints   # FT
+    J_im = [0.0] * npoints   # FT
+    J = [0.0] * npoints   # FT
+    I = [0.0] * npoints   # FT intensities
+    W = [0.0] * npoints   # frequencies
+
+    for iw in range(0,npoints):
+        w = wmin + iw * dw
+
+        J_re[iw] = 0.0  
+        J_im[iw] = 0.0  
+        for it in range(0,sz):
+            t = it * dt
+            J_re[iw] += math.cos(w * t)*X[it]
+            J_im[iw] += math.cos(w * t)*X[it]
+
+        J_re[iw] *= dt
+        J_im[iw] *= dt
+
+        W[iw] = w
+        J[iw] = J_re[iw] + 1j*J_im[iw]
+        I[iw] = (abs(J[iw]))**2
+
+    return W, J, I, J_re, J_im
+
+
+
+
 def py_cft(X, dt):  
     """Complex Discrete Fourier transform
 
