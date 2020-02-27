@@ -73,9 +73,9 @@ CMATRIX compute_phase_corrections(CMATRIX& S, double tol){
   for(i=0; i<nc; i++){
 
     f = S.get(i,i);
-    //double af = sqrt( std::norm(f) );
 
-    double af = std::norm(f);
+    double af = sqrt( std::norm(f) ); // std::norm(val) returns the norm squared of complex number val. So we use sqrt()
+    //double af = std::norm(f);
 
 
     // If the overlap is very small, it means we might have switched
