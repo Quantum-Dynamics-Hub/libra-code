@@ -30,6 +30,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 from libra_py import DFTB_methods
 from libra_py import units
+from libra_py import data_io
 import util.libutil as comn
 
 
@@ -102,8 +103,8 @@ def do_step(snap, params):
                        "md_file":"md.xyz", "sp_gen_file":"x1.gen", "syst_spec":"C" ,
                        "scf_in_file":"dftb_in_ham1.hsd",
                        "hs_in_file":"dftb_in_ham2.hsd",
-                       "do_tddftb":False,                     
-                       "use_single_particle_en":False
+                       "do_tddftb":False, "use_single_sd_energy":False,
+                       "get_dominant_sd_transitions":False
                      }
 
     comn.check_input(params, default_params, critical_params)
@@ -116,8 +117,9 @@ def do_step(snap, params):
     scf_in_file = params["scf_in_file"]
     hs_in_file = params["hs_in_file"]
     do_tddftb = params["do_tddftb"]
-    use_single_particle_en = params["use_single_particle_en"]
-    
+    use_single_sd_energy = params["use_single_sd_energy"]
+    get_dominant_sd_transitions = params["get_dominant_sd_transitions"]
+
     # Make an input file for SP calculations 
     DFTB_methods.xyz_traj2gen_sp(md_file, sp_gen_file, snap, syst_spec)
 
@@ -142,7 +144,9 @@ def do_step(snap, params):
             print("Exiting program...\n")
             sys.exit(0)
 
-        config_en = []
+        configuration_energies  = []
+        dominant_sd_transitions = []
+
         f  = open("EXC.DAT")
         A  = f.readlines()
         f.close()
@@ -156,25 +160,60 @@ def do_step(snap, params):
             else:
                 if b[0].replace('.', '', 1).isdigit():
 
-                    if use_single_particle_en == True:
+                    if use_single_sd_energy == True:
+                        # We are choosing to use the energy of the dominant SD transition to approximates the
+                        # multi-configurational energy. This SD transition is the one with the largest 
+                        # coefficient in the multi-configurational picture.
+                        configuration_energies.append( float(b[6]) )
 
-                        # We are choosing to use the single particle energies that approximate the
-                        # multi-configurational energy. Such a single particle energy is the single
-                        # particle transition with the largest coefficient in the multi-configurational 
-                        # transition.
-                        config_en.append(float(b[6]))
-
-                    else:
-              
+                    else:            
                         # Use the multi-configurational energy.
-                        config_en.append(float(b[0]))
+                        configuration_energies.append( float(b[0]) )
+   
+                    if get_dominant_sd_transitions == True:
+                        # Get the dominant SD transition in either the multi-configurational or single SD picture.
+                        dominant_sd_transitions.append( [ int(b[2]), int(b[4]) ]  )
 
-        print (config_en)
-        num_configs = len(config_en)
-        E = CMATRIX(num_configs,num_configs)       
+        if use_single_sd_energy == True:
 
-        for i in range(num_configs):
-            E.set(i,i,config_en[i])
+            # Sort these energies due to the potential for smaller energy values to be higher in index
+
+            #print ("\nIndex and energies of the single SD states BEFORE sorting:\n")
+            #print ( [i for i in range(len(configuration_energies))] )
+            #print (configuration_energies)
+            #print (dominant_sd_transitions)
+
+            single_sd_energies_index_sorted = sorted(range(len(configuration_energies)), key=lambda k: configuration_energies[k])
+            single_sd_energies_sorted = [configuration_energies[i] for i in single_sd_energies_index_sorted]
+
+            if get_dominant_sd_transitions == True:
+                # Sort the dominant SD transitions from those lowest in energy to highest 
+                dominant_sd_transitions_sorted = [dominant_sd_transitions[i] for i in single_sd_energies_index_sorted]
+                with open( params["out_dir"]+"/sd_transitions_%i" % (snap), "w" ) as out_file:
+                    for transition in dominant_sd_transitions_sorted:
+                        for index in transition:
+                            out_file.write("%s " % ( str(index) ) ) 
+
+            #print ("\nIndex and energies of the single SD states AFTER sorting:")
+            #print (single_sd_energies_index_sorted)
+            #print (single_sd_energies_sorted)
+            #print (dominant_sd_transitions_sorted) 
+
+            num_configs = len(single_sd_energies_sorted)
+            E = CMATRIX(num_configs,num_configs)
+
+            for i in range(num_configs):
+                E.set(i,i,single_sd_energies_sorted[i])
+
+        else:
+            print ("Your Multi-Configurational energies are:")
+            print (configuration_energies)
+
+            num_configs = len(configuration_energies)
+            E = CMATRIX(num_configs,num_configs)       
+
+            for i in range(num_configs):
+                E.set(i,i,configuration_energies[i])
 
         # For now, only return E
         return E, None, None, None
