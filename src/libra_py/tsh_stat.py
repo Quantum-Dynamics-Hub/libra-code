@@ -261,8 +261,11 @@ def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl):
     ndia = Cdia.num_of_rows
     nadi = Cadi.num_of_rows
 
-   
+    # Dynamically-consistent
     dm_dia, dm_adi = CMATRIX(ndia, ndia), CMATRIX(nadi, nadi)
+
+    # Raw
+    dm_dia_raw, dm_adi_raw = CMATRIX(ndia, ndia), CMATRIX(nadi, nadi)
 
 
     for traj in range(0,ntraj):
@@ -272,39 +275,57 @@ def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl):
         elif lvl==1:
             indx = Py2Cpp_int([0,traj])
 
+        S = ham.get_ovlp_dia(indx)
+        U = ham.get_basis_transform(indx) 
     
         if rep==0:
-            S = ham.get_ovlp_dia(indx)
-            U = ham.get_basis_transform(indx) 
     
             dm_tmp = S * Cdia.col(traj) * Cdia.col(traj).H() * S
+
+            # Dia dyn-consistent
             dm_dia = dm_dia + dm_tmp
-            dm_adi = dm_adi + U.H() * dm_tmp * U
-       
+
+            # Dia raw - i'm not sure about that one, so lets keep it just zero for now
+
+            # Adi dyn-consistent
+            tmp = U.H() * dm_tmp * U
+            dm_adi = dm_adi + tmp
+
+            # Adi raw
+            dm_adi_raw = dm_adi_raw + projectors[traj] * tmp * projectors[traj].H()
+                   
     
         elif rep==1:
-            c = Cadi.col(traj)
-            #M = ham.get_ordering_adi(Py2Cpp_int([0, traj]))
-            #iM = inverse_permutation(M)
-
-            #c.permute_rows(iM)
-            dm_tmp = c * c.H()
-            dm_adi = dm_adi + dm_tmp
-
-            S = ham.get_ovlp_dia(indx)
-            U = ham.get_basis_transform(indx)     
-            # correct_phase(U) 7/20/2019 - I don't think this does anything
             su = S * U
-            dm_dia = dm_dia + su * dm_tmp * su.H()
+
+            # Raw
+            c = Cadi.col(traj)            
+            dm_tmp = c * c.H()
+                        
+            # Adi dynamically-consistent DM
+            dm_adi = dm_adi + dm_tmp
+            
+            # Adi raw
+            dm_tmp_raw = projectors[traj] * dm_tmp * projectors[traj].H()
+            dm_adi_raw = dm_adi_raw + dm_tmp_raw
+
+            # Dia dynamically-consistent DM
+            dm_dia = dm_dia + su * dm_tmp * su.H()            
+
+            # Dia raw
+            dm_dia_raw = dm_dia_raw + su * dm_tmp_raw * su.H()            
+
     
     dm_dia = dm_dia / float(ntraj)        
     dm_adi = dm_adi / float(ntraj)
+    dm_dia_raw = dm_dia_raw / float(ntraj)        
+    dm_adi_raw = dm_adi_raw / float(ntraj)
 
-    return dm_dia, dm_adi
+    return dm_dia, dm_adi, dm_dia_raw, dm_adi_raw
 
 
 
-def compute_sh_statistics(nstates, istate):
+def compute_sh_statistics(nstates, istate, projectors):
     """
 
     This function computes the SH statistics for an ensemble of trajectories
@@ -324,16 +345,26 @@ def compute_sh_statistics(nstates, istate):
             total number of quantum states considered, ```nstates```
     """
 
-    ntraj = len(istate)
-    f = 1.0/float(ntraj)
-
-    coeff_sh = MATRIX(nstates, 1)
-
+    ntraj = len(istate)    
+    coeff_sh = MATRIX(nstates, 1)        
+    coeff_sh_raw = MATRIX(nstates, 1)        
+    
     for i in range(0,ntraj):
         st = istate[i]
-        coeff_sh.add(st, 0, f)
+        pop = CMATRIX(nstates, nstates)
+        pop.set(st, st, 1.0+0.0j)
+        
+        pop_raw = projectors[i] * pop * projectors[i].H()
+        
+        for j in range(nstates):
+            coeff_sh.add(j, 0, pop.get(j,j).real)
+            coeff_sh_raw.add(j, 0, pop_raw.get(j,j).real)
+            
+    coeff_sh.scale(-1,0, 1.0/float(ntraj))
+    coeff_sh_raw.scale(-1,0, 1.0/float(ntraj))
  
-    return coeff_sh
+    return coeff_sh, coeff_sh_raw
+
 
 
 def update_sh_pop(istate, nstates):  

@@ -653,9 +653,9 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
     # Parameters and dimensions
     properties_to_save = [ "timestep", "time", "Ekin_ave", "Epot_ave", "Etot_ave", 
-                           "dEkin_ave", "dEpot_ave", "dEtot_ave", "states", "SH_pop",
-                           "D_adi", "D_dia", "q", "p", "Cadi", "Cdia", "hvib_adi", "hvib_dia",
-                           "St", "basis_transform", "projector"
+                           "dEkin_ave", "dEpot_ave", "dEtot_ave", "states", "SH_pop", "SH_pop_raw",
+                           "D_adi", "D_adi_raw", "D_dia", "D_dia_raw", "q", "p", "Cadi", "Cdia", 
+                           "hvib_adi", "hvib_dia", "St", "basis_transform", "projector"
                          ] 
 
     critical_params = [  ] 
@@ -733,8 +733,8 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
         elif rep_tdse==1:
             ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
 
-        dm_dia, dm_adi = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1)        
-        pops = tsh_stat.compute_sh_statistics(nadi, states)
+        dm_dia, dm_adi, dm_dia_raw, dm_adi_raw, = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1)        
+        pops, pops_raw = tsh_stat.compute_sh_statistics(nadi, states, projectors)
 
 
         # Energies 
@@ -747,7 +747,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
         save.save_tsh_data_123(_savers, dyn_params, 
                        i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, states,
-                       pops, dm_adi, dm_dia, q, p, Cadi, Cdia  )
+                       pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia  )
 
     
         for tr in range(ntraj):

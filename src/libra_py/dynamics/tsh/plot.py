@@ -218,6 +218,57 @@ def plot_dyn(plot_params):
             plt.savefig(F"{out_prefix}/t-pops.png", dpi=300)
             plt.show()            
         
+
+        if output_level>=3:
+          
+            #========= SH, adi SE and dia SE populations =========
+            nadi = f["D_adi_raw/data"].shape[1] #attrs['dim'][1]
+            ndia = f["D_dia_raw/data"].shape[1] #attrs['dim'][1]
+
+            plt.figure(num=None, figsize=(24, 8), dpi=300, frameon=False)        
+
+            #================ SH populations =============
+            plt.subplot(1,3,1)            
+            plt.title('SH populations (raw)')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Population, a.u.')        
+                        
+            indx = -1
+            for istate in range(nadi):
+                if istate in which_adi_states:
+                    indx = indx + 1
+                    plt.plot(f["time/data"][:], f["SH_pop_raw/data"][:, istate, 0], label=F"state {istate}", linewidth=2, color = colors[clrs_index[indx] ])                 
+
+            #================ adi SE populations =============
+            plt.subplot(1,3,2)            
+            plt.title('adi SE populations (raw)')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Population, a.u.')        
+            
+            indx = -1
+            for istate in range(nadi):
+                if istate in which_adi_states:
+                    indx = indx + 1
+                    plt.plot(f["time/data"][:], f["D_adi_raw/data"][:, istate, istate], label=F"state {istate}", linewidth=2, color = colors[clrs_index[indx] ])                 
+                    
+                    
+            #================ dia SE populations =============
+            plt.subplot(1,3,3)            
+            plt.title('dia SE populations (raw)')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Population, a.u.')        
+            
+            indx = -1
+            for istate in range(ndia):
+                if istate in which_dia_states:
+                    indx = indx + 1
+                    plt.plot(f["time/data"][:], f["D_dia_raw/data"][:, istate, istate], label=F"state {istate}", linewidth=2, color = colors[clrs_index[indx] ])                 
+                    
+                    
+            plt.savefig(F"{out_prefix}/t-pops_raw.png", dpi=300)
+            plt.show()            
+        
+
         
         
         if output_level>=3:

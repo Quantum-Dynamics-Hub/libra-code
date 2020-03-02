@@ -559,7 +559,20 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   update_Hamiltonian_q(prms, q, projectors, ham, py_funct, params);
   update_Hamiltonian_q_ethd(prms, q, p, projectors, ham, py_funct, params, invM);
 
-
+/*
+  std::string key;
+  int timestep;
+  for(int i=0;i<len(params.values());i++){
+      key = extract<std::string>(params.keys()[i]);
+      if(key=="timestep"){  timestep = extract< int >(params.values()[i]); }
+  }
+  cout<<" timestep = "<<timestep<<endl;
+  cout<<"tracking_algo = "<<prms.state_tracking_algo<<endl;
+  cout<<"phase_corr = "<<prms.do_phase_correction<<endl;
+  cout<<"prms.rep_tdse = "<<prms.rep_tdse<<endl;
+  cout<<"Debug: before the update_projectors\n";
+  cout<<projectors[0].get(0,0)<<endl;
+*/   
 
   // Apply phase correction and state reordering as needed
   if(prms.rep_tdse==1){
@@ -572,6 +585,11 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
     }
   }// rep_tdse == 1
+
+/*
+  cout<<"Debug: after the update_projectors\n";
+  cout<<projectors[0].get(0,0)<<endl;
+*/
 
 
   // NVT dynamics

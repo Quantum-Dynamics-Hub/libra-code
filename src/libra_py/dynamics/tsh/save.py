@@ -91,14 +91,25 @@ def init_tsh_data(saver, hdf5_output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia
 
     if hdf5_output_level>=3:
 
-        # Average adiabatic SH populations
+        # Average adiabatic SH populations (dynamically-consistent)
         saver.add_dataset("SH_pop", (_nsteps, _nadi, 1), "R") 
 
-        # Average adiabatic density matrices
+        # Average adiabatic SH populations (raw)
+        saver.add_dataset("SH_pop_raw", (_nsteps, _nadi, 1), "R") 
+
+
+        # Average adiabatic density matrices (dynamically-consistent)
         saver.add_dataset("D_adi", (_nsteps, _nadi, _nadi), "C") 
 
-        # Average diabatic density matrices
+        # Average adiabatic density matrices (raw)
+        saver.add_dataset("D_adi_raw", (_nsteps, _nadi, _nadi), "C") 
+
+
+        # Average diabatic density matrices (dynamically-consistent)
         saver.add_dataset("D_dia", (_nsteps, _ndia, _ndia), "C") 
+
+        # Average diabatic density matrices (raw)
+        saver.add_dataset("D_dia_raw", (_nsteps, _ndia, _ndia), "C") 
 
 
 
@@ -233,24 +244,38 @@ def save_hdf5_2D(saver, i, states):
 
 
 
-def save_hdf5_3D(saver, i, pops, dm_adi, dm_dia, q, p, Cadi, Cdia):
+def save_hdf5_3D(saver, i, pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia):
     """
     saver - can be either hdf5_saver or mem_saver
 
     """
 
-    # Average adiabatic SH populations
+    # Average adiabatic SH populations (dynamically-consistent)
     # Format: saver.add_dataset("SH_pop", (_nsteps, _nadi, 1), "R") 
     saver.save_matrix(i, "SH_pop", pops) 
 
+    # Average adiabatic SH populations (raw)
+    # Format: saver.add_dataset("SH_pop_raw", (_nsteps, _nadi, 1), "R") 
+    saver.save_matrix(i, "SH_pop_raw", pops_raw) 
 
-    # Average adiabatic density matrices
+
+
+    # Average adiabatic density matrices (dynamically-consistent)
     # Format: saver.add_dataset("D_adi", (_nsteps, _nadi, _nadi), "C") 
     saver.save_matrix(i, "D_adi", dm_adi) 
 
-    # Average diabatic density matrices
+    # Average adiabatic density matrices (raw)
+    # Format: saver.add_dataset("D_adi_raw", (_nsteps, _nadi, _nadi), "C") 
+    saver.save_matrix(i, "D_adi_raw", dm_adi_raw) 
+
+
+    # Average diabatic density matrices (dynamically-consistent)
     # Format: saver.add_dataset("D_dia", (_nsteps, _ndia, _ndia), "C") 
     saver.save_matrix(i, "D_dia", dm_dia) 
+
+    # Average diabatic density matrices (raw)
+    # Format: saver.add_dataset("D_dia_raw", (_nsteps, _ndia, _ndia), "C") 
+    saver.save_matrix(i, "D_dia_raw", dm_dia_raw) 
 
 
     # Trajectory-resolved coordinates
@@ -302,7 +327,7 @@ def save_hdf5_4D(saver, i, tr, hvib_adi, hvib_dia, St, U, projector):
 
 def save_tsh_data_123(_savers, params, 
                       i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, states,
-                      pops, dm_adi, dm_dia, q, p, Cadi, Cdia
+                      pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia
                      ):
 
     hdf5_output_level = params["hdf5_output_level"]
@@ -335,10 +360,10 @@ def save_tsh_data_123(_savers, params,
 
 
     if hdf5_output_level>=3 and _savers["hdf5_saver"]!=None: 
-        save_hdf5_3D(_savers["hdf5_saver"], i, pops, dm_adi, dm_dia, q, p, Cadi, Cdia)
+        save_hdf5_3D(_savers["hdf5_saver"], i, pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia)
 
     if mem_output_level>=3 and _savers["mem_saver"]!=None: 
-        save_hdf5_3D(_savers["mem_saver"], i, pops, dm_adi, dm_dia, q, p, Cadi, Cdia)
+        save_hdf5_3D(_savers["mem_saver"], i, pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia)
 
 
 
