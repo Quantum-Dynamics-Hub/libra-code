@@ -911,7 +911,7 @@ CMATRIX compute_deriv_n_new(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CM
 
           scaling_factor = 1.0;
           if(do_scale==1){ // Scaled HEOM approach from JCP 130, 084105 (2009)
-            scaling_factor = sqrt((nvectors[nplus][m*(KK+1) + k] + 1.0 )*fabs(c_matsubara[k]));
+            scaling_factor = sqrt((nvectors[n][m*(KK+1) + k] + 1.0 )*fabs(c_matsubara[k]));
           } 
 
           sum_rho_over_k  += scaling_factor * rho[nplus];  
@@ -941,7 +941,7 @@ CMATRIX compute_deriv_n_new(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CM
 
             double denom = fabs(c_matsubara[k]);
             if(denom > 1e-50){
-              scaling_factor = sqrt( nvectors[nminus][m*(KK+1) + k] / denom );
+              scaling_factor = sqrt( nvectors[n][m*(KK+1) + k] / denom );
             }
             else{  scaling_factor = 0.0; }
 

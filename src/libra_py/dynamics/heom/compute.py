@@ -428,7 +428,7 @@ def run_dynamics(dyn_params, Ham, rho_init):
         print("nonzero = ", Cpp2Py(params["nonzero"]))
         print("adm_list = ", Cpp2Py(params["adm_list"]))
 
-        if params["verbosity"]>=3:
+        if params["verbosity"]>=4:
             print("ADMs")
             aux_print_matrices(0, aux_memory["rho_unpacked"])
             print("Scaled ADMs")
