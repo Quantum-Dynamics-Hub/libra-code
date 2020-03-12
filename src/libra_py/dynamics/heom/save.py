@@ -137,8 +137,8 @@ def save_heom_data(_savers, step, print_freq, params, rho_unpacked):
 
     #================ Saving the data ==================
 
-    if step%print_freq==0:
-        print(F" step= {step}")
+    #if step%print_freq==0:
+    #    print(F" step= {step}")
         
     # Save properties
     if _savers["hdf5_saver"] != None:            

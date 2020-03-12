@@ -101,6 +101,7 @@ def ft2(X, wmin, wmax, dw, dt):
     J_im = [0.0] * npoints   # FT
     J = [0.0] * npoints   # FT
     I = [0.0] * npoints   # FT intensities
+    I2 = [0.0] * npoints  # FT intensities squared
     W = [0.0] * npoints   # frequencies
 
     for iw in range(0,npoints):
@@ -111,16 +112,17 @@ def ft2(X, wmin, wmax, dw, dt):
         for it in range(0,sz):
             t = it * dt
             J_re[iw] += math.cos(w * t)*X[it]
-            J_im[iw] += math.cos(w * t)*X[it]
+            J_im[iw] += math.sin(w * t)*X[it]
 
         J_re[iw] *= dt
         J_im[iw] *= dt
 
         W[iw] = w
         J[iw] = J_re[iw] + 1j*J_im[iw]
-        I[iw] = (abs(J[iw]))**2
+        I[iw] = abs(J[iw])
+        I2[iw] = I[iw]**2
 
-    return W, J, I, J_re, J_im
+    return W, J, I, I2, J_re, J_im
 
 
 
