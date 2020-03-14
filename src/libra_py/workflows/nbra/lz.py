@@ -241,6 +241,10 @@ def adjust_SD_probabilities(P, params):
         * **params["excitations"]** ( list of lists of lists ) : SDs themselves (QE or dftb+ non-tddftb) or the SD transitions (tddftb). If the excitations are non-changing, then the
                                                                  length of excitations is 1. If excitations do change, then there must be an excitation list for each step. In this case,
                                                                  the length of excitation = nsteps = len(P)     
+                                                                 params["excitation"][i][j][k] = kth SD step for the jth step of the ith nuclear trajectory
+                                                                                                 i: index of nuclear trajectory
+                                                                                                 j: index of timestep of nuclear trajectory i
+                                                                                                 k: index of SD for the jth timestep on nuclear trajectory i
             Examples:
                 
                 Assume we have constructed SDs from a basis of 4 alpha and 4 beta Kohn-Sham spin-orbitals
@@ -255,16 +259,6 @@ def adjust_SD_probabilities(P, params):
 
                 - tddftb - [ [ [2,3], [2,4], [1,3], [1,4] ] ]                                           
     """
-
-    if "excitations" not in params:
-        print ("The key 'excitations' is not defined in the parameters dictionary, params. Please define it")
-        print ("Exiting now")
-        print (sys.exit(0))
-
-    if params["excitations"] == [] or params["excitations"] == [[]]: 
-        print ("Your list of SD excitations is empty! Please make sure to supply your excitations")
-        print ("Exiting now")
-        print (sys.exit(0))
 
     ndata  = len(P)
     nsteps = len(P[0])
@@ -491,5 +485,5 @@ def run(H_vib, params):
     if return_probabilities == True:
         return res, P
     else:    
-        return res
+        return res, None
 
