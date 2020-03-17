@@ -228,6 +228,111 @@ def Belyaev_Lebedev(Hvib, params):
 
 
 
+
+def adjust_SD_probabilities(P, params):
+    """
+    Adjusts the surface hopping probabilties computed according to Belyaev-Lebedev's work by setting the probability
+    to hop between Slater determinants that differ by more than 1 electron to zero.  
+
+    Args:
+        P ( list of lists of MATRIX ): each element of P contains the probability matrix according to the NBRA BLSH method
+        params ( dictionary ): control parameters
+
+        * **params["excitations"]** ( list of lists of lists ) : SDs themselves (QE or dftb+ non-tddftb) or the SD transitions (tddftb). If the excitations are non-changing, then the
+                                                                 length of excitations is 1. If excitations do change, then there must be an excitation list for each step. In this case,
+                                                                 the length of excitation = nsteps = len(P)     
+                                                                 params["excitation"][i][j][k] = kth SD step for the jth step of the ith nuclear trajectory
+                                                                                                 i: index of nuclear trajectory
+                                                                                                 j: index of timestep of nuclear trajectory i
+                                                                                                 k: index of SD for the jth timestep on nuclear trajectory i
+            Examples:
+                
+                Assume we have constructed SDs from a basis of 4 alpha and 4 beta Kohn-Sham spin-orbitals
+                The ground state is defined as: [1, 2, -5, -6]. Consider only alpha-excitations
+
+                We currently do non-tddftb computations by forming our own SDs in libra_py.workflows.nbra.step3
+
+                - QE or dftb+ non-tddftb - [ [ [1, 3, -5, -6], [1, 4, -5, -6], [3, 2, -5, -6], [4, 2, -5, -6] ] ] 
+
+                As tddftb is used exclusively with the BLSH-NBRA method, we usually just read the energies, and know information only regarding
+                the index of the orbtial transitions, such as: [2 -> 3]. So, we package this in the following form
+
+                - tddftb - [ [ [2,3], [2,4], [1,3], [1,4] ] ]                                           
+    """
+
+    ndata  = len(P)
+    nsteps = len(P[0])
+
+    excitations        = params["excitations"]
+    nsteps_excitations = len(excitations[0])
+    num_of_excitations = len(excitations[0][0])
+
+    print ("ndata  = ", ndata)
+    print ("nsteps = ", nsteps)
+    print ("nsteps_excitations = ", nsteps_excitations)
+
+    for idata in range(ndata):
+
+       if nsteps_excitations == nsteps:
+
+           for nstep in range(nsteps):
+
+               for j in range(num_of_excitations):
+
+                   s1 = set(excitations[idata][nstep][j])
+
+                   for i in range(num_of_excitations):
+                                 
+                        s2 = set(excitations[idata][nstep][i])
+                        diff_electrons = [k for k in s2 if k not in s1]
+
+                        if len(diff_electrons) > 1:
+
+                           source_state_regain = P[idata][nstep].get(i,j)
+                           #if source_state_regain > 0:
+                               #print ("\nIndex of states with more than 1 electron different", i, j)
+                               #print ("Prob to trasnfer to state i:", source_state_regain)
+                               #print ("Prob to remain on   state j:", P[idata][nstep].get(j,j))
+                               #print ("Adjusting probs gives:")
+                           P[idata][nstep].scale(i,j,0.0)
+                           P[idata][nstep].add(j,j,source_state_regain)
+                           #if source_state_regain > 0:
+                               #print ("Prob to trasnfer to state i:", P[idata][nstep].get(i,j))
+                               #print ("Prob to remain on   state j:", P[idata][nstep].get(j,j))
+ 
+ 
+       else:
+
+           for nstep in range(nsteps):
+
+               for j in range(num_of_excitations):
+
+                   s1 = set(excitations[idata][0][j])
+
+                   for i in range(num_of_excitations):
+
+                       s2 = set(excitations[idata][0][i])
+                       diff_electrons = [k for k in s2 if k not in s1]
+                                      
+                       if len(diff_electrons) > 1:
+
+                           source_state_regain = P[idata][nstep].get(i,j)
+                           #if source_state_regain > 0:
+                               #print ("\nIndex of states with more than 1 electron different", i, j)
+                               #print ("Prob to trasnfer to state i:", source_state_regain)
+                               #print ("Prob to remain on   state j:", P[idata][nstep].get(j,j))
+                               #print ("Adjusting probs gives:")
+                           P[idata][nstep].scale(i,j,0.0)
+                           P[idata][nstep].add(j,j,source_state_regain)
+                           #if source_state_regain > 0:
+                               #print ("Prob to trasnfer to state i:", P[idata][nstep].get(i,j))
+                               #print ("Prob to remain on   state j:", P[idata][nstep].get(j,j))
+
+    return P
+
+
+
+
 def run(H_vib, params):
     """
     Main function to run the SH calculations based on the Landau-Zener hopping
@@ -258,11 +363,12 @@ def run(H_vib, params):
             - 3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
         
         * **params["T"]** ( double ) : temperature of the nuclei - affects the acceptance probabilities [ units: K, default: 300.0 K]
-        * **params["do_output"]** ( Boolean ) : wheather to print out the results into a file [ default: True ]
+        * **params["do_output"]** ( Boolean ) : whether to print out the results into a file [ default: True ]
         * **params["outfile"]** ( string ) : the name of the file, where all the results will be printed out [ default: "_out.txt" ]
-        * **params["do_return"]** ( Boolean ) : wheather to construct the big matrix with all the result [ default: True ]
-        * **params["evolve_Markov"]** ( Boolean ) : wheather to propagate the "SE" populations via Markov chain [ default: True ]
-        * **params["evolve_TSH"]** ( Boolean ) : wheather to propagate the "SH" populations via TSH with many trajectories [ default: True ]
+        * **params["do_return"]** ( Boolean ) : whether to construct the big matrix with all the result [ default: True ]
+        * **params["evolve_Markov"]** ( Boolean ) : whether to propagate the "SE" populations via Markov chain [ default: True ]
+        * **params["evolve_TSH"]** ( Boolean ) : whether to propagate the "SH" populations via TSH with many trajectories [ default: True ]
+        * **params["detect_SD_difference"]** ( Boolean ) : see if SD states differ by more than 1 electron, if so probability to zero [ default: False ]
 
     """
 
@@ -271,7 +377,10 @@ def run(H_vib, params):
     default_params = { "dt":41.0, "ntraj":1, "nsteps":1, "istate":0, 
                        "Boltz_opt":1, "Boltz_opt_BL":1, "T":300.0,
                        "do_output":True, "outfile":"_out.txt", "do_return":True,
-                       "evolve_Markov":True, "evolve_TSH":True }
+                       "evolve_Markov":True, "evolve_TSH":True, 
+                       "detect_SD_differences":False,
+                       "return_probabilities":False }
+
     comn.check_input(params, default_params, critical_params)
     
     rnd = Random()
@@ -287,7 +396,8 @@ def run(H_vib, params):
     T = params["T"]
     evolve_Markov = params["evolve_Markov"]
     evolve_TSH = params["evolve_TSH"]
-
+    detect_SD_difference = params["detect_SD_differences"]
+    return_probabilities = params["return_probabilities"]
 
     res = MATRIX(nsteps, 3*nstates+5)
 
@@ -300,6 +410,8 @@ def run(H_vib, params):
         p = Belyaev_Lebedev(H_vib[idata], params)
         P.append(p)
 
+    if detect_SD_difference == True:
+        P = adjust_SD_probabilities(P, params)  
 
     #========== Initialize the DYNAMICAL VARIABLES  ===============
     # State populations and active state indices
@@ -310,7 +422,6 @@ def run(H_vib, params):
         istate.append(params["istate"])
         Pop.append(CMATRIX(nstates, 1)); 
         Pop[tr].set(params["istate"], 1.0, 0.0)
-
 
     #=============== Entering the DYNAMICS ========================
     for i in range(0,nsteps):  # over all evolution times
@@ -370,7 +481,9 @@ def run(H_vib, params):
                                 istate[Tr] = st_new                  
                         else:
                             istate[Tr] = st_new
-        
-    return res
 
+    if return_probabilities == True:
+        return res, P
+    else:    
+        return res, None
 
