@@ -122,7 +122,7 @@ def QE_pdos(prefix, emin, emax, de, projections, Ef, outfile_prefix, do_convolve
             * E ( MATRIX(N, 1) ): new energy grid, N - the new number of energy grid points
             * pDOSa ( MATRIX(N, Nproj) ): new Y grids, Nproj - len(projections) the number of projections we are interested in
             * if spin = 2, returns pDOSb for beta spin-orbtials as well
-            * if spin = 4, 
+            * if spin = 4, returns just the pDOSa (pDOSb = None), but the orbitals now mixed spin states 
     """
 
     if nspin not in [1,2,4]:
