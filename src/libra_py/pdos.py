@@ -159,8 +159,7 @@ def QE_pdos(prefix, emin, emax, de, projections, Ef, outfile_prefix, do_convolve
                     for Elt in elements: # for given atom names
 
                         if nspin == 4:
-                            K = [0.5, 1.5, 2.5]
-                            for k in K:
+                            for k in [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]: # total angular momentum label
                                 filename = prefix+str(a)+"("+Elt+")_wfc#"+str(wfc)+"("+symb+"_j"+str(k)+")"
                                 if os.path.exists(filename):
 
@@ -237,4 +236,4 @@ def QE_pdos(prefix, emin, emax, de, projections, Ef, outfile_prefix, do_convolve
     if nspin == 2:
         return E, pDOSa, pDOSb
     else:
-        return E, pDOSa, None
+        return E, pDOSa, pDOSa
