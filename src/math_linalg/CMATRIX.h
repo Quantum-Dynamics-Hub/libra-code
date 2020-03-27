@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2020 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -12,6 +12,15 @@
   \file CMATRIX.h
   \brief The file describes the CMATRIX class for representing arbitrary size complex-valued matrices as well as the
   set of functions of complex Fourier transforms and convolution
+
+  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  NOTE:  the functions that return CMATRIX should not be relpaced by the base template functions
+
+  for some reason, the base_matrix< complex<double> > is not recognized as CMATRIX so 
+
+  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
     
 */
 
@@ -22,7 +31,7 @@
 #include <complex>
 #include "base_matrix.h"
 #include "MATRIX.h"
-#include "IMATRIX.h"
+//#include "IMATRIX.h"
 
 /// liblibra 
 namespace liblibra{
@@ -63,8 +72,8 @@ public:
   CMATRIX(vector<vector<double> >& re_part,vector<vector<double> >& im_part); 
 
   ///< Create the complex-valued matrix (with zero imaginary components) from an int-valued matrix
-  CMATRIX(IMATRIX& re_part);  
-  CMATRIX(const IMATRIX& re_part);  
+//  CMATRIX(IMATRIX& re_part);  
+//  CMATRIX(const IMATRIX& re_part);  
 
   ///< Create the complex-valued matrix (with zero imaginary components) from a real-valued matrix
   CMATRIX(MATRIX& re_part);  
@@ -95,6 +104,10 @@ public:
   }
 
 
+  ///=========== Extractions ======================
+//  using base_matrix<complex<double> >::col;
+//  using base_matrix<complex<double> >::row;
+
   ///========= Initialization =====================
   using base_matrix<complex<double> >::diag;
   using base_matrix<complex<double> >::identity;
@@ -115,6 +128,7 @@ public:
 
   ///========= Transformation =====================
   using base_matrix<complex<double> >::Transpose;
+//  using base_matrix<complex<double> >::T;
   using base_matrix<complex<double> >::swap_cols;
   using base_matrix<complex<double> >::swap_rows;
   using base_matrix<complex<double> >::permute_cols;
@@ -134,7 +148,6 @@ public:
 
   CMATRIX col(int i); ///< takes given column and makes it n x 1 CMATRIX
   CMATRIX row(int i); ///< takes given column and makes it n x 1 CMATRIX
-
 
   ///================ Matrix properties =====================
   /// Inherited properties
@@ -217,17 +230,6 @@ public:
 
                  
 };
-
-/*
-vector<int> get_reordering(CMATRIX& X);
-vector<int> compute_signature(CMATRIX& Ref, CMATRIX& X);
-vector<int> compute_signature(CMATRIX& X);
-void correct_phase(CMATRIX& Ref, CMATRIX& X);
-void correct_phase(CMATRIX& Ref, CMATRIX* X);
-void correct_phase(CMATRIX& X);
-void correct_phase(CMATRIX* X);
-*/
-
 
 
 typedef std::vector<CMATRIX> CMATRIXList;  ///< Data type holding a list of arbitrary-size complex-valued matrices

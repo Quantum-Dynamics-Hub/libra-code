@@ -2,7 +2,7 @@
 * Copyright (C) 2020 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -13,11 +13,12 @@
   \brief The file implements the IMATRIX class for representing arbitrary size integer-valued matrices     
 */
 
-#include "IMATRIX.h"
+
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
 
+#include "IMATRIX.h"
 
 /// liblibra 
 namespace liblibra{
@@ -47,6 +48,7 @@ IMATRIX::IMATRIX(vector<vector<int> >& mtx){
  
 }
 
+/*
 IMATRIX::IMATRIX(MATRIX& re_part){
 
   n_rows = re_part.n_rows;
@@ -62,18 +64,18 @@ IMATRIX::IMATRIX(MATRIX& re_part){
   }
 
 }
+*/
 
 
 IMATRIX IMATRIX::T(){   
-/** Returns the matrix which is transposed w.r.t. the caller matrix */
+// Returns the matrix which is transposed w.r.t. the caller matrix 
 
   IMATRIX res(*this); res.Transpose();
   return res;    
 }
 
-
 IMATRIX IMATRIX::col(int i){ 
-/** takes given column and makes it n x 1 IMATRIX */
+// takes given column and makes it n x 1 IMATRIX /
 
   IMATRIX tmp(n_rows,1);
   for(int j=0;j<n_rows;j++){ tmp.M[j] = M[j*n_cols+i]; }
@@ -81,13 +83,12 @@ IMATRIX IMATRIX::col(int i){
 }
 
 IMATRIX IMATRIX::row(int i){ 
-/** takes given row and makes it 1 x n IMATRIX */
+// takes given row and makes it 1 x n IMATRIX /
 
   IMATRIX tmp(1,n_cols);
   for(int j=0;j<n_cols;j++){ tmp.M[j] = M[i*n_cols+j]; }
   return tmp;
 }
-
 
 
 int IMATRIX::max_elt(){
@@ -312,11 +313,11 @@ IMATRIX IMATRIX::operator-(int rhs){
 }
 
 
-
+/*
 void IMATRIX::operator+=(int f){  
   for(int i=0;i<n_elts;i++) { M[i] += f; }
 }
-
+*/
 
 IMATRIX IMATRIX::operator*(const IMATRIX& ob){
   IMATRIX res(n_rows, ob.n_cols);  res.product(*this, ob);
@@ -336,6 +337,7 @@ IMATRIX operator*(int f, const IMATRIX& ob){
 }
 
 
+/*
 void IMATRIX::operator*=(int f){ 
   for(int i=0; i<n_elts; i++){  M[i] *= f;  }
 }
@@ -343,7 +345,7 @@ void IMATRIX::operator*=(int f){
 void IMATRIX::operator/=(int f){ 
   for(int i=0; i<n_elts; i++){  M[i] /= f;  }
 }
-
+*/
 
 IMATRIX IMATRIX::operator/(int f){ 
   IMATRIX res(*this); res /= f; 

@@ -90,10 +90,10 @@ def update_filters(rho_scaled, params, aux_memory):
     unpack_mtx(aux_memory["drho_unpacked_scaled"], drho_scaled)
 
     # Filtering of the derivatives - defines the active EOMs, params["adm_list"]
-    trash = filter2(aux_memory["drho_unpacked_scaled"], params["adm_list"], params["adm_deriv_tolerance"], 0)
+    trash = filter(aux_memory["drho_unpacked_scaled"], params["adm_list"], params["adm_deriv_tolerance"], 0)
 
     # Filtering of the densities - defines the list of nonzero derivatives, params["nonzero"]
-    params["nonzero"] = filter2(aux_memory["rho_unpacked_scaled"], trash, params["adm_tolerance"], params["do_zeroing"])
+    params["nonzero"] = filter(aux_memory["rho_unpacked_scaled"], trash, params["adm_tolerance"], params["do_zeroing"])
 
     pack_mtx(aux_memory["rho_unpacked_scaled"], rho_scaled)
 
@@ -319,7 +319,7 @@ def run_dynamics(dyn_params, Ham, rho_init):
                        "gamma": 1.0/(0.1 * units.ps2au),
                        "eta": 2.0 * 50.0 * units.inv_cm2Ha,
                        "temperature": 300.0,
-                       "el_phon_couplings":initialize_el_phonon_couplings2(Ham.num_of_cols),
+                       "el_phon_couplings":initialize_el_phonon_couplings(Ham.num_of_cols),
 
                        "dt":0.1*units.fs2au, "nsteps":10, 
                        "verbosity":-1, "progress_frequency":0.1,
