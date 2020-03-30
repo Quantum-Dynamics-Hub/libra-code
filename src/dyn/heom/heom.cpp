@@ -16,6 +16,7 @@
 */
 
 #include "heom.h"
+#include "../../util/libutil.h"
 #include "../../math_linalg/liblinalg.h"
 #include "../../math_specialfunctions/libspecialfunctions.h"
 #include "libheom.h"
@@ -24,82 +25,70 @@ namespace liblibra{
 namespace libdyn{
 namespace libheom{
 
+using namespace libutil;
 using namespace liblinalg;
 using namespace libspecialfunctions;
 
 
-vector< vector<int> > gen_next_level(vector<int>& parent){
-    /**
-    parent = ( n10, n11, ... , n1K    ...     nM0, nM1, ... , nMK)
 
-    This function generates the vectors of integers our of a given vector
-    by incrementing every element of the original (parent) vector by 1
- 
-    The result is the list of the resulting children vectors 
+int compute_nn_tot(int d, int max_tier){
+/**
+  \brief Compute the total number of density matrices in the EOM hierarchy
 
-    */
+  This number is given by:   (LL+nquant*KK)! / ( LL! * (nquant*KK)! )
 
-    int d = parent.size();  // shall be M * (K+1)
+  of course, we don't want to evaluate the factorial explicitly
 
-    vector< vector<int> > children;
+  \param[in] L Level of the HEOM hierarchy
+  \param[in] nquant (often denoted M) the number of system-bath coupling terms, in the case
+  where each state is coupled to the bath intependently, this number is also equal to the number
+  of quantum state, hence the current name
+  \param[in] KK the number of the Matsubara terms
 
-    for(int i=0;i<d; i++){
-        children.push_back( parent );
-        children[i][i] += 1;
-    }
+  d = nquant*(KK+1)  ! The expectation
 
-    return children;
+
+*/
+
+  int i;
+  double tmp = 1.0;
+
+  for(int i=1; i<=d; i++){
+    tmp *= (max_tier+i)/((float)i);
+  }
+
+  return (int)tmp;
 }
 
 
-vector< vector<int> > gen_next_level2(vector< vector<int> >& parents){
+
+vector< vector<int> > gen_next_level(vector< vector<int> >& parents){
     /**
     This function is similar to gen_next_level, except it takes a list of
     parent vectors of integers and generates the list of the children for 
     all of the parent inputs.
     */
 
+    int num_parents = parents.size();
+    int num_children = parents[0].size(); // per parent
+
     vector< vector<int> > next_level;
 
-    int d = parents.size();
-    for(int i=0;i<d; i++){
-    
-        vector< vector<int> > children = gen_next_level(parents[i]);
-
-        int num_children = children.size();
-
+    for(int i=0; i<num_parents; i++){
         for(int j=0;j<num_children; j++){
-            next_level.push_back(children[j]);
-        }
-    }
+
+            vector<int> child = parents[i];
+            child[j] += 1;
+
+            if(! is_included(child, next_level) ){  next_level.push_back(child);  }
+
+        }// for j
+    }// for i
 
     return next_level;
 }
 
 
-int is_equal(vector<int>& vec1, vector<int>& vec2){
-
-  int res = 1; 
-  int sz1 = vec1.size();
-  int sz2 = vec2.size();
-
-  if(sz1!=sz2){ res = 0; }
-  else{
-    for(int i=0; i<sz1; i++){
-      if(vec1[i] != vec2[i]){ res = 0; break; }
-    }
-  }
-  return res;
-}
-
-int is_included(vector<int>& vec1, vector<vector<int> >& vec){
-
-  int res = 0;
-  for(int i=0; i<vec.size(); i++){
-    if(is_equal(vec1, vec[i])){ res = 1; break; }
-  }
-  return res;
-}
 
 void gen_hierarchy(int d, int max_tier, int verbosity,
                    vector< vector<int> >& all_vectors, 
@@ -136,20 +125,19 @@ void gen_hierarchy(int d, int max_tier, int verbosity,
         int iparent = 0;
         int num_parents = parents.size();
 
-        for(i=0; i<num_parents; i++){
-            if( !is_included(parents[i], all_vectors) ){
-                all_vectors.push_back( parents[i] );
-                vector<int> coord(2,0);
-                coord[0] = tier;
-                coord[1] = iparent;
-                all_coordinates.push_back( coord );
-                iparent += 1;
-            }// not yet included
+        for(i=0; i<num_parents; i++){            
+            all_vectors.push_back( parents[i] );
+            vector<int> coord(2,0);
+            coord[0] = tier;
+            coord[1] = iparent;
+            all_coordinates.push_back( coord );
+            iparent += 1;            
+
         }// for i
 
         tier_nums.push_back( all_vectors.size() ) ;
 
-        vector< vector<int> > new_parents = gen_next_level2(parents);
+        vector< vector<int> > new_parents = gen_next_level(parents);
         parents.resize(new_parents.size());
         parents = new_parents;
 
@@ -210,17 +198,11 @@ void gen_hierarchy(int d, int max_tier, int verbosity,
 
     if(verbosity>1){
         for(i=0; i<num_nodes; i++){
-
-            cout<<"index= "<<i<<" ";
-    
+            cout<<"index= "<<i<<" ";    
             cout<<" vector=["; for(j=0;j<d;j++){ cout<<all_vectors[i][j]<<","; } cout<<"] ";
-
             cout<<" coordinates=["<<all_coordinates[i][0]<<","<<all_coordinates[i][1]<<"] ";
-
             cout<<" vec_plus=["; for(j=0;j<d;j++){ cout<<vec_plus[i][j]<<","; } cout<<"] ";
-
             cout<<" vec_minus=["; for(j=0;j<d;j++){ cout<<vec_minus[i][j]<<","; } cout<<"] ";
-
             cout<<"\n";
         }
     }
@@ -228,337 +210,8 @@ void gen_hierarchy(int d, int max_tier, int verbosity,
 }
 
 
-int compute_nn_tot(int nquant, int KK, int LL){
-/**
-  \brief Compute the total number of density matrices in the EOM hierarchy
 
-  This number is given by:   (LL+nquant*KK)! / ( LL! * (nquant*KK)! )
-
-  of course, we don't want to evaluate the factorial explicitly
-
-  \param[in] L Level of the HEOM hierarchy
-  \param[in] nquant (often denoted M) the number of system-bath coupling terms, in the case
-  where each state is coupled to the bath intependently, this number is also equal to the number
-  of quantum state, hence the current name
-  \param[in] KK the number of the Matsubara terms
-
-
-*/
-
-  int i;
-  double tmp = 1.0;
-
-  for(int i=1; i<=nquant*(KK+1); i++){
-    tmp *= (LL+i)/((float)i);
-  }
-
-  return (int)tmp;
-}
-
-
-vector<int> allocate_1D(int sz1){
-
-  vector<int> res(sz1, 0);
-
-  return res;
-
-}
-
-vector< vector<int> > allocate_2D(int sz1, int sz2){
-
-  vector< vector<int> > res(sz1, vector<int>(sz2, 0) );
-
-  return res;
-}
-
-vector< vector< vector<int> > > allocate_3D(int sz1, int sz2, int sz3){
-
-  vector< vector< vector<int> > > res(sz1, vector< vector<int> >(sz2,  vector<int>(sz3, 0) ) );
-
-  return res;
-}
-
-
-
-
-
-void compute_nn(int nquant, int KK, int LL, 
-                vector<int>& map_sum, 
-                vector< vector< vector<int> > >& nn){
-/**
-  \brief ?? 
-  \param[in] nquant
-  \param[in] KK
-  \param[in] LL
-  \param[in/out] map_sum  is of size LL+1:  [0, ... , LL]
-  \param[in/out] map_nneg, map_nplus, nn  are of size nquant+1 x KK+1 x LL+1:  [0,... nquant] x [0, KK] x [0, ... , LL] each
-
-*/
-
-  // Alternative recursive method
-  int n_beg, n_end;
-  n_beg = n_end = 0;
-  
-  for(int n=0; n<=LL; n++){
-
-    compute_nn_sum_L(nquant, KK, n, n_beg, n_end, nn);
-    map_sum[n] = n_beg;
-
-    cout<<"n = "<<n<<" n_beg = "<<n_beg<<" n_end = "<<n_end<<endl;
-  }
-  cout<<" n_end = "<<n_end<<endl;
-
-}
-
-
-void compute_nn_sum_L(int nquant, int KK, int L, int& n_beg, int& n_end, 
-                      vector< vector< vector<int> > >& nn){
-/**
-  \brief ?? 
-  \param[in] L Level of the HEOM hierarchy
-  \param[in/out] n_beg ?? at input, state/end point of entries for sum {L-1}; at output, for entries for sum {L}
-  \param[out] nn (IMATRIX(nquant, KK+1) ) the vectors of the indices
-  \param[in] nquant the number of quantum states
-  \param[in] KK the number of the Matsubara terms
-  \param[in/out] nn  is of size nquant+1 x KK+1 x LL+1:  [0,... nquant] x [0, KK] x [0, ... , LL] each
-
-*/
-  int tot_L, i, j, m, k, a,b;
-  int flag_new; 
-
-  vector< vector<int> > nvec(nquant+1, vector<int>(KK+1, 0) );
-
-  if(L==0){
-
-    for(a=0;a<=nquant;a++){  for(b=0;b<=KK;b++){  nn[a][b][1] = 0;   } }
-    n_beg=1;
-    n_end=1;
-  }
-  else{
-
-    tot_L=n_end;
-
-    for(i=n_beg; i<=n_end; i++){
-      for(m=1; m<=nquant; m++){
-
-        for(k=0; k<=KK; k++){
-
-          for(a=0;a<=nquant;a++){  for(b=0;b<=KK;b++){ nvec[a][b] = nn[a][b][i];   } }          
-          nvec[m][k] +=1;
-
-
-          flag_new=0;
-          if(tot_L > n_end){
-            for(j=n_end+1; j<=tot_L; j++){
-
-              int same = 1;
-              for(a=1;a<=nquant;a++){  for(b=0;b<=KK;b++){  if(nvec[a][b] != nn[a][b][j]){  same = 0; }   } }          
-              if(same==1){ flag_new=1; }
-
-            }// for j
-          }
-
-          if(flag_new==0){
-            tot_L += 1;
-
-            for(a=0;a<=nquant;a++){  for(b=0;b<=KK;b++){ nn[a][b][tot_L] = nn[a][b][i];   } }          
-            nn[m][k][tot_L] = nn[m][k][i] + 1; 
-
-          }
-
-        }// for k
-
-      }// for m
-
-    }// for i
-
-    n_beg = n_end+1;
-    n_end = tot_L;
-    
-  }// else
-
-
-}
-
-
-
-
-vector< vector<int> > index_int2vec(vector< vector< vector<int> > >& nn, int n, int nquant, int KK){
-/**
-  \brief Computes the correspondence between the many-integers representation of 
-  the auxiliary density matrix and their single-integer index
-
-  ** n is input, nvec is output **
-
-  \param[in] nn  The set of all many-integer indices
-  \param[in] n  The single-integer index
-
-  
-*/
-  vector< vector<int> > nvec(nquant+1, vector<int>(KK+1, 0) );
-
-  int a,b;
-
-  for(a=0; a<=nquant; a++){
-    for(b=0; b<=KK; b++){
-      nvec[a][b] = nn[a][b][n];
-    }
-  }
-
-  return nvec;
-
-}
-
-
-int sum2D(vector< vector<int> >& nvec){
-
-  int sz1 = nvec.size();
-  int sz2 = nvec[0].size();
-
-  int i,j;
-  int summ = 0;
-
-  for(i=0; i<sz1; i++){
-    for(j=0; j<sz2; j++){
-      summ += nvec[i][j];
-    }
-  }
-
-  return summ;
-}
-
-int index_vec2int(vector< vector< vector<int> > >& nn, vector< vector<int> >& nvec, int LL){
-/**
-  \brief Computes the correspondence between the many-integers representation of 
-  the auxiliary density matrix and their single-integer index
-
-  ** nvec is input, n is output **
-
-  \param[in] nn  The set of all many-integer indices
-  \param[in/out] n  The single-integer index
-  \param[in/out] nvec  The many-integers index
-  \param[in] iflag The direction of the transformation
-
-*/
-
-  int i,j;
-
-  int sz1 = nn.size();
-  int sz2 = nn[0].size();
-  int nn_tot = nn[0][0].size() - 1;
-
-  int n = 0;
-
-  int l_sum = sum2D(nvec);
-
-  if(l_sum<=LL){
-
-    int found = 0;
-
-    for(int m=1; m<=nn_tot && found==0; m++){ 
-    
-      int are_equal = 1;
-    
-      for(i=0; i<sz1 && are_equal; i++){
-        for(j=0; j<sz2 && are_equal; j++){
-          if(nvec[i][j] != nn[i][j][m]){  are_equal = 0; }
-        }
-      }
-    
-      if(are_equal==1){  n = m;  found = 1;   }
-    
-    }// for m
-
-  }// if l_sum
-
-  return n;
-        
-}
-
-
-
-
-void compute_map(int nquant, int KK, int LL, 
-                 vector< vector< vector<int> > >& nn,
-                 vector< vector< vector<int> > >& map_nplus,
-                 vector< vector< vector<int> > >& map_nneg){
-/**
-  \brief Compute the mapping of the overall index of the density matrix to the 
-  3 integers that characterize the density matrix. In fact, this function return
-  the enumerated list of such 3-integer vectors
-
-  \param[in] L Level of the HEOM hierarchy
-  \param[in] nquant (often denoted M) the number of system-bath coupling terms, in the case
-  where each state is coupled to the bath intependently, this number is also equal to the number
-  of quantum state, hence the current name
-  \param[in] KK the number of the Matsubara terms
-
-  \param[in/out] map_nneg, map_nplus, nn  are of size nquant+1 x KK+1 x LL+1:  [0,... nquant] x [0, KK] x [0, ... , LL] each
-
-
-*/
-
-  int n,m,k;
-  int nplus, nneg;
-  vector< vector<int> > nvec(nquant+1, vector<int>(KK+1, 0) );
-  vector< vector<int> > nvec_plus(nquant+1, vector<int>(KK+1, 0) );
-  vector< vector<int> > nvec_neg(nquant+1, vector<int>(KK+1, 0) );
-
-
-  int nn_tot = compute_nn_tot(nquant, KK, LL);
-
-//  map_nplus = vector< vector< vector<int> > >(nquant+1, vector< vector<int> >(KK+1, vector<int>(nn_tot+1, 0)) );
-//  map_nneg = vector< vector< vector<int> > >(nquant+1, vector< vector<int> >(KK+1, vector<int>(nn_tot+1, 0)) );
-
-  for(n=1; n<=nn_tot; n++){
-
-    m=n;
-    nvec = index_int2vec(nn, m, nquant, KK);
-
-    for(m=1; m<=nquant; m++){
-      for(k=0; k<=KK; k++){
-
-        nvec_plus = nvec;
-        nvec_plus[m][k] = nvec_plus[m][k] + 1;
-
-        map_nplus[m][k][n] = index_vec2int(nn, nvec_plus, LL);
-       
-        if(nvec[m][k] > 0){
-          nvec_neg = nvec;
-          nvec_neg[m][k] = nvec_neg[m][k] - 1;
-
-          map_nneg[m][k][n] = index_vec2int(nn, nvec_neg, LL);
-        }
-
-      }// for k
-    }// for m
-
-  }// for n
-
-}
-
-
-vector<int> filter(vector<CMATRIX>& rho, double tolerance){
-/**
-   Shi, Chen, Nan, Xu, Yan, JCP 130, 084105 (2009)
-*/
-
-  int n;
-  int nn_tot = rho.size()-1; 
-  vector<int> zero(nn_tot+1, 0);
-
-  for(int n=1; n<=nn_tot; n++){
-
-    if( abs(rho[n].max_elt() ) < tolerance ){
-      rho[n] = 0.0;  zero[n] = 1;
-    }
-
-  }// for n
-
-  return zero;
-}
-
-vector<int> filter2(vector<CMATRIX>& rho, vector<int>& adm_list, double tolerance, int do_zeroing){
+vector<int> filter(vector<CMATRIX>& rho, vector<int>& adm_list, double tolerance, int do_zeroing){
 /**
    Gives the list of indices for the density matrices which are assumed to
    be non-zero, also returns the list of flags for whether a given ADM is non-zero
@@ -590,212 +243,8 @@ vector<int> filter2(vector<CMATRIX>& rho, vector<int>& adm_list, double toleranc
 
 
 
-vector<CMATRIX> initialize_el_phonon_couplings(int nquant){
-/**
-  Compute the matrices  Q_m = |m><m| - the simplest type of the coupling of electrons to phonons
-
-*/
-
-  vector<CMATRIX> projectors(nquant+1, CMATRIX(nquant, nquant));
-
-  for(int m=1; m<=nquant; m++){
-
-    projectors[m] = 0.0;
-    projectors[m].set(m-1,m-1, complex<double>(1.0, 0.0));  // matrix |m><m|
-  }
-
-  return projectors;
-
-}
-
-
-vector<CMATRIX> initialize_el_phonon_couplings2(int nquant){
-/**
-  Compute the matrices  Q_m = |m><m| - the simplest type of the coupling of electrons to phonons
-
-*/
-
-  vector<CMATRIX> projectors(nquant, CMATRIX(nquant, nquant));
-
-  for(int m=0; m<nquant; m++){
-
-    projectors[m] = 0.0;
-    projectors[m].set(m,m, complex<double>(1.0, 0.0));  // matrix |m><m|
-  }
-
-  return projectors;
-
-}
-
-
-
-
-complex<double> compute_matsubara_sum(vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK){
-/**
-  Compute the sum of the c/gamma terms over all Matsubara frequencies
-*/
-
-  complex<double> matsubara_sum(0.0, 0.0);
-  for(int k=0; k<=KK; k++){
-    matsubara_sum += c_matsubara[k]/gamma_matsubara[k];
-  }
-
-  return matsubara_sum;
-
-}
-
 
 CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRIX>& el_phon_coupl,
-        double eta, double temperature,
-        vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara,
-        int do_truncate, int do_scale,
-        vector< vector< vector<int> > >& nn, int KK, vector<int>& zero,
-        vector< vector< vector<int> > >& map_nplus, vector< vector< vector<int> > >& map_nneg        
-        ){
-/**
-
-   Compute drho_n/dt = ...     !! Eq. 15, JCP 131, 094502 (2009)
-
-   Parameters:
-    n : the order of the auxiliary matrix
-    rho : density matrices (including the auxiliary ones) of the system
-    Ham : system's Hamiltonian 
-    projectors : the matrices that describe how each electronic phonon is coupled to various electronic states
-       in the simplest picture, when a phonon k is coupled to electronic state m, the matrix projectors[k] will 
-       contain 1.0 at the element (m,m) and zeroes everywhere else. You can of course define more general situations
-       when one phonon is coupled to many states (and perhaps to their coherences)
-    eta : reorganization energy [a.u.]
-    temperature : bath temperature [ K ] 
-    gamma_matsubara : Matsubara frequencies
-    c_matsubara : expansion coefficients of the autocorrelation function in the Matsubara terms
-    do_truncate : a flag to control the Ihizaki-Tanimura scheme for truncation -  JPSJ 74 3131, 2005
-      0 - don't truncate 
-      1 - do truncate 
-    do_scale : a flag to control the scaled HEOM approach from JCP 130, 084105 (2009)
-      0 - don't use scaling
-      1 - do use scaling
-    nn : the mapping of the variables
-    KK : the number of Matsubara terms
-    zero : mask to discard some of the matrices
-    map_nplus : mapping of the rho_n+ matrices
-    map_minus : mapping of the rho_n- matrices
-    
-    
-   
-
-*/
-
-  int nn_tot = rho.size();
-  int nquant = rho[0].n_cols;
-
-  int m,k,nplus,nminus;
-  CMATRIX drho_n_dt(nquant, nquant);
-  CMATRIX commut(nquant, nquant);
-  CMATRIX term1(nquant, nquant);
-  CMATRIX term2(nquant, nquant);
-  CMATRIX mat_tmp(nquant, nquant);
-  CMATRIX mat_tmp2(nquant, nquant);
-
-  vector< vector<int> > nvec(nquant, vector<int>(KK+1, 0) );
-  vector< vector<int> > nvec_plus(nquant, vector<int>(KK, 0) );
-  vector< vector<int> > nvec_neg(nquant, vector<int>(KK, 0) );
-
-  double scaling_factor = 1.0;
-  complex<double> iota(0.0, 1.0);
-  double kB = boltzmann/hartree;
- 
-
-  m=n;
-  nvec = index_int2vec(nn, m, nquant, KK);
-
-  //=============== Liouvillian =====================
-  drho_n_dt = -iota * ( Ham * rho[n] - rho[n] * Ham ); 
-
-
-  if(zero[n]==0){  // matrix at n is not filtered out
-
-    //============= Friction ======================
-    for(m=1; m<=nquant; m++){
-      for(k=0; k<=KK; k++){
-        drho_n_dt -= nvec[m][k] * gamma_matsubara[k] * rho[n];
-      }// for k
-    } // for m
-
-       
-    if(do_truncate==1){
-      // Ihizaki-Tanimura scheme for truncation
-      // JPSJ 74 3131, 2005
-      complex<double> matsubara_sum = compute_matsubara_sum(gamma_matsubara, c_matsubara, KK);
-      double pref = eta * kB * temperature/gamma_matsubara[0] - std::real(matsubara_sum);
-      
-      for(m=1; m<=nquant; m++){         
-        commut = el_phon_coupl[m] * rho[n] - rho[n] * el_phon_coupl[m];
-        commut = el_phon_coupl[m] * commut - commut * el_phon_coupl[m];
-        drho_n_dt -= pref *commut;
-      }
-
-    }// if 
-  }// zero[n] ==0
-
-  
-
-
-  for(m=1; m<=nquant; m++){
-    for(k=0; k<=KK; k++){
-      nplus = map_nplus[m][k][n];
-
-      if(nplus > 0 && nplus <= nn_tot){
-        if(zero[nplus]==0){
-
-          scaling_factor = 1.0;          
-          if(do_scale==1){
-            // Scaled HEOM approach from JCP 130, 084105 (2009)
-            scaling_factor = sqrt((nvec[m][k]+1.0)*abs(c_matsubara[k]));
-          }
-
-          drho_n_dt -=  iota*( el_phon_coupl[m] * rho[nplus] - rho[nplus] * el_phon_coupl[m]) * scaling_factor;
-
-        }// zero[nplus] == 0
-      }// if 
-
-    }// for k
-  } // for m
-
-
-  for(m=1; m<=nquant; m++){
-    for(k=0; k<=KK; k++){
-      nminus = map_nneg[m][k][n];
-
-      if(nminus > 0 && nminus <= nn_tot){
-
-        if(zero[nminus]==0){
-
-          term1 = c_matsubara[k] * el_phon_coupl[m] * rho[nminus];
-          term2 = std::conj(c_matsubara[k]) * rho[nminus] * el_phon_coupl[m];
-
-
-          scaling_factor = nvec[m][k];
-          if(do_scale==1){
-            // Scaled HEOM approach from JCP 130, 084105 (2009)
-            scaling_factor =  sqrt(nvec[m][k]/abs(c_matsubara[k]));
-          } 
-
-           drho_n_dt -= iota * (term1 - term2) * scaling_factor;
-
-        }// if
-      }// if 
-    }// for k 
-  }// for m
-
-
-  return drho_n_dt;
-
-}
-
-
-
-
-CMATRIX compute_deriv_n_new(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRIX>& el_phon_coupl,
         double eta, double temperature, 
         vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara,
         int truncation_scheme, complex<double> truncation_prefactor, int do_scale, vector<int>& nonzero,
@@ -964,30 +413,224 @@ CMATRIX compute_deriv_n_new(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CM
 
 
 
-void unpack_rho(vector<CMATRIX>& rho_unpacked, CMATRIX& RHO){
-/**
-*/
+CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
+    /**
+
+    RHO - CMATRIX((nn_tot)*nquant, nquant) - all the density matrices stacked together in a super-column
+    prms - Python dict - control parameters
+    
+    */
+
+    int n_threads = 1;
+    int truncation_scheme = 1;
+    int do_scale = 1;
+
 
     int i, n;
     int nquant = RHO.n_cols;
-    int nn_tot = int(RHO.n_rows / nquant) - 1;
+    int nn_tot = int(RHO.n_rows / nquant);
 
-    if(rho_unpacked.size() != (nn_tot+1) ) {   cout<<"ERROR in unpack_rho: \n"; exit(0); }
+
+    CMATRIX Ham(nquant, nquant);
+    double eta = 0.0;
+    double gamma = 0.0;
+    double temperature = 300.0;
+    int KK; KK = 0;
+
+    vector<double> gamma_matsubara;
+    vector< complex<double> > c_matsubara;
+    intList2 nvec, nvec_plus, nvec_minus;
+    intList zero, nonzero, adm_list;
+
+    adm_list = vector<int>(nn_tot, 0);
+    for(i=0;i<nn_tot; i++){ adm_list[i] = i; }
+
+    vector<CMATRIX> el_phon_couplings; 
+    int el_phon_couplings_status = 0; // whether we have read them
+
     
+    std::string key;
+    for(i=0;i<len(prms.values());i++){
 
-    vector<int> sub_x(nquant, 0);
-    vector<int> sub_y(nquant, 0);
-    for(i = 0; i<nquant; i++){    sub_y[i] = i;  }
+      key = extract<std::string>(prms.keys()[i]);
 
-    
-    for(n = 0; n<=nn_tot; n++){
+      if(key=="KK"){  KK = extract< int >(prms.values()[i]); }
+      if(key=="Ham"){  Ham = extract<CMATRIX>(prms.values()[i]); }
+      if(key=="eta"){  eta = extract<double>(prms.values()[i]); }
+      if(key=="gamma"){  gamma = extract<double>(prms.values()[i]); }
+      if(key=="temperature"){  temperature = extract<double>(prms.values()[i]); }
+      if(key=="gamma_matsubara"){  gamma_matsubara = extract< doubleList >(prms.values()[i]); }
+      if(key=="c_matsubara"){  c_matsubara = extract< complexList >(prms.values()[i]); }
+      if(key=="truncation_scheme"){  truncation_scheme = extract< int >(prms.values()[i]); }
+      if(key=="do_scale"){  do_scale = extract< int >(prms.values()[i]); }
+      if(key=="el_phon_couplings"){  
+        el_phon_couplings = extract< CMATRIXList >(prms.values()[i]); 
+        el_phon_couplings_status = 1;
+      }
+      if(key=="nvec"){  nvec = extract< intList2 >(prms.values()[i]); }
+      if(key=="nvec_plus"){  nvec_plus = extract< intList2 >(prms.values()[i]); }
+      if(key=="nvec_minus"){ nvec_minus = extract< intList2 >(prms.values()[i]); }
+      if(key=="nonzero"){  nonzero = extract< intList >(prms.values()[i]); }
+      if(key=="adm_list"){  adm_list = extract< intList >(prms.values()[i]); }
 
-      for(i = 0; i<nquant; i++){    sub_x[i] = n*nquant + i;  }
-      pop_submatrix(RHO, rho_unpacked[n], sub_x, sub_y );
-        
+      if(key=="num_threads"){ n_threads = extract<int>(prms.values()[i]); }
+
     }
 
+    if(el_phon_couplings_status==0){
+      el_phon_couplings = initialize_el_phonon_couplings(nquant);
+    }
+
+    complex<double> truncation_prefactor(0.0, 0.0);
+    complex<double> iota(0.0, 1.0);
+    double kB = boltzmann/hartree;
+
+    if(truncation_scheme==1 || truncation_scheme==2){
+      // Ihizaki-Tanimura scheme for truncation
+      // JPSJ 74 3131, 2005
+
+      truncation_prefactor = complex<double>(eta * kB * temperature/gamma_matsubara[0], 0.0);
+
+      if(truncation_scheme==1){
+        // 1 - according to Schulten, with real part of Matsubara terms
+        // Taking the real part in the line below is really important! otherwise, the result
+        // is quite erratic
+        truncation_prefactor -= std::real( compute_matsubara_sum(gamma_matsubara, c_matsubara, KK) );
+      }
+
+      if(truncation_scheme==2){
+        // 2 - according to Schulten, but with full Matsubara terms
+        // But this is how it is supposed to be
+        truncation_prefactor -= compute_matsubara_sum(gamma_matsubara, c_matsubara, KK);
+      }
+    }
+
+    if(truncation_scheme==3 || truncation_scheme==4){
+      // 3 - according to Shi, with real part of Matsubara terms
+      // 4 - according to Shi, but with full Matsubara terms
+
+      // This is a bit unoptimized approach to call the bath setups here
+      int more = 200;
+      int KK_ext = KK + more;
+      vector<double> gamma_matsubara_ext;
+      vector< complex<double> > c_matsubara_ext;
+      setup_bath(KK_ext, eta, gamma, temperature, gamma_matsubara_ext, c_matsubara_ext);
+
+      complex<double> sum_KK; sum_KK = compute_matsubara_sum(gamma_matsubara, c_matsubara, KK);
+      complex<double> sum_KK_ext; sum_KK_ext = compute_matsubara_sum(gamma_matsubara_ext, c_matsubara_ext, KK+more);
+
+      if(truncation_scheme==3){
+        truncation_prefactor = sum_KK_ext - sum_KK;
+      }
+
+      if(truncation_scheme==4){
+        truncation_prefactor = std::real( sum_KK_ext - sum_KK);
+      }
+
+
+    }
+
+
+    CMATRIX dRHO(nn_tot*nquant, nquant);
+    CMATRIX drho(nquant, nquant);
+    vector<CMATRIX> rho_unpacked(nn_tot, CMATRIX(nquant, nquant));
+    vector<CMATRIX> drho_unpacked(nn_tot, CMATRIX(nquant, nquant));
+
+    unpack_mtx(rho_unpacked, RHO);
+
+    int nn_nonzero = adm_list.size();
+
+    #pragma omp parallel num_threads(n_threads)
+    {
+        #pragma omp for
+        for(int n1=0; n1<nn_nonzero; n1++){
+            drho_unpacked[adm_list[n1]] = compute_deriv_n(adm_list[n1], rho_unpacked, Ham, el_phon_couplings, eta, temperature, 
+                gamma_matsubara, c_matsubara, truncation_scheme, truncation_prefactor, do_scale, nonzero, nvec, nvec_plus, nvec_minus);
+        }
+    }
+
+
+    pack_mtx(drho_unpacked, dRHO);
+
+    return dRHO;
+
 }
+
+
+
+
+vector<CMATRIX> initialize_el_phonon_couplings(int nquant){
+/**
+  Compute the matrices  Q_m = |m><m| - the simplest type of the coupling of electrons to phonons
+
+*/
+
+  vector<CMATRIX> projectors(nquant, CMATRIX(nquant, nquant));
+
+  for(int m=0; m<nquant; m++){
+
+    projectors[m] = 0.0;
+    projectors[m].set(m,m, complex<double>(1.0, 0.0));  // matrix |m><m|
+  }
+
+  return projectors;
+
+}
+
+
+complex<double> compute_matsubara_sum(vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK){
+/**
+  Compute the sum of the c/gamma terms over all Matsubara frequencies
+*/
+
+  complex<double> matsubara_sum(0.0, 0.0);
+  for(int k=0; k<=KK; k++){
+    matsubara_sum += c_matsubara[k]/gamma_matsubara[k];
+  }
+
+  return matsubara_sum;
+
+}
+
+
+void setup_bath(int KK, double eta, double gamma, double temperature,
+                vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara){
+/** 
+  KK - (KK+1) is the number of Matsubara frequencies
+  eta - reorganization energy of the bath [Ha]
+  gamma - the system-bath interaction frequency [a.u.]
+  temperature - the bath temperature [K]
+*/
+
+  int k, i;
+
+  complex<double> one(1.0, 0.0);
+  complex<double> iota(0.0, 1.0);
+
+  double kB = boltzmann/hartree;
+  double kT = kB * temperature;
+
+  c_matsubara = vector< complex<double> >(KK+1, complex<double>(0.0, 0.0) );
+  gamma_matsubara = vector<double>(KK+1, 0.0 );
+
+  gamma_matsubara[0] = gamma;
+  c_matsubara[0] = 0.5*eta*gamma * ( 1.0/tan( 0.5 * gamma/kT )*one - iota );
+
+  for(k=1; k<=KK; k++){
+
+    gamma_matsubara[k] = 2.0*k*M_PI*kT;
+
+    double g = gamma_matsubara[k];
+    c_matsubara[k] = 2*eta*kT * (gamma* g/(g*g - gamma*gamma));
+  }
+
+
+}
+
+
+
+
+
 
 
 void unpack_mtx(vector<CMATRIX>& rho_unpacked, CMATRIX& RHO){
@@ -1014,30 +657,6 @@ void unpack_mtx(vector<CMATRIX>& rho_unpacked, CMATRIX& RHO){
     }
 
 }
-
-
-void pack_rho(vector<CMATRIX>& rho_unpacked, CMATRIX& RHO){
-
-    int i, n;
-    int nquant = RHO.n_cols;
-    int nn_tot = int(RHO.n_rows / nquant) - 1;
-
-    if(rho_unpacked.size() != (nn_tot+1) ) {   cout<<"ERROR in pack_rho: \n"; exit(0); }
-    
-
-    vector<int> sub_x(nquant, 0);
-    vector<int> sub_y(nquant, 0);
-    for(i = 0; i<nquant; i++){    sub_y[i] = i;  }
-
-    
-    for(n = 0; n<=nn_tot; n++){
-
-      for(i = 0; i<nquant; i++){    sub_x[i] = n*nquant + i;  }
-      push_submatrix(RHO, rho_unpacked[n], sub_x, sub_y );
-        
-    }
-}
-
 
 
 void pack_mtx(vector<CMATRIX>& rho_unpacked, CMATRIX& RHO){
@@ -1149,191 +768,6 @@ void inv_scale_rho(vector<CMATRIX>& rho, vector<CMATRIX>& rho_scaled, bp::dict p
 }
 
 
-
-
-CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
-    /**
-
-    RHO - CMATRIX((nn_tot)*nquant, nquant) - all the density matrices stacked together in a super-column
-    prms - Python dict - control parameters
-    
-    */
-
-    int n_threads = 1;
-    int truncation_scheme = 1;
-    int do_scale = 1;
-
-
-    int i, n;
-    int nquant = RHO.n_cols;
-    int nn_tot = int(RHO.n_rows / nquant);
-
-
-    CMATRIX Ham(nquant, nquant);
-    double eta = 0.0;
-    double gamma = 0.0;
-    double temperature = 300.0;
-    int KK; KK = 0;
-
-    vector<double> gamma_matsubara;
-    vector< complex<double> > c_matsubara;
-    intList2 nvec, nvec_plus, nvec_minus;
-    intList zero, nonzero, adm_list;
-
-    adm_list = vector<int>(nn_tot, 0);
-    for(i=0;i<nn_tot; i++){ adm_list[i] = i; }
-
-    vector<CMATRIX> el_phon_couplings; 
-    int el_phon_couplings_status = 0; // whether we have read them
-
-    
-    std::string key;
-    for(i=0;i<len(prms.values());i++){
-
-      key = extract<std::string>(prms.keys()[i]);
-
-      if(key=="KK"){  KK = extract< int >(prms.values()[i]); }
-      if(key=="Ham"){  Ham = extract<CMATRIX>(prms.values()[i]); }
-      if(key=="eta"){  eta = extract<double>(prms.values()[i]); }
-      if(key=="gamma"){  gamma = extract<double>(prms.values()[i]); }
-      if(key=="temperature"){  temperature = extract<double>(prms.values()[i]); }
-      if(key=="gamma_matsubara"){  gamma_matsubara = extract< doubleList >(prms.values()[i]); }
-      if(key=="c_matsubara"){  c_matsubara = extract< complexList >(prms.values()[i]); }
-      if(key=="truncation_scheme"){  truncation_scheme = extract< int >(prms.values()[i]); }
-      if(key=="do_scale"){  do_scale = extract< int >(prms.values()[i]); }
-      if(key=="el_phon_couplings"){  
-        el_phon_couplings = extract< CMATRIXList >(prms.values()[i]); 
-        el_phon_couplings_status = 1;
-      }
-      if(key=="nvec"){  nvec = extract< intList2 >(prms.values()[i]); }
-      if(key=="nvec_plus"){  nvec_plus = extract< intList2 >(prms.values()[i]); }
-      if(key=="nvec_minus"){ nvec_minus = extract< intList2 >(prms.values()[i]); }
-      if(key=="nonzero"){  nonzero = extract< intList >(prms.values()[i]); }
-      if(key=="adm_list"){  adm_list = extract< intList >(prms.values()[i]); }
-
-      if(key=="num_threads"){ n_threads = extract<int>(prms.values()[i]); }
-
-    }
-
-    if(el_phon_couplings_status==0){
-      el_phon_couplings = initialize_el_phonon_couplings2(nquant);
-    }
-
-    complex<double> truncation_prefactor(0.0, 0.0);
-    complex<double> iota(0.0, 1.0);
-    double kB = boltzmann/hartree;
-
-    if(truncation_scheme==1 || truncation_scheme==2){
-      // Ihizaki-Tanimura scheme for truncation
-      // JPSJ 74 3131, 2005
-
-      truncation_prefactor = complex<double>(eta * kB * temperature/gamma_matsubara[0], 0.0);
-
-      if(truncation_scheme==1){
-        // 1 - according to Schulten, with real part of Matsubara terms
-        // Taking the real part in the line below is really important! otherwise, the result
-        // is quite erratic
-        truncation_prefactor -= std::real( compute_matsubara_sum(gamma_matsubara, c_matsubara, KK) );
-      }
-
-      if(truncation_scheme==2){
-        // 2 - according to Schulten, but with full Matsubara terms
-        // But this is how it is supposed to be
-        truncation_prefactor -= compute_matsubara_sum(gamma_matsubara, c_matsubara, KK);
-      }
-    }
-
-    if(truncation_scheme==3 || truncation_scheme==4){
-      // 3 - according to Shi, with real part of Matsubara terms
-      // 4 - according to Shi, but with full Matsubara terms
-
-      // This is a bit unoptimized approach to call the bath setups here
-      int more = 200;
-      int KK_ext = KK + more;
-      vector<double> gamma_matsubara_ext;
-      vector< complex<double> > c_matsubara_ext;
-      setup_bath(KK_ext, eta, gamma, temperature, gamma_matsubara_ext, c_matsubara_ext);
-
-      complex<double> sum_KK; sum_KK = compute_matsubara_sum(gamma_matsubara, c_matsubara, KK);
-      complex<double> sum_KK_ext; sum_KK_ext = compute_matsubara_sum(gamma_matsubara_ext, c_matsubara_ext, KK+more);
-
-      if(truncation_scheme==3){
-        truncation_prefactor = sum_KK_ext - sum_KK;
-      }
-
-      if(truncation_scheme==4){
-        truncation_prefactor = std::real( sum_KK_ext - sum_KK);
-      }
-
-
-    }
-
-
-    CMATRIX dRHO(nn_tot*nquant, nquant);
-    CMATRIX drho(nquant, nquant);
-    vector<CMATRIX> rho_unpacked(nn_tot, CMATRIX(nquant, nquant));
-    vector<CMATRIX> drho_unpacked(nn_tot, CMATRIX(nquant, nquant));
-
-    unpack_mtx(rho_unpacked, RHO);
-
-    int nn_nonzero = adm_list.size();
-
-    #pragma omp parallel num_threads(n_threads)
-    {
-        #pragma omp for
-        for(int n1=0; n1<nn_nonzero; n1++){
-            /*
-            n = adm_list[n1];
-            drho_unpacked[n] = compute_deriv_n_new(n, rho_unpacked, Ham, el_phon_couplings, eta, temperature, 
-                gamma_matsubara, c_matsubara, truncation_scheme, truncation_prefactor, do_scale, nonzero, nvec, nvec_plus, nvec_minus);
-            */
-
-            drho_unpacked[adm_list[n1]] = compute_deriv_n_new(adm_list[n1], rho_unpacked, Ham, el_phon_couplings, eta, temperature, 
-                gamma_matsubara, c_matsubara, truncation_scheme, truncation_prefactor, do_scale, nonzero, nvec, nvec_plus, nvec_minus);
-        }
-    }
-
-
-    pack_mtx(drho_unpacked, dRHO);
-
-    return dRHO;
-
-}
-
-
-void setup_bath(int KK, double eta, double gamma, double temperature,
-                vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara){
-/** 
-  KK - (KK+1) is the number of Matsubara frequencies
-  eta - reorganization energy of the bath [Ha]
-  gamma - the system-bath interaction frequency [a.u.]
-  temperature - the bath temperature [K]
-*/
-
-  int k, i;
-
-  complex<double> one(1.0, 0.0);
-  complex<double> iota(0.0, 1.0);
-
-  double kB = boltzmann/hartree;
-  double kT = kB * temperature;
-
-  c_matsubara = vector< complex<double> >(KK+1, complex<double>(0.0, 0.0) );
-  gamma_matsubara = vector<double>(KK+1, 0.0 );
-
-  gamma_matsubara[0] = gamma;
-  c_matsubara[0] = 0.5*eta*gamma * ( 1.0/tan( 0.5 * gamma/kT )*one - iota );
-
-  for(k=1; k<=KK; k++){
-
-    gamma_matsubara[k] = 2.0*k*M_PI*kT;
-
-    double g = gamma_matsubara[k];
-    c_matsubara[k] = 2*eta*kT * (gamma* g/(g*g - gamma*gamma));
-  }
-
-
-}
 
 
 

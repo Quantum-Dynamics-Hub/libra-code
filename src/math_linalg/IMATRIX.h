@@ -2,7 +2,7 @@
 * Copyright (C) 2020 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -11,6 +11,15 @@
 /**
   \file IMATRIX.h
   \brief The file describes the IMATRIX class for representing arbitrary size integer-valued matrices    
+
+  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  NOTE:  the functions that return IMATRIX should not be relpaced by the base template functions
+
+  for some reason, the base_matrix<int> is not recognized as IMATRIX so 
+
+  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 */
 
 
@@ -18,7 +27,7 @@
 #define IMATRIX_H
 
 #include "base_matrix.h"
-#include "MATRIX.h"
+//#include "MATRIX.h"
 
 /// liblibra 
 namespace liblibra{
@@ -58,7 +67,7 @@ public:
   IMATRIX(vector< vector<int> >& mtx);  
 
   ///< Create the int-valued matrix from a real-valued matrix by converting the numbers to ints
-  IMATRIX(MATRIX& mtx);  
+//  IMATRIX(MATRIX& mtx);  
 
  ~IMATRIX(){}
 
@@ -71,24 +80,29 @@ public:
 
 
   ///< Sets the indx's emelent of the M array to the input value (real and imaginary components)  
+/*
   void set(int indx, int value){
     set(indx, value);
   }
-
-  void set(int indx, double value){
-    set(indx, (int)value);
-  }
-
 
   ///< Sets the "row","col" matrix emelent of the M array to the input value (real and imaginary components) 
   void set(int row, int col, int value){
     set(row, col, value);
   }
 
+
+  void set(int indx, double value){
+    set(indx, (int)value);
+  }
+
   void set(int row, int col, double value){
     set(row, col, (int)value);
   }
+*/
 
+  ///=========== Extractions ======================
+//  using base_matrix<int>::col;
+//  using base_matrix<int>::row;
 
 
   ///========= Initialization =====================
@@ -111,6 +125,7 @@ public:
 
   ///========= Transformation =====================
   using base_matrix< int >::Transpose;
+//  using base_matrix< int >::T;
   using base_matrix< int >::swap_cols;
   using base_matrix< int >::swap_rows;
   using base_matrix< int >::permute_cols;
@@ -119,7 +134,6 @@ public:
 
   ///========== Return derivative matrices ===========
   IMATRIX T();   ///< Returns the matrix which is transposed w.r.t. the caller matrix
-
   IMATRIX col(int i); ///< takes given column and makes it n x 1 IMATRIX
   IMATRIX row(int i); ///< takes given column and makes it n x 1 IMATRIX
 
@@ -173,29 +187,22 @@ public:
   IMATRIX operator-(const IMATRIX& rhs);
   IMATRIX operator-(int rhs);
 
+/*
   void operator+=(int f);
   void operator-=(int f);
-
+*/
   IMATRIX operator*(const IMATRIX& ob);
   friend IMATRIX operator*(const IMATRIX& ob, int f);
   friend IMATRIX operator*(int f, const IMATRIX& ob);
 
+/*
   void operator*=(int f);
   void operator/=(int f);
+*/
   IMATRIX operator/(int f);
 
                  
 };
-
-/*
-vector<int> get_reordering(CMATRIX& X);
-vector<int> compute_signature(CMATRIX& Ref, CMATRIX& X);
-vector<int> compute_signature(CMATRIX& X);
-void correct_phase(CMATRIX& Ref, CMATRIX& X);
-void correct_phase(CMATRIX& Ref, CMATRIX* X);
-void correct_phase(CMATRIX& X);
-void correct_phase(CMATRIX* X);
-*/
 
 
 

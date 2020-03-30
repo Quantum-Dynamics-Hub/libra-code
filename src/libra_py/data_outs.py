@@ -28,6 +28,26 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 
+def print_matrix(x):
+
+    if type(x).__name__ in ["MATRIX", "IMATRIX", "CMATRIX"]:
+
+        nrows = x.num_of_rows
+        ncols = x.num_of_cols
+
+        for row in range(nrows):
+            line = ""
+            for col in range(ncols):
+                line = line + F"{x.get(row, col)}  "
+            print(line)
+
+    elif type(x).__name__ == "MATRIX3x3":
+        print(F" xx = {x.xx}  xy = {x.xy}  xz = {x.xz}")
+        print(F" yx = {x.yx}  yy = {x.yy}  yz = {x.yz}")
+        print(F" zx = {x.zx}  zy = {x.zy}  zz = {x.zz}")
+
+
+
 def show_matrix_pyplot(X, set_diag_to_zero=0):
     """
 

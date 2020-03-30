@@ -56,6 +56,43 @@ void export_util_objects(){
   def("split_line", expt_split_line_v2);  
 
 
+  int (*expt_is_equal_v1)
+  (vector<int>& vec1, vector<int>& vec2) = &is_equal;
+  def("is_equal", expt_is_equal_v1);
+ 
+  int (*expt_is_included_v1)
+  (vector<int>& vec1, vector<vector<int> >& vec) = &is_included;
+  int (*expt_is_included_v2)
+  (vector<int>& vec1, vector<vector<int> >& vec, int start, int num_of_elts) = &is_included; 
+  def("is_included", expt_is_included_v1);
+  def("is_included", expt_is_included_v2);
+
+  int (*expt_is_present_v1)
+  (vector< vector<int> >& vec, int i, int start, int end) = &is_present;
+  def("is_present", expt_is_present_v1);
+
+  int (*expt_sum_row_v1)
+  (int row, vector<vector<int> >& vec) = &sum_row;
+  def("sum_row", expt_sum_row_v1);
+
+
+
+
+  vector<int> (*expt_allocate_1D_v1)
+  (int sz1) = &allocate_1D;
+  def("allocate_1D", expt_allocate_1D_v1);
+
+  vector< vector<int> > (*expt_allocate_2D_v1)
+  (int sz1, int sz2) = &allocate_2D;
+  def("allocate_2D", expt_allocate_2D_v1);
+
+  vector< vector< vector<int> > > (*expt_allocate_3D_v1)
+  (int sz1, int sz2, int sz3) = &allocate_3D;
+  def("allocate_3D", expt_allocate_3D_v1);
+
+
+
+
   void (*expt_check_input_v1)(boost::python::dict params, boost::python::dict default_params, boost::python::list critical_params) = &check_input;
   def("check_input", expt_check_input_v1);  
  

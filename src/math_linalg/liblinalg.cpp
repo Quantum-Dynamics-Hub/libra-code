@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2017 Alexey V. Akimov
+* Copyright (C) 2017-2020 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -100,6 +100,9 @@ void export_base_matrix(){
       .def("get", expt_get_v1)
       .def("get", expt_get_v2)
 
+      .def("col", &base_matrix<T1>::col )
+      .def("row", &base_matrix<T1>::row )
+
       /// Generic initializaitons 
       .def("diag", expt_diag_v1)
       .def("diag", expt_diag_v2)
@@ -118,6 +121,7 @@ void export_base_matrix(){
 
       /// Generic matrix modifiers
       .def("Transpose", &base_matrix<T1>::Transpose )
+      .def("T", &base_matrix<T1>::T )
       .def("swap_cols", &base_matrix<T1>::swap_cols )
       .def("swap_rows", &base_matrix<T1>::swap_rows )
       .def("permute_cols", &base_matrix<T1>::permute_cols )
@@ -201,11 +205,12 @@ void export_IMATRIX(){
   void (IMATRIX::*expt_min_row_elt_v1)(int, int&, int&) = &IMATRIX::min_row_elt;
   boost::python::list (IMATRIX::*expt_min_row_elt_v2)(int) = &IMATRIX::min_row_elt;
 
-  void (IMATRIX::*expt_set_v1)(int, int) = &IMATRIX::set;
+//  void (IMATRIX::*expt_set_v1)(int, int) = &IMATRIX::set;
+//  void (IMATRIX::*expt_set_v2)(int, int, int) = &IMATRIX::set;
+/*
   void (IMATRIX::*expt_set_v2)(int, double) = &IMATRIX::set;
-  void (IMATRIX::*expt_set_v3)(int, int, int) = &IMATRIX::set;
   void (IMATRIX::*expt_set_v4)(int, int, double) = &IMATRIX::set;
-
+*/
 
   class_< IMATRIX, boost::python::bases<base_matrix< int > > >("IMATRIX",init<>())
       .def(init<int,int>())
@@ -215,13 +220,14 @@ void export_IMATRIX(){
       .def("__deepcopy__", &generic__deepcopy__<IMATRIX>)
 
       /// Setters and getters
-      .def("set", expt_set_v1)
-      .def("set", expt_set_v2)
+//      .def("set", expt_set_v1)
+//      .def("set", expt_set_v2)
+/*
       .def("set", expt_set_v3)
       .def("set", expt_set_v4)
+*/
 
 
-/*
 
       /// Initializations
 //      .def("diag", &IMATRIX::diag)
@@ -235,9 +241,9 @@ void export_IMATRIX(){
 
 
       /// Returning matrix derivatives
-      .def("T", &IMATRIX::T)         // return a transposed matrix
-      .def("col", &IMATRIX::col)     // return given column of the matrix 
-      .def("row", &IMATRIX::row)     // return given row of the matrix 
+//      .def("T", &IMATRIX::T)         // return a transposed matrix
+//      .def("col", &IMATRIX::col)     // return given column of the matrix 
+//      .def("row", &IMATRIX::row)     // return given row of the matrix 
 
       /// Properties of the matrix
       .def("max_elt", &IMATRIX::max_elt)
@@ -262,7 +268,7 @@ void export_IMATRIX(){
       .def(self*int())
       .def(int()*self)
       .def(self/int())
-*/
+
   ;
 
   class_< IMATRIXList >("IMATRIXList")
@@ -315,9 +321,9 @@ void export_MATRIX(){
       .def("init", expt_init_v1)
 
       /// Returning matrix derivatives
-      .def("T", &MATRIX::T )
-      .def("col", &MATRIX::col)
-      .def("row", &MATRIX::row)
+//      .def("T", &MATRIX::T )
+//      .def("col", &MATRIX::col)
+//      .def("row", &MATRIX::row)
 
       /// Properties of the matrix
       .def("NonOrtogonality_Measure", &MATRIX::NonOrtogonality_Measure)
@@ -428,14 +434,14 @@ void export_CMATRIX(){
 
 
       /// Returning matrix derivatives
-      .def("T", &CMATRIX::T)         // return a transposed matrix
+//      .def("T", &CMATRIX::T)         // return a transposed matrix
       .def("H", &CMATRIX::H)         // return a Hermitian-conjugate matrix
       .def("conj", &CMATRIX::conj)   // return a complex conjugate matrix
       .def("real", &CMATRIX::real)
       .def("imag", &CMATRIX::imag)
       .def("get_components", &CMATRIX::get_components)
-      .def("col", &CMATRIX::col)     // return given column of the matrix 
-      .def("row", &CMATRIX::row)     // return given row of the matrix 
+//      .def("col", &CMATRIX::col)     // return given column of the matrix 
+//      .def("row", &CMATRIX::row)     // return given row of the matrix 
 
       /// Properties of the matrix
       .def("NonOrtogonality_Measure", &CMATRIX::NonOrtogonality_Measure)
@@ -757,7 +763,7 @@ void export_linalg_objects(){
 
 */
 
-
+  ///============== 1D data ======================
 
   class_< intList >("intList")
       .def(vector_indexing_suite< intList >())
@@ -777,6 +783,7 @@ void export_linalg_objects(){
 
 
 
+  ///============== 2D data ======================
 
   class_< intList2 >("intList2")
       .def(vector_indexing_suite< intList2 >())
@@ -790,8 +797,27 @@ void export_linalg_objects(){
       .def(vector_indexing_suite< doubleList2 >())
   ;
 
-  class_< complexList >("complexList2")
+  class_< complexList2 >("complexList2")
       .def(vector_indexing_suite< complexList2 >())
+  ;
+
+
+  ///============== 3D data ======================
+
+  class_< intList3 >("intList3")
+      .def(vector_indexing_suite< intList3 >())
+  ;
+
+  class_< floatList3 >("floatList3")
+      .def(vector_indexing_suite< floatList3 >())
+  ;
+
+  class_< doubleList3 >("doubleList3")
+      .def(vector_indexing_suite< doubleList3 >())
+  ;
+
+  class_< complexList3 >("complexList3")
+      .def(vector_indexing_suite< complexList3 >())
   ;
 
 
