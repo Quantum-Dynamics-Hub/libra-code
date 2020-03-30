@@ -100,8 +100,8 @@ void export_base_matrix(){
       .def("get", expt_get_v1)
       .def("get", expt_get_v2)
 
-      .def("col", &base_matrix<T1>::col )
-      .def("row", &base_matrix<T1>::row )
+//      .def("col", &base_matrix<T1>::col )
+//      .def("row", &base_matrix<T1>::row )
 
       /// Generic initializaitons 
       .def("diag", expt_diag_v1)
@@ -121,7 +121,7 @@ void export_base_matrix(){
 
       /// Generic matrix modifiers
       .def("Transpose", &base_matrix<T1>::Transpose )
-      .def("T", &base_matrix<T1>::T )
+//      .def("T", &base_matrix<T1>::T )
       .def("swap_cols", &base_matrix<T1>::swap_cols )
       .def("swap_rows", &base_matrix<T1>::swap_rows )
       .def("permute_cols", &base_matrix<T1>::permute_cols )
@@ -241,9 +241,9 @@ void export_IMATRIX(){
 
 
       /// Returning matrix derivatives
-//      .def("T", &IMATRIX::T)         // return a transposed matrix
-//      .def("col", &IMATRIX::col)     // return given column of the matrix 
-//      .def("row", &IMATRIX::row)     // return given row of the matrix 
+      .def("T", &IMATRIX::T)         // return a transposed matrix
+      .def("col", &IMATRIX::col)     // return given column of the matrix 
+      .def("row", &IMATRIX::row)     // return given row of the matrix 
 
       /// Properties of the matrix
       .def("max_elt", &IMATRIX::max_elt)
@@ -321,9 +321,9 @@ void export_MATRIX(){
       .def("init", expt_init_v1)
 
       /// Returning matrix derivatives
-//      .def("T", &MATRIX::T )
-//      .def("col", &MATRIX::col)
-//      .def("row", &MATRIX::row)
+      .def("T", &MATRIX::T )
+      .def("col", &MATRIX::col)
+      .def("row", &MATRIX::row)
 
       /// Properties of the matrix
       .def("NonOrtogonality_Measure", &MATRIX::NonOrtogonality_Measure)
@@ -434,14 +434,14 @@ void export_CMATRIX(){
 
 
       /// Returning matrix derivatives
-//      .def("T", &CMATRIX::T)         // return a transposed matrix
+      .def("T", &CMATRIX::T)         // return a transposed matrix
       .def("H", &CMATRIX::H)         // return a Hermitian-conjugate matrix
       .def("conj", &CMATRIX::conj)   // return a complex conjugate matrix
       .def("real", &CMATRIX::real)
       .def("imag", &CMATRIX::imag)
       .def("get_components", &CMATRIX::get_components)
-//      .def("col", &CMATRIX::col)     // return given column of the matrix 
-//      .def("row", &CMATRIX::row)     // return given row of the matrix 
+      .def("col", &CMATRIX::col)     // return given column of the matrix 
+      .def("row", &CMATRIX::row)     // return given row of the matrix 
 
       /// Properties of the matrix
       .def("NonOrtogonality_Measure", &CMATRIX::NonOrtogonality_Measure)
@@ -527,13 +527,23 @@ void export_VECTOR(){
 
       .def(self+self)
       .def(self+double())
+      .def(self+=double())
+      .def(self+=self)
+
       .def(self-self)
+      .def(self-double())
+      .def(self-=double())
+      .def(self-=self)
+
+      .def(self*self)
       .def(self*double())
       .def(double()*self)
-      .def(self/double())
-      .def(self*self)
-//      .def(self*MATRIX())
+      .def(self*=double())
       .def(MATRIX()*self)
+
+      .def(self/double())
+      .def(self/=double())
+
       .def(self==other<VECTOR>())
       .def(self!=other<VECTOR>())
 

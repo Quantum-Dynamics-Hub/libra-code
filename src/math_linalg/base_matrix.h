@@ -170,22 +170,22 @@ public:
   ///< Returns the matrix element accessed by its row and coloumn indices
   T1 get(int i, int j){  return M[i*n_cols+j];  }
 
-
+/**
   ///==================== Extractions ==============================
   base_matrix<T1> col(int i){ 
-  /** takes given column and makes it n x 1 matrix */
+  /// takes given column and makes it n x 1 matrix 
     base_matrix<T1> tmp(n_rows,1);
     for(int j=0;j<n_rows;j++){ tmp.M[j] = M[j*n_cols+i]; }
     return tmp;
   }
 
   base_matrix<T1> row(int i){ 
-  /** takes given row and makes it 1 x n matrix */
+  /// takes given row and makes it 1 x n matrix 
     base_matrix<T1> tmp(1,n_cols);
     for(int j=0;j<n_cols;j++){ tmp.M[j] = M[i*n_cols+j]; }
     return tmp;
   }
-
+*/
  
   ///========= Initialization =====================
   void diag(int dim, T1 x){ 
@@ -400,12 +400,13 @@ public:
 
   }
 
+/**
   base_matrix<T1> T(){   
-  /** Returns the matrix which is transposed w.r.t. the caller matrix */
+  // Returns the matrix which is transposed w.r.t. the caller matrix 
     base_matrix<T1> res(*this); res.Transpose();
     return res;    
   }
-
+*/
 
   void swap_cols(int I, int J){ ///< Swaps two columns
 
