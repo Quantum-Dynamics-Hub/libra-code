@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015-2020 Alexey V. Akimov
+* Copyright (C) 2015 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 3 of
+* as published by the Free Software Foundation, either version 2 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -47,11 +47,6 @@ typedef std::vector< std::vector<int> > intList2;       ///< data type for holdi
 typedef std::vector< std::vector<float> > floatList2;   ///< data type for holding the list of lists of floats
 typedef std::vector< std::vector<double> > doubleList2; ///< data type for holding the list of lists of doubles
 typedef std::vector< std::vector<std::complex<double> > > complexList2;  ///< data type for holding the list of lists of complex values
-
-typedef std::vector< std::vector<  std::vector<int> > > intList3;    ///< data type for holding the list of lists of lists of integers
-typedef std::vector< std::vector<  std::vector<float> > > floatList3;    ///< data type for holding the list of lists of lists of floats
-typedef std::vector< std::vector<  std::vector<double> > > doubleList3;    ///< data type for holding the list of lists of lists of double
-typedef std::vector< std::vector<  std::vector< complex<double> > > > complexList3;    ///< data type for holding the list of lists of lists of complex
 
 
 typedef std::vector<vector<int> > intMap;  ///< data type for holding the table of integers

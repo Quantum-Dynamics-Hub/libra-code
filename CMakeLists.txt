@@ -78,7 +78,7 @@ MESSAGE("${Boost_INCLUDE_DIRS}")
 #
 IF(CMAKE_COMPILER_IS_GNUCXX)
 # For Linux
-  ADD_DEFINITIONS("-Wall -Wl,-z,defs")
+  ADD_DEFINITIONS("-Wall")
 # For Cygwin
 #  ADD_DEFINITIONS("-Wall -DCYGWIN")
 ELSE()

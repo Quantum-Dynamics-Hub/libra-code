@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2019-2020 Alexey V. Akimov
+* Copyright (C) 2019 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -25,6 +25,8 @@ namespace libdyn{
 namespace libheom{
 
 
+
+typedef std::vector< std::vector<  std::vector<int> > > intList3;    ///< data type for holding the list of lists of integers
 
 
 void export_heom_objects();

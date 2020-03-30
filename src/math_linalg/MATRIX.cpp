@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015-2020 Alexey V. Akimov
+* Copyright (C) 2015 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 3 of
+* as published by the Free Software Foundation, either version 2 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -14,12 +14,10 @@
     
 */
 
-#include <stdio.h>
-#include <string.h>
-
 #include "MATRIX.h"
 #include "VECTOR.h"
-
+#include <stdio.h>
+#include <string.h>
 
 // ========================= Matrices ================================
 // ------------------------- Constructors ----------------------------
@@ -83,15 +81,14 @@ the corresponding given input vectors
 
 
 MATRIX MATRIX::T(){   
-// Returns the matrix which is transposed w.r.t. the caller matrix  
+/** Returns the matrix which is transposed w.r.t. the caller matrix  */
 
   MATRIX res(*this); res.Transpose();
   return res;    
 }
 
-
 MATRIX MATRIX::col(int i){
-// takes given column and makes it n x 1 CMATRIX  
+/** takes given column and makes it n x 1 CMATRIX  */
 
   MATRIX tmp(n_rows,1);
   for(int j=0;j<n_rows;j++){ tmp.M[j] = M[j*n_cols+i]; }
@@ -99,12 +96,13 @@ MATRIX MATRIX::col(int i){
 }
 
 MATRIX MATRIX::row(int i){ 
-// takes given row and makes it 1 x n CMATRIX  
+/** takes given row and makes it 1 x n CMATRIX  */
 
   MATRIX tmp(1,n_cols);
   for(int j=0;j<n_cols;j++){ tmp.M[j] = M[i*n_cols+j]; }
   return tmp;
 }
+
 
 
 double MATRIX::NonOrtogonality_Measure(){

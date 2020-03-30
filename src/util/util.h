@@ -61,21 +61,6 @@ void extract_1D(vector<double>& in, vector<double>& out, vector<int>& templ,int 
 void extract_2D(vector< vector<double> >& in, vector< vector<double> >& out, int minx,int maxx, int miny, int maxy );
 void extract_2D(vector< vector<double> >& in, vector< vector<double> >& out, vector<int>& templ,int shift);
 
-// Checking the presence of vectors in lists of vectors
-int is_equal(vector<int>& vec1, vector<int>& vec2);
-int is_included(vector<int>& vec1, vector<vector<int> >& vec);
-int is_included(vector<int>& vec1, vector<vector<int> >& vec, int start, int num_of_elts);
-int is_present(vector< vector<int> >& vec, int i, int start, int end);
-
-// Properties of vectors
-int sum_row(int row, vector<vector<int> >& vec);
-
-// Allocating storage
-vector<int> allocate_1D(int sz1);
-vector< vector<int> > allocate_2D(int sz1, int sz2);
-vector< vector< vector<int> > > allocate_3D(int sz1, int sz2, int sz3);
-
-
 
 void check_input(boost::python::dict params, boost::python::dict default_params, boost::python::list critical_params);
 

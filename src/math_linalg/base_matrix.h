@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015-2020 Alexey V. Akimov
+* Copyright (C) 2015-2017 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 3 of
+* as published by the Free Software Foundation, either version 2 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -170,21 +170,6 @@ public:
   ///< Returns the matrix element accessed by its row and coloumn indices
   T1 get(int i, int j){  return M[i*n_cols+j];  }
 
-
-  ///==================== Extractions ==============================
-  base_matrix<T1> col(int i){ 
-  /** takes given column and makes it n x 1 matrix */
-    base_matrix<T1> tmp(n_rows,1);
-    for(int j=0;j<n_rows;j++){ tmp.M[j] = M[j*n_cols+i]; }
-    return tmp;
-  }
-
-  base_matrix<T1> row(int i){ 
-  /** takes given row and makes it 1 x n matrix */
-    base_matrix<T1> tmp(1,n_cols);
-    for(int j=0;j<n_cols;j++){ tmp.M[j] = M[i*n_cols+j]; }
-    return tmp;
-  }
 
  
   ///========= Initialization =====================
@@ -400,11 +385,6 @@ public:
 
   }
 
-  base_matrix<T1> T(){   
-  /** Returns the matrix which is transposed w.r.t. the caller matrix */
-    base_matrix<T1> res(*this); res.Transpose();
-    return res;    
-  }
 
 
   void swap_cols(int I, int J){ ///< Swaps two columns
@@ -710,6 +690,8 @@ public:
 
 
 
+
+
   ///< Increment by a matrix
   void operator+=(const base_matrix<T1>& ob){
     for(int i=0;i<n_elts;i++) { M[i] += ob.M[i]; }
@@ -723,6 +705,8 @@ public:
   void operator+=(double f){  
     for(int i=0;i<n_elts;i++) { M[i] += (T1)f; }
   }
+
+
 
 
 
@@ -764,6 +748,10 @@ public:
   }
 
 
+
+
+
+
   ///< Comparison: true if matrices are not equal to each other
   friend int operator !=(const base_matrix<T1>& m1, const base_matrix<T1>& m2){
     if(m1.n_cols != m2.n_cols){ return 1; } 
@@ -784,8 +772,6 @@ public:
 
 
 };
-
-
 
 
 

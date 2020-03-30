@@ -57,7 +57,6 @@ CMATRIX::CMATRIX(vector<vector<double> >& re_part,vector<vector<double> >& im_pa
  
 }
 
-/*
 CMATRIX::CMATRIX(IMATRIX& re_part){
 
   n_rows = re_part.n_rows;
@@ -89,7 +88,7 @@ CMATRIX::CMATRIX(const IMATRIX& re_part){
   }
 
 }
-*/
+
 
 CMATRIX::CMATRIX(MATRIX& re_part){
 
@@ -149,12 +148,14 @@ CMATRIX::CMATRIX(MATRIX& re_part,MATRIX& im_part){
 
 }
 
+
 CMATRIX CMATRIX::T(){   
-// Returns the matrix which is transposed w.r.t. the caller matrix 
+/** Returns the matrix which is transposed w.r.t. the caller matrix */
 
   CMATRIX res(*this); res.Transpose();
   return res;    
 }
+
 
 CMATRIX CMATRIX::H(){
 /** Returns the matrix which is Hermitian-conjugate to the caller matrix */
@@ -218,8 +219,9 @@ void CMATRIX::get_components(MATRIX& re_part,MATRIX& im_part){
 
 
 
+
 CMATRIX CMATRIX::col(int i){ 
-// takes given column and makes it n x 1 CMATRIX 
+/** takes given column and makes it n x 1 CMATRIX */
 
   CMATRIX tmp(n_rows,1);
   for(int j=0;j<n_rows;j++){ tmp.M[j] = M[j*n_cols+i]; }
@@ -227,12 +229,13 @@ CMATRIX CMATRIX::col(int i){
 }
 
 CMATRIX CMATRIX::row(int i){ 
-// takes given row and makes it 1 x n CMATRIX 
+/** takes given row and makes it 1 x n CMATRIX */
 
   CMATRIX tmp(1,n_cols);
   for(int j=0;j<n_cols;j++){ tmp.M[j] = M[i*n_cols+j]; }
   return tmp;
 }
+
 
 
 

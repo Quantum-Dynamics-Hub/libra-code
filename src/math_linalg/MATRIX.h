@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015-2020 Alexey V. Akimov
+* Copyright (C) 2015 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 3 of
+* as published by the Free Software Foundation, either version 2 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -11,15 +11,6 @@
 /**
   \file MATRIX.h
   \brief The file describes the MATRIX class for representing arbitrary real-valued matrices
-
-  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-  NOTE:  the functions that return MATRIX should not be relpaced by the base template functions
-
-  for some reason, the base_matrix<double> is not recognized as MATRIX so 
-
-  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  
     
 */
 
@@ -39,7 +30,6 @@ namespace liblinalg{
 // Forward declared dependencies
 //class VECTOR;
 //class MATRIX;
-
 
 
 class MATRIX : public base_matrix<double>{
@@ -88,11 +78,6 @@ class MATRIX : public base_matrix<double>{
   using base_matrix<double>::get;
 
 
-  ///=========== Extractions ======================
-//  using base_matrix<double >::col;
-//  using base_matrix<double >::row;
-
-
   ///========= Initialization =====================
   using base_matrix<double>::diag;
   using base_matrix<double>::identity;
@@ -113,7 +98,6 @@ class MATRIX : public base_matrix<double>{
 
   ///========= Transformation =====================
   using base_matrix<double>::Transpose;
-//  using base_matrix<double>::T;
   using base_matrix<double>::swap_cols;
   using base_matrix<double>::swap_rows;
   using base_matrix<double>::permute_cols;
@@ -123,10 +107,11 @@ class MATRIX : public base_matrix<double>{
  
 
   ///========== Return derivative matrices ===========
-
   MATRIX T();   ///< Returns the matrix which is transposed w.r.t. the caller matrix
+
   MATRIX col(int i); ///< takes given column and makes it n x 1 CMATRIX
   MATRIX row(int i); ///< takes given column and makes it n x 1 CMATRIX
+
 
   ///================ Matrix properties =====================
   /// Inherited properties
@@ -165,26 +150,7 @@ class MATRIX : public base_matrix<double>{
 
   ///================ Operator overloads =====================
 
-/*
-void operator=(const base_matrix<T1>& ob)
-void operator=(int f)
-void operator=(double f)
-void operator=(complex<double> f)
-void operator+=(const base_matrix<T1>& ob)
-void operator+=(int f)
-void operator+=(double f)
-void operator-=(const base_matrix<T1>& ob)
-void operator-=(int f)
-void operator-=(double f)
-void operator*=(int f)
-void operator*=(double f)
-void operator/=(int f)
-void operator/=(double f)
-*/
-
-
-
-  using base_matrix<double>::operator=;  
+  using base_matrix<double>::operator=;
   using base_matrix<double>::operator+=;
   using base_matrix<double>::operator-=;
   using base_matrix<double>::operator*=;
@@ -203,9 +169,8 @@ void operator/=(double f)
 
   MATRIX operator*(const MATRIX& ob); ///< Multiplication operator
   friend MATRIX operator*(const MATRIX& ob, int f);
-  friend MATRIX operator*(int f, const MATRIX& ob);
-
   friend MATRIX operator*(const MATRIX& ob, double f);
+  friend MATRIX operator*(int f, const MATRIX& ob);
   friend MATRIX operator*(double f, const MATRIX& ob);
  
   ///< Multiplication of vector and matrix:  matrix * vector
