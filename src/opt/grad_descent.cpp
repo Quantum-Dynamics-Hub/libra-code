@@ -53,7 +53,7 @@ MATRIX grad_descent(bp::object grad_function, MATRIX& dof, bp::object funct_para
   double err = 2.0*grad_tol;
   int iter = 0;
 
-  while(err>grad_tol &&  iter<max_steps){
+  while(err>grad_tol && iter<max_steps){
 
       // Call the Python function with such arguments
       grd = bp::extract<MATRIX>(grad_function(res, funct_params));  
