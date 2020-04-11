@@ -494,6 +494,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   vector<Thermostat> therm;
   if(prms.ensemble==1){  
     therm = vector<Thermostat>(ntraj, Thermostat(prms.thermostat_params));
+    for(traj=0;traj<ntraj;traj++){  therm[traj].init_nhc();  }
   }
 
 
