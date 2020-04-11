@@ -138,6 +138,9 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia, int lvl){
   vector<int> stenc_frc(nnucl, 0);
   vector<int> stenc_col(1, 0);
 
+  // The indicies in stenc_frc reflects which indicies are to be updated in the final F matrix
+  for(i=0;i<nnucl;i++) { stenc_frc[i] = i;}    
+
   for(i=0;i<ampl_dia.n_rows;i++){ stenc_ampl[i] = i;}
 
   for(i=0;i<ampl_dia.n_cols;i++){
@@ -275,6 +278,9 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl){
   vector<int> stenc_ampl(ampl_adi.n_rows, 0);
   vector<int> stenc_frc(nnucl, 0);
   vector<int> stenc_col(1, 0);
+
+  // The indicies in stenc_frc reflects which indicies are to be updated in the final F matrix
+  for(i=0;i<nnucl;i++) { stenc_frc[i] = i;}   
 
   for(i=0;i<ampl_adi.n_rows;i++){ stenc_ampl[i] = i;}
 
