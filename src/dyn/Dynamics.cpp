@@ -435,10 +435,29 @@ vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev){
 
 
 
-
 void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
               vector<int>& act_states,              
               nHamiltonian& ham, bp::object py_funct, bp::dict params, bp::dict dyn_params, Random& rnd){
+/**
+  This is a version to maintain the backward-compatibility
+*/ 
+
+  dyn_control_params prms;
+  prms.set_parameters(dyn_params);
+
+  int ntraj = q.n_cols;
+  vector<Thermostat> therm(ntraj, Thermostat(prms.thermostat_params));
+
+  compute_dynamics(q, p, invM, C, projectors, act_states, ham, py_funct, params, dyn_params, rnd, therm);
+
+}
+
+
+
+void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
+              vector<int>& act_states,              
+              nHamiltonian& ham, bp::object py_funct, bp::dict params, bp::dict dyn_params, Random& rnd,
+              vector<Thermostat>& therm){
 
 /**
   \brief One step of the TSH algorithm for electron-nuclear DOFs for one trajectory
@@ -490,13 +509,14 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   vector<int> t1(ndof, 0); for(dof=0;dof<ndof;dof++){  t1[dof] = dof; }
   vector<int> t2(1,0);
 
-
+/*
+  The initialization should be done only once, outside of this function!
   vector<Thermostat> therm;
   if(prms.ensemble==1){  
     therm = vector<Thermostat>(ntraj, Thermostat(prms.thermostat_params));
     for(traj=0;traj<ntraj;traj++){  therm[traj].init_nhc();  }
   }
-
+*/
 
   if(prms.tsh_method == 3){
     for(traj=0; traj<ntraj; traj++){

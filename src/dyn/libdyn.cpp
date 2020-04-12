@@ -482,6 +482,13 @@ void export_Dyn_objects(){
    bp::dict dyn_params, Random& rnd) = &compute_dynamics;
   def("compute_dynamics", expt_compute_dynamics_v1);
 
+  void (*expt_compute_dynamics_v2)
+  (MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, vector<int>& act_states, 
+   nHamiltonian& ham, bp::object py_funct, bp::dict model_params, bp::dict dyn_params, Random& rnd, 
+   vector<Thermostat>& therm) = &compute_dynamics;
+  def("compute_dynamics", expt_compute_dynamics_v2);
+
+
 
 
 

@@ -693,6 +693,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     properties_to_save = dyn_params["properties_to_save"]
     use_compression = dyn_params["use_compression"]
     compression_level = dyn_params["compression_level"]
+    ensemble = dyn_params["ensemble"]
     
     ndia = Cdia.num_of_rows
     nadi = Cadi.num_of_rows
@@ -718,6 +719,13 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     for tr in range(ntraj):
         U.append(ham.get_basis_transform(Py2Cpp_int([0, tr]) ))
 
+
+    therm = ThermostatList();
+    if ensemble==1:
+        for traj in range(ntraj):
+            therm.append( Thermostat( dyn_params["thermostat_params"] ) )
+            therm[traj].init_nhc();
+
                 
     # Do the propagation
     for i in range(nsteps):
@@ -739,14 +747,20 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
         # Energies 
         Ekin, Epot, Etot, dEkin, dEpot, dEtot = 0.0, 0.0, 0.0,  0.0, 0.0, 0.0
+        Etherm, E_NHC = 0.0, 0.0
         if force_method in [0, 1]:
             Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh_stat.compute_etot_tsh(ham, p, Cdia, Cadi, projectors, states, iM, rep_tdse)
         elif force_method in [2]:
             Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh_stat.compute_etot(ham, p, Cdia, Cadi, projectors, iM, rep_tdse)
 
+        for bath in therm:
+            Etherm += bath.energy()
+        E_NHC = Etot + Etherm
+
+        
 
         save.save_tsh_data_123(_savers, dyn_params, 
-                       i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, states,
+                       i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Etherm, E_NHC, states,
                        pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia  )
 
     
@@ -770,9 +784,9 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
         #============ Propagate ===========        
         model_params.update({"timestep":i})        
         if rep_tdse==0:
-            compute_dynamics(q, p, iM, Cdia, projectors, states, ham, compute_model, model_params, dyn_params, rnd)
+            compute_dynamics(q, p, iM, Cdia, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm)
         elif rep_tdse==1:
-            compute_dynamics(q, p, iM, Cadi, projectors, states, ham, compute_model, model_params, dyn_params, rnd)
+            compute_dynamics(q, p, iM, Cadi, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm)
 
 
     if _savers["mem_saver"]!=None:

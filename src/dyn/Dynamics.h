@@ -80,6 +80,11 @@ vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev);
 void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, vector<int>& act_states, 
               nHamiltonian& ham, bp::object py_funct, bp::dict model_params, bp::dict dyn_params, Random& rnd);
 
+void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, vector<int>& act_states, 
+              nHamiltonian& ham, bp::object py_funct, bp::dict model_params, bp::dict dyn_params, Random& rnd, 
+              vector<Thermostat>& therm);
+
+
 
 
 }// namespace libdyn

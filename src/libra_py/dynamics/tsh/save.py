@@ -82,6 +82,14 @@ def init_tsh_data(saver, hdf5_output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia
         # Fluctuation of average total energy
         saver.add_dataset("dEtot_ave", (_nsteps,) , "R")  
 
+        # Thermostat energy 
+        saver.add_dataset("Etherm", (_nsteps,) , "R")  
+
+        # System + thermostat energy
+        saver.add_dataset("E_NHC", (_nsteps,) , "R")  
+
+
+
 
     if hdf5_output_level>=2:
 
@@ -196,7 +204,7 @@ def init_tsh_savers(params, model_params, nsteps, ntraj, nnucl, nadi, ndia):
 
 
 
-def save_hdf5_1D(saver, i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot):
+def save_hdf5_1D(saver, i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Etherm, E_NHC):
     """
     saver - can be either hdf5_saver or mem_saver
 
@@ -225,6 +233,13 @@ def save_hdf5_1D(saver, i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot):
 
     # Fluctuation average total energy
     saver.save_scalar(i, "dEtot_ave", dEtot)  
+
+    # Thermostat energy 
+    saver.save_scalar(i, "Etherm", Etherm)  
+
+    # System + thermostat energy
+    saver.save_scalar(i, "E_NHC", E_NHC)  
+
 
 
 
@@ -326,7 +341,7 @@ def save_hdf5_4D(saver, i, tr, hvib_adi, hvib_dia, St, U, projector):
 
 
 def save_tsh_data_123(_savers, params, 
-                      i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, states,
+                      i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Etherm, E_NHC, states,
                       pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia
                      ):
 
@@ -342,10 +357,10 @@ def save_tsh_data_123(_savers, params,
 
     
     if hdf5_output_level>=1 and _savers["hdf5_saver"]!=None:
-        save_hdf5_1D(_savers["hdf5_saver"], i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot)
+        save_hdf5_1D(_savers["hdf5_saver"], i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Etherm, E_NHC)
 
     if mem_output_level>=1 and _savers["mem_saver"]!=None:
-        save_hdf5_1D(_savers["mem_saver"], i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot)
+        save_hdf5_1D(_savers["mem_saver"], i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Etherm, E_NHC)
 
 
 
