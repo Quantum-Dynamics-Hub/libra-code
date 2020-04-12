@@ -724,7 +724,8 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     if ensemble==1:
         for traj in range(ntraj):
             therm.append( Thermostat( dyn_params["thermostat_params"] ) )
-            therm[traj].init_nhc();
+            therm[traj].set_Nf_t(nnucl)
+            therm[traj].init_nhc()
 
                 
     # Do the propagation
