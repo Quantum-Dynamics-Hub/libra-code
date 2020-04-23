@@ -126,7 +126,7 @@ MATRIX covariance(MATRIX& X){
 /** 
   Compute a covariance of the data in X:
 
-  cov_ij = <X_i * X_j> = (1/nsampl) sum_k { (X_ik-E[X_i]) * (X_jk-E[X_j]) }
+  cov_ij = <X_i * X_j> = (1/nsampl) sum_k { X_ik * X_jk }
 
   X (ndof x nsampl)
   where ndof - the number of degrees of freedom 
@@ -138,10 +138,7 @@ MATRIX covariance(MATRIX& X){
   int ndof = X.n_rows;
   int sz = X.n_cols;
 
-//  MATRIX dX(ndof, sz);
   MATRIX res(ndof, ndof);
-
-//  dX = deviation(X);
 
   for(int i=0;i<ndof;i++){
     for(int j=0;j<ndof;j++){
@@ -157,11 +154,53 @@ MATRIX covariance(MATRIX& X){
   return res;
 }
 
+
+MATRIX covariance(MATRIX& X, MATRIX& Y){
+/** 
+  Compute a covariance of the data in X and Y:
+
+  cov_ij = <X_i * Y_j> = (1/nsampl) sum_k { X_ik * Y_jk }
+
+  X (ndof x nsampl) and Y (ndof x nsampl)
+  where ndof - the number of degrees of freedom 
+        nsampl - the number of samples on ndof-dimensional data
+
+*/
+
+  int nx = X.n_rows;
+  int ny = Y.n_rows;
+  int sz = X.n_cols;
+
+  if(Y.n_cols!=sz){
+    cout<<"Error in covariance(MATRIX&, MATRIX&): the sizes of the matrices are incompatible\n";
+    cout<<"X is a "<<nx<<" x "<<sz<<" matrix\n";
+    cout<<"Y is a "<<ny<<" x "<<Y.n_cols<<" matrix\n";
+    cout<<"Exiting...\n";
+    exit(0);
+  }
+
+  MATRIX res(nx, ny);
+
+  for(int i=0;i<nx;i++){
+    for(int j=0;j<ny;j++){
+
+      double tmp = 0.0;
+      for(int t=0;t<sz;t++){  tmp += X.get(i,t) * Y.get(j,t);  }
+
+      res.set(i,j, tmp/double(sz) );
+
+    }// for j
+  }// for i
+
+  return res;
+}
+
+
 CMATRIX covariance(CMATRIX& X){
 /** 
   Compute a covariance of the data in X:
 
-  cov_ij = <X_i * X_j> = (1/nsampl) sum_k { (X_ik-E[X_i]) * conj(X_jk-E[X_j]) }
+  cov_ij = <X_i * X_j> = (1/nsampl) sum_k { X_ik * conj(X_jk) }
 
   According to: https://en.wikipedia.org/wiki/Complex_random_variable
 
@@ -175,10 +214,8 @@ CMATRIX covariance(CMATRIX& X){
   int ndof = X.n_rows;
   int sz = X.n_cols;
 
-//  CMATRIX dX(ndof, sz);
   CMATRIX res(ndof, ndof);
 
-//  dX = deviation(X);
 
   for(int i=0;i<ndof;i++){
     for(int j=0;j<ndof;j++){
@@ -190,6 +227,47 @@ CMATRIX covariance(CMATRIX& X){
 
     }
   }
+
+  return res;
+}
+
+
+CMATRIX covariance(CMATRIX& X, CMATRIX& Y){
+/** 
+  Compute a covariance of the data in X and Y:
+
+  cov_ij = <X_i * Y_j> = (1/nsampl) sum_k { X_ik * conj(Y_jk) }
+
+  X (ndof x nsampl) and Y (ndof x nsampl)
+  where ndof - the number of degrees of freedom 
+        nsampl - the number of samples on ndof-dimensional data
+
+*/
+
+  int nx = X.n_rows;
+  int ny = Y.n_rows;
+  int sz = X.n_cols;
+
+  if(Y.n_cols!=sz){
+    cout<<"Error in covariance(CMATRIX&, CMATRIX&): the sizes of the matrices are incompatible\n";
+    cout<<"X is a "<<nx<<" x "<<sz<<" matrix\n";
+    cout<<"Y is a "<<ny<<" x "<<Y.n_cols<<" matrix\n";
+    cout<<"Exiting...\n";
+    exit(0);
+  }
+
+  CMATRIX res(nx, ny);
+
+  for(int i=0;i<nx;i++){
+    for(int j=0;j<ny;j++){
+
+      complex<double> tmp(0.0,0.0);
+      for(int t=0;t<sz;t++){  tmp += X.get(i,t) * std::conj(Y.get(j,t));  }
+
+      res.set(i,j, tmp/double(sz) );
+
+    }// for j
+  }// for i
 
   return res;
 }
