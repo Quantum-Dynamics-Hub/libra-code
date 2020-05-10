@@ -46,6 +46,142 @@ import libra_py.hungarian as hungarian
 
 
 
+
+def build_SD_basis(data_dim, cbm_alpha_index, alpha_include, cbm_beta_index, beta_include, excitation_type):
+    """
+    Builds a Slater Determinant basis based on the indexing notation scheme used in Libra
+
+    Args:
+        data_dim (int): how many rows or columns in the vibronic Hamiltonian matrix. This will be an even number becuase the 
+                        number of alpha orbtials should equal the number of beta orbitals
+        cbm_(alpha/beta)_index (int): index of VBM (or HOMO) in the matrix of the vibronic Hamiltonian 
+                                      (row or column index). Note, this index is from 1 
+        (alpha/beta)_include (int): how many orbitals to include from the cbm_(alpha/beta)_index
+        excitation_type (int):  0: Make SDs with beta electrons excited
+                                1: Make SDs with alpha electrons excited
+                                2: Make two sets of SDs, one for beta and one for alpha electrons excited  
+    """
+
+    num_same_spin_orbitals = int( data_dim / 2 )
+
+    alpha_electrons = []
+    beta_electrons  = []
+
+    # Check for potential errors
+    if data_dim % 2 > 0:
+        print ("The dimensions of your vibronic Hamiltonian matrix (or whatever data you wish to pass to the function build_SD) must be even")
+        print ("Exiting now ..")
+        sys.exit(0)
+
+    if cbm_alpha_index > num_same_spin_orbitals:
+        print ("You must have the same number of alpha and beta spin-orbitals in your basis. The index of the CBM for the alpha spin-orbitals\
+ cannot be greater than 1/2 the total number of spin orbitals ")
+        print ("Exiting now")
+        sys.exit(0)
+
+    elif cbm_alpha_index <= 0:
+        print ("The index of the CBM for the alpha spin-orbitals must be > 0")
+        print ("Exiting now")
+        sys.exit(0)
+
+    elif cbm_beta_index <= num_same_spin_orbitals:
+        print ("You must have the same number of alpha and beta spin-orbitals in your basis. The index of the CBM for the beta spin-orbitals\
+ cannot be less than 1/2 the total number of spin orbitals ")
+        print ("Exiting now")
+        sys.exit(0)
+
+    elif cbm_beta_index > 2*num_same_spin_orbitals:
+        print ("The index of the CBM for the beta spin-orbitals must be < total number of spin-orbitals")
+        print ("Exiting now")
+        sys.exit(0)
+
+    if cbm_alpha_index + alpha_include + 2 > num_same_spin_orbitals:
+        print ("Cannot include more alpha spin-orbitals than there are")
+        print ("Including the maximum amount")
+        alpha_include = num_same_spin_orbitals - cbm_alpha_index - 1
+        print ("New value for alpha_include = ", alpha_include)
+
+    if cbm_beta_index + beta_include + 2 > 2*num_same_spin_orbitals:
+        print ("Cannot include more beta spin-orbitals than there are")
+        print ("Including the maximum amount")
+        beta_include = 2*num_same_spin_orbitals - cbm_beta_index - 1
+        print ("New value for beta_include = ", beta_include) 
+
+    # Make ground state SD
+    for i in range( cbm_alpha_index - alpha_include, cbm_alpha_index + 1):
+        alpha_electrons.append( i )
+    for i in range( cbm_beta_index  - beta_include, cbm_beta_index  + 1):
+        beta_electrons.append( -i )
+
+    gs_SD = alpha_electrons[:] + beta_electrons[:] 
+
+    # Make excited state SDs
+    es_SD    = []
+    SD_basis = []
+   
+    # Excite only alpha electrons 
+    if excitation_type == 0:
+        for i in alpha_electrons:
+            for j in range(cbm_alpha_index + 1, cbm_alpha_index + 2 + alpha_include):
+
+                #es_sd = [ j if electron == i else electron for electron in gs_SD[:] ]  # compact version
+                es_sd = []
+                for electron in gs_SD[:]:
+                    if electron == i:
+                        es_sd.append( j ) 
+                    else:
+                        es_sd.append( electron )
+                es_SD.append( es_sd )
+
+    # Excite only beta electrons
+    elif excitation_type == 1:   
+        for i in beta_electrons:
+            for j in range(cbm_beta_index + 1, cbm_beta_index + 2 + beta_include):
+
+                #es_sd = [ -j if electron == i else electron for electron in gs_SD[:] ]  # compact version
+                es_sd = []
+                for electron in gs_SD[:]:
+                    if electron == i:
+                        es_sd.append( -j )
+                    else:
+                        es_sd.append( electron )
+                es_SD.append( es_sd )
+    
+    # Excite both alpha and beta electrons
+    else:
+        for i in alpha_electrons:
+            for j in range(cbm_alpha_index + 1, cbm_alpha_index + 2 + alpha_include):
+
+                #es_sd = [ j if electron == i else electron for electron in gs_SD[:] ]  # compact version
+                es_sd = []
+                for electron in gs_SD[:]:
+                    if electron == i:
+                        es_sd.append( j )
+                    else:
+                        es_sd.append( electron )
+                es_SD.append( es_sd )
+
+        for i in beta_electrons:
+            for j in range(cbm_beta_index + 1, cbm_beta_index + 2 + beta_include):
+
+                #es_sd = [ -j if electron == i else electron for electron in gs_SD[:] ]  # compact version
+                es_sd = []
+                for electron in gs_SD[:]:
+                    if electron == i:
+                        es_sd.append( -j )
+                    else:
+                        es_sd.append( electron )
+                es_SD.append( es_sd )
+
+    SD_basis.append( gs_SD )
+    for i in range(len(es_SD)):
+        SD_basis.append( es_SD[i] )
+
+    return SD_basis
+
+
+
+
 def get_Lowdin(S):
     """  
     Find the S_i_half for the S matrix - alpha and beta components
