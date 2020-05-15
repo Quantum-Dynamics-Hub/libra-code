@@ -42,7 +42,160 @@ from . import mapping
 import util.libutil as comn
 import libra_py.tsh as tsh
 import libra_py.units as units
+import libra_py.data_read as data_read
 import libra_py.hungarian as hungarian
+
+
+def get_step2_data(_params):
+    """
+    A light function to obtain the step2 data
+
+    Args:
+        params ( dictionary ): Control paramerter of this type of simulation. Can include the follwing keys:
+
+            * **params["basis"]** ( string ): describes if one is using either the spin-diabatic (non spin-orbit coupling) 
+                                              or is using the spin-adiabatic (spin orbit-coupling)
+    """
+
+    params = dict(_params)
+    spin_basis = params["basis"]
+
+    # Fetching the overlap matricies
+    params.update({ "data_re_prefix" : "S_"+spin_basis+"_ks_", "data_re_suffix" : "_re",
+                    "data_im_prefix" : "S_"+spin_basis+"_ks_", "data_im_suffix" : "_im"  } )
+    S = data_read.get_data_sets(params)
+    #print ("\n")
+    #S[0][0].show_matrix()
+    #print (S[0][0].get(0,0))
+    #sys.exit(0)
+
+    # Fetching the time-derivative overlap matricies
+    params.update({ "data_re_prefix" : "St_"+spin_basis+"_ks_", "data_re_suffix" : "_re",
+                    "data_im_prefix" : "St_"+spin_basis+"_ks_", "data_im_suffix" : "_im"  } ) 
+    St = data_read.get_data_sets(params)
+    #print ("\n")
+    #St[0][0].show_matrix()
+    #sys.exit(0)
+ 
+    # Fetching the vibronic Hamiltonian matricies
+    params.update({ "data_re_prefix" : "hvib_"+spin_basis+"_", "data_re_suffix" : "_re",
+                    "data_im_prefix" : "hvib_"+spin_basis+"_", "data_im_suffix" : "_im"  } ) 
+    Hvib_ks = data_read.get_data_sets(params)
+    #print ("\n")
+    #Hvib_ks[0][0].show_matrix()
+    #sys.exit(0)
+
+    return S, St, Hvib_ks
+
+
+
+
+def print_SD_basis(SD_basis):
+    """
+    Just a light function to print the SD basis
+
+    Args:
+        SD_basis ( list of lists of ints ): Slater determinant basis in terms of Kohn-Sham orbital indicies
+
+            Possible ground state configurations
+
+            Ex. 1. SD_basis[0] = [ 5, -15 ]
+            Ex. 2. SD_basis[0] = [ 2, 3, 4, 5, -12, -13, -14, -15 ]
+
+            Possible ground state configurations
+
+            Ex. 1. SD_basis[N > 0] = [ 6, -15 ]
+            Ex. 2. SD_basis[N > 0] = [ 2, 3, 4, 6, -12, -13, -14, -15 ]
+
+            Where we have 10 alpha and beta spin orbitals, and the cbm index for the alpha spin-channel is 5
+            and the cbm index for the beta spin-channel is 15. 
+    """
+
+    for i in range(len(SD_basis)):
+        if i == 0:
+            print (" GS: ", SD_basis[i])
+        else:
+            print (" ES "+str(i)+": ", SD_basis[i]) 
+    print ("WARNING: The Slater determinant bases above may not be sorted based on their energies\n")
+
+
+
+
+def sort_SD_energies(Hvib):
+    """
+    This function goes into the Hvib (SD basis) files and sorts the energies
+    For each Hvib file, we are going to obtain a list of lists of orbital index and energy pair
+    These orbital index and energy pairs for each step will be sorted based on energies  
+
+    Args:
+        Hvib ( list of lists of CMATRIX objects ): vibronic Hamiltonian in the Slater determinant basis
+
+    """
+
+    ntraj  = len(Hvib)
+    nsnaps = len(Hvib[0])   
+    nSD = Hvib[0][0].num_of_cols
+
+    orbital_index_energy_pairs = []
+
+    for traj in range(ntraj):
+
+        orbital_index_energy_pairs.append( [] )
+
+        for snap in range(nsnaps):
+
+            index_energy_pairs = []
+
+            for sd_index in range(nSD):
+                index_energy_pairs.append( [ sd_index, Hvib[ traj ][ snap ].get( sd_index, sd_index ).real ]  )
+
+            sorted_index_energy_pairs = merge_sort( index_energy_pairs  ) 
+            orbital_index_energy_pairs[traj].append( sorted_index_energy_pairs )
+
+    return orbital_index_energy_pairs
+
+
+
+
+def output_sorted_Hvibs(Hvib, orbital_index_energy_pairs):
+    """
+    This function outputs the vibronic Hamiltonians in the SD basis according to their sorted order
+
+    Args:
+        Hvib ( list of lists of CMATRIX objects ): vibronic Hamiltonian in the Slater determinant basis
+        orbital_index_energy_pairs ( list of lists of lists of lists ): orbital index and energy pair lists for each step and nuclear trajectory
+                               Ex. orbital_index_energy_pairs[i][j][k][0] = kth slater determinant index at the jth step on the ith nuclear trajectory   
+                               Ex. orbital_index_energy_pairs[i][j][k][1] = kth slater determinant energy at the jth step on the ith nuclear trajectory   
+
+    """
+
+    ntraj  = len(orbital_index_energy_pairs)
+    nsnaps = len(orbital_index_energy_pairs[0])
+    nSD    = len(orbital_index_energy_pairs[0][0])
+
+    Hvibs_sorted   = []
+
+    for traj in range( ntraj ):
+
+        rd_sorted = "res_sorted_traj"+str(traj)+""
+        os.system("rm -r "+rd_sorted)
+        os.system("mkdir "+rd_sorted)
+
+        Hvibs_sorted.append( [] )
+
+        for snap in range( nsnaps ):
+            Hvib_sorted  = CMATRIX( nSD, nSD)
+            for i in range( nSD ):
+                for j in range( nSD ):
+                    a = orbital_index_energy_pairs[ traj ][ snap ][ i ][ 0 ]
+                    b = orbital_index_energy_pairs[ traj ][ snap ][ j ][ 0 ]
+                    Hvib_sorted.set( i, j, Hvib[ traj ][ snap ].get( a, b ) )
+
+            Hvibs_sorted[ traj ].append( Hvib_sorted )
+            Hvibs_sorted[ traj ][ snap ].real().show_matrix("%s/Hvib_sorted_%i_re" % (rd_sorted, snap))
+            Hvibs_sorted[ traj ][ snap ].imag().show_matrix("%s/Hvib_sorted_%i_im" % (rd_sorted, snap))
+
+    return Hvibs_sorted
 
 
 
