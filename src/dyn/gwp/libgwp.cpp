@@ -41,6 +41,22 @@ void export_gwp_objects(){
 
   complex<double> (*expt_gwp_value_v1)(MATRIX& r, MATRIX& R, MATRIX& P, double gamma,  double alp, double hbar) = &gwp_value;
 
+  def("gwp_value",  expt_gwp_value_v1);
+
+
+  double (*expt_gwp_product_decomposition_v1)
+  (double q1, double p1, double gamma1, double alp1,
+   double q2, double p2, double gamma2, double alp2,
+   double& q, double& p, double& gamma, double& alp) = &gwp_product_decomposition;
+
+  double (*expt_gwp_product_decomposition_v2)
+  (MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
+   MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2,
+   MATRIX& q,  MATRIX& p,  MATRIX& gamma,  MATRIX& alp) = &gwp_product_decomposition;
+
+  def("gwp_product_decomposition",  expt_gwp_product_decomposition_v1);
+  def("gwp_product_decomposition",  expt_gwp_product_decomposition_v2);
+
 
   ///=============== Overlaps ===================
 
@@ -56,6 +72,10 @@ void export_gwp_objects(){
   (MATRIX& R1, MATRIX& P1, double gamma1, 
    MATRIX& R2, MATRIX& P2, double gamma2, double alp, double hbar) = &gwp_overlap;
 
+  def("gwp_overlap",  expt_gwp_overlap_v1);
+  def("gwp_overlap",  expt_gwp_overlap_v2);
+  def("gwp_overlap",  expt_gwp_overlap_v3);
+
 
   ///=============== Transition dipole moments ===================
   complex<double> (*expt_gwp_dipole_v1)
@@ -68,6 +88,11 @@ void export_gwp_objects(){
 
   CMATRIX (*expt_gwp_dipole_v3)
   (MATRIX& R1, MATRIX& P1, double gamma1, MATRIX& R2, MATRIX& P2, double gamma2, double alp, double hbar) = &gwp_dipole; 
+
+
+  def("gwp_dipole", expt_gwp_dipole_v1);
+  def("gwp_dipole", expt_gwp_dipole_v2);
+  def("gwp_dipole", expt_gwp_dipole_v3);
 
 
   ///=============== Derivative couplings ===================
@@ -84,6 +109,10 @@ void export_gwp_objects(){
   (MATRIX& R1, MATRIX& P1, double gamma1, MATRIX& R2, MATRIX& P2, double gamma2, double alp, double hbar) = &gwp_coupling; 
 
 
+  def("gwp_coupling", expt_gwp_coupling_v1);
+  def("gwp_coupling", expt_gwp_coupling_v2);
+  def("gwp_coupling", expt_gwp_coupling_v3);
+
   ///=============== Kinetic energy ===================
 
   complex<double> (*expt_gwp_kinetic_v1)
@@ -96,20 +125,6 @@ void export_gwp_objects(){
 
   complex<double> (*expt_gwp_kinetic_v3)
   (MATRIX& R1, MATRIX& P1, double gamma1, MATRIX& R2, MATRIX& P2, double gamma2, double alp, double hbar) = &gwp_kinetic;
-
-
-  def("gwp_value",  expt_gwp_value_v1);
-  def("gwp_overlap",  expt_gwp_overlap_v1);
-  def("gwp_overlap",  expt_gwp_overlap_v2);
-  def("gwp_overlap",  expt_gwp_overlap_v3);
-
-  def("gwp_dipole", expt_gwp_dipole_v1);
-  def("gwp_dipole", expt_gwp_dipole_v2);
-  def("gwp_dipole", expt_gwp_dipole_v3);
-
-  def("gwp_coupling", expt_gwp_coupling_v1);
-  def("gwp_coupling", expt_gwp_coupling_v2);
-  def("gwp_coupling", expt_gwp_coupling_v3);
 
   def("gwp_kinetic",  expt_gwp_kinetic_v1);
   def("gwp_kinetic",  expt_gwp_kinetic_v2);

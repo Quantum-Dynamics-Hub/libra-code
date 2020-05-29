@@ -39,6 +39,15 @@ int check_dimensions(std::string function_name, MATRIX& R1, MATRIX& P1, MATRIX& 
 complex<double> gwp_value(MATRIX& r, MATRIX& R, MATRIX& P, double gamma,  double alp, double hbar);
 
 
+double gwp_product_decomposition(double q1, double p1, double gamma1, double alp1,
+                                 double q2, double p2, double gamma2, double alp2,
+                                 double& q, double& p, double& gamma, double& alp);
+
+double gwp_product_decomposition(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
+                                 MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2,
+                                 MATRIX& q,  MATRIX& p,  MATRIX& gamma,  MATRIX& alp);
+
+
 ///=============== Overlaps (gwp_overlap.cpp) ===================
 
 complex<double> gwp_overlap(double q1, double p1, double gamma1, double alp1,

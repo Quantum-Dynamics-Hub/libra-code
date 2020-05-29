@@ -34,6 +34,27 @@ import util.libutil as comn
 
 
 
+colors = {}
+
+colors.update({"11": "#8b1a0e"})  # red       
+colors.update({"12": "#FF4500"})  # orangered 
+colors.update({"13": "#B22222"})  # firebrick 
+colors.update({"14": "#DC143C"})  # crimson   
+
+colors.update({"21": "#5e9c36"})  # green
+colors.update({"22": "#006400"})  # darkgreen  
+colors.update({"23": "#228B22"})  # forestgreen
+colors.update({"24": "#808000"})  # olive      
+
+colors.update({"31": "#8A2BE2"})  # blueviolet
+colors.update({"32": "#00008B"})  # darkblue  
+
+colors.update({"41": "#2F4F4F"})  # darkslategray
+
+clrs_index = ["11", "21", "31", "41", "12", "22", "32", "13","23", "14", "24"]
+
+
+
 def plot_map(ax, x_grid, y_grid, z_values, colormap="plasma", resolution=30j):
     """
     This is a function to plot 2D functions

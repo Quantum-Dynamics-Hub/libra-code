@@ -86,6 +86,78 @@ complex<double> gwp_value(MATRIX& r, MATRIX& R, MATRIX& P, double gamma,  double
 }
 
 
+double gwp_product_decomposition(double q1, double p1, double gamma1, double alp1,
+                                 double q2, double p2, double gamma2, double alp2,
+                                 double& q, double& p, double& gamma, double& alp 
+                              ){
+/**
+
+ This function computes the parameters `q`, `p`, `gamma`, `alp`, and `prefactor` in a Gaussian wavepacket decompositions:
+
+ G(q; q1, p1, gamma1, alp1) *  G(q; q2, p2, gamma2, alp2) =  prefactor * G(q; q, p, gamma, alp)
+
+ This is a version for 1D case
+
+**/
+
+
+  alp = alp1 + alp2;
+  p = p1 + p2;
+  q = (alp1 * q1 + alp2 * q2) / alp;
+  double dq = q2 - q1;
+  gamma = gamma1 + gamma2 + dq * (alp2 * p1 - alp1 * p2) / alp;
+  
+  double prefactor = pow(2.0 * alp1 * alp2 / alp, 0.25) * exp( - (alp1 * alp2 / alp) * dq*dq ); 
+  
+  return prefactor;
+}
+
+
+double gwp_product_decomposition(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
+                                 MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2,
+                                 MATRIX& q,  MATRIX& p,  MATRIX& gamma,  MATRIX& alp
+                              ){
+/**
+
+ This function computes the parameters `q`, `p`, `gamma`, `alp`, and `prefactor` in a Gaussian wavepacket decompositions:
+
+ G(q; q1, p1, gamma1, alp1) *  G(q; q2, p2, gamma2, alp2) =  prefactor * G(q; q, p, gamma, alp)
+
+ This is a version for 1D case
+
+**/
+
+
+  int Ndof = check_dimensions("libgwp::gwp_product_decomposition", q1, p1, q2, p2);
+             check_dimensions("libgwp::gwp_product_decomposition", q,  p,  q,  p);
+
+
+  double prefactor = 1.0;
+  double pref1 = 1.0;
+  double pref2 = 0.0;
+
+  for(int i=0; i<Ndof; i++){
+
+    alp.set(i, 0, alp1.get(i,0) + alp2.get(i,0));
+    p.set(i, 0, p1.get(i,0) + p2.get(i,0));
+    q.set(i, 0, (alp1.get(i,0) * q1.get(i,0) + alp2.get(i,0) * q2.get(i,0)) / alp.get(i,0) );
+    double dq = q2.get(i,0) - q1.get(i,0);
+
+    gamma.set(i,0, gamma1.get(i,0) + gamma2.get(i,0) + dq * (alp2.get(i,0) * p1.get(i,0) - alp1.get(i,0) * p2.get(i,0)) / alp.get(i,0));      
+
+    double a1a2_over_a = alp1.get(i,0) * alp2.get(i,0) / alp.get(i,0);
+    pref1 *= (2.0 * a1a2_over_a );
+    pref2 += a1a2_over_a * dq*dq;   
+  
+  }
+
+  prefactor = pow(pref1, 0.25) * exp( -pref2 );
+
+  return prefactor;
+}
+
+
+
 
 }// namespace libgwp
 }// namespace libdyn
