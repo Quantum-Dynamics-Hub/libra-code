@@ -231,7 +231,7 @@ def read_volumetric_data(filename: str):
 
 
 
-def cube_t_cube_tplus(A, B, dv):
+def cube_ovlp_arb(A, B, dv):
     """
     This function calculates the element-wise multiplication of two numpy arrays 
     and sums their product. Then, it will multiply the sum by 'dv' element to 
