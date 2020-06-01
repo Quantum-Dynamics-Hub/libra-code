@@ -1,6 +1,6 @@
 #*********************************************************************************
-#* Copyright (C) 2020 Mohammad Shakiba, Brendan Smith, Alexey V. Akimov
 #*
+#* Copyright (C) 2020 Mohammad Shakiba, Brendan Smith, Alexey V. Akimov
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
 #* the License, or (at your option) any later version.
