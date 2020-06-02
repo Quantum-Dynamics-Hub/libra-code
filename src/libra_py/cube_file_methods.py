@@ -41,11 +41,11 @@ def read_cube(filename: str):
 
     Args:
 
-        filename ( string ): the name of the .cube file to read
+        filename (string): the name of the .cube file to read
 
     Returns:
 
-        numpy.array : the 1D array of the wavefunctions for all the points on the grid
+        data (numpy.array) : the 1D array of the wavefunctions for all the points on the grid
 	
     """
     
@@ -104,7 +104,7 @@ def grid_volume(filename: str):
     axis_2 = [float(lines[4].split()[1]),float(lines[4].split()[2]),float(lines[4].split()[3])]
     axis_3 = [float(lines[5].split()[1]),float(lines[5].split()[2]),float(lines[5].split()[3])]
     Voxel = np.array([axis_1, axis_2, axis_3])
-    # Then we calculate the determinant of the a to obtain the volume.
+    # Then we calculate the determinant of Voxel to obtain the volume.
     dv = np.absolute(np.linalg.det(Voxel))
 	
     
