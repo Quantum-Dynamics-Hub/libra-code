@@ -9,7 +9,7 @@
 #*
 #*********************************************************************************/
 """
-.. module:: cube_file_process
+.. module:: cube_file_methods
    :platform: Unix, Windows
    :synopsis: This module implements functions for processing with cube files
 .. moduleauthors:: 
@@ -29,6 +29,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import numpy as np
+from libra_py import *
 
 
 
@@ -45,12 +46,7 @@ def read_cube(filename: str):
     Returns:
 
         numpy.array : the 1D array of the wavefunctions for all the points on the grid
-    
-
-    Note: 
-
-        Previously, it was called `read_1`
-
+	
     """
     
     f = open(filename,'r')
@@ -95,11 +91,6 @@ def grid_volume(filename: str):
         Returns:
 	
 	    dv (float): The grid volume in Bohr^3.
-		
-        Note:
-        
-	    It uses the formula of calculating the parallelpiped volume:
-            https://en.wikipedia.org/wiki/Parallelepiped
         	
     """
 	
@@ -108,13 +99,13 @@ def grid_volume(filename: str):
     f.close()
     
     # We use the 3rd, 4th and 5th row in the lines to obtain
-    # the vectors of the parallelpiped into a numpy array (V).
-    V = np.array([[float(lines[3].split()[1]),float(lines[3].split()[2]),float(lines[3].split()[3])],\
-                 [float(lines[4].split()[1]),float(lines[4].split()[2]),float(lines[4].split()[3])],\
-                 [float(lines[5].split()[1]),float(lines[5].split()[2]),float(lines[5].split()[3])]\
-                 ])
+    # the axes of the parallelpiped into a numpy array (Voxel).
+    axis_1 = [float(lines[3].split()[1]),float(lines[3].split()[2]),float(lines[3].split()[3])]
+    axis_2 = [float(lines[4].split()[1]),float(lines[4].split()[2]),float(lines[4].split()[3])]
+    axis_3 = [float(lines[5].split()[1]),float(lines[5].split()[2]),float(lines[5].split()[3])]
+    Voxel = np.array([axis_1, axis_2, axis_3])
     # Then we calculate the determinant of the a to obtain the volume.
-    dv = np.absolute(np.linalg.det(V))
+    dv = np.absolute(np.linalg.det(Voxel))
 	
     
     return dv 
@@ -139,15 +130,16 @@ def read_volumetric_data(filename: str):
 		
     Returns:
 	
-        Coordinates (2D numpy array): The coordinates of the molecule structure in
+        coordinates (2D numpy array): The coordinates of the molecule structure in
                                       the same format shown in the .cube file.
 		
-           x, y, z (3D numpy array): Containing the grid points for each of the X-,
+        X_3d, Y_3d, Z_3d (3D numpy array): Containing the grid points for each of the X-,
                                      Y-, and Z- axis.
 		
-           v (3D numpy array): The volumetric data in a 3D numpy array format.
+        V_3d (3D numpy array): The volumetric data in a 3D numpy array format.
 		
-           spacing (numpy 1D array): The spacing vector used for plotting the isosurfaces.
+        
+	spacing_vector (numpy 1D array): The spacing vector used for plotting the isosurfaces.
 
     """
 
@@ -155,101 +147,117 @@ def read_volumetric_data(filename: str):
     lines = f.readlines()
     f.close()
 	
-	# The number of atoms in the 3rd line
+    # The number of atoms in the 3rd line
     natoms = int(lines[2].split()[0])
-	
-	# The number of voxels defined for each axis
-    vx = int(lines[3].split()[0])
-    vy = int(lines[4].split()[0])
-    vz = int(lines[5].split()[0])
-	
-	# The spacing vector. This will be used in the 'marching_cubes_lewiner'
-	# function to define the vertices and faces for 'plot_trisurf' function.
-    spacing = []
-    spacing.append([float(lines[3].split()[1])+float(lines[4].split()[1])+float(lines[5].split()[1]),\
-               float(lines[3].split()[2])+float(lines[4].split()[2])+float(lines[5].split()[2]),\
-               float(lines[3].split()[3])+float(lines[4].split()[3])+float(lines[5].split()[3])])
+
+
+    # The number of voxels defined for each axis obtained from
+    # the first elements of the 4th, 5th, and 6th line of the cube files
+    nx = int(lines[3].split()[0])
+    ny = int(lines[4].split()[0])
+    nz = int(lines[5].split()[0])
+
+
+    # The three vectors below are the same vectors which are present in lines 4th to 6th
+    # which are used to create the 3D numpy array of the grid points (x, y, z) used to plot
+    # the isosurfaces.
+    # Here we use the same unit as is used in the .cube file structure which is Bohr
+    # with no need for unit conversion. This makes the plotting easier.
+    axis_1 = np.array([float(lines[3].split()[1]),float(lines[3].split()[2]),float(lines[3].split()[3])])
+    axis_2 = np.array([float(lines[4].split()[1]),float(lines[4].split()[2]),float(lines[4].split()[3])])
+    axis_3 = np.array([float(lines[5].split()[1]),float(lines[5].split()[2]),float(lines[5].split()[3])])
+
+
+    # The spacing vector. This will be used in the 'marching_cubes_lewiner'
+    # function to define the vertices and faces for 'plot_trisurf' function.
+    # This vector is obtained from the sum of the three axis in the cube file as above.
+    spacing_vector = axis_1+axis_2+axis_3
     
-    # Bohr to Angstrom : *0.529177
-	# Here we use the same unit as is used in the .cube file structure which is Bohr.
-	# The three vectors below are the same vectors which are present in lines 4th to 6th
-	# which are used to create the 3D numpy array of the grid points (x, y, z) which are
-	# used to plot the isosurfaces.
-    vecx = np.array([float(lines[3].split()[1]),float(lines[3].split()[2]),float(lines[3].split()[3])])#*0.529177
-    vecy = np.array([float(lines[4].split()[1]),float(lines[4].split()[2]),float(lines[4].split()[3])])#*0.529177
-    vecz = np.array([float(lines[5].split()[1]),float(lines[5].split()[2]),float(lines[5].split()[3])])#*0.529177
 
-    # First we read all the isovalues in a 1D array
-    s = []
+    # First we read all the isovalues into a 1D list 'isovals'.
+    isovals = []
 
+	
+    # Starting from the line which the volumetric data starts which is the (natoms+3+2+1+1)th line.
     for i in range(natoms+3+2+1,len(lines)):
         for j in range(0,len(lines[i].split())):
-            s.append(float(lines[i].split()[j]))
-
-    v = np.zeros((vx,vy,vz)) # Define the volumetric numpy matrix
+            isovals.append(float(lines[i].split()[j]))
     
-	# Setting up the counters
+
+    # Define the volumetric numpy array
+    V_3d = np.zeros((nx,ny,nz))
+    
+    # Setting up the counters to append the isovalues in a 3D numpy array
     c = 0
     c1 = 0
     c2 = 0
 	
-    for i in range(0,len(s)):
-        if c2!=vx:
-            v[c2][c1][c] = s[i]
+    for i in range(0,len(isovals)):
+        if c2!=nx:
+            V_3d[c2][c1][c] = isovals[i]
             c = c+1
-            if c%vz==0:
+            if c%nz==0:
                 c = 0
                 c1 = c1+1
-                if c1%vy==0:
+                if c1%ny==0:
                     c1 = 0
                     c2 = c2+1
     
-	# Now define the x, y, and z 3D arrays to store the grids
-	# which is then used for plotting the isosurfaces.
-    x = np.zeros((vx,vy,vz))
-    y = np.zeros((vx,vy,vz))
-    z = np.zeros((vx,vy,vz))
+    # Now define the x, y, and z 3D arrays to store the grids
+    # which is then used for plotting the isosurfaces.
+    X_3d = np.zeros((nx,ny,nz))
+    Y_3d = np.zeros((nx,ny,nz))
+    Z_3d = np.zeros((nx,ny,nz))
 	
-	# Defining each element of the grid points.
-    for i in range(0,vx):
-        for j in range(0,vy):
-            for k in range(0,vz):
-                x[i][j][k] = vecx[0]*i+vecy[0]*j+vecz[0]*k
-                y[i][j][k] = vecx[1]*i+vecy[1]*j+vecz[1]*k
-                z[i][j][k] = vecx[2]*i+vecy[2]*j+vecz[2]*k
+    
+    # Defining each element of the grid points.
+    for i in range(0,nx):
+        for j in range(0,ny):
+            for k in range(0,nz):
+                X_3d[i][j][k] = axis_1[0]*i+axis_2[0]*j+axis_3[0]*k
+                Y_3d[i][j][k] = axis_1[1]*i+axis_2[1]*j+axis_3[1]*k
+                Z_3d[i][j][k] = axis_1[2]*i+axis_2[2]*j+axis_3[2]*k
+
+
 
     # For plottin the atoms in the molecule we have to read the
-	# coordinates in xyz format which starts from the 7th line.
+    # coordinates in xyz format which starts from the 7th line.
     coordinates = []
     for i in range(6,natoms+6):
     	coordinates.append(lines[i].split())
 
     coordinates = np.array(coordinates)
-                
-    return coordinates, x, y, z, v, spacing
+
+
+    return coordinates, X_3d, Y_3d, Z_3d, V_3d, spacing_vector
 
 
 
 
-def cube_ovlp_arb(A, B, dv):
+def integrate_cube(cube_A, cube_B, grid_volume):
     """
     This function calculates the element-wise multiplication of two numpy arrays 
     and sums their product. Then, it will multiply the sum by 'dv' element to 
     compute the integral of two wavefunction represented as .cube files.
 	
     Args:
-        A, B (numpy array): The elements of the cube files in a 1D array 
+        cube_A, cube_B (numpy array): The elements of the cube files in a 1D array 
                             obtained from the 'read_cube' function.
-        dv (float): The volume of the voxel obtained from grid_volume function.
+        grid_volume (float): The volume of the voxel obtained from grid_volume function.
 		
     Returns:
-        S*dv (float): The integration between two wavefunction in the .cube files.
+        Integral (float): The integration between two wavefunction in the .cube files.
 		
     """
-
-    C = np.multiply(A,B)
-    S = C.sum()
+    # Compute the element-wise multiplication of the two cube files
+    # which were previously obtained in 1D numpy arrays and store 
+    # them into another 1D numpy array.
+    C = np.multiply(cube_A,cube_B)
+    
+    # Compute the summation of the above matrix
+    summation = C.sum()
+    Integral = summation*grid_volume
             
-    return S*dv
+    return Integral
 
 
