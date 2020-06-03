@@ -22,14 +22,12 @@ import os
 import sys
 import math
 import re
+import numpy as np
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-
-import numpy as np
-from libra_py import *
 
 
 
@@ -103,9 +101,9 @@ def grid_volume(filename: str):
     axis_1 = [float(lines[3].split()[1]),float(lines[3].split()[2]),float(lines[3].split()[3])]
     axis_2 = [float(lines[4].split()[1]),float(lines[4].split()[2]),float(lines[4].split()[3])]
     axis_3 = [float(lines[5].split()[1]),float(lines[5].split()[2]),float(lines[5].split()[3])]
-    Voxel = np.array([axis_1, axis_2, axis_3])
+    vol_element = np.array([axis_1, axis_2, axis_3])
     # Then we calculate the determinant of Voxel to obtain the volume.
-    dv = np.absolute(np.linalg.det(Voxel))
+    dv = np.absolute(np.linalg.det(vol_element))
 	
     
     return dv 
@@ -133,10 +131,10 @@ def read_volumetric_data(filename: str):
         coordinates (2D numpy array): The coordinates of the molecule structure in
                                       the same format shown in the .cube file.
 		
-        X_3d, Y_3d, Z_3d (3D numpy array): Containing the grid points for each of the X-,
+        x_grid, y_grid, z_grid (3D numpy array): Containing the grid points for each of the X-,
                                      Y-, and Z- axis.
 		
-        V_3d (3D numpy array): The volumetric data in a 3D numpy array format.
+        wave_fun (3D numpy array): The volumetric data in a 3D numpy array format.
 		
         
 	spacing_vector (numpy 1D array): The spacing vector used for plotting the isosurfaces.
@@ -185,7 +183,7 @@ def read_volumetric_data(filename: str):
     
 
     # Define the volumetric numpy array
-    V_3d = np.zeros((nx,ny,nz))
+    wave_fun = np.zeros((nx,ny,nz))
     
     # Setting up the counters to append the isovalues in a 3D numpy array
     c = 0
@@ -194,7 +192,7 @@ def read_volumetric_data(filename: str):
 	
     for i in range(0,len(isovals)):
         if c2!=nx:
-            V_3d[c2][c1][c] = isovals[i]
+            wave_fun[c2][c1][c] = isovals[i]
             c = c+1
             if c%nz==0:
                 c = 0
@@ -205,18 +203,18 @@ def read_volumetric_data(filename: str):
     
     # Now define the x, y, and z 3D arrays to store the grids
     # which is then used for plotting the isosurfaces.
-    X_3d = np.zeros((nx,ny,nz))
-    Y_3d = np.zeros((nx,ny,nz))
-    Z_3d = np.zeros((nx,ny,nz))
+    x_grid = np.zeros((nx,ny,nz))
+    y_grid = np.zeros((nx,ny,nz))
+    z_grid = np.zeros((nx,ny,nz))
 	
     
     # Defining each element of the grid points.
     for i in range(0,nx):
         for j in range(0,ny):
             for k in range(0,nz):
-                X_3d[i][j][k] = axis_1[0]*i+axis_2[0]*j+axis_3[0]*k
-                Y_3d[i][j][k] = axis_1[1]*i+axis_2[1]*j+axis_3[1]*k
-                Z_3d[i][j][k] = axis_1[2]*i+axis_2[2]*j+axis_3[2]*k
+                x_grid[i][j][k] = axis_1[0]*i+axis_2[0]*j+axis_3[0]*k
+                y_grid[i][j][k] = axis_1[1]*i+axis_2[1]*j+axis_3[1]*k
+                z_grid[i][j][k] = axis_1[2]*i+axis_2[2]*j+axis_3[2]*k
 
 
 
@@ -229,7 +227,7 @@ def read_volumetric_data(filename: str):
     coordinates = np.array(coordinates)
 
 
-    return coordinates, X_3d, Y_3d, Z_3d, V_3d, spacing_vector
+    return coordinates, x_grid, y_grid, z_grid, wave_fun, spacing_vector
 
 
 
@@ -246,18 +244,18 @@ def integrate_cube(cube_A, cube_B, grid_volume):
         grid_volume (float): The volume of the voxel obtained from grid_volume function.
 		
     Returns:
-        Integral (float): The integration between two wavefunction in the .cube files.
+        integral (float): The integration between two wavefunction in the .cube files.
 		
     """
     # Compute the element-wise multiplication of the two cube files
     # which were previously obtained in 1D numpy arrays and store 
     # them into another 1D numpy array.
-    C = np.multiply(cube_A,cube_B)
+    product = np.multiply(cube_A,cube_B)
     
     # Compute the summation of the above matrix
-    summation = C.sum()
-    Integral = summation*grid_volume
+    summation = product.sum()
+    integral = summation*grid_volume
             
-    return Integral
+    return integral
 
 
