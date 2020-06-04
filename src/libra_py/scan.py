@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2019 Alexey V. Akimov
+#* Copyright (C) 2019-2020 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 2 of
@@ -30,6 +30,72 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 from . import units
+
+
+def coords2xyz(labels, q, itraj, unit_conversion_factor=1.0):
+    """
+
+    This function creates a string containing an xyz-formatted atomistic information.
+
+    Args:
+        labels ( list of strings ): the labels of the atoms of the system, the labels are in a 
+            specific order that corresponds to the atomic info in an xyz file. The length of this 
+            list is `nat` - the number of atoms.
+        q ( MATRIX(ndof, ntraj) ): the coordinates of all DOFs for all trajectories, here `ndof` = 3 `natoms` 
+        itraj ( int ): the index of the trajectory that we are interested in.
+        unit_conversion_factor ( double ): the conversion factor to convert input in `q` unit to the new units
+            expected in the xyz file. In a common situation, when `q` uses Bohr units, and xyz is expected to 
+            be in Angstroms, use the `unit_conversion_factor = 1.0/units.Angst` 
+ 
+    Returns:
+        string: the string representation of the xyz file that is made of the provided input geomtry/atomic labels
+
+    """
+
+    natoms = int(q.num_of_rows / 3)
+        
+    res = ""
+    for iatom in range(natoms):
+        label = labels[iatom]
+        x = unit_conversion_factor * q.get(3*iatom+0, itraj)
+        y = unit_conversion_factor * q.get(3*iatom+1, itraj)
+        z = unit_conversion_factor * q.get(3*iatom+2, itraj)        
+        res = res + F"{label}  {x} {y} {z}\n"
+        
+    return res
+
+
+def make_path_xyz2(labels, path, itraj, unit_conversion_factor=1.0):
+    """
+    This function creates a string containing an xyz-formatted trajectory (multiple geometries)
+
+    Args:
+        labels ( list of strings ): the labels of the atoms of the system, the labels are in a 
+            specific order that corresponds to the atomic info in an xyz file. The length of this 
+            list is `nat` - the number of atoms.
+        path ( list of nsteps MATRIX(ndof, ntraj) objects ): the coordinates of all DOFs for all trajectories for `nsteps` frames
+            (geometries), here `ndof` = 3 `natoms` 
+        itraj ( int ): the index of the trajectory that we are interested in.
+        unit_conversion_factor ( double ): the conversion factor to convert input in `q` unit to the new units
+            expected in the xyz file. In a common situation, when `q` uses Bohr units, and xyz is expected to 
+            be in Angstroms, use the `unit_conversion_factor = 1.0/units.Angst` 
+ 
+    Returns:
+        string: the string representation of the xyz file that is made of the provided input geomtry/atomic labels 
+    
+    """
+
+    nsnaps = len(path)
+    natoms = len(labels)
+
+    md_xyz = ""
+    for isnap in range(nsnaps):
+        snap = coords2xyz(labels, path[isnap], itraj, unit_conversion_factor)    
+        md_xyz = md_xyz + F"{natoms}\nsnapshot {isnap}\n{snap}"
+    
+    return md_xyz
+
+
 
 def make_path_xyz(R0, R1, E, s0=0.0, s1=1.0, npts=2, S0=0.0, S1=1.0):
     """

@@ -64,7 +64,13 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
                 * **pes_params["ndia"]** ( int ): dinemsionality of the diabatic Hamiltonian [ default: 2 ]
                 * **pes_params["nadi"]** ( int ): dinemsionality of the adiabatic Hamiltonian [ default: 2 ]
                 * **pes_params["ndof"]** ( int ): the number of nuclear DOF [ default: 1 ]
+                * **pes_params["active_dof"]** ( int ): index of the DOF w.r.t. which the scan will be done [ default: 0 ]
                 * **pes_params["coord_type"]** ( 0 or 1 ): 0 - actual coordinate, 1 - time coordinate [ default: 0 ]
+                * **pes_params["reference_coord"]** ( MARIX(ndof, 1) ): the geometry of a many-DOF-system, used in case we 
+                    only vary one DOF, but want to keep all other DOFs fixed
+                * **pes_params["coord_mapping"]** ( PyObject ): the function that maps the 1D "scan coordinate" to a
+                    ndof-dimensional vector that represents the system's geometry. If provided (other than None),
+                    it will be used to update the geometries of the system will  [ default: None ]
                 * **pes_params["xmin"]** ( double ): minimal range of PES scan, matters only if coord_type = 0 [ default: -10.0 ]
                 * **pes_params["xmax"]** ( double ): maximal range of PES scan, matters only if coord_type = 0 [ default:  10.0 ]
                 * **pes_params["dx"]** ( double ): PES scan step size, matters only if coord_type = 0 [ default:  1.0 ]
@@ -109,14 +115,20 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
     
     pes_params = dict(pes_params_)
     pes_params_critical = [ "rep_tdse", "rep_ham" ] 
-    pes_params_default = { "ndia":2, "nadi":2, "ndof":1, 
+    pes_params_default = { "ndia":2, "nadi":2, "ndof":1,
+                           "active_dof":0,
                            "coord_type":0,
+                           "reference_coord":MATRIX(1, 0),
+                           "coord_mapping":None,
                            "xmin":-10.0, "xmax":10.0, "dx":1.0,
                            "tmin":0, "tmax":10, "dt":1
                          }
     comn.check_input(pes_params, pes_params_default, pes_params_critical)
 
+    active_dof = pes_params["active_dof"]
     coord_type = pes_params["coord_type"]
+    reference_coord = pes_params["reference_coord"]
+    coord_mapping = pes_params["coord_mapping"]
     xmax = pes_params["xmax"]
     xmin = pes_params["xmin"]
     dx = pes_params["dx"]
@@ -228,14 +240,21 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
     for i in which_dc1_adi:
         dc1_adi.append([])
         
-
                     
     nsteps = len(grid)
+    scan_path = []
     
     tid = Py2Cpp_int([0, 0])
     
     for step in range(nsteps):
-        q = MATRIX(1,1); q.set(0, 0, grid[step])
+        q = None
+        if coord_mapping == None:
+            q = MATRIX(reference_coord); 
+            q.set(active_dof, 0, grid[step])
+        else:
+            q = coord_mapping(grid[step])
+        scan_path.append( MATRIX(q) )
+
         model_params["timestep"] = step
             
         update_Hamiltonian_q( {"rep_tdse":rep_tdse, "rep_ham":rep_ham}, 
@@ -339,6 +358,9 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
 
     plt.show()
     plt.close()
+
+    return scan_path
+
 
 
 def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, dx, plot_params):
