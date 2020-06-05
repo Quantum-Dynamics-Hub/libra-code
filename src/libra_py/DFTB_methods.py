@@ -326,7 +326,7 @@ def xyz_traj2gen_ovlp(infile, outfile, md_iter1, md_iter2, sys_type):
 
 
 
-def make_dftp_input(dftb_input_template_filename, istate):
+def make_dftb_input(dftb_input_template_filename, istate):
     """
     This function creates an input file for DFTB+ package from a template file,
     it changes several placeholder lines to ensure the calculations are done
@@ -451,7 +451,7 @@ def read_dftb_output(natoms, istate):
 
 
 
-def run_dftbp_adi(q, params_, full_id):
+def run_dftb_adi(q, params_, full_id):
     """
    
     This function executes the DFTB+ quantum chemistry calculations and 
@@ -535,7 +535,7 @@ def run_dftbp_adi(q, params_, full_id):
     for istate in range(nstates):
         
         # Update the input file
-        make_dftp_input(dftb_input_template_filename, istate)
+        make_dftb_input(dftb_input_template_filename, istate)
         
         # We have written the dftb+ input file for a certain state in nstates. Now we must compute the 
         # state energies and forces. 
