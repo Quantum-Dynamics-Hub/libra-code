@@ -225,7 +225,7 @@ public:
     atoms = std::vector<basisset_atom_struct>(max_no_of_atom_types, basisset_atom_struct(max_no_of_shells_per_atom, max_no_of_contr) );
   }
 
-  void read_basisset_file(std::string fileName,int print_raw);
+  int read_basisset_file(std::string fileName,int print_raw);
 
 } ;
 

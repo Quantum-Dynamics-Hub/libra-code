@@ -116,7 +116,7 @@ class DATA{
   int Calculate_MiniMax(double&,int&,double&,int&);
   int Calculate_MiniMax();
   int Calculate_Distribution(vector<double>&,vector<double>&,vector<double>&);
-  boost::python::list DATA::Calculate_Distribution(boost::python::list Interval);
+  boost::python::list Calculate_Distribution(boost::python::list Interval);
 
   // Regression
   //int Lin_Regression(int, double& ,double& ,double&, double&);
