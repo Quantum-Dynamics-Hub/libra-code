@@ -378,6 +378,7 @@ def run(H_vib, params):
                        "Boltz_opt":1, "Boltz_opt_BL":1, "T":300.0,
                        "do_output":True, "outfile":"_out.txt", "do_return":True,
                        "evolve_Markov":True, "evolve_TSH":True, 
+                       "extend_md_option":0, "extend_md_time":0,
                        "detect_SD_differences":False,
                        "return_probabilities":False }
 
@@ -399,6 +400,9 @@ def run(H_vib, params):
     detect_SD_difference = params["detect_SD_differences"]
     return_probabilities = params["return_probabilities"]
 
+    extend_md_option = params["extend_md_option"]
+    extend_md_time   = params["extend_md_time"]
+
     res = MATRIX(nsteps, 3*nstates+5)
 
     #===== Precompute hopping probabilities ===
@@ -412,6 +416,33 @@ def run(H_vib, params):
 
     if detect_SD_difference == True:
         P = adjust_SD_probabilities(P, params)  
+
+    # Check if to extend md time
+    if extend_md_option == 1:
+
+        rnd = Random()
+        P_ext = []
+        H_vib_ext = []
+        for idata in range(0,ndata):
+            P_ext.append(     [ MATRIX(nstates, nstates) ] )
+            H_vib_ext.append( [ CMATRIX(nstates, nstates) ] )
+            for i in range(0,nstates):
+
+                P_ext[idata][0].set(i,i, 1.0)
+                rnd_step = rnd.uniform(0,nsteps)
+                H_vib_ext[idata][0] = CMATRIX( H_vib[idata][int(rnd_step)] )
+
+            for n in range(1, extend_md_time):
+
+                rnd_step = rnd.uniform(0,nsteps)
+                P_ext[idata].append( MATRIX(nstates, nstates) )
+                P_ext[idata][n] = MATRIX( P[idata][int(rnd_step)] )    
+                H_vib_ext[idata].append( CMATRIX(nstates, nstates) )
+                H_vib_ext[idata][n] = CMATRIX( H_vib[idata][int(rnd_step)] )
+
+        P = P_ext
+        H_vib = H_vib_ext
+        nsteps = extend_md_time
 
     #========== Initialize the DYNAMICAL VARIABLES  ===============
     # State populations and active state indices
@@ -458,7 +489,7 @@ def run(H_vib, params):
                     # The convention is:
                     # P(i,j) - the probability to go from j to i
                     if evolve_Markov==True:
-                        Pop[Tr] = CMATRIX(P[idata][i]) * Pop[Tr]
+                        Pop[Tr] = CMATRIX(P[idata][it+i]) * Pop[Tr]
 
 
                     if evolve_TSH==True:        
@@ -467,11 +498,11 @@ def run(H_vib, params):
                         ksi  = rnd.uniform(0.0, 1.0)
                         
                         # Proposed hop:
-                        st_new = tsh.hop_py(istate[Tr], P[idata][i].T(), ksi)  
+                        st_new = tsh.hop_py(istate[Tr], P[idata][it+i].T(), ksi)  
                         
                         # Accept the proposed hop with the Boltzmann probability
-                        E_new = H_vib[idata][i].get(st_new,st_new).real
-                        E_old = H_vib[idata][i].get(istate[Tr], istate[Tr]).real
+                        E_new = H_vib[idata][it+i].get(st_new,st_new).real
+                        E_old = H_vib[idata][it+i].get(istate[Tr], istate[Tr]).real
                         de = E_new - E_old
                         
                         if de>0.0:
