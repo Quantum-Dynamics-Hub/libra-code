@@ -368,6 +368,8 @@ def run(H_vib, params):
         * **params["do_return"]** ( Boolean ) : whether to construct the big matrix with all the result [ default: True ]
         * **params["evolve_Markov"]** ( Boolean ) : whether to propagate the "SE" populations via Markov chain [ default: True ]
         * **params["evolve_TSH"]** ( Boolean ) : whether to propagate the "SH" populations via TSH with many trajectories [ default: True ]
+        * **params["extend_md"]** ( Boolean ) : whether or not to extend md time by resampling the NBRA hopping probabilities
+        * **params["extend_md_time"]** ( int ) : length of the new dynamics trajectory, in units dt
         * **params["detect_SD_difference"]** ( Boolean ) : see if SD states differ by more than 1 electron, if so probability to zero [ default: False ]
 
     """
@@ -378,7 +380,7 @@ def run(H_vib, params):
                        "Boltz_opt":1, "Boltz_opt_BL":1, "T":300.0,
                        "do_output":True, "outfile":"_out.txt", "do_return":True,
                        "evolve_Markov":True, "evolve_TSH":True, 
-                       "extend_md_option":0, "extend_md_time":0,
+                       "extend_md":False, "extend_md_time":1,
                        "detect_SD_differences":False,
                        "return_probabilities":False }
 
@@ -399,9 +401,8 @@ def run(H_vib, params):
     evolve_TSH = params["evolve_TSH"]
     detect_SD_difference = params["detect_SD_differences"]
     return_probabilities = params["return_probabilities"]
-
-    extend_md_option = params["extend_md_option"]
-    extend_md_time   = params["extend_md_time"]
+    extend_md = params["extend_md"]
+    extend_md_time = params["extend_md_time"]
 
     res = MATRIX(nsteps, 3*nstates+5)
 
@@ -418,11 +419,14 @@ def run(H_vib, params):
         P = adjust_SD_probabilities(P, params)  
 
     # Check if to extend md time
-    if extend_md_option == 1:
+    # Check if to extend md time
+    if extend_md == True:
 
         rnd = Random()
         P_ext = []
         H_vib_ext = []
+
+        # For the first step, diagonal elements are 1
         for idata in range(0,ndata):
             P_ext.append(     [ MATRIX(nstates, nstates) ] )
             H_vib_ext.append( [ CMATRIX(nstates, nstates) ] )
@@ -443,6 +447,8 @@ def run(H_vib, params):
         P = P_ext
         H_vib = H_vib_ext
         nsteps = extend_md_time
+        res = MATRIX(nsteps, 3*nstates+5)
+
 
     #========== Initialize the DYNAMICAL VARIABLES  ===============
     # State populations and active state indices
@@ -490,7 +496,6 @@ def run(H_vib, params):
                     # P(i,j) - the probability to go from j to i
                     if evolve_Markov==True:
                         Pop[Tr] = CMATRIX(P[idata][it+i]) * Pop[Tr]
-
 
                     if evolve_TSH==True:        
 
