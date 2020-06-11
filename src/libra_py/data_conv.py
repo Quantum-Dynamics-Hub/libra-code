@@ -329,5 +329,50 @@ def list2MATRIX(data):
     return res
 
 
+def nparray2MATRIX(data):
+    """
+    Converts 2D np.array of shape( N, M ) doubles into a MATRIX( N, M ) object
+    The numpy array can contain either complex or real values    
 
+    Args:
+        data ( 2D np.array of dimension N x M ): data to be converted
+    Returns:
+        MATRIX( N, M ): a matrix representation of the data
+    
+    """
+
+    N = data.shape[0]
+    M = data.shape[1]
+    
+    res = MATRIX(N,M)
+    
+    for n in range(0,N):
+        for m in range(0,M):
+            res.set(n, m, data[n][m].real)
+
+    return res
+
+
+def nparray2CMATRIX(data):
+    """
+    Converts 2D np.array of shape( N, M ) doubles into a CMATRIX( N, M ) object
+    The numpy array should be complex   
+ 
+    Args:
+        data ( 2D np.array of dimension N x M ): data to be converted
+    Returns:
+        MATRIX( N, M ): a matrix representation of the data
+    
+    """
+
+    N = data.shape[0]
+    M = data.shape[1]
+
+    res = CMATRIX(N,M)
+
+    for n in range(0,N):
+        for m in range(0,M):
+            res.set(n, m, data[n][m])
+
+    return res
 
