@@ -32,6 +32,7 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
+import util.libutil as comn
 
 from . import units
 from . import scan

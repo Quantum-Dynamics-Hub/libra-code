@@ -28,8 +28,10 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
+import util.libutil as comn
 
 from . import units
+from . import scan
 from . import regexlib as rgl
 
 
@@ -450,6 +452,8 @@ def read_dftb_output(natoms, istate):
     return E, grad          
 
 
+class tmp:
+    pass
 
 def run_dftb_adi(q, params_, full_id):
     """
@@ -508,9 +512,12 @@ def run_dftb_adi(q, params_, full_id):
     obj.ham_adi = CMATRIX(nstates, nstates)    
     obj.nac_adi = CMATRIX(nstates, nstates)    
     obj.hvib_adi = CMATRIX(nstates, nstates)            
+    obj.basis_transform = CMATRIX(nstates, nstates)            
     obj.d1ham_adi = CMATRIXList();            
+    obj.dc1_adi = CMATRIXList();            
     for idof in range(ndof):        
         obj.d1ham_adi.append( CMATRIX(nstates, nstates) )
+        obj.dc1_adi.append( CMATRIX(nstates, nstates) )
   
 
     Id = Cpp2Py(full_id)
@@ -547,6 +554,7 @@ def run_dftb_adi(q, params_, full_id):
         # Now, populate the allocated matrices                
         obj.ham_adi.set(istate, istate, E * (1.0+0.0j) )
         obj.hvib_adi.set(istate, istate, E * (1.0+0.0j) )        
+        obj.basis_transform.set(istate, istate, 1.0+0.0j )        
         for idof in range(ndof):        
             obj.d1ham_adi[idof].set(istate, istate, grad.get(idof, 0) * (1.0+0.0j) )                
     

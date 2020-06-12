@@ -376,3 +376,49 @@ def nparray2CMATRIX(data):
 
     return res
 
+
+
+def matrix2list(q):
+    """
+    Converts the MATRIX(ndof, 1) or CMATRIX(ndof, 1) to a list of `ndof` float/complex numbers
+
+    Args:
+
+        q ( MATRIX(ndof, 1) or CMATRIX(ndof, 1) ): input matrix
+
+    Returns:
+   
+        list : list representation of the matrix
+
+    """
+    
+    list_q = []
+    
+    ndof = q.num_of_rows
+    
+    for idof in range(ndof):
+        list_q.append( q.get(idof, 0) )
+        
+    return list_q
+
+
+
+def make_list(nitems, value):
+    """
+    Creates a list of `nitems` items, each of which is `value`
+
+    Args:
+        nitems ( int ): the size of the resulting list to create
+        value ( any type ): the value of each initialized element of the list
+    
+    Returns:
+        list : the list of the added values
+
+    """
+    
+    res_list = []
+    
+    for iitem in range(nitems):
+        res_list.append( value )
+        
+    return res_list
