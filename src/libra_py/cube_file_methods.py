@@ -293,6 +293,32 @@ def form_block_matrix( mat_a, mat_b, mat_c, mat_d ):
 
 
 
+        
+def ndigits( integer_number: int ):
+    """
+    This function calculates the number of digits for an integer number.
+
+    Args:
+
+        integer_number ( integer ): An integer number.
+
+    Returns:
+ 
+        digit_num ( integer ): The number of digits for 'num'.
+    """
+
+    # Setting up the digit number counter
+    digit_num = 0
+
+    while( integer_number > 0 ):
+
+        digit_num = digit_num+1
+        integer_number = integer_number//10
+        
+    return digit_num
+
+
+
 def state_num_cp2k(state_num: int):
     """
     This function turns an integer number to a string. This string 
@@ -336,30 +362,6 @@ def state_num_cp2k(state_num: int):
     
     return state_num_str
 
-
-        
-def ndigits( integer_number: int ):
-    """
-    This function calculates the number of digits for an integer number.
-
-    Args:
-
-        integer_number ( integer ): An integer number.
-
-    Returns:
- 
-        digit_num ( integer ): The number of digits for 'num'.
-    """
-
-    # Setting up the digit number counter
-    digit_num = 0
-
-    while( integer_number > 0 ):
-
-        digit_num = digit_num+1
-        integer_number = integer_number//10
-        
-    return digit_num
 
 
 
