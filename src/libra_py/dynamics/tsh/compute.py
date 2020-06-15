@@ -784,6 +784,21 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
         #============ Propagate ===========        
         model_params.update({"timestep":i})        
+
+        #== Debug ======
+        """
+        print("q")
+        data_outs.print_matrix(q)
+        print("p")
+        data_outs.print_matrix(p)
+        print("Cadi")
+        data_outs.print_matrix(Cadi)
+        print("Cdia")
+        data_outs.print_matrix(Cdia)
+        print("Projectors")
+        data_outs.print_matrix(projectors[0])
+        """
+        
         if rep_tdse==0:
             compute_dynamics(q, p, iM, Cdia, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm)
         elif rep_tdse==1:

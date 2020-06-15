@@ -115,7 +115,9 @@ MATRIX deviation(MATRIX& X);
 CMATRIX deviation(CMATRIX& X);
 
 MATRIX covariance(MATRIX& X);
+MATRIX covariance(MATRIX& X, MATRIX& Y);
 CMATRIX covariance(CMATRIX& X);
+CMATRIX covariance(CMATRIX& X, CMATRIX& Y);
 
 
 }// namespace libspecialfunctions

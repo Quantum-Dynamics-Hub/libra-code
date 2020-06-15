@@ -42,7 +42,296 @@ from . import mapping
 import util.libutil as comn
 import libra_py.tsh as tsh
 import libra_py.units as units
+import libra_py.data_read as data_read
 import libra_py.hungarian as hungarian
+
+
+def get_step2_data(_params):
+    """
+    A light function to obtain the step2 data
+
+    Args:
+        params ( dictionary ): Control paramerter of this type of simulation. Can include the follwing keys:
+
+            * **params["basis"]** ( string ): describes if one is using either the spin-diabatic (non spin-orbit coupling) 
+                                              or is using the spin-adiabatic (spin orbit-coupling)
+    """
+
+    params = dict(_params)
+    spin_basis = params["basis"]
+
+    # Fetching the overlap matricies
+    params.update({ "data_re_prefix" : "S_"+spin_basis+"_ks_", "data_re_suffix" : "_re",
+                    "data_im_prefix" : "S_"+spin_basis+"_ks_", "data_im_suffix" : "_im"  } )
+    S = data_read.get_data_sets(params)
+    #print ("\n")
+    #S[0][0].show_matrix()
+    #print (S[0][0].get(0,0))
+    #sys.exit(0)
+
+    # Fetching the time-derivative overlap matricies
+    params.update({ "data_re_prefix" : "St_"+spin_basis+"_ks_", "data_re_suffix" : "_re",
+                    "data_im_prefix" : "St_"+spin_basis+"_ks_", "data_im_suffix" : "_im"  } ) 
+    St = data_read.get_data_sets(params)
+    #print ("\n")
+    #St[0][0].show_matrix()
+    #sys.exit(0)
+ 
+    # Fetching the vibronic Hamiltonian matricies
+    params.update({ "data_re_prefix" : "hvib_"+spin_basis+"_", "data_re_suffix" : "_re",
+                    "data_im_prefix" : "hvib_"+spin_basis+"_", "data_im_suffix" : "_im"  } ) 
+    Hvib_ks = data_read.get_data_sets(params)
+    #print ("\n")
+    #Hvib_ks[0][0].show_matrix()
+    #sys.exit(0)
+
+    return S, St, Hvib_ks
+
+
+
+
+def print_SD_basis(SD_basis):
+    """
+    Just a light function to print the SD basis
+
+    Args:
+        SD_basis ( list of lists of ints ): Slater determinant basis in terms of Kohn-Sham orbital indicies
+
+            Possible ground state configurations
+
+            Ex. 1. SD_basis[0] = [ 5, -15 ]
+            Ex. 2. SD_basis[0] = [ 2, 3, 4, 5, -12, -13, -14, -15 ]
+
+            Possible ground state configurations
+
+            Ex. 1. SD_basis[N > 0] = [ 6, -15 ]
+            Ex. 2. SD_basis[N > 0] = [ 2, 3, 4, 6, -12, -13, -14, -15 ]
+
+            Where we have 10 alpha and beta spin orbitals, and the cbm index for the alpha spin-channel is 5
+            and the cbm index for the beta spin-channel is 15. 
+    """
+
+    for i in range(len(SD_basis)):
+        if i == 0:
+            print (" GS: ", SD_basis[i])
+        else:
+            print (" ES "+str(i)+": ", SD_basis[i]) 
+    print ("WARNING: The Slater determinant bases above may not be sorted based on their energies\n")
+
+
+
+
+def sort_SD_energies(Hvib):
+    """
+    This function goes into the Hvib (SD basis) files and sorts the energies
+    For each Hvib file, we are going to obtain a list of lists of orbital index and energy pair
+    These orbital index and energy pairs for each step will be sorted based on energies  
+
+    Args:
+        Hvib ( list of lists of CMATRIX objects ): vibronic Hamiltonian in the Slater determinant basis
+
+    """
+
+    ntraj  = len(Hvib)
+    nsnaps = len(Hvib[0])   
+    nSD = Hvib[0][0].num_of_cols
+
+    orbital_index_energy_pairs = []
+
+    for traj in range(ntraj):
+
+        orbital_index_energy_pairs.append( [] )
+
+        for snap in range(nsnaps):
+
+            index_energy_pairs = []
+
+            for sd_index in range(nSD):
+                index_energy_pairs.append( [ sd_index, Hvib[ traj ][ snap ].get( sd_index, sd_index ).real ]  )
+
+            sorted_index_energy_pairs = merge_sort( index_energy_pairs  ) 
+            orbital_index_energy_pairs[traj].append( sorted_index_energy_pairs )
+
+    return orbital_index_energy_pairs
+
+
+
+
+def output_sorted_Hvibs(Hvib, orbital_index_energy_pairs):
+    """
+    This function outputs the vibronic Hamiltonians in the SD basis according to their sorted order
+
+    Args:
+        Hvib ( list of lists of CMATRIX objects ): vibronic Hamiltonian in the Slater determinant basis
+        orbital_index_energy_pairs ( list of lists of lists of lists ): orbital index and energy pair lists for each step and nuclear trajectory
+                               Ex. orbital_index_energy_pairs[i][j][k][0] = kth slater determinant index at the jth step on the ith nuclear trajectory   
+                               Ex. orbital_index_energy_pairs[i][j][k][1] = kth slater determinant energy at the jth step on the ith nuclear trajectory   
+
+    """
+
+    ntraj  = len(orbital_index_energy_pairs)
+    nsnaps = len(orbital_index_energy_pairs[0])
+    nSD    = len(orbital_index_energy_pairs[0][0])
+
+    Hvibs_sorted   = []
+
+    for traj in range( ntraj ):
+
+        rd_sorted = "res_sorted_traj"+str(traj)+""
+        os.system("rm -r "+rd_sorted)
+        os.system("mkdir "+rd_sorted)
+
+        Hvibs_sorted.append( [] )
+
+        for snap in range( nsnaps ):
+            Hvib_sorted  = CMATRIX( nSD, nSD)
+            for i in range( nSD ):
+                for j in range( nSD ):
+                    a = orbital_index_energy_pairs[ traj ][ snap ][ i ][ 0 ]
+                    b = orbital_index_energy_pairs[ traj ][ snap ][ j ][ 0 ]
+                    Hvib_sorted.set( i, j, Hvib[ traj ][ snap ].get( a, b ) )
+
+            Hvibs_sorted[ traj ].append( Hvib_sorted )
+            Hvibs_sorted[ traj ][ snap ].real().show_matrix("%s/Hvib_sorted_%i_re" % (rd_sorted, snap))
+            Hvibs_sorted[ traj ][ snap ].imag().show_matrix("%s/Hvib_sorted_%i_im" % (rd_sorted, snap))
+
+    return Hvibs_sorted
+
+
+
+
+def build_SD_basis(data_dim, cbm_alpha_index, alpha_include, cbm_beta_index, beta_include, excitation_type):
+    """
+    Builds a Slater Determinant basis based on the indexing notation scheme used in Libra
+
+    Args:
+        data_dim (int): how many rows or columns in the vibronic Hamiltonian matrix. This will be an even number becuase the 
+                        number of alpha orbtials should equal the number of beta orbitals
+        cbm_(alpha/beta)_index (int): index of VBM (or HOMO) in the matrix of the vibronic Hamiltonian 
+                                      (row or column index). Note, this index is from 1 
+        (alpha/beta)_include (int): how many orbitals to include from the cbm_(alpha/beta)_index
+        excitation_type (int):  0: Make SDs with beta electrons excited
+                                1: Make SDs with alpha electrons excited
+                                2: Make two sets of SDs, one for beta and one for alpha electrons excited  
+    """
+
+    num_same_spin_orbitals = int( data_dim / 2 )
+
+    alpha_electrons = []
+    beta_electrons  = []
+
+    # Check for potential errors
+    if data_dim % 2 > 0:
+        print ("The dimensions of your vibronic Hamiltonian matrix (or whatever data you wish to pass to the function build_SD) must be even")
+        print ("Exiting now ..")
+        sys.exit(0)
+
+    if cbm_alpha_index > num_same_spin_orbitals:
+        print ("You must have the same number of alpha and beta spin-orbitals in your basis. The index of the CBM for the alpha spin-orbitals\
+ cannot be greater than 1/2 the total number of spin orbitals ")
+        print ("Exiting now")
+        sys.exit(0)
+
+    elif cbm_alpha_index <= 0:
+        print ("The index of the CBM for the alpha spin-orbitals must be > 0")
+        print ("Exiting now")
+        sys.exit(0)
+
+    elif cbm_beta_index <= num_same_spin_orbitals:
+        print ("You must have the same number of alpha and beta spin-orbitals in your basis. The index of the CBM for the beta spin-orbitals\
+ cannot be less than 1/2 the total number of spin orbitals ")
+        print ("Exiting now")
+        sys.exit(0)
+
+    elif cbm_beta_index > 2*num_same_spin_orbitals:
+        print ("The index of the CBM for the beta spin-orbitals must be < total number of spin-orbitals")
+        print ("Exiting now")
+        sys.exit(0)
+
+    if cbm_alpha_index + alpha_include + 2 > num_same_spin_orbitals:
+        print ("Cannot include more alpha spin-orbitals than there are")
+        print ("Including the maximum amount")
+        alpha_include = num_same_spin_orbitals - cbm_alpha_index - 1
+        print ("New value for alpha_include = ", alpha_include)
+
+    if cbm_beta_index + beta_include + 2 > 2*num_same_spin_orbitals:
+        print ("Cannot include more beta spin-orbitals than there are")
+        print ("Including the maximum amount")
+        beta_include = 2*num_same_spin_orbitals - cbm_beta_index - 1
+        print ("New value for beta_include = ", beta_include) 
+
+    # Make ground state SD
+    for i in range( cbm_alpha_index - alpha_include, cbm_alpha_index + 1):
+        alpha_electrons.append( i )
+    for i in range( cbm_beta_index  - beta_include, cbm_beta_index  + 1):
+        beta_electrons.append( -i )
+
+    gs_SD = alpha_electrons[:] + beta_electrons[:] 
+
+    # Make excited state SDs
+    es_SD    = []
+    SD_basis = []
+   
+    # Excite only alpha electrons 
+    if excitation_type == 0:
+        for i in alpha_electrons:
+            for j in range(cbm_alpha_index + 1, cbm_alpha_index + 2 + alpha_include):
+
+                #es_sd = [ j if electron == i else electron for electron in gs_SD[:] ]  # compact version
+                es_sd = []
+                for electron in gs_SD[:]:
+                    if electron == i:
+                        es_sd.append( j ) 
+                    else:
+                        es_sd.append( electron )
+                es_SD.append( es_sd )
+
+    # Excite only beta electrons
+    elif excitation_type == 1:   
+        for i in beta_electrons:
+            for j in range(cbm_beta_index + 1, cbm_beta_index + 2 + beta_include):
+
+                #es_sd = [ -j if electron == i else electron for electron in gs_SD[:] ]  # compact version
+                es_sd = []
+                for electron in gs_SD[:]:
+                    if electron == i:
+                        es_sd.append( -j )
+                    else:
+                        es_sd.append( electron )
+                es_SD.append( es_sd )
+    
+    # Excite both alpha and beta electrons
+    else:
+        for i in alpha_electrons:
+            for j in range(cbm_alpha_index + 1, cbm_alpha_index + 2 + alpha_include):
+
+                #es_sd = [ j if electron == i else electron for electron in gs_SD[:] ]  # compact version
+                es_sd = []
+                for electron in gs_SD[:]:
+                    if electron == i:
+                        es_sd.append( j )
+                    else:
+                        es_sd.append( electron )
+                es_SD.append( es_sd )
+
+        for i in beta_electrons:
+            for j in range(cbm_beta_index + 1, cbm_beta_index + 2 + beta_include):
+
+                #es_sd = [ -j if electron == i else electron for electron in gs_SD[:] ]  # compact version
+                es_sd = []
+                for electron in gs_SD[:]:
+                    if electron == i:
+                        es_sd.append( -j )
+                    else:
+                        es_sd.append( electron )
+                es_SD.append( es_sd )
+
+    SD_basis.append( gs_SD )
+    for i in range(len(es_SD)):
+        SD_basis.append( es_SD[i] )
+
+    return SD_basis
+
 
 
 

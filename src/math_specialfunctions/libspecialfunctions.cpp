@@ -106,9 +106,14 @@ void export_SpecialFunctions_objects(){
   def("deviation", expt_deviation_v2); 
 
   MATRIX (*expt_covariance_v1)(MATRIX& X) = &covariance;
-  CMATRIX (*expt_covariance_v2)(CMATRIX& X) = &covariance;
+  MATRIX (*expt_covariance_v2)(MATRIX& X, MATRIX& Y) = &covariance;
+  CMATRIX (*expt_covariance_v3)(CMATRIX& X) = &covariance;
+  CMATRIX (*expt_covariance_v4)(CMATRIX& X, CMATRIX& Y) = &covariance;
   def("covariance", expt_covariance_v1); 
   def("covariance", expt_covariance_v2); 
+  def("covariance", expt_covariance_v3); 
+  def("covariance", expt_covariance_v4); 
+
 
 
 

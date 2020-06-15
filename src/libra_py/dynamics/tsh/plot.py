@@ -533,3 +533,56 @@ def plot_dyn_old(res):
     plt.show()
     plt.close()
 
+
+
+def hdf2xyz(labels, filename, snaps, trajectories, atoms, unit_conversion_factor=1.0):
+    """
+    This function creates a string containing an xyz-formatted trajectory (multiple geometries)
+    from an HDF5 file produced by the `compute.run_dynamics` function
+
+    Args:
+        labels ( list of strings ): the labels of the atoms of the system, the labels are in a 
+            specific order that corresponds to the atomic order in the system. The length of this 
+            list should be `nat` - the number of atoms listed in the xyz header, even if not all of 
+            them are listed in the input parameter `atoms`
+        filename ( string ): the name of the HDF5 file that contains the geometry 
+        snaps ( list of ints ): indices of the timesteps to be included in the xyz file being generated.
+            This allows printing only simesteps of interest. 
+        trajectories ( list of ints ): indices of the trajectories that we want to include in the xyz file. 
+            This allows plotting many trajectories at once (in every frame).
+        atoms ( list of ints ): indices of the atomic species to be printed out to the xyz files (e.g. to 
+            eventually visualize). This allows for visualizing only a subset of atoms (e.g. a spatial region,
+            a molecule, a group, etc.) of the main interest.
+        unit_conversion_factor ( double ): the conversion factor to convert the data stored in the
+            HDF5 file to the new units. Since `compute.run_dynamics` function stores all the information
+            in the atomic units (Bohrs for the coordinates) and since the xyz files visualization works
+            best in the Angstrom units, it is common situation to use the 
+            `unit_conversion_factor = 1.0/units.Angst` conversion factor.
+ 
+    Returns:
+        string: the string representation of the xyz trajectory file that is made of the 
+            provided input geomtries/trajectories/atomic labels 
+    
+    """
+    
+    natoms = len(atoms)  # the actual number of atoms to show 
+    ntraj = len(trajectories)
+    
+    md_xyz = ""
+    
+    with h5py.File(filename, 'r') as f:
+    
+        for isnap in snaps:
+            
+            md_xyz = md_xyz + F"{natoms*ntraj}\nsnapshot {isnap}\n"
+            
+            for itraj in trajectories:
+                for iatom in atoms:
+                
+                    x = f["q/data"][isnap, itraj, 3*iatom+0] * unit_conversion_factor
+                    y = f["q/data"][isnap, itraj, 3*iatom+1] * unit_conversion_factor
+                    z = f["q/data"][isnap, itraj, 3*iatom+2] * unit_conversion_factor
+    
+                    md_xyz = md_xyz + F"{labels[iatom] }  {x} {y} {z}\n"                    
+    
+    return md_xyz

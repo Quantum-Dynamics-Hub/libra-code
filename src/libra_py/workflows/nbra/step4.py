@@ -666,8 +666,8 @@ def run(H_vib, params):
                             do_collapse = 1
                         elif params["decoherence_method"]==2:  # MSDM
                             do_collapse = 0                            
-                            Coeff[Tr] = msdm(Coeff[Tr], dt, istate[Tr], dephasing_rates)
-                    
+                            Coeff[Tr] = sdm(Coeff[Tr], dt, istate[Tr], dephasing_rates)
+ 
                         istate[Tr], Coeff[Tr] = tsh.hopping(Coeff[Tr], Heff, istate[Tr], params["sh_method"], do_collapse, ksi, ksi2, dt, T, bolt_opt)
                     
                     elif params["decoherence_method"] in [3]:  # DISH
