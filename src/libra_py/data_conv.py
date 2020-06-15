@@ -21,6 +21,7 @@ import os
 import sys
 import math
 import copy
+import numpy as np
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -329,5 +330,35 @@ def list2MATRIX(data):
     return res
 
 
+
+def form_block_matrix( mat_a, mat_b, mat_c, mat_d ):
+    """
+    This function gets four numpy arrays and concatenate them into a 
+    new matrix in a block format. These matrices should have the same 
+    shape on each side which they get concatenated.
+
+         |mat_a   mat_b|
+    S =  |             |
+         |mat_c   mat_d|
+
+    Args:
+
+        mat_a, mat_b, mat_c, mat_d ( 2D numpy arrays ): The matrices which will form the block matrix
+
+    Returns:
+
+        block_matrix ( numpy 2D array ): The block matrix of the four matrices above.
+
+    """
+
+    # Concatenate the two marix on their row axis
+    block_1 = np.concatenate( ( mat_a, mat_b ) )
+    block_2 = np.concatenate( (mat_c, mat_d ) )
+
+    # Now concatenate the above concatenated matrices on their 
+    # column axis and form the final matrix
+    block_matrix = np.concatenate( ( block_1, block_2 ), axis=1 )
+
+    return block_matrix
 
 
