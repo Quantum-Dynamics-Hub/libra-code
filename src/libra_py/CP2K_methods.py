@@ -32,7 +32,6 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 
 
-
 def ndigits( integer_number: int ):
     """
     This function calculates the number of digits for an integer number.
