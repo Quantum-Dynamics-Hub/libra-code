@@ -117,3 +117,63 @@ def plot_map(ax, x_grid, y_grid, z_values, colormap="plasma", resolution=30j):
     #ax.plot(xs0, ys0, "bo")
     ax.colorbar()
 
+
+
+
+def plot_map_nparray( plt, data, colormap='hot', interpolation_scheme='nearest', fig_width=6.42, fig_height=2.14, num_subplots=1, \
+                      titles=[""], title_size=10, xticks_size=8, yticks_size=8, colorbar_label='fs' ):
+
+    """
+    This is a function to plot a heat map using a 2d numpy array
+
+    Args:
+
+        plt ( pyplot instance ): the handler of the plot which we create
+
+        data ( 2d numpy array ): A 2D numpy array. Contains the data to be plotted using a heat map
+        
+        colormap ( string ): The type of coloring scheme, 
+
+            Options include: "plasma" (default), "Blues", "viridis", "binary", "hot", etc.
+        
+        interpolation_scheme ( string ): Describes how to terpolate the presented data. 
+                                         Nearest for no interpolation
+        
+        fig_width ( float ): width of the final figure. May contain multiple subplots 
+        
+        fig_height ( float ): height of the final figure. May contain multiple subplots         
+
+        num_subplots ( int ): number of subplots to have in the total figure        
+
+        titles ( list of strings ): the title for each subplot     
+
+        title_size ( int ): fontsize of the title
+        
+        xticks_size ( int ): fontsize of the title
+        
+        yticks_size ( int ): fontsize of the title
+        
+        colorbar_label ( string ): Name of the label of the colorbar
+
+    Returns:
+
+        None : just plots the 2D image(s)
+    """
+    
+    if len(titles) != num_subplots:
+        print("\nYou do not have a title for every subplot. Assigning the title for subplot[0] to all subplots")
+        for i in range(num_subplots-1):
+            titles.append( titles[0] )
+    
+    plt.figure(num=None, figsize=(fig_width, fig_height), dpi=300)
+    for sub_plot in range( num_subplots ):
+
+        plt.subplot(1, num_subplots, sub_plot+1)
+        plt.title(titles[sub_plot], fontsize=title_size)
+        plt.xticks(fontsize=xticks_size)
+        plt.yticks(fontsize=yticks_size)
+        plt.imshow( data, cmap=colormap, interpolation=interpolation_scheme )
+        cb = plt.colorbar(label=colorbar_label)
+        cb.ax.tick_params(labelsize=8)
+        plt.tight_layout()
+
