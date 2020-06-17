@@ -207,7 +207,7 @@ def orbs2spinorbs(s):
 
 
 
-def ovlp_arb(SD1, SD2, S):
+def ovlp_arb(SD1, SD2, S, use_minimal=True):
     """Compute the overlap of two generic SDs: <SD1|SD2>
 
     Args:
@@ -221,31 +221,64 @@ def ovlp_arb(SD1, SD2, S):
         S ( CMATRIX(N,N) ): is the matrix in the space of 1-el spin-orbitals (either spin-diabatic or 
             spin-adiabatic or both) , N - is the number of 1-el orbitals.
 
+        use_minimal ( Boolean ): If True, use the minimal subset of Kohn-Sham orbitals needed to describe 
+            the overlap of the SDs      
+
     Returns:
         complex: the overlap of the two determinants <SD1|SD2>
 
     """
 
     nbasis = S.num_of_rows
+    # Converting the SDs provided by the user into the internal format to be read by Libra
+    sd1_tmp = sd2indx(SD1,nbasis)
+    sd2_tmp = sd2indx(SD2,nbasis)
 
-    sd1 = sd2indx(SD1,nbasis)
-    sd2 = sd2indx(SD2,nbasis)
+    # Now, we will either keep the full SDs (this may cause artifacts when computing overlaps)
+    # Or will use a smaller subset of these. 
+    sd1, sd2 = [], []
+
+    if use_minimal == True:
+        #print("sd1_tmp = ", sd1_tmp)
+        #print("sd2_tmp = ", sd2_tmp)
+        for i in range( len(sd1_tmp) ):
+            if sd1_tmp[i] not in sd2_tmp:
+               sd1.append( sd1_tmp[i] ) 
+        for i in range( len(sd1_tmp) ):
+            if sd2_tmp[i] not in sd1_tmp:
+               sd2.append( sd2_tmp[i] ) 
+        #print("sd1 = ", sd1)
+        #print("sd2 = ",   sd2)
+
+    else:
+
+        #print("sd1_tmp = ", sd1_tmp)
+        #print("sd2_tmp = ", sd2_tmp)
+        sd1 = sd1_tmp
+        sd2 = sd2_tmp
+        #print("sd1 = ", sd1)
+        #print("sd2 = ",   sd2)
+
+
     s = CMATRIX(len(sd1),len(sd2))
+    if len(sd1) and len(sd2) > 0:
 
-    for i in range(0,len(sd1)):
-        for j in range(0,len(sd2)):
+        for i in range(0,len(sd1)):
+            for j in range(0,len(sd2)):
 
-            # The overlap is non-zero only if the orbitals
-            # are occupied with the same-spin electrons. 
-            if (SD1[i] * SD2[j]) > 0:          
-                s.set(i,j,S.get(sd1[i],sd2[j]))
-            else:
-                s.set(i,j,0.0,0.0)
-
+                # The overlap is non-zero only if the orbitals
+                # are occupied with the same-spin electrons. 
+                if (SD1[i] * SD2[j]) > 0:          
+                    s.set(i,j,S.get(sd1[i],sd2[j]))
+                else:
+                    s.set(i,j,0.0,0.0)
+    else:
+        s.identity()
+        
     return det(s)
 
 
-def ovlp_mat_arb(SD1, SD2, S):
+def ovlp_mat_arb(SD1, SD2, S, use_minimal=True):
     """Compute a matrix of overlaps in the SD basis 
 
     Args:
@@ -262,6 +295,9 @@ def ovlp_mat_arb(SD1, SD2, S):
         S ( CMATRIX(K,K) ): is the matrix in the space of 1-el spin-orbitals (either spin-diabatic or 
             spin-adiabatic or both) , K - is the number of 1-el orbitals.
 
+        use_minimal ( Boolean ): If True, use the minimal subset of Kohn-Sham orbitals needed to describe 
+            the overlap of the SDs. This is passed to the funciton that computes the overlaps      
+
     Returns:
         CMATRIX(N, M): overlap matrix composed of elements <SD1(i)|SD2(j)>
 
@@ -272,7 +308,7 @@ def ovlp_mat_arb(SD1, SD2, S):
 
     for n in range(0,N):
         for m in range(0,M):
-            res.set(n,m, ovlp_arb(SD1[n], SD2[m], S))
+            res.set(n,m, ovlp_arb(SD1[n], SD2[m], S, use_minimal))
 
     return res
 
