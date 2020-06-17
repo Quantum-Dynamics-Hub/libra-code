@@ -130,7 +130,7 @@ def plot_map_nparray( plt, data, colormap='hot', interpolation_scheme='nearest',
 
         plt ( pyplot instance ): the handler of the plot which we create
 
-        data ( 2d numpy array ): A 2D numpy array. Contains the data to be plotted using a heat map
+        data ( list of  2d numpy arrays ): Contains the data to be plotted using a heat map. Each list element can be its own subplot
         
         colormap ( string ): The type of coloring scheme, 
 
@@ -172,7 +172,7 @@ def plot_map_nparray( plt, data, colormap='hot', interpolation_scheme='nearest',
         plt.title(titles[sub_plot], fontsize=title_size)
         plt.xticks(fontsize=xticks_size)
         plt.yticks(fontsize=yticks_size)
-        plt.imshow( data, cmap=colormap, interpolation=interpolation_scheme )
+        plt.imshow( data[sub_plot], cmap=colormap, interpolation=interpolation_scheme )
         cb = plt.colorbar(label=colorbar_label)
         cb.ax.tick_params(labelsize=8)
         plt.tight_layout()
