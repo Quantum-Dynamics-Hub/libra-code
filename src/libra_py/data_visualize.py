@@ -164,6 +164,11 @@ def plot_map_nparray( plt, data, colormap='hot', interpolation_scheme='nearest',
         print("\nYou do not have a title for every subplot. Assigning the title for subplot[0] to all subplots")
         for i in range(num_subplots-1):
             titles.append( titles[0] )
+
+    if len(data) != num_subplots:
+        print("\nYou do not have a data for every subplot. Assigning the data for subplot[0] to all subplots")
+        for i in range(num_subplots-1):
+            data.append( data[0] )
     
     plt.figure(num=None, figsize=(fig_width, fig_height), dpi=300)
     for sub_plot in range( num_subplots ):
