@@ -379,6 +379,34 @@ def nparray2CMATRIX(data):
 
 
 
+
+def MATRIX2nparray( data ):
+    """
+    Converts both Libra MATRIX ( N, M ) object and CMATRIX ( N, M ) object 
+    into a 2D np.array of shape( N, M )
+    
+    Args:
+        data ( Libra MATRIX object of dimension N x M ): data to be converted
+    Returns:
+        2d np.array: 2D np.array of shape( N, M )
+    
+    """
+
+    N = data.num_of_rows
+    M = data.num_of_cols
+    
+    res = []
+    
+    for n in range(0,N):
+        res.append( [] )
+        for m in range(0,M):
+            res[n].append(data.get(n,m))
+
+    return np.array(res)
+
+
+
+
 def matrix2list(q):
     """
     Converts the MATRIX(ndof, 1) or CMATRIX(ndof, 1) to a list of `ndof` float/complex numbers
@@ -428,7 +456,7 @@ def make_list(nitems, value):
 
   
   
-  def form_block_matrix( mat_a, mat_b, mat_c, mat_d ):
+def form_block_matrix( mat_a, mat_b, mat_c, mat_d ):
     """
     This function gets four numpy arrays and concatenate them into a 
     new matrix in a block format. These matrices should have the same 
