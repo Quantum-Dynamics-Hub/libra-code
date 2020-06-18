@@ -1,11 +1,12 @@
 #*********************************************************************************                     
+#* Copyright (C) 2020 Brendan Smith, Alexey V. Akimov                                                   
 #* Copyright (C) 2019 Alexey V. Akimov                                                   
-#*                                                                                                     
-#* This file is distributed under the terms of the GNU General Public License                          
-#* as published by the Free Software Foundation, either version 2 of                                   
-#* the License, or (at your option) any later version.                                                 
-#* See the file LICENSE in the root directory of this distribution   
-#* or <http://www.gnu.org/licenses/>.          
+#*
+#* This file is distributed under the terms of the GNU General Public License
+#* as published by the Free Software Foundation, either version 3 of
+#* the License, or (at your option) any later version.
+#* See the file LICENSE in the root directory of this distribution
+#* or <http://www.gnu.org/licenses/>.
 #***********************************************************************************
 """
 .. module:: data_conv
@@ -13,7 +14,7 @@
    :synopsis: 
        This module implements various functions for data conversions and data transformations
 
-.. moduleauthor:: Alexey V. Akimov
+.. moduleauthor:: Alexey V. Akimov, Brendan Smith
 
 """
 

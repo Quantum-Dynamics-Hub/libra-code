@@ -1,4 +1,5 @@
 #*********************************************************************************
+#* Copyright (C) 2020 Story Temen, Alexey V. Akimov
 #* Copyright (C) 2018-2019 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
@@ -11,7 +12,7 @@
 .. module:: models_Holstein
    :platform: Unix, Windows
    :synopsis: This module implements the Henon-Heiles Hamiltonians
-.. moduleauthor:: Alexey V. Akimov
+.. moduleauthor:: Alexey V. Akimov, Story Temen
 
 """
 
