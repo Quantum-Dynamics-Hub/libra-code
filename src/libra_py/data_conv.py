@@ -428,7 +428,7 @@ def make_list(nitems, value):
 
   
   
-  def form_block_matrix( mat_a, mat_b, mat_c, mat_d ):
+def form_block_matrix( mat_a, mat_b, mat_c, mat_d ):
     """
     This function gets four numpy arrays and concatenate them into a 
     new matrix in a block format. These matrices should have the same 
