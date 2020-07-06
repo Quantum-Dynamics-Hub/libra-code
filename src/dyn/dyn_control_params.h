@@ -150,21 +150,27 @@ class dyn_control_params{
   */ 
   double Temperature;
 
+/** 
+   THESE VARIABLES ARE DEPRECATED
 
-  /** 
-    Do not revert momenta at the frustrated hops, 1 - do revert the momenta
-  */
+//    Do not revert momenta at the frustrated hops, 1 - do revert the momenta
   int do_reverse;
 
 
-  /** 
     How to rescale momenta if the hops are successful:
+
+# How to rescale momenta if the hops are successful:
+# -1: do not rescale, as in the NBRA [ default ]
+#  0: rescale in the diabatic basis - don't care about the
+#     velocity directions, just a uniform rescaling 
+#  1: rescale along the directions of derivative couplings
+
       0 - rescale along the directions of derivative couplings
       1 - rescale in the diabatic basis - don't care about the velocity directions, just a uniform rescaling,
       2 - do not rescale, as in the NBRA.  
-  */
-  int vel_rescale_opt;
 
+  int vel_rescale_opt;
+*/
 
   /** 
     integration timestep [units: a.u., default: 41 a.u. = 1 fs]

@@ -9,6 +9,7 @@
 
 __all__ = ["compute",
            "plot",
+           "recipes",
            "recipes_Ehrenfest",
            "save",
           ]

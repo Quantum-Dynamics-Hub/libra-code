@@ -73,8 +73,8 @@ public:
   // Member functions
   void init(int l,int m,int n,double alp,VECTOR& center);  ///< general initialization/setup
 
-  PrimitiveG::PrimitiveG();   ///< Default c-tor
-  PrimitiveG::PrimitiveG(int l,int m,int n,double alp,VECTOR& center); ///< general c-tor, with parameters
+  PrimitiveG();   ///< Default c-tor
+  PrimitiveG(int l,int m,int n,double alp,VECTOR& center); ///< general c-tor, with parameters
   PrimitiveG(const PrimitiveG&);  ///< Copy c-tor
   PrimitiveG& operator=(const PrimitiveG&);  ///< assignment operator
 

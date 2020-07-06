@@ -1,11 +1,12 @@
 #*********************************************************************************                     
+#* Copyright (C) 2020 Brendan Smith, Alexey V. Akimov                                                   
 #* Copyright (C) 2019 Alexey V. Akimov                                                   
-#*                                                                                                     
-#* This file is distributed under the terms of the GNU General Public License                          
-#* as published by the Free Software Foundation, either version 2 of                                   
-#* the License, or (at your option) any later version.                                                 
-#* See the file LICENSE in the root directory of this distribution   
-#* or <http://www.gnu.org/licenses/>.          
+#*
+#* This file is distributed under the terms of the GNU General Public License
+#* as published by the Free Software Foundation, either version 3 of
+#* the License, or (at your option) any later version.
+#* See the file LICENSE in the root directory of this distribution
+#* or <http://www.gnu.org/licenses/>.
 #***********************************************************************************
 """
 .. module:: data_conv
@@ -13,7 +14,7 @@
    :synopsis: 
        This module implements various functions for data conversions and data transformations
 
-.. moduleauthor:: Alexey V. Akimov
+.. moduleauthor:: Alexey V. Akimov, Brendan Smith
 
 """
 
@@ -21,6 +22,7 @@ import os
 import sys
 import math
 import copy
+import numpy as np
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -329,5 +331,159 @@ def list2MATRIX(data):
     return res
 
 
+def nparray2MATRIX(data):
+    """
+    Converts 2D np.array of shape( N, M ) doubles into a MATRIX( N, M ) object
+    The numpy array can contain either complex or real values    
 
+    Args:
+        data ( 2D np.array of dimension N x M ): data to be converted
+    Returns:
+        MATRIX( N, M ): a matrix representation of the data
+    
+    """
+
+    N = data.shape[0]
+    M = data.shape[1]
+    
+    res = MATRIX(N,M)
+    
+    for n in range(0,N):
+        for m in range(0,M):
+            res.set(n, m, data[n][m].real)
+
+    return res
+
+
+def nparray2CMATRIX(data):
+    """
+    Converts 2D np.array of shape( N, M ) doubles into a CMATRIX( N, M ) object
+    The numpy array should be complex   
+ 
+    Args:
+        data ( 2D np.array of dimension N x M ): data to be converted
+    Returns:
+        MATRIX( N, M ): a matrix representation of the data
+    
+    """
+
+    N = data.shape[0]
+    M = data.shape[1]
+
+    res = CMATRIX(N,M)
+
+    for n in range(0,N):
+        for m in range(0,M):
+            res.set(n, m, data[n][m])
+
+    return res
+
+
+
+
+def MATRIX2nparray( data ):
+    """
+    Converts both Libra MATRIX ( N, M ) object and CMATRIX ( N, M ) object 
+    into a 2D np.array of shape( N, M )
+    
+    Args:
+        data ( Libra MATRIX object of dimension N x M ): data to be converted
+    Returns:
+        2d np.array: 2D np.array of shape( N, M )
+    
+    """
+
+    N = data.num_of_rows
+    M = data.num_of_cols
+    
+    res = []
+    
+    for n in range(0,N):
+        res.append( [] )
+        for m in range(0,M):
+            res[n].append(data.get(n,m))
+
+    return np.array(res)
+
+
+
+
+def matrix2list(q):
+    """
+    Converts the MATRIX(ndof, 1) or CMATRIX(ndof, 1) to a list of `ndof` float/complex numbers
+
+    Args:
+
+=======
+        q ( MATRIX(ndof, 1) or CMATRIX(ndof, 1) ): input matrix
+
+
+    Returns:
+   
+        list : list representation of the matrix
+
+    """
+    
+    list_q = []
+    
+    ndof = q.num_of_rows
+    
+    for idof in range(ndof):
+        list_q.append( q.get(idof, 0) )
+        
+    return list_q
+
+
+
+def make_list(nitems, value):
+    """
+    Creates a list of `nitems` items, each of which is `value`
+
+    Args:
+        nitems ( int ): the size of the resulting list to create
+        value ( any type ): the value of each initialized element of the list
+    
+    Returns:
+        list : the list of the added values
+
+    """
+    
+    res_list = []
+    
+    for iitem in range(nitems):
+        res_list.append( value )
+        
+    return res_list
+
+  
+  
+def form_block_matrix( mat_a, mat_b, mat_c, mat_d ):
+    """
+    This function gets four numpy arrays and concatenate them into a 
+    new matrix in a block format. These matrices should have the same 
+    shape on each side which they get concatenated.
+
+         |mat_a   mat_b|
+    S =  |             |
+         |mat_c   mat_d|
+
+    Args:
+
+        mat_a, mat_b, mat_c, mat_d ( 2D numpy arrays ): The matrices which will form the block matrix
+
+    Returns:
+
+        block_matrix ( numpy 2D array ): The block matrix of the four matrices above.
+
+    """
+
+    # Concatenate the two marix on their row axis
+    block_1 = np.concatenate( ( mat_a, mat_b ) )
+    block_2 = np.concatenate( (mat_c, mat_d ) )
+
+    # Now concatenate the above concatenated matrices on their 
+    # column axis and form the final matrix
+    block_matrix = np.concatenate( ( block_1, block_2 ), axis=1 )
+
+    return block_matrix
 

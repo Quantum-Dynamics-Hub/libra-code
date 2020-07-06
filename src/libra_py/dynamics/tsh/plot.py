@@ -96,9 +96,9 @@ def plot_dyn(plot_params):
                         "which_trajectories":[0], "which_dofs":[0],
                         "which_adi_states":[0], "which_dia_states":[0],
                         "colors":colors, "clrs_index":clrs_index,
-                        "linewidth":12, "title_fontsize":30, "axis_fontsize":28,
-                        "axis_width":2, "tick_fontsize":24, "tick_width":8,
-                        "tick_length":24
+                        "linewidth":12, "title_fontsize":32, "axis_fontsize":22,
+                        "axis_width":3, "tick_fontsize":18, "tick_width":4,
+                        "tick_length":8
                      }
     comn.check_input(plot_params, default_params, critical_params)
 
@@ -112,16 +112,16 @@ def plot_dyn(plot_params):
     which_dia_states = plot_params["which_dia_states"]
     colors = plot_params["colors"]
     clrs_index = plot_params["clrs_index"]
-
-    linewidth = plot_params["linewidth"]
-    title_fontsize = plot_params["title_fontsize"]
-    axis_fontsize = plot_params["axis_fontsize"]
-    axis_width = plot_params["axis_width"]
-    axis_width = plot_params["axis_width"]
     tick_fontsize =  plot_params["tick_fontsize"]
     tick_width = plot_params["tick_width"]
     tick_length = plot_params["tick_length"]
+
     out_prefix = prefix
+
+    plt.rcParams['axes.titlesize'] = plot_params["title_fontsize"]
+    plt.rcParams['axes.labelsize'] = plot_params["axis_fontsize"]
+    plt.rcParams['axes.linewidth'] = plot_params["axis_width"]
+    plt.rcParams['lines.linewidth'] = plot_params["linewidth"]
 
     with h5py.File(F"{prefix}/{filename}", 'r') as f:
 
@@ -132,39 +132,31 @@ def plot_dyn(plot_params):
             #========= Energies and their fluctuations =========
 
             plt.figure(num=None, figsize=(24, 12), dpi=300, frameon=False)
-
+            plt.subplots_adjust(wspace = 0.3)
 
             plt.subplot(1,2,1)
             ax = plt.gca()
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
+            plt.title('t-Energies')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Energy, a.u.')
 
-            plt.title('t-Energies', fontsize=title_fontsize)
-            plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-            plt.ylabel('Energy, a.u.',fontsize=axis_fontsize)
-
-            plt.plot(f["time/data"][:], f["Ekin_ave/data"][:], label="Kinetic energy", linewidth=linewidth, color = colors["11"])
-            plt.plot(f["time/data"][:], f["Epot_ave/data"][:], label="Potential energy", linewidth=linewidth, color = colors["21"])
-            plt.plot(f["time/data"][:], f["Etot_ave/data"][:], label="Total energy", linewidth=linewidth, color = colors["31"])
+            plt.plot(f["time/data"][:], f["Ekin_ave/data"][:], label="Kinetic energy", color = colors["11"])
+            plt.plot(f["time/data"][:], f["Epot_ave/data"][:], label="Potential energy", color = colors["21"])
+            plt.plot(f["time/data"][:], f["Etot_ave/data"][:], label="Total energy", color = colors["31"])
 
 
             plt.subplot(1,2,2)
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
+            ax = plt.gca()
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
 
-            plt.title('t-dEnergies', fontsize=title_fontsize)
-            plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-            plt.ylabel('Energy fluctuation, a.u.', fontsize=axis_fontsize)
+            plt.title('t-dEnergies')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Energy fluctuation, a.u.')
 
-            plt.plot(f["time/data"][:], f["dEkin_ave/data"][:], label="Kinetic energy", linewidth=linewidth, color = colors["11"])
-            plt.plot(f["time/data"][:], f["dEpot_ave/data"][:], label="Potential energy", linewidth=linewidth, color = colors["21"])
-            plt.plot(f["time/data"][:], f["dEtot_ave/data"][:], label="Total energy", linewidth=linewidth, color = colors["31"])
+            plt.plot(f["time/data"][:], f["dEkin_ave/data"][:], label="Kinetic energy", color = colors["11"])
+            plt.plot(f["time/data"][:], f["dEpot_ave/data"][:], label="Potential energy", color = colors["21"])
+            plt.plot(f["time/data"][:], f["dEtot_ave/data"][:], label="Total energy", color = colors["31"])
 
 
             plt.savefig(F"{out_prefix}/t-en.png", dpi=300)
@@ -179,15 +171,13 @@ def plot_dyn(plot_params):
             ntraj = f["time/data"].shape[0]
 
             plt.figure(num=None, figsize=(24, 24), dpi=300, frameon=False)
+            plt.subplots_adjust(wspace = 0.3)
+            ax = plt.gca()
+            ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
 
             plt.title('State indices')
             plt.xlabel('Time, a.u.')
             plt.ylabel('State index')
-
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
 
             for tr in range(ntraj):
@@ -206,64 +196,54 @@ def plot_dyn(plot_params):
             ndia = f["D_dia/data"].shape[1] #attrs['dim'][1]
 
             plt.figure(num=None, figsize=(24, 8), dpi=300, frameon=False)
+            plt.subplots_adjust(wspace = 0.3)
 
 
             #================ SH populations =============
             plt.subplot(1,3,1)
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
+            ax = plt.gca()
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
 
-            plt.title('SH populations', fontsize=title_fontsize)
-            plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-            plt.ylabel('Population, a.u.', fontsize=axis_fontsize)
+            plt.title('SH populations')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Population, a.u.')
 
             indx = -1
             for istate in range(nadi):
                 if istate in which_adi_states:
                     indx = indx + 1
-                    plt.plot(f["time/data"][:], f["SH_pop/data"][:, istate, 0], label=F"state {istate}", linewidth=linewidth, color = colors[clrs_index[indx] ])
+                    plt.plot(f["time/data"][:], f["SH_pop/data"][:, istate, 0], label=F"state {istate}", color = colors[clrs_index[indx] ])
 
             #================ adi SE populations =============
             plt.subplot(1,3,2)
             ax = plt.gca()
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
 
-            plt.title('adi SE populations', fontsize=title_fontsize)
-            plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-            plt.ylabel('Population, a.u.', fontsize=axis_fontsize)
+            plt.title('adi SE populations')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Population, a.u.')
 
             indx = -1
             for istate in range(nadi):
                 if istate in which_adi_states:
                     indx = indx + 1
-                    plt.plot(f["time/data"][:], f["D_adi/data"][:, istate, istate], label=F"state {istate}", linewidth=linewidth, color = colors[clrs_index[indx] ])
+                    plt.plot(f["time/data"][:], f["D_adi/data"][:, istate, istate], label=F"state {istate}", color = colors[clrs_index[indx] ])
 
 
             #================ dia SE populations =============
             plt.subplot(1,3,3)
             ax = plt.gca()
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
 
-            plt.title('dia SE populations', fontsize=title_fontsize)
-            plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-            plt.ylabel('Population, a.u.',fontsize=axis_fontsize)
+            plt.title('dia SE populations')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Population, a.u.')
 
             indx = -1
             for istate in range(ndia):
                 if istate in which_dia_states:
                     indx = indx + 1
-                    plt.plot(f["time/data"][:], f["D_dia/data"][:, istate, istate], label=F"state {istate}", linewidth=linewidth, color = colors[clrs_index[indx] ])
+                    plt.plot(f["time/data"][:], f["D_dia/data"][:, istate, istate], label=F"state {istate}", color = colors[clrs_index[indx] ])
 
 
             plt.savefig(F"{out_prefix}/t-pops.png", dpi=300)
@@ -277,67 +257,53 @@ def plot_dyn(plot_params):
             ndia = f["D_dia_raw/data"].shape[1] #attrs['dim'][1]
 
             plt.figure(num=None, figsize=(24, 8), dpi=300, frameon=False)
+            plt.subplots_adjust(wspace = 0.3)
 
             #================ SH populations =============
             plt.subplot(1,3,1)
             ax = plt.gca()
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
-            plt.title('SH populations (raw)', fontsize=title_fontsize)
-            plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-            plt.ylabel('Population, a.u.', fontsize=axis_fontsize)
+            plt.title('SH populations (raw)')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Population, a.u.')
 
             indx = -1
             for istate in range(nadi):
                 if istate in which_adi_states:
                     indx = indx + 1
-                    plt.plot(f["time/data"][:], f["SH_pop_raw/data"][:, istate, 0], label=F"state {istate}", linewidth=linewidth, color = colors[clrs_index[indx] ])
+                    plt.plot(f["time/data"][:], f["SH_pop_raw/data"][:, istate, 0], label=F"state {istate}", color = colors[clrs_index[indx] ])
 
             #================ adi SE populations =============
             plt.subplot(1,3,2)
             ax = plt.gca()
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
-            plt.title('adi SE populations (raw)', fontsize=title_fontsize)
-            plt.xlabel('Time, a.u.', fontsize=title_fontsize)
-            plt.ylabel('Population, a.u.', fontsize=title_fontsize)
+            plt.title('adi SE populations (raw)')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Population, a.u.')
 
             indx = -1
             for istate in range(nadi):
                 if istate in which_adi_states:
                     indx = indx + 1
-                    plt.plot(f["time/data"][:], f["D_adi_raw/data"][:, istate, istate], label=F"state {istate}", linewidth=linewidth, color = colors[clrs_index[indx] ])
+                    plt.plot(f["time/data"][:], f["D_adi_raw/data"][:, istate, istate], label=F"state {istate}", color = colors[clrs_index[indx] ])
 
 
             #================ dia SE populations =============
             plt.subplot(1,3,3)
             ax = plt.gca()
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
-            plt.title('dia SE populations (raw)', fontsize=title_fontsize)
-            plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-            plt.ylabel('Population, a.u.', fontsize=axis_fontsize)
+            plt.title('dia SE populations (raw)')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Population, a.u.')
 
             indx = -1
             for istate in range(ndia):
                 if istate in which_dia_states:
                     indx = indx + 1
-                    plt.plot(f["time/data"][:], f["D_dia_raw/data"][:, istate, istate], label=F"state {istate}", linewidth=linewidth, color = colors[clrs_index[indx] ])
-
+                    plt.plot(f["time/data"][:], f["D_dia_raw/data"][:, istate, istate], label=F"state {istate}", color = colors[clrs_index[indx] ])
 
             plt.savefig(F"{out_prefix}/t-pops_raw.png", dpi=300)
             plt.show()
-
-
 
 
         if output_level>=3:
@@ -348,17 +314,14 @@ def plot_dyn(plot_params):
 
 
             plt.figure(num=None, figsize=(24, 12), dpi=300, frameon=False)
+            plt.subplots_adjust(wspace = 0.3)
 
             plt.subplot(1,2,1)
             ax = plt.gca()
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
-            plt.title('t-q', fontsize=title_fontsize)
-            plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-            plt.ylabel('Coordiante, a.u.', fontsize=axis_fontsize)
+            plt.title('t-q')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Coordiante, a.u.')
 
             indx = -1
             for idof in range(ndof):
@@ -366,20 +329,16 @@ def plot_dyn(plot_params):
                     indx = indx + 1
                     for tr in range(ntraj):
                         if tr in which_trajectories:
-                            plt.plot(f["time/data"][:], f["q/data"][:, tr, idof], label="", linewidth=linewidth, color = colors[ clrs_index[indx] ])
+                            plt.plot(f["time/data"][:], f["q/data"][:, tr, idof], linewidth = 2, label="", color = colors[ clrs_index[indx] ])
 
 
             #========= Phase-space =========
             plt.subplot(1,2,2)
             ax = plt.gca()
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
-            plt.title('q-p', fontsize=title_fontsize)
-            plt.xlabel('Coordiante, a.u.', fontsize=axis_fontsize)
-            plt.ylabel('Momenta, a.u.', fontsize=axis_fontsize)
+            plt.title('q-p')
+            plt.xlabel('Coordiante, a.u.')
+            plt.ylabel('Momenta, a.u.')
 
             indx = -1
             for idof in range(ndof):
@@ -387,7 +346,7 @@ def plot_dyn(plot_params):
                     indx = indx + 1
                     for tr in range(ntraj):
                         if tr in which_trajectories:
-                            plt.plot(f["q/data"][:, tr, idof], f["p/data"][:, tr, idof], label="", linewidth=linewidth, color = colors[ clrs_index[indx] ])
+                            plt.plot(f["q/data"][:, tr, idof], f["p/data"][:, tr, idof], linewidth = 2, label="", color = colors[ clrs_index[indx] ])
 
             plt.savefig(F"{out_prefix}/t-q-p.png", dpi=300)
             plt.show()
@@ -401,17 +360,14 @@ def plot_dyn(plot_params):
 
             #============== Adiabatic energies =============
             plt.figure(num=None, figsize=(24, 12), dpi=300, frameon=False)
+            plt.subplots_adjust(wspace = 0.3)
 
             plt.subplot(1,2,1)
             ax = plt.gca()
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
-            plt.title('t-H_adi', fontsize=title_fontsize)
-            plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-            plt.ylabel('Energy, a.u.', fontsize=axis_fontsize)
+            plt.title('t-H_adi')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Energy, a.u.')
 
             indx = -1
             for istate in range(nadi):
@@ -419,19 +375,15 @@ def plot_dyn(plot_params):
                     indx = indx + 1
                     for tr in range(ntraj):
                         if tr in which_trajectories:
-                            plt.plot(f["time/data"][:], f["hvib_adi/data"][:, tr, istate, istate], label="", linewidth=linewidth, color = colors[ clrs_index[indx] ])
+                            plt.plot(f["time/data"][:], f["hvib_adi/data"][:, tr, istate, istate], linewidth = 2, label="", color = colors[ clrs_index[indx] ])
 
             #============== Diabatic energies =============
             plt.subplot(1,2,2)
             ax = plt.gca()
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
-            plt.title('t-H_dia', fontsize=title_fontsize)
-            plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-            plt.ylabel('Energy, a.u.', fontsize=axis_fontsize)
+            plt.title('t-H_dia')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Energy, a.u.')
 
             indx = -1
             for istate in range(ndia):
@@ -439,7 +391,7 @@ def plot_dyn(plot_params):
                     indx = indx + 1
                     for tr in range(ntraj):
                         if tr in which_trajectories:
-                            plt.plot(f["time/data"][:], f["hvib_dia/data"][:, tr, istate, istate], label="", linewidth=linewidth, color = colors[ clrs_index[indx] ])
+                            plt.plot(f["time/data"][:], f["hvib_dia/data"][:, tr, istate, istate], linewidth =2, label="", color = colors[ clrs_index[indx] ])
 
             plt.savefig(F"{out_prefix}/t-hvib.png", dpi=300)
             plt.show()
@@ -452,18 +404,14 @@ def plot_dyn(plot_params):
 
             #============== St diagonal matrix elements =============
             plt.figure(num=None, figsize=(24, 12), dpi=300, frameon=False)
-            ax = plt.gca()
+            plt.subplots_adjust(wspace = 0.3)
 
             plt.subplot(1,2,1)
             ax = plt.gca()
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
-            plt.title('t-St', fontsize=title_fontsize)
-            plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-            plt.ylabel('Time overlap', fontsize=axis_fontsize)
+            plt.title('t-St')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Time overlap')
 
             indx = -1
             for istate in range(nadi):
@@ -471,19 +419,15 @@ def plot_dyn(plot_params):
                     indx = indx + 1
                     for tr in range(ntraj):
                         if tr in which_trajectories:
-                            plt.plot(f["time/data"][:], f["St/data"][:, tr, istate, istate], label="", linewidth=linewidth, color = colors[ clrs_index[indx] ])
+                            plt.plot(f["time/data"][:], f["St/data"][:, tr, istate, istate], linewidth = 2, label="", color = colors[ clrs_index[indx] ])
 
             #============== Projectors =============
             plt.subplot(1,2,2)
             ax = plt.gca()
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
-            plt.title('t-projectors', fontsize=title_fontsize)
-            plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-            plt.ylabel('Projectors', fontsize=axis_fontsize)
+            plt.title('t-projectors')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Projectors')
 
             indx = -1
             for istate in range(nadi):
@@ -491,7 +435,7 @@ def plot_dyn(plot_params):
                     indx = indx + 1
                     for tr in range(ntraj):
                         if tr in which_trajectories:
-                            plt.plot(f["time/data"][:], f["projector/data"][:, tr, istate, istate], label="", linewidth=linewidth, color = colors[ clrs_index[indx] ])
+                            plt.plot(f["time/data"][:], f["projector/data"][:, tr, istate, istate], linewidth = 2, label="", color = colors[ clrs_index[indx] ])
 
             plt.savefig(F"{out_prefix}/St-projector.png", dpi=300)
             plt.show()
@@ -505,17 +449,14 @@ def plot_dyn(plot_params):
 
             #============== dia-to-adia transformation matrix =============
             plt.figure(num=None, figsize=(24, 24), dpi=300, frameon=False)
+            plt.subplots_adjust(wspace = 0.3)
 
             plt.subplot(1,1,1)
             ax = plt.gca()
-            ax.spines['top'].set_linewidth(axis_width)
-            ax.spines['bottom'].set_linewidth(axis_width)
-            ax.spines['right'].set_linewidth(axis_width)
-            ax.spines['left'].set_linewidth(axis_width)
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
-            plt.title('t-Basis_transform', fontsize=title_fontsize)
-            plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-            plt.ylabel('Basis transform', fontsize=axis_fontsize)
+            plt.title('t-Basis_transform')
+            plt.xlabel('Time, a.u.')
+            plt.ylabel('Basis transform')
 
             indx = -1
             for istate in range(nadi):
@@ -526,7 +467,7 @@ def plot_dyn(plot_params):
                             indx = indx + 1
                             for tr in range(ntraj):
                                 if tr in which_trajectories:
-                                    plt.plot(f["time/data"][:], f["basis_transform/data"][:, tr, istate2, istate], label="", linewidth=linewidth, color = colors[ clrs_index[indx] ])
+                                    plt.plot(f["time/data"][:], f["basis_transform/data"][:, tr, istate2, istate], linewidth = 2, label="", color = colors[ clrs_index[indx] ])
 
             plt.savefig(F"{out_prefix}/basis_transform.png", dpi=300)
             plt.show()
@@ -648,3 +589,56 @@ def plot_dyn_old(res):
 
     plt.show()
     plt.close()
+
+
+def hdf2xyz(labels, filename, snaps, trajectories, atoms, unit_conversion_factor=1.0):
+    """
+    This function creates a string containing an xyz-formatted trajectory (multiple geometries)
+    from an HDF5 file produced by the `compute.run_dynamics` function
+
+    Args:
+        labels ( list of strings ): the labels of the atoms of the system, the labels are in a
+            specific order that corresponds to the atomic order in the system. The length of this
+            list should be `nat` - the number of atoms listed in the xyz header, even if not all of
+            them are listed in the input parameter `atoms`
+        filename ( string ): the name of the HDF5 file that contains the geometry
+        snaps ( list of ints ): indices of the timesteps to be included in the xyz file being generated.
+            This allows printing only simesteps of interest.
+        trajectories ( list of ints ): indices of the trajectories that we want to include in the xyz file.
+            This allows plotting many trajectories at once (in every frame).
+        atoms ( list of ints ): indices of the atomic species to be printed out to the xyz files (e.g. to
+            eventually visualize). This allows for visualizing only a subset of atoms (e.g. a spatial region,
+            a molecule, a group, etc.) of the main interest.
+        unit_conversion_factor ( double ): the conversion factor to convert the data stored in the
+            HDF5 file to the new units. Since `compute.run_dynamics` function stores all the information
+            in the atomic units (Bohrs for the coordinates) and since the xyz files visualization works
+            best in the Angstrom units, it is common situation to use the
+            `unit_conversion_factor = 1.0/units.Angst` conversion factor.
+
+    Returns:
+        string: the string representation of the xyz trajectory file that is made of the
+            provided input geomtries/trajectories/atomic labels
+
+    """
+
+    natoms = len(atoms)  # the actual number of atoms to show
+    ntraj = len(trajectories)
+
+    md_xyz = ""
+
+    with h5py.File(filename, 'r') as f:
+
+        for isnap in snaps:
+
+            md_xyz = md_xyz + F"{natoms*ntraj}\nsnapshot {isnap}\n"
+
+            for itraj in trajectories:
+                for iatom in atoms:
+
+                    x = f["q/data"][isnap, itraj, 3*iatom+0] * unit_conversion_factor
+                    y = f["q/data"][isnap, itraj, 3*iatom+1] * unit_conversion_factor
+                    z = f["q/data"][isnap, itraj, 3*iatom+2] * unit_conversion_factor
+
+                    md_xyz = md_xyz + F"{labels[iatom] }  {x} {y} {z}\n"
+
+    return md_xyz

@@ -45,8 +45,8 @@ dyn_control_params::dyn_control_params(){
   momenta_rescaling_algo = 0;
   use_boltz_factor = 0;
   Temperature = 300.0;
-  do_reverse = 1;
-  vel_rescale_opt = 0;
+//  do_reverse = 1;
+//  vel_rescale_opt = 0;
   dt = 41.0;
   do_phase_correction = 1;
   phase_correction_tol = 1e-3; 
@@ -111,8 +111,8 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="momenta_rescaling_algo"){ momenta_rescaling_algo = bp::extract<int>(params.values()[i]);  }
     else if(key=="use_boltz_factor") { use_boltz_factor = bp::extract<int>(params.values()[i]);  }
     else if(key=="Temperature") { Temperature = bp::extract<double>(params.values()[i]);  }
-    else if(key=="do_reverse") { do_reverse = bp::extract<int>(params.values()[i]);  }
-    else if(key=="vel_rescale_opt") { vel_rescale_opt = bp::extract<int>(params.values()[i]);  }
+//    else if(key=="do_reverse") { do_reverse = bp::extract<int>(params.values()[i]);  }
+//    else if(key=="vel_rescale_opt") { vel_rescale_opt = bp::extract<int>(params.values()[i]);  }
 
     else if(key=="dt") { dt = bp::extract<double>(params.values()[i]);  }
 

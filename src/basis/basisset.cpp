@@ -136,7 +136,7 @@ read_basisset_file(basisset_struct* result, const char* fileName,
                    int print_raw)
 */ 
 
-void basisset_struct::read_basisset_file(std::string fileName,int print_raw){
+int basisset_struct::read_basisset_file(std::string fileName,int print_raw){
 
   enum { END_PARSING, ATOM_EXPECTED, SHELL_EXPECTED,
          SHELL_OR_ATOM_EXPECTED, CONTRACTION_BLOCK_EXPECTED } state;

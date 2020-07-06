@@ -257,12 +257,6 @@ def plot_hdf5(plot_params):
 
     """
 
-    plt.rc('axes', titlesize=24)      # fontsize of the axes title
-    plt.rc('axes', labelsize=20)      # fontsize of the x and y labels
-    plt.rc('legend', fontsize=20)     # legend fontsize
-    plt.rc('xtick', labelsize=16)    # fontsize of the tick labels
-    plt.rc('ytick', labelsize=16)    # fontsize of the tick labels
-
     plt.rc('figure.subplot', left=0.2)
     plt.rc('figure.subplot', right=0.95)
     plt.rc('figure.subplot', bottom=0.13)
@@ -295,9 +289,9 @@ def plot_hdf5(plot_params):
     default_params = {  "prefix":"out", "filename":"data.hdf", "hdf5_output_level":3,
                         "which_dofs":[0], "which_adi_states":[0], "which_dia_states":[0],
                         "colors":colors, "clrs_index":clrs_index,
-                        "linewidth":12, "title_fontsize":30, "axis_fontsize":28,
-                        "axis_width":4, "tick_fontsize":24, "tick_width":4,
-                        "tick_length":12,
+                        "linewidth":12, "title_fontsize":48, "axis_fontsize":34,
+                        "axis_width":3, "tick_fontsize":24, "tick_width":4,
+                        "tick_length":8, "legend_fontsize":24,
                         "properties_to_save":
                           [ "timestep", "time", "Ekin_dia", "Ekin_adi", "Epot_dia",
                             "Epot_adi", "Etot_dia", "Etot_adi", "norm_dia", "norm_adi",
@@ -309,7 +303,6 @@ def plot_hdf5(plot_params):
     comn.check_input(plot_params, default_params, critical_params)
 
 
-
     filename = plot_params["filename"]
     prefix = plot_params["prefix"]
     hdf5_output_level = plot_params["hdf5_output_level"]
@@ -318,10 +311,6 @@ def plot_hdf5(plot_params):
     which_dia_states = plot_params["which_dia_states"]
     colors = plot_params["colors"]
     clrs_index = plot_params["clrs_index"]
-    linewidth = plot_params["linewidth"]
-    title_fontsize = plot_params["title_fontsize"]
-    axis_fontsize = plot_params["axis_fontsize"]
-    axis_width = plot_params["axis_width"]
     tick_fontsize =  plot_params["tick_fontsize"]
     tick_width = plot_params["tick_width"]
     tick_length = plot_params["tick_length"]
@@ -329,6 +318,11 @@ def plot_hdf5(plot_params):
 
     out_prefix = prefix
 
+    plt.rcParams['axes.titlesize'] = plot_params["title_fontsize"]
+    plt.rcParams['axes.labelsize'] = plot_params["axis_fontsize"]
+    plt.rcParams['axes.linewidth'] = plot_params["axis_width"]
+    plt.rcParams['lines.linewidth'] = plot_params["linewidth"]
+    plt.rcParams['legend.fontsize'] = plot_params["legend_fontsize"]
 
     with h5py.File(F"{prefix}/{filename}", 'r') as f:
 
@@ -340,15 +334,11 @@ def plot_hdf5(plot_params):
 
         plt.figure(1, figsize=(36, 12)) # dpi=300, frameon=False)
         plt.subplot(1, 2, 1)
-        plt.title('Adiabatic population dynamics', fontsize=title_fontsize )
-        plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-        plt.ylabel('Population', fontsize=axis_fontsize)
+        plt.title('Adiabatic population dynamics')
+        plt.xlabel('Time, a.u.')
+        plt.ylabel('Population')
 
         ax = plt.gca()
-        ax.spines['top'].set_linewidth(axis_width)
-        ax.spines['bottom'].set_linewidth(axis_width)
-        ax.spines['right'].set_linewidth(axis_width)
-        ax.spines['left'].set_linewidth(axis_width)
         ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
 
         if "pop_adi" in properties_to_save and t != None:
@@ -356,28 +346,24 @@ def plot_hdf5(plot_params):
             for i in range(nstates):
                 if i in which_adi_states:
                     Pi = list(f["pop_adi/data"][:, i, 0])
-                    plt.plot(t, Pi, label='$P_%i$' % (i), linewidth=linewidth, color = colors[clrs_index[i]])
+                    plt.plot(t, Pi, label='$P_%i$' % (i), color = colors[clrs_index[i]])
                     plt.legend()
 
 
         plt.subplot(1, 2, 2)
         ax = plt.gca()
-        ax.spines['top'].set_linewidth(axis_width)
-        ax.spines['bottom'].set_linewidth(axis_width)
-        ax.spines['right'].set_linewidth(axis_width)
-        ax.spines['left'].set_linewidth(axis_width)
         ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
 
-        plt.title('Diabatic population dynamics', fontsize=title_fontsize )
-        plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-        plt.ylabel('Population', fontsize=axis_fontsize)
+        plt.title('Diabatic population dynamics')
+        plt.xlabel('Time, a.u.')
+        plt.ylabel('Population')
 
         if "pop_dia" in properties_to_save and t != None:
             nstates = f["pop_dia/data"].shape[1] #.attrs['dim'][1]
             for i in range(nstates):
                 if i in which_dia_states:
                     Pi = list(f["pop_dia/data"][:, i, 0])
-                    plt.plot(t, Pi, label='$P_%i$' % (i), linewidth=linewidth, color = colors[clrs_index[i]])
+                    plt.plot(t, Pi, label='$P_%i$' % (i), color = colors[clrs_index[i]])
                     plt.legend()
 
         plt.savefig("%s/Fig1.png" % (prefix), dpi=300)
@@ -389,15 +375,11 @@ def plot_hdf5(plot_params):
 
         plt.subplot(1, 2, 1)
         ax = plt.gca()
-        ax.spines['top'].set_linewidth(axis_width)
-        ax.spines['bottom'].set_linewidth(axis_width)
-        ax.spines['right'].set_linewidth(axis_width)
-        ax.spines['left'].set_linewidth(axis_width)
         ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
 
-        plt.title('Energies', fontsize=title_fontsize)
-        plt.xlabel('t, a.u.', fontsize=axis_fontsize)
-        plt.ylabel('Energy, a.u.', fontsize=axis_fontsize)
+        plt.title('Energies')
+        plt.xlabel('t, a.u.')
+        plt.ylabel('Energy, a.u.')
         if "Ekin_dia" in properties_to_save \
            and "Epot_dia" in properties_to_save \
            and "Etot_dia" in properties_to_save \
@@ -407,23 +389,19 @@ def plot_hdf5(plot_params):
             Epot_dia =  list(f["Epot_dia/data"][:])
             Etot_dia =  list(f["Etot_dia/data"][:])
 
-            plt.plot(t, Etot_dia, label='$Etot_{dia}$', linewidth=linewidth, color = colors["11"])
-            plt.plot(t, Ekin_dia, label='$Ekin_{dia}$', linewidth=linewidth, color = colors["21"])
-            plt.plot(t, Epot_dia, label='$Epot_{dia}$', linewidth=linewidth, color = colors["31"])
+            plt.plot(t, Etot_dia, label='$Etot_{dia}$', color = colors["11"])
+            plt.plot(t, Ekin_dia, label='$Ekin_{dia}$', color = colors["21"])
+            plt.plot(t, Epot_dia, label='$Epot_{dia}$', color = colors["31"])
             plt.legend()
 
 
         plt.subplot(1, 2, 2)
         ax = plt.gca()
-        ax.spines['top'].set_linewidth(axis_width)
-        ax.spines['bottom'].set_linewidth(axis_width)
-        ax.spines['right'].set_linewidth(axis_width)
-        ax.spines['left'].set_linewidth(axis_width)
         ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
 
-        plt.title('Energies', fontsize=title_fontsize)
-        plt.xlabel('t, a.u.', fontsize=axis_fontsize)
-        plt.ylabel('Energy, a.u.', fontsize=axis_fontsize)
+        plt.title('Energies')
+        plt.xlabel('t, a.u.')
+        plt.ylabel('Energy, a.u.')
 
         if "Ekin_adi" in properties_to_save \
            and "Epot_adi" in properties_to_save \
@@ -434,9 +412,9 @@ def plot_hdf5(plot_params):
             Epot_adi =  list(f["Epot_adi/data"][:])
             Etot_adi =  list(f["Etot_adi/data"][:])
 
-            plt.plot(t, Etot_adi, label='$Etot_{adi}$', linewidth=linewidth, color = colors["11"])
-            plt.plot(t, Ekin_adi, label='$Ekin_{adi}$', linewidth=linewidth, color = colors["21"])
-            plt.plot(t, Epot_adi, label='$Epot_{adi}$', linewidth=linewidth, color = colors["31"])
+            plt.plot(t, Etot_adi, label='$Etot_{adi}$', color = colors["11"])
+            plt.plot(t, Ekin_adi, label='$Ekin_{adi}$', color = colors["21"])
+            plt.plot(t, Epot_adi, label='$Epot_{adi}$', color = colors["31"])
             plt.legend()
 
         plt.savefig("%s/Fig2.png" % (prefix), dpi=300)
@@ -448,15 +426,11 @@ def plot_hdf5(plot_params):
 
         plt.subplot(1, 2, 1)
         ax = plt.gca()
-        ax.spines['top'].set_linewidth(axis_width)
-        ax.spines['bottom'].set_linewidth(axis_width)
-        ax.spines['right'].set_linewidth(axis_width)
-        ax.spines['left'].set_linewidth(axis_width)
         ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
 
-        plt.title('Phase space', fontsize=title_fontsize)
-        plt.xlabel('Coordinate, a.u.', fontsize=axis_fontsize)
-        plt.ylabel('Momentum, a.u.', fontsize=axis_fontsize)
+        plt.title('Phase space')
+        plt.xlabel('Coordinate, a.u.')
+        plt.ylabel('Momentum, a.u.')
 
         if "q_dia" in properties_to_save and "p_dia" in properties_to_save:
             ndof = f["q_dia/data"].shape[1] #.attrs['dim'][1]
@@ -466,34 +440,29 @@ def plot_hdf5(plot_params):
                     qi =  list(f["q_dia/data"][:, idof, 0])
                     pi =  list(f["p_dia/data"][:, idof, 0])
 
-                    plt.plot(qi, pi, label='', linewidth=linewidth, color = colors[clrs_index[i]])
+                    plt.plot(qi, pi, label='', color = colors[clrs_index[i]])
                     plt.legend()
 
 
         plt.subplot(1, 2, 2)
         ax = plt.gca()
-        ax.spines['top'].set_linewidth(axis_width)
-        ax.spines['bottom'].set_linewidth(axis_width)
-        ax.spines['right'].set_linewidth(axis_width)
-        ax.spines['left'].set_linewidth(axis_width)
         ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
 
-        plt.title('Norms', fontsize=title_fontsize)
-        plt.xlabel('Time, a.u.', fontsize=axis_fontsize)
-        plt.ylabel('Norm', fontsize=axis_fontsize)
+        plt.title('Norms')
+        plt.xlabel('Time, a.u.')
+        plt.ylabel('Norm')
 
         if "norm_dia" in properties_to_save and "norm_adi" in properties_to_save and t != None:
 
             nrm_dia = list(f["norm_dia/data"][:])
             nrm_adi = list(f["norm_adi/data"][:])
 
-            plt.plot(t, nrm_dia, label='Diabatic', linewidth=linewidth, color = colors["11"])
-            plt.plot(t, nrm_adi, label='Adiabatic', linewidth=linewidth, color = colors["21"])
+            plt.plot(t, nrm_dia, label='Diabatic', color = colors["11"])
+            plt.plot(t, nrm_adi, label='Adiabatic', color = colors["21"])
             plt.legend()
 
         plt.savefig("%s/Fig3.png" % (prefix), dpi=300)
         plt.savefig("%s/Fig3.pdf" % (prefix), dpi=300)
-
 
         plt.show()
         plt.close()
