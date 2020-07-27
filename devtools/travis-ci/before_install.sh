@@ -2,7 +2,14 @@
 pushd .
 cd $HOME
 # Make sure some level of pip is installed
-python -m ensurepip
+#  the old approach
+#python -m ensurepip
+
+# AVA on 7/27/2020 - Now they discourage use of the system pip with Python, so here is my workaround
+# based on this resource:
+# https://linuxize.com/post/how-to-install-pip-on-debian-10/
+sudo apt update
+sudo apt install python3-pip
 
 # Install Miniconda
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
