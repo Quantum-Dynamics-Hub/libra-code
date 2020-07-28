@@ -60,18 +60,18 @@ def read_cube(filename: str):
     nstart = natoms+2+1+3        # the index of the first line containing wfc data
     nlines = len(lines)          # the total number of lines
 
-    x = []
+    isovalues = []
     for i in range(nstart,nlines):
         tmp = lines[i].split()
         ncols = len(tmp)
 
         for j in range(ncols):
-            x.append(float(tmp[j]))
+            isovalues.append(float(tmp[j]))
     
-    data = np.array(x)
+    isovalues = np.array(isovalues)
     #data = np.loadtxt(filename,skiprows=n)
     
-    return data
+    return isovalues
 
 
 
