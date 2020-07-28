@@ -221,9 +221,25 @@ def integrate_cube_set( cubefiles_set_1, cubefiles_set_2, dv ):
 
 def compute_cube_ks_overlaps( cubefiles_prev, params):
     """
-    This function computes 
+    This function computes overlaps between cube files of two time steps. In order to not read the cube files 
+    twice it returns the cube files of the current step, and gets the cube files of the previous step.
+    
+    Args:
+    
+        cubefiles_prev (list): The list containing th cube files of the previous step.
+	
+	params (dict):
+	
+	    curr_step (int): The current time step.
+	    
+	    isUKS (int): This parameter is set for spin restricted and unrestricted calculations. When it is
+	                 set to 1 it means that unrestricted calculations were set in the input file otherwise 
+			 it is restricted.
+            
+	    nprocs (int): The number of processors used to read the cube files and perform the integration.
     """
 
+    # Extract the variables
     curr_step = int(params["curr_step"])
     isUKS  = int(params["isUKS"])
     nprocs = int(params["nprocs"])
@@ -237,58 +253,62 @@ def compute_cube_ks_overlaps( cubefiles_prev, params):
     # Creating a pool and assigning the number of processors for mp.Pool
     pool = mp.Pool(processes=nprocs)
     
-    # for time t
-    print("\nWe are reading the cubes for step ", curr_step)
+    # for curr_step
+    print("Reading the cubes for step ", curr_step)
+    # generate the cube file names produced by CP2K
     cubefile_names_curr = CP2K_methods.cube_file_names_cp2k( params )
-    print("\nIn compute_cube_ks_overlaps, the cubfile_names_curr are")
-    print("\n", cubefile_names_curr)
 
-    cubefiles_curr = []    
+    # Reading the cube files
+    cubefiles_curr = []
+    # Apply pool.map to the cube_file_methods to the set of variables of the cubefile_names_curr
     cubefiles_curr = pool.map( cube_file_methods.read_cube, cubefile_names_curr ) 
+    # Close the pool
     pool.close()
     
     # Calculate the dv element for integration
     dv = cube_file_methods.grid_volume( cubefile_names_curr[0] )
 
-    # Compute the overlaps
+    #### Compute the overlaps
+    # If spin unrestricted calculations were set to run
     if isUKS == 1:
 
-        # The cube files for alpha and beta spin for time t-1
+        # The cube files for alpha and beta spin for the previous time step
+	
+	# The alpha cubes are the even indices of the read cube files
         alp_cubes_prev = cubefiles_prev[0::2]
+	# The beta cubes are the odd indices of the read cube files
         bet_cubes_prev = cubefiles_prev[1::2]
-
-        # The cube files for alpha and beta spin for time t
+	
+        # The cube files for alpha and beta spin for the current time step
+	
+        # The alpha cubes are the even indices of the read cube files
         alp_cubes_curr = cubefiles_curr[0::2]
+	# The beta cubes are the odd indices of the read cube files
         bet_cubes_curr = cubefiles_curr[1::2]
 
+	# Initializing the overlap matrices for alpha and beta spin with zero matrices
         zero_mat_alp = np.zeros( ( len( alp_cubes_prev ), len( alp_cubes_curr ) ) )
         zero_mat_bet = np.zeros( ( len( bet_cubes_prev ), len( bet_cubes_curr ) ) )
 
-        """
-        print('---------------------------------')
-        print('Calculating the time overlap matrix...')
-        # The time overlap between cube files of time t-1 and t
-        St_alp_alp = integrate_cube_set( alp_cubes_prev, alp_cubes_curr, dv ) 
-        St_bet_bet = integrate_cube_set( bet_cubes_prev, bet_cubes_curr, dv )
-	
-        # The overlap between cube files at times t-1 and t
-        S_alp_alp_prev = integrate_cube_set( alp_cubes_prev, alp_cubes_prev, dv )
-        S_bet_bet_prev = integrate_cube_set( bet_cubes_prev, bet_cubes_prev, dv )
-        S_alp_alp_curr = integrate_cube_set( alp_cubes_curr, alp_cubes_curr, dv )
-        S_bet_bet_curr = integrate_cube_set( bet_cubes_curr, bet_cubes_curr, dv )
-	"""
 
-        ### For using concurrency 
+        ### Using concurrency to compute the integration and overlap matrices
         with concurrent.futures.ThreadPoolExecutor(max_workers=nprocs) as executor:
+            # <psi_alp(t-1)|psi_alp(t)>
             int_1 = executor.submit(integrate_cube_set, alp_cubes_prev, alp_cubes_curr, dv )
+            # <psi_bet(t-1)|psi_bet(t)>
             int_2 = executor.submit(integrate_cube_set, bet_cubes_prev, bet_cubes_curr, dv )
+            # <psi_alp(t-1)|psi_alp(t-1)>
             int_3 = executor.submit(integrate_cube_set, alp_cubes_prev, alp_cubes_prev, dv )
+            # <psi_bet(t-1)|psi_bet(t-1)>
             int_4 = executor.submit(integrate_cube_set, bet_cubes_prev, bet_cubes_prev, dv )
+            # <psi_alp(t)|psi_alp(t)>
             int_5 = executor.submit(integrate_cube_set, alp_cubes_curr, alp_cubes_curr, dv )
+            # <psi_bet(t)|psi_bet(t)>
             int_6 = executor.submit(integrate_cube_set, bet_cubes_curr, bet_cubes_curr, dv )
+	
+	# Extracting the results for each of the submitted jobs
         St_alp_alp = int_1.result()
         St_bet_bet = int_2.result()
-        ### End using concurrency 
 	
         # The overlap between cube files at times t-1 and t
         S_alp_alp_prev = int_3.result()
@@ -297,37 +317,31 @@ def compute_cube_ks_overlaps( cubefiles_prev, params):
         S_bet_bet_curr = int_6.result()
 
     else:
-        """
-        # Spin non-polarized case
-        St = np.zeros( ( len( cubefiles_prev ), len( cubefiles_curr ) ) )
-        S_prev = np.zeros( ( len( cubefiles_prev ), len( cubefiles_prev ) ) )
-        S_curr = np.zeros( ( len( cubefiles_curr ), len( cubefiles_curr ) ) )
-    
-        print('---------------------------------')
-        print('Calculating the time overlap matrix...')
-        for i in range( 0, len( cubefiles_prev ) ):
-            for j in range( 0, len( cubefiles_curr ) ):
-                S_prev[i][j] = cube_file_methods.integrate_cube( cubefiles_prev[i][0], cubefiles_prev[j][0], dv )
-                S_curr[i][j] = cube_file_methods.integrate_cube( cubefiles_curr[i][0], cubefiles_curr[j][0], dv )
-                St[i][j]     = cube_file_methods.integrate_cube( cubefiles_prev[i][0], cubefiles_curr[j][0], dv )
-       """
 
         ### Using the concurrency
         with concurrent.futures.ThreadPoolExecutor(max_workers=nprocs) as executor:
+            # <psi(t-1)|psi(t-1)>
             int_1 = executor.submit(integrate_cube_set, cubefiles_prev, cubefiles_prev, dv )
+            # <psi(t)|psi(t)>
             int_2 = executor.submit(integrate_cube_set, cubefiles_curr, cubefiles_curr, dv )
+            # <psi(t-1)|psi(t)>
             int_3 = executor.submit(integrate_cube_set, cubefiles_prev, cubefiles_curr, dv )
+
+        # Extracting the results
         S_prev = int_1.result()
         S_curr = int_2.result()
         St     = int_3.result()
-        ### End using concurrency
 
+	# These are used to form the block matrices for two-spinor format 
         zero_mat_alp = np.zeros( ( len( S_prev ), len( S_curr ) ) )
         zero_mat_bet = np.zeros( ( len( S_prev ), len( S_curr ) ) )
+	
+	# The alpha and beta spin have the same overlap matrix in spin restricted case
         S_alp_alp_prev, S_bet_bet_prev = S_prev, S_prev
         S_alp_alp_curr, S_bet_bet_curr = S_curr, S_curr
         St_alp_alp, St_bet_bet = St, St
     
+    # Storing the overlap matices in two-spinor format by forming the block matrices
     S_ks_prev = data_conv.form_block_matrix( S_alp_alp_prev, zero_mat_alp, zero_mat_bet, S_bet_bet_prev )
     S_ks_curr = data_conv.form_block_matrix( S_alp_alp_curr, zero_mat_alp, zero_mat_bet, S_bet_bet_curr )
     St_ks     = data_conv.form_block_matrix( St_alp_alp,     zero_mat_alp, zero_mat_bet, St_bet_bet )
