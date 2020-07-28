@@ -104,35 +104,37 @@ def normalize_ci_coefficients(ci_coefficients_raw_unnorm):
     
     Args:
     
-        ci_coefficients_raw_unnorm (list): The list containing the unnormalized CI coefficients.
+        ci_coefficients_raw_unnorm (list): The list containing the lists of unnormalized CI coefficients.
 	
     Returns:
     
-        ci_coefficients_raw_norm (list): The list normalized CI coefficients.
+        ci_coefficients_raw_norm (list): The list containing the lists of normalized CI coefficients.
     
     """
-    
+    # Number of states contributing in the excited state
     nstates = len(ci_coefficients_raw_unnorm)
+    # Creating an empty list to store the normalized CI coefficients
     ci_coefficients_raw_norm = []
        
     for i in range(nstates):
         
-        norm = 0.0
+	#### ordinary way without using numpy
+        # Set up an initial parameter to compute the norm of the vector
+	norm = 0.0
+	# For each list of CI coefficients
         ci_coefficients_raw_norm.append( [] )
         
         for j in ci_coefficients_raw_unnorm[i]:
-            
+            # sum of CI coefficients square
             norm += j*j
-        
+        # Compute the norm by taking the square root of the sum to compute the norm
         norm = math.sqrt(norm)
         
-        # numpy way
+        # numpy way to compute the normalized CI coefficients
         ci_coefficients_raw_unnorm[i] = np.array(ci_coefficients_raw_unnorm[i])
         ci_coefficients_raw_norm[i] = abs ( ci_coefficients_raw_unnorm[i] / norm )
         ci_coefficients_raw_norm[i] = list(ci_coefficients_raw_norm[i])
         
-        # non-numpy, pythonic way
-        #ci_coefficients_raw_norm[i] = [ ci_coefficients_raw_unnorm[i][k] / norm for k in range(len(ci_coefficients_raw_unnorm[i])) ]
     
     return ci_coefficients_raw_norm
 
@@ -142,6 +144,28 @@ def normalize_ci_coefficients(ci_coefficients_raw_unnorm):
 
 def get_es_output(params):
     """
+    This function reads the information of the excited states from the log file of the single point calculations.
+    
+    Args:
+    
+        params (dict):
+	
+	    logfile_directory (str): The log files directory.
+	    
+	    es_software (str): The name of the software used to calculate the energy calculations.
+	    
+	    curr_step (int): The current time step of the calculations.
+	    
+    Returns:
+    
+        excitation_energies (numpy array): The excitation energies of the curr_step.
+	
+	ci_basis_raw (numpy array): The excited states which contains the occupied and virtual orbitals.
+	
+	ci_coefficients_raw_unnorm (numpy array): The excited states CI coefficients.
+	
+	spin_components (numpy array): Contains the excited states spin components ('alp' for alpha spin and 'bet' for beta spin)
+	
     """
     
     logfile_directory = params["logfile_directory"]
@@ -163,6 +187,7 @@ def get_es_output(params):
 
 def integrate_cube_set( cubefiles_curr, cubefiles_prev, dv ):
     """
+    This function 
     """
 
     overlap_matrix = np.zeros( ( len( cubefiles_prev ) , len( cubefiles_curr ) ) )
@@ -179,6 +204,7 @@ def integrate_cube_set( cubefiles_curr, cubefiles_prev, dv ):
 
 def compute_cube_ks_overlaps( cubefiles_prev, params):
     """
+    This function computes
     """
 
     curr_step = int(params["curr_step"])
