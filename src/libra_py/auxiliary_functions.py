@@ -176,6 +176,7 @@ def get_es_output(params):
         
         logfile_name = logfile_directory+'/step_'+str(curr_step)+'.log'
         params.update({"logfile_name":logfile_name}) 
+	# Extract the excitation energies and their configurations from the output file.
         excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = \
         CP2K_methods.read_cp2k_tddfpt_log_file( params )
   
@@ -185,16 +186,32 @@ def get_es_output(params):
 
 
 
-def integrate_cube_set( cubefiles_curr, cubefiles_prev, dv ):
+def integrate_cube_set( cubefiles_set_1, cubefiles_set_2, dv ):
     """
-    This function 
+    This function comutes the overlap matrix between two set of cube files.
+    
+    Args:
+    
+        cubefiles_set_1 (list): The list of cube files of the curr_step.
+	
+	cubefiles_set_2 (list): The list of cube files of the previous step.
+	
+	dv (float): The integration element obtained from the cube files.
+	
+    Returns:
+    
+        overlap_matrix (numpy 2D array): The overlap between the two set of cube files.
+	
     """
+    # Initialize the overlap matrix
+    # Note: The overlap matrix is a square matrix so the cubefiles_set_1 and cubefiles_set_2 must have the same length
+    overlap_matrix = np.zeros( ( len( cubefiles_set_2 ) , len( cubefiles_set_1 ) ) )
 
-    overlap_matrix = np.zeros( ( len( cubefiles_prev ) , len( cubefiles_curr ) ) )
-
-    for i in range( 0, len( cubefiles_prev ) ):
-        for j in range( 0, len( cubefiles_curr ) ):
-            overlap_matrix[i][j] = cube_file_methods.integrate_cube( cubefiles_prev[i], cubefiles_curr[j], dv )
+    # The overlaps between the cube files of the first set and second set
+    for i in range( 0, len( cubefiles_set_2 ) ):
+        for j in range( 0, len( cubefiles_set_1 ) ):
+            # Use the integrate_cube to compute the integration between the wavefunctions.
+            overlap_matrix[i][j] = cube_file_methods.integrate_cube( cubefiles_set_2[i], cubefiles_set_1[j], dv )
 
     return overlap_matrix
 
@@ -204,7 +221,7 @@ def integrate_cube_set( cubefiles_curr, cubefiles_prev, dv ):
 
 def compute_cube_ks_overlaps( cubefiles_prev, params):
     """
-    This function computes
+    This function computes 
     """
 
     curr_step = int(params["curr_step"])
