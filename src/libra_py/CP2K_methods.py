@@ -24,10 +24,10 @@ import math
 import re
 import numpy as np
 
-if sys.platform=="cygwin":
-    from cyglibra_core import *
-elif sys.platform=="linux" or sys.platform=="linux2":
-    from liblibra_core import *
+# if sys.platform=="cygwin":
+#     from cyglibra_core import *
+# elif sys.platform=="linux" or sys.platform=="linux2":
+#     from liblibra_core import *
 
 
 
@@ -35,11 +35,8 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 def ndigits( integer_number: int ):
     """
     This function calculates the number of digits for an integer number.
-
     Args:
-
         integer_number ( integer ): An integer number.
-
     Returns:
  
         digit_num ( integer ): The number of digits for 'num'.
@@ -63,15 +60,10 @@ def state_num_cp2k(state_num: int):
     has the format in five digits and if the number of digits is less than
     five it will append zeros before the number. This is necessary to read
     the .cube files produced by CP2K.
-
     Args:
-
         state_num (integer): Integer number which is in fact the energy level.
-
     Returns:
-
         state_num_str (string): The number in five digits (or more) in string format.
-
     """
     # Setting up an initial string
     state_num_str = ''
@@ -107,29 +99,20 @@ def cube_file_names_cp2k( static_or_dynamics, project_name, min_band, max_band, 
     """
     This function will produce the cube file names produced by CP2K both for energy calculations
     and molecular dynamics. 
-
     Args:
-
         static_or_dynamics ( integer ): This variable has two options:
                                       0: static calculations
                                       1: molecular dynamics calculations
-
         project_name ( string ): The project name used in CP2K input file.
-
         min_band ( integer ): The minimum state number to be considered.
-
         max_band ( integer ): The maximum state number to be considered.
-
         time_step ( integer ): The time step in CP2K calculations.
-
         spin ( integer ): This variable can get only two options:
                           1 for alpha spin
                           2 for beta spin
-
     Returns:
-
         names ( list ): The list of cube file names.
-	
+
     """
     # Define the names of the cube files for time t.
     cube_file_names = []
@@ -157,7 +140,7 @@ def cube_file_names_cp2k( static_or_dynamics, project_name, min_band, max_band, 
             # For time step '( t )'
             cube_file_name_of_band_i = str('%s-%d-WFN_%s_%d-1_0.cube' % ( project_name, time_step, state_num, spin ) )
             cube_file_names.append( cube_file_name_of_band_i )
-			
+
     return cube_file_names
 
 
@@ -286,30 +269,29 @@ def read_cp2k_tddfpt_log_file( params ):
 
 
 
+
 def cp2k_distribute( istep, fstep, nsteps_this_job, cp2k_positions, cp2k_input, curr_job_number ):
     """
     Distributes cp2k jobs for trivial parallelization 
-
     *** Make sure that your cp2k input file has absolute paths to the following input parameters:
         BASIS
         POTENTIAL
         < any other file dependent parameter (dftd3, etc) >
-
     Args:
     
         istep (int): The initial time step for molecular dynamics trajectory which 
-	             the user wants to start the calculations with. This paramter 
-		     is set in the input file for submitting the jobs.
+                     the user wants to start the calculations with. This paramter 
+                     is set in the input file for submitting the jobs.
         
-	fstep (int): The final time step for molecular dynamics trajectory which 
-	             the user wants to start the calculations with. This paramter 
-		     is set in the input file for submitting the jobs.
-		     
+        fstep (int): The final time step for molecular dynamics trajectory which 
+                     the user wants to start the calculations with. This paramter 
+                     is set in the input file for submitting the jobs.
+     
         nsteps_this_job (int): The number of step for the job to be distributed.
-	
-	cp2k_positions (str): The full path to the molecular dynamics trajectory xyz file.
-	
-	curr_job_number (int): The current job number.
+
+        cp2k_positions (str): The full path to the molecular dynamics trajectory xyz file.
+
+        curr_job_number (int): The current job number.
         
     """
 
@@ -345,7 +327,7 @@ def cp2k_distribute( istep, fstep, nsteps_this_job, cp2k_positions, cp2k_input, 
         A   = tmp.readlines()
         sz  = len(A)
         tmp.close()
-	# create a new input file based on the curr step
+        # create a new input file based on the curr step
         tmp2 = open("step_%d"%curr_step+".inp","w"); tmp2.close()
         for i in range(sz):
 
@@ -370,27 +352,27 @@ def cp2k_distribute( istep, fstep, nsteps_this_job, cp2k_positions, cp2k_input, 
     os.chdir("../../") 
 
 
-	
+
 def read_trajectory_xyz_file(file_name: str, step: int):
     """
-	This function reads the trajectory of a molecular dynamics .xyz file and
-	extract the 'step' th step then writes it to coord-step.xyz file. This function
-	is used in single point calculations for calculations of the NACs where one has
-	previously obtained the trajectory via any molecular dynamics packages. 
-	
-	Args:
-	
-	    file_name (string): The trajectory .xyz file name.
-		
+    This function reads the trajectory of a molecular dynamics .xyz file and
+    extract the 'step' th step then writes it to coord-step.xyz file. This function
+    is used in single point calculations for calculations of the NACs where one has
+    previously obtained the trajectory via any molecular dynamics packages. 
+    
+    Args:
+    
+        file_name (string): The trajectory .xyz file name.
+
             step (integer): The desired time to extract its .xyz 
-		         coordinates which starts from zero.
-	
+                            coordinates which starts from zero.
+
     """
-	
+
     f = open(file_name,'r')
     lines = f.readlines()
     f.close()
-	
+
     # The number of atoms for each time step in the .xyz file of the trajectory.
     number_of_atoms = int(lines[0].split()[0])
 
@@ -412,31 +394,31 @@ def read_trajectory_xyz_file(file_name: str, step: int):
 def CP2K_input_static(cp2k_sample_energy_input: str, project_name: str,\
                            trajectory_file: str, time_step: int):
     """
-	This function provides the inputs required for single point calculations used for 
-	calculation of NACs and overlap matrix. This function requires a sample CP2K input
-	used for ENERGY calculations and the project name which will used to identify the 
-	produced cube files. 
-	
-	Args:
-	
-	    cp2k_sample_energy_input (string): The CP2K sample input file for energy calculations.
-		
-		project_name (string): The poject name of the CP2K sample input (in &GLOBAL-> PROJECT)
-		                       This is required for identifying the cube files.
-		
-		trajectory_file (string): The .xyz trajectory file obtained from previous 
-		                          molecular dynamics calculations
-								  
-		time_step (integer): The time step of the single point calculation. It starts from 0.
-		
+    This function provides the inputs required for single point calculations used for 
+    calculation of NACs and overlap matrix. This function requires a sample CP2K input
+    used for ENERGY calculations and the project name which will used to identify the 
+    produced cube files. 
+
+    Args:
+
+        cp2k_sample_energy_input (string): The CP2K sample input file for energy calculations.
+
+        project_name (string): The poject name of the CP2K sample input (in &GLOBAL-> PROJECT)
+                               This is required for identifying the cube files.
+
+        trajectory_file (string): The .xyz trajectory file obtained from previous 
+                                  molecular dynamics calculations
+
+        time_step (integer): The time step of the single point calculation. It starts from 0.
+
     """
     
     # Reading the .xyz trajectory file and extract the coordinates at time 'time_step'.
     read_trajectory_xyz_file(trajectory_file, time_step)
-	
-	# The new project name for each time_step.
+
+    # The new project name for each time_step.
     f_new = project_name+'-%d'%time_step+'.inp'
-	
+
     f = open(cp2k_sample_energy_input,'r')
     lines = f.readlines()
     f.close()
@@ -444,7 +426,7 @@ def CP2K_input_static(cp2k_sample_energy_input: str, project_name: str,\
     # wfn_restart_file name
     c = 0
 
-	
+
     f = open(f_new,'w')
     for i in range(0,len(lines)):
         # Writing the COORD_FILE_NAME in the input
@@ -462,7 +444,7 @@ def CP2K_input_static(cp2k_sample_energy_input: str, project_name: str,\
             f.write(' %s'%project_name+'-%d'%time_step)
             f.write('\n')
         # Writing the WFN_RESTART_FILE_NAME of the previous time step
-	elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower().split():
+        elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower().split():
             f.write('    WFN_RESTART_FILE_NAME')
             f.write(' %s'%project_name+'-%d'%(time_step-1)+'-RESTART.wfn')
             f.write('\n')
@@ -557,7 +539,5 @@ def read_energies_from_cp2k_log_file( cp2k_log_file_name: str, time: int, min_ba
         
     # Returning the energeis from min_band to max_band
     return ks_energies[min_band-1:max_band], total_energy
-
-
 
 
