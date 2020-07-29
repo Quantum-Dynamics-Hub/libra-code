@@ -250,3 +250,91 @@ def read_cp2k_tddfpt_log_file( tddfpt_log_file_name, num_ci_states, tolerance ):
         
     return excitation_energies, ci_basis, ci_coefficients
 
+
+
+def cp2k_distribute( istep, fstep, nsteps_this_job, cp2k_positions, cp2k_input, curr_job_number ):
+    """
+    Distributes cp2k jobs for trivial parallelization 
+
+    *** Make sure that your cp2k input file has absolute paths to the following input parameters:
+        BASIS
+        POTENTIAL
+        < any other file dependent parameter (dftd3, etc) >
+
+    Args:
+    
+        istep (int): The initial time step for molecular dynamics trajectory which 
+	             the user wants to start the calculations with. This paramter 
+		     is set in the input file for submitting the jobs.
+        
+	fstep (int): The final time step for molecular dynamics trajectory which 
+	             the user wants to start the calculations with. This paramter 
+		     is set in the input file for submitting the jobs.
+		     
+        nsteps_this_job (int): The number of step for the job to be distributed.
+	
+	cp2k_positions (str): The full path to the molecular dynamics trajectory xyz file.
+	
+	curr_job_number (int): The current job number.
+        
+    """
+
+    # Now we need to distribute the jobs into job batches
+    # First, make a working directory where the calculations will take place
+    os.chdir("wd")
+
+    # total number of steps
+    nsteps = fstep - istep + 1
+    # number of jobs obtained from nsteps/nsteps_this_job
+    njobs  = int( nsteps / nsteps_this_job ) 
+    # The current step is set to istep
+    curr_step = istep
+    # Making the job directories in the wd folder like job0, job1, ...
+    os.system("mkdir job"+str(curr_job_number)+"")
+    # Chnage directory to job folder
+    os.chdir("job"+str(curr_job_number)+"")
+    # Copy the trajectory xyz file
+    os.system("cp ../../"+cp2k_positions+" .")
+    # Copy the CP2K sample input
+    os.system("cp ../../"+cp2k_input+" .")
+
+    #os.system("cp ../../submit_template.slm .")
+    # Now, we need to edit the submit file
+
+    # Now, in job folder njob, we should do only a certain number of steps
+    for step in range( nsteps_this_job ):
+        # extract the curr_step xyz coordianates from the trajectory file and write it to another xyz file
+        read_trajectory_xyz_file( cp2k_positions, curr_step )
+
+        # Now, we need to edit the cp2k_input file
+        tmp = open(cp2k_input)
+        A   = tmp.readlines()
+        sz  = len(A)
+        tmp.close()
+	# create a new input file based on the curr step
+        tmp2 = open("step_%d"%curr_step+".inp","w"); tmp2.close()
+        for i in range(sz):
+
+            b = A[i].strip().split()
+
+            if not b:
+                continue
+
+            tmp2 = open("step_%d"%curr_step+".inp","a")
+            # Write the project name in the new input file
+            if b[0].lower() == "PROJECT".lower() or b[0].lower() == "PROJECT_NAME".lower():
+                tmp2.write("  %s %s \n" % ("PROJECT", "step_%d"%curr_step +"_sp"))
+            # Wite the coordinate file name obtained for the curr_step in the new input file
+            elif b[0].lower() == "COORD_FILE_NAME".lower():
+                tmp2.write("  %s %s \n" % ("COORD_FILE_NAME", "../../cp2k_atomic_coordinates/coord_%d"%curr_step+".xyz"))
+            else:
+                tmp2.write(A[i])
+            tmp2.close()
+
+        curr_step += 1
+    # Go back to the main directory
+    os.chdir("../../") 
+
+
+	
+	
