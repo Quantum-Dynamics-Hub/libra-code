@@ -11,7 +11,7 @@
 """
 .. module:: cube_file_methods
    :platform: Unix, Windows
-   :synopsis: This module implements functions for processing with cube files
+   :synopsis: This module implements functions for processing with cube files.
 .. moduleauthors:: 
        Mohammad Shakiba, Brendan Smith, Alexey V. Akimov 
   
@@ -36,15 +36,11 @@ def read_cube(filename: str):
     """
     This function reads the wavefunction from a cube file and stores it in
     a 1D numpy array
-
     Args:
-
         filename (string): the name of the .cube file to read
-
     Returns:
+        isovalues (numpy.array) : the 1D array of the wavefunctions for all the points on the grid
 
-        data (numpy.array) : the 1D array of the wavefunctions for all the points on the grid
-	
     """
     
     f = open(filename,'r')
@@ -78,20 +74,20 @@ def read_cube(filename: str):
 
 def grid_volume(filename: str):
     """
-	This function reads the wavefunction from a cube file and calculate 
-	the grid volum using the X-, Y- and Z-axis of the volumetric region
-	which are placed in the 4th, 5th and 6th line of the cube file structure
-	
+    This function reads the wavefunction from a cube file and calculate 
+    the grid volum using the X-, Y- and Z-axis of the volumetric region
+    which are placed in the 4th, 5th and 6th line of the cube file structure
+
         Args:
         
-	    filename (string): The name of the .cube file to read.
-		
+        filename (string): The name of the .cube file to read.
+
         Returns:
-	
-	    dv (float): The grid volume in Bohr^3.
-        	
+
+        dv (float): The grid volume in Bohr^3.
+        
     """
-	
+
     f = open(filename,'r')
     lines = f.readlines()
     f.close()
@@ -104,7 +100,7 @@ def grid_volume(filename: str):
     vol_element = np.array([axis_1, axis_2, axis_3])
     # Then we calculate the determinant of Voxel to obtain the volume.
     dv = np.absolute(np.linalg.det(vol_element))
-	
+
     
     return dv 
 
@@ -117,34 +113,33 @@ def read_volumetric_data(filename: str):
     of the data. The difference between 'read_cube' function is that it will
     show the data in a 3D array which has the shape as the number of grid points
     for each of the X-, Y-, and Z-axis in the 4th to 6th line of the cube file.
-	
+
     This function will return the grid points in each axis, the coordinates of the
     structure and the spacing vector which is used to plot the isosurfaces of the 
     molecular orbitals.
-	
+
     Args:
-	
+
         filename (string): The name of the .cube file.
-		
+
     Returns:
-	
+
         coordinates (2D numpy array): The coordinates of the molecule structure in
                                       the same format shown in the .cube file.
-		
+
         x_grid, y_grid, z_grid (3D numpy array): Containing the grid points for each of the X-,
                                      Y-, and Z- axis.
-		
-        wave_fun (3D numpy array): The volumetric data in a 3D numpy array format.
-		
-        
-	spacing_vector (numpy 1D array): The spacing vector used for plotting the isosurfaces.
 
+        wave_fun (3D numpy array): The volumetric data in a 3D numpy array format.
+
+        
+        spacing_vector (numpy 1D array): The spacing vector used for plotting the isosurfaces.
     """
 
     f = open(filename,'r')
     lines = f.readlines()
     f.close()
-	
+
     # The number of atoms in the 3rd line
     natoms = int(lines[2].split()[0])
 
@@ -175,7 +170,7 @@ def read_volumetric_data(filename: str):
     # First we read all the isovalues into a 1D list 'isovals'.
     isovals = []
 
-	
+
     # Starting from the line which the volumetric data starts which is the (natoms+3+2+1+1)th line.
     for i in range(natoms+3+2+1,len(lines)):
         for j in range(0,len(lines[i].split())):
@@ -189,7 +184,7 @@ def read_volumetric_data(filename: str):
     c = 0
     c1 = 0
     c2 = 0
-	
+
     for i in range(0,len(isovals)):
         if c2!=nx:
             wave_fun[c2][c1][c] = isovals[i]
@@ -206,7 +201,7 @@ def read_volumetric_data(filename: str):
     x_grid = np.zeros((nx,ny,nz))
     y_grid = np.zeros((nx,ny,nz))
     z_grid = np.zeros((nx,ny,nz))
-	
+
     
     # Defining each element of the grid points.
     for i in range(0,nx):
@@ -237,15 +232,15 @@ def integrate_cube(cube_A, cube_B, grid_volume):
     This function calculates the element-wise multiplication of two numpy arrays 
     and sums their product. Then, it will multiply the sum by 'dv' element to 
     compute the integral of two wavefunction represented as .cube files.
-	
+
     Args:
         cube_A, cube_B (numpy array): The elements of the cube files in a 1D array 
                             obtained from the 'read_cube' function.
         grid_volume (float): The volume of the voxel obtained from grid_volume function.
-		
+
     Returns:
         integral (float): The integration between two wavefunction in the .cube files.
-		
+
     """
     # Compute the element-wise multiplication of the two cube files
     # which were previously obtained in 1D numpy arrays and store 
@@ -267,24 +262,24 @@ def plot_cubes( params ):
     Args:
     
         params (dict):
-	    
-	    ks_orbital_indicies (list): This list contains the Kohn-Sham orbital indices. Using this list we can
-	                                generate the minimum state and obtain the index of the states to be plotted.
-					
-	    states_to_be_plotted (list): The list containing the Kohn-Sham orbitals to be plotted by VMD. This list is defined in the submit file.
-	    
-	    path_to_tcl_file (str): The path to the tcl file which contains the input for plotting the cubes in VMD.
-	    
-	    MO_images_directory (str): The molecular orbitals images directory.
-	    
-	    isUKS (int): This parameter is set for spin restricted and unrestricted calculations. When it is
-	                 set to 1 it means that unrestricted calculations were set in the input file otherwise 
-			 it is restricted.
-			 
-            curr_step (int): The current time step used to save the images of the MOs.
-	    
-	    phase_factor_visual (numpy array): The phase correction factor list for each MOs for the current step.
-	    
+    
+        ks_orbital_indicies (list): This list contains the Kohn-Sham orbital indices. Using this list we can
+                                    generate the minimum state and obtain the index of the states to be plotted.
+
+        states_to_be_plotted (list): The list containing the Kohn-Sham orbitals to be plotted by VMD. This list is defined in the submit file.
+
+        path_to_tcl_file (str): The path to the tcl file which contains the input for plotting the cubes in VMD.
+
+        MO_images_directory (str): The molecular orbitals images directory.
+    
+        isUKS (int): This parameter is set for spin restricted and unrestricted calculations. When it is
+                     set to 1 it means that unrestricted calculations were set in the input file otherwise 
+                     it is restricted.
+
+        curr_step (int): The current time step used to save the images of the MOs.
+
+        phase_factor_visual (numpy array): The phase correction factor list for each MOs for the current step.
+    
     """
 
     # Unpack the Kohn-Sham orbital indicies and the Kohn-Sham orbitals to be plotted. Also unpack the 
@@ -317,13 +312,13 @@ def plot_cubes( params ):
 
 
     if isUKS == 1:
-	# The cube file names of the alpha spin is the even indices of the cubefile_names_prev
+        # The cube file names of the alpha spin is the even indices of the cubefile_names_prev
         alp_cubefile_names_prev = cubefile_names_prev[0::2]
-	# The same but for the phase factor of the alpha spin
+        # The same but for the phase factor of the alpha spin
         phase_factor_alpha      = phase_factor_visual[0::2]
         # The cube file names of the beta spin is the odd indices of the cubefile_names_prev
         bet_cubefile_names_prev = cubefile_names_prev[1::2]
-	# The same but for the phase factor of the beta spin
+        # The same but for the phase factor of the beta spin
         phase_factor_beta       = phase_factor_visual[1::2]
 
         for state_to_be_plotted in states_to_be_plotted:
@@ -383,7 +378,7 @@ def plot_cubes( params ):
                 if 'mol load cube' in tcl_lines[j]:
                     new_file.write( 'mol load cube %s\n' % cube_name )
                 elif 'render TachyonInternal' in tcl_lines[j]:
-                    new_file.write( 'render TachyonInternal %s/%s.tga\n' % ( MO_images_directory,cube_name.replace('cubefiles/','').replace('.cube','') )  )
+                    new_file.write( 'render TachyonInternal %s/%s.tga\n' % ( MO_images_directory, cube_name.replace('cubefiles/','').replace('.cube','') )  )
                 elif 'isosurface' in tcl_lines[j].lower():
                     tmp_elements = tcl_lines[j].split()
                     tmp_elements[5] = str( phase_factor_visual[state_to_be_plotted-min_band] * float( tmp_elements[5] ) )
@@ -396,7 +391,6 @@ def plot_cubes( params ):
 
             os.system('vmd < vmd_cube_plot_%d.tcl' % curr_step)
             #os.system('rm vmd_cube_plot_%d.tcl' % curr_step)
-
-
-
-
+            
+            
+            
