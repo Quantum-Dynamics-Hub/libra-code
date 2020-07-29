@@ -11,7 +11,7 @@
 """
 .. module:: auxiliary_functions
    :platform: Unix, Windows
-   :synopsis: This module implements functions for processing with cube files
+   :synopsis: This module implements functions for computing the overlap matrices and nonadiabatic couplings matrix.
 .. moduleauthors:: 
        Mohammad Shakiba, Brendan Smith, Alexey V. Akimov 
   
