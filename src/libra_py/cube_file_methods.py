@@ -331,43 +331,50 @@ def plot_cubes( params ):
             alpha_cube_name = alp_cubefile_names_prev[state_to_be_plotted-min_band]
             # Subtracting the min_band to obtain the index of the cube file for the state to be plotted for beta spin
             beta_cube_name = bet_cubefile_names_prev[state_to_be_plotted-min_band]
-
+            # open a new tcl file for alpha cubes
             new_file_alpha = open("vmd_alpha_cube_plot_%d.tcl" % curr_step,'w')
+            # open a new tcl file for beta cubes
             new_file_beta = open("vmd_beta_cube_plot_%d.tcl" % curr_step,'w')
 
             for j in range(len(tcl_lines)):
                 if 'mol load cube' in tcl_lines[j]:
+                    # Open the cube file in VMD for alpha cubes
                     new_file_alpha.write( 'mol load cube %s\n' % alpha_cube_name )
+                    # Open the cube file in VMD for beta cubes
                     new_file_beta.write( 'mol load cube %s\n' % beta_cube_name )
                 elif 'render TachyonInternal' in tcl_lines[j]:
+                    # Render the images to the MO_images_directory alpha cubes
                     new_file_alpha.write( 'render TachyonInternal %s/%s.tga\n' % ( MO_images_directory, alpha_cube_name.replace('cubefiles/','').replace('.cube','') ) )
+                    # Render the images to the MO_images_directory beta cubes
                     new_file_beta.write( 'render TachyonInternal %s/%s.tga\n' % ( MO_images_directory, beta_cube_name.replace('cubefiles/','').replace('.cube','') ) )
                 elif 'isosurface' in tcl_lines[j].lower():
+                    # Correct the isovalues by multiplying it by the phase factor fo alpha orbitals
                     tmp_elements_alpha = tcl_lines[j].split()
                     tmp_elements_alpha[5] = str( phase_factor_alpha[state_to_be_plotted-min_band] * float( tmp_elements_alpha[5] ) )
                     isosurface_line_alpha = ' '.join(tmp_elements_alpha)
                     new_file_alpha.write( isosurface_line_alpha + '\n' )
 
-
+                    # Correct the isovalues by multiplying it by the phase factor for beta orbitals
                     tmp_elements_beta = tcl_lines[j].split()
                     tmp_elements_beta[5] = str( phase_factor_beta[state_to_be_plotted-min_band] * float( tmp_elements_beta[5] ) )
                     isosurface_line_beta = ' '.join(tmp_elements_beta)
                     new_file_beta.write( isosurface_line_beta + '\n' )
 
                 else:
+                    # The rest of the tcl file lines
                     new_file_alpha.write( tcl_lines[j] )
                     new_file_beta.write( tcl_lines[j] )
 
             new_file_alpha.close()
             new_file_beta.close()
-
+            # Run the VMD by tcl file
             os.system('vmd < vmd_alpha_cube_plot_%d.tcl' % curr_step)
             os.system('vmd < vmd_beta_cube_plot_%d.tcl' % curr_step)
             #os.system('rm vmd_alpha_cube_plot_%d.tcl' % curr_step)
             #os.system('rm vmd_beta_cube_plot_%d.tcl' % curr_step)
 
     else:
-
+        # The same as above but with restricted spin calculations. No beta orbitals is considered.
         for state_to_be_plotted in states_to_be_plotted:
             cube_name = cubefile_names_prev[state_to_be_plotted-min_band]
 
