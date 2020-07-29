@@ -541,3 +541,6 @@ def read_energies_from_cp2k_log_file( cp2k_log_file_name: str, time: int, min_ba
     return ks_energies[min_band-1:max_band], total_energy
 
 
+
+   
+   
