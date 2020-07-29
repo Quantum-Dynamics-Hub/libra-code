@@ -260,3 +260,134 @@ def integrate_cube(cube_A, cube_B, grid_volume):
 
 
 
+def plot_cubes( params ):
+    """
+    This function plots the cubes for selected energy levels using VMD.
+    
+    Args:
+    
+        params (dict):
+	    
+	    ks_orbital_indicies (list): This list contains the Kohn-Sham orbital indices. Using this list we can
+	                                generate the minimum state and obtain the index of the states to be plotted.
+					
+	    states_to_be_plotted (list): The list containing the Kohn-Sham orbitals to be plotted by VMD. This list is defined in the submit file.
+	    
+	    path_to_tcl_file (str): The path to the tcl file which contains the input for plotting the cubes in VMD.
+	    
+	    MO_images_directory (str): The molecular orbitals images directory.
+	    
+	    isUKS (int): This parameter is set for spin restricted and unrestricted calculations. When it is
+	                 set to 1 it means that unrestricted calculations were set in the input file otherwise 
+			 it is restricted.
+			 
+            curr_step (int): The current time step used to save the images of the MOs.
+	    
+	    phase_factor_visual (numpy array): The phase correction factor list for each MOs for the current step.
+	    
+    """
+
+    # Unpack the Kohn-Sham orbital indicies and the Kohn-Sham orbitals to be plotted. Also unpack the 
+    # path to the directory where the molecular orbitals will be plotted
+    ks_orbital_indicies  = params["ks_orbital_indicies"]
+    states_to_be_plotted = params["states_to_be_plotted"]
+    # For VMD
+    path_to_tcl_file = params["path_to_tcl_file"]
+    # The molecular orbital images directory
+    MO_images_directory  = params["MO_images_directory"]
+
+    # isUKS flag for spin-polarized and spin-unpolarized
+    isUKS  = int( params["isUKS"] )
+    # The current step
+    curr_step = int(params["curr_step"])
+    # If the path does not exist create it.
+    if not os.path.isdir(MO_images_directory):
+        os.makedirs(MO_images_directory)
+
+    # Extracting the phase factor from params
+    phase_factor_visual = params["phase_factor_visual"]
+
+    min_band = ks_orbital_indicies[0]
+    # We plot the cubes for the previous time step
+    cubefile_names_prev = CP2K_methods.cube_file_names_cp2k( params )
+    # read the lines of the tcl file
+    tcl_file = open(path_to_tcl_file,'r')
+    tcl_lines = tcl_file.readlines()
+    tcl_file.close()
+
+
+    if isUKS == 1:
+	# The cube file names of the alpha spin is the even indices of the cubefile_names_prev
+        alp_cubefile_names_prev = cubefile_names_prev[0::2]
+	# The same but for the phase factor of the alpha spin
+        phase_factor_alpha      = phase_factor_visual[0::2]
+        # The cube file names of the beta spin is the odd indices of the cubefile_names_prev
+        bet_cubefile_names_prev = cubefile_names_prev[1::2]
+	# The same but for the phase factor of the beta spin
+        phase_factor_beta       = phase_factor_visual[1::2]
+
+        for state_to_be_plotted in states_to_be_plotted:
+            alpha_cube_name = alp_cubefile_names_prev[state_to_be_plotted-min_band]
+            beta_cube_name = bet_cubefile_names_prev[state_to_be_plotted-min_band]
+
+            new_file_alpha = open("vmd_alpha_cube_plot_%d.tcl" % curr_step,'w')
+            new_file_beta = open("vmd_beta_cube_plot_%d.tcl" % curr_step,'w')
+
+            for j in range(len(tcl_lines)):
+                if 'mol load cube' in tcl_lines[j]:
+                    new_file_alpha.write( 'mol load cube %s\n' % alpha_cube_name )
+                    new_file_beta.write( 'mol load cube %s\n' % beta_cube_name )
+                elif 'render TachyonInternal' in tcl_lines[j]:
+                    new_file_alpha.write( 'render TachyonInternal %s/%s.tga\n' % ( MO_images_directory, alpha_cube_name.replace('cubefiles/','').replace('.cube','') ) )
+                    new_file_beta.write( 'render TachyonInternal %s/%s.tga\n' % ( MO_images_directory, beta_cube_name.replace('cubefiles/','').replace('.cube','') ) )
+                elif 'isosurface' in tcl_lines[j].lower():
+                    tmp_elements_alpha = tcl_lines[j].split()
+                    tmp_elements_alpha[5] = str( phase_factor_alpha[state_to_be_plotted-min_band] * float( tmp_elements_alpha[5] ) )
+                    isosurface_line_alpha = ' '.join(tmp_elements_alpha)
+                    new_file_alpha.write( isosurface_line_alpha + '\n' )
+
+
+                    tmp_elements_beta = tcl_lines[j].split()
+                    tmp_elements_beta[5] = str( phase_factor_beta[state_to_be_plotted-min_band] * float( tmp_elements_beta[5] ) )
+                    isosurface_line_beta = ' '.join(tmp_elements_beta)
+                    new_file_beta.write( isosurface_line_beta + '\n' )
+
+                else:
+                    new_file_alpha.write( tcl_lines[j] )
+                    new_file_beta.write( tcl_lines[j] )
+
+            new_file_alpha.close()
+            new_file_beta.close()
+
+            os.system('vmd < vmd_alpha_cube_plot_%d.tcl' % curr_step)
+            os.system('vmd < vmd_beta_cube_plot_%d.tcl' % curr_step)
+            #os.system('rm vmd_alpha_cube_plot_%d.tcl' % curr_step)
+            #os.system('rm vmd_beta_cube_plot_%d.tcl' % curr_step)
+
+    else:
+
+        for state_to_be_plotted in states_to_be_plotted:
+            cube_name = cubefile_names_prev[state_to_be_plotted-min_band]
+
+            new_file = open("vmd_cube_plot_%d.tcl" % curr_step,'w')
+            for j in range(len(tcl_lines)):
+                if 'mol load cube' in tcl_lines[j]:
+                    new_file.write( 'mol load cube %s\n' % cube_name )
+                elif 'render TachyonInternal' in tcl_lines[j]:
+                    new_file.write( 'render TachyonInternal %s/%s.tga\n' % ( MO_images_directory,cube_name.replace('cubefiles/','').replace('.cube','') )  )
+                elif 'isosurface' in tcl_lines[j].lower():
+                    tmp_elements = tcl_lines[j].split()
+                    tmp_elements[5] = str( phase_factor_visual[state_to_be_plotted-min_band] * float( tmp_elements[5] ) )
+                    isosurface_line = ' '.join(tmp_elements)
+                    new_file.write( isosurface_line + '\n' )
+                else:
+                    new_file.write( tcl_lines[j] )
+
+            new_file.close()
+
+            os.system('vmd < vmd_cube_plot_%d.tcl' % curr_step)
+            #os.system('rm vmd_cube_plot_%d.tcl' % curr_step)
+
+
+
+
