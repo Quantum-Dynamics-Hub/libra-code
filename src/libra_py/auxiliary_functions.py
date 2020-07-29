@@ -45,9 +45,6 @@ import concurrent.futures
 
 
 
-
-
-
 # This file is temp only. These functions will eventually be placed in Libra somewhere ...
 def curr_and_final_step_job( istep, fstep, njobs, njob ):
     """
