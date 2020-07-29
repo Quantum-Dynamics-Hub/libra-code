@@ -337,4 +337,193 @@ def cp2k_distribute( istep, fstep, nsteps_this_job, cp2k_positions, cp2k_input, 
 
 
 	
+def read_trajectory_xyz_file(file_name: str, step: int):
+    """
+	This function reads the trajectory of a molecular dynamics .xyz file and
+	extract the 'step' th step then writes it to coord-step.xyz file. This function
+	is used in single point calculations for calculations of the NACs where one has
+	previously obtained the trajectory via any molecular dynamics packages. 
 	
+	Args:
+	
+	    file_name (string): The trajectory .xyz file name.
+		
+            step (integer): The desired time to extract its .xyz 
+		         coordinates which starts from zero.
+	
+    """
+	
+    f = open(file_name,'r')
+    lines = f.readlines()
+    f.close()
+	
+    # The number of atoms for each time step in the .xyz file of the trajectory.
+    number_of_atoms = int(lines[0].split()[0])
+
+    # Write the coordinates of the 't' th step in file coord-t.xyz
+    f = open('coord-%d'%step+'.xyz','w')
+
+    # This is used to skip the first two lines for each time step.
+    n = number_of_atoms+2
+
+    # Write the coordinates of the 'step'th time step into the file
+    for i in range( n * step, n * ( step + 1 ) ):
+        f.write( lines[i] )
+    f.close()
+
+
+
+
+
+def CP2K_input_static(cp2k_sample_energy_input: str, project_name: str,\
+                           trajectory_file: str, time_step: int):
+    """
+	This function provides the inputs required for single point calculations used for 
+	calculation of NACs and overlap matrix. This function requires a sample CP2K input
+	used for ENERGY calculations and the project name which will used to identify the 
+	produced cube files. 
+	
+	Args:
+	
+	    cp2k_sample_energy_input (string): The CP2K sample input file for energy calculations.
+		
+		project_name (string): The poject name of the CP2K sample input (in &GLOBAL-> PROJECT)
+		                       This is required for identifying the cube files.
+		
+		trajectory_file (string): The .xyz trajectory file obtained from previous 
+		                          molecular dynamics calculations
+								  
+		time_step (integer): The time step of the single point calculation. It starts from 0.
+		
+    """
+    
+    # Reading the .xyz trajectory file and extract the coordinates at time 'time_step'.
+    read_trajectory_xyz_file(trajectory_file, time_step)
+	
+	# The new project name for each time_step.
+    f_new = project_name+'-%d'%time_step+'.inp'
+	
+    f = open(cp2k_sample_energy_input,'r')
+    lines = f.readlines()
+    f.close()
+
+    # wfn_restart_file name
+    c = 0
+
+	
+    f = open(f_new,'w')
+    for i in range(0,len(lines)):
+        # Writing the COORD_FILE_NAME in the input
+        if 'COORD_FILE_NAME'.lower() in lines[i].lower().split():
+            f.write('      COORD_FILE_NAME')
+            f.write(' coord-%d'%time_step+'.xyz')
+            f.write('\n')
+        # Writing the project name
+        elif 'PROJECT'.lower() in lines[i].lower().split():
+            f.write('  PROJECT')
+            f.write(' %s'%project_name+'-%d'%time_step)
+            f.write('\n')
+        elif 'PROJECT_NAME'.lower() in lines[i].lower().split():
+            f.write('  PROJECT')
+            f.write(' %s'%project_name+'-%d'%time_step)
+            f.write('\n')
+        # Writing the WFN_RESTART_FILE_NAME of the previous time step
+	elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower().split():
+            f.write('    WFN_RESTART_FILE_NAME')
+            f.write(' %s'%project_name+'-%d'%(time_step-1)+'-RESTART.wfn')
+            f.write('\n')
+        # Setting the scf guess to restart, CP2K will automatically switch to atomic if the wfn file does not exist
+        elif 'SCF_GUESS'.lower() in lines[i].lower().split():
+            f.write('    SCF_GUESS RESTART')
+            f.write('\n')
+        else:
+            f.write(lines[i])
+
+
+
+def read_energies_from_cp2k_log_file( cp2k_log_file_name: str, time: int, min_band: int, max_band: int, spin: int ):
+    """
+    This function reads the energies from CP2K log file for a specific spin.
+    
+    Args:
+    
+        cp2k_log_file_name (str): The output file produced by CP2K
+        
+        time (int): The time step of the molecular dynamics. For single point calculations
+                    it should be set to 0.
+                    
+        min_band (int): The minimum state to be considered.
+        
+        max_band (int): The maximum state to be considered.
+        
+        spin (int): This number can only accept two values: 1 for alpha and 2 for beta spin.
+        
+    Returns:
+    
+        E (1D numpy array): The vector consisting of the KS energies from min_band to max_band.
+        
+    """
+    # First openning the file and reading its lines
+    f = open( cp2k_log_file_name, 'r' )
+    lines = f.readlines()
+    f.close()
+    
+    # The lines containing 'Eigenvalues of the occupied subspace'
+    lines_with_occupied   = []
+    # The lines containing 'Eigenvalues of the unoccupied subspace'
+    lines_with_unoccupied = []
+    
+    # The lines containing the energies of the occupied states
+    occ_energies_last_line   = []
+    # The lines containing the energies of the unoccupied states
+    unocc_energies_last_line = []
+    # Set the total energy to zero
+    total_energy = 0.0
+
+    for i in range(0,len(lines)):
+        # Find the occupied states lines
+        if 'Eigenvalues of the occupied subspace'.lower() in lines[i].lower():
+        
+            if  str( spin ) in lines[i].lower().split():
+                lines_with_occupied.append( i )
+                for j in range( i, len( lines ) ):
+                    # Find the last line number containing the energies for occupied states
+                    if len( lines[j].split() ) == 0:
+                        occ_energies_last_line.append( j )
+                        break
+        # Find the unoccupied states lines
+        if 'Eigenvalues of the unoccupied subspace'.lower() in lines[i].lower():
+            if  str( spin ) in lines[i].lower().split():
+                lines_with_unoccupied.append(i)
+                for j in range( i, len( lines ) ):
+                    # Find the last line number containing the energies for unoccupied states
+                    if len( lines[j].split() ) == 0:
+                        unocc_energies_last_line.append( j )
+                        break
+       
+        if "Total energy:" in lines[i]:  
+            total_energy = float( lines[i].split()[2] )
+
+
+    # The Kohn-Sham energies
+    ks_energies = []
+    # Start after two lines of the 'Eigenvalues of the occupied subspace'
+    for i in range( lines_with_occupied[time] + 2, occ_energies_last_line[time] - 1 ):
+        for j in range(0,len(lines[i].split())):
+            ks_energies.append(float(lines[i].split()[j]))
+    
+    # Start after two lines of the 'Eigenvalues of the unoccupied subspace'
+    for i in range( lines_with_unoccupied[time] + 2, unocc_energies_last_line[time] ):
+        if not 'Reached'.lower() in lines[i].lower().split():
+            for j in range(0,len(lines[i].split())):
+                ks_energies.append(float(lines[i].split()[j]))
+
+    # Now appending all the energies into a numpy array
+    ks_energies = np.array(ks_energies)
+        
+    # Returning the energeis from min_band to max_band
+    return ks_energies[min_band-1:max_band], total_energy
+
+
+
+
