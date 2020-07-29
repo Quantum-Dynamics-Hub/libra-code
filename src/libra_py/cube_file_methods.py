@@ -327,7 +327,9 @@ def plot_cubes( params ):
         phase_factor_beta       = phase_factor_visual[1::2]
 
         for state_to_be_plotted in states_to_be_plotted:
+            # Subtracting the min_band to obtain the index of the cube file for the state to be plotted for alpha spin
             alpha_cube_name = alp_cubefile_names_prev[state_to_be_plotted-min_band]
+            # Subtracting the min_band to obtain the index of the cube file for the state to be plotted for beta spin
             beta_cube_name = bet_cubefile_names_prev[state_to_be_plotted-min_band]
 
             new_file_alpha = open("vmd_alpha_cube_plot_%d.tcl" % curr_step,'w')
