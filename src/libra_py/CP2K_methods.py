@@ -162,31 +162,33 @@ def cube_file_names_cp2k( static_or_dynamics, project_name, min_band, max_band, 
 
 
 
-def read_cp2k_tddfpt_log_file( tddfpt_log_file_name, num_ci_states, tolerance ):
+def read_cp2k_tddfpt_log_file( params ):
     """
     This function reads log files generated from TD-DFPT calculations using CP2K and returns the TD-DFPT
     excitation energies, Slater determinent states in terms of the Kohn-Sham orbital indicies, 
     and the Slater determinent coefficients that comprise the multi-configurational electronic states
     
     Args:
-
-        tddfpt_log_file_name ( string ): name of the log file for this particular timestep
-
-        num_ci_states ( int ): how many ci states to consider
-
-        tolerance ( float ): the tolerance for accepting SDs are members of the CI wavefunctions
-
+      params ( dictionary ): parameters dictionary 
+          logfile_name ( string ): name of the log file for this particular timestep
+          num_ci_states ( int ): how many ci states to consider
+          tolerance ( float ): the tolerance for accepting SDs are members of the CI wavefunctions
+          isUSK ( Boolean ): flag for whether or not a spin-polarized Kohn-Sham basis is being used. TRUE means
+                           that a spin-polarized Kohn-Sham basis is being used.
     Returns:
-
        excitation_energies ( list ): The excitation energies in the log file.
-
        ci_basis ( list ): The CI-basis configuration.
-
        ci_coefficients ( list ): The coefficients of the CI-states.
-
+       spin_components (list): The spin component of the excited states.
     """
-    
-    f = open(tddfpt_log_file_name,'r')
+
+    logfile_name = params["logfile_name"]
+    number_ci_states = int(params["number_ci_states"])
+    tolerance = float(params["tolerance"])
+    isUKS = int(params["isUKS"])
+
+
+    f = open( logfile_name, 'r' )
     lines = f.readlines()
     f.close()
 
@@ -198,23 +200,23 @@ def read_cp2k_tddfpt_log_file( tddfpt_log_file_name, num_ci_states, tolerance ):
                 # When found the line in which contains 'Excitation analysis' in 
                 # the log file, append it in the variable exc_anal_line
                 exc_anal_line = i
-        
+
         if 'states' in lines[i].lower().split():
             if 'multiplicity' in lines[i].lower().split():
 
-                # Here we search for the line that contains
-                # 'R-TDDFPT states of multiplicity 1' in the log file
+                # Here we search for the line that contains 'R-TDDFPT states of multiplicity 1'
+                # or 'U-TDDFPT states of multiplicity 1' in the log file
                 r_tddfpt_line = i
 
     excitation_energies = []
-    
+
     # Start from 5 lines after finding the line contaning 'R-TDDFPT states of multiplicity 1'
     # This is because they contain the energies from that line.
     for i in range( r_tddfpt_line+5, len( lines ) ):
         if len( lines[i].split() ) == 0:
             break
         excitation_energies.append( float( lines[i].split()[2] ) )
-        
+
     # Start from 5 lines after finding the line contaning 'Excitation analysis'
     # From that point we have the state numbers with their configurations.
     # So, we append the lines which contain only 'State number' and stop
@@ -222,33 +224,65 @@ def read_cp2k_tddfpt_log_file( tddfpt_log_file_name, num_ci_states, tolerance ):
     state_num_lines = []
     for i in range( exc_anal_line+5, len( lines ) ):
 
-        if len( lines[i].split() ) == 0:
-            state_num_lines.append( i )
-            break
+        if isUKS == 1:
 
-        if len( lines[i].split() ) == 1:
-            state_num_lines.append( i )
+            if len( lines[i].split() ) == 0 or '----' in lines[i]:
+                state_num_lines.append( i )
+                break
+            if len(lines[i].split())==1 or len(lines[i].split())==3:
+                state_num_lines.append(i)
+
+        else:
+
+            if len( lines[i].split() ) == 0 or '----' in lines[i]:
+                state_num_lines.append( i )
+                break
+            if len(lines[i].split())==1:
+                state_num_lines.append(i)
+            elif len(lines[i].split())>1:
+                if lines[i].split()[0].isdigit() and not(lines[i].split()[1].isdigit()):
+                    state_num_lines.append( i )
+
 
     # Setting up the CI-basis list and their coefficients list
-    ci_basis        = []
+    ci_basis = []
     ci_coefficients = []
-    for i in range( num_ci_states ):
-        
+    spin_components = []
+    for i in range( number_ci_states ):
+
         # CI states and their coefficients for each excited state
         tmp_ci_state              = []
         tmp_ci_state_coefficients = []
+        tmp_spin = []
         for j in range( state_num_lines[i]+1, state_num_lines[i+1] ):
 
-            if abs( float( lines[j].split()[2] ) ) > tolerance:
-                tmp_ci_state.append( [ int( lines[j].split()[0] ), int( lines[j].split()[1] ) ]  )
-                tmp_ci_state_coefficients.append( float( lines[j].split()[2] ) )
+            # If we are using the spin-polarized Kohn-Sham basis, then the size of the split line is different
+            # from the size of the split line when using the spin-unpolarized Kohn-Sham basis
+            if isUKS == 1:
+
+                ci_coefficient = float( lines[j].split()[4] )
+                if ci_coefficient**2 > tolerance:
+                    tmp_spin.append( lines[j].split()[1].replace('(','').replace(')','') )
+                    tmp_ci_state.append( [ int( lines[j].split()[0] ), int( lines[j].split()[2] ) ]  )
+                    tmp_ci_state_coefficients.append( ci_coefficient  )
+
+            # Here, we have the spin-unpolarize Kohn-Sham basis
+            # For this case, spin-components will just return all alpha
+            else:
+                ci_coefficient = float( lines[j].split()[2] )
+                if ci_coefficient**2 > tolerance:
+                    tmp_spin.append( "alp" )
+                    tmp_ci_state.append( [ int( lines[j].split()[0] ), int( lines[j].split()[1] ) ]  )
+                    tmp_ci_state_coefficients.append( ci_coefficient  )
 
         # Append the CI-basis and and their coefficients for
         # this state into the ci_basis and ci_coefficients lists
         ci_basis.append( tmp_ci_state )
         ci_coefficients.append( tmp_ci_state_coefficients )
-        
-    return excitation_energies, ci_basis, ci_coefficients
+        spin_components.append( tmp_spin )
+
+    return excitation_energies[0:number_ci_states], ci_basis, ci_coefficients, spin_components
+
 
 
 
