@@ -11,7 +11,7 @@
 """
 .. module:: auxiliary_functions
    :platform: Unix, Windows
-   :synopsis: This module implements functions for computing the overlap matrices and nonadiabatic couplings matrix.
+   :synopsis: This module implements functions for computing the overlap and nonadiabatic couplings matrices.
 .. moduleauthors:: 
        Mohammad Shakiba, Brendan Smith, Alexey V. Akimov 
   
@@ -54,23 +54,23 @@ def curr_and_final_step_job( istep, fstep, njobs, njob ):
     Args:
     
         istep (int): The initial time step for molecular dynamics trajectory which 
-	             the user wants to start the calculations with. This paramter 
-		     is set in the input file for submitting the jobs.
+                     the user wants to start the calculations with. This paramter 
+                     is set in the input file for submitting the jobs.
         
-	fstep (int): The final time step for molecular dynamics trajectory which 
-	             the user wants to start the calculations with. This paramter 
-		     is set in the input file for submitting the jobs.
-		     
+        fstep (int): The final time step for molecular dynamics trajectory which 
+                     the user wants to start the calculations with. This paramter 
+                     is set in the input file for submitting the jobs.
+     
         njobs (int): The number of jobs specified by user.
-	
-	njob (int): The job number.
-	
+        
+        njob (int): The job number.
+
     Returns:
     
         job_init_step (int): The job initial time step.
-	
-	job_final_step (int): The job final time step.
-	
+
+        job_final_step (int): The job final time step.
+
     """
 
     total_steps = fstep - istep + 1
@@ -102,7 +102,7 @@ def normalize_ci_coefficients(ci_coefficients_raw_unnorm):
     Args:
     
         ci_coefficients_raw_unnorm (list): The list containing the lists of unnormalized CI coefficients.
-	
+
     Returns:
     
         ci_coefficients_raw_norm (list): The list containing the lists of normalized CI coefficients.
@@ -115,10 +115,10 @@ def normalize_ci_coefficients(ci_coefficients_raw_unnorm):
        
     for i in range(nstates):
         
-	#### ordinary way without using numpy
+        #### ordinary way without using numpy
         # Set up an initial parameter to compute the norm of the vector
-	norm = 0.0
-	# For each list of CI coefficients
+        norm = 0.0
+        # For each list of CI coefficients
         ci_coefficients_raw_norm.append( [] )
         
         for j in ci_coefficients_raw_unnorm[i]:
@@ -146,23 +146,23 @@ def get_es_output(params):
     Args:
     
         params (dict):
-	
-	    logfile_directory (str): The log files directory.
-	    
-	    es_software (str): The name of the software used to calculate the energy calculations.
-	    
-	    curr_step (int): The current time step of the calculations.
-	    
+
+        logfile_directory (str): The log files directory.
+
+        es_software (str): The name of the software used to calculate the energy calculations.
+        
+        curr_step (int): The current time step of the calculations.
+    
     Returns:
     
         excitation_energies (numpy array): The excitation energies of the curr_step.
-	
-	ci_basis_raw (numpy array): The excited states which contains the occupied and virtual orbitals.
-	
-	ci_coefficients_raw_unnorm (numpy array): The excited states CI coefficients.
-	
-	spin_components (numpy array): Contains the excited states spin components ('alp' for alpha spin and 'bet' for beta spin)
-	
+
+        ci_basis_raw (numpy array): The excited states which contains the occupied and virtual orbitals.
+
+        ci_coefficients_raw_unnorm (numpy array): The excited states CI coefficients.
+
+        spin_components (numpy array): Contains the excited states spin components ('alp' for alpha spin and 'bet' for beta spin)
+
     """
     
     logfile_directory = params["logfile_directory"]
@@ -173,7 +173,7 @@ def get_es_output(params):
         
         logfile_name = logfile_directory+'/step_'+str(curr_step)+'.log'
         params.update({"logfile_name":logfile_name}) 
-	# Extract the excitation energies and their configurations from the output file.
+        # Extract the excitation energies and their configurations from the output file.
         excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = \
         CP2K_methods.read_cp2k_tddfpt_log_file( params )
   
@@ -190,15 +190,15 @@ def integrate_cube_set( cubefiles_set_1, cubefiles_set_2, dv ):
     Args:
     
         cubefiles_set_1 (list): The list of cube files of the curr_step.
-	
-	cubefiles_set_2 (list): The list of cube files of the previous step.
-	
-	dv (float): The integration element obtained from the cube files.
-	
+
+        cubefiles_set_2 (list): The list of cube files of the previous step.
+
+        dv (float): The integration element obtained from the cube files.
+
     Returns:
     
         overlap_matrix (numpy 2D array): The overlap between the two set of cube files.
-	
+
     """
     # Initialize the overlap matrix
     # Note: The overlap matrix is a square matrix so the cubefiles_set_1 and cubefiles_set_2 must have the same length
@@ -224,16 +224,17 @@ def compute_cube_ks_overlaps( cubefiles_prev, params):
     Args:
     
         cubefiles_prev (list): The list containing th cube files of the previous step.
-	
-	params (dict):
-	
-	    curr_step (int): The current time step.
-	    
-	    isUKS (int): This parameter is set for spin restricted and unrestricted calculations. When it is
-	                 set to 1 it means that unrestricted calculations were set in the input file otherwise 
-			 it is restricted.
+
+    params (dict):
+
+        curr_step (int): The current time step.
+
+        isUKS (int): This parameter is set for spin restricted and unrestricted calculations. When it is
+                     set to 1 it means that unrestricted calculations were set in the input file otherwise 
+                     it is restricted.
             
-	    nprocs (int): The number of processors used to read the cube files and perform the integration.
+        nprocs (int): The number of processors used to read the cube files and perform the integration.
+        
     """
 
     # Extract the variables
@@ -270,20 +271,20 @@ def compute_cube_ks_overlaps( cubefiles_prev, params):
     if isUKS == 1:
 
         # The cube files for alpha and beta spin for the previous time step
-	
-	# The alpha cubes are the even indices of the read cube files
+
+        # The alpha cubes are the even indices of the read cube files
         alp_cubes_prev = cubefiles_prev[0::2]
-	# The beta cubes are the odd indices of the read cube files
+        # The beta cubes are the odd indices of the read cube files
         bet_cubes_prev = cubefiles_prev[1::2]
-	
+    
         # The cube files for alpha and beta spin for the current time step
-	
+
         # The alpha cubes are the even indices of the read cube files
         alp_cubes_curr = cubefiles_curr[0::2]
-	# The beta cubes are the odd indices of the read cube files
+        # The beta cubes are the odd indices of the read cube files
         bet_cubes_curr = cubefiles_curr[1::2]
 
-	# Initializing the overlap matrices for alpha and beta spin with zero matrices
+        # Initializing the overlap matrices for alpha and beta spin with zero matrices
         zero_mat_alp = np.zeros( ( len( alp_cubes_prev ), len( alp_cubes_curr ) ) )
         zero_mat_bet = np.zeros( ( len( bet_cubes_prev ), len( bet_cubes_curr ) ) )
 
@@ -302,11 +303,11 @@ def compute_cube_ks_overlaps( cubefiles_prev, params):
             int_5 = executor.submit(integrate_cube_set, alp_cubes_curr, alp_cubes_curr, dv )
             # <psi_bet(t)|psi_bet(t)>
             int_6 = executor.submit(integrate_cube_set, bet_cubes_curr, bet_cubes_curr, dv )
-	
-	# Extracting the results for each of the submitted jobs
+
+        # Extracting the results for each of the submitted jobs
         St_alp_alp = int_1.result()
         St_bet_bet = int_2.result()
-	
+
         # The overlap between cube files at times t-1 and t
         S_alp_alp_prev = int_3.result()
         S_bet_bet_prev = int_4.result()
@@ -329,11 +330,11 @@ def compute_cube_ks_overlaps( cubefiles_prev, params):
         S_curr = int_2.result()
         St     = int_3.result()
 
-	# These are used to form the block matrices for two-spinor format 
+        # These are used to form the block matrices for two-spinor format 
         zero_mat_alp = np.zeros( ( len( S_prev ), len( S_curr ) ) )
         zero_mat_bet = np.zeros( ( len( S_prev ), len( S_curr ) ) )
-	
-	# The alpha and beta spin have the same overlap matrix in spin restricted case
+
+        # The alpha and beta spin have the same overlap matrix in spin restricted case
         S_alp_alp_prev, S_bet_bet_prev = S_prev, S_prev
         S_alp_alp_curr, S_bet_bet_curr = S_curr, S_curr
         St_alp_alp, St_bet_bet = St, St
@@ -352,7 +353,6 @@ def compute_cube_ks_overlaps( cubefiles_prev, params):
 
 def reindex_cpk2_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states ):
     """
-
     sd_basis_states( list of lists of lists ): A list of Slater determinants, where each slater determinant is a excitation in the Kohn-Sham
                                                basis. This function assumes that all Kohn-Sham excitations are for alpha electrons. To
                                                differentiate between alpha and beta excitations, elements of sd_basis_states contain spin
@@ -360,20 +360,14 @@ def reindex_cpk2_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
                
                                                Ex) sd_basis_states[0] = [ [9,10], "alp" ] 
                                                    sd_basis_states[1] = [ [9,10], "bet" ]
-
     Returns:
-
          Reindexed Slater determinant basis states in terms of the ks_orbital_homo_index. 
-
          Ex.)   ks_orbital_homo_index = 9,    ks_orbital_indicies = [5,6,7,8,9,10,11,12,13,14]
                 [ [9,10], "alp" ] --> [5,6]
                 [ [9,10], "bet" ] --> [-15,-16]
-
          In general form, the reindexing take the form of:
-
                 [ [9,10], "alp" ] --> [ index from 1 of 9 in ks_orbital_indicies, index from 1 of 10 in ks_orbital_indicies  ]
                 [ [9,10], "bet" ] --> [ - ( index from 1 of 9 in ks_orbital_indicies + len(ks_orbital_indicies) ), - ( index from 1 of 10 in ks_orbital_indicies + len(ks_orbital_indicies) ) ]
-
     """
 
     # We need to update the indexing of the sd_basis - in terms of the rows and cols of St_KS
@@ -503,7 +497,7 @@ def apply_state_reordering_ci(St, E, params):
             St[i].permute_cols(perm_t)
 
 
-		
+
 def form_Hvib_real( cp2k_log_file_name: str, time: int, min_band: int, max_band: int, isUKS: int):
     """
     This function forms the real part of the vibronic Hamiltonian by inserting the 
@@ -535,20 +529,20 @@ def form_Hvib_real( cp2k_log_file_name: str, time: int, min_band: int, max_band:
     if isUKS == 1:
         # Read energies with alpha spin
         spin = 1
-        E_alpha, total_energy = read_energies_from_cp2k_log_file( cp2k_log_file_name, time, min_band, max_band, spin )
+        E_alpha, total_energy = CP2K_methods.read_energies_from_cp2k_log_file( cp2k_log_file_name, time, min_band, max_band, spin )
         # Read energies with beta spin
         spin = 2
-        E_beta, total_energy = read_energies_from_cp2k_log_file( cp2k_log_file_name, time, min_band, max_band, spin )
+        E_beta, total_energy = CP2K_methods.read_energies_from_cp2k_log_file( cp2k_log_file_name, time, min_band, max_band, spin )
         # Now forming the diagonal matrix containing the Kohn-Sham energies of the alpha and beta spins
         Hvib_ks_re = np.diag( np.concatenate( ( E_alpha, E_beta ) ) )
     # If there is no UKS calculations set
     else:
         spin = 1
-        E_alpha, total_energy = read_energies_from_cp2k_log_file( cp2k_log_file_name, time, min_band, max_band, spin )
+        E_alpha, total_energy = CP2K_methods.read_energies_from_cp2k_log_file( cp2k_log_file_name, time, min_band, max_band, spin )
         Hvib_ks_re = np.diag( np.concatenate( ( E_alpha, E_alpha ) ) )
     
     return Hvib_ks_re, total_energy
 
 
 
-		
+
