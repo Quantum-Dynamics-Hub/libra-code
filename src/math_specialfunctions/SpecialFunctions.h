@@ -46,7 +46,7 @@ double sinh_(double);
 double sin_(double);
 double ERF(double);
 double ERFC(double);
-double gamma_lower(double s,double x); 
+double gamma_lower(double s,double x);
 double Fn(int n,double t);
 
 // Integrals of Gaussian functions
@@ -55,7 +55,7 @@ double gaussian_norm2(int n,double alp);
 double gaussian_norm1(int n,double alp);
 double gaussian_normalization_factor(int n,double alp);
 
-  
+
 double FACTORIAL(int);
 double DFACTORIAL(int);
 double BINOM(int,int);
@@ -63,7 +63,7 @@ void zero_array(double* X,int n);
 void binomial_expansion(int n1,int n2,double x1,double x2,double* f,double* dfdx1, double* dfdx2,int is_derivs);
 boost::python::list binomial_expansion(int n1,int n2,double x1,double x2,int is_derivs);
 
-  
+
 void LEGENDRE(int n,double x,double a,double b,double& p,double& q);
 void CHEBYSHEV(int n,double x,double a,double b,double& p,double& q);
 void LAGUERRE(int n,double x,double& p,double& q);
@@ -119,10 +119,10 @@ MATRIX covariance(MATRIX& X, MATRIX& Y);
 CMATRIX covariance(CMATRIX& X);
 CMATRIX covariance(CMATRIX& X, CMATRIX& Y);
 
+vector< vector<int> > permutations_reiteration(vector<int> given_list, int size, int num_elements, vector< vector<int> > list_of_permutations);
+vector< vector<int> > compute_all_permutations(vector<int> given_list);
 
 }// namespace libspecialfunctions
 }// namespace liblibra
 
 #endif // SPECIALFUNCTIONS_H
-
-

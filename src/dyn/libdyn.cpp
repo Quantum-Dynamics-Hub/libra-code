@@ -11,7 +11,7 @@
 /**
   \file libdyn.cpp
   \brief The file implements Python export function
-    
+
 */
 
 #include <boost/python.hpp>
@@ -95,7 +95,7 @@ void export_dyn_control_params_objects(){
 
 
 void export_dyn_decoherence_objects(){
- 
+
   //================== ID-A =======================
 /*
   int (*expt_ida_v1)(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi) = &ida;
@@ -118,7 +118,7 @@ void export_dyn_decoherence_objects(){
   void (*expt_collapse_v1)(CMATRIX& Coeff, int traj, int i, int collapse_option) = &collapse;
   def("collapse", expt_collapse_v1);
 
-  void (*expt_instantaneous_decoherence_v1)(CMATRIX& Coeff, 
+  void (*expt_instantaneous_decoherence_v1)(CMATRIX& Coeff,
   vector<int>& accepted_states, vector<int>& proposed_states, vector<int>& initial_states,
   int instantaneous_decoherence_variant, int collapse_option) = &instantaneous_decoherence;
   def("instantaneous_decoherence", expt_instantaneous_decoherence_v1);
@@ -131,7 +131,7 @@ void export_dyn_decoherence_objects(){
   def("edc_rates", expt_edc_rates_v1);
 
   vector<MATRIX> (*expt_edc_rates_v2)
-  (vector<CMATRIX>& Hvib, vector<double>& Ekin, 
+  (vector<CMATRIX>& Hvib, vector<double>& Ekin,
   double C_param, double eps_param) = &edc_rates;
   def("edc_rates", expt_edc_rates_v2);
 
@@ -144,7 +144,7 @@ void export_dyn_decoherence_objects(){
   (vector<MATRIX>& decoh_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps) = &dephasing_informed_correction;
   def("dephasing_informed_correction", expt_dephasing_informed_correction_v2);
 
-  
+
   MATRIX (*expt_coherence_intervals_v1)(CMATRIX& Coeff, MATRIX& rates) = &coherence_intervals;
   def("coherence_intervals", expt_coherence_intervals_v1);
 
@@ -162,7 +162,7 @@ void export_dyn_decoherence_objects(){
   int (*expt_dish_v1)(Electronic& el, MATRIX& t_m, const MATRIX& tau_m, const CMATRIX& Hvib,
           int use_boltz_flag, double Ekin, double T, double ksi1, double ksi2) = &dish;
 
-  int (*expt_dish_v2)(Electronic& el, Nuclear& mol, Hamiltonian& ham, 
+  int (*expt_dish_v2)(Electronic& el, Nuclear& mol, Hamiltonian& ham,
           MATRIX& t_m, const MATRIX& tau_m, int use_boltz_flag, double T, double ksi1, double ksi2) = &dish;
   def("dish", expt_dish_v1);
   def("dish", expt_dish_v2);
@@ -207,7 +207,7 @@ void export_dyn_hop_acceptance_objects(){
 
   vector<int> (*expt_accept_hops_v1)
   (dyn_control_params& prms,
-   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
+   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
    nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd ) = &accept_hops;
   def("accept_hops", expt_accept_hops_v1);
 
@@ -255,12 +255,12 @@ void export_dyn_methods_objects(){
 
 
   vector<int> (*expt_dish_hop_proposal_v1)
-  (vector<int>& act_states, CMATRIX& Coeff, 
+  (vector<int>& act_states, CMATRIX& Coeff,
   MATRIX& coherence_time, vector<MATRIX>& decoherence_rates, Random& rnd) = &dish_hop_proposal;
   def("dish_hop_proposal", expt_dish_hop_proposal_v1);
 
   void (*expt_dish_project_out_collapse_v1)
-  (vector<int>& old_states, vector<int>& proposed_states, vector<int>& new_states, 
+  (vector<int>& old_states, vector<int>& proposed_states, vector<int>& new_states,
   CMATRIX& Coeff, MATRIX& coherence_time, int collapse_option) = &dish_project_out_collapse;
   def("dish_project_out_collapse", expt_dish_project_out_collapse_v1);
 
@@ -279,20 +279,20 @@ void export_dyn_projectors_objects(){
   def("compute_phase_corrections", expt_compute_phase_corrections_v2);
 
   vector<int> (*expt_get_reordering_v1)(CMATRIX& time_overlap) = &get_reordering;
-  def("get_reordering", expt_get_reordering_v1);  
+  def("get_reordering", expt_get_reordering_v1);
 
   MATRIX (*expt_make_cost_mat_v1)(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha) = &make_cost_mat;
-  def("make_cost_mat", expt_make_cost_mat_v1);  
+  def("make_cost_mat", expt_make_cost_mat_v1);
 
   vector<int> (*expt_Munkres_Kuhn_v1)(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha, int verbosity) = &Munkres_Kuhn;
-  def("Munkres_Kuhn", expt_Munkres_Kuhn_v1);  
+  def("Munkres_Kuhn", expt_Munkres_Kuhn_v1);
 
   CMATRIX (*expt_permutation2cmatrix_v1)(vector<int>& permutation) = &permutation2cmatrix;
-  def("permutation2cmatrix", expt_permutation2cmatrix_v1);  
+  def("permutation2cmatrix", expt_permutation2cmatrix_v1);
 
-  void (*expt_update_projectors_v1)(dyn_control_params& prms, vector<CMATRIX>& projectors, 
+  void (*expt_update_projectors_v1)(dyn_control_params& prms, vector<CMATRIX>& projectors,
   vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd) = &update_projectors;
-  def("update_projectors", expt_update_projectors_v1);  
+  def("update_projectors", expt_update_projectors_v1);
 
 
   CMATRIX (*expt_raw_to_dynconsyst_v1)
@@ -303,8 +303,13 @@ void export_dyn_projectors_objects(){
   (CMATRIX& amplitudes, vector<CMATRIX>& projectors) = &dynconsyst_to_raw;
   def("dynconsyst_to_raw", expt_dynconsyst_to_raw_v1);
 
+  vector<int> (*expt_get_stochastic_reordering)
+  (CMATRIX& time_overlap, Random& rnd) = &get_stochastic_reordering;
+  def("get_stochastic_reordering", expt_get_stochastic_reordering);
 
-
+  vector<int> (*expt_get_stochastic_reordering2)
+  (CMATRIX& time_overlap, Random& rnd) = &get_stochastic_reordering2;
+  def("get_stochastic_reordering2", expt_get_stochastic_reordering2);
 
 }
 
@@ -323,13 +328,13 @@ void export_LZ_hopping_probabilities_objects(){
 void export_permutation_objects(){
 
 
-  vector<int> (*expt_get_permutation_v1)(vector<vector<int> >& inp) = &get_permutation; 
+  vector<int> (*expt_get_permutation_v1)(vector<vector<int> >& inp) = &get_permutation;
   vector<int> (*expt_Munkres_Kuhn_minimize_v1)(MATRIX& _X, int verbosity) = &Munkres_Kuhn_minimize;
   vector<int> (*expt_Munkres_Kuhn_maximize_v1)(MATRIX& _X, int verbosity) = &Munkres_Kuhn_maximize;
 
-  def("get_permutation", expt_get_permutation_v1);  
-  def("Munkres_Kuhn_minimize", expt_Munkres_Kuhn_minimize_v1);  
-  def("Munkres_Kuhn_maximize", expt_Munkres_Kuhn_maximize_v1);  
+  def("get_permutation", expt_get_permutation_v1);
+  def("Munkres_Kuhn_minimize", expt_Munkres_Kuhn_minimize_v1);
+  def("Munkres_Kuhn_maximize", expt_Munkres_Kuhn_maximize_v1);
 
 
 }
@@ -348,12 +353,12 @@ void export_Energy_Forces_objects(){
 
 
   MATRIX (*expt_aux_get_forces_v1)
-  (dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, 
+  (dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors,
   vector<int>& act_states, nHamiltonian& ham) = &aux_get_forces;
   def("aux_get_forces", expt_aux_get_forces_v1);
 
   MATRIX (*expt_aux_get_forces_v2)
-  (bp::dict prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, 
+  (bp::dict prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors,
   vector<int>& act_states, nHamiltonian& ham) = &aux_get_forces;
   def("aux_get_forces", expt_aux_get_forces_v2);
 
@@ -390,7 +395,7 @@ void export_Energy_Forces_objects(){
 
 
 void export_Dyn_objects(){
-/** 
+/**
   \brief Exporter of libdyn classes and functions
 
 */
@@ -413,7 +418,7 @@ void export_Dyn_objects(){
   export_dyn_methods_objects();
   export_dyn_projectors_objects();
 
-  
+
   export_LZ_hopping_probabilities_objects();
   export_permutation_objects();
 
@@ -426,13 +431,13 @@ void export_Dyn_objects(){
 
 
   void (*expt_update_Hamiltonian_q_v1)
-  (dyn_control_params& prms, MATRIX& q, vector<CMATRIX>& projectors, 
-   nHamiltonian& ham, 
+  (dyn_control_params& prms, MATRIX& q, vector<CMATRIX>& projectors,
+   nHamiltonian& ham,
    bp::object py_funct, bp::object model_params) = &update_Hamiltonian_q;
 
   void (*expt_update_Hamiltonian_q_v2)
-  (bp::dict prms, MATRIX& q, vector<CMATRIX>& projectors, 
-   nHamiltonian& ham, 
+  (bp::dict prms, MATRIX& q, vector<CMATRIX>& projectors,
+   nHamiltonian& ham,
    bp::object py_funct, bp::object model_params) = &update_Hamiltonian_q;
 
   def("update_Hamiltonian_q", expt_update_Hamiltonian_q_v1);
@@ -441,12 +446,12 @@ void export_Dyn_objects(){
 
   void (*expt_update_Hamiltonian_q_ethd_v1)
   (dyn_control_params& prms, MATRIX& q, MATRIX& p, vector<CMATRIX>& projectors,
-   nHamiltonian& ham, 
+   nHamiltonian& ham,
    bp::object py_funct, bp::object model_params, MATRIX& invM) = &update_Hamiltonian_q_ethd;
 
   void (*expt_update_Hamiltonian_q_ethd_v2)
   (bp::dict prms, MATRIX& q, MATRIX& p, vector<CMATRIX>& projectors,
-   nHamiltonian& ham, 
+   nHamiltonian& ham,
    bp::object py_funct, bp::object model_params, MATRIX& invM) = &update_Hamiltonian_q_ethd;
 
   def("update_Hamiltonian_q_ethd", expt_update_Hamiltonian_q_ethd_v1);
@@ -478,13 +483,13 @@ void export_Dyn_objects(){
 
   void (*expt_compute_dynamics_v1)
   (MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, vector<int>& act_states,
-   nHamiltonian& ham, bp::object py_funct, bp::dict model_params, 
+   nHamiltonian& ham, bp::object py_funct, bp::dict model_params,
    bp::dict dyn_params, Random& rnd) = &compute_dynamics;
   def("compute_dynamics", expt_compute_dynamics_v1);
 
   void (*expt_compute_dynamics_v2)
-  (MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, vector<int>& act_states, 
-   nHamiltonian& ham, bp::object py_funct, bp::dict model_params, bp::dict dyn_params, Random& rnd, 
+  (MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, vector<int>& act_states,
+   nHamiltonian& ham, bp::object py_funct, bp::dict model_params, bp::dict dyn_params, Random& rnd,
    vector<Thermostat>& therm) = &compute_dynamics;
   def("compute_dynamics", expt_compute_dynamics_v2);
 
@@ -514,4 +519,3 @@ BOOST_PYTHON_MODULE(libdyn){
 
 }// libdyn
 }// liblibra
-

@@ -36,7 +36,7 @@ void export_SpecialFunctions_objects(){
   def("ERFC",ERFC);    // complementary error function
   def("gamma_lower", gamma_lower);  // lower gamma function divided by the power
   def("Fn", Fn);
-  def("gaussian_int", gaussian_int);  
+  def("gaussian_int", gaussian_int);
   def("gaussian_norm2", gaussian_norm2);
   def("gaussian_norm1", gaussian_norm1);
   def("gaussian_normalization_factor", gaussian_normalization_factor);
@@ -50,7 +50,7 @@ void export_SpecialFunctions_objects(){
   def("LEGENDRE",LEGENDRE);
   def("CHEBYSHEV",CHEBYSHEV);
   def("LAGUERRE",LAGUERRE);
-  def("HERMITE",HERMITE); 
+  def("HERMITE",HERMITE);
 
   def("Ellipe",Ellipe);
   def("Ellipe2",Ellipe2);
@@ -92,29 +92,30 @@ void export_SpecialFunctions_objects(){
   def("exp1_", expt_exp1__v2);
 
   boost::python::list (*expt_merge_sort_v1)(boost::python::list) = &merge_sort;
-  def("merge_sort", expt_merge_sort_v1); 
+  def("merge_sort", expt_merge_sort_v1);
 
 
   MATRIX (*expt_mean_v1)(MATRIX& X) = &mean;
   CMATRIX (*expt_mean_v2)(CMATRIX& X) = &mean;
-  def("mean", expt_mean_v1); 
-  def("mean", expt_mean_v2); 
+  def("mean", expt_mean_v1);
+  def("mean", expt_mean_v2);
 
   MATRIX (*expt_deviation_v1)(MATRIX& X) = &deviation;
   CMATRIX (*expt_deviation_v2)(CMATRIX& X) = &deviation;
-  def("deviation", expt_deviation_v1); 
-  def("deviation", expt_deviation_v2); 
+  def("deviation", expt_deviation_v1);
+  def("deviation", expt_deviation_v2);
 
   MATRIX (*expt_covariance_v1)(MATRIX& X) = &covariance;
   MATRIX (*expt_covariance_v2)(MATRIX& X, MATRIX& Y) = &covariance;
   CMATRIX (*expt_covariance_v3)(CMATRIX& X) = &covariance;
   CMATRIX (*expt_covariance_v4)(CMATRIX& X, CMATRIX& Y) = &covariance;
-  def("covariance", expt_covariance_v1); 
-  def("covariance", expt_covariance_v2); 
-  def("covariance", expt_covariance_v3); 
-  def("covariance", expt_covariance_v4); 
+  def("covariance", expt_covariance_v1);
+  def("covariance", expt_covariance_v2);
+  def("covariance", expt_covariance_v3);
+  def("covariance", expt_covariance_v4);
 
-
+  def("permutations_reiteration", permutations_reiteration);
+  def("compute_all_permutations", compute_all_permutations);
 
 
 }

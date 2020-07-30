@@ -49,7 +49,7 @@ dyn_control_params::dyn_control_params(){
 //  vel_rescale_opt = 0;
   dt = 41.0;
   do_phase_correction = 1;
-  phase_correction_tol = 1e-3; 
+  phase_correction_tol = 1e-3;
   state_tracking_algo = 2;
   MK_alpha = 0.0;
   MK_verbosity = 0;
@@ -58,14 +58,14 @@ dyn_control_params::dyn_control_params(){
   ETHD3_alpha = 1.0;
   ETHD3_beta = 1.0;
 
-  decoherence_algo = -1; 
+  decoherence_algo = -1;
   decoh_rates = NULL;
   decoherence_times_type = 0;
   decoherence_C_param = 1.0;
   decoherence_eps_param = 0.1;
   dephasing_informed = 0;
   ave_gaps = NULL;
-  instantaneous_decoherence_variant = 1; 
+  instantaneous_decoherence_variant = 1;
   collapse_option = 0;
 
   ensemble = 0;
@@ -78,7 +78,7 @@ dyn_control_params::dyn_control_params(){
 void dyn_control_params::sanity_check(){
 
   if(state_tracking_algo==0 || state_tracking_algo==1 ||
-     state_tracking_algo==2 || state_tracking_algo==3){ ; ; }
+     state_tracking_algo==2 || state_tracking_algo==3 || state_tracking_algo==32){ ; ; }
   else{
     std::cout<<"Error in dyn_control_params::sanity_check: state_tracking_algo = "
         <<state_tracking_algo<<" is not allowed. Exiting...\n";
@@ -132,15 +132,15 @@ void dyn_control_params::set_parameters(bp::dict params){
 
 
     else if(key=="decoherence_algo"){ decoherence_algo = bp::extract<int>(params.values()[i]); }
-    else if(key=="decoh_rates"){ 
+    else if(key=="decoh_rates"){
 
       MATRIX x( bp::extract<MATRIX>(params.values()[i]) );
-      decoh_rates = new MATRIX(x.n_rows, x.n_cols);      
+      decoh_rates = new MATRIX(x.n_rows, x.n_cols);
       for(int a=0;a<x.n_rows;a++){
         for(int b=0;b<x.n_cols;b++){
           decoh_rates->set(a, b, x.get(a,b));
         }
-      } 
+      }
 
     }
 
@@ -149,25 +149,25 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="decoherence_eps_param"){ decoherence_eps_param = bp::extract<double>(params.values()[i]); }
     else if(key=="dephasing_informed"){ dephasing_informed = bp::extract<int>(params.values()[i]); }
 
-    else if(key=="ave_gaps"){ 
+    else if(key=="ave_gaps"){
 
       MATRIX x( bp::extract<MATRIX>(params.values()[i]) );
-      ave_gaps = new MATRIX(x.n_rows, x.n_cols);      
+      ave_gaps = new MATRIX(x.n_rows, x.n_cols);
       for(int a=0;a<x.n_rows;a++){
         for(int b=0;b<x.n_cols;b++){
           ave_gaps->set(a, b, x.get(a,b));
         }
-      } 
+      }
 
     }
-    else if(key=="instantaneous_decoherence_variant"){ 
+    else if(key=="instantaneous_decoherence_variant"){
       instantaneous_decoherence_variant = bp::extract<int>(params.values()[i]);
     }
     else if(key=="collapse_option"){ collapse_option = bp::extract<int>(params.values()[i]); }
 
 
-    else if(key=="ensemble"){ ensemble = bp::extract<int>(params.values()[i]); }    
-    else if(key=="thermostat_params"){ thermostat_params = bp::extract<bp::dict>(params.values()[i]); }    
+    else if(key=="ensemble"){ ensemble = bp::extract<int>(params.values()[i]); }
+    else if(key=="thermostat_params"){ thermostat_params = bp::extract<bp::dict>(params.values()[i]); }
 
 
   }
@@ -179,4 +179,3 @@ void dyn_control_params::set_parameters(bp::dict params){
 
 }// namespace libdyn
 }// liblibra
-

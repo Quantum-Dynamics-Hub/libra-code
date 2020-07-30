@@ -27,7 +27,7 @@ namespace libspecialfunctions{
 
 double FAST_POW(double x,int n){
 
-    double res,res1;    
+    double res,res1;
     if(n==0)      { res = 1.0; }
     else if(n==1) { res = x; }                                    // 0 mult
     else if(n==2) { res = x*x;}                                   // 1 mult
@@ -38,7 +38,7 @@ double FAST_POW(double x,int n){
     else if(n==7) { res = x*x*x; res = res*res*x; }               // 4 mult
     else if(n==8) { res = x*x; res = res*res; res = res*res;}     // 3 mult
     else if(n==9) { res = x*x*x; res = res*res*res; }             // 4 mult
-    else if(n==10){ res1= res = x*x; 
+    else if(n==10){ res1= res = x*x;
                     res = res*res;
                     res = res*res;
                     res = res*res1;
@@ -173,7 +173,7 @@ S. Winitzki, Uniform approximations for transcendental functions, in Proc. ICCSA
 
 double gamma_lower(double s,double x){
 /** This computes lower incomplete gamma function divided by power:
- gamma_tilda(s,x) = gamma(s,x)/ x^s, 
+ gamma_tilda(s,x) = gamma(s,x)/ x^s,
  gamma(s,x) is defined in the link below:
  http://en.wikipedia.org/wiki/Incomplete_gamma_function
  We use series expansion, as in the link
@@ -194,7 +194,7 @@ double gamma_lower(double s,double x){
     iter++;
   }
 
-    
+
   return res;
 }
 
@@ -202,9 +202,9 @@ double gamma_lower(double s,double x){
 double Fn(int n,double t){
 /** This computes the incomplete gamma function given by an integral
             1
-  F_n(t) =  | u^2n * exp(-t*u^2) du 
+  F_n(t) =  | u^2n * exp(-t*u^2) du
             0
- 
+
   which is equal to: gamma(n+1/2,t)/ (2* t^{n+1/2}) = 0.5*gamma_lower(n+1/2,t)
   where gamma(s,x) - is lower incomplete gamma-function:
   http://en.wikipedia.org/wiki/Incomplete_gamma_function
@@ -212,7 +212,7 @@ double Fn(int n,double t){
 
   double res = 0.5*gamma_lower((n+0.5),t);
 
-  return res; 
+  return res;
 
 }
 
@@ -236,9 +236,9 @@ double gaussian_int(int n, double alp){
 
   double res = 0.0;
 
-  if(n%2==0){  // even    
+  if(n%2==0){  // even
     if(n==0){  res = sqrt(M_PI/alp); }
-    else{ 
+    else{
       res = (DFACTORIAL(n-1)/pow(2.0*alp, n/2))*sqrt(M_PI/alp);
     }
   }
@@ -274,7 +274,7 @@ double gaussian_normalization_factor(int n,double alp){
 double FACTORIAL(int n) {
 /** Factorial function :
   n! = n * (n-1) * (n-2) * ... * 1
-  0! = 1  
+  0! = 1
 */
 
   double res = 1.0;
@@ -296,10 +296,10 @@ double FACTORIAL(int n) {
 
 double DFACTORIAL(int n) {
 /** Double factorial :
-  n!! = n * (n-2)!!, that is 1*3*5*... 
+  n!! = n * (n-2)!!, that is 1*3*5*...
 
 */
-  double res; 
+  double res;
 
   if(n<=1){ res = 1.0;}
   else if(n==3){ res = 3.0; }
@@ -316,27 +316,27 @@ double DFACTORIAL(int n) {
 
 
 double BINOM(int i,int n) {
-/** Binomial coefficient : 
+/** Binomial coefficient :
   C^i_n =  n! /( i! * (n-i)!) ,  0<=i<=n
 */
 
-  if(i<0) { 
-    cout<<"Error in BINOM: i must be non-negative\n"; 
+  if(i<0) {
+    cout<<"Error in BINOM: i must be non-negative\n";
     exit(0);
   }
-  if(n<0) { 
-    cout<<"Error in BINOM: n must be non-negative\n"; 
+  if(n<0) {
+    cout<<"Error in BINOM: n must be non-negative\n";
     exit(0);
   }
-  if(i>n) { 
-    cout<<"Error in BINOM: i must be not larger than n\n"; 
+  if(i>n) {
+    cout<<"Error in BINOM: i must be not larger than n\n";
     exit(0);
   }
 
 
   double res;
 
-  if(n==0){ 
+  if(n==0){
     if(i==0){ res = 1.0; }
   }
   else if(n==1){
@@ -405,9 +405,9 @@ boost::python::list binomial_expansion(int n1,int n2,double x1,double x2,int is_
 
   binomial_expansion(n1,n2,x1,x2,f,dfdx1,dfdx2,is_derivs);
 
-  boost::python::list lf; 
-  boost::python::list ldfdx1; 
-  boost::python::list ldfdx2; 
+  boost::python::list lf;
+  boost::python::list ldfdx1;
+  boost::python::list ldfdx2;
 
   for(int i=0;i<n;i++){
     lf.append(f[i]);
@@ -418,7 +418,7 @@ boost::python::list binomial_expansion(int n1,int n2,double x1,double x2,int is_
     }
   }
 
-  boost::python::list res;   
+  boost::python::list res;
   res.append(lf);
   if(is_derivs){
     res.append(ldfdx1);
@@ -444,10 +444,10 @@ void binomial_expansion(int n1,int n2,double x1,double x2,double* f,double* dfdx
    dfdx1 - derivatives of f w.r.t. x1:  df / dx1
    dfdx2 - derivatives of f w.r.t. x2:  df / dx2
 
-   is_derivs - defines if we want to compute derivatives 
+   is_derivs - defines if we want to compute derivatives
 *********************************************************************************/
   // Maximal expansion power
-  int n = n1 + n2; 
+  int n = n1 + n2;
 
   // Zero arrays
   zero_array(f,n+1);
@@ -458,8 +458,8 @@ void binomial_expansion(int n1,int n2,double x1,double x2,double* f,double* dfdx
   if(n<=4){
 
     //>>>>>>>>>>>>>>>>>>>>>>>> n == 0  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    if(n1==0 && n2==0){  
-      f[0] = 1; 
+    if(n1==0 && n2==0){
+      f[0] = 1;
 
       if(is_derivs){
       dfdx1[0] = 0.0;
@@ -468,42 +468,42 @@ void binomial_expansion(int n1,int n2,double x1,double x2,double* f,double* dfdx
     }/// n1==0 && n2==0
 
     //>>>>>>>>>>>>>>>>>>>>>>>> n == 1  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    else if(n1==1 && n2==0){ 
-      f[0] = x1;       f[1] = 1.0;    
+    else if(n1==1 && n2==0){
+      f[0] = x1;       f[1] = 1.0;
 
       if(is_derivs){
       dfdx1[0] = 1.0;  dfdx1[1] = 0.0;
       dfdx2[0] = 0.0;  dfdx2[1] = 0.0;
-      }    
+      }
     }/// n1==1 && n2==0
 
-    else if(n1==0 && n2==1){ 
-      f[0] = x2;       f[1] = 1.0;    
+    else if(n1==0 && n2==1){
+      f[0] = x2;       f[1] = 1.0;
 
       if(is_derivs){
       dfdx1[0] = 0.0;  dfdx1[1] = 0.0;
-      dfdx2[0] = 1.0;  dfdx2[1] = 0.0; 
+      dfdx2[0] = 1.0;  dfdx2[1] = 0.0;
       }
     }/// n1==0 && n2==1
 
     //>>>>>>>>>>>>>>>>>>>>>>>> n == 2  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    else if(n1==1 && n2==1){ 
-      f[0] = x1*x2;    f[1] = x1+x2;     f[2] = 1.0;    
+    else if(n1==1 && n2==1){
+      f[0] = x1*x2;    f[1] = x1+x2;     f[2] = 1.0;
 
       if(is_derivs){
       dfdx1[0] = x2;   dfdx1[1] = 1.0;   dfdx1[2] = 0.0;
-      dfdx2[0] = x1;   dfdx2[1] = 1.0;   dfdx2[2] = 0.0; 
+      dfdx2[0] = x1;   dfdx2[1] = 1.0;   dfdx2[2] = 0.0;
       }
     }/// n1==1 && n2==1
 
     else if(n1==2 && n2==0){
       // Optimized version: 2 mults
-      f[0] = x1*x1;       f[1] = 2.0*x1;     f[2] = 1.0;    
+      f[0] = x1*x1;       f[1] = 2.0*x1;     f[2] = 1.0;
 
       if(is_derivs){
       dfdx1[0] = f[1];    dfdx1[1] = 2.0;    dfdx1[2] = 0.0;
       dfdx2[0] = 0.0;     dfdx2[1] = 0.0;    dfdx2[2] = 0.0;
-      }         
+      }
 /**  Fully expanded version - retain for clarity:  3  mults
       f[0] = x1*x1;    dfdx1[0] = 2.0*x1;  dfdx2[0] = 0.0;
       f[1] = 2.0*x1;   dfdx1[1] = 2.0;     dfdx2[1] = 0.0;
@@ -513,12 +513,12 @@ void binomial_expansion(int n1,int n2,double x1,double x2,double* f,double* dfdx
 
     else if(n1==0 && n2==2){
       // Optimized version: 2 mults
-      f[0] = x2*x2;       f[1] = 2.0*x2;     f[2] = 1.0;    
+      f[0] = x2*x2;       f[1] = 2.0*x2;     f[2] = 1.0;
 
       if(is_derivs){
       dfdx1[0] = 0.0;     dfdx1[1] = 0.0;    dfdx1[2] = 0.0;
       dfdx2[0] = f[1];    dfdx2[1] = 2.0;    dfdx2[2] = 0.0;
-      }      
+      }
 /**  Fully expanded version - retain for clarity:  3  mults
       f[0] = x2*x2;    dfdx1[0] = 0.0;  dfdx2[0] = 2.0*x2;
       f[1] = 2.0*x2;   dfdx1[1] = 0.0;  dfdx2[1] = 2.0;
@@ -527,10 +527,10 @@ void binomial_expansion(int n1,int n2,double x1,double x2,double* f,double* dfdx
     }/// n1==0 && n2==2
 
     //>>>>>>>>>>>>>>>>>>>>>>>> n == 3  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    else if(n1==3 && n2==0){ 
+    else if(n1==3 && n2==0){
       // Optimized version: 5 mults
       double x11 = x1*x1;
-      f[0] = x11*x1;       f[1] = 3.0*x11;     f[2] = 3.0*x1;   f[3] = 1.0;    
+      f[0] = x11*x1;       f[1] = 3.0*x11;     f[2] = 3.0*x1;   f[3] = 1.0;
 
       if(is_derivs){
       dfdx1[0] = f[1];     dfdx1[1] = 6.0*x1;  dfdx1[2] = 3.0;  dfdx1[3] = 0.0;
@@ -544,10 +544,10 @@ void binomial_expansion(int n1,int n2,double x1,double x2,double* f,double* dfdx
 **/
     }/// n1==3 && n2==0
 
-    else if(n1==0 && n2==3){ 
+    else if(n1==0 && n2==3){
       // Optimized version: 5 mults
       double x22 = x2*x2;
-      f[0] = x22*x2;       f[1] = 3.0*x22;      f[2] = 3.0*x2;    f[3] = 1.0;    
+      f[0] = x22*x2;       f[1] = 3.0*x22;      f[2] = 3.0*x2;    f[3] = 1.0;
 
       if(is_derivs){
       dfdx1[0] = 0.0;      dfdx1[1] = 0.0;      dfdx1[2] = 0.0;   dfdx1[3] = 0.0;
@@ -561,53 +561,53 @@ void binomial_expansion(int n1,int n2,double x1,double x2,double* f,double* dfdx
 **/
     }/// n1==0 && n2==3
 
-    else if(n1==2 && n2==1){ 
+    else if(n1==2 && n2==1){
       // Optimized version: 7 mults
       double x12 = 2.0*x1*x2;
       double x11 = x1*x1;
-      f[0] = x11*x2;  f[1] = x12 + x11;         f[2] = 2.0*x1+x2;  f[3] = 1.0; 
+      f[0] = x11*x2;  f[1] = x12 + x11;         f[2] = 2.0*x1+x2;  f[3] = 1.0;
 
-      if(is_derivs){ 
-      dfdx1[0] = x12; dfdx1[1] = 2.0*(x2 + x1); dfdx1[2] = 2.0;    dfdx1[3] = 0.0; 
-      dfdx2[0] = x11; dfdx2[1] = 2.0*x1;        dfdx2[2] = 1.0;    dfdx2[3] = 0.0; 
+      if(is_derivs){
+      dfdx1[0] = x12; dfdx1[1] = 2.0*(x2 + x1); dfdx1[2] = 2.0;    dfdx1[3] = 0.0;
+      dfdx2[0] = x11; dfdx2[1] = 2.0*x1;        dfdx2[2] = 1.0;    dfdx2[3] = 0.0;
       }
 /**  Fully expanded version - retain for clarity:  12  mults
       f[0] = x1*x1*x2;        dfdx1[0] = 2.0*x1*x2;     dfdx2[0] = x1*x1;
-      f[1] = 2.0*x1*x2+x1*x1; dfdx1[1] = 2.0*x2+2.0*x1; dfdx2[1] = 2.0*x1;   
-      f[2] = 2.0*x1+x2;       dfdx1[2] = 2.0;           dfdx2[2] = 1.0;      
-      f[3] = 1.0;             dfdx1[3] = 0.0;           dfdx2[3] = 0.0;      
+      f[1] = 2.0*x1*x2+x1*x1; dfdx1[1] = 2.0*x2+2.0*x1; dfdx2[1] = 2.0*x1;
+      f[2] = 2.0*x1+x2;       dfdx1[2] = 2.0;           dfdx2[2] = 1.0;
+      f[3] = 1.0;             dfdx1[3] = 0.0;           dfdx2[3] = 0.0;
 **/
     }/// n1==2 && n1==1
 
-    else if(n1==1 && n2==2){ 
+    else if(n1==1 && n2==2){
       // Optimized version: 7 mults
       double x12 = 2.0*x1*x2;
       double x22 = x2*x2;
-      f[0] = x22*x1;   f[1] = x12 + x22;         f[2] = 2.0*x2 + x1;  f[3] = 1.0;     
+      f[0] = x22*x1;   f[1] = x12 + x22;         f[2] = 2.0*x2 + x1;  f[3] = 1.0;
 
-      if(is_derivs){ 
-      dfdx1[0] = x22;  dfdx1[1] = 2.0*x2;        dfdx1[2] = 1.0;      dfdx1[3] = 0.0; 
-      dfdx2[0] = x12;  dfdx2[1] = 2.0*(x1 + x2); dfdx2[2] = 2.0;      dfdx2[3] = 0.0; 
+      if(is_derivs){
+      dfdx1[0] = x22;  dfdx1[1] = 2.0*x2;        dfdx1[2] = 1.0;      dfdx1[3] = 0.0;
+      dfdx2[0] = x12;  dfdx2[1] = 2.0*(x1 + x2); dfdx2[2] = 2.0;      dfdx2[3] = 0.0;
       }
 
 /**  Fully expanded version - retain for clarity:  12  mults
       f[0] = x2*x2*x1;        dfdx1[0] = x2*x2;      dfdx2[0] = 2.0*x2*x1;
-      f[1] = 2.0*x2*x1+x2*x2; dfdx1[1] = 2.0*x2;     dfdx2[1] = 2.0*x1+2.0*x2;   
-      f[2] = 2.0*x2+x1;       dfdx1[2] = 1.0;        dfdx2[2] = 2.0;      
-      f[3] = 1.0;             dfdx1[3] = 0.0;        dfdx2[3] = 0.0;      
+      f[1] = 2.0*x2*x1+x2*x2; dfdx1[1] = 2.0*x2;     dfdx2[1] = 2.0*x1+2.0*x2;
+      f[2] = 2.0*x2+x1;       dfdx1[2] = 1.0;        dfdx2[2] = 2.0;
+      f[3] = 1.0;             dfdx1[3] = 0.0;        dfdx2[3] = 0.0;
 **/
     }/// n1==1 && n1==2
 
     //>>>>>>>>>>>>>>>>>>>>>>>> n == 4  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    else if(n1==4 && n2==0){ 
+    else if(n1==4 && n2==0){
       // Optimized version: 8 mults
       double x11 = x1*x1;
       double x111 = 4.0*x11*x1;
-      f[0] = x11*x11;  f[1] = x111;         f[2] = 6.0*x11;     f[3] = 4.0*x1;  f[4] = 1.0;     
+      f[0] = x11*x11;  f[1] = x111;         f[2] = 6.0*x11;     f[3] = 4.0*x1;  f[4] = 1.0;
 
-      if(is_derivs){ 
-      dfdx1[0] = x111; dfdx1[1] = 12.0*x11; dfdx1[2] = 12.0*x1; dfdx1[3] = 4.0; dfdx1[4] = 0.0; 
-      dfdx2[0] = 0.0;  dfdx2[1] = 0.0;      dfdx2[2] = 0.0;     dfdx2[3] = 0.0; dfdx2[4] = 0.0; 
+      if(is_derivs){
+      dfdx1[0] = x111; dfdx1[1] = 12.0*x11; dfdx1[2] = 12.0*x1; dfdx1[3] = 4.0; dfdx1[4] = 0.0;
+      dfdx2[0] = 0.0;  dfdx2[1] = 0.0;      dfdx2[2] = 0.0;     dfdx2[3] = 0.0; dfdx2[4] = 0.0;
       }
 /**  Fully expanded version - retain for clarity:  15 mults
       f[0] = x1*x1*x1*x1;   dfdx1[0] = 4.0*x1*x1*x1;   dfdx2[0] = 0.0;
@@ -618,15 +618,15 @@ void binomial_expansion(int n1,int n2,double x1,double x2,double* f,double* dfdx
 **/
     }/// n1==4 && n2==0
 
-    else if(n1==0 && n2==4){ 
+    else if(n1==0 && n2==4){
       // Optimized version: 8 mults
       double x22 = x2*x2;
       double x222 = 4.0*x22*x2;
-      f[0] = x22*x22;  f[1] = x222;         f[2] = 6.0*x22;     f[3] = 4.0*x2;  f[4] = 1.0;     
+      f[0] = x22*x22;  f[1] = x222;         f[2] = 6.0*x22;     f[3] = 4.0*x2;  f[4] = 1.0;
 
-      if(is_derivs){ 
-      dfdx2[0] = x222; dfdx2[1] = 12.0*x22; dfdx2[2] = 12.0*x2; dfdx2[3] = 4.0; dfdx2[4] = 0.0; 
-      dfdx1[0] = 0.0;  dfdx1[1] = 0.0;      dfdx1[2] = 0.0;     dfdx1[3] = 0.0; dfdx1[4] = 0.0; 
+      if(is_derivs){
+      dfdx2[0] = x222; dfdx2[1] = 12.0*x22; dfdx2[2] = 12.0*x2; dfdx2[3] = 4.0; dfdx2[4] = 0.0;
+      dfdx1[0] = 0.0;  dfdx1[1] = 0.0;      dfdx1[2] = 0.0;     dfdx1[3] = 0.0; dfdx1[4] = 0.0;
       }
 /**  Fully expanded version - retain for clarity:  15 mults
       f[0] = x2*x2*x2*x2;   dfdx2[0] = 4.0*x2*x2*x2;   dfdx1[0] = 0.0;
@@ -637,16 +637,16 @@ void binomial_expansion(int n1,int n2,double x1,double x2,double* f,double* dfdx
 **/
     }/// n1==0 && n2==4
 
-    else if(n1==3 && n2==1){ 
+    else if(n1==3 && n2==1){
       // Optimized version: 15 mults
       double x11 = x1*x1;
       double x22 = x2*x2;
       double x12 = x1*x2;
-      f[0] = x11*x12;           f[1] = x11*x1 + 3.0*x11*x2;   f[2] = 3.0*(x12 + x11);     f[3] = 3.0*x1+x2; f[4] = 1.0;     
+      f[0] = x11*x12;           f[1] = x11*x1 + 3.0*x11*x2;   f[2] = 3.0*(x12 + x11);     f[3] = 3.0*x1+x2; f[4] = 1.0;
 
-      if(is_derivs){ 
-      dfdx2[0] = x11*x1;        dfdx2[1] = 3.0*x11;            dfdx2[2] = 3.0*x1;          dfdx2[3] = 1.0;   dfdx2[4] = 0.0; 
-      dfdx1[0] = f[1]-dfdx2[0]; dfdx1[1] = dfdx2[1] + 6.0*x12; dfdx1[2] = 3.0*x2 + 6.0*x1; dfdx1[3] = 3.0;   dfdx1[4] = 0.0; 
+      if(is_derivs){
+      dfdx2[0] = x11*x1;        dfdx2[1] = 3.0*x11;            dfdx2[2] = 3.0*x1;          dfdx2[3] = 1.0;   dfdx2[4] = 0.0;
+      dfdx1[0] = f[1]-dfdx2[0]; dfdx1[1] = dfdx2[1] + 6.0*x12; dfdx1[2] = 3.0*x2 + 6.0*x1; dfdx1[3] = 3.0;   dfdx1[4] = 0.0;
       }
 /**  Fully expanded version - retain for clarity:  27 mults
       f[0] = x1*x1*x1*x2;             dfdx1[0] = 3.0*x1*x1*x2;            dfdx2[0] = x1*x1*x1;
@@ -657,16 +657,16 @@ void binomial_expansion(int n1,int n2,double x1,double x2,double* f,double* dfdx
 **/
     }/// n1==3 && n2==1
 
-    else if(n1==1 && n2==3){ 
+    else if(n1==1 && n2==3){
       // Optimized version: 15 mults
       double x11 = x1*x1;
       double x22 = x2*x2;
       double x12 = x1*x2;
-      f[0] = x22*x12;           f[1] = 3.0*x22*x1 + x22*x2;   f[2] = 3.0*(x12 + x22);     f[3] = 3.0*x2+x1; f[4] = 1.0;     
+      f[0] = x22*x12;           f[1] = 3.0*x22*x1 + x22*x2;   f[2] = 3.0*(x12 + x22);     f[3] = 3.0*x2+x1; f[4] = 1.0;
 
-      if(is_derivs){ 
-      dfdx1[0] = x22*x2;        dfdx1[1] = 3.0*x22;            dfdx1[2] = 3.0*x2;          dfdx1[3] = 1.0;   dfdx1[4] = 0.0; 
-      dfdx2[0] = f[1]-dfdx1[0]; dfdx2[1] = dfdx1[1] + 6.0*x12; dfdx2[2] = 3.0*x1 + 6.0*x2; dfdx2[3] = 3.0;   dfdx2[4] = 0.0; 
+      if(is_derivs){
+      dfdx1[0] = x22*x2;        dfdx1[1] = 3.0*x22;            dfdx1[2] = 3.0*x2;          dfdx1[3] = 1.0;   dfdx1[4] = 0.0;
+      dfdx2[0] = f[1]-dfdx1[0]; dfdx2[1] = dfdx1[1] + 6.0*x12; dfdx2[2] = 3.0*x1 + 6.0*x2; dfdx2[3] = 3.0;   dfdx2[4] = 0.0;
       }
 /**  Fully expanded version - retain for clarity: 27 mults
       f[0] = x2*x2*x2*x1;             dfdx2[0] = 3.0*x2*x2*x1;            dfdx1[0] = x2*x2*x2;
@@ -677,16 +677,16 @@ void binomial_expansion(int n1,int n2,double x1,double x2,double* f,double* dfdx
 **/
     }/// n1==1 && n2==3
 
-    else if(n1==2 && n2==2){ 
+    else if(n1==2 && n2==2){
       // Optimized version: 18 mults
       double x11 = x1*x1;
       double x22 = x2*x2;
       double x12 = x1*x2;
-      f[0] = x11*x22;           f[1] = 2.0*(x1*x22 + x11*x2);   f[2] = x11 + x22 + 4.0*x12; f[3] = 2.0*(x1 + x2); f[4] = 1.0;     
+      f[0] = x11*x22;           f[1] = 2.0*(x1*x22 + x11*x2);   f[2] = x11 + x22 + 4.0*x12; f[3] = 2.0*(x1 + x2); f[4] = 1.0;
 
-      if(is_derivs){ 
-      dfdx1[0] = 2.0*x1*x22;    dfdx1[1] = 2.0*x22 + 4.0*x12; dfdx1[2] = 2.0*x1 + 4.0*x2; dfdx1[3] = 2.0;       dfdx1[4] = 0.0; 
-      dfdx2[0] = f[1]-dfdx1[0]; dfdx2[1] = 4.0*x12 + 2.0*x11; dfdx2[2] = 2.0*x2 + 4.0*x1; dfdx2[3] = 2.0;       dfdx2[4] = 0.0; 
+      if(is_derivs){
+      dfdx1[0] = 2.0*x1*x22;    dfdx1[1] = 2.0*x22 + 4.0*x12; dfdx1[2] = 2.0*x1 + 4.0*x2; dfdx1[3] = 2.0;       dfdx1[4] = 0.0;
+      dfdx2[0] = f[1]-dfdx1[0]; dfdx2[1] = 4.0*x12 + 2.0*x11; dfdx2[2] = 2.0*x2 + 4.0*x1; dfdx2[3] = 2.0;       dfdx2[4] = 0.0;
       }
 /** Fully expanded verion - retain for clarity: 33 mults
       f[0] = x1*x1*x2*x2;                 dfdx1[0] = 2.0*x1*x2*x2;            dfdx2[0] = 2.0*x1*x1*x2;
@@ -708,7 +708,7 @@ void binomial_expansion(int n1,int n2,double x1,double x2,double* f,double* dfdx
         //
         f[i+j] += b*p1*p2;
 
-        if(is_derivs){ 
+        if(is_derivs){
 
           double pw1,pw2;
           if(n1-i==0){ pw1 = 0.0; } else{ pw1 = (n1-i)*FAST_POW(x1,n1-i-1); }
@@ -737,18 +737,18 @@ void LEGENDRE(int n,double x,double a,double b,double& p,double& q){
  <> - subscript
  recursive relation: (n+1)P<n+1>(x) = (2n+1)xP<n>(x) - nP<n-1>(x)
  normaliztion:        = 2/(2n+1)
- recursive derivatives: P'<n+1>(x) = xP'<n>(x) + (n+1)P<n>(x)    
+ recursive derivatives: P'<n+1>(x) = xP'<n>(x) + (n+1)P<n>(x)
  weighting function: w(x) = 1
-        
+
  defined for an interval [a,b]
 
 */
-    if(x<a){ 
-      cout<<"Error: Legendre polynomial is not defined for x = "<<x<<" < a = "<<a<<endl; 
+    if(x<a){
+      cout<<"Error: Legendre polynomial is not defined for x = "<<x<<" < a = "<<a<<endl;
       exit(0);
     }
-    if(x>b){ 
-      cout<<"Error: Legendre polynomial is not defined for x = "<<x<<" > b = "<<b<<endl; 
+    if(x>b){
+      cout<<"Error: Legendre polynomial is not defined for x = "<<x<<" > b = "<<b<<endl;
       exit(0);
     }
 
@@ -773,24 +773,24 @@ void LEGENDRE(int n,double x,double a,double b,double& p,double& q){
 }
 
 void CHEBYSHEV(int n,double x,double a,double b,double& p,double& q){
-/** Chebyshev polynomials and its derivatives    
+/** Chebyshev polynomials and its derivatives
 
  <> - subscript
 
  recursive relation: T<n+1>(x) = 2xT<n>(x) - T<n-1>(x)
  normaliztion:        = PI (n==0);  PI/2 (n>0)
- recursive derivatives: T'<n+1>(x) = [(n+1)x/n]T'<n>(x) + (n+1)T<n>(x)   
+ recursive derivatives: T'<n+1>(x) = [(n+1)x/n]T'<n>(x) + (n+1)T<n>(x)
  weighting function: w(x) = 1/sqrt(1-x^2)
-        
+
  defined for an interval [a,b]
 
 */
-    if(x<a){ 
-      cout<<"Error: Chebychev polynomial is not defined for x = "<<x<<" < a = "<<a<<endl; 
+    if(x<a){
+      cout<<"Error: Chebychev polynomial is not defined for x = "<<x<<" < a = "<<a<<endl;
       exit(0);
     }
-    if(x>b){ 
-      cout<<"Error: Chebychev polynomial is not defined for x = "<<x<<" > b = "<<b<<endl; 
+    if(x>b){
+      cout<<"Error: Chebychev polynomial is not defined for x = "<<x<<" > b = "<<b<<endl;
       exit(0);
     }
 
@@ -817,21 +817,21 @@ void CHEBYSHEV(int n,double x,double a,double b,double& p,double& q){
 }
 
 void LAGUERRE(int n,double x,double& p,double& q){
-/** Laguerre polynomials and its derivatives     
+/** Laguerre polynomials and its derivatives
 
  <> - subscript
 
  recursive relation: (n+1)L<n+1>(x) = (2n+1-x)L<n>(x) - nL<n-1>(x)
  normaliztion:        = 1
- recursive derivatives: L'<n+1>(x) = L'<n>(x) - L<n>(x)  
+ recursive derivatives: L'<n+1>(x) = L'<n>(x) - L<n>(x)
  weighting function: w(x) = exp(-x)
-        
+
  defined for an interval [0,+inf)
 
 */
 
-    if(x<0.0){ 
-      cout<<"Error: Laguerre polynomial is not defined for x = "<<x<<" < 0.0"<<endl; 
+    if(x<0.0){
+      cout<<"Error: Laguerre polynomial is not defined for x = "<<x<<" < 0.0"<<endl;
       exit(0);
     }
 
@@ -858,16 +858,16 @@ void LAGUERRE(int n,double x,double& p,double& q){
 
 void HERMITE(int n,double x,double& p,double& q){
 
-        // Hermite polynomials and its derivatives      
+        // Hermite polynomials and its derivatives
         /*
 
         <> - subscript
 
                 recursive relation: H<n+1>(x) = 2xH<n>(x) - 2nH<n-1>(x)
                 normaliztion:        = 2^n*n!*sqrt(PI)
-        recursive derivatives: H'<n+1>(x) = 2(n+1)H<n>(x)       
+        recursive derivatives: H'<n+1>(x) = 2(n+1)H<n>(x)
                 weighting function: w(x) = exp(-x^2)
-        
+
             defined for an interval (-inf,+inf)
 
         */
@@ -1052,7 +1052,7 @@ void Ellint(double m,double sinphi,double tol,double& Km_,double& value){
 // This function calculates incomplete elliptic integral of first kind (returned in value)
 // It also returns the complete elliptic integral of first kind (in Km_)
 // Arguments: sinphi - sine of angle phi
-// m - parameter, tol - accuracy 
+// m - parameter, tol - accuracy
 
 //------ Precompute some quantities and the complete integral -------------
   if (m < 0.0) {
@@ -1077,7 +1077,7 @@ void Ellint(double m,double sinphi,double tol,double& Km_,double& value){
     b[N] = sqrt(a[N-1]*b[N-1]);
     d[N] = b[N]/a[N];
     err = (a[N-1]-b[N-1]);
-    
+
     if(fabs(err*(double)N)<tol) break;
   }
 
@@ -1191,13 +1191,13 @@ MATRIX exp_(MATRIX& x, double dt){
 */
 
   if(x.n_cols != x.n_rows){
-    cout<<"Error in libspecialfunctions::exp_ : the input matrix is not square\n"; exit(0); 
+    cout<<"Error in libspecialfunctions::exp_ : the input matrix is not square\n"; exit(0);
   }
 
   int i,j;
- 
+
   // Let us first diagonalize the input matrix x
-  int sz = x.n_cols;  
+  int sz = x.n_cols;
   MATRIX* evec; evec = new MATRIX(sz, sz);  *evec = 0.0;
   MATRIX* eval; eval = new MATRIX(sz, sz);  *eval = 0.0;
   MATRIX res(sz,sz);
@@ -1227,13 +1227,13 @@ CMATRIX exp_(CMATRIX& x, complex<double> dt){
 */
 
   if(x.n_cols != x.n_rows){
-    cout<<"Error in libspecialfunctions::exp_ : the input matrix is not square\n"; exit(0); 
+    cout<<"Error in libspecialfunctions::exp_ : the input matrix is not square\n"; exit(0);
   }
 
   int i,j;
- 
+
   // Let us first diagonalize the input matrix x
-  int sz = x.n_cols;  
+  int sz = x.n_cols;
   CMATRIX* evec; evec = new CMATRIX(sz, sz);  *evec = complex<double>(0.0, 0.0);
   CMATRIX* eval; eval = new CMATRIX(sz, sz);  *eval = complex<double>(0.0,0.0);
   CMATRIX res(sz,sz);
@@ -1264,17 +1264,17 @@ MATRIX exp_2(MATRIX& x, double dt, int nterms, double max_tol){
 */
 
   if(x.n_cols != x.n_rows){
-    cout<<"Error in libspecialfunctions::exp_ : the input matrix is not square\n"; exit(0); 
+    cout<<"Error in libspecialfunctions::exp_ : the input matrix is not square\n"; exit(0);
   }
 
-  int sz = x.n_cols;  
+  int sz = x.n_cols;
   MATRIX tmp(sz,sz);
   MATRIX res(sz,sz);
 
   res.identity();
   tmp.identity();
   double err = 1e+10;
-  
+
   int n = 1;
   while(n < (nterms+1) && err > max_tol){
 
@@ -1322,17 +1322,17 @@ CMATRIX exp_2(CMATRIX& x, complex<double> dt, int nterms, double max_tol){
 */
 
   if(x.n_cols != x.n_rows){
-    cout<<"Error in libspecialfunctions::exp_ : the input matrix is not square\n"; exit(0); 
+    cout<<"Error in libspecialfunctions::exp_ : the input matrix is not square\n"; exit(0);
   }
 
-  int sz = x.n_cols;  
+  int sz = x.n_cols;
   CMATRIX tmp(sz,sz);
   CMATRIX res(sz,sz);
 
   res.identity();
   tmp.identity();
   double err = 1e+10;
-  
+
   int n = 1;
   while(n < (nterms+1) && err > max_tol){
 
@@ -1449,14 +1449,14 @@ int merge_sort(vector< pair<int,double> >& in, vector< pair<int,double> >& out){
     vector< pair<int,double> > in1,in2,out1,out2;
     for(int i=0;i<half;i++){ in1.push_back(in[i]); }
     merge_sort(in1,out1);
-       
+
     for(int i=half;i<sz;i++){ in2.push_back(in[i]); }
-    merge_sort(in2,out2); 
-      
+    merge_sort(in2,out2);
+
     // Now merge two parts
     int cl,cr; cl = 0; cr = half;
     while((cl<half) && (cr<sz)){
- 
+
     /// EXTREMELY IMPORTANT !!!  This simple, slight difference - the use of < or <= makes HUGE differnece
     /// The "good" version maximally preserves the ordering of orbitals, so one does not run into trouble of alternating
     /// charges - this also leads to symmetric charge distribution in unrestricted formulations even without population smearing
@@ -1470,7 +1470,7 @@ int merge_sort(vector< pair<int,double> >& in, vector< pair<int,double> >& out){
     /// It is here only for the purpose of "demonstration of pathological implementation"
 //    if(out1[cl].second<out2[cr-half].second){ out.push_back(out1[cl]); cl++; } <-- This is BAD
       else{ out.push_back(out2[cr-half]); cr++; }
-    } 
+    }
     while(cl<half){ out.push_back(out1[cl]); cl++;}
     while(cr<sz)  { out.push_back(out2[cr-half]); cr++;}
   }
@@ -1501,19 +1501,78 @@ boost::python::list merge_sort(boost::python::list inp){
     boost::python::list ri;
     ri.append(out[i].first);
     ri.append(out[i].second);
-  
+
     res.append(ri);
   }
- 
+
   return res;
 
 
 }
 
+vector< vector<int> > permutations_reiteration(vector<int> given_list, int size, int num_elements, vector< vector<int> > list_of_permutations){
+    /*
+    This function generates all permutations of a given list and outputs as a list of lists.
+    The heart of this algorithm is inspired by:
+    https://www.geeksforgeeks.org/heaps-algorithm-for-generating-permutations/
+    */
 
+    vector<int> one_permutation;
+    int i;
+
+    if(size == 1){
+        one_permutation.clear();
+        for(i = 0; i<num_elements; i++)
+            one_permutation.push_back(given_list[i]);
+        list_of_permutations.push_back(one_permutation);
+        return list_of_permutations;
+    } // if
+
+
+    for(i=0;i<size;i++){
+        list_of_permutations = permutations_reiteration(given_list, size-1, num_elements, list_of_permutations);
+
+        if(size%2==0) // if even
+            swap(given_list[0], given_list[size-1]);
+
+        else // if odd
+            swap(given_list[i], given_list[size-1]);
+} // for loop
+    return list_of_permutations;
+
+}
+/*
+if k = 1 then
+        output(A)
+    else
+
+        // Recursively call once for each k
+        for i := 0; i < k; i += 1 do
+            generate(k - 1, A)
+            // avoid swap when i==k-1
+            if (i < k - 1)
+                // swap choice dependent on parity of k
+                if k is even then
+                    swap(A[i], A[k-1])
+                else
+                    swap(A[0], A[k-1])
+                end if
+            end if
+        end for
+    end if
+*/
+vector< vector<int> > compute_all_permutations(vector<int> given_list){
+    /*
+    This function acts as a wrapper for the permutations_reiteration function,
+    simplifying the required user input to only a list.
+    */
+    int num_elements;
+    vector< vector<int> > list_of_permutations;
+    list_of_permutations.empty();
+    num_elements= given_list.size();
+
+    return permutations_reiteration(given_list, num_elements, num_elements, list_of_permutations);
+}
 
 }// namespace libspecialfunctions
 }// namespace liblibra
-
-
-
