@@ -664,7 +664,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
     // Just use the plain times given from the input, usually the
     // mSDM formalism
     if(prms.decoherence_times_type==0){
-      for(traj=0; traj<ntraj; traj++){   decoherence_rates[traj] = *prms.decoh_rates;   }
+      for(traj=0; traj<ntraj; traj++){   decoherence_rates[traj] = *prms.decoherence_rates;   }
     }
 
     // Compute the dephasing rates according the original energy-based formalism
@@ -688,7 +688,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   //============ Apply decoherence corrections ==================
   // SDM and alike methods
   if(prms.decoherence_algo==0){
-    Coeff = sdm(Coeff, prms.dt, act_states, decoherence_rates);
+    Coeff = sdm(Coeff, prms.dt, act_states, decoherence_rates, prms.sdm_norm_tolerance);
   }
  
  

@@ -530,7 +530,6 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 - 1: print details
 
 
-
             * **dyn_params["entanglement_opt"]** ( int ): A selector of a method to couple the trajectories in this ensemble:
 
                 - 0: no coupling across trajectories [ default ]
@@ -552,8 +551,11 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 - 0: MSDM
                 - 1: ID-A
 
+            * **dyn_params["sdm_norm_tolerance"]** ( double ): Corresponds to the "tol" parameter in the sdm function. It controls 
+                how much the norm of the old state can be larger than 1.0  before the code stops with the error message [ default : 0.0 ]
 
-            * **dyn_params["decoh_rates"]** ( MATRIX(ntates, nstates) ): the matrix of dephasing rates [ units: a.u. of time ^-1 ]
+
+            * **dyn_params["decoherence_rates"]** ( MATRIX(ntates, nstates) ): the matrix of dephasing rates [ units: a.u. of time ^-1 ]
 
 
             * **dyn_params["dt"]** ( double ): the nuclear and electronic integration
@@ -665,7 +667,9 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                        "do_phase_correction":1, "tol":1e-3,
                        "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0, 
                        "entanglement_opt":0, "ETHD3_alpha":0.0, "ETHD3_beta":0.0, 
-                       "decoherence_algo":-1, "decoherence_rates":DR,
+                       "decoherence_algo":-1, 
+                       "sdm_norm_tolerance":0.0,
+                       "decoherence_rates":DR,
                        "decoherence_times_type":0, "decoherence_C_param":1.0, 
                        "decoherence_eps_param":0.1, "dephasing_informed":0,
                        "ave_gaps":AG, "instantaneous_decoherence_variant":1, "collapse_option":0,
