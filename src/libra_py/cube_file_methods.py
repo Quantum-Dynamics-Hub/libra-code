@@ -30,6 +30,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 
+import util.libutil as comn
 
 
 def read_cube(filename: str):
@@ -76,10 +77,13 @@ def grid_volume(filename: str):
     This function reads the wavefunction from a cube file and calculate 
     the grid volum using the X-, Y- and Z-axis of the volumetric region
     which are placed in the 4th, 5th and 6th line of the cube file structure
-        Args:
+    
+    Args:
         
         filename (string): The name of the .cube file to read.
-        Returns:
+        
+    Returns:
+    
         dv (float): The grid volume in Bohr^3.
         
     """
@@ -112,16 +116,23 @@ def read_volumetric_data(filename: str):
     This function will return the grid points in each axis, the coordinates of the
     structure and the spacing vector which is used to plot the isosurfaces of the 
     molecular orbitals.
+    
     Args:
+        
         filename (string): The name of the .cube file.
+        
     Returns:
+        
         coordinates (2D numpy array): The coordinates of the molecule structure in
                                       the same format shown in the .cube file.
+                                      
         x_grid, y_grid, z_grid (3D numpy array): Containing the grid points for each of the X-,
                                      Y-, and Z- axis.
+                                     
         wave_fun (3D numpy array): The volumetric data in a 3D numpy array format.
         
         spacing_vector (numpy 1D array): The spacing vector used for plotting the isosurfaces.
+        
     """
 
     f = open(filename,'r')
@@ -248,23 +259,37 @@ def plot_cubes( params ):
     
         params (dict):
     
-        ks_orbital_indicies (list): This list contains the Kohn-Sham orbital indices. Using this list we can
-                                    generate the minimum state and obtain the index of the states to be plotted.
-        states_to_be_plotted (list): The list containing the Kohn-Sham orbitals to be plotted by VMD. This list is defined in the submit file.
-        path_to_tcl_file (str): The path to the tcl file which contains the input for plotting the cubes in VMD.
-        MO_images_directory (str): The molecular orbitals images directory.
+            min_band (int): The minimum state number.
+                                        
+            states_to_be_plotted (list): The list containing the Kohn-Sham orbitals to be plotted by VMD. This list is defined in the submit file.
+            
+            path_to_tcl_file (str): The path to the tcl file which contains the input for plotting the cubes in VMD.
+            
+            MO_images_directory (str): The molecular orbitals images directory.
     
-        isUKS (int): This parameter is set for spin restricted and unrestricted calculations. When it is
-                     set to 1 it means that unrestricted calculations were set in the input file otherwise 
-                     it is restricted.
-        curr_step (int): The current time step used to save the images of the MOs.
-        phase_factor_visual (numpy array): The phase correction factor list for each MOs for the current step.
+            isUKS (int): This parameter is set for spin restricted and unrestricted calculations. When it is
+                         set to 1 it means that unrestricted calculations were set in the input file otherwise 
+                         it is restricted.
+                         
+            curr_step (int): The current time step used to save the images of the MOs.
+            
+            phase_factor_visual (numpy array): The phase correction factor list for each MOs for the current step.
+        
+    Returns:
     
+        None
+        
     """
+    
+   # Critical parameters
+    critical_params = [ "min_band", "states_to_be_plotted", "path_to_tcl_file", "MO_images_directory", "curr_step", "phase_factor_visual" ]
+    # Default parameters
+    default_params = { "isUKS": 0}
+    # Check input
+    comn.check_input(params, default_params, critical_params)
 
     # Unpack the Kohn-Sham orbital indicies and the Kohn-Sham orbitals to be plotted. Also unpack the 
     # path to the directory where the molecular orbitals will be plotted
-    ks_orbital_indicies  = params["ks_orbital_indicies"]
     states_to_be_plotted = params["states_to_be_plotted"]
     # For VMD
     path_to_tcl_file = params["path_to_tcl_file"]
@@ -282,7 +307,7 @@ def plot_cubes( params ):
     # Extracting the phase factor from params
     phase_factor_visual = params["phase_factor_visual"]
 
-    min_band = ks_orbital_indicies[0]
+    min_band = params["min_band"]
     # We plot the cubes for the previous time step
     cubefile_names_prev = CP2K_methods.cube_file_names_cp2k( params )
     # read the lines of the tcl file
@@ -371,6 +396,5 @@ def plot_cubes( params ):
 
             os.system('vmd < vmd_cube_plot_%d.tcl' % curr_step)
             #os.system('rm vmd_cube_plot_%d.tcl' % curr_step)
-            
-            
-            
+
+ 
