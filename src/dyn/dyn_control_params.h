@@ -47,7 +47,7 @@ class dyn_control_params{
   int rep_tdse;
 
 
-  /** 
+  /**
    The representation of the Hamiltonian update: 0 - diabatic, 1 - adiabatic
    this is the representation in which the computed properties are assumed to be
    for instance, we may have set it to 1, to read the adiabatic energies and couplings,
@@ -63,14 +63,14 @@ class dyn_control_params{
   int rep_sh;
 
 
-  /** 
-    The representation to compute LZ probabilitieis: 0 - diabatic, 1- adiabatic 
+  /**
+    The representation to compute LZ probabilitieis: 0 - diabatic, 1- adiabatic
   */
   int rep_lz;
 
 
-  /** 
-    Surface hopping mthodology: 
+  /**
+    Surface hopping mthodology:
     -1 - adiabatic (no need to compute)
      0 - FSSH
      1 - GFSH
@@ -80,15 +80,15 @@ class dyn_control_params{
   int tsh_method;
 
 
-  /** 
-    How to compute forces in the dynamics: 
+  /**
+    How to compute forces in the dynamics:
       0 - don't compute forces at all - e.g. we do not really need them
       1 - state-specific  as in the TSH or adiabatic (including adiabatic excited states)
       2 - Ehrenfest
   */
   int force_method;
 
-  /** 
+  /**
     How to update NACs and vibronic Hamiltonian before electronic TD-SE propagation
       0 - don't update them (e.g. for simplest NAC)
       1 - update according to changed momentum and existing derivative couplings
@@ -96,8 +96,8 @@ class dyn_control_params{
   int nac_update_method;
 
 
-  /** 
-    In which representation to compute forces: 
+  /**
+    In which representation to compute forces:
       0 - diabatic
       1 - adiabatic
   */
@@ -140,17 +140,17 @@ class dyn_control_params{
 
 
   /**
-    Whether to scale the SH probabilities by the Boltzmann factor: 0 - do not scale, 1 - scale                            
+    Whether to scale the SH probabilities by the Boltzmann factor: 0 - do not scale, 1 - scale
   */
   int use_boltz_factor;
 
-  
+
   /**
     Temperature of the system
-  */ 
+  */
   double Temperature;
 
-/** 
+/**
    THESE VARIABLES ARE DEPRECATED
 
 //    Do not revert momenta at the frustrated hops, 1 - do revert the momenta
@@ -162,28 +162,28 @@ class dyn_control_params{
 # How to rescale momenta if the hops are successful:
 # -1: do not rescale, as in the NBRA [ default ]
 #  0: rescale in the diabatic basis - don't care about the
-#     velocity directions, just a uniform rescaling 
+#     velocity directions, just a uniform rescaling
 #  1: rescale along the directions of derivative couplings
 
       0 - rescale along the directions of derivative couplings
       1 - rescale in the diabatic basis - don't care about the velocity directions, just a uniform rescaling,
-      2 - do not rescale, as in the NBRA.  
+      2 - do not rescale, as in the NBRA.
 
   int vel_rescale_opt;
 */
 
-  /** 
+  /**
     integration timestep [units: a.u., default: 41 a.u. = 1 fs]
   */
   double dt;
 
-  /** 
+  /**
     Option to perform the phase correction: 0 - no, 1 - yes (default)
   */
   int do_phase_correction;
 
 
-  /** 
+  /**
     The minimal magnutude of the matrix element for which we'll be computing the phase correction
     If the overlap is zero, then we don't really care about the phase, but if it is not, then this
     parameter sets out threshold for when we do.  Default: 1e-3
@@ -191,7 +191,7 @@ class dyn_control_params{
   double phase_correction_tol;
 
 
-  /** 
+  /**
     State tracking algorithm:
       0 - no state tracking
       1 - method of Kosuke Sato (may fail by getting trapped into an infinite loop)
@@ -200,7 +200,7 @@ class dyn_control_params{
   */
   int state_tracking_algo;
 
-  /** 
+  /**
     Munkres-Kuhn alpha (selects the range of orbitals included in reordering) [default: 0.0]
   */
   double MK_alpha;
@@ -245,40 +245,40 @@ class dyn_control_params{
   /**
     Dephasing rates provided by user
   */
-  MATRIX* decoh_rates;
+  MATRIX* decoherence_rates;
 
 
   /**
     Type of dephasing times/rates calculation:
 
       0 - use the rates read out from the input  [default]
-      1 - use the energy-based decoherence method (EDC)    
-  */  
+      1 - use the energy-based decoherence method (EDC)
+  */
   int decoherence_times_type;
 
 
   /**
     An empirical parameter used in the EDC method: [default = 1.0 Ha]
-  */ 
+  */
   double decoherence_C_param;
 
 
   /**
     An empirical parameter used in the EDC method: [default = 0.1 Ha]
-  */ 
+  */
   double decoherence_eps_param;
 
 
   /**
-    A flag to apply the dephasing-informed approach of Sifain et al 
-    to correct dephasing times: 
+    A flag to apply the dephasing-informed approach of Sifain et al
+    to correct dephasing times:
 
       0 - don't apply [default]
-      1 - use it 
+      1 - use it
   */
-  int dephasing_informed; 
+  int dephasing_informed;
 
-  
+
   /**
     A matrix that contains the averaged moduli of the energy gaps:
     E_ij = <|E_i - E_j|>
@@ -301,7 +301,7 @@ class dyn_control_params{
   /**
     How to collapse wavefunction amplitudes in the decoherence schemes:
       0 - by rescaling the magnitude of the amplitude vector elements, but preserving "phase" [ default ]
-      1 - by resetting the amplitudes to 1.0+0.0j. This option changes phase 
+      1 - by resetting the amplitudes to 1.0+0.0j. This option changes phase
 
   */
   int collapse_option;
@@ -311,18 +311,18 @@ class dyn_control_params{
   */
   int ensemble;
 
-  
+
   /**
-    Thermostat parameters 
+    Thermostat parameters
   */
   bp::dict thermostat_params;
 
 
 
   dyn_control_params();
-  dyn_control_params(const dyn_control_params& x){ 
+  dyn_control_params(const dyn_control_params& x){
     *this = x;
-    decoh_rates = new MATRIX( *x.decoh_rates );  
+    decoherence_rates = new MATRIX( *x.decoherence_rates );
   }
  ~dyn_control_params() { ;; }
 

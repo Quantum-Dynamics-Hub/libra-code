@@ -105,11 +105,11 @@ void export_dyn_decoherence_objects(){
   ///=================== dyn_decoherence_methods.cpp =======================
 
   CMATRIX (*expt_sdm_v1)
-  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates) = &sdm;
+  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates) = &sdm;
   def("sdm", expt_sdm_v1);
 
   CMATRIX (*expt_sdm_v2)
-  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates) = &sdm;
+  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoherence_rates) = &sdm;
   def("sdm", expt_sdm_v2);
 
   void (*expt_project_out_v1)(CMATRIX& Coeff, int traj, int i) = &project_out;
@@ -137,11 +137,11 @@ void export_dyn_decoherence_objects(){
 
 
   void (*expt_dephasing_informed_correction_v1)
-  (MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& ave_gaps) = &dephasing_informed_correction;
+  (MATRIX& decoherence_rates, CMATRIX& Hvib, MATRIX& ave_gaps) = &dephasing_informed_correction;
   def("dephasing_informed_correction", expt_dephasing_informed_correction_v1);
 
   void (*expt_dephasing_informed_correction_v2)
-  (vector<MATRIX>& decoh_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps) = &dephasing_informed_correction;
+  (vector<MATRIX>& decoherence_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps) = &dephasing_informed_correction;
   def("dephasing_informed_correction", expt_dephasing_informed_correction_v2);
 
 
