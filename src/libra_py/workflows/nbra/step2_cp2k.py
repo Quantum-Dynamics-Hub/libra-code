@@ -9,7 +9,7 @@
 #*
 #*********************************************************************************/
 """
-.. module:: auxiliary_functions
+.. module:: step2_cp2k
    :platform: Unix, Windows
    :synopsis: This module implements functions for computing the overlap and nonadiabatic couplings matrices.
 .. moduleauthors:: 
