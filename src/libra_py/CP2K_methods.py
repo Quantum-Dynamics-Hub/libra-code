@@ -29,6 +29,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 
+import util.libutil as comn   
 
 
 def ndigits( integer_number: int ):
@@ -102,59 +103,67 @@ def state_num_cp2k(state_num: int):
 
 
 
-def cube_file_names_cp2k( static_or_dynamics, project_name, min_band, max_band, time_step, spin ):
+def cube_file_names_cp2k( params ):
     """
     This function will produce the cube file names produced by CP2K both for energy calculations
     and molecular dynamics. 
 
     Args:
 
-        static_or_dynamics ( integer ): This variable has two options:
-                                      0: static calculations
-                                      1: molecular dynamics calculations
-
-        project_name ( string ): The project name used in CP2K input file.
-
-        min_band ( integer ): The minimum state number to be considered.
-
-        max_band ( integer ): The maximum state number to be considered.
-
-        time_step ( integer ): The time step in CP2K calculations.
-
-        spin ( integer ): This variable can get only two options:
-                          1 for alpha spin
-                          2 for beta spin
+        params( dictionary ): contains dynamical paramters
+	
+            project_name ( string ): The project name used in CP2K input file.
+	    
+            min_band ( integer ): The minimum state number to be considered.
+	    
+            max_band ( integer ): The maximum state number to be considered.
+	    
+            curr_step ( integer ): The time current step in CP2K calculations.
+	    
+            isUKS ( int ): 1 if spin-polarized calculations used
 
     Returns:
 
         names ( list ): The list of cube file names.
 	
     """
+    # Critical parameters
+    critical_params = [ "project_name", "min_band", "max_band", "curr_step" ]
+    # Default parameters
+    default_params = { "isUKS":0 }
+    # Check input
+    comn.check_input(params, default_params, critical_params) 
+  
+    project_name = params["project_name"]
+    min_band  = params["min_band"]
+    max_band  = params["max_band"]
+    curr_step = params["curr_step"]
+    isUKS = params["isUKS"]
+
+    # isUKS needs to be epressed as a string, even though it is used as a Boolean in other parts of the workflows
+    spin = []
+    if isUKS == 1:
+        spin = [1,2]
+    else:
+        spin = [1]
+
     # Define the names of the cube files for time t.
-    cube_file_names = []
+    cube_file_names = []   
 
-    # Dynamics calculations
-    if static_or_dynamics == 1:
+    for i in range( min_band, max_band+1 ):
 
-        for i in range( min_band, max_band + 1 ):
-
-            # Using the state_num_cp2k function to obtain the names of the .cube files for state 'i'.
-            state_num = state_num_cp2k( i )
-
-            # For time step '( t )'
-            cube_file_name_of_band_i = str( '%s-WFN_%s_%d-1_%d.cube' % ( project_name, state_num, spin, time_step ) )
+        # Using the function state_num_cp2k to obtain the names of the .cube files for state 'i'.
+        state_num = state_num_cp2k( i )
+ 
+        # For the current time step "curr_step"
+        if isUKS == 1:
+            cube_file_name_of_band_i = str('cubefiles/%s-%d-WFN_%s_%d-1_0.cube' % ( project_name, curr_step, state_num, spin[0] ) )
+            cube_file_name_of_band_j = str('cubefiles/%s-%d-WFN_%s_%d-1_0.cube' % ( project_name, curr_step, state_num, spin[1] ) )
             cube_file_names.append( cube_file_name_of_band_i )
-
-    # Static calculations
-    elif static_or_dynamics == 0:
-
-        for i in range( min_band, max_band+1 ):
-
-            # Using the int_to_five_digit_str to obtain the names of the .cube files for state 'i'.
-            state_num = state_num_cp2k( i )
-
-            # For time step '( t )'
-            cube_file_name_of_band_i = str('%s-%d-WFN_%s_%d-1_0.cube' % ( project_name, time_step, state_num, spin ) )
+            cube_file_names.append( cube_file_name_of_band_j )
+ 
+        else:
+            cube_file_name_of_band_i = str('cubefiles/%s-%d-WFN_%s_%d-1_0.cube' % ( project_name, curr_step, state_num, spin[0] ) )
             cube_file_names.append( cube_file_name_of_band_i )
 			
     return cube_file_names
@@ -168,21 +177,36 @@ def read_cp2k_tddfpt_log_file( params ):
     and the Slater determinent coefficients that comprise the multi-configurational electronic states
     
     Args:
-      params ( dictionary ): parameters dictionary 
-          logfile_name ( string ): name of the log file for this particular timestep
-          num_ci_states ( int ): how many ci states to consider
-          tolerance ( float ): the tolerance for accepting SDs are members of the CI wavefunctions
-          isUSK ( Boolean ): flag for whether or not a spin-polarized Kohn-Sham basis is being used. TRUE means
-                           that a spin-polarized Kohn-Sham basis is being used.
+        params ( dictionary ): parameters dictionary 
+	
+            logfile_name ( string ): name of the log file for this particular timestep
+	    
+            number_of_states ( int ): how many ci states to consider
+	    
+            tolerance ( float ): the tolerance for accepting SDs are members of the CI wavefunctions
+	    
+            isUKS ( Boolean ): flag for whether or not a spin-polarized Kohn-Sham basis is being used. TRUE means
+                                 that a spin-polarized Kohn-Sham basis is being used.
     Returns:
-       excitation_energies ( list ): The excitation energies in the log file.
-       ci_basis ( list ): The CI-basis configuration.
-       ci_coefficients ( list ): The coefficients of the CI-states.
-       spin_components (list): The spin component of the excited states.
+        excitation_energies ( list ): The excitation energies in the log file.
+	
+        ci_basis ( list ): The CI-basis configuration.
+	
+        ci_coefficients ( list ): The coefficients of the CI-states.
+	
+        spin_components (list): The spin component of the excited states.
+	
     """
 
+    # Critical parameters
+    critical_params = [ "logfile_name", "number_of_states" ]
+    # Default parameters
+    default_params = { "tolerance":0.05, "isUKS": 0}
+    # Check input
+    comn.check_input(params, default_params, critical_params)
+    
     logfile_name = params["logfile_name"]
-    number_ci_states = int(params["number_ci_states"])
+    number_of_states = int(params["number_of_states"])
     tolerance = float(params["tolerance"])
     isUKS = int(params["isUKS"])
 
@@ -247,41 +271,44 @@ def read_cp2k_tddfpt_log_file( params ):
     ci_basis = []
     ci_coefficients = []
     spin_components = []
-    for i in range( number_ci_states ):
+    for i in range( number_of_states ):
 
-        # CI states and their coefficients for each excited state
-        tmp_ci_state              = []
-        tmp_ci_state_coefficients = []
+        # states and their coefficients for each excited state
+        tmp_state              = []
+        tmp_state_coefficients = []
         tmp_spin = []
         for j in range( state_num_lines[i]+1, state_num_lines[i+1] ):
+            
+            # Splitting lines[j] into tmp_splitted_line
+            tmp_splitted_line = lines[j].split()
 
             # If we are using the spin-polarized Kohn-Sham basis, then the size of the split line is different
             # from the size of the split line when using the spin-unpolarized Kohn-Sham basis
             if isUKS == 1:
 
-                ci_coefficient = float( lines[j].split()[4] )
+                ci_coefficient = float( tmp_splitted_line[4] )
                 if ci_coefficient**2 > tolerance:
-                    tmp_spin.append( lines[j].split()[1].replace('(','').replace(')','') )
-                    tmp_ci_state.append( [ int( lines[j].split()[0] ), int( lines[j].split()[2] ) ]  )
-                    tmp_ci_state_coefficients.append( ci_coefficient  )
+                    # We need to remove the paranthesis from the 2nd element of the temporary splitted line
+                    tmp_spin.append( tmp_splitted_line[1].replace('(','').replace(')','') )
+                    tmp_state.append( [ int( tmp_splitted_line[0] ), int( tmp_splitted_line[2] ) ]  )
+                    tmp_state_coefficients.append( ci_coefficient  )
 
             # Here, we have the spin-unpolarize Kohn-Sham basis
             # For this case, spin-components will just return all alpha
             else:
-                ci_coefficient = float( lines[j].split()[2] )
+                ci_coefficient = float( tmp_splitted_line[2] )
                 if ci_coefficient**2 > tolerance:
                     tmp_spin.append( "alp" )
-                    tmp_ci_state.append( [ int( lines[j].split()[0] ), int( lines[j].split()[1] ) ]  )
-                    tmp_ci_state_coefficients.append( ci_coefficient  )
+                    tmp_state.append( [ int( tmp_splitted_line[0] ), int( tmp_splitted_line[1] ) ]  )
+                    tmp_state_coefficients.append( ci_coefficient  )
 
         # Append the CI-basis and and their coefficients for
         # this state into the ci_basis and ci_coefficients lists
-        ci_basis.append( tmp_ci_state )
-        ci_coefficients.append( tmp_ci_state_coefficients )
+        ci_basis.append( tmp_state )
+        ci_coefficients.append( tmp_state_coefficients )
         spin_components.append( tmp_spin )
 
-    return excitation_energies[0:number_ci_states], ci_basis, ci_coefficients, spin_components
-
+    return excitation_energies[0:number_of_states], ci_basis, ci_coefficients, spin_components
 
 
 
@@ -304,9 +331,15 @@ def cp2k_distribute( istep, fstep, nsteps_this_job, cp2k_positions, cp2k_input, 
                      is set in the input file for submitting the jobs.
      
         nsteps_this_job (int): The number of step for the job to be distributed.
+	
         cp2k_positions (str): The full path to the molecular dynamics trajectory xyz file.
+	
         curr_job_number (int): The current job number.
-        
+    
+    Returns:
+    
+        None
+	
     """
 
     # Now we need to distribute the jobs into job batches
@@ -379,6 +412,11 @@ def read_trajectory_xyz_file(file_name: str, step: int):
         file_name (string): The trajectory .xyz file name.
             step (integer): The desired time to extract its .xyz 
                             coordinates which starts from zero.
+    
+    Returns:
+    
+        None
+	
     """
 
     f = open(file_name,'r')
@@ -403,7 +441,7 @@ def read_trajectory_xyz_file(file_name: str, step: int):
 
 
 
-def CP2K_input_static(cp2k_sample_energy_input: str, project_name: str,\
+def CP2K_input_static(cp2k_sample_energy_input: str, project_name: str,
                            trajectory_file: str, time_step: int):
     """
     This function provides the inputs required for single point calculations used for 
@@ -412,11 +450,19 @@ def CP2K_input_static(cp2k_sample_energy_input: str, project_name: str,\
     produced cube files. 
     Args:
         cp2k_sample_energy_input (string): The CP2K sample input file for energy calculations.
+	
         project_name (string): The poject name of the CP2K sample input (in &GLOBAL-> PROJECT)
                                This is required for identifying the cube files.
+			       
         trajectory_file (string): The .xyz trajectory file obtained from previous 
                                   molecular dynamics calculations
+				  
         time_step (integer): The time step of the single point calculation. It starts from 0.
+    
+    Returns:
+    
+        None
+	
     """
     
     # Reading the .xyz trajectory file and extract the coordinates at time 'time_step'.
@@ -463,28 +509,55 @@ def CP2K_input_static(cp2k_sample_energy_input: str, project_name: str,\
 
 
 
-def read_energies_from_cp2k_log_file( cp2k_log_file_name: str, time: int, min_band: int, max_band: int, spin: int ):
+def read_energies_from_cp2k_log_file( params ):
     """
     This function reads the energies from CP2K log file for a specific spin.
     
     Args:
     
-        cp2k_log_file_name (str): The output file produced by CP2K
+        params (dictionary):
+    
+            logfile_name (str): The output file produced by CP2K
         
-        time (int): The time step of the molecular dynamics. For single point calculations
-                    it should be set to 0.
+            time (int): The time step of the molecular dynamics. For single point calculations
+                        it should be set to 0.
                     
-        min_band (int): The minimum state to be considered.
-        
-        max_band (int): The maximum state to be considered.
-        
-        spin (int): This number can only accept two values: 1 for alpha and 2 for beta spin.
+            min_band (int): The minimum state number.
+
+            max_band (int): The maximum state number.
+ 
+            spin (int): This number can only accept two values: 1 for alpha and 2 for beta spin.
         
     Returns:
     
         E (1D numpy array): The vector consisting of the KS energies from min_band to max_band.
         
+        total_energy (float): The total energy obtained from the log file.
+        
     """
+    
+    # Critical parameters
+    critical_params = [ "logfile_name", "min_band", "max_band" ]
+    # Default parameters
+    default_params = { "time":0, "spin": 1}
+    # Check input
+    comn.check_input(params, default_params, critical_params)
+    
+    cp2k_log_file_name = params["logfile_name"]
+    # Time step, for molecular dynamics it will read the energies
+    # of time step 'time', but for static calculations the time is set to 0
+    time = params["time"]
+    
+    # Koh-Sham orbital indicies
+    # ks_orbital_indicies = params["ks_orbital_indicies"]
+    
+    # The minimum state number
+    min_band = params["min_band"] # ks_orbital_indicies[0]
+    # The maximum state number
+    max_band = params["max_band"] # ks_orbital_indicies[-1]
+    
+    spin = params["spin"]
+    
     # First openning the file and reading its lines
     f = open( cp2k_log_file_name, 'r' )
     lines = f.readlines()
@@ -546,7 +619,4 @@ def read_energies_from_cp2k_log_file( cp2k_log_file_name: str, time: int, min_ba
     # Returning the energeis from min_band to max_band
     return ks_energies[min_band-1:max_band], total_energy
 
-
-
-   
-   
+ 
