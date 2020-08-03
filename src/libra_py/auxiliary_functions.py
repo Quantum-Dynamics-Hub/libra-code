@@ -29,6 +29,9 @@ import copy
 
 import multiprocessing as mp
 
+# Concurrency for large systems
+import concurrent.futures
+
 from liblibra_core import *
 
 from libra_py import data_conv
@@ -38,11 +41,7 @@ from libra_py.workflows.nbra import mapping
 from libra_py.workflows.nbra import step3
 from libra_py import units
 
-# Concurrency for large systems
-import concurrent.futures
-
-
-
+import util.libutil as comn
 
 
 # This file is temp only. These functions will eventually be placed in Libra somewhere ...
@@ -147,11 +146,11 @@ def get_es_output(params):
     
         params (dict):
 
-        logfile_directory (str): The log files directory.
+            logfile_directory (str): The log files directory.
 
-        es_software (str): The name of the software used to calculate the energy calculations.
+            es_software (str): The name of the software used to calculate the energy calculations.
         
-        curr_step (int): The current time step of the calculations.
+            curr_step (int): The current time step of the calculations.
     
     Returns:
     
@@ -164,6 +163,12 @@ def get_es_output(params):
         spin_components (numpy array): Contains the excited states spin components ('alp' for alpha spin and 'bet' for beta spin)
 
     """
+    
+    critical_params = [ "logfile_directory", "es_software", "curr_step" ]
+    # Default parameters
+    default_params = { "isUKS": 0}
+    # Check input
+    comn.check_input(params, default_params, critical_params)
     
     logfile_directory = params["logfile_directory"]
     es_software = params["es_software"]
@@ -178,7 +183,6 @@ def get_es_output(params):
         CP2K_methods.read_cp2k_tddfpt_log_file( params )
   
     return excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components
-
 
 
 
@@ -225,18 +229,33 @@ def compute_cube_ks_overlaps( cubefiles_prev, params):
     
         cubefiles_prev (list): The list containing th cube files of the previous step.
 
-    params (dict):
+        params (dict):
 
-        curr_step (int): The current time step.
+            curr_step (int): The current time step.
 
-        isUKS (int): This parameter is set for spin restricted and unrestricted calculations. When it is
-                     set to 1 it means that unrestricted calculations were set in the input file otherwise 
-                     it is restricted.
+            isUKS (int): This parameter is set for spin restricted and unrestricted calculations. When it is
+                         set to 1 it means that unrestricted calculations were set in the input file otherwise 
+                         it is restricted.
             
-        nprocs (int): The number of processors used to read the cube files and perform the integration.
+            nprocs (int): The number of processors used to read the cube files and perform the integration.
+            
+    Returns:
+    
+        cubefiles_curr (list): The list of the read current step cube files.
+        
+        S_ks_prev (2D numpy array): The overlap matrix of the wavefunctions for the previous time step.
+        
+        S_ks_curr (2D numpy array): The overlap matrix of the wavefunctions for the current time step.
+        
+        St_ks (2D numpy array): The overlap matrix between wavefunctions of the two time step.
         
     """
-
+    
+    critical_params = [ "curr_step", "nprocs" ]
+    # Default parameters
+    default_params = { "isUKS": 0}
+    # Check input
+    comn.check_input(params, default_params, critical_params)
     # Extract the variables
     curr_step = int(params["curr_step"])
     isUKS  = int(params["isUKS"])
@@ -378,7 +397,9 @@ def reindex_cpk2_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
         if ks_orbital_indicies[i] == ks_orbital_homo_index:
             alp_homo_matrix_index = i+1
 
-    ks_orbs_new_index = [ i+1 for i in range(n_alp_ks_orbs) ]
+    ks_orbs_new_index = []
+    for i in range(n_alp_ks_orbs):
+        ks_orbs_new_index.append(i+1)
 
     # Form excited state SDs
     excitations = []
@@ -412,7 +433,14 @@ def reindex_cpk2_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
 
     # Now that we have done the ground state slater 
     for j in range( len( excitations ) ):
-        sd_excitation = [ excitations[j][1] if x == excitations[j][0] else x for x in sd_basis[0] ]
+        sd_excitation = []
+        # sd_excitation = [ excitations[j][1] if x == excitations[j][0] else x for x in sd_basis[0] ]
+        for sd_state in sd_basis[0]:
+            if sd_state==excitations[j][0]:
+                sd_excitation.append(excitations[j][1])
+            else:
+                sd_excitation.append(sd_state)
+
         sd_basis.append( sd_excitation )
     print ( sd_basis )
     
@@ -498,7 +526,7 @@ def apply_state_reordering_ci(St, E, params):
 
 
 
-def form_Hvib_real( cp2k_log_file_name: str, time: int, min_band: int, max_band: int, isUKS: int):
+def form_Hvib_real( params ):
     """
     This function forms the real part of the vibronic Hamiltonian by inserting the 
     energies on the diagonal of a zero matrix. The Hvib is in two-spinor format 
@@ -506,17 +534,19 @@ def form_Hvib_real( cp2k_log_file_name: str, time: int, min_band: int, max_band:
     
     Args:
         
-        cp2k_log_file_name (str): The output file produced by CP2K
-        
-        time (int): The time step of the molecular dynamics. For single point calculations
-                    it should be set to 0.
+        params (distionary):
+
+            cp2k_log_file_name (str): The output file produced by CP2K
+
+            time (int): The time step of the molecular dynamics. For single point calculations
+                        it should be set to 0.
                     
-        min_band (int): The minimum state to be considered.
-        
-        max_band (int): The maximum state to be considered.
-        
-        isUKS (int): This flag is used whenever the UKS calculations were called in CP2K input. if it is set to
-                     1 then UKS calculations were called and if not it will consider only alpha energies.
+            min_band (int): The minimum state number.
+
+            max_band (int): The maximum state number.
+ 
+            isUKS (int): This flag is used whenever the UKS calculations were called in CP2K input. if it is set to
+                         1 then UKS calculations were called and if not it will consider only alpha energies.
         
     Returns:
     
@@ -524,24 +554,45 @@ def form_Hvib_real( cp2k_log_file_name: str, time: int, min_band: int, max_band:
                                      UKS is set to True and the energies of alpha spin in a block form matrix.
         
     """
+    critical_params = [ "logfile_directory", "min_band", "max_band", "curr_step" ]
+    # Default parameters
+    default_params = { "isUKS": 0}
+    # Check input
+    comn.check_input(params, default_params, critical_params)
+    # Extracting the data
+
+    isUKS = int( params["isUKS"] )
+    # ks_orbital_indicies = params["ks_orbital_indicies"]
+    # minimum state
+    min_band = params["min_band"] # ks_orbital_indicies[0]
+    # maximum state
+    max_band = params["max_band"] # ks_orbital_indicies[-1]
+    # log file directory
+    logfile_directory = params["logfile_directory"]
+    # current time step
+    curr_step = params["curr_step"]
+    # generate the log file name
+    logfile_name = logfile_directory+'/step_'+str(curr_step)+'.log'
+    # update the logfile_name parameter in params
+    params.update({"logfile_name":logfile_name})
 
     # If the UKS calculations were set to True in CP2K input
     if isUKS == 1:
         # Read energies with alpha spin
-        spin = 1
-        E_alpha, total_energy = CP2K_methods.read_energies_from_cp2k_log_file( cp2k_log_file_name, time, min_band, max_band, spin )
+        params["spin"] = 1
+        E_alpha, total_energy = CP2K_methods.read_energies_from_cp2k_log_file( params )
         # Read energies with beta spin
-        spin = 2
-        E_beta, total_energy = CP2K_methods.read_energies_from_cp2k_log_file( cp2k_log_file_name, time, min_band, max_band, spin )
+        params["spin"] = 2
+        E_beta, total_energy = CP2K_methods.read_energies_from_cp2k_log_file( params )
         # Now forming the diagonal matrix containing the Kohn-Sham energies of the alpha and beta spins
         Hvib_ks_re = np.diag( np.concatenate( ( E_alpha, E_beta ) ) )
     # If there is no UKS calculations set
     else:
-        spin = 1
-        E_alpha, total_energy = CP2K_methods.read_energies_from_cp2k_log_file( cp2k_log_file_name, time, min_band, max_band, spin )
+        params["spin"] = 1
+        # spin = 1
+        E_alpha, total_energy = CP2K_methods.read_energies_from_cp2k_log_file( params )
         Hvib_ks_re = np.diag( np.concatenate( ( E_alpha, E_alpha ) ) )
     
     return Hvib_ks_re, total_energy
 
-
-
+ 
