@@ -237,7 +237,7 @@ def read_cp2k_tddfpt_log_file( params ):
     # This is because they contain the energies from that line.
     for i in range( r_tddfpt_line+5, len( lines ) ):
         tmp_line = lines[i].split()
-        if len( lines[i].split() ) == 0:
+        if len( tmp_line ) == 0:
             break
         excitation_energies.append( float( tmp_line[2] ) )
 
