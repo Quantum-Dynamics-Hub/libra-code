@@ -216,16 +216,16 @@ def read_cp2k_tddfpt_log_file( params ):
     f.close()
 
     for i in range( 0, len(lines) ):
-
-        if 'excitation' in lines[i].lower().split():
-            if 'analysis' in lines[i].lower().split():
+        tmp_line = lines[i].lower().split()
+        if 'excitation' in tmp_line:
+            if 'analysis' in tmp_line:
 
                 # When found the line in which contains 'Excitation analysis' in 
                 # the log file, append it in the variable exc_anal_line
                 exc_anal_line = i
 
-        if 'states' in lines[i].lower().split():
-            if 'multiplicity' in lines[i].lower().split():
+        if 'states' in tmp_line:
+            if 'multiplicity' in tmp_line:
 
                 # Here we search for the line that contains 'R-TDDFPT states of multiplicity 1'
                 # or 'U-TDDFPT states of multiplicity 1' in the log file
@@ -236,9 +236,10 @@ def read_cp2k_tddfpt_log_file( params ):
     # Start from 5 lines after finding the line contaning 'R-TDDFPT states of multiplicity 1'
     # This is because they contain the energies from that line.
     for i in range( r_tddfpt_line+5, len( lines ) ):
+        tmp_line = lines[i].split()
         if len( lines[i].split() ) == 0:
             break
-        excitation_energies.append( float( lines[i].split()[2] ) )
+        excitation_energies.append( float( tmp_line[2] ) )
 
     # Start from 5 lines after finding the line contaning 'Excitation analysis'
     # From that point we have the state numbers with their configurations.
@@ -246,24 +247,24 @@ def read_cp2k_tddfpt_log_file( params ):
     # whenever we reach to a blank line.
     state_num_lines = []
     for i in range( exc_anal_line+5, len( lines ) ):
-
+        tmp_line = lines[i].split()
         if isUKS == 1:
 
-            if len( lines[i].split() ) == 0 or '----' in lines[i]:
+            if len( tmp_line ) == 0 or '----' in lines[i]:
                 state_num_lines.append( i )
                 break
-            if len(lines[i].split())==1 or len(lines[i].split())==3:
+            if len( tmp_line )==1 or len( tmp_line )==3:
                 state_num_lines.append(i)
 
         else:
 
-            if len( lines[i].split() ) == 0 or '----' in lines[i]:
+            if len( tmp_line ) == 0 or '----' in lines[i]:
                 state_num_lines.append( i )
                 break
             if len(lines[i].split())==1:
                 state_num_lines.append(i)
-            elif len(lines[i].split())>1:
-                if lines[i].split()[0].isdigit() and not(lines[i].split()[1].isdigit()):
+            elif len( tmp_line ) > 1:
+                if tmp_line[0].isdigit() and not( tmp_line[1].isdigit() ):
                     state_num_lines.append( i )
 
 
