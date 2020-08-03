@@ -58,7 +58,12 @@ dyn_control_params::dyn_control_params(){
   ETHD3_alpha = 1.0;
   ETHD3_beta = 1.0;
 
+<<<<<<< HEAD
   decoherence_algo = -1;
+=======
+  decoherence_algo = -1; 
+  sdm_norm_tolerance = 0.0;
+>>>>>>> c3601c27552479ab6c01776ebfbe8bbf69ad8fc8
   decoherence_rates = NULL;
   decoherence_times_type = 0;
   decoherence_C_param = 1.0;
@@ -132,10 +137,18 @@ void dyn_control_params::set_parameters(bp::dict params){
 
 
     else if(key=="decoherence_algo"){ decoherence_algo = bp::extract<int>(params.values()[i]); }
+<<<<<<< HEAD
     else if(key=="decoherence_rates"){
 
       MATRIX x( bp::extract<MATRIX>(params.values()[i]) );
       decoherence_rates = new MATRIX(x.n_rows, x.n_cols);
+=======
+    else if(key=="sdm_norm_tolerance"){ sdm_norm_tolerance = bp::extract<double>(params.values()[i]); }
+    else if(key=="decoherence_rates"){ 
+
+      MATRIX x( bp::extract<MATRIX>(params.values()[i]) );
+      decoherence_rates = new MATRIX(x.n_rows, x.n_cols);      
+>>>>>>> c3601c27552479ab6c01776ebfbe8bbf69ad8fc8
       for(int a=0;a<x.n_rows;a++){
         for(int b=0;b<x.n_cols;b++){
           decoherence_rates->set(a, b, x.get(a,b));

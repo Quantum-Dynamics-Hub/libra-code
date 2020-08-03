@@ -688,7 +688,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   //============ Apply decoherence corrections ==================
   // SDM and alike methods
   if(prms.decoherence_algo==0){
-    Coeff = sdm(Coeff, prms.dt, act_states, decoherence_rates);
+    Coeff = sdm(Coeff, prms.dt, act_states, decoherence_rates, prms.sdm_norm_tolerance);
   }
 
 

@@ -243,6 +243,16 @@ class dyn_control_params{
 
 
   /**
+     Corresponds to the "tol" parameter in the sdm function. It controls 
+     how much the norm of the old state can be larger than 1.0  before the 
+     code stops with the error message
+
+     Default: 0.0
+  **/
+  double sdm_norm_tolerance;
+
+
+  /**
     Dephasing rates provided by user
   */
   MATRIX* decoherence_rates;
@@ -322,7 +332,11 @@ class dyn_control_params{
   dyn_control_params();
   dyn_control_params(const dyn_control_params& x){
     *this = x;
+<<<<<<< HEAD
     decoherence_rates = new MATRIX( *x.decoherence_rates );
+=======
+    decoherence_rates = new MATRIX( *x.decoherence_rates );  
+>>>>>>> c3601c27552479ab6c01776ebfbe8bbf69ad8fc8
   }
  ~dyn_control_params() { ;; }
 

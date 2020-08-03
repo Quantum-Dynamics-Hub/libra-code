@@ -24,7 +24,11 @@ namespace liblibra{
 namespace libdyn{
 
 
+<<<<<<< HEAD
 CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates){
+=======
+CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol){
+>>>>>>> c3601c27552479ab6c01776ebfbe8bbf69ad8fc8
     /**
     \brief Generic framework of Simplified Decay of Mixing (SDM) method of
     Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114
@@ -32,7 +36,12 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates){
     \param[in]       Coeff [ CMATRIX(nadi, 1) ] An object containig electronic DOFs.
     \param[in]          dt [ float ] The integration timestep. Units = a.u. of time
     \param[in]      act_st [ integer ] The active state index
+<<<<<<< HEAD
     \param[in]      decoherence_rates [ MATRIX ] The matrix of decoherence (pure dephasing) rates between all pairs of states
+=======
+    \param[in]      decoh_rates [ MATRIX ] The matrix of decoherence (pure dephasing) rates between all pairs of states
+    \param[in]         tol [double] The maximal acceptable deviation of the p_aa_old from 1. If the p_aa_old < 1.0 + tol, then renormalize it to 1.0 
+>>>>>>> c3601c27552479ab6c01776ebfbe8bbf69ad8fc8
 
     The function returns:
     C [ CMATRIX ] - the updated state of the electronic DOF, in the same data type as the input
@@ -48,13 +57,18 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates){
     // Population of the active state
     double p_aa_old = (std::conj(C.get(act_st)) * C.get(act_st)).real();
 
-    if(p_aa_old>1.0){
+    if(p_aa_old>1.0 + tol){
       // Comment this place if you want to allow inprecise integration
       // (where the total norm may exceeed 1.0), as is the case for too large dt
       // for some algorithms
       cout<<"=== Place 1 =====\n";
+<<<<<<< HEAD
       cout<<"Error in CMATRIX msdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates):\n";
       cout<<"active state is larger than 1: p_aa_old = "<< p_aa_old << endl;
+=======
+      cout<<"Error in CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates):\n";
+      cout<<"The population of the active state is larger than 1: p_aa_old = "<< p_aa_old << endl;
+>>>>>>> c3601c27552479ab6c01776ebfbe8bbf69ad8fc8
       cout<<"C = \n"; C.show_matrix();
       cout<<"act_st = "<<act_st<<endl;
       cout<<"Coeff = \n"; Coeff.show_matrix();
@@ -140,8 +154,19 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates){
 
 }
 
+CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
 
+<<<<<<< HEAD
 CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoherence_rates){
+=======
+  double tol = 0.0;
+
+  return sdm(Coeff, dt, act_st, decoh_rates, tol);
+}
+
+
+CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol){
+>>>>>>> c3601c27552479ab6c01776ebfbe8bbf69ad8fc8
     /**
     \brief The generic framework of the Simplified Decay of Mixing (SDM) method of
     Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114)
@@ -151,7 +176,12 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& deco
     \param[in]       Coeff [ CMATRIX(nadi, ntraj) ] An object containig electronic DOFs.
     \param[in]          dt [ float ] The integration timestep. Units = a.u. of time
     \param[in]      act_st [ integer ] The active state index
+<<<<<<< HEAD
     \param[in]      decoherence_rates [ MATRIX ] The matrix of decoherence (pure dephasing) rates between all pairs of states
+=======
+    \param[in]      decoh_rates [ MATRIX ] The matrix of decoherence (pure dephasing) rates between all pairs of states
+    \param[in]         tol [double] The maximal acceptable deviation of the p_aa_old from 1. If the p_aa_old < 1.0 + tol, then renormalize it to 1.0 
+>>>>>>> c3601c27552479ab6c01776ebfbe8bbf69ad8fc8
 
     The function returns:
     # C [ CMATRIX ] - the updated state of the electronic DOF, in the same data type as the input
@@ -173,7 +203,11 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& deco
 
     stenc_y[0] = traj;
     pop_submatrix(Coeff, coeff, stenc_x, stenc_y);
+<<<<<<< HEAD
     coeff = sdm(coeff, dt, act_st[traj], decoherence_rates[traj]);
+=======
+    coeff = sdm(coeff, dt, act_st[traj], decoh_rates[traj], tol);
+>>>>>>> c3601c27552479ab6c01776ebfbe8bbf69ad8fc8
     push_submatrix(res, coeff, stenc_x, stenc_y);
 
   }// for traj
@@ -181,6 +215,11 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& deco
 
 }
 
+CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates){
+             
+  double tol = 0.0;
+  return sdm(Coeff, dt, act_st, decoh_rates, tol);
+}
 
 
 void project_out(CMATRIX& Coeff, int traj, int i){

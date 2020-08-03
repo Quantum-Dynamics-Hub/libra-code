@@ -2,7 +2,14 @@
 pushd .
 cd $HOME
 # Make sure some level of pip is installed
+#  the old approach
 python -m ensurepip
+
+# AVA on 7/27/2020 - Now they discourage use of the system pip with Python, so here is my workaround
+# based on this resource:
+# https://linuxize.com/post/how-to-install-pip-on-debian-10/
+#sudo apt update
+#sudo apt install python3-pip
 
 # Install Miniconda
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
@@ -11,13 +18,17 @@ if [ "$TRAVIS_OS_NAME" == "osx" ]; then
         command md5 -r "$@"
     }
     MINICONDA=Miniconda3-latest-MacOSX-x86_64.sh
+    #MINICONDA=Miniconda3-py37_4.8.3-MacOSX-x86_64.sh
 else
     MINICONDA=Miniconda3-latest-Linux-x86_64.sh
+    #MINICONDA=Miniconda3-py37_4.8.3-Linux-x86_64.sh
 fi
 MINICONDA_HOME=$HOME/miniconda
-MINICONDA_MD5=$(curl -s https://repo.continuum.io/miniconda/ | grep -A3 $MINICONDA | sed -n '4p' | sed -n 's/ *<td>\(.*\)<\/td> */\1/p')
-wget -q https://repo.continuum.io/miniconda/$MINICONDA
+MINICONDA_MD5=$(curl -s https://repo.anaconda.com/miniconda/ | grep -A3 $MINICONDA | sed -n '4p' | sed -n 's/ *<td>\(.*\)<\/td> */\1/p')
+wget -q https://repo.anaconda.com/miniconda/$MINICONDA
 if [[ $MINICONDA_MD5 != $(md5sum $MINICONDA | cut -d ' ' -f 1) ]]; then
+    echo $MINICONDA_MD5
+    echo $(md5sum $MINICONDA | cut -d ' ' -f 1) 
     echo "Miniconda MD5 mismatch"
     exit 1
 fi
