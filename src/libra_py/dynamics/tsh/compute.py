@@ -562,7 +562,6 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 - 1: print details
 
 
-
             * **dyn_params["entanglement_opt"]** ( int ): A selector of a method to couple the trajectories in this ensemble:
 
                 - 0: no coupling across trajectories [ default ]
@@ -585,6 +584,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 - 0: MSDM
                 - 1: ID-A
 
+<<<<<<< HEAD
 <<<<<<< HEAD
             * **dyn_params["sdm_norm_tolerance"]** ( double ): Corresponds to the "tol" parameter in the sdm function. It controls
                 how much the norm of the old state can be larger than 1.0  before the code stops with the error message [ default : 0.0 ]
@@ -623,6 +623,13 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 - 0: use energy-based dephasing times [ default ]
                 - 1: calculate decoherence rates from user-provided average energy gaps (from ave_gaps)
 
+=======
+            * **dyn_params["sdm_norm_tolerance"]** ( double ): Corresponds to the "tol" parameter in the sdm function. It controls 
+                how much the norm of the old state can be larger than 1.0  before the code stops with the error message [ default : 0.0 ]
+
+
+            * **dyn_params["decoherence_rates"]** ( MATRIX(ntates, nstates) ): the matrix of dephasing rates [ units: a.u. of time ^-1 ]
+>>>>>>> 68e7dfb2c0d562032278b84cf66b6914d4a792b2
 
 
             * **dyn_params["dt"]** ( double ): the nuclear and electronic integration
@@ -745,7 +752,9 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 =======
                        "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0, 
                        "entanglement_opt":0, "ETHD3_alpha":0.0, "ETHD3_beta":0.0, 
-                       "decoherence_algo":-1, "decoherence_rates":DR,
+                       "decoherence_algo":-1, 
+                       "sdm_norm_tolerance":0.0,
+                       "decoherence_rates":DR,
                        "decoherence_times_type":0, "decoherence_C_param":1.0, 
 >>>>>>> parent of c3601c2... Added a new parameter to the sdm function to allow the old active population to be slightly more than 1, to account for the fact that the TD-SE integration is numerical so some fluctuation of the computed norm may be reasonable to expect
                        "decoherence_eps_param":0.1, "dephasing_informed":0,

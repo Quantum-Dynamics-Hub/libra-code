@@ -257,7 +257,11 @@ def plot_hdf5(plot_params, ax=plt, use_default_ax=True):
 
     """
 
+<<<<<<< HEAD
     if use_default_ax==True:
+=======
+    if use_default_ax==True:    
+>>>>>>> 68e7dfb2c0d562032278b84cf66b6914d4a792b2
         ax.rc('axes', titlesize=24)      # fontsize of the axes title
         ax.rc('axes', labelsize=20)      # fontsize of the x and y labels
         ax.rc('legend', fontsize=20)     # legend fontsize
@@ -337,6 +341,7 @@ def plot_hdf5(plot_params, ax=plt, use_default_ax=True):
             t = list(f["time/data"][:])
 
         #=============== Populations ======================
+<<<<<<< HEAD
 
 
         plt.figure(1, figsize=(36, 12)) # dpi=300, frameon=False)
@@ -349,10 +354,20 @@ def plot_hdf5(plot_params, ax=plt, use_default_ax=True):
         ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
 
 
+=======
+    
+        ax.figure(1, figsize=(36, 12)) # dpi=300, frameon=False)    
+        ax.subplot(1, 2, 1)
+        ax.title('Adiabatic population dynamics' )
+        ax.xlabel('Time, a.u.')
+        ax.ylabel('Population')
+    
+>>>>>>> 68e7dfb2c0d562032278b84cf66b6914d4a792b2
         if "pop_adi" in properties_to_save and t != None:
             nstates = f["pop_adi/data"].shape[1] #.attrs['dim'][1]
             for i in range(nstates):
                 if i in which_adi_states:
+<<<<<<< HEAD
                     Pi = list(f["pop_adi/data"][:, i, 0])
                     plt.plot(t, Pi, label='$P_%i$' % (i), color = colors[clrs_index[i]])
                     plt.legend()
@@ -367,10 +382,23 @@ def plot_hdf5(plot_params, ax=plt, use_default_ax=True):
         plt.ylabel('Population')
 
 
+=======
+                    Pi = list(f["pop_adi/data"][:, i, 0])                
+                    ax.plot(t, Pi, label='$P_%i$' % (i), linewidth=10, color = colors[clrs_index[i]])   
+                    ax.legend()
+    
+    
+        ax.subplot(1, 2, 2)
+        ax.title('Diabatic population dynamics' )
+        ax.xlabel('Time, a.u.')
+        ax.ylabel('Population')
+    
+>>>>>>> 68e7dfb2c0d562032278b84cf66b6914d4a792b2
         if "pop_dia" in properties_to_save and t != None:
             nstates = f["pop_dia/data"].shape[1] #.attrs['dim'][1]
             for i in range(nstates):
                 if i in which_dia_states:
+<<<<<<< HEAD
 
                     Pi = list(f["pop_dia/data"][:, i, 0])
                     plt.plot(t, Pi, label='$P_%i$' % (i), color = colors[clrs_index[i]])
@@ -391,10 +419,28 @@ def plot_hdf5(plot_params, ax=plt, use_default_ax=True):
         plt.xlabel('t, a.u.')
         plt.ylabel('Energy, a.u.')
 
+=======
+                    Pi = list(f["pop_dia/data"][:, i, 0])                            
+                    ax.plot(t, Pi, label='$P_%i$' % (i), linewidth=10, color = colors[clrs_index[i]])   
+                    ax.legend()
+            
+        ax.savefig("%s/Fig1.png" % (prefix), dpi=300)
+        ax.savefig("%s/Fig1.pdf" % (prefix), dpi=300)
+            
+                
+        #============= Energies =====================
+        ax.figure(2, figsize=(36, 12)) # dpi=300, frameon=False)           
+    
+        ax.subplot(1, 2, 1)
+        ax.title('Energies' )
+        ax.xlabel('t, a.u.')
+        ax.ylabel('Energy, a.u.')
+>>>>>>> 68e7dfb2c0d562032278b84cf66b6914d4a792b2
         if "Ekin_dia" in properties_to_save \
            and "Epot_dia" in properties_to_save \
            and "Etot_dia" in properties_to_save \
            and t != None:
+<<<<<<< HEAD
 
 
             Ekin_dia =  list(f["Ekin_dia/data"][:])
@@ -416,10 +462,29 @@ def plot_hdf5(plot_params, ax=plt, use_default_ax=True):
         plt.ylabel('Energy, a.u.')
 
 
+=======
+        
+            Ekin_dia =  list(f["Ekin_dia/data"][:])                             
+            Epot_dia =  list(f["Epot_dia/data"][:])                             
+            Etot_dia =  list(f["Etot_dia/data"][:])                             
+        
+            ax.plot(t, Etot_dia, label='$Etot_{dia}$', linewidth=10, color = colors["11"])   
+            ax.plot(t, Ekin_dia, label='$Ekin_{dia}$', linewidth=10, color = colors["21"])   
+            ax.plot(t, Epot_dia, label='$Epot_{dia}$', linewidth=10, color = colors["31"])   
+            ax.legend()
+    
+    
+        ax.subplot(1, 2, 2)
+        ax.title('Energies' )
+        ax.xlabel('t, a.u.')
+        ax.ylabel('Energy, a.u.')
+    
+>>>>>>> 68e7dfb2c0d562032278b84cf66b6914d4a792b2
         if "Ekin_adi" in properties_to_save \
            and "Epot_adi" in properties_to_save \
            and "Etot_adi" in properties_to_save \
            and t != None:
+<<<<<<< HEAD
 
 
             Ekin_adi =  list(f["Ekin_adi/data"][:])
@@ -480,3 +545,59 @@ def plot_hdf5(plot_params, ax=plt, use_default_ax=True):
 
         plt.show()
         plt.close()
+=======
+        
+            Ekin_adi =  list(f["Ekin_adi/data"][:])                             
+            Epot_adi =  list(f["Epot_adi/data"][:])                             
+            Etot_adi =  list(f["Etot_adi/data"][:])                             
+        
+            ax.plot(t, Etot_adi, label='$Etot_{adi}$', linewidth=10, color = colors["11"])   
+            ax.plot(t, Ekin_adi, label='$Ekin_{adi}$', linewidth=10, color = colors["21"])   
+            ax.plot(t, Epot_adi, label='$Epot_{adi}$', linewidth=10, color = colors["31"])   
+            ax.legend()
+
+        ax.savefig("%s/Fig2.png" % (prefix), dpi=300)
+        ax.savefig("%s/Fig2.pdf" % (prefix), dpi=300)
+    
+  
+        #============= Phase spaces & Norms  =====================
+        ax.figure(3, figsize=(36, 12)) # dpi=300, frameon=False)           
+                
+        ax.subplot(1, 2, 1)
+        ax.title('Phase space' )
+        ax.xlabel('Coordinate, a.u.')
+        ax.ylabel('Momentum, a.u.')   
+    
+        if "q_dia" in properties_to_save and "p_dia" in properties_to_save:                                
+            ndof = f["q_dia/data"].shape[1] #.attrs['dim'][1]                        
+    
+            for idof in range(ndof):
+                if idof in which_dofs:
+                    qi =  list(f["q_dia/data"][:, idof, 0])                             
+                    pi =  list(f["p_dia/data"][:, idof, 0])                                         
+    
+                    ax.plot(qi, pi, label='', linewidth=10, color = colors[clrs_index[i]])   
+                    ax.legend()
+                    
+                
+        ax.subplot(1, 2, 2)
+        ax.title('Norms' )
+        ax.xlabel('Time, a.u.')
+        ax.ylabel('Norm')
+    
+        if "norm_dia" in properties_to_save and "norm_adi" in properties_to_save and t != None:
+        
+            nrm_dia = list(f["norm_dia/data"][:])                             
+            nrm_adi = list(f["norm_adi/data"][:])                                     
+                
+            ax.plot(t, nrm_dia, label='Diabatic', linewidth=10, color = colors["11"])   
+            ax.plot(t, nrm_adi, label='Adiabatic', linewidth=10, color = colors["21"])   
+            ax.legend()
+
+        ax.savefig("%s/Fig3.png" % (prefix), dpi=300)
+        ax.savefig("%s/Fig3.pdf" % (prefix), dpi=300)
+            
+        ax.show()
+        ax.close()
+        
+>>>>>>> 68e7dfb2c0d562032278b84cf66b6914d4a792b2

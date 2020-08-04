@@ -142,8 +142,16 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates, do
 
 }
 
+CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
 
-CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoherence_rates, double tol){
+  double tol = 0.0;
+
+  return sdm(Coeff, dt, act_st, decoh_rates, tol);
+}
+
+
+CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol){
+
     /**
     \brief The generic framework of the Simplified Decay of Mixing (SDM) method of
     Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114)
@@ -177,9 +185,7 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& deco
 
     stenc_y[0] = traj;
     pop_submatrix(Coeff, coeff, stenc_x, stenc_y);
-
-    coeff = sdm(coeff, dt, act_st[traj], decoherence_rates[traj], tol);
-
+    coeff = sdm(coeff, dt, act_st[traj], decoh_rates[traj], tol);
     push_submatrix(res, coeff, stenc_x, stenc_y);
 
   }// for traj
@@ -187,10 +193,11 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& deco
 
 }
 
-CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoherence_rates){
+
+CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates){
 
   double tol = 0.0;
-  return sdm(Coeff, dt, act_st, decoherence_rates, tol);
+  return sdm(Coeff, dt, act_st, decoh_rates, tol);
 }
 
 

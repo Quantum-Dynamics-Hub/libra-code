@@ -107,11 +107,11 @@ void export_dyn_decoherence_objects(){
 
   CMATRIX (*expt_sdm_v1)
 
-  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates, double tol) = &sdm;
+  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol) = &sdm;
   def("sdm", expt_sdm_v1);
 
   CMATRIX (*expt_sdm_v2)
-  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates) = &sdm;
+  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates) = &sdm;
 
   def("sdm", expt_sdm_v2);
 
