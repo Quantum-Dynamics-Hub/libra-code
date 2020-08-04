@@ -138,7 +138,7 @@ def normalize_ci_coefficients(ci_coefficients_raw_unnorm):
 
 
 
-def get_es_output(params):
+def get_excitation_analysis_output(params):
     """
     This function reads the information of the excited states from the log file of the single point calculations.
     
@@ -168,9 +168,9 @@ def get_es_output(params):
 
     """
     
-    critical_params = [ "logfile_directory", "es_software", "curr_step" ]
+    critical_params = [ "logfile_directory", "curr_step" ]
     # Default parameters
-    default_params = { "isUKS": 0}
+    default_params = { "isUKS": 0, "es_software": "cp2k"}
     # Check input
     comn.check_input(params, default_params, critical_params)
     
@@ -180,7 +180,7 @@ def get_es_output(params):
 
     if es_software == "cp2k":
         
-        logfile_name = logfile_directory+'/step_'+str(curr_step)+'.log'
+        logfile_name = F"{logfile_directory}/step_{curr_step}.log"
         params.update({"logfile_name":logfile_name}) 
         # Extract the excitation energies and their configurations from the output file.
         excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = \
@@ -576,7 +576,7 @@ def form_Hvib_real( params ):
     # current time step
     curr_step = params["curr_step"]
     # generate the log file name
-    logfile_name = logfile_directory+'/step_'+str(curr_step)+'.log'
+    logfile_name = F"{logfile_directory}/step_{curr_step}.log"
     # update the logfile_name parameter in params
     params.update({"logfile_name":logfile_name})
 
