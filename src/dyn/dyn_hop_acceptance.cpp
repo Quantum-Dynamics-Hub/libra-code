@@ -384,7 +384,8 @@ double boltz_factor(double E_new, double E_old, double T, int boltz_opt){
 
 vector<int> accept_hops(dyn_control_params& prms,
        MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
-       nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd ){
+       nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd, 
+       vector<int>& which_trajectories ){
 /**
   This function returns the new state indices if the corresponding transitions can be
   accepted according to given criteria
@@ -406,12 +407,14 @@ vector<int> accept_hops(dyn_control_params& prms,
 
 */
 
+
   int ndof = q.n_rows;
   int ntraj = q.n_cols;
+  int ntraj_active = which_trajectories.size();
   int nst = C.n_rows;    
-  int traj, dof, i;
+  int itraj, traj, dof, i;
 
-  vector<int> fstates(ntraj,0); 
+  vector<int> fstates(ntraj, -1); 
   MATRIX p_tr(ndof, 1);
   CMATRIX hvib(nst, nst);
   CMATRIX nac(nst, nst);
@@ -420,7 +423,9 @@ vector<int> accept_hops(dyn_control_params& prms,
 
   if(prms.hop_acceptance_algo==0){  // Just accept all the hops
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
+
       fstates[traj] = initial_states[traj];
     }
 
@@ -428,7 +433,8 @@ vector<int> accept_hops(dyn_control_params& prms,
 
   else if(prms.hop_acceptance_algo==10){  // Just based on the adiabatic energy levels
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
@@ -462,7 +468,8 @@ vector<int> accept_hops(dyn_control_params& prms,
 
   else if(prms.hop_acceptance_algo==11){  // Just based on the diabatic energy levels
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
@@ -494,7 +501,8 @@ vector<int> accept_hops(dyn_control_params& prms,
 
     MATRIX dNAC(ndof, 1);
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
@@ -547,7 +555,8 @@ vector<int> accept_hops(dyn_control_params& prms,
 */
 
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
@@ -586,7 +595,8 @@ vector<int> accept_hops(dyn_control_params& prms,
 
   else if(prms.hop_acceptance_algo==31){  // stochastic decision based on quantum Boltzmann factors
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
@@ -613,7 +623,8 @@ vector<int> accept_hops(dyn_control_params& prms,
 
   else if(prms.hop_acceptance_algo==32){  // stochastic decision based on classical Maxwell-Boltzmann factors
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
@@ -641,7 +652,8 @@ vector<int> accept_hops(dyn_control_params& prms,
 
   else if(prms.hop_acceptance_algo==33){  // stochastic decision based on quantum probabilities
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
@@ -672,6 +684,69 @@ vector<int> accept_hops(dyn_control_params& prms,
 
 }
 
+
+vector<int> accept_hops(dyn_control_params& prms,
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
+       nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd ){
+
+    int ntraj = q.n_cols;
+    vector<int> which_trajectories(ntraj);
+
+    for(int i=0; i<ntraj; i++){ which_trajectories[i] = i; }
+
+    return accept_hops(prms, q, p, invM, C, projectors, ham, proposed_states, initial_states, rnd, which_trajectories);
+
+}
+
+
+
+
+vector<int> where_can_we_hop(int traj, dyn_control_params& prms,
+       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, vector<CMATRIX>& projectors, 
+       nHamiltonian& ham, vector<int>& act_states, Random& rnd){
+/**
+   This function gives a list of indices of states to which a trajectory of index `traj` can
+   hop to from its current active state
+   We want to determine only the non-trivial transitions (that is everything  other than hopping onto itself)
+
+   act_states = [ state_0,  state_1, ... <state_traj>, .... ] is the array of the current state indices for each trajectory
+ 
+   So, we are interested in the particular trajectory `traj` and we agoing to check onto which other states can that trajectory hop
+
+   We don't care about all other values in act_states, q, p, etc. ... other than corresponding to the index `traj`
+
+*/
+
+    int ntraj = act_states.size();
+    int nstates = Coeff.n_rows;
+
+    vector<int> proposed_states(ntraj, -1);
+    vector<int> new_states(ntraj, -1);
+    vector<int> which_trajectories(1, traj);
+    vector<int> all_possible_hops;
+
+    /// Determine whereto we can hop from the current state:
+    for(int istate=0; istate<nstates; istate++){
+
+      if(istate != act_states[traj]){
+
+        proposed_states[traj] = istate;
+
+        /// Decide if we can accept the transitions, the function below only checks the hopping for a single trajectory `traj`
+        /// other elements of the input and output vector<int> variables (old_states, new_states, proposed_states) are irrelevant
+        /// the variable `which_trajectories` instructs to handle only the current trajectory
+        new_states = accept_hops(prms, q, p, invM, Coeff, projectors, ham, proposed_states, act_states, rnd, which_trajectories);
+
+        if(new_states[traj]!=act_states[traj]){
+          all_possible_hops.push_back(new_states[traj]);
+        }
+
+      }/// if not the current active state 
+
+    }/// for istate
+
+    return all_possible_hops;
+}
 
 
 

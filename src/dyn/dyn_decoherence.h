@@ -20,12 +20,15 @@
 // External dependencies
 #include "../math_linalg/liblinalg.h"
 #include "../io/libio.h"
+#include "../hamiltonian/libhamiltonian.h"
+#include "dyn_control_params.h"
 
 
 /// liblibra namespace
 namespace liblibra{
 
 using namespace libio;
+using namespace libhamiltonian;
 namespace bp = boost::python;
 
 /// libdyn namespace
@@ -61,6 +64,12 @@ MATRIX coherence_intervals(CMATRIX& Coeff, vector<MATRIX>& rates);
 
 
 ///================  In dyn_methods_dish.cpp  ===================================
+
+vector<int> dish(dyn_control_params& prms,
+       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, vector<CMATRIX>& projectors, 
+       nHamiltonian& ham, vector<int>& act_states, MATRIX& coherence_time, 
+       vector<MATRIX>& decoherence_rates, Random& rnd);
+
 /*
 int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi);
 int dish(Electronic& el, MATRIX& t_m, const MATRIX& tau_m, const CMATRIX& Hvib,

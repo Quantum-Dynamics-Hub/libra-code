@@ -490,7 +490,6 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   prms.set_parameters(dyn_params);
 
 
-
   int ndof = q.n_rows;
   int ntraj = q.n_cols;
   int nst = C.n_rows;    
@@ -724,6 +723,8 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
     /// Advance coherence times
     coherence_time.add(-1, -1, prms.dt);
 
+    /// Older version:
+    /**
     vector<int> prop_states( dish_hop_proposal(act_states, Coeff, coherence_time, decoherence_rates, rnd) );
 
     /// Decide if to accept the transitions (and then which)
@@ -733,9 +734,15 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
     /// Velocity rescaling
     handle_hops_nuclear(prms, q, p, invM, Coeff, projectors, ham, act_states, old_states);
 
-
     dish_project_out_collapse(old_states, prop_states, act_states, Coeff, coherence_time, prms.collapse_option);
+    */
 
+    /// New version, as of 8/3/2020
+    vector<int> old_states(act_states);
+    act_states = dish(prms, q, p, invM, Coeff, projectors, ham, act_states, coherence_time, decoherence_rates, rnd);
+
+    /// Velocity rescaling
+    handle_hops_nuclear(prms, q, p, invM, Coeff, projectors, ham, act_states, old_states);
 
 
   }// tsh_method = 3
