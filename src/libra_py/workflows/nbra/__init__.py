@@ -1,5 +1,5 @@
 #***********************************************************
-# * Copyright (C) 2018 Brendan A. Smith, Alexey V. Akimov
+# * Copyright (C) 2018-2020 Brendan A. Smith, Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
@@ -15,6 +15,7 @@ __all__ = ["compute_hprime",
            "qsh", 
            "step2",
            "step2_analysis",
+           "step2_cp2k",
            "step2_dftb",
            "step2_ergoscf",
            "step3",
