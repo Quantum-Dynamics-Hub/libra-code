@@ -12,6 +12,8 @@ libra_py
    libra_py/acf.rst
    libra_py/autoconnect.rst
    libra_py/build.rst
+   libra_py/CP2K_methods.rst
+   libra_py/cube_file_methods.rst
    libra_py/data_conv.rst
    libra_py/data_outs.rst
    libra_py/data_read.rst
