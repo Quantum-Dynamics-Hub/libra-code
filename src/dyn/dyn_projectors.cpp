@@ -421,6 +421,8 @@ for(int probability_index = 0; probability_index<list_permutations.size(); proba
 
 }
 
+
+
 CMATRIX permutation2cmatrix(vector<int>& permutation){
 /**
   Represent a permutation as a matrix

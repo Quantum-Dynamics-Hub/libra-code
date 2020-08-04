@@ -11,7 +11,7 @@
 /**
   \file dyn_decoherence_methods.cpp
   \brief The file implements various decoherence correction methods
-    
+
 */
 
 #include "Surface_Hopping.h"
@@ -24,15 +24,17 @@ namespace liblibra{
 namespace libdyn{
 
 
-CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
+CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates, double tol){
+
     /**
-    \brief Generic framework of Simplified Decay of Mixing (SDM) method of 
+    \brief Generic framework of Simplified Decay of Mixing (SDM) method of
     Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114
-    
-    \param[in]       Coeff [ CMATRIX(nadi, 1) ] An object containig electronic DOFs. 
+
+    \param[in]       Coeff [ CMATRIX(nadi, 1) ] An object containig electronic DOFs.
     \param[in]          dt [ float ] The integration timestep. Units = a.u. of time
     \param[in]      act_st [ integer ] The active state index
-    \param[in]      decoh_rates [ MATRIX ] The matrix of decoherence (pure dephasing) rates between all pairs of states
+    \param[in]      decoherence_rates [ MATRIX ] The matrix of decoherence (pure dephasing) rates between all pairs of states
+    \param[in]         tol [double] The maximal acceptable deviation of the p_aa_old from 1. If the p_aa_old < 1.0 + tol, then renormalize it to 1.0
 
     The function returns:
     C [ CMATRIX ] - the updated state of the electronic DOF, in the same data type as the input
@@ -48,17 +50,17 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
     // Population of the active state
     double p_aa_old = (std::conj(C.get(act_st)) * C.get(act_st)).real();
 
-    if(p_aa_old>1.0){
+    if(p_aa_old>1.0 + tol){
       // Comment this place if you want to allow inprecise integration
       // (where the total norm may exceeed 1.0), as is the case for too large dt
       // for some algorithms
       cout<<"=== Place 1 =====\n";
-      cout<<"Error in CMATRIX msdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates):\n";
-      cout<<"active state is larger than 1: p_aa_old = "<< p_aa_old << endl;
+      cout<<"Error in CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates):\n";
+      cout<<"The population of the active state is larger than 1: p_aa_old = "<< p_aa_old << endl;
       cout<<"C = \n"; C.show_matrix();
       cout<<"act_st = "<<act_st<<endl;
       cout<<"Coeff = \n"; Coeff.show_matrix();
-      cout<<"decoh_rates = \n"; decoh_rates.show_matrix();
+      cout<<"decoherence_rates = \n"; decoherence_rates.show_matrix();
       cout<<"initial total pop = "<<(Coeff.H() * Coeff).get(0,0).real();
       exit(0);
     }
@@ -66,14 +68,14 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
 
     if(p_aa_old>0.0){
 
-      // First - update all the coefficients for the non-active states        
+      // First - update all the coefficients for the non-active states
       int N = Coeff.n_elts;
 
       double inact_st_pop = 0.0; // population of the inactive states after rescaling
 
       for(int i=0; i<N; i++){
         if(i != act_st){
-          double itau = decoh_rates.get(i, act_st); 
+          double itau = decoherence_rates.get(i, act_st);
           sclf = exp(-dt*itau);
           C.scale(i, 0, sclf);
 
@@ -83,35 +85,35 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
 
       if(inact_st_pop>1.0){
         cout<<"=== Place 2 =====\n";
-        cout<<"Error in CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates):\n";
+        cout<<"Error in CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates):\n";
         cout<<"Total population of inactive states after rescaling is larger than 1: inact_st_pop = "<<inact_st_pop<<endl;
         cout<<"C = \n"; C.show_matrix();
         cout<<"act_st = "<<act_st<<endl;
         cout<<"Coeff = \n"; Coeff.show_matrix();
-        cout<<"decoh_rates = \n"; decoh_rates.show_matrix();
+        cout<<"decoherence_rates = \n"; decoherence_rates.show_matrix();
         cout<<"initial total pop = "<<(Coeff.H() * Coeff).get(0,0).real();
         exit(0);
       }
 
       double p_aa_new = 1.0 - inact_st_pop;
 
-     
+
       if(p_aa_new<0.0){
         cout<<"=== Place 3 =====\n";
-        cout<<"Error in CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates):\n";
+        cout<<"Error in CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates):\n";
         cout<<"new population of the active state "<< p_aa_new <<" is negative...\n";
         cout<<"inact_st_pop = "<<inact_st_pop<<endl;
         cout<<"p_aa_old = "<<p_aa_old<<endl;
         cout<<"C = \n"; C.show_matrix();
         cout<<"act_st = "<<act_st<<endl;
         cout<<"Coeff = \n"; Coeff.show_matrix();
-        cout<<"decoh_rates = \n"; decoh_rates.show_matrix();     
+        cout<<"decoherence_rates = \n"; decoherence_rates.show_matrix();
         cout<<"initial total pop = "<<(Coeff.H() * Coeff).get(0,0).real();
         exit(0);
       }
 
       sclf = sqrt( p_aa_new / p_aa_old );  // scaling factor for the active state
-        
+
       // Rescale the active state
       C.scale(act_st, 0, sclf);
 
@@ -123,14 +125,14 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
 
     if(fabs(new_norm-1.0)>0.1){
       cout<<"=== Place 4 =====\n";
-      cout<<"Error in CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates):\n";
+      cout<<"Error in CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates):\n";
     //  cout<<"new population of the active state "<< p_aa_new <<" is negative...\n";
     //  cout<<"inact_st_pop = "<<inact_st_pop<<endl;
       cout<<"p_aa_old = "<<p_aa_old<<endl;
       cout<<"C = \n"; C.show_matrix();
       cout<<"act_st = "<<act_st<<endl;
       cout<<"Coeff = \n"; Coeff.show_matrix();
-      cout<<"decoh_rates = \n"; decoh_rates.show_matrix();     
+      cout<<"decoherence_rates = \n"; decoherence_rates.show_matrix();
       cout<<"initial total pop = "<<(Coeff.H() * Coeff).get(0,0).real();
       exit(0);
     }
@@ -141,17 +143,19 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
 }
 
 
-CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates){
+CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoherence_rates, double tol){
     /**
     \brief The generic framework of the Simplified Decay of Mixing (SDM) method of
     Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114)
 
     This is a version for multiple trajectories
-    
-    \param[in]       Coeff [ CMATRIX(nadi, ntraj) ] An object containig electronic DOFs. 
+
+    \param[in]       Coeff [ CMATRIX(nadi, ntraj) ] An object containig electronic DOFs.
     \param[in]          dt [ float ] The integration timestep. Units = a.u. of time
     \param[in]      act_st [ integer ] The active state index
-    \param[in]      decoh_rates [ MATRIX ] The matrix of decoherence (pure dephasing) rates between all pairs of states
+    \param[in]      decoherence_rates [ MATRIX ] The matrix of decoherence (pure dephasing) rates between all pairs of states
+    \param[in]         tol [double] The maximal acceptable deviation of the p_aa_old from 1. If the p_aa_old < 1.0 + tol, then renormalize it to 1.0
+
 
     The function returns:
     # C [ CMATRIX ] - the updated state of the electronic DOF, in the same data type as the input
@@ -164,16 +168,18 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& deco
 
 
   vector<int> stenc_x(nadi, 0); for(i=0;i<nadi;i++){  stenc_x[i] = i; }
-  vector<int> stenc_y(1, 0); 
+  vector<int> stenc_y(1, 0);
 
   CMATRIX coeff(nadi, 1);
   CMATRIX res(nadi, ntraj);
- 
+
   for(traj=0; traj<ntraj; traj++){
 
     stenc_y[0] = traj;
     pop_submatrix(Coeff, coeff, stenc_x, stenc_y);
-    coeff = sdm(coeff, dt, act_st[traj], decoh_rates[traj]);
+
+    coeff = sdm(coeff, dt, act_st[traj], decoherence_rates[traj], tol);
+
     push_submatrix(res, coeff, stenc_x, stenc_y);
 
   }// for traj
@@ -181,6 +187,11 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& deco
 
 }
 
+CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoherence_rates){
+
+  double tol = 0.0;
+  return sdm(Coeff, dt, act_st, decoherence_rates, tol);
+}
 
 
 void project_out(CMATRIX& Coeff, int traj, int i){
@@ -195,10 +206,10 @@ void project_out(CMATRIX& Coeff, int traj, int i){
     Returns:
         None: but changes the input variable `Coeff`
 
-   */ 
+   */
 
     int nstates = Coeff.n_rows;
-    
+
     complex<double> ci; ci = Coeff.get(i,traj);
     double pi; pi = (std::conj(ci) * ci).real();
     double nrm = 1.0 - pi;
@@ -220,14 +231,14 @@ void collapse(CMATRIX& Coeff, int traj, int i, int collapse_option){
         traj ( int ): The index of the trajectory (column) on which we will operate
         i ( int ): The index of the state onto which the supeposition will be collapsed
         collapse_option ( int ): the way to collapse onto given state:
-        
+
           - 0: by rescaling the magnitude of the amplitude vector elements, but preserving "phase"
           - 1: by resetting the amplitudes to 1.0+0.0j. This option changes phase
 
     Returns:
         None: but changes the input variable `Coeff`
 
-    */ 
+    */
 
     complex<double> ci; ci = Coeff.get(i,traj);
     double pi; pi = (std::conj(ci) * ci).real();
@@ -235,7 +246,7 @@ void collapse(CMATRIX& Coeff, int traj, int i, int collapse_option){
     Coeff.scale(-1, traj, 0.0);
 
     if(collapse_option==0){
-      if(pi>0.0){   Coeff.set(i, traj, ci/sqrt(pi)); }     
+      if(pi>0.0){   Coeff.set(i, traj, ci/sqrt(pi)); }
       else{  Coeff.set(i, traj, complex<double>(1.0, 0.0) ); }
     }
     else if(collapse_option==1){
@@ -246,7 +257,7 @@ void collapse(CMATRIX& Coeff, int traj, int i, int collapse_option){
 
 
 
-void instantaneous_decoherence(CMATRIX& Coeff, 
+void instantaneous_decoherence(CMATRIX& Coeff,
    vector<int>& accepted_states, vector<int>& proposed_states, vector<int>& initial_states,
    int instantaneous_decoherence_variant, int collapse_option){
 
@@ -270,9 +281,9 @@ void instantaneous_decoherence(CMATRIX& Coeff,
    2 - ID-C - consistent ID - an experimental algo
 
    In the "consistent" version, we lift the condition that the accepted/proposed states must be different from
-   the starting state - this option addresses a philosophical question - what if we say that no hops 
-   is equivalent to the hop onto the current state? why should the "hopping" into the original state 
-   by treated differently from the "actual hopping" to another state? So, in this version we 
+   the starting state - this option addresses a philosophical question - what if we say that no hops
+   is equivalent to the hop onto the current state? why should the "hopping" into the original state
+   by treated differently from the "actual hopping" to another state? So, in this version we
    collapse onto the accpeted states, no matter if they are the result of a successfull or frustrated hop.
 
   The mechanism of the collapse event itself is controlled by the collapse_option parameter
@@ -355,4 +366,3 @@ void instantaneous_decoherence(CMATRIX& Coeff,
 
 }// namespace libdyn
 }// liblibra
-

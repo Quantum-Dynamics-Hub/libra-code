@@ -78,6 +78,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("ETHD3_alpha", &dyn_control_params::ETHD3_alpha)
       .def_readwrite("ETHD3_beta", &dyn_control_params::ETHD3_beta)
       .def_readwrite("decoherence_algo", &dyn_control_params::decoherence_algo)
+      .def_readwrite("sdm_norm_tolerance", &dyn_control_params::sdm_norm_tolerance)
       .def_readwrite("decoherence_times_type", &dyn_control_params::decoherence_times_type)
       .def_readwrite("decoherence_C_param", &dyn_control_params::decoherence_C_param)
       .def_readwrite("decoherence_eps_param", &dyn_control_params::decoherence_eps_param)
@@ -105,12 +106,24 @@ void export_dyn_decoherence_objects(){
   ///=================== dyn_decoherence_methods.cpp =======================
 
   CMATRIX (*expt_sdm_v1)
-  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates) = &sdm;
+
+  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates, double tol) = &sdm;
   def("sdm", expt_sdm_v1);
 
   CMATRIX (*expt_sdm_v2)
-  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates) = &sdm;
+  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoherence_rates) = &sdm;
+
   def("sdm", expt_sdm_v2);
+
+  CMATRIX (*expt_sdm_v3)
+  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol) = &sdm;
+  def("sdm", expt_sdm_v3);
+
+  CMATRIX (*expt_sdm_v4)
+  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates) = &sdm;
+  def("sdm", expt_sdm_v4);
+
+
 
   void (*expt_project_out_v1)(CMATRIX& Coeff, int traj, int i) = &project_out;
   def("project_out", expt_project_out_v1);
@@ -137,11 +150,11 @@ void export_dyn_decoherence_objects(){
 
 
   void (*expt_dephasing_informed_correction_v1)
-  (MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& ave_gaps) = &dephasing_informed_correction;
+  (MATRIX& decoherence_rates, CMATRIX& Hvib, MATRIX& ave_gaps) = &dephasing_informed_correction;
   def("dephasing_informed_correction", expt_dephasing_informed_correction_v1);
 
   void (*expt_dephasing_informed_correction_v2)
-  (vector<MATRIX>& decoh_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps) = &dephasing_informed_correction;
+  (vector<MATRIX>& decoherence_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps) = &dephasing_informed_correction;
   def("dephasing_informed_correction", expt_dephasing_informed_correction_v2);
 
 
@@ -152,9 +165,14 @@ void export_dyn_decoherence_objects(){
   def("coherence_intervals", expt_coherence_intervals_v2);
 
 
+  ///================== In dyn_methods_dish.cpp  =======================
 
+  vector<int> (*expt_dish_v1)
+  (dyn_control_params& prms, MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff,
+   vector<CMATRIX>& projectors, nHamiltonian& ham, vector<int>& act_states,
+   MATRIX& coherence_time, vector<MATRIX>& decoherence_rates, Random& rnd) = &dish;
+  def("dish", expt_dish_v1);
 
-  //================== DISH =======================
 
 /*
 
@@ -207,9 +225,23 @@ void export_dyn_hop_acceptance_objects(){
 
   vector<int> (*expt_accept_hops_v1)
   (dyn_control_params& prms,
+
+   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
+   nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd, vector<int>& which_trajectories) = &accept_hops;
+
+  def("accept_hops", expt_accept_hops_v1);
+
+  vector<int> (*expt_accept_hops_v2)
+  (dyn_control_params& prms,
    MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
    nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd ) = &accept_hops;
-  def("accept_hops", expt_accept_hops_v1);
+  def("accept_hops", expt_accept_hops_v2);
+
+  vector<int> (*expt_where_can_we_hop_v1)
+  (int traj, dyn_control_params& prms,
+   MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, vector<CMATRIX>& projectors,
+   nHamiltonian& ham, vector<int>& act_states, Random& rnd) = &where_can_we_hop;
+  def("where_can_we_hop", expt_where_can_we_hop_v1);
 
 }
 

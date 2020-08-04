@@ -26,7 +26,8 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-
+from . import units
+import numpy as np
 
 def convolve(X0, Y0, dx0, dx, var):
     """
@@ -239,3 +240,148 @@ def QE_pdos(prefix, emin, emax, de, projections, Ef, outfile_prefix, do_convolve
         pDOSb = MATRIX(pDOSa)
         return E, pDOSa, pDOSb
 
+
+
+def libra_pdos(_emin, _emax, _de, projections, prefix, outfile, Nel, do_convolve, _de_new, _var):
+    """
+    
+    Args:
+    
+        * _emin ( double ): minimal energy of the spectrum [eV]
+        
+        * _emax ( double ): maximal energy of the spectrum [eV]
+        
+        * _de ( double ): original energy grid spacing  [eV]
+        
+        * projections ( list ):  groups of atoms and types of projections 
+            e.g. projections = [["s",[1,2,3]], ["p",[1,2,3]], ... 
+            
+            Possible projections (examples)
+            proj = [["s",range(0,360)],["p",range(0,360)],["d",range(0,360)]]
+            proj = [["s",range(0,1)],["p",range(0,1)],["d",range(0,1)]]
+            proj = [["tot",range(0,112)]]
+
+            
+        * prefix ( string ): the common prefix of the files containing the projection information
+        
+        * outfile ( string ): the name of the file that will contain the computed pDOSs
+        
+        * Nel ( int ): the number of electrons, to compute the Fermi energy
+            
+        * _de_new ( double ): new energy grid (for convolved) spacing  [eV]
+        
+        * _var ( double ): the width of the Gaussian used to broaden each energy grid point [eV] 
+        
+        
+    # Example: of call - for Si QD
+    # Si
+    #main(-35.0, 35.0, 0.1,[["tot",range(0,103)]],"_alpha_wfc_atom","dos_proj.txt",238)   
+
+    """
+    
+    # Internally, we work in a.u. (Ha)
+    emin = _emin * units.ev2Ha
+    emax = _emax * units.ev2Ha
+    de = _de * units.ev2Ha
+    de_new = _de_new * units.ev2Ha
+    var = _var * units.ev2Ha
+
+    # Determine dimensionality and prepare arrays
+    nproj = len(projections)                # number of projections
+    N = int(math.floor((emax - emin)/de))+1 # number of the gridpoints
+
+    en0 = []
+    dosa = MATRIX(N, nproj)  # Matrix for alpha spin-orbitals dos.get(i,proj) - dos for level i projected on projection proj
+    dosb = MATRIX(N, nproj)  # Matrix for beta  spin-orbitals
+    
+    
+    for proj in projections:  # loop over all projection
+        ang_mom = proj[0]
+        atoms = proj[1]
+
+        proj_indx = projections.index(proj)
+                                            
+        for a in atoms: # open files for all atoms in given group
+            fa = open(prefix+str(a),"r")
+            B = fa.readlines()
+            fa.close()
+
+            for lin in B[1:-4]:  # read all lines
+                tmp = lin.split()
+                 
+                e = float(tmp[0]) # energy in Ha
+                if a==0:
+                    en0.append(e)  
+                
+                x = 0.0
+                if ang_mom=="s":
+                    x = float(tmp[2])
+                elif ang_mom=="p":
+                    x = float(tmp[3])
+                elif ang_mom=="d":
+                    x = float(tmp[4])
+                elif ang_mom=="tot":
+                    x = float(tmp[1])
+                else:
+                    x = 0.0
+
+                if e<emin or e>emax:
+                    pass
+                else:
+                    grid_indx = int(math.floor((e - emin)/de))  # grid point
+                    dosa.add(grid_indx, proj_indx, x)
+                    dosb.add(grid_indx, proj_indx, x)
+
+
+    
+    etol = 1e-10
+    kT = 0.1 * units.ev2Ha # some reasonable parameters
+    Ef = fermi_energy(en0, Nel,2.0, kT, etol)  # Fermi energy in Ha
+    
+
+    en = MATRIX(N,1)
+    for i in range(0,N):
+        en.set(i, 0, emin + i*de - Ef)
+
+    
+    E = None                
+    if do_convolve==True:
+        E, pDOSa = convolve(en, dosa, de, de_new, var)
+        #E, pDOSb = convolve(en0, dosb, de, de_new, var)
+    else:
+        E = MATRIX(dosa)
+            
+    # Convert the energy axis back to eV 
+    E *= (1.0/units.ev2Ha)
+
+        
+    f2 = open(outfile,"w")
+    f2.write("Ef = %5.3f eV\n" % (Ef / units.ev2Ha) )
+    f2.close()
+
+    
+    res = np.zeros( (N, nproj+2), dtype=float)
+    
+    # Now compute projections
+    for i in range(0,N):  # loop energy grid
+
+        res[i, 0] = E.get(i,0) 
+        line = str(E.get(i,0))+"   "
+
+        tot = 0.0
+        for j in range(0,nproj):
+            res[i, j+1] = pDOSa.get(i,j)
+            tot = tot + pDOSa.get(i,j)
+            line = line + str(pDOSa.get(i,j))+"   "
+            
+        res[i, nproj+1] = tot
+        line = line + str(tot)+"\n"
+
+        f2 = open(outfile,"a")
+        f2.write(line)
+        f2.close()
+    
+
+    return res
+    
+        

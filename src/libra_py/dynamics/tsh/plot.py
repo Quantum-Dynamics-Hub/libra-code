@@ -170,7 +170,7 @@ def plot_dyn(plot_params):
             #ntraj = f["states"].attrs["dim"][0]
             ntraj = f["time/data"].shape[0]
 
-            plt.figure(num=None, figsize=(24, 24), dpi=300, frameon=False)
+            plt.figure(num=None, figsize=(8, 8), frameon=False)
             plt.subplots_adjust(wspace = 0.3)
             ax = plt.gca()
             ax.tick_params(labelsize=tick_fontsize, width=tick_width, length=tick_length)
@@ -184,7 +184,7 @@ def plot_dyn(plot_params):
                 if tr in which_trajectories:
                     plt.plot(f["time/data"][:], f["states/data"][:, tr], label="", linewidth=2, color = colors["11"])
 
-            plt.savefig(F"{out_prefix}/t-state_indices.png", dpi=300)
+            plt.savefig(F"{out_prefix}/t-state_indices.png")
             plt.show()
 
 
