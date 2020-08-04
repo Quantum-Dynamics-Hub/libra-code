@@ -151,6 +151,10 @@ def get_es_output(params):
             es_software (str): The name of the software used to calculate the energy calculations.
         
             curr_step (int): The current time step of the calculations.
+            
+            isUKS (int): This parameter is set for spin restricted and unrestricted calculations. When it is
+                         set to 1 it means that unrestricted calculations were set in the input file otherwise 
+                         it is restricted.
     
     Returns:
     
@@ -536,7 +540,7 @@ def form_Hvib_real( params ):
         
         params (distionary):
 
-            cp2k_log_file_name (str): The output file produced by CP2K
+            logfile_directory (str): The directory of the output files by CP2K.
 
             time (int): The time step of the molecular dynamics. For single point calculations
                         it should be set to 0.
