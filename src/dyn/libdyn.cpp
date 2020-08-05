@@ -79,6 +79,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("ETHD3_beta", &dyn_control_params::ETHD3_beta)
       .def_readwrite("decoherence_algo", &dyn_control_params::decoherence_algo)
       .def_readwrite("sdm_norm_tolerance", &dyn_control_params::sdm_norm_tolerance)
+      .def_readwrite("dish_decoherence_event_option", &dyn_control_params::dish_decoherence_event_option)
       .def_readwrite("decoherence_times_type", &dyn_control_params::decoherence_times_type)
       .def_readwrite("decoherence_C_param", &dyn_control_params::decoherence_C_param)
       .def_readwrite("decoherence_eps_param", &dyn_control_params::decoherence_eps_param)
@@ -278,8 +279,12 @@ void export_dyn_hop_proposal_objects(){
 void export_dyn_methods_objects(){
 
   vector<int> (*expt_decoherence_event_v1)
-  (MATRIX& coherence_time, MATRIX& coherence_interval, Random& rnd) = &decoherence_event;
+  (MATRIX& coherence_time, MATRIX& coherence_interval, int decoherence_event_option, Random& rnd) = &decoherence_event;
   def("decoherence_event", expt_decoherence_event_v1);
+
+  vector<int> (*expt_decoherence_event_v2)
+  (MATRIX& coherence_time, MATRIX& coherence_interval, Random& rnd) = &decoherence_event;
+  def("decoherence_event", expt_decoherence_event_v2);
 
 
   vector<int> (*expt_dish_hop_proposal_v1)

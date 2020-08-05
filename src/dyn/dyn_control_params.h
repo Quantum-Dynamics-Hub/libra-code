@@ -243,13 +243,31 @@ class dyn_control_params{
 
 
   /**
-     Corresponds to the "tol" parameter in the sdm function. It controls 
-     how much the norm of the old state can be larger than 1.0  before the 
-     code stops with the error message
+    Corresponds to the "tol" parameter in the sdm function. It controls 
+    how much the norm of the old state can be larger than 1.0  before the 
+    code stops with the error message
 
-     Default: 0.0
+    Default: 0.0
+
+    Note: only matters if decoherence_algo == 0
   **/
   double sdm_norm_tolerance;
+
+
+  /**
+    Selects the how to sample decoherence events in the DISH.
+    Possible options:
+      0 - compare the coherence time counter with the decoherence time (simplified DISH)
+      1 - compare the coherence time counter with the time drawn from the exponential distribution
+          with the parameter lambda = 1/decoherence time - this distribution corresponds to 
+          the statistics of wait times between the Poisson-distributed events (decoherence)
+          This is what the original DISH meant to do 
+
+    Default: 0     
+
+    Note: only matters if tsh_method == 3
+  **/
+  int dish_decoherence_event_option;
 
 
   /**

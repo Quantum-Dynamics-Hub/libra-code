@@ -28,14 +28,18 @@ namespace liblibra{
 namespace libdyn{
 
 
-vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval, Random& rnd){
+vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval, int decoherence_event_option, Random& rnd){
 /**
   For each trajectory, check which adiabatic states have evolved longer than decoherence times.
   In the case that multiple states have done this, we select only one randomly.
   
   coherence_time - MATRIX(nst, ntraj) - for each state is how long has that state resided in a coherence evolution
   coherence_interval - MATRIX(1, ntraj) - for each trajectory - what is the longest coherence time in the system
-
+  decoherence_event_option : 0 - compare the coherence time counter with the decoherence time (simplified DISH)
+                             1 - compare the coherence time counter with the time drawn from the exponential distribution
+                                 with the parameter lambda = 1/decoherence time - this distribution corresponds to 
+                                 the statistics of wait times between the Poisson-distributed events (decoherence)
+                                 This is what the original DISH meant to do 
   Return:
   For each trajectory:
   The selection of the states which will experience decoherence events (collapse or projection out)
@@ -46,7 +50,7 @@ vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval
   int i,traj;
   int ntraj = coherence_time.n_cols;
   int nst = coherence_time.n_rows; 
-
+  
   /// By default, set the indices of the states that "experience" decoherence events to -1
   /// In the analysis, if we encounter the index of -1, we'll know that no decoherence has happened
   /// and will simply continue the coherent evolution.
@@ -61,9 +65,11 @@ vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval
 
       /// The state i has evolved coherently for longer than the coherence interval
       /// so it has to experience a decoherence event 
-      if(coherence_time.get(i, traj) >= coherence_interval.get(i, traj) ) { 
-        which_decohere.push_back(i);
-      }
+      double tau = 0.0;
+      if(decoherence_event_option==0){  tau = coherence_interval.get(i, traj); }
+      else if(decoherence_event_option==1){  tau = rnd.exponential(1.0/coherence_interval.get(i, traj)); }
+        
+      if(coherence_time.get(i, traj) >= tau ) {     which_decohere.push_back(i);    }
     }
 
     if(which_decohere.size()>0){
@@ -77,6 +83,12 @@ vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval
   }// for traj
 
   return res;
+
+}
+
+vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval, Random& rnd){
+
+  return decoherence_event(coherence_time, coherence_interval, 0, rnd);
 
 }
 
@@ -109,7 +121,7 @@ vector<int> dish(dyn_control_params& prms,
     /// If the decohered_states[traj] == -1, this means no basis states on the trajectory traj
     /// have experienced the decoherence event, othervise the variable will contain an index of 
     /// such state for each trajectory
-    vector<int> decohered_states( decoherence_event(coherence_time, coherence_interval, rnd) );
+    vector<int> decohered_states( decoherence_event(coherence_time, coherence_interval, prms.dish_decoherence_event_option, rnd) );
 
     //cout<<"======= In dish... ==========\n";
 
