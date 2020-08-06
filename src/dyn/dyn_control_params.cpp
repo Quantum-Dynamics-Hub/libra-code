@@ -61,6 +61,7 @@ dyn_control_params::dyn_control_params(){
 
   decoherence_algo = -1;
   sdm_norm_tolerance = 0.0;
+  dish_decoherence_event_option = 1;
   decoherence_rates = NULL;
   decoherence_times_type = 0;
   decoherence_C_param = 1.0;
@@ -136,6 +137,8 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="decoherence_algo"){ decoherence_algo = bp::extract<int>(params.values()[i]); }
 
     else if(key=="sdm_norm_tolerance"){ sdm_norm_tolerance = bp::extract<double>(params.values()[i]); }
+
+    else if(key=="dish_decoherence_event_option"){ dish_decoherence_event_option = bp::extract<int>(params.values()[i]); }
     else if(key=="decoherence_rates"){
 
       MATRIX x( bp::extract<MATRIX>(params.values()[i]) );

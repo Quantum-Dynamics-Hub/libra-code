@@ -623,6 +623,20 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
             * **dyn_params["sdm_norm_tolerance"]** ( double ): Corresponds to the "tol" parameter in the sdm function. It controls
                 how much the norm of the old state can be larger than 1.0  before the code stops with the error message [ default : 0.0 ]
 
+                Note: only matters if decoherence_algo == 0
+
+
+            * **dyn_params["dish_decoherence_event_option"]** ( int ):  Selects the how to sample decoherence events in the DISH. [ default: 0 ]
+                Possible options:
+
+                - 0: compare the coherence time counter with the decoherence time (simplified DISH)
+                - 1: compare the coherence time counter with the time drawn from the exponential distribution
+                    with the parameter lambda = 1/decoherence time - this distribution corresponds to 
+                    the statistics of wait times between the Poisson-distributed events (decoherence)
+                    This is what the original DISH meant to do 
+
+                Note: only matters if dyn_params["tsh_method"] == 3
+
 
             * **dyn_params["decoherence_rates"]** ( MATRIX(ntates, nstates) ): the matrix of dephasing rates [ units: a.u. of time ^-1 ]
 >>>>>>> 68e7dfb2c0d562032278b84cf66b6914d4a792b2
@@ -740,6 +754,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                        "entanglement_opt":0, "ETHD3_alpha":0.0, "ETHD3_beta":0.0,
                        "decoherence_algo":-1,
                        "sdm_norm_tolerance":0.0,
+                       "dish_decoherence_event_option":0,
                        "decoherence_rates":DR,
                        "decoherence_times_type":0, "decoherence_C_param":1.0,
                        "decoherence_eps_param":0.1, "dephasing_informed":0,
@@ -831,6 +846,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
         for bath in therm:
             Etherm += bath.energy()
+        Etherm = Etherm / float(ntraj)
         E_NHC = Etot + Etherm
 
 
