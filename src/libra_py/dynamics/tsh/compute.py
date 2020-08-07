@@ -814,6 +814,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
         for bath in therm:
             Etherm += bath.energy()
+        Etherm = Etherm/float(ntraj)
         E_NHC = Etot + Etherm
 
 
