@@ -1510,7 +1510,7 @@ boost::python::list merge_sort(boost::python::list inp){
 
 }
 
-vector< vector<int> > permutations_reiteration(vector<int> given_list, int size, int num_elements, vector< vector<int> > list_of_permutations){
+vector< vector<int> > permutations_reiteration(vector<int>& given_list, int size, int num_elements, vector< vector<int> >& list_of_permutations){
     /*
     This function generates all permutations of a given list and outputs as a list of lists.
     The heart of this algorithm is inspired by:
@@ -1541,7 +1541,7 @@ vector< vector<int> > permutations_reiteration(vector<int> given_list, int size,
 
 }
 
-vector< vector<int> > compute_all_permutations(vector<int> given_list){
+vector< vector<int> > compute_all_permutations(vector<int>& given_list){
     /*
     This function acts as a wrapper for the permutations_reiteration function,
     simplifying the required user input to only a list.
