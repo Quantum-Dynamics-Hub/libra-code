@@ -119,6 +119,8 @@ MATRIX covariance(MATRIX& X, MATRIX& Y);
 CMATRIX covariance(CMATRIX& X);
 CMATRIX covariance(CMATRIX& X, CMATRIX& Y);
 
+vector< vector<int> > permutations_reiteration(vector<int> given_list, int size, int num_elements, vector< vector<int> > list_of_permutations);
+vector< vector<int> > compute_all_permutations(vector<int> given_list);
 
 }// namespace libspecialfunctions
 }// namespace liblibra
