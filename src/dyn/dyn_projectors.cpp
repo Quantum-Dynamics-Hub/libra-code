@@ -328,8 +328,8 @@ vector<int> get_stochastic_reordering2(CMATRIX& time_overlap, Random& rnd){
     In the dynamics, this situation occurs when the system passes the conical intersection region
     and the identity of the states may change. The states' energies become non-descriptive for this
     purpose and one needs to look at the changes of the orbitals (e.g. eigenvectors). In particular,
-    we can look at the overlap of the sates at adjacent times: <phi_i(t)|phi_i(t+dt)> 
-    If no spurious state changes happens, the diagonal elements should be close to 1.0. 
+    we can look at the overlap of the sates at adjacent times: <phi_i(t)|phi_i(t+dt)>
+    If no spurious state changes happens, the diagonal elements should be close to 1.0.
     If they are not - we locate to which state the transitions might have happened.
 
     In general context, the "time_overlap" matrix is compused of the overlaps of the eigenvectors
@@ -338,91 +338,71 @@ vector<int> get_stochastic_reordering2(CMATRIX& time_overlap, Random& rnd){
     \param[in] time_overlap ( CMATRIX ) the time overlap matrix, <phi_i(t)|phi_j(t+dt)>.
 
     Returns:
-    perm - list of integers that describe the permutation. That is:
-    perm[i] - is the index identifying the "older" state "i". Now, it may be labeled
-    by some other index, j = perm[i]. 
+    chosen_permutation - list of integers that describe the permutation. That is:
+    chosen_permutation[i] - is the index identifying the "older" state "i". Now, it may be labeled
+    by some other index, j = chosen_permutation[i].
 
     |phi_j(t+dt)> = a_0j |phi_0(t)> + a_1j |phi_1(t)> + ... a_Nj |phi_N(t)>
 
     So:  <phi_i(t)|phi_j(t+dt)> = a_ij and then
- 
+
     |a_ij|^2 is the probability that the state i at time t becomes state j at time t+dt
 
     i - state index at t
-    perm[i] - state index at t+dt
+    chosen_permutation[i] - state index at t+dt
 
     """
     */
 
-    // extract the indices where <phi_i(t)|phi_i(t+dt)> is not close to 1. 
+    // extract the indices where <phi_i(t)|phi_i(t+dt)> is not close to 1.
     CMATRIX S(time_overlap);  // just a temporary working object
-    int sz = time_overlap.n_rows;
-    int i,j, target;
 
-    // Original permutation
-    vector<int> perm(sz, 0);  
-    for(i=0;i<sz;i++){ perm[i] = i; } 
+    int initial_state = 0;
+    double ksi = rnd.uniform(0.0, 1.0);
+    int number_states = time_overlap.n_rows;
+    vector<int> list_states;
+    vector<int> permutation;
+    vector<double> all_probablities;
+    double permutation_probability;
+    double sum_overlap;
+    double state_probability;
 
+// Construct perumtations and calculate probability of each permutation
 
-    vector<int> used;  // already utilized options
-    MATRIX g(1, sz);   // switching probabilities
+    for(int i=0; i<number_states; i++)
+        list_states.push_back(i);
 
-    // was sz - 1 - not sure why
-    for(i=0;i<sz;i++){ // all starting states (at time t)
+    vector< vector<int> > list_permutations = compute_all_permutations(list_states);
+    MATRIX g(1,list_permutations.size());
 
-        // Make a list of the states that can still participate
-        // in the reordering
-        vector<int> active_states;
-        for(j=0;j<sz;j++){ 
-            if(is_in_vector(j,used)){  ;;  }
-            else{ active_states.push_back(j); }
-        }
+    for(int permutation_num = 0; permutation_num<list_permutations.size(); permutation_num++){
+        permutation_probability = 1;
+        sum_overlap = 0;
+        permutation = list_permutations[permutation_num];
+        for(int i = 0; i<number_states; i++){
+                state_probability = real(conj(S.get(i, permutation[i])) * S.get(i, permutation[i]));
+                    permutation_probability *= state_probability;
+                all_probablities.push_back(permutation_probability);
+                
+        } // for i
+        g.set(0, permutation_num, permutation_probability);
+    } // for permutation
 
+// normalize probabilities
+double sum_probabilities = 0;
+for(int probability_index = 0; probability_index<list_permutations.size(); probability_index++){
+    sum_probabilities += g.get(0,probability_index);
+    }
+for(int probability_index = 0; probability_index<list_permutations.size(); probability_index++){
+    g.scale(0,probability_index, (1/sum_probabilities));
+    }
+// Stochastically determine permutations
 
-        int act_st_sz = active_states.size(); // should be equal to sz - i
+    vector<int> chosen_permutation = list_permutations[hop(initial_state, g, ksi)];
 
-        if(act_st_sz > 1){
- 
-            MATRIX g(1, act_st_sz);
-            for(j=0; j<act_st_sz; j++){ // all target states
+    return chosen_permutation;
 
-                int indx = active_states[j];
-                g.set(0,j, (S.get(i,indx)*std::conj(S.get(i,indx))).real() );
-            }
- 
-            // Now stochastically determine the states re-assignment
-            double ksi = rnd.uniform(0.0, 1.0);
-
-            target = hop(0, g, ksi);    // internal (active states') state index
-            if(target > act_st_sz-1){
-                cout<<"ERROR: target = "<<target<<" is larger than max possible value = "<<act_st_sz-1<<endl;
-                exit(0);
-            }
-            target = active_states[target]; // actual state index
-        }
-        else if(act_st_sz == 1){
-            target = active_states[0];
-        }
-
-        // Update the permutaiton and add the found target state to the exclude list
-        perm[i] = target;
-        used.push_back(target);
-
-    }// for i
-
-    for(i=0;i<sz;i++){ 
-      if(!is_in_vector(i,perm)){
-        for(j=0;j<sz;j++){ 
-            cout<<"j= "<<j<<" perms[j] = "<<perm[j]<<endl; 
-            exit(0);
-        }
-      }
-    } 
-
-    return perm;
 }
-
-
 
 CMATRIX permutation2cmatrix(vector<int>& permutation){
 /**
@@ -472,6 +452,9 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
     }
     if(prms.state_tracking_algo==3){
         perm_t = get_stochastic_reordering(st, rnd);
+    }
+    if(prms.state_tracking_algo==32){
+        perm_t = get_stochastic_reordering2(st, rnd);
     }
 
     // P -> P * perm

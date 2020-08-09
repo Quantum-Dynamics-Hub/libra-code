@@ -336,7 +336,13 @@ void export_dyn_projectors_objects(){
   (CMATRIX& amplitudes, vector<CMATRIX>& projectors) = &dynconsyst_to_raw;
   def("dynconsyst_to_raw", expt_dynconsyst_to_raw_v1);
 
+  vector<int> (*expt_get_stochastic_reordering)
+  (CMATRIX& time_overlap, Random& rnd) = &get_stochastic_reordering;
+  def("get_stochastic_reordering", expt_get_stochastic_reordering);
 
+  vector<int> (*expt_get_stochastic_reordering2)
+  (CMATRIX& time_overlap, Random& rnd) = &get_stochastic_reordering2;
+  def("get_stochastic_reordering2", expt_get_stochastic_reordering2);
 
 
 }

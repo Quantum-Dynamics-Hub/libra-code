@@ -80,7 +80,7 @@ dyn_control_params::dyn_control_params(){
 void dyn_control_params::sanity_check(){
 
   if(state_tracking_algo==0 || state_tracking_algo==1 ||
-     state_tracking_algo==2 || state_tracking_algo==3){ ; ; }
+     state_tracking_algo==2 || state_tracking_algo==3 || state_tracking_algo==32){ ; ; }
   else{
     std::cout<<"Error in dyn_control_params::sanity_check: state_tracking_algo = "
         <<state_tracking_algo<<" is not allowed. Exiting...\n";
