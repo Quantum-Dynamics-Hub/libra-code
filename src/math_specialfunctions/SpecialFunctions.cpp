@@ -1510,7 +1510,49 @@ boost::python::list merge_sort(boost::python::list inp){
 
 }
 
+vector< vector<int> > permutations_reiteration(vector<int>& given_list, int size, int num_elements, vector< vector<int> >& list_of_permutations){
+    /*
+    This function generates all permutations of a given list and outputs as a list of lists.
+    The heart of this algorithm is inspired by:
+    https://www.geeksforgeeks.org/heaps-algorithm-for-generating-permutations/
+    */
 
+    vector<int> one_permutation;
+    int i;
+
+    if(size == 1){
+        one_permutation.clear();
+        for(i = 0; i<num_elements; i++)
+            one_permutation.push_back(given_list[i]);
+        list_of_permutations.push_back(one_permutation);
+        return list_of_permutations;
+    } // if
+
+    for(i=0;i<size;i++){
+        list_of_permutations = permutations_reiteration(given_list, size-1, num_elements, list_of_permutations);
+
+        if(size%2==0) // if even
+            swap(given_list[0], given_list[size-1]);
+
+        else // if odd
+            swap(given_list[i], given_list[size-1]);
+} // for loop
+    return list_of_permutations;
+
+}
+
+vector< vector<int> > compute_all_permutations(vector<int>& given_list){
+    /*
+    This function acts as a wrapper for the permutations_reiteration function,
+    simplifying the required user input to only a list.
+    */
+    int num_elements;
+    vector< vector<int> > list_of_permutations;
+    list_of_permutations.empty();
+    num_elements= given_list.size();
+
+    return permutations_reiteration(given_list, num_elements, num_elements, list_of_permutations);
+}
 
 }// namespace libspecialfunctions
 }// namespace liblibra
