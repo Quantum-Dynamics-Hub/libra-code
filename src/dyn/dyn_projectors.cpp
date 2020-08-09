@@ -369,7 +369,7 @@ vector<int> get_stochastic_reordering2(CMATRIX& time_overlap, Random& rnd){
 
 // Construct perumtations and calculate probability of each permutation
 
-    for(int i = 0; i<number_states; i++)
+    for(int i=0; i<number_states; i++)
         list_states.push_back(i);
 
     vector< vector<int> > list_permutations = compute_all_permutations(list_states);
@@ -383,45 +383,26 @@ vector<int> get_stochastic_reordering2(CMATRIX& time_overlap, Random& rnd){
                 state_probability = real(conj(S.get(i, permutation[i])) * S.get(i, permutation[i]));
                     permutation_probability *= state_probability;
                 all_probablities.push_back(permutation_probability);
-                sum_overlap += state_probability;
+                
         } // for i
-        g.set(0, permutation_num, (permutation_probability/sum_overlap));
+        g.set(0, permutation_num, permutation_probability);
     } // for permutation
 
 // normalize probabilities
 double sum_probabilities = 0;
-for(int probability_index = 0; probability_index<list_permutations.size(); probability_index++)
+for(int probability_index = 0; probability_index<list_permutations.size(); probability_index++){
     sum_probabilities += g.get(0,probability_index);
-for(int probability_index = 0; probability_index<list_permutations.size(); probability_index++)
+    }
+for(int probability_index = 0; probability_index<list_permutations.size(); probability_index++){
     g.scale(0,probability_index, (1/sum_probabilities));
+    }
 // Stochastically determine permutations
 
     vector<int> chosen_permutation = list_permutations[hop(initial_state, g, ksi)];
 
-/* just for testing
-    double total_prob = 0;
-    for(int prob_index = 0; prob_index<list_permutations.size(); prob_index++)
-    total_prob += abs(g.get(0,prob_index));
-
-
-    for(int i=0; i<list_permutations.size(); i++){
-        permutation = list_permutations[i];
-        cout<< "Probability of permutation ";
-        for(int j=0; j<permutation.size(); j++)
-            cout << permutation[j];
-        cout<< " is "<< g.get(0,i) << endl;
-    }
-    cout<< "Sum of probabilities is "<< total_prob<< endl<< "The chosen permutation is ";
-    for(int k=0; k<permutation.size(); k++)
-        cout << chosen_permutation[k];
-    cout<< endl;
-*/
-
     return chosen_permutation;
 
 }
-
-
 
 CMATRIX permutation2cmatrix(vector<int>& permutation){
 /**
