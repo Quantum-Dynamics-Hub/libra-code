@@ -470,9 +470,16 @@ vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd){
     for(i=0;i<size;i++){ list_states[i] = i; } 
 
     vector<int> chosen_perm = list_states;
-    
+
     MATRIX g(1, size);   // switching probabilities
 
+    int is_accepted = 0;
+    int number_of_attempts = 0;
+    int max_number_of_attempts = 100;
+    
+    while(!is_accepted && (number_of_attempts < max_number_of_attempts) ){
+    // propose hop 
+    
     for(i=0;i<size;i++){ // all starting states (at time t)
 
         for(j=0; j<size; j++){ // all target states
@@ -488,26 +495,15 @@ vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd){
 
         // Update the permutaiton
         chosen_perm[i] = list_states[target];
-
     }// for i
-
-    // check if the proposed "hop" is accepted
     
-    int is_accepted = 1;
-    int number_of_attempts = 0;
-    int max_number_of_attempts = 5;
-    
-    //chosen_perm = "identity";
-    
-    while(is_accepted && (number_of_attempts < max_number_of_attempts) ){
-    //while(!is_accepted){
-
+    // check is hop is accepted
+        is_accepted = 1; 
         for(i=0; i<chosen_perm.size() && is_accepted; i++){
             for(j=0; j<chosen_perm.size() && is_accepted; j++){
                 if(i!=j){
                     if(chosen_perm[i] == chosen_perm[j]){
                         is_accepted = 0;
-                        chosen_perm = get_stochastic_reordering3(time_overlap, rnd);
                     } // if perm
                 } // if i != j
             } // for j
@@ -516,7 +512,7 @@ vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd){
     number_of_attempts++;    
         
     } // while
-    
+
     return chosen_perm;
 }
 
