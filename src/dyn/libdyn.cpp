@@ -344,6 +344,10 @@ void export_dyn_projectors_objects(){
   (CMATRIX& time_overlap, Random& rnd) = &get_stochastic_reordering2;
   def("get_stochastic_reordering2", expt_get_stochastic_reordering2);
 
+  vector<int> (*expt_get_stochastic_reordering3)
+  (CMATRIX& time_overlap, Random& rnd) = &get_stochastic_reordering3;
+  def("get_stochastic_reordering3", expt_get_stochastic_reordering3);
+
 
 }
 
