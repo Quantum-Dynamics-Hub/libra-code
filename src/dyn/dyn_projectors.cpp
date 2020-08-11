@@ -491,17 +491,32 @@ vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd){
 
     }// for i
 
-    // check consistancy
-    for(i=0; i<chosen_perm.size(); i++){
-        for(j=0; j<chosen_perm.size(); j++){
-            if(i!=j){
-                if(chosen_perm[i] == chosen_perm[j]){
-                    get_stochastic_reordering3(time_overlap, rnd);
-                } // if perm                
-            } // if i != j            
-        } // for j        
-    } // for i
+    // check if the proposed "hop" is accepted
+    
+    int is_accepted = 1;
+    int number_of_attempts = 0;
+    int max_number_of_attempts = 5;
+    
+    //chosen_perm = "identity";
+    
+    while(is_accepted && (number_of_attempts < max_number_of_attempts) ){
+    //while(!is_accepted){
 
+        for(i=0; i<chosen_perm.size() && is_accepted; i++){
+            for(j=0; j<chosen_perm.size() && is_accepted; j++){
+                if(i!=j){
+                    if(chosen_perm[i] == chosen_perm[j]){
+                        is_accepted = 0;
+                        chosen_perm = get_stochastic_reordering3(time_overlap, rnd);
+                    } // if perm
+                } // if i != j
+            } // for j
+        } // for i
+        
+    number_of_attempts++;    
+        
+    } // while
+    
     return chosen_perm;
 }
 
