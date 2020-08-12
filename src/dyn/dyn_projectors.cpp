@@ -357,50 +357,45 @@ vector<int> get_stochastic_reordering2(CMATRIX& time_overlap, Random& rnd){
     // extract the indices where <phi_i(t)|phi_i(t+dt)> is not close to 1.
     CMATRIX S(time_overlap);  // just a temporary working object
 
-    int initial_state = 0;
-    double ksi = rnd.uniform(0.0, 1.0);
-    int number_states = time_overlap.n_rows;
-    vector<int> list_states;
+    int i, iperm;
     vector<int> permutation;
-    vector<double> all_probablities;
-    double permutation_probability;
-    double sum_overlap;
-    double state_probability;
+    int number_states = time_overlap.n_rows;
 
-// Construct perumtations and calculate probability of each permutation
 
-    for(int i=0; i<number_states; i++)
-        list_states.push_back(i);
+    //====== Construct permutations possible ==============
+    vector<int> identity_permutation;
+    for(i = 0; i < number_states; i++){  identity_permutation.push_back(i); }
 
-    vector< vector<int> > list_permutations = compute_all_permutations(list_states);
-    MATRIX g(1,list_permutations.size());
+    vector< vector<int> > list_permutations = compute_all_permutations(identity_permutation);
+    int num_permutations = list_permutations.size();  /// this should be number_states!
 
-    for(int permutation_num = 0; permutation_num<list_permutations.size(); permutation_num++){
-        permutation_probability = 1;
-        sum_overlap = 0;
-        permutation = list_permutations[permutation_num];
-        for(int i = 0; i<number_states; i++){
-                state_probability = real(conj(S.get(i, permutation[i])) * S.get(i, permutation[i]));
-                    permutation_probability *= state_probability;
-                all_probablities.push_back(permutation_probability);
-                
+    //====== Compute the probabilities of all permutations ==============
+    MATRIX g(1, num_permutations);
+
+    double norm = 0.0;
+    for(iperm = 0; iperm < num_permutations; iperm++){
+
+        permutation = list_permutations[iperm];
+ 
+        double permutation_probability = 1.0;
+        for(i = 0; i < number_states; i++){
+            permutation_probability *= real(conj(S.get(i, permutation[i])) * S.get(i, permutation[i]));
         } // for i
-        g.set(0, permutation_num, permutation_probability);
-    } // for permutation
 
-// normalize probabilities
-double sum_probabilities = 0;
-for(int probability_index = 0; probability_index<list_permutations.size(); probability_index++){
-    sum_probabilities += g.get(0,probability_index);
-    }
-for(int probability_index = 0; probability_index<list_permutations.size(); probability_index++){
-    g.scale(0,probability_index, (1/sum_probabilities));
-    }
-// Stochastically determine permutations
+        norm += permutation_probability;
+        g.set(0, iperm, permutation_probability);
 
-    vector<int> chosen_permutation = list_permutations[hop(initial_state, g, ksi)];
+    } // for iperm
+  
+    g /= norm; // normalize the probabilities
 
-    return chosen_permutation;
+
+    //========= Stochastically determine permutations ==========
+    double ksi = rnd.uniform(0.0, 1.0);
+    int selected_permutation_index = hop(0, g, ksi);
+    
+    return list_permutations[selected_permutation_index];
+
 
 }
 
@@ -410,13 +405,10 @@ CMATRIX permutation2cmatrix(vector<int>& permutation){
 */
 
   int nst = permutation.size();
-
   CMATRIX res(nst, nst);
 
-  for(int i=0; i<nst; i++){
-
-    res.set(permutation[i], i, complex<double>(1.0, 0.0));
- 
+  for(int i=0; i < nst; i++){
+    res.set(permutation[i], i, complex<double>(1.0, 0.0)); 
   }
 
   return res;
@@ -463,58 +455,60 @@ vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd){
     // extract the indices where <phi_i(t)|phi_i(t+dt)> is not close to 1. 
     CMATRIX S(time_overlap);  // just a temporary working object
     int size = time_overlap.n_rows;
-    int i,j, target;
-
-    // Original permutation
-    vector<int> list_states(size, 0);  
-    for(i=0;i<size;i++){ list_states[i] = i; } 
-
-    vector<int> chosen_perm = list_states;
-
+    int i,j;
+    vector<int> chosen_perm(size, 0);  
     MATRIX g(1, size);   // switching probabilities
 
+
+    //=========== Lets keep trying ========
     int is_accepted = 0;
     int number_of_attempts = 0;
     int max_number_of_attempts = 100;
     
     while(!is_accepted && (number_of_attempts < max_number_of_attempts) ){
-    // propose hop 
-    
-    for(i=0;i<size;i++){ // all starting states (at time t)
 
-        for(j=0; j<size; j++){ // all target states
-            
-            int indx = list_states[j];
-            g.set(0,j, (S.get(i,indx)*std::conj(S.get(i,indx))).real() );
+      //======= propose hop ========
+    
+      for(i=0;i<size;i++){ // all starting states (at time t)
+
+        for(j=0; j<size; j++){ // all target states            
+
+            g.set(0, j, (S.get(i, j) * std::conj(S.get(i, j))).real() ); // probability to go for i->j transition
         }
  
         // Now stochastically determine the states re-assignment
         double ksi = rnd.uniform(0.0, 1.0);
-
-        target = hop(0, g, ksi);    // internal (active states') state index
+        int target = hop(0, g, ksi);    // internal (active states') state index
 
         // Update the permutaiton
-        chosen_perm[i] = list_states[target];
-    }// for i
+        chosen_perm[i] = target;  /// chose the permutation i->traget
+      }// for i
     
-    // check is hop is accepted
-        is_accepted = 1; 
-        for(i=0; i<chosen_perm.size() && is_accepted; i++){
-            for(j=0; j<chosen_perm.size() && is_accepted; j++){
-                if(i!=j){
-                    if(chosen_perm[i] == chosen_perm[j]){
-                        is_accepted = 0;
-                    } // if perm
-                } // if i != j
-            } // for j
-        } // for i
+
+      //======= check if hop is accepted =========
+      is_accepted = 1; 
+      for(i = 0; i < chosen_perm.size() && is_accepted; i++){
+          for(j = 0; j < chosen_perm.size() && is_accepted; j++){
+              if(i!=j){
+                  if(chosen_perm[i] == chosen_perm[j]){
+                      is_accepted = 0;
+                  } // if perm
+              } // if i != j
+          } // for j
+      } // for i
         
-    number_of_attempts++;    
+      number_of_attempts++;    
         
     } // while
 
+    // If we haven't found a suitable transition, make it an identity permutation
+    if(!is_accepted){  
+      for(i = 0; i < size; i++){  chosen_perm[i] = i; }
+    }
+
     return chosen_perm;
 }
+
 
 void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors, 
   vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd){
