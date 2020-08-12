@@ -423,6 +423,98 @@ CMATRIX permutation2cmatrix(vector<int>& permutation){
 
 }
 
+vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd){
+    /**
+    """ This function identifies which states have changed their identities during some
+    calculations (usually the eigenvalue problem) in comparison to what they might have been.
+
+    In the dynamics, this situation occurs when the system passes the conical intersection region
+    and the identity of the states may change. The states' energies become non-descriptive for this
+    purpose and one needs to look at the changes of the orbitals (e.g. eigenvectors). In particular,
+    we can look at the overlap of the sates at adjacent times: <phi_i(t)|phi_i(t+dt)> 
+    If no spurious state changes happens, the diagonal elements should be close to 1.0. 
+    If they are not - we locate to which state the transitions might have happened.
+
+    In general context, the "time_overlap" matrix is compused of the overlaps of the eigenvectors
+    for two problems - the original one and a perturbed one.
+
+    Instead of eliminating used states along the way as in get_stochastic_reordering, 
+    this algo assigns all states and then checks for consistancy (ie no duplicate) at end.
+    
+    \param[in] time_overlap ( CMATRIX ) the time overlap matrix, <phi_i(t)|phi_j(t+dt)>.
+
+    Returns:
+    perm - list of integers that describe the permutation. That is:
+    perm[i] - is the index identifying the "older" state "i". Now, it may be labeled
+    by some other index, j = perm[i]. 
+
+    |phi_j(t+dt)> = a_0j |phi_0(t)> + a_1j |phi_1(t)> + ... a_Nj |phi_N(t)>
+
+    So:  <phi_i(t)|phi_j(t+dt)> = a_ij and then
+ 
+    |a_ij|^2 is the probability that the state i at time t becomes state j at time t+dt
+
+    i - state index at t
+    perm[i] - state index at t+dt
+
+    """
+    */
+
+    // extract the indices where <phi_i(t)|phi_i(t+dt)> is not close to 1. 
+    CMATRIX S(time_overlap);  // just a temporary working object
+    int size = time_overlap.n_rows;
+    int i,j, target;
+
+    // Original permutation
+    vector<int> list_states(size, 0);  
+    for(i=0;i<size;i++){ list_states[i] = i; } 
+
+    vector<int> chosen_perm = list_states;
+
+    MATRIX g(1, size);   // switching probabilities
+
+    int is_accepted = 0;
+    int number_of_attempts = 0;
+    int max_number_of_attempts = 100;
+    
+    while(!is_accepted && (number_of_attempts < max_number_of_attempts) ){
+    // propose hop 
+    
+    for(i=0;i<size;i++){ // all starting states (at time t)
+
+        for(j=0; j<size; j++){ // all target states
+            
+            int indx = list_states[j];
+            g.set(0,j, (S.get(i,indx)*std::conj(S.get(i,indx))).real() );
+        }
+ 
+        // Now stochastically determine the states re-assignment
+        double ksi = rnd.uniform(0.0, 1.0);
+
+        target = hop(0, g, ksi);    // internal (active states') state index
+
+        // Update the permutaiton
+        chosen_perm[i] = list_states[target];
+    }// for i
+    
+    // check is hop is accepted
+        is_accepted = 1; 
+        for(i=0; i<chosen_perm.size() && is_accepted; i++){
+            for(j=0; j<chosen_perm.size() && is_accepted; j++){
+                if(i!=j){
+                    if(chosen_perm[i] == chosen_perm[j]){
+                        is_accepted = 0;
+                    } // if perm
+                } // if i != j
+            } // for j
+        } // for i
+        
+    number_of_attempts++;    
+        
+    } // while
+
+    return chosen_perm;
+}
 
 void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors, 
   vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd){
@@ -457,6 +549,10 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
         perm_t = get_stochastic_reordering2(st, rnd);
     }
 
+    if(prms.state_tracking_algo==33){
+        perm_t = get_stochastic_reordering3(st, rnd);
+    }
+    
     // P -> P * perm
     CMATRIX p_i(nst, nst);
     p_i = permutation2cmatrix(perm_t);
