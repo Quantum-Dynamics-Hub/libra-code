@@ -395,8 +395,10 @@ void nHamiltonian::compute_adiabatic(int der_lvl, int lvl){
  
               double dE = (ham_adi->get(j,j) - ham_adi->get(i,i) ).real();
               if(fabs(dE)<1e-100){ 
-                //dE = 1e-10 * (dE>0.0 ? 1.0 : -1.0); 
-                dc1_adi[n]->set(i,j, 0.0, 0.0 );
+                //dE = 1e-10 * (dE>0.0 ? 1.0 : -1.0);                 
+                dE = 1e-100;
+                dc1_adi[n]->set(i,j, tmp->get(i,j)/dE );
+                //dc1_adi[n]->set(i,j, 0.0, 0.0 );
               }else{
           
                 dc1_adi[n]->set(i,j, tmp->get(i,j)/dE );
