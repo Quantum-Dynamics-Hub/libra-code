@@ -89,6 +89,9 @@ void export_dyn_control_params_objects(){
       .def_readwrite("collapse_option", &dyn_control_params::collapse_option)
       .def_readwrite("ensemble", &dyn_control_params::ensemble)
       .def_readwrite("thermostat_params", &dyn_control_params::thermostat_params)
+      .def_readwrite("thermostat_dofs", &dyn_control_params::thermostat_dofs)
+      .def_readwrite("quantum_dofs", &dyn_control_params::quantum_dofs)
+      .def_readwrite("constrained_dofs", &dyn_control_params::constrained_dofs)
 
       .def("sanity_check", expt_sanity_check_v1)
       .def("set_parameters", expt_set_parameters_v1)
@@ -193,12 +196,23 @@ void export_dyn_hop_acceptance_objects(){
   //============= dyn_hop_proposal.cpp ======================
 
   int (*expt_can_rescale_along_vector_v1)
-  (double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t) = &can_rescale_along_vector;
+  (double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, vector<int>& which_dofs) = &can_rescale_along_vector;
   def("can_rescale_along_vector", expt_can_rescale_along_vector_v1);
 
+  int (*expt_can_rescale_along_vector_v2)
+  (double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t) = &can_rescale_along_vector;
+  def("can_rescale_along_vector", expt_can_rescale_along_vector_v2);
+
+
+
   void (*expt_rescale_along_vector_v1)
-  (double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse) = &rescale_along_vector;
+  (double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse, vector<int>& which_dofs) = &rescale_along_vector;
   def("rescale_along_vector", expt_rescale_along_vector_v1);
+
+  void (*expt_rescale_along_vector_v2)
+  (double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse) = &rescale_along_vector;
+  def("rescale_along_vector", expt_rescale_along_vector_v2);
+
 
   vector<double> (*expt_Boltz_quant_prob_v1)
   (vector<double>& E, double T) = &Boltz_quant_prob;
@@ -222,10 +236,13 @@ void export_dyn_hop_acceptance_objects(){
   (double E_new, double E_old, double T, int boltz_opt) = &boltz_factor;
   def("boltz_factor", expt_boltz_factor_v1);
 
+
+
   vector<int> (*expt_accept_hops_v1)
   (dyn_control_params& prms,
    MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
-   nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd, vector<int>& which_trajectories) = &accept_hops;
+   nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd, 
+   vector<int>& which_trajectories) = &accept_hops;
   def("accept_hops", expt_accept_hops_v1);
 
   vector<int> (*expt_accept_hops_v2)
@@ -234,11 +251,20 @@ void export_dyn_hop_acceptance_objects(){
    nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd ) = &accept_hops;
   def("accept_hops", expt_accept_hops_v2);
 
+
+
   vector<int> (*expt_where_can_we_hop_v1)
   (int traj, dyn_control_params& prms,
    MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, vector<CMATRIX>& projectors, 
    nHamiltonian& ham, vector<int>& act_states, Random& rnd) = &where_can_we_hop;
   def("where_can_we_hop", expt_where_can_we_hop_v1);
+
+
+  void (*expt_handle_hops_nuclear_v1)
+  (dyn_control_params& prms,
+   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
+   nHamiltonian& ham, vector<int>& new_states, vector<int>& old_states) = &handle_hops_nuclear;
+  def("handle_hops_nuclear", expt_handle_hops_nuclear_v1);
 
 }
 
@@ -380,11 +406,29 @@ void export_permutation_objects(){
 void export_Energy_Forces_objects(){
 
 
-  double (*expt_compute_kinetic_energy_v1)(MATRIX& p, MATRIX& invM) = &compute_kinetic_energy;
-  def("compute_kinetic_energy",expt_compute_kinetic_energy_v1);
+  double (*expt_compute_kinetic_energy_v11)(MATRIX& p, MATRIX& invM, vector<int>& which_dofs) = &compute_kinetic_energy;
+  def("compute_kinetic_energy",expt_compute_kinetic_energy_v11);
 
-  vector<double> (*expt_compute_kinetic_energies_v1)(MATRIX& p, MATRIX& invM) = &compute_kinetic_energies;
+  double (*expt_compute_kinetic_energy_v12)(MATRIX& p, MATRIX& invM) = &compute_kinetic_energy;
+  def("compute_kinetic_energy",expt_compute_kinetic_energy_v12);
+
+  double (*expt_compute_kinetic_energy_v2)(Nuclear& mol) = &compute_kinetic_energy;
+  def("compute_kinetic_energy",expt_compute_kinetic_energy_v2);
+
+  double (*expt_compute_kinetic_energy_v3)(Ensemble& ens) = &compute_kinetic_energy;
+  def("compute_kinetic_energy",expt_compute_kinetic_energy_v3);
+
+
+
+  vector<double> (*expt_compute_kinetic_energies_v1)(MATRIX& p, MATRIX& invM, vector<int>& which_dofs) = &compute_kinetic_energies;
   def("compute_kinetic_energies",expt_compute_kinetic_energies_v1);
+
+  vector<double> (*expt_compute_kinetic_energies_v2)(MATRIX& p, MATRIX& invM) = &compute_kinetic_energies;
+  def("compute_kinetic_energies",expt_compute_kinetic_energies_v2);
+
+
+
+
 
   CMATRIX (*expt_tsh_indx2ampl_v1)(vector<int>& res, int nstates) = &tsh_indx2ampl;
   def("tsh_indx2ampl", expt_tsh_indx2ampl_v1);
@@ -407,12 +451,6 @@ void export_Energy_Forces_objects(){
 
 
 
-
-  double (*expt_compute_kinetic_energy_v2)(Nuclear& mol) = &compute_kinetic_energy;
-  def("compute_kinetic_energy",expt_compute_kinetic_energy_v2);
-
-  double (*expt_compute_kinetic_energy_v3)(Ensemble& ens) = &compute_kinetic_energy;
-  def("compute_kinetic_energy",expt_compute_kinetic_energy_v3);
 
 
   double (*expt_compute_potential_energy_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt) = &compute_potential_energy;

@@ -129,12 +129,34 @@ void update_Hamiltonian_p(dyn_control_params& prms, nHamiltonian& ham,
     Update of the vibronic Hamiltonian in response to changed p
   */
 
+  // For the purpose of updating the NACs and Hvibs for just the quantum DOFs,
+  // we'll reset the momenta for all other DOFs to zero, to effectively turn of
+  // the effect of classical momenta on the NAC calculations (in case those derivative
+  // couplings have been computed)
+  int ndof, ntraj;
+  vector<int>& which_dofs = prms.quantum_dofs;
+  int n_active_dof = which_dofs.size();
+  ndof = p.n_rows;
+  ntraj = p.n_cols;
+
+  MATRIX p_quantum_dof(ndof, ntraj);
+
+  for(int idof = 0; idof < n_active_dof; idof++){
+    int dof = which_dofs[idof];
+
+    for(int itraj = 0; itraj < ntraj; itraj++){
+      p_quantum_dof.set(dof, itraj,  p.get(dof, itraj) );
+    }
+  }
+  
+
+
   // Update NACs and Hvib for all trajectories
   if(prms.rep_tdse==0){  
 
     if(prms.nac_update_method==0){ ;;  }
     else if(prms.nac_update_method==1){
-      ham.compute_nac_dia(p, invM, 0, 1);
+      ham.compute_nac_dia(p_quantum_dof, invM, 0, 1);
       ham.compute_hvib_dia(1);
     }
   }
@@ -142,7 +164,7 @@ void update_Hamiltonian_p(dyn_control_params& prms, nHamiltonian& ham,
 
     if(prms.nac_update_method==0){ ;;  }
     else if(prms.nac_update_method==1){
-      ham.compute_nac_adi(p, invM, 0, 1); 
+      ham.compute_nac_adi(p_quantum_dof, invM, 0, 1); 
       ham.compute_hvib_adi(1);
     }
   }
@@ -223,195 +245,6 @@ CMATRIX transform_amplitudes(int rep_in, int rep_out, CMATRIX& C, nHamiltonian& 
 
 
 
-
-
-void handle_hops_nuclear(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
-       nHamiltonian& ham, vector<int>& new_states, vector<int>& old_states){
-/**
-  This function changes the nuclear dynamical variables after successful or frustrated hops
-
-  options:
-  0 - don't rescale
-
-  100 - based on adiabatic energy, don't reverse on frustrated hops
-  101 - based on adiabatic energy, reverse on frustrated hops
-  110 - based on diabatic energy, don't reverse on frustrated hops
-  111 - based on diabatic energy, reverse on frustrated hops
-
-  200 - along derivative coupling vectors, don't reverse on frustrated hops
-  201 - along derivative coupling vectors, reverse on frustrated hops
-  210 - along difference of state-specific forces, don't reverse on frustrated hops
-  211 - along difference of state-specific forces, reverse on frustrated hops
-
-*/
-
-  int ndof = q.n_rows;
-  int ntraj = q.n_cols;
-  int nst = C.n_rows;    
-  int traj, dof, i;
-
-  MATRIX p_tr(ndof, 1);
-  CMATRIX hvib(nst, nst);
-  CMATRIX nac(nst, nst);
-  CMATRIX df(nst, nst);
-
-
-  if(prms.momenta_rescaling_algo==0){  // Don't rescale at all
-    ; ;
-  }// algo = 0
-
-  else if(prms.momenta_rescaling_algo==100 || prms.momenta_rescaling_algo==101){  // rescale momenta uniformly based on adiabatic energies
-
-    for(traj=0; traj<ntraj; traj++){
-
-      int old_st = old_states[traj];
-      int new_st = new_states[traj];
-
-      p_tr = p.col(traj);
-
-      double T_i = compute_kinetic_energy(p_tr, invM); // initial kinetic energy
-
-      hvib = ham.children[traj]->get_ham_adi();
-      hvib = projectors[traj].H() * hvib * projectors[traj];
-        
-      double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
-      double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
-      double T_f = T_i + E_i - E_f;             // predicted final kinetic energy
-
-
-      double scl_fac = 1.0;
-
-      if(T_f>=0.0){  scl_fac = std::sqrt(T_f/T_i);   }
-      else{
-        if(prms.momenta_rescaling_algo==100){  scl_fac = 1.0; }
-        else if(prms.momenta_rescaling_algo==101){  scl_fac = -1.0; }
-      }      
-
-      for(dof = 0; dof < ndof; dof++){   p.scale(dof, traj, scl_fac);  }
-
-    }
-  }// algo = 100 || 101
-
-  else if(prms.momenta_rescaling_algo==110 || prms.momenta_rescaling_algo==111){  // rescale momenta uniformly based on diabatic energies
-
-    for(traj=0; traj<ntraj; traj++){
-
-      int old_st = old_states[traj];
-      int new_st = new_states[traj];
-
-      p_tr = p.col(traj);
-      double T_i = compute_kinetic_energy(p_tr, invM); // initial kinetic energy
-      double E_i = ham.children[traj]->get_ham_dia().get(old_st, old_st).real();  // initial potential energy
-      double E_f = ham.children[traj]->get_ham_dia().get(new_st, new_st).real();  // final potential energy  
-      double T_f = T_i + E_i - E_f;             // predicted final kinetic energy
-
-      double scl_fac = 1.0;
-
-      if(T_f>=0.0){  scl_fac = std::sqrt(T_f/T_i);   }
-      else{
-        if(prms.momenta_rescaling_algo==110){  scl_fac = 1.0; }
-        else if(prms.momenta_rescaling_algo==111){  scl_fac = -1.0; }
-      }      
-
-      for(dof = 0; dof < ndof; dof++){   p.scale(dof, traj, scl_fac);  }
-
-    }
-  }// algo = 110 || algo = 111
-
-
-  else if(prms.momenta_rescaling_algo==200 || prms.momenta_rescaling_algo==201){  // rescale momenta along the derivative coupling vector
-
-    MATRIX dNAC(ndof, 1);
-    int do_reverse;
-
-    if(prms.momenta_rescaling_algo==200){ do_reverse = 0; }
-    else if(prms.momenta_rescaling_algo==201){ do_reverse = 1; }
-
-    for(traj=0; traj<ntraj; traj++){
-
-      int old_st = old_states[traj];
-      int new_st = new_states[traj];
-
-      hvib = ham.children[traj]->get_ham_adi();
-      hvib = projectors[traj].H() * hvib * projectors[traj];
-
-      double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
-      double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
-
-      for(dof = 0; dof < ndof; dof++){
-        nac = ham.children[traj]->get_dc1_adi(dof);
-        nac = projectors[traj].H() * nac * projectors[traj];
-
-        dNAC.set(dof, 0, nac.get(old_st, new_st).real() );
-      }
-
-      p_tr = p.col(traj);       
-      rescale_along_vector(E_i, E_f, p_tr, invM, dNAC, do_reverse); 
-
-      for(dof = 0; dof < ndof; dof++){   p.set(dof, traj, p_tr.get(dof, 0));     }
-
-    }// for traj
-
-  }// algo = 200 || 201
-
-  else if(prms.momenta_rescaling_algo==210 || prms.momenta_rescaling_algo==211 ){  // rescale momenta along the difference in forces
-
-    MATRIX dF(ndof, 1);
-/*
-    MATRIX Fi(ndof, ntraj);
-    MATRIX Ff(ndof, ntraj);
-    CMATRIX _ampl_i(nst, ntraj);     // CMATRIX version of "initial_states"
-    CMATRIX _ampl_f(nst, ntraj);     // CMATRIX version of "proposed_states"
-
-
-    tsh_indx2vec(ham, _ampl_i, old_states);
-    Fi = ham.Ehrenfest_forces_adi(_ampl_i, 1).real();
-
-    tsh_indx2vec(ham, _ampl_f, new_states);
-    Ff = ham.Ehrenfest_forces_adi(_ampl_f, 1).real();
-
-*/
-
-    int do_reverse;
-
-    if(prms.momenta_rescaling_algo==210){ do_reverse = 0; }
-    else if(prms.momenta_rescaling_algo==211){ do_reverse = 1; }
-
-
-
-    for(traj=0; traj<ntraj; traj++){
-
-      int old_st = old_states[traj];
-      int new_st = new_states[traj];
-
-      hvib = ham.children[traj]->get_ham_adi();
-      hvib = projectors[traj].H() * hvib * projectors[traj];
-      double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
-      double E_f = hvib.get(new_st, new_st).real();  // final potential energy        
-
-      for(dof = 0; dof < ndof; dof++){
-
-        df = ham.children[traj]->get_d1ham_adi(dof);
-        df = projectors[traj].H() * df * projectors[traj];
-        dF.set(dof, 0, df.get(old_st, old_st).real() - df.get(new_st, new_st).real());
-
-      }
-
-      p_tr = p.col(traj);       
-      rescale_along_vector(E_i, E_f, p_tr, invM, dF, do_reverse); 
-
-      for(dof = 0; dof < ndof; dof++){   p.set(dof, traj, p_tr.get(dof, 0));     }
-      
-    }// for traj
-
-  }// algo = 210 || 211
-
-
-}
-
-
-
 //vector<CMATRIX> compute_St(nHamiltonian& ham, CMATRIX** Uprev){
 vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev){
 /**
@@ -489,11 +322,12 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   dyn_control_params prms;
   prms.set_parameters(dyn_params);
 
-
+  int cdof;
   int ndof = q.n_rows;
   int ntraj = q.n_cols;
   int nst = C.n_rows;    
-  int traj, dof;
+  int traj, dof, idof;
+  int n_therm_dofs;
 
   MATRIX coherence_time(nst, ntraj); // for DISH
   MATRIX coherence_interval(nst, ntraj); // for DISH
@@ -509,6 +343,18 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   MATRIX p_traj(ndof, 1);
   vector<int> t1(ndof, 0); for(dof=0;dof<ndof;dof++){  t1[dof] = dof; }
   vector<int> t2(1,0);
+
+  //============ Sanity checks ==================
+  if(prms.ensemble==1){  
+    n_therm_dofs = therm[0].Nf_t + therm[0].Nf_r;
+    if(n_therm_dofs != prms.thermostat_dofs.size()){
+      cout<<"Error in compute_dynamics: The number of thermostat DOFs ( currently "<<n_therm_dofs<<") must be \
+      equal to the number of thermostat dofs set up by the `thermostat_dofs` parameter ( currently "
+      <<prms.thermostat_dofs.size()<<")\nExiting...\n";
+      exit(0);
+    }
+  }
+
 
 
   if(prms.tsh_method == 3){
@@ -541,12 +387,20 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
   // NVT dynamics
   if(prms.ensemble==1){  
-    for(traj=0; traj<ntraj; traj++){
-      p.scale(-1, traj, therm[traj].vel_scale(0.5*prms.dt));
-    }
+    for(idof=0; idof<n_therm_dofs; idof++){
+      dof = prms.thermostat_dofs[idof];
+      for(traj=0; traj<ntraj; traj++){
+        p.scale(dof, traj, therm[traj].vel_scale(0.5*prms.dt));
+      }// traj
+    }// idof 
   }
  
   p = p + aux_get_forces(prms, C, projectors, act_states, ham) * 0.5 * prms.dt;
+
+  // Kinetic constraint
+  for(cdof = 0; cdof < prms.constrained_dofs.size(); cdof++){   
+    p.scale(prms.constrained_dofs[cdof], -1, 0.0); 
+  }
 
 
 
@@ -567,8 +421,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   }
 
 
-  // Recompute the matrices at the new geometry and apply any
-  // necessary fixes 
+  // Recompute the matrices at the new geometry and apply any necessary fixes 
   update_Hamiltonian_q(prms, q, projectors, ham, py_funct, params);
   update_Hamiltonian_q_ethd(prms, q, p, projectors, ham, py_funct, params, invM);
 
@@ -607,11 +460,10 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
   // NVT dynamics
   if(prms.ensemble==1){  
-
     for(traj=0; traj<ntraj; traj++){
       t2[0] = traj; 
       pop_submatrix(p, p_traj, t1, t2);
-      double ekin = compute_kinetic_energy(p_traj, invM);
+      double ekin = compute_kinetic_energy(p_traj, invM, prms.thermostat_dofs);
       therm[traj].propagate_nhc(prms.dt, ekin, 0.0, 0.0);
     }
 
@@ -620,11 +472,20 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
   p = p + aux_get_forces(prms, C, projectors, act_states, ham) * 0.5 * prms.dt;
 
+  // Kinetic constraint
+  for(cdof=0; cdof<prms.constrained_dofs.size(); cdof++){   
+    p.scale(prms.constrained_dofs[cdof], -1, 0.0); 
+  }
+
+
   // NVT dynamics
   if(prms.ensemble==1){  
-    for(traj=0; traj<ntraj; traj++){
-      p.scale(-1, traj, therm[traj].vel_scale(0.5*prms.dt));
-    }
+    for(idof=0; idof<n_therm_dofs; idof++){
+      dof = prms.thermostat_dofs[idof];
+      for(traj=0; traj<ntraj; traj++){
+        p.scale(dof, traj, therm[traj].vel_scale(0.5*prms.dt));
+      }// traj
+    }// idof 
   }
 
 

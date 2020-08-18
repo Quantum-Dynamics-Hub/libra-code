@@ -694,11 +694,14 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                        "mem_output_level":-1,
                        "use_compression":0, "compression_level":[0,0,0], 
                        "txt_output_level":0,
-                       "progress_frequency":0.1
+                       "progress_frequency":0.1,
+                       "quantum_dofs":None,
+                       "thermostat_dofs":[],
+                       "constrained_dofs":[]
                      }
 
     comn.check_input(dyn_params, default_params, critical_params)
-        
+               
     prefix = dyn_params["prefix"]    
     rep_tdse = dyn_params["rep_tdse"]
     nsteps = dyn_params["nsteps"]
@@ -718,6 +721,9 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     nadi = Cadi.num_of_rows
     nnucl= q.num_of_rows
     ntraj= q.num_of_cols
+
+    if(dyn_params["quantum_dofs"]==None):
+        dyn_params["quantum_dofs"] = list(range(nnucl))
 
 
     # Initialize savers
@@ -743,7 +749,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     if ensemble==1:
         for traj in range(ntraj):
             therm.append( Thermostat( dyn_params["thermostat_params"] ) )
-            therm[traj].set_Nf_t(nnucl)
+            therm[traj].set_Nf_t( len(dyn_params["thermostat_dofs"]) )
             therm[traj].init_nhc()
 
                 

@@ -346,6 +346,33 @@ class dyn_control_params{
   bp::dict thermostat_params;
 
 
+  /**
+    Thermostat DOFs
+
+    This list contains the indices of nuclear DOFs which shall be coupled to a thermostat directly
+  */
+  vector<int> thermostat_dofs;
+
+
+  /**
+    Quantum-classical partitioning
+
+    This list of integers contains the indices of nuclear DOFs which chall be treated "quantum-mechanically", well
+    including with TSH that is. These DOFs will determine the velocity-rescaling-based acceptance of the hops,
+    and these DOFs will be rescaled when the transition is accepted 
+
+  */
+  vector<int> quantum_dofs;
+
+
+  /**
+    Constrained DOFs
+  */
+  vector<int> constrained_dofs; 
+
+    
+
+
 
   dyn_control_params();
   dyn_control_params(const dyn_control_params& x){ 

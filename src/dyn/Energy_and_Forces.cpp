@@ -27,7 +27,7 @@ namespace liblibra{
 namespace libdyn{
 
 
-double compute_kinetic_energy(MATRIX& p, MATRIX& invM){
+double compute_kinetic_energy(MATRIX& p, MATRIX& invM, vector<int>& which_dofs){
 /**
   \brief Compute kinetic energy of nuclear DOFs
   \param[in] p [ndof x ntraj] Momenta of ntraj replicas of the system with ndof 
@@ -39,13 +39,15 @@ double compute_kinetic_energy(MATRIX& p, MATRIX& invM){
 
   This is the classical nuclear kinetic energy
 */
-  int ndof = p.n_rows;
+  int ndof = which_dofs.size(); ///p.n_rows;
   int ntraj = p.n_cols;
 
   double Ekin = 0.0;
   
     
-  for(int dof=0; dof < ndof; dof++){ 
+  for(int idof=0; idof < ndof; idof++){ 
+
+    int dof = which_dofs[idof];
 
     double sum = 0.0;
     for(int traj=0; traj < ntraj; traj++){    
@@ -59,7 +61,18 @@ double compute_kinetic_energy(MATRIX& p, MATRIX& invM){
 
 }
 
-vector<double> compute_kinetic_energies(MATRIX& p, MATRIX& invM){
+double compute_kinetic_energy(MATRIX& p, MATRIX& invM){
+
+  int ndof = p.n_rows;
+  vector<int> which_dofs(ndof);
+  for(int i = 0; i < ndof; i++){  which_dofs[i] = i; }
+
+  return compute_kinetic_energy(p, invM, which_dofs);
+
+}
+
+
+vector<double> compute_kinetic_energies(MATRIX& p, MATRIX& invM, vector<int>& which_dofs){
 /**
   \brief Compute trajectory-resolved kinetic energies of nuclear DOFs
 
@@ -69,7 +82,7 @@ vector<double> compute_kinetic_energies(MATRIX& p, MATRIX& invM){
 
   This is the classical nuclear kinetic energy
 */
-  int ndof = p.n_rows;
+  int ndof = which_dofs.size(); ///p.n_rows;
   int ntraj = p.n_cols;
 
   vector<double> Ekin(ntraj, 0.0);
@@ -78,7 +91,9 @@ vector<double> compute_kinetic_energies(MATRIX& p, MATRIX& invM){
 
     double sum = 0.0;
 
-    for(int dof=0; dof < ndof; dof++){ 
+    for(int idof=0; idof < ndof; idof++){ 
+
+      int dof = which_dofs[idof];
       sum += p.get(dof, traj) * invM.get(dof, 0) * p.get(dof, traj);
     }
     sum *= 0.5;
@@ -88,6 +103,18 @@ vector<double> compute_kinetic_energies(MATRIX& p, MATRIX& invM){
   }// for traj
 
   return Ekin;
+
+}
+
+
+
+vector<double> compute_kinetic_energies(MATRIX& p, MATRIX& invM){
+
+  int ndof = p.n_rows;
+  vector<int> which_dofs(ndof);
+  for(int i = 0; i < ndof; i++){  which_dofs[i] = i; }
+
+  return compute_kinetic_energies(p, invM, which_dofs);
 
 }
 

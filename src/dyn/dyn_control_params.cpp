@@ -73,20 +73,62 @@ dyn_control_params::dyn_control_params(){
   ensemble = 0;
   thermostat_params = bp::dict();
 
+  thermostat_dofs = vector<int>(1, 0);
+  quantum_dofs = vector<int>(1, 0);
+  constrained_dofs = vector<int>();
+
 }
 
 
 
 void dyn_control_params::sanity_check(){
 
+  ///=================== Options for state tracking ======================
   if(state_tracking_algo==0 || state_tracking_algo==1 ||
      state_tracking_algo==2 || state_tracking_algo==3 ||
      state_tracking_algo==32 || state_tracking_algo==33){ ; ; }
   else{
     std::cout<<"Error in dyn_control_params::sanity_check: state_tracking_algo = "
-        <<state_tracking_algo<<" is not allowed. Exiting...\n";
+        <<state_tracking_algo<<" is not allowed\nExiting...\n";
     exit(0);
   }
+
+  /// Shall not use DISH with the decoherence correction
+  if(tsh_method==3 && decoherence_algo!=-1){
+    cout<<"Error in dyn_control_params::sanity_check: Shall not use DISH (tsh_method == 3) with the \
+           decoherence correction (any but decoherence_algo == -1)\nExiting...\n";
+    exit(0);
+  }
+
+  /// Check that we don't constrian the thermostatted DOFs and also quantum DOFs
+  int sz1 = constrained_dofs.size();
+  if(sz1!=0){
+
+    int sz2 = thermostat_dofs.size();
+
+    for(int i1=0; i1<sz1; i1++){
+      for(int i2=0; i2<sz2; i2++){
+        if( constrained_dofs[i1] == thermostat_dofs[i2] ){
+           cout<<"Error in dyn_control_params::sanity_check: can not constrain the thermostatted DOF "<<thermostat_dofs[i2]<<endl;
+           cout<<"Exiting...\n";
+           exit(0);
+        }
+      }// for i2
+    }// for i1
+
+    sz2 = quantum_dofs.size();
+    for(int i1=0; i1<sz1; i1++){
+      for(int i2=0; i2<sz2; i2++){
+        if( constrained_dofs[i1] == quantum_dofs[i2] ){
+           cout<<"Error in dyn_control_params::sanity_check: can not constrain the quantum DOF "<<quantum_dofs[i2]<<endl;
+           cout<<"Exiting...\n";
+           exit(0);
+        }
+      }// for i2
+    }// for i1
+
+  }// sz1!=0
+
 
 }
 
@@ -174,8 +216,26 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="ensemble"){ ensemble = bp::extract<int>(params.values()[i]); }    
     else if(key=="thermostat_params"){ thermostat_params = bp::extract<bp::dict>(params.values()[i]); }    
 
+    else if(key=="thermostat_dofs"){  
+      thermostat_dofs.clear();
+      boost::python::list tmp = extract<boost::python::list>(params.values()[i]);
+      for(int j=0; j<len(tmp); j++){  thermostat_dofs.push_back( extract<double>(tmp[j]) );  }
+    }
+    else if(key=="quantum_dofs"){  
+      quantum_dofs.clear();
+      boost::python::list tmp = extract<boost::python::list>(params.values()[i]);
+      for(int j=0; j<len(tmp); j++){  quantum_dofs.push_back( extract<double>(tmp[j]) );  }
+    }
+    else if(key=="constrained_dofs"){  
+      constrained_dofs.clear();
+      boost::python::list tmp = extract<boost::python::list>(params.values()[i]);
+      for(int j=0; j<len(tmp); j++){  constrained_dofs.push_back( extract<double>(tmp[j]) );  }
+    }
 
-  }
+
+
+
+  }// for i
 
   sanity_check();
 
