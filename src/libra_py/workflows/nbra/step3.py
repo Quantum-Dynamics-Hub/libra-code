@@ -433,7 +433,7 @@ def apply_normalization(S, St):
     
     """
 
-    nsteps = len(St)
+    nsteps  = len(S)
     nstates = int(St[0].num_of_cols/2)  # division by 2 because it is a super-matrix
     
     alp = list(range(0,nstates))
@@ -1171,6 +1171,129 @@ def pyxaid2libra(Hvib_pyxaid, params):
         H_vib.append(Hvib)        
         
     return H_vib
+
+
+
+def apply_state_reordering_general(St, E, params):
+    """
+    Performs the state's identity reordering in a given basis for all time steps.
+    This is reflects in the corresponding changess of the TDM.
+
+    This function is for dat NOT in spin-block format
+
+    Args:
+        St ( list of CMATRIX(nstates, nstates) ): TDM for each timestep
+        E ( list of CMATRIX(nstates, nstates) ): energies of all states at every step
+        params ( dictionary ): parameters controlling the reordering
+            * **params["do_state_reordering"]** ( int ): option to select the state reordering algorithm 
+                Available options:
+                    - 1: older version developed by Kosuke Sato, may not the working all the times
+                    - 2: Munkres-Kuhn (Hungarian) method [default]
+            * **params["state_reordering_alpha"]** ( double ): a parameter that controls how 
+                many states will be included in the reordering
+    Returns:
+        None: but changes the input St object
+    """
+
+    critical_params = [ ]
+    default_params = { "do_state_reordering":2, "state_reordering_alpha":0.0 }
+    comn.check_input(params, default_params, critical_params)
+
+    nsteps  = len(St)
+    nstates = St[0].num_of_cols 
+
+    # Initialize the cumulative permutation as the identity permutation
+    perm_cum = intList() # cumulative permutation for alpha spatial orbitals
+    for i in range(0,nstates):
+        perm_cum.append(i)
+
+    # Current permutation
+    perm_t = intList() 
+    for i in range(0,nstates):
+        perm_t.append(i)
+ 
+    for i in range(0, nsteps):
+
+        if params["do_state_reordering"]==1:
+            """
+            A simple approach based on permuations - but this is not robust
+            may have loops
+            """
+            perm_t = get_reordering(St[i])
+
+            # apply the cumulative permutation  
+            update_permutation(perm_t, perm_cum)
+
+            # apply the permutation
+            # Because St = <psi(t)|psi(t+dt)> - we permute only columns
+            St[i].permute_cols(perm_cum)
+
+            E[i].permute_cols(perm_cum)
+            E[i].permute_rows(perm_cum)
+
+
+        elif params["do_state_reordering"]==2:
+            """
+            The Hungarian approach
+            """
+
+            # Permute rows 
+            St[i].permute_rows(perm_t)
+
+            # compute the cost matrices
+            cost_mat = make_cost_mat(St[i], E[i], params["state_reordering_alpha"])
+
+            # Solve the optimal assignment problem for diagonal blocks
+            res = hungarian.maximize(cost_mat)
+
+            # Convert the list of lists into the permutation object
+            for row in res:
+                perm_t[row[0]] = row[1]  # for < i | i > this becomes a new value: perm_t = P_{n+1}
+
+            # Permute the blocks by col
+            St[i].permute_cols(perm_t)
+
+
+
+def apply_phase_correction_general(St):
+    """Performs the phase correction according to:         
+    Akimov, A. V. J. Phys. Chem. Lett, 2018, 9, 6096
+
+    This function is for dat NOT in spin-block format
+
+    Args:
+        St ( list of CMATRIX(N,N) ): St_ij[n] = <i(n)|j(n+1)> transition density matrix for 
+            the timestep n, where N is the number of states in the active space. 
+            Spin-orbitals, not just orbitals! So it is composed as:
+
+    Returns: 
+        None: but changes the input St matrices
+    """
+
+    nsteps  = len(St)
+    nstates = St[0].num_of_cols
+
+    ### Initiate the cumulative phase correction factors ###    
+    cum_phase = CMATRIX(nstates,1)  # F(n-1)  cumulative phase
+    for i in range(0,nstates):
+        cum_phase.set(i, 0, 1.0+0.0j)
+
+    print("number of steps , nsteps= ", nsteps)
+
+    for i in range(0, nsteps):
+
+        ### Compute the instantaneous phase correction factors for diag. blocks ###
+        phase_i = compute_phase_corrections(St[i]) # f(i)
+
+        phase_i.show_matrix()
+
+        ### Do the  phase corrections ###
+        do_phase_corr(cum_phase, St[i], cum_phase, phase_i)
+
+        ### Update the cumulative phase correction factors for diag. blocks ###
+        for j in range(0,nstates):
+            cum_phase.scale(j, 0, phase_i.get(j))
+
 
 
 
