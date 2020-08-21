@@ -48,6 +48,8 @@ dyn_control_params::dyn_control_params(){
 //  do_reverse = 1;
 //  vel_rescale_opt = 0;
   dt = 41.0;
+
+  time_overlap_method = 0;
   do_phase_correction = 1;
   phase_correction_tol = 1e-3; 
   state_tracking_algo = 2;
@@ -161,6 +163,8 @@ void dyn_control_params::set_parameters(bp::dict params){
 
     else if(key=="dt") { dt = bp::extract<double>(params.values()[i]);  }
 
+    // Time-overlap "computation"
+    else if(key=="time_overlap_method"){ time_overlap_method = bp::extract<double>(params.values()[i]); }
     // Phase correction
     else if(key=="do_phase_correction") { do_phase_correction = bp::extract<int>(params.values()[i]);  }
     else if(key=="phase_correction_tol") { phase_correction_tol = bp::extract<double>(params.values()[i]);  }

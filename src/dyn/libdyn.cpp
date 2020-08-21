@@ -69,6 +69,7 @@ void export_dyn_control_params_objects(){
 //      .def_readwrite("do_reverse", &dyn_control_params::do_reverse)
 //      .def_readwrite("vel_rescale_opt", &dyn_control_params::vel_rescale_opt)
       .def_readwrite("dt", &dyn_control_params::dt)
+      .def_readwrite("time_overlap_method", &dyn_control_params::time_overlap_method)
       .def_readwrite("do_phase_correction", &dyn_control_params::do_phase_correction)
       .def_readwrite("phase_correction_tol", &dyn_control_params::phase_correction_tol)
       .def_readwrite("state_tracking_algo", &dyn_control_params::state_tracking_algo)
@@ -552,8 +553,10 @@ void export_Dyn_objects(){
 
 
 
-  vector<CMATRIX> (*expt_compute_St_v1)(nHamiltonian& ham, vector<CMATRIX>& Uprev) = &compute_St;
+  vector<CMATRIX> (*expt_compute_St_v1)(nHamiltonian& ham) = &compute_St;
   def("compute_St", expt_compute_St_v1);
+  vector<CMATRIX> (*expt_compute_St_v2)(nHamiltonian& ham, vector<CMATRIX>& Uprev) = &compute_St;
+  def("compute_St", expt_compute_St_v2);
 
 
 

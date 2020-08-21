@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2017-2018 Alexey V. Akimov
+* Copyright (C) 2017-2020 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -78,6 +78,9 @@ nHamiltonian::nHamiltonian(int ndia_, int nadi_, int nnucl_){
   hvib_adi = NULL;             hvib_adi_mem_status = 0;
 
   basis_transform = NULL;      basis_transform_mem_status = 0;
+
+  time_overlap_adi = NULL;     time_overlap_adi_mem_status = 0;
+  time_overlap_dia = NULL;     time_overlap_dia_mem_status = 0;
 
   cum_phase_corr = NULL;       cum_phase_corr_mem_status = 0;
 
@@ -180,6 +183,10 @@ nHamiltonian::~nHamiltonian(){
 
   if(basis_transform_mem_status == 1){ delete basis_transform; basis_transform = NULL; basis_transform_mem_status = 0;}
 
+  if(time_overlap_adi_mem_status == 1){ delete time_overlap_adi; time_overlap_adi = NULL; time_overlap_adi_mem_status = 0;}
+
+  if(time_overlap_dia_mem_status == 1){ delete time_overlap_dia; time_overlap_dia = NULL; time_overlap_dia_mem_status = 0;}
+
   if(cum_phase_corr_mem_status == 1){ delete cum_phase_corr; cum_phase_corr = NULL; cum_phase_corr_mem_status = 0;}
 
 //  if(next!=NULL){
@@ -216,6 +223,8 @@ void nHamiltonian::init_all(int der_lvl, int lvl){
     init_hvib_adi();
 
     init_basis_transform();
+    init_time_overlap_adi();
+    init_time_overlap_dia();
     init_cum_phase_corr();
   }
 
@@ -1163,6 +1172,115 @@ void nHamiltonian::set_basis_transform_by_val(CMATRIX& basis_transform_){
 
 }
 
+///================= Time-overlaps adiabatic ==================
+void nHamiltonian::init_time_overlap_adi(){
+/**
+  Allocate memory for the time-overlap matrix for adiabatic states
+*/
+
+  if(time_overlap_adi_mem_status==0){
+    time_overlap_adi = new CMATRIX(nadi, nadi);
+    time_overlap_adi_mem_status = 1;
+  }
+  else{ 
+    cout<<"WARNING in init_time_overlap_adi: memory is already allocated\n";
+  }
+
+}
+
+void nHamiltonian::set_time_overlap_adi_by_ref(CMATRIX& time_overlap_adi_){
+/**
+  Setup of the adiabatic time-overlap matrix
+*/
+
+//  set_X1_by_ref(basis_transform, basis_transform_, basis_transform_mem_status, ndia, nadi);
+  check_mat_dimensions(&time_overlap_adi_,nadi,nadi);
+
+  if(time_overlap_adi_mem_status==0){  time_overlap_adi = &time_overlap_adi_;  } 
+  else if(time_overlap_adi_mem_status==1){ delete time_overlap_adi; time_overlap_adi = &time_overlap_adi_;  }
+  else if(time_overlap_adi_mem_status==2){ time_overlap_adi = &time_overlap_adi_;    }
+
+  time_overlap_adi_mem_status = 2; // Allocated externally
+
+}
+
+void nHamiltonian::set_time_overlap_adi_by_val(CMATRIX& time_overlap_adi_){
+/**
+  Setup of the adiabatic time-overlap matrix
+*/
+
+//  set_X1_by_val(basis_transform, basis_transform_, basis_transform_mem_status, ndia, nadi);
+
+  check_mat_dimensions(&time_overlap_adi_,nadi,nadi);
+
+  if(time_overlap_adi_mem_status==0){  time_overlap_adi = new CMATRIX(nadi,nadi);  } 
+  else if(time_overlap_adi_mem_status==1){ check_mat_dimensions(time_overlap_adi,nadi,nadi);  }
+  else if(time_overlap_adi_mem_status==2){  time_overlap_adi = new CMATRIX(nadi,nadi);    }
+
+  *time_overlap_adi = time_overlap_adi_;
+  time_overlap_adi_mem_status = 1; // Allocated internally
+
+}
+
+
+
+///================= Time-overlaps adiabatic ==================
+void nHamiltonian::init_time_overlap_dia(){
+/**
+  Allocate memory for the time-overlap matrix for diabatic states
+*/
+
+  if(time_overlap_dia_mem_status==0){
+    time_overlap_dia = new CMATRIX(ndia, ndia);
+    time_overlap_dia_mem_status = 1;
+  }
+  else{ 
+    cout<<"WARNING in init_time_overlap_dia: memory is already allocated\n";
+  }
+
+}
+
+void nHamiltonian::set_time_overlap_dia_by_ref(CMATRIX& time_overlap_dia_){
+/**
+  Setup of the diabatic time-overlap matrix
+*/
+
+//  set_X1_by_ref(basis_transform, basis_transform_, basis_transform_mem_status, ndia, nadi);
+  check_mat_dimensions(&time_overlap_dia_,ndia,ndia);
+
+  if(time_overlap_dia_mem_status==0){  time_overlap_dia = &time_overlap_dia_;  } 
+  else if(time_overlap_dia_mem_status==1){ delete time_overlap_dia; time_overlap_dia = &time_overlap_dia_;  }
+  else if(time_overlap_dia_mem_status==2){ time_overlap_dia = &time_overlap_dia_;    }
+
+  time_overlap_dia_mem_status = 2; // Allocated externally
+
+}
+
+void nHamiltonian::set_time_overlap_dia_by_val(CMATRIX& time_overlap_dia_){
+/**
+  Setup of the diabatic time-overlap matrix
+*/
+
+//  set_X1_by_val(basis_transform, basis_transform_, basis_transform_mem_status, ndia, nadi);
+
+  check_mat_dimensions(&time_overlap_dia_,ndia,ndia);
+
+  if(time_overlap_dia_mem_status==0){  time_overlap_dia = new CMATRIX(ndia,ndia);  } 
+  else if(time_overlap_dia_mem_status==1){ check_mat_dimensions(time_overlap_dia,ndia,ndia);  }
+  else if(time_overlap_dia_mem_status==2){  time_overlap_dia = new CMATRIX(ndia,ndia);    }
+
+  *time_overlap_dia = time_overlap_dia_;
+  time_overlap_dia_mem_status = 1; // Allocated internally
+
+}
+
+
+
+
+
+
+
+
 
 void nHamiltonian::set_ordering_adi_by_ref(vector<int>& ordering_adi_){
 /**
@@ -1707,6 +1825,69 @@ CMATRIX nHamiltonian::get_basis_transform(vector<int>& id_){
     return children[id_[1]]->get_basis_transform(next);
   }
 }
+
+
+
+///============= Time-overlaps, adiabatic ================
+CMATRIX nHamiltonian::get_time_overlap_adi(){ 
+/**
+  Return the time-overlap matrix in adiabatic basis
+*/
+  if(time_overlap_adi_mem_status==0){
+    cout<<"Error in get_time_overlap_adi: The matrix is not allocated anywhere\nExiting...\n";
+    exit(0);
+  }
+
+  return *time_overlap_adi; 
+}
+
+
+CMATRIX nHamiltonian::get_time_overlap_adi(vector<int>& id_){ 
+/**
+  Return the time-overlap matrix in adiabatic basis
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return get_time_overlap_adi();    }
+    else{ cout<<"ERROR in get_time_overlap_adi: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->get_time_overlap_adi(next);
+  }
+}
+
+
+
+///============= Time-overlaps, diabatic ================
+CMATRIX nHamiltonian::get_time_overlap_dia(){ 
+/**
+  Return the time-overlap matrix in diabatic basis
+*/
+  if(time_overlap_dia_mem_status==0){
+    cout<<"Error in get_time_overlap_dia: The matrix is not allocated anywhere\nExiting...\n";
+    exit(0);
+  }
+
+  return *time_overlap_dia; 
+}
+
+
+CMATRIX nHamiltonian::get_time_overlap_dia(vector<int>& id_){ 
+/**
+  Return the time-overlap matrix in diabatic basis
+*/
+  if(id_.size()==1){
+    if(id_[0]==id){   return get_time_overlap_dia();    }
+    else{ cout<<"ERROR in get_time_overlap_dia: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->get_time_overlap_dia(next);
+  }
+}
+
+
+
 
 
 vector<int> nHamiltonian::get_ordering_adi(){ 

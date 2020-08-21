@@ -210,6 +210,15 @@ void nHamiltonian::compute_diabatic(bp::object py_funct, bp::object q, bp::objec
       for(int i=0;i<nnucl;i++){    *d2ham_dia[i] = _d2ham_dia[i];  }
     }
 
+    has_attr=0;
+    has_attr = (int)hasattr(obj,"time_overlap_dia"); 
+    if(has_attr){    
+
+      check_cmatrix(obj, "time_overlap_adi", ndia, ndia);
+      *time_overlap_dia = extract<CMATRIX>(obj.attr("time_overlap_dia"));    
+    }
+
+
   
     
   }// if lvl == level

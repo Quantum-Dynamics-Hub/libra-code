@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015-2017 Alexey V. Akimov
+* Copyright (C) 2015-2020 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -213,6 +213,13 @@ public:
   CMATRIX* basis_transform;  ///< These are the eigenvectors of the generalized eigenvalue problem for diabatic Hamiltonian
   int basis_transform_mem_status;
 
+  CMATRIX* time_overlap_adi;  ///< These are <psi_i_adi (t) | psi_j_adi (t+dt)> matrices
+  int time_overlap_adi_mem_status;
+
+  CMATRIX* time_overlap_dia;  ///< These are <psi_i_dia (t) | psi_j_dia (t+dt)> matrices
+  int time_overlap_dia_mem_status;
+
+
   vector<int>* ordering_adi;  ///< the permutation describing how the indices of the internally-stored
                               /// properties like ham_adi or nac_adi relate to the indices of the 
                               /// actual "physical" states.
@@ -329,14 +336,21 @@ public:
   void set_basis_transform_by_ref(CMATRIX& basis_transform_);
   void set_basis_transform_by_val(CMATRIX& basis_transform_);
 
+  void init_time_overlap_adi();
+  void set_time_overlap_adi_by_ref(CMATRIX& time_overlap_adi_);
+  void set_time_overlap_adi_by_val(CMATRIX& time_overlap_adi_);
+
+  void init_time_overlap_dia();
+  void set_time_overlap_dia_by_ref(CMATRIX& time_overlap_dia_);
+  void set_time_overlap_dia_by_val(CMATRIX& time_overlap_dia_);
+
+
   void set_ordering_adi_by_ref(vector<int>& ordering_adi_);
   void set_ordering_adi_by_val(vector<int>& ordering_adi_);
 
   void init_cum_phase_corr();
   void set_cum_phase_corr_by_ref(CMATRIX& cum_phase_corr_);
   void set_cum_phase_corr_by_val(CMATRIX& cum_phase_corr_);
-
-
 
 
   /// Getters
@@ -378,13 +392,17 @@ public:
   CMATRIX get_basis_transform();
   CMATRIX get_basis_transform(vector<int>& id_);
 
+  CMATRIX get_time_overlap_adi();
+  CMATRIX get_time_overlap_adi(vector<int>& id_);
+
+  CMATRIX get_time_overlap_dia();
+  CMATRIX get_time_overlap_dia(vector<int>& id_);
+
   vector<int> get_ordering_adi(); 
   vector<int> get_ordering_adi(vector<int>& id_); 
 
   CMATRIX get_cum_phase_corr();
   CMATRIX get_cum_phase_corr(vector<int>& id_);
-
-
 
 
 

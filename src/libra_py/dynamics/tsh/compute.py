@@ -489,17 +489,11 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
             * **dyn_params["Temperature"]** ( double ): Temperature of the system [ default: 300 K ]
 
 
-            * **dyn_params["do_reverse"]** ( int ): what to do with velocities on frustrated hops:
+            * **dyn_params["time_overlap_method"]** ( int ): the flag to select how the time-overlaps are computed:
 
-                - 0: do not revert momenta at the frustrated hops
-                - 1: do revert the momenta [ default ]
-
-            * **dyn_params["vel_rescale_opt"]** ( int ): How to rescale momenta if the hops are successful:
-
-                - -1: do not rescale, as in the NBRA [ default ]
-                - 0: rescale in the diabatic basis - don't care about the
-                    velocity directions, just a uniform rescaling 
-                - 1: rescale along the directions of derivative couplings
+                - 0: on-the-fly, based on the wavefunction ("basis_transform") [ default: 0 ]
+                - 1: read externally ( via "time_overlap_adi" ), use this option with the NBRA, but don't forget
+                    to set up its update in the Hamiltonian update functions (aka "compute_model")
 
 
             * **dyn_params["do_phase_correction"]** ( int ): the algorithm to correct phases on adiabatic states
@@ -537,6 +531,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 - 2: ETHD3 (experimental)
                 - 22: another flavor of ETHD3 (experimental)
 
+
             * **dyn_params["ETHD3_alpha"]** ( double ): Gaussian exponents that dresses up the trajectories in the ETHD3 method
                 in the coordinate space, that is   ~exp(-alpha*(R-R0)^2 ) [ default: 0.0 ]
 
@@ -550,6 +545,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 - -1: no decoherence [ default ]
                 - 0: MSDM
                 - 1: ID-A
+
 
             * **dyn_params["sdm_norm_tolerance"]** ( double ): Corresponds to the "tol" parameter in the sdm function. It controls 
                 how much the norm of the old state can be larger than 1.0  before the code stops with the error message [ default : 0.0 ]
@@ -592,6 +588,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                     for each individual trajectory vs. time 
                 - 3: 3-D info - St, Hvib_adi, Hvib_dia matrices (energies, couplings, etc.) for each
                     individual trajectory vs. time 
+
 
             * **dyn_params["mem_output_level"]** ( int ): controls what info to return as the result of this function
 
@@ -677,7 +674,8 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     critical_params = [  ] 
     default_params = { "rep_tdse":1, "rep_ham":0, "rep_sh":1, "rep_lz":0, "tsh_method":-1,
                        "force_method":1, "nac_update_method":1, "rep_force":1,
-                       "use_boltz_factor":0, "Temperature":300.0, "do_reverse":1, "vel_rescale_opt":-1,
+                       "use_boltz_factor":0, "Temperature":300.0,
+                       "time_overlap_method":0,
                        "do_phase_correction":1, "tol":1e-3,
                        "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0, 
                        "entanglement_opt":0, "ETHD3_alpha":0.0, "ETHD3_beta":0.0, 
@@ -716,6 +714,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     use_compression = dyn_params["use_compression"]
     compression_level = dyn_params["compression_level"]
     ensemble = dyn_params["ensemble"]
+    time_overlap_method = dyn_params["time_overlap_method"]
     
     ndia = Cdia.num_of_rows
     nadi = Cadi.num_of_rows
@@ -792,9 +791,14 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
     
         for tr in range(ntraj):
-            x = ham.get_basis_transform(Py2Cpp_int([0, tr]) )            
-            St = U[tr] * x.H()             
-            U[tr] = CMATRIX(x)
+            if time_overlap_method==0:
+                x = ham.get_basis_transform(Py2Cpp_int([0, tr]) )            
+                St = U[tr].H() * x
+                U[tr] = CMATRIX(x)
+
+            elif time_overlap_method==1:                
+                St = ham.get_time_overlap_adi(Py2Cpp_int([0, tr]) ) 
+
 
             if hdf5_output_level>=4: 
                 hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 

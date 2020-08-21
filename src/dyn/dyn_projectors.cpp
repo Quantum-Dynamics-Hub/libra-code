@@ -557,7 +557,7 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
     if(prms.do_phase_correction){
 
       // ### Compute the instantaneous phase correction factors ###
-      phase_i = compute_phase_corrections(st);  // f(i)
+      phase_i = compute_phase_corrections(st, prms.phase_correction_tol);  // f(i)
 
       // ### Scale projections' components by the phases ###
       for(int a=0; a<nst; a++){  

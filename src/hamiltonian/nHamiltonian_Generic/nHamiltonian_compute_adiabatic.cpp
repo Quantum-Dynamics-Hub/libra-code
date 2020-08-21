@@ -518,6 +518,14 @@ void nHamiltonian::compute_adiabatic(bp::object py_funct, bp::object q, bp::obje
       *basis_transform = extract<CMATRIX>(obj.attr("basis_transform"));    
     }
 
+    has_attr=0;
+    has_attr = (int)hasattr(obj,"time_overlap_adi"); 
+    if(has_attr){    
+
+      check_cmatrix(obj, "time_overlap_adi", nadi, nadi);
+      *time_overlap_adi = extract<CMATRIX>(obj.attr("time_overlap_adi"));    
+    }
+
 
     has_attr=0;
     has_attr = (int)hasattr(obj,"dc1_adi");        

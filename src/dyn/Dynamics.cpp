@@ -258,13 +258,33 @@ vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev){
   vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
 
   for(int traj=0; traj<ntraj; traj++){
-    //St[traj] = (*Uprev[traj]).H() * ham.children[traj]->get_basis_transform();
     St[traj] = Uprev[traj].H() * ham.children[traj]->get_basis_transform();
   }
 
   return St;
 
 }
+
+vector<CMATRIX> compute_St(nHamiltonian& ham){
+/**
+  This function computes the time-overlap matrices for all trajectories
+
+*/
+
+  int nst = ham.nadi;
+  int ntraj = ham.children.size();
+
+  vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
+
+  for(int traj=0; traj<ntraj; traj++){
+    St[traj] = ham.children[traj]->get_time_overlap_adi();
+  }
+
+  return St;
+
+}
+
+
 
 
 
@@ -357,7 +377,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
 
 
-  if(prms.tsh_method == 3){
+  if(prms.tsh_method == 3){ // DISH
     for(traj=0; traj<ntraj; traj++){
       prev_ham_dia[traj] = ham.children[traj]->get_ham_dia().real();  
     }
@@ -369,13 +389,15 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   if(prms.rep_tdse==1){      
     if(prms.do_phase_correction || prms.state_tracking_algo > 0){
 
-      Uprev = vector<CMATRIX>(ntraj, CMATRIX(nst, nst));
+      // On-the-fly calculations, from the wavefunctions
+      if(prms.time_overlap_method==0){
+        Uprev = vector<CMATRIX>(ntraj, CMATRIX(nst, nst));
 
-      for(traj=0; traj<ntraj; traj++){
-        Uprev[traj] = ham.children[traj]->get_basis_transform();  
-      }
-      
-    }
+        for(traj=0; traj<ntraj; traj++){
+          Uprev[traj] = ham.children[traj]->get_basis_transform();  
+        }
+      }      
+    }// do_phase_correction || state_tracking_algo > 0
   }// rep == 1
 
 
@@ -445,7 +467,9 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
     if(prms.state_tracking_algo > 0 || prms.do_phase_correction){
 
-      St = compute_St(ham, Uprev);    
+      if(prms.time_overlap_method==0){    St = compute_St(ham, Uprev);    }
+      else if(prms.time_overlap_method==1){    St = compute_St(ham);      }
+
       Eadi = get_Eadi(ham);           // these are raw properties
       update_projectors(prms, projectors, Eadi, St, rnd);
 

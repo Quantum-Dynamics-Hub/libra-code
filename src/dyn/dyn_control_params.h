@@ -177,6 +177,15 @@ class dyn_control_params{
   */
   double dt;
 
+  /**
+    How do get the time-overlaps in the dynamics:
+    Options:
+      0 - based on the wavefunctions (the Hamiltonian shall have the basis_transform variables updated)  [ default ]
+      1 - based on external calculations (the Hamiltonian shall have the time_overlap_adi member updated) - use for NBRA
+  */
+  int time_overlap_method;
+
+
   /** 
     Option to perform the phase correction: 0 - no, 1 - yes (default)
   */
@@ -367,6 +376,9 @@ class dyn_control_params{
 
   /**
     Constrained DOFs
+
+    This list of integers contains the indices of the nuclear DOFs to be constrained - their momenta will be constantly 
+    reset to zero, so the corresponding coordinates will stay fixed
   */
   vector<int> constrained_dofs; 
 

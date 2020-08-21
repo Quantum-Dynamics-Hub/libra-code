@@ -363,7 +363,8 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
 
 
 
-def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, dx, plot_params, _ndof=1, _active_dof=0, _all_coordinates=[]):
+def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, dx, plot_params,\
+                 _ndof=1, _active_dof=0, _all_coordinates=[0.0]):
     """
     Args:
         _compute_model ( PyObject ): the function that returns the class with Hamiltonian properties
