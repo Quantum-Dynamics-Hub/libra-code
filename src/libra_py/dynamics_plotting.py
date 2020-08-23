@@ -524,7 +524,11 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
     
         for k2 in states_of_interest:
             indx = states_of_interest.index(k2)
-            plt.subplot(1, sz1, 1+indx)
+
+            plt.figure(2*iset+1+indx, figsize=(36, 18)) # dpi=300, frameon=False)            
+
+            #plt.subplot(1, sz1, 1+indx)
+            #plt.subplot(1, 1, 1+indx)
             #plt.title('Params set %i: Adi state %i' % (iset, k2) )
             plt.xlabel('Coordinate, a.u.')
             plt.ylabel('Projection')
