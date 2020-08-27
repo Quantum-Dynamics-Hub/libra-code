@@ -54,6 +54,7 @@ dyn_control_params::dyn_control_params(){
   tsh_method = 0;
   hop_acceptance_algo = 0;
   momenta_rescaling_algo = 0;
+  use_boltz_factor = 0;
 
   ///================= Decoherence options =========================================
   decoherence_algo = -1; 
@@ -170,6 +171,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="tsh_method") { tsh_method = bp::extract<int>(params.values()[i]);  }
     else if(key=="hop_acceptance_algo") { hop_acceptance_algo = bp::extract<int>(params.values()[i]);  }
     else if(key=="momenta_rescaling_algo"){ momenta_rescaling_algo = bp::extract<int>(params.values()[i]);  }
+    else if(key=="use_boltz_factor"){ use_boltz_factor = bp::extract<int>(params.values()[i]);  }
 
     ///================= Decoherence options =========================================
     else if(key=="decoherence_algo"){ decoherence_algo = bp::extract<int>(params.values()[i]); }

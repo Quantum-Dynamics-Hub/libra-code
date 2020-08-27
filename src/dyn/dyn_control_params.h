@@ -238,6 +238,19 @@ class dyn_control_params{
   */
   int momenta_rescaling_algo;
 
+  /**
+    A flag to scale the proposed hopping probabilities by the
+    Boltzmann factor. This is needed for the libra_py/workflows/nbra calculations, where the hop proposal 
+    probability also includes the factor to account for the hop acceptance probabilities
+
+    Options:
+
+      - 0: don't scale [ default ]
+      - 1: do scale
+  */
+   int use_boltz_factor;
+
+
   
   ///===============================================================================
   ///================= Decoherence options =========================================

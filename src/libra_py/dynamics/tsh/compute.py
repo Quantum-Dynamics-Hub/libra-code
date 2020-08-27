@@ -562,6 +562,14 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 - 211: along difference of state-specific forces, reverse on frustrated hops
 
 
+            * **dyn_params["use_boltz_factor"]** ( int ): A flag to scale the proposed hopping probabilities by the
+                Boltzmann factor. This is needed for the libra_py/workflows/nbra calculations, where the hop proposal 
+                probability also includes the factor to account for the hop acceptance probabilities
+
+                - 0: don't scale [ default ]
+                - 1: do scale
+
+
             ///===============================================================================
             ///================= Decoherence options =========================================
             ///===============================================================================
@@ -832,11 +840,13 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     default_params.update( { "rep_tdse":1, "rep_ham":0, "rep_sh":1, "rep_lz":0, "rep_force":1,
                              "force_method":1, "time_overlap_method":0, "nac_update_method":1, 
                              "do_phase_correction":1, "phase_correction_tol":1e-3,
-                             "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0
+                             "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0,
                            } )
 
     #================= Surface hopping: proposal, acceptance =======================
-    default_params.update( { "tsh_method":-1, "hop_acceptance_algo":0, "momenta_rescaling_algo":0  } )
+    default_params.update( { "tsh_method":-1, "hop_acceptance_algo":0, "momenta_rescaling_algo":0,
+                             "use_boltz_factor":0
+                           } )
 
     #================= Decoherence options =========================================
     default_params.update( { "decoherence_algo":-1, "sdm_norm_tolerance":0.0,

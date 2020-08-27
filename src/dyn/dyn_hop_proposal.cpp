@@ -59,7 +59,7 @@ MATRIX hopping_probabilities_fssh(dyn_control_params& prms, CMATRIX& Coeff, CMAT
 
   double dt = prms.dt;
   double T = prms.Temperature;
-  int use_boltz_factor = 0; //prms.use_boltz_factor;
+  int use_boltz_factor = prms.use_boltz_factor;
 
 
   int nstates = Coeff.n_rows;
@@ -169,7 +169,7 @@ MATRIX hopping_probabilities_gfsh(dyn_control_params& prms, CMATRIX& Coeff, CMAT
 
   double dt = prms.dt;
   double T = prms.Temperature;
-  int use_boltz_factor = 0; //prms.use_boltz_factor;
+  int use_boltz_factor = prms.use_boltz_factor;
 
 
   int nstates = Coeff.n_rows;
@@ -275,7 +275,7 @@ MATRIX hopping_probabilities_mssh(dyn_control_params& prms, CMATRIX& Coeff, CMAT
 
   double dt = prms.dt;
   double T = prms.Temperature;
-  int use_boltz_factor = 0; //prms.use_boltz_factor;
+  int use_boltz_factor = prms.use_boltz_factor;
 
   int nstates = Coeff.n_rows;
   MATRIX g(nstates,nstates);
