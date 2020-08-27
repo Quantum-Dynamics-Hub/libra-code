@@ -54,30 +54,27 @@ void export_dyn_control_params_objects(){
       .def("__copy__", &generic__copy__<dyn_control_params>)
       .def("__deepcopy__", &generic__deepcopy__<dyn_control_params>)
 
+      ///================= Computing Hamiltonian-related properties ====================
       .def_readwrite("rep_tdse", &dyn_control_params::rep_tdse)
       .def_readwrite("rep_ham", &dyn_control_params::rep_ham)
       .def_readwrite("rep_sh", &dyn_control_params::rep_sh)
       .def_readwrite("rep_lz", &dyn_control_params::rep_lz)
-      .def_readwrite("tsh_method", &dyn_control_params::tsh_method)
-      .def_readwrite("force_method", &dyn_control_params::force_method)
-      .def_readwrite("nac_update_method", &dyn_control_params::nac_update_method)
       .def_readwrite("rep_force", &dyn_control_params::rep_force)
-      .def_readwrite("hop_acceptance_algo", &dyn_control_params::hop_acceptance_algo)
-      .def_readwrite("momenta_rescaling_algo", &dyn_control_params::momenta_rescaling_algo)
-      .def_readwrite("use_boltz_factor", &dyn_control_params::use_boltz_factor)
-      .def_readwrite("Temperature", &dyn_control_params::Temperature)
-//      .def_readwrite("do_reverse", &dyn_control_params::do_reverse)
-//      .def_readwrite("vel_rescale_opt", &dyn_control_params::vel_rescale_opt)
-      .def_readwrite("dt", &dyn_control_params::dt)
+      .def_readwrite("force_method", &dyn_control_params::force_method)
       .def_readwrite("time_overlap_method", &dyn_control_params::time_overlap_method)
+      .def_readwrite("nac_update_method", &dyn_control_params::nac_update_method)
       .def_readwrite("do_phase_correction", &dyn_control_params::do_phase_correction)
       .def_readwrite("phase_correction_tol", &dyn_control_params::phase_correction_tol)
       .def_readwrite("state_tracking_algo", &dyn_control_params::state_tracking_algo)
       .def_readwrite("MK_alpha", &dyn_control_params::MK_alpha)
       .def_readwrite("MK_verbosity", &dyn_control_params::MK_verbosity)
-      .def_readwrite("entanglement_opt", &dyn_control_params::entanglement_opt)
-      .def_readwrite("ETHD3_alpha", &dyn_control_params::ETHD3_alpha)
-      .def_readwrite("ETHD3_beta", &dyn_control_params::ETHD3_beta)
+
+      ///================= Surface hopping: proposal, acceptance =======================
+      .def_readwrite("tsh_method", &dyn_control_params::tsh_method)
+      .def_readwrite("hop_acceptance_algo", &dyn_control_params::hop_acceptance_algo)
+      .def_readwrite("momenta_rescaling_algo", &dyn_control_params::momenta_rescaling_algo)
+
+      ///================= Decoherence options =========================================
       .def_readwrite("decoherence_algo", &dyn_control_params::decoherence_algo)
       .def_readwrite("sdm_norm_tolerance", &dyn_control_params::sdm_norm_tolerance)
       .def_readwrite("dish_decoherence_event_option", &dyn_control_params::dish_decoherence_event_option)
@@ -85,14 +82,27 @@ void export_dyn_control_params_objects(){
       .def_readwrite("decoherence_C_param", &dyn_control_params::decoherence_C_param)
       .def_readwrite("decoherence_eps_param", &dyn_control_params::decoherence_eps_param)
       .def_readwrite("dephasing_informed", &dyn_control_params::dephasing_informed)
-      .def_readwrite("ave_gaps", &dyn_control_params::ave_gaps)
       .def_readwrite("instantaneous_decoherence_variant", &dyn_control_params::instantaneous_decoherence_variant)
       .def_readwrite("collapse_option", &dyn_control_params::collapse_option)
+      .def_readwrite("decoherence_rates", &dyn_control_params::decoherence_rates)
+      .def_readwrite("ave_gaps", &dyn_control_params::ave_gaps)
+
+      ///================= Entanglement of trajectories ================================
+      .def_readwrite("entanglement_opt", &dyn_control_params::entanglement_opt)
+      .def_readwrite("ETHD3_alpha", &dyn_control_params::ETHD3_alpha)
+      .def_readwrite("ETHD3_beta", &dyn_control_params::ETHD3_beta)
+
+
+      ///================= Bath, Constraints, and Dynamical controls ===================
+      .def_readwrite("Temperature", &dyn_control_params::Temperature)
       .def_readwrite("ensemble", &dyn_control_params::ensemble)
       .def_readwrite("thermostat_params", &dyn_control_params::thermostat_params)
       .def_readwrite("thermostat_dofs", &dyn_control_params::thermostat_dofs)
       .def_readwrite("quantum_dofs", &dyn_control_params::quantum_dofs)
       .def_readwrite("constrained_dofs", &dyn_control_params::constrained_dofs)
+      .def_readwrite("dt", &dyn_control_params::dt)
+
+
 
       .def("sanity_check", expt_sanity_check_v1)
       .def("set_parameters", expt_set_parameters_v1)

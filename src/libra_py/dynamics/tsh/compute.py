@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2019 Alexey V. Akimov                                                   
+#* Copyright (C) 2019-2020 Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 3 of                                   
@@ -417,6 +417,10 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
         dyn_params ( dictionary ): parameters controlling the execution of the dynamics
             Can contain:
+
+            ///===============================================================================
+            ///================= Computing Hamiltonian-related properties ====================
+            ///===============================================================================
       
             * **dyn_params["rep_tdse"]** ( int ): selects the representation in which 
                 nuclear/electronic (Ehrenfest core) dynamics is executed. The representation 
@@ -427,14 +431,13 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
 
             * **dyn_params["rep_ham"]** (int): The representation of the Hamiltonian update: 
-
-                - 0: diabatic   [ default ]
-                - 1: adiabatic
-                              
                 This is the representation in which the computed properties are assumed to be
                 For instance, we may have set it to 1, to read the adiabatic energies and couplings,
                 to bypass the diabatic-to-adiabatic transformation, which may be useful in some atomistic
                 calculations, or with the NBRA
+
+                - 0: diabatic   [ default ]
+                - 1: adiabatic                              
 
 
             * **dyn_params["rep_sh"]** ( int ): selects the representation which is 
@@ -450,13 +453,14 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 - 1: adiabatic 
 
 
-            * **dyn_params["tsh_method"]** ( int ): Formula for computing SH probabilities: 
-   
-                - -1: adiabatic - no hops [ default ]
-                - 0: FSSH
-                - 1: GFSH 
-                - 2: MSSH
-                - 3: DISH
+            * **dyn_params["rep_force"]** ( int ): In which representation to compute forces.
+                To clarify - the forces in both representations shall be equivalent, so this flag actually
+                selects the type of the properties needed to compute such forces.
+                For instance, if it is set to 0, we may be using the derivatives
+                of the diabatic Hamiltonians, diabatic states overlaps, etc.
+
+                - 0: diabatic
+                - 1: adiabatic [ default ]
 
 
             * **dyn_params["force_method"]** ( int ): How to compute forces in the dynamics: 
@@ -466,6 +470,13 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 - 2: Ehrenfest
 
 
+            * **dyn_params["time_overlap_method"]** ( int ): the flag to select how the time-overlaps are computed:
+
+                - 0: on-the-fly, based on the wavefunction ("basis_transform") [ default ]
+                - 1: read externally ( via "time_overlap_adi" ), use this option with the NBRA, but don't forget
+                    to set up its update in the Hamiltonian update functions (aka "compute_model")
+
+
             * **dyn_params["nac_update_method"]** ( int ): How to update NACs and vibronic Hamiltonian before
                electronic TD-SE propagation:
 
@@ -473,45 +484,25 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 - 1: update according to changed momentum and existing derivative couplings [ default ]
 
 
-            * **dyn_params["rep_force"]** ( int ): In which representation to compute forces: 
-
-                - 0: diabatic
-                - 1: adiabatic [ default ]
-
-
-            * **dyn_params["use_boltz_factor"]** ( int ): Whether to scale the SH probabilities
-                by the Boltzmann factor: 
- 
-                - 0: do not scale [ default ]
-                - 1: scale 
-
-
-            * **dyn_params["Temperature"]** ( double ): Temperature of the system [ default: 300 K ]
-
-
-            * **dyn_params["time_overlap_method"]** ( int ): the flag to select how the time-overlaps are computed:
-
-                - 0: on-the-fly, based on the wavefunction ("basis_transform") [ default: 0 ]
-                - 1: read externally ( via "time_overlap_adi" ), use this option with the NBRA, but don't forget
-                    to set up its update in the Hamiltonian update functions (aka "compute_model")
-
-
             * **dyn_params["do_phase_correction"]** ( int ): the algorithm to correct phases on adiabatic states
  
                 - 0: no phase correction
-                - 1: according to our phase correction algorithm [ default: 1 ]
+                - 1: according to our phase correction algorithm [ default ]
 
 
-            * **dyn_params["tol"]** ( double ): the minimal value of the time-overlap for considering 
-                phase corrections - no correction applied if the time-overlap is smaller in magnitude than 
-                this parameter [ default: 1e-3 ]
+            * **dyn_params["phase_correction_tol"]** ( double ): The minimal magnutude of the matrix element 
+               for which we'll be computing the phase correction. If the overlap is zero, then we don't really
+               care about the phase, but if it is not, then this parameter sets out threshold for when we do. [ default: 1e-3 ]
  
 
             * **dyn_params["state_tracking_algo"]** ( int ): the algorithm to keep track of the states' identities
  
                 - 0: no state tracking
                 - 1: Sato
-                - 2: using the mincost, Munkres-Kuhn [ default: 2 ]
+                - 2: using the mincost, Munkres-Kuhn [ default ]
+                - 3: experimental stochastic algorithm, the original version with elimination (known problems)
+                - 32: experimental stochastic algorithms with all permutations (too expensive)
+                - 33: the improved stochastic algorithm with good scaling and performance, on par with the mincost
 
 
             * **dyn_params["MK_alpha"]** ( double ): Munkres-Kuhn alpha 
@@ -521,7 +512,129 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
             * **dyn_params["MK_verbosity"]** ( double ): Munkres-Kuhn verbosity: 
 
                 - 0: no extra output [ default ]
-                - 1: print details
+                - 1: print details for debugging
+
+
+            ///===============================================================================
+            ///================= Surface hopping: proposal, acceptance =======================
+            ///===============================================================================
+
+
+            * **dyn_params["tsh_method"]** ( int ): Formula for computing SH probabilities:
+   
+                - -1: adiabatic - no hops [ default ]
+                - 0: FSSH
+                - 1: GFSH 
+                - 2: MSSH
+                - 3: DISH
+
+            * **dyn_params["hop_acceptance_algo"]** ( int ): Options to control the acceptance of the proposed hops:
+
+                - 0: accept all proposed hops  [ default ]
+
+                - 10: based on adiabatic energy - accept only those hops that can obey the energy conservation with 
+                    adiabatic potential energies
+                - 11: based on diabatic energy - same as 10, but we use diabatic potential energies
+
+                - 20: based on derivative coupling vectors - accept only those hops that can obey the energy conservation
+                    by rescaling nuclear velocities along the directions of derivative couplings for the quantum nuclear DOFs                   
+                - 21: based on difference of state-specific forces - same as 20, but the rescaling is done along the vector
+                    parallel to the difference of adiabatic forces on initial and target states
+
+                - 31: accept hops with the probability taken from the quantum Boltzmann distribution
+                - 32: accept hops with the probability taken from the classical Maxwell-Boltzmann distribution
+                - 33: accept hops with the probability taken from the updated quantum Boltzmann distribution (experimental)
+
+
+            * **dyn_params["momenta_rescaling_algo"]** ( int ): Options to control nuclear momenta changes upon successful 
+                or frustrated hops.
+
+                - 0: don't rescale [ default ]
+
+                - 100: based on adiabatic energy, don't reverse on frustrated hops
+                - 101: based on adiabatic energy, reverse on frustrated hops
+                - 110: based on diabatic energy, don't reverse on frustrated hops
+                - 111: based on diabatic energy, reverse on frustrated hops
+
+                - 200: along derivative coupling vectors, don't reverse on frustrated hops
+                - 201: along derivative coupling vectors, reverse on frustrated hops
+                - 210: along difference of state-specific forces, don't reverse on frustrated hops
+                - 211: along difference of state-specific forces, reverse on frustrated hops
+
+
+            ///===============================================================================
+            ///================= Decoherence options =========================================
+            ///===============================================================================
+
+
+            * **dyn_params["decoherence_algo"]** ( int ): selector of the method to incorporate decoherence:
+
+                - [-1]: no decoherence [ default ]
+                - 0: SDM and alike
+                - 1: instantaneous decoherence options (ID-S, ID-A, ID-C)
+
+
+            * **dyn_params["sdm_norm_tolerance"]** ( double ): Corresponds to the "tol" parameter in the sdm function. It controls 
+                how much the norm of the old state can be larger than 1.0  before the code stops with the error message [ default : 0.0 ]
+
+                Note: only matters if decoherence_algo == 0
+
+
+            * **dyn_params["dish_decoherence_event_option"]** ( int ):  Selects the how to sample decoherence events in the DISH:
+
+                - 0: compare the coherence time counter with the decoherence time (simplified DISH) 
+                - 1: compare the coherence time counter with the time drawn from the exponential distribution
+                    with the parameter lambda = 1/decoherence time - this distribution corresponds to 
+                    the statistics of wait times between the Poisson-distributed events (decoherence)
+                    This is what the original DISH meant to do  [ default ]
+
+                Note: only matters if dyn_params["tsh_method"] == 3
+
+
+            * **dyn_params["decoherence_times_type"]** ( int ): Type of dephasing times/rates calculation:
+
+                - 0: use the rates read out from the input, need `decoherence_rates` input  [default]
+                - 1: use the energy-based decoherence method (EDC)    
+
+
+            * **dyn_params["decoherence_C_param"]** ( double ): An empirical parameter used in the EDC method: [ default: 1.0 Ha]
+
+
+            * **dyn_params["decoherence_eps_param"]** ( double ): An empirical parameter used in the EDC method: [ default: 0.1 Ha]
+
+            * **dyn_params["dephasing_informed"]** ( int ): A flag to apply the dephasing-informed approach of Sifain et al. 
+                to correct dephasing times: 
+
+                - 0: don't apply [ default ]
+                - 1: use it, will need also the `ave_gaps` input
+
+
+            * **dyn_params["instantaneous_decoherence_variant"]** ( int ): Option to control the instantaneous decoherence methodology,
+                only used with `decoherence_algo == 1`
+
+                - 0: ID-S
+                - 1: ID-A [ default ]
+                - 2: ID-C - consistent ID (experimental)
+
+
+            * **dyn_params["collapse_option"]** ( int ): How to collapse wavefunction amplitudes in the decoherence schemes:
+
+                - 0: by rescaling the magnitude of the amplitude vector elements, but preserving "phase" [ default ]
+                - 1: by resetting the amplitudes to 1.0+0.0j. This option changes phase 
+
+
+            * **dyn_params["decoherence_rates"]** ( MATRIX(ntates, nstates) ): the matrix of dephasing rates [ units: a.u. of time ^-1 ]
+
+
+            * **dyn_params["ave_gaps"]** ( MATRIX(ntates, nstates) ): A matrix that contains the averaged moduli of the energy gaps:
+                E_ij = <|E_i - E_j|>.  It is needed when dephasing_informed option is used
+
+
+
+
+            ///===============================================================================
+            ///================= Entanglement of trajectories ================================
+            ///===============================================================================
 
 
             * **dyn_params["entanglement_opt"]** ( int ): A selector of a method to couple the trajectories in this ensemble:
@@ -540,61 +653,113 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 in the coordinate space, that is   ~exp(-alpha*(P-P0)^2 ) [ default: 0.0 ]
 
 
-            * **dyn_params["decoherence_algo"]** ( int ): selector of the method to incorporate decoherence:
-
-                - -1: no decoherence [ default ]
-                - 0: MSDM
-                - 1: ID-A
+            ///===============================================================================
+            ///================= Bath, Constraints, and Dynamical controls ===================
+            ///===============================================================================
 
 
-            * **dyn_params["sdm_norm_tolerance"]** ( double ): Corresponds to the "tol" parameter in the sdm function. It controls 
-                how much the norm of the old state can be larger than 1.0  before the code stops with the error message [ default : 0.0 ]
-
-                Note: only matters if decoherence_algo == 0
-
-
-            * **dyn_params["dish_decoherence_event_option"]** ( int ):  Selects the how to sample decoherence events in the DISH. [ default: 0 ]
-                Possible options:
-
-                - 0: compare the coherence time counter with the decoherence time (simplified DISH)
-                - 1: compare the coherence time counter with the time drawn from the exponential distribution
-                    with the parameter lambda = 1/decoherence time - this distribution corresponds to 
-                    the statistics of wait times between the Poisson-distributed events (decoherence)
-                    This is what the original DISH meant to do 
-
-                Note: only matters if dyn_params["tsh_method"] == 3
+            * **dyn_params["Temperature"]** ( double ): Temperature of the system. This parameter
+                could be used even in the NVE simulations e.g. as a parameters to compute hop 
+                acceptance probabilities based on Boltzmann factors [ default: 300 K]
 
 
-            * **dyn_params["decoherence_rates"]** ( MATRIX(ntates, nstates) ): the matrix of dephasing rates [ units: a.u. of time ^-1 ]
+            * **dyn_params["ensemble"]** ( int ): Which ensemble to use in the dynamics. 
+
+                - 0: NVE [ default ]
+                - 1: NVT
+
+
+            * **dyn_params["thermostat_params"]** ( dict ): Parameters controlling the thermostat,
+                only relevant for `ensemble = 1`  [ default: {} ]
+
+
+            * **dyn_params["thermostat_dofs"]** ( list of ints ): Thermostat DOFs
+                This list contains the indices of nuclear DOFs which shall be coupled to a thermostat directly.
+                [ default: [] ]
+
+
+            * **dyn_params["quantum_dofs"]** ( list of ints ): Quantum-classical partitioning
+                This list of integers contains the indices of nuclear DOFs which chall be treated "quantum-mechanically", well
+                including with TSH that is. These DOFs will determine the velocity-rescaling-based acceptance of the hops,
+                and these DOFs will be rescaled when the transition is accepted 
+                [ default: all DOFs ]
+
+                Note: this default is different from the C++ default, where we just use [0]
+
+
+            * **dyn_params["constrained_dofs"]** ( list of ints ):  Constrained DOFs
+                This list of integers contains the indices of the nuclear DOFs to be constrained - their momenta will be constantly 
+                reset to zero, so the corresponding coordinates will stay fixed
+                [ default: [] ]
 
 
             * **dyn_params["dt"]** ( double ): the nuclear and electronic integration
-                timestep [ units: a.u. of time, default: 41.0 ]
+                timesteps [ units: a.u. of time, default: 41.0 a.u. = 1 fs ]
 
 
-            * **dyn_params["nsteps"]** ( int ): the number of NA-MD steps to do [ default: 1 ]
+            ///===============================================================================
+            ///================= Variables specific to Python version: saving ================
+            ///===============================================================================
+
+
+            * **dyn_params["nsteps"]** ( int ): the number of the dynamical steps to do [ default: 1 ]
 
 
             * **dyn_params["prefix"]** ( string ): the name of the folder to be created by this function. 
-                All the data files will be created in that folder
+                All the data files will be created in that folder [ default: "out" ]
 
 
-            * **dyn_params["hdf5_output_level"]** ( int ): controls what info to return as the result of this function
+            * **dyn_params["hdf5_output_level"]** ( int ): controls what info to save into HDF5 files (as we run)
 
-                - -1: all return values are None [ default ]
-                - 0: also, all return values are none 
-                - 1: 1-D info - energies, SE and SH populations averaged over ensemble vs. time
-                - 2: 2-D info - coordinates, momenta, SE amplitudes, and SH states populations 
-                    for each individual trajectory vs. time 
-                - 3: 3-D info - St, Hvib_adi, Hvib_dia matrices (energies, couplings, etc.) for each
-                    individual trajectory vs. time 
+                - -1: all returned values are None [ default ]
+                - 0: also, all return values are none  
+                - 1: 1-D info - Relevant variables to request to save: ["timestep", "time", "Ekin_ave", "Epot_ave", "Etot_ave", 
+                    "Etherm", "E_NHC", "dEkin_ave", "dEpot_ave", "dEtot_ave"]
+                - 2: 2-D info - Relevant variables to request to save: ["states"]
+                - 3: 3-D info - Relevant variables to request to save: [ "SH_pop", "SH_pop_raw",
+                    "D_adi", "D_adi_raw", "D_dia", "D_dia_raw", "q", "p", "Cadi", "Cdia" ]
+                - 4: 4-D info - Relevant variables to request to save: ["hvib_adi", "hvib_dia", "St", "basis_transform", "projector"]
 
 
-            * **dyn_params["mem_output_level"]** ( int ): controls what info to return as the result of this function
+            * **dyn_params["mem_output_level"]** ( int ): controls what info to save into HDF5 files (all at the end)
 
                 Same meaning and output as with hdf5_output_level, except all the variables are first stored in memory
                 (while the calcs are running) and then they are written into the HDF5 file at the end of the calculations.
-                This is a much faster version of hdf5 saver. 
+                This is a much faster version of hdf5 saver.
+
+
+            * **dyn_params["txt_output_level"]** ( int ): controls what info to save into TXT files 
+
+                Same meaning and output as with hdf5_output_level, except all the variables are written as text files. [ default: -1 ] 
+
+
+            * **dyn_params["use_compression"]** ( int ): whether to use the compression when writing the info into HDF5 files
+                 
+                - 0: don't use it [ default ]
+                - 1: use the compression, with the level defined by the `compression_level` parameter. However,
+                     we found that the compression slows down the processing significantly and sometimes
+                     creates even larger files, so it is not recommended to use it
+
+            * **dyn_params["compression_level"]** ( list of 3 ints ): the compression level for ints, doubles, and complex, respectively.
+                The larger the value, the higher the compression. [ default: [0, 0, 0] ]
+
+
+            * **dyn_params["progress_frequency"]** ( double ):  at what intervals print out some "progress" messages. For
+                instance, if you have `nsteps = 100` and `progress_frequency = 0.1`, the code will notify you every 10 steps. [ default : 0.1 ]
+
+                Note: this doesn't affect the frequency of the data saving to the file - at this point, we save the information for every
+                timestep
+
+                                                                                                                          
+            * **dyn_params["properties_to_save"]** ( list of string ): describes what properties to save to the HDF5 files. Note that
+                if some properties are not listed in this variable, then they are not saved, even if `mem_output_level` suggests they may be
+                saved. You need to BOTH set the appropriate `mem_output_level` AND `properties_to_save`
+
+                [ default:  [ "timestep", "time", "Ekin_ave", "Epot_ave", "Etot_ave", 
+                           "dEkin_ave", "dEpot_ave", "dEtot_ave", "states", "SH_pop", "SH_pop_raw",
+                           "D_adi", "D_adi_raw", "D_dia", "D_dia_raw", "q", "p", "Cadi", "Cdia", 
+                           "hvib_adi", "hvib_dia", "St", "basis_transform", "projector"
+                ] 
 
 
         compute_model ( PyObject ): the pointer to the Python function that performs the Hamiltonian calculations
@@ -647,64 +812,69 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     model_params = dict(_model_params)
     dyn_params = dict(_dyn_params)
 
+
     q = MATRIX(_q)
     p = MATRIX(_p)
     iM = MATRIX(_iM)
     Cdia = CMATRIX(_Cdia)
     Cadi = CMATRIX(_Cadi)
     states = intList()
-    projectors = CMATRIXList()
-    
-    
+    projectors = CMATRIXList()       
     for i in range(len(_states)):
         states.append(_states[i])
         projectors.append(CMATRIX(_projectors[i]))
 
-    DR = MATRIX(len(_states), len(_states))
-    AG = MATRIX(len(_states), len(_states))
-
 
     # Parameters and dimensions
-    properties_to_save = [ "timestep", "time", "Ekin_ave", "Epot_ave", "Etot_ave", 
-                           "dEkin_ave", "dEpot_ave", "dEtot_ave", "states", "SH_pop", "SH_pop_raw",
-                           "D_adi", "D_adi_raw", "D_dia", "D_dia_raw", "q", "p", "Cadi", "Cdia", 
-                           "hvib_adi", "hvib_dia", "St", "basis_transform", "projector"
-                         ] 
-
     critical_params = [  ] 
-    default_params = { "rep_tdse":1, "rep_ham":0, "rep_sh":1, "rep_lz":0, "tsh_method":-1,
-                       "force_method":1, "nac_update_method":1, "rep_force":1,
-                       "use_boltz_factor":0, "Temperature":300.0,
-                       "time_overlap_method":0,
-                       "do_phase_correction":1, "tol":1e-3,
-                       "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0, 
-                       "entanglement_opt":0, "ETHD3_alpha":0.0, "ETHD3_beta":0.0, 
-                       "decoherence_algo":-1, 
-                       "sdm_norm_tolerance":0.0,
-                       "dish_decoherence_event_option":0,
-                       "decoherence_rates":DR,
-                       "decoherence_times_type":0, "decoherence_C_param":1.0, 
-                       "decoherence_eps_param":0.1, "dephasing_informed":0,
-                       "ave_gaps":AG, "instantaneous_decoherence_variant":1, "collapse_option":0,
-                       "ensemble":0, "thermostat_params":{},
-                       "dt":1.0*units.fs2au, "nsteps":1, 
-                       "hdf5_output_level":-1, "prefix":"out", "properties_to_save":properties_to_save,
-                       "mem_output_level":-1,
-                       "use_compression":0, "compression_level":[0,0,0], 
-                       "txt_output_level":0,
-                       "progress_frequency":0.1,
-                       "quantum_dofs":None,
-                       "thermostat_dofs":[],
-                       "constrained_dofs":[]
-                     }
+    default_params = {}
+    #================= Computing Hamiltonian-related properties ====================
+    default_params.update( { "rep_tdse":1, "rep_ham":0, "rep_sh":1, "rep_lz":0, "rep_force":1,
+                             "force_method":1, "time_overlap_method":0, "nac_update_method":1, 
+                             "do_phase_correction":1, "phase_correction_tol":1e-3,
+                             "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0
+                           } )
+
+    #================= Surface hopping: proposal, acceptance =======================
+    default_params.update( { "tsh_method":-1, "hop_acceptance_algo":0, "momenta_rescaling_algo":0  } )
+
+    #================= Decoherence options =========================================
+    default_params.update( { "decoherence_algo":-1, "sdm_norm_tolerance":0.0,
+                             "dish_decoherence_event_option":1, "decoherence_times_type":0, 
+                             "decoherence_C_param":1.0, "decoherence_eps_param":0.1, 
+                             "dephasing_informed":0, "instantaneous_decoherence_variant":1, 
+                             "collapse_option":0,  
+                             "decoherence_rates":MATRIX(len(_states), len(_states)),
+                             "ave_gaps":MATRIX(len(_states), len(_states))
+                           } )
+
+    #================= Entanglement of trajectories ================================
+    default_params.update( { "entanglement_opt":0, "ETHD3_alpha":0.0, "ETHD3_beta":0.0   } )
+
+    #================= Bath, Constraints, and Dynamical controls ===================
+    default_params.update( { "Temperature":300.0, "ensemble":0, "thermostat_params":{},
+                             "quantum_dofs":None, "thermostat_dofs":[], "constrained_dofs":[],
+                             "dt":1.0*units.fs2au
+                           } )
+
+    #================= Variables specific to Python version: saving ================
+    default_params.update( { "nsteps":1, "prefix":"out",
+                             "hdf5_output_level":-1, "mem_output_level":-1, "txt_output_level":-1,
+                             "use_compression":0, "compression_level":[0,0,0], 
+                             "progress_frequency":0.1,
+                             "properties_to_save":[ "timestep", "time", "Ekin_ave", "Epot_ave", "Etot_ave", 
+                                   "dEkin_ave", "dEpot_ave", "dEtot_ave", "states", "SH_pop", "SH_pop_raw",
+                                   "D_adi", "D_adi_raw", "D_dia", "D_dia_raw", "q", "p", "Cadi", "Cdia", 
+                                   "hvib_adi", "hvib_dia", "St", "basis_transform", "projector" ] 
+                           } )
 
     comn.check_input(dyn_params, default_params, critical_params)
                
-    prefix = dyn_params["prefix"]    
+    prefix = dyn_params["prefix"] 
     rep_tdse = dyn_params["rep_tdse"]
     nsteps = dyn_params["nsteps"]
     dt = dyn_params["dt"]
-    tol = dyn_params["tol"]
+    phase_correction_tol = dyn_params["phase_correction_tol"]
     hdf5_output_level = dyn_params["hdf5_output_level"]
     mem_output_level = dyn_params["mem_output_level"]
     do_phase_correction = dyn_params["do_phase_correction"]
@@ -814,20 +984,6 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
         #============ Propagate ===========        
         model_params.update({"timestep":i})        
-
-        #== Debug ======
-        """
-        print("q")
-        data_outs.print_matrix(q)
-        print("p")
-        data_outs.print_matrix(p)
-        print("Cadi")
-        data_outs.print_matrix(Cadi)
-        print("Cdia")
-        data_outs.print_matrix(Cdia)
-        print("Projectors")
-        data_outs.print_matrix(projectors[0])
-        """
         
         if rep_tdse==0:
             compute_dynamics(q, p, iM, Cdia, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm)
@@ -1362,9 +1518,9 @@ def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_el
     """
 
 
-    critical_params = [ "model0" ] 
-    default_params = {  }
-    comn.check_input(_model_params, default_params, critical_params)
+    comn.check_input(_model_params, {  }, [ "model0" ] )
+    comn.check_input(_dyn_params, { "rep_tdse":1 }, [  ] )
+
 
 
     # Internal parameters
