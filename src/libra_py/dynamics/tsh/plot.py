@@ -351,7 +351,7 @@ def add_cooordinates_vs_t(plt, hdf_file, plot_params_):
                 if dof in which_dofs:
                     plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["q/data"][:, tr, dof],
                              label=F"traj={tr} dof={dof}", linewidth=Lw, 
-                             color = colors[ clrs_index[tr] ]) 
+                             color = colors[ clrs_index[dof] ]) 
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()
         
@@ -400,7 +400,7 @@ def add_momenta_vs_t(plt, hdf_file, plot_params_):
                 if dof in which_dofs:
                     plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["p/data"][:, tr, dof],
                              label=F"traj={tr} dof={dof}", linewidth=Lw, 
-                             color = colors[ clrs_index[tr] ]) 
+                             color = colors[ clrs_index[dof] ]) 
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()
         
@@ -449,7 +449,7 @@ def add_phase_space(plt, hdf_file, plot_params_):
                 if dof in which_dofs:
                     plt.plot(hdf_file["q/data"][:, tr, dof], hdf_file["p/data"][:, tr, dof],
                              label=F"traj={tr} dof={dof}", linewidth=Lw, 
-                             color = colors[ clrs_index[tr] ]) 
+                             color = colors[ clrs_index[dof] ]) 
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()
                 
