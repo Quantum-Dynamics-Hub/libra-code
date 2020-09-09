@@ -13,7 +13,7 @@ nbra
    nbra/qsh.rst
    nbra/step2.rst
    nbra/step2_analysis.rst
-   nbra/step2_cp2k.rst
+   nbra/step2_many_body.rst
    nbra/step2_dftb.rst
    nbra/step2_ergoscf.rst
    nbra/step3.rst
