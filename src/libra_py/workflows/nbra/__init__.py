@@ -17,6 +17,7 @@ __all__ = ["compute_hprime",
            "step2_analysis",
            "step2_dftb",
            "step2_ergoscf",
+           "step2_many_body",
            "step3",
            "step4",
           ]
