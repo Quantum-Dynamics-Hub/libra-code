@@ -92,20 +92,20 @@ def read_gaussian_tddft_log_file(params):
                 if isUKS==1:
                     # For alpha spin
                     if 'A' in lines[j]:
-                        line_alpha = lines[j].replace('A','').split()
+                        line_alpha = lines[j].replace('A','').replace('->','').split()
                         # Use the tolerance factor for chosing the states
-                        if float(line_alpha[3])**2 > tolerance:
-                            tmp_ci_state.append( [int(line_alpha[0]), int(line_alpha[2])] )
-                            tmp_ci_state_coefficients.append( float(line_alpha[3]) )
+                        if float(line_alpha[2])**2 > tolerance:
+                            tmp_ci_state.append( [int(line_alpha[0]), int(line_alpha[1])] )
+                            tmp_ci_state_coefficients.append( float(line_alpha[2]) )
                             tmp_spin.append('alp')
 
                     # For beta spin
                     elif 'B' in lines[j]:
-                        line_beta = lines[j].replace('B','').split()
+                        line_beta = lines[j].replace('B','').replace('->','').split()
                         # Use the tolerance factor for chosing the states
-                        if float(line_beta[3])**2 > tolerance:
-                            tmp_ci_state.append( [int(line_beta[0]), int(line_beta[2])] )
-                            tmp_ci_state_coefficients.append( float(line_beta[3]) )
+                        if float(line_beta[2])**2 > tolerance:
+                            tmp_ci_state.append( [int(line_beta[0]), int(line_beta[1])] )
+                            tmp_ci_state_coefficients.append( float(line_beta[2]) )
                             tmp_spin.append('bet')
                 else:
                     # Just for alpha spin and the same as above
@@ -443,24 +443,32 @@ def cube_generator_gaussian( project_name, time_step, min_band, max_band, nprocs
     print('formchk %s-%d.chk %s-%d.fchk'%(project_name, time_step, project_name, time_step))
     # Generate the sample cube file, if it exists it will not create it again
     if not os.path.isfile(sample_cube_file):
-        os.system('cubegen %d MO=Homo %s-%d.fchk %s 80 h'%(nprocs, project_name, time_step, sample_cube_file))
+        # Generate the sample cube file with the maximum fineness ---> 100 as in Gaussian website
+        os.system('cubegen %d MO=Homo %s-%d.fchk %s 100 h'%(nprocs, project_name, time_step, sample_cube_file))
+    # For spin unrestricted
     if isUKS == 1:
+        # Generate the names and cube files for each state. Here we use the cube names by CP2K. This will increase the speed of our work.
         for state in range(min_band,max_band+1):
+            # State name in CP2K format
             state_name = CP2K_methods.state_num_cp2k(state)
+            # Cube file name 
             cube_name = '%s-%d-WFN_%s_1-1_0.cube'%(project_name, time_step, state_name)
             print('Generating cube for state %d'%state)
+            # Generate cube files for alpha spin using the 'cubegen'
             os.system('cubegen %d AMO=%d %s-%d.fchk %s -1 h %s'%(nprocs, state, project_name, time_step, cube_name, sample_cube_file))
             print('cubegen %d AMO=%d %s-%d.fchk %s -1 h %s'%(nprocs, state, project_name, time_step, cube_name, sample_cube_file))
             cube_name = '%s-%d-WFN_%s_2-1_0.cube'%(project_name, time_step, state_name)
             print('Generating cube for state %d'%state)
+            # Generate cube files for beta spin using the 'cubegen'
             os.system('cubegen %d BMO=%d %s-%d.fchk %s -1 h %s'%(nprocs, state, project_name, time_step, cube_name, sample_cube_file))
             print('cubegen %d BMO=%d %s-%d.fchk %s -1 h %s'%(nprocs, state, project_name, time_step, cube_name, sample_cube_file))
-
+    # Spin restricted case
     else:
         for state in range(min_band,max_band+1):
             # Use cp2k names because the rest of the code expects this format
             state_name = CP2K_methods.state_num_cp2k(state)
             cube_name = '%s-%d-WFN_%s_1-1_0.cube'%(project_name, time_step, state_name)
             print('Generating cube for state %d'%state)
+            # Generate the cubes for alpha spin only
             os.system('cubegen %d MO=%d %s-%d.fchk %s -1 h %s'%(nprocs, state, project_name, time_step, cube_name, sample_cube_file))
             print('cubegen %d MO=%d %s-%d.fchk %s -1 h %s'%(nprocs, state, project_name, time_step, cube_name, sample_cube_file))
