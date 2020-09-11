@@ -37,6 +37,7 @@ from liblibra_core import *
 from libra_py import data_conv
 from libra_py import cube_file_methods
 from libra_py import CP2K_methods
+from libra_py import Gaussian_methods
 from libra_py.workflows.nbra import mapping
 from libra_py.workflows.nbra import step3
 from libra_py import units
@@ -168,9 +169,9 @@ def get_excitation_analysis_output(params):
 
     """
     
-    critical_params = [ "logfile_directory", "curr_step" ]
+    critical_params = [ "curr_step" ]
     # Default parameters
-    default_params = { "isUKS": 0, "es_software": "cp2k"}
+    default_params = { "isUKS": 0, "es_software": "cp2k", "logfile_directory": "logfiles" }
     # Check input
     comn.check_input(params, default_params, critical_params)
     
@@ -185,6 +186,13 @@ def get_excitation_analysis_output(params):
         # Extract the excitation energies and their configurations from the output file.
         excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = \
         CP2K_methods.read_cp2k_tddfpt_log_file( params )
+
+    elif es_software == "gaussian":
+
+        logfile_name = F"{logfile_directory}/step_{curr_step}.log"
+        params.update({"logfile_name":logfile_name}) 
+        excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = \
+        Gaussian_methods.read_gaussian_tddft_log_file( params )
   
     return excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components
 
@@ -558,9 +566,9 @@ def form_Hvib_real( params ):
                                      UKS is set to True and the energies of alpha spin in a block form matrix.
         
     """
-    critical_params = [ "logfile_directory", "min_band", "max_band", "curr_step" ]
+    critical_params = [ "min_band", "max_band", "curr_step" ]
     # Default parameters
-    default_params = { "isUKS": 0}
+    default_params = { "isUKS": 0, "es_software": "cp2k", "logfile_directory": "logfiles"}
     # Check input
     comn.check_input(params, default_params, critical_params)
     # Extracting the data
@@ -575,6 +583,8 @@ def form_Hvib_real( params ):
     logfile_directory = params["logfile_directory"]
     # current time step
     curr_step = params["curr_step"]
+    # es_software
+    es_software = params["es_software"]
     # generate the log file name
     logfile_name = F"{logfile_directory}/step_{curr_step}.log"
     # update the logfile_name parameter in params
@@ -583,18 +593,29 @@ def form_Hvib_real( params ):
     # If the UKS calculations were set to True in CP2K input
     if isUKS == 1:
         # Read energies with alpha spin
-        params["spin"] = 1
-        E_alpha, total_energy = CP2K_methods.read_energies_from_cp2k_log_file( params )
-        # Read energies with beta spin
-        params["spin"] = 2
-        E_beta, total_energy = CP2K_methods.read_energies_from_cp2k_log_file( params )
+        if es_software == "cp2k":
+            params["spin"] = 1
+            E_alpha, total_energy = CP2K_methods.read_energies_from_cp2k_log_file( params )
+            # Read energies with beta spin
+            params["spin"] = 2
+            E_beta, total_energy = CP2K_methods.read_energies_from_cp2k_log_file( params )
+        if es_software == "gaussian":
+            params["spin"] = 1
+            E_alpha, total_energy = Gaussian_methods.read_energies_from_gaussian_log_file( params )
+            # Read energies with beta spin
+            params["spin"] = 2
+            E_beta, total_energy = Gaussian_methods.read_energies_from_gaussian_log_file( params )
         # Now forming the diagonal matrix containing the Kohn-Sham energies of the alpha and beta spins
         Hvib_ks_re = np.diag( np.concatenate( ( E_alpha, E_beta ) ) )
     # If there is no UKS calculations set
     else:
-        params["spin"] = 1
-        # spin = 1
-        E_alpha, total_energy = CP2K_methods.read_energies_from_cp2k_log_file( params )
+        if es_software == "cp2k":
+            params["spin"] = 1
+            # spin = 1
+            E_alpha, total_energy = CP2K_methods.read_energies_from_cp2k_log_file( params )
+        elif es_software == "gaussian":
+            params["spin"] = 1
+            E_alpha, total_energy = Gaussian_methods.read_energies_from_gaussian_log_file( params )
         Hvib_ks_re = np.diag( np.concatenate( ( E_alpha, E_alpha ) ) )
     
     return Hvib_ks_re, total_energy
