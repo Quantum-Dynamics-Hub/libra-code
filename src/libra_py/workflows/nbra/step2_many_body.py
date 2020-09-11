@@ -9,7 +9,7 @@
 #*
 #*********************************************************************************/
 """
-.. module:: step2_cp2k
+.. module:: step2_many_body
    :platform: Unix, Windows
    :synopsis: This module implements functions for computing the overlap and nonadiabatic couplings matrices.
 .. moduleauthors:: 
