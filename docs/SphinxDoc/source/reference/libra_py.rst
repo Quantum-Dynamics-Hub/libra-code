@@ -12,6 +12,8 @@ libra_py
    libra_py/acf.rst
    libra_py/autoconnect.rst
    libra_py/build.rst
+   libra_py/CP2K_methods.rst
+   libra_py/cube_file_methods.rst
    libra_py/data_conv.rst
    libra_py/data_outs.rst
    libra_py/data_read.rst
@@ -24,6 +26,7 @@ libra_py
    libra_py/fit.rst
    libra_py/fix_motion.rst
    libra_py/ft.rst
+   libra_py/Gaussian_methods.rst
    libra_py/hpc_utils.rst
    libra_py/hungarian.rst
    libra_py/influence_spectrum.rst

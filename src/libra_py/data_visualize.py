@@ -21,6 +21,7 @@ import os
 import sys
 import math
 import copy
+import scipy
 
 import numpy as np
 from scipy.interpolate import griddata
@@ -184,8 +185,6 @@ def plot_map_nparray( plt, data, colormap='hot', interpolation_scheme='nearest',
 
 
 
-
-
 def plot_nparrays( plt, xdata, ydata, fig_width=6.42, fig_height=2.14, num_subplots=1, colors=["black"], \
                    titles=[""], labels=[ [""] ], title_size=10, xticks_size=8, yticks_size=8, legend_fontsize=8, \
                    n_superimposing=1, savefig=0, figure_names=['plotted_nparray.png']):
@@ -265,4 +264,4 @@ def plot_nparrays( plt, xdata, ydata, fig_width=6.42, fig_height=2.14, num_subpl
 
         if savefig == 1:
             plt.savefig(figure_names[sub_plot])
-    
+ 

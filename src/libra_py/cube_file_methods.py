@@ -46,14 +46,18 @@ def read_cube(filename: str):
     f = open(filename,'r')
     lines = f.readlines()
     f.close()
-
-    natoms = int(lines[2].split()[0])
+    # The absolute value is for Gaussian since it might return a negative number for number of atoms
+    natoms = abs( int(lines[2].split()[0]) )
     # We skip a few lines in the cube files, that go as follows:
     # 2 lines - comments
     # 1 line  - the number of atoms, etc.
     # 3 lines - the grid spacing and number of grid points in each dimensions
 
     nstart = natoms+2+1+3        # the index of the first line containing wfc data
+    # For Gaussian cube files
+    if len( lines[nstart].split() ) < 6:
+        nstart += 1
+
     nlines = len(lines)          # the total number of lines
 
     isovalues = []

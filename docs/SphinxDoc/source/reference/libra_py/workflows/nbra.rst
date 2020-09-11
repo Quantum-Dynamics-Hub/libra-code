@@ -15,6 +15,7 @@ nbra
    nbra/step2_analysis.rst
    nbra/step2_dftb.rst
    nbra/step2_ergoscf.rst
+   nbra/step2_many_body.rst
    nbra/step3.rst
    nbra/step4.rst
 

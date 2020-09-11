@@ -433,7 +433,8 @@ def apply_normalization(S, St):
     
     """
 
-    nsteps  = len(S)
+    nsteps = len(S)
+
     nstates = int(St[0].num_of_cols/2)  # division by 2 because it is a super-matrix
     
     alp = list(range(0,nstates))

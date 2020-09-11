@@ -497,9 +497,14 @@ def CP2K_input_static(cp2k_sample_energy_input: str, project_name: str,
             f.write(' %s'%project_name+'-%d'%time_step)
             f.write('\n')
         # Writing the WFN_RESTART_FILE_NAME of the previous time step
-        elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower().split():
-            f.write('    WFN_RESTART_FILE_NAME')
-            f.write(' %s'%project_name+'-%d'%(time_step-1)+'-RESTART.wfn')
+        elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower().split() and ".wfn" in lines[i].lower():	
+            f.write('    WFN_RESTART_FILE_NAME')	
+            f.write(' %s'%project_name+'-%d'%(time_step-1)+'-RESTART.wfn')	
+            f.write('\n')	
+        # Writing the WFN_RESTART_FILE_NAME of the previous time step for the tddft calculation	
+        elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower().split() and ".tdwfn" in lines[i].lower():	
+            f.write('    WFN_RESTART_FILE_NAME')	
+            f.write(' %s'%project_name+'-%d'%(time_step-1)+'-RESTART.tdwfn')
             f.write('\n')
         # Setting the scf guess to restart, CP2K will automatically switch to atomic if the wfn file does not exist
         elif 'SCF_GUESS'.lower() in lines[i].lower().split():
@@ -619,5 +624,4 @@ def read_energies_from_cp2k_log_file( params ):
         
     # Returning the energeis from min_band to max_band
     return ks_energies[min_band-1:max_band], total_energy
-
- 
+  
