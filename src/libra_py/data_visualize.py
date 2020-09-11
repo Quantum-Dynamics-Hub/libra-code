@@ -182,3 +182,86 @@ def plot_map_nparray( plt, data, colormap='hot', interpolation_scheme='nearest',
         cb.ax.tick_params(labelsize=8)
         plt.tight_layout()
 
+
+
+
+def plot_nparrays( plt, xdata, ydata, fig_width=6.42, fig_height=2.14, num_subplots=1, colors=["black"], \
+                   titles=[""], labels=[ [""] ], title_size=10, xticks_size=8, yticks_size=8, legend_fontsize=8, \
+                   n_superimposing=1, savefig=0, figure_names=['plotted_nparray.png']):
+
+    """
+    This function takes in n nparrays and plots them using the features described below
+
+
+    Args:
+
+        plt ( pyplot instance ): the handler of the plot which we create
+
+        xdata ( list of numpy arrays ): Contains the data to be plotted. Each list element can be its own subplot
+
+        ydata ( list of numpy arrays ): Contains the data to be plotted. Each list element can be its own subplot
+
+        fig_width ( float ): width of the final figure. May contain multiple subplots 
+        
+        fig_height ( float ): height of the final figure. May contain multiple subplots         
+
+        num_subplots ( int ): number of subplots to have in the total figure        
+
+        titles ( list of strings ): the title for each subplot     
+
+        title_size ( int ): fontsize of the title
+        
+        xticks_size ( int ): fontsize of the title
+        
+        yticks_size ( int ): fontsize of the title
+        
+        n_superimposing ( int ): number of data to super impose on one plot
+
+    Returns:
+
+        None : just plots the 2D image(s)
+    """
+
+    if len(titles) != num_subplots:
+        print("\nYou do not have a title for every subplot. Assigning titles[0] to all subplots")
+        for i in range(num_subplots-1):
+            titles.append( titles[0] )
+
+    if len(labels) != num_subplots:
+        print("\nYou do not have a labels for every subplot. Assigning labels[0] to all subplots")
+        for i in range(num_subplots-1):
+            labels.append( labels[0] )
+
+    if len(xdata) != num_subplots:
+        print("\nYou do not have a xdata for every subplot. Assigning xdata[0] to all subplots")
+        for i in range(num_subplots-1):
+            xdata.append( xdata[0] )
+
+    if len(ydata) != num_subplots:
+        print("\nYou do not have a ydata for every subplot. Assigning ydata[0] to all subplots")
+        for i in range(num_subplots-1):
+            ydata.append( ydata[0] )
+
+    if len(figure_names) != num_subplots:
+        print("\nYou do not have a figure_name for every subplot. Assigning a figure_name to all subplots")
+        for i in range(num_subplots-1):
+            figure_names.append( "tmp_"+str(i)+".png" )
+
+    plt.figure(num=None, figsize=(fig_width, fig_height), dpi=300)
+    for sub_plot in range( num_subplots ):
+
+        plt.subplot(1, num_subplots, sub_plot+1)
+        plt.title(titles[sub_plot], fontsize=title_size)
+        plt.xticks(fontsize=xticks_size)
+        plt.yticks(fontsize=yticks_size)
+
+        for superimpose in range( n_superimposing ):
+
+            plt.plot( xdata[sub_plot][0], ydata[sub_plot][superimpose], label=labels[sub_plot][superimpose] )
+
+        plt.legend(fontsize=legend_fontsize)
+        plt.tight_layout()
+
+        if savefig == 1:
+            plt.savefig(figure_names[sub_plot])
+  
