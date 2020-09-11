@@ -105,8 +105,13 @@ def get_Hvib(params):
 
     nstates = params["nstates"]  # the number of states in the input files
 
+    # init_time
+    init_time = params["init_times"][0]
+
     Hvib = []
-    for i in range(0,params["nfiles"]):
+    # The previous was based on nfiles now it is based on the initial time and starts from init_time
+    # for i in range(0,params["nfiles"]):
+    for i in range(init_time, init_time+params["nfiles"]):
 
         filename_re = params["Hvib_re_prefix"]+str(i)+params["Hvib_re_suffix"]
         filename_im = params["Hvib_im_prefix"]+str(i)+params["Hvib_im_suffix"]
