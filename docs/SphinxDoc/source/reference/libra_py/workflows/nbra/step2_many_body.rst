@@ -1,6 +1,6 @@
-step2_cp2k
+step2_many_body
 *******************
 
-.. automodule:: libra_py.workflows.nbra.step2_cp2k
+.. automodule:: libra_py.workflows.nbra.step2_many_body
    :members:
 
