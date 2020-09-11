@@ -21,6 +21,7 @@ import os
 import sys
 import math
 import copy
+import scipy
 
 import numpy as np
 from scipy.interpolate import griddata
