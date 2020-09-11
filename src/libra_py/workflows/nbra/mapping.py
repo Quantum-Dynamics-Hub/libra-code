@@ -249,6 +249,10 @@ def ovlp_arb(SD1, SD2, S, use_minimal=True):
                sd2.append( sd2_tmp[i] ) 
         #print("sd1 = ", sd1)
         #print("sd2 = ",   sd2)
+        # if both sd1 and sd2 are empty set them with sd1_tmp and sd2_tmp
+        if len(sd1) == 0 and len(sd2) == 0:
+            sd1 = sd1_tmp
+            sd2 = sd2_tmp
 
     else:
 
@@ -261,20 +265,28 @@ def ovlp_arb(SD1, SD2, S, use_minimal=True):
 
 
     s = CMATRIX(len(sd1),len(sd2))
-    if len(sd1) and len(sd2) > 0:
+    # Forming the overlap of the SDs
+    for i in range(0,len(sd1)):
+        for j in range(0,len(sd2)):
+            # The overlap is non-zero only if the orbitals
+            # are occupied with the same-spin electrons. 
+            if (SD1[i] * SD2[j]) > 0:          
+                s.set(i,j,S.get(sd1[i],sd2[j]))
+            else:
+                s.set(i,j,0.0,0.0)
 
-        for i in range(0,len(sd1)):
-            for j in range(0,len(sd2)):
+    # Checking if the matrix is square
+    print("\nChecking if s is a square matrix ...")
+    if s.num_of_rows != s.num_of_cols:
+        print("\nWARNING: the matarix of Kohn-Sham orbitial overlaps is not a square matrix") 
+        print("\nExiting now ..")
+        print("sd1 = ", sd1)
+        print("sd2 = ", sd2)
+        print("s.num_of_rows = ", s.num_of_rows)
+        print("s.num_of_cols = ", s.num_of_cols)
+        sys.exit(0)
 
-                # The overlap is non-zero only if the orbitals
-                # are occupied with the same-spin electrons. 
-                if (SD1[i] * SD2[j]) > 0:          
-                    s.set(i,j,S.get(sd1[i],sd2[j]))
-                else:
-                    s.set(i,j,0.0,0.0)
-    else:
-        s.identity()
-        
+
     return det(s)
 
 
