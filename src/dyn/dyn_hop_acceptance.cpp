@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2019 Alexey V. Akimov
+* Copyright (C) 2019-2020 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -30,20 +30,22 @@ namespace libdyn{
 namespace bp = boost::python;
 
 
-int can_rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t){
+int can_rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, vector<int>& which_dofs){
 /**
   Check if we can rescale momenta p along the vector t such that the total energy is conserved
 
 */
 
-  int ndof = p.n_rows;
+  int ndof = which_dofs.size();
 
   // According to Fabiano
   double a_ij = 0.0;
   double b_ij = 0.0;
   double c_ij = E_old - E_new;
-    
-  for(int dof=0; dof< ndof; dof++){  
+
+  for(int idof = 0; idof < ndof; idof++){  
+
+    int dof = which_dofs[idof];
 
     a_ij += t.get(dof, 0) * t.get(dof, 0) * invM.get(dof, 0); 
     b_ij += p.get(dof, 0) * t.get(dof, 0) * invM.get(dof, 0); 
@@ -60,24 +62,36 @@ int can_rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM
   return res;
 }
 
+int can_rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t){
+
+  int ndof = p.n_rows;
+  vector<int> which_dofs(ndof, 0);
+  for(int i = 0; i < ndof; i++){ which_dofs[i] = i; }
+
+  return can_rescale_along_vector(E_old, E_new, p, invM, t, which_dofs);
+
+}
 
 
-void rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse){
+
+void rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse, vector<int>& which_dofs){
 /**
   Rescale momenta p along the vector t such that the total energy is conserved
 
   or reverse the momentum along the vector t
 
 */
-  int dof;
-  int ndof = p.n_rows;
+  int idof, dof; 
+  int ndof = which_dofs.size();
 
   // According to Fabiano
   double a_ij = 0.0;
   double b_ij = 0.0;
   double c_ij = E_old - E_new;
     
-  for(dof=0; dof< ndof; dof++){  
+  for(idof=0; idof < ndof; idof++){  
+
+    dof = which_dofs[idof];
 
     a_ij += t.get(dof, 0) * t.get(dof, 0) * invM.get(dof, 0); 
     b_ij += p.get(dof, 0) * t.get(dof, 0) * invM.get(dof, 0); 
@@ -111,12 +125,28 @@ void rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, M
   }
 
   //Rescale velocities and do the hop
-  p -= gamma_ij * t;
+  MATRIX dp(t.n_rows, t.n_cols);
+  dp = gamma_ij * t;
+
+  /// Only shift the momenta along the active dofs (`which_dofs`)
+  /// p -= dp; (only for the active dofs)
+  for(idof=0; idof < ndof; idof++){  
+    dof = which_dofs[idof];
+    p.add(dof, 0, -dp.get(idof, 0) );
+  }
 
 }
 
 
+void rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse){
 
+  int ndof = p.n_rows;
+  vector<int> which_dofs(ndof, 0);
+  for(int i = 0; i < ndof; i++){ which_dofs[i] = i; }
+
+  rescale_along_vector(E_old, E_new, p, invM, t, do_reverse, which_dofs);
+
+}
 
 
 
@@ -384,7 +414,8 @@ double boltz_factor(double E_new, double E_old, double T, int boltz_opt){
 
 vector<int> accept_hops(dyn_control_params& prms,
        MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
-       nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd ){
+       nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd, 
+       vector<int>& which_trajectories){
 /**
   This function returns the new state indices if the corresponding transitions can be
   accepted according to given criteria
@@ -406,12 +437,16 @@ vector<int> accept_hops(dyn_control_params& prms,
 
 */
 
-  int ndof = q.n_rows;
-  int ntraj = q.n_cols;
-  int nst = C.n_rows;    
-  int traj, dof, i;
+  vector<int>& which_dofs = prms.quantum_dofs;
 
-  vector<int> fstates(ntraj,0); 
+  int ndof = q.n_rows;
+  int ndof_active = which_dofs.size();
+  int ntraj = q.n_cols;
+  int ntraj_active = which_trajectories.size();
+  int nst = C.n_rows;    
+  int itraj, traj, dof, i, idof;
+
+  vector<int> fstates(ntraj, -1); 
   MATRIX p_tr(ndof, 1);
   CMATRIX hvib(nst, nst);
   CMATRIX nac(nst, nst);
@@ -420,7 +455,9 @@ vector<int> accept_hops(dyn_control_params& prms,
 
   if(prms.hop_acceptance_algo==0){  // Just accept all the hops
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
+
       fstates[traj] = initial_states[traj];
     }
 
@@ -428,7 +465,8 @@ vector<int> accept_hops(dyn_control_params& prms,
 
   else if(prms.hop_acceptance_algo==10){  // Just based on the adiabatic energy levels
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
@@ -462,7 +500,8 @@ vector<int> accept_hops(dyn_control_params& prms,
 
   else if(prms.hop_acceptance_algo==11){  // Just based on the diabatic energy levels
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
@@ -494,7 +533,8 @@ vector<int> accept_hops(dyn_control_params& prms,
 
     MATRIX dNAC(ndof, 1);
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
@@ -507,8 +547,10 @@ vector<int> accept_hops(dyn_control_params& prms,
         double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
         double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
 
-        for(dof = 0; dof < ndof; dof++){
-
+        dNAC = 0.0;
+        //for(dof = 0; dof < ndof; dof++){
+        for(idof = 0; idof < ndof_active; idof++){
+          dof = which_dofs[idof];
           nac = ham.children[traj]->get_dc1_adi(dof);
           nac = projectors[traj].H() * nac * projectors[traj];
 
@@ -516,7 +558,7 @@ vector<int> accept_hops(dyn_control_params& prms,
         }
       
         p_tr = p.col(traj);
-        if(can_rescale_along_vector(E_i, E_f, p_tr, invM, dNAC)){
+        if(can_rescale_along_vector(E_i, E_f, p_tr, invM, dNAC, which_dofs)){
           fstates[traj] = proposed_states[traj];
         }
         else{
@@ -547,7 +589,8 @@ vector<int> accept_hops(dyn_control_params& prms,
 */
 
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
@@ -559,8 +602,10 @@ vector<int> accept_hops(dyn_control_params& prms,
         double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
         double E_f = hvib.get(new_st, new_st).real();  // final potential energy        
 
-        for(dof = 0; dof < ndof; dof++){
-
+        //for(dof = 0; dof < ndof; dof++){
+        dF = 0.0;
+        for(idof = 0; idof < ndof_active; idof++){
+          dof = which_dofs[idof];
           df = ham.children[traj]->get_d1ham_adi(dof);
           df = projectors[traj].H() * df * projectors[traj];
           dF.set(dof, 0, df.get(old_st, old_st).real() - df.get(new_st, new_st).real());
@@ -568,7 +613,7 @@ vector<int> accept_hops(dyn_control_params& prms,
         }
       
         p_tr = p.col(traj);
-        if(can_rescale_along_vector(E_i, E_f, p_tr, invM, dF)){
+        if(can_rescale_along_vector(E_i, E_f, p_tr, invM, dF, which_dofs)){
           fstates[traj] = proposed_states[traj];
         }
         else{
@@ -586,7 +631,8 @@ vector<int> accept_hops(dyn_control_params& prms,
 
   else if(prms.hop_acceptance_algo==31){  // stochastic decision based on quantum Boltzmann factors
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
@@ -613,7 +659,8 @@ vector<int> accept_hops(dyn_control_params& prms,
 
   else if(prms.hop_acceptance_algo==32){  // stochastic decision based on classical Maxwell-Boltzmann factors
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
@@ -641,7 +688,8 @@ vector<int> accept_hops(dyn_control_params& prms,
 
   else if(prms.hop_acceptance_algo==33){  // stochastic decision based on quantum probabilities
 
-    for(traj=0; traj<ntraj; traj++){
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
@@ -673,6 +721,270 @@ vector<int> accept_hops(dyn_control_params& prms,
 }
 
 
+vector<int> accept_hops(dyn_control_params& prms,
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
+       nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd ){
+
+    int ntraj = q.n_cols;
+    vector<int> which_trajectories(ntraj);
+
+    for(int i=0; i<ntraj; i++){ which_trajectories[i] = i; }
+
+    return accept_hops(prms, q, p, invM, C, projectors, ham, proposed_states, initial_states, rnd, which_trajectories);
+
+}
+
+
+
+
+
+vector<int> where_can_we_hop(int traj, dyn_control_params& prms,
+       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, vector<CMATRIX>& projectors, 
+       nHamiltonian& ham, vector<int>& act_states, Random& rnd){
+/**
+   This function gives a list of indices of states to which a trajectory of index `traj` can
+   hop to from its current active state
+   We want to determine only the non-trivial transitions (that is everything  other than hopping onto itself)
+
+   act_states = [ state_0,  state_1, ... <state_traj>, .... ] is the array of the current state indices for each trajectory
+ 
+   So, we are interested in the particular trajectory `traj` and we agoing to check onto which other states can that trajectory hop
+
+   We don't care about all other values in act_states, q, p, etc. ... other than corresponding to the index `traj`
+
+*/
+
+    int ntraj = act_states.size();
+    int nstates = Coeff.n_rows;
+
+    vector<int> proposed_states(ntraj, -1);
+    vector<int> new_states(ntraj, -1);
+    vector<int> which_trajectories(1, traj);
+    vector<int> all_possible_hops;
+
+    /// Determine whereto we can hop from the current state:
+    for(int istate=0; istate<nstates; istate++){
+
+      if(istate != act_states[traj]){
+
+        proposed_states[traj] = istate;
+
+        /// Decide if we can accept the transitions, the function below only checks the hopping for a single trajectory `traj`
+        /// other elements of the input and output vector<int> variables (old_states, new_states, proposed_states) are irrelevant
+        /// the variable `which_trajectories` instructs to handle only the current trajectory
+        new_states = accept_hops(prms, q, p, invM, Coeff, projectors, ham, proposed_states, act_states, rnd, which_trajectories);
+
+        if(new_states[traj]!=act_states[traj]){
+          all_possible_hops.push_back(new_states[traj]);
+        }
+
+      }/// if not the current active state 
+
+    }/// for istate
+
+    return all_possible_hops;
+}
+
+
+
+
+void handle_hops_nuclear(dyn_control_params& prms,
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
+       nHamiltonian& ham, vector<int>& new_states, vector<int>& old_states){
+/**
+  This function changes the nuclear dynamical variables after successful or frustrated hops
+
+  options:
+  0 - don't rescale
+
+  100 - based on adiabatic energy, don't reverse on frustrated hops
+  101 - based on adiabatic energy, reverse on frustrated hops
+  110 - based on diabatic energy, don't reverse on frustrated hops
+  111 - based on diabatic energy, reverse on frustrated hops
+
+  200 - along derivative coupling vectors, don't reverse on frustrated hops
+  201 - along derivative coupling vectors, reverse on frustrated hops
+  210 - along difference of state-specific forces, don't reverse on frustrated hops
+  211 - along difference of state-specific forces, reverse on frustrated hops
+
+*/
+
+  vector<int>& which_dofs = prms.quantum_dofs;
+
+  int ndof = q.n_rows;
+  int n_active_dof = which_dofs.size(); 
+  int ntraj = q.n_cols;
+  int nst = C.n_rows;    
+  int traj, idof, dof, i;
+
+  MATRIX p_tr(ndof, 1);
+  CMATRIX hvib(nst, nst);
+  CMATRIX nac(nst, nst);
+  CMATRIX df(nst, nst);
+
+
+  if(prms.momenta_rescaling_algo==0){  // Don't rescale at all
+    ; ;
+  }// algo = 0
+
+  else if(prms.momenta_rescaling_algo==100 || prms.momenta_rescaling_algo==101){  // rescale momenta uniformly based on adiabatic energies
+
+    for(traj=0; traj<ntraj; traj++){
+
+      int old_st = old_states[traj];
+      int new_st = new_states[traj];
+
+      p_tr = p.col(traj);
+
+      double T_i = compute_kinetic_energy(p_tr, invM, which_dofs); // initial kinetic energy
+
+      hvib = ham.children[traj]->get_ham_adi();
+      hvib = projectors[traj].H() * hvib * projectors[traj];
+        
+      double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
+      double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
+      double T_f = T_i + E_i - E_f;             // predicted final kinetic energy
+
+
+      double scl_fac = 1.0;
+
+      if(T_f>=0.0){  scl_fac = std::sqrt(T_f/T_i);   }
+      else{
+        if(prms.momenta_rescaling_algo==100){  scl_fac = 1.0; }
+        else if(prms.momenta_rescaling_algo==101){  scl_fac = -1.0; }
+      }      
+
+      //for(dof = 0; dof < ndof; dof++){   p.scale(dof, traj, scl_fac);  }
+      for(idof = 0; idof < n_active_dof; idof++){   
+        dof = which_dofs[idof];
+        p.scale(dof, traj, scl_fac);  
+      }
+
+    }
+  }// algo = 100 || 101
+
+  else if(prms.momenta_rescaling_algo==110 || prms.momenta_rescaling_algo==111){  // rescale momenta uniformly based on diabatic energies
+
+    for(traj=0; traj<ntraj; traj++){
+
+      int old_st = old_states[traj];
+      int new_st = new_states[traj];
+
+      p_tr = p.col(traj);
+      double T_i = compute_kinetic_energy(p_tr, invM, which_dofs); // initial kinetic energy
+      double E_i = ham.children[traj]->get_ham_dia().get(old_st, old_st).real();  // initial potential energy
+      double E_f = ham.children[traj]->get_ham_dia().get(new_st, new_st).real();  // final potential energy  
+      double T_f = T_i + E_i - E_f;             // predicted final kinetic energy
+
+      double scl_fac = 1.0;
+
+      if(T_f>=0.0){  scl_fac = std::sqrt(T_f/T_i);   }
+      else{
+        if(prms.momenta_rescaling_algo==110){  scl_fac = 1.0; }
+        else if(prms.momenta_rescaling_algo==111){  scl_fac = -1.0; }
+      }      
+
+      //for(dof = 0; dof < ndof; dof++){   p.scale(dof, traj, scl_fac);  }
+      for(idof = 0; idof < n_active_dof; idof++){   
+        dof = which_dofs[idof];
+        p.scale(dof, traj, scl_fac);  
+      }
+
+
+    }
+  }// algo = 110 || algo = 111
+
+
+  else if(prms.momenta_rescaling_algo==200 || prms.momenta_rescaling_algo==201){  // rescale momenta along the derivative coupling vector
+
+    MATRIX dNAC(ndof, 1);
+    int do_reverse;
+
+    if(prms.momenta_rescaling_algo==200){ do_reverse = 0; }
+    else if(prms.momenta_rescaling_algo==201){ do_reverse = 1; }
+
+    for(traj=0; traj<ntraj; traj++){
+
+      int old_st = old_states[traj];
+      int new_st = new_states[traj];
+
+      hvib = ham.children[traj]->get_ham_adi();
+      hvib = projectors[traj].H() * hvib * projectors[traj];
+
+      double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
+      double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
+
+      dNAC = 0.0;
+      for(idof = 0; idof < n_active_dof; idof++){
+        dof = which_dofs[idof];
+        nac = ham.children[traj]->get_dc1_adi(dof);
+        nac = projectors[traj].H() * nac * projectors[traj];
+        dNAC.set(dof, 0, nac.get(old_st, new_st).real() );
+      }
+
+      p_tr = p.col(traj);       
+      rescale_along_vector(E_i, E_f, p_tr, invM, dNAC, do_reverse, which_dofs); 
+
+      for(dof = 0; dof < ndof; dof++){   p.set(dof, traj, p_tr.get(dof, 0));     }
+
+
+    }// for traj
+
+  }// algo = 200 || 201
+
+  else if(prms.momenta_rescaling_algo==210 || prms.momenta_rescaling_algo==211 ){  // rescale momenta along the difference in forces
+
+    MATRIX dF(ndof, 1);
+/*
+    MATRIX Fi(ndof, ntraj);
+    MATRIX Ff(ndof, ntraj);
+    CMATRIX _ampl_i(nst, ntraj);     // CMATRIX version of "initial_states"
+    CMATRIX _ampl_f(nst, ntraj);     // CMATRIX version of "proposed_states"
+
+
+    tsh_indx2vec(ham, _ampl_i, old_states);
+    Fi = ham.Ehrenfest_forces_adi(_ampl_i, 1).real();
+
+    tsh_indx2vec(ham, _ampl_f, new_states);
+    Ff = ham.Ehrenfest_forces_adi(_ampl_f, 1).real();
+
+*/
+
+    int do_reverse;
+
+    if(prms.momenta_rescaling_algo==210){ do_reverse = 0; }
+    else if(prms.momenta_rescaling_algo==211){ do_reverse = 1; }
+
+
+    for(traj=0; traj<ntraj; traj++){
+
+      int old_st = old_states[traj];
+      int new_st = new_states[traj];
+
+      hvib = ham.children[traj]->get_ham_adi();
+      hvib = projectors[traj].H() * hvib * projectors[traj];
+      double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
+      double E_f = hvib.get(new_st, new_st).real();  // final potential energy        
+
+      dF = 0.0;
+      for(idof = 0; idof < n_active_dof; idof++){
+        dof = which_dofs[idof];
+        df = ham.children[traj]->get_d1ham_adi(dof);
+        df = projectors[traj].H() * df * projectors[traj];
+        dF.set(dof, 0, df.get(old_st, old_st).real() - df.get(new_st, new_st).real());
+      }
+
+      p_tr = p.col(traj);       
+      rescale_along_vector(E_i, E_f, p_tr, invM, dF, do_reverse, which_dofs); 
+
+      for(dof = 0; dof < ndof; dof++){   p.set(dof, traj, p_tr.get(dof, 0));     }
+      
+    }// for traj
+
+  }// algo = 210 || 211
+
+
+}// handle_hops_nuclear
 
 
 

@@ -320,23 +320,193 @@ vector<int> get_stochastic_reordering(CMATRIX& time_overlap, Random& rnd){
 }
 
 
+vector<int> get_stochastic_reordering2(CMATRIX& time_overlap, Random& rnd){
+    /**
+    """ This function identifies which states have changed their identities during some
+    calculations (usually the eigenvalue problem) in comparison to what they might have been.
+
+    In the dynamics, this situation occurs when the system passes the conical intersection region
+    and the identity of the states may change. The states' energies become non-descriptive for this
+    purpose and one needs to look at the changes of the orbitals (e.g. eigenvectors). In particular,
+    we can look at the overlap of the sates at adjacent times: <phi_i(t)|phi_i(t+dt)>
+    If no spurious state changes happens, the diagonal elements should be close to 1.0.
+    If they are not - we locate to which state the transitions might have happened.
+
+    In general context, the "time_overlap" matrix is compused of the overlaps of the eigenvectors
+    for two problems - the original one and a perturbed one.
+
+    \param[in] time_overlap ( CMATRIX ) the time overlap matrix, <phi_i(t)|phi_j(t+dt)>.
+
+    Returns:
+    chosen_permutation - list of integers that describe the permutation. That is:
+    chosen_permutation[i] - is the index identifying the "older" state "i". Now, it may be labeled
+    by some other index, j = chosen_permutation[i].
+
+    |phi_j(t+dt)> = a_0j |phi_0(t)> + a_1j |phi_1(t)> + ... a_Nj |phi_N(t)>
+
+    So:  <phi_i(t)|phi_j(t+dt)> = a_ij and then
+
+    |a_ij|^2 is the probability that the state i at time t becomes state j at time t+dt
+
+    i - state index at t
+    chosen_permutation[i] - state index at t+dt
+
+    """
+    */
+
+    // extract the indices where <phi_i(t)|phi_i(t+dt)> is not close to 1.
+    CMATRIX S(time_overlap);  // just a temporary working object
+
+    int i, iperm;
+    vector<int> permutation;
+    int number_states = time_overlap.n_rows;
+
+
+    //====== Construct permutations possible ==============
+    vector<int> identity_permutation;
+    for(i = 0; i < number_states; i++){  identity_permutation.push_back(i); }
+
+    vector< vector<int> > list_permutations = compute_all_permutations(identity_permutation);
+    int num_permutations = list_permutations.size();  /// this should be number_states!
+
+    //====== Compute the probabilities of all permutations ==============
+    MATRIX g(1, num_permutations);
+
+    double norm = 0.0;
+    for(iperm = 0; iperm < num_permutations; iperm++){
+
+        permutation = list_permutations[iperm];
+ 
+        double permutation_probability = 1.0;
+        for(i = 0; i < number_states; i++){
+            permutation_probability *= real(conj(S.get(i, permutation[i])) * S.get(i, permutation[i]));
+        } // for i
+
+        norm += permutation_probability;
+        g.set(0, iperm, permutation_probability);
+
+    } // for iperm
+  
+    g /= norm; // normalize the probabilities
+
+
+    //========= Stochastically determine permutations ==========
+    double ksi = rnd.uniform(0.0, 1.0);
+    int selected_permutation_index = hop(0, g, ksi);
+    
+    return list_permutations[selected_permutation_index];
+
+
+}
+
 CMATRIX permutation2cmatrix(vector<int>& permutation){
 /**
   Represent a permutation as a matrix
 */
 
   int nst = permutation.size();
-
   CMATRIX res(nst, nst);
 
-  for(int i=0; i<nst; i++){
-
-    res.set(permutation[i], i, complex<double>(1.0, 0.0));
- 
+  for(int i=0; i < nst; i++){
+    res.set(permutation[i], i, complex<double>(1.0, 0.0)); 
   }
 
   return res;
 
+}
+
+vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd){
+    /**
+    """ This function identifies which states have changed their identities during some
+    calculations (usually the eigenvalue problem) in comparison to what they might have been.
+
+    In the dynamics, this situation occurs when the system passes the conical intersection region
+    and the identity of the states may change. The states' energies become non-descriptive for this
+    purpose and one needs to look at the changes of the orbitals (e.g. eigenvectors). In particular,
+    we can look at the overlap of the sates at adjacent times: <phi_i(t)|phi_i(t+dt)> 
+    If no spurious state changes happens, the diagonal elements should be close to 1.0. 
+    If they are not - we locate to which state the transitions might have happened.
+
+    In general context, the "time_overlap" matrix is compused of the overlaps of the eigenvectors
+    for two problems - the original one and a perturbed one.
+
+    Instead of eliminating used states along the way as in get_stochastic_reordering, 
+    this algo assigns all states and then checks for consistancy (ie no duplicate) at end.
+    
+    \param[in] time_overlap ( CMATRIX ) the time overlap matrix, <phi_i(t)|phi_j(t+dt)>.
+
+    Returns:
+    perm - list of integers that describe the permutation. That is:
+    perm[i] - is the index identifying the "older" state "i". Now, it may be labeled
+    by some other index, j = perm[i]. 
+
+    |phi_j(t+dt)> = a_0j |phi_0(t)> + a_1j |phi_1(t)> + ... a_Nj |phi_N(t)>
+
+    So:  <phi_i(t)|phi_j(t+dt)> = a_ij and then
+ 
+    |a_ij|^2 is the probability that the state i at time t becomes state j at time t+dt
+
+    i - state index at t
+    perm[i] - state index at t+dt
+
+    """
+    */
+
+    // extract the indices where <phi_i(t)|phi_i(t+dt)> is not close to 1. 
+    CMATRIX S(time_overlap);  // just a temporary working object
+    int size = time_overlap.n_rows;
+    int i,j;
+    vector<int> chosen_perm(size, 0);  
+    MATRIX g(1, size);   // switching probabilities
+
+
+    //=========== Lets keep trying ========
+    int is_accepted = 0;
+    int number_of_attempts = 0;
+    int max_number_of_attempts = 100;
+    
+    while(!is_accepted && (number_of_attempts < max_number_of_attempts) ){
+
+      //======= propose hop ========
+    
+      for(i=0;i<size;i++){ // all starting states (at time t)
+
+        for(j=0; j<size; j++){ // all target states            
+
+            g.set(0, j, (S.get(i, j) * std::conj(S.get(i, j))).real() ); // probability to go for i->j transition
+        }
+ 
+        // Now stochastically determine the states re-assignment
+        double ksi = rnd.uniform(0.0, 1.0);
+        int target = hop(0, g, ksi);    // internal (active states') state index
+
+        // Update the permutaiton
+        chosen_perm[i] = target;  /// chose the permutation i->traget
+      }// for i
+    
+
+      //======= check if hop is accepted =========
+      is_accepted = 1; 
+      for(i = 0; i < chosen_perm.size() && is_accepted; i++){
+          for(j = 0; j < chosen_perm.size() && is_accepted; j++){
+              if(i!=j){
+                  if(chosen_perm[i] == chosen_perm[j]){
+                      is_accepted = 0;
+                  } // if perm
+              } // if i != j
+          } // for j
+      } // for i
+        
+      number_of_attempts++;    
+        
+    } // while
+
+    // If we haven't found a suitable transition, make it an identity permutation
+    if(!is_accepted){  
+      for(i = 0; i < size; i++){  chosen_perm[i] = i; }
+    }
+
+    return chosen_perm;
 }
 
 
@@ -369,7 +539,14 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
     if(prms.state_tracking_algo==3){
         perm_t = get_stochastic_reordering(st, rnd);
     }
+    if(prms.state_tracking_algo==32){
+        perm_t = get_stochastic_reordering2(st, rnd);
+    }
 
+    if(prms.state_tracking_algo==33){
+        perm_t = get_stochastic_reordering3(st, rnd);
+    }
+    
     // P -> P * perm
     CMATRIX p_i(nst, nst);
     p_i = permutation2cmatrix(perm_t);
@@ -380,7 +557,7 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
     if(prms.do_phase_correction){
 
       // ### Compute the instantaneous phase correction factors ###
-      phase_i = compute_phase_corrections(st);  // f(i)
+      phase_i = compute_phase_corrections(st, prms.phase_correction_tol);  // f(i)
 
       // ### Scale projections' components by the phases ###
       for(int a=0; a<nst; a++){  

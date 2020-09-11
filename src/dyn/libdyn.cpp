@@ -54,39 +54,56 @@ void export_dyn_control_params_objects(){
       .def("__copy__", &generic__copy__<dyn_control_params>)
       .def("__deepcopy__", &generic__deepcopy__<dyn_control_params>)
 
+      ///================= Computing Hamiltonian-related properties ====================
       .def_readwrite("rep_tdse", &dyn_control_params::rep_tdse)
       .def_readwrite("rep_ham", &dyn_control_params::rep_ham)
       .def_readwrite("rep_sh", &dyn_control_params::rep_sh)
       .def_readwrite("rep_lz", &dyn_control_params::rep_lz)
-      .def_readwrite("tsh_method", &dyn_control_params::tsh_method)
-      .def_readwrite("force_method", &dyn_control_params::force_method)
-      .def_readwrite("nac_update_method", &dyn_control_params::nac_update_method)
       .def_readwrite("rep_force", &dyn_control_params::rep_force)
-      .def_readwrite("hop_acceptance_algo", &dyn_control_params::hop_acceptance_algo)
-      .def_readwrite("momenta_rescaling_algo", &dyn_control_params::momenta_rescaling_algo)
-      .def_readwrite("use_boltz_factor", &dyn_control_params::use_boltz_factor)
-      .def_readwrite("Temperature", &dyn_control_params::Temperature)
-//      .def_readwrite("do_reverse", &dyn_control_params::do_reverse)
-//      .def_readwrite("vel_rescale_opt", &dyn_control_params::vel_rescale_opt)
-      .def_readwrite("dt", &dyn_control_params::dt)
+      .def_readwrite("force_method", &dyn_control_params::force_method)
+      .def_readwrite("time_overlap_method", &dyn_control_params::time_overlap_method)
+      .def_readwrite("nac_update_method", &dyn_control_params::nac_update_method)
       .def_readwrite("do_phase_correction", &dyn_control_params::do_phase_correction)
       .def_readwrite("phase_correction_tol", &dyn_control_params::phase_correction_tol)
       .def_readwrite("state_tracking_algo", &dyn_control_params::state_tracking_algo)
       .def_readwrite("MK_alpha", &dyn_control_params::MK_alpha)
       .def_readwrite("MK_verbosity", &dyn_control_params::MK_verbosity)
-      .def_readwrite("entanglement_opt", &dyn_control_params::entanglement_opt)
-      .def_readwrite("ETHD3_alpha", &dyn_control_params::ETHD3_alpha)
-      .def_readwrite("ETHD3_beta", &dyn_control_params::ETHD3_beta)
+
+      ///================= Surface hopping: proposal, acceptance =======================
+      .def_readwrite("tsh_method", &dyn_control_params::tsh_method)
+      .def_readwrite("hop_acceptance_algo", &dyn_control_params::hop_acceptance_algo)
+      .def_readwrite("momenta_rescaling_algo", &dyn_control_params::momenta_rescaling_algo)
+      .def_readwrite("use_boltz_factor", &dyn_control_params::use_boltz_factor)
+
+      ///================= Decoherence options =========================================
       .def_readwrite("decoherence_algo", &dyn_control_params::decoherence_algo)
+      .def_readwrite("sdm_norm_tolerance", &dyn_control_params::sdm_norm_tolerance)
+      .def_readwrite("dish_decoherence_event_option", &dyn_control_params::dish_decoherence_event_option)
       .def_readwrite("decoherence_times_type", &dyn_control_params::decoherence_times_type)
       .def_readwrite("decoherence_C_param", &dyn_control_params::decoherence_C_param)
       .def_readwrite("decoherence_eps_param", &dyn_control_params::decoherence_eps_param)
       .def_readwrite("dephasing_informed", &dyn_control_params::dephasing_informed)
-      .def_readwrite("ave_gaps", &dyn_control_params::ave_gaps)
       .def_readwrite("instantaneous_decoherence_variant", &dyn_control_params::instantaneous_decoherence_variant)
       .def_readwrite("collapse_option", &dyn_control_params::collapse_option)
+      .def_readwrite("decoherence_rates", &dyn_control_params::decoherence_rates)
+      .def_readwrite("ave_gaps", &dyn_control_params::ave_gaps)
+
+      ///================= Entanglement of trajectories ================================
+      .def_readwrite("entanglement_opt", &dyn_control_params::entanglement_opt)
+      .def_readwrite("ETHD3_alpha", &dyn_control_params::ETHD3_alpha)
+      .def_readwrite("ETHD3_beta", &dyn_control_params::ETHD3_beta)
+
+
+      ///================= Bath, Constraints, and Dynamical controls ===================
+      .def_readwrite("Temperature", &dyn_control_params::Temperature)
       .def_readwrite("ensemble", &dyn_control_params::ensemble)
       .def_readwrite("thermostat_params", &dyn_control_params::thermostat_params)
+      .def_readwrite("thermostat_dofs", &dyn_control_params::thermostat_dofs)
+      .def_readwrite("quantum_dofs", &dyn_control_params::quantum_dofs)
+      .def_readwrite("constrained_dofs", &dyn_control_params::constrained_dofs)
+      .def_readwrite("dt", &dyn_control_params::dt)
+
+
 
       .def("sanity_check", expt_sanity_check_v1)
       .def("set_parameters", expt_set_parameters_v1)
@@ -105,12 +122,22 @@ void export_dyn_decoherence_objects(){
   ///=================== dyn_decoherence_methods.cpp =======================
 
   CMATRIX (*expt_sdm_v1)
-  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates) = &sdm;
+  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol) = &sdm;
   def("sdm", expt_sdm_v1);
 
   CMATRIX (*expt_sdm_v2)
-  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates) = &sdm;
+  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates) = &sdm;
   def("sdm", expt_sdm_v2);
+
+  CMATRIX (*expt_sdm_v3)
+  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol) = &sdm;
+  def("sdm", expt_sdm_v3);
+
+  CMATRIX (*expt_sdm_v4)
+  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates) = &sdm;
+  def("sdm", expt_sdm_v4);
+
+
 
   void (*expt_project_out_v1)(CMATRIX& Coeff, int traj, int i) = &project_out;
   def("project_out", expt_project_out_v1);
@@ -152,9 +179,14 @@ void export_dyn_decoherence_objects(){
   def("coherence_intervals", expt_coherence_intervals_v2);
 
 
+  ///================== In dyn_methods_dish.cpp  =======================
 
+  vector<int> (*expt_dish_v1)
+  (dyn_control_params& prms, MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, 
+   vector<CMATRIX>& projectors, nHamiltonian& ham, vector<int>& act_states, 
+   MATRIX& coherence_time, vector<MATRIX>& decoherence_rates, Random& rnd) = &dish;
+  def("dish", expt_dish_v1);
 
-  //================== DISH =======================
 
 /*
 
@@ -176,12 +208,23 @@ void export_dyn_hop_acceptance_objects(){
   //============= dyn_hop_proposal.cpp ======================
 
   int (*expt_can_rescale_along_vector_v1)
-  (double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t) = &can_rescale_along_vector;
+  (double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, vector<int>& which_dofs) = &can_rescale_along_vector;
   def("can_rescale_along_vector", expt_can_rescale_along_vector_v1);
 
+  int (*expt_can_rescale_along_vector_v2)
+  (double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t) = &can_rescale_along_vector;
+  def("can_rescale_along_vector", expt_can_rescale_along_vector_v2);
+
+
+
   void (*expt_rescale_along_vector_v1)
-  (double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse) = &rescale_along_vector;
+  (double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse, vector<int>& which_dofs) = &rescale_along_vector;
   def("rescale_along_vector", expt_rescale_along_vector_v1);
+
+  void (*expt_rescale_along_vector_v2)
+  (double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse) = &rescale_along_vector;
+  def("rescale_along_vector", expt_rescale_along_vector_v2);
+
 
   vector<double> (*expt_Boltz_quant_prob_v1)
   (vector<double>& E, double T) = &Boltz_quant_prob;
@@ -205,11 +248,35 @@ void export_dyn_hop_acceptance_objects(){
   (double E_new, double E_old, double T, int boltz_opt) = &boltz_factor;
   def("boltz_factor", expt_boltz_factor_v1);
 
+
+
   vector<int> (*expt_accept_hops_v1)
   (dyn_control_params& prms,
    MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
-   nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd ) = &accept_hops;
+   nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd, 
+   vector<int>& which_trajectories) = &accept_hops;
   def("accept_hops", expt_accept_hops_v1);
+
+  vector<int> (*expt_accept_hops_v2)
+  (dyn_control_params& prms,
+   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
+   nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd ) = &accept_hops;
+  def("accept_hops", expt_accept_hops_v2);
+
+
+
+  vector<int> (*expt_where_can_we_hop_v1)
+  (int traj, dyn_control_params& prms,
+   MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, vector<CMATRIX>& projectors, 
+   nHamiltonian& ham, vector<int>& act_states, Random& rnd) = &where_can_we_hop;
+  def("where_can_we_hop", expt_where_can_we_hop_v1);
+
+
+  void (*expt_handle_hops_nuclear_v1)
+  (dyn_control_params& prms,
+   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
+   nHamiltonian& ham, vector<int>& new_states, vector<int>& old_states) = &handle_hops_nuclear;
+  def("handle_hops_nuclear", expt_handle_hops_nuclear_v1);
 
 }
 
@@ -250,8 +317,12 @@ void export_dyn_hop_proposal_objects(){
 void export_dyn_methods_objects(){
 
   vector<int> (*expt_decoherence_event_v1)
-  (MATRIX& coherence_time, MATRIX& coherence_interval, Random& rnd) = &decoherence_event;
+  (MATRIX& coherence_time, MATRIX& coherence_interval, int decoherence_event_option, Random& rnd) = &decoherence_event;
   def("decoherence_event", expt_decoherence_event_v1);
+
+  vector<int> (*expt_decoherence_event_v2)
+  (MATRIX& coherence_time, MATRIX& coherence_interval, Random& rnd) = &decoherence_event;
+  def("decoherence_event", expt_decoherence_event_v2);
 
 
   vector<int> (*expt_dish_hop_proposal_v1)
@@ -303,7 +374,17 @@ void export_dyn_projectors_objects(){
   (CMATRIX& amplitudes, vector<CMATRIX>& projectors) = &dynconsyst_to_raw;
   def("dynconsyst_to_raw", expt_dynconsyst_to_raw_v1);
 
+  vector<int> (*expt_get_stochastic_reordering)
+  (CMATRIX& time_overlap, Random& rnd) = &get_stochastic_reordering;
+  def("get_stochastic_reordering", expt_get_stochastic_reordering);
 
+  vector<int> (*expt_get_stochastic_reordering2)
+  (CMATRIX& time_overlap, Random& rnd) = &get_stochastic_reordering2;
+  def("get_stochastic_reordering2", expt_get_stochastic_reordering2);
+
+  vector<int> (*expt_get_stochastic_reordering3)
+  (CMATRIX& time_overlap, Random& rnd) = &get_stochastic_reordering3;
+  def("get_stochastic_reordering3", expt_get_stochastic_reordering3);
 
 
 }
@@ -337,11 +418,29 @@ void export_permutation_objects(){
 void export_Energy_Forces_objects(){
 
 
-  double (*expt_compute_kinetic_energy_v1)(MATRIX& p, MATRIX& invM) = &compute_kinetic_energy;
-  def("compute_kinetic_energy",expt_compute_kinetic_energy_v1);
+  double (*expt_compute_kinetic_energy_v11)(MATRIX& p, MATRIX& invM, vector<int>& which_dofs) = &compute_kinetic_energy;
+  def("compute_kinetic_energy",expt_compute_kinetic_energy_v11);
 
-  vector<double> (*expt_compute_kinetic_energies_v1)(MATRIX& p, MATRIX& invM) = &compute_kinetic_energies;
+  double (*expt_compute_kinetic_energy_v12)(MATRIX& p, MATRIX& invM) = &compute_kinetic_energy;
+  def("compute_kinetic_energy",expt_compute_kinetic_energy_v12);
+
+  double (*expt_compute_kinetic_energy_v2)(Nuclear& mol) = &compute_kinetic_energy;
+  def("compute_kinetic_energy",expt_compute_kinetic_energy_v2);
+
+  double (*expt_compute_kinetic_energy_v3)(Ensemble& ens) = &compute_kinetic_energy;
+  def("compute_kinetic_energy",expt_compute_kinetic_energy_v3);
+
+
+
+  vector<double> (*expt_compute_kinetic_energies_v1)(MATRIX& p, MATRIX& invM, vector<int>& which_dofs) = &compute_kinetic_energies;
   def("compute_kinetic_energies",expt_compute_kinetic_energies_v1);
+
+  vector<double> (*expt_compute_kinetic_energies_v2)(MATRIX& p, MATRIX& invM) = &compute_kinetic_energies;
+  def("compute_kinetic_energies",expt_compute_kinetic_energies_v2);
+
+
+
+
 
   CMATRIX (*expt_tsh_indx2ampl_v1)(vector<int>& res, int nstates) = &tsh_indx2ampl;
   def("tsh_indx2ampl", expt_tsh_indx2ampl_v1);
@@ -364,12 +463,6 @@ void export_Energy_Forces_objects(){
 
 
 
-
-  double (*expt_compute_kinetic_energy_v2)(Nuclear& mol) = &compute_kinetic_energy;
-  def("compute_kinetic_energy",expt_compute_kinetic_energy_v2);
-
-  double (*expt_compute_kinetic_energy_v3)(Ensemble& ens) = &compute_kinetic_energy;
-  def("compute_kinetic_energy",expt_compute_kinetic_energy_v3);
 
 
   double (*expt_compute_potential_energy_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt) = &compute_potential_energy;
@@ -471,8 +564,10 @@ void export_Dyn_objects(){
 
 
 
-  vector<CMATRIX> (*expt_compute_St_v1)(nHamiltonian& ham, vector<CMATRIX>& Uprev) = &compute_St;
+  vector<CMATRIX> (*expt_compute_St_v1)(nHamiltonian& ham) = &compute_St;
   def("compute_St", expt_compute_St_v1);
+  vector<CMATRIX> (*expt_compute_St_v2)(nHamiltonian& ham, vector<CMATRIX>& Uprev) = &compute_St;
+  def("compute_St", expt_compute_St_v2);
 
 
 

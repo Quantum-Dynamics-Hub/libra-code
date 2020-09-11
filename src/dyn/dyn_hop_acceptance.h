@@ -34,7 +34,10 @@ namespace bp = boost::python;
 /// libdyn namespace
 namespace libdyn{
 
+int can_rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, vector<int>& which_dofs);
 int can_rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t);
+
+void rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse, vector<int>& which_dofs);
 void rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, MATRIX& t, int do_reverse);
 
 vector<double> Boltz_quant_prob(vector<double>& E, double T);
@@ -44,9 +47,27 @@ double HO_prob(vector<double>& E, vector<int>& qn, double T, vector<double>& pro
 double HO_prob_up(vector<double>& E, vector<int>& qn, double T, vector<double>& prob);
 double boltz_factor(double E_new, double E_old, double T, int boltz_opt);
 
+
 vector<int> accept_hops(dyn_control_params& prms,
        MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
-       nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd );
+       nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd,
+       vector<int>& which_trajectories);
+
+vector<int> accept_hops(dyn_control_params& prms,
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
+       nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd);
+
+
+vector<int> where_can_we_hop(int traj, dyn_control_params& prms,
+       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, vector<CMATRIX>& projectors, 
+       nHamiltonian& ham, vector<int>& act_states, Random& rnd);
+
+
+
+void handle_hops_nuclear(dyn_control_params& prms,
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
+       nHamiltonian& ham, vector<int>& new_states, vector<int>& old_states);
+
 
 
 }// namespace libdyn

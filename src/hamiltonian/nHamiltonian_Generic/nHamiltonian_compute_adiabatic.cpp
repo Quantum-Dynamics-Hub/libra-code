@@ -395,8 +395,10 @@ void nHamiltonian::compute_adiabatic(int der_lvl, int lvl){
  
               double dE = (ham_adi->get(j,j) - ham_adi->get(i,i) ).real();
               if(fabs(dE)<1e-100){ 
-                //dE = 1e-10 * (dE>0.0 ? 1.0 : -1.0); 
-                dc1_adi[n]->set(i,j, 0.0, 0.0 );
+                //dE = 1e-10 * (dE>0.0 ? 1.0 : -1.0);                 
+                dE = 1e-100;
+                dc1_adi[n]->set(i,j, tmp->get(i,j)/dE );
+                //dc1_adi[n]->set(i,j, 0.0, 0.0 );
               }else{
           
                 dc1_adi[n]->set(i,j, tmp->get(i,j)/dE );
@@ -514,6 +516,14 @@ void nHamiltonian::compute_adiabatic(bp::object py_funct, bp::object q, bp::obje
 
       check_cmatrix(obj, "basis_transform", nadi, nadi);
       *basis_transform = extract<CMATRIX>(obj.attr("basis_transform"));    
+    }
+
+    has_attr=0;
+    has_attr = (int)hasattr(obj,"time_overlap_adi"); 
+    if(has_attr){    
+
+      check_cmatrix(obj, "time_overlap_adi", nadi, nadi);
+      *time_overlap_adi = extract<CMATRIX>(obj.attr("time_overlap_adi"));    
     }
 
 

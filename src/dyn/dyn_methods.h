@@ -35,6 +35,7 @@ namespace libdyn{
 
 ///================  In dyn_methods_dish.cpp  ===================================
 
+vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval, int decoherence_event_option, Random& rnd);
 vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval, Random& rnd);
 
 vector<int> dish_hop_proposal(vector<int>& act_states, CMATRIX& Coeff, 

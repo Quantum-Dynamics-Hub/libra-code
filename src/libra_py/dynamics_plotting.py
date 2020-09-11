@@ -363,7 +363,8 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
 
 
 
-def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, dx, plot_params):
+def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, dx, plot_params,\
+                 _ndof=1, _active_dof=0, _all_coordinates=[0.0]):
     """
     Args:
         _compute_model ( PyObject ): the function that returns the class with Hamiltonian properties
@@ -383,6 +384,10 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
             ** plot_params["clrs_index"]** ( list of strings ): the mapping of a color definition to its "name" (similar to the one found below)
             ** plot_params["xlim"]** ( list of 2 doubles ): the minimal and maximal values of the x axis in the plotted frame
             ** plot_params["ylim"]** ( list of 2 doubles ): the minimal and maximal values of the y axis in the plotted frame        
+        _ndof ( int ): the dimensionality of the PES [ default: 1 ]
+        _active_dof ( int ): the index of the DOF used to construct the PES [ default: 0 ]
+        _all_coodinates ( list of doubles ): values of all coordinates, the one at the position of `_active_dof` will be disregarded, while all
+            other will be fixed at the values provided
         
     """
 
@@ -428,7 +433,6 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
         X.append(xmin + i * dx)
     
     
-
     plt.rc('axes', titlesize=38)      # fontsize of the axes title
     plt.rc('axes', labelsize=38)      # fontsize of the x and y labels
     plt.rc('legend', fontsize=36)     # legend fontsize
@@ -447,29 +451,33 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
         # The "nstates" field must be specified
         comn.check_input(_param_sets[iset], {}, ["nstates"])
         n = _param_sets[iset]["nstates"]
+        nstates = n
         
-        ham = nHamiltonian(n, n, 1) # ndia, nadi, nnucl
+        ham = nHamiltonian(nstates, nstates, _ndof) # ndia, nadi, nnucl
         ham.init_all(2)
 
         
         hdia, hadi  = [], []  
         uij = []              # projecitions of the MOs onto elementary basis
     
-        for k1 in range(n):
+        for k1 in range(nstates):
             hadi.append([])
             hdia.append([])
             uij_k1 = []
-            for k2 in range(n):
+            for k2 in range(nstates):
                 uij_k1.append([])
             uij.append(uij_k1)
                 
     
         for i in range(nsteps):
-                 
-            q = MATRIX(1,1); q.set(0, 0, X[i])        
+
+            scan_coord = MATRIX(_ndof, 1);
+            for j in range(_ndof):
+                scan_coord.set(j, 0, _all_coordinates[j])                 
+            scan_coord.set(_active_dof, 0, X[i])  
         
             # Diabatic properties
-            ham.compute_diabatic(_compute_model, q, _param_sets[iset])
+            ham.compute_diabatic(_compute_model, scan_coord, _param_sets[iset])
             
             # Adiabatic properties
             ham.compute_adiabatic(1);       
@@ -477,11 +485,11 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
             U = ham.get_basis_transform()
             #P = U * U.H()  # population matrix
         
-            for k1 in range(n):
-                hadi[k1].append(ham.get_ham_adi().get(k1,k1).real)
-                hdia[k1].append(ham.get_ham_dia().get(k1,k1).real)
+            for k1 in range(nstates):
+                hadi[k1].append(ham.get_ham_adi().get(k1, k1).real)
+                hdia[k1].append(ham.get_ham_dia().get(k1, k1).real)
             
-                for k2 in range(n):
+                for k2 in range(nstates):
                     uij[k1][k2].append(U.get(k1,k2).real**2 + U.get(k1,k2).imag**2)
                     
 
@@ -516,12 +524,16 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
     
         for k2 in states_of_interest:
             indx = states_of_interest.index(k2)
-            plt.subplot(1, sz1, 1+indx)
+
+            plt.figure(2*iset+1+indx, figsize=(36, 18)) # dpi=300, frameon=False)            
+
+            #plt.subplot(1, sz1, 1+indx)
+            #plt.subplot(1, 1, 1+indx)
             #plt.title('Params set %i: Adi state %i' % (iset, k2) )
             plt.xlabel('Coordinate, a.u.')
             plt.ylabel('Projection')
     
-            for k1 in range(n):            
+            for k1 in range(nstates):
 #                plt.plot(X, uij[k1][k2], label='$dia_{%i} | adi_{%i}$' % (k1, k2), linewidth=7, color = colors[clrs_index[k1]])         
                 plt.plot(X, uij[k1][k2], label='$< \psi^{dia}_{%i} | \psi^{adi}_{%i} >$' % (k1, k2), linewidth=7, color = colors[clrs_index[k1]])         
             plt.legend()               

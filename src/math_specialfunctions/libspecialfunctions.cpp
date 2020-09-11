@@ -114,7 +114,8 @@ void export_SpecialFunctions_objects(){
   def("covariance", expt_covariance_v3); 
   def("covariance", expt_covariance_v4); 
 
-
+  def("permutations_reiteration", permutations_reiteration);
+  def("compute_all_permutations", compute_all_permutations);
 
 
 }

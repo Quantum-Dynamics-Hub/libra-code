@@ -44,8 +44,10 @@ using namespace libelectronic;
 using namespace libensemble;
 
 
-
+double compute_kinetic_energy(MATRIX& p, MATRIX& invM, vector<int>& which_dofs);
 double compute_kinetic_energy(MATRIX& p, MATRIX& invM);
+
+vector<double> compute_kinetic_energies(MATRIX& p, MATRIX& invM, vector<int>& which_dofs);
 vector<double> compute_kinetic_energies(MATRIX& p, MATRIX& invM);
 
 

@@ -39,146 +39,106 @@ class dyn_control_params{
 
   public:
 
-
-
+  ///===============================================================================
+  ///================= Computing Hamiltonian-related properties ====================
+  ///===============================================================================
   /**
-    The representation to run the Ehrenfest : 0 - diabatic, 1 - adiabatic
+    Selects the representation in which nuclear/electronic (Ehrenfest core) dynamics 
+    is executed. This is the representation chosen as the main one to represent the 
+    time-dependent wavefunction and the one used to integrate the TD-SE
+    
+    Options:
+     - 0: diabatic representation 
+     - 1: adiabatic representation [ default ]
   */
   int rep_tdse;
 
 
   /** 
-   The representation of the Hamiltonian update: 0 - diabatic, 1 - adiabatic
-   this is the representation in which the computed properties are assumed to be
-   for instance, we may have set it to 1, to read the adiabatic energies and couplings,
-   to bypass the diabatic-to-adiabatic transformation, which may be useful in some atomistic
-   calculations, or with the NBRA
+   The representation of the Hamiltonian update. This is the representation in which the 
+   computed properties are assumed to be. For instance, we may have set it to 1, to read the 
+   adiabatic energies and nonadiabatic couplings, to bypass the diabatic-to-adiabatic transformation,
+   which may be useful in some atomistic calculations, or with the NBRA
+
+   Options:
+     - 0: diabatic representation [ default ]
+     - 1: adiabatic representation 
+
   */
   int rep_ham;
 
 
   /**
-   The representation to run the SH : 0 - diabatic, 1 - adiabatic
+   The representation to run the SH.
+
+   Options: 
+     - 0: diabatic
+     - 1: adiabatic [ default ]
   */
   int rep_sh;
 
 
   /** 
-    The representation to compute LZ probabilitieis: 0 - diabatic, 1- adiabatic 
+    The representation to compute LZ probabilitieis.
+ 
+    Options:
+      - 0: diabatic [ default ]
+      - 1: adiabatic, this will use Belyaev-Lebedev approach
   */
   int rep_lz;
 
 
   /** 
-    Surface hopping mthodology: 
-    -1 - adiabatic (no need to compute)
-     0 - FSSH
-     1 - GFSH
-     2 - MSSH
-     3 - DISH
+    In which representation to compute forces. To clarify - the forces
+    in both representations shall be equivalent, so this flag actually
+    selects the type of the properties needed to compute such forces.
+    For instance, if it is set to 0, we may be using the derivatives
+    of the diabatic Hamiltonians, diabatic states overlaps, etc.
+
+    Options:
+      - 0: diabatic
+      - 1: adiabatic [ default ]
   */
-  int tsh_method;
+  int rep_force;
 
 
   /** 
-    How to compute forces in the dynamics: 
-      0 - don't compute forces at all - e.g. we do not really need them
-      1 - state-specific  as in the TSH or adiabatic (including adiabatic excited states)
-      2 - Ehrenfest
+    How to compute forces in the dynamics.
+ 
+    Options:
+      - 0: don't compute forces at all - e.g. we do not really need them
+      - 1: state-specific  as in the TSH or adiabatic (including adiabatic excited states) [ default ]
+      - 2: Ehrenfest
   */
   int force_method;
 
+
+  /**
+    How do get the time-overlaps in the dynamics.
+
+    Options:
+      - 0: based on the wavefunctions (the Hamiltonian shall have the basis_transform variables updated)  [ default ]
+      - 1: based on external calculations (the Hamiltonian shall have the time_overlap_adi member updated) - use for NBRA
+  */
+  int time_overlap_method;
+
+
   /** 
-    How to update NACs and vibronic Hamiltonian before electronic TD-SE propagation
-      0 - don't update them (e.g. for simplest NAC)
-      1 - update according to changed momentum and existing derivative couplings
+    How to update NACs and vibronic Hamiltonian before electronic TD-SE propagation.
+
+    Options:
+      - 0: don't update them (e.g. for simplest NAC)
+      - 1: update according to changed momentum and existing derivative couplings [ default ]
   */
   int nac_update_method;
 
 
   /** 
-    In which representation to compute forces: 
-      0 - diabatic
-      1 - adiabatic
-  */
-  int rep_force;
+    The algorithm to correct phases on adiabatic states
 
-
-  /**
-    Options to control the acceptance of the proposed hops:
-      0 - accept all
-
-      10 - based on adiabatic energy
-      11 - based on diabatic energy
-
-      20 - derivative coupling vectors
-      21 - difference of state-specific forces
-
-      31 - quantum Boltzmann
-      32 - Maxwell-Boltzmann
-      33 - updated quantum Boltzmann
-  */
-  int hop_acceptance_algo;
-
-
-  /**
-    Options to control momenta changes upon successful or frustrated hops:
-
-      0 - don't rescale
-
-      100 - based on adiabatic energy, don't reverse on frustrated hops
-      101 - based on adiabatic energy, reverse on frustrated hops
-      110 - based on diabatic energy, don't reverse on frustrated hops
-      111 - based on diabatic energy, reverse on frustrated hops
-
-      200 - along derivative coupling vectors, don't reverse on frustrated hops
-      201 - along derivative coupling vectors, reverse on frustrated hops
-      210 - along difference of state-specific forces, don't reverse on frustrated hops
-      211 - along difference of state-specific forces, reverse on frustrated hops
-  */
-  int momenta_rescaling_algo;
-
-
-  /**
-    Whether to scale the SH probabilities by the Boltzmann factor: 0 - do not scale, 1 - scale                            
-  */
-  int use_boltz_factor;
-
-  
-  /**
-    Temperature of the system
-  */ 
-  double Temperature;
-
-/** 
-   THESE VARIABLES ARE DEPRECATED
-
-//    Do not revert momenta at the frustrated hops, 1 - do revert the momenta
-  int do_reverse;
-
-
-    How to rescale momenta if the hops are successful:
-
-# How to rescale momenta if the hops are successful:
-# -1: do not rescale, as in the NBRA [ default ]
-#  0: rescale in the diabatic basis - don't care about the
-#     velocity directions, just a uniform rescaling 
-#  1: rescale along the directions of derivative couplings
-
-      0 - rescale along the directions of derivative couplings
-      1 - rescale in the diabatic basis - don't care about the velocity directions, just a uniform rescaling,
-      2 - do not rescale, as in the NBRA.  
-
-  int vel_rescale_opt;
-*/
-
-  /** 
-    integration timestep [units: a.u., default: 41 a.u. = 1 fs]
-  */
-  double dt;
-
-  /** 
-    Option to perform the phase correction: 0 - no, 1 - yes (default)
+    Options: 
+      - 0: no phase correction
+      - 1: according to our phase correction algorithm [ default ]
   */
   int do_phase_correction;
 
@@ -186,19 +146,24 @@ class dyn_control_params{
   /** 
     The minimal magnutude of the matrix element for which we'll be computing the phase correction
     If the overlap is zero, then we don't really care about the phase, but if it is not, then this
-    parameter sets out threshold for when we do.  Default: 1e-3
+    parameter sets out threshold for when we do.  [ default: 1e-3 ]
   */
   double phase_correction_tol;
 
 
   /** 
     State tracking algorithm:
-      0 - no state tracking
-      1 - method of Kosuke Sato (may fail by getting trapped into an infinite loop)
-      2 - Munkres-Kuhn (Hungarian) algorithm (default)
-      3 - stochastic reordering
+      - 0: no state tracking
+      - 1: method of Kosuke Sato (may fail by getting trapped into an infinite loop)
+      - 2: Munkres-Kuhn (Hungarian) algorithm [ default ]
+      - 3: experimental stochastic algorithm, the original version with elimination (known problems)
+      - 32: experimental stochastic algorithms with all permutations (too expensive)
+      - 33: the improved stochastic algorithm with good scaling and performance, on par with the mincost
+
+
   */
   int state_tracking_algo;
+
 
   /** 
     Munkres-Kuhn alpha (selects the range of orbitals included in reordering) [default: 0.0]
@@ -206,65 +171,144 @@ class dyn_control_params{
   double MK_alpha;
 
   /**
-    Munkres-Kuhn verbosity: 0 - no extra output (default), 1 - details
+    Munkres-Kuhn verbosity.
+ 
+    Options:
+      - 0: no extra output [ default ]
+      - 1: prints extra details on what the algorithm is doing, for debugging
   */
   int MK_verbosity;
 
 
-  /**
-    A selector of a method to couple the trajectories in this ensemble:
-      0 - no coupling, 1 - ETHD, 2 - ETHD3 (experimental), 22 - another flavor of ETHD3 (experimental)
+  ///===============================================================================
+  ///================= Surface hopping: proposal, acceptance =======================
+  ///===============================================================================
+
+  /** 
+    Surface hop proposal methodology.
+
+    Options: 
+      - [-1]: adiabatic dynamics, no hops [ default ]
+      - 0: FSSH
+      - 1: GFSH
+      - 2: MSSH
+      - 3: DISH
   */
-  int entanglement_opt;
+  int tsh_method;
 
 
   /**
-    Gaussian exponents that dresses up the trajectories in the ETHD3 method
-    in the coordinate space, that is   ~exp(-alpha*(R-R0)^2 )
+    Options to control the acceptance of the proposed hops.
+
+    Options:
+      - 0: accept all proposed hops  [ default ]
+
+      - 10: based on adiabatic energy - accept only those hops that can obey the energy conservation with 
+            adiabatic potential energies
+      - 11: based on diabatic energy - same as 10, but we use diabatic potential energies
+
+      - 20: based on derivative coupling vectors - accept only those hops that can obey the energy conservation
+            by rescaling nuclear velocities along the directions of derivative couplings for the quantum nuclear DOFs                   
+      - 21: based on difference of state-specific forces - same as 20, but the rescaling is done along the vector
+            parallel to the difference of adiabatic forces on initial and target states
+
+      - 31: accept hops with the probability taken from the quantum Boltzmann distribution
+      - 32: accept hops with the probability taken from the classical Maxwell-Boltzmann distribution
+      - 33: accept hops with the probability taken from the updated quantum Boltzmann distribution (experimental)
   */
-  double ETHD3_alpha;
+  int hop_acceptance_algo;
 
 
   /**
-    Gaussian exponents that dresses up the trajectories in the ETHD3 method
-    in the momentum space, that is   ~exp(-beta*(P-P0)^2 )
+    Options to control nuclear momenta changes upon successful or frustrated hops.
+
+    Options:
+
+      - 0: don't rescale [ default ]
+
+      - 100: based on adiabatic energy, don't reverse on frustrated hops
+      - 101: based on adiabatic energy, reverse on frustrated hops
+      - 110: based on diabatic energy, don't reverse on frustrated hops
+      - 111: based on diabatic energy, reverse on frustrated hops
+
+      - 200: along derivative coupling vectors, don't reverse on frustrated hops
+      - 201: along derivative coupling vectors, reverse on frustrated hops
+      - 210: along difference of state-specific forces, don't reverse on frustrated hops
+      - 211: along difference of state-specific forces, reverse on frustrated hops
   */
-  double ETHD3_beta;
-
+  int momenta_rescaling_algo;
 
   /**
-    Selector of the method to incorporate decoherence:
+    A flag to scale the proposed hopping probabilities by the
+    Boltzmann factor. This is needed for the libra_py/workflows/nbra calculations, where the hop proposal 
+    probability also includes the factor to account for the hop acceptance probabilities
 
-     -1 - no decoherence [default]
-      0 - SDM and alike
-      1 - instantaneous decoherence options (ID-S, ID-A, ID-C)
+    Options:
+
+      - 0: don't scale [ default ]
+      - 1: do scale
+  */
+   int use_boltz_factor;
+
+
+  
+  ///===============================================================================
+  ///================= Decoherence options =========================================
+  ///===============================================================================
+
+  /**
+    Selector of the method to incorporate decoherence.
+
+    Options:
+
+      - [-1]: no decoherence [ default ]
+      - 0: SDM and alike
+      - 1: instantaneous decoherence options (ID-S, ID-A, ID-C)
   */
   double decoherence_algo;
 
 
   /**
-    Dephasing rates provided by user
-  */
-  MATRIX* decoh_rates;
+    Corresponds to the "tol" parameter in the sdm function. It controls 
+    how much the norm of the old state can be larger than 1.0  before the 
+    code stops with the error message [ default: 0.0 ]
+
+    Note: only matters if decoherence_algo == 0
+  **/
+  double sdm_norm_tolerance;
+
+
+  /**
+    Selects the how to sample decoherence events in the DISH.
+    Possible options:
+      - 0: compare the coherence time counter with the decoherence time (simplified DISH) 
+      - 1: compare the coherence time counter with the time drawn from the exponential distribution
+           with the parameter lambda = 1/decoherence time - this distribution corresponds to 
+           the statistics of wait times between the Poisson-distributed events (decoherence)
+           This is what the original DISH meant to do [ default ]
+
+    Note: only matters if tsh_method == 3
+  **/
+  int dish_decoherence_event_option;
 
 
   /**
     Type of dephasing times/rates calculation:
 
-      0 - use the rates read out from the input  [default]
-      1 - use the energy-based decoherence method (EDC)    
+      - 0: use the rates read out from the input  [ default ]
+      - 1: use the energy-based decoherence method (EDC)    
   */  
   int decoherence_times_type;
 
 
   /**
-    An empirical parameter used in the EDC method: [default = 1.0 Ha]
+    An empirical parameter used in the EDC method: [ default = 1.0 Ha ]
   */ 
   double decoherence_C_param;
 
 
   /**
-    An empirical parameter used in the EDC method: [default = 0.1 Ha]
+    An empirical parameter used in the EDC method: [ default = 0.1 Ha ]
   */ 
   double decoherence_eps_param;
 
@@ -273,41 +317,97 @@ class dyn_control_params{
     A flag to apply the dephasing-informed approach of Sifain et al 
     to correct dephasing times: 
 
-      0 - don't apply [default]
-      1 - use it 
+      - 0: don't apply [ default ]
+      - 1: use it 
   */
   int dephasing_informed; 
-
-  
-  /**
-    A matrix that contains the averaged moduli of the energy gaps:
-    E_ij = <|E_i - E_j|>
-    It is needed when dephasing_informed option is used
-  */
-  MATRIX* ave_gaps;
 
 
   /**
     Option to control the instantaneous decoherence methodology,
     only used with decoherence_algo == 1
 
-      0 - ID-S
-      1 - ID-A [default]
-      2 - ID-C - consistent ID - an experimental algorithm
+      - 0: ID-S
+      - 1: ID-A [default]
+      - 2: ID-C - consistent ID - an experimental algorithm
   */
   int instantaneous_decoherence_variant;
 
 
   /**
     How to collapse wavefunction amplitudes in the decoherence schemes:
-      0 - by rescaling the magnitude of the amplitude vector elements, but preserving "phase" [ default ]
-      1 - by resetting the amplitudes to 1.0+0.0j. This option changes phase 
+      - 0: by rescaling the magnitude of the amplitude vector elements, but preserving "phase" [ default ]
+      - 1: by resetting the amplitudes to 1.0+0.0j. This option changes phase 
 
   */
   int collapse_option;
 
+
   /**
-    Ensemble: which ensemble to use: 0 - NVE, 1 - NVT
+    Dephasing rates provided by user
+    [ default : NULL ]
+  */
+  MATRIX* decoherence_rates;
+
+
+  /**
+    A matrix that contains the averaged moduli of the energy gaps:
+    E_ij = <|E_i - E_j|>
+    It is needed when dephasing_informed option is used
+    [ default : NULL ]
+  */
+  MATRIX* ave_gaps;
+
+
+
+
+  ///===============================================================================
+  ///================= Entanglement of trajectories ================================
+  ///===============================================================================
+
+  /**
+    A selector of a method to couple the trajectories in this ensemble.
+
+    Options:
+      - 0: no coupling [ default ]
+      - 1: ETHD
+      - 2: ETHD3 (experimental)
+      - 22: another flavor of ETHD3 (experimental)
+  */
+  int entanglement_opt;
+
+
+  /**
+    Gaussian exponents that dresses up the trajectories in the ETHD3 method
+    in the coordinate space, that is   ~exp(-alpha*(R-R0)^2 ) [ default: 0.0 ]
+  */
+  double ETHD3_alpha;
+
+
+  /**
+    Gaussian exponents that dresses up the trajectories in the ETHD3 method
+    in the momentum space, that is   ~exp(-beta*(P-P0)^2 ) [ default: 0.0 ]
+  */
+  double ETHD3_beta;
+
+
+  ///===============================================================================
+  ///================= Bath, Constraints, and Dynamical controls ===================
+  ///===============================================================================
+
+  /**
+    Temperature of the system. This parameter could be used even in the NVE simulations
+    e.g. as a parameters to compute hop acceptance probabilities based on Boltzmann factors [ default: 300 K]
+  */ 
+  double Temperature;
+
+
+  /**
+    Which ensemble to use in the dynamics. 
+
+    Options:
+      - 0: NVE [ default ]
+      - 1: NVT
   */
   int ensemble;
 
@@ -318,11 +418,48 @@ class dyn_control_params{
   bp::dict thermostat_params;
 
 
+  /**
+    Thermostat DOFs
+
+    This list contains the indices of nuclear DOFs which shall be coupled to a thermostat directly.
+    [ default: [] ]
+  */
+  vector<int> thermostat_dofs;
+
+
+  /**
+    Quantum-classical partitioning
+
+    This list of integers contains the indices of nuclear DOFs which chall be treated "quantum-mechanically", well
+    including with TSH that is. These DOFs will determine the velocity-rescaling-based acceptance of the hops,
+    and these DOFs will be rescaled when the transition is accepted 
+    [ default: [0] ]
+  */
+  vector<int> quantum_dofs;
+
+
+  /**
+    Constrained DOFs
+
+    This list of integers contains the indices of the nuclear DOFs to be constrained - their momenta will be constantly 
+    reset to zero, so the corresponding coordinates will stay fixed
+    [ default: [] ]
+  */
+  vector<int> constrained_dofs; 
+
+
+  /** 
+    the nuclear and electronic integration timesteps [ units: a.u. of time, default: 41.0 a.u. = 1 fs ]
+  */
+  double dt;
+
+
+
 
   dyn_control_params();
   dyn_control_params(const dyn_control_params& x){ 
     *this = x;
-    decoh_rates = new MATRIX( *x.decoh_rates );  
+    decoherence_rates = new MATRIX( *x.decoherence_rates );  
   }
  ~dyn_control_params() { ;; }
 

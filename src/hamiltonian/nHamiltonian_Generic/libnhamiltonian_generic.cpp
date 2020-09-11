@@ -94,6 +94,14 @@ void export_nhamiltonian_generic_objects(){
   CMATRIX (nHamiltonian::*expt_get_basis_transform_v1)() = &nHamiltonian::get_basis_transform;
   CMATRIX (nHamiltonian::*expt_get_basis_transform_v2)(vector<int>&) = &nHamiltonian::get_basis_transform;
 
+  CMATRIX (nHamiltonian::*expt_get_time_overlap_adi_v1)() = &nHamiltonian::get_time_overlap_adi;
+  CMATRIX (nHamiltonian::*expt_get_time_overlap_adi_v2)(vector<int>&) = &nHamiltonian::get_time_overlap_adi;
+
+  CMATRIX (nHamiltonian::*expt_get_time_overlap_dia_v1)() = &nHamiltonian::get_time_overlap_dia;
+  CMATRIX (nHamiltonian::*expt_get_time_overlap_dia_v2)(vector<int>&) = &nHamiltonian::get_time_overlap_dia;
+
+
+
   vector<int> (nHamiltonian::*expt_get_ordering_adi_v1)() = &nHamiltonian::get_ordering_adi; 
   vector<int> (nHamiltonian::*expt_get_ordering_adi_v2)(vector<int>&) = &nHamiltonian::get_ordering_adi; 
 
@@ -340,6 +348,15 @@ void export_nhamiltonian_generic_objects(){
       .def("set_basis_transform_by_ref", &nHamiltonian::set_basis_transform_by_ref)
       .def("set_basis_transform_by_val", &nHamiltonian::set_basis_transform_by_val)
 
+      .def("init_time_overlap_adi", &nHamiltonian::init_time_overlap_adi)
+      .def("set_time_overlap_adi_by_ref", &nHamiltonian::set_time_overlap_adi_by_ref)
+      .def("set_time_overlap_adi_by_val", &nHamiltonian::set_time_overlap_adi_by_val)
+
+      .def("init_time_overlap_dia", &nHamiltonian::init_time_overlap_dia)
+      .def("set_time_overlap_dia_by_ref", &nHamiltonian::set_time_overlap_dia_by_ref)
+      .def("set_time_overlap_dia_by_val", &nHamiltonian::set_time_overlap_dia_by_val)
+
+
       .def("set_ordering_adi_by_ref", &nHamiltonian::set_ordering_adi_by_ref)
       .def("set_ordering_adi_by_val", &nHamiltonian::set_ordering_adi_by_val)
 
@@ -383,6 +400,10 @@ void export_nhamiltonian_generic_objects(){
 
       .def("get_basis_transform", expt_get_basis_transform_v1)
       .def("get_basis_transform", expt_get_basis_transform_v2)
+      .def("get_time_overlap_adi", expt_get_time_overlap_adi_v1)
+      .def("get_time_overlap_adi", expt_get_time_overlap_adi_v2)
+      .def("get_time_overlap_dia", expt_get_time_overlap_dia_v1)
+      .def("get_time_overlap_dia", expt_get_time_overlap_dia_v2)
       .def("get_ordering_adi", expt_get_ordering_adi_v1)
       .def("get_ordering_adi", expt_get_ordering_adi_v2)
       .def("get_cum_phase_corr", expt_get_cum_phase_corr_v1)

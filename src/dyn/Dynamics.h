@@ -72,7 +72,7 @@ void update_Hamiltonian_p(bp::dict prms, nHamiltonian& ham, MATRIX& p, MATRIX& i
 CMATRIX transform_amplitudes(int rep_in, int rep_out, CMATRIX& C, nHamiltonian& ham);
 
 
-//vector<CMATRIX> compute_St(nHamiltonian& ham, CMATRIX** Uprev);
+vector<CMATRIX> compute_St(nHamiltonian& ham);
 vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev);
 
 
