@@ -1,3 +1,23 @@
+#*********************************************************************************
+#* Copyright (C) 2020 Mohammad Shakiba, Brendan Smith, Alexey V. Akimov
+#* This file is distributed under the terms of the GNU General Public License
+#* as published by the Free Software Foundation, either version 3 of
+#* the License, or (at your option) any later version.
+#* See the file LICENSE in the root directory of this distribution
+#* or <http://www.gnu.org/licenses/>.
+#*
+#*********************************************************************************/
+"""
+.. module:: Gaussian_methods
+   :platform: Unix, Windows
+   :synopsis: This module implements functions for processing the Gaussian inputs and outputs.
+.. moduleauthors:: 
+       Mohammad Shakiba, Brendan Smith, Alexey V. Akimov 
+  
+"""
+
+
+
 import os
 import sys
 import numpy as np
