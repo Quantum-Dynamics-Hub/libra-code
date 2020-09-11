@@ -26,6 +26,7 @@ libra_py
    libra_py/fit.rst
    libra_py/fix_motion.rst
    libra_py/ft.rst
+   libra_py/Gaussian_methods.rst
    libra_py/hpc_utils.rst
    libra_py/hungarian.rst
    libra_py/influence_spectrum.rst
