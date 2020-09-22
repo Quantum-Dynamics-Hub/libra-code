@@ -265,13 +265,14 @@ def compute_cube_ks_overlaps( cubefiles_prev, params):
     
     critical_params = [ "curr_step", "nprocs" ]
     # Default parameters
-    default_params = { "isUKS": 0}
+    default_params = { "isUKS": 0, "es_software": "cp2k"}
     # Check input
     comn.check_input(params, default_params, critical_params)
     # Extract the variables
     curr_step = int(params["curr_step"])
     isUKS  = int(params["isUKS"])
     nprocs = int(params["nprocs"])
+    es_software = params["es_software"]
     
     print('---------------------------------------------------------')
     print('Starting the calculations by reading the cube files    \n')
@@ -287,10 +288,15 @@ def compute_cube_ks_overlaps( cubefiles_prev, params):
     # generate the cube file names produced by CP2K
     cubefile_names_curr = CP2K_methods.cube_file_names_cp2k( params )
 
+    #for cubefile in cubefile_names_curr:
+    #    os.system( "/gpfs/scratch/brendan/cp2k/tools/cubecruncher/cubecruncher.x -center geo -i %s -o %s-1.cube " % ( cubefile, cubefile.replace( ".cube", "" ) ) )
+    #    os.system( "rm %s" % cubefile)
+    #    os.system( "mv %s-1.cube %s" % ( cubefile.replace(".cube",""), cubefile ) )
+
     # Reading the cube files
     cubefiles_curr = []
     # Apply pool.map to the cube_file_methods to the set of variables of the cubefile_names_curr
-    cubefiles_curr = pool.map( cube_file_methods.read_cube, cubefile_names_curr ) 
+    cubefiles_curr = pool.map( cube_file_methods.read_cube, cubefile_names_curr )
     # Close the pool
     pool.close()
     
@@ -382,7 +388,7 @@ def compute_cube_ks_overlaps( cubefiles_prev, params):
 
 
 
-def reindex_cpk2_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states ):
+def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states ):
     """
     sd_basis_states( list of lists of lists ): A list of Slater determinants, where each slater determinant is a excitation in the Kohn-Sham
                                                basis. This function assumes that all Kohn-Sham excitations are for alpha electrons. To
@@ -413,6 +419,9 @@ def reindex_cpk2_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
     for i in range(n_alp_ks_orbs):
         ks_orbs_new_index.append(i+1)
 
+    print("\nWe are about to form the excited state SDs, printing the sd_basis_states")
+    print(sd_basis_states)
+   
     # Form excited state SDs
     excitations = []
     # For each Slater determinant basis state, which could have spin_component "alp" or "bet"
@@ -575,6 +584,7 @@ def form_Hvib_real( params ):
 
     isUKS = int( params["isUKS"] )
     # ks_orbital_indicies = params["ks_orbital_indicies"]
+    es_software = params["es_software"]
     # minimum state
     min_band = params["min_band"] # ks_orbital_indicies[0]
     # maximum state
@@ -583,8 +593,6 @@ def form_Hvib_real( params ):
     logfile_directory = params["logfile_directory"]
     # current time step
     curr_step = params["curr_step"]
-    # es_software
-    es_software = params["es_software"]
     # generate the log file name
     logfile_name = F"{logfile_directory}/step_{curr_step}.log"
     # update the logfile_name parameter in params
@@ -620,7 +628,8 @@ def form_Hvib_real( params ):
     
     return Hvib_ks_re, total_energy
 
- 
+
+
 def run_step2_many_body( params ):
     """
     This function is the main function which runs the following calculations:
@@ -1148,12 +1157,12 @@ def run_step2_many_body( params ):
     if int(params["perform_state_reordering"]) == 1:
         params2 = {"do_state_reordering":int(params["do_state_reordering"]), "state_reordering_alpha":float(params["state_reordering_alpha"])}
         print("Applying state reordering....")
-        step3.apply_state_reordering_ci( St_ci_job, ci_midpoint_energies, params2 )
+        step3.apply_state_reordering_general( St_ci_job, ci_midpoint_energies, params2 )
 
     # Are we to perform phase corrections?
     if do_phase_corrections == 1:
         print("\nApplying phase corrections")
-        step3.apply_phase_correction_ci( St_ci_job )
+        step3.apply_phase_correction_general( St_ci_job )
 
     # Output CI data to res directory
     print("Outputting the CI data to the res directory..." )
@@ -1173,4 +1182,5 @@ def run_step2_many_body( params ):
 
 
     print("All steps were done successfully for this job!")
+
  
