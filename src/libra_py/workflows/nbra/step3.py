@@ -485,7 +485,7 @@ def get_Lowdin_general(S):
 
 
 
-def apply_normalization_general(S, St):
+def apply_orthonormalization_general(S, St):
     """
 
     Transforms the input transition density matrix computed with potentially
