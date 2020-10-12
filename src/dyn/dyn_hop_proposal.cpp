@@ -39,7 +39,7 @@ MATRIX hopping_probabilities_fssh(dyn_control_params& prms, CMATRIX& Coeff, CMAT
 
   See more details in:
   (1) Tully, J. C. Molecular Dynamics with Electronic Transitions. J. Chem. Phys. 1990, 93, 1061–1071. - the original paper
-  (2) Fabiano, E.; Keal, T. W.; Thiel, W. Implementation of Surface Hopping Molecular Dynamics Using Semiempirical Methods. Chem. Phys. 2008, 349, 334-347.
+  (2) Fabiano, E.; Keal, T. W.; Thiel, W. Implementation of Surface Hopping Molecular Dynamics Using Semiempirical Methods. Chem. Phys. 2008, 349, 334–347.
   Here, we generalized the formula, so it works equally well for both diabatic and adiabatic representations
   (3) Akimov, A. V. Libra: An Open-Source “Methodology Discovery” Library for Quantum and Classical Dynamics Simulations.
   J. Comput. Chem. 2016, 37, 1626–1649.
