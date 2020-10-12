@@ -38,11 +38,11 @@ MATRIX hopping_probabilities_fssh(dyn_control_params& prms, CMATRIX& Coeff, CMAT
   The surface-hopping probabilities may be Boltzmann-corrected
 
   See more details in:
-  (1) Tully, J. C. Molecular Dynamics with Electronic Transitions. J. Chem. Phys. 1990, 93, 1061�1071. - the original paper
-  (2) Fabiano, E.; Keal, T. W.; Thiel, W. Implementation of Surface Hopping Molecular Dynamics Using Semiempirical Methods. Chem. Phys. 2008, 349, 334�347.
+  (1) Tully, J. C. Molecular Dynamics with Electronic Transitions. J. Chem. Phys. 1990, 93, 1061-1071. - the original paper
+  (2) Fabiano, E.; Keal, T. W.; Thiel, W. Implementation of Surface Hopping Molecular Dynamics Using Semiempirical Methods. Chem. Phys. 2008, 349, 334-347.
   Here, we generalized the formula, so it works equally well for both diabatic and adiabatic representations
-  (3) Akimov, A. V. Libra: An Open-Source �Methodology Discovery� Library for Quantum and Classical Dynamics Simulations.
-  J. Comput. Chem. 2016, 37, 1626�1649.
+  (3) Akimov, A. V. Libra: An Open-Source "Methodology Discovery" Library for Quantum and Classical Dynamics Simulations.
+  J. Comput. Chem. 2016, 37, 1626-1649.
 
   \param[in] Coeff - [ndia x 1] or a [nadi x 1] matrix of electronic basis states amplitudes in a superposition - is dynamically-consistent
   \param[in] Hvib - [ndia x ndia] or a [nadi x nadi] vibronic Hamiltonian matrix - must be dynamically-consistent
@@ -154,9 +154,9 @@ MATRIX hopping_probabilities_gfsh(dyn_control_params& prms, CMATRIX& Coeff, CMAT
 
   Abbreviation: GFSH - global flux surface hopping
   References: 
-  (1) Wang, L.; Trivedi, D.; Prezhdo, O. V. Global Flux Surface Hopping Approach for Mixed Quantum-Classical Dynamics. J. Chem. Theory Comput. 2014, 10, 3598�3605.
-  (2) Akimov, A. V. Libra: An Open-Source �Methodology Discovery� Library for Quantum and Classical Dynamics Simulations.
-  J. Comput. Chem. 2016, 37, 1626�1649.
+  (1) Wang, L.; Trivedi, D.; Prezhdo, O. V. Global Flux Surface Hopping Approach for Mixed Quantum-Classical Dynamics. J. Chem. Theory Comput. 2014, 10, 3598-3605.
+  (2) Akimov, A. V. Libra: An Open-Source "Methodology Discovery" Library for Quantum and Classical Dynamics Simulations.
+  J. Comput. Chem. 2016, 37, 1626-1649.
 
 
 */
