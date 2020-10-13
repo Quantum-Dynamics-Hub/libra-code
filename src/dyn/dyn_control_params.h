@@ -182,7 +182,7 @@ class dyn_control_params{
   /**
     A swtich for stochastic reordering algorithm 3 to choose what happens when an acceptable permutation isn't generated in the set number of attempts:
                 0: returns the identity permutation (does not require convergence)
-                1: exits and prints an error (required convergence)
+                1: exits and prints an error (requires convergence)
   */
   int convergence;
   
@@ -205,8 +205,6 @@ class dyn_control_params{
       - 2: MSSH
       - 3: DISH
   */
-  
-  
   int tsh_method;
 
 
