@@ -415,7 +415,7 @@ CMATRIX permutation2cmatrix(vector<int>& permutation){
 
 }
 
-vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd, int& convergence, int& max_number_of_attempts){
+vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd, int convergence, int max_number_of_attempts){
     /**
     """ This function identifies which states have changed their identities during some
     calculations (usually the eigenvalue problem) in comparison to what they might have been.
@@ -504,10 +504,10 @@ vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd, int& 
         
     } // while
 
-    // If we haven't found a suitable transition, make it an identity permutation
+    // If we haven't found a suitable transition, make it an identity permutation or exit
     if(!is_accepted && !convergence){  
-      for(i = 0; i < size; i++){  chosen_perm[i] = i;
-      std::cout << "Stochastic reordering did not converge in " << max_number_of_attempts << " attempts\nChoosing identity...\n"; }
+      for(i = 0; i < size; i++){  chosen_perm[i] = i;}
+      std::cout << "Stochastic reordering did not converge in " << max_number_of_attempts << " attempts\nChoosing identity...\n"; 
     }
     if(!is_accepted && convergence){
       std::cout << "Stochastic reordering did not converge in " << max_number_of_attempts << " attempts\nExiting now...\n";
