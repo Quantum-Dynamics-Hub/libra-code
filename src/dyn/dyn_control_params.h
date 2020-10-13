@@ -179,6 +179,17 @@ class dyn_control_params{
   */
   int MK_verbosity;
 
+  /**
+    A swtich for stochastic reordering algorithm 3 to choose what happens when an acceptable permutation isn't generated in the set number of attempts:
+                0: returns the identity permutation (does not require convergence)
+                1: exits and prints an error (required convergence)
+  */
+  int convergence;
+  
+  /**
+  The maximum number of hops that an be attempted before either choosing the identity or exiting in stochastic reordering algorithm 3. 
+  */
+  int max_number_attempts;
 
   ///===============================================================================
   ///================= Surface hopping: proposal, acceptance =======================
@@ -194,6 +205,8 @@ class dyn_control_params{
       - 2: MSSH
       - 3: DISH
   */
+  
+  
   int tsh_method;
 
 
