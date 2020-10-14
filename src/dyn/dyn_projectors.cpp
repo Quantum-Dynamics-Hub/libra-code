@@ -415,7 +415,7 @@ CMATRIX permutation2cmatrix(vector<int>& permutation){
 
 }
 
-vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd){
+vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd, int convergence, int max_number_of_attempts){
     /**
     """ This function identifies which states have changed their identities during some
     calculations (usually the eigenvalue problem) in comparison to what they might have been.
@@ -434,6 +434,10 @@ vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd){
     this algo assigns all states and then checks for consistancy (ie no duplicate) at end.
     
     \param[in] time_overlap ( CMATRIX ) the time overlap matrix, <phi_i(t)|phi_j(t+dt)>.
+    \param[in] max_number_of_attempts (int) the maximum number of hops that an be attempted before either choosing the identity or exiting. 
+    \param[in] convergence (int) a swtich to choose what happens when an acceptable permutation isn't generated in the set number of attempts:
+                            0: returns the identity permutation (does not require convergence)
+                            1: exits and prints an error (required convergence)
 
     Returns:
     perm - list of integers that describe the permutation. That is:
@@ -463,7 +467,6 @@ vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd){
     //=========== Lets keep trying ========
     int is_accepted = 0;
     int number_of_attempts = 0;
-    int max_number_of_attempts = 100;
     
     while(!is_accepted && (number_of_attempts < max_number_of_attempts) ){
 
@@ -501,10 +504,15 @@ vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd){
         
     } // while
 
-    // If we haven't found a suitable transition, make it an identity permutation
-    if(!is_accepted){  
-      for(i = 0; i < size; i++){  chosen_perm[i] = i; }
+    // If we haven't found a suitable transition, make it an identity permutation or exit
+    if(!is_accepted && !convergence){  
+      for(i = 0; i < size; i++){  chosen_perm[i] = i;}
+      std::cout << "Stochastic reordering did not converge in " << max_number_of_attempts << " attempts\nChoosing identity...\n"; 
     }
+    if(!is_accepted && convergence){
+      std::cout << "Stochastic reordering did not converge in " << max_number_of_attempts << " attempts\nExiting now...\n";
+      exit(0);
+  }
 
     return chosen_perm;
 }
@@ -544,7 +552,7 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
     }
 
     if(prms.state_tracking_algo==33){
-        perm_t = get_stochastic_reordering3(st, rnd);
+        perm_t = get_stochastic_reordering3(st, rnd, prms.convergence, prms.max_number_attempts);
     }
     
     // P -> P * perm
