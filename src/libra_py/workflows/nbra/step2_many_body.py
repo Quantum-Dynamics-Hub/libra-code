@@ -129,9 +129,8 @@ def normalize_ci_coefficients(ci_coefficients_raw_unnorm):
         
         # numpy way to compute the normalized CI coefficients
         ci_coefficients_raw_unnorm[i] = np.array(ci_coefficients_raw_unnorm[i])
-        ci_coefficients_raw_norm[i] = abs ( ci_coefficients_raw_unnorm[i] / norm )
-        ci_coefficients_raw_norm[i] = list(ci_coefficients_raw_norm[i])
-        
+        ci_coefficients_raw_norm[i]   = ci_coefficients_raw_unnorm[i] / norm
+        ci_coefficients_raw_norm[i]   = list(ci_coefficients_raw_norm[i]) 
     
     return ci_coefficients_raw_norm
 
@@ -706,7 +705,7 @@ def run_step2_many_body( params ):
     # Critical variables
     critical_params = ["min_band", "max_band", "ks_orbital_homo_index", "nsteps_this_job", 'trajectory_xyz_filename']
     # Default parameters
-    default_params = { "isUKS": 0, "es_software": "cp2k", "es_software_exe": "cp2k.psmp", "es_software_input_template": "cp2k_input_template.inp", "project_name": "Libra_CP2K", "njob": 1, "nprocs": 2, "dt":  41.3393964448119, "logfile_directory": "logfiles", "number_of_states": 5, "tolerance": 0.05, "do_phase_corrections": 1, "istep": 0, "do_cube_visualization": 0, "states_to_be_plotted": [] }
+    default_params = { "isUKS": 0, "es_software": "cp2k", "es_software_exe": "cp2k.psmp", "es_software_input_template": "cp2k_input_template.inp", "project_name": "Libra_CP2K", "njob": 1, "nprocs": 2, "dt":  41.3393964448119, "logfile_directory": "logfiles", "number_of_states": 5, "tolerance": 0.0, "do_phase_corrections": 1, "istep": 0, "do_cube_visualization": 0, "states_to_be_plotted": [] }
     # Check input
     comn.check_input(params, default_params, critical_params)
    
@@ -778,6 +777,10 @@ def run_step2_many_body( params ):
     # Cube file visualization flag
     do_cube_visualization = int(params["do_cube_visualization"])
 
+    # Flag for the completion level
+    completion_level = int(params["completion_level"]) 
+
+
     #####################################################################################################
     ######################## Initializing lists for storing the data for each job #######################
     #####################################################################################################
@@ -839,7 +842,7 @@ def run_step2_many_body( params ):
     # The cube file names produced by CP2K, Here we set it as prev since we
     # don't want to read the cubes twice.
     cubefile_names_prev = CP2K_methods.cube_file_names_cp2k( params )
-    # We have to "crunch" the cubes - this is especially needed for periodic systems 
+    # We may have to "crunch" the cubes - this may be especially needed for periodic systems.
     #for cubefile in cubefile_names_prev:
     #    os.system( "/gpfs/scratch/brendan/cp2k/tools/cubecruncher/cubecruncher.x -center geo -i %s -o %s-1.cube " % ( cubefile, cubefile.replace( ".cube", "" ) ) )
     #    os.system( "rm %s" % cubefile)
@@ -879,74 +882,65 @@ def run_step2_many_body( params ):
     E_ks_job.append( E_ks_re )
     total_energies_job.append( total_energy )
 
-    # Get the excitation analysis output
-    excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = get_excitation_analysis_output( params )
-    # Normalize CI coefficients
-    ci_coefficients_raw_norm = normalize_ci_coefficients(ci_coefficients_raw_unnorm)
+    if completion_level > 0:
+        # Get the excitation analysis output
+        excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = get_excitation_analysis_output( params )
+        # Normalize CI coefficients
+        ci_coefficients_raw_norm = normalize_ci_coefficients(ci_coefficients_raw_unnorm)
+        print("\nPrinting excitation_analysis_output")
+        print("excitation_energies = ", excitation_energies)
+        print("ci_basis_raw = ", ci_basis_raw)
+        print("ci_coefficients_raw_unnorm = ", ci_coefficients_raw_unnorm)
+        print("spin_components = ", spin_components)
+        #sys.exit(0)
 
-    print("\nPrinting excitation_analysis_output")
-    print("excitation_energies = ", excitation_energies)
-    print("ci_basis_raw = ", ci_basis_raw)
-    print("ci_coefficients_raw_unnorm = ", ci_coefficients_raw_unnorm)
-    print("spin_components = ", spin_components)
+        # Extract the uniquie SD basis states from the ci basis states
+        for ci_basis_state_index in range( len( ci_basis_raw ) ):
+            for sd_basis_state_index in range( len( ci_basis_raw[ ci_basis_state_index ] ) ):
+                sd_basis_state_and_spin = [ ci_basis_raw[ ci_basis_state_index ][ sd_basis_state_index ] , spin_components[ ci_basis_state_index ][ sd_basis_state_index ] ]
+                if sd_basis_state_and_spin not in sd_basis_states_unique:
+                    sd_basis_states_unique.append( sd_basis_state_and_spin )
+        # Printing the unique Slater determinants basis - this will help the user to 
+        # see which states are considered and check them
+        print( "Slater determinant basis states = ", sd_basis_states_unique )
 
-    #sys.exit(0)
-
-    # Extract the uniquie SD basis states from the ci basis states
-    for ci_basis_state_index in range( len( ci_basis_raw ) ):
-        for sd_basis_state_index in range( len( ci_basis_raw[ ci_basis_state_index ] ) ):
-            sd_basis_state_and_spin = [ ci_basis_raw[ ci_basis_state_index ][ sd_basis_state_index ] , spin_components[ ci_basis_state_index ][ sd_basis_state_index ] ]
-            if sd_basis_state_and_spin not in sd_basis_states_unique:
-                sd_basis_states_unique.append( sd_basis_state_and_spin )
-
-    # Printing the unique Slater determinants basis - this will help the user to 
-    # see which states are considered and check them
-    print( "Slater determinant basis states = ", sd_basis_states_unique )
-
-    # Appending the extracted data from excitation analysis in the _job variables
-    ci_basis_states_job.append( ci_basis_raw )
-    ci_coefficients_job.append( ci_coefficients_raw_norm )
-    ci_energies_job.append( excitation_energies )
-    spin_components_job.append( spin_components )
+        # Appending the extracted data from excitation analysis in the _job variables
+        ci_basis_states_job.append( ci_basis_raw )
+        ci_coefficients_job.append( ci_coefficients_raw_norm )
+        ci_energies_job.append( excitation_energies )
+        spin_components_job.append( spin_components )
 
     curr_step += 1
 
+
+    #########################################
     # All other steps after initial step for this job
     for step in range( nsteps_this_job-1 ):
+
         # Update the params with curr_step
         params.update({ "curr_step":curr_step })
+
         # Setting up the timer
         timer1 = time.time()
+
         if es_software == "cp2k":
+
             # Creating the CP2K input
             CP2K_methods.CP2K_input_static( cp2k_input_template, project_name, trajectory_xyz_filename, curr_step )
             # Run CP2K
             os.system("mpirun -np %d %s -i %s-%i.inp -o logfiles/step_%d.log "%( nprocs, cp2k_exe, project_name, curr_step, curr_step ) )
             # Move all the pdos and cube files to one folder
             os.system("mv *.pdos pdosfiles")
+
         elif es_software == "gaussian":
             Gaussian_methods.gaussian_input( project_name, curr_step, gaussian_input_template, trajectory_xyz_filename )
             os.system("%s < %s-%i.gjf > logfiles/step_%d.log "%( gaussian_exe, project_name, curr_step, curr_step ) )
             Gaussian_methods.cube_generator_gaussian(project_name,curr_step,ks_orbital_indicies[0],ks_orbital_indicies[-1],nprocs,'../../sample_cube_file.cube',int(params["isUKS"]))
 
         os.system("mv *.cube cubefiles")
+
         # Print the CP2K timing
         print("CP2K elapsed time for step ", params["curr_step"]," was ", time.time() - timer1)
-
-        print("Extracting the excitation analysis output for step ", params["curr_step"])
-        # Get excitation analysis output results
-        excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = get_excitation_analysis_output( params )
-
-        print("\nPrinting excitation_analysis_output")
-        print("excitation_energies = ", excitation_energies)
-        print("ci_basis_raw = ", ci_basis_raw)
-        print("ci_coefficients_raw_unnorm = ", ci_coefficients_raw_unnorm)
-        print("spin_components = ", spin_components)
-
-        # Normalize the coefficients
-        ci_coefficients_raw_norm = normalize_ci_coefficients(ci_coefficients_raw_unnorm)
-
-        print("ci_coefficients_raw_norm = ", ci_coefficients_raw_norm)
 
         # Forming the hvib_ks_re the same as above
         hvib_ks_re, total_energy = form_Hvib_real( params )
@@ -984,59 +978,56 @@ def run_step2_many_body( params ):
         if step == nsteps_this_job-2:
             S_ks_job.append(S_ks_curr)
 
-        # Extract the uniquie SD basis states from the ci basis states
-        for ci_basis_state_index in range( len( ci_basis_raw ) ):
-            for sd_basis_state_index in range( len( ci_basis_raw[ ci_basis_state_index ] ) ):
-               sd_basis_state_and_spin = [ ci_basis_raw[ ci_basis_state_index ][ sd_basis_state_index ] , spin_components[ ci_basis_state_index ][ sd_basis_state_index ] ] 
-               if sd_basis_state_and_spin not in sd_basis_states_unique:
-                   sd_basis_states_unique.append( sd_basis_state_and_spin )
+        if completion_level > 0:
+            print("Reading the excitation analysis output for step ", params["curr_step"])
+            # Get excitation analysis output results
+            excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = get_excitation_analysis_output( params )
+            print("\nPrinting excitation_analysis_output")
+            print("excitation_energies = ", excitation_energies)
+            print("ci_basis_raw = ", ci_basis_raw)
+            print("ci_coefficients_raw_unnorm = ", ci_coefficients_raw_unnorm)
+            print("spin_components = ", spin_components)
+            # Normalize the coefficients
+            ci_coefficients_raw_norm = normalize_ci_coefficients(ci_coefficients_raw_unnorm)
+            print("ci_coefficients_raw_norm = ", ci_coefficients_raw_norm)
+            # Extract the uniquie SD basis states from the ci basis states
 
-        print( "The unique SD basis states = ", sd_basis_states_unique )
+            for ci_basis_state_index in range( len( ci_basis_raw ) ):
+                for sd_basis_state_index in range( len( ci_basis_raw[ ci_basis_state_index ] ) ):
+                    sd_basis_state_and_spin = [ ci_basis_raw[ ci_basis_state_index ][ sd_basis_state_index ] , spin_components[ ci_basis_state_index ][ sd_basis_state_index ] ] 
+                    if sd_basis_state_and_spin not in sd_basis_states_unique:
+                        sd_basis_states_unique.append( sd_basis_state_and_spin )
+            print( "The unique SD basis states = ", sd_basis_states_unique )
 
-        # Now append the extracted excitation analysis output in _job variables
-        ci_basis_states_job.append( ci_basis_raw )
-        ci_coefficients_job.append(   ci_coefficients_raw_norm )
-        ci_energies_job.append( excitation_energies )
-        spin_components_job.append( spin_components )
+            # Now append the extracted excitation analysis output in _job variables
+            ci_basis_states_job.append( ci_basis_raw )
+            ci_coefficients_job.append(   ci_coefficients_raw_norm )
+            ci_energies_job.append( excitation_energies )
+            spin_components_job.append( spin_components )
 
-        #==================== Add one step to the curr_step
         curr_step += 1
-        # Output the overlap matrices and energies in the res directory
-        #S_ks_job[step].real().show_matrix("%s/S_ks_%d_re_unnorm" % (res_dir, int(params["istep"])+step))
-        #St_ks_job[step].real().show_matrix("%s/St_ks_%d_re_unnorm" % (res_dir, int(params["istep"])+step))
-        E_ks_job[step].real().show_matrix("%s/E_ks_%d_re" % (res_dir, int(params["istep"])+step))
- 
-    print("Finished with all of the step. Now computing the overlap matrices and NACs in TD-DFPT level of theory...")
-
-    # Now we have the S_ks, St_ks and E_ks for each step in this job folder. We now output the Hvib on the KS level
-    # Output KS data to res directory
 
     # We need to output the last step overlap and energies as well.
     step = nsteps_this_job-1
-    #S_ks_job[step].real().show_matrix("%s/S_ks_%d_re_unnorm" % (res_dir, int(params["istep"])+step))
-    E_ks_job[step].real().show_matrix("%s/E_ks_%d_re" % (res_dir, int(params["istep"])+step))
-
-    # Now, we need to orthonormalize the KS basis. Recall that in the function step3.normalization, 
-    # only the St variables are updated, not the S variables. 
-    #S_ks_prev = data_conv.nparray2CMATRIX( S_ks_prev )
-    #S_ks_curr = data_conv.nparray2CMATRIX( S_ks_curr )
-    #St_ks     = data_conv.nparray2CMATRIX( St_ks )
-    #step3.apply_normalization( [S_ks_prev, S_ks_curr] , [St_ks] )
-
     for step in range( nsteps_this_job ):
         S_ks_job[step]  = data_conv.nparray2CMATRIX(  S_ks_job[step] )
     for step in range( nsteps_this_job-1 ):
         St_ks_job[step] = data_conv.nparray2CMATRIX( St_ks_job[step] )
-
     step3.apply_normalization( S_ks_job, St_ks_job )
-
     for step in range( nsteps_this_job ):
         S_ks_job[step].real().show_matrix("%s/S_ks_%d_re" % (res_dir, int(params["istep"])+step))
+        E_ks_job[step].real().show_matrix("%s/E_ks_%d_re" % (res_dir, int(params["istep"])+step))
     for step in range( nsteps_this_job-1 ):
         St_ks_job[step].real().show_matrix("%s/St_ks_%d_re" % (res_dir, int(params["istep"])+step))
-
     #sys.exit(0)
 
+    if completion_level == 0:
+        print("\nComplete! Exiting for completion levels 0 or 1")
+        sys.exit(0)
+
+    #################################################################################################################
+    #################################################################################################################
+    print("Finished with all of the step. Now computing the overlap matrices and NACs in TD-DFPT level of theory...")
     # Now, time to compute S_sd and St_sd
     # Start by reindexing the unique Slater determinant basis. The current SD bases are not able to be read by Libra
     sd_states_reindexed = reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states_unique )
