@@ -460,8 +460,74 @@ def apply_normalization(S, St):
         push_submatrix(St[i], St_ba, bet, alp);   push_submatrix(St[i], St_bb, bet, bet)
 
 
-        
-         
+
+
+def get_Lowdin_general(S):
+    """  
+    Find the S_i_half for the S matrix
+    Args: 
+        S ( CMATRIX(N, N) ): is a matrix of MO overlaps. 
+    Returns:
+        tuple: S_i_half, where:
+            * S_i_half ( CMATRIX(N,N) ): S^{-1/2} - inverse square root matrix
+          
+    """
+
+    nstates = int(S.num_of_cols)  # division by 2 because it is a super-matrix
+    is_inv = FullPivLU_rank_invertible(S)
+    if is_inv[1] != 1:
+        print("Error, S is not invertible, Exiting Program");  sys.exit(0)
+    S_half   = CMATRIX(nstates,nstates)
+    S_i_half = CMATRIX(nstates,nstates)
+    sqrt_matrix(S, S_half, S_i_half)
+    return S_i_half
+
+
+
+
+def apply_orthonormalization_general(S, St):
+    """
+
+    Transforms the input transition density matrix computed with potentially
+    non-orthogonalized orbitals such that it would correspond to the properly
+    orthonormalized ones
+
+    Args: 
+        S  ( CMATRIX(N, N) ): is a matrix of MO overlaps S_ij = <i|j>
+        St ( CMATRIX(N, N) ): the transition density matrix St_ij = <i|d/dt|j>
+
+    Returns:
+        None: but the input matricies ```S``` and ```St``` are changed   
+    """
+
+    nsteps  = len(S)
+    nstates = int(St[0].num_of_cols)  # division by 2 because it is a super-matrix
+
+    # For St
+    for i in range(0, nsteps-1):
+        U1 = get_Lowdin_general(S[i])   # time n
+        U2 = get_Lowdin_general(S[i+1]) # time n+1          
+        #print("St matrix before")
+        #St[i].show_matrix()
+        St_normalized = U1.H() * St[i] * U2
+        #print("St matrix after")
+        #St_normalized.show_matrix()
+        push_submatrix(St[i], St_normalized, list(range(0,nstates)), list(range(0,nstates)))
+
+    # For S
+    for i in range(0, nsteps):
+        U1 = get_Lowdin_general(S[i]) # time n
+        #print("S matrix before")
+        #S[i].show_matrix()
+        S_normalized = U1.H() * S[i] * U1
+        #print("S matrix after")
+        #S_normalized.show_matrix()
+        push_submatrix(S[i], S_normalized, list(range(0,nstates)), list(range(0,nstates)))
+
+
+
+
+
 def make_cost_mat(orb_mat_inp, en_mat_inp, alpha):
     """
 

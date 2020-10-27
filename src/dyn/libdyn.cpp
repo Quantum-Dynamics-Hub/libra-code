@@ -68,6 +68,8 @@ void export_dyn_control_params_objects(){
       .def_readwrite("state_tracking_algo", &dyn_control_params::state_tracking_algo)
       .def_readwrite("MK_alpha", &dyn_control_params::MK_alpha)
       .def_readwrite("MK_verbosity", &dyn_control_params::MK_verbosity)
+      .def_readwrite("convergence", &dyn_control_params::convergence)
+      .def_readwrite("max_number_attempts", &dyn_control_params::max_number_attempts)
 
       ///================= Surface hopping: proposal, acceptance =======================
       .def_readwrite("tsh_method", &dyn_control_params::tsh_method)
@@ -383,7 +385,7 @@ void export_dyn_projectors_objects(){
   def("get_stochastic_reordering2", expt_get_stochastic_reordering2);
 
   vector<int> (*expt_get_stochastic_reordering3)
-  (CMATRIX& time_overlap, Random& rnd) = &get_stochastic_reordering3;
+  (CMATRIX& time_overlap, Random& rnd, int convergence, int max_number_attempts) = &get_stochastic_reordering3;
   def("get_stochastic_reordering3", expt_get_stochastic_reordering3);
 
 

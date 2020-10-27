@@ -39,7 +39,7 @@ MATRIX make_cost_mat(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha);
 vector<int> Munkres_Kuhn(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha, int verbosity);
 vector<int> get_stochastic_reordering(CMATRIX& time_overlap, Random& rnd);
 vector<int> get_stochastic_reordering2(CMATRIX& time_overlap, Random& rnd);
-vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd);
+vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd, int convergence, int max_number_of_attempts);
 CMATRIX permutation2cmatrix(vector<int>& permutation);
 void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors, 
   vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd);
