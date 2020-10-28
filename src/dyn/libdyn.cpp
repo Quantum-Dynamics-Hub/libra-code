@@ -376,17 +376,23 @@ void export_dyn_projectors_objects(){
   (CMATRIX& amplitudes, vector<CMATRIX>& projectors) = &dynconsyst_to_raw;
   def("dynconsyst_to_raw", expt_dynconsyst_to_raw_v1);
 
-  vector<int> (*expt_get_stochastic_reordering)
+  vector<int> (*expt_get_stochastic_reordering_v1)
   (CMATRIX& time_overlap, Random& rnd) = &get_stochastic_reordering;
-  def("get_stochastic_reordering", expt_get_stochastic_reordering);
+  def("get_stochastic_reordering", expt_get_stochastic_reordering_v1);
 
-  vector<int> (*expt_get_stochastic_reordering2)
+  vector<int> (*expt_get_stochastic_reordering2_v1)
   (CMATRIX& time_overlap, Random& rnd) = &get_stochastic_reordering2;
-  def("get_stochastic_reordering2", expt_get_stochastic_reordering2);
+  def("get_stochastic_reordering2", expt_get_stochastic_reordering2_v1);
 
-  vector<int> (*expt_get_stochastic_reordering3)
+  vector<int> (*expt_get_stochastic_reordering3_v1)
   (CMATRIX& time_overlap, Random& rnd, int convergence, int max_number_attempts) = &get_stochastic_reordering3;
-  def("get_stochastic_reordering3", expt_get_stochastic_reordering3);
+  def("get_stochastic_reordering3", expt_get_stochastic_reordering3_v1);
+
+  vector<int> (*expt_get_stochastic_reordering3_v2)
+  (CMATRIX& time_overlap, Random& rnd, int convergence, int max_number_attempts,
+  double filter_tol, int verbosity_level) = &get_stochastic_reordering3;
+  def("get_stochastic_reordering3", expt_get_stochastic_reordering3_v2);
+
 
 
 }
