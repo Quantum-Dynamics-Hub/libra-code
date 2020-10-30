@@ -385,10 +385,10 @@ def compute_cube_ks_overlaps( cubefiles_prev, params):
 
 
 
-
-
-def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states ):
+def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states, sd_format=2 ):
     """
+    ks_orbital_homo_index: Index of the homo ks orbital, from 1
+    ks_orbital_indicies: Range of the considered ks orbtials. Ex) [8,9,10,11], where 9 is homo orbtial index (from 1)
     sd_basis_states( list of lists of lists ): A list of Slater determinants, where each slater determinant is a excitation in the Kohn-Sham
                                                basis. This function assumes that all Kohn-Sham excitations are for alpha electrons. To
                                                differentiate between alpha and beta excitations, elements of sd_basis_states contain spin
@@ -397,14 +397,26 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
                                                Ex) sd_basis_states[0] = [ [9,10], "alp" ] 
                                                    sd_basis_states[1] = [ [9,10], "bet" ]
     Returns:
-         Reindexed Slater determinant basis states in terms of the ks_orbital_homo_index. 
-         Ex.)   ks_orbital_homo_index = 9,    ks_orbital_indicies = [5,6,7,8,9,10,11,12,13,14]
-                [ [9,10], "alp" ] --> [5,6]
-                [ [9,10], "bet" ] --> [-15,-16]
-         In general form, the reindexing take the form of:
-                [ [9,10], "alp" ] --> [ index from 1 of 9 in ks_orbital_indicies, index from 1 of 10 in ks_orbital_indicies  ]
-                [ [9,10], "bet" ] --> [ - ( index from 1 of 9 in ks_orbital_indicies + len(ks_orbital_indicies) ), - ( index from 1 of 10 in ks_orbital_indicies + len(ks_orbital_indicies) ) ]
+         Reindexed Slater determinant basis states in terms of the ks_orbital_homo_index. The SD states returned can be either in one of two ways
+
+         1. All alpha orbitals before beta orbtials. This format is still a fixed slot format. It is used when used both alpha and beta spin channels
+         Ex.)   ks_orbital_homo_index = 68,    ks_orbital_indicies = [67, 68, 69, 70, 71, 72]
+                The ground state will be: [1, 2, -7, -8]
+                [ [68,69], "alp" ] --> [1, 3, -7, -8]
+                [ [68,69], "bet" ] --> [1, 2, -7, -9]
+
+         2. Fixed slot format. this format used only the alpha spin channel
+         Ex.)   ks_orbital_homo_index = 68,    ks_orbital_indicies = [67, 68, 69, 70, 71, 72]
+                The ground state will be: [1, -1, 2, -2]
+                [ [68,69], "alp" ] --> [1, -1, 3, -2]
+                [ [68,69], "bet" ] --> [1, -1, 2, -3]
+
     """
+
+    print("\nEntered reindex_cp2k_sd_states function")
+    print("ks_orbital_homo_index", ks_orbital_homo_index)
+    print("ks_orbital_indicies", ks_orbital_indicies)
+    print("sd_basis_states", sd_basis_states)
 
     # We need to update the indexing of the sd_basis - in terms of the rows and cols of St_KS
     # reindex ks orbs according to the matrix size
@@ -412,59 +424,72 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
     alp_homo_matrix_index = 0
     for i in range( n_alp_ks_orbs ):
         if ks_orbital_indicies[i] == ks_orbital_homo_index:
-            alp_homo_matrix_index = i+1
+            alp_homo_matrix_index = i
+
+    print("alp_homo_matrix_index",alp_homo_matrix_index)
 
     ks_orbs_new_index = []
-    for i in range(n_alp_ks_orbs):
-        ks_orbs_new_index.append(i+1)
+    for i in range( n_alp_ks_orbs ):
+        ks_orbs_new_index.append( i+1 )
 
-    print("\nWe are about to form the excited state SDs, printing the sd_basis_states")
-    print(sd_basis_states)
-   
     # Form excited state SDs
     excitations = []
     # For each Slater determinant basis state, which could have spin_component "alp" or "bet"
     for j in range( len( sd_basis_states ) ):
 
+        print(int( sd_basis_states[j][0][0] ))
+        print(int( sd_basis_states[j][0][1] ))
+
+        if sd_format == 1:
+            if sd_basis_states[j][1] == "alp":
+                initial_ks_orb = int( sd_basis_states[j][0][0] ) - ks_orbital_homo_index + alp_homo_matrix_index + 1
+                final_ks_orb   = int( sd_basis_states[j][0][1] ) - ks_orbital_homo_index + alp_homo_matrix_index + 1
+            elif sd_basis_states[j][1] == "bet":
+                initial_ks_orb = int( sd_basis_states[j][0][0] ) - ks_orbital_homo_index + alp_homo_matrix_index + n_alp_ks_orbs + 1
+                final_ks_orb   = int( sd_basis_states[j][0][1] ) - ks_orbital_homo_index + alp_homo_matrix_index + n_alp_ks_orbs + 1
+
+        elif sd_format == 2:  
+            initial_ks_orb = int( sd_basis_states[j][0][0] ) - ks_orbital_homo_index + alp_homo_matrix_index + 1
+            final_ks_orb   = int( sd_basis_states[j][0][1] ) - ks_orbital_homo_index + alp_homo_matrix_index + 1
+
         if sd_basis_states[j][1] == "alp":
-            initial_ks_orb = int( sd_basis_states[j][0][0] ) - ks_orbital_homo_index + alp_homo_matrix_index
-            final_ks_orb   = int( sd_basis_states[j][0][1] ) - ks_orbital_homo_index + alp_homo_matrix_index
             excitations.append( [initial_ks_orb, final_ks_orb]  )
     
         elif sd_basis_states[j][1] == "bet":
-            initial_ks_orb = int( sd_basis_states[j][0][0] ) - ks_orbital_homo_index + alp_homo_matrix_index + n_alp_ks_orbs
-            final_ks_orb   = int( sd_basis_states[j][0][1] ) - ks_orbital_homo_index + alp_homo_matrix_index + n_alp_ks_orbs
             excitations.append( [-initial_ks_orb, -final_ks_orb]  )
+
     print( "excitations = ", excitations )
     #sys.exit(0)
 
+    # Form ground-state SD first
     sd_basis = [ [] ]
-    # We are now going to form the ground state Slater determinant. We first need a loop over all of the Kohn-Sham orbitals
-    # beginning from index 1.
-    # At this point we have a bunch of Slater determinants in the form of reindexed excitations in the variable "excitations" 
-    for i in range( 1, 2*len( ks_orbital_indicies )-1 ):
-        # Form ground state SD. Following the example in the function's documentation, the ground state Slater determinant should be:
-        # [ 1, 2, 3, 4, 5, -11, -12, -13, -14,- 15 ]. Later on, we have the option of using only [ 5, -15 ] when computing the overlaps
-        if i < alp_homo_matrix_index + 1:
-            sd_basis[0].append( i )
-        if i > n_alp_ks_orbs and i < n_alp_ks_orbs + alp_homo_matrix_index + 1:
-            sd_basis[0].append( -i )
-    #print ( sd_basis )
+    if sd_format == 1:
+        for i in range( 1, 2*len( ks_orbital_indicies ) ):
+            if i < alp_homo_matrix_index + 2:
+                sd_basis[0].append( i )
+            if i > n_alp_ks_orbs and i < n_alp_ks_orbs + alp_homo_matrix_index + 2:
+                sd_basis[0].append( -i )
+
+    elif sd_format == 2:
+        for i in range( 1, len( ks_orbital_indicies ) ):
+            if i < alp_homo_matrix_index + 2:
+                sd_basis[0].append(  i )
+                sd_basis[0].append( -i )
+    print ( "ground state = ", sd_basis )
 
     # Now that we have done the ground state slater 
     for j in range( len( excitations ) ):
         sd_excitation = []
-        # sd_excitation = [ excitations[j][1] if x == excitations[j][0] else x for x in sd_basis[0] ]
         for sd_state in sd_basis[0]:
             if sd_state==excitations[j][0]:
                 sd_excitation.append(excitations[j][1])
             else:
                 sd_excitation.append(sd_state)
-
         sd_basis.append( sd_excitation )
     print ( sd_basis )
     
     return sd_basis
+
 
 
 
@@ -543,6 +568,7 @@ def apply_state_reordering_ci(St, E, params):
 
             # Permute the blocks by col
             St[i].permute_cols(perm_t)
+
 
 
 
