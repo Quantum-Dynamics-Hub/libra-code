@@ -48,6 +48,8 @@ dyn_control_params::dyn_control_params(){
   state_tracking_algo = 2;
   MK_alpha = 0.0;
   MK_verbosity = 0;
+  convergence = 0;
+  max_number_attempts = 100;
 
 
   ///================= Surface hopping: proposal, acceptance =======================
@@ -166,6 +168,8 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="state_tracking_algo"){  state_tracking_algo = bp::extract<int>(params.values()[i]);  }
     else if(key=="MK_alpha") { MK_alpha = bp::extract<double>(params.values()[i]);  }
     else if(key=="MK_verbosity") { MK_verbosity = bp::extract<int>(params.values()[i]);  }
+    else if(key=="convergence") { convergence = bp::extract<int>(params.values()[i]);  }
+    else if(key=="max_number_attempts") { max_number_attempts = bp::extract<int>(params.values()[i]);  }
 
     ///================= Surface hopping: proposal, acceptance =======================
     else if(key=="tsh_method") { tsh_method = bp::extract<int>(params.values()[i]);  }

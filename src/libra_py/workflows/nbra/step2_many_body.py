@@ -129,9 +129,8 @@ def normalize_ci_coefficients(ci_coefficients_raw_unnorm):
         
         # numpy way to compute the normalized CI coefficients
         ci_coefficients_raw_unnorm[i] = np.array(ci_coefficients_raw_unnorm[i])
-        ci_coefficients_raw_norm[i] = abs ( ci_coefficients_raw_unnorm[i] / norm )
-        ci_coefficients_raw_norm[i] = list(ci_coefficients_raw_norm[i])
-        
+        ci_coefficients_raw_norm[i]   = ci_coefficients_raw_unnorm[i] / norm
+        ci_coefficients_raw_norm[i]   = list(ci_coefficients_raw_norm[i]) 
     
     return ci_coefficients_raw_norm
 
@@ -386,10 +385,10 @@ def compute_cube_ks_overlaps( cubefiles_prev, params):
 
 
 
-
-
-def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states ):
+def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states, sd_format=2 ):
     """
+    ks_orbital_homo_index: Index of the homo ks orbital, from 1
+    ks_orbital_indicies: Range of the considered ks orbtials. Ex) [8,9,10,11], where 9 is homo orbtial index (from 1)
     sd_basis_states( list of lists of lists ): A list of Slater determinants, where each slater determinant is a excitation in the Kohn-Sham
                                                basis. This function assumes that all Kohn-Sham excitations are for alpha electrons. To
                                                differentiate between alpha and beta excitations, elements of sd_basis_states contain spin
@@ -398,14 +397,26 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
                                                Ex) sd_basis_states[0] = [ [9,10], "alp" ] 
                                                    sd_basis_states[1] = [ [9,10], "bet" ]
     Returns:
-         Reindexed Slater determinant basis states in terms of the ks_orbital_homo_index. 
-         Ex.)   ks_orbital_homo_index = 9,    ks_orbital_indicies = [5,6,7,8,9,10,11,12,13,14]
-                [ [9,10], "alp" ] --> [5,6]
-                [ [9,10], "bet" ] --> [-15,-16]
-         In general form, the reindexing take the form of:
-                [ [9,10], "alp" ] --> [ index from 1 of 9 in ks_orbital_indicies, index from 1 of 10 in ks_orbital_indicies  ]
-                [ [9,10], "bet" ] --> [ - ( index from 1 of 9 in ks_orbital_indicies + len(ks_orbital_indicies) ), - ( index from 1 of 10 in ks_orbital_indicies + len(ks_orbital_indicies) ) ]
+         Reindexed Slater determinant basis states in terms of the ks_orbital_homo_index. The SD states returned can be either in one of two ways
+
+         1. All alpha orbitals before beta orbtials. This format is still a fixed slot format. It is used when used both alpha and beta spin channels
+         Ex.)   ks_orbital_homo_index = 68,    ks_orbital_indicies = [67, 68, 69, 70, 71, 72]
+                The ground state will be: [1, 2, -7, -8]
+                [ [68,69], "alp" ] --> [1, 3, -7, -8]
+                [ [68,69], "bet" ] --> [1, 2, -7, -9]
+
+         2. Fixed slot format. this format used only the alpha spin channel
+         Ex.)   ks_orbital_homo_index = 68,    ks_orbital_indicies = [67, 68, 69, 70, 71, 72]
+                The ground state will be: [1, -1, 2, -2]
+                [ [68,69], "alp" ] --> [1, -1, 3, -2]
+                [ [68,69], "bet" ] --> [1, -1, 2, -3]
+
     """
+
+    print("\nEntered reindex_cp2k_sd_states function")
+    print("ks_orbital_homo_index", ks_orbital_homo_index)
+    print("ks_orbital_indicies", ks_orbital_indicies)
+    print("sd_basis_states", sd_basis_states)
 
     # We need to update the indexing of the sd_basis - in terms of the rows and cols of St_KS
     # reindex ks orbs according to the matrix size
@@ -413,59 +424,72 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
     alp_homo_matrix_index = 0
     for i in range( n_alp_ks_orbs ):
         if ks_orbital_indicies[i] == ks_orbital_homo_index:
-            alp_homo_matrix_index = i+1
+            alp_homo_matrix_index = i
+
+    print("alp_homo_matrix_index",alp_homo_matrix_index)
 
     ks_orbs_new_index = []
-    for i in range(n_alp_ks_orbs):
-        ks_orbs_new_index.append(i+1)
+    for i in range( n_alp_ks_orbs ):
+        ks_orbs_new_index.append( i+1 )
 
-    print("\nWe are about to form the excited state SDs, printing the sd_basis_states")
-    print(sd_basis_states)
-   
     # Form excited state SDs
     excitations = []
     # For each Slater determinant basis state, which could have spin_component "alp" or "bet"
     for j in range( len( sd_basis_states ) ):
 
+        print(int( sd_basis_states[j][0][0] ))
+        print(int( sd_basis_states[j][0][1] ))
+
+        if sd_format == 1:
+            if sd_basis_states[j][1] == "alp":
+                initial_ks_orb = int( sd_basis_states[j][0][0] ) - ks_orbital_homo_index + alp_homo_matrix_index + 1
+                final_ks_orb   = int( sd_basis_states[j][0][1] ) - ks_orbital_homo_index + alp_homo_matrix_index + 1
+            elif sd_basis_states[j][1] == "bet":
+                initial_ks_orb = int( sd_basis_states[j][0][0] ) - ks_orbital_homo_index + alp_homo_matrix_index + n_alp_ks_orbs + 1
+                final_ks_orb   = int( sd_basis_states[j][0][1] ) - ks_orbital_homo_index + alp_homo_matrix_index + n_alp_ks_orbs + 1
+
+        elif sd_format == 2:  
+            initial_ks_orb = int( sd_basis_states[j][0][0] ) - ks_orbital_homo_index + alp_homo_matrix_index + 1
+            final_ks_orb   = int( sd_basis_states[j][0][1] ) - ks_orbital_homo_index + alp_homo_matrix_index + 1
+
         if sd_basis_states[j][1] == "alp":
-            initial_ks_orb = int( sd_basis_states[j][0][0] ) - ks_orbital_homo_index + alp_homo_matrix_index
-            final_ks_orb   = int( sd_basis_states[j][0][1] ) - ks_orbital_homo_index + alp_homo_matrix_index
             excitations.append( [initial_ks_orb, final_ks_orb]  )
     
         elif sd_basis_states[j][1] == "bet":
-            initial_ks_orb = int( sd_basis_states[j][0][0] ) - ks_orbital_homo_index + alp_homo_matrix_index + n_alp_ks_orbs
-            final_ks_orb   = int( sd_basis_states[j][0][1] ) - ks_orbital_homo_index + alp_homo_matrix_index + n_alp_ks_orbs
             excitations.append( [-initial_ks_orb, -final_ks_orb]  )
+
     print( "excitations = ", excitations )
     #sys.exit(0)
 
+    # Form ground-state SD first
     sd_basis = [ [] ]
-    # We are now going to form the ground state Slater determinant. We first need a loop over all of the Kohn-Sham orbitals
-    # beginning from index 1.
-    # At this point we have a bunch of Slater determinants in the form of reindexed excitations in the variable "excitations" 
-    for i in range( 1, 2*len( ks_orbital_indicies )-1 ):
-        # Form ground state SD. Following the example in the function's documentation, the ground state Slater determinant should be:
-        # [ 1, 2, 3, 4, 5, -11, -12, -13, -14,- 15 ]. Later on, we have the option of using only [ 5, -15 ] when computing the overlaps
-        if i < alp_homo_matrix_index + 1:
-            sd_basis[0].append( i )
-        if i > n_alp_ks_orbs and i < n_alp_ks_orbs + alp_homo_matrix_index + 1:
-            sd_basis[0].append( -i )
-    #print ( sd_basis )
+    if sd_format == 1:
+        for i in range( 1, 2*len( ks_orbital_indicies ) ):
+            if i < alp_homo_matrix_index + 2:
+                sd_basis[0].append( i )
+            if i > n_alp_ks_orbs and i < n_alp_ks_orbs + alp_homo_matrix_index + 2:
+                sd_basis[0].append( -i )
+
+    elif sd_format == 2:
+        for i in range( 1, len( ks_orbital_indicies ) ):
+            if i < alp_homo_matrix_index + 2:
+                sd_basis[0].append(  i )
+                sd_basis[0].append( -i )
+    print ( "ground state = ", sd_basis )
 
     # Now that we have done the ground state slater 
     for j in range( len( excitations ) ):
         sd_excitation = []
-        # sd_excitation = [ excitations[j][1] if x == excitations[j][0] else x for x in sd_basis[0] ]
         for sd_state in sd_basis[0]:
             if sd_state==excitations[j][0]:
                 sd_excitation.append(excitations[j][1])
             else:
                 sd_excitation.append(sd_state)
-
         sd_basis.append( sd_excitation )
     print ( sd_basis )
     
     return sd_basis
+
 
 
 
@@ -544,6 +568,7 @@ def apply_state_reordering_ci(St, E, params):
 
             # Permute the blocks by col
             St[i].permute_cols(perm_t)
+
 
 
 
@@ -706,7 +731,7 @@ def run_step2_many_body( params ):
     # Critical variables
     critical_params = ["min_band", "max_band", "ks_orbital_homo_index", "nsteps_this_job", 'trajectory_xyz_filename']
     # Default parameters
-    default_params = { "isUKS": 0, "es_software": "cp2k", "es_software_exe": "cp2k.psmp", "es_software_input_template": "cp2k_input_template.inp", "project_name": "Libra_CP2K", "njob": 1, "nprocs": 2, "dt":  41.3393964448119, "logfile_directory": "logfiles", "number_of_states": 5, "tolerance": 0.05, "do_phase_corrections": 1, "istep": 0, "do_cube_visualization": 0, "states_to_be_plotted": [] }
+    default_params = { "isUKS": 0, "es_software": "cp2k", "es_software_exe": "cp2k.psmp", "es_software_input_template": "cp2k_input_template.inp", "project_name": "Libra_CP2K", "njob": 1, "nprocs": 2, "dt":  41.3393964448119, "logfile_directory": "logfiles", "number_of_states": 5, "tolerance": 0.0, "do_phase_corrections": 1, "istep": 0, "do_cube_visualization": 0, "states_to_be_plotted": [] }
     # Check input
     comn.check_input(params, default_params, critical_params)
    
@@ -778,6 +803,10 @@ def run_step2_many_body( params ):
     # Cube file visualization flag
     do_cube_visualization = int(params["do_cube_visualization"])
 
+    # Flag for the completion level
+    completion_level = int(params["completion_level"]) 
+
+
     #####################################################################################################
     ######################## Initializing lists for storing the data for each job #######################
     #####################################################################################################
@@ -839,7 +868,7 @@ def run_step2_many_body( params ):
     # The cube file names produced by CP2K, Here we set it as prev since we
     # don't want to read the cubes twice.
     cubefile_names_prev = CP2K_methods.cube_file_names_cp2k( params )
-    # We have to "crunch" the cubes - this is especially needed for periodic systems 
+    # We may have to "crunch" the cubes - this may be especially needed for periodic systems.
     #for cubefile in cubefile_names_prev:
     #    os.system( "/gpfs/scratch/brendan/cp2k/tools/cubecruncher/cubecruncher.x -center geo -i %s -o %s-1.cube " % ( cubefile, cubefile.replace( ".cube", "" ) ) )
     #    os.system( "rm %s" % cubefile)
@@ -879,74 +908,65 @@ def run_step2_many_body( params ):
     E_ks_job.append( E_ks_re )
     total_energies_job.append( total_energy )
 
-    # Get the excitation analysis output
-    excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = get_excitation_analysis_output( params )
-    # Normalize CI coefficients
-    ci_coefficients_raw_norm = normalize_ci_coefficients(ci_coefficients_raw_unnorm)
+    if completion_level > 0:
+        # Get the excitation analysis output
+        excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = get_excitation_analysis_output( params )
+        # Normalize CI coefficients
+        ci_coefficients_raw_norm = normalize_ci_coefficients(ci_coefficients_raw_unnorm)
+        print("\nPrinting excitation_analysis_output")
+        print("excitation_energies = ", excitation_energies)
+        print("ci_basis_raw = ", ci_basis_raw)
+        print("ci_coefficients_raw_unnorm = ", ci_coefficients_raw_unnorm)
+        print("spin_components = ", spin_components)
+        #sys.exit(0)
 
-    print("\nPrinting excitation_analysis_output")
-    print("excitation_energies = ", excitation_energies)
-    print("ci_basis_raw = ", ci_basis_raw)
-    print("ci_coefficients_raw_unnorm = ", ci_coefficients_raw_unnorm)
-    print("spin_components = ", spin_components)
+        # Extract the uniquie SD basis states from the ci basis states
+        for ci_basis_state_index in range( len( ci_basis_raw ) ):
+            for sd_basis_state_index in range( len( ci_basis_raw[ ci_basis_state_index ] ) ):
+                sd_basis_state_and_spin = [ ci_basis_raw[ ci_basis_state_index ][ sd_basis_state_index ] , spin_components[ ci_basis_state_index ][ sd_basis_state_index ] ]
+                if sd_basis_state_and_spin not in sd_basis_states_unique:
+                    sd_basis_states_unique.append( sd_basis_state_and_spin )
+        # Printing the unique Slater determinants basis - this will help the user to 
+        # see which states are considered and check them
+        print( "Slater determinant basis states = ", sd_basis_states_unique )
 
-    #sys.exit(0)
-
-    # Extract the uniquie SD basis states from the ci basis states
-    for ci_basis_state_index in range( len( ci_basis_raw ) ):
-        for sd_basis_state_index in range( len( ci_basis_raw[ ci_basis_state_index ] ) ):
-            sd_basis_state_and_spin = [ ci_basis_raw[ ci_basis_state_index ][ sd_basis_state_index ] , spin_components[ ci_basis_state_index ][ sd_basis_state_index ] ]
-            if sd_basis_state_and_spin not in sd_basis_states_unique:
-                sd_basis_states_unique.append( sd_basis_state_and_spin )
-
-    # Printing the unique Slater determinants basis - this will help the user to 
-    # see which states are considered and check them
-    print( "Slater determinant basis states = ", sd_basis_states_unique )
-
-    # Appending the extracted data from excitation analysis in the _job variables
-    ci_basis_states_job.append( ci_basis_raw )
-    ci_coefficients_job.append( ci_coefficients_raw_norm )
-    ci_energies_job.append( excitation_energies )
-    spin_components_job.append( spin_components )
+        # Appending the extracted data from excitation analysis in the _job variables
+        ci_basis_states_job.append( ci_basis_raw )
+        ci_coefficients_job.append( ci_coefficients_raw_norm )
+        ci_energies_job.append( excitation_energies )
+        spin_components_job.append( spin_components )
 
     curr_step += 1
 
+
+    #########################################
     # All other steps after initial step for this job
     for step in range( nsteps_this_job-1 ):
+
         # Update the params with curr_step
         params.update({ "curr_step":curr_step })
+
         # Setting up the timer
         timer1 = time.time()
+
         if es_software == "cp2k":
+
             # Creating the CP2K input
             CP2K_methods.CP2K_input_static( cp2k_input_template, project_name, trajectory_xyz_filename, curr_step )
             # Run CP2K
             os.system("mpirun -np %d %s -i %s-%i.inp -o logfiles/step_%d.log "%( nprocs, cp2k_exe, project_name, curr_step, curr_step ) )
             # Move all the pdos and cube files to one folder
             os.system("mv *.pdos pdosfiles")
+
         elif es_software == "gaussian":
             Gaussian_methods.gaussian_input( project_name, curr_step, gaussian_input_template, trajectory_xyz_filename )
             os.system("%s < %s-%i.gjf > logfiles/step_%d.log "%( gaussian_exe, project_name, curr_step, curr_step ) )
             Gaussian_methods.cube_generator_gaussian(project_name,curr_step,ks_orbital_indicies[0],ks_orbital_indicies[-1],nprocs,'../../sample_cube_file.cube',int(params["isUKS"]))
 
         os.system("mv *.cube cubefiles")
+
         # Print the CP2K timing
         print("CP2K elapsed time for step ", params["curr_step"]," was ", time.time() - timer1)
-
-        print("Extracting the excitation analysis output for step ", params["curr_step"])
-        # Get excitation analysis output results
-        excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = get_excitation_analysis_output( params )
-
-        print("\nPrinting excitation_analysis_output")
-        print("excitation_energies = ", excitation_energies)
-        print("ci_basis_raw = ", ci_basis_raw)
-        print("ci_coefficients_raw_unnorm = ", ci_coefficients_raw_unnorm)
-        print("spin_components = ", spin_components)
-
-        # Normalize the coefficients
-        ci_coefficients_raw_norm = normalize_ci_coefficients(ci_coefficients_raw_unnorm)
-
-        print("ci_coefficients_raw_norm = ", ci_coefficients_raw_norm)
 
         # Forming the hvib_ks_re the same as above
         hvib_ks_re, total_energy = form_Hvib_real( params )
@@ -984,59 +1004,56 @@ def run_step2_many_body( params ):
         if step == nsteps_this_job-2:
             S_ks_job.append(S_ks_curr)
 
-        # Extract the uniquie SD basis states from the ci basis states
-        for ci_basis_state_index in range( len( ci_basis_raw ) ):
-            for sd_basis_state_index in range( len( ci_basis_raw[ ci_basis_state_index ] ) ):
-               sd_basis_state_and_spin = [ ci_basis_raw[ ci_basis_state_index ][ sd_basis_state_index ] , spin_components[ ci_basis_state_index ][ sd_basis_state_index ] ] 
-               if sd_basis_state_and_spin not in sd_basis_states_unique:
-                   sd_basis_states_unique.append( sd_basis_state_and_spin )
+        if completion_level > 0:
+            print("Reading the excitation analysis output for step ", params["curr_step"])
+            # Get excitation analysis output results
+            excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = get_excitation_analysis_output( params )
+            print("\nPrinting excitation_analysis_output")
+            print("excitation_energies = ", excitation_energies)
+            print("ci_basis_raw = ", ci_basis_raw)
+            print("ci_coefficients_raw_unnorm = ", ci_coefficients_raw_unnorm)
+            print("spin_components = ", spin_components)
+            # Normalize the coefficients
+            ci_coefficients_raw_norm = normalize_ci_coefficients(ci_coefficients_raw_unnorm)
+            print("ci_coefficients_raw_norm = ", ci_coefficients_raw_norm)
+            # Extract the uniquie SD basis states from the ci basis states
 
-        print( "The unique SD basis states = ", sd_basis_states_unique )
+            for ci_basis_state_index in range( len( ci_basis_raw ) ):
+                for sd_basis_state_index in range( len( ci_basis_raw[ ci_basis_state_index ] ) ):
+                    sd_basis_state_and_spin = [ ci_basis_raw[ ci_basis_state_index ][ sd_basis_state_index ] , spin_components[ ci_basis_state_index ][ sd_basis_state_index ] ] 
+                    if sd_basis_state_and_spin not in sd_basis_states_unique:
+                        sd_basis_states_unique.append( sd_basis_state_and_spin )
+            print( "The unique SD basis states = ", sd_basis_states_unique )
 
-        # Now append the extracted excitation analysis output in _job variables
-        ci_basis_states_job.append( ci_basis_raw )
-        ci_coefficients_job.append(   ci_coefficients_raw_norm )
-        ci_energies_job.append( excitation_energies )
-        spin_components_job.append( spin_components )
+            # Now append the extracted excitation analysis output in _job variables
+            ci_basis_states_job.append( ci_basis_raw )
+            ci_coefficients_job.append(   ci_coefficients_raw_norm )
+            ci_energies_job.append( excitation_energies )
+            spin_components_job.append( spin_components )
 
-        #==================== Add one step to the curr_step
         curr_step += 1
-        # Output the overlap matrices and energies in the res directory
-        #S_ks_job[step].real().show_matrix("%s/S_ks_%d_re_unnorm" % (res_dir, int(params["istep"])+step))
-        #St_ks_job[step].real().show_matrix("%s/St_ks_%d_re_unnorm" % (res_dir, int(params["istep"])+step))
-        E_ks_job[step].real().show_matrix("%s/E_ks_%d_re" % (res_dir, int(params["istep"])+step))
- 
-    print("Finished with all of the step. Now computing the overlap matrices and NACs in TD-DFPT level of theory...")
-
-    # Now we have the S_ks, St_ks and E_ks for each step in this job folder. We now output the Hvib on the KS level
-    # Output KS data to res directory
 
     # We need to output the last step overlap and energies as well.
     step = nsteps_this_job-1
-    #S_ks_job[step].real().show_matrix("%s/S_ks_%d_re_unnorm" % (res_dir, int(params["istep"])+step))
-    E_ks_job[step].real().show_matrix("%s/E_ks_%d_re" % (res_dir, int(params["istep"])+step))
-
-    # Now, we need to orthonormalize the KS basis. Recall that in the function step3.normalization, 
-    # only the St variables are updated, not the S variables. 
-    #S_ks_prev = data_conv.nparray2CMATRIX( S_ks_prev )
-    #S_ks_curr = data_conv.nparray2CMATRIX( S_ks_curr )
-    #St_ks     = data_conv.nparray2CMATRIX( St_ks )
-    #step3.apply_normalization( [S_ks_prev, S_ks_curr] , [St_ks] )
-
     for step in range( nsteps_this_job ):
         S_ks_job[step]  = data_conv.nparray2CMATRIX(  S_ks_job[step] )
     for step in range( nsteps_this_job-1 ):
         St_ks_job[step] = data_conv.nparray2CMATRIX( St_ks_job[step] )
-
     step3.apply_normalization( S_ks_job, St_ks_job )
-
     for step in range( nsteps_this_job ):
         S_ks_job[step].real().show_matrix("%s/S_ks_%d_re" % (res_dir, int(params["istep"])+step))
+        E_ks_job[step].real().show_matrix("%s/E_ks_%d_re" % (res_dir, int(params["istep"])+step))
     for step in range( nsteps_this_job-1 ):
         St_ks_job[step].real().show_matrix("%s/St_ks_%d_re" % (res_dir, int(params["istep"])+step))
-
     #sys.exit(0)
 
+    if completion_level == 0:
+        print("\nComplete! Exiting for completion levels 0 or 1")
+        sys.exit(0)
+
+    #################################################################################################################
+    #################################################################################################################
+    print("Finished with all of the step. Now computing the overlap matrices and NACs in TD-DFPT level of theory...")
     # Now, time to compute S_sd and St_sd
     # Start by reindexing the unique Slater determinant basis. The current SD bases are not able to be read by Libra
     sd_states_reindexed = reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states_unique )
