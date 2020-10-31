@@ -34,7 +34,10 @@ for all users with the intent:
 
   * Mr. Brendan Smith (University at Buffalo) 
       Entangled trajectories Hamiltonian, NA-MD with spin-orbit coupling, NBRA workflows, BL-LZ NA-MD tutorials and examples, 
-      Libra/DFTB+, Libra/QE, and Libra/ErgoSCF interfaces
+      Libra/DFTB+, Libra/QE, Libra/ErgoSCF, Libra/CP2K, and Libra/Gaussian interfaces
+      
+  * Mr. Mohammad Shakiba (Shahid Bahonar University of Kerman, Iran)
+      Cube file processing scripts, Libra/CP2K and Libra/Gaussian interfaces
 
   * Mrs. Story Temen (University at Buffalo)
       Implementation and testing of the HEOM codes
@@ -53,7 +56,6 @@ for all users with the intent:
 
   * Dr. Xiang Sun (Indian Institute of Technology, Bombay)
       Implementation and testing of the FGR codes
-
 
 
 ## References
