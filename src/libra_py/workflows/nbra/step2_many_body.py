@@ -38,6 +38,7 @@ from libra_py import data_conv
 from libra_py import cube_file_methods
 from libra_py import CP2K_methods
 from libra_py import Gaussian_methods
+from libra_py import DFTB_methods
 from libra_py.workflows.nbra import mapping
 from libra_py.workflows.nbra import step3
 from libra_py import units
@@ -192,6 +193,13 @@ def get_excitation_analysis_output(params):
         params.update({"logfile_name":logfile_name}) 
         excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = \
         Gaussian_methods.read_gaussian_tddft_log_file( params )
+
+    elif es_software == "dftb+":
+
+        logfile_name = F"{logfile_directory}/TRA_{curr_step}.DAT"
+        params.update({"logfile_name":logfile_name})
+        excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = \
+        DFTB_methods.read_dftbplus_TRA_file( params )
   
     return excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components
 
@@ -649,6 +657,13 @@ def form_Hvib_real( params ):
         elif es_software == "gaussian":
             params["spin"] = 1
             E_alpha, total_energy = Gaussian_methods.read_energies_from_gaussian_log_file( params )
+        elif es_software == "dftb+":
+            # generate the log file name
+            logfile_name = F"{logfile_directory}/step_{curr_step}_ks.log"
+            # update the logfile_name parameter in params
+            params.update({"logfile_name":logfile_name})
+            params["spin"] = 1
+            E_alpha, total_energy = DFTB_methods.get_dftb_ks_energies( params )
         Hvib_ks_re = np.diag( np.concatenate( ( E_alpha, E_alpha ) ) )
     
     return Hvib_ks_re, total_energy
@@ -767,6 +782,10 @@ def run_step2_many_body( params ):
         gaussian_exe = params["es_software_exe"]
         gaussian_input_template = params["es_software_input_template"]
 
+    elif es_software == "dftb+":
+        dftbp_exe = params["es_software_exe"]
+        dftb_input_template = params["es_software_input_template"]
+
     # The project name, this is important since the cube files are produced based on the project_name
     project_name = params["project_name"]
     # The path to the pre-computed trajectory
@@ -856,18 +875,39 @@ def run_step2_many_body( params ):
         os.system("%s < %s-%i.gjf > logfiles/step_%d.log "%( gaussian_exe, project_name, curr_step, curr_step ) )
         Gaussian_methods.cube_generator_gaussian(project_name,curr_step,ks_orbital_indicies[0],ks_orbital_indicies[-1],nprocs,'../../sample_cube_file.cube',int(params["isUKS"]))
 
+    elif es_software == "dftb+":
+
+        print( 'params["curr_step"]', params["curr_step"])
+        # Set up the dftb+ input template.
+        DFTB_methods.make_dftb_input( dftb_input_template, 0, params["curr_step"]  )
+        # Convert the xyz file for currstep to the .gen file format
+        os.system("xyz2gen coord-"+str(params["curr_step"])+".xyz")
+        # Run the dftb+ program
+        os.system("srun %s"%( dftbp_exe ) )
+        os.system("mv band.out step_"+str(curr_step)+"_ks.log")
+        os.system("mv step_"+str(curr_step)+"_ks.log logfiles/.")
+        os.system("mv EXC.DAT EXC_"+str(curr_step)+".DAT")
+        os.system("mv EXC_"+str(curr_step)+".DAT logfiles/.")
+        os.system("mv TRA.DAT TRA_"+str(curr_step)+".DAT")
+        os.system("mv TRA_"+str(curr_step)+".DAT logfiles/.")
+        DFTB_methods.cube_generator_dftbplus( project_name, curr_step, ks_orbital_indicies[0], ks_orbital_indicies[-1], "/util/academic/dftbplus/19.1-arpack/bin/waveplot", int(params["isUKS"]) )
+
+    #sys.exit(0)
+
     os.system("mv *.cube cubefiles")
     # Print the elapsed time for CP2K calculations for this step.
     print(params["es_software"]," calculation time for step ", params["curr_step"]," was ", time.time() - timer1)
 
     # We have compted the first SCF calculation for this job, now to read the output data and cubes
     print("Reading the initial step using pool")
+    print("nprocs", nprocs)
     # Creating a pool with nprocs
     pool = mp.Pool( processes = nprocs )
 
     # The cube file names produced by CP2K, Here we set it as prev since we
     # don't want to read the cubes twice.
     cubefile_names_prev = CP2K_methods.cube_file_names_cp2k( params )
+    print("Initial step for this job, the cube file names are:\n", cubefile_names_prev)
     # We may have to "crunch" the cubes - this may be especially needed for periodic systems.
     #for cubefile in cubefile_names_prev:
     #    os.system( "/gpfs/scratch/brendan/cp2k/tools/cubecruncher/cubecruncher.x -center geo -i %s -o %s-1.cube " % ( cubefile, cubefile.replace( ".cube", "" ) ) )
@@ -875,7 +915,6 @@ def run_step2_many_body( params ):
     #    os.system( "mv %s-1.cube %s" % ( cubefile.replace(".cube",""), cubefile ) )
     cubefiles_prev = pool.map( cube_file_methods.read_cube, cubefile_names_prev )
 
-    print("Initial step for this job, the cube file names are:\n", cubefile_names_prev)
     # Call the pool to read the cube files
     # Close the pool 
     pool.close()
@@ -897,6 +936,7 @@ def run_step2_many_body( params ):
         cube_file_methods.plot_cubes( params )
 
     # After reading the cubefiles for curr_step, we should delete them to be memory efficient
+    print("Removing cubefiles")
     os.system("rm cubefiles/*")
 
     # Froming the hvib_ks_re with energies for the first step in the job.
@@ -909,6 +949,7 @@ def run_step2_many_body( params ):
     total_energies_job.append( total_energy )
 
     if completion_level > 0:
+        print("Using completion level > 0")
         # Get the excitation analysis output
         excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = get_excitation_analysis_output( params )
         # Normalize CI coefficients
@@ -963,10 +1004,27 @@ def run_step2_many_body( params ):
             os.system("%s < %s-%i.gjf > logfiles/step_%d.log "%( gaussian_exe, project_name, curr_step, curr_step ) )
             Gaussian_methods.cube_generator_gaussian(project_name,curr_step,ks_orbital_indicies[0],ks_orbital_indicies[-1],nprocs,'../../sample_cube_file.cube',int(params["isUKS"]))
 
+        elif es_software == "dftb+":
+
+            print( 'params["curr_step"]', params["curr_step"])
+            # Set up the dftb+ input template.
+            DFTB_methods.make_dftb_input( dftb_input_template, 0, params["curr_step"]  )
+            # Convert the xyz file for currstep to the .gen file format
+            os.system("xyz2gen coord-"+str(params["curr_step"])+".xyz")
+            # Run the dftb+ program
+            os.system("srun %s"%( dftbp_exe ) )
+            os.system("mv band.out step_"+str(curr_step)+"_ks.log")
+            os.system("mv step_"+str(curr_step)+"_ks.log logfiles/.")
+            os.system("mv EXC.DAT EXC_"+str(curr_step)+".DAT")
+            os.system("mv EXC_"+str(curr_step)+".DAT logfiles/.")
+            os.system("mv TRA.DAT TRA_"+str(curr_step)+".DAT")
+            os.system("mv TRA_"+str(curr_step)+".DAT logfiles/.")
+            DFTB_methods.cube_generator_dftbplus( project_name, curr_step, ks_orbital_indicies[0], ks_orbital_indicies[-1], "/util/academic/dftbplus/19.1-arpack/bin/waveplot", int(params["isUKS"]) )
+  
         os.system("mv *.cube cubefiles")
 
-        # Print the CP2K timing
-        print("CP2K elapsed time for step ", params["curr_step"]," was ", time.time() - timer1)
+        # Print the Timing
+        print("Elapsed time for step ", params["curr_step"]," was ", time.time() - timer1)
 
         # Forming the hvib_ks_re the same as above
         hvib_ks_re, total_energy = form_Hvib_real( params )
@@ -1039,13 +1097,15 @@ def run_step2_many_body( params ):
         S_ks_job[step]  = data_conv.nparray2CMATRIX(  S_ks_job[step] )
     for step in range( nsteps_this_job-1 ):
         St_ks_job[step] = data_conv.nparray2CMATRIX( St_ks_job[step] )
+
     step3.apply_normalization( S_ks_job, St_ks_job )
+    step3.apply_phase_correction( St_ks_job )
     for step in range( nsteps_this_job ):
         S_ks_job[step].real().show_matrix("%s/S_ks_%d_re" % (res_dir, int(params["istep"])+step))
         E_ks_job[step].real().show_matrix("%s/E_ks_%d_re" % (res_dir, int(params["istep"])+step))
     for step in range( nsteps_this_job-1 ):
         St_ks_job[step].real().show_matrix("%s/St_ks_%d_re" % (res_dir, int(params["istep"])+step))
-    #sys.exit(0)
+    sys.exit(0)
 
     if completion_level == 0:
         print("\nComplete! Exiting for completion levels 0 or 1")
@@ -1056,7 +1116,7 @@ def run_step2_many_body( params ):
     print("Finished with all of the step. Now computing the overlap matrices and NACs in TD-DFPT level of theory...")
     # Now, time to compute S_sd and St_sd
     # Start by reindexing the unique Slater determinant basis. The current SD bases are not able to be read by Libra
-    sd_states_reindexed = reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states_unique )
+    sd_states_reindexed = reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states_unique, sd_format=2 )
     print("The reindexed Slater determinants = \n", sd_states_reindexed)
 
     # For each step, we must sort the set of unique Slater determinant states based on their energy
@@ -1080,6 +1140,7 @@ def run_step2_many_body( params ):
         sd_states_unique_sorted.append( [] )
         for i in range(1,len(reindex)):
             sd_states_unique_sorted[step].append( sd_basis_states_unique[ int(reindex[i])-1 ] )
+
 
     # For each step make S_sd and St_sd
     print("Making the S_sd and St_sd....")
