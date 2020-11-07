@@ -139,6 +139,7 @@ def cube_file_names_cp2k( params ):
     max_band  = params["max_band"]
     curr_step = params["curr_step"]
     isUKS = params["isUKS"]
+    es_software = params["es_software"] 
 
     # isUKS needs to be epressed as a string, even though it is used as a Boolean in other parts of the workflows
     spin = []
@@ -157,16 +158,29 @@ def cube_file_names_cp2k( params ):
  
         # For the current time step "curr_step"
         if isUKS == 1:
-            cube_file_name_of_band_i = str('cubefiles/%s-%d-WFN_%s_%d-1_0.cube' % ( project_name, curr_step, state_num, spin[0] ) )
-            cube_file_name_of_band_j = str('cubefiles/%s-%d-WFN_%s_%d-1_0.cube' % ( project_name, curr_step, state_num, spin[1] ) )
-            cube_file_names.append( cube_file_name_of_band_i )
-            cube_file_names.append( cube_file_name_of_band_j )
+
+            if es_software == "cp2k" or es_software == "gaussian":
+
+                cube_file_name_of_band_i = str('cubefiles/%s-%d-WFN_%s_%d-1_0.cube' % ( project_name, curr_step, state_num, spin[0] ) )
+                cube_file_name_of_band_j = str('cubefiles/%s-%d-WFN_%s_%d-1_0.cube' % ( project_name, curr_step, state_num, spin[1] ) )
+                cube_file_names.append( cube_file_name_of_band_i )
+                cube_file_names.append( cube_file_name_of_band_j )
+
+            elif software == "dftb+":
+                print("\nReading cubefiles from spin-polarized calculations not currently available")
+                print("Exiting now")
+                sys.exit(0)
  
         else:
+
+            # Using the function state_num_cp2k to obtain the names of the .cube files for state 'i'.
+            state_num = state_num_cp2k( i )
             cube_file_name_of_band_i = str('cubefiles/%s-%d-WFN_%s_%d-1_0.cube' % ( project_name, curr_step, state_num, spin[0] ) )
             cube_file_names.append( cube_file_name_of_band_i )
-			
+		
     return cube_file_names
+
+
 
 
 
@@ -497,12 +511,12 @@ def CP2K_input_static(cp2k_sample_energy_input: str, project_name: str,
             f.write(' %s'%project_name+'-%d'%time_step)
             f.write('\n')
         # Writing the WFN_RESTART_FILE_NAME of the previous time step
-        elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower().split() and ".wfn" in lines[i].lower():	
+        elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower().split() and ".wfn" in lines[i].lower() and "!" not in lines[i].lower():	
             f.write('    WFN_RESTART_FILE_NAME')	
             f.write(' %s'%project_name+'-%d'%(time_step-1)+'-RESTART.wfn')	
             f.write('\n')	
         # Writing the WFN_RESTART_FILE_NAME of the previous time step for the tddft calculation	
-        elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower().split() and ".tdwfn" in lines[i].lower():	
+        elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower().split() and ".tdwfn" in lines[i].lower() and "!" not in lines[i].lower():	
             f.write('    WFN_RESTART_FILE_NAME')	
             f.write(' %s'%project_name+'-%d'%(time_step-1)+'-RESTART.tdwfn')
             f.write('\n')

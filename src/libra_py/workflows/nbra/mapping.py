@@ -32,7 +32,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 #from libra_py import *
 
 
-def sd2indx(inp,nbasis, do_sort=True):
+def sd2indx(inp,nbasis, do_sort=False):
     """
 
     This function maps a list of integers defining the 
@@ -99,7 +99,6 @@ def sd2indx(inp,nbasis, do_sort=True):
         # beta
         else:
             spat[i] = (abs(inp[i])) - 1  #+ nbasis/2 - 1
-
 
 
     # Rearrange in ascending order: this is needed for 
@@ -207,7 +206,7 @@ def orbs2spinorbs(s):
 
 
 
-def ovlp_arb(SD1, SD2, S, use_minimal=True):
+def ovlp_arb(SD1, SD2, S, use_minimal=False):
     """Compute the overlap of two generic SDs: <SD1|SD2>
 
     Args:
@@ -255,14 +254,8 @@ def ovlp_arb(SD1, SD2, S, use_minimal=True):
             sd2 = sd2_tmp
 
     else:
-
-        #print("sd1_tmp = ", sd1_tmp)
-        #print("sd2_tmp = ", sd2_tmp)
         sd1 = sd1_tmp
         sd2 = sd2_tmp
-        #print("sd1 = ", sd1)
-        #print("sd2 = ",   sd2)
-
 
     s = CMATRIX(len(sd1),len(sd2))
     # Forming the overlap of the SDs
@@ -276,7 +269,7 @@ def ovlp_arb(SD1, SD2, S, use_minimal=True):
                 s.set(i,j,0.0,0.0)
 
     # Checking if the matrix is square
-    print("\nChecking if s is a square matrix ...")
+    #print("\nChecking if s is a square matrix ...")
     if s.num_of_rows != s.num_of_cols:
         print("\nWARNING: the matarix of Kohn-Sham orbitial overlaps is not a square matrix") 
         print("\nExiting now ..")
@@ -286,8 +279,9 @@ def ovlp_arb(SD1, SD2, S, use_minimal=True):
         print("s.num_of_cols = ", s.num_of_cols)
         sys.exit(0)
 
-
     return det(s)
+
+
 
 
 def ovlp_mat_arb(SD1, SD2, S, use_minimal=True):
