@@ -22,11 +22,13 @@
 import math
 import os
 import sys
+import time
 if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from . import units
+import util.libutil as comn
 import numpy as np
 
 def convolve(X0, Y0, dx0, dx, var):
@@ -384,4 +386,184 @@ def libra_pdos(_emin, _emax, _de, projections, prefix, outfile, Nel, do_convolve
 
     return res
     
+
+def convolve_cp2k_pdos(params: dict):
+    """
+    This function reads the pdos file produced by CP2K and extract the pdos at each time step and 
+    then convolve them with Gaussian functions.
+    
+    Args:
+    
+        params (dictionary):
+    
+            cp2k_pdos_file (str): The CP2K .pdos file.
         
+            time_step (int): The time step of molecular dynamics.
+        
+            sigma (float): The standard deviation in Gaussian function.
+        
+            coef (float): The coefficient multiplied in Gaussian function.
+        
+            npoints (int): The number of points used in convolution.
+        
+            energy_conversion (float): The energy conversion unit from Hartree. For example 27.211386 is
+                                       for unit conversion from Hartree to eV. This value comes from libra_py.units. For example
+                                       for Hartree to eV one needs to call libra_py.units.au2ev in the input. The default value is 
+                                       Hartree to eV.
+				   
+            angular_momentum_cols (list): The angular momentum columns in the *.pdos files produced by CP2K.
+	
+    Returns:
+	
+        energy_grid (numpy array): The energy grid points vector.
+		
+        convolved_pdos (numpy array): The convolved pDOS vector.
+		
+        homo_energy (float): The average HOMO energy.
+		
+    """
+
+    # Critical parameters
+    critical_params = [ "cp2k_pdos_file", "angular_momentum_cols"]
+    # Default parameters
+    default_params = { "time_step": 0, "sigma": 0.02, "coef": 1.0, "npoints": 4000, "energy_conversion": units.au2ev }
+    # Check input
+    comn.check_input(params, default_params, critical_params) 
+
+    # The CP2K log file name
+    cp2k_pdos_file = params["cp2k_pdos_file"]
+    # The time step in the .pdos file (This is for molecular dynamics, for single-point calculations it is set to 0).
+    time_step = params["time_step"]
+    # The standard deviation value
+    sigma = params["sigma"]
+    # The pre factor that is multiplied to the Gaussian function
+    coef = params["coef"]
+    # Number of points for the grid 
+    npoints = params["npoints"]
+    # The energy conversion value from atomic unit, It is better to use the default values in the `libra_py.units`
+    energy_conversion = params["energy_conversion"]
+    # The angular momentum columns in the .pdos files
+    angular_momentum_cols = params["angular_momentum_cols"]
+
+    # Opening the file
+    file = open(cp2k_pdos_file,'r')
+    lines = file.readlines()
+    file.close()
+    
+    # Lines with 'DOS'
+    lines_with_dos = []
+    
+    # Finding the lines with 'DOS'
+    for i in range(0,len(lines)):
+        if 'DOS'.lower() in lines[i].lower().split():
+            lines_with_dos.append(i)
+    
+    # Finding the first and last index of PDOS for each time step
+    if len(lines_with_dos)==1:
+        # First index
+        first_index = 2
+        # Last index
+        last_index = int(lines[len(lines)-1].split()[0])
+    elif len(lines_with_dos)>1:
+        # First index
+        first_index = 2
+        # Last index
+        last_index = int(lines_with_dos[1]-1)
+    
+    # Find the number of columns in the PDOS file showing the number 
+    # of orbital components, energy, and occupation column.
+    num_cols = len(lines[first_index].split())
+    
+    # Number of energy levels considered for PDOS
+    num_levels = last_index - first_index + 1
+
+    
+    # Finding the homo and lumo energy level by appending the 
+    # pdos numerical values of unoccupied states only
+    pdos_unocc = []
+    # Energy levels
+    energy_levels = []
+    for i in range(first_index, last_index + 1):
+        energy_levels.append(float(lines[i].split()[1])*energy_conversion)
+        if float(lines[i].split()[2])==0:
+            pdos_unocc.append(i)
+    # LUMO energy level
+    lumo_level = int(lines[min(pdos_unocc)].split()[0])
+    # HOMO energy level
+    homo_level = lumo_level-1
+    # HOMO energy
+    homo_energy = float(lines[homo_level].split()[1])*energy_conversion
+    # Minimum energy level
+    min_energy = float(lines[first_index].split()[1])*energy_conversion
+    # Maximum energy level
+    max_energy = float(lines[last_index].split()[1])*energy_conversion
+    
+    
+    # Now we make an equispaced energy vector from min_energy ad max_energy with npoints.
+    energy_grid = np.linspace( min_energy-2, max_energy+2, npoints )
+    energy_grid = np.array(energy_grid)
+    
+    
+    # Appending the energy lines with their component densities of states
+    energy_lines = []
+    # The initial line in the .pdos file of step 'time_step'
+    init_line  = time_step * ( num_levels + 2 ) + 2
+    # The final line in the .pdos file of step 'time_step'
+    final_line = ( time_step + 1 ) * ( num_levels + 2 )
+    for i in range( init_line, final_line ):
+        # Appending the energy lines into enrgy_lines
+        energy_lines.append( lines[i].split() )
+
+    for i in range(0, len(energy_lines)):
+        
+        for j in range(0,len(energy_lines[0])):
+            
+            energy_lines[i][j] = float(energy_lines[i][j])
+            
+    energy_lines = np.array(energy_lines)
+
+    # Now we sum the PDOSs defined in angular_momentum_cols by user
+    pdos_sum = []
+    for k in range(0, len(energy_lines)):
+        
+        # A temporary vector for summation of the PDOS
+        tmp_vec = []
+        tmp_vec.append(energy_lines[k][1])
+        
+        for i in range(0,len(angular_momentum_cols)):
+            # Initializing a new sum variable
+            # print("angular_momentum_cols[i]",angular_momentum_cols[i])
+            tmp_sum = 0
+            for j in angular_momentum_cols[i]:
+                
+                # If j is less than the number of columns 
+                # then sum the PDOS
+                if j<=num_cols:
+                    tmp_sum += energy_lines[k][j]
+            # Appending tmp_sum into tmp_vec
+            tmp_vec.append(tmp_sum)
+        
+        # Now append tmp_vec into pdos_sum, we will
+        # then use this pdos_sum for convolution
+        pdos_sum.append(tmp_vec)
+    
+    convolved_pdos = []
+    t1 = time.time()
+    # The pre-factor for Gaussian functions
+    pre_factor = (coef/(sigma*np.sqrt(2.0*np.pi)))
+    for j in range(1,len(angular_momentum_cols)+1):
+        # Initialize a vector of zeros summing the weighted PDOS
+        tmp_weighted_pdos = np.zeros(energy_grid.shape)
+
+        for i in range(0,num_levels):
+            # The Guassian function
+            gaussian_fun = pre_factor*(np.exp(-0.5*np.power(((energy_grid-float(pdos_sum[i][0])*energy_conversion)/sigma),2)))
+            
+            tmp_weighted_pdos = tmp_weighted_pdos + gaussian_fun * float( pdos_sum[i][j] )
+        convolved_pdos.append(tmp_weighted_pdos)
+    print('Elapsed time for convolving ',cp2k_pdos_file,': ',time.time()-t1,' seconds')
+    convolved_pdos = np.array(convolved_pdos)
+    
+    return energy_grid, convolved_pdos, homo_energy
+   
+   
