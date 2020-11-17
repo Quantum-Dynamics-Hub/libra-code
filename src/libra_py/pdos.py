@@ -22,11 +22,13 @@
 import math
 import os
 import sys
+import time
 if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from . import units
+import util.libutil as comn
 import numpy as np
 
 def convolve(X0, Y0, dx0, dx, var):
@@ -385,27 +387,31 @@ def libra_pdos(_emin, _emax, _de, projections, prefix, outfile, Nel, do_convolve
     return res
     
 
-def convolve_cp2k_pdos(cp2k_log_file: str, time_step: int, sigma: float, coef: float, npoints: int, energy_conversion: float, angular_momentum_cols: list):
+def convolve_cp2k_pdos(params: dict):
     """
     This function reads the pdos file produced by CP2K and extract the pdos at each time step and 
     then convolve them with Gaussian functions.
     
     Args:
     
-        cp2k_log_file (str): The CP2K output file.
+        params (dictionary):
+    
+            cp2k_pdos_file (str): The CP2K .pdos file.
         
-        time_step (int): The time step of molecular dynamics.
+            time_step (int): The time step of molecular dynamics.
         
-        sigma (float): The standard deviation in Gaussian function.
+            sigma (float): The standard deviation in Gaussian function.
         
-        coef (float): The coefficient multiplied in Gaussian function.
+            coef (float): The coefficient multiplied in Gaussian function.
         
-        npoints (int): The number of points used in convolution.
+            npoints (int): The number of points used in convolution.
         
-        energy_conversion (float): The energy conversion unit from Hartree. For example 27.211386 is
-                                   for unit conversion from Hartree to eV.
+            energy_conversion (float): The energy conversion unit from Hartree. For example 27.211386 is
+                                       for unit conversion from Hartree to eV. This value comes from libra_py.units. For example
+                                       for Hartree to eV one needs to call libra_py.units.au2ev in the input. The default value is 
+                                       Hartree to eV.
 				   
-        angular_momentum_cols (list): The angular momentum columns in the *.pdos files produced by CP2K.
+            angular_momentum_cols (list): The angular momentum columns in the *.pdos files produced by CP2K.
 	
     Returns:
 	
@@ -417,8 +423,30 @@ def convolve_cp2k_pdos(cp2k_log_file: str, time_step: int, sigma: float, coef: f
 		
     """
 
+    # Critical parameters
+    critical_params = [ "cp2k_pdos_file", "angular_momentum_cols"]
+    # Default parameters
+    default_params = { "time_step": 0, "sigma": 0.02, "coef": 1.0, "npoints": 4000, "energy_conversion": units.au2ev }
+    # Check input
+    comn.check_input(params, default_params, critical_params) 
+
+    # The CP2K log file name
+    cp2k_pdos_file = params["cp2k_pdos_file"]
+    # The time step in the .pdos file (This is for molecular dynamics, for single-point calculations it is set to 0).
+    time_step = params["time_step"]
+    # The standard deviation value
+    sigma = params["sigma"]
+    # The pre factor that is multiplied to the Gaussian function
+    coef = params["coef"]
+    # Number of points for the grid 
+    npoints = params["npoints"]
+    # The energy conversion value from atomic unit, It is better to use the default values in the `libra_py.units`
+    energy_conversion = params["energy_conversion"]
+    # The angular momentum columns in the .pdos files
+    angular_momentum_cols = params["angular_momentum_cols"]
+
     # Opening the file
-    file = open(cp2k_log_file,'r')
+    file = open(cp2k_pdos_file,'r')
     lines = file.readlines()
     file.close()
     
@@ -478,7 +506,11 @@ def convolve_cp2k_pdos(cp2k_log_file: str, time_step: int, sigma: float, coef: f
     
     # Appending the energy lines with their component densities of states
     energy_lines = []
-    for i in range( time_step * ( num_levels + 2 ) + 2, ( time_step + 1 ) * ( num_levels + 2 ) ):
+    # The initial line in the .pdos file of step 'time_step'
+    init_line  = time_step * ( num_levels + 2 ) + 2
+    # The final line in the .pdos file of step 'time_step'
+    final_line = ( time_step + 1 ) * ( num_levels + 2 )
+    for i in range( init_line, final_line ):
         # Appending the energy lines into enrgy_lines
         energy_lines.append( lines[i].split() )
 
@@ -517,20 +549,20 @@ def convolve_cp2k_pdos(cp2k_log_file: str, time_step: int, sigma: float, coef: f
     
     convolved_pdos = []
     t1 = time.time()
+    # The pre-factor for Gaussian functions
+    pre_factor = (coef/(sigma*np.sqrt(2.0*np.pi)))
     for j in range(1,len(angular_momentum_cols)+1):
         # Initialize a vector of zeros summing the weighted PDOS
         tmp_weighted_pdos = np.zeros(energy_grid.shape)
 
         for i in range(0,num_levels):
             # The Guassian function
-            gaussian_fun = (coef/(sigma*np.sqrt(2.0*np.pi)))*(np.exp(-0.5*np.power(((energy_grid-float(pdos_sum[i][0])*energy_conversion)/sigma),2)))
+            gaussian_fun = pre_factor*(np.exp(-0.5*np.power(((energy_grid-float(pdos_sum[i][0])*energy_conversion)/sigma),2)))
             
             tmp_weighted_pdos = tmp_weighted_pdos + gaussian_fun * float( pdos_sum[i][j] )
         convolved_pdos.append(tmp_weighted_pdos)
-    print('Elapsed time for convolving ',cp2k_log_file,': ',time.time()-t1,' seconds')
+    print('Elapsed time for convolving ',cp2k_pdos_file,': ',time.time()-t1,' seconds')
     convolved_pdos = np.array(convolved_pdos)
-    
-    energy_grid = energy_grid
     
     return energy_grid, convolved_pdos, homo_energy
    
