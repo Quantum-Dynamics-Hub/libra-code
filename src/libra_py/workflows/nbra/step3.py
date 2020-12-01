@@ -1416,9 +1416,10 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
             e[state] =  E_this_sd.get(state,state).real
             # Obtain the indexing fo the SDs by their energies
         reindex = np.argsort(e)
-        reindex_nsteps.append( reindex )
 
         if sorting_type == "identity":
+
+            reindex_nsteps.append( list(range(nstates_sd)) )
 
             for state in range(nstates_sd):
 
@@ -1439,6 +1440,8 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
                     sd_states_unique_sorted[step].append( sd_states_unique[ state ] )
 
         elif sorting_type == "energy":
+
+            reindex_nsteps.append( reindex )
 
             # For each SD basis, make the energy matrix and reindex the list of basis according to their energies
             for i in range(len(reindex)):
