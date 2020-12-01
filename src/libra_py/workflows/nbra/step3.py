@@ -32,6 +32,7 @@ import sys
 import cmath
 import math
 import os
+import numpy as np
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -1362,5 +1363,226 @@ def apply_phase_correction_general(St):
             cum_phase.scale(j, 0, phase_i.get(j))
 
 
+
+
+
+def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fstep, sorting_type ):
+    """
+        This function computes the energies of the SP transitions (according to the sum of 1 electron terms) - no J or K
+        It then may sort the order of the sd_states either based on their energy at each timestep
+       
+        E_ks (list of CMATRIX) - KS orbital energies
+        sd_states_unique (list of lists) - all SP transitions and which spin it was
+                                           Ex) [ [ ['28 29'], ['alp'] ]. [ ['28 30'], ['alp'] ] ]
+        sd_states_reindexed (list of lists) - sd_states_unique but in internal  Libra notation 
+                                           Ex) [ [1,-1,3,-2], [3,-1,2,-2] ]
+        sorting_type ( (string) - "energy"   - sort by energy
+                                  "identity" - sort by identity
+
+        istep (int) - step from which to start counting
+        fstep (int) - step at which to stop counting
+ 
+        Returns E_sd, sd_states_unique_sorted, sd_states_reindexed_sorted
+        
+        E_sd (list of CMATRIX) - SD energies at each timestep
+        sd_states_unique_sorted - all SP transitions and which spin it is, but now sorted somehow ^
+        sd_states_reindexed_sorted - sd_states_unique_sorted, but in Libra's notation
+    """
+
+    E_sd = []
+    sd_states_reindexed_sorted = []
+    sd_states_unique_sorted = []
+    SD_energy_corr = [0.0]*len(sd_states_reindexed)
+    nstates_sd = len(sd_states_reindexed)
+
+    for step in range( fstep - istep ):
+
+        # Append a CMATRIX of dimension nstates_sd x nstates_sd
+        E_sd.append( CMATRIX( nstates_sd, nstates_sd) )
+
+        # At this step, compute the energy of the SD
+        E_this_sd = mapping.energy_mat_arb( sd_states_reindexed, E_ks[step], SD_energy_corr )
+
+        # Make a list for the final ordering of the sd_states_unique.
+        # This will not contain the ground state, which we will manually add later. 
+        sd_states_unique_sorted.append( [] )
+        sd_states_reindexed_sorted.append( [] )
+
+        if sorting_type == "identity":
+
+            for state in range(nstates_sd):
+
+                # This is making the energy matrix. And the "sorted" sds (written in Libra's input format) are just appened
+                # to sd_states_reindexed_sorted[step]. For identity ordering - no energy sorting is done!
+                E_sd[step].set(  state, state, E_this_sd.get( state, state ) )
+                sd_states_reindexed_sorted[step].append( sd_states_reindexed[ state ] )
+                print( sd_states_reindexed_sorted[step][ state ], ( E_sd[step].get( state, state ) - E_sd[step].get( 0, 0 ) ).real * units.au2ev )
+
+                # This is reindexing the list of SD bases at this time step according to their energies 
+                # We are adding the ground state SD later, so skip it for now. In this list sd_states_unique,
+                # the ground state is not there - this list is the single-particle transitions (and spin) given by the
+                # ES software. So, for example, if nstates_sd = 4, we take only the first 3, because the ground state is not
+                # in sd_states_unique
+                # Ex) sd_states_unique = [  [ ['28,29'], ['alp'] ] , [ ['27,29'], ['alp'] ] , [ ['26,29'], ['alp'] ] ]    
+                # 28 = homo
+                if state < nstates_sd-1:
+                    sd_states_unique_sorted[step].append( sd_states_unique[ state ] )
+
+        elif sorting_type == "energy":
+
+            # Make an array of zeros, these will be overwritten with the energy of each SD
+            e = np.zeros( nstates_sd )
+            for state in range(nstates_sd):
+                e[state] =  E_this_sd.get(state,state).real
+                # Obtain the indexing fo the SDs by their energies
+            reindex = np.argsort(e)
+
+            # For each SD basis, make the energy matrix and reindex the list of basis according to their energies
+            for i in range(len(reindex)):
+                # This is making the energy matrix
+                E_sd[step].set( i, i, E_this_sd.get(  int(reindex[i]), int(reindex[i])) )
+                # This is reindexing the list of SD bases at this time step according to their energies 
+                sd_states_reindexed_sorted[step].append( sd_states_reindexed[ int(reindex[i]) ] )
+                print( sd_states_reindexed_sorted[step][i], ( E_sd[step].get( i, i ) - E_sd[step].get( 0, 0 ) ).real * units.au2ev )
+
+            for i in range(1,len(reindex)):
+                sd_states_unique_sorted[step].append( sd_states_unique[ int(reindex[i])-1 ] )
+
+
+    return E_sd, sd_states_unique_sorted, sd_states_reindexed_sorted
+
+
+
+
+
+def make_T_matricies( ci_coefficients, ci_basis_states, spin_components, sd_states_unique_sorted, nstates, istep, fstep, outdir, verbose=1):
+    """
+    This function makes the "T"ransformation matricies that convert between the SD basis to the CI-like (or many-body (MB)) basis.
+
+    This funciton is made to be used within the NBRA Libra workflow, where things such as ci_coefficients, ci_basis_states, spin_components, 
+    and sd_states_unique_sorted have been extracted from TD-DFT calculations. As of 11/30/2020, compatable ES programs
+    include CP2K, DFTB+ and Gaussian.
+
+    Inputs:
+        ci_coefficients (list of lists of lists) - coefficients for the many-body states for each step
+        ci_basis_states (list of lists) - All SD basis states that comprise the many-body excitations for each step
+        spin_components (list of lists) - the spin components of the excitation (alpha or beta excitaiton?) for all states and all steps  
+        sd_basis_states_unique (list) - 1 of each of the SP transitions (and its spin) that made up the considered CI states
+        nstates (int) - number of excited MB states
+        istep (int) - step at which to start counting
+        fstep (int) - stap at which to stop counting
+        outdir (string) - output directory for the T matricies
+        verbose (int) - want to see some messages?
+    """
+
+    number_of_states = nstates
+    ci_coefficients_libra = []
+    nSDs = len( sd_states_unique_sorted[0] ) + 1
+    # Add one to the number of CI states because the ground state is not included yet
+    nCIs  = number_of_states + 1
+    SD2CI = []
+
+    for step in range( fstep - istep ):
+
+        # Make the list of ci_coefficients for each step in the way Libra accepts
+        ci_coefficients_libra.append( [] )
+        # Start with the ground state. This is not explicitly given by electronic strcture calculations
+        ci_coefficients_libra[step].insert( 0, [0.0] * nSDs )
+        ci_coefficients_libra[step][0][0] = 1.0
+
+        # For each ci state for this step
+        for i in range( len( ci_coefficients[step] ) ):
+            count = 0
+            # The ci wavefunction is a linear combination of SD states. Make a list of zeros the size of the number of unique
+            # SD states + 1 for the ground state
+            ci_coefficients_libra[step].append( [0.0] * nSDs )
+            # Exclude ground state here in the index, that info is not explicitly contained 
+            # in the ci_coefficients_dynamics list from electronic structure calculations
+            tmp_ci_basis_state_and_spin = []
+            # For each ci_coefficient in this ci state for this step, get the ci coefficients and spin (alp or bet)
+            for k in range(len(ci_coefficients[step][i])):
+                tmp_ci_basis_state_and_spin.append( [ci_basis_states[step][i][k] , spin_components[step][i][k]] )
+            # Now, loop over the SDs (excluding the ground state) to assign the coefficients
+            for j in range( nSDs-1 ):
+                # Check to see if one of the SDs from the list of unique SDs comprises this ci state
+                if sd_states_unique_sorted[step][j] in tmp_ci_basis_state_and_spin:
+                    # ok, it has found a match, now what is the index of the SD in the list of unique SDs?
+                    item_index = tmp_ci_basis_state_and_spin.index(sd_states_unique_sorted[step][j])
+                    ci_coefficients_libra[step][i+1][j+1] = float(ci_coefficients[step][i][item_index])
+
+
+        # Sanity check. Make sure sum of squared elements of columns == 1:
+        for i in range( nCIs ):
+            check_norm = 0
+            for j in range( nSDs ):
+                check_norm += ci_coefficients_libra[step][i][j]**2
+            if verbose == 1:
+                print("Step", step, "state", i, "check_norm", check_norm)
+            if check_norm < 0.99 or check_norm > 1.01:
+                print("Warning: Step, ", step)
+                print("Column ", i, "in SD2Ci (T) matrix has norm either < 0.99 or > 1.01")
+                print("Exiting now")
+                sys.exit(0)
+
+        SD2CI.append( CMATRIX( nSDs, nCIs ) )
+        for i in range( nSDs ):
+            for j in range( nCIs ):
+                SD2CI[step].set( i, j, ci_coefficients_libra[step][j][i] * (1.0+0.0j) )
+
+        # Output the transformation matrix. This is how you can double check that it worked ( it does ... :) )
+        SD2CI[step].show_matrix( "%s/T_%s.txt" % (outdir, str(step)) )
+
+    return SD2CI
+
+
+
+
+def compute_ci_energies_midpoint( ci_energies, num_excited_states, istep, fstep ):
+    """
+    This function compute the excitation energies energies at the midpoint from a list of excitation energies at each step. 
+    At each step, there are many electronic states. This function takes a list as an input, and is meant to be used 
+    in the NBRA workflow calculatiosn where lists may be more convenient than matricies. 
+
+    This funciton is made to be used within the NBRA Libra workflow, where things such as ci_energies have been extracted from TD-DFT calculations. 
+    As of 11/30/2020, compatable ES programs include CP2K, DFTB+ and Gaussian.
+
+    Energies are assumed to be energies from TDDFT calculatons. This function gives zero as the ground state total energy
+
+    ci_energies (list of lists) - energies of the MB states
+    num_excited_states (int) - number of excited states
+    istep (int) - step at which to start counting
+    fstep (int) - stap at which to stop counting
+
+    Returns ci_midpoint_energies
+    ci_midpoint_energies (list of CMATRIX) - energies in Ha. Ground state energy is set to zero
+    """
+
+    nstates = num_excited_states
+
+    # Now, compute the CI energy matrix at each-point and the mid-points
+    # For each step
+    #print("Computing the CI energy matrices....")
+    ci_energies_cmatrix = []
+    for step in range( fstep - istep ):
+        ci_energies_cmatrix.append( CMATRIX( nstates + 1, nstates + 1 ) )
+        for state in range( nstates + 1 ):
+            if state == 0:
+                ci_energies_cmatrix[step].set( state, state, 0.0 )
+            else:
+                ci_energies_cmatrix[step].set( state, state, ( ci_energies[step][state-1]  * units.ev2Ha )  )
+
+    # At the midpoints
+    ci_midpoint_energies = []
+    for step in range( fstep - istep - 1 ):
+        total_energy_mid_point = 0.0 #0.5 * ( total_energies[step] + total_energies[step+1] )
+        ci_midpoint_energies.append( CMATRIX( nstates + 1, nstates + 1 ) )
+        for state in range( nstates + 1 ):
+            if state == 0:
+                ci_midpoint_energies[step].set( state, state, total_energy_mid_point )
+            else:
+                midpoint_energy = 0.5 * ( ci_energies[step][state-1] + ci_energies[step+1][state-1] )
+                ci_midpoint_energies[step].set( state, state, total_energy_mid_point + ( midpoint_energy  * units.ev2Ha )  )
+
+    return ci_midpoint_energies
 
 

@@ -21,6 +21,7 @@
 import os
 import sys
 import math
+from libra_py.workflows.nbra import step2_many_body
 
 # Fisrt, we add the location of the library to test to the PYTHON path
 if sys.platform=="cygwin":
@@ -141,5 +142,96 @@ def compute_spectrum(Hvib, Hprime_x, Hprime_y, Hprime_z, params):
 
     return E, osc_str, istep, init_st, fin_st
 
+
+
+
+def get_step2_mb_sp_properties( params ):
+    """
+        This function extracts information from es output files. It currently works for
+        cp2k, dftb+, gaussian
+
+        params ( dictionary )
+
+            params["ks_orbital_indicies"] (list)   - ks orbitals that were used in step2. Ex) [15,16,17, ... , 32,33,34]
+            params["logfile_directory"]   (string) - "../excitation_analysis/all_logfiles"
+            params["es_software"]         (string) - "cp2k"
+            params["isUKS"]               (int)    - 0 for spin-unpolarized, 1 for spin-polarized
+            params["number_of_states"]    (int)    - number of ci states to extract
+            params["tolerance"]           (float)  - cutoff for SD contribution
+            params["start_time"]          (int)    - file index to start reading from
+            params["finish_time"]         (int)    - file index to stop  reading from
+   
+        returns S_sd_job, St_sd_job, sd_basis_states_unique, ci_basis_states_job, ci_coefficients_job, ci_energies_job, spin_components_job
+         
+        S_sd_job  (list) - overlaps of SD at each step
+        St_sd_job (list) - time-overlaps of SD at each step
+        sd_basis_states_unique (list) - 1 of each of the SP transitions (and its spin) that made up the considered CI states
+        ci_basis_states_job (list) - similar to sd_basis_states_unique, but all SP transitions encountered
+        ci_coefficients_job (list) - all ci coefficients encountered
+        ci_energies_job (list) - excitation energies
+        spin_components_job (list) - just the spin components (alpha or beta excitaiton?)
+    """
+
+
+    start_time  = params["start_time"]
+    finish_time = params["finish_time"]
+
+    curr_step = start_time
+
+    # Define ks_orbital_indicies based on the min_band and max_band    
+
+    # Update params with ks_orbital_indicies
+    params["curr_step"]           = curr_step
+    params["logfile_name"]        = "step_"+str(params["curr_step"])+".out"
+
+    S_sd_job, St_sd_job = [], []
+    ci_energies_job, ci_basis_states_job, ci_coefficients_job = [], [], []
+    spin_components_job = []
+    sd_basis_states_unique = []
+
+    excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = step2_many_body.get_excitation_analysis_output( params )
+    ci_coefficients_raw_norm = step2_many_body.normalize_ci_coefficients(ci_coefficients_raw_unnorm)
+
+    print( excitation_energies )
+    print( ci_basis_raw )
+    print( ci_coefficients_raw_unnorm )
+    print( spin_components )
+    print( ci_coefficients_raw_norm )
+
+    # Now append the extracted excitation analysis output to the respective lists
+    ci_basis_states_job.append( ci_basis_raw )
+    ci_coefficients_job.append( ci_coefficients_raw_norm )
+    ci_energies_job.append( excitation_energies )
+    spin_components_job.append( spin_components )
+
+    # Extract the uniquie SD basis states from the ci basis states
+    for ci_basis_state_index in range( len( ci_basis_raw ) ):
+        for sd_basis_state_index in range( len( ci_basis_raw[ ci_basis_state_index ] ) ):
+             sd_basis_state_and_spin = [ ci_basis_raw[ ci_basis_state_index ][ sd_basis_state_index ] , spin_components[ ci_basis_state_index ][ sd_basis_state_index ] ]
+             if sd_basis_state_and_spin not in sd_basis_states_unique:
+                 sd_basis_states_unique.append( sd_basis_state_and_spin )
+    #print( "Slater determinant basis states = ", sd_basis_states_unique )
+    curr_step += 1
+
+    # All other steps after initial step for this job
+    for step in range( finish_time-start_time-1 ):
+        params.update({ "curr_step":curr_step })
+        excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = step2_many_body.get_excitation_analysis_output( params )
+        ci_coefficients_raw_norm = step2_many_body.normalize_ci_coefficients(ci_coefficients_raw_unnorm)
+        # Extract the uniquie SD basis states from the ci basis states
+        for ci_basis_state_index in range( len( ci_basis_raw ) ):
+            for sd_basis_state_index in range( len( ci_basis_raw[ ci_basis_state_index ] ) ):
+                sd_basis_state_and_spin = [ ci_basis_raw[ ci_basis_state_index ][ sd_basis_state_index ] , spin_components[ ci_basis_state_index ][ sd_basis_state_index ] ]
+                if sd_basis_state_and_spin not in sd_basis_states_unique:
+                    sd_basis_states_unique.append( sd_basis_state_and_spin )
+        #print( "Slater determinant basis states = ", sd_basis_states_unique )
+        # Now append the extracted excitation analysis output in _job variables
+        ci_basis_states_job.append( ci_basis_raw )
+        ci_coefficients_job.append(   ci_coefficients_raw_norm )
+        ci_energies_job.append( excitation_energies )
+        spin_components_job.append( spin_components )
+        curr_step += 1
+
+    return S_sd_job, St_sd_job, sd_basis_states_unique, ci_basis_states_job, ci_coefficients_job, ci_energies_job, spin_components_job
 
 
