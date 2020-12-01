@@ -1371,23 +1371,25 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
         This function computes the energies of the SP transitions (according to the sum of 1 electron terms) - no J or K
         It then may sort the order of the sd_states either based on their energy at each timestep
        
-        E_ks (list of CMATRIX) - KS orbital energies
-        sd_states_unique (list of lists) - all SP transitions and which spin it was
-                                           Ex) [ [ ['28 29'], ['alp'] ]. [ ['28 30'], ['alp'] ] ]
-        sd_states_reindexed (list of lists) - sd_states_unique but in internal  Libra notation 
-                                           Ex) [ [1,-1,3,-2], [3,-1,2,-2] ]
-        sorting_type ( (string) - "energy"   - sort by energy
-                                  "identity" - sort by identity
+        Args:
+            E_ks (list of CMATRIX): KS orbital energies at each timestep. Spin block style 
+                                                                          Ex)     [ alp*alp  alp*bet ]
+                                                                                  [ bet*alp  bet*bet ]
+            sd_states_unique (list of lists): all SP transitions and which spin it was
+                                              Ex) [ [ ['28 29'], ['alp'] ]. [ ['28 30'], ['alp'] ] ]
+            sd_states_reindexed (list of lists): sd_states_unique but in internal  Libra notation 
+                                                  Ex) [ [1,-1,3,-2], [3,-1,2,-2] ]
+            sorting_type ( (string) ): "energy"   - sort by energy
+                                       "identity" - sort by identity
 
-        istep (int) - step from which to start counting
-        fstep (int) - step at which to stop counting
+            istep (int): step from which to start counting
+            fstep (int): step at which to stop counting
  
-        Returns E_sd, sd_states_unique_sorted, sd_states_reindexed_sorted
-        
-        E_sd (list of CMATRIX) - SD energies at each timestep
-        sd_states_unique_sorted - all SP transitions and which spin it is, but now sorted somehow ^
-        sd_states_reindexed_sorted - sd_states_unique_sorted, but in Libra's notation
-        reindex_nsteps - the energy ordering of the SD for each step in terms of the index of the SD from the initial step
+        Returns:       
+            E_sd (list of CMATRIX): SD energies at each timestep
+            sd_states_unique_sorted (list of lists): All SP transitions and which spin it is, but now sorted either by identity (no sorting) or energy
+            sd_states_reindexed_sorted (list of lists): The sd_states_unique_sorted, but in Libra's notation
+            reindex_nsteps (list of lists): The energy ordering of the SD for each step in terms of the index of the SD from the initial step
     """
 
     E_sd = []
@@ -1469,16 +1471,20 @@ def make_T_matricies( ci_coefficients, ci_basis_states, spin_components, sd_stat
     and sd_states_unique_sorted have been extracted from TD-DFT calculations. As of 11/30/2020, compatable ES programs
     include CP2K, DFTB+ and Gaussian.
 
-    Inputs:
-        ci_coefficients (list of lists of lists) - coefficients for the many-body states for each step
-        ci_basis_states (list of lists) - All SD basis states that comprise the many-body excitations for each step
-        spin_components (list of lists) - the spin components of the excitation (alpha or beta excitaiton?) for all states and all steps  
-        sd_basis_states_unique (list) - 1 of each of the SP transitions (and its spin) that made up the considered CI states
-        nstates (int) - number of excited MB states
-        istep (int) - step at which to start counting
-        fstep (int) - stap at which to stop counting
-        outdir (string) - output directory for the T matricies
-        verbose (int) - want to see some messages?
+    Args:
+        ci_coefficients (list of lists of lists): coefficients for the many-body states for each step
+        ci_basis_states (list of lists): All SD basis states that comprise the many-body excitations for each step
+        spin_components (list of lists): the spin components of the excitation (alpha or beta excitaiton?) for all states and all steps  
+        sd_basis_states_unique (list): 1 of each of the SP transitions (and its spin) that made up the considered CI states
+        nstates (int): number of excited MB states
+        istep (int): step at which to start counting
+        fstep (int): stap at which to stop counting
+        outdir (string): output directory for the T matricies
+        verbose (int): want to see some messages?
+
+    Returns:
+        SD2CI (list of CMATRIX): CMATRIX at each timestep where the rows are SDs and the cols are MB states. The columns contain the coefficients of the MB expansion for each MB state
+
     """
 
     number_of_states = nstates
@@ -1554,13 +1560,14 @@ def compute_ci_energies_midpoint( ci_energies, num_excited_states, istep, fstep 
 
     Energies are assumed to be energies from TDDFT calculatons. This function gives zero as the ground state total energy
 
-    ci_energies (list of lists) - energies of the MB states
-    num_excited_states (int) - number of excited states
-    istep (int) - step at which to start counting
-    fstep (int) - stap at which to stop counting
+    Args:
+        ci_energies (list of lists): energies of the MB states
+        num_excited_states (int): number of excited states
+        istep (int): step at which to start counting
+        fstep (int): stap at which to stop counting
 
-    Returns ci_midpoint_energies
-    ci_midpoint_energies (list of CMATRIX) - energies in Ha. Ground state energy is set to zero
+    Returns:
+        ci_midpoint_energies (list of CMATRIX): energies in Ha. Ground state energy is set to zero
     """
 
     nstates = num_excited_states
