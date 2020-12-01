@@ -1387,6 +1387,7 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
         E_sd (list of CMATRIX) - SD energies at each timestep
         sd_states_unique_sorted - all SP transitions and which spin it is, but now sorted somehow ^
         sd_states_reindexed_sorted - sd_states_unique_sorted, but in Libra's notation
+        reindex_nsteps - the energy ordering of the SD for each step in terms of the index of the SD from the initial step
     """
 
     E_sd = []
@@ -1394,6 +1395,7 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
     sd_states_unique_sorted = []
     SD_energy_corr = [0.0]*len(sd_states_reindexed)
     nstates_sd = len(sd_states_reindexed)
+    reindex_nsteps = []     
 
     for step in range( fstep - istep ):
 
@@ -1407,6 +1409,14 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
         # This will not contain the ground state, which we will manually add later. 
         sd_states_unique_sorted.append( [] )
         sd_states_reindexed_sorted.append( [] )
+
+        # Make an array of zeros, these will be overwritten with the energy of each SD
+        e = np.zeros( nstates_sd )
+        for state in range(nstates_sd):
+            e[state] =  E_this_sd.get(state,state).real
+            # Obtain the indexing fo the SDs by their energies
+        reindex = np.argsort(e)
+        reindex_nsteps.append( reindex )
 
         if sorting_type == "identity":
 
@@ -1430,13 +1440,6 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
 
         elif sorting_type == "energy":
 
-            # Make an array of zeros, these will be overwritten with the energy of each SD
-            e = np.zeros( nstates_sd )
-            for state in range(nstates_sd):
-                e[state] =  E_this_sd.get(state,state).real
-                # Obtain the indexing fo the SDs by their energies
-            reindex = np.argsort(e)
-
             # For each SD basis, make the energy matrix and reindex the list of basis according to their energies
             for i in range(len(reindex)):
                 # This is making the energy matrix
@@ -1449,7 +1452,7 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
                 sd_states_unique_sorted[step].append( sd_states_unique[ int(reindex[i])-1 ] )
 
 
-    return E_sd, sd_states_unique_sorted, sd_states_reindexed_sorted
+    return E_sd, sd_states_unique_sorted, sd_states_reindexed_sorted, reindex_nsteps
 
 
 
