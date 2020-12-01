@@ -150,31 +150,41 @@ def get_step2_mb_sp_properties( params ):
         This function extracts information from es output files. It currently works for
         cp2k, dftb+, gaussian
 
-        params ( dictionary )
+        Args:
 
-            params["ks_orbital_indicies"] (list)   - ks orbitals that were used in step2. Ex) [15,16,17, ... , 32,33,34]
-            params["logfile_directory"]   (string) - "../excitation_analysis/all_logfiles"
-            params["es_software"]         (string) - "cp2k"
-            params["isUKS"]               (int)    - 0 for spin-unpolarized, 1 for spin-polarized
-            params["number_of_states"]    (int)    - number of ci states to extract
-            params["tolerance"]           (float)  - cutoff for SD contribution
-            params["start_time"]          (int)    - file index to start reading from
-            params["finish_time"]         (int)    - file index to stop  reading from
+            params ( dictionary ): parameters controlling the function execution
+
+            * **params["ks_orbital_indicies"] (list)   - ks orbitals that were used in step2. Ex) [15,16,17, ... , 32,33,34]
+            * **params["logfile_directory"]** (string) - "../excitation_analysis/all_logfiles"
+            * **params["es_software"]**       (string) - "cp2k" or "dftb+", etc
+            * **params["isUKS"]**             (int)    - 0 for spin-unpolarized, 1 for spin-polarized
+            * **params["number_of_states"]**  (int)    - number of ci states to extract
+            * **params["tolerance"]**         (float)  - cutoff for SD contribution
+            * **params["start_time"]**        (int)    - file index to start reading from
+            * **params["finish_time"]**       (int)    - file index to stop  reading from
    
-        returns S_sd_job, St_sd_job, sd_basis_states_unique, ci_basis_states_job, ci_coefficients_job, ci_energies_job, spin_components_job
-         
-        S_sd_job  (list) - overlaps of SD at each step
-        St_sd_job (list) - time-overlaps of SD at each step
-        sd_basis_states_unique (list) - 1 of each of the SP transitions (and its spin) that made up the considered CI states
-        ci_basis_states_job (list) - similar to sd_basis_states_unique, but all SP transitions encountered
-        ci_coefficients_job (list) - all ci coefficients encountered
-        ci_energies_job (list) - excitation energies
-        spin_components_job (list) - just the spin components (alpha or beta excitaiton?)
+        Returns:
+            Overlaps of SD at each step: S_sd_job
+                a time series of matrices
+            Time-overlaps of SD at each step: St_sd_job
+                a time series of Hvib matrices
+            One of each of the SP transitions (and its spin) that made up the considered CI states: sd_basis_states_unique
+                ex) [ ['1, 2'], 'alp' ] # 1 = homo, 2 = lumo
+            SP transitions for each excitation for each step: ci_basis_states_job
+                ex) [ ['1 ,2'] ]
+            CI coefficients for each excitation for each step: ci_coefficients_job
+                    [ [1.0] ] 
+            Spin components (alpha or beta excitaiton?) for each excitation for each step: spin_components_job
+                   [ ['alp'] ]
     """
+
+    critical_params = ["logfile_directory", "es_software", "number_of_states", "start_time", "finish_time"]
+    default_params  = {"isUKS":0, "tolerance":0.01 }
+    comn.check_input(params, default_params, critical_params)
 
 
     start_time  = params["start_time"]
-    finish_time = params["finish_time"]
+    finish_time = params["finish_time"]    
 
     curr_step = start_time
 
