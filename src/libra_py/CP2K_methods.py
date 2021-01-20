@@ -639,3 +639,121 @@ def read_energies_from_cp2k_log_file( params ):
     # Returning the energeis from min_band to max_band
     return ks_energies[min_band-1:max_band], total_energy
   
+
+def read_energies_from_cp2k_md_log_file( params ):
+    """
+    This function reads the energies from CP2K molecular dynamics log file for a specific spin. The difference between this function
+    and the function `read_energies_from_cp2k_log_file` is that it is more efficient and faster for molecular dynamics energy levels.
+    
+    Args:
+    
+        params (dictionary):
+    
+            logfile_name (str): The output file produced by CP2K
+        
+            init_time (int): The initial time step of the molecular dynamics. 
+                        
+            final_time (int): The final time step of the molecular dynamics. 
+                    
+            min_band (int): The minimum state number.
+
+            max_band (int): The maximum state number.
+ 
+            spin (int): This number can only accept two values: 1 for alpha and 2 for beta spin.
+        
+    Returns:
+    
+        E (1D numpy array): The vector consisting of the KS energies from min_band to max_band.
+        
+        total_energy (float): The total energy obtained from the log file.
+        
+    """
+    
+    # Critical parameters
+    critical_params = [ "logfile_name", "min_band", "max_band" ]
+    # Default parameters
+    default_params = { "spin": 1, "init_time": 0, "final_time": 1}
+    # Check input
+    comn.check_input(params, default_params, critical_params)
+    
+    cp2k_log_file_name = params["logfile_name"]
+    # Time step, for molecular dynamics it will read the energies
+    # of time step 'time', but for static calculations the time is set to 0
+    init_time = params["init_time"]
+    final_time = params["final_time"]
+    
+    # Koh-Sham orbital indicies
+    # ks_orbital_indicies = params["ks_orbital_indicies"]
+    
+    # The minimum state number
+    min_band = params["min_band"] # ks_orbital_indicies[0]
+    # The maximum state number
+    max_band = params["max_band"] # ks_orbital_indicies[-1]
+    
+    spin = params["spin"]
+    
+    # First openning the file and reading its lines
+    f = open( cp2k_log_file_name, 'r' )
+    lines = f.readlines()
+    f.close()
+    
+    # The lines containing 'Eigenvalues of the occupied subspace'
+    lines_with_occupied   = []
+    # The lines containing 'Eigenvalues of the unoccupied subspace'
+    lines_with_unoccupied = []
+    
+    # The lines containing the energies of the occupied states
+    occ_energies_last_line   = []
+    # The lines containing the energies of the unoccupied states
+    unocc_energies_last_line = []
+    # Set the total energy to zero
+    total_energy = 0.0
+
+    
+    for i in range(0,len(lines)):
+        # Find the occupied states lines
+        if 'Eigenvalues of the occupied subspace'.lower() in lines[i].lower():
+        
+            if  str( spin ) in lines[i].lower().split():
+                lines_with_occupied.append( i )
+                for j in range( i, len( lines ) ):
+                    # Find the last line number containing the energies for occupied states
+                    if len( lines[j].split() ) == 0:
+                        occ_energies_last_line.append( j )
+                        break
+        # Find the unoccupied states lines
+        if 'Eigenvalues of the unoccupied subspace'.lower() in lines[i].lower():
+            if  str( spin ) in lines[i].lower().split():
+                lines_with_unoccupied.append(i)
+                for j in range( i, len( lines ) ):
+                    # Find the last line number containing the energies for unoccupied states
+                    if len( lines[j].split() ) == 0:
+                        unocc_energies_last_line.append( j )
+                        break
+       
+        if "Total energy:" in lines[i]:  
+            total_energy = float( lines[i].split()[2] )
+
+    # All KS energies
+    KS_energies = []
+    for time in range(init_time,final_time):
+        # The Kohn-Sham energies
+        ks_energies = []
+        # Start after two lines of the 'Eigenvalues of the occupied subspace'
+        for i in range( lines_with_occupied[time] + 2, occ_energies_last_line[time] - 1 ):
+            for j in range(0,len(lines[i].split())):
+                ks_energies.append(float(lines[i].split()[j]))
+    
+        # Start after two lines of the 'Eigenvalues of the unoccupied subspace'
+        for i in range( lines_with_unoccupied[time] + 2, unocc_energies_last_line[time] ):
+            if not 'Reached'.lower() in lines[i].lower().split():
+                for j in range(0,len(lines[i].split())):
+                    ks_energies.append(float(lines[i].split()[j]))
+
+        # Now appending all the energies into a numpy array
+        ks_energies = np.array(ks_energies)
+        KS_energies.append(ks_energies[min_band-1:max_band])
+        
+    # Returning the energeis from min_band to max_band
+    return KS_energies, total_energy
+
