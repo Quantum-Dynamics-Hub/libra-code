@@ -74,9 +74,6 @@ def read_gaussian_tddft_log_file(params):
     lines = file.readlines()
     file.close()
 
-    print("\nWe are opening gaussian logfile, here is the number of lines")
-    print("lines = ", lines)
-
     # Initialize the excitation energies list
     excitation_energies = []
     # The lines with excited state in them
