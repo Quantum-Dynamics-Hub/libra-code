@@ -674,18 +674,9 @@ def run_step2_many_body( params ):
     """
     This function is the main function which runs the following calculations:
 
-    * performin CP2K calculations
-    * computing the overlap matrices
-    * molecular orbital energies
-    * nonadiabatic couplings in Kohn-Sham and TD-DFPT level of theory
-    * molecular orbital visualization using VMD
-    * phase correction and state reordering
-
-    then it will print out all the outputs.
-
-    * Note: The current code works with CP2K but it can be generalized to other electronic structure
-            calculation software packages which are capable of producing cube files and performing 
-            TD-DFT calculations such as Gaussian. So this parameter is for future implementations.
+    * Executes calls to perform CP2K, DFTB+, or Gaussian electronic structure calculations
+    * Computing the overlap, time-overlap, and energy eigenvalue matrices for the KS basis
+    * Molecular orbital visualization using VMD
 
     Args:
 
@@ -726,16 +717,6 @@ def run_step2_many_body( params ):
 
             logfile_directory (string): The path to where the log files are stored.
 
-            number_of_states (integer): The number of excited states to be considered in the TD-DFPT calculations.
-
-            tolerance (float): This float number is used to consider only the states which their 
-                               square CI coefficients is larger than tolerance factor.
-
-            do_phase_corrections (integer): This flag is for phase correction of the overlap matrices. If it is set to
-                                            1 it will perform phase correction otherwise it will not.
-
-            
-
     Returns:
 
         None
@@ -746,10 +727,9 @@ def run_step2_many_body( params ):
     # Critical variables
     critical_params = ["min_band", "max_band", "ks_orbital_homo_index", "nsteps_this_job", 'trajectory_xyz_filename']
     # Default parameters
-    default_params = { "isUKS": 0, "es_software": "cp2k", "es_software_exe": "cp2k.psmp", "es_software_input_template": "cp2k_input_template.inp", "project_name": "Libra_CP2K", "njob": 1, "nprocs": 2, "dt":  41.3393964448119, "logfile_directory": "logfiles", "number_of_states": 5, "tolerance": 0.0, "do_phase_corrections": 1, "istep": 0, "do_cube_visualization": 0, "states_to_be_plotted": [] }
+    default_params = { "isUKS": 0, "es_software": "cp2k", "es_software_exe": "cp2k.psmp", "es_software_input_template": "cp2k_input_template.inp", "project_name": "Libra_CP2K", "njob": 1, "nprocs": 2, "dt":  41.3393964448119, "logfile_directory": "logfiles", "istep": 0, "do_cube_visualization": 0, "states_to_be_plotted": [] }
     # Check input
-    comn.check_input(params, default_params, critical_params)
-   
+    comn.check_input(params, default_params, critical_params)  
 
     # Extracting the min_band and max_band, we have to use int(...) since 
     # the numbers which are read from the bash are strings.
@@ -806,14 +786,6 @@ def run_step2_many_body( params ):
     # The path to log files produced by CP2K
     logfile_directory = params["logfile_directory"]
 
-    # Number of excited states
-    number_of_states = int(params["number_of_states"])
-    # The tolerance factor for CI coefficients
-    tolerance = float(params["tolerance"])    
-
-    # Phase corection flag
-    do_phase_corrections = int(params["do_phase_corrections"])
-
     # The current time step which here is set to istep
     curr_step = int(params["istep"])
     # Update the curr_step in params
@@ -822,9 +794,14 @@ def run_step2_many_body( params ):
     # Cube file visualization flag
     do_cube_visualization = int(params["do_cube_visualization"])
 
-    # Flag for the completion level
-    completion_level = int(params["completion_level"]) 
-
+    # Make a directory for this job folder for storing the logfiles, cubefiles, and pdosfiles
+    os.mkdir("logfiles")
+    os.mkdir("cubefiles")
+    os.mkdir("pdosfiles")
+    if not os.path.exists("../../all_logfiles"):
+        os.mkdir("../../all_logfiles")
+    if not os.path.exists("../../all_pdosfiles"):
+        os.mkdir("../../all_pdosfiles")
 
     #####################################################################################################
     ######################## Initializing lists for storing the data for each job #######################
@@ -843,17 +820,6 @@ def run_step2_many_body( params ):
     # The overlap matrices for Slater determinant basis for each time step in this job
     S_sd_job  = []
     St_sd_job = []
-    # The unique basis of Slater determinants basis
-    sd_basis_states_unique = []
-
-    # The overlap matrices for excited states for each time step in this job
-    S_ci_job  = []
-    St_ci_job = []
-    # The configuration interaction coefficients, energies, and basis states with their spin components for each time step in this job
-    ci_coefficients_job   = []
-    ci_basis_states_job   = []
-    ci_energies_job       = []
-    spin_components_job   = []
 
     ####### Setting up the calculations for the initial step
 
@@ -891,8 +857,6 @@ def run_step2_many_body( params ):
         os.system("mv TRA.DAT TRA_"+str(curr_step)+".DAT")
         os.system("mv TRA_"+str(curr_step)+".DAT logfiles/.")
         DFTB_methods.cube_generator_dftbplus( project_name, curr_step, ks_orbital_indicies[0], ks_orbital_indicies[-1], "/util/academic/dftbplus/19.1-arpack/bin/waveplot", int(params["isUKS"]) )
-
-    #sys.exit(0)
 
     os.system("mv *.cube cubefiles")
     # Print the elapsed time for CP2K calculations for this step.
@@ -942,43 +906,11 @@ def run_step2_many_body( params ):
     # Froming the hvib_ks_re with energies for the first step in the job.
     # This will extract the Kohn-Sham energies and total energy from the CP2K log files and forms the Hvib_real
     hvib_ks_re, total_energy = form_Hvib_real( params )
-    # Extracting the energies from Hvib_real matrices
-    E_ks_re = data_conv.nparray2CMATRIX( hvib_ks_re )
     # Appending the Kohn-Sham and total energies of this step in the E_ks_job and total_energies_job
-    E_ks_job.append( E_ks_re )
+    E_ks_job.append( hvib_ks_re )
     total_energies_job.append( total_energy )
 
-    if completion_level > 0:
-        print("Using completion level > 0")
-        # Get the excitation analysis output
-        excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = get_excitation_analysis_output( params )
-        # Normalize CI coefficients
-        ci_coefficients_raw_norm = normalize_ci_coefficients(ci_coefficients_raw_unnorm)
-        print("\nPrinting excitation_analysis_output")
-        print("excitation_energies = ", excitation_energies)
-        print("ci_basis_raw = ", ci_basis_raw)
-        print("ci_coefficients_raw_unnorm = ", ci_coefficients_raw_unnorm)
-        print("spin_components = ", spin_components)
-        #sys.exit(0)
-
-        # Extract the uniquie SD basis states from the ci basis states
-        for ci_basis_state_index in range( len( ci_basis_raw ) ):
-            for sd_basis_state_index in range( len( ci_basis_raw[ ci_basis_state_index ] ) ):
-                sd_basis_state_and_spin = [ ci_basis_raw[ ci_basis_state_index ][ sd_basis_state_index ] , spin_components[ ci_basis_state_index ][ sd_basis_state_index ] ]
-                if sd_basis_state_and_spin not in sd_basis_states_unique:
-                    sd_basis_states_unique.append( sd_basis_state_and_spin )
-        # Printing the unique Slater determinants basis - this will help the user to 
-        # see which states are considered and check them
-        print( "Slater determinant basis states = ", sd_basis_states_unique )
-
-        # Appending the extracted data from excitation analysis in the _job variables
-        ci_basis_states_job.append( ci_basis_raw )
-        ci_coefficients_job.append( ci_coefficients_raw_norm )
-        ci_energies_job.append( excitation_energies )
-        spin_components_job.append( spin_components )
-
     curr_step += 1
-
 
     #########################################
     # All other steps after initial step for this job
@@ -1000,6 +932,7 @@ def run_step2_many_body( params ):
             os.system("mv *.pdos pdosfiles")
 
         elif es_software == "gaussian":
+
             Gaussian_methods.gaussian_input( project_name, curr_step, gaussian_input_template, trajectory_xyz_filename )
             os.system("%s < %s-%i.gjf > logfiles/step_%d.log "%( gaussian_exe, project_name, curr_step, curr_step ) )
             Gaussian_methods.cube_generator_gaussian(project_name,curr_step,ks_orbital_indicies[0],ks_orbital_indicies[-1],nprocs,'../../sample_cube_file.cube',int(params["isUKS"]))
@@ -1022,15 +955,12 @@ def run_step2_many_body( params ):
             DFTB_methods.cube_generator_dftbplus( project_name, curr_step, ks_orbital_indicies[0], ks_orbital_indicies[-1], "/util/academic/dftbplus/19.1-arpack/bin/waveplot", int(params["isUKS"]) )
   
         os.system("mv *.cube cubefiles")
-
         # Print the Timing
         print("Elapsed time for step ", params["curr_step"]," was ", time.time() - timer1)
 
         # Forming the hvib_ks_re the same as above
         hvib_ks_re, total_energy = form_Hvib_real( params )
-        # Extracting the energies and appending them in _job variables
-        E_ks_re = data_conv.nparray2CMATRIX( hvib_ks_re )
-        E_ks_job.append( E_ks_re )
+        E_ks_job.append( hvib_ks_re )
         total_energies_job.append( total_energy )
 
         #============================== Computation of the overlap matrices=============================
@@ -1062,203 +992,18 @@ def run_step2_many_body( params ):
         if step == nsteps_this_job-2:
             S_ks_job.append(S_ks_curr)
 
-        if completion_level > 0:
-            print("Reading the excitation analysis output for step ", params["curr_step"])
-            # Get excitation analysis output results
-            excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = get_excitation_analysis_output( params )
-            print("\nPrinting excitation_analysis_output")
-            print("excitation_energies = ", excitation_energies)
-            print("ci_basis_raw = ", ci_basis_raw)
-            print("ci_coefficients_raw_unnorm = ", ci_coefficients_raw_unnorm)
-            print("spin_components = ", spin_components)
-            # Normalize the coefficients
-            ci_coefficients_raw_norm = normalize_ci_coefficients(ci_coefficients_raw_unnorm)
-            print("ci_coefficients_raw_norm = ", ci_coefficients_raw_norm)
-            # Extract the uniquie SD basis states from the ci basis states
-
-            for ci_basis_state_index in range( len( ci_basis_raw ) ):
-                for sd_basis_state_index in range( len( ci_basis_raw[ ci_basis_state_index ] ) ):
-                    sd_basis_state_and_spin = [ ci_basis_raw[ ci_basis_state_index ][ sd_basis_state_index ] , spin_components[ ci_basis_state_index ][ sd_basis_state_index ] ] 
-                    if sd_basis_state_and_spin not in sd_basis_states_unique:
-                        sd_basis_states_unique.append( sd_basis_state_and_spin )
-            print( "The unique SD basis states = ", sd_basis_states_unique )
-
-            # Now append the extracted excitation analysis output in _job variables
-            ci_basis_states_job.append( ci_basis_raw )
-            ci_coefficients_job.append(   ci_coefficients_raw_norm )
-            ci_energies_job.append( excitation_energies )
-            spin_components_job.append( spin_components )
+        #np.savetxt(filename, np.array, fmt='%.16e', delimiter=" ")
+        np.savetxt("%s/S_ks_%d_re"  % (res_dir, int(params["istep"])+step), S_ks_job[step], fmt='%.16e', delimiter=" ")
+        np.savetxt("%s/E_ks_%d_re"  % (res_dir, int(params["istep"])+step), E_ks_job[step], fmt='%.16e', delimiter=" ")
+        np.savetxt("%s/St_ks_%d_re" % (res_dir, int(params["istep"])+step), St_ks_job[step], fmt='%.16e', delimiter=" ")
 
         curr_step += 1
 
-    # We need to output the last step overlap and energies as well.
-    step = nsteps_this_job-1
-    for step in range( nsteps_this_job ):
-        S_ks_job[step]  = data_conv.nparray2CMATRIX(  S_ks_job[step] )
-    for step in range( nsteps_this_job-1 ):
-        St_ks_job[step] = data_conv.nparray2CMATRIX( St_ks_job[step] )
-
-    step3.apply_normalization( S_ks_job, St_ks_job )
-    step3.apply_phase_correction( St_ks_job )
-    for step in range( nsteps_this_job ):
-        S_ks_job[step].real().show_matrix("%s/S_ks_%d_re" % (res_dir, int(params["istep"])+step))
-        E_ks_job[step].real().show_matrix("%s/E_ks_%d_re" % (res_dir, int(params["istep"])+step))
-    for step in range( nsteps_this_job-1 ):
-        St_ks_job[step].real().show_matrix("%s/St_ks_%d_re" % (res_dir, int(params["istep"])+step))
-    sys.exit(0)
-
-    if completion_level == 0:
-        print("\nComplete! Exiting for completion levels 0 or 1")
-        sys.exit(0)
-
-    #################################################################################################################
-    #################################################################################################################
-    print("Finished with all of the step. Now computing the overlap matrices and NACs in TD-DFPT level of theory...")
-    # Now, time to compute S_sd and St_sd
-    # Start by reindexing the unique Slater determinant basis. The current SD bases are not able to be read by Libra
-    sd_states_reindexed = reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states_unique, sd_format=2 )
-    print("The reindexed Slater determinants = \n", sd_states_reindexed)
-
-    # For each step, we must sort the set of unique Slater determinant states based on their energy
-    E_sd_job = []
-    sd_states_reindexed_sorted = []
-    sd_states_unique_sorted = []
-    SD_energy_corr = [0.0]*len(sd_states_reindexed)
-    for step in range( nsteps_this_job ):
-        E_this_sd  = mapping.energy_mat_arb( sd_states_reindexed, E_ks_job[step], SD_energy_corr )
-        nstates_sd = len(sd_states_reindexed)
-        e = np.zeros( nstates_sd )
-        for state in range(nstates_sd):
-            e[state] =  E_this_sd.get(state,state).real
-        reindex = np.argsort(e)
-        E_sd_job.append(  CMATRIX(nstates_sd,nstates_sd) )
-        sd_states_reindexed_sorted.append( [] )
-        for i in range(len(reindex)):
-            E_sd_job[step].set(  i,i, E_this_sd.get(  int(reindex[i]), int(reindex[i])) )
-            sd_states_reindexed_sorted[step].append( sd_states_reindexed[ int(reindex[i]) ] )
-        # To omit the ground state, we will manually make this later. the below variable goes to make the T matrix
-        sd_states_unique_sorted.append( [] )
-        for i in range(1,len(reindex)):
-            sd_states_unique_sorted[step].append( sd_basis_states_unique[ int(reindex[i])-1 ] )
-
-
-    # For each step make S_sd and St_sd
-    print("Making the S_sd and St_sd....")
-    for step in range( nsteps_this_job ):
-        s_sd = step3.mapping.ovlp_mat_arb(  sd_states_reindexed_sorted[step], sd_states_reindexed_sorted[step], S_ks_job[step],  use_minimal=False )
-        S_sd_job.append( s_sd )
-    for step in range( nsteps_this_job-1 ):
-        st_sd = step3.mapping.ovlp_mat_arb(  sd_states_reindexed_sorted[step], sd_states_reindexed_sorted[step+1], St_ks_job[step],  use_minimal=False )
-        St_sd_job.append( st_sd )
-
-    # Output Slater determinant data to the res directory
-    print("Outputting the SD overlaps and energies.")
-    for step in range( nsteps_this_job ):
-        S_sd_job[step].real().show_matrix("%s/S_sd_%d_re" % (res_dir, int(params["istep"])+step))
-        E_sd_job[step].real().show_matrix("%s/E_sd_%d_re" % (res_dir, int(params["istep"])+step))
-    for step in range( nsteps_this_job-1 ):
-        St_sd_job[step].real().show_matrix("%s/St_sd_%d_re" % (res_dir, int(params["istep"])+step))
-
-    # Now, we have computed the overlaps in the KS and SD bases. Now, we need to compute the SD2CI matrix for each step
-    # Now, form the SD2CI matrix for each step
-    ci_coefficients = []
-    # Add one to the number of CI states because the ground state is not included yet
-    nSDs = len( sd_basis_states_unique ) + 1
-    nCIs = number_of_states + 1
-    SD2CI = []
-
-    print("Computing the NACs for single-particle and many-body wavefunctions....")
-    for step in range( nsteps_this_job ):
-
-        # Make the list of ci_coefficients for each step in the way Libra accepts
-        ci_coefficients.append( [] )
-        # Start with the ground state. This is not explicitly given by electronic strcture calculations
-        ci_coefficients[step].insert( 0, [0.0] * nSDs )
-        ci_coefficients[step][0][0] = 1.0
-
-        # For each ci state for this step
-        for i in range( len( ci_coefficients_job[step] ) ):
-            count = 0
-            ci_coefficients[step].append( [0.0] * nSDs )
-            # Exclude ground state here in the index, that info is not explicitly contained 
-            # in the ci_coefficients_dynamics list from electronic strcture calculations
-            tmp_ci_basis_state_and_spin = []
-            for k in range(len(ci_coefficients_job[step][i])):
-                tmp_ci_basis_state_and_spin.append( [ci_basis_states_job[step][i][k] , spin_components_job[step][i][k]] )
-
-            for j in range( nSDs-1 ):
-                if sd_states_unique_sorted[step][j] in tmp_ci_basis_state_and_spin:   
-                    # ok, it has found a match, now what is the index?
-                    item_index = tmp_ci_basis_state_and_spin.index(sd_states_unique_sorted[step][j])
-                    ci_coefficients[step][i+1][j+1] = float(ci_coefficients_job[step][i][item_index])    
- 
-        SD2CI.append( CMATRIX( nSDs, nCIs ) )
-        for i in range( nSDs ):
-            for j in range( nCIs ):
-                SD2CI[step].set( i, j, ci_coefficients[step][j][i] * (1.0+0.0j) )
-        SD2CI[step].show_matrix( "T_%s.txt" % str(step) )
-
-    # For each step make S_ci and St_ci
-    print("Making the S_ci and St_ci matrices....")
-    for step in range( nsteps_this_job ):
-        s_ci = SD2CI[step].H()  * S_sd_job[step]  * SD2CI[step]
-        S_ci_job.append( s_ci )
-    for step in range( nsteps_this_job-1 ):
-        st_ci = SD2CI[step].H() * St_sd_job[step] * SD2CI[step+1]
-        St_ci_job.append( st_ci )
-
-    # Now, compute the CI energy matrix at each-point and the mid-points
-    # For each step
-    print("Computing the CI energy matrices....")
-    ci_energies_job_cmatrix = []
-    for step in range( nsteps_this_job ):
-        ci_energies_job_cmatrix.append( CMATRIX( number_of_states + 1, number_of_states + 1 ) )
-        for state in range( number_of_states + 1 ):
-            if state == 0:
-                ci_energies_job_cmatrix[step].set( state, state, total_energies_job[step] )
-            else:
-                ci_energies_job_cmatrix[step].set( state, state, total_energies_job[step] + ( ci_energies_job[step][state-1]  * units.ev2Ha )  )
-
-    # At the midpoints
-    ci_midpoint_energies = []
-    for step in range( nsteps_this_job-1 ):
-        total_energy_mid_point = 0.5 * ( total_energies_job[step] + total_energies_job[step+1] )
-        ci_midpoint_energies.append( CMATRIX( number_of_states + 1, number_of_states + 1 ) )
-        for state in range( number_of_states + 1 ):
-            if state == 0:
-                ci_midpoint_energies[step].set( state, state, total_energy_mid_point )
-            else:
-                midpoint_energy = 0.5 * ( ci_energies_job[step][state-1] + ci_energies_job[step+1][state-1] )
-                ci_midpoint_energies[step].set( state, state, total_energy_mid_point + ( midpoint_energy  * units.ev2Ha )  )
-
-    # Are we to perform state reordering?
-    if int(params["perform_state_reordering"]) == 1:
-        params2 = {"do_state_reordering":int(params["do_state_reordering"]), "state_reordering_alpha":float(params["state_reordering_alpha"])}
-        print("Applying state reordering....")
-        step3.apply_state_reordering_general( St_ci_job, ci_midpoint_energies, params2 )
-
-    # Are we to perform phase corrections?
-    if do_phase_corrections == 1:
-        print("\nApplying phase corrections")
-        step3.apply_phase_correction_general( St_ci_job )
-
-    # Output CI data to res directory
-    print("Outputting the CI data to the res directory..." )
-    for step in range( nsteps_this_job ):
-        S_ci_job[step].real().show_matrix("%s/S_ci_%d_re"   % (res_dir, int(params["istep"])+step))
-        ci_energies_job_cmatrix[step].real().show_matrix("%s/E_ci_%d_re"   % (res_dir, int(params["istep"])+step))
-    for step in range( nsteps_this_job-1 ):
-        St_ci_job[step].real().show_matrix("%s/St_ci_%d_re" % (res_dir, int(params["istep"])+step))
-
-    # Now, compute the CI NACs and compute the CI Hvib
-    print("Computing and outputting the CI NACs...")
-    for step in range( nsteps_this_job-1 ): 
-        ci_nacs = -(  0.5j / dt ) * CMATRIX ( ( St_ci_job[step] - St_ci_job[step].H() ).real() )    
-        ci_hvib = ci_midpoint_energies[step] + ci_nacs
-        ci_hvib.real().show_matrix("%s/Hvib_ci_%d_re" % (res_dir, int(params["istep"])+step))
-        ci_hvib.imag().show_matrix("%s/Hvib_ci_%d_im" % (res_dir, int(params["istep"])+step))
-
-
+    # Print out the KS Overlap and Energy matricies for the last step in this job batch
+    np.savetxt("%s/S_ks_%d_re" % (res_dir, int(params["istep"])+step+1), S_ks_job[step+1], fmt='%.16e', delimiter=" ")
+    np.savetxt("%s/E_ks_%d_re" % (res_dir, int(params["istep"])+step+1), E_ks_job[step+1], fmt='%.16e', delimiter=" ")
     print("All steps were done successfully for this job!")
 
- 
+    os.system("mv logfiles/* ../../all_logfiles/.")
+    os.system("mv pdosfiles/* ../../all_pdosfiles/.")
+
