@@ -1006,4 +1006,5 @@ def run_step2_many_body( params ):
 
     os.system("mv logfiles/* ../../all_logfiles/.")
     os.system("mv pdosfiles/* ../../all_pdosfiles/.")
-
+    os.system("rm "+trajectory_xyz_filename)
+    os.system("rm *wfn")
