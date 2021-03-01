@@ -59,6 +59,7 @@ __all__ = ["dynamics",
            "tsh_stat",
            "unavoided",
            "units",
-           "vesta2qe"
+           "vesta2qe",
+           "libra_executables.py"
           ]
 
