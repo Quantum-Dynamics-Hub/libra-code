@@ -83,8 +83,6 @@ def main(json_parameters_filename):
             logger.debug(params["pdos_params"][params_indx])
             pdos_recipes.compute_pdos(params["pdos_params"][params_indx])
 
-    return 0
-
 
 if __name__ == '__main__':
-    sys.exit(main("libra_jobs.json"))
+    main("libra_jobs.json")

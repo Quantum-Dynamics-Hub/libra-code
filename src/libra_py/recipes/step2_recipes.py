@@ -40,8 +40,8 @@ def generate_step2_submit_template(params):
 
     logger.debug("Entered into generate_step2_submit_template function") 
 
-    critical_params = [ "mail", "min_band", "max_band", "homo_index", "dt", "project_name", "trajectory_xyz_filename", "path" ]
-    default_params = { "time":"1:00:00" }
+    critical_params = []
+    default_params = { "time":"1:00:00", "mail":"user@xyz.com", "min_band":0, "max_band":1, "homo_index":0, "dt":"41.0", "project_name":"libra_step2", "trajectory_xyz_filename":"md.xyz", "path":"./" }
     comn.check_input(params, default_params, critical_params)
     logger.debug("Checked params in function generate_template")
 
@@ -91,7 +91,7 @@ gaussian_exe=g16
 dftb_exe=/util/academic/dftbplus/19.1-arpack/bin/dftb+
 
 path="""+path+"""
-res=$path/res
+results_single_particle=$path/res
 MO_images_directory=$path/MO_images_directory
 path_to_tcl_file=$path/cube.tcl
 
@@ -123,7 +123,7 @@ params[\\"ks_orbital_homo_index\\"]=\\"$ks_orbital_homo_index\\"
 params[\\"istep\\"]=\\"$job_init_step\\"
 params[\\"nsteps_this_job\\"]=\\"$nsteps_this_job\\"
 params[\\"njob\\"]=\\"$njob\\"
-params[\\"res_dir\\"]=\\"$res\\"
+params[\\"res_dir\\"]=\\"$results_single_particle\\"
 params[\\"dt\\"]=\\"$dt\\"
 params[\\"do_cube_visualization\\"]=0
 params[\\"path_to_tcl_file\\"] = \\"$path_to_tcl_file\\"
@@ -155,8 +155,8 @@ def run_step2_jobs(params):
 
     logger.debug("Entered into the function initialize_step2_jobs")
 
-    critical_params = [ "trajectory_xyz_filename", "es_software", "es_software_input_template", "istep", "fstep", "njobs" ]
-    default_params = { "waveplot_input_template":"waveplot_in.hsd",  }
+    critical_params = []
+    default_params = { "trajectory_xyz_filename":"md.xyz", "es_software":"cp2k", "es_software_input_template":"cp2k_input_template", "istep":0, "fstep":1, "njobs":1, "waveplot_input_template":"waveplot_in.hsd",  }
     comn.check_input(params, default_params, critical_params)
     logger.debug("Checked params in the function initialize_step2_jobs")
     

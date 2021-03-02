@@ -7,7 +7,6 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 #***********************************************************/
 
-__all__ = ["step2_recipes",
-           "pdos_recipes"
+__all__ = ["step2_recipes"
           ]
 
