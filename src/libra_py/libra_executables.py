@@ -2,7 +2,7 @@ import sys
 import json
 import logging
 
-from libra_py.workflows.nbra import recipes
+from libra_py.recipes import *
 
 
 logger = logging.getLogger(__name__)
@@ -28,6 +28,8 @@ def read_libra_jobs_json(input_file):
             black-box manner
     """
 
+    logger.debug("Entered into the read_libra_jobs_json function of libra_executables.py")
+
     with open(input_file) as f:
         file_lines = f.readlines()
         f.close()
@@ -38,30 +40,51 @@ def read_libra_jobs_json(input_file):
         json_string = json_string + file_line
 
     params = json.loads(json_string)
+
+    logger.debug("Debugging the json -> python params dict")
     logger.debug(params)
 
     return params 
 
 
 
+def main(json_parameters_filename):
+    """ Call this function to run your libra 'executable'
 
-#================ Do the job =============
-params = read_libra_jobs_json('libra_jobs.json')
+    Args:
+        json_parameters_filename (string): The name of the .json file 
+            that contains the user-defined parameters for executing a 
+            Libra capability
 
-jobs = params["jobs"]
-for job in jobs:
+    Returns:
+        None: but carrys out the Libra capability in a 
+            black-box manner
+    """
 
-    logger.debug(F"job {job}\n")
-    if job["job_type"] == "step2":
-        logger.debug("Doing step2")
-        params_indx = job["job_params"]
-        logger.debug("Generating step2 submit_template.slm")
-        recipes.generate_step2_submit_template(params["step2_params"][params_indx])
-        logger.debug("Initializing step2 job folders and files")
-        recipes.initialize_step2_jobs(params["step2_params"][params_indx])
+    logger.debug("Entered into the main() function of libra_executables.py")
 
-    #if job["job_type"] == "pdos":
-        #logger.debug("Doing pDOS\n")
-        #params_indx = job["job_params"]
-        #logger.debug(params["pdos_params"][params_indx])
-        #recipes.pdos.run(job["pdos_params"][params_indx])   
+    params = read_libra_jobs_json('libra_jobs.json')
+
+    jobs = params["jobs"]
+    for job in jobs:
+
+        logger.debug(F"job {job}\n")
+        if job["job_type"] == "step2":
+            logger.debug("Doing some step2 job")
+            params_indx = job["job_params"]
+            logger.debug("Generating step2 submit_template.slm")
+            step2_recipes.generate_step2_submit_template(params["step2_params"][params_indx])
+            logger.debug("Initializing step2 job folders and files")
+            step2_recipes.run_step2_jobs(params["step2_params"][params_indx])
+
+        if job["job_type"] == "pdos":
+            logger.debug("Doing some pdos job")
+            params_indx = job["job_params"]
+            logger.debug(params["pdos_params"][params_indx])
+            pdos_recipes.compute_pdos(params["pdos_params"][params_indx])
+
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main("libra_jobs.json"))

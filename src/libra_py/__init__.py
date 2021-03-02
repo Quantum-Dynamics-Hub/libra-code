@@ -10,6 +10,7 @@
 __all__ = ["dynamics",
            "models",
            "workflows",
+           "recipes",
            "acf",
            "autoconnect",
            "build",

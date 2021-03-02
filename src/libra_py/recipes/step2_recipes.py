@@ -1,6 +1,10 @@
 import os
 import sys
 import logging
+import numpy as np
+import multiprocessing as mp
+import glob
+import matplotlib.pyplot as plt
 
 import util.libutil as comn
 from libra_py import CP2K_methods
@@ -8,10 +12,11 @@ from libra_py import Gaussian_methods
 from libra_py import DFTB_methods
 from libra_py.workflows.nbra import step2_many_body
 
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-file_handler = logging.FileHandler('recipes.log')
+file_handler = logging.FileHandler('step2_recipes.log')
 file_handler.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -135,8 +140,8 @@ step2_many_body.run_step2_many_body( params )
     f.close()
 
 
-def initialize_step2_jobs(params):
-    """ Initializes the files and job folders needed for running step2 
+def run_step2_jobs(params):
+    """ Prepares and runs job folders needed for running step2 
 
     Args:
         params (dict): The parameters dictionary used for containing 
@@ -144,7 +149,8 @@ def initialize_step2_jobs(params):
 
     Returns:
         None: but creates the wd (working diretory) that stores the 
-            job folders and the files needed to run each job.    
+            job folders and the files needed to run each job, and runs
+            those jobs.    
     """
 
     logger.debug("Entered into the function initialize_step2_jobs")
@@ -244,9 +250,9 @@ def initialize_step2_jobs(params):
 def main(params):
     generate_step2_submit_template(params)
     initialize_step2_jobs(params)
-    #step2_many_body.run(params)
+
 
 if __name__ == '__main__':
     params = {"time":"2:00:00", "mail":"bsmith24@buffalo.edu", "min_band":28, "max_band":29, "homo_index":28, "dt":41.341374575751, "project_name":"c10h16", "trajectory_xyz_filename":"c10h16.xyz", "es_software":"cp2k", "es_software_input_template":"cp2k_input_template.inp", "istep":0, "fstep":9, "njobs":4}
-    logger.debug("Running the recipe")
+    logger.debug("Running step2 recipe")
     main(params)
