@@ -10,6 +10,7 @@
 __all__ = ["dynamics",
            "models",
            "workflows",
+           "recipes",
            "acf",
            "autoconnect",
            "build",
@@ -59,6 +60,7 @@ __all__ = ["dynamics",
            "tsh_stat",
            "unavoided",
            "units",
-           "vesta2qe"
+           "vesta2qe",
+           "libra_executable.py"
           ]
 
