@@ -487,10 +487,8 @@ def convolve_cp2k_pdos(params: dict):
         energy_levels.append(float(lines[i].split()[1])*energy_conversion)
         if float(lines[i].split()[2])==0:
             pdos_unocc.append(i)
-    # LUMO energy level
-    lumo_level = int(lines[min(pdos_unocc)].split()[0])
     # HOMO energy level
-    homo_level = lumo_level-1
+    homo_level = int(lines[min(pdos_unocc)].split()[0])
     # HOMO energy
     homo_energy = float(lines[homo_level].split()[1])*energy_conversion
     # Minimum energy level
