@@ -1,9 +1,19 @@
+#***********************************************************
+# * Copyright (C) 2021 Brendan Smith and Alexey V. Akimov
+# * This file is distributed under the terms of the
+# * GNU General Public License as published by the
+# * Free Software Foundation; either version 3 of the
+# * License, or (at your option) any later version.
+# * http://www.gnu.org/copyleft/gpl.txt
+#***********************************************************/
+
 import os
 import sys
+import glob
 import logging
 import numpy as np
 import multiprocessing as mp
-import glob
+
 import matplotlib.pyplot as plt
 
 import util.libutil as comn
@@ -24,7 +34,7 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 
-def generate_step2_submit_template(params):
+def make_step2_submit_template(params):
     """ Generate the submit_template.slm file for step2 in the nbra workflow.
             
     Please note that the generated submit_template.slm here is
@@ -36,41 +46,78 @@ def generate_step2_submit_template(params):
 
     Returns:
         None: but creates a file template for submit.slm.
+
+    Notes:
+        cp2k_exe=/panasas/scratch/grp-alexeyak/brendan/cp2k/exe/local/cp2k.popt
+        gaussian_exe=g16
+        dftb_exe=/util/academic/dftbplus/19.1-arpack/bin/dftb+
+ 
     """
 
     logger.debug("Entered into generate_step2_submit_template function") 
 
     critical_params = []
-    default_params = { "partition":"debug", "clusters":"ub-hpc", "time":"1:00:00", "ncores":1, "memory":50000, "mail":"user@xyz.com", "min_band":0, "max_band":1, "homo_index":0, "dt":41.0, "project_name":"libra_step2", "trajectory_xyz_filename":"md.xyz", "path":"" }
+    default_params = { "partition":"debug", "clusters":"ub-hpc", "constraint":"CPU-Gold-6130",
+                       "nnodes":1, "ncores":1, "cpus_per_task":1,
+                       "time":"1:00:00", "memory":50000, "email":None, 
+
+                       "es_software":"cp2k",  "es_software_input_template": "cp2k_input_template.inp",
+                       "es_software_exe":"/panasas/scratch/grp-alexeyak/brendan/cp2k/exe/local/cp2k.popt",
+
+                       "project_name":"libra_step2",
+                       "min_band":0, "max_band":1, "homo_index":0, 
+
+
+                       "dt":41.0, 
+                       "trajectory_xyz_filename":"md.xyz", "path":""
+                      }
     comn.check_input(params, default_params, critical_params)
     logger.debug("Checked params in function generate_template")
 
-    partition = params["partition"]
-    clusters = params["clusters"]
-    time = params["time"]
-    ncores = params["ncores"]
-    memory = params["memory"]
-    mail = params["mail"]
-    path = params["path"]
-    min_band = params["min_band"]
-    max_band = params["max_band"]
-    homo_index = params["homo_index"]
-    dt = params["dt"]
-    project_name = params["project_name"]
-    trajectory_xyz_filename = params["trajectory_xyz_filename"]
+    file_content = "#!/bin/sh\n#SBATCH --requeue\n"
 
-    file_content = """#!/bin/sh
-#SBATCH --partition="""+partition+"""  --qos="""+partition+"""
-#SBATCH --clusters="""+clusters+"""
-#SBATCH --constraint=CPU-Gold-6130
-#SBATCH --time="""+time+"""
-#SBATCH --nodes=1
-#SBATCH --requeue
-#SBATCH --ntasks-per-node="""+str(ncores)+"""
-#SBATCH --cpus-per-task=1
-#SBATCH --mem="""+str(memory)+"""
-#SBATCH --mail-user="""+mail+"""
-echo "SLURM_JOBID="$SLURM_JOBID
+    #============ General Slurm stuff ===============
+    if params["partition"]!=None:
+        partition = params["partition"]
+        file_content = file_content + F"""#SBATCH --partition={partition} --qos={partition}\n"""
+
+    if params["clusters"]!=None:
+        clusters = params["clusters"]
+        file_content = file_content + F"""#SBATCH --clusters={clusters}\n"""
+
+    if params["constraint"]!=None:
+        constraint = params["constraint"]
+        file_content = file_content + F"""#SBATCH --constraint={constraint}\n"""
+
+    if params["nnodes"]!=None:
+        nnodes = params["nnodes"]
+        file_content = file_content + F"""#SBATCH --nodes={nnodes}\n"""
+
+    if params["ncores"]!=None:
+        ncores = params["ncores"]
+        file_content = file_content + F"""#SBATCH --nodes={ncores}\n"""
+
+    if params["cpus_per_task"]!=None:
+        cpus_per_task = params["cpus_per_task"]
+        file_content = file_content + F"""#SBATCH --cpus-per-task={cpus_per_task}\n"""
+
+    if params["time"]!=None:
+        time = params["time"]
+        file_content = file_content + F"""#SBATCH --time={time}\n"""
+
+    if params["memory"]!=None:
+        memory = params["memory"]
+        file_content = file_content + F"""#SBATCH --memory={memory}\n"""
+
+    if params["email"]!=None:
+        email = params["email"]
+        file_content = file_content + F"""#SBATCH --mail-user={email}\n"""
+
+
+    #========== Additional setup for CCR  ==================
+
+    file_content = file_content + 
+"""echo "SLURM_JOBID="$SLURM_JOBID
 echo "SLURM_JOB_NODELIST="$SLURM_JOB_NODELIST
 echo "SLURM_NNODES="$SLURM_NNODES
 echo "SLURMTMPDIR="$SLURMTMPDIR
@@ -86,55 +133,74 @@ if [ -n "$SLURM_CPUS_PER_TASK" ]; then
 else
   omp_threads=1
 fi
-export OMP_NUM_THREADS=$omp_threads
+export OMP_NUM_THREADS=$omp_threads"""
 
-cp2k_exe=/panasas/scratch/grp-alexeyak/brendan/cp2k/exe/local/cp2k.popt
-gaussian_exe=g16
-dftb_exe=/util/academic/dftbplus/19.1-arpack/bin/dftb+
 
-path="""+path+"""
-results_single_particle=$path/res
-MO_images_directory=$path/MO_images_directory
-path_to_tcl_file=$path/cube.tcl
+    #========== Additional setup for CCR  ==================
 
-project_name="""+project_name+"""
-trajectory_xyz_filename="""+trajectory_xyz_filename+"""
-declare -i min_band="""+str(min_band)+"""
-declare -i max_band="""+str(max_band)+"""
-declare -i ks_orbital_homo_index="""+str(homo_index)+"""
-declare -i states_to_be_plotted=0
-dt="""+str(dt)+"""
+    path = params["path"]
+    min_band = params["min_band"]
+    max_band = params["max_band"]
+    homo_index = params["homo_index"]
+    dt = params["dt"]
+    project_name = params["project_name"]
+    trajectory_xyz_filename = params["trajectory_xyz_filename"]
+
+    file_content = file_content + """
 
 job_init_step=
 nsteps_this_job=
 njob=
 
-python -c "from libra_py.workflows.nbra import step2_many_body
-params = {}
-params[\\"es_software\\"]=\\"cp2k\\"
-params[\\"es_software_input_template\\"]=\\"cp2k_input_template.inp\\"
-params[\\"es_software_exe\\"]=\\"$cp2k_exe\\"
+"""
+
+    #================= Python script to run ==========================
+    es_software = params["es_software"]
+    es_software_input_template = params["es_software_input_template"]
+    es_software_exe = params["es_software_exe"]
+
+    project_name = params["project_name"]
+    trajectory_xyz_filename = params["trajectory_xyz_filename"]
+
+    isUKS = params["isUKS"]
+    min_band = params["min_band"]
+    max_band = params["max_band"]
+    homo_index = params["homo_index"]
+
+    path = params["results_path"]
+
+    dt = params["dt"]
+
+    do_cube_visualization = params["do_cube_visualization"]
+    states_to_be_plotted = params["states_to_be_plotted"]
+
+
+    file_content = file_content +
+F"""python -c "from libra_py.workflows.nbra import step2_many_body
+params = {{}}
+params[\\"es_software\\"]=\\"{es_software}\\"
+params[\\"es_software_input_template\\"]=\\"{es_software_input_template}\\"
+params[\\"es_software_exe\\"]=\\"{es_software_exe}\\"
 params[\\"nprocs\\"]=\\"$SLURM_NTASKS_PER_NODE\\"
-params[\\"project_name\\"]=\\"$project_name\\"
-params[\\"trajectory_xyz_filename\\"]=\\"$trajectory_xyz_filename\\"
-params[\\"logfile_directory\\"]=\\"logfiles\\"
-params[\\"isUKS\\"]=0
-params[\\"min_band\\"]=int(\\"$min_band\\")
-params[\\"max_band\\"]=\\"$max_band\\"
-params[\\"ks_orbital_homo_index\\"]=\\"$ks_orbital_homo_index\\"
+params[\\"project_name\\"]=\\"{project_name}\\"
+params[\\"trajectory_xyz_filename\\"]=\\"{trajectory_xyz_filename}\\"
+params[\\"isUKS\\"]={isUKS}
+params[\\"min_band\\"]={min_band}
+params[\\"max_band\\"]={max_band}
+params[\\"ks_orbital_homo_index\\"]={homo_index}
 params[\\"istep\\"]=\\"$job_init_step\\"
 params[\\"nsteps_this_job\\"]=\\"$nsteps_this_job\\"
 params[\\"njob\\"]=\\"$njob\\"
-params[\\"res_dir\\"]=\\"$results_single_particle\\"
-params[\\"dt\\"]=\\"$dt\\"
-params[\\"do_cube_visualization\\"]=0
-params[\\"path_to_tcl_file\\"] = \\"$path_to_tcl_file\\"
-params[\\"states_to_be_plotted\\"]=\\"$states_to_be_plotted\\"
-params[\\"MO_images_directory\\"] = \\"$MO_images_directory\\"
+params[\\"res_dir\\"]=\\"{path}/res\\"
+params[\\"dt\\"]={dt}
+params[\\"do_cube_visualization\\"]={do_cube_visualization}
+params[\\"path_to_tcl_file\\"] = \\"{path}/cube.tcl\\"
+params[\\"states_to_be_plotted\\"]=\\"{states_to_be_plotted}\\"
+params[\\"mo_images_directory\\"] = \\"{path}/mo_images\\"
+params[\\"logfile_directory\\"]=\\"{path}/logs\\"
 print( params )
 step2_many_body.run_step2_many_body( params )
-" 
-
+"
 """   
 
     f = open("submit_template.slm", "w")
@@ -249,12 +315,10 @@ def run_step2_jobs(params):
         logger.debug(f"Finished submitting job. We are now back in directory: {os.getcwd()}")
 
 
-def main(params):
-    generate_step2_submit_template(params)
-    run_step2_jobs(params)
-
 
 if __name__ == '__main__':
     params = { "partition":"debug", "clusters":"ub-hpc", "time":"1:00:00", "ncores":32, "memory":50000, "mail":"bsmith24@buffalo.edu", "min_band":28, "max_band":29, "homo_index":28, "dt":41.0, "project_name":"c10h16", "trajectory_xyz_filename":"c10h16.xyz", "path":"/panasas/scratch/grp-alexeyak/brendan/active_projects/libra_development/test_black_box", "es_software":"cp2k", "es_software_input_template":"cp2k_input_template.inp", "istep":0, "fstep":1, "njobs":1}
     logger.debug("Running step2 recipe")
-    main(params)
+
+    make_step2_submit_template(params)
+    run_step2_jobs(params)

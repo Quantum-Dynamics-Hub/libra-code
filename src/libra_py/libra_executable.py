@@ -1,8 +1,17 @@
+#***********************************************************
+# * Copyright (C) 2021 Brendan Smith and Alexey V. Akimov
+# * This file is distributed under the terms of the
+# * GNU General Public License as published by the
+# * Free Software Foundation; either version 3 of the
+# * License, or (at your option) any later version.
+# * http://www.gnu.org/copyleft/gpl.txt
+#***********************************************************/
+
 import sys
 import json
 import logging
 
-from libra_py.recipes import *
+import libra_py.recipes as recipes
 
 
 logger = logging.getLogger(__name__)
@@ -71,17 +80,22 @@ def main(json_parameters_filename):
         logger.debug(F"job {job}\n")
         if job["job_type"] == "step2":
             logger.debug("Doing some step2 job")
+
             params_indx = job["job_params"]
+
             logger.debug("Generating step2 submit_template.slm")
-            step2_recipes.generate_step2_submit_template(params["step2_params"][params_indx])
+            recipes.step2_recipes.make_step2_submit_template(params["step2_params"][params_indx])
+
             logger.debug("Initializing step2 job folders and files")
-            step2_recipes.run_step2_jobs(params["step2_params"][params_indx])
+            recipes.step2_recipes.run_step2_jobs(params["step2_params"][params_indx])
 
         if job["job_type"] == "pdos":
             logger.debug("Doing some pdos job")
+
             params_indx = job["job_params"]
+
             logger.debug(params["pdos_params"][params_indx])
-            pdos_recipes.compute_pdos(params["pdos_params"][params_indx])
+            recipes.pdos_recipes.compute_pdos(params["pdos_params"][params_indx])
 
 
 if __name__ == '__main__':
