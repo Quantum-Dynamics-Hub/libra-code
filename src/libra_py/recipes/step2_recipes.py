@@ -41,11 +41,15 @@ def generate_step2_submit_template(params):
     logger.debug("Entered into generate_step2_submit_template function") 
 
     critical_params = []
-    default_params = { "time":"1:00:00", "mail":"user@xyz.com", "min_band":0, "max_band":1, "homo_index":0, "dt":"41.0", "project_name":"libra_step2", "trajectory_xyz_filename":"md.xyz", "path":"./" }
+    default_params = { "partition":"debug", "clusters":"ub-hpc", "time":"1:00:00", "ncores":1, "memory":50000, "mail":"user@xyz.com", "min_band":0, "max_band":1, "homo_index":0, "dt":41.0, "project_name":"libra_step2", "trajectory_xyz_filename":"md.xyz", "path":"" }
     comn.check_input(params, default_params, critical_params)
     logger.debug("Checked params in function generate_template")
 
+    partition = params["partition"]
+    clusters = params["clusters"]
     time = params["time"]
+    ncores = params["ncores"]
+    memory = params["memory"]
     mail = params["mail"]
     path = params["path"]
     min_band = params["min_band"]
@@ -56,17 +60,15 @@ def generate_step2_submit_template(params):
     trajectory_xyz_filename = params["trajectory_xyz_filename"]
 
     file_content = """#!/bin/sh
-###SBATCH --partition=scavenger  --qos=scavenger
-###SBATCH --clusters=faculty
-#SBATCH --partition=debug  --qos=debug
-#SBATCH --clusters=ub-hpc
+#SBATCH --partition="""+partition+"""  --qos="""+partition+"""
+#SBATCH --clusters="""+clusters+"""
 #SBATCH --constraint=CPU-Gold-6130
 #SBATCH --time="""+time+"""
 #SBATCH --nodes=1
 #SBATCH --requeue
-#SBATCH --ntasks-per-node=32
+#SBATCH --ntasks-per-node="""+str(ncores)+"""
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=128000
+#SBATCH --mem="""+str(memory)+"""
 #SBATCH --mail-user="""+mail+"""
 echo "SLURM_JOBID="$SLURM_JOBID
 echo "SLURM_JOB_NODELIST="$SLURM_JOB_NODELIST
@@ -133,7 +135,7 @@ print( params )
 step2_many_body.run_step2_many_body( params )
 " 
 
-"""
+"""   
 
     f = open("submit_template.slm", "w")
     f.write(file_content)
@@ -249,10 +251,10 @@ def run_step2_jobs(params):
 
 def main(params):
     generate_step2_submit_template(params)
-    initialize_step2_jobs(params)
+    run_step2_jobs(params)
 
 
 if __name__ == '__main__':
-    params = {"time":"2:00:00", "mail":"bsmith24@buffalo.edu", "min_band":28, "max_band":29, "homo_index":28, "dt":41.341374575751, "project_name":"c10h16", "trajectory_xyz_filename":"c10h16.xyz", "es_software":"cp2k", "es_software_input_template":"cp2k_input_template.inp", "istep":0, "fstep":9, "njobs":4}
+    params = { "partition":"debug", "clusters":"ub-hpc", "time":"1:00:00", "ncores":32, "memory":50000, "mail":"bsmith24@buffalo.edu", "min_band":28, "max_band":29, "homo_index":28, "dt":41.0, "project_name":"c10h16", "trajectory_xyz_filename":"c10h16.xyz", "path":"/panasas/scratch/grp-alexeyak/brendan/active_projects/libra_development/test_black_box", "es_software":"cp2k", "es_software_input_template":"cp2k_input_template.inp", "istep":0, "fstep":1, "njobs":1}
     logger.debug("Running step2 recipe")
     main(params)

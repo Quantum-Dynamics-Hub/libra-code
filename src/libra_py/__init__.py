@@ -61,6 +61,6 @@ __all__ = ["dynamics",
            "unavoided",
            "units",
            "vesta2qe",
-           "libra_executables.py"
+           "libra_executable.py"
           ]
 
