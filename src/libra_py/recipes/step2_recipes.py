@@ -66,10 +66,12 @@ def make_step2_submit_template(params):
 
                        "project_name":"libra_step2",
                        "min_band":0, "max_band":1, "homo_index":0, 
-
+                       "isUKS":0,   
 
                        "dt":41.0, 
-                       "trajectory_xyz_filename":"md.xyz", "path":""
+                       "trajectory_xyz_filename":"md.xyz", "results_path":"",
+
+                       "do_cube_visualization":0, "states_to_be_plotted":0
                       }
     comn.check_input(params, default_params, critical_params)
     logger.debug("Checked params in function generate_template")
@@ -95,7 +97,7 @@ def make_step2_submit_template(params):
 
     if params["ncores"]!=None:
         ncores = params["ncores"]
-        file_content = file_content + F"""#SBATCH --nodes={ncores}\n"""
+        file_content = file_content + F"""#SBATCH --ntasks-per-node={ncores}\n"""
 
     if params["cpus_per_task"]!=None:
         cpus_per_task = params["cpus_per_task"]
@@ -107,7 +109,7 @@ def make_step2_submit_template(params):
 
     if params["memory"]!=None:
         memory = params["memory"]
-        file_content = file_content + F"""#SBATCH --memory={memory}\n"""
+        file_content = file_content + F"""#SBATCH --mem={memory}\n"""
 
     if params["email"]!=None:
         email = params["email"]
@@ -116,8 +118,8 @@ def make_step2_submit_template(params):
 
     #========== Additional setup for CCR  ==================
 
-    file_content = file_content + 
-"""echo "SLURM_JOBID="$SLURM_JOBID
+    file_content = file_content + F"""
+echo "SLURM_JOBID="$SLURM_JOBID
 echo "SLURM_JOB_NODELIST="$SLURM_JOB_NODELIST
 echo "SLURM_NNODES="$SLURM_NNODES
 echo "SLURMTMPDIR="$SLURMTMPDIR
@@ -135,18 +137,8 @@ else
 fi
 export OMP_NUM_THREADS=$omp_threads"""
 
-
-    #========== Additional setup for CCR  ==================
-
-    path = params["path"]
-    min_band = params["min_band"]
-    max_band = params["max_band"]
-    homo_index = params["homo_index"]
-    dt = params["dt"]
-    project_name = params["project_name"]
-    trajectory_xyz_filename = params["trajectory_xyz_filename"]
-
-    file_content = file_content + """
+    #===== Initialize variables to be updated by the job distributor ===========
+    file_content = file_content + F"""
 
 job_init_step=
 nsteps_this_job=
@@ -167,16 +159,15 @@ njob=
     max_band = params["max_band"]
     homo_index = params["homo_index"]
 
-    path = params["results_path"]
-
     dt = params["dt"]
+
+    path = params["results_path"]
 
     do_cube_visualization = params["do_cube_visualization"]
     states_to_be_plotted = params["states_to_be_plotted"]
 
-
-    file_content = file_content +
-F"""python -c "from libra_py.workflows.nbra import step2_many_body
+    file_content = file_content +F"""
+python -c "from libra_py.workflows.nbra import step2_many_body
 params = {{}}
 params[\\"es_software\\"]=\\"{es_software}\\"
 params[\\"es_software_input_template\\"]=\\"{es_software_input_template}\\"
@@ -197,10 +188,11 @@ params[\\"do_cube_visualization\\"]={do_cube_visualization}
 params[\\"path_to_tcl_file\\"] = \\"{path}/cube.tcl\\"
 params[\\"states_to_be_plotted\\"]=\\"{states_to_be_plotted}\\"
 params[\\"mo_images_directory\\"] = \\"{path}/mo_images\\"
-params[\\"logfile_directory\\"]=\\"{path}/logs\\"
+params[\\"logfile_directory\\"]=\\"logfiles\\"
 print( params )
 step2_many_body.run_step2_many_body( params )
 "
+
 """   
 
     f = open("submit_template.slm", "w")
@@ -238,8 +230,8 @@ def run_step2_jobs(params):
     trajectory_xyz_filename = params["trajectory_xyz_filename"]
     es_software = params["es_software"]
     es_software_input_template = params["es_software_input_template"]
-    istep = params["istep"]
-    fstep = params["fstep"]
+    init_md_step = params["istep"]
+    final_md_step = params["fstep"]
     njobs = params["njobs"]
 
     # Initialize the jobs
@@ -247,7 +239,7 @@ def run_step2_jobs(params):
 
         logger.debug(f"Within the loops over njobs, initializing job: {njob}")
 
-        job_init_step, job_final_step = step2_many_body.curr_and_final_step_job( istep, fstep, njobs, njob )
+        job_init_step, job_final_step = step2_many_body.curr_and_final_step_job( init_md_step, final_md_step, njobs, njob )
         nsteps_this_job = job_final_step - job_init_step + 1
         logger.debug(f"The initial step for the job {njob} is: {job_init_step} with final step: {job_final_step}")
         logger.debug(f"nsteps_this_job is: {nsteps_this_job}")
