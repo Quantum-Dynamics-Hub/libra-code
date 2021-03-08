@@ -501,85 +501,6 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
 
 
 
-def apply_state_reordering_ci(St, E, params):
-    """
-    Performs the state's identity reordering in a given basis for all time steps.
-    This is reflects in the corresponding changess of the TDM.
-    Args:
-        St ( list of CMATRIX(nstates, nstates) ): TDM for each timestep
-        E ( list of CMATRIX(nstates, nstates) ): energies of all states at every step
-        params ( dictionary ): parameters controlling the reordering
-            * **params["do_state_reordering"]** ( int ): option to select the state reordering algorithm 
-                Available options:
-                    - 1: older version developed by Kosuke Sato, may not the working all the times
-                    - 2: Munkres-Kuhn (Hungarian) method [default]
-            * **params["state_reordering_alpha"]** ( double ): a parameter that controls how 
-                many states will be included in the reordering
-    Returns:
-        None: but changes the input St object
-    """
-
-    critical_params = [ ]
-    default_params = { "do_state_reordering":2, "state_reordering_alpha":0.0 }
-    comn.check_input(params, default_params, critical_params)
-
-    nsteps  = len(St)
-    nstates = St[0].num_of_cols 
-
-    # Initialize the cumulative permutation as the identity permutation
-    perm_cum = intList() # cumulative permutation for alpha spatial orbitals
-    for i in range(0,nstates):
-        perm_cum.append(i)
-
-    # Current permutation
-    perm_t = intList() 
-    for i in range(0,nstates):
-        perm_t.append(i)
- 
-    for i in range(0, nsteps):
-
-        if params["do_state_reordering"]==1:
-            """
-            A simple approach based on permuations - but this is not robust
-            may have loops
-            """
-            perm_t = get_reordering(St[i])
-
-            # apply the cumulative permutation  
-            update_permutation(perm_t, perm_cum)
-
-            # apply the permutation
-            # Because St = <psi(t)|psi(t+dt)> - we permute only columns
-            St[i].permute_cols(perm_cum)
-
-            E[i].permute_cols(perm_cum)
-            E[i].permute_rows(perm_cum)
-
-
-        elif params["do_state_reordering"]==2:
-            """
-            The Hungarian approach
-            """
-
-            # Permute rows for this time-step
-            St[i].permute_rows(perm_t)
-
-            # compute the cost matrices
-            cost_mat = make_cost_mat(St[i], E[i], params["state_reordering_alpha"])
-
-            # Solve the optimal assignment problem for this time-step
-            res = hungarian.maximize(cost_mat)
-
-            # Convert the list of lists into the permutation object
-            for row in res:
-                perm_t[row[0]] = row[1]  # for < i | i > this becomes a new value: perm_t = P_{n+1}
-
-            # Permute the blocks by col
-            St[i].permute_cols(perm_t)
-
-
-
-
 def form_Hvib_real( params ):
     """
     This function forms the real part of the vibronic Hamiltonian by inserting the 
@@ -713,8 +634,6 @@ def run_step2_many_body( params ):
 
             res_dir (string): The full path to res directory where the output data are stored.
 
-            dt (float): The time step in atomic unit used in molecular dynamics calculations.
-
             logfile_directory (string): The path to where the log files are stored.
 
     Returns:
@@ -725,9 +644,9 @@ def run_step2_many_body( params ):
     # Current working directory
     pwd = os.getcwd()
     # Critical variables
-    critical_params = ["min_band", "max_band", "ks_orbital_homo_index", "nsteps_this_job", 'trajectory_xyz_filename']
+    critical_params = []
     # Default parameters
-    default_params = { "isUKS": 0, "es_software": "cp2k", "es_software_exe": "cp2k.psmp", "es_software_input_template": "cp2k_input_template.inp", "project_name": "Libra_CP2K", "njob": 1, "nprocs": 2, "dt":  41.3393964448119, "logfile_directory": "logfiles", "istep": 0, "do_cube_visualization": 0, "states_to_be_plotted": [] }
+    default_params = { "min_band":1, "max_band":1, "ks_orbital_homo_index":0, "nsteps_this_job":1, 'trajectory_xyz_filename':"md.xyz", "isUKS": 0, "es_software": "cp2k", "es_software_exe": "cp2k.popt", "es_software_input_template": "cp2k_input_template.inp", "project_name": "Libra_CP2K", "njob": 1, "nprocs": 2, "logfile_directory": "logfiles", "istep": 0, "do_cube_visualization": 0, "states_to_be_plotted": [], "waveplot_exe":"/util/academic/dftbplus/20.2.1-arpack/bin/waveplot" }
     # Check input
     comn.check_input(params, default_params, critical_params)  
 
@@ -749,7 +668,7 @@ def run_step2_many_body( params ):
 
     # Number of steps for this job
     nsteps_this_job = int(params["nsteps_this_job"])
-    es_software = params["es_software"].lower()
+    es_software = params["es_software"].lower()    
     params.update( {"es_software": es_software} )
 
     # The electronic structure software, for example cp2k
@@ -765,6 +684,7 @@ def run_step2_many_body( params ):
     elif es_software == "dftb+":
         dftbp_exe = params["es_software_exe"]
         dftb_input_template = params["es_software_input_template"]
+        waveplot_exe = params["waveplot_exe"]
 
     # The project name, this is important since the cube files are produced based on the project_name
     project_name = params["project_name"]
@@ -779,9 +699,6 @@ def run_step2_many_body( params ):
 
     # The path to res directory where the overlap matrices, energies, and NACs are stored
     res_dir = params["res_dir"]
-
-    # The time step in atomic unit, used to compute the NACs
-    dt = float(params["dt"])
 
     # The path to log files produced by CP2K
     logfile_directory = params["logfile_directory"]
@@ -856,7 +773,7 @@ def run_step2_many_body( params ):
         os.system("mv EXC_"+str(curr_step)+".DAT logfiles/.")
         os.system("mv TRA.DAT TRA_"+str(curr_step)+".DAT")
         os.system("mv TRA_"+str(curr_step)+".DAT logfiles/.")
-        DFTB_methods.cube_generator_dftbplus( project_name, curr_step, ks_orbital_indicies[0], ks_orbital_indicies[-1], "/util/academic/dftbplus/19.1-arpack/bin/waveplot", int(params["isUKS"]) )
+        DFTB_methods.cube_generator_dftbplus( project_name, curr_step, ks_orbital_indicies[0], ks_orbital_indicies[-1], waveplot_exe, int(params["isUKS"]) )
 
     os.system("mv *.cube cubefiles")
     # Print the elapsed time for CP2K calculations for this step.
@@ -952,7 +869,7 @@ def run_step2_many_body( params ):
             os.system("mv EXC_"+str(curr_step)+".DAT logfiles/.")
             os.system("mv TRA.DAT TRA_"+str(curr_step)+".DAT")
             os.system("mv TRA_"+str(curr_step)+".DAT logfiles/.")
-            DFTB_methods.cube_generator_dftbplus( project_name, curr_step, ks_orbital_indicies[0], ks_orbital_indicies[-1], "/util/academic/dftbplus/19.1-arpack/bin/waveplot", int(params["isUKS"]) )
+            DFTB_methods.cube_generator_dftbplus( project_name, curr_step, ks_orbital_indicies[0], ks_orbital_indicies[-1], waveplot_exe, int(params["isUKS"]) )
   
         os.system("mv *.cube cubefiles")
         # Print the Timing

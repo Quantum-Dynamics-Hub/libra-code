@@ -63,12 +63,12 @@ def make_step2_submit_template(params):
 
                        "es_software":"cp2k",  "es_software_input_template": "cp2k_input_template.inp",
                        "es_software_exe":"/panasas/scratch/grp-alexeyak/brendan/cp2k/exe/local/cp2k.popt",
+                       "waveplot_exe":"/util/academic/dftbplus/20.2.1-arpack/bin/waveplot",
 
                        "project_name":"libra_step2",
                        "min_band":0, "max_band":1, "homo_index":0, 
                        "isUKS":0,   
 
-                       "dt":41.0, 
                        "trajectory_xyz_filename":"md.xyz", "results_path":"",
 
                        "do_cube_visualization":0, "states_to_be_plotted":0
@@ -125,9 +125,6 @@ echo "SLURM_NNODES="$SLURM_NNODES
 echo "SLURMTMPDIR="$SLURMTMPDIR
 echo "working directory="$SLURM_SUBMIT_DIR
 
-module load cuda/6.5
-module load vmd/v1.9
-module load openmpi/3.0.3/gcc-7.3.0
 export I_MPI_PMI_LIBRARY=/usr/lib64/libpmi.so
 
 if [ -n "$SLURM_CPUS_PER_TASK" ]; then
@@ -135,7 +132,15 @@ if [ -n "$SLURM_CPUS_PER_TASK" ]; then
 else
   omp_threads=1
 fi
-export OMP_NUM_THREADS=$omp_threads"""
+export OMP_NUM_THREADS=$omp_threads
+"""
+
+
+    #===== Module loading ===========
+    modules = params["modules"]
+    for module in modules:
+        file_content = file_content + F"""
+module load """+module+""""""
 
     #===== Initialize variables to be updated by the job distributor ===========
     file_content = file_content + F"""
@@ -150,7 +155,6 @@ njob=
     es_software = params["es_software"]
     es_software_input_template = params["es_software_input_template"]
     es_software_exe = params["es_software_exe"]
-
     project_name = params["project_name"]
     trajectory_xyz_filename = params["trajectory_xyz_filename"]
 
@@ -158,8 +162,6 @@ njob=
     min_band = params["min_band"]
     max_band = params["max_band"]
     homo_index = params["homo_index"]
-
-    dt = params["dt"]
 
     path = params["results_path"]
 
@@ -171,7 +173,14 @@ python -c "from libra_py.workflows.nbra import step2_many_body
 params = {{}}
 params[\\"es_software\\"]=\\"{es_software}\\"
 params[\\"es_software_input_template\\"]=\\"{es_software_input_template}\\"
-params[\\"es_software_exe\\"]=\\"{es_software_exe}\\"
+params[\\"es_software_exe\\"]=\\"{es_software_exe}\\" """
+
+    if es_software == "dftb+":    
+        waveplot_exe = params["waveplot_exe"]
+        file_content = file_content +F"""
+params[\\"waveplot_exe\\"]=\\"{waveplot_exe}\\" """
+
+    file_content = file_content +F"""
 params[\\"nprocs\\"]=\\"$SLURM_NTASKS_PER_NODE\\"
 params[\\"project_name\\"]=\\"{project_name}\\"
 params[\\"trajectory_xyz_filename\\"]=\\"{trajectory_xyz_filename}\\"
@@ -183,7 +192,6 @@ params[\\"istep\\"]=\\"$job_init_step\\"
 params[\\"nsteps_this_job\\"]=\\"$nsteps_this_job\\"
 params[\\"njob\\"]=\\"$njob\\"
 params[\\"res_dir\\"]=\\"{path}/res\\"
-params[\\"dt\\"]={dt}
 params[\\"do_cube_visualization\\"]={do_cube_visualization}
 params[\\"path_to_tcl_file\\"] = \\"{path}/cube.tcl\\"
 params[\\"states_to_be_plotted\\"]=\\"{states_to_be_plotted}\\"
@@ -216,7 +224,7 @@ def run_step2_jobs(params):
     logger.debug("Entered into the function initialize_step2_jobs")
 
     critical_params = []
-    default_params = { "trajectory_xyz_filename":"md.xyz", "es_software":"cp2k", "es_software_input_template":"cp2k_input_template", "istep":0, "fstep":1, "njobs":1, "waveplot_input_template":"waveplot_in.hsd",  }
+    default_params = { "trajectory_xyz_filename":"md.xyz", "es_software":"cp2k", "es_software_input_template":"cp2k_input_template", "istep":0, "fstep":1, "njobs":1, "waveplot_input_template":"waveplot_in.hsd" }
     comn.check_input(params, default_params, critical_params)
     logger.debug("Checked params in the function initialize_step2_jobs")
     
@@ -233,6 +241,9 @@ def run_step2_jobs(params):
     init_md_step = params["istep"]
     final_md_step = params["fstep"]
     njobs = params["njobs"]
+
+    if es_software == "dftb+":
+        waveplot_input_template = params["waveplot_input_template"]
 
     # Initialize the jobs
     for njob in range(njobs):
@@ -309,7 +320,7 @@ def run_step2_jobs(params):
 
 
 if __name__ == '__main__':
-    params = { "partition":"debug", "clusters":"ub-hpc", "time":"1:00:00", "ncores":32, "memory":50000, "mail":"bsmith24@buffalo.edu", "min_band":28, "max_band":29, "homo_index":28, "dt":41.0, "project_name":"c10h16", "trajectory_xyz_filename":"c10h16.xyz", "path":"/panasas/scratch/grp-alexeyak/brendan/active_projects/libra_development/test_black_box", "es_software":"cp2k", "es_software_input_template":"cp2k_input_template.inp", "istep":0, "fstep":1, "njobs":1}
+    params = { "partition":"debug", "clusters":"ub-hpc", "time":"1:00:00", "ncores":32, "memory":50000, "mail":"bsmith24@buffalo.edu", "min_band":28, "max_band":29, "homo_index":28, "project_name":"c10h16", "trajectory_xyz_filename":"c10h16.xyz", "path":"/panasas/scratch/grp-alexeyak/brendan/active_projects/libra_development/test_black_box", "es_software":"cp2k", "es_software_input_template":"cp2k_input_template.inp", "istep":0, "fstep":1, "njobs":1}
     logger.debug("Running step2 recipe")
 
     make_step2_submit_template(params)
