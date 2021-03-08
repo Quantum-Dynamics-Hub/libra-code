@@ -133,14 +133,13 @@ else
   omp_threads=1
 fi
 export OMP_NUM_THREADS=$omp_threads
-"""
 
+"""
 
     #===== Module loading ===========
     modules = params["modules"]
     for module in modules:
-        file_content = file_content + F"""
-module load """+module+""""""
+        file_content = file_content + F"""module load {module}\n"""
 
     #===== Initialize variables to be updated by the job distributor ===========
     file_content = file_content + F"""
