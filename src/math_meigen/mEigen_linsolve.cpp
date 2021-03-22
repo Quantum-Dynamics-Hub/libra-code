@@ -41,6 +41,9 @@ bool linsys_solver(const MATRIX& A, MATRIX& X, const MATRIX& B, const double Nor
   // if that fails, tries again using singular value decomposition (SVD)
 */
 
+    std::cout<<"Not implemented. Exiting...\n";
+    exit(0);
+
     int i,j;   // counters
 
     if(A.n_rows!=A.n_cols){
@@ -58,8 +61,8 @@ bool linsys_solver(const MATRIX& A, MATRIX& X, const MATRIX& B, const double Nor
 
     // Set dimentions
     int N = A.n_rows; // the dimension of the matrix A (square)
-/*
 
+/*
     // Convert out matrices to the Eigen types:
     MatrixXd a(N,N); for(i=0;i<N;i++){  for(j=0;j<N;j++){  a(i,j) = A.M[i*N+j];  }    }// for i
     VectorXd x(N);   for(i=0;i<N;i++){  x(i) = 0.0;   }// for i
@@ -102,7 +105,6 @@ bool linsys_solver(const MATRIX& A, MATRIX& X, const MATRIX& B, const double Nor
 
     // Copy results from the intermediate variable back into the argument
     for(i=0;i<N;i++){  X.M[i] = x(i);   }// for i
-
 */
 
     return true;
