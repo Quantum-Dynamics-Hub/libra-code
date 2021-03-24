@@ -274,16 +274,22 @@ CMATRIX Wfcgrid2::get_den_mat(int rep){
 
   CMATRIX res(nstates, nstates);  
 
+  double nrm; nrm = 0.0;
+
   for(int npt1=0; npt1<Npts; npt1++){
 
     if(rep==0){
       res += (PSI_dia[npt1] * PSI_dia[npt1].H());
+      nrm += (PSI_dia[npt1].H() * PSI_dia[npt1]).get(0,0).real();
     }
     else if(rep==1){
       res += (PSI_adi[npt1] * PSI_adi[npt1].H());
+      nrm += (PSI_adi[npt1].H() * PSI_adi[npt1]).get(0,0).real();
     }
 
   }// for npt1
+
+  res = res / nrm;
 
   return res;
 
