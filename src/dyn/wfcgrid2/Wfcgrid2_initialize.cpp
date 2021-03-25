@@ -298,11 +298,11 @@ void Wfcgrid2::add_wfc_ARB(bp::object py_funct, bp::object params, int rep){
   CMATRIX res(nstates, 1);
 
   for(int i=0;i<Npts;i++){      
-      vector<double> x(ndof, 0.0);
+      MATRIX x(ndof, 1);
 
       for(int idof=0; idof<ndof; idof++){
           int ipt = gmap[i][idof];          /// index of the point in that dof
-          x[idof] = rgrid[idof]->M[ipt];
+          x.set(idof, 0, rgrid[idof]->M[ipt] );
       }
 
       res = bp::extract< CMATRIX >( py_funct(x, params) );
