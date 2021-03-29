@@ -229,19 +229,15 @@ public:
   void update_diabatic();
 
 
-
-
-/*
   // Print 1D and 2D wavefunctions to file
-  void print_wfc_1D(std::string prefix, int snap, int state);
-  void print_wfc_2D(std::string prefix, int snap, int state);
-  void print_reci_wfc_1D(std::string prefix, int snap, int state);
-  void print_reci_wfc_2D(std::string prefix, int snap, int state);
-  void print_ham_1D(std::string prefix, int i, int j);
-  void print_expH_1D(std::string prefix, int i, int j);
-  void print_expK_1D(std::string prefix, int i);
+  void print_wfc_1D(std::string prefix, int rep, vector<int>& states, int do_real, int do_imag, int do_dens);
+  void print_reci_wfc_1D(std::string prefix, int rep, vector<int>& states, int do_real, int do_imag, int do_dens);
 
- 
+  void print_wfc_2D(std::string prefix, int rep, int state, int do_real, int do_imag, int do_dens);
+  void print_reci_wfc_2D(std::string prefix, int rep, int state, int do_real, int do_imag, int do_dens);
+
+
+/* 
   // Print state-resolved populations 
   double print_populations_1D(string filename,int snap);
   double print_populations_2D(string filename,int snap);

@@ -225,6 +225,12 @@ void export_Wfcgrid2_objects(){
       .def("update_adiabatic",  &Wfcgrid2::update_adiabatic)
       .def("update_diabatic",   &Wfcgrid2::update_diabatic)
 
+      /**  Wfcgrid2_io    */
+      .def("print_wfc_1D", &Wfcgrid2::print_wfc_1D)
+      .def("print_reci_wfc_1D", &Wfcgrid2::print_reci_wfc_1D)
+
+      .def("print_wfc_2D", &Wfcgrid2::print_wfc_2D)
+      .def("print_reci_wfc_2D", &Wfcgrid2::print_reci_wfc_2D)
 
 
        /*
