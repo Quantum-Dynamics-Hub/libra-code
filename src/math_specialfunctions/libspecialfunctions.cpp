@@ -92,7 +92,9 @@ void export_SpecialFunctions_objects(){
   def("exp1_", expt_exp1__v2);
 
   boost::python::list (*expt_merge_sort_v1)(boost::python::list) = &merge_sort;
+  int (*expt_merge_sort_v2)(vector<double>&, vector<double>&) = &merge_sort;
   def("merge_sort", expt_merge_sort_v1); 
+  def("merge_sort", expt_merge_sort_v2); 
 
 
   MATRIX (*expt_mean_v1)(MATRIX& X) = &mean;
