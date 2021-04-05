@@ -19,6 +19,7 @@
 
 #include "../math_linalg/liblinalg.h"
 #include "../math_data/libdata.h"
+#include "../math_random/librandom.h"
 #include "../math_specialfunctions/libspecialfunctions.h"
 
 
@@ -28,6 +29,7 @@ namespace liblibra{
 using namespace boost::python;
 using namespace liblinalg;
 using namespace libdata;
+using namespace librandom;
 using namespace libspecialfunctions;
 using namespace std;
 
@@ -105,6 +107,9 @@ public:
   vector<MATRIX> dW; // for momentum term
   vector<MATRIX> dWcurr; // for batch
   vector<MATRIX> dWold; 
+//  vector<MATRIX> NET;  // net values    NET[L] = W[L]*Y[L-1] + B[L]; where X is the input, the output of the layer L-1
+//  vector<MATRIX> TF;   // transfer function   e.g.  Y[L] = tanh(NET[L]), element by element 
+//  vector<MATRIX> dF;   // derivative of the transfer functions, e.g. dF[L] = 1- Y[L]*Y[L], element by element
   vector<MATRIX> D;
   vector<MATRIX> Delta;
  
@@ -128,7 +133,9 @@ public:
    derivs_flag = 0;
 
    scale_method = "none";
- }
+  }
+
+  NeuralNetwork(vector<int>& arch);
 
 
   // Copy constructor
@@ -136,6 +143,18 @@ public:
 
   // Destructor
   ~NeuralNetwork(); 
+
+  vector<MATRIX> propagate(MATRIX& input);
+  double back_propagate(vector<MATRIX>& Y, MATRIX& target);
+
+  // Init weights and biases
+  void init_weights_biases_uniform(Random& rnd, double left_w, double right_w, double left_b, double right_b);
+  void init_weights_biases_normal(Random& rnd, double scaling_w, double shift_w, double scaling_b, double shift_b);
+
+
+  // Training
+  void train(Random& rnd, bp::dict params, MATRIX& inputs, MATRIX& targets);
+
 
   // Methods
   void CreateANN(boost::python::list);
@@ -164,11 +183,13 @@ public:
   int NormalizeAndTransformTrainingData(int,int);
   int CropTrainingData(boost::python::list,boost::python::list);
 
+  //void set_parameters(boost::python::dict params);
+
   void ANNTrain();
-  int Propagate(boost::python::list input, boost::python::list& result);
-  int Propagate(const MATRIX& input, MATRIX& result);
-  int Propagate(boost::python::list input, boost::python::list& result, boost::python::list& derivs);
+//  int Propagate(const MATRIX& input, MATRIX& result);
+//  int Propagate(boost::python::list input, boost::python::list& result);
   int Propagate(const MATRIX& input, MATRIX& result, MATRIX& derivs);  
+  int Propagate(boost::python::list input, boost::python::list& result, boost::python::list& derivs);
   void LearningHistory(std::string filename,std::string data_flag);
 
 
