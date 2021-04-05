@@ -1,0 +1,394 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>compute_hprime &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="compute_properties" href="compute_properties.html" />
+    <link rel="prev" title="nbra" href="../nbra.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../models.html">models</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../workflows.html">workflows</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../nbra.html">nbra</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">compute_hprime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="compute_properties.html">compute_properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="decoherence_times.html">decoherence_times</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lz.html">lz</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapping.html">mapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="qsh.html">qsh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2.html">step2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_analysis.html">step2_analysis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_dftb.html">step2_dftb</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_ergoscf.html">step2_ergoscf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_many_body.html">step2_many_body</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step3.html">step3</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step4.html">step4</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../nbra.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../libra_py.html">libra_py</a> &raquo;</li>
+        
+          <li><a href="../../workflows.html">workflows</a> &raquo;</li>
+        
+          <li><a href="../nbra.html">nbra</a> &raquo;</li>
+        
+      <li>compute_hprime</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../../_sources/reference/libra_py/workflows/nbra/compute_hprime.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.workflows.nbra.compute_hprime">
+<span id="compute-hprime"></span><h1>compute_hprime<a class="headerlink" href="#module-libra_py.workflows.nbra.compute_hprime" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-compute_hprime"></span><dl class="py function">
+<dt id="libra_py.workflows.nbra.compute_hprime.compute_hprime_dia">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.compute_hprime.</span></code><code class="sig-name descname"><span class="pre">compute_hprime_dia</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">es</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/compute_hprime.html#compute_hprime_dia"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.compute_hprime.compute_hprime_dia" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the matrix elements of transition dipole  moments</p>
+<p>This function computes the matrix elements of the dipole operator for the
+case without SOC, and prints them to them to the file specificed by the
+function parameter “filename”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>es</strong> (<em>dictionary</em>) – <p>Information about electronic structure.</p>
+<ul>
+<li><dl class="simple">
+<dt><strong>es[“Coeff_dia”]</strong> ( list of CMATRIX(npw, len(act_space)) objects )<span class="classifier">the</span></dt><dd><p>wavefunction coefficients in the planewave basis for the spin-diabatic wavefunctions, such
+that res_curr[“Coeff_dia”][k] is a matrix for the k-point with index k.
+Can be generated by ..seealso::step2.read_wfc_grid</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>es[“grid”]</strong> ( list of VECTOR objects ): the grid point vectors [ units: tpiba ]</dt><dd><p>Can be generated by ..seealso::step2.read_wfc_grid</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+<li><p><strong>info</strong> (<em>dictionary</em>) – <p>The basic information regarding the system. ..seealso::QE_methods.read_qe_index
+step2.read_info to see how this object can be generated. For the purpose of this calculation, it should include:</p>
+<ul>
+<li><p><strong>info[“b1”]</strong> ( VECTOR ): reciprocal lattice vector 1 [units: Bohr^-1]</p></li>
+<li><p><strong>info[“b2”]</strong> ( VECTOR ): reciprocal lattice vector 2 [units: Bohr^-1]</p></li>
+<li><p><strong>info[“b3”]</strong> ( VECTOR ): reciprocal lattice vector 3 [units: Bohr^-1]</p></li>
+</ul>
+</p></li>
+<li><p><strong>filename</strong> (<em>string</em>) – This is the name of the output file where the data will be printed out</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Hprime_x, Hprime_y, Hprime_z:</dt><dd><p>the matrices with i*hbar*&lt;i|r_alpha|j&gt; matrix elements, where N = len(act_space) for alpha = x, y, z
+Here, the act_space includes both the alpha and beta-orbitals</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>[CMATRIX(N/2, N/2) , CMATRIX(N/2, N/2), CMATRIX(N/2, N/2) ]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.compute_hprime.hprime_py">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.compute_hprime.</span></code><code class="sig-name descname"><span class="pre">hprime_py</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">es</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/compute_hprime.html#hprime_py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.compute_hprime.hprime_py" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the matrix elements of transition dipole  moments</p>
+<p>This function computes the matrix elements of the dipole operator for the
+case without SOC, and prints them to them to the file specificed by the
+function parameter “filename”</p>
+<p>This is a Python-only version of the ::funct:<code class="docutils literal notranslate"><span class="pre">`compute_hprime_dia`</span></code>, so it is going
+to be slower than that version, but it allows more flexibility</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>es</strong> (<em>dictionary</em>) – <p>Information about electronic structure.</p>
+<ul>
+<li><dl class="simple">
+<dt><strong>es[“Coeff_dia”]</strong> ( list of CMATRIX(npw, len(act_space)) objects )<span class="classifier">the</span></dt><dd><p>wavefunction coefficients in the planewave basis for the spin-diabatic wavefunctions, such
+that res_curr[“Coeff_dia”][k] is a matrix for the k-point with index k.
+Can be generated by ..seealso::step2.read_wfc_grid</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>es[“grid”]</strong> ( list of VECTOR objects ): the grid point vectors [ units: tpiba ]</dt><dd><p>Can be generated by ..seealso::step2.read_wfc_grid</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+<li><p><strong>info</strong> (<em>dictionary</em>) – <p>The basic information regarding the system. ..seealso::QE_methods.read_qe_index
+step2.read_info to see how this object can be generated. For the purpose of this calculation, it should include:</p>
+<ul>
+<li><p><strong>info[“b1”]</strong> ( VECTOR ): reciprocal lattice vector 1 [units: Bohr^-1]</p></li>
+<li><p><strong>info[“b2”]</strong> ( VECTOR ): reciprocal lattice vector 2 [units: Bohr^-1]</p></li>
+<li><p><strong>info[“b3”]</strong> ( VECTOR ): reciprocal lattice vector 3 [units: Bohr^-1]</p></li>
+</ul>
+</p></li>
+<li><p><strong>filename</strong> (<em>string</em>) – This is the name of the output file where the data will be printed out</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Hprime_x, Hprime_y, Hprime_z:</dt><dd><p>the matrices with i*hbar*&lt;i|r_alpha|j&gt; matrix elements, where N = len(act_space) for alpha = x, y, z
+Here, the act_space includes both the alpha and beta-orbitals</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>[CMATRIX(N/2, N/2) , CMATRIX(N/2, N/2), CMATRIX(N/2, N/2) ]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="compute_properties.html" class="btn btn-neutral float-right" title="compute_properties" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../nbra.html" class="btn btn-neutral float-left" title="nbra" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,286 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.units &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.units</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.units</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#* Copyright (C) 2018-2019 Alexey V. Akimov</span>
+<span class="c1">#*</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: units</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module defines the units conversion factors and implements the </span>
+<span class="sd">       functions for unit conversion</span>
+
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="c1"># Unit conversions Parameters</span>
+<span class="c1"># Length units</span>
+<span class="n">Angst</span> <span class="o">=</span> <span class="mf">1.889725989</span>                                <span class="c1"># in Bohr</span>
+
+<span class="c1"># Energy units</span>
+<span class="n">inv_cm2ev</span> <span class="o">=</span> <span class="mf">1.239841870000000847635400992705E-4</span>    <span class="c1"># (1.0/8065.54468111324)</span>
+<span class="n">ev2Ha</span> <span class="o">=</span> <span class="mf">0.0367498438131637940538752710301</span>          <span class="c1"># (1.0/27.211)    # 27.2 ev is 1 Ha </span>
+<span class="n">ev2au</span> <span class="o">=</span> <span class="mf">0.0367498438131637940538752710301</span>          <span class="c1"># (1.0/27.211)    # 27.2 ev is 1 Ha </span>
+<span class="n">au2ev</span> <span class="o">=</span> <span class="mf">27.211</span>                                     <span class="c1"># 1 Ha = 27.211 eV</span>
+<span class="n">inv_cm2Ha</span> <span class="o">=</span> <span class="mf">4.5563995075520960186520193771085E-6</span>   <span class="c1"># inv_cm2ev * ev2Ha</span>
+<span class="n">hartree</span> <span class="o">=</span> <span class="mf">627.5094709</span>                              <span class="c1"># 1 Ha = 627.5.. kcal/mol</span>
+
+<span class="c1"># Time units</span>
+<span class="n">fs2au</span> <span class="o">=</span> <span class="mf">41.339396444811905746176105828855</span>          <span class="c1"># (1.0/0.02419)   # 41.34 a.u. is 1 fs </span>
+<span class="n">au2fs</span> <span class="o">=</span> <span class="mf">0.02419</span>                                    <span class="c1"># 41.34 a.u. is 1 fs</span>
+<span class="n">ps2au</span> <span class="o">=</span> <span class="mf">41.339396444811905746176105828855E+3</span>       <span class="c1"># </span>
+<span class="n">au2ps</span> <span class="o">=</span> <span class="mf">0.02419E-3</span>                                 <span class="c1"># </span>
+
+<span class="n">au2wavn</span> <span class="o">=</span> <span class="mf">219471.53631777237364</span>                    <span class="c1"># 27.211 * 8065.54468111324</span>
+<span class="n">wavn2au</span> <span class="o">=</span> <span class="mf">4.5563995075520960186520193771085E-6</span>     <span class="c1"># 1/au2wavn</span>
+
+<span class="c1"># Mass units</span>
+<span class="n">amu</span> <span class="o">=</span> <span class="mf">1836.0</span>                                       <span class="c1"># chemical mass unit in masses of electron</span>
+
+<span class="c1"># Fundamental constants</span>
+<span class="n">boltzmann</span> <span class="o">=</span> <span class="mf">1.9872065E-3</span>                           <span class="c1"># in kcal/mol*K</span>
+<span class="n">kB</span> <span class="o">=</span> <span class="mf">3.166815151251607985889922605788E-6</span>           <span class="c1"># Ha/mol*K</span>
+
+
+
+<div class="viewcode-block" id="length_converter"><a class="viewcode-back" href="../../reference/libra_py/units.html#libra_py.units.length_converter">[docs]</a><span class="k">def</span> <span class="nf">length_converter</span><span class="p">(</span><span class="n">inp_units</span><span class="p">,</span> <span class="n">out_units</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Length units conversion factor</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        inp_units ( int ): defines the input units</span>
+<span class="sd">        out_units ( int ): defines the output units</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        Both inp_units and out_units are encoded as follows:</span>
+
+<span class="sd">            * 0 - atomic units (Bohrs)</span>
+<span class="sd">            * 1 - Angstroms</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        double: the length units conversion factor</span>
+<span class="sd">         </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">scl</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">if</span> <span class="n">inp_units</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>  <span class="c1"># input in Bohrs</span>
+        <span class="k">if</span> <span class="n">out_units</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>  <span class="c1"># output in Bohrs</span>
+            <span class="n">scl</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">elif</span> <span class="n">out_units</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># output in Angstroms</span>
+            <span class="n">scl</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">Angst</span>
+
+    <span class="k">elif</span> <span class="n">inp_units</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># input in Angstroms</span>
+        <span class="k">if</span> <span class="n">out_units</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>  <span class="c1"># output in Bohrs</span>
+            <span class="n">scl</span> <span class="o">=</span> <span class="n">Angst</span>
+        <span class="k">elif</span> <span class="n">out_units</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># output in Angstroms</span>
+            <span class="n">scl</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="k">return</span> <span class="n">scl</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>hungarian &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="influence_spectrum" href="influence_spectrum.html" />
+    <link rel="prev" title="hpc_utils" href="hpc_utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>hungarian</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/hungarian.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.hungarian">
+<span id="hungarian"></span><h1>hungarian<a class="headerlink" href="#module-libra_py.hungarian" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="libra_py.hungarian.TestHungarian">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">libra_py.hungarian.</span></code><code class="sig-name descname"><span class="pre">TestHungarian</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runTest'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/hungarian.html#TestHungarian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.hungarian.TestHungarian" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="libra_py.hungarian.TestHungarian.test_maximize">
+<code class="sig-name descname"><span class="pre">test_maximize</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/hungarian.html#TestHungarian.test_maximize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.hungarian.TestHungarian.test_maximize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests the reordering algorithm</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libra_py.hungarian.TestHungarian.test_minimize">
+<code class="sig-name descname"><span class="pre">test_minimize</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/hungarian.html#TestHungarian.test_minimize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.hungarian.TestHungarian.test_minimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests the reordering algorithm</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.hungarian.maximize">
+<code class="sig-prename descclassname"><span class="pre">libra_py.hungarian.</span></code><code class="sig-name descname"><span class="pre">maximize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/hungarian.html#maximize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.hungarian.maximize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimize the negative of the original matrix</p>
+<p>We also need to shift the negative matrix up rigidly, so all its
+elements are &gt; 0.0</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.hungarian.step1">
+<code class="sig-prename descclassname"><span class="pre">libra_py.hungarian.</span></code><code class="sig-name descname"><span class="pre">step1</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/hungarian.html#step1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.hungarian.step1" title="Permalink to this definition">¶</a></dt>
+<dd><p>For each row of the matrix, find the smallest element and subtract it from every
+element in its row. Go to Step 2.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.hungarian.step2">
+<code class="sig-prename descclassname"><span class="pre">libra_py.hungarian.</span></code><code class="sig-name descname"><span class="pre">step2</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rcov</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ccov</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/hungarian.html#step2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.hungarian.step2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a zero (Z) in the resulting matrix. If there is no starred zero in its row or column,
+star Z. Repeat for each element in the matrix. Go to Step 3.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.hungarian.step3">
+<code class="sig-prename descclassname"><span class="pre">libra_py.hungarian.</span></code><code class="sig-name descname"><span class="pre">step3</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">M</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ccov</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/hungarian.html#step3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.hungarian.step3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cover each column containing a starred zero.
+If K columns are covered, the starred zeros describe a complete set of unique assignments.
+In this case, Go to DONE, otherwise, Go to Step 4.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.hungarian.step4">
+<code class="sig-prename descclassname"><span class="pre">libra_py.hungarian.</span></code><code class="sig-name descname"><span class="pre">step4</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rcov</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ccov</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/hungarian.html#step4"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.hungarian.step4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a noncovered zero and prime it.
+If there is no starred zero in the row containing this primed zero, Go to Step 5.
+Otherwise, cover this row and uncover the column containing the starred zero.
+Continue in this manner until there are no uncovered zeros left.
+Save the smallest uncovered value and Go to Step 6.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.hungarian.step5">
+<code class="sig-prename descclassname"><span class="pre">libra_py.hungarian.</span></code><code class="sig-name descname"><span class="pre">step5</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">M</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_row_0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_col_0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rcov</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ccov</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/hungarian.html#step5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.hungarian.step5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a series of alternating primed and starred zeros as follows.
+Let Z0 represent the uncovered primed zero found in Step 4.
+Let Z1 denote the starred zero in the column of Z0 (if any).
+Let Z2 denote the primed zero in the row of Z1 (there will always be one).
+Continue until the series terminates at a primed zero that has no starred zero in its column.
+Unstar each starred zero of the series, star each primed zero of the series, erase all primes
+and uncover every line in the matrix. Return to Step 3.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.hungarian.step6">
+<code class="sig-prename descclassname"><span class="pre">libra_py.hungarian.</span></code><code class="sig-name descname"><span class="pre">step6</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rcov</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ccov</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/hungarian.html#step6"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.hungarian.step6" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the value found in Step 4 to every element of each covered row, and subtract it from
+every element of each uncovered column.  Return to Step 4 without altering any stars,
+primes, or covered lines.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="influence_spectrum.html" class="btn btn-neutral float-right" title="influence_spectrum" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="hpc_utils.html" class="btn btn-neutral float-left" title="hpc_utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

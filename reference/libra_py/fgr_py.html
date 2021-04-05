@@ -1,0 +1,377 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>fgr_py &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="fit" href="fit.html" />
+    <link rel="prev" title="ERGO_methods" href="ERGO_methods.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>fgr_py</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/fgr_py.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.fgr_py">
+<span id="fgr-py"></span><h1>fgr_py<a class="headerlink" href="#module-libra_py.fgr_py" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-fgr_py"></span><dl class="py function">
+<dt id="libra_py.fgr_py.run_NEFGRL_populations">
+<code class="sig-prename descclassname"><span class="pre">libra_py.fgr_py.</span></code><code class="sig-name descname"><span class="pre">run_NEFGRL_populations</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">omega_DA</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">req_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_NE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/fgr_py.html#run_NEFGRL_populations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.fgr_py.run_NEFGRL_populations" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Noneq FGR in non-Condon/Condon case (linear coupling) using normal modes</dt><dd><p>k(t’) = 2/(hbar^2) * Re { int_0^t’ { dtau * C(tau) }  }</p>
+</dd>
+</dl>
+<p>Compute the non-equilibrium FGR populations as a function of time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>omega_DA</strong> (<em>double</em>) – energy gap between donor and acceptor states E(donor) - E(acceptor) [units: a.u.]</p></li>
+<li><p><strong>V</strong> (<em>double</em>) – electronic coupling between the two states [units: a.u.]</p></li>
+<li><p><strong>omega_nm</strong> (<em>list of doubles</em>) – frequencies of the bath normal modes [units: a.u.]</p></li>
+<li><p><strong>gamma_nm</strong> (<em>list of doubles</em>) – couplings of the bath modes to the quantum system/primary mode [units: a.u.]</p></li>
+<li><p><strong>req_nm</strong> (<em>list of doubles</em>) – displacements of the normal modes from their equilibrium positions upon the
+charge transfer</p></li>
+<li><p><strong>shift_NE</strong> (<em>list of doubles</em>) – non-equilibrium displacements of the normal modes</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>parameters controlling the execution of the calculations</p>
+<ul>
+<li><p><strong>params[“tmax”]</strong> ( double ): time since the initial photoexcitation [units: a.u. of time; default: 10 fs]</p></li>
+<li><p><strong>params[“dt”]</strong> ( double ): integration timestep for the forward propagation [units: a.u. of time, ]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“dtau”]</strong> ( double ): integration timestep for backward propagation,</dt><dd><p>used to take the integral above (tau = dtau*n &lt; t, where n is integer) [units: a.u.]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“method”]</strong> ( int ): flag that specifies which method to use:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0: Exact quantum result [ default ]</p></li>
+<li><p>1: LSC</p></li>
+<li><p>2: CAV</p></li>
+<li><p>3: CD</p></li>
+<li><p>4: W0</p></li>
+<li><p>5: C0</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>params[“dyn_type”]</strong> ( int ): flag that selects:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0: Condon [ default ]</p></li>
+<li><p>1: non-Condon</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>params[“Temperature”]</strong> ( double ): temperature of the bath [ units: K, default: 300.0 ]</p></li>
+<li><p><strong>params[“do_output”]</strong> ( Boolean ): whether to print out the results in a file [ default: False ]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“filename”]</strong> ( string ): the name of the file where the results would be</dt><dd><p>printed out if <code class="docutils literal notranslate"><span class="pre">`do_output`</span></code> is set to True [ default: “FGR.txt” ]</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(time, rate, pop), where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>time ( list of doubles ): time axis [ units: a.u. ]</p></li>
+<li><p>rate ( list of doubles ): time-dependent rate constants [ units: a.u.^-1 ]</p></li>
+<li><p>pop ( list of doubles ): time-dependent population of the donor state</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.fgr_py.run_NEFRG_acf">
+<code class="sig-prename descclassname"><span class="pre">libra_py.fgr_py.</span></code><code class="sig-name descname"><span class="pre">run_NEFRG_acf</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega_DA</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">req_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_NE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/fgr_py.html#run_NEFRG_acf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.fgr_py.run_NEFRG_acf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Noneq FGR in non-Condon/Condon case (linear coupling) using normal modes</p>
+<p>Compute the non-equilibrium FGR populations as a function of time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>double</em>) – compute the properties (e.g. rates) for the time t [units: a.u.]</p></li>
+<li><p><strong>SeeAlso</strong> – <code class="docutils literal notranslate"><span class="pre">`run_NEFGRL_populations`</span></code> - the present function takes the same arguments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(_tau, _argg_re, _argg_im, _lin_re, _lin_im, _C_re, _C_im, _int_re, _int_im), where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>_tau ( list of doubles ): time axis [ units: a.u. ]</p></li>
+<li><p>_argg_re ( list of doubles ): real part of the sum over frequencies - sitting in the exponent, at given tau</p></li>
+<li><p>_argg_im ( list of doubles ): imaginary part of the sum over frequencies - sitting in the exponent, at given tau</p></li>
+<li><p>_lin_re ( list of doubles ): real part of the linear term - in front of the exponent, at given tau</p></li>
+<li><p>_lin_im ( list of doubles ): imaginary part of the linear term - in front of the exponent, at given tau</p></li>
+<li><p>_C_re ( list of doubles ): real part of the time-correlation function, at given tau</p></li>
+<li><p>_C_im ( list of doubles ): real part of the time-correlation function, at given tau</p></li>
+<li><p>_int_re ( list of double ): integral of _C_re to this time point,   int_0_t { C(t,tau) dtau }  for a fixed t</p></li>
+<li><p>_int_re ( list of double ): integral of _C_re to this time point,   int_0_t { C(t,tau) dtau }  for a fixed t</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="fit.html" class="btn btn-neutral float-right" title="fit" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="ERGO_methods.html" class="btn btn-neutral float-left" title="ERGO_methods" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

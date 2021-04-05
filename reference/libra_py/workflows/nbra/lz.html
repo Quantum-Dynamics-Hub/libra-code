@@ -1,0 +1,438 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>lz &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="mapping" href="mapping.html" />
+    <link rel="prev" title="decoherence_times" href="decoherence_times.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../models.html">models</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../workflows.html">workflows</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../nbra.html">nbra</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="compute_hprime.html">compute_hprime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="compute_properties.html">compute_properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="decoherence_times.html">decoherence_times</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">lz</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapping.html">mapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="qsh.html">qsh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2.html">step2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_analysis.html">step2_analysis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_dftb.html">step2_dftb</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_ergoscf.html">step2_ergoscf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_many_body.html">step2_many_body</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step3.html">step3</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step4.html">step4</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../nbra.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../libra_py.html">libra_py</a> &raquo;</li>
+        
+          <li><a href="../../workflows.html">workflows</a> &raquo;</li>
+        
+          <li><a href="../nbra.html">nbra</a> &raquo;</li>
+        
+      <li>lz</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../../_sources/reference/libra_py/workflows/nbra/lz.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.workflows.nbra.lz">
+<span id="lz"></span><h1>lz<a class="headerlink" href="#module-libra_py.workflows.nbra.lz" title="Permalink to this headline">¶</a></h1>
+<p>Implementation of the Landau-Zener transition probability.</p>
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.lz.Belyaev_Lebedev">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.lz.</span></code><code class="sig-name descname"><span class="pre">Belyaev_Lebedev</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Hvib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/lz.html#Belyaev_Lebedev"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.lz.Belyaev_Lebedev" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Landau-Zener hopping probabilities based on the energy levels
+according to:
+(1) Belyaev, A. K.; Lebedev, O. V. Phys. Rev. A, 2011, 84, 014701</p>
+<p>See also:
+(2) Xie, W.; Domcke, W. J. Chem. Phys. 2017, 147, 184114
+(3) Crespo-Otero, R.; Barbatti, M. Chem. Rev. 2018, 188, 7026 - section: 3.2.3</p>
+<p>Specifics:
+1) The estimation of d^2E_ij / dt^2 is based on the 3-point Lagrange interpolation
+2) This is done within the NBRA</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Hvib</strong> (<em>list of CMATRIX</em><em>(</em><em>nstates</em><em>,</em><em>nstates</em><em>)</em>) – vibronic Hamiltonians along the trajectory</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>control parameters</p>
+<ul>
+<li><p><strong>params[“dt”]</strong> ( double ): time distance between the adjacent data points [ units: a.u., defaut: 41.0 ]</p></li>
+<li><p><strong>params[“T”]</strong> ( double ): temperature of the nuclear sub-system [ units: K, default: 300.0 ]</p></li>
+<li><dl>
+<dt><strong>params[“Boltz_opt_BL”]</strong> ( int ): option to select a probability of hopping acceptance [default: 1]</dt><dd><p>Options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0 - all proposed hops are accepted - no rejection based on energies</p></li>
+<li><p>1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)</p></li>
+<li><p>2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous</p></li>
+<li><p>3 - generalization of “1”, but actually it should be changed in case there are many degenerate levels</p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>params[“gap_min_exception”]</strong> ( int ): option to handle the situation when extrapolated gap minimum is negative</dt><dd><p>Options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0 - set to zero [ default ]</p></li>
+<li><p>1 - use the mid-point gap</p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>params[“target_space”]</strong> ( int ): how to select the space of target states for each source state</dt><dd><p>Options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0 - only adjacent states</p></li>
+<li><p>1 - all states available [ default ]</p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.lz.adjust_SD_probabilities">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.lz.</span></code><code class="sig-name descname"><span class="pre">adjust_SD_probabilities</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/lz.html#adjust_SD_probabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.lz.adjust_SD_probabilities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adjusts the surface hopping probabilties computed according to Belyaev-Lebedev’s work by setting the probability
+to hop between Slater determinants that differ by more than 1 electron to zero.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>P</strong> (<em>list of lists of MATRIX</em>) – each element of P contains the probability matrix according to the NBRA BLSH method</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – control parameters</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;excitations&quot;</strong><strong>]</strong> (<em>*</em>) – <dl>
+<dt>SDs themselves (QE or dftb+ non-tddftb) or the SD transitions (tddftb). If the excitations are non-changing, then the</dt><dd><p>length of excitations is 1. If excitations do change, then there must be an excitation list for each step. In this case,
+the length of excitation = nsteps = len(P)
+params[“excitation”][i][j][k] = kth SD step for the jth step of the ith nuclear trajectory</p>
+<blockquote>
+<div><p>i: index of nuclear trajectory
+j: index of timestep of nuclear trajectory i
+k: index of SD for the jth timestep on nuclear trajectory i</p>
+</div></blockquote>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Assume we have constructed SDs from a basis of 4 alpha and 4 beta Kohn-Sham spin-orbitals
+The ground state is defined as: [1, 2, -5, -6]. Consider only alpha-excitations</p>
+<p>We currently do non-tddftb computations by forming our own SDs in libra_py.workflows.nbra.step3</p>
+<ul>
+<li><p>QE or dftb+ non-tddftb - [ [ [1, 3, -5, -6], [1, 4, -5, -6], [3, 2, -5, -6], [4, 2, -5, -6] ] ]</p></li>
+</ul>
+<p>As tddftb is used exclusively with the BLSH-NBRA method, we usually just read the energies, and know information only regarding
+the index of the orbtial transitions, such as: [2 -&gt; 3]. So, we package this in the following form</p>
+<ul>
+<li><p>tddftb - [ [ [2,3], [2,4], [1,3], [1,4] ] ]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.lz.run">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.lz.</span></code><code class="sig-name descname"><span class="pre">run</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">H_vib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/lz.html#run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.lz.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main function to run the SH calculations based on the Landau-Zener hopping
+probabilities, all within the NBRA. The probabilities are implemented according to
+the Belyaev-Lebedev work.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> (<em>dictionary</em>) – control parameters</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;dt&quot;</strong><strong>]</strong> (<em>*</em>) – time distance between the adjacent data points [ units: a.u.; default: 41.0 a.u.]</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;ntraj&quot;</strong><strong>]</strong> (<em>*</em>) – how many stochastic trajectories to use in the ensemble [ defult: 1]</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;nsteps&quot;</strong><strong>]</strong> (<em>*</em>) – how nuclear steps in the trajectory to be computed [ defult: 1]</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;istate&quot;</strong><strong>]</strong> (<em>*</em>) – index of the starting state (within those used in the active_space) [ default: 0]</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;Boltz_opt&quot;</strong><strong>]</strong> (<em>*</em>) – <p>option to control the acceptance of the proposed hops
+Options:</p>
+<ul>
+<li><p>0 - all proposed hops are accepted - no rejection based on energies</p></li>
+<li><p>1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach) [ default ]</p></li>
+<li><p>2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous</p></li>
+<li><p>3 - generalization of “1”, but actually it should be changed in case there are many degenerate levels</p></li>
+</ul>
+</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;Boltz_opt_BL&quot;</strong><strong>]</strong> (<em>*</em>) – <p>what type of hop acceptance scheme to incorporate into the BL probabilities
+Options:</p>
+<ul>
+<li><p>0 - all proposed hops are accepted - no rejection based on energies [ default ]</p></li>
+<li><p>1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)</p></li>
+<li><p>2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous</p></li>
+<li><p>3 - generalization of “1”, but actually it should be changed in case there are many degenerate levels</p></li>
+</ul>
+</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;T&quot;</strong><strong>]</strong> (<em>*</em>) – temperature of the nuclei - affects the acceptance probabilities [ units: K, default: 300.0 K]</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;do_output&quot;</strong><strong>]</strong> (<em>*</em>) – whether to print out the results into a file [ default: True ]</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;outfile&quot;</strong><strong>]</strong> (<em>*</em>) – the name of the file, where all the results will be printed out [ default: “_out.txt” ]</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;do_return&quot;</strong><strong>]</strong> (<em>*</em>) – whether to construct the big matrix with all the result [ default: True ]</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;evolve_Markov&quot;</strong><strong>]</strong> (<em>*</em>) – whether to propagate the “SE” populations via Markov chain [ default: True ]</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;evolve_TSH&quot;</strong><strong>]</strong> (<em>*</em>) – whether to propagate the “SH” populations via TSH with many trajectories [ default: True ]</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;extend_md&quot;</strong><strong>]</strong> (<em>*</em>) – whether or not to extend md time by resampling the NBRA hopping probabilities</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;extend_md_time&quot;</strong><strong>]</strong> (<em>*</em>) – length of the new dynamics trajectory, in units dt</p></li>
+<li><p><strong>params</strong><strong>[</strong><strong>&quot;detect_SD_difference&quot;</strong><strong>]</strong> (<em>*</em>) – see if SD states differ by more than 1 electron, if so probability to zero [ default: False ]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="mapping.html" class="btn btn-neutral float-right" title="mapping" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="decoherence_times.html" class="btn btn-neutral float-left" title="decoherence_times" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

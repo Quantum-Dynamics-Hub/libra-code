@@ -1,0 +1,1062 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.tsh &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.tsh</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.tsh</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************                     </span>
+<span class="c1">#* Copyright (C) 2016-2019 Kosuke Sato, Alexey V. Akimov                                                   </span>
+<span class="c1">#*                                                                                                     </span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License                          </span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of                                   </span>
+<span class="c1">#* the License, or (at your option) any later version.                                                 </span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution   </span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.          </span>
+<span class="c1">#***********************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: tsh</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements the generic function for TSH calculations as well as some</span>
+<span class="sd">       customized versions of TSH recipes</span>
+<span class="sd">.. moduleauthor:: Kosuke Sato, Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Alexey V. Akimov, Kosuke Sato&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2016-2019 Kosuke Sato, Alexey V. Akimov&quot;</span>
+<span class="n">__credits__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Alexey V. Akimov&quot;</span><span class="p">,</span> <span class="s2">&quot;Kosuke Sato&quot;</span><span class="p">]</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s2">&quot;GNU-3&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.0&quot;</span>
+<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s2">&quot;Alexey V. Akimov&quot;</span>
+<span class="n">__email__</span> <span class="o">=</span> <span class="s2">&quot;alexvakimov@gmail.com&quot;</span>
+<span class="n">__url__</span> <span class="o">=</span> <span class="s2">&quot;https://quantum-dynamics-hub.github.io/libra/index.html&quot;</span>
+
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">probabilities</span>
+
+
+
+
+<div class="viewcode-block" id="sample"><a class="viewcode-back" href="../../reference/libra_py/tsh.html#libra_py.tsh.sample">[docs]</a><span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mean_x</span><span class="p">,</span> <span class="n">sigma_x</span><span class="p">,</span> <span class="n">rnd</span><span class="p">):</span>  
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function generates ntraj ndof-dimensional vectors sampled from a </span>
+<span class="sd">    normal distribution with a given mean and variance</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        x ( MATRIX(ndof, ntraj) ): Each column of the matrix corresponds to </span>
+<span class="sd">            a vector of certain properties (e.g. coordinates, momenta, of all DOFs) for </span>
+<span class="sd">            a given trajectory (element of ensemble)</span>
+<span class="sd">        mean_x ( MATRIX(ndof, 1) ):  The mean of the ndof-dimensional vector (component-wise)</span>
+<span class="sd">        sigma_x ( MATRIX(ndof, 1) ): The variance width for each component</span>
+<span class="sd">        rnd ( Random ): The random number generator object</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: but changes the matrix ```x```</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nr</span><span class="p">,</span> <span class="n">nc</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">num_of_rows</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">num_of_cols</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nr</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nc</span><span class="p">):</span>    
+            <span class="n">x</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">mean_x</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">sigma_x</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">rnd</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span> <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="hop_py"><a class="viewcode-back" href="../../reference/libra_py/tsh.html#libra_py.tsh.hop_py">[docs]</a><span class="k">def</span> <span class="nf">hop_py</span><span class="p">(</span><span class="n">initstate</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">ksi</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Python implementation of the stochastic hopping procedure</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        initstate ( int ): The index of the initial state, before hop  </span>
+<span class="sd">        g ( MATRIX(N, N) ): The surface hopping matrix, the element g(i,j) </span>
+<span class="sd">            contains the probability for a i-&gt;j transition. Here, N - is the </span>
+<span class="sd">            total number of states considered in the transitions</span>
+<span class="sd">        ksi ( double ): A random number uniformly distributed in the range of (0.0, 1.0) </span>
+<span class="sd">            Essentially, it determines the outcome of the procedure</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        int: finstate: The index of the final state after hop</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">num_of_cols</span>
+    <span class="n">finstate</span> <span class="o">=</span> <span class="n">initstate</span><span class="p">;</span>
+
+    <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+          <span class="n">left</span> <span class="o">=</span> <span class="mf">0.0</span>
+          <span class="n">right</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">initstate</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+          <span class="n">left</span> <span class="o">=</span> <span class="n">right</span>
+          <span class="n">right</span> <span class="o">=</span> <span class="n">right</span> <span class="o">+</span> <span class="n">g</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">initstate</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
+ 
+      <span class="k">if</span><span class="p">((</span><span class="n">left</span><span class="o">&lt;</span><span class="n">ksi</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ksi</span><span class="o">&lt;=</span><span class="n">right</span><span class="p">)):</span>
+          <span class="n">finstate</span> <span class="o">=</span> <span class="n">i</span>
+
+    <span class="k">return</span> <span class="n">finstate</span></div>
+
+
+
+<div class="viewcode-block" id="set_random_state"><a class="viewcode-back" href="../../reference/libra_py/tsh.html#libra_py.tsh.set_random_state">[docs]</a><span class="k">def</span> <span class="nf">set_random_state</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="n">ksi</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function implements a simple random state selection procedure. </span>
+<span class="sd">    Each state is selected with a given probability</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob ( list of N doubles ): The probabilities of all N states </span>
+<span class="sd">        ksi ( double ): A random number uniformly distributed in the range of (0.0, 1.0).</span>
+<span class="sd">            It determines the outcome of this function.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        integer: finstate: The index of the selected state</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nstates</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prob</span><span class="p">)</span>
+    <span class="n">finstate</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+          <span class="n">left</span> <span class="o">=</span> <span class="mf">0.0</span>
+          <span class="n">right</span> <span class="o">=</span> <span class="n">prob</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+      <span class="k">else</span><span class="p">:</span>
+          <span class="n">left</span> <span class="o">=</span> <span class="n">right</span>
+          <span class="n">right</span> <span class="o">=</span> <span class="n">right</span> <span class="o">+</span> <span class="n">prob</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+ 
+      <span class="k">if</span><span class="p">((</span><span class="n">left</span><span class="o">&lt;</span><span class="n">ksi</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ksi</span><span class="o">&lt;=</span><span class="n">right</span><span class="p">)):</span>
+          <span class="n">finstate</span> <span class="o">=</span> <span class="n">i</span>
+
+    <span class="k">return</span> <span class="n">finstate</span></div>
+
+
+
+
+<div class="viewcode-block" id="boltz_factor"><a class="viewcode-back" href="../../reference/libra_py/tsh.html#libra_py.tsh.boltz_factor">[docs]</a><span class="k">def</span> <span class="nf">boltz_factor</span><span class="p">(</span><span class="n">E_new</span><span class="p">,</span> <span class="n">E_old</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">boltz_opt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the Boltzmann scaling factor, but only if we consider a hop up in energy</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        E_new ( double ): the energy of the proposed (new) state [units: a.u.]</span>
+<span class="sd">        E_old ( double ): the energy of the current (old) state [units: a.u.]</span>
+<span class="sd">        T ( double ): temperature of the bath [units: K]</span>
+<span class="sd">        boltz_opt ( int ): the proposed hop acceptance criterion</span>
+
+<span class="sd">            * 0: all hops are accepted</span>
+<span class="sd">            * 1: hops are accepted according to the Boltzmann ratio of the final and initial states</span>
+<span class="sd">            * 2: hops are accepted according to the classical Maxwell-Boltzmann distribution</span>
+<span class="sd">            * 3: hops are accepted based on the quantum probability of the final state</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        double: boltz_f: the probability of the proposed hop acceptance</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">dE</span> <span class="o">=</span> <span class="p">(</span><span class="n">E_new</span> <span class="o">-</span> <span class="n">E_old</span><span class="p">)</span>
+    <span class="n">boltz_f</span> <span class="o">=</span> <span class="mf">1.0</span> 
+
+    <span class="k">if</span> <span class="n">boltz_opt</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">boltz_f</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="k">elif</span> <span class="n">boltz_opt</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dE</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">argg</span> <span class="o">=</span> <span class="n">dE</span><span class="o">/</span><span class="p">(</span><span class="n">units</span><span class="o">.</span><span class="n">kB</span><span class="o">*</span><span class="n">T</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">argg</span> <span class="o">&gt;</span> <span class="mf">50.0</span><span class="p">:</span>
+                <span class="n">boltz_f</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">boltz_f</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">argg</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">boltz_opt</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dE</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">boltz_f</span> <span class="o">=</span> <span class="n">probabilities</span><span class="o">.</span><span class="n">Boltz_cl_prob_up</span><span class="p">(</span><span class="n">dE</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">boltz_opt</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dE</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">boltz_f</span> <span class="o">=</span> <span class="n">probabilities</span><span class="o">.</span><span class="n">Boltz_quant_prob</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">dE</span><span class="p">],</span> <span class="n">T</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">boltz_f</span></div>
+
+
+
+<div class="viewcode-block" id="surface_hopping"><a class="viewcode-back" href="../../reference/libra_py/tsh.html#libra_py.tsh.surface_hopping">[docs]</a><span class="k">def</span> <span class="nf">surface_hopping</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">el</span><span class="p">,</span> <span class="n">ham</span><span class="p">,</span> <span class="n">rnd</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function performs either generic or NBRA-type surface hopping</span>
+
+<span class="sd">    Here, the number of nuclear objects and that of electronic ones may be not equal.</span>
+<span class="sd">    Each trajectory evolves both nuclear and electronic DOFs, as appropriate </span>
+<span class="sd">    for the most general TSH recipe, but one can execute multiple TSH realizations per</span>
+<span class="sd">    selected-electron-nuclear dynamics</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mol ( list of Nuclear objects ): variables that contains classical DOFs for each trajectory</span>
+<span class="sd">        el ( list of Electronic objects ): variables that contains quantum DOFs for each trajectory</span>
+<span class="sd">        ham ( list of Hamiltonian objects ): variables that control energy/forces calculations for each trajectory</span>
+<span class="sd">        rnd ( Random object ): a random number generator object. It is important that</span>
+<span class="sd">            we use the same (global) object every time this function is called. If we</span>
+<span class="sd">            create it here and use - the statistical properties will be very poor, because </span>
+<span class="sd">            every new &quot;random&quot; number will be not far from the common seed value     </span>
+<span class="sd">        params ( dictionary): control parameters, specifically:</span>
+<span class="sd">        </span>
+<span class="sd">            * **params[&quot;tsh_method&quot;]** ( int ): choose the hopping probability calculation scheme</span>
+
+<span class="sd">                - 1: FSSH  [default]</span>
+<span class="sd">                - 2: GFSH</span>
+<span class="sd">                - 3: MSSH</span>
+
+<span class="sd">            * **params[&quot;rep&quot;]** ( int ): choose the representation for velocity rescaling</span>
+
+<span class="sd">                - 0: diabatic (uniform rescaling) </span>
+<span class="sd">                - 1: adiabatic (need the derivative couplings) [default]</span>
+
+<span class="sd">            * **params[&quot;do_rescaling&quot;]** ( int ): choose how to account for detailed balance</span>
+
+<span class="sd">                - 0: don&#39;t do explicit rescaling, so it is used with Boltzmann factor hopping probability scaling</span>
+<span class="sd">                - 1: do the excplicit velocity rescaling [default]</span>
+
+<span class="sd">            * **params[&quot;do_reverse&quot;]** ( int ): how to handle the nuclear velocities when hop is frustrated</span>
+
+<span class="sd">                - 0: keep as they are, don&#39;t change</span>
+<span class="sd">                - 1: reverse the velocities [default]</span>
+
+<span class="sd">            * **params[&quot;dt_nucl&quot;]** ( double): nuclear time step [ units: fs, default: 1.0 TODO: check units ]</span>
+<span class="sd">            * **params[&quot;Temperature&quot;]** ( double ): Temperature of the environment [ units: K, default: 300.0 ]</span>
+<span class="sd">            * **params[&quot;print_tsh_probabilities&quot;]** ( int ): Print hopping probabilities matrix</span>
+
+<span class="sd">                - 0: don&#39;t print [default]</span>
+<span class="sd">                - 1: print</span>
+
+<span class="sd">            * **params[&quot;check_tsh_probabilities&quot;]** ( int ): Run-time sanity test of the dt_nucl, </span>
+
+<span class="sd">                - 0: don&#39;t check</span>
+<span class="sd">                - 1: check [default]</span>
+
+<span class="sd">            * **params[&quot;use_boltz_factor&quot;]** ( int ): whether to scale the hopping probabilities by the Boltzmann factor</span>
+
+<span class="sd">                - 0: don&#39;t scale [default]</span>
+<span class="sd">                - 1: scale</span>
+
+<span class="sd">            * **params[&quot;nconfig&quot;]** ( int ): how many distinct initial nuclear geometries</span>
+<span class="sd">            * **params[&quot;excitations_init&quot;] ( list of ints ): indices of excited states to which </span>
+<span class="sd">                each initial geometry may be excited, multiplies the total number of distinct</span>
+<span class="sd">                electron-nuclear evolutions</span>
+<span class="sd">            * **params[&quot;num_SH_traj&quot;]** ( int ): the number of electronic evolutions per initial </span>
+<span class="sd">                geometry per initial excitation</span>
+
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: but the following variables are changed</span>
+
+<span class="sd">        * mol</span>
+<span class="sd">        * el</span>
+<span class="sd">        * ham</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span>  <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;tsh_method&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;rep&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;do_rescaling&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;do_reverse&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+                       <span class="s2">&quot;dt_nucl&quot;</span><span class="p">:</span><span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;Temperature&quot;</span><span class="p">:</span><span class="mf">300.0</span><span class="p">,</span> <span class="s2">&quot;print_tsh_probabilities&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+                       <span class="s2">&quot;check_tsh_probabilities&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;use_boltz_factor&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+                       <span class="s2">&quot;nconfig&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;excitations_init&quot;</span><span class="p">:[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;num_SH_traj&quot;</span><span class="p">:</span><span class="mi">1</span>  <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+
+    <span class="c1"># Parameters to internal variables - for convenience</span>
+    <span class="n">tsh_method</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;tsh_method&quot;</span><span class="p">]</span>
+    <span class="n">rep</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;rep&quot;</span><span class="p">]</span>
+    <span class="n">do_rescaling</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;do_rescaling&quot;</span><span class="p">]</span>
+    <span class="n">do_reverse</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;do_reverse&quot;</span><span class="p">]</span>
+    <span class="n">dt_nucl</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dt_nucl&quot;</span><span class="p">]</span>
+    <span class="n">Temperature</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;Temperature&quot;</span><span class="p">]</span>
+    <span class="n">print_prob</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;print_tsh_probabilities&quot;</span><span class="p">]</span>
+    <span class="n">check_prob</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;check_tsh_probabilities&quot;</span><span class="p">]</span>
+    <span class="n">use_boltz_factor</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;use_boltz_factor&quot;</span><span class="p">]</span>
+
+    <span class="n">ninit</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;nconfig&quot;</span><span class="p">]</span>
+    <span class="n">nstates_init</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;excitations_init&quot;</span><span class="p">])</span>
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">el</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nstates</span>  <span class="c1"># how many electronic DOF</span>
+    <span class="n">num_SH_traj</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;num_SH_traj&quot;</span><span class="p">]</span>
+
+
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">!=</span><span class="nb">len</span><span class="p">(</span><span class="n">ham</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;Error in surface_hopping_nbra: The size of the ensemble of Nuclear objects (&quot;</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">mol</span><span class="p">),</span><span class="s2">&quot;) should be the same</span><span class="se">\</span>
+<span class="s2">              as the length of the ensemble of Hamiltonian objects (&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ham</span><span class="p">),</span><span class="s2">&quot;)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">!=</span> <span class="n">ninit</span> <span class="o">*</span> <span class="n">nstates_init</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in surface_hopping_nbra: The size of the ensemble of Nuclear objects (&quot;</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">mol</span><span class="p">),</span><span class="s2">&quot;) should be the same</span><span class="se">\</span>
+<span class="s2">              as the product of nconfig (&quot;</span><span class="p">,</span><span class="n">ninit</span><span class="p">,</span><span class="s2">&quot;) and the number of initial excitations (&quot;</span><span class="p">,</span> <span class="n">nstates_init</span><span class="p">,</span><span class="s2">&quot;)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">el</span><span class="p">)</span><span class="o">!=</span> <span class="n">ninit</span> <span class="o">*</span> <span class="n">nstates_init</span> <span class="o">*</span> <span class="n">num_SH_traj</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in surface_hopping_nbra: The size of the ensemble of Electronic objects (&quot;</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">el</span><span class="p">),</span><span class="s2">&quot;) should be the same</span><span class="se">\</span>
+<span class="s2">              as the product of nconfig (&quot;</span><span class="p">,</span><span class="n">ninit</span><span class="p">,</span><span class="s2">&quot;),  the number of initial excitations (&quot;</span><span class="p">,</span> <span class="n">nstates_init</span><span class="p">,</span><span class="s2">&quot;), and the </span><span class="se">\</span>
+<span class="s2">              number of surface hopping trajectories per run (&quot;</span><span class="p">,</span><span class="n">num_SH_traj</span><span class="p">,</span><span class="s2">&quot;)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+    <span class="n">g</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span><span class="n">nstates</span><span class="p">)</span> <span class="c1"># initialize a matrix of hopping probability</span>
+
+    <span class="c1"># For all initial geometries</span>
+    <span class="k">for</span> <span class="n">iconf</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ninit</span><span class="p">):</span>
+
+        <span class="c1"># For all initial excitations</span>
+        <span class="k">for</span> <span class="n">i_ex</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates_init</span><span class="p">):</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">iconf</span><span class="o">*</span><span class="n">nstates_init</span> <span class="o">+</span> <span class="n">i_ex</span>
+
+            <span class="c1"># Run many stochastic SH realizations</span>
+            <span class="k">for</span> <span class="n">itraj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">num_SH_traj</span><span class="p">):</span> 
+
+                <span class="n">iel</span> <span class="o">=</span> <span class="n">iconf</span><span class="o">*</span><span class="n">nstates_init</span><span class="o">*</span><span class="n">num_SH_traj</span> <span class="o">+</span> <span class="n">i_ex</span><span class="o">*</span><span class="n">num_SH_traj</span> <span class="o">+</span> <span class="n">itraj</span>
+
+                <span class="c1">#Compute hopping probabilities</span>
+                <span class="k">if</span> <span class="n">tsh_method</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="c1"># FSSH</span>
+                    <span class="n">compute_hopping_probabilities_fssh</span><span class="p">(</span><span class="n">mol</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">el</span><span class="p">[</span><span class="n">iel</span><span class="p">],</span> <span class="n">ham</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">g</span><span class="p">,</span> <span class="n">dt_nucl</span><span class="p">,</span> <span class="n">use_boltz_factor</span><span class="p">,</span> <span class="n">Temperature</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">tsh_method</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span> <span class="c1"># GFSH</span>
+                    <span class="n">compute_hopping_probabilities_gfsh</span><span class="p">(</span><span class="n">mol</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">el</span><span class="p">[</span><span class="n">iel</span><span class="p">],</span> <span class="n">ham</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">g</span><span class="p">,</span> <span class="n">dt_nucl</span><span class="p">,</span> <span class="n">use_boltz_factor</span><span class="p">,</span> <span class="n">Temperature</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">tsh_method</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span> <span class="c1"># MSSH</span>
+                    <span class="n">compute_hopping_probabilities_mssh</span><span class="p">(</span><span class="n">mol</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">el</span><span class="p">[</span><span class="n">iel</span><span class="p">],</span> <span class="n">ham</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">g</span><span class="p">,</span> <span class="n">dt_nucl</span><span class="p">,</span> <span class="n">use_boltz_factor</span><span class="p">,</span> <span class="n">Temperature</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning in surface_hopping: tsh_method can be 1, 2, or 3. Other values are not defined&quot;</span><span class="p">)</span>
+
+                <span class="c1"># output hopping probability</span>
+                <span class="k">if</span> <span class="n">print_prob</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;hopping probability matrix is:&quot;</span><span class="p">)</span>
+                    <span class="n">g</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+
+                <span class="c1"># check elements of g matrix are less than 1 or not.</span>
+                <span class="k">if</span> <span class="n">check_prob</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+                        <span class="k">for</span> <span class="n">st1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">st</span><span class="p">,</span><span class="n">st1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;g(</span><span class="si">%d</span><span class="s2">,</span><span class="si">%d</span><span class="s2">) is </span><span class="si">%f</span><span class="s2">, larger than 1; better to decrease dt_nucl&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">st</span><span class="p">,</span><span class="n">st1</span><span class="p">,</span><span class="n">g</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">st</span><span class="p">,</span><span class="n">st1</span><span class="p">))</span> <span class="p">)</span>
+                
+                <span class="c1"># Attempt to hop</span>
+                <span class="n">ksi</span> <span class="o">=</span> <span class="n">rnd</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">)</span> <span class="c1"># generate random number for every trajectory</span>
+                <span class="c1"># Everything else - change of electronic state and velocities rescaling/reversal happens here</span>
+                <span class="n">el</span><span class="p">[</span><span class="n">iel</span><span class="p">]</span><span class="o">.</span><span class="n">istate</span> <span class="o">=</span> <span class="n">hop</span><span class="p">(</span><span class="n">el</span><span class="p">[</span><span class="n">iel</span><span class="p">]</span><span class="o">.</span><span class="n">istate</span><span class="p">,</span> <span class="n">mol</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ham</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ksi</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">do_rescaling</span><span class="p">,</span> <span class="n">rep</span><span class="p">,</span> <span class="n">do_reverse</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="surface_hopping_cpa"><a class="viewcode-back" href="../../reference/libra_py/tsh.html#libra_py.tsh.surface_hopping_cpa">[docs]</a><span class="k">def</span> <span class="nf">surface_hopping_cpa</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">el</span><span class="p">,</span> <span class="n">ham</span><span class="p">,</span> <span class="n">rnd</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function performs surface hopping with Boltzmann factor used to </span>
+<span class="sd">    rescale hopping probabilities in lieu of explicit velocity rescaling</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        SeeAlso: `surface_hopping`</span>
+<span class="sd">     </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        SeeAlso: `surface_hopping`</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+ 
+    <span class="c1"># Update parameters</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;do_rescaling&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>      <span class="c1"># No explicit velocity rescaling</span>
+
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;use_boltz_factor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># we don&#39;t need to use Boltzmann factor, since  </span>
+                                    <span class="c1"># we are using velocity rescaling in the hopping procedure.</span>
+                                    <span class="c1"># Although the rescaling doesn&#39;t account for the direction, but it</span>
+                                    <span class="c1"># still accounts for energy partitioning between electronic and</span>
+                                    <span class="c1"># nuclear DOFs</span>
+
+    <span class="c1"># rep and do_reverse are irrelevant</span>
+
+    <span class="c1"># Call actual calculations </span>
+    <span class="n">surface_hopping</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">el</span><span class="p">,</span> <span class="n">ham</span><span class="p">,</span> <span class="n">rnd</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="surface_hopping_cpa2"><a class="viewcode-back" href="../../reference/libra_py/tsh.html#libra_py.tsh.surface_hopping_cpa2">[docs]</a><span class="k">def</span> <span class="nf">surface_hopping_cpa2</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">el</span><span class="p">,</span> <span class="n">ham</span><span class="p">,</span> <span class="n">rnd</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function performs surface hopping with velocity rescaling according to </span>
+<span class="sd">    total energy conservation (but not along the derivative coupling vectors)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        SeeAlso: `surface_hopping`</span>
+<span class="sd">     </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        SeeAlso: `surface_hopping`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Update parameters</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;do_rescaling&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>      <span class="c1"># Explicit velocity rescaling</span>
+
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;use_boltz_factor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># we don&#39;t need to use Boltzmann factor, since  </span>
+                                    <span class="c1"># we are using velocity rescaling in the hopping procedure.</span>
+                                    <span class="c1"># Although the rescaling doesn&#39;t account for the direction, but it</span>
+                                    <span class="c1"># still accounts for energy partitioning between electronic and</span>
+                                    <span class="c1"># nuclear DOFs</span>
+
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;rep&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>               <span class="c1"># velocity rescaling will be done based on the total energy conservation,</span>
+                                    <span class="c1"># no derivative couplings will be needed - we don&#39;t have them</span>
+                                    <span class="c1"># !!! This option makes do_reverse not relevant - so</span>
+                                    <span class="c1"># we can set it to any value</span>
+
+    <span class="c1"># do_reverse becomes irrelevant</span>
+
+    <span class="c1"># Call actual calculations </span>
+    <span class="n">surface_hopping</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">el</span><span class="p">,</span> <span class="n">ham</span><span class="p">,</span> <span class="n">rnd</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span></div>
+
+
+
+
+<div class="viewcode-block" id="ida_py"><a class="viewcode-back" href="../../reference/libra_py/tsh.html#libra_py.tsh.ida_py">[docs]</a><span class="k">def</span> <span class="nf">ida_py</span><span class="p">(</span><span class="n">Coeff</span><span class="p">,</span> <span class="n">old_st</span><span class="p">,</span> <span class="n">new_st</span><span class="p">,</span> <span class="n">E_old</span><span class="p">,</span> <span class="n">E_new</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">ksi</span><span class="p">,</span> <span class="n">do_collapse</span><span class="p">,</span> <span class="n">boltz_opt</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The Python implementation of the instantaneous decoherence at attempted hops algorithm</span>
+
+<span class="sd">    This function takes care of a single act of decoherence/hop</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        Coeff ( CMATRIX(N, 1) or Electronic ): An object containig electronic DOFs (basis wavefunctions amplitudes). </span>
+<span class="sd">            Here, N would be the number of electronic states in the dynamical basis</span>
+<span class="sd">        old_st ( int ): The state index before hop  </span>
+<span class="sd">        new_st ( int ): The state index after hop </span>
+<span class="sd">        E_old ( double ): The energy of the initial state, before hop [ units: a.u. ]</span>
+<span class="sd">        E_new ( double ): The energy of the final state, after hop [ units: a.u. ]</span>
+<span class="sd">        T ( double ): The Temperature of nuclear DOF [ units: K]</span>
+<span class="sd">        ksi ( double ): A random number uniformly distributed in the range of [0.0, 1.0]</span>
+<span class="sd">        do_collapse ( int ): The flag turning the decoherence (at the IDA level on/off):</span>
+
+<span class="sd">            - 0: do not include decoherence </span>
+<span class="sd">            - 1: include decoherence</span>
+
+<span class="sd">        boltz_opt ( int ): The proposed hop acceptance criterion: </span>
+
+<span class="sd">            - 0: all proposed hops are accepted - no rejection based on energies</span>
+<span class="sd">            - 1: proposed hops are accepted with min{ 1, exp(-dE/kT) } probability, where </span>
+<span class="sd">                dE = E_new - E_old  [ default ]</span>
+<span class="sd">            - 2: proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous</span>
+<span class="sd">            - 3: generalization of &quot;1&quot;, but actually it should be changed in case there are many degenerate levels</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: ( res, C ): where:</span>
+<span class="sd">        </span>
+<span class="sd">            * res ( int ): index of the final state, after IDA is applied (or not)</span>
+<span class="sd">            * C ( CMATRIX(N, 1) or Electronic ): the updated state of the electronic DOF, in the same data type as the input</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">old_st</span>
+
+    <span class="n">dE</span> <span class="o">=</span> <span class="n">E_new</span> <span class="o">-</span> <span class="n">E_old</span>
+    <span class="n">boltz_f</span> <span class="o">=</span> <span class="n">boltz_factor</span><span class="p">(</span><span class="n">E_new</span><span class="p">,</span> <span class="n">E_old</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">boltz_opt</span><span class="p">)</span>
+
+    <span class="c1"># In case the electronic DOF are given in the form of CMATRIX</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">Coeff</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;CMATRIX&quot;</span><span class="p">:</span>
+
+        <span class="n">C</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">Coeff</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">dE</span><span class="o">&gt;</span><span class="mf">0.0</span><span class="p">:</span>
+        
+            <span class="k">if</span> <span class="n">ksi</span><span class="o">&lt;</span><span class="n">boltz_f</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">new_st</span>  <span class="c1"># we&#39;ve got enough kinetic energy - accept the hop</span>
+                
+                <span class="c1"># Collapse the wavefunction to the new state </span>
+                <span class="k">if</span> <span class="n">do_collapse</span><span class="p">:</span>
+                    <span class="n">C</span> <span class="o">*=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">C</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">new_st</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Unsuccessful hop - collapse wfc back to the original state^M</span>
+                <span class="k">if</span> <span class="n">do_collapse</span><span class="p">:</span>
+                    <span class="n">C</span> <span class="o">*=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">C</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">old_st</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">new_st</span>
+        
+        <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">C</span>
+
+
+    <span class="c1"># In case the electronic DOF are given in the form of Electronic object</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">Coeff</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;Electronic&quot;</span><span class="p">:</span>
+        
+        <span class="n">C</span> <span class="o">=</span> <span class="n">Electronic</span><span class="p">(</span><span class="n">Coeff</span><span class="p">)</span>
+                
+        <span class="k">if</span> <span class="n">dE</span><span class="o">&gt;</span><span class="mf">0.0</span><span class="p">:</span>
+        
+            <span class="k">if</span> <span class="n">ksi</span><span class="o">&lt;</span><span class="n">boltz_f</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">new_st</span>  <span class="c1"># accepted hop</span>
+         
+                <span class="c1"># Collapse the wavefunction to the new state                                                                                                           </span>
+                <span class="k">if</span> <span class="n">do_collapse</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">C</span><span class="o">.</span><span class="n">nstates</span><span class="p">):</span>
+                        <span class="n">C</span><span class="o">.</span><span class="n">q</span><span class="p">[</span><span class="n">st</span><span class="p">],</span> <span class="n">C</span><span class="o">.</span><span class="n">p</span><span class="p">[</span><span class="n">st</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+                    <span class="n">C</span><span class="o">.</span><span class="n">q</span><span class="p">[</span><span class="n">new_st</span><span class="p">],</span> <span class="n">C</span><span class="o">.</span><span class="n">p</span><span class="p">[</span><span class="n">new_st</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Unsuccessful hop - collapse wfc back to the original state^M                                                                                         </span>
+                <span class="k">if</span> <span class="n">do_collapse</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">C</span><span class="o">.</span><span class="n">nstates</span><span class="p">):</span>
+                        <span class="n">C</span><span class="o">.</span><span class="n">q</span><span class="p">[</span><span class="n">st</span><span class="p">],</span> <span class="n">C</span><span class="o">.</span><span class="n">p</span><span class="p">[</span><span class="n">st</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+                    <span class="n">C</span><span class="o">.</span><span class="n">q</span><span class="p">[</span><span class="n">old_st</span><span class="p">],</span> <span class="n">C</span><span class="o">.</span><span class="n">p</span><span class="p">[</span><span class="n">old_st</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">new_st</span>
+        
+        <span class="n">C</span><span class="o">.</span><span class="n">istate</span> <span class="o">=</span> <span class="n">res</span> <span class="c1"># return res</span>
+        
+        <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">C</span></div>
+
+
+
+<div class="viewcode-block" id="sdm_py"><a class="viewcode-back" href="../../reference/libra_py/tsh.html#libra_py.tsh.sdm_py">[docs]</a><span class="k">def</span> <span class="nf">sdm_py</span><span class="p">(</span><span class="n">Coeff</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">act_st</span><span class="p">,</span> <span class="n">En</span><span class="p">,</span> <span class="n">Ekin</span><span class="p">,</span> <span class="n">C_param</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">eps_param</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Python implementation of the simplified decay of mixing algorithm for decoherence correction</span>
+
+<span class="sd">    Reference: Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        Coeff ( CMATRIX(N, 1) or Electronic ): An object containig electronic DOFs (basis wavefunctions amplitudes). </span>
+<span class="sd">            Here, N would be the number of electronic states in the dynamical basis</span>
+<span class="sd">        dt ( double ): Nuclear integration time-step [ units: a.u. ]</span>
+<span class="sd">        act_st ( int ): The current active state index</span>
+<span class="sd">        En ( list of doubles ): Energies of the states [ units: Ha ]</span>
+<span class="sd">        Ekin ( double ): The classical kinetic energy of nuclei [ units: Ha ]</span>
+<span class="sd">        C_param ( double ): The method parameter [ units: None, default: 1.0]</span>
+<span class="sd">        eps_param ( double ): The method parameter [ units: Ha, default: 0.1 Ha ]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ( CMATRIX(N, 1) or Electronic ): C : </span>
+<span class="sd">            the updated state of the electronic DOF, in the same data type as the input</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># In case the electronic DOF are given in the form of CMATRIX</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">Coeff</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;CMATRIX&quot;</span><span class="p">:</span>
+
+        <span class="c1"># The results will be stored here</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">Coeff</span><span class="p">)</span>
+
+
+        <span class="c1"># First - update all the coefficients for the non-active states        </span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">Coeff</span><span class="o">.</span><span class="n">num_of_elts</span> 
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">act_st</span><span class="p">:</span>    
+                <span class="n">itau</span> <span class="o">=</span> <span class="p">(</span> <span class="n">En</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">En</span><span class="p">[</span><span class="n">act_st</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="p">(</span> <span class="n">C_param</span> <span class="o">+</span> <span class="p">(</span><span class="n">eps_param</span><span class="o">/</span><span class="n">Ekin</span><span class="p">)</span> <span class="p">)</span>
+                <span class="n">sclf</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dt</span><span class="o">*</span><span class="n">itau</span><span class="p">)</span>
+                <span class="n">C</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sclf</span><span class="p">)</span>
+
+        <span class="c1"># Population of the active state</span>
+        <span class="n">p_aa_old</span> <span class="o">=</span> <span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">act_st</span><span class="p">,</span><span class="n">act_st</span><span class="p">)</span><span class="o">.</span><span class="n">conjugate</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">act_st</span><span class="p">,</span><span class="n">act_st</span><span class="p">))</span><span class="o">.</span><span class="n">real</span> 
+
+        <span class="n">new_norm</span> <span class="o">=</span> <span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">H</span><span class="p">()</span> <span class="o">*</span> <span class="n">C</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="o">-</span> <span class="n">p_aa_old</span>  <span class="c1"># total population of all inactive states</span>
+                                                         <span class="c1"># after rescaling</span>
+        <span class="n">p_aa_new</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">new_norm</span>
+
+        <span class="n">sclf</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">if</span> <span class="n">p_aa_old</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">sclf</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">p_aa_new</span> <span class="o">/</span> <span class="n">p_aa_old</span> <span class="p">)</span>  <span class="c1"># scaling factor for the active state</span>
+        
+
+        <span class="c1"># Rescale the active state</span>
+        <span class="n">C</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">act_st</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sclf</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">C</span>
+
+    <span class="c1"># In case the electronic DOF are given in the form of Electronic object</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">Coeff</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;Electronic&quot;</span><span class="p">:</span>
+        
+        <span class="n">C</span> <span class="o">=</span> <span class="n">Electronic</span><span class="p">(</span><span class="n">Coeff</span><span class="p">)</span>
+
+        <span class="c1"># First - update all the coefficients for the non-active states        </span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">nstates</span> 
+        <span class="n">new_norm</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">act_st</span><span class="p">:</span>    
+                <span class="n">itau</span> <span class="o">=</span> <span class="p">(</span> <span class="n">En</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">En</span><span class="p">[</span><span class="n">act_st</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="p">(</span> <span class="n">C_param</span> <span class="o">+</span> <span class="p">(</span><span class="n">eps_param</span><span class="o">/</span><span class="n">Ekin</span><span class="p">)</span> <span class="p">)</span>
+                <span class="n">sclf</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dt</span><span class="o">*</span><span class="n">itau</span><span class="p">)</span>
+                <span class="n">C</span><span class="o">.</span><span class="n">q</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">q</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">sclf</span>
+                <span class="n">C</span><span class="o">.</span><span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">sclf</span>
+
+                <span class="n">new_norm</span> <span class="o">+=</span> <span class="n">C</span><span class="o">.</span><span class="n">rho</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> 
+
+        <span class="c1"># new_norm now contains the total population of all inactive states after rescaling</span>
+        <span class="c1"># How much of population is left for the new active state</span>
+        <span class="n">p_aa_new</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">new_norm</span>
+
+        <span class="n">sclf</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">if</span> <span class="n">p_aa_old</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">sclf</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">p_aa_new</span> <span class="o">/</span> <span class="n">p_aa_old</span> <span class="p">)</span>  <span class="c1"># scaling factor for the active state</span>
+
+        <span class="c1"># Rescale the active state</span>
+        <span class="n">C</span><span class="o">.</span><span class="n">q</span><span class="p">[</span><span class="n">act_st</span><span class="p">]</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">q</span><span class="p">[</span><span class="n">act_st</span><span class="p">]</span> <span class="o">*</span> <span class="n">sclf</span>
+        <span class="n">C</span><span class="o">.</span><span class="n">p</span><span class="p">[</span><span class="n">act_st</span><span class="p">]</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">p</span><span class="p">[</span><span class="n">act_st</span><span class="p">]</span> <span class="o">*</span> <span class="n">sclf</span>
+
+        <span class="k">return</span> <span class="n">C</span></div>
+        
+
+<div class="viewcode-block" id="hopping"><a class="viewcode-back" href="../../reference/libra_py/tsh.html#libra_py.tsh.hopping">[docs]</a><span class="k">def</span> <span class="nf">hopping</span><span class="p">(</span><span class="n">Coeff</span><span class="p">,</span> <span class="n">Hvib</span><span class="p">,</span> <span class="n">istate</span><span class="p">,</span> <span class="n">sh_method</span><span class="p">,</span> <span class="n">do_collapse</span><span class="p">,</span> <span class="n">ksi</span><span class="p">,</span> <span class="n">ksi2</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">boltz_opt</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A simplified version for the CPA-like hopping</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        Coeff ( CMATRIX(nstates, 1) ): amplitudes of all states</span>
+<span class="sd">        Hvib ( CMATRIX(nstates, nstates) ): vibronic Hamiltonian </span>
+<span class="sd">        istate ( int ): the index of the initial state</span>
+<span class="sd">        sh_method ( int ): selector of the TSH method:</span>
+
+<span class="sd">            - 0: MSSH</span>
+<span class="sd">            - 1: FSSH</span>
+<span class="sd">            - 2: GFSH</span>
+
+<span class="sd">        do_collapse ( int ): flag to turn on the decoherence via ID-A:</span>
+
+<span class="sd">            - 0 - no decoherence</span>
+<span class="sd">            - 1 - decoherence via ID-A</span>
+
+<span class="sd">        ksi ( double ):random number in interval [0.0, 1.0] cotrolling the execution of SH</span>
+<span class="sd">        ksi2 ( double ):random number in interval [0.0, 1.0] cotrolling the execution of SH</span>
+<span class="sd">        dt ( double ): the time interval for the surface hopping [ units: a.u. ]</span>
+<span class="sd">        T ( double ): temperature [ units: K ]</span>
+
+<span class="sd">        boltz_opt ( int ): The selector of the proposed hop acceptance algorithm:</span>
+
+<span class="sd">            - 0: all proposed hops are accepted - no rejection based on energies</span>
+<span class="sd">            - 1: proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)</span>
+<span class="sd">            - 2: proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous</span>
+<span class="sd">            - 3: generalization of &quot;1&quot;, but actually it should be changed in case there are many degenerate levels</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        tuple: ( istate, Coeff1 ): where:</span>
+<span class="sd">        </span>
+<span class="sd">            * istate ( int ): index of the final state, after the hop</span>
+<span class="sd">            * Coeff1 ( CMATRIX(N, 1) ): the updated state of the electronic DOF</span>
+<span class="sd">           </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">prms</span> <span class="o">=</span> <span class="n">dyn_control_params</span><span class="p">()</span>
+    <span class="n">prms</span><span class="o">.</span><span class="n">set_parameters</span><span class="p">({</span><span class="s2">&quot;dt&quot;</span><span class="p">:</span><span class="n">dt</span><span class="p">,</span>  <span class="s2">&quot;use_boltz_factor&quot;</span><span class="p">:</span><span class="n">boltz_opt</span><span class="p">,</span> <span class="s2">&quot;Temperature&quot;</span><span class="p">:</span><span class="n">T</span> <span class="p">})</span>
+
+    <span class="n">g</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">if</span> <span class="n">sh_method</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="c1">#g = compute_hopping_probabilities_mssh(Coeff)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">hopping_probabilities_mssh</span><span class="p">(</span><span class="n">prms</span><span class="p">,</span> <span class="n">Coeff</span><span class="p">,</span> <span class="n">Hvib</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">sh_method</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">hopping_probabilities_fssh</span><span class="p">(</span><span class="n">prms</span><span class="p">,</span> <span class="n">Coeff</span><span class="p">,</span> <span class="n">Hvib</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">sh_method</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">hopping_probabilities_gfsh</span><span class="p">(</span><span class="n">prms</span><span class="p">,</span> <span class="n">Coeff</span><span class="p">,</span> <span class="n">Hvib</span><span class="p">)</span>
+
+
+    <span class="n">old_st</span> <span class="o">=</span> <span class="n">istate</span>
+    <span class="n">new_st</span> <span class="o">=</span> <span class="n">hop</span><span class="p">(</span><span class="n">istate</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">ksi</span><span class="p">)</span>
+
+    <span class="n">Coeff1</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">Coeff</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">new_st</span> <span class="o">!=</span> <span class="n">old_st</span><span class="p">:</span>
+        <span class="n">E_old</span> <span class="o">=</span> <span class="n">Hvib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">old_st</span><span class="p">,</span><span class="n">old_st</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">E_new</span> <span class="o">=</span> <span class="n">Hvib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">new_st</span><span class="p">,</span><span class="n">new_st</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+
+        <span class="c1"># ID-A decoherence                </span>
+        <span class="n">istate</span><span class="p">,</span> <span class="n">Coeff1</span> <span class="o">=</span> <span class="n">ida_py</span><span class="p">(</span><span class="n">Coeff</span><span class="p">,</span> <span class="n">old_st</span><span class="p">,</span> <span class="n">new_st</span><span class="p">,</span> <span class="n">E_old</span><span class="p">,</span> <span class="n">E_new</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">ksi2</span><span class="p">,</span> <span class="n">do_collapse</span><span class="p">,</span> <span class="n">boltz_opt</span><span class="p">)</span>
+
+
+    <span class="k">return</span> <span class="n">istate</span><span class="p">,</span> <span class="n">Coeff1</span></div>
+    
+
+
+<div class="viewcode-block" id="project_out"><a class="viewcode-back" href="../../reference/libra_py/tsh.html#libra_py.tsh.project_out">[docs]</a><span class="k">def</span> <span class="nf">project_out</span><span class="p">(</span><span class="n">Coeff</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Projects the state `i` out of a coherent superposition of states</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        Coeff ( CMATRIX(N, 1) ): amplitudes of the electronic states in</span>
+<span class="sd">            a coherent superposition from which we will project a state out</span>
+<span class="sd">        i ( int ): The index of the state to be projected out</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: but changes the input variable `Coeff`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">Coeff</span><span class="o">.</span><span class="n">num_of_rows</span>
+    
+    <span class="n">ci</span> <span class="o">=</span> <span class="n">Coeff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">pi</span> <span class="o">=</span> <span class="p">(</span><span class="n">ci</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span> <span class="o">*</span> <span class="n">ci</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+    <span class="n">nrm</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">pi</span>
+    <span class="k">if</span> <span class="n">nrm</span><span class="o">&lt;</span><span class="mf">0.0</span><span class="p">:</span>
+        <span class="n">nrm</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">if</span> <span class="n">nrm</span><span class="o">&gt;</span><span class="mf">0.0</span><span class="p">:</span>
+        <span class="n">nrm</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nrm</span><span class="p">)</span>
+
+    <span class="n">Coeff</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nrm</span><span class="p">)</span>
+    <span class="n">Coeff</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="collapse"><a class="viewcode-back" href="../../reference/libra_py/tsh.html#libra_py.tsh.collapse">[docs]</a><span class="k">def</span> <span class="nf">collapse</span><span class="p">(</span><span class="n">Coeff</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>   
+    <span class="sd">&quot;&quot;&quot;Collapse the wfc but such that to preserve the phase!</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        Coeff ( CMATRIX(N, 1) ): amplitudes of the electronic states in</span>
+<span class="sd">            a coherent superposition which we are going to collapse</span>
+<span class="sd">        i ( int ): The index of the state onto which the supeposition will be collapsed</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: but changes the input variable `Coeff`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Coeff</span> <span class="o">*=</span> <span class="mf">0.0</span>
+
+    <span class="n">ci</span> <span class="o">=</span> <span class="n">Coeff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">pi</span> <span class="o">=</span> <span class="p">(</span><span class="n">ci</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span> <span class="o">*</span> <span class="n">ci</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+    <span class="k">if</span> <span class="n">pi</span><span class="o">&gt;</span><span class="mf">0.0</span><span class="p">:</span>
+        <span class="n">Coeff</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ci</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="p">))</span>     
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">Coeff</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span></div>
+
+
+
+
+<div class="viewcode-block" id="dish_py"><a class="viewcode-back" href="../../reference/libra_py/tsh.html#libra_py.tsh.dish_py">[docs]</a><span class="k">def</span> <span class="nf">dish_py</span><span class="p">(</span><span class="n">Coeff</span><span class="p">,</span> <span class="n">istate</span><span class="p">,</span> <span class="n">t_m</span><span class="p">,</span> <span class="n">tau_m</span><span class="p">,</span> <span class="n">Hvib</span><span class="p">,</span> <span class="n">boltz_opt</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">ksi1</span><span class="p">,</span> <span class="n">ksi2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decoherence-induced surface hopping (DISH)</span>
+<span class="sd">    Reference: Jaeger, H. M.; Fischer, S.; Prezhdo, O. V. Decoherence-Induced Surface Hopping. J. Chem. Phys. 2012, 137, 22A545.</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        Coeff ( CMATRIX(N, 1) ): Amplitudes of electronic states</span>
+<span class="sd">        istate ( int ): Initial state index</span>
+<span class="sd">        t_m ( MATRIX(N, 1) ): Matrix of the times each state resides in a coherence interval since the last decoherence event [ units: a.u. ]</span>
+<span class="sd">        tau_m  ( MATRIX(N, 1) ): Matrix of the coherence intervals for each electronic state [ units: a.u. ]</span>
+<span class="sd">        Hvib ( CMATRIX(N, N) ): Vibronic Hamiltonian matrix [ units: Ha ]</span>
+<span class="sd">        boltz_opt ( int ): The selector of the proposed hop acceptance algorithm:</span>
+
+<span class="sd">            - 0: all proposed hops are accepted - no rejection based on energies</span>
+<span class="sd">            - 1: proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)</span>
+<span class="sd">            - 2: proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous</span>
+<span class="sd">            - 3: generalization of &quot;1&quot;, but actually it should be changed in case there are many degenerate levels</span>
+
+
+<span class="sd">        T ( double ): temperature [ units: K ]</span>
+<span class="sd">        ksi ( double ):random number in interval [0.0, 1.0] cotrolling the execution of SH</span>
+<span class="sd">        ksi2 ( double ):random number in interval [0.0, 1.0] cotrolling the execution of SH</span>
+
+
+<span class="sd">    Returns: </span>
+<span class="sd">        int: fstat: the index of the electronic state after the &quot;hop&quot; (old state index or a new one)</span>
+
+<span class="sd">    Note: </span>
+<span class="sd">        The function also modifies the `Coeff` and `t_m` variables</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">fstate</span> <span class="o">=</span> <span class="n">istate</span>
+
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">Coeff</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">dm</span> <span class="o">=</span> <span class="n">Coeff</span> <span class="o">*</span> <span class="n">Coeff</span><span class="o">.</span><span class="n">H</span><span class="p">()</span>     <span class="c1"># density matrix</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">has_decoherence</span> <span class="o">=</span> <span class="kc">False</span>   <span class="c1"># set to True if we have encountered a decoherence event</span>
+
+    <span class="k">while</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">nstates</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_decoherence</span><span class="p">:</span>
+
+        <span class="c1"># The state i has evolved coherently for longer than the coherence interval</span>
+        <span class="c1"># so it has to experience a decoherence event </span>
+        <span class="k">if</span> <span class="n">t_m</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">tau_m</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+            <span class="c1"># There are essentially two outcomes when the decoherence takes place:</span>
+
+            <span class="k">if</span> <span class="n">ksi1</span> <span class="o">&lt;</span> <span class="n">dm</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">:</span>  
+                <span class="c1"># One: we collapse the wavefunction onto the state i with the probability </span>
+                <span class="c1"># given by the population of that state</span>
+
+                <span class="c1"># Now, lets determine if the hop is possible based on the energy conservation</span>
+                <span class="c1"># considerations </span>
+                <span class="n">boltz_f</span> <span class="o">=</span> <span class="n">boltz_factor</span><span class="p">(</span><span class="n">Hvib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">Hvib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">istate</span><span class="p">,</span> <span class="n">istate</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">boltz_opt</span><span class="p">)</span>
+ 
+                <span class="k">if</span> <span class="n">ksi2</span> <span class="o">&lt;</span> <span class="n">boltz_f</span><span class="p">:</span>
+                    <span class="c1">#  Now, decide about decoherence         </span>
+                    <span class="n">collapse</span><span class="p">(</span><span class="n">Coeff</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>      <span class="c1"># Here is the actuall collapse</span>
+                    <span class="n">fstate</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">project_out</span><span class="p">(</span><span class="n">Coeff</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>       <span class="c1"># Project out of the state</span>
+                    <span class="n">fstate</span> <span class="o">=</span> <span class="n">istate</span>
+
+            <span class="c1"># The below section is not present in the DISH implementation in PYXAID</span>
+            <span class="c1"># but this is not how it should be done according to the paper of Jaeger et al.</span>
+            <span class="c1"># so this implementation does follow the algorithm outlined in the paper</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Second: project the system out of that state</span>
+                <span class="n">project_out</span><span class="p">(</span><span class="n">Coeff</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>   <span class="c1"># Project out of the state</span>
+                <span class="n">fstate</span> <span class="o">=</span> <span class="n">istate</span>
+
+            <span class="c1"># Reset the time axis for state i (only for this state)</span>
+            <span class="c1"># other states still reside in a coherent superposition</span>
+            <span class="n">t_m</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+            <span class="c1"># Set the flag that we have attempted a decoherence event</span>
+            <span class="c1"># so we done with DISH at this point in time</span>
+            <span class="n">has_decoherence</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">fstate</span><span class="p">;</span></div>
+
+
+
+<div class="viewcode-block" id="Boltz_corr_Ham"><a class="viewcode-back" href="../../reference/libra_py/tsh.html#libra_py.tsh.Boltz_corr_Ham">[docs]</a><span class="k">def</span> <span class="nf">Boltz_corr_Ham</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">Coeff</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">case</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function implements the computation of the</span>
+<span class="sd">    effective Hamiltonian used in the Boltzmann-corrected Ehrenfest</span>
+<span class="sd">    method of Bastida et al.</span>
+
+<span class="sd">    Ref: Bastida, A.; Cruz, C.; Zuniga, J.; Requena, A.; Miguel, B.</span>
+<span class="sd">    &quot;A modified Ehrenfest method that achieves Boltzmann quantum state populations&quot;</span>
+<span class="sd">    Chem. Phys. Lett. 2006, 417, 53-57</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        H ( CMATRIX(N,N) ): original vibronic Hamiltonian [units: a.u.]</span>
+<span class="sd">        Coeff ( CMATRIX(N,1) ): amplitudes of the basis states </span>
+<span class="sd">        T ( double ): bath temperature [ units: K]</span>
+<span class="sd">        case ( int ): selection of the type of the Hamiltonian</span>
+<span class="sd"> </span>
+<span class="sd">            - 0: diabatic Hamiltonian  H_ij = |i&gt;E_i&lt;i|  + |i&gt; V_ij &lt;j|</span>
+<span class="sd">            - 1: adiabatic Hamiltonian  H_ij = |i&gt;E_i&lt;i|  - i hbar |i&gt; d_ij &lt;j| [ default ]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        CMATRIX(N,N) : the effective Hamiltonian to be used in the calculations</span>
+<span class="sd">       </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">sz</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">num_of_cols</span>    
+    <span class="n">kT</span> <span class="o">=</span> <span class="n">units</span><span class="o">.</span><span class="n">kB</span> <span class="o">*</span> <span class="n">T</span>    
+    
+    
+    <span class="c1">#============= Step 1 ===================</span>
+    <span class="c1"># Compute the absolute values of the state amplitudes</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">sz</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">rho</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">Coeff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span> <span class="p">)</span>
+    
+    <span class="c1">#============= Step 2 ===================</span>
+    <span class="c1"># Include the thermal factors, the Hcorr matrix is no longer symmetric</span>
+    <span class="n">Hcorr</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>    
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">j</span><span class="o">!=</span><span class="n">k</span><span class="p">:</span>                
+                <span class="n">dE</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="o">-</span> <span class="n">H</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+                <span class="n">corr</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dE</span><span class="o">/</span><span class="n">kT</span><span class="p">))</span> <span class="p">)</span>                                
+                <span class="n">Hcorr</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">k</span><span class="p">,</span> <span class="n">corr</span><span class="p">)</span>
+                
+    <span class="c1">#============= Step 3 ===================</span>
+    <span class="c1"># Symmetrize the thermally-corrected Hamiltonian</span>
+    <span class="n">Hcorr2</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">sz</span><span class="p">,</span><span class="n">sz</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">case</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>  <span class="c1"># diabatic - original Bastida</span>
+                <span class="n">hkj</span> <span class="o">=</span> <span class="n">rho</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">Hcorr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">k</span><span class="p">)</span> <span class="o">-</span> <span class="n">rho</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">Hcorr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="c1"># adiabatic - changed Bastida</span>
+                <span class="n">hkj</span> <span class="o">=</span> <span class="n">rho</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">Hcorr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="n">rho</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">Hcorr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+            
+            <span class="n">Hcorr2</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">hkj</span><span class="p">)</span>
+            <span class="n">Hcorr2</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">k</span><span class="p">,</span> <span class="n">hkj</span><span class="p">)</span>
+            
+    <span class="k">return</span> <span class="n">Hcorr2</span></div>
+    
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

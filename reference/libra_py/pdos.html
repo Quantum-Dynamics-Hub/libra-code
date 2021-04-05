@@ -1,0 +1,410 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pdos &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="probabilities" href="probabilities.html" />
+    <link rel="prev" title="parse_gamess" href="parse_gamess.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>pdos</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/pdos.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.pdos">
+<span id="pdos"></span><h1>pdos<a class="headerlink" href="#module-libra_py.pdos" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-pdos"></span><dl class="py function">
+<dt id="libra_py.pdos.QE_pdos">
+<code class="sig-prename descclassname"><span class="pre">libra_py.pdos.</span></code><code class="sig-name descname"><span class="pre">QE_pdos</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">de</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projections</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ef</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfile_prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_convolve</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">de_new</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nspin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/pdos.html#QE_pdos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.pdos.QE_pdos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes various types of pDOS from the atomic state projections generated by the QE</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prefix</strong> (<em>string</em>) – a common prefix of the filenames for files containing the projection information</p></li>
+<li><p><strong>emin</strong> (<em>double</em>) – the minimal energy of the pDOS window [eV]</p></li>
+<li><p><strong>emax</strong> (<em>double</em>) – maximal energy of the pDOS window [eV]</p></li>
+<li><p><strong>de</strong> (<em>double</em>) – the original grid spacing of the pDOS [eV] (not necessarily the one used in pdos.in)</p></li>
+<li><p><strong>projections</strong> (<em>list of lists of - see below</em>) – groups of atoms and types of projections.
+Each element of this list contains 3 sub-lists, whose intersection defines which files to use:
+e.g. projection = [[“s”,”p”], [1,2,3], [“Cs”, “Br”]] - means s and p orbitals of atoms 1, 2, and 3
+as long as any of these atoms are Cs or Br</p></li>
+<li><p><strong>Ef</strong> (<em>double</em>) – which energy use as the origin of energy scale (zero) in the output. Usually
+the Fermi or LUMO energy</p></li>
+<li><p><strong>outfile_prefix</strong> (<em>string</em>) – the prefix of the output file that will contain the final projections</p></li>
+<li><p><strong>do_convolve</strong> (<em>Bool</em>) – the flag telling whether we want to convolve the original data with the
+Gaussian envelope. The convolution is done with <a class="reference internal" href="#libra_py.pdos.convolve" title="libra_py.pdos.convolve"><code class="xref py py-func docutils literal notranslate"><span class="pre">convolve()</span></code></a></p></li>
+<li><p><strong>de_new</strong> (<em>double</em>) – the new energy grid spacing [eV], in effect only if do_convolve == True</p></li>
+<li><p><strong>var</strong> (<em>double</em>) – standard deviation of the Gaussian [eV] with which we do a convolution,
+in effect only if do_convolve == True</p></li>
+<li><p><strong>nspin</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – specifies which nspin was used in the electronic structure calculation.
+nspin = 1
+nspin = 2
+nspin = 4</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( E, pDOSa ), where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>E ( MATRIX(N, 1) ): new energy grid, N - the new number of energy grid points</p></li>
+<li><p>pDOSa ( MATRIX(N, Nproj) ): new Y grids, Nproj - len(projections) the number of projections we are interested in</p></li>
+<li><p>if spin = 2, returns pDOSb for beta spin-orbtials as well</p></li>
+<li><p>if spin = 4, returns just the pDOSa (pDOSb = None), but the orbitals now mixed spin states</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.pdos.convolve">
+<code class="sig-prename descclassname"><span class="pre">libra_py.pdos.</span></code><code class="sig-name descname"><span class="pre">convolve</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/pdos.html#convolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.pdos.convolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function convolves the original data with the Gaussian
+of a given width:  exp(- (x - x0)^2 / (2*var^2) )
+This also means the energy grid spacing may change (usually to a denser one)
+The difference in grid densities is defined by the multiplicative factor dx0/dx</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X0</strong> (<em>MATRIX</em><em>(</em><em>N0</em><em>, </em><em>1</em><em>)</em>) – original X grid, N0 - the number of energy grid points</p></li>
+<li><p><strong>Y0</strong> (<em>MATRIX</em><em>(</em><em>N0</em><em>, </em><em>Nproj</em><em>)</em>) – original Y grids, Nproj - the number of projections
+to consider</p></li>
+<li><p><strong>dx0</strong> (<em>double</em>) – original X grid spacing [in units of energy]</p></li>
+<li><p><strong>dx</strong> (<em>double</em>) – new X grid spacing [in units of energy]</p></li>
+<li><p><strong>var</strong> (<em>double</em>) – width of the Gaussians that broaden the original data [in units of energy]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( X, Y ), where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>X ( MATRIX(N, 1) ): new X grid, N - the new number of energy grid points (N*dx = N0*dx0)</p></li>
+<li><p>Y ( MATRIX(N, Nproj) ): new Y grids, Nproj has the same meaning as in Y0</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.pdos.convolve_cp2k_pdos">
+<code class="sig-prename descclassname"><span class="pre">libra_py.pdos.</span></code><code class="sig-name descname"><span class="pre">convolve_cp2k_pdos</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/pdos.html#convolve_cp2k_pdos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.pdos.convolve_cp2k_pdos" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function reads the pdos file produced by CP2K and extract the pdos at each time step and
+then convolve them with Gaussian functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dictionary</em>) – <p>cp2k_pdos_file (str): The CP2K .pdos file.</p>
+<p>time_step (int): The time step of molecular dynamics.</p>
+<p>sigma (float): The standard deviation in Gaussian function.</p>
+<p>coef (float): The coefficient multiplied in Gaussian function.</p>
+<p>npoints (int): The number of points used in convolution.</p>
+<dl class="simple">
+<dt>energy_conversion (float): The energy conversion unit from Hartree. For example 27.211386 is</dt><dd><p>for unit conversion from Hartree to eV. This value comes from libra_py.units. For example
+for Hartree to eV one needs to call libra_py.units.au2ev in the input. The default value is
+Hartree to eV.</p>
+</dd>
+</dl>
+<p>angular_momentum_cols (list): The angular momentum columns in the <a href="#id1"><span class="problematic" id="id2">*</span></a>.pdos files produced by CP2K.</p>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The energy grid points vector.</p>
+<p>convolved_pdos (numpy array): The convolved pDOS vector.</p>
+<p>homo_energy (float): The average HOMO energy.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>energy_grid (numpy array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.pdos.libra_pdos">
+<code class="sig-prename descclassname"><span class="pre">libra_py.pdos.</span></code><code class="sig-name descname"><span class="pre">libra_pdos</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_emin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_emax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_de</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projections</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_convolve</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_de_new</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_var</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/pdos.html#libra_pdos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.pdos.libra_pdos" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>_emin</strong> (<em>*</em>) – minimal energy of the spectrum [eV]</p></li>
+<li><p><strong>_emax</strong> (<em>*</em>) – maximal energy of the spectrum [eV]</p></li>
+<li><p><strong>_de</strong> (<em>*</em>) – original energy grid spacing  [eV]</p></li>
+<li><p><strong>projections</strong> (<em>*</em>) – <p>groups of atoms and types of projections
+e.g. projections = [[“s”,[1,2,3]], [“p”,[1,2,3]], …</p>
+<p>Possible projections (examples)
+proj = [[“s”,range(0,360)],[“p”,range(0,360)],[“d”,range(0,360)]]
+proj = [[“s”,range(0,1)],[“p”,range(0,1)],[“d”,range(0,1)]]
+proj = [[“tot”,range(0,112)]]</p>
+</p></li>
+<li><p><strong>prefix</strong> (<em>*</em>) – the common prefix of the files containing the projection information</p></li>
+<li><p><strong>outfile</strong> (<em>*</em>) – the name of the file that will contain the computed pDOSs</p></li>
+<li><p><strong>Nel</strong> (<em>*</em>) – the number of electrons, to compute the Fermi energy</p></li>
+<li><p><strong>_de_new</strong> (<em>*</em>) – new energy grid (for convolved) spacing  [eV]</p></li>
+<li><p><strong>_var</strong> (<em>*</em>) – the width of the Gaussian used to broaden each energy grid point [eV]</p></li>
+</ul>
+</dd>
+</dl>
+<p># Example: of call - for Si QD
+# Si
+#main(-35.0, 35.0, 0.1,[[“tot”,range(0,103)]],”_alpha_wfc_atom”,”dos_proj.txt”,238)</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="probabilities.html" class="btn btn-neutral float-right" title="probabilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="parse_gamess.html" class="btn btn-neutral float-left" title="parse_gamess" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,475 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>mapping &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="qsh" href="qsh.html" />
+    <link rel="prev" title="lz" href="lz.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../models.html">models</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../workflows.html">workflows</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../nbra.html">nbra</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="compute_hprime.html">compute_hprime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="compute_properties.html">compute_properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="decoherence_times.html">decoherence_times</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lz.html">lz</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">mapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="qsh.html">qsh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2.html">step2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_analysis.html">step2_analysis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_dftb.html">step2_dftb</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_ergoscf.html">step2_ergoscf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_many_body.html">step2_many_body</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step3.html">step3</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step4.html">step4</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../nbra.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../libra_py.html">libra_py</a> &raquo;</li>
+        
+          <li><a href="../../workflows.html">workflows</a> &raquo;</li>
+        
+          <li><a href="../nbra.html">nbra</a> &raquo;</li>
+        
+      <li>mapping</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../../_sources/reference/libra_py/workflows/nbra/mapping.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.workflows.nbra.mapping">
+<span id="mapping"></span><h1>mapping<a class="headerlink" href="#module-libra_py.workflows.nbra.mapping" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-mapping"></span><dl class="py function">
+<dt id="libra_py.workflows.nbra.mapping.energy_arb">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.mapping.</span></code><code class="sig-name descname"><span class="pre">energy_arb</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/mapping.html#energy_arb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.mapping.energy_arb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the energy of a Slater Determinat (SD) state</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>SD</strong> (<em>list of ints</em>) – indices of the orbitals occupied in this SD
+SeeAlso: <code class="docutils literal notranslate"><span class="pre">`inp`</span></code> in the <code class="docutils literal notranslate"><span class="pre">`sd2indx(inp,nbasis)`</span></code> function</p></li>
+<li><p><strong>e</strong> (<em>MATRIX</em><em>(</em><em>nbasis</em><em>, </em><em>nbasis</em><em>)</em>) – energies of all 1-electron levels (alpha- and beta- components)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>the sum of the orbital energies for the occupied spin-orbitals -</dt><dd><p>This is the approximation of the SD energy</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>double</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.mapping.energy_mat_arb">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.mapping.</span></code><code class="sig-name descname"><span class="pre">energy_mat_arb</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dE</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/mapping.html#energy_mat_arb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.mapping.energy_mat_arb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes a matrix of the SD energies</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>SD</strong> (<em>list of lists of ints</em>) – a list of SD determinants, such that:
+SD[iSD] is a list of integers defining which orbitals are
+occupied in SD with index <code class="docutils literal notranslate"><span class="pre">`iSD`</span></code> and how
+SeeAlso: <code class="docutils literal notranslate"><span class="pre">`inp`</span></code> in the <code class="docutils literal notranslate"><span class="pre">`sd2indx(inp,nbasis)`</span></code> function</p></li>
+<li><p><strong>e</strong> (<em>MATRIX</em><em>(</em><em>nbasis</em><em>, </em><em>nbasis</em><em>)</em>) – energies of all 1-electron levels (alpha- and beta- components)</p></li>
+<li><p><strong>dE</strong> (<em>list of doubles</em>) – energy corrections added to each SD</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the matrix of energies in the SD basis. Here, N = len(SD) - the number of SDs.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>CMATRIX(N,N)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.mapping.orbs2spinorbs">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.mapping.</span></code><code class="sig-name descname"><span class="pre">orbs2spinorbs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/mapping.html#orbs2spinorbs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.mapping.orbs2spinorbs" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function converts the matrices in the orbital basis (e.g. old PYXAID style)
+to the spin-orbital basis.
+Essentially, it makes a block matrix of a double dimension:</p>
+<blockquote>
+<div><p>( s  0 )</p>
+</div></blockquote>
+<p>s –&gt;  ( 0  s )</p>
+<p>This is meant to be used for backward compatibility with PYXIAD-generated data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>s</strong> (<em>CMATRIX</em><em>(</em><em>N</em><em>,</em><em>N</em><em>)</em>) – whatever matrix in the orbital basis, N - is the number of
+doubly-occupied orbitals</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>whatever matrix in the spin-orbital basis. It has a doubled dimensionality</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>CMATRIX(2N, 2N)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.mapping.ovlp_arb">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.mapping.</span></code><code class="sig-name descname"><span class="pre">ovlp_arb</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SD1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SD2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">S</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_minimal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/mapping.html#ovlp_arb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.mapping.ovlp_arb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the overlap of two generic SDs: &lt;SD1|SD2&gt;</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>SD1</strong> (<em>lists of ints</em>) – first SD, such that:
+SeeAlso: <code class="docutils literal notranslate"><span class="pre">`inp`</span></code> in the <code class="docutils literal notranslate"><span class="pre">`sd2indx(inp,nbasis)`</span></code> function</p></li>
+<li><p><strong>SD2</strong> (<em>lists of ints</em>) – second SD, such that:
+SeeAlso: <code class="docutils literal notranslate"><span class="pre">`inp`</span></code> in the <code class="docutils literal notranslate"><span class="pre">`sd2indx(inp,nbasis)`</span></code> function</p></li>
+<li><p><strong>S</strong> (<em>CMATRIX</em><em>(</em><em>N</em><em>,</em><em>N</em><em>)</em>) – is the matrix in the space of 1-el spin-orbitals (either spin-diabatic or
+spin-adiabatic or both) , N - is the number of 1-el orbitals.</p></li>
+<li><p><strong>use_minimal</strong> (<em>Boolean</em>) – If True, use the minimal subset of Kohn-Sham orbitals needed to describe
+the overlap of the SDs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the overlap of the two determinants &lt;SD1|SD2&gt;</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#complex" title="(in Python v3.9)">complex</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.mapping.ovlp_mat_arb">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.mapping.</span></code><code class="sig-name descname"><span class="pre">ovlp_mat_arb</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SD1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SD2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">S</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_minimal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/mapping.html#ovlp_mat_arb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.mapping.ovlp_mat_arb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute a matrix of overlaps in the SD basis</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>SD1</strong> (<em>list of lists of N ints</em>) – a list of N SD determinants, such that:
+SD1[iSD] is a list of integers defining which orbitals are
+occupied in SD with index <code class="docutils literal notranslate"><span class="pre">`iSD`</span></code> and how
+SeeAlso: <code class="docutils literal notranslate"><span class="pre">`inp`</span></code> in the <code class="docutils literal notranslate"><span class="pre">`sd2indx(inp,nbasis)`</span></code> function</p></li>
+<li><p><strong>SD2</strong> (<em>list of lists of M ints</em>) – a list of M SD determinants, such that:
+SD2[iSD] is a list of integers defining which orbitals are
+occupied in SD with index <code class="docutils literal notranslate"><span class="pre">`iSD`</span></code> and how
+SeeAlso: <code class="docutils literal notranslate"><span class="pre">`inp`</span></code> in the <code class="docutils literal notranslate"><span class="pre">`sd2indx(inp,nbasis)`</span></code> function</p></li>
+<li><p><strong>S</strong> (<em>CMATRIX</em><em>(</em><em>K</em><em>,</em><em>K</em><em>)</em>) – is the matrix in the space of 1-el spin-orbitals (either spin-diabatic or
+spin-adiabatic or both) , K - is the number of 1-el orbitals.</p></li>
+<li><p><strong>use_minimal</strong> (<em>Boolean</em>) – If True, use the minimal subset of Kohn-Sham orbitals needed to describe
+the overlap of the SDs. This is passed to the funciton that computes the overlaps</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>overlap matrix composed of elements &lt;SD1(i)|SD2(j)&gt;</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>CMATRIX(N, M)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.mapping.sd2indx">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.mapping.</span></code><code class="sig-name descname"><span class="pre">sd2indx</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nbasis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/mapping.html#sd2indx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.mapping.sd2indx" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function maps a list of integers defining the
+occupied spin-orbitals in a SD onto the global indices of the orbitals
+that are being occupied.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inp</strong> (<em>list of ints</em>) – <p>indices of the occupied spin-orbitals.
+Indexing starts with 1, not 0!</p>
+<p>Positive number <code class="docutils literal notranslate"><span class="pre">`n`</span></code> correspond to an alpha electron occupying the
+orbital (whether it is an alpha-spatial or beta-spatial component) <code class="docutils literal notranslate"><span class="pre">`n`</span></code></p>
+<p>Negative number <code class="docutils literal notranslate"><span class="pre">`-n`</span></code> correspond to a beta electron occupying the
+orbital (whether it is an alpha-spatial or beta-spatial component) <code class="docutils literal notranslate"><span class="pre">`n`</span></code></p>
+</p></li>
+<li><p><strong>nbasis</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the total number of orbitals orbitals (both alpha- and beta-
+spatial components ) in the selected active space [currently not really used!]</p></li>
+<li><p><strong>do_sort</strong> (<em>Boolean</em>) – <p>the flag to tell whether the indices should be sorted in
+a particular order:</p>
+<blockquote>
+<div><ul>
+<li><p>True - for new scheme (needed for the SAC) [default]</p></li>
+<li><p>use with False for Pyxaid mapping!</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the indices of the orbitals occupied in this SD (different convention)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of ints</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>Assume out active space consists of 4 orbitals:  <a href="#id1"><span class="problematic" id="id2">|</span></a>1^a&gt;, <a href="#id3"><span class="problematic" id="id4">|</span></a>1^b&gt;, <a href="#id5"><span class="problematic" id="id6">|</span></a>2^a&gt;, <a href="#id7"><span class="problematic" id="id8">|</span></a>2^b&gt;.
+Here, the superscript indicates the spin-component of the given orbital.</p>
+<p>In the step2 they are grouped as <a href="#id9"><span class="problematic" id="id10">|</span></a>1^a&gt;, <a href="#id11"><span class="problematic" id="id12">|</span></a>2^a&gt;, <a href="#id13"><span class="problematic" id="id14">|</span></a>1^b&gt;, <a href="#id15"><span class="problematic" id="id16">|</span></a>2^b&gt;</p>
+<dl class="simple">
+<dt>And indexed (overall) as:           1     2      3      4  (as used in the input)</dt><dd><p>0     1      2      3  (as used in the output)</p>
+</dd>
+</dl>
+<p>Note: this indexing convention assumes starting from 1, not from 0!</p>
+<p>So the <code class="docutils literal notranslate"><span class="pre">`nbasis`</span></code> should be = 4</p>
+<p>Input SD = [1, -3] means that the orbital <a href="#id17"><span class="problematic" id="id18">|</span></a>1^a&gt; is occupied by an alpha electron <a href="#id19"><span class="problematic" id="id20">|</span></a>a&gt;
+and the orbital <a href="#id21"><span class="problematic" id="id22">|</span></a>1^b&gt; is occupied by a beta electron <a href="#id23"><span class="problematic" id="id24">|</span></a>b&gt;, so the SD is:</p>
+<p>SD = 1/sqrt(2) * | <a href="#id25"><span class="problematic" id="id26">|</span></a>1^a&gt;|a&gt;   <a href="#id27"><span class="problematic" id="id28">|</span></a>1^b&gt;|b&gt; |</p>
+<p>This function will return the global indices of the occupied orbitals in the
+set of active orbitals. That is the conversion will be:
+[1, -3] -&gt; [0, 2]
+Note that the output indices start from 0</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="qsh.html" class="btn btn-neutral float-right" title="qsh" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="lz.html" class="btn btn-neutral float-left" title="lz" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

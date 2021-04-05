@@ -1,0 +1,469 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>influence_spectrum &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="init_ensembles" href="init_ensembles.html" />
+    <link rel="prev" title="hungarian" href="hungarian.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>influence_spectrum</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/influence_spectrum.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.influence_spectrum">
+<span id="influence-spectrum"></span><h1>influence_spectrum<a class="headerlink" href="#module-libra_py.influence_spectrum" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-influence_spectrum"></span><dl class="py class">
+<dt id="libra_py.influence_spectrum.TestDatautils">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">libra_py.influence_spectrum.</span></code><code class="sig-name descname"><span class="pre">TestDatautils</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runTest'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/influence_spectrum.html#TestDatautils"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.influence_spectrum.TestDatautils" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="libra_py.influence_spectrum.TestDatautils.test_1">
+<code class="sig-name descname"><span class="pre">test_1</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/influence_spectrum.html#TestDatautils.test_1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.influence_spectrum.TestDatautils.test_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests find_maxima(s, verbose=0, filename=”run.log”)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libra_py.influence_spectrum.TestDatautils.test_2">
+<code class="sig-name descname"><span class="pre">test_2</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/influence_spectrum.html#TestDatautils.test_2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.influence_spectrum.TestDatautils.test_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests scalar_stat(X)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libra_py.influence_spectrum.TestDatautils.test_3">
+<code class="sig-name descname"><span class="pre">test_3</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/influence_spectrum.html#TestDatautils.test_3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.influence_spectrum.TestDatautils.test_3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests matrix_stat(X)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libra_py.influence_spectrum.TestDatautils.test_4">
+<code class="sig-name descname"><span class="pre">test_4</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/influence_spectrum.html#TestDatautils.test_4"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.influence_spectrum.TestDatautils.test_4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests matrix_freqs(X, a, b, dt, prefix, Nfreqs, verbose = [1,1,1], dw = 1.0, wspan = 3000.0, logfile=None)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.influence_spectrum.compute_all">
+<code class="sig-prename descclassname"><span class="pre">libra_py.influence_spectrum.</span></code><code class="sig-name descname"><span class="pre">compute_all</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/influence_spectrum.html#compute_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.influence_spectrum.compute_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the frequencies with which all matrix elements evolve in time</p>
+<p>In particular, we are interested only in the frequencies of the real part of
+diagonal elements and in frequencies of imaginary part of non-diagonal elements.
+This is a typical situation for the “vibronic” Hamiltonian data in the NA-MD</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>list of CMATRIX</em>) – time-series data of complex matrices, e.g. “vibronic” Hamiltonian</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – parameters controlling the execution of <a href="#id1"><span class="problematic" id="id2">:funct:`compute_mat_elt`</span></a> function
+..seealso::<cite>compute_mat_elt</cite> for the full description of the required and allowed parameters and the default values</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>freqs, such that</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>freqs[a][b][fr][0] ( double ): frequency of the mode fr for the matrix element X_ab [in 2*pi*a.u.^-1]</p></li>
+<li><dl class="simple">
+<dt>freqs[a][b][fr][1] ( double ): amplitude of the mode fr in the influence</dt><dd><p>spectrum for the matrix element X_ab  [arb. units]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>freqs[a][b][fr][2] ( double ):  normalized amplitued of the mode fr for the matrix</dt><dd><p>element X_ab  [arb.units]</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a>[nstates][nstates][nfreqs][3]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.influence_spectrum.compute_mat_elt">
+<code class="sig-prename descclassname"><span class="pre">libra_py.influence_spectrum.</span></code><code class="sig-name descname"><span class="pre">compute_mat_elt</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/influence_spectrum.html#compute_mat_elt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.influence_spectrum.compute_mat_elt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the frequencies with which a given matrix element evolves in time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>list of MATRIX</em>) – time-series data</p></li>
+<li><p><strong>a</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – is the row index of the matrix element to analyze</p></li>
+<li><p><strong>b</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – is the column index of the matrix element to analyze</p></li>
+<li><p><strong>params</strong> (<em>dictionalry</em>) – <p>parameters of the simulation. Contain the following keys:
+* <strong>params[“filename”]</strong> ( string ): the prefix of the filenames generated. Doesn’t matter</p>
+<blockquote>
+<div><p>if <cite>do_output == False</cite> [default: “<a href="#id3"><span class="problematic" id="id4">influence_spectra_</span></a>”]</p>
+</div></blockquote>
+<ul>
+<li><dl class="simple">
+<dt><strong>params[“logname”]</strong> ( string ): the name of the log-file. Doesn’t matter</dt><dd><p>if <cite>do_output == False</cite> [default: “out.log”]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“nfreqs”]</strong> ( int ): the maximal number of frequencies we want to extract [default: 1]</p></li>
+</ul>
+<p>SeeAlso: recipe1(data, params) for the description of other parameters:</p>
+<blockquote>
+<div><ul>
+<li><p>dr</p></li>
+<li><p>wspan</p></li>
+<li><p>dw</p></li>
+<li><p>do_output</p></li>
+<li><p>acf_filename</p></li>
+<li><p>spectrum_filename</p></li>
+<li><p>do_center</p></li>
+<li><p>acf_type</p></li>
+<li><p>data_type</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( T, norm_acf, raw_acf, W, J, J2, freqs ), where</p>
+<blockquote>
+<div><p>freqs ( list of lists ), where</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>freqs[fr][0] - frequency of the mode fr [in 2*pi*a.u.^-1]</p></li>
+<li><p>freqs[fr][1] - amplitude of the mode fr in the influence spectrum [arb. units]</p></li>
+<li><p>freqs[fr][2] - normalized amplitued of the mode fr [arb.units]</p></li>
+</ul>
+</div></blockquote>
+<dl class="simple">
+<dt>SeeAlso: The first 6 outputs are described in the <cite>recipe1</cite></dt><dd><ul class="simple">
+<li><p>T</p></li>
+<li><p>norm_acf</p></li>
+<li><p>raw_acf</p></li>
+<li><p>W</p></li>
+<li><p>J</p></li>
+<li><p>J2</p></li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.influence_spectrum.recipe1">
+<code class="sig-prename descclassname"><span class="pre">libra_py.influence_spectrum.</span></code><code class="sig-name descname"><span class="pre">recipe1</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/influence_spectrum.html#recipe1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.influence_spectrum.recipe1" title="Permalink to this definition">¶</a></dt>
+<dd><p>A recipe to compute ACF and its FT for data series</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>list of MATRIX</em><em>(</em><em>ndof</em><em>, </em><em>1</em><em>) </em><em>objects</em>) – sequence of real-valued ndof-dimensional vectors</p></li>
+<li><p><strong>params</strong> (<em>Python dictionary</em>) – <p>controlling the parameters</p>
+<ul>
+<li><p><strong>params[“dt”]</strong> ( double ): time distance between the adjacent data points [units: fs, default: 1.0]</p></li>
+<li><p><strong>params[“wspan”]</strong> ( double ): window of frequencies for the Fourier transform [ units: cm^-1, default: 3000.0 ]</p></li>
+<li><p><strong>params[“dw”]</strong> ( double ): grid points spacing in the frequency domain [ units: cm^-1, default: 1.0 ]</p></li>
+<li><p><strong>params[“do_output”]</strong> ( Boolean ): whether we print out the data the results into files [ default: False ]</p></li>
+<li><p><strong>params[“acf_filename”]</strong> ( string ): the name of the file where to print the ACF [ default: “acf.txt”]</p></li>
+<li><p><strong>params[“spectrum_filename”]</strong> ( string ): the name of the file where to print the spectrum [ default: “spectrum.txt” ]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“do_center”]</strong> ( Boolean ): a flag controlling whether to center data (=1) or not (=0)</dt><dd><p>Centering means we subtract the average value (over all the data points) from all
+the data points - this way, we convert values into their fluctuations [default: True ]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“acf_type”]</strong> ( int ): selector of the convention to to compute ACF</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0 : the chemist convention,  (1/(N-h)) Sum_{t=1,N-h} (Y[t]*Y[t+h]) [ default ]</p></li>
+<li><p>1 : the statistician convention, (1/N) Sum_{t=1,N-h} (Y[t]*Y[t+h])</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>params[“data_type”]</strong> ( int ): what is the format of the data?</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0 : list of MATRIX(ndof, 1) [ default ]</p></li>
+<li><p>1 : list of VECTOR</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(T, norm_acf, raw_acf, W, J, J2), where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>T ( list of double ): time axis [ units: fs ]</p></li>
+<li><p>norm_acf ( list of double ): normalized ACF</p></li>
+<li><p>raw_acf ( list of double ): un-normalized ACF</p></li>
+<li><p>W ( list of double ): frequencies axis [ units: cm^-1 ]</p></li>
+<li><p>J ( list of double ): amplitudes of FT</p></li>
+<li><p>J2 ( list of double ): (1/2pi)*|J|^2</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="init_ensembles.html" class="btn btn-neutral float-right" title="init_ensembles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="hungarian.html" class="btn btn-neutral float-left" title="hungarian" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

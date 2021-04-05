@@ -1,0 +1,351 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.acf &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.acf</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.acf</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************                     </span>
+<span class="c1">#* Copyright (C) 2017-2019 Brendan Smith, Wei Li, Alexey V. Akimov                                                   </span>
+<span class="c1">#*                                                                                                     </span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License                          </span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of                                   </span>
+<span class="c1">#* the License, or (at your option) any later version.                                                 </span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution   </span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.          </span>
+<span class="c1">#***********************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: acf</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: </span>
+<span class="sd">       This module implements the functionality to compute Autocorrelation Functions (ACF)</span>
+<span class="sd">       and do some transformations of them</span>
+<span class="sd">       The assumption is that data are provided in a matrix form - not vectors, so we can handle the</span>
+<span class="sd">       data of arbitrary dimensionality</span>
+
+
+<span class="sd">.. moduleauthor:: Brendan Smith, Wei Li, Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">data_stat</span>
+
+
+<div class="viewcode-block" id="acf_mat"><a class="viewcode-back" href="../../reference/libra_py/acf.html#libra_py.acf.acf_mat">[docs]</a><span class="k">def</span> <span class="nf">acf_mat</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the autocorrelation function of the given data set</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data ( list of MATRIX(ndof, 1) objects ): sequence of real-valued ndof-dimensional vectors</span>
+<span class="sd">        dt ( double ): time distance between the adjacent data points [units: general]</span>
+<span class="sd">        opt ( int ): selector of the convention to to compute ACF</span>
+
+<span class="sd">            * 0 : the chemist convention,  (1/(N-h)) Sum_{t=1,N-h} (Y[t]*Y[t+h])</span>
+<span class="sd">            * 1 : the statistician convention, (1/N) Sum_{t=1,N-h} (Y[t]*Y[t+h])</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (T, nautocorr, autocorr), where:</span>
+
+<span class="sd">            T (list of sz doubles ): lag time scale for the ACF [units: same as for dt]</span>
+<span class="sd">            nautocorr (list of sz doubles ): normalized ACF</span>
+<span class="sd">            autocorr (list of sz doubles ): un-normalized ACF</span>
+
+<span class="sd">    SeeAlso:</span>
+<span class="sd">        https://www.itl.nist.gov/div898/handbook/eda/section3/autocopl.htm</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>    <span class="c1"># For now, we will use the full data set </span>
+
+                      <span class="c1">###               how many elements we have in the time series</span>
+                      <span class="c1">###  old comments we use only a half of the point, because of the </span>
+                      <span class="c1">###               poorer statistics we get otherwise</span>
+    <span class="n">autocorr</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_rows</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="o">-</span><span class="n">i</span><span class="p">):</span>
+            <span class="n">total</span> <span class="o">+=</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">()</span><span class="o">*</span><span class="n">data</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>   <span class="c1"># scalar product</span>
+        <span class="k">if</span> <span class="n">opt</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">autocorr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">total</span><span class="o">/</span><span class="p">((</span><span class="n">sz</span><span class="o">-</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">ndof</span><span class="p">)</span> <span class="p">)</span>  <span class="c1"># less bias, chemistry adopted</span>
+        <span class="k">elif</span> <span class="n">opt</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">autocorr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">total</span><span class="o">/</span><span class="p">(</span><span class="n">sz</span><span class="o">*</span><span class="n">ndof</span><span class="p">)</span> <span class="p">)</span>      <span class="c1"># statistically-preferred option</span>
+
+    <span class="c1">#normalize the ACF	</span>
+    <span class="n">nautocorr</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">autocorr</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">&gt;</span><span class="mf">0.0</span><span class="p">:</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">autocorr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">T</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">T</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">it</span><span class="o">*</span><span class="n">dt</span><span class="p">)</span>
+        <span class="n">nautocorr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">norm</span> <span class="o">*</span> <span class="n">autocorr</span><span class="p">[</span><span class="n">it</span><span class="p">]</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">T</span><span class="p">,</span> <span class="n">nautocorr</span><span class="p">,</span> <span class="n">autocorr</span></div>
+
+
+
+
+<div class="viewcode-block" id="acf_vec"><a class="viewcode-back" href="../../reference/libra_py/acf.html#libra_py.acf.acf_vec">[docs]</a><span class="k">def</span> <span class="nf">acf_vec</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the autocorrelation function of the given data set</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data ( list of VECTOR objects ): sequence of real-valued 3-dimensional vectors</span>
+<span class="sd">        dt ( double ): time distance between the adjacent data points [units: general]</span>
+<span class="sd">        opt ( int ): selector of the convention to to compute ACF</span>
+
+<span class="sd">            * 0 : the chemist convention,  (1/(N-h)) Sum_{t=1,N-h} (Y[t]*Y[t+h])</span>
+<span class="sd">            * 1 : the statistician convention, (1/N) Sum_{t=1,N-h} (Y[t]*Y[t+h])</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (T, nautocorr, autocorr), where:</span>
+
+<span class="sd">            T (list of sz doubles ): lag time scale for the ACF [units: same as for dt]</span>
+<span class="sd">            nautocorr (list of sz doubles ): normalized ACF</span>
+<span class="sd">            autocorr (list of sz doubles ): un-normalized ACF</span>
+
+<span class="sd">    SeeAlso:</span>
+<span class="sd">        https://www.itl.nist.gov/div898/handbook/eda/section3/autocopl.htm</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>    <span class="c1"># For now, we will use the full data set </span>
+
+                      <span class="c1">###               how many elements we have in the time series</span>
+                      <span class="c1">###  old comments we use only a half of the point, because of the </span>
+                      <span class="c1">###               poorer statistics we get otherwise</span>
+    <span class="n">autocorr</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ndof</span> <span class="o">=</span> <span class="mf">3.0</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="o">-</span><span class="n">i</span><span class="p">):</span>
+            <span class="n">total</span> <span class="o">+=</span> <span class="n">data</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">data</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="n">i</span><span class="p">]</span>  <span class="c1"># scalar product</span>
+        <span class="k">if</span> <span class="n">opt</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">autocorr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">total</span><span class="o">/</span><span class="p">((</span><span class="n">sz</span><span class="o">-</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">ndof</span><span class="p">)</span> <span class="p">)</span>  <span class="c1"># less bias, chemistry adopted</span>
+        <span class="k">elif</span> <span class="n">opt</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">autocorr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">total</span><span class="o">/</span><span class="p">(</span><span class="n">sz</span><span class="o">*</span><span class="n">ndof</span><span class="p">)</span> <span class="p">)</span>      <span class="c1"># statistically-preferred option</span>
+
+    <span class="c1">#normalize the ACF	</span>
+    <span class="n">nautocorr</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">autocorr</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">&gt;</span><span class="mf">0.0</span><span class="p">:</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">autocorr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">T</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">T</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">it</span><span class="o">*</span><span class="n">dt</span><span class="p">)</span>
+        <span class="n">nautocorr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">norm</span> <span class="o">*</span> <span class="n">autocorr</span><span class="p">[</span><span class="n">it</span><span class="p">]</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">T</span><span class="p">,</span> <span class="n">nautocorr</span><span class="p">,</span> <span class="n">autocorr</span></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

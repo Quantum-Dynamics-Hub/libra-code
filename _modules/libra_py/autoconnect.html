@@ -1,0 +1,527 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.autoconnect &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.autoconnect</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.autoconnect</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#* Copyright (C) 2017-2019 Brendan Smith, Ekadashi Pradhan, Alexey V. Akimov</span>
+<span class="c1">#*</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: autoconnect</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements functions to determine the connectivity </span>
+<span class="sd">       matrix in molecular systems.</span>
+
+<span class="sd">.. moduleauthor:: Brendan Smith, Ekadashi Pradhan, Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1">#import common_utils as comn</span>
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+
+<div class="viewcode-block" id="autoconnect"><a class="viewcode-back" href="../../reference/libra_py/autoconnect.html#libra_py.autoconnect.autoconnect">[docs]</a><span class="k">def</span> <span class="nf">autoconnect</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">MaxCoord</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        R ( list of VECTOR objects ): The atomic coordinates of the system [ units: arbitrary ]</span>
+<span class="sd">        MaxCoord ( list of ints ): Maximal coorination numbers of each atom </span>
+<span class="sd">        params ( dictionary ): Parameters controlling the execution of this function</span>
+
+<span class="sd">            * **params[&quot;Rcut&quot;]** ( double ): The maximal radius of connectivity [ units: same as R, default: 0.0 ]</span>
+<span class="sd">            * **params[&quot;tv1&quot;]** ( VECTOR ): unit cell translation vector a [ units: same as R ]</span>
+<span class="sd">            * **params[&quot;tv2&quot;]** ( VECTOR ): unit cell translation vector b [ units: same as R ]</span>
+<span class="sd">            * **params[&quot;tv3&quot;]** ( VECTOR ): unit cell translation vector c [ units: same as R ]</span>
+<span class="sd">            * **params[&quot;pbc_opt&quot;]** ( string ): what type of periodicity to assume. </span>
+<span class="sd">                Options: &quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;ab&quot;, &quot;ac&quot;, &quot;bc&quot;, &quot;abc&quot;, &quot;none&quot; [ default: None ]</span>
+<span class="sd">            * **params[&quot;opt&quot;]** ( int ): Option to obey maximal coordination number: </span>
+<span class="sd">                - 0: the connected atoms in a pair have to obey both the coordination numbers</span>
+<span class="sd">                   Some of the atoms may stay undercoordinated. This is the consistent scheme in</span>
+<span class="sd">                   the sense that if A is connected to B, then B is necessarily connected to A [default]</span>
+<span class="sd">                - 1: treat the MaxCoord as the minimal coordination number each atom should attain.</span>
+<span class="sd">                   Some atoms may be overcoordinated. </span>
+<span class="sd">            * **params[&quot;verbosity&quot;]** ( int ): Flag to control the amount of the printout [ default: 0 ]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: ( res, line, unsorted_pairs_out ), where:</span>
+
+<span class="sd">            * res ( list of lists [ res[i][0], res[0][1] ] ), where </span>
+<span class="sd">                * res[i][0] ( int ): index of the atom</span>
+<span class="sd">                * res[i][1] ( list of ints ): indices of the atoms that are connected to res[i][0]</span>
+
+<span class="sd">            * line ( string ): the connectivity information in the .ent format</span>
+
+<span class="sd">            * unsorted_pairs_out ( same type as ```res```): same as ```res```, but not sorted</span>
+<span class="sd">                                  </span>
+<span class="sd">   </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;Rcut&quot;</span><span class="p">:</span><span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;pbc_opt&quot;</span><span class="p">:</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;opt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+                       <span class="s2">&quot;tv1&quot;</span><span class="p">:</span><span class="n">VECTOR</span><span class="p">(</span><span class="mf">1.0e+10</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="s2">&quot;tv2&quot;</span><span class="p">:</span><span class="n">VECTOR</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0e+10</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="s2">&quot;tv3&quot;</span><span class="p">:</span><span class="n">VECTOR</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0e+10</span><span class="p">),</span>
+                       <span class="s2">&quot;verbosity&quot;</span><span class="p">:</span><span class="mi">0</span>
+                     <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="n">Rcut</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;Rcut&quot;</span><span class="p">]</span>
+    <span class="n">pbc_opt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;pbc_opt&quot;</span><span class="p">]</span>
+    <span class="n">verbosity</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;verbosity&quot;</span><span class="p">]</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;opt&quot;</span><span class="p">]</span>
+    <span class="n">tv1</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;tv1&quot;</span><span class="p">]</span>
+    <span class="n">tv2</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;tv2&quot;</span><span class="p">]</span>
+    <span class="n">tv3</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;tv3&quot;</span><span class="p">]</span>
+
+
+    <span class="c1"># Preprocessing - sanity check</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">MaxCoord</span><span class="p">)</span> <span class="o">!=</span> <span class="n">N</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: The length of the MaxCoord list should be the same as the lenght of the R list!&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exiting now...&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+ 
+    <span class="n">unsorted_pairs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">mapping</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">periodicity</span> <span class="o">=</span> <span class="p">[]</span>    
+
+
+    <span class="k">if</span> <span class="n">pbc_opt</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="s2">&quot;ab&quot;</span><span class="p">,</span> <span class="s2">&quot;ac&quot;</span><span class="p">,</span> <span class="s2">&quot;bc&quot;</span><span class="p">,</span> <span class="s2">&quot;abc&quot;</span><span class="p">,</span><span class="s2">&quot;none&quot;</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: pbc_opt &quot;</span><span class="p">,</span> <span class="n">pbc_opt</span><span class="p">,</span> <span class="s2">&quot; is not recognized&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="n">transl_a</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span>
+    <span class="n">transl_b</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span>
+    <span class="n">transl_c</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">pbc_opt</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;ab&quot;</span><span class="p">,</span> <span class="s2">&quot;ac&quot;</span><span class="p">,</span> <span class="s2">&quot;abc&quot;</span><span class="p">]:</span>
+        <span class="n">transl_a</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">pbc_opt</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;ab&quot;</span><span class="p">,</span> <span class="s2">&quot;bc&quot;</span><span class="p">,</span> <span class="s2">&quot;abc&quot;</span><span class="p">]:</span>
+        <span class="n">transl_b</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">pbc_opt</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="s2">&quot;ac&quot;</span><span class="p">,</span> <span class="s2">&quot;bc&quot;</span><span class="p">,</span> <span class="s2">&quot;abc&quot;</span><span class="p">]:</span>
+        <span class="n">transl_c</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
+
+
+ 
+    <span class="c1"># Distances between all the pairs</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>    
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>        
+            <span class="k">for</span> <span class="n">n1</span> <span class="ow">in</span> <span class="n">transl_a</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">n2</span> <span class="ow">in</span> <span class="n">transl_b</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">n3</span> <span class="ow">in</span> <span class="n">transl_c</span><span class="p">:</span>
+
+                        <span class="n">T</span> <span class="o">=</span> <span class="n">n1</span> <span class="o">*</span> <span class="n">tv1</span> <span class="o">+</span> <span class="n">n2</span> <span class="o">*</span> <span class="n">tv2</span> <span class="o">+</span> <span class="n">n3</span> <span class="o">*</span> <span class="n">tv3</span>
+                        <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">R</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">length</span><span class="p">()</span>
+
+                        <span class="k">if</span> <span class="n">r</span><span class="o">&lt;</span><span class="n">Rcut</span><span class="p">:</span>
+                            <span class="n">unsorted_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">count</span><span class="p">,</span> <span class="n">r</span><span class="p">])</span>
+                            <span class="n">mapping</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">])</span>
+                            <span class="n">periodicity</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">n1</span><span class="p">,</span><span class="n">n2</span><span class="p">,</span><span class="n">n3</span><span class="p">])</span>
+                            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># Sort all the pairs according to the interparticle distance</span>
+    <span class="n">sorted_pairs</span> <span class="o">=</span> <span class="n">merge_sort</span><span class="p">(</span><span class="n">unsorted_pairs</span><span class="p">)</span> 
+
+
+    <span class="n">unsorted_pairs_out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">unsorted_pairs</span><span class="p">:</span>
+        <span class="n">unsorted_pairs_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">[</span> <span class="n">mapping</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">0</span><span class="p">],</span> <span class="n">mapping</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">1</span><span class="p">],</span>
+                                   <span class="n">VECTOR</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                                   <span class="n">VECTOR</span><span class="p">(</span> <span class="n">periodicity</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">tv1</span> <span class="o">+</span> <span class="n">periodicity</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">tv2</span> <span class="o">+</span> <span class="n">periodicity</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">tv3</span> <span class="p">)</span> <span class="p">]</span> 
+                                  <span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Pairs of atoms separated no more than by Rcut&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">unsorted_pairs</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Formatted printout:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">unsorted_pairs</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;Atoms </span><span class="si">{</span><span class="n">mapping</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">mapping</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> are separated by</span><span class="se">\</span>
+<span class="s2">                  </span><span class="si">{</span><span class="n">it</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">8.5f</span><span class="si">}</span><span class="s2">. Periodic translation applied = </span><span class="si">{</span><span class="n">periodicity</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">8.5f</span><span class="si">}</span><span class="s2">,</span><span class="se">\</span>
+<span class="s2">                  </span><span class="si">{</span><span class="n">periodicity</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">8.5f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">periodicity</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">8.5f</span><span class="si">}</span><span class="s2"> )&quot;</span> <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Pairs of atoms separated no more than by Rcut, sorted by the distance&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">sorted_pairs</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Formatted printout:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">sorted_pairs</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;Atoms </span><span class="si">{</span><span class="n">mapping</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">mapping</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> are separated by</span><span class="se">\</span>
+<span class="s2">                  </span><span class="si">{</span><span class="n">it</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">8.5f</span><span class="si">}</span><span class="s2">. Periodic translation applied = </span><span class="si">{</span><span class="n">periodicity</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">8.5f</span><span class="si">}</span><span class="s2">,</span><span class="se">\</span>
+<span class="s2">                  </span><span class="si">{</span><span class="n">periodicity</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">8.5f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">periodicity</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">8.5f</span><span class="si">}</span><span class="s2"> )&quot;</span> <span class="p">)</span>
+
+
+
+    <span class="c1"># Initialize the results variables</span>
+    <span class="n">act_coord</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">N</span>   <span class="c1"># actual coordination numbers</span>
+    <span class="n">num_sat</span> <span class="o">=</span> <span class="mi">0</span>         <span class="c1"># the number of valence-saturated atoms</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">,[]])</span>
+
+    <span class="c1"># Now lets pick the pairs with the minimal distance, depending on the option...</span>
+    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">sorted_pairs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">num_sat</span> <span class="o">&lt;</span> <span class="n">N</span><span class="p">:</span>        
+            <span class="n">i</span><span class="p">,</span><span class="n">j</span> <span class="o">=</span> <span class="n">mapping</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">0</span><span class="p">],</span> <span class="n">mapping</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">opt</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>  <span class="c1">#... no overcoordinated atoms</span>
+                <span class="k">if</span> <span class="n">act_coord</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&lt;</span><span class="n">MaxCoord</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">and</span> <span class="n">act_coord</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">&lt;</span><span class="n">MaxCoord</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>  
+                    <span class="n">res</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                    <span class="n">res</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                    <span class="n">act_coord</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">act_coord</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="k">if</span> <span class="n">act_coord</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">==</span><span class="n">MaxCoord</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">num_sat</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="k">if</span> <span class="n">act_coord</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">==</span><span class="n">MaxCoord</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                    <span class="n">num_sat</span> <span class="o">+=</span> <span class="mi">1</span>
+
+
+
+            <span class="k">elif</span> <span class="n">opt</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="c1"># ... no undercoordinated atoms</span>
+                <span class="k">if</span> <span class="n">act_coord</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&lt;</span><span class="n">MaxCoord</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>  
+                    <span class="n">res</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                    <span class="n">act_coord</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="k">if</span> <span class="n">act_coord</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">&lt;</span><span class="n">MaxCoord</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>  
+                    <span class="n">res</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                    <span class="n">act_coord</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># Order the indices of the atoms to which each atom is connected (for testing and convenience)    </span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">res</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+   
+
+    <span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot;CONECT </span><span class="si">%5i</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">it2</span> <span class="ow">in</span> <span class="n">it</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="si">%5i</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">it2</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;res = &quot;</span><span class="p">,</span> <span class="n">res</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Formatted output:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+ 
+    <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">unsorted_pairs_out</span></div>
+
+
+
+<div class="viewcode-block" id="find_undercoordinated_atoms"><a class="viewcode-back" href="../../reference/libra_py/autoconnect.html#libra_py.autoconnect.find_undercoordinated_atoms">[docs]</a><span class="k">def</span> <span class="nf">find_undercoordinated_atoms</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">MaxCoord</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        res ( list of lists [ res[i][0], res[0][1] ] ), where </span>
+<span class="sd">            * res[i][0] ( int ): index of the atom</span>
+<span class="sd">            * res[i][1] ( list of ints ): indices of the atoms that are connected to res[i][0]</span>
+
+<span class="sd">            This would typically be the first output of the ```autoconnect``` function</span>
+
+<span class="sd">        MaxCoord ( list of ints ): Maximal coorination numbers of each atom </span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        (list):  out, such that:</span>
+
+<span class="sd">            out[i][0] - is the index of the i-th undercoordinated atom</span>
+<span class="sd">            out[i][1] - is the number of dangling bonds on the i-th atom</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nat</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">MaxCoord</span><span class="p">)</span>  <span class="c1"># the total number of atoms</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nat</span><span class="p">):</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">MaxCoord</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span>  <span class="n">diff</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">diff</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<span class="k">def</span> <span class="nf">example_1</span><span class="p">():</span>
+
+    <span class="n">rnd</span> <span class="o">=</span> <span class="n">Random</span><span class="p">()</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">MaxCoord</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">rnd</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span><span class="o">&lt;</span><span class="mf">0.5</span><span class="p">:</span>
+            <span class="n">MaxCoord</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">MaxCoord</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">VECTOR</span><span class="p">(</span><span class="n">rnd</span><span class="o">.</span><span class="n">normal</span><span class="p">(),</span> <span class="n">rnd</span><span class="o">.</span><span class="n">normal</span><span class="p">(),</span> <span class="n">rnd</span><span class="o">.</span><span class="n">normal</span><span class="p">()))</span>
+    <span class="n">Rcut</span> <span class="o">=</span> <span class="mf">3.0</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Runing   autoconnect(R, MaxCoord, Rcut, 0, 1)  with : &quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;R = &quot;</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;MaxCoord = &quot;</span><span class="p">,</span> <span class="n">MaxCoord</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Rcut = &quot;</span><span class="p">,</span> <span class="n">Rcut</span><span class="p">)</span>
+    
+    <span class="n">autoconnect</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">MaxCoord</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Rcut&quot;</span><span class="p">:</span><span class="n">Rcut</span><span class="p">,</span> <span class="s2">&quot;opt&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;verbosity&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
+
+
+
+<div class="viewcode-block" id="TestAutoconnect"><a class="viewcode-back" href="../../reference/libra_py/autoconnect.html#libra_py.autoconnect.TestAutoconnect">[docs]</a><span class="k">class</span> <span class="nc">TestAutoconnect</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Docs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestAutoconnect.test_1"><a class="viewcode-back" href="../../reference/libra_py/autoconnect.html#libra_py.autoconnect.TestAutoconnect.test_1">[docs]</a>    <span class="k">def</span> <span class="nf">test_1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Diatomic&quot;&quot;&quot;</span>
+
+        <span class="n">R</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">MaxCoord</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">VECTOR</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">));</span>   <span class="n">MaxCoord</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Atom 1</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">VECTOR</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">));</span>   <span class="n">MaxCoord</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Atom 2</span>
+
+                 
+        <span class="n">res</span><span class="p">,</span> <span class="n">lines</span> <span class="o">=</span> <span class="n">autoconnect</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">MaxCoord</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Rcut&quot;</span><span class="p">:</span><span class="mf">1.5</span><span class="p">})</span>          
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]]]</span> <span class="p">)</span>
+
+        <span class="n">res</span><span class="p">,</span> <span class="n">lines</span> <span class="o">=</span> <span class="n">autoconnect</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">MaxCoord</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Rcut&quot;</span><span class="p">:</span><span class="mf">0.5</span><span class="p">})</span>          
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,[]],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">[]]]</span> <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestAutoconnect.test_2"><a class="viewcode-back" href="../../reference/libra_py/autoconnect.html#libra_py.autoconnect.TestAutoconnect.test_2">[docs]</a>    <span class="k">def</span> <span class="nf">test_2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Triatomic &quot;&quot;&quot;</span>
+
+        <span class="n">R</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">MaxCoord</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">VECTOR</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">));</span>   <span class="n">MaxCoord</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Atom 1</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">VECTOR</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">));</span>   <span class="n">MaxCoord</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Atom 2</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">VECTOR</span><span class="p">(</span><span class="mf">1.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">));</span>   <span class="n">MaxCoord</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Atom 2</span>
+
+                 
+        <span class="n">res</span><span class="p">,</span> <span class="n">lines</span> <span class="o">=</span> <span class="n">autoconnect</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">MaxCoord</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Rcut&quot;</span><span class="p">:</span><span class="mf">1.5</span><span class="p">})</span>          
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> <span class="p">]</span> <span class="p">)</span>
+
+        <span class="n">res</span><span class="p">,</span> <span class="n">lines</span> <span class="o">=</span> <span class="n">autoconnect</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">MaxCoord</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Rcut&quot;</span><span class="p">:</span><span class="mf">0.5</span><span class="p">})</span>          
+        <span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="p">[</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">[]],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="p">]</span> <span class="p">)</span></div></div>
+
+
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s1">&#39;__main__&#39;</span><span class="p">:</span>    
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+    <span class="c1">#example_1()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

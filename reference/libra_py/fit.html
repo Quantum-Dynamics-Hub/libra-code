@@ -1,0 +1,405 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>fit &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="fix_motion" href="fix_motion.html" />
+    <link rel="prev" title="fgr_py" href="fgr_py.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>fit</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/fit.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.fit">
+<span id="fit"></span><h1>fit<a class="headerlink" href="#module-libra_py.fit" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-fit"></span><dl class="py function">
+<dt id="libra_py.fit.Regression">
+<code class="sig-prename descclassname"><span class="pre">libra_py.fit.</span></code><code class="sig-name descname"><span class="pre">Regression</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/fit.html#Regression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.fit.Regression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs a linear regression of the Y vs. X of the form:</p>
+<blockquote>
+<div><p>Y = b*x      opt=0  (default)
+Y = a + b*x  opt=1</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>list of doubles</em>) – The x axis data</p></li>
+<li><p><strong>Y</strong> (<em>list of doubles</em>) – The y axis data</p></li>
+<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>Selects the type of fitting to perform:</p>
+<ul>
+<li><p>opt = 0: The fitting is of the form: Y = b*X  (default)</p></li>
+<li><p>opt = 1: The fitting is of a more general form: Y = a + b*X</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>the linear regression coefficients a and b</p>
+<blockquote>
+<div><p>For opt==0, a = 0</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>[double, double]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.fit.fit_exp">
+<code class="sig-prename descclassname"><span class="pre">libra_py.fit.</span></code><code class="sig-name descname"><span class="pre">fit_exp</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linreg_opt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/fit.html#fit_exp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.fit.fit_exp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits Y vs. X data using:  Y = A*exp(-B*(X-x0))</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>list of doubles</em>) – The x axis data</p></li>
+<li><p><strong>Y</strong> (<em>list of doubles</em>) – The y axis data</p></li>
+<li><p><strong>x0</strong> (<em>double</em>) – the “origin” of the exponential function [default: 0.0]</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – whether to print extra info (1) or not (0) [default: 0]</p></li>
+<li><p><strong>linreg_opt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>the type of the linear regression to use
+SeeAlso:: <a href="#id1"><span class="problematic" id="id2">:funct:`Regression`</span></a> [default: 0]</p>
+<ul>
+<li><p>opt = 0: ln(Y) = b*(X-x0)</p></li>
+<li><p>opt = 1: ln(Y) = a + b*(X-x0)</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The Y values predicted using the obtained linear</dt><dd><p>interpolation parameters. These values are computed for all X values</p>
+</dd>
+</dl>
+<p>A ( double ):  The A coefficient in: Y = A*exp(-B*(X-x0))
+B ( double ):  The B coefficient in: Y = A*exp(-B*(X-x0))</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>predy ( list of doubles )</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># get the first two columns of data as X and Y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">get_data_from_file</span><span class="p">(</span><span class="s2">&quot;relax.txt&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Y = exp(-B*X), the minimaal version</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ypred</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">fit_exp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Y = exp(-B*X), the more explicit version</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ypred</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">fit_exp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Y = A * exp(-B*X), the most explicit version</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ypred</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">fit_exp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Assume the fitting function is: Y = A * exp(-B*(X+1.5))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ypred</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">fit_exp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># Y = A * exp(-B*(X+1.5))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.fit.fit_gau">
+<code class="sig-prename descclassname"><span class="pre">libra_py.fit.</span></code><code class="sig-name descname"><span class="pre">fit_gau</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linreg_opt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/fit.html#fit_gau"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.fit.fit_gau" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits Y vs. X data using:  Y = A*exp(-B*(X-x0)^2)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>list of doubles</em>) – The x axis data</p></li>
+<li><p><strong>Y</strong> (<em>list of doubles</em>) – The y axis data</p></li>
+<li><p><strong>x0</strong> (<em>double</em>) – the “origin” of the exponential function [default: 0.0]</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – whether to print extra info (1) or not (0) [default: 0]</p></li>
+<li><p><strong>linreg_opt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>the type of the linear regression to use
+SeeAlso:: <a href="#id3"><span class="problematic" id="id4">:funct:`Regression`</span></a> [default: 0]</p>
+<ul>
+<li><p>opt = 0: ln(Y) = b*(X-x0)^2</p></li>
+<li><p>opt = 1: ln(Y) = a + b*(X-x0)^2</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The Y values predicted using the obtained linear</dt><dd><p>interpolation parameters. These values are computed for all X values</p>
+</dd>
+</dl>
+<p>A ( double ):  The A coefficient in: Y = A*exp(-B*(X-x0)^2)
+B ( double ):  The B coefficient in: Y = A*exp(-B*(X-x0)^2)</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>predy ( list of doubles )</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># get the first two columns of data as X and Y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">get_data_from_file</span><span class="p">(</span><span class="s2">&quot;relax.txt&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Y = exp(-B*X^2), the minimaal version</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ypred</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">fit_gau</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Y = exp(-B*X^2), the more explicit version</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ypred</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">fit_gau</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Y = A * exp(-B*X^2), the most explicit version</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ypred</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">fit_gau</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Assume the fitting function is: Y = A * exp(-B*(X-1)^2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ypred</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">fit_exp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># Y = A * exp(-B*(X-1)^2)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="fix_motion.html" class="btn btn-neutral float-right" title="fix_motion" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="fgr_py.html" class="btn btn-neutral float-left" title="fgr_py" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,572 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.QE_utils &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.QE_utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.QE_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1">#***********************************************************</span>
+<span class="c1"># * Copyright (C) 2017-2018 Brendan Smith, Wei Li and Alexey V. Akimov</span>
+<span class="c1"># * This file is distributed under the terms of the</span>
+<span class="c1"># * GNU General Public License as published by the</span>
+<span class="c1"># * Free Software Foundation; either version 3 of the</span>
+<span class="c1"># * License, or (at your option) any later version.</span>
+<span class="c1"># * http://www.gnu.org/copyleft/gpl.txt</span>
+<span class="c1">#***********************************************************/</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="c1"># Fisrt, we add the location of the library to test to the PYTHON path</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<div class="viewcode-block" id="get_value"><a class="viewcode-back" href="../../reference/libra_py/QE_utils.html#libra_py.QE_utils.get_value">[docs]</a><span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="n">params</span><span class="p">,</span><span class="n">key</span><span class="p">,</span><span class="n">default</span><span class="p">,</span><span class="n">typ</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to extract parameter from the dictionary</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        params ( dict ) : A dictionary containing important simulation parameters</span>
+<span class="sd">        key (string) : The name of the variable that we wish to extract from the params</span>
+<span class="sd">            dictionary</span>
+
+<span class="sd">        default (various types): The default value assigned to a dictionary key </span>
+<span class="sd">        typ (string): The data type assigned to a value that is extracted from the dictionary</span>
+<span class="sd">  </span>
+<span class="sd">    Returns: </span>
+
+<span class="sd">        various types: a value from the params dictionary that is of type `typ`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Try to get value from the dictionary</span>
+    <span class="n">str_val</span> <span class="o">=</span> <span class="s2">&quot;None&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
+            <span class="n">str_val</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="c1"># If nothing found - use default value</span>
+    <span class="k">if</span> <span class="n">str_val</span><span class="o">!=</span><span class="s2">&quot;None&quot;</span><span class="p">:</span>
+        <span class="k">pass</span>  <span class="c1"># All is ok</span>
+    <span class="k">else</span><span class="p">:</span> 
+        <span class="n">str_val</span> <span class="o">=</span> <span class="n">default</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: Parameter with key = </span><span class="si">%s</span><span class="s2"> does not exist in dictionary&quot;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Using the default value of </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">default</span><span class="p">)</span>
+
+    <span class="c1"># Convert string to desired data type</span>
+    <span class="k">if</span> <span class="n">typ</span><span class="o">==</span><span class="s2">&quot;s&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">str_val</span>
+    <span class="k">elif</span> <span class="n">typ</span><span class="o">==</span><span class="s2">&quot;f&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">str_val</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">typ</span><span class="o">==</span><span class="s2">&quot;i&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">str_val</span><span class="p">))</span></div>
+
+
+
+
+<div class="viewcode-block" id="split_orbitals_energies"><a class="viewcode-back" href="../../reference/libra_py/QE_utils.html#libra_py.QE_utils.split_orbitals_energies">[docs]</a><span class="k">def</span> <span class="nf">split_orbitals_energies</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">E</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    In SOC, non-collinear case, the orbitals are 2-component spinors:</span>
+<span class="sd">             | psi_i^alp |          | E_i_alp          |</span>
+<span class="sd">     psi_i = |           |,  so E = |                  |</span>
+<span class="sd">             | psi_i^bet |          |          E_i_bet |</span>
+<span class="sd">  </span>
+<span class="sd">    So, the wfc we read from the QE calculations, in this case is composed of such</span>
+<span class="sd">    pairs, going in this order, so:</span>
+
+<span class="sd">    psi_i^alp, psi_i^bet, psi_{i+1}^alp, psi_{i+1}^bet, ...</span>
+
+<span class="sd">    Thus, there are 2*N_mo_adi columns, so we need to extract spin-components </span>
+<span class="sd">    into 2 matrices</span>
+
+<span class="sd">    \param[in] C Coefficient matrix of size N_pw x 2*N_Mo </span>
+<span class="sd">    \param[in] E Eigenvalue matrix of size  2*N_mo x 2*N_Mo</span>
+
+<span class="sd">    Returns: Matricies for the alpha and beta components of the input matricies</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">N_pw</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">N_mo_adi</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">num_of_cols</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>   <span class="c1"># C.num_of_cols has to be even</span>
+
+    <span class="n">C_alp</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">N_pw</span><span class="p">,</span> <span class="n">N_mo_adi</span><span class="p">)</span>
+    <span class="n">C_bet</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">N_pw</span><span class="p">,</span> <span class="n">N_mo_adi</span><span class="p">)</span>
+    <span class="n">E_alp</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">N_mo_adi</span><span class="p">,</span> <span class="n">N_mo_adi</span><span class="p">)</span>
+    <span class="n">E_bet</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">N_mo_adi</span><span class="p">,</span> <span class="n">N_mo_adi</span><span class="p">)</span>
+
+
+    <span class="n">stenc1</span><span class="p">,</span> <span class="n">stenc2</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_mo_adi</span><span class="p">):</span>
+        <span class="n">stenc1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">stenc2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">C_alp</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N_pw</span><span class="p">)),</span> <span class="n">stenc1</span> <span class="p">)</span>
+    <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">C_bet</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N_pw</span><span class="p">)),</span> <span class="n">stenc2</span> <span class="p">)</span>
+
+    <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">E_alp</span><span class="p">,</span> <span class="n">stenc1</span><span class="p">,</span> <span class="n">stenc1</span><span class="p">)</span>
+    <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">E_bet</span><span class="p">,</span> <span class="n">stenc2</span><span class="p">,</span> <span class="n">stenc2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">C_alp</span><span class="p">,</span> <span class="n">C_bet</span><span class="p">,</span> <span class="n">E_alp</span><span class="p">,</span> <span class="n">E_bet</span></div>
+
+    
+
+
+
+<div class="viewcode-block" id="merge_orbitals"><a class="viewcode-back" href="../../reference/libra_py/QE_utils.html#libra_py.QE_utils.merge_orbitals">[docs]</a><span class="k">def</span> <span class="nf">merge_orbitals</span><span class="p">(</span><span class="n">Ca</span><span class="p">,</span> <span class="n">Cb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function puts two matrices together into a single matrix</span>
+
+<span class="sd">    \param[in] Ca Coefficient matrix corresponding to alpha orbitals of size N_pw x N_Mo </span>
+<span class="sd">    \param[in] Cb Coefficient matrix corresponding to beta orbitals of size N_pw x N_Mo </span>
+
+<span class="sd">    Returns: A single matrix of size N_pw x 2*N_Mo   </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">npw_a</span> <span class="o">=</span> <span class="n">Ca</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">N_mo_a</span> <span class="o">=</span> <span class="n">Ca</span><span class="o">.</span><span class="n">num_of_cols</span>
+ 
+    <span class="n">npw_b</span> <span class="o">=</span> <span class="n">Cb</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">N_mo_b</span> <span class="o">=</span> <span class="n">Cb</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="k">if</span> <span class="n">npw_a</span> <span class="o">!=</span> <span class="n">npw_b</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: The number of rows of the two matrices should be equal&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">C</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">npw_a</span><span class="p">,</span> <span class="n">N_mo_a</span> <span class="o">+</span> <span class="n">N_mo_b</span><span class="p">)</span>
+
+    <span class="n">push_submatrix</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">Ca</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">npw_a</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_mo_a</span><span class="p">))</span> <span class="p">)</span>
+    <span class="n">push_submatrix</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">Cb</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">npw_a</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N_mo_a</span><span class="p">,</span> <span class="n">N_mo_a</span> <span class="o">+</span> <span class="n">N_mo_b</span><span class="p">))</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">C</span></div>
+
+
+
+<div class="viewcode-block" id="post_process"><a class="viewcode-back" href="../../reference/libra_py/QE_utils.html#libra_py.QE_utils.post_process">[docs]</a><span class="k">def</span> <span class="nf">post_process</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="n">ene</span><span class="p">,</span> <span class="n">issoc</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Post-processing of the data extracted from QE output files</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        coeff (list of CMATRIX): PW coefficients for orbitals, potentially spin-resolved</span>
+
+<span class="sd">        ene (list of CMATRIX):energies of KS orbitals, potentially spin-resolved</span>
+
+<span class="sd">        issoc (int): flag to indicate whether the orbitals are 2-component spinors (with SOC) or </span>
+<span class="sd">            regular KS orbitals, one per spin channel</span>
+<span class="sd">              </span>
+<span class="sd">            - 0 : no SOC</span>
+<span class="sd">            - 1 : yes SOC</span>
+
+<span class="sd">    Returns: </span>
+
+<span class="sd">    (list[0], list[1]), where :</span>
+<span class="sd"> </span>
+<span class="sd">        No-SOC case: list[0] = list[1]           </span>
+<span class="sd">        SOC case: 2 lists, where list[0] = alpha components, list[1] = beta components</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">  </span>
+<span class="sd">        In SOC case (spinor):</span>
+
+<span class="sd">            coeff[0] - a N_pw x 2*N matrix of type:   (psi_0^alp, psi_0^bet, ... psi_{N-1}^alp, psi_{N-1}^bet) </span>
+<span class="sd">                where each psi is a colum of the PW coefficients for given KS orbital (spatial component for each spin)</span>
+
+<span class="sd">            ene[0] - a 2*N x 2*N matrix of energies coming in pairs:  e_{2*i} = e_{2*i+1}, because these are the </span>
+<span class="sd">                energies of the same orbital, just its different spin components</span>
+<span class="sd">   </span>
+
+<span class="sd">            We then split the coeff[0] matrix into a pair of N_pw x N matrices that represent alpha and beta</span>
+<span class="sd">            spatial components of the wavefunction, separately</span>
+
+<span class="sd">            However, the number of &lt;b&gt;spin&lt;\b&gt;-orbitals will be twice that of the N,</span>
+<span class="sd">            so we need to construct new matrices with spin-orbitals.</span>
+
+<span class="sd">            So that we have both psi_i = (psi_i_alp, psi_i_bet) and psi_{i+N} = (psi_i_bet, psi_i_alp)</span>
+<span class="sd">            pairs of spin-orbitals (this is needed to represent the indistinguishable nature of electrons)</span>
+<span class="sd">            i = 0,...N-1, where N - is the number of pairs of read spinors  = N_adi_ks_orb</span>
+
+
+<span class="sd">    In non-SOC case (spin-polarized):</span>
+
+<span class="sd">        We directly get a pair of N_pw x N_mo_dia matrices that represent alpha and beta spatial components of the wavefunction</span>
+
+<span class="sd">        coeff[0] - a N_pw x N matrix of type:   (psi_0^alp, ... psi_{N-1}^alp) </span>
+<span class="sd">        coeff[1] - a N_pw x N matrix of type:   (psi_0^bet, ... psi_{N-1}^bet) </span>
+
+<span class="sd">                   where each psi is a colum of the PW coefficients for given KS orbital (spatial component </span>
+<span class="sd">                   for each spin)</span>
+<span class="sd">        ene[0] -   a N x N matrix of alpha KS orbital energies</span>
+<span class="sd">        ene[1] -   a N x N matrix of beta KS orbital energies</span>
+
+
+<span class="sd">        Eventually:</span>
+
+<span class="sd">        &quot;alpha-block&quot;        &quot;beta-block&quot;</span>
+
+<span class="sd">        C_adi[0] = (psi_0^alp,... psi_{N-1}^alp,  psi_N^alp, ... psi_{2N-1}^alp)     alpha-components of spinors </span>
+<span class="sd">        C_adi[1] = (psi_0^bet,... psi_{N-1}^bet,  psi_N^bet, ... psi_{2N-1}^bet)     beta-components of spinors</span>
+
+<span class="sd">        same energies in SOC case or non-polarized non-SOC</span>
+<span class="sd">        different energies in spin-polarized non-SOC</span>
+<span class="sd">        </span>
+
+<span class="sd">        Also:  psi_0^alp = psi_N^bet  and psi_0^bet = psi_N^alp, and so on</span>
+
+<span class="sd">            | E^alpha-block          0         |</span>
+<span class="sd">            E_adi =  |                                  |</span>
+<span class="sd">            |      0             E^beta-block  |</span>
+
+<span class="sd">        E^alpha-block  = E^beta-block (SOC or non-polarized non-SOC)</span>
+<span class="sd">        E^alpha-block != E^beta-block (spin-polarized non-SOC)</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">C</span><span class="p">,</span> <span class="n">E</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">issoc</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># SOC, spinor case</span>
+
+        <span class="n">c_a</span><span class="p">,</span> <span class="n">c_b</span><span class="p">,</span> <span class="n">e_a</span><span class="p">,</span> <span class="n">e_b</span> <span class="o">=</span> <span class="n">split_orbitals_energies</span><span class="p">(</span><span class="n">coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ene</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">N_ks_orb</span> <span class="o">=</span> <span class="n">c_a</span><span class="o">.</span><span class="n">num_of_cols</span>  <span class="c1"># should be equal to c_b.num_of_cols</span>
+        <span class="n">N_pw</span> <span class="o">=</span> <span class="n">c_a</span><span class="o">.</span><span class="n">num_of_rows</span>      <span class="c1"># should be equal to c_b.num_of_rows</span>
+
+        <span class="c1"># Construct spin-Orbtial matrix of size (2*N_pw,2*N_ks_orb)</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">N_pw</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">)</span>
+        <span class="n">push_submatrix</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">c_a</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_pw</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_ks_orb</span><span class="p">))</span> <span class="p">)</span>
+        <span class="n">push_submatrix</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">c_b</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N_pw</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">N_pw</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N_ks_orb</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">))</span> <span class="p">)</span>
+
+        <span class="c1"># Same with energies:</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">)</span>
+        <span class="n">push_submatrix</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">e_a</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_ks_orb</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_ks_orb</span><span class="p">))</span> <span class="p">)</span>
+        <span class="n">push_submatrix</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">e_b</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N_ks_orb</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N_ks_orb</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">))</span> <span class="p">)</span>
+
+
+    <span class="k">elif</span> <span class="n">issoc</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>  <span class="c1"># no SOC</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># spin-unpolarized (1-k point)</span>
+
+            <span class="n">N_ks_orb</span> <span class="o">=</span> <span class="n">coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>  
+            <span class="n">N_pw</span> <span class="o">=</span> <span class="n">coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_rows</span> 
+
+            <span class="c1"># Construct spin-Orbtial matrix of size (N_pw,2*N_ks_orb)</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">N_pw</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">)</span>
+            <span class="n">push_submatrix</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_pw</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_ks_orb</span><span class="p">))</span> <span class="p">)</span> 
+            <span class="n">push_submatrix</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_pw</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N_ks_orb</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">))</span> <span class="p">)</span>
+ 
+            <span class="c1"># Construct energy matrix of size (2*N_ks_orb,2*N_ks_orb):</span>
+            <span class="n">E</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">)</span>
+            <span class="n">push_submatrix</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">ene</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_ks_orb</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_ks_orb</span><span class="p">))</span> <span class="p">)</span>
+            <span class="n">push_submatrix</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">ene</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N_ks_orb</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N_ks_orb</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">))</span> <span class="p">)</span>
+
+
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>  <span class="c1"># spin-polarized (or 2-k points, non-polarized case, beware!)</span>
+
+            <span class="n">N_ks_orb</span> <span class="o">=</span> <span class="n">coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>  
+            <span class="n">N_pw</span> <span class="o">=</span> <span class="n">coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_rows</span>
+
+            <span class="c1"># Construct spin-Orbtial matrix of size (N_pw,2*N_ks_orb)</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">N_pw</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">)</span>
+            <span class="n">push_submatrix</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_pw</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_ks_orb</span><span class="p">))</span> <span class="p">)</span>
+            <span class="n">push_submatrix</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">coeff</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_pw</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N_ks_orb</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">))</span> <span class="p">)</span>
+
+            <span class="c1"># Same with energies:</span>
+            <span class="n">E</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">)</span>
+            <span class="n">push_submatrix</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">ene</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_ks_orb</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N_ks_orb</span><span class="p">))</span> <span class="p">)</span>
+            <span class="n">push_submatrix</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">ene</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N_ks_orb</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N_ks_orb</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">N_ks_orb</span><span class="p">))</span> <span class="p">)</span>
+
+
+    <span class="k">return</span> <span class="n">C</span><span class="p">,</span> <span class="n">E</span></div>
+
+
+
+
+<div class="viewcode-block" id="orthogonalize_orbitals"><a class="viewcode-back" href="../../reference/libra_py/QE_utils.html#libra_py.QE_utils.orthogonalize_orbitals">[docs]</a><span class="k">def</span> <span class="nf">orthogonalize_orbitals</span><span class="p">(</span><span class="n">C</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function takes an input of orbitals (C), which may not</span>
+<span class="sd">    be rigorously orthogonal, finds a suitable transformation (U)</span>
+<span class="sd">    and converts them into rigorously orthogonal orbitals (C_tilda)</span>
+
+<span class="sd">    C_tilda = C * U, so if you want</span>
+
+<span class="sd">    C_tilda^+  * C_tilda = I, you&#39;ll find that</span>
+
+<span class="sd">    U = S^{-1/2}, where S = C^+ * C</span>
+
+
+<span class="sd">    Args: </span>
+
+<span class="sd">        C ( CMATRIX(N_pw, N_mo) ): just alpha or beta orbitals</span>
+
+
+<span class="sd">    Returns: </span>
+
+<span class="sd">        CMATRIX(N_pw, N_mo):  just alpha or beta orbitals, where</span>
+<span class="sd">            the overlap matrix constructed using this matrix is the identity matrix    </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">S</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">H</span><span class="p">()</span> <span class="o">*</span> <span class="n">C</span>  <span class="c1"># overlap matrix</span>
+
+    <span class="c1"># Test is S is invertabile</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Testing if S is invertabile</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">FullPivLU_rank_invertible</span><span class="p">(</span><span class="n">S</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Det = &quot;</span><span class="p">,</span> <span class="n">FullPivLU_det</span><span class="p">(</span><span class="n">S</span><span class="p">))</span>
+    <span class="n">is_inv</span> <span class="o">=</span> <span class="n">FullPivLU_rank_invertible</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">is_inv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error, S is not invertible, Exiting Program&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">S_half</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">num_of_rows</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">num_of_cols</span><span class="p">)</span>
+    <span class="n">S_i_half</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">num_of_rows</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">num_of_cols</span><span class="p">)</span>
+
+    <span class="n">sqrt_matrix</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">S_half</span><span class="p">,</span> <span class="n">S_i_half</span><span class="p">)</span>
+
+    <span class="n">C_tilda</span> <span class="o">=</span> <span class="n">C</span> <span class="o">*</span> <span class="n">S_i_half</span>
+
+    <span class="k">return</span> <span class="n">C_tilda</span></div>
+
+
+<div class="viewcode-block" id="orthogonalize_orbitals2"><a class="viewcode-back" href="../../reference/libra_py/QE_utils.html#libra_py.QE_utils.orthogonalize_orbitals2">[docs]</a><span class="k">def</span> <span class="nf">orthogonalize_orbitals2</span><span class="p">(</span><span class="n">Ca</span><span class="p">,</span> <span class="n">Cb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ca and Cb = N_pw x N_mo   - represent the spin-components</span>
+<span class="sd">    of the adiabatic states</span>
+
+<span class="sd">    This function takes an input of orbitals (C), which may not</span>
+<span class="sd">    be rigorously orthogonal, finds a suitable transformation (U)</span>
+<span class="sd">    and converts them into rigorously orthogonal orbitals (C_tilda)</span>
+
+<span class="sd">    For each channel:</span>
+
+<span class="sd">    C_tilda = C * U, so if you want</span>
+
+<span class="sd">    C_tilda^+  * C_tilda = I, you&#39;ll find that</span>
+
+<span class="sd">    U = S^{-1/2}, where $S = Ca^+ * Ca + Cb^+ * Cb$</span>
+
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        Ca ( CMATRIX(N_pw, N_mo) ): alpha-component of the adiabatic states</span>
+
+<span class="sd">        Cb ( CMATRIX(N_pw, N_mo) ): beta-component of the adiabatic states</span>
+
+<span class="sd">    Returns: </span>
+
+<span class="sd">        ( CMATRIX(N_pw, N_mo) , CMATRIX(N_pw, N_mo) ): Two matricies where the overlap matrix </span>
+<span class="sd">            constructed using this matrix is the identity matrix  </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">S</span> <span class="o">=</span> <span class="n">Ca</span><span class="o">.</span><span class="n">H</span><span class="p">()</span> <span class="o">*</span> <span class="n">Ca</span> <span class="o">+</span> <span class="n">Cb</span><span class="o">.</span><span class="n">H</span><span class="p">()</span> <span class="o">*</span> <span class="n">Cb</span>  <span class="c1"># overlap matrix</span>
+
+    <span class="n">S_half</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">num_of_rows</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">num_of_cols</span><span class="p">)</span>
+    <span class="n">S_i_half</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">num_of_rows</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">num_of_cols</span><span class="p">)</span>
+
+    <span class="n">sqrt_matrix</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">S_half</span><span class="p">,</span> <span class="n">S_i_half</span><span class="p">)</span>
+
+    <span class="n">Ca_tilda</span> <span class="o">=</span> <span class="n">Ca</span> <span class="o">*</span> <span class="n">S_i_half</span>
+    <span class="n">Cb_tilda</span> <span class="o">=</span> <span class="n">Cb</span> <span class="o">*</span> <span class="n">S_i_half</span>
+
+    <span class="k">return</span> <span class="n">Ca_tilda</span><span class="p">,</span> <span class="n">Cb_tilda</span></div>
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

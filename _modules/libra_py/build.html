@@ -1,0 +1,940 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.build &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.build</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.build</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************                     </span>
+<span class="c1">#* Copyright (C) 2017-2019 Alexey V. Akimov                                                   </span>
+<span class="c1">#*                                                                                                     </span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License                          </span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of                                   </span>
+<span class="c1">#* the License, or (at your option) any later version.                                                 </span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution   </span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.          </span>
+<span class="c1">#***********************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: build</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements functions for building molecular structures</span>
+
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">LoadPT</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">units</span>
+
+
+<div class="viewcode-block" id="read_xyz"><a class="viewcode-back" href="../../reference/libra_py/build.html#libra_py.build.read_xyz">[docs]</a><span class="k">def</span> <span class="nf">read_xyz</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">inp_units</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">out_units</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read an xyz file (single structure)</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        filename ( string ): the name of the xyz file to read</span>
+<span class="sd">        inp_units ( int ): defines the coordinates&#39; units in the input file:</span>
+
+<span class="sd">            * 0 - Bohr</span>
+<span class="sd">            * 1 - Angstrom ( default )</span>
+
+<span class="sd">        out_units ( int ): defines the output coordinates&#39; units:</span>
+
+<span class="sd">            * 0 - Bohr ( default )</span>
+<span class="sd">            * 1 - Angstrom</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        tuple: (L, coords), where:</span>
+<span class="sd"> </span>
+<span class="sd">            * L ( list of N strings ): the labels of N atoms read</span>
+<span class="sd">            * coords ( list of N VECTORs ): the coordinates of N atoms read [defined by out_units]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">Natoms</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+    <span class="n">L</span> <span class="o">=</span> <span class="p">[]</span> 
+    <span class="n">coords</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">A</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> 
+            <span class="n">y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+             
+            <span class="n">R</span> <span class="o">=</span> <span class="n">VECTOR</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">length_converter</span><span class="p">(</span><span class="n">inp_units</span><span class="p">,</span> <span class="n">out_units</span><span class="p">)</span>
+
+            <span class="n">L</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">L</span><span class="p">,</span> <span class="n">coords</span></div>
+
+
+<div class="viewcode-block" id="make_xyz"><a class="viewcode-back" href="../../reference/libra_py/build.html#libra_py.build.make_xyz">[docs]</a><span class="k">def</span> <span class="nf">make_xyz</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">inp_units</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">out_units</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert atomic labels and coordinates to a string formatted according to xyz</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        L ( list of N strings ): the labels of N atoms in the system</span>
+<span class="sd">        R ( list of N VECTORs ): the coordinates of N atoms in the system</span>
+<span class="sd">        inp_units ( int ): defines the units of variables stored in R:</span>
+
+<span class="sd">            * 0 - Bohr ( default )</span>
+<span class="sd">            * 1 - Angstrom </span>
+
+<span class="sd">        out_units ( int ): defines the units of the coordinates written in xyz file:</span>
+
+<span class="sd">            * 0 - Bohr </span>
+<span class="sd">            * 1 - Angstrom ( default )</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        string: a string representing the xyz file of the system</span>
+<span class="sd">                </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nat</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%i</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nat</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nat</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">   </span><span class="si">%12.8f</span><span class="s2">  </span><span class="si">%12.8f</span><span class="s2">  </span><span class="si">%12.8f</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">x</span><span class="o">/</span><span class="n">units</span><span class="o">.</span><span class="n">Angst</span><span class="p">,</span> <span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">y</span><span class="o">/</span><span class="n">units</span><span class="o">.</span><span class="n">Angst</span><span class="p">,</span> <span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">z</span><span class="o">/</span><span class="n">units</span><span class="o">.</span><span class="n">Angst</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+<div class="viewcode-block" id="make_xyz_mat"><a class="viewcode-back" href="../../reference/libra_py/build.html#libra_py.build.make_xyz_mat">[docs]</a><span class="k">def</span> <span class="nf">make_xyz_mat</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function returns a string in the xyz format with X, Y, Z</span>
+<span class="sd">    where X,Y,Z are the coordinates</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        E ( list of ndof/3 string ): atom names (elements) of all atoms</span>
+<span class="sd">        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        string: A string representing an xyz file</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+    <span class="n">nsteps</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">num_of_cols</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nsteps</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%3i</span><span class="se">\n</span><span class="s2">Step = </span><span class="si">%6i</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">natoms</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">natoms</span><span class="p">):</span>
+            <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="p">,</span> <span class="n">step</span><span class="p">),</span> <span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="p">),</span> <span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>                            
+            <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">  </span><span class="si">%5.3f</span><span class="s2">  </span><span class="si">%5.3f</span><span class="s2">  </span><span class="si">%5.3f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">E</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+
+<div class="viewcode-block" id="read_xyz_crystal"><a class="viewcode-back" href="../../reference/libra_py/build.html#libra_py.build.read_xyz_crystal">[docs]</a><span class="k">def</span> <span class="nf">read_xyz_crystal</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span> <span class="n">inp_units</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">out_units</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read an xyz file with atomic coordinates given in fractional lattice vector units</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename ( string ): the name of the xyz file to read</span>
+<span class="sd">        a ( VECTOR ): the unit cell vector in the direction a [units defined by inp_units]</span>
+<span class="sd">        b ( VECTOR ): the unit cell vector in the direction b [units defined by inp_units]</span>
+<span class="sd">        c ( VECTOR ): the unit cell vector in the direction c [units defined by inp_units]</span>
+<span class="sd">        inp_units ( int ): defines the units of a,b,c:</span>
+
+<span class="sd">            * 0 - Bohr ( default )</span>
+<span class="sd">            * 1 - Angstrom </span>
+
+<span class="sd">        out_units ( int ): defines the units of the coordinates in the ourput variable:</span>
+
+<span class="sd">            * 0 - Bohr ( default )</span>
+<span class="sd">            * 1 - Angstrom </span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        tuple: (L, coords), where:</span>
+<span class="sd"> </span>
+<span class="sd">            * L ( list of N strings ): the labels of N atoms read</span>
+<span class="sd">            * coords ( list of N VECTORs ): the coordinates of N atoms read [defined by out_units]</span>
+<span class="sd">                </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">M</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">M</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">)</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">T</span><span class="p">()</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">Natoms</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+    <span class="n">L</span> <span class="o">=</span> <span class="p">[]</span> 
+    <span class="n">coords</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">A</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> 
+            <span class="n">y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+             
+            <span class="n">R</span> <span class="o">=</span> <span class="n">M</span> <span class="o">*</span> <span class="n">VECTOR</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>  <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">length_converter</span><span class="p">(</span><span class="n">inp_units</span><span class="p">,</span> <span class="n">out_units</span><span class="p">)</span>
+
+            <span class="n">L</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">L</span><span class="p">,</span> <span class="n">coords</span></div>
+
+
+
+
+<div class="viewcode-block" id="generate_replicas_xyz"><a class="viewcode-back" href="../../reference/libra_py/build.html#libra_py.build.generate_replicas_xyz">[docs]</a><span class="k">def</span> <span class="nf">generate_replicas_xyz</span><span class="p">(</span><span class="n">tv1</span><span class="p">,</span> <span class="n">tv2</span><span class="p">,</span> <span class="n">tv3</span><span class="p">,</span> <span class="n">rep1</span><span class="p">,</span> <span class="n">rep2</span><span class="p">,</span> <span class="n">rep3</span> <span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">inp_units</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">out_units</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function generates a lattice of coordinates and an array of </span>
+<span class="sd">    corresponding atomic labels by replicating a given set of labeled</span>
+<span class="sd">    atoms periodically in up to 3 dimensions (with a variable number of </span>
+<span class="sd">    replicas in each direction). This function first reads in the </span>
+<span class="sd">    atomic coordinates (supplied in an .xyz format) and then writes </span>
+<span class="sd">    the resulting data into another file (.xyz format)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tv1 ( VECTOR ): translation vector in direction 1 [defined by inp_units] </span>
+<span class="sd">        tv2 ( VECTOR ): translation vector in direction 2 [defined by inp_units] </span>
+<span class="sd">        tv3 ( VECTOR ): translation vector in direction 3 [defined by inp_units] </span>
+<span class="sd">        rep1 ( int ): the number of replications along the vector tv1, not counting the original cell</span>
+<span class="sd">        rep2 ( int ): the number of replications along the vector tv2, not counting the original cell</span>
+<span class="sd">        rep3 ( int ): the number of replications along the vector tv3, not counting the original cell</span>
+<span class="sd">        filename ( string ): the name of the file containing input coordinates (original unit cell)</span>
+<span class="sd">        outfile ( string ): the name of the file where the resulting lattice atoms will be written</span>
+<span class="sd">        inp_units ( int ): defines the units of variables in filename, tv1, tv2, and tv3:</span>
+
+<span class="sd">            * 0 - Bohr ( default )</span>
+<span class="sd">            * 1 - Angstrom </span>
+
+<span class="sd">        out_units ( int ): defines the units of the coordinates written to outfile</span>
+
+<span class="sd">            * 0 - Bohr ( default )</span>
+<span class="sd">            * 1 - Angstrom </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: but a new .xyz file will be printed out</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        The example below read in a unit cell of Si (8 atoms), replicates in 5 times </span>
+<span class="sd">        in x, y, and z directions (so we get a 6 x 6 x 6 supercell). The resulting </span>
+<span class="sd">        structure is written to the &quot;cube10.xyz&quot; file</span>
+
+<span class="sd">        &gt;&gt;&gt; a = [     5.4307100000000000,    0.0000000000000000,    0.0000000000000000 ]</span>
+<span class="sd">        &gt;&gt;&gt; b = [     0.0000000000000000,    5.4307100000000000,    0.0000000000000000 ]</span>
+<span class="sd">        &gt;&gt;&gt; c = [     0.0000000000000000,    0.0000000000000000,    5.4307100000000000 ]</span>
+<span class="sd">        &gt;&gt;&gt; generate_replicas_xyz(a, b, c, 5, 5, 5 , &quot;Si.xyz&quot;, &quot;cube10.xyz&quot;)</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">transl</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">rep1</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">rep2</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">rep3</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">transl</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">])</span>
+
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">Natoms</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s2">&quot;w+&quot;</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">transl</span><span class="p">)</span> <span class="o">*</span> <span class="n">Natoms</span><span class="p">)</span><span class="si">:</span><span class="s2">i</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">s</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">L</span> <span class="o">=</span> <span class="p">[]</span> 
+    <span class="n">coords</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">T</span> <span class="ow">in</span> <span class="n">transl</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">A</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> 
+                <span class="n">y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+                 
+                <span class="c1"># Now apply PBC</span>
+                <span class="n">dx</span> <span class="o">=</span> <span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">tv1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">tv2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">T</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">tv3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">dy</span> <span class="o">=</span> <span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">tv1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">tv2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">T</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">tv3</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">dz</span> <span class="o">=</span> <span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">tv1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">tv2</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">T</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">tv3</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">x</span><span class="o">+</span><span class="n">dx</span><span class="si">:</span><span class="s2">8.5f</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">y</span><span class="o">+</span><span class="n">dy</span><span class="si">:</span><span class="s2">8.5f</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">z</span><span class="o">+</span><span class="n">dz</span><span class="si">:</span><span class="s2">8.5f</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="n">L</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">VECTOR</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">dx</span><span class="p">,</span> <span class="n">y</span><span class="o">+</span><span class="n">dy</span><span class="p">,</span> <span class="n">z</span><span class="o">+</span><span class="n">dz</span><span class="p">))</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">L</span><span class="p">,</span> <span class="n">coords</span></div>
+
+
+
+<div class="viewcode-block" id="generate_replicas_xyz2"><a class="viewcode-back" href="../../reference/libra_py/build.html#libra_py.build.generate_replicas_xyz2">[docs]</a><span class="k">def</span> <span class="nf">generate_replicas_xyz2</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">tv1</span><span class="p">,</span> <span class="n">tv2</span><span class="p">,</span> <span class="n">tv3</span><span class="p">,</span> <span class="n">Nx</span><span class="p">,</span> <span class="n">Ny</span><span class="p">,</span> <span class="n">Nz</span><span class="p">,</span> <span class="n">inp_units</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">out_units</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function generates a lattice of coordinates and an array of </span>
+<span class="sd">    corresponding atomic labels by replicating a given set of labeled</span>
+<span class="sd">    atoms periodically in up to 3 dimensions (with a variable number of </span>
+<span class="sd">    replicas in each direction)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        L ( list of strings ): atomis labels</span>
+<span class="sd">        R ( list of VECTOR objects ): initial atomic coords [defined by inp_units] </span>
+<span class="sd">        tv1 ( VECTOR ): translation vector in direction 1 [defined by inp_units] </span>
+<span class="sd">        tv2 ( VECTOR ): translation vector in direction 2 [defined by inp_units] </span>
+<span class="sd">        tv3 ( VECTOR ): translation vector in direction 3 [defined by inp_units] </span>
+<span class="sd">        Nx ( int ): the number of replications along the vector tv1, not counting the original cell</span>
+<span class="sd">        Ny ( int ): the number of replications along the vector tv2, not counting the original cell</span>
+<span class="sd">        Nz ( int ): the number of replications along the vector tv3, not counting the original cell</span>
+<span class="sd">        inp_units ( int ): defines the units of variables R, tv1, tv2, and tv3:</span>
+
+<span class="sd">            * 0 - Bohr ( default )</span>
+<span class="sd">            * 1 - Angstrom </span>
+
+<span class="sd">        out_units ( int ): defines the units of the coordinates returned:</span>
+
+<span class="sd">            * 0 - Bohr ( default )</span>
+<span class="sd">            * 1 - Angstrom </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (lab, newR), where:</span>
+<span class="sd"> </span>
+<span class="sd">            * lab ( list of N strings ): the labels of all atoms and their corresponding replicas</span>
+<span class="sd">            * newR ( list of N VECTORs ): the coordinates of all replicated atoms [defined by out_units]</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nat</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+
+    <span class="n">lab</span><span class="p">,</span> <span class="n">newR</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="n">scl</span> <span class="o">=</span> <span class="n">units</span><span class="o">.</span><span class="n">length_converter</span><span class="p">(</span><span class="n">inp_units</span><span class="p">,</span> <span class="n">out_units</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nat</span><span class="p">):</span>
+
+        <span class="k">for</span> <span class="n">nx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Nx</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">ny</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Ny</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">nz</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Nz</span><span class="p">):</span>
+                 
+                    <span class="c1"># Now apply PBC</span>
+                    <span class="n">r</span> <span class="o">=</span> <span class="n">VECTOR</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">nx</span> <span class="o">*</span> <span class="n">tv1</span> <span class="o">+</span> <span class="n">ny</span> <span class="o">*</span> <span class="n">tv2</span> <span class="o">+</span> <span class="n">nz</span> <span class="o">*</span> <span class="n">tv3</span><span class="p">)</span> <span class="o">*</span> <span class="n">scl</span>
+
+                    <span class="n">lab</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="n">newR</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">lab</span><span class="p">,</span> <span class="n">newR</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="crop_sphere_xyz"><a class="viewcode-back" href="../../reference/libra_py/build.html#libra_py.build.crop_sphere_xyz">[docs]</a><span class="k">def</span> <span class="nf">crop_sphere_xyz</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">Rcut</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    </span>
+<span class="sd">    This function reads an .xyz file with the geometry, cuts the atoms that are outside</span>
+<span class="sd">    of a sphere of given radius and then prints out the remaining atoms to a new file</span>
+<span class="sd">    in .xyz format</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        infile ( string ): the name of the .xyz file that contains the original coordinates</span>
+<span class="sd">        outfile ( string ): the name of the new .xyz file to create (with the cropped geometry)</span>
+<span class="sd">        Rcut ( double ): the radius of the sphere from the center of the QD [ same units as used in infile ]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (lab, coords), where:</span>
+<span class="sd"> </span>
+<span class="sd">            * lab ( list of N strings ): the labels of all remaining atoms</span>
+<span class="sd">            * coords ( list of N VECTORs ): the coordinates of all remaining atoms</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        The example below read in a unit cell of Si (8 atoms), replicates in 5 times </span>
+<span class="sd">        in x, y, and z directions (so we get a 6 x 6 x 6 supercell). The resulting </span>
+<span class="sd">        structure is written to the &quot;cube10.xyz&quot; file. Then the file cube10.xyz</span>
+<span class="sd">        is read and cropped to make a sphere of 5 Angstrom. The resulting system</span>
+<span class="sd">        is then printed out to the &quot;qd_5.xyz&quot; file.</span>
+
+<span class="sd">        &gt;&gt;&gt; a = [     5.4307100000000000,    0.0000000000000000,    0.0000000000000000 ]</span>
+<span class="sd">        &gt;&gt;&gt; b = [     0.0000000000000000,    5.4307100000000000,    0.0000000000000000 ]</span>
+<span class="sd">        &gt;&gt;&gt; c = [     0.0000000000000000,    0.0000000000000000,    5.4307100000000000 ]</span>
+<span class="sd">        &gt;&gt;&gt; generate_replicas_xyz(a, b, c, 5, 5, 5 , &quot;Si.xyz&quot;, &quot;cube10.xyz&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; crop_sphere_xyz(&quot;cube10.xyz&quot;, &quot;qd_5.xyz&quot;, 5.0)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">Natoms</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># Read coordinates and compute COM</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">Rcom</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">A</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> 
+            <span class="n">y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+
+            <span class="n">Rcom</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">Rcom</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span>
+            <span class="n">Rcom</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Rcom</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">y</span>
+            <span class="n">Rcom</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">Rcom</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">z</span>
+
+            <span class="n">L</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">R</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">])</span>
+
+    <span class="c1"># Geometric center</span>
+    <span class="n">Rcom</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">Rcom</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">Natoms</span>
+    <span class="n">Rcom</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Rcom</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">Natoms</span>
+    <span class="n">Rcom</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">Rcom</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">Natoms</span>
+
+ 
+    <span class="c1"># Compute remaining number of atoms</span>
+    <span class="n">Nat</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">indx</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Natoms</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">Rcom</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">Rcom</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">Rcom</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">r</span><span class="o">&lt;=</span><span class="n">Rcut</span><span class="p">):</span>
+            <span class="n">Nat</span> <span class="o">=</span> <span class="n">Nat</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">indx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            
+
+    <span class="c1"># Print resulting coordinates</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
+    <span class="n">f1</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Nat</span><span class="si">:</span><span class="s2">5i</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">f1</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+
+    <span class="n">coords</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">lab</span> <span class="o">=</span> <span class="p">[]</span>     
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indx</span><span class="p">:</span>
+        <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">VECTOR</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="n">lab</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">f1</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">12.6f</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">12.6f</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">12.6f</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">f1</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">lab</span><span class="p">,</span> <span class="n">coords</span></div>
+
+
+
+
+<div class="viewcode-block" id="crop_sphere_xyz2"><a class="viewcode-back" href="../../reference/libra_py/build.html#libra_py.build.crop_sphere_xyz2">[docs]</a><span class="k">def</span> <span class="nf">crop_sphere_xyz2</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">Rcut</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    </span>
+<span class="sd">    This function removes all atoms that are outside of a sphere of </span>
+<span class="sd">    Rcut radius. The sphere is centered on GEOMETRIC center of the </span>
+<span class="sd">    system</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        L ( list of strings ): element names, this list will be trimmed accordingly</span>
+<span class="sd">        R ( VECTORList or list of VECTOR objects): coordinates of the particles [ Bohr ]</span>
+<span class="sd">        Rcut ( double ): the radius of the sphere from the center of the QD [ Bohrs ]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (lab, coords), where:</span>
+<span class="sd"> </span>
+<span class="sd">            * lab ( list of N strings ): the labels of all remaining atoms</span>
+<span class="sd">            * coords ( list of N VECTORs ): the coordinates of all remaining atoms</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="c1"># Compute COM</span>
+    <span class="n">Rcom</span> <span class="o">=</span> <span class="n">VECTOR</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">R</span><span class="p">:</span>
+        <span class="n">Rcom</span> <span class="o">=</span> <span class="n">Rcom</span> <span class="o">+</span> <span class="n">r</span>
+
+    <span class="c1"># Geometric center</span>
+    <span class="n">Natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+    <span class="n">Rcom</span> <span class="o">=</span> <span class="n">Rcom</span> <span class="o">/</span> <span class="n">Natoms</span>
+
+ 
+    <span class="c1"># Compute remaining number of atoms</span>
+    <span class="n">Nat</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">indx</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Natoms</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">Rcom</span><span class="p">)</span><span class="o">.</span><span class="n">length</span><span class="p">()</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">r</span><span class="o">&lt;=</span><span class="n">Rcut</span><span class="p">):</span>
+            <span class="n">Nat</span> <span class="o">=</span> <span class="n">Nat</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">indx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            
+
+    <span class="c1"># Prepare the coordinates and labels of the remaining atoms</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">lab</span> <span class="o">=</span> <span class="p">[]</span>     
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indx</span><span class="p">:</span>
+        <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">lab</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">lab</span><span class="p">,</span> <span class="n">coords</span></div>
+
+
+
+<div class="viewcode-block" id="crop_sphere_xyz3"><a class="viewcode-back" href="../../reference/libra_py/build.html#libra_py.build.crop_sphere_xyz3">[docs]</a><span class="k">def</span> <span class="nf">crop_sphere_xyz3</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">Rcut</span><span class="p">,</span> <span class="n">pairs</span><span class="p">,</span> <span class="n">new_L</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function removes all atoms that are outside of a sphere of </span>
+<span class="sd">    Rcut radius. The sphere is centered on GEOMETRIC center of the </span>
+<span class="sd">    system</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        L ( list of strings ): element names, this list will be trimmed accordingly</span>
+<span class="sd">        R ( VECTORList or list of VECTOR objects): coordinates of the particles [ Bohr ]</span>
+<span class="sd">        Rcut ( double ): the radius of the sphere from the center of the QD [ Bohrs ]</span>
+<span class="sd">        pairs ( list of [int, int, VECTOR, VECTOR] lists ): integers describe the indices for </span>
+<span class="sd">            the connected atoms, the VECTORs describe the translation vector by which the atoms</span>
+<span class="sd">            should be translated before considering connected (e.g. for periodic boundary conditions)</span>
+<span class="sd">            these VECTOR objects are not used in the present function, but the format</span>
+<span class="sd">            is kept such that the output of other functions could be used in this function.</span>
+
+<span class="sd">        new_L ( dictionary(string:string) ): a map containing the key-value pairs, where </span>
+<span class="sd">            the key string corresponds to the label of the atom that is inside the cropped sphere.</span>
+<span class="sd">            The value string corresponds to the new label of the atom outside the sphere. The function</span>
+<span class="sd">            will use the original connectivity information to decide how to cap the dangling bonds</span>
+<span class="sd">            formed at cropping. So, if the atom A is connected to atom B, atom A is inside of the </span>
+<span class="sd">            sphere and B is outside the sphere. The vaule element will become a new label for atom</span>
+<span class="sd">            B, if the key element corresponds to atom type A.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (lab, coords), where:</span>
+<span class="sd"> </span>
+<span class="sd">            * lab ( list of N strings ): the labels of all remaining atoms</span>
+<span class="sd">            * coords ( list of N VECTORs ): the coordinates of all remaining atoms</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="c1"># Compute COM</span>
+    <span class="n">Rcom</span> <span class="o">=</span> <span class="n">VECTOR</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">R</span><span class="p">:</span>
+        <span class="n">Rcom</span> <span class="o">=</span> <span class="n">Rcom</span> <span class="o">+</span> <span class="n">r</span>
+
+    <span class="c1"># Geometric center</span>
+    <span class="n">Natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+    <span class="n">Rcom</span> <span class="o">=</span> <span class="n">Rcom</span> <span class="o">/</span> <span class="n">Natoms</span>
+
+ 
+    <span class="c1"># Compute remaining number of atoms</span>
+    <span class="n">Nat</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">indx</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Natoms</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">Rcom</span><span class="p">)</span><span class="o">.</span><span class="n">length</span><span class="p">()</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">r</span><span class="o">&lt;=</span><span class="n">Rcut</span><span class="p">):</span>
+            <span class="n">Nat</span> <span class="o">=</span> <span class="n">Nat</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">indx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            
+
+    <span class="c1"># Prepare the coordinates and labels of the remaining atoms</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">lab</span> <span class="o">=</span> <span class="p">[]</span>     
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indx</span><span class="p">:</span>
+        <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">lab</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+
+    <span class="c1"># Now add a number of atoms that are ourside the sphere</span>
+    <span class="n">added</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># indices of the added atoms - we need them to avoid a multiple placing</span>
+    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">:</span>
+           
+        <span class="k">if</span> <span class="p">(</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">indx</span> <span class="ow">and</span> <span class="n">it</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">indx</span><span class="p">):</span>  <span class="c1"># both atoms are within the sphere</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">indx</span> <span class="ow">and</span> <span class="n">it</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">indx</span><span class="p">):</span>  <span class="c1"># it[0] is inside, it[1] is outside</span>
+            <span class="k">if</span> <span class="n">it</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">added</span><span class="p">:</span>
+
+                <span class="n">new_lab</span> <span class="o">=</span> <span class="n">new_L</span><span class="p">[</span> <span class="n">L</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="p">]</span>  <span class="c1"># new label</span>
+                <span class="k">if</span> <span class="n">new_lab</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+                    <span class="n">lab</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_lab</span><span class="p">)</span>            
+                    <span class="n">added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">it</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">elif</span> <span class="p">(</span><span class="n">it</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">indx</span> <span class="ow">and</span> <span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">indx</span><span class="p">):</span>  <span class="c1"># it[1] is inside, it[0] is outside</span>
+            <span class="k">if</span> <span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">added</span><span class="p">:</span>
+                <span class="n">new_lab</span> <span class="o">=</span> <span class="n">new_L</span><span class="p">[</span> <span class="n">L</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="p">]</span>  <span class="c1"># new label</span>
+                <span class="k">if</span> <span class="n">new_lab</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+                    <span class="n">lab</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_lab</span><span class="p">)</span>
+                    <span class="n">added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+
+    <span class="k">return</span> <span class="n">lab</span><span class="p">,</span> <span class="n">coords</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="add_atoms_to_system"><a class="viewcode-back" href="../../reference/libra_py/build.html#libra_py.build.add_atoms_to_system">[docs]</a><span class="k">def</span> <span class="nf">add_atoms_to_system</span><span class="p">(</span><span class="n">syst</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">scl</span><span class="p">,</span> <span class="n">mass</span><span class="p">,</span> <span class="n">univ_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Args:    </span>
+<span class="sd">        syst ( System object ): the chemical system to which we are going to add the atoms</span>
+<span class="sd">        L ( list of strings ): element names    </span>
+<span class="sd">        R ( list of VECTOR objects ): coordinates of the particles [ Bohrs ]</span>
+<span class="sd">        scl ( VECTOR ): momentum rescaling factors along each direction [a.u. of momentum]</span>
+<span class="sd">        mass ( list of doubles ): atomic masses [a.u. of mass]</span>
+<span class="sd">        univ_file ( string ): name of the file that contains the Universe properties</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: but adds new atoms to the System object, modifies the syst variable</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">rnd</span> <span class="o">=</span> <span class="n">Random</span><span class="p">()</span>
+
+    <span class="n">nat</span> <span class="o">=</span> <span class="n">syst</span><span class="o">.</span><span class="n">Number_of_atoms</span>
+
+    <span class="c1"># Associate the coordinates with a molecular system</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="n">Universe</span><span class="p">()</span> 
+    <span class="n">LoadPT</span><span class="o">.</span><span class="n">Load_PT</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">univ_file</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+
+        <span class="n">syst</span><span class="o">.</span><span class="n">CREATE_ATOM</span><span class="p">(</span> <span class="n">Atom</span><span class="p">(</span><span class="n">U</span><span class="p">,</span>  <span class="p">{</span><span class="s2">&quot;Atom_element&quot;</span><span class="p">:</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="s2">&quot;Atom_cm_x&quot;</span><span class="p">:</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="s2">&quot;Atom_cm_y&quot;</span><span class="p">:</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">y</span><span class="p">,</span><span class="s2">&quot;Atom_cm_z&quot;</span><span class="p">:</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">z</span><span class="p">})</span>  <span class="p">)</span>
+
+        <span class="c1"># Masses</span>
+        <span class="n">syst</span><span class="o">.</span><span class="n">Atoms</span><span class="p">[</span><span class="n">nat</span><span class="o">+</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">Atom_RB</span><span class="o">.</span><span class="n">set_mass</span><span class="p">(</span><span class="n">mass</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="c1"># Momenta</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">VECTOR</span><span class="p">(</span><span class="n">scl</span><span class="o">.</span><span class="n">x</span><span class="o">*</span><span class="n">rnd</span><span class="o">.</span><span class="n">normal</span><span class="p">(),</span> <span class="n">scl</span><span class="o">.</span><span class="n">y</span><span class="o">*</span><span class="n">rnd</span><span class="o">.</span><span class="n">normal</span><span class="p">(),</span> <span class="n">scl</span><span class="o">.</span><span class="n">z</span><span class="o">*</span><span class="n">rnd</span><span class="o">.</span><span class="n">normal</span><span class="p">())</span>
+        <span class="n">syst</span><span class="o">.</span><span class="n">Atoms</span><span class="p">[</span><span class="n">nat</span><span class="o">+</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">Atom_RB</span><span class="o">.</span><span class="n">set_momentum</span><span class="p">(</span><span class="n">p</span><span class="p">);</span></div>
+
+
+
+
+<div class="viewcode-block" id="add_atom_to_system"><a class="viewcode-back" href="../../reference/libra_py/build.html#libra_py.build.add_atom_to_system">[docs]</a><span class="k">def</span> <span class="nf">add_atom_to_system</span><span class="p">(</span><span class="n">syst</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">MaxCoords</span><span class="p">,</span> <span class="n">Nx</span><span class="p">,</span><span class="n">Ny</span><span class="p">,</span><span class="n">Nz</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="n">elt</span><span class="p">,</span> <span class="n">mass</span><span class="p">,</span> <span class="n">scl</span><span class="p">,</span> <span class="n">max_coord</span><span class="p">,</span> <span class="n">rnd</span><span class="p">,</span> <span class="n">inp_units</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">       </span>
+<span class="sd">    This function adds an atom and its periordic replicas to a (chemical) System object. </span>
+<span class="sd">    The momenta of the atoms are also initialized and are drawn from the normal distribution along</span>
+<span class="sd">    each of the directions (Cartesian x, y, and z), no center of mass momentum subtraction is made however.</span>
+<span class="sd">    This is good for constructing lattices.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        syst ( System object ): the chemical system to which we are going to add the atoms</span>
+<span class="sd">        coords ( list of VECTORs ): coordinates of all atoms in a system</span>
+<span class="sd">        MaxCoords (list of ints): Maximal coordination number of each atom</span>
+<span class="sd">        Nx ( int ): how many times to replicate the atom along a direction</span>
+<span class="sd">        Ny ( int ): how many times to replicate the atom along b direction</span>
+<span class="sd">        Nz ( int ): how many times to replicate the atom along c direction</span>
+<span class="sd">        a ( VECTOR ): the periodicity translation vector along the a direction [Bohr]</span>
+<span class="sd">        b ( VECTOR ): the periodicity translation vector along the b direction [Bohr]</span>
+<span class="sd">        c ( VECTOR ): the periodicity translation vector along the c direction [Bohr]</span>
+<span class="sd">        shift ( VECTOR ): essentially a coordinate of the atom in the unit cell [Bohr]</span>
+<span class="sd">        elt ( string ): Element name</span>
+<span class="sd">        mass ( double ): mass of the atom [a.u. of mass, 1 = mass of an electron]        </span>
+<span class="sd">        scl ( VECTOR ): momentum rescaling factors along each direction [a.u. of momentum]</span>
+<span class="sd">        max_coord ( int ): maximal coordination number of the added atom allowed</span>
+<span class="sd">        rnd ( Random ): an instance of the random number generator class</span>
+<span class="sd">        inp_units ( int ): defines the units of variables stored in shift, a,b, and c</span>
+
+<span class="sd">            * 0 - Bohr ( default )</span>
+<span class="sd">            * 1 - Angstrom </span>
+
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: But the following objects will be updated: </span>
+<span class="sd">     </span>
+<span class="sd">        * syst - the new atoms will be added</span>
+<span class="sd">        * coords - the new coordinates will be added</span>
+<span class="sd">        * MaxCoords - the maximal coordination numbers for new atoms will be added</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nat</span> <span class="o">=</span> <span class="n">syst</span><span class="o">.</span><span class="n">Number_of_atoms</span>
+
+    <span class="c1"># Associate the coordinates with a molecular system</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="n">Universe</span><span class="p">()</span> 
+    <span class="n">LoadPT</span><span class="o">.</span><span class="n">Load_PT</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="s2">&quot;elements.dat&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">out_units</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># internal units in System objects are atomic units</span>
+    <span class="k">for</span> <span class="n">nx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Nx</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">ny</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Ny</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">nz</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Nz</span><span class="p">):</span>
+             
+                <span class="n">R</span> <span class="o">=</span> <span class="n">VECTOR</span><span class="p">(</span><span class="n">nx</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="n">ny</span> <span class="o">*</span> <span class="n">b</span> <span class="o">+</span> <span class="n">nz</span> <span class="o">*</span> <span class="n">c</span> <span class="o">+</span> <span class="n">shift</span><span class="p">)</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">length_converter</span><span class="p">(</span><span class="n">inp_units</span><span class="p">,</span> <span class="n">out_units</span><span class="p">)</span>
+                <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+                <span class="n">MaxCoords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">max_coord</span><span class="p">)</span>
+
+                <span class="n">syst</span><span class="o">.</span><span class="n">CREATE_ATOM</span><span class="p">(</span> <span class="n">Atom</span><span class="p">(</span><span class="n">U</span><span class="p">,</span>  <span class="p">{</span><span class="s2">&quot;Atom_element&quot;</span><span class="p">:</span><span class="n">elt</span><span class="p">,</span><span class="s2">&quot;Atom_cm_x&quot;</span><span class="p">:</span><span class="n">R</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="s2">&quot;Atom_cm_y&quot;</span><span class="p">:</span><span class="n">R</span><span class="o">.</span><span class="n">y</span><span class="p">,</span><span class="s2">&quot;Atom_cm_z&quot;</span><span class="p">:</span><span class="n">R</span><span class="o">.</span><span class="n">z</span><span class="p">})</span>  <span class="p">)</span>
+
+                <span class="c1"># Masses</span>
+                <span class="n">syst</span><span class="o">.</span><span class="n">Atoms</span><span class="p">[</span><span class="n">nat</span><span class="o">+</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">Atom_RB</span><span class="o">.</span><span class="n">set_mass</span><span class="p">(</span><span class="n">mass</span><span class="p">)</span>
+
+                <span class="c1"># Momenta</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">VECTOR</span><span class="p">(</span><span class="n">scl</span><span class="o">.</span><span class="n">x</span><span class="o">*</span><span class="n">rnd</span><span class="o">.</span><span class="n">normal</span><span class="p">(),</span> <span class="n">scl</span><span class="o">.</span><span class="n">y</span><span class="o">*</span><span class="n">rnd</span><span class="o">.</span><span class="n">normal</span><span class="p">(),</span> <span class="n">scl</span><span class="o">.</span><span class="n">z</span><span class="o">*</span><span class="n">rnd</span><span class="o">.</span><span class="n">normal</span><span class="p">())</span>
+                <span class="n">syst</span><span class="o">.</span><span class="n">Atoms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">Atom_RB</span><span class="o">.</span><span class="n">set_momentum</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+                <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span></div>
+
+
+
+<div class="viewcode-block" id="make_system"><a class="viewcode-back" href="../../reference/libra_py/build.html#libra_py.build.make_system">[docs]</a><span class="k">def</span> <span class="nf">make_system</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">U</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function creates a chemical system (System) oject from the </span>
+<span class="sd">    corrdinates and atom labels provided. All atoms of the system</span>
+<span class="sd">    are made into a single group.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        R ( MATRIX(ndof, nsteps) ): molecular coordinates at different times</span>
+<span class="sd">            The convention is R.get(dof, step) is the coordinate of the ```dof```-th </span>
+<span class="sd">            degree of freedom and ```step```-th timestep.</span>
+<span class="sd">            Note: ndof = 3*natoms. [ a.u. = Bohrs ]</span>
+<span class="sd">        E ( list of ```natoms``` strings): atomic labels</span>
+<span class="sd">        step ( int ): selector of the timestep for which we want to construct the system</span>
+<span class="sd">        U ( Universe object ): Universe</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        System : the chemical system with the coordinates of all atoms at a given time. All atoms</span>
+<span class="sd">            are grouped together into a single rigid body    </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">nat</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ndof</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+    
+    <span class="n">syst</span> <span class="o">=</span> <span class="n">System</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">at</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nat</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+        
+        <span class="n">syst</span><span class="o">.</span><span class="n">CREATE_ATOM</span><span class="p">(</span> <span class="n">Atom</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Atom_element&quot;</span><span class="p">:</span><span class="n">E</span><span class="p">[</span><span class="n">at</span><span class="p">],</span> <span class="s2">&quot;Atom_cm_x&quot;</span><span class="p">:</span><span class="n">x</span><span class="p">,</span> <span class="s2">&quot;Atom_cm_y&quot;</span><span class="p">:</span><span class="n">y</span><span class="p">,</span> <span class="s2">&quot;Atom_cm_z&quot;</span><span class="p">:</span><span class="n">z</span> <span class="p">}</span>  <span class="p">)</span>  <span class="p">)</span>
+    
+    <span class="n">syst</span><span class="o">.</span><span class="n">GROUP_ATOMS</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nat</span><span class="o">+</span><span class="mi">1</span><span class="p">)),</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">syst</span><span class="o">.</span><span class="n">init_fragments</span><span class="p">()</span>
+        
+    <span class="k">return</span> <span class="n">syst</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

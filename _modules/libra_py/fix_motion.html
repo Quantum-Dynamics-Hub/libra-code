@@ -1,0 +1,800 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.fix_motion &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.fix_motion</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.fix_motion</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************                     </span>
+<span class="c1">#* Copyright (C) 2019 Alexey V. Akimov                                                   </span>
+<span class="c1">#*                                                                                                     </span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License                          </span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of                                   </span>
+<span class="c1">#* the License, or (at your option) any later version.                                                 </span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution   </span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.          </span>
+<span class="c1">#***********************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: fix_motion</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements functions for removing translation of CM and</span>
+<span class="sd">       rotation around it</span>
+
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">build</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">QE_methods</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">normal_modes</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">LoadPT</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">LoadMolecule</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">nve_md</span>
+
+
+<div class="viewcode-block" id="permutation1"><a class="viewcode-back" href="../../reference/libra_py/fix_motion.html#libra_py.fix_motion.permutation1">[docs]</a><span class="k">def</span> <span class="nf">permutation1</span><span class="p">(</span><span class="n">case</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function returns one of the 6 permutation matrices that</span>
+<span class="sd">    describe possible orderings/directions of the 3 coordinate axes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        case ( int ): selector of the permutation</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MATRIX3x3: the matrix that encodes the permutation</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">U</span> <span class="o">=</span> <span class="n">MATRIX3x3</span><span class="p">()</span>
+        
+    <span class="k">if</span> <span class="n">case</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># U[0] * diag(I1,I2,I3) * U[0] = diag(I1,I2,I3)</span>
+        <span class="c1"># det = 1</span>
+        <span class="c1"># identity</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+        
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># U[1] * diag(I1,I2,I3) * U[1] = diag(I2,I1,I3)</span>
+        <span class="c1"># det = 1 </span>
+        <span class="c1"># x -&gt; y&#39;, y -&gt; x&#39;, z -&gt; -z&#39;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span>
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># U[2] * diag(I1,I2,I3) * U[2] = diag(I1,I3,I2)</span>
+        <span class="c1"># det = 1 </span>
+        <span class="c1"># x -&gt; -x&#39;, y -&gt; z&#39;, z -&gt; y&#39;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
+        <span class="c1"># U[3] * diag(I1,I2,I3) * U[4] = diag(I3,I1,I2)</span>
+        <span class="c1"># det = 1</span>
+        <span class="c1"># x -&gt; z&#39;, y -&gt; x&#39;, z -&gt; y&#39;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+        <span class="c1"># U[4] * diag(I1,I2,I3) * U[3] = diag(I2,I3,I1)</span>
+        <span class="c1"># det = 1</span>
+        <span class="c1"># x -&gt; y&#39;, y -&gt; z&#39;, z -&gt; x&#39;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">5</span><span class="p">:</span> 
+        <span class="c1"># U[5] * diag(I1,I2,I3) * U[5] = diag(I3,I2,I1)</span>
+        <span class="c1"># det = 1 </span>
+        <span class="c1"># x -&gt; z&#39;, y -&gt; -y&#39;, z -&gt; x&#39;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+    
+    <span class="k">return</span> <span class="n">U</span></div>
+
+
+<div class="viewcode-block" id="permutation"><a class="viewcode-back" href="../../reference/libra_py/fix_motion.html#libra_py.fix_motion.permutation">[docs]</a><span class="k">def</span> <span class="nf">permutation</span><span class="p">(</span><span class="n">case</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function returns one of the 6 permutation matrices that</span>
+<span class="sd">    describe possible orderings/directions of the 3 coordinate axes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        case ( int ): selector of the permutation</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MATRIX3x3: the matrix that encodes the permutation</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">U</span> <span class="o">=</span> <span class="n">MATRIX3x3</span><span class="p">()</span>
+        
+    <span class="k">if</span> <span class="n">case</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># x -&gt; x    y -&gt; y      z -&gt; z</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+        
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># x &lt;-&gt; y     z -&gt; z</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># x &lt;-&gt; z     y -&gt; y</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
+        <span class="c1"># y &lt;-&gt; z     x -&gt; x</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+
+    
+    <span class="k">return</span> <span class="n">U</span></div>
+
+
+<div class="viewcode-block" id="permutation2"><a class="viewcode-back" href="../../reference/libra_py/fix_motion.html#libra_py.fix_motion.permutation2">[docs]</a><span class="k">def</span> <span class="nf">permutation2</span><span class="p">(</span><span class="n">case</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function returns one of the 6 permutation matrices that</span>
+<span class="sd">    describe possible orderings/directions of the 3 coordinate axes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        case ( int ): selector of the permutation</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MATRIX3x3: the matrix that encodes the permutation</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">U</span> <span class="o">=</span> <span class="n">MATRIX3x3</span><span class="p">()</span>
+        
+    <span class="k">if</span> <span class="n">case</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># x -&gt; x    y -&gt; y      z -&gt; z</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+        
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># x &lt;-&gt; y     z -&gt; -z</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span>
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># x &lt;-&gt; z     y -&gt; -y</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
+        <span class="c1"># y &lt;-&gt; z     x -&gt; -x</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+        <span class="c1"># x-&gt;y, y-&gt;z, z-&gt;x</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">5</span><span class="p">:</span>
+        <span class="c1"># x-&gt;z, z-&gt;y, y-&gt;x</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+
+
+    
+    <span class="k">return</span> <span class="n">U</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">reflection</span><span class="p">(</span><span class="n">case</span><span class="p">):</span>
+
+    <span class="n">U</span> <span class="o">=</span> <span class="n">MATRIX3x3</span><span class="p">()</span>
+        
+    <span class="k">if</span> <span class="n">case</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># x - &gt; x, y -&gt; y, z -&gt; z</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># x - &gt; -x, y -&gt; y, z -&gt; z</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># x - &gt; x, y -&gt; -y, z -&gt; z</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
+        <span class="c1"># x - &gt; x, y -&gt; y, z -&gt; -z</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span>
+
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+        <span class="c1"># x - &gt; -x, y -&gt; -y, z -&gt; z</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">5</span><span class="p">:</span>
+        <span class="c1"># x - &gt; -x, y -&gt; y, z -&gt; -z</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span>
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">6</span><span class="p">:</span>
+        <span class="c1"># x - &gt; x, y -&gt; -y, z -&gt; -z</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span>
+
+
+    <span class="k">elif</span> <span class="n">case</span><span class="o">==</span><span class="mi">7</span><span class="p">:</span>
+        <span class="c1"># x - &gt; -x, y -&gt; -y, z -&gt; -z</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">xx</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">yx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">zx</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span> <span class="o">=-</span><span class="mf">1.0</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="n">U</span>
+
+       
+
+<div class="viewcode-block" id="measure"><a class="viewcode-back" href="../../reference/libra_py/fix_motion.html#libra_py.fix_motion.measure">[docs]</a><span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="n">S0</span><span class="p">,</span> <span class="n">S1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the measure of the two systems&#39; dis-orientation</span>
+<span class="sd">    It is zero if the two systems are ideally parallel to each other</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        S0 ( System ): first system</span>
+<span class="sd">        S1 ( System ): second system</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        ( double ): measure of two systems&#39; dis-orientation</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nat</span> <span class="o">=</span> <span class="n">S0</span><span class="o">.</span><span class="n">Number_of_atoms</span>
+    <span class="n">res</span><span class="p">,</span> <span class="n">dot</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nat</span><span class="p">):</span>
+        
+        <span class="n">dr0</span> <span class="o">=</span> <span class="n">S0</span><span class="o">.</span><span class="n">Atoms</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">Atom_RB</span><span class="o">.</span><span class="n">rb_cm</span> <span class="o">-</span>  <span class="n">S0</span><span class="o">.</span><span class="n">Fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Group_RB</span><span class="o">.</span><span class="n">rb_cm</span> 
+        <span class="n">dr1</span> <span class="o">=</span> <span class="n">S1</span><span class="o">.</span><span class="n">Atoms</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">Atom_RB</span><span class="o">.</span><span class="n">rb_cm</span> <span class="o">-</span>  <span class="n">S1</span><span class="o">.</span><span class="n">Fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Group_RB</span><span class="o">.</span><span class="n">rb_cm</span> 
+        
+        <span class="n">dr0</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+        <span class="n">dr1</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">cross</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">dr0</span><span class="p">,</span> <span class="n">dr1</span><span class="p">)</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="n">l</span><span class="o">.</span><span class="n">length2</span><span class="p">()</span>        
+        <span class="n">dot</span> <span class="o">=</span> <span class="n">dot</span> <span class="o">+</span> <span class="n">dr0</span> <span class="o">*</span> <span class="n">dr1</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">nat</span><span class="p">)</span>
+    <span class="n">dot</span> <span class="o">=</span> <span class="n">dot</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">nat</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">res</span><span class="p">,</span>  <span class="n">dot</span></div>
+
+
+<div class="viewcode-block" id="measure2"><a class="viewcode-back" href="../../reference/libra_py/fix_motion.html#libra_py.fix_motion.measure2">[docs]</a><span class="k">def</span> <span class="nf">measure2</span><span class="p">(</span><span class="n">S0</span><span class="p">,</span> <span class="n">S1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the measure of the two systems&#39; dis-orientation</span>
+<span class="sd">    It is zero if the two systems are ideally parallel to each other</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        S0 ( System ): first system</span>
+<span class="sd">        S1 ( System ): second system</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        ( double ): measure of two systems&#39; dis-orientation</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nat</span> <span class="o">=</span> <span class="n">S0</span><span class="o">.</span><span class="n">Number_of_atoms</span>
+    <span class="n">res</span><span class="p">,</span> <span class="n">dot</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nat</span><span class="p">):</span>
+        
+        <span class="n">dr</span> <span class="o">=</span> <span class="n">S0</span><span class="o">.</span><span class="n">Atoms</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">Atom_RB</span><span class="o">.</span><span class="n">rb_cm</span> <span class="o">-</span> <span class="n">S1</span><span class="o">.</span><span class="n">Atoms</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">Atom_RB</span><span class="o">.</span><span class="n">rb_cm</span>       
+        <span class="n">dot</span> <span class="o">=</span> <span class="n">dot</span> <span class="o">+</span> <span class="n">dr</span><span class="o">.</span><span class="n">length2</span><span class="p">()</span>
+
+
+        <span class="n">dr0</span> <span class="o">=</span> <span class="n">S0</span><span class="o">.</span><span class="n">Atoms</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">Atom_RB</span><span class="o">.</span><span class="n">rb_cm</span> <span class="o">-</span>  <span class="n">S0</span><span class="o">.</span><span class="n">Fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Group_RB</span><span class="o">.</span><span class="n">rb_cm</span> 
+        <span class="n">dr1</span> <span class="o">=</span> <span class="n">S1</span><span class="o">.</span><span class="n">Atoms</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">Atom_RB</span><span class="o">.</span><span class="n">rb_cm</span> <span class="o">-</span>  <span class="n">S1</span><span class="o">.</span><span class="n">Fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Group_RB</span><span class="o">.</span><span class="n">rb_cm</span>         
+        <span class="n">dr0</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+        <span class="n">dr1</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="n">dr0</span> <span class="o">*</span> <span class="n">dr1</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">nat</span><span class="p">)</span>
+    <span class="n">dot</span> <span class="o">=</span> <span class="n">dot</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">nat</span><span class="p">)</span>
+     
+    <span class="k">return</span> <span class="n">dot</span><span class="p">,</span> <span class="n">res</span></div>
+
+
+
+<div class="viewcode-block" id="remove_translation"><a class="viewcode-back" href="../../reference/libra_py/fix_motion.html#libra_py.fix_motion.remove_translation">[docs]</a><span class="k">def</span> <span class="nf">remove_translation</span><span class="p">(</span><span class="n">S0</span><span class="p">,</span> <span class="n">S1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Translates the system ```S1``` such that it&#39;s center of mass </span>
+<span class="sd">    coincides with that of the system ```S0```</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        S0 ( System ): first system</span>
+<span class="sd">        S1 ( System ): second system</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        None: but the system ```S1``` is changed</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="n">R0</span> <span class="o">=</span> <span class="n">S0</span><span class="o">.</span><span class="n">Fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Group_RB</span><span class="o">.</span><span class="n">rb_cm</span> 
+    <span class="n">R1</span> <span class="o">=</span> <span class="n">S1</span><span class="o">.</span><span class="n">Fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Group_RB</span><span class="o">.</span><span class="n">rb_cm</span> 
+    <span class="n">dR</span> <span class="o">=</span> <span class="n">R0</span> <span class="o">-</span> <span class="n">R1</span>
+    <span class="n">dr</span> <span class="o">=</span> <span class="n">dR</span><span class="o">.</span><span class="n">length</span><span class="p">()</span>
+
+    <span class="c1">#print dR.x, dR.y, dR.z</span>
+    <span class="n">S1</span><span class="o">.</span><span class="n">TRANSLATE_FRAGMENT</span><span class="p">(</span><span class="n">dr</span><span class="p">,</span> <span class="n">dR</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="remove_rotation"><a class="viewcode-back" href="../../reference/libra_py/fix_motion.html#libra_py.fix_motion.remove_rotation">[docs]</a><span class="k">def</span> <span class="nf">remove_rotation</span><span class="p">(</span><span class="n">S0</span><span class="p">,</span> <span class="n">S1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rotates the system ```S1``` such that it is oriented as similar to </span>
+<span class="sd">    the system ```S0``` as possible</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        S0 ( System ): first system</span>
+<span class="sd">        S1 ( System ): second system</span>
+<span class="sd">        verbose ( int ): the level of debug info printout [ default: 0 - no printout ]</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        None: but the system ```S1``` is changed</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">MATRIX3x3</span><span class="p">();</span> <span class="n">I</span><span class="o">.</span><span class="n">identity</span><span class="p">()</span>
+
+    <span class="n">Q0</span> <span class="o">=</span> <span class="n">QUATERNION</span><span class="p">()</span>
+    <span class="n">Q1</span> <span class="o">=</span> <span class="n">QUATERNION</span><span class="p">()</span>
+    <span class="n">Q2</span> <span class="o">=</span> <span class="n">QUATERNION</span><span class="p">()</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="n">MATRIX3x3</span><span class="p">()</span>
+
+    <span class="n">MATRIX_TO_QUATERNION</span><span class="p">(</span><span class="n">S0</span><span class="o">.</span><span class="n">Fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Group_RB</span><span class="o">.</span><span class="n">rb_A_I_to_e</span><span class="p">,</span> <span class="n">Q0</span><span class="p">);</span>
+    <span class="n">MATRIX_TO_QUATERNION</span><span class="p">(</span><span class="n">S1</span><span class="o">.</span><span class="n">Fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Group_RB</span><span class="o">.</span><span class="n">rb_A_I_to_e</span><span class="p">,</span> <span class="n">Q1</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Q0 = &quot;</span><span class="p">,</span> <span class="n">Q0</span><span class="o">.</span><span class="n">Lt</span><span class="p">,</span> <span class="n">Q0</span><span class="o">.</span><span class="n">Lx</span><span class="p">,</span> <span class="n">Q0</span><span class="o">.</span><span class="n">Ly</span><span class="p">,</span> <span class="n">Q0</span><span class="o">.</span><span class="n">Lz</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Q1 = &quot;</span><span class="p">,</span> <span class="n">Q1</span><span class="o">.</span><span class="n">Lt</span><span class="p">,</span> <span class="n">Q1</span><span class="o">.</span><span class="n">Lx</span><span class="p">,</span> <span class="n">Q1</span><span class="o">.</span><span class="n">Ly</span><span class="p">,</span> <span class="n">Q1</span><span class="o">.</span><span class="n">Lz</span><span class="p">)</span>
+
+    <span class="c1"># If one of the bodies is totally-symmetric, don&#39;t do anything</span>
+    <span class="c1"># bacause we can&#39;t e sure about the directions</span>
+    <span class="k">if</span> <span class="n">Q0</span><span class="o">.</span><span class="n">vect</span><span class="p">()</span><span class="o">.</span><span class="n">length2</span><span class="p">()</span> <span class="o">*</span> <span class="n">Q1</span><span class="o">.</span><span class="n">vect</span><span class="p">()</span><span class="o">.</span><span class="n">length2</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">1e-15</span><span class="p">:</span>
+         
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>       
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Measure before rotation = &quot;</span><span class="p">,</span> <span class="n">measure2</span><span class="p">(</span><span class="n">S0</span><span class="p">,</span> <span class="n">S1</span><span class="p">)</span> <span class="p">)</span>
+
+        <span class="c1"># Lets consider all possible axes permutations and compute the</span>
+        <span class="c1"># alignment measure for each one</span>
+        <span class="n">mes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span><span class="p">):</span>            <span class="c1"># reflections</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">6</span><span class="p">):</span>        <span class="c1"># permutations</span>
+<span class="c1">#        for i in [0]:            # reflections</span>
+<span class="c1">#            for j in [0]:        # permutations</span>
+
+
+                <span class="c1">#Q2 = Q0 * Q1.inverse()</span>
+                <span class="c1">#QUATERNION_TO_MATRIX(Q2, U);</span>
+
+
+                <span class="n">P</span> <span class="o">=</span> <span class="n">reflection</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">*</span> <span class="n">permutation2</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>  <span class="c1"># reflection(i) *</span>
+                <span class="c1">#P = permutation2(j) * reflection(i)</span>
+                <span class="n">A1</span> <span class="o">=</span> <span class="n">S1</span><span class="o">.</span><span class="n">Fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Group_RB</span><span class="o">.</span><span class="n">rb_A_I_to_e</span> <span class="o">*</span> <span class="n">P</span>    
+                <span class="n">U</span> <span class="o">=</span> <span class="n">S0</span><span class="o">.</span><span class="n">Fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Group_RB</span><span class="o">.</span><span class="n">rb_A_I_to_e</span> <span class="o">*</span> <span class="n">A1</span><span class="o">.</span><span class="n">T</span><span class="p">()</span> <span class="c1">#A1.inverse()</span>
+
+                <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                dU = A1</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (dU.xx, dU.xy, dU.xz)</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (dU.yx, dU.yy, dU.yz)</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (dU.zx, dU.zy, dU.zz)</span>
+
+<span class="sd">                dU = S0.Fragments[0].Group_RB.rb_A_I_to_e</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (dU.xx, dU.xy, dU.xz)</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (dU.yx, dU.yy, dU.yz)</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (dU.zx, dU.zy, dU.zz)</span>
+
+<span class="sd">                dU = S0.Fragments[0].Group_RB.rb_A_I_to_e * S0.Fragments[0].Group_RB.rb_A_I_to_e_T</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (dU.xx, dU.xy, dU.xz)</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (dU.yx, dU.yy, dU.yz)</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (dU.zx, dU.zy, dU.zz)</span>
+
+<span class="sd">                dU = A1 * A1.T()</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (dU.xx, dU.xy, dU.xz)</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (dU.yx, dU.yy, dU.yz)</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (dU.zx, dU.zy, dU.zz)</span>
+
+<span class="sd">                dU = (U*U.T() - I)</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (dU.xx, dU.xy, dU.xz)</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (dU.yx, dU.yy, dU.yz)</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (dU.zx, dU.zy, dU.zz)</span>
+
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (U.xx, U.xy, U.xz)</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (U.yx, U.yy, U.yz)</span>
+<span class="sd">                print &quot;%8.5f  %8.5f  %8.5f &quot; % (U.zx, U.zy, U.zz)</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+
+
+                <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">Determinant</span><span class="p">())</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: 1) Problems with inversion: &quot;</span><span class="p">,</span> <span class="n">U</span><span class="o">.</span><span class="n">Determinant</span><span class="p">()</span> <span class="p">)</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="n">dU</span> <span class="o">=</span> <span class="p">(</span><span class="n">U</span><span class="o">*</span><span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="p">()</span> <span class="o">-</span> <span class="n">I</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">dU</span> <span class="o">*</span> <span class="n">dU</span><span class="o">.</span><span class="n">T</span><span class="p">())</span><span class="o">.</span><span class="n">tr</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: 2) Problems with inversion: &quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">dU</span> <span class="o">*</span> <span class="n">dU</span><span class="o">.</span><span class="n">T</span><span class="p">())</span><span class="o">.</span><span class="n">tr</span><span class="p">())</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dU</span><span class="o">.</span><span class="n">xx</span><span class="p">,</span> <span class="n">dU</span><span class="o">.</span><span class="n">xy</span><span class="p">,</span> <span class="n">dU</span><span class="o">.</span><span class="n">xz</span><span class="p">))</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dU</span><span class="o">.</span><span class="n">yx</span><span class="p">,</span> <span class="n">dU</span><span class="o">.</span><span class="n">yy</span><span class="p">,</span> <span class="n">dU</span><span class="o">.</span><span class="n">yz</span><span class="p">))</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dU</span><span class="o">.</span><span class="n">zx</span><span class="p">,</span> <span class="n">dU</span><span class="o">.</span><span class="n">zy</span><span class="p">,</span> <span class="n">dU</span><span class="o">.</span><span class="n">zz</span><span class="p">))</span>
+
+                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="n">s</span> <span class="o">=</span> <span class="n">System</span><span class="p">(</span><span class="n">S1</span><span class="p">)</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">ROTATE_FRAGMENT</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    
+                <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">xx</span><span class="p">,</span> <span class="n">U</span><span class="o">.</span><span class="n">xy</span><span class="p">,</span> <span class="n">U</span><span class="o">.</span><span class="n">xz</span><span class="p">)</span> <span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">yx</span><span class="p">,</span> <span class="n">U</span><span class="o">.</span><span class="n">yy</span><span class="p">,</span> <span class="n">U</span><span class="o">.</span><span class="n">yz</span><span class="p">)</span> <span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">zx</span><span class="p">,</span> <span class="n">U</span><span class="o">.</span><span class="n">zy</span><span class="p">,</span> <span class="n">U</span><span class="o">.</span><span class="n">zz</span><span class="p">)</span> <span class="p">)</span>
+                
+                <span class="n">mes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">measure2</span><span class="p">(</span><span class="n">S0</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="p">)</span>
+                <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;Measure after reflection </span><span class="si">%i</span><span class="s2"> and permutaiton </span><span class="si">%i</span><span class="s2"> = &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">mes</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="p">]</span> <span class="p">)</span>
+
+
+                <span class="c1"># Rotate the system S1 back to its original configuration</span>
+                <span class="c1"># before applying the next ordering </span>
+                <span class="c1">#S1.ROTATE_FRAGMENT(U.inverse(), 1)</span>
+
+        <span class="c1"># Determine the permutation for which the alignment of the</span>
+        <span class="c1"># two configurations is the best</span>
+        <span class="n">mes_indx</span><span class="p">,</span> <span class="n">min_dist</span><span class="p">,</span> <span class="n">max_dot</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">mes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">mes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mes</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">mes</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">min_dist</span> <span class="ow">and</span> <span class="n">mes</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">max_dot</span><span class="p">:</span>
+                <span class="n">min_dist</span> <span class="o">=</span> <span class="n">mes</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">max_dot</span> <span class="o">=</span> <span class="n">mes</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">mes_indx</span> <span class="o">=</span> <span class="n">i</span>
+
+
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Selected transformation = &quot;</span><span class="p">,</span> <span class="n">mes_indx</span><span class="p">,</span> <span class="n">indices</span><span class="p">[</span><span class="n">mes_indx</span><span class="p">]</span> <span class="p">)</span>
+
+        <span class="c1">#QUATERNION_TO_MATRIX(Q2, U);</span>
+
+        <span class="c1"># Apply the rotation with the correct permutation    </span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">reflection</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="n">mes_indx</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">permutation2</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="n">mes_indx</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>   
+        <span class="c1">#P = permutation2(indices[mes_indx][1]) * reflection(indices[mes_indx][0])    </span>
+        <span class="n">A1</span> <span class="o">=</span> <span class="n">S1</span><span class="o">.</span><span class="n">Fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Group_RB</span><span class="o">.</span><span class="n">rb_A_I_to_e</span> <span class="o">*</span> <span class="n">P</span>    
+        <span class="n">U</span> <span class="o">=</span> <span class="n">S0</span><span class="o">.</span><span class="n">Fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Group_RB</span><span class="o">.</span><span class="n">rb_A_I_to_e</span> <span class="o">*</span> <span class="n">A1</span><span class="o">.</span><span class="n">T</span><span class="p">()</span>  <span class="c1">#A1.inverse()</span>
+
+
+        <span class="n">S1</span><span class="o">.</span><span class="n">ROTATE_FRAGMENT</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Measure after rotation = &quot;</span><span class="p">,</span> <span class="n">measure2</span><span class="p">(</span><span class="n">S0</span><span class="p">,</span> <span class="n">S1</span><span class="p">)</span> <span class="p">)</span>
+            <span class="n">MATRIX_TO_QUATERNION</span><span class="p">(</span><span class="n">S1</span><span class="o">.</span><span class="n">Fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Group_RB</span><span class="o">.</span><span class="n">rb_A_I_to_e</span><span class="p">,</span> <span class="n">Q1</span><span class="p">);</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Q1(updated) = &quot;</span><span class="p">,</span> <span class="n">Q1</span><span class="o">.</span><span class="n">Lt</span><span class="p">,</span> <span class="n">Q1</span><span class="o">.</span><span class="n">Lx</span><span class="p">,</span> <span class="n">Q1</span><span class="o">.</span><span class="n">Ly</span><span class="p">,</span> <span class="n">Q1</span><span class="o">.</span><span class="n">Lz</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="process_xyz"><a class="viewcode-back" href="../../reference/libra_py/fix_motion.html#libra_py.fix_motion.process_xyz">[docs]</a><span class="k">def</span> <span class="nf">process_xyz</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">PT</span><span class="p">,</span> <span class="n">itime</span><span class="p">,</span> <span class="n">ftime</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function will read xyz file to create the coordinates for a range of </span>
+<span class="sd">    configurations and it will remove the translation of COM and rotation of </span>
+<span class="sd">    the configuration. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename ( string ): the name of the xyz file to read</span>
+<span class="sd">        PT ( dictionary ): periodic table, which sets up the atomic masses [ in Daltons ]</span>
+<span class="sd">            for all elements that one meets in the xyz file</span>
+<span class="sd">        itime ( int ): the initial timeframe to process</span>
+<span class="sd">        ftime ( int ): the final timefram to process</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Read in the xyz file </span>
+    <span class="n">R</span><span class="p">,</span> <span class="n">E</span> <span class="o">=</span> <span class="n">QE_methods</span><span class="o">.</span><span class="n">read_md_data_xyz2</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">PT</span><span class="p">)</span> <span class="c1"># R  in a.u. </span>
+
+    <span class="c1"># Determine dimensions</span>
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">nat</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ndof</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">nsteps</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">num_of_cols</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;nsteps = &quot;</span><span class="p">,</span> <span class="n">nsteps</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ndos = &quot;</span><span class="p">,</span> <span class="n">ndof</span><span class="p">)</span>
+
+    <span class="c1"># Setup masses</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">at</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nat</span><span class="p">):</span>    
+        <span class="n">M</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">PT</span><span class="p">[</span><span class="n">E</span><span class="p">[</span><span class="n">at</span><span class="p">]])</span>
+        <span class="n">M</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">PT</span><span class="p">[</span><span class="n">E</span><span class="p">[</span><span class="n">at</span><span class="p">]])</span>
+        <span class="n">M</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">PT</span><span class="p">[</span><span class="n">E</span><span class="p">[</span><span class="n">at</span><span class="p">]])</span>
+
+    <span class="c1"># Setup the universe    </span>
+    <span class="n">U</span> <span class="o">=</span> <span class="n">Universe</span><span class="p">()</span>
+    <span class="n">LoadPT</span><span class="o">.</span><span class="n">Load_PT</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="s2">&quot;elements.dat&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Build chemical systems corresponding to each geometry </span>
+    <span class="c1"># also find the reference system - the one for which the directions are </span>
+    <span class="c1"># not of zero length</span>
+    <span class="n">indx</span><span class="p">,</span> <span class="n">found</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">False</span>
+    <span class="n">Systems</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">itime</span><span class="p">,</span> <span class="n">ftime</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># Build systems</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">build</span><span class="o">.</span><span class="n">make_system</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">U</span><span class="p">)</span>        
+        <span class="n">Systems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+        <span class="c1"># Check if it is a good reference</span>
+        <span class="k">if</span> <span class="n">found</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">Q</span> <span class="o">=</span> <span class="n">QUATERNION</span><span class="p">()</span>
+            <span class="n">MATRIX_TO_QUATERNION</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">Fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Group_RB</span><span class="o">.</span><span class="n">rb_A_I_to_e</span><span class="p">,</span> <span class="n">Q</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">Q</span><span class="o">.</span><span class="n">vect</span><span class="p">()</span><span class="o">.</span><span class="n">length2</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">1e-15</span><span class="p">:</span>
+                <span class="n">indx</span> <span class="o">=</span> <span class="n">frame</span> <span class="o">-</span> <span class="n">itime</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Optionally, print out some info           </span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="o">&gt;</span><span class="mi">2</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">Fragments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Group_RB</span><span class="o">.</span><span class="n">show_info</span><span class="p">()</span>
+
+    <span class="c1"># Now, we are ready to process all the systems and convert them to xyz</span>
+    <span class="n">xyz0</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">xyz</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">nframes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Systems</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nframes</span><span class="p">):</span>
+
+        <span class="c1"># To xyz - before</span>
+        <span class="n">xyz1</span> <span class="o">=</span> <span class="n">nve_md</span><span class="o">.</span><span class="n">syst2xyz</span><span class="p">(</span><span class="n">Systems</span><span class="p">[</span><span class="n">frame</span><span class="p">])</span>
+        <span class="n">xyz0</span> <span class="o">=</span> <span class="n">xyz0</span> <span class="o">+</span> <span class="n">xyz1</span>
+
+        <span class="k">if</span> <span class="n">frame</span><span class="o">!=</span><span class="n">indx</span><span class="p">:</span>
+            <span class="n">remove_translation</span><span class="p">(</span><span class="n">Systems</span><span class="p">[</span><span class="n">indx</span><span class="p">],</span> <span class="n">Systems</span><span class="p">[</span><span class="n">frame</span><span class="p">])</span>        
+            <span class="n">remove_rotation</span><span class="p">(</span><span class="n">Systems</span><span class="p">[</span><span class="n">indx</span><span class="p">],</span> <span class="n">Systems</span><span class="p">[</span><span class="n">frame</span><span class="p">],</span> <span class="n">verbose</span><span class="p">)</span>
+
+        <span class="c1"># To xyz - after</span>
+        <span class="n">xyz1</span> <span class="o">=</span> <span class="n">nve_md</span><span class="o">.</span><span class="n">syst2xyz</span><span class="p">(</span><span class="n">Systems</span><span class="p">[</span><span class="n">frame</span><span class="p">])</span>
+        <span class="n">xyz</span> <span class="o">=</span> <span class="n">xyz</span> <span class="o">+</span> <span class="n">xyz1</span>
+
+
+    <span class="c1"># Convert the Systems into R</span>
+    <span class="n">R</span>  <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">nframes</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nframes</span><span class="p">):</span>    
+
+        <span class="c1"># To MATRIX</span>
+        <span class="k">for</span> <span class="n">at</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nat</span><span class="p">):</span>    
+            <span class="n">R</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">Systems</span><span class="p">[</span><span class="n">frame</span><span class="p">]</span><span class="o">.</span><span class="n">Atoms</span><span class="p">[</span><span class="n">at</span><span class="p">]</span><span class="o">.</span><span class="n">Atom_RB</span><span class="o">.</span><span class="n">rb_cm</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">R</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">Systems</span><span class="p">[</span><span class="n">frame</span><span class="p">]</span><span class="o">.</span><span class="n">Atoms</span><span class="p">[</span><span class="n">at</span><span class="p">]</span><span class="o">.</span><span class="n">Atom_RB</span><span class="o">.</span><span class="n">rb_cm</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">R</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">Systems</span><span class="p">[</span><span class="n">frame</span><span class="p">]</span><span class="o">.</span><span class="n">Atoms</span><span class="p">[</span><span class="n">at</span><span class="p">]</span><span class="o">.</span><span class="n">Atom_RB</span><span class="o">.</span><span class="n">rb_cm</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+       
+    <span class="k">return</span> <span class="n">R</span><span class="p">,</span> <span class="n">xyz0</span><span class="p">,</span> <span class="n">xyz</span></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

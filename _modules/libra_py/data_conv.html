@@ -1,0 +1,693 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.data_conv &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.data_conv</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.data_conv</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************                     </span>
+<span class="c1">#* Copyright (C) 2020 Brendan Smith, Alexey V. Akimov                                                   </span>
+<span class="c1">#* Copyright (C) 2019 Alexey V. Akimov                                                   </span>
+<span class="c1">#*</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 3 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#***********************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: data_conv</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: </span>
+<span class="sd">       This module implements various functions for data conversions and data transformations</span>
+
+<span class="sd">.. moduleauthor:: Alexey V. Akimov, Brendan Smith</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1">#import common_utils as comn</span>
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+
+
+<div class="viewcode-block" id="transform_data"><a class="viewcode-back" href="../../reference/libra_py/data_conv.html#libra_py.data_conv.transform_data">[docs]</a><span class="k">def</span> <span class="nf">transform_data</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This is an auxiliary function to transform the original matrices X (e.g. H_vib) according to:     </span>
+<span class="sd">    X(original) -&gt;    ( X + shift1 ) (x) (scale) + shift2,  </span>
+
+<span class="sd">    Here, (x) indicates the element-wise multiplicaiton, and shift1, shift2, and scale are matrices</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        X ( list of lists of CMATRIX(nstates, nstates) ): the original data stored as</span>
+<span class="sd">            X[idata][step] - a CMATRIX(nstates, nstates) for the dataset `idata` and time </span>
+<span class="sd">            step `step`</span>
+<span class="sd">        params ( dictionary ): parameters controlling the transformation</span>
+
+<span class="sd">            * **params[&quot;shift1&quot;]** ( CMATRIX(nstates,nstates) ): first shift corrections [units of X], [default: zero]</span>
+<span class="sd">            * **params[&quot;shift2&quot;]** ( CMATRIX(nstates,nstates) ): second shift corrections [units of X], [default: zero]</span>
+<span class="sd">            * **params[&quot;scale&quot;]** ( CMATRIX(nstates,nstates) ): scaling of the X [unitless], [default: 1.0 in all matrix elements]</span>
+
+<span class="sd">    Returns:    </span>
+<span class="sd">        None: but transforms X input directly, so changes the original input</span>
+
+
+<span class="sd">    Example:</span>
+<span class="sd">        Lets say we have a data set of 2x2 matrices and we want to increase the energy gap by 0.1 units and scale the</span>
+<span class="sd">        couplings by a factor of 3. Then, the input is going to be like this:</span>
+
+<span class="sd">        &gt;&gt;&gt; scl = CMATRIX(2,2); </span>
+<span class="sd">        &gt;&gt;&gt; scl.set(0,0, 1.0+0.0j);  scl.set(0,1, 3.0+0.0j);</span>
+<span class="sd">        &gt;&gt;&gt; scl.set(0,0, 3.0+0.0j);  scl.set(0,1, 1.0+0.0j);</span>
+<span class="sd">        &gt;&gt;&gt; shi = CMATRIX(2,2); </span>
+<span class="sd">        &gt;&gt;&gt; shi.set(0,0, 0.0+0.0j);  shi.set(0,1, 0.0+0.0j);</span>
+<span class="sd">        &gt;&gt;&gt; shi.set(0,0, 0.0+0.0j);  shi.set(0,1, 0.1+0.0j);</span>
+<span class="sd">        &gt;&gt;&gt; transform_data(X, {&quot;shift2&quot;:shi, &quot;scale&quot;:scl })</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ndata</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">nsteps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="n">sh1</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span> <span class="c1"># zero</span>
+    <span class="n">sh2</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span> <span class="c1"># zero</span>
+    <span class="n">scl</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span> <span class="c1"># all elements are 1</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+            <span class="n">scl</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span>  <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;shift1&quot;</span><span class="p">:</span><span class="n">sh1</span><span class="p">,</span> <span class="s2">&quot;shift2&quot;</span><span class="p">:</span><span class="n">sh2</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span><span class="n">scl</span>  <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">idata</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndata</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">istep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nsteps</span><span class="p">):</span>
+
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">istep</span><span class="p">])</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">tmp</span> <span class="o">+</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;shift1&quot;</span><span class="p">]</span>
+            <span class="n">tmp</span><span class="o">.</span><span class="n">dot_product</span><span class="p">(</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span> <span class="p">)</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">tmp</span> <span class="o">+</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;shift2&quot;</span><span class="p">]</span>
+            <span class="n">X</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">istep</span><span class="p">]</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="unit_conversion"><a class="viewcode-back" href="../../reference/libra_py/data_conv.html#libra_py.data_conv.unit_conversion">[docs]</a><span class="k">def</span> <span class="nf">unit_conversion</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">scaling_factor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Rescales the data X uniformly:     </span>
+<span class="sd">    X(original) -&gt;    ( X ) (x) (scaling_factor),  </span>
+
+<span class="sd">    Here, (x) indicates the element-wise multiplicaiton, and shift1, shift2, and scale are matrices</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        X ( list of lists of CMATRIX(nstates, nstates) ): the original data stored as</span>
+<span class="sd">            X[idata][step] - a CMATRIX(nstates, nstates) for the dataset `idata` and time </span>
+<span class="sd">            step `step`</span>
+<span class="sd">        scaling_factor ( double or complex ): the rescaling factor</span>
+
+<span class="sd">    Returns:    </span>
+<span class="sd">        None: but transforms X input directly, so changes the original input</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nst</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="n">scl</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">nst</span><span class="p">);</span>                             
+    <span class="n">shi</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">nst</span><span class="p">);</span>                             
+
+    <span class="c1"># Default ones</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nst</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nst</span><span class="p">):</span>
+            <span class="n">scl</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">scaling_factor</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">))</span>
+            <span class="n">shi</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">))</span>        
+    <span class="n">transform_data</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;shift2&quot;</span><span class="p">:</span><span class="n">shi</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span><span class="n">scl</span> <span class="p">})</span> </div>
+
+
+
+
+<div class="viewcode-block" id="scale_NAC"><a class="viewcode-back" href="../../reference/libra_py/data_conv.html#libra_py.data_conv.scale_NAC">[docs]</a><span class="k">def</span> <span class="nf">scale_NAC</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">scaling_factor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Rescales only the matrix elements X_ab by a uniform scaling factor:     </span>
+<span class="sd">    X_ab(original) -&gt;    ( X_ab ) x (scaling_factor),  </span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        X ( list of lists of CMATRIX(nstates, nstates) ): the original data stored as</span>
+<span class="sd">            X[idata][step] - a CMATRIX(nstates, nstates) for the dataset `idata` and time </span>
+<span class="sd">            step `step`</span>
+<span class="sd">        scaling_factor ( double or complex ): the rescaling factor</span>
+
+<span class="sd">    Returns:    </span>
+<span class="sd">        None: but transforms X input directly, so changes the original input</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="n">nst</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="n">scl</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">nst</span><span class="p">);</span>                             
+    <span class="n">shi</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">nst</span><span class="p">);</span>                             
+
+    <span class="c1"># Default ones</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nst</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nst</span><span class="p">):</span>
+            <span class="n">scl</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span>
+            <span class="n">shi</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span>        
+    <span class="n">scl</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span> <span class="n">scaling_factor</span><span class="p">)</span>
+
+    <span class="n">transform_data</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;shift2&quot;</span><span class="p">:</span><span class="n">shi</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span><span class="n">scl</span> <span class="p">})</span> </div>
+
+
+
+<div class="viewcode-block" id="scale_NACs"><a class="viewcode-back" href="../../reference/libra_py/data_conv.html#libra_py.data_conv.scale_NACs">[docs]</a><span class="k">def</span> <span class="nf">scale_NACs</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">scaling_factor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Rescales all the off-diagonal matrix elements X_ab by a uniform scaling factor:     </span>
+<span class="sd">    X_ab(original) -&gt;    ( X_ab ) x (scaling_factor),  for all a!=b</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        X ( list of lists of CMATRIX(nstates, nstates) ): the original data stored as</span>
+<span class="sd">            X[idata][step] - a CMATRIX(nstates, nstates) for the dataset `idata` and time </span>
+<span class="sd">            step `step`</span>
+<span class="sd">        scaling_factor ( double or complex ): the rescaling factor</span>
+
+<span class="sd">    Returns:    </span>
+<span class="sd">        None: but transforms X input directly, so changes the original input</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="n">nst</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="n">scl</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">nst</span><span class="p">);</span>                             
+    <span class="n">shi</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">nst</span><span class="p">);</span>                             
+
+    <span class="c1"># Default ones</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nst</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nst</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">!=</span><span class="n">j</span><span class="p">:</span>
+                <span class="n">scl</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">scaling_factor</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">scl</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">))</span>
+            <span class="n">shi</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">))</span>        
+
+    <span class="n">transform_data</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;shift2&quot;</span><span class="p">:</span><span class="n">shi</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span><span class="n">scl</span> <span class="p">})</span> </div>
+
+
+
+
+<div class="viewcode-block" id="scissor"><a class="viewcode-back" href="../../reference/libra_py/data_conv.html#libra_py.data_conv.scissor">[docs]</a><span class="k">def</span> <span class="nf">scissor</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">dE</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Shift the diagonal elements of X : X_ii for all i = a, a+1, ... by a constant value dE</span>
+<span class="sd">    X_ii(original) -&gt;    ( X_ii ) + dE, for all i &gt;= a</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        X ( list of lists of CMATRIX(nstates, nstates) ): the original data stored as</span>
+<span class="sd">            X[idata][step] - a CMATRIX(nstates, nstates) for the dataset `idata` and time </span>
+<span class="sd">            step `step`</span>
+<span class="sd">        dE ( double or complex ): the shift magnitude</span>
+
+<span class="sd">    Returns:    </span>
+<span class="sd">        None: but transforms X input directly, so changes the original input</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="n">nst</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="n">scl</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">nst</span><span class="p">);</span>                             
+    <span class="n">shi</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">nst</span><span class="p">);</span>                             
+
+    <span class="c1"># Default ones</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nst</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nst</span><span class="p">):</span>
+            <span class="n">scl</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span>
+            <span class="n">shi</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span>        
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">nst</span><span class="p">):</span>
+        <span class="n">shi</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">,</span> <span class="n">dE</span><span class="p">)</span>
+
+    <span class="n">transform_data</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;shift2&quot;</span><span class="p">:</span><span class="n">shi</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span><span class="n">scl</span> <span class="p">})</span> </div>
+
+
+
+
+<div class="viewcode-block" id="unpack1"><a class="viewcode-back" href="../../reference/libra_py/data_conv.html#libra_py.data_conv.unpack1">[docs]</a><span class="k">def</span> <span class="nf">unpack1</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Converts a list of CMATRIX or MATRIX objects into a list of doubles.</span>
+<span class="sd">    These numbers are the time-series of a specifiend component (real of imaginary)</span>
+<span class="sd">    of a specified matrix element (i,j) of each matrix:  res[k] = H[k].get(i,j).component</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        H ( list of CMATRIX(n, m) or MATRIX(n, m)): time-series of the matrices</span>
+<span class="sd">        i ( int ): row index of the matrix element of interest</span>
+<span class="sd">        j ( int ): column index of the matrix element of interest</span>
+<span class="sd">        component ( int ): index selecting real or imaginary component</span>
+<span class="sd"> </span>
+<span class="sd">            - 0: real</span>
+<span class="sd">            - 1: imaginary</span>
+<span class="sd">            - 2: the whole thing - use for real matrices [ default ]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list of doubles: time-series of a given matrix element&#39;s component</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">component</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">H</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">component</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">H</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span> <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">component</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">H</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+<div class="viewcode-block" id="unpack2"><a class="viewcode-back" href="../../reference/libra_py/data_conv.html#libra_py.data_conv.unpack2">[docs]</a><span class="k">def</span> <span class="nf">unpack2</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Converts a CMATRIX or MATRIX object into a list of doubles.</span>
+<span class="sd">    These numbers are the time-series of a specifiend component (real of imaginary)</span>
+<span class="sd">    of a specified matrix column ```i``` res[k] = H.get(k,i).component</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        H ( CMATRIX(n, m) or MATRIX(n, m) ): time-series in a form of a matrix</span>
+<span class="sd">        i ( int ): column index of interest</span>
+<span class="sd">        component ( int ): index selecting real or imaginary component</span>
+<span class="sd"> </span>
+<span class="sd">            - 0: real</span>
+<span class="sd">            - 1: imaginary</span>
+<span class="sd">            - 2: the whole thing - use for real matrices</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list of doubles: time-series of a given matrix column&#39;s components</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">sz</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">num_of_rows</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">component</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">H</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">component</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">H</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span> <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">component</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">H</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">i</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+
+<div class="viewcode-block" id="list2MATRIX"><a class="viewcode-back" href="../../reference/libra_py/data_conv.html#libra_py.data_conv.list2MATRIX">[docs]</a><span class="k">def</span> <span class="nf">list2MATRIX</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a list of N doubles into a MATRIX(N,1) object</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data ( list of doubles ): data to be converted</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MATRIX(N,1): a matrix representation of the data</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+<div class="viewcode-block" id="nparray2MATRIX"><a class="viewcode-back" href="../../reference/libra_py/data_conv.html#libra_py.data_conv.nparray2MATRIX">[docs]</a><span class="k">def</span> <span class="nf">nparray2MATRIX</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts 2D np.array of shape( N, M ) doubles into a MATRIX( N, M ) object</span>
+<span class="sd">    The numpy array can contain either complex or real values    </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data ( 2D np.array of dimension N x M ): data to be converted</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        MATRIX( N, M ): a matrix representation of the data</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="n">res</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">M</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">M</span><span class="p">):</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">m</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+<div class="viewcode-block" id="nparray2CMATRIX"><a class="viewcode-back" href="../../reference/libra_py/data_conv.html#libra_py.data_conv.nparray2CMATRIX">[docs]</a><span class="k">def</span> <span class="nf">nparray2CMATRIX</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts 2D np.array of shape( N, M ) doubles into a CMATRIX( N, M ) object</span>
+<span class="sd">    The numpy array should be complex   </span>
+<span class="sd"> </span>
+<span class="sd">    Args:</span>
+<span class="sd">        data ( 2D np.array of dimension N x M ): data to be converted</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        MATRIX( N, M ): a matrix representation of the data</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">M</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">M</span><span class="p">):</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">m</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+
+<div class="viewcode-block" id="MATRIX2nparray"><a class="viewcode-back" href="../../reference/libra_py/data_conv.html#libra_py.data_conv.MATRIX2nparray">[docs]</a><span class="k">def</span> <span class="nf">MATRIX2nparray</span><span class="p">(</span> <span class="n">data</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts both Libra MATRIX ( N, M ) object and CMATRIX ( N, M ) object </span>
+<span class="sd">    into a 2D np.array of shape( N, M )</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        data ( Libra MATRIX object of dimension N x M ): data to be converted</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        2d np.array: 2D np.array of shape( N, M )</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">num_of_cols</span>
+    
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">[]</span> <span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">M</span><span class="p">):</span>
+            <span class="n">res</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">res</span><span class="p">)</span></div>
+
+
+
+
+<div class="viewcode-block" id="matrix2list"><a class="viewcode-back" href="../../reference/libra_py/data_conv.html#libra_py.data_conv.matrix2list">[docs]</a><span class="k">def</span> <span class="nf">matrix2list</span><span class="p">(</span><span class="n">q</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts the MATRIX(ndof, 1) or CMATRIX(ndof, 1) to a list of `ndof` float/complex numbers</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">=======</span>
+<span class="sd">        q ( MATRIX(ndof, 1) or CMATRIX(ndof, 1) ): input matrix</span>
+
+
+<span class="sd">    Returns:</span>
+<span class="sd">   </span>
+<span class="sd">        list : list representation of the matrix</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">list_q</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">num_of_rows</span>
+    
+    <span class="k">for</span> <span class="n">idof</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndof</span><span class="p">):</span>
+        <span class="n">list_q</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">q</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">idof</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">list_q</span></div>
+
+
+
+<div class="viewcode-block" id="make_list"><a class="viewcode-back" href="../../reference/libra_py/data_conv.html#libra_py.data_conv.make_list">[docs]</a><span class="k">def</span> <span class="nf">make_list</span><span class="p">(</span><span class="n">nitems</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a list of `nitems` items, each of which is `value`</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        nitems ( int ): the size of the resulting list to create</span>
+<span class="sd">        value ( any type ): the value of each initialized element of the list</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        list : the list of the added values</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">res_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">iitem</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nitems</span><span class="p">):</span>
+        <span class="n">res_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">value</span> <span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">res_list</span></div>
+
+  
+  
+<div class="viewcode-block" id="form_block_matrix"><a class="viewcode-back" href="../../reference/libra_py/data_conv.html#libra_py.data_conv.form_block_matrix">[docs]</a><span class="k">def</span> <span class="nf">form_block_matrix</span><span class="p">(</span> <span class="n">mat_a</span><span class="p">,</span> <span class="n">mat_b</span><span class="p">,</span> <span class="n">mat_c</span><span class="p">,</span> <span class="n">mat_d</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function gets four numpy arrays and concatenate them into a </span>
+<span class="sd">    new matrix in a block format. These matrices should have the same </span>
+<span class="sd">    shape on each side which they get concatenated.</span>
+
+<span class="sd">         |mat_a   mat_b|</span>
+<span class="sd">    S =  |             |</span>
+<span class="sd">         |mat_c   mat_d|</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        mat_a, mat_b, mat_c, mat_d ( 2D numpy arrays ): The matrices which will form the block matrix</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">        block_matrix ( numpy 2D array ): The block matrix of the four matrices above.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Concatenate the two marix on their row axis</span>
+    <span class="n">block_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span> <span class="p">(</span> <span class="n">mat_a</span><span class="p">,</span> <span class="n">mat_b</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="n">block_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span> <span class="p">(</span><span class="n">mat_c</span><span class="p">,</span> <span class="n">mat_d</span> <span class="p">)</span> <span class="p">)</span>
+
+    <span class="c1"># Now concatenate the above concatenated matrices on their </span>
+    <span class="c1"># column axis and form the final matrix</span>
+    <span class="n">block_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span> <span class="p">(</span> <span class="n">block_1</span><span class="p">,</span> <span class="n">block_2</span> <span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">block_matrix</span></div>
+
+ 
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

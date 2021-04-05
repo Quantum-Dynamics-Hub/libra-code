@@ -1,0 +1,804 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.normal_modes &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.normal_modes</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.normal_modes</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#* Copyright (C) 2018-2019 Alexey V. Akimov</span>
+<span class="c1">#*</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: normal_modes</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: ========= Theory ==============  </span>
+<span class="sd">       Convention on the normal modes transformations:</span>
+<span class="sd">       U^T * H * U = W^2       (1)</span>
+<span class="sd">       x = U * q               (2a)</span>
+<span class="sd">       so q = U^T * x          (2b)                   </span>
+<span class="sd">       x = M^(1/2) * (R-R_ave) (3)</span>
+
+<span class="sd">       Here:</span>
+<span class="sd">       H - mass-scaled Hessian (dynamical matrix): H_ij = (d^2E/dx_i * dx_j )/sqrt(m_i * m_j)</span>
+<span class="sd">       U, q - normal modes (q are columns of U)</span>
+<span class="sd">       x - mass-scaled and shifted coordinates  </span>
+<span class="sd">       R - Cartesian coordinates</span>
+<span class="sd">      </span>
+<span class="sd">       Note: to relate to the definitions here (as of 11/7/2018), use: U = D^T</span>
+<span class="sd">       https://www.pci.uni-heidelberg.de//tc/usr/mctdh/doc/vcham/latex/nmode_coo.pdf</span>
+
+<span class="sd">       Also useful:</span>
+<span class="sd">       https://nanohub.org/courses/FATM/01a/asset/256</span>
+
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">units</span>
+
+
+<div class="viewcode-block" id="covariance_matrix"><a class="viewcode-back" href="../../reference/libra_py/normal_modes.html#libra_py.normal_modes.covariance_matrix">[docs]</a><span class="k">def</span> <span class="nf">covariance_matrix</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">flag</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the covariance matrix</span>
+
+<span class="sd">    Computes the covariance matrix $$K^x = &lt;sqrt(m_i * m_j) * x_i * x_j }&gt;$$</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        X ( MATRIX(ndof, nsteps) ): data collected along a trajectory: can be R, V, or A</span>
+<span class="sd">        M ( MATRIX(ndof, 1) ): masses of all DOFs </span>
+<span class="sd">        flag ( int ): controls how to compute variance</span>
+
+<span class="sd">            * 0 - using the data as they are (no centering)</span>
+<span class="sd">            * 1 - using the fluctuations of the data around the mean (do centering)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MATRIX(ndof, ndof): the matrix of covariance of all DOFs averaged over the trajectory</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">nsteps</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="c1"># To speed-up the calculations, minimize the number of sqrt calls</span>
+    <span class="n">sM</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndof</span><span class="p">):</span>
+        <span class="n">sM</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="p">)</span>
+
+    <span class="n">K</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">flag</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">covariance</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">flag</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">dX</span> <span class="o">=</span> <span class="n">deviation</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">covariance</span><span class="p">(</span><span class="n">dX</span><span class="p">)</span>
+
+    <span class="c1"># Compute the covariance matrix</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndof</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndof</span><span class="p">):</span>
+            <span class="n">mij</span> <span class="o">=</span> <span class="n">sM</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">*</span> <span class="n">sM</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+            <span class="n">K</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">mij</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">K</span></div>
+
+
+<div class="viewcode-block" id="visualize_modes"><a class="viewcode-back" href="../../reference/libra_py/normal_modes.html#libra_py.normal_modes.visualize_modes">[docs]</a><span class="k">def</span> <span class="nf">visualize_modes</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function &quot;visualizes&quot; a particular collective modes for a particular set of data.</span>
+<span class="sd">    The visualization means we generate an &quot;xyz&quot; file, showing the trajectory with defined number</span>
+<span class="sd">    of repetitions of the mode.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        E ( list of ndof/3 ): atom names (elements) of all atoms</span>
+<span class="sd">        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps</span>
+<span class="sd">        U ( MATRIX(ndof, ndof) ): eigenvectors defining the collective modes in terms of the original DOFs, see the theory</span>
+<span class="sd">        M ( MATRIX(ndof x 1) ): masses of all DOFs</span>
+<span class="sd">        w ( list of ndof doubles ): frequencies of all modes</span>
+<span class="sd">        params ( dictionary ): parameters controlling how to do the visualization. Contains keyword-value pairs:</span>
+
+<span class="sd">            * **params[&quot;scale&quot;]** ( double ): mode amplification factor (for better visualization)</span>
+<span class="sd">            * **params[&quot;print_modes&quot;]** ( list of integers ): indices of the modes to handle. </span>
+<span class="sd">              Indexing starts with 0 and should be consistent</span>
+<span class="sd">              with other data arrays provided - e.g. &quot;w&quot;</span>
+<span class="sd">            * **params[&quot;prefix&quot;]** ( string ): the name of the prefix of the files, to where the modes are printed out</span>
+<span class="sd">            * **params[&quot;nperiods&quot;]** ( integer ): the number of periods of motion to repeat</span>
+<span class="sd">            * **params[&quot;nsteps&quot;]** ( integer ): how many steps should be in the &quot;visualization&quot; trajectory. </span>
+<span class="sd">              Controls the resolution of the modes</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: Simply prints out a number of files with the trajectories (using Angstrom units) showing the</span>
+<span class="sd">            periodic motion along the modes of interest</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        All quantities are in atomic units</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">nat</span> <span class="o">=</span> <span class="n">ndof</span><span class="o">/</span><span class="mi">3</span>
+
+    <span class="n">scl</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">mode</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;print_modes&quot;</span><span class="p">]:</span>
+    
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;prefix&quot;</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;_mode</span><span class="si">%i</span><span class="s2">.xyz&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mode</span><span class="p">)</span>
+
+        <span class="n">dt</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span><span class="o">&gt;</span><span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;nperiods&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span> <span class="n">w</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span> <span class="o">*</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;nsteps&quot;</span><span class="p">])</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> 
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;nsteps&quot;</span><span class="p">]):</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%i</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nat</span><span class="p">))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;step </span><span class="si">%i</span><span class="s2"> = </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="p">)</span>
+ 
+            <span class="k">for</span> <span class="n">at</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nat</span><span class="p">):</span> 
+                <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">0</span><span class="p">)))</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span> <span class="o">*</span> <span class="n">t</span><span class="o">*</span><span class="n">dt</span><span class="p">)</span> <span class="o">*</span> <span class="n">scl</span><span class="p">)</span><span class="o">/</span><span class="n">units</span><span class="o">.</span><span class="n">Angst</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span> <span class="o">*</span> <span class="n">t</span><span class="o">*</span><span class="n">dt</span><span class="p">)</span> <span class="o">*</span> <span class="n">scl</span><span class="p">)</span><span class="o">/</span><span class="n">units</span><span class="o">.</span><span class="n">Angst</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">2</span><span class="p">)))</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span> <span class="o">*</span> <span class="n">t</span><span class="o">*</span><span class="n">dt</span><span class="p">)</span> <span class="o">*</span> <span class="n">scl</span><span class="p">)</span><span class="o">/</span><span class="n">units</span><span class="o">.</span><span class="n">Angst</span>
+
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2"> </span><span class="si">%8.5f</span><span class="s2"> </span><span class="si">%8.5f</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">E</span><span class="p">[</span><span class="n">at</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="p">)</span>
+        
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+    
+   
+
+<div class="viewcode-block" id="compute_cov"><a class="viewcode-back" href="../../reference/libra_py/normal_modes.html#libra_py.normal_modes.compute_cov">[docs]</a><span class="k">def</span> <span class="nf">compute_cov</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Computes and visualizes (as the trajectories) normal modes following the</span>
+<span class="sd">    methods described in:</span>
+
+<span class="sd">    (1) Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics </span>
+<span class="sd">    or Monte Carlo Simulation. J. Chem. Phys. 2003, 120, 1-4.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps</span>
+<span class="sd">        V ( MATRIX(ndof x nsteps-1) ): velocities of all DOFs for all mid-timesteps</span>
+<span class="sd">        A ( MATRIX(ndof x nsteps-1) ): accelerations of all DOFs for all mid-timesteps</span>
+<span class="sd">        M ( MATRIX(ndof x 1) ): masses of all DOFs</span>
+<span class="sd">        E ( list of ndof/3 strings ): atom names (elements) of all atoms</span>
+<span class="sd">        params ( dictionary ): parameters controlling the computations, including the </span>
+<span class="sd">            visualization (see the visualize_modes(E, R, U, w, params) description). </span>
+<span class="sd">            Contains keyword-value pairs:</span>
+
+<span class="sd">            * **params[&quot;verbosity&quot;]** (int): level to control verbosity</span>
+<span class="sd">            * **params[&quot;visualize&quot;]** (int): flag to control whether we want to produce additional files (with normal modes)</span>
+<span class="sd">                - 0 - not to</span>
+<span class="sd">                - 1 - do it</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (w, w_inv_cm, U_v,  w2, w2_inv_cm, U_a), where:</span>
+<span class="sd">            * w ( MATRIX(ndof,1) ): frequencies from the velocity covariance matrix</span>
+<span class="sd">            * w_inv_cm ( MATRIX(ndof,1) ): frequencies from the velocity covariance matrix, in cm^-1 units</span>
+<span class="sd">            * U_v ( MATRIX(ndof,ndof) ): eigenvectors of the velocity covariance matrix</span>
+<span class="sd">            * w2 ( MATRIX(ndof,1) ): frequencies from the acceleration covariance matrix</span>
+<span class="sd">            * w2_inv_cm ( MATRIX(ndof,1) ): frequencies from the acceleration covariance matrix, in cm^-1 units</span>
+<span class="sd">            * U_a ( MATRIX(ndof,ndof) ): eigenvectors of the acceleration covariance matrix</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        All quantities are in atomic units</span>
+<span class="sd"> </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">verbosity</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;verbosity&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;========= Normal modes calculations according to: =============================&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics</span><span class="se">\</span>
+<span class="s2">        or Monte Carlo Simulation. J. Chem. Phys. 2003, 120, 1-4.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">nat</span> <span class="o">=</span> <span class="n">ndof</span><span class="o">/</span><span class="mi">3</span>
+    <span class="n">cov_flag</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;cov_flag&quot;</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Computing covariance matrix of positions</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">K_r</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">covariance_matrix</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">cov_flag</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Computing covariance matrix of velocities</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">K_v</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">covariance_matrix</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">cov_flag</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Computing covariance matrix of accelerations</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">K_a</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">covariance_matrix</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">cov_flag</span><span class="p">))</span>
+
+    <span class="n">w_r</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">ndof</span><span class="p">);</span>  <span class="n">U_r</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">ndof</span><span class="p">)</span>
+    <span class="n">w_v</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">ndof</span><span class="p">);</span>  <span class="n">U_v</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">ndof</span><span class="p">)</span>
+    <span class="n">w_a</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">ndof</span><span class="p">);</span>  <span class="n">U_a</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">ndof</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Eigenvalue solver for covariance matrix of positions</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">solve_eigen_nosort</span><span class="p">(</span><span class="n">K_r</span><span class="p">,</span> <span class="n">w_r</span><span class="p">,</span> <span class="n">U_r</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Eigenvalue solver for covariance matrix of velocities</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">solve_eigen_nosort</span><span class="p">(</span><span class="n">K_v</span><span class="p">,</span> <span class="n">w_v</span><span class="p">,</span> <span class="n">U_v</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Eigenvalue solver for covariance matrix of accelerations</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">solve_eigen_nosort</span><span class="p">(</span><span class="n">K_a</span><span class="p">,</span> <span class="n">w_a</span><span class="p">,</span> <span class="n">U_a</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_r:&quot;</span><span class="p">);</span> <span class="n">K_r</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_r eigenvalues:&quot;</span><span class="p">);</span>  <span class="n">w_r</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_r eigenvectors:&quot;</span><span class="p">);</span> <span class="n">U_r</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_v:&quot;</span><span class="p">);</span> <span class="n">K_v</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_v eigenvalues:&quot;</span><span class="p">);</span>  <span class="n">w_v</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_v eigenvectors:&quot;</span><span class="p">);</span> <span class="n">U_v</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_a:&quot;</span><span class="p">);</span> <span class="n">K_a</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_a eigenvalues:&quot;</span><span class="p">);</span>  <span class="n">w_a</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_a eigenvectors:&quot;</span><span class="p">);</span> <span class="n">U_a</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+
+
+    <span class="n">w</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>      
+    <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndof</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">w_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">dof</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="o">&gt;</span><span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>  <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span> <span class="n">w_v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">dof</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="o">/</span><span class="n">w_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">dof</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="p">)</span>  <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">w_inv_cm</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="n">units</span><span class="o">.</span><span class="n">inv_cm2Ha</span>
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Angular frequencies (derived from w_v/w_r)&quot;</span><span class="p">)</span>
+        <span class="n">w_inv_cm</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+
+
+    <span class="n">w2</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>      
+    <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndof</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">w_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">dof</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="o">&gt;</span><span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">w2</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>  <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span> <span class="n">w_a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">dof</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="o">/</span><span class="n">w_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">dof</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="p">)</span> <span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>  <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">w2</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">w2_inv_cm</span> <span class="o">=</span> <span class="n">w2</span> <span class="o">/</span> <span class="n">units</span><span class="o">.</span><span class="n">inv_cm2Ha</span>
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Angular frequencies (derived from w_a/w_r)&quot;</span><span class="p">)</span>
+        <span class="n">w2_inv_cm</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;visualize&quot;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Visualizing modes based on velocities covariance</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;prefix&quot;</span><span class="p">]</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;prefix&quot;</span><span class="p">:</span> <span class="n">prefix</span><span class="o">+</span><span class="s2">&quot;_velocity&quot;</span><span class="p">})</span>
+        <span class="n">visualize_modes</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">U_v</span><span class="o">.</span><span class="n">real</span><span class="p">(),</span> <span class="n">M</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">params</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Visualizing modes based on accelerations covariance</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;prefix&quot;</span><span class="p">:</span> <span class="n">prefix</span><span class="o">+</span><span class="s2">&quot;_acceleration&quot;</span><span class="p">})</span>
+        <span class="n">visualize_modes</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">U_a</span><span class="o">.</span><span class="n">real</span><span class="p">(),</span> <span class="n">M</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">params</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;========= Done with the Normal modes calculations =============================&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">w_inv_cm</span><span class="p">,</span> <span class="n">U_v</span><span class="o">.</span><span class="n">real</span><span class="p">(),</span>  <span class="n">w2</span><span class="p">,</span> <span class="n">w2_inv_cm</span><span class="p">,</span> <span class="n">U_a</span><span class="o">.</span><span class="n">real</span><span class="p">()</span></div>
+
+
+
+
+<div class="viewcode-block" id="compute_cov1"><a class="viewcode-back" href="../../reference/libra_py/normal_modes.html#libra_py.normal_modes.compute_cov1">[docs]</a><span class="k">def</span> <span class="nf">compute_cov1</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Same as compute_cov, except that we don&#39;t use the acceleration data</span>
+
+<span class="sd">    Computes and visualizes (as the trajectories) normal modes following the</span>
+<span class="sd">    methods described in:</span>
+
+<span class="sd">    (1) Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics </span>
+<span class="sd">    or Monte Carlo Simulation. J. Chem. Phys. 2003, 120, 1-4.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps [Bohr]</span>
+<span class="sd">        V ( MATRIX(ndof x nsteps-1) ): velocities of all DOFs for all mid-timesteps [a.u. of velocity]</span>
+<span class="sd">        M ( MATRIX(ndof x 1) ): masses of all DOFs [a.u. of mass]</span>
+<span class="sd">        E ( list of ndof/3 strings ): atom names (elements) of all atoms</span>
+<span class="sd">        params ( dictionary ): parameters controlling the computations, including the </span>
+<span class="sd">            visualization (see the visualize_modes(E, R, U, w, params) description). </span>
+<span class="sd">            Contains keyword-value pairs:</span>
+
+<span class="sd">            * **params[&quot;verbosity&quot;]** (int): level to control verbosity</span>
+<span class="sd">            * **params[&quot;visualize&quot;]** (int): flag to control whether we want to produce additional files (with normal modes)</span>
+<span class="sd">                - 0 - not to</span>
+<span class="sd">                - 1 - do it</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (w, w_inv_cm, U_v), where:</span>
+<span class="sd">            * w ( MATRIX(ndof,1) ): frequencies from the velocity covariance matrix</span>
+<span class="sd">            * w_inv_cm ( MATRIX(ndof,1) ): frequencies from the velocity covariance matrix, in cm^-1 units</span>
+<span class="sd">            * U_v ( MATRIX(ndof,ndof) ): eigenvectors of the velocity covariance matrix</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        All quantities are in atomic units</span>
+<span class="sd"> </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">verbosity</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;verbosity&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;========= Normal modes calculations according to: =============================&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics</span><span class="se">\</span>
+<span class="s2">        or Monte Carlo Simulation. J. Chem. Phys. 2003, 120, 1-4.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">nat</span> <span class="o">=</span> <span class="n">ndof</span><span class="o">/</span><span class="mi">3</span>
+    <span class="n">cov_flag</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;cov_flag&quot;</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Computing covariance matrix of positions</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> 
+    <span class="n">K_r</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">covariance_matrix</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">cov_flag</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Computing covariance matrix of velocities</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">K_v</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">covariance_matrix</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">cov_flag</span><span class="p">))</span>
+
+    <span class="n">w_r</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">ndof</span><span class="p">);</span>  <span class="n">U_r</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">ndof</span><span class="p">)</span>
+    <span class="n">w_v</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">ndof</span><span class="p">);</span>  <span class="n">U_v</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">ndof</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Eigenvalue solver for covariance matrix of positions</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">solve_eigen_nosort</span><span class="p">(</span><span class="n">K_r</span><span class="p">,</span> <span class="n">w_r</span><span class="p">,</span> <span class="n">U_r</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Eigenvalue solver for covariance matrix of velocities</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">solve_eigen_nosort</span><span class="p">(</span><span class="n">K_v</span><span class="p">,</span> <span class="n">w_v</span><span class="p">,</span> <span class="n">U_v</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_r:&quot;</span><span class="p">);</span> <span class="n">K_r</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_r eigenvalues:&quot;</span><span class="p">);</span>  <span class="n">w_r</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_r eigenvectors:&quot;</span><span class="p">);</span> <span class="n">U_r</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_v:&quot;</span><span class="p">);</span> <span class="n">K_v</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_v eigenvalues:&quot;</span><span class="p">);</span>  <span class="n">w_v</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_v eigenvectors:&quot;</span><span class="p">);</span> <span class="n">U_v</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+
+
+    <span class="n">w</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>      
+    <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndof</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">w_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">dof</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="o">&gt;</span><span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>  <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span> <span class="n">w_v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">dof</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="o">/</span><span class="n">w_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">dof</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="p">)</span>  <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">w_inv_cm</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="n">units</span><span class="o">.</span><span class="n">inv_cm2Ha</span>
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Angular frequencies (derived from w_v/w_r)&quot;</span><span class="p">)</span>
+        <span class="n">w_inv_cm</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+
+
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;visualize&quot;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Visualizing modes based on velocities covariance</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;prefix&quot;</span><span class="p">]</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;prefix&quot;</span><span class="p">:</span> <span class="n">prefix</span><span class="o">+</span><span class="s2">&quot;_velocity&quot;</span><span class="p">})</span>
+        <span class="n">visualize_modes</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">U_v</span><span class="o">.</span><span class="n">real</span><span class="p">(),</span> <span class="n">M</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">params</span><span class="p">);</span>
+
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;========= Done with the Normal modes calculations =============================&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">w_inv_cm</span><span class="p">,</span> <span class="n">U_v</span><span class="o">.</span><span class="n">real</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="compute_cov2"><a class="viewcode-back" href="../../reference/libra_py/normal_modes.html#libra_py.normal_modes.compute_cov2">[docs]</a><span class="k">def</span> <span class="nf">compute_cov2</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Computes and visualizes (as the trajectories) normal modes following the</span>
+<span class="sd">    methods described in:</span>
+
+<span class="sd">    (1) Pereverzev, A.; Sewell, T. D. Obtaining the Hessian from the Force Covariance Matrix:</span>
+<span class="sd">    Application to Crystalline Explosives PETN and RDX. J. Chem. Phys. 2015, 142, 134110.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps</span>
+<span class="sd">        A ( MATRIX(ndof x nsteps-1) ): accelerations of all DOFs for all mid-timesteps</span>
+<span class="sd">        M ( MATRIX(ndof x 1) ): masses of all DOFs</span>
+<span class="sd">        E ( list of ndof/3 strings ): atom names (elements) of all atoms</span>
+<span class="sd">        T ( double ): temperature of simulation (in K)</span>
+<span class="sd">        params ( dictionary ): parameters controlling the computations, including the</span>
+<span class="sd">            visualization (see the visualize_modes(E, R, U, w, params) description).</span>
+<span class="sd">            Contains keyword-value pairs:</span>
+
+<span class="sd">            * **params[&quot;verbosity&quot;]** ( int ): level to control verbosity</span>
+<span class="sd">            * **params[&quot;visualize&quot;]** ( int ): flag to control whether we want to produce additional files (with normal modes)</span>
+<span class="sd">                - 0 - not to</span>
+<span class="sd">                - 1 - do it</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (w_a, w_inv_cm, U_a), where:</span>
+
+<span class="sd">            * w_a ( MATRIX(ndof,1) ): frequencies - Hessian eigenvalues</span>
+<span class="sd">            * w_inv_cm ( MATRIX(ndof,1) ): frequencies from - Hessian eigenvalues, in cm^-1 units</span>
+<span class="sd">            * U_a ( MATRIX(ndof,ndof) ): Hessian eigenvectors</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        All quantities are in atomic units</span>
+<span class="sd"> </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">verbosity</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;verbosity&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;========= Normal modes calculations according to: =============================&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Pereverzev, A.; Sewell, T. D. Obtaining the Hessian from the Force Covariance Matrix:</span><span class="se">\</span>
+<span class="s2">        Application to Crystalline Explosives PETN and RDX. J. Chem. Phys. 2015, 142, 134110.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">nat</span> <span class="o">=</span> <span class="n">ndof</span><span class="o">/</span><span class="mi">3</span>
+    <span class="n">cov_flag</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;cov_flag&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Computing covariance matrix of accelerations</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">K_a</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">cov_flag</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">K_a</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">covariance</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">cov_flag</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">dA</span> <span class="o">=</span> <span class="n">deviation</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">K_a</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">covariance</span><span class="p">(</span><span class="n">dA</span><span class="p">))</span>
+
+    <span class="n">k</span> <span class="o">=</span> <span class="n">units</span><span class="o">.</span><span class="n">boltzmann</span> <span class="o">/</span> <span class="n">units</span><span class="o">.</span><span class="n">hartree</span>
+    <span class="n">K_a</span> <span class="o">*=</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="n">k</span><span class="o">*</span><span class="n">T</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Eigenvalue solver for covariance matrix of accelerations</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">w_a</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">ndof</span><span class="p">);</span>  <span class="n">U_a</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">ndof</span><span class="p">)</span>
+    <span class="n">solve_eigen_nosort</span><span class="p">(</span><span class="n">K_a</span><span class="p">,</span> <span class="n">w_a</span><span class="p">,</span> <span class="n">U_a</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_a:&quot;</span><span class="p">);</span> <span class="n">K_a</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_a eigenvalues:&quot;</span><span class="p">);</span>  <span class="n">w_a</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;K_a eigenvectors:&quot;</span><span class="p">);</span> <span class="n">U_a</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+
+    <span class="n">w</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>      
+    <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndof</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">w_a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">dof</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="o">&gt;</span><span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>  <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">w_a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">dof</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="p">)</span> 
+    <span class="n">w_inv_cm</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="n">units</span><span class="o">.</span><span class="n">inv_cm2Ha</span>
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Frequencies (cm^-1)&quot;</span><span class="p">);</span>  <span class="n">w_inv_cm</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;visualize&quot;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Visualizing modes based on accelerations covariance matrix</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">visualize_modes</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">U_a</span><span class="o">.</span><span class="n">real</span><span class="p">(),</span> <span class="n">M</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">params</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;========= Done with the Normal modes calculations =============================&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">w_a</span><span class="p">,</span> <span class="n">w_inv_cm</span><span class="p">,</span> <span class="n">U_a</span><span class="o">.</span><span class="n">real</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="compute_dynmat"><a class="viewcode-back" href="../../reference/libra_py/normal_modes.html#libra_py.normal_modes.compute_dynmat">[docs]</a><span class="k">def</span> <span class="nf">compute_dynmat</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Computes and visualizes (as the trajectories) normal modes </span>
+<span class="sd">    using the dynamic matrix:   D_ij = [1/sqrt(m_i * m_j)]  d^2E/dR_i dR_j</span>
+
+<span class="sd">    Here, H_ij = d^2E/dR_i dR_j is the Hessian</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps</span>
+<span class="sd">        D ( MATRIX(ndof x nsteps-1) ): the dynamic matrix</span>
+<span class="sd">        M ( MATRIX(ndof x 1) ): masses of all DOFs</span>
+<span class="sd">        E ( list of ndof/3 strings): atom names (elements) of all atoms</span>
+<span class="sd">        params ( dictionary ): parameters controlling the computations, including the </span>
+<span class="sd">            visualization (see the visualize_modes(E, R, U, w, params) description).</span>
+<span class="sd">            Contains keyword-value pairs:</span>
+
+<span class="sd">            * **params[&quot;verbosity&quot;]** ( int ): level to control verbosity</span>
+<span class="sd">            * **params[&quot;visualize&quot;]** ( int ): flag to control whether we want to produce additional files (with normal modes)</span>
+<span class="sd">               - 0 - not to</span>
+<span class="sd">               - 1 - do it</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (w_a, w_inv_cm, U_a), where:</span>
+
+<span class="sd">            * w_a ( MATRIX(ndof,1) ): frequencies - Hessian eigenvalues</span>
+<span class="sd">            * w_inv_cm ( MATRIX(ndof,1) ): frequencies from - Hessian eigenvalues, in cm^-1 units</span>
+<span class="sd">            * U_a ( MATRIX(ndof,ndof) ): Hessian eigenvectors</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        All quantities are in atomic units</span>
+<span class="sd"> </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">verbosity</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;verbosity&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;========= Normal modes calculations using the provided dynamical matrix =============================&quot;</span><span class="p">)</span>
+    
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">nat</span> <span class="o">=</span> <span class="n">ndof</span><span class="o">/</span><span class="mi">3</span>
+
+    <span class="n">w_a</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">ndof</span><span class="p">);</span>  <span class="n">U_a</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">ndof</span><span class="p">)</span>
+
+    <span class="n">solve_eigen_nosort</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">w_a</span><span class="p">,</span> <span class="n">U_a</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dynamic matrix:&quot;</span><span class="p">);</span> <span class="n">D</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Its eigenvalues:&quot;</span><span class="p">);</span>  <span class="n">w_a</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Its eigenvectors:&quot;</span><span class="p">);</span> <span class="n">U_a</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+
+
+    <span class="n">w</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>      
+    <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndof</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">w_a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">dof</span><span class="p">)</span><span class="o">&gt;</span><span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>  <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">w_a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">dof</span><span class="p">))</span> <span class="p">)</span>            
+    <span class="n">w_inv_cm</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="n">units</span><span class="o">.</span><span class="n">inv_cm2Ha</span>
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Frequencies (cm^-1)&quot;</span><span class="p">);</span>  <span class="n">w_inv_cm</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;visualize&quot;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Visualizing modes based on dynamic matrix</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">visualize_modes</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">U_a</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">params</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;========= Done with the Normal modes calculations =============================&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">w_inv_cm</span><span class="p">,</span> <span class="n">U_a</span></div>
+ 
+
+
+<div class="viewcode-block" id="get_xyz"><a class="viewcode-back" href="../../reference/libra_py/normal_modes.html#libra_py.normal_modes.get_xyz">[docs]</a><span class="k">def</span> <span class="nf">get_xyz</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function returns a string in the xyz format with X, Y, Z and UX, UY, UZ</span>
+<span class="sd">    where X,Y,Z are the coordinates, UX, UY, UZ - vectors coming from those coordinates - e.g. normal modes</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        E ( list of ndof/3 strings ): atom names (elements) of all atoms</span>
+<span class="sd">        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps</span>
+<span class="sd">        M ( MATRIX(ndof x 1) ): masses of all DOFs</span>
+<span class="sd">        U ( MATRIX(ndof x ndof) ): a matrix containing normal mode vectors </span>
+<span class="sd">        mode ( int ): index of the normal mode that we want to visualize</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        string: A string representing an xyz file</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%3i</span><span class="se">\n</span><span class="s2">Comment</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">natoms</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">natoms</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>        
+        <span class="n">ux</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">uy</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">uz</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">))</span>
+        
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">  </span><span class="si">%5.3f</span><span class="s2">  </span><span class="si">%5.3f</span><span class="s2">  </span><span class="si">%5.3f</span><span class="s2">  </span><span class="si">%5.3f</span><span class="s2">  </span><span class="si">%5.3f</span><span class="s2">  </span><span class="si">%5.3f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">E</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">,</span> <span class="n">ux</span><span class="p">,</span><span class="n">uy</span><span class="p">,</span><span class="n">uz</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="get_xyz2"><a class="viewcode-back" href="../../reference/libra_py/normal_modes.html#libra_py.normal_modes.get_xyz2">[docs]</a><span class="k">def</span> <span class="nf">get_xyz2</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function returns a string in the xyz format with X, Y, Z and UX, UY, UZ</span>
+<span class="sd">    where X,Y,Z are the coordinates, UX, UY, UZ - vectors coming from those coordinates - e.g. normal modes</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        E ( list of ndof/3 string ): atom names (elements) of all atoms</span>
+<span class="sd">        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps</span>
+<span class="sd">        U ( MATRIX(ndof x ndof) ): a matrix containing normal mode vectors </span>
+<span class="sd">        mode ( int ): index of the normal mode that we want to visualize</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        string: A string representing an xyz file</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%3i</span><span class="se">\n</span><span class="s2">Comment</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">natoms</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">natoms</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>        
+        <span class="n">ux</span><span class="p">,</span> <span class="n">uy</span><span class="p">,</span> <span class="n">uz</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="n">mode</span><span class="p">),</span> <span class="n">U</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">mode</span><span class="p">),</span> <span class="n">U</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+        
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">  </span><span class="si">%5.3f</span><span class="s2">  </span><span class="si">%5.3f</span><span class="s2">  </span><span class="si">%5.3f</span><span class="s2">  </span><span class="si">%5.3f</span><span class="s2">  </span><span class="si">%5.3f</span><span class="s2">  </span><span class="si">%5.3f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">E</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">,</span> <span class="n">ux</span><span class="p">,</span><span class="n">uy</span><span class="p">,</span><span class="n">uz</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

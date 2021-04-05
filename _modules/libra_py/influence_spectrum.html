@@ -1,0 +1,647 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.influence_spectrum &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.influence_spectrum</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.influence_spectrum</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#* Copyright (C) 2018-2019 Wei Li and Alexey V. Akimov</span>
+<span class="c1">#*</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">.. module:: influence_spectrum</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements functions to compute the autocorrelation functions </span>
+<span class="sd">       and their Fourier spectra (influence spectra) of the time-series of matrices (e.g.</span>
+<span class="sd">       of the &quot;vibronic&quot; Hamiltonian data sampled along the MD trajectories)</span>
+
+<span class="sd">.. moduleauthor:: Wei Li and Alexey V. Akimov</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">cmath</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1">#import common_utils as comn</span>
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">data_stat</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">acf</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">ft</span>
+
+
+
+<div class="viewcode-block" id="recipe1"><a class="viewcode-back" href="../../reference/libra_py/influence_spectrum.html#libra_py.influence_spectrum.recipe1">[docs]</a><span class="k">def</span> <span class="nf">recipe1</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A recipe to compute ACF and its FT for data series</span>
+<span class="sd">           </span>
+<span class="sd">    Args:</span>
+<span class="sd">        data ( list of MATRIX(ndof, 1) objects ): sequence of real-valued ndof-dimensional vectors</span>
+<span class="sd">        params ( Python dictionary ): controlling the parameters</span>
+<span class="sd">     </span>
+<span class="sd">            * **params[&quot;dt&quot;]** ( double ): time distance between the adjacent data points [units: fs, default: 1.0]</span>
+<span class="sd">            * **params[&quot;wspan&quot;]** ( double ): window of frequencies for the Fourier transform [ units: cm^-1, default: 3000.0 ]</span>
+<span class="sd">            * **params[&quot;dw&quot;]** ( double ): grid points spacing in the frequency domain [ units: cm^-1, default: 1.0 ]</span>
+<span class="sd">            * **params[&quot;do_output&quot;]** ( Boolean ): whether we print out the data the results into files [ default: False ]</span>
+<span class="sd">            * **params[&quot;acf_filename&quot;]** ( string ): the name of the file where to print the ACF [ default: &quot;acf.txt&quot;]</span>
+<span class="sd">            * **params[&quot;spectrum_filename&quot;]** ( string ): the name of the file where to print the spectrum [ default: &quot;spectrum.txt&quot; ]</span>
+<span class="sd">            * **params[&quot;do_center&quot;]** ( Boolean ): a flag controlling whether to center data (=1) or not (=0)</span>
+<span class="sd">                Centering means we subtract the average value (over all the data points) from all</span>
+<span class="sd">                the data points - this way, we convert values into their fluctuations [default: True ]</span>
+
+<span class="sd">            * **params[&quot;acf_type&quot;]** ( int ): selector of the convention to to compute ACF</span>
+
+<span class="sd">                * 0 : the chemist convention,  (1/(N-h)) Sum_{t=1,N-h} (Y[t]*Y[t+h]) [ default ]</span>
+<span class="sd">                * 1 : the statistician convention, (1/N) Sum_{t=1,N-h} (Y[t]*Y[t+h])</span>
+
+<span class="sd">            * **params[&quot;data_type&quot;]** ( int ): what is the format of the data?</span>
+<span class="sd"> </span>
+<span class="sd">                * 0 : list of MATRIX(ndof, 1) [ default ]</span>
+<span class="sd">                * 1 : list of VECTOR</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (T, norm_acf, raw_acf, W, J, J2), where:</span>
+
+<span class="sd">            * T ( list of double ): time axis [ units: fs ] </span>
+<span class="sd">            * norm_acf ( list of double ): normalized ACF</span>
+<span class="sd">            * raw_acf ( list of double ): un-normalized ACF</span>
+<span class="sd">            * W ( list of double ): frequencies axis [ units: cm^-1 ]</span>
+<span class="sd">            * J ( list of double ): amplitudes of FT </span>
+<span class="sd">            * J2 ( list of double ): (1/2pi)*|J|^2 </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span><span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;wspan&quot;</span><span class="p">:</span><span class="mf">3000.0</span><span class="p">,</span> <span class="s2">&quot;dw&quot;</span><span class="p">:</span><span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;do_output&quot;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> 
+                       <span class="s2">&quot;acf_filename&quot;</span><span class="p">:</span><span class="s2">&quot;acf.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;spectrum_filename&quot;</span><span class="p">:</span><span class="s2">&quot;spectrum.txt&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;do_center&quot;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;acf_type&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;data_type&quot;</span><span class="p">:</span><span class="mi">0</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">fs2au</span>            <span class="c1"># convert to  atomic units of time</span>
+    <span class="n">wspan</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;wspan&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">inv_cm2Ha</span>  <span class="c1"># convert to Ha (atomic units)</span>
+    <span class="n">dw</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dw&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">inv_cm2Ha</span>        <span class="c1"># convert to Ha (atomic units)</span>
+    <span class="n">do_output</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;do_output&quot;</span><span class="p">]</span>
+    <span class="n">acf_filename</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;acf_filename&quot;</span><span class="p">]</span>
+    <span class="n">spectrum_filename</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;spectrum_filename&quot;</span><span class="p">]</span>
+    <span class="n">do_center</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;do_center&quot;</span><span class="p">]</span>
+    <span class="n">acf_type</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;acf_type&quot;</span><span class="p">]</span>
+    <span class="n">data_type</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">]</span>
+    
+
+    <span class="c1">#========</span>
+    <span class="n">data_new</span> <span class="o">=</span> <span class="n">data</span>
+    <span class="k">if</span> <span class="n">do_center</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">data_type</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">data_new</span> <span class="o">=</span> <span class="n">data_stat</span><span class="o">.</span><span class="n">mat_center_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">data_type</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">data_new</span> <span class="o">=</span> <span class="n">data_stat</span><span class="o">.</span><span class="n">vec_center_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="c1">#=========== ACFs ==============</span>
+    <span class="n">T</span><span class="p">,</span> <span class="n">norm_acf</span><span class="p">,</span> <span class="n">raw_acf</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">data_type</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">T</span><span class="p">,</span> <span class="n">norm_acf</span><span class="p">,</span> <span class="n">raw_acf</span> <span class="o">=</span> <span class="n">acf</span><span class="o">.</span><span class="n">acf_mat</span><span class="p">(</span> <span class="n">data_new</span> <span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">acf_type</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">data_type</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">T</span><span class="p">,</span> <span class="n">norm_acf</span><span class="p">,</span> <span class="n">raw_acf</span> <span class="o">=</span> <span class="n">acf</span><span class="o">.</span><span class="n">acf_vec</span><span class="p">(</span> <span class="n">data_new</span> <span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">acf_type</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: data_type = &quot;</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="s2">&quot; is not known</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">T</span><span class="p">[</span><span class="n">it</span><span class="p">]</span> <span class="o">=</span> <span class="n">T</span><span class="p">[</span><span class="n">it</span><span class="p">]</span><span class="o">/</span><span class="n">units</span><span class="o">.</span><span class="n">fs2au</span>  <span class="c1"># convert to fs</span>
+
+    <span class="k">if</span> <span class="n">do_output</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">acf_filename</span><span class="p">,</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2">  </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">it</span><span class="p">]</span> <span class="p">,</span> <span class="n">norm_acf</span><span class="p">[</span><span class="n">it</span><span class="p">],</span> <span class="n">raw_acf</span><span class="p">[</span><span class="n">it</span><span class="p">]))</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+    <span class="c1">#=========== FT =============</span>
+    <span class="n">W</span><span class="p">,</span> <span class="n">J</span> <span class="o">=</span> <span class="n">ft</span><span class="o">.</span><span class="n">ft</span><span class="p">(</span><span class="n">norm_acf</span><span class="p">,</span> <span class="n">wspan</span><span class="p">,</span> <span class="n">dw</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+
+    <span class="n">J2</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">iw</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">W</span><span class="p">[</span><span class="n">iw</span><span class="p">]</span> <span class="o">=</span> <span class="n">W</span><span class="p">[</span><span class="n">iw</span><span class="p">]</span><span class="o">/</span><span class="n">units</span><span class="o">.</span><span class="n">inv_cm2Ha</span>
+        <span class="n">J2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span><span class="o">*</span><span class="n">J</span><span class="p">[</span><span class="n">iw</span><span class="p">]</span><span class="o">*</span><span class="n">J</span><span class="p">[</span><span class="n">iw</span><span class="p">]</span> <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">do_output</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">spectrum_filename</span><span class="p">,</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">iw</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">W</span><span class="p">[</span><span class="n">iw</span><span class="p">],</span> <span class="n">J</span><span class="p">[</span><span class="n">iw</span><span class="p">],</span> <span class="n">J2</span><span class="p">[</span><span class="n">iw</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">T</span><span class="p">,</span> <span class="n">norm_acf</span><span class="p">,</span> <span class="n">raw_acf</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="n">J2</span></div>
+
+
+
+<div class="viewcode-block" id="compute_mat_elt"><a class="viewcode-back" href="../../reference/libra_py/influence_spectrum.html#libra_py.influence_spectrum.compute_mat_elt">[docs]</a><span class="k">def</span> <span class="nf">compute_mat_elt</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the frequencies with which a given matrix element evolves in time</span>
+
+<span class="sd">    Args:   </span>
+<span class="sd">        X ( list of MATRIX ): time-series data</span>
+<span class="sd">        a ( int ): is the row index of the matrix element to analyze</span>
+<span class="sd">        b ( int ): is the column index of the matrix element to analyze</span>
+<span class="sd">        params ( dictionalry ): parameters of the simulation. Contain the following keys:</span>
+<span class="sd">            * **params[&quot;filename&quot;]** ( string ): the prefix of the filenames generated. Doesn&#39;t matter </span>
+<span class="sd">                if `do_output == False` [default: &quot;influence_spectra_&quot;]</span>
+<span class="sd">            * **params[&quot;logname&quot;]** ( string ): the name of the log-file. Doesn&#39;t matter </span>
+<span class="sd">                if `do_output == False` [default: &quot;out.log&quot;]             </span>
+<span class="sd">            * **params[&quot;nfreqs&quot;]** ( int ): the maximal number of frequencies we want to extract [default: 1]</span>
+
+<span class="sd">            SeeAlso: recipe1(data, params) for the description of other parameters: </span>
+<span class="sd">            </span>
+<span class="sd">                * dr</span>
+<span class="sd">                * wspan</span>
+<span class="sd">                * dw</span>
+<span class="sd">                * do_output</span>
+<span class="sd">                * acf_filename</span>
+<span class="sd">                * spectrum_filename</span>
+<span class="sd">                * do_center</span>
+<span class="sd">                * acf_type</span>
+<span class="sd">                * data_type</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: ( T, norm_acf, raw_acf, W, J, J2, freqs ), where</span>
+
+<span class="sd">            freqs ( list of lists ), where</span>
+
+<span class="sd">                * freqs[fr][0] - frequency of the mode fr [in 2*pi*a.u.^-1]</span>
+<span class="sd">                * freqs[fr][1] - amplitude of the mode fr in the influence spectrum [arb. units]</span>
+<span class="sd">                * freqs[fr][2] - normalized amplitued of the mode fr [arb.units]</span>
+
+<span class="sd">            SeeAlso: The first 6 outputs are described in the `recipe1`</span>
+<span class="sd">                * T</span>
+<span class="sd">                * norm_acf</span>
+<span class="sd">                * raw_acf</span>
+<span class="sd">                * W</span>
+<span class="sd">                * J</span>
+<span class="sd">                * J2</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Set defaults and check critical parameters</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;nfreqs&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;logname&quot;</span><span class="p">:</span><span class="s2">&quot;out.log&quot;</span><span class="p">,</span> <span class="s2">&quot;filename&quot;</span><span class="p">:</span><span class="s2">&quot;influence_spectra_&quot;</span><span class="p">,</span> <span class="s2">&quot;do_output&quot;</span><span class="p">:</span><span class="mi">0</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="c1"># Local variables and dimensions</span>
+    <span class="n">nfreqs</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;nfreqs&quot;</span><span class="p">]</span>
+    <span class="n">do_output</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;do_output&quot;</span><span class="p">]</span> 
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span>
+    <span class="n">logname</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;logname&quot;</span><span class="p">]</span>
+
+
+    <span class="c1">#========= Collect info in a different format =======</span>
+    <span class="n">nsteps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>    
+    <span class="n">sz</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">data_ab</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nsteps</span><span class="p">):</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">xi</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="n">X</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">))</span>
+        <span class="n">data_ab</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>   
+
+  
+    <span class="c1"># ===== Compute the ACFs and their FTs</span>
+    <span class="n">params1</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">params1</span><span class="p">[</span><span class="s2">&quot;acf_filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filename</span><span class="o">+</span><span class="s2">&quot;_acf_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;.txt&quot;</span>
+    <span class="n">params1</span><span class="p">[</span><span class="s2">&quot;spectrum_filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filename</span><span class="o">+</span><span class="s2">&quot;_acf_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;.txt&quot;</span>
+    <span class="n">params1</span><span class="p">[</span><span class="s2">&quot;verbose&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+    <span class="n">T</span><span class="p">,</span> <span class="n">norm_acf</span><span class="p">,</span> <span class="n">raw_acf</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="n">J2</span> <span class="o">=</span> <span class="n">recipe1</span><span class="p">(</span><span class="n">data_ab</span><span class="p">,</span> <span class="n">params1</span><span class="p">)</span>   <span class="c1"># T is in fs, W is in cm^-1</span>
+ 
+    
+    <span class="c1">#===== Determine all frequencies (peaks) and sort them (in accending manner) ====</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">data_stat</span><span class="o">.</span><span class="n">find_maxima</span><span class="p">(</span><span class="n">J2</span><span class="p">,</span> <span class="n">params1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">do_output</span><span class="p">:</span>
+        <span class="n">lgfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">logname</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span>
+        <span class="n">lgfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Maximal peaks in the file &quot;</span><span class="o">+</span><span class="n">params1</span><span class="p">[</span><span class="s2">&quot;spectrum_filename&quot;</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Reduce the number of frequencies to the maximal number available</span>
+    <span class="k">if</span> <span class="n">nfreqs</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">):</span>
+        <span class="n">nfreqs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+    <span class="n">szo</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="c1">#==== Compute the intensities and normalized intensities, do the output =========</span>
+    <span class="n">freqs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nfreqs</span><span class="p">):</span>
+        <span class="n">indx</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">szo</span><span class="o">-</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">norm</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">J</span><span class="p">[</span><span class="n">indx</span><span class="p">])</span>
+       
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nfreqs</span><span class="p">):</span>
+        <span class="n">indx</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">szo</span><span class="o">-</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">freqs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">[</span><span class="n">W</span><span class="p">[</span><span class="n">indx</span><span class="p">],</span> <span class="n">J</span><span class="p">[</span><span class="n">indx</span><span class="p">],</span> <span class="n">J</span><span class="p">[</span><span class="n">indx</span><span class="p">]</span><span class="o">/</span><span class="n">norm</span> <span class="p">]</span> <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">do_output</span><span class="p">:</span>
+            <span class="n">lgfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;index= </span><span class="si">%3i</span><span class="s2">  frequency= </span><span class="si">%8.5f</span><span class="s2">  amplitude= </span><span class="si">%8.5f</span><span class="s2"> normalized_amplitude= </span><span class="si">%8.5f</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">W</span><span class="p">[</span><span class="n">indx</span><span class="p">],</span> <span class="n">J</span><span class="p">[</span><span class="n">indx</span><span class="p">],</span> <span class="n">J</span><span class="p">[</span><span class="n">indx</span><span class="p">]</span><span class="o">/</span><span class="n">norm</span><span class="p">)</span> <span class="p">)</span>
+    <span class="k">if</span> <span class="n">do_output</span><span class="p">:</span>
+        <span class="n">lgfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>    
+    
+        <span class="n">lgfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">logname</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">freqs</span><span class="p">:</span>
+            <span class="n">lgfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; ========= Mode = </span><span class="si">%5i</span><span class="s2"> =========== </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">freqs</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">a</span><span class="p">))</span> <span class="p">)</span>
+            <span class="n">lgfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; omega = E/hbar = </span><span class="si">%8.5f</span><span class="s2"> [cm^-1] </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>   <span class="p">)</span>
+            <span class="n">lgfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; Amplitude = </span><span class="si">%8.5f</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="p">)</span>
+            <span class="n">lgfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; Normalized amplitude = </span><span class="si">%8.5f</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="n">lgfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+   
+    <span class="k">return</span>  <span class="n">freqs</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">norm_acf</span><span class="p">,</span> <span class="n">raw_acf</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="n">J2</span></div>
+
+
+
+<div class="viewcode-block" id="compute_all"><a class="viewcode-back" href="../../reference/libra_py/influence_spectrum.html#libra_py.influence_spectrum.compute_all">[docs]</a><span class="k">def</span> <span class="nf">compute_all</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the frequencies with which all matrix elements evolve in time</span>
+
+<span class="sd">    In particular, we are interested only in the frequencies of the real part of </span>
+<span class="sd">    diagonal elements and in frequencies of imaginary part of non-diagonal elements.</span>
+<span class="sd">    This is a typical situation for the &quot;vibronic&quot; Hamiltonian data in the NA-MD</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        X ( list of CMATRIX ): time-series data of complex matrices, e.g. &quot;vibronic&quot; Hamiltonian</span>
+<span class="sd">        params ( dictionary ): parameters controlling the execution of :funct:`compute_mat_elt` function</span>
+<span class="sd">            ..seealso::`compute_mat_elt` for the full description of the required and allowed parameters and the default values</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list[nstates][nstates][nfreqs][3]: freqs, such that</span>
+<span class="sd">        </span>
+<span class="sd">            * freqs[a][b][fr][0] ( double ): frequency of the mode fr for the matrix element X_ab [in 2*pi*a.u.^-1] </span>
+<span class="sd">            * freqs[a][b][fr][1] ( double ): amplitude of the mode fr in the influence </span>
+<span class="sd">                spectrum for the matrix element X_ab  [arb. units]</span>
+<span class="sd">            * freqs[a][b][fr][2] ( double ):  normalized amplitued of the mode fr for the matrix </span>
+<span class="sd">                element X_ab  [arb.units]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;filename&quot;</span><span class="p">:</span><span class="s2">&quot;influence_spectra_&quot;</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+
+    <span class="n">params_re</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">params_re</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;filename&quot;</span><span class="p">:</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;_re_&quot;</span><span class="p">})</span>
+
+    <span class="n">params_im</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">params_im</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;filename&quot;</span><span class="p">:</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;_im_&quot;</span><span class="p">})</span>
+    
+
+    <span class="c1"># Split the X array into two arrays - real and imaginary parts</span>
+    <span class="n">X_re</span><span class="p">,</span> <span class="n">X_im</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="n">nsteps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nsteps</span><span class="p">):</span>
+        <span class="n">X_re</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">step</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">())</span>
+        <span class="n">X_im</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">step</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span><span class="p">())</span>
+
+    <span class="c1"># Do the calculations for each matrix element</span>
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>   
+
+    <span class="n">freqs</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span>
+    <span class="n">norm_acf</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span>
+    <span class="n">raw_acf</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span>
+    <span class="n">W</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span>
+    <span class="n">J2</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span>
+
+ 
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+                <span class="n">freqs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span>  <span class="n">norm_acf</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span>  <span class="n">raw_acf</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span>  <span class="n">W</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span> <span class="n">J</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span> <span class="n">J2</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">compute_mat_elt</span><span class="p">(</span><span class="n">X_re</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">params_re</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">freqs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span> <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span>  <span class="n">norm_acf</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span>  <span class="n">raw_acf</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span>  <span class="n">W</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span> <span class="n">J</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span> <span class="n">J2</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">compute_mat_elt</span><span class="p">(</span><span class="n">X_im</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">params_im</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">freqs</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span>  <span class="n">norm_acf</span><span class="p">,</span>  <span class="n">raw_acf</span><span class="p">,</span>  <span class="n">W</span><span class="p">,</span>  <span class="n">J</span><span class="p">,</span> <span class="n">J2</span></div>
+
+
+
+
+
+
+
+<div class="viewcode-block" id="TestDatautils"><a class="viewcode-back" href="../../reference/libra_py/influence_spectrum.html#libra_py.influence_spectrum.TestDatautils">[docs]</a><span class="k">class</span> <span class="nc">TestDatautils</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestDatautils.test_1"><a class="viewcode-back" href="../../reference/libra_py/influence_spectrum.html#libra_py.influence_spectrum.TestDatautils.test_1">[docs]</a>    <span class="k">def</span> <span class="nf">test_1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tests find_maxima(s, verbose=0, filename=&quot;run.log&quot;) &quot;&quot;&quot;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">slst</span> <span class="o">=</span> <span class="p">[</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">50.0</span><span class="p">,</span> <span class="mf">42.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">slst</span><span class="p">)):</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">slst</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+          
+        <span class="n">out</span> <span class="o">=</span> <span class="n">find_maxima</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mf">42.0</span><span class="p">]])</span></div>
+
+<div class="viewcode-block" id="TestDatautils.test_2"><a class="viewcode-back" href="../../reference/libra_py/influence_spectrum.html#libra_py.influence_spectrum.TestDatautils.test_2">[docs]</a>    <span class="k">def</span> <span class="nf">test_2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tests scalar_stat(X) &quot;&quot;&quot;</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]</span>
+        <span class="n">ave</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">scalar_stat</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">ave</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">std</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="o">/</span><span class="mf">3.0</span><span class="p">))</span>
+
+        <span class="n">X</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
+        <span class="n">ave</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">scalar_stat</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">ave</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">std</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDatautils.test_3"><a class="viewcode-back" href="../../reference/libra_py/influence_spectrum.html#libra_py.influence_spectrum.TestDatautils.test_3">[docs]</a>    <span class="k">def</span> <span class="nf">test_3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tests matrix_stat(X) &quot;&quot;&quot;</span>
+
+        <span class="n">x00</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span>  <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span>  <span class="mf">4.0</span><span class="p">]</span>
+        <span class="n">x11</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">]</span>
+        <span class="n">x01</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">]</span>
+        <span class="n">x10</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span>  <span class="o">-</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]</span>
+
+        <span class="n">X</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">):</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="n">x00</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span> <span class="n">m</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">x01</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="n">x10</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span> <span class="n">m</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">x11</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+            <span class="n">X</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+
+        <span class="n">ave</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">dw</span><span class="p">,</span> <span class="n">up</span> <span class="o">=</span> <span class="n">matrix_stat</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">ave</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="mf">2.5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">ave</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">ave</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">ave</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="mf">0.25</span><span class="p">)</span> 
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">std</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.5</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">1.5</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">std</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">std</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.5</span><span class="p">)</span> <span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">std</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">0.25</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.75</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">3.25</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">2.75</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span> 
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>  <span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">dw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mf">3.0</span><span class="p">)</span> 
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">up</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>  <span class="mf">4.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">up</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>  <span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">up</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>  <span class="mf">2.0</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">up</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>  <span class="mf">3.0</span><span class="p">)</span> </div>
+
+
+<div class="viewcode-block" id="TestDatautils.test_4"><a class="viewcode-back" href="../../reference/libra_py/influence_spectrum.html#libra_py.influence_spectrum.TestDatautils.test_4">[docs]</a>    <span class="k">def</span> <span class="nf">test_4</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tests matrix_freqs(X, a, b, dt, prefix, Nfreqs, verbose = [1,1,1], dw = 1.0, wspan = 3000.0, logfile=None) &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+
+
+
+    
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="c1"># Test case: 3 frequences</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">fs2au</span>
+    <span class="n">dw</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">inv_cm2Ha</span>
+    <span class="n">w1</span> <span class="o">=</span> <span class="mf">500.0</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">inv_cm2Ha</span>
+    <span class="n">w2</span> <span class="o">=</span> <span class="mf">1400.0</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">inv_cm2Ha</span>
+    <span class="n">w3</span> <span class="o">=</span> <span class="mf">850.0</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">inv_cm2Ha</span>
+    <span class="n">wspan</span> <span class="o">=</span> <span class="mf">2000.0</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">inv_cm2Ha</span>
+
+    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">it</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">w1</span><span class="o">*</span><span class="n">t</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">w2</span><span class="o">*</span><span class="n">t</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">w3</span><span class="o">*</span><span class="n">t</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">d</span> <span class="p">)</span>
+    
+    <span class="n">recipe1</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2000.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+
+    <span class="c1"># Test case: 3 frequences</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">it</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">VECTOR</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">w1</span><span class="o">*</span><span class="n">t</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">w2</span><span class="o">*</span><span class="n">t</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">w3</span><span class="o">*</span><span class="n">t</span><span class="p">))</span> <span class="p">)</span>
+    
+    <span class="n">recipe2</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2000.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

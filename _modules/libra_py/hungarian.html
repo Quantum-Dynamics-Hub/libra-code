@@ -1,0 +1,762 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.hungarian &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.hungarian</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.hungarian</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#* Copyright (C) 2018  Alexey V. Akimov</span>
+<span class="c1">#*</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: hungarian</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: </span>
+<span class="sd">       This module implements the Munkres-Kuhn algorithm for the assignment problem</span>
+<span class="sd">       The implementation of the code is based on the instructions from:</span>
+<span class="sd">       http://csclab.murraystate.edu/~bob.pilgrim/445/munkres.html</span>
+
+<span class="sd">       References:</span>
+
+<span class="sd">           1. http://www.public.iastate.edu/~ddoty/HungarianAlgorithm.html</span>
+<span class="sd">           2. Harold W. Kuhn. The Hungarian Method for the assignment problem.</span>
+<span class="sd">               *Naval Research Logistics Quarterly*, 2:83-97, 1955.</span>
+<span class="sd">           3. Harold W. Kuhn. Variants of the Hungarian method for assignment</span>
+<span class="sd">               problems. *Naval Research Logistics Quarterly*, 3: 253-258, 1956.</span>
+<span class="sd">           4. Munkres, J. Algorithms for the Assignment and Transportation Problems.</span>
+<span class="sd">               *Journal of the Society of Industrial and Applied Mathematics*,</span>
+<span class="sd">               5(1):32-38, March, 1957.</span>
+<span class="sd">           5. http://en.wikipedia.org/wiki/Hungarian_algorithm</span>
+
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">cmath</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="c1">#from libra_py import *</span>
+
+
+
+<div class="viewcode-block" id="step1"><a class="viewcode-back" href="../../reference/libra_py/hungarian.html#libra_py.hungarian.step1">[docs]</a><span class="k">def</span> <span class="nf">step1</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    For each row of the matrix, find the smallest element and subtract it from every </span>
+<span class="sd">    element in its row. Go to Step 2. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">min_row_elt</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">X</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  
+
+    <span class="k">return</span> <span class="mi">2</span></div>
+
+
+<div class="viewcode-block" id="step2"><a class="viewcode-back" href="../../reference/libra_py/hungarian.html#libra_py.hungarian.step2">[docs]</a><span class="k">def</span> <span class="nf">step2</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">Rcov</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find a zero (Z) in the resulting matrix. If there is no starred zero in its row or column, </span>
+<span class="sd">    star Z. Repeat for each element in the matrix. Go to Step 3. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">))</span><span class="o">&lt;</span><span class="mf">1e-10</span> <span class="ow">and</span> <span class="n">Rcov</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">Ccov</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">Rcov</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">Ccov</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Before we go on to Step 3, we uncover all rows and columns so that we can use the</span>
+<span class="sd">    cover vectors to help us count the number of starred zeros</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">Rcov</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">Ccov</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="k">return</span> <span class="mi">3</span></div>
+    
+
+<div class="viewcode-block" id="step3"><a class="viewcode-back" href="../../reference/libra_py/hungarian.html#libra_py.hungarian.step3">[docs]</a><span class="k">def</span> <span class="nf">step3</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;   </span>
+<span class="sd">    Cover each column containing a starred zero.  </span>
+<span class="sd">    If K columns are covered, the starred zeros describe a complete set of unique assignments.</span>
+<span class="sd">    In this case, Go to DONE, otherwise, Go to Step 4.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">Ccov</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">colcount</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">colcount</span> <span class="o">+=</span> <span class="n">Ccov</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="n">step</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="k">if</span> <span class="n">colcount</span><span class="o">&gt;=</span><span class="n">n</span><span class="p">:</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="mi">7</span>
+
+    <span class="k">return</span> <span class="n">step</span><span class="p">,</span> <span class="n">colcount</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">find_a_zero</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Rcov</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">):</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">num_of_cols</span>
+    <span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span><span class="p">(</span><span class="ow">not</span> <span class="n">done</span><span class="p">):</span>
+
+        <span class="n">c</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="n">c</span><span class="p">))</span><span class="o">&lt;</span><span class="mf">1e-20</span> <span class="ow">and</span> <span class="n">Rcov</span><span class="p">[</span><span class="n">r</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">Ccov</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+                <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">done</span> <span class="o">=</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="kc">True</span>
+
+            <span class="n">c</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">c</span><span class="o">&gt;=</span><span class="n">n</span> <span class="ow">or</span> <span class="n">done</span><span class="p">):</span>
+                <span class="k">break</span>
+         
+        <span class="n">r</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">r</span><span class="o">&gt;=</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">return</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span>    
+
+
+<span class="k">def</span> <span class="nf">find_star_in_row</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+    <span class="n">col</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">M</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="n">i</span>
+
+    <span class="k">return</span> <span class="n">col</span>
+
+<span class="k">def</span> <span class="nf">find_star_in_col</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+    <span class="n">row</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">i</span>
+
+    <span class="k">return</span> <span class="n">row</span>
+
+
+<span class="k">def</span> <span class="nf">find_prime_in_row</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+    <span class="n">col</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">M</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="n">i</span>
+
+    <span class="k">return</span> <span class="n">col</span>
+
+
+
+
+<div class="viewcode-block" id="step4"><a class="viewcode-back" href="../../reference/libra_py/hungarian.html#libra_py.hungarian.step4">[docs]</a><span class="k">def</span> <span class="nf">step4</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">Rcov</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find a noncovered zero and prime it. </span>
+<span class="sd">    If there is no starred zero in the row containing this primed zero, Go to Step 5. </span>
+<span class="sd">    Otherwise, cover this row and uncover the column containing the starred zero. </span>
+<span class="sd">    Continue in this manner until there are no uncovered zeros left. </span>
+<span class="sd">    Save the smallest uncovered value and Go to Step 6.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">path_row_0</span><span class="p">,</span> <span class="n">path_col_0</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="ow">not</span> <span class="n">done</span><span class="p">):</span>    
+        <span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="o">=</span> <span class="n">find_a_zero</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Rcov</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">row</span><span class="o">==-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="mi">6</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+
+            <span class="n">col_</span> <span class="o">=</span> <span class="n">find_star_in_row</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">col_</span><span class="o">&gt;-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">col</span> <span class="o">=</span> <span class="n">col_</span>
+                <span class="n">Rcov</span><span class="p">[</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">Ccov</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">path_row_0</span> <span class="o">=</span> <span class="n">row</span>
+                <span class="n">path_col_0</span> <span class="o">=</span> <span class="n">col</span>
+                <span class="n">step</span> <span class="o">=</span> <span class="mi">5</span>
+
+    <span class="k">return</span> <span class="n">step</span><span class="p">,</span> <span class="n">path_row_0</span><span class="p">,</span> <span class="n">path_col_0</span></div>
+
+
+<span class="k">def</span> <span class="nf">augment_path</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">M</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">=</span><span class="mi">1</span>
+
+
+<span class="k">def</span> <span class="nf">clear_covers</span><span class="p">(</span><span class="n">Rcov</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">):</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Rcov</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">Rcov</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">Ccov</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+<span class="k">def</span> <span class="nf">erase_primes</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+                <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+<div class="viewcode-block" id="step5"><a class="viewcode-back" href="../../reference/libra_py/hungarian.html#libra_py.hungarian.step5">[docs]</a><span class="k">def</span> <span class="nf">step5</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">path_row_0</span><span class="p">,</span> <span class="n">path_col_0</span><span class="p">,</span> <span class="n">Rcov</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct a series of alternating primed and starred zeros as follows.</span>
+<span class="sd">    Let Z0 represent the uncovered primed zero found in Step 4.</span>
+<span class="sd">    Let Z1 denote the starred zero in the column of Z0 (if any). </span>
+<span class="sd">    Let Z2 denote the primed zero in the row of Z1 (there will always be one).  </span>
+<span class="sd">    Continue until the series terminates at a primed zero that has no starred zero in its column.  </span>
+<span class="sd">    Unstar each starred zero of the series, star each primed zero of the series, erase all primes</span>
+<span class="sd">    and uncover every line in the matrix. Return to Step 3. </span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+    <span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[[</span><span class="n">path_row_0</span><span class="p">,</span> <span class="n">path_col_0</span><span class="p">]]</span>
+    <span class="n">path_count</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="ow">not</span> <span class="n">done</span><span class="p">):</span>
+
+        <span class="c1">#print path</span>
+      
+        <span class="n">r</span> <span class="o">=</span> <span class="n">find_star_in_col</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">path</span><span class="p">[</span><span class="n">path_count</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">r</span><span class="o">&gt;-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">path_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">([</span> <span class="n">r</span><span class="p">,</span> <span class="n">path</span><span class="p">[</span><span class="n">path_count</span><span class="o">-</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="p">])</span>      
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
+      
+        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="n">done</span><span class="p">):</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">find_prime_in_row</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">path</span><span class="p">[</span><span class="n">path_count</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">path_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">([</span> <span class="n">path</span><span class="p">[</span><span class="n">path_count</span><span class="o">-</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="p">])</span>      
+
+
+    <span class="n">augment_path</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+    <span class="n">clear_covers</span><span class="p">(</span><span class="n">Rcov</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">)</span>  
+    <span class="n">erase_primes</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="mi">3</span><span class="p">,</span> <span class="n">path</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">find_smallest</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Rcov</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">):</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">num_of_cols</span>
+    <span class="n">minval</span> <span class="o">=</span> <span class="mf">1.0e+25</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">Rcov</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">Ccov</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">minval</span><span class="o">&gt;</span><span class="n">X</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">):</span>
+                    <span class="n">minval</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">minval</span>
+
+
+
+<div class="viewcode-block" id="step6"><a class="viewcode-back" href="../../reference/libra_py/hungarian.html#libra_py.hungarian.step6">[docs]</a><span class="k">def</span> <span class="nf">step6</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Rcov</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add the value found in Step 4 to every element of each covered row, and subtract it from</span>
+<span class="sd">    every element of each uncovered column.  Return to Step 4 without altering any stars, </span>
+<span class="sd">    primes, or covered lines. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">minval</span> <span class="o">=</span> <span class="n">find_smallest</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Rcov</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">)</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+    
+            <span class="k">if</span> <span class="n">Rcov</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">X</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">minval</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">Ccov</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">X</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="n">minval</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">4</span></div>
+
+
+<span class="k">def</span> <span class="nf">compute_assignment</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+<span class="k">def</span> <span class="nf">show_M</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="si">%3i</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+ 
+
+<span class="k">def</span> <span class="nf">minimize</span><span class="p">(</span><span class="n">_X</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+
+    <span class="n">X</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">_X</span><span class="p">)</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="n">M</span> <span class="o">=</span> <span class="n">intList2</span><span class="p">()</span>
+    <span class="n">Rcov</span> <span class="o">=</span> <span class="n">intList</span><span class="p">()</span>
+    <span class="n">Ccov</span> <span class="o">=</span> <span class="n">intList</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">Rcov</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">Ccov</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">Mi</span> <span class="o">=</span> <span class="n">intList</span><span class="p">()</span> 
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">Mi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">M</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Mi</span><span class="p">)</span>
+
+
+    <span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">path_row_0</span><span class="p">,</span> <span class="n">path_col_0</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">iter_</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">while</span><span class="p">(</span><span class="ow">not</span> <span class="n">done</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;** Iteration </span><span class="si">%3i</span><span class="s2"> **&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">iter_</span><span class="p">))</span>
+        <span class="n">iter_</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">step</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Step 1&quot;</span><span class="p">)</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="n">step1</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">step</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Step 2&quot;</span><span class="p">)</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="n">step2</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">Rcov</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">step</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Step 3&quot;</span><span class="p">)</span>
+            <span class="n">step</span><span class="p">,</span> <span class="n">colcount</span> <span class="o">=</span> <span class="n">step3</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">step</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Step 4&quot;</span><span class="p">)</span>
+            <span class="n">step</span><span class="p">,</span> <span class="n">path_row_0</span><span class="p">,</span> <span class="n">path_col_0</span> <span class="o">=</span> <span class="n">step4</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">Rcov</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">step</span><span class="o">==</span><span class="mi">5</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Step 5&quot;</span><span class="p">)</span>
+            <span class="n">step</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">step5</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">path_row_0</span><span class="p">,</span> <span class="n">path_col_0</span><span class="p">,</span> <span class="n">Rcov</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">step</span><span class="o">==</span><span class="mi">6</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Step 6&quot;</span><span class="p">)</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="n">step6</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Rcov</span><span class="p">,</span> <span class="n">Ccov</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">step</span><span class="o">==</span><span class="mi">7</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">compute_assignment</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+            <span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;X = &quot;</span><span class="p">);</span> <span class="n">X</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>    
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;M = &quot;</span><span class="p">);</span> <span class="n">show_M</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ccov = &quot;</span><span class="p">,</span> <span class="n">Cpp2Py</span><span class="p">(</span><span class="n">Ccov</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Rcov = &quot;</span><span class="p">,</span> <span class="n">Cpp2Py</span><span class="p">(</span><span class="n">Rcov</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;============================&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span>    
+
+
+<div class="viewcode-block" id="maximize"><a class="viewcode-back" href="../../reference/libra_py/hungarian.html#libra_py.hungarian.maximize">[docs]</a><span class="k">def</span> <span class="nf">maximize</span><span class="p">(</span><span class="n">_X</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Minimize the negative of the original matrix</span>
+<span class="sd"> </span>
+<span class="sd">    We also need to shift the negative matrix up rigidly, so all its </span>
+<span class="sd">    elements are &gt; 0.0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">X</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">_X</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">num_of_cols</span>
+    <span class="n">maxval</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">&gt;</span><span class="n">maxval</span><span class="p">:</span>
+                <span class="n">maxval</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">X</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">X</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">maxval</span> <span class="o">+</span> <span class="mf">1e-5</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">minimize</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">verbosity</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_test_setup</span><span class="p">():</span>
+
+    <span class="n">S</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">S</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">);</span> <span class="n">S</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">);</span> <span class="n">S</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">);</span> 
+    <span class="n">S</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">);</span> <span class="n">S</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">);</span> <span class="n">S</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">);</span> 
+    <span class="n">S</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">);</span> <span class="n">S</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">);</span> <span class="n">S</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">);</span> 
+
+    <span class="n">X</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">);</span> <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">);</span> <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">);</span> <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">);</span> 
+    <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">);</span> <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">);</span> <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">);</span> <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">);</span> 
+    <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">);</span> <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">);</span> <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">);</span> <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">12.0</span><span class="p">);</span> 
+    <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">);</span> <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">);</span> <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mf">12.0</span><span class="p">);</span> <span class="n">X</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">16.0</span><span class="p">);</span> 
+
+    <span class="c1"># identical</span>
+    <span class="c1"># | 1 0 0 0 |</span>
+    <span class="c1"># | 0 1 0 0 |</span>
+    <span class="c1"># | 0 0 1 0 |</span>
+    <span class="c1"># | 0 0 0 1 |</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>  <span class="n">a</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span> 
+    <span class="n">a</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>  <span class="n">a</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span> 
+
+    <span class="c1"># non-identical (4x4) matrix</span>
+    <span class="c1"># | 1 0 0 0 |</span>
+    <span class="c1"># | 0 0 1 0 |</span>
+    <span class="c1"># | 0 0 0 1 |</span>
+    <span class="c1"># | 0 1 0 0 |</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">b</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>  <span class="n">b</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span> 
+    <span class="n">b</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>  <span class="n">b</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>
+
+    <span class="c1"># non-identical (4x4) matrix</span>
+    <span class="c1"># | 0 1 0 0 |</span>
+    <span class="c1"># | 0 0 1 0 |</span>
+    <span class="c1"># | 1 0 0 0 |</span>
+    <span class="c1"># | 0 0 0 1 |</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>  <span class="n">c</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span> 
+    <span class="n">c</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>  <span class="n">c</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>
+
+    <span class="c1"># non-identical (8x8) matrix</span>
+    <span class="c1"># | 1 0 0 0 0 0 0 0 |</span>
+    <span class="c1"># | 0 1 0 0 0 0 0 0 |</span>
+    <span class="c1"># | 0 0 0 1 0 0 0 0 |</span>
+    <span class="c1"># | 0 0 1 0 0 0 0 0 |</span>
+    <span class="c1"># | 0 0 0 0 1 0 0 0 |</span>
+    <span class="c1"># | 0 0 0 0 0 0 0 1 |</span>
+    <span class="c1"># | 0 0 0 0 0 1 0 0 |</span>
+    <span class="c1"># | 0 0 0 0 0 0 1 0 |</span>
+
+    <span class="n">d</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>  <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>  <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>  <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>  <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">S</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span>
+
+
+
+<div class="viewcode-block" id="TestHungarian"><a class="viewcode-back" href="../../reference/libra_py/hungarian.html#libra_py.hungarian.TestHungarian">[docs]</a><span class="k">class</span> <span class="nc">TestHungarian</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TestHungarian.test_minimize"><a class="viewcode-back" href="../../reference/libra_py/hungarian.html#libra_py.hungarian.TestHungarian.test_minimize">[docs]</a>    <span class="k">def</span> <span class="nf">test_minimize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tests the reordering algorithm&quot;&quot;&quot;</span>
+        <span class="n">S</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span> <span class="o">=</span> <span class="n">_test_setup</span><span class="p">()</span>
+
+        <span class="n">P</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input matrix &quot;</span><span class="p">);</span> <span class="n">S</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Assignment map = &quot;</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">P</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]])</span>
+
+        <span class="n">P</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input matrix &quot;</span><span class="p">);</span> <span class="n">X</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Assignment map = &quot;</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">P</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">]])</span></div>
+
+
+<div class="viewcode-block" id="TestHungarian.test_maximize"><a class="viewcode-back" href="../../reference/libra_py/hungarian.html#libra_py.hungarian.TestHungarian.test_maximize">[docs]</a>    <span class="k">def</span> <span class="nf">test_maximize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tests the reordering algorithm&quot;&quot;&quot;</span>
+        <span class="n">S</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span> <span class="o">=</span> <span class="n">_test_setup</span><span class="p">()</span>
+
+        <span class="n">P</span> <span class="o">=</span> <span class="n">maximize</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input matrix &quot;</span><span class="p">);</span> <span class="n">a</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Assignment map = &quot;</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">P</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">]])</span>
+
+        <span class="n">P</span> <span class="o">=</span> <span class="n">maximize</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input matrix &quot;</span><span class="p">);</span> <span class="n">b</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Assignment map = &quot;</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">P</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
+
+        <span class="n">P</span> <span class="o">=</span> <span class="n">maximize</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input matrix &quot;</span><span class="p">);</span> <span class="n">c</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Assignment map = &quot;</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">P</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">]])</span>
+
+        <span class="n">P</span> <span class="o">=</span> <span class="n">maximize</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input matrix &quot;</span><span class="p">);</span> <span class="n">d</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Assignment map = &quot;</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">P</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">],[</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">],[</span><span class="mi">6</span><span class="p">,</span><span class="mi">5</span><span class="p">],[</span><span class="mi">7</span><span class="p">,</span><span class="mi">6</span><span class="p">]])</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

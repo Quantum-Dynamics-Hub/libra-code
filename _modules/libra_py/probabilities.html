@@ -1,0 +1,421 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.probabilities &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.probabilities</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.probabilities</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#* Copyright (C) 2018-2019 Alexey V. Akimov</span>
+<span class="c1">#*</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: probabilities</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module aims to implement the probabilities to find system in a given state</span>
+
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+<span class="sd">  </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">cmath</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">units</span>
+
+
+<div class="viewcode-block" id="Boltz_quant_prob"><a class="viewcode-back" href="../../reference/libra_py/probabilities.html#libra_py.probabilities.Boltz_quant_prob">[docs]</a><span class="k">def</span> <span class="nf">Boltz_quant_prob</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Computes the quantum Boltzman probability of occupying different </span>
+<span class="sd">    energy levels at given temperature T:  P_i = exp(-E_i/kT) / Z</span>
+<span class="sd">    where Z = sum_i { exp(-E_i/kT)  }</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        E ( list of doubles ): energy levels [in a.u.]</span>
+<span class="sd">        T ( double ): temperature [K]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        double: prob: the probability to  find a system in a discrete state i with</span>
+<span class="sd">            energy E_i at given temperature T, considering a number of selected energy</span>
+<span class="sd">            levels as given by the list E</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+ 
+    <span class="n">b</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="n">units</span><span class="o">.</span><span class="n">kB</span> <span class="o">*</span> <span class="n">T</span><span class="p">)</span>
+
+    <span class="n">nstates</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+
+    <span class="n">Z</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># partition function</span>
+    <span class="n">prob</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+        <span class="n">prob</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">E</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">*</span><span class="n">b</span><span class="p">))</span>
+        <span class="n">Z</span> <span class="o">+=</span> <span class="n">prob</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+    
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+        <span class="n">prob</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">prob</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">/</span> <span class="n">Z</span>
+
+    <span class="k">return</span> <span class="n">prob</span></div>
+
+
+
+<div class="viewcode-block" id="Boltz_cl_prob"><a class="viewcode-back" href="../../reference/libra_py/probabilities.html#libra_py.probabilities.Boltz_cl_prob">[docs]</a><span class="k">def</span> <span class="nf">Boltz_cl_prob</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Computes the normalized classical Boltzmann probability distribution function </span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        E ( double ): the minimum energy level [in a.u.]</span>
+<span class="sd">        T ( double ): temperature [K]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        double: The probability to have kinetic energy greater than a given threshold value at</span>
+<span class="sd">            given temperature</span>
+
+<span class="sd">    See Also:</span>
+<span class="sd">        This is essentially a Maxwell-Boltzmann distribution in the energy scale</span>
+<span class="sd">        Used this: http://mathworld.wolfram.com/MaxwellDistribution.html</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+ 
+    <span class="n">x</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">E</span><span class="o">/</span><span class="p">(</span><span class="n">units</span><span class="o">.</span><span class="n">kB</span> <span class="o">*</span> <span class="n">T</span><span class="p">))</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="n">D</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.0</span><span class="o">/</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">kB</span> <span class="o">*</span> <span class="n">T</span><span class="p">))</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">D</span><span class="o">&gt;</span><span class="mf">1.0</span> <span class="ow">or</span> <span class="n">D</span><span class="o">&lt;</span><span class="mf">0.0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;D = &quot;</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">D</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+
+<div class="viewcode-block" id="Boltz_cl_prob_up"><a class="viewcode-back" href="../../reference/libra_py/probabilities.html#libra_py.probabilities.Boltz_cl_prob_up">[docs]</a><span class="k">def</span> <span class="nf">Boltz_cl_prob_up</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Computes the classical Boltzmann probability to have kinetic energy larger than a given </span>
+<span class="sd">    threshold E  at temperature T. See Eq. 7 of probabilities_theory.docx.</span>
+<span class="sd">    The present function is related to it.</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        E ( double ): the minimum energy level [in a.u.]</span>
+<span class="sd">        T ( double ): temperature [K]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        double: The probability to have kinetic energy greater than a given threshold value at</span>
+<span class="sd">            given temperature</span>
+
+<span class="sd">    See Also:</span>
+<span class="sd">        This is essentially a Maxwell-Boltzmann distribution in the energy scale</span>
+<span class="sd">        Used this: http://mathworld.wolfram.com/MaxwellDistribution.html</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+ 
+    <span class="n">x</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">E</span><span class="o">/</span><span class="p">(</span><span class="n">units</span><span class="o">.</span><span class="n">kB</span> <span class="o">*</span> <span class="n">T</span><span class="p">))</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="n">D</span> <span class="o">=</span> <span class="n">ERF</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">4.0</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">D</span><span class="o">&gt;</span><span class="mf">1.0</span> <span class="ow">or</span> <span class="n">D</span><span class="o">&lt;</span><span class="mf">0.0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;D = &quot;</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">D</span>
+
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+<div class="viewcode-block" id="HO_prob"><a class="viewcode-back" href="../../reference/libra_py/probabilities.html#libra_py.probabilities.HO_prob">[docs]</a><span class="k">def</span> <span class="nf">HO_prob</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">qn</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    </span>
+<span class="sd">    Probability that the oscillators are in the given vibrational states</span>
+<span class="sd">    Multi-oscillator generalization of Eq. 10</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        E ( list of doubles ): all the energy levels present in the system [in a.u.]</span>
+<span class="sd">        qn ( list of ints ): quantum numbers for each oscillator</span>
+<span class="sd">        T ( double ): temperature </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (res, prob), where:</span>
+
+<span class="sd">            * res ( double ): the probability that the system of N oscillators is in a given</span>
+<span class="sd">                state, defined by quantum numbers of each oscillator</span>
+<span class="sd">            * prob ( list of N doubles ): probability with which each of N oscillators occupies </span>
+<span class="sd">                given vibrational state</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_freqs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+ 
+    <span class="n">res</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">prob</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n_freqs</span><span class="p">):</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">E</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">units</span><span class="o">.</span><span class="n">kB</span><span class="o">*</span><span class="n">T</span><span class="p">))</span>        
+        <span class="n">prob</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">qn</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">xi</span><span class="p">))</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">*</span> <span class="n">prob</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">prob</span></div>
+
+
+<div class="viewcode-block" id="HO_prob_up"><a class="viewcode-back" href="../../reference/libra_py/probabilities.html#libra_py.probabilities.HO_prob_up">[docs]</a><span class="k">def</span> <span class="nf">HO_prob_up</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">qn</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Probability that the oscillators are in vibrational states with quantum numbers</span>
+<span class="sd">    above or equal to the minimal quantum numbers provided. Multi-oscillator generalization of Eq. 12</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        E ( list of doubles ): all the energy levels  present in the system [in a.u.]</span>
+<span class="sd">        qn ( list of ints ): min quantum numbers for each frequency</span>
+<span class="sd">        T ( double ): temperature [K]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (res, prob), where:</span>
+
+<span class="sd">            * res ( double ): the probability that the system of N oscillators is in any state</span>
+<span class="sd">                higher than given quantum numbers of each oscillators</span>
+<span class="sd">            * prob ( list of N doubles ): probability with which each oscillator can be found in any of </span>
+<span class="sd">                the vibrational states higher than given by the quantum numbers in the qn argument</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_freqs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+ 
+    <span class="n">res</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">prob</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n_freqs</span><span class="p">):</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">E</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">qn</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">units</span><span class="o">.</span><span class="n">kB</span><span class="o">*</span><span class="n">T</span><span class="p">))</span>
+        <span class="n">prob</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">*</span> <span class="n">prob</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">prob</span></div>
+
+
+<div class="viewcode-block" id="HO_prob_E_up"><a class="viewcode-back" href="../../reference/libra_py/probabilities.html#libra_py.probabilities.HO_prob_E_up">[docs]</a><span class="k">def</span> <span class="nf">HO_prob_E_up</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">Emin</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    We will compute the probability that a system of N oscillators </span>
+<span class="sd">    has energy more or equal of Emin. The oscillators can have only </span>
+<span class="sd">    quantized energy values</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        E ( list of doubles ): all the energy levels  present in the system [in a.u.]</span>
+<span class="sd">        Emin ( double ): the minimum energy</span>
+<span class="sd">        T ( double ): temperature [K]</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This function is not yet implemented</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+    
+        
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,846 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.tsh_stat &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.tsh_stat</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.tsh_stat</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************                     </span>
+<span class="c1">#* Copyright (C) 2019 Alexey V. Akimov                                                   </span>
+<span class="c1">#* Copyright (C) 2016-2019 Kosuke Sato, Alexey V. Akimov                                                   </span>
+<span class="c1">#*                                                                                                     </span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License                          </span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of                                   </span>
+<span class="c1">#* the License, or (at your option) any later version.                                                 </span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution   </span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.          </span>
+<span class="c1">#***********************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: tsh_stat</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements various functions for analysis of the statistics </span>
+<span class="sd">       in the TSH calculations</span>
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Alexey V. Akimov, Kosuke Sato&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2016-2019 Kosuke Sato, Alexey V. Akimov&quot;</span>
+<span class="n">__credits__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Alexey V. Akimov&quot;</span><span class="p">,</span> <span class="s2">&quot;Kosuke Sato&quot;</span><span class="p">]</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s2">&quot;GNU-3&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.0&quot;</span>
+<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s2">&quot;Alexey V. Akimov&quot;</span>
+<span class="n">__email__</span> <span class="o">=</span> <span class="s2">&quot;alexvakimov@gmail.com&quot;</span>
+<span class="n">__url__</span> <span class="o">=</span> <span class="s2">&quot;https://quantum-dynamics-hub.github.io/libra/index.html&quot;</span>
+
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">probabilities</span>
+
+
+<div class="viewcode-block" id="compute_etot"><a class="viewcode-back" href="../../reference/libra_py/tsh_stat.html#libra_py.tsh_stat.compute_etot">[docs]</a><span class="k">def</span> <span class="nf">compute_etot</span><span class="p">(</span><span class="n">ham</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">Cdia</span><span class="p">,</span> <span class="n">Cadi</span><span class="p">,</span> <span class="n">projectors</span><span class="p">,</span> <span class="n">iM</span><span class="p">,</span> <span class="n">rep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the Ehrenfest potential energy</span>
+
+<span class="sd">    This function computes the average kinetic, potential, and total</span>
+<span class="sd">    energies for an ensemble of trajectories - according to the Ehrenfest recipe</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        ham ( nHamiltonian ): object that handles Hamiltonian-related calculations with many trajectories</span>
+<span class="sd">        p ( MATRIX(ndof, ntraj) ): nuclear momenta of multiple trajectories</span>
+<span class="sd">        Cdia ( CMATRIX(ndia, ntraj) ): amplitudes of diabatic states in the TD wavefunction expansion</span>
+<span class="sd">        Cadi ( CMATRIX(ndia, ntraj) ): amplitudes of adiabatic states in the TD wavefunction expansion</span>
+<span class="sd">        projectors ( list of CMATRIX(nst, nst)): dynamically-consistent corrections</span>
+<span class="sd">        iM ( MATRIX(ndof, 1) ): inverse masses for all nuclear DOFs</span>
+<span class="sd">        rep ( int ): The selector of the representation that is of current interest.</span>
+
+<span class="sd">            - 0: diabatic</span>
+<span class="sd">            - 1: adiabatic</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        tuple: ( Ekin, Epot, Etot, dEkin, dEpot, dEtot ): here</span>
+
+<span class="sd">            * Ekin ( double ): average kinetic energy of the ensemble</span>
+<span class="sd">            * Epot ( double ): average potential energy of the ensemble</span>
+<span class="sd">            * Etot ( double ): average total energy of the ensemble</span>
+<span class="sd">            * dEkin ( double ): standard deviation of the kinetic energy in the ensemble</span>
+<span class="sd">            * dEpot ( double ): standard deviation of the potential energy in the ensemble</span>
+<span class="sd">            * dEtot ( double ): standard deviation of the total energy in the ensemble</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">num_of_cols</span>
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">num_of_rows</span>
+
+    <span class="n">epot</span><span class="p">,</span> <span class="n">ekin</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>    
+    <span class="n">Epot</span><span class="p">,</span> <span class="n">Ekin</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+
+    <span class="n">nst</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">rep</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">nst</span> <span class="o">=</span> <span class="n">Cdia</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="k">elif</span> <span class="n">rep</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">nst</span> <span class="o">=</span> <span class="n">Cadi</span><span class="o">.</span><span class="n">num_of_rows</span>
+
+
+    <span class="n">C</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">traj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">rep</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">Cdia</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">Py2Cpp_int</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nst</span><span class="p">))),</span> <span class="n">Py2Cpp_int</span><span class="p">([</span><span class="n">traj</span><span class="p">]))</span>    
+            <span class="n">epot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">ham</span><span class="o">.</span><span class="n">Ehrenfest_energy_dia</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">Py2Cpp_int</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">traj</span><span class="p">]))</span><span class="o">.</span><span class="n">real</span> <span class="p">)</span>
+            <span class="n">Epot</span> <span class="o">=</span> <span class="n">Epot</span> <span class="o">+</span> <span class="n">epot</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">rep</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+
+            <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">Cadi</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">Py2Cpp_int</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nst</span><span class="p">))),</span> <span class="n">Py2Cpp_int</span><span class="p">([</span><span class="n">traj</span><span class="p">]))</span>    
+            <span class="n">C</span> <span class="o">=</span> <span class="n">projectors</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span> <span class="o">*</span> <span class="n">C</span>  <span class="c1"># dyn-const -&gt; raw</span>
+            <span class="n">epot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">ham</span><span class="o">.</span><span class="n">Ehrenfest_energy_adi</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">Py2Cpp_int</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">traj</span><span class="p">]))</span><span class="o">.</span><span class="n">real</span> <span class="p">)</span>
+            <span class="n">Epot</span> <span class="o">=</span> <span class="n">Epot</span> <span class="o">+</span> <span class="n">epot</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span>
+
+        <span class="n">tmp</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndof</span><span class="p">):</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">tmp</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">iM</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">traj</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">ekin</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+        <span class="n">Ekin</span> <span class="o">=</span> <span class="n">Ekin</span> <span class="o">+</span> <span class="n">ekin</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span>
+
+    <span class="n">Ekin</span> <span class="o">=</span> <span class="n">Ekin</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span>
+    <span class="n">Epot</span> <span class="o">=</span> <span class="n">Epot</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span>
+    <span class="n">Etot</span> <span class="o">=</span> <span class="n">Ekin</span> <span class="o">+</span> <span class="n">Epot</span>
+
+    <span class="c1"># Variances:</span>
+    <span class="n">dEkin</span><span class="p">,</span> <span class="n">dEpot</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">traj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+        <span class="n">dEkin</span> <span class="o">=</span> <span class="n">dEkin</span> <span class="o">+</span> <span class="p">(</span><span class="n">ekin</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span> <span class="o">-</span> <span class="n">Ekin</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">dEpot</span> <span class="o">=</span> <span class="n">dEpot</span> <span class="o">+</span> <span class="p">(</span><span class="n">epot</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span> <span class="o">-</span> <span class="n">Epot</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="n">dEtot</span> <span class="o">=</span> <span class="n">dEkin</span> <span class="o">+</span> <span class="n">dEpot</span>
+
+    <span class="n">dEkin</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dEkin</span><span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">))</span>
+    <span class="n">dEpot</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dEpot</span><span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">))</span>
+    <span class="n">dEtot</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dEtot</span><span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">))</span>
+    
+
+    <span class="k">return</span> <span class="n">Ekin</span><span class="p">,</span> <span class="n">Epot</span><span class="p">,</span> <span class="n">Etot</span><span class="p">,</span> <span class="n">dEkin</span><span class="p">,</span> <span class="n">dEpot</span><span class="p">,</span> <span class="n">dEtot</span></div>
+
+
+
+
+<div class="viewcode-block" id="compute_etot_tsh"><a class="viewcode-back" href="../../reference/libra_py/tsh_stat.html#libra_py.tsh_stat.compute_etot_tsh">[docs]</a><span class="k">def</span> <span class="nf">compute_etot_tsh</span><span class="p">(</span><span class="n">ham</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">Cdia</span><span class="p">,</span> <span class="n">Cadi</span><span class="p">,</span> <span class="n">projectors</span><span class="p">,</span> <span class="n">act_states</span><span class="p">,</span> <span class="n">iM</span><span class="p">,</span> <span class="n">rep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the adiabatic potential energy</span>
+
+<span class="sd">    This function computes the average kinetic, potential, and total</span>
+<span class="sd">    energies for an ensemble of trajectories - according to the TSH recipe</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        ham ( nHamiltonian ): object that handles Hamiltonian-related calculations with many trajectories</span>
+<span class="sd">        p ( MATRIX(ndof, ntraj) ): nuclear momenta of multiple trajectories</span>
+<span class="sd">        Cdia ( CMATRIX(ndia, ntraj) ): amplitudes of diabatic states in the TD wavefunction expansion</span>
+<span class="sd">        Cadi ( CMATRIX(nadi, ntraj) ): amplitudes of adiabatic states in the TD wavefunction expansion</span>
+<span class="sd">        projectors ( list of CMATRIX(nst, nst)): dynamically-consistent corrections</span>
+<span class="sd">        iM ( MATRIX(ndof, 1) ): inverse masses for all nuclear DOFs</span>
+<span class="sd">        rep ( int ): The selector of the representation that is of current interest.</span>
+
+<span class="sd">            - 0: diabatic</span>
+<span class="sd">            - 1: adiabatic</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        tuple: ( Ekin, Epot, Etot, dEkin, dEpot, dEtot ): here</span>
+
+<span class="sd">            * Ekin ( double ): average kinetic energy of the ensemble</span>
+<span class="sd">            * Epot ( double ): average potential energy of the ensemble</span>
+<span class="sd">            * Etot ( double ): average total energy of the ensemble</span>
+<span class="sd">            * dEkin ( double ): standard deviation of the kinetic energy in the ensemble</span>
+<span class="sd">            * dEpot ( double ): standard deviation of the potential energy in the ensemble</span>
+<span class="sd">            * dEtot ( double ): standard deviation of the total energy in the ensemble</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">num_of_cols</span>
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">num_of_rows</span>
+
+    <span class="n">epot</span><span class="p">,</span> <span class="n">ekin</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>    
+    <span class="n">Epot</span><span class="p">,</span> <span class="n">Ekin</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+
+    <span class="n">nst</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">rep</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">nst</span> <span class="o">=</span> <span class="n">Cdia</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="k">elif</span> <span class="n">rep</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">nst</span> <span class="o">=</span> <span class="n">Cadi</span><span class="o">.</span><span class="n">num_of_rows</span>
+
+
+    <span class="n">C</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">states</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="n">ntraj</span><span class="p">)</span>
+
+    <span class="c1">#tsh_indx2vec(ham, states, act_states)</span>
+    <span class="n">states</span> <span class="o">=</span> <span class="n">tsh_indx2ampl</span><span class="p">(</span><span class="n">act_states</span><span class="p">,</span> <span class="n">nst</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">traj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+
+        <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">Py2Cpp_int</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nst</span><span class="p">))),</span> <span class="n">Py2Cpp_int</span><span class="p">([</span><span class="n">traj</span><span class="p">]))</span>      
+
+        <span class="k">if</span> <span class="n">rep</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">epot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">ham</span><span class="o">.</span><span class="n">Ehrenfest_energy_dia</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">Py2Cpp_int</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">traj</span><span class="p">]))</span><span class="o">.</span><span class="n">real</span> <span class="p">)</span>
+            <span class="n">Epot</span> <span class="o">=</span> <span class="n">Epot</span> <span class="o">+</span> <span class="n">epot</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">rep</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># C is supposed to be a dyn-consistent amplitudes, so we&#39;d need to convert</span>
+            <span class="c1"># the Hamiltonian into it, but since the Ehrenfest energy is invariant w.r.t. </span>
+            <span class="c1"># the choice of raw/dynamically-consystent rep, we better convert C</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">projectors</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span> <span class="o">*</span> <span class="n">C</span>  <span class="c1"># dyn-const -&gt; raw</span>
+            <span class="n">epot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">ham</span><span class="o">.</span><span class="n">Ehrenfest_energy_adi</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">Py2Cpp_int</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">traj</span><span class="p">]))</span><span class="o">.</span><span class="n">real</span> <span class="p">)</span>
+            <span class="n">Epot</span> <span class="o">=</span> <span class="n">Epot</span> <span class="o">+</span> <span class="n">epot</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span>
+
+        <span class="n">tmp</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndof</span><span class="p">):</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">tmp</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">iM</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">traj</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">ekin</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+        <span class="n">Ekin</span> <span class="o">=</span> <span class="n">Ekin</span> <span class="o">+</span> <span class="n">ekin</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span>
+
+    <span class="n">Ekin</span> <span class="o">=</span> <span class="n">Ekin</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span>
+    <span class="n">Epot</span> <span class="o">=</span> <span class="n">Epot</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span>
+    <span class="n">Etot</span> <span class="o">=</span> <span class="n">Ekin</span> <span class="o">+</span> <span class="n">Epot</span>
+
+    <span class="c1"># Variances:</span>
+    <span class="n">dEkin</span><span class="p">,</span> <span class="n">dEpot</span><span class="p">,</span> <span class="n">dEtot</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">traj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+        <span class="n">dEkin</span> <span class="o">=</span> <span class="n">dEkin</span> <span class="o">+</span> <span class="p">(</span><span class="n">ekin</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span> <span class="o">-</span> <span class="n">Ekin</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">dEpot</span> <span class="o">=</span> <span class="n">dEpot</span> <span class="o">+</span> <span class="p">(</span><span class="n">epot</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span> <span class="o">-</span> <span class="n">Epot</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">dEtot</span> <span class="o">=</span> <span class="n">dEtot</span> <span class="o">+</span> <span class="p">(</span><span class="n">ekin</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span> <span class="o">+</span> <span class="n">epot</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span> <span class="o">-</span> <span class="n">Etot</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="n">dEkin</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dEkin</span><span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">))</span>
+    <span class="n">dEpot</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dEpot</span><span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">))</span>
+    <span class="n">dEtot</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dEtot</span><span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">))</span>
+    
+
+    <span class="k">return</span> <span class="n">Ekin</span><span class="p">,</span> <span class="n">Epot</span><span class="p">,</span> <span class="n">Etot</span><span class="p">,</span> <span class="n">dEkin</span><span class="p">,</span> <span class="n">dEpot</span><span class="p">,</span> <span class="n">dEtot</span></div>
+
+
+
+
+<div class="viewcode-block" id="compute_dm"><a class="viewcode-back" href="../../reference/libra_py/tsh_stat.html#libra_py.tsh_stat.compute_dm">[docs]</a><span class="k">def</span> <span class="nf">compute_dm</span><span class="p">(</span><span class="n">ham</span><span class="p">,</span> <span class="n">Cdia</span><span class="p">,</span> <span class="n">Cadi</span><span class="p">,</span> <span class="n">projectors</span><span class="p">,</span> <span class="n">rep</span><span class="p">,</span> <span class="n">lvl</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Compute the trajectory-averaged density matrices in diabatic</span>
+<span class="sd">    or adiabatic representations</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        ham ( nHamiltonian ): object that handles Hamiltonian-related calculations with many trajectories</span>
+<span class="sd">        Cdia ( CMATRIX(ndia, ntraj) ): amplitudes of diabatic states in the TD wavefunction expansion</span>
+<span class="sd">        Cadi ( CMATRIX(ndia, ntraj) ): amplitudes of adiabatic states in the TD wavefunction expansion</span>
+<span class="sd">        projectors ( list of CMATRIX(nst, nst)): dynamically-consistent corrections   </span>
+<span class="sd">        rep ( int ): a selector of which representation is considered main (being propagated)</span>
+<span class="sd">            E.g. if rep = 0 - that means we propagate the diabatic coefficients, that is the calculation </span>
+<span class="sd">            of the diabatic density matrix is straightforward, but we need to involve some transformations </span>
+<span class="sd">            to compute the adiabatic density matrix and vice versa, if rep = 1, the propagation is done according</span>
+<span class="sd">            to the adiabatic properties and we&#39;d need to convert to the diabatic representation in the end</span>
+<span class="sd">             </span>
+<span class="sd">            - 0: diabatic</span>
+<span class="sd">            - 1: adiabatic</span>
+
+<span class="sd">        lvl ( int ): The level of the Hamiltonian that treats the transformations:</span>
+<span class="sd">            - 0: ham is the actual Hamiltonian to use (use with single trajectory),</span>
+<span class="sd">            - 1: ham is the parent of the Hamiltonians to use (use with multiple trajectories)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: ( dm_dia, dm_adi ):</span>
+
+<span class="sd">            * dm_dia ( CMATRIX(ndia, ndia) ): the trajectory-averaged density matrix in</span>
+<span class="sd">                the diabatic representation. Here, ndia - is the number of diabatic basis</span>
+<span class="sd">                states</span>
+<span class="sd">            * dm_adi ( CMATRIX(nadi, nadi) ): the trajectory-averaged density matrix in</span>
+<span class="sd">                the adiabatic representation. Here, nadi - is the number of adiabatic basis</span>
+<span class="sd">                states</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="n">Cdia</span><span class="o">.</span><span class="n">num_of_cols</span>
+    <span class="n">ndia</span> <span class="o">=</span> <span class="n">Cdia</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">nadi</span> <span class="o">=</span> <span class="n">Cadi</span><span class="o">.</span><span class="n">num_of_rows</span>
+
+    <span class="c1"># Dynamically-consistent</span>
+    <span class="n">dm_dia</span><span class="p">,</span> <span class="n">dm_adi</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ndia</span><span class="p">,</span> <span class="n">ndia</span><span class="p">),</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nadi</span><span class="p">,</span> <span class="n">nadi</span><span class="p">)</span>
+
+    <span class="c1"># Raw</span>
+    <span class="n">dm_dia_raw</span><span class="p">,</span> <span class="n">dm_adi_raw</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ndia</span><span class="p">,</span> <span class="n">ndia</span><span class="p">),</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nadi</span><span class="p">,</span> <span class="n">nadi</span><span class="p">)</span>
+
+
+    <span class="k">for</span> <span class="n">traj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+        <span class="n">indx</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">lvl</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">indx</span> <span class="o">=</span> <span class="n">Py2Cpp_int</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">lvl</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">indx</span> <span class="o">=</span> <span class="n">Py2Cpp_int</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">traj</span><span class="p">])</span>
+
+        <span class="n">S</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">get_ovlp_dia</span><span class="p">(</span><span class="n">indx</span><span class="p">)</span>
+        <span class="n">U</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">get_basis_transform</span><span class="p">(</span><span class="n">indx</span><span class="p">)</span> 
+    
+        <span class="k">if</span> <span class="n">rep</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+    
+            <span class="n">dm_tmp</span> <span class="o">=</span> <span class="n">S</span> <span class="o">*</span> <span class="n">Cdia</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">traj</span><span class="p">)</span> <span class="o">*</span> <span class="n">Cdia</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">traj</span><span class="p">)</span><span class="o">.</span><span class="n">H</span><span class="p">()</span> <span class="o">*</span> <span class="n">S</span>
+
+            <span class="c1"># Dia dyn-consistent</span>
+            <span class="n">dm_dia</span> <span class="o">=</span> <span class="n">dm_dia</span> <span class="o">+</span> <span class="n">dm_tmp</span>
+
+            <span class="c1"># Dia raw - i&#39;m not sure about that one, so lets keep it just zero for now</span>
+
+            <span class="c1"># Adi dyn-consistent</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">H</span><span class="p">()</span> <span class="o">*</span> <span class="n">dm_tmp</span> <span class="o">*</span> <span class="n">U</span>
+            <span class="n">dm_adi</span> <span class="o">=</span> <span class="n">dm_adi</span> <span class="o">+</span> <span class="n">tmp</span>
+
+            <span class="c1"># Adi raw</span>
+            <span class="n">dm_adi_raw</span> <span class="o">=</span> <span class="n">dm_adi_raw</span> <span class="o">+</span> <span class="n">projectors</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span> <span class="o">*</span> <span class="n">tmp</span> <span class="o">*</span> <span class="n">projectors</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span><span class="o">.</span><span class="n">H</span><span class="p">()</span>
+                   
+    
+        <span class="k">elif</span> <span class="n">rep</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">su</span> <span class="o">=</span> <span class="n">S</span> <span class="o">*</span> <span class="n">U</span>
+
+            <span class="c1"># Raw</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">Cadi</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">traj</span><span class="p">)</span>            
+            <span class="n">dm_tmp</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="n">c</span><span class="o">.</span><span class="n">H</span><span class="p">()</span>
+                        
+            <span class="c1"># Adi dynamically-consistent DM</span>
+            <span class="n">dm_adi</span> <span class="o">=</span> <span class="n">dm_adi</span> <span class="o">+</span> <span class="n">dm_tmp</span>
+            
+            <span class="c1"># Adi raw</span>
+            <span class="n">dm_tmp_raw</span> <span class="o">=</span> <span class="n">projectors</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span> <span class="o">*</span> <span class="n">dm_tmp</span> <span class="o">*</span> <span class="n">projectors</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span><span class="o">.</span><span class="n">H</span><span class="p">()</span>
+            <span class="n">dm_adi_raw</span> <span class="o">=</span> <span class="n">dm_adi_raw</span> <span class="o">+</span> <span class="n">dm_tmp_raw</span>
+
+            <span class="c1"># Dia dynamically-consistent DM</span>
+            <span class="n">dm_dia</span> <span class="o">=</span> <span class="n">dm_dia</span> <span class="o">+</span> <span class="n">su</span> <span class="o">*</span> <span class="n">dm_tmp</span> <span class="o">*</span> <span class="n">su</span><span class="o">.</span><span class="n">H</span><span class="p">()</span>            
+
+            <span class="c1"># Dia raw</span>
+            <span class="n">dm_dia_raw</span> <span class="o">=</span> <span class="n">dm_dia_raw</span> <span class="o">+</span> <span class="n">su</span> <span class="o">*</span> <span class="n">dm_tmp_raw</span> <span class="o">*</span> <span class="n">su</span><span class="o">.</span><span class="n">H</span><span class="p">()</span>            
+
+    
+    <span class="n">dm_dia</span> <span class="o">=</span> <span class="n">dm_dia</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span>        
+    <span class="n">dm_adi</span> <span class="o">=</span> <span class="n">dm_adi</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span>
+    <span class="n">dm_dia_raw</span> <span class="o">=</span> <span class="n">dm_dia_raw</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span>        
+    <span class="n">dm_adi_raw</span> <span class="o">=</span> <span class="n">dm_adi_raw</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dm_dia</span><span class="p">,</span> <span class="n">dm_adi</span><span class="p">,</span> <span class="n">dm_dia_raw</span><span class="p">,</span> <span class="n">dm_adi_raw</span></div>
+
+
+
+<div class="viewcode-block" id="compute_sh_statistics"><a class="viewcode-back" href="../../reference/libra_py/tsh_stat.html#libra_py.tsh_stat.compute_sh_statistics">[docs]</a><span class="k">def</span> <span class="nf">compute_sh_statistics</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">istate</span><span class="p">,</span> <span class="n">projectors</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function computes the SH statistics for an ensemble of trajectories</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        nstates ( int ): The number of considered quantum states</span>
+<span class="sd">        istate ( list of integers ): The list containing the info about the index</span>
+<span class="sd">            of a quantum state in which each trajectory is found. </span>
+<span class="sd">            The length of the list is equal to the number of trajectories. </span>
+<span class="sd">            Each element of the list is the state index for that trajectory. </span>
+<span class="sd">            In other words, istate[0] is the quantum state for a trajectory 0, </span>
+<span class="sd">            istate[1] is the quantum state for a trajectory 1, etc.</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        MATRIX(nstates, 1): coeff_sh: The list containing the average </span>
+<span class="sd">            population of each quantum state. The length of the list is equal to the </span>
+<span class="sd">            total number of quantum states considered, ```nstates```</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">istate</span><span class="p">)</span>    
+    <span class="n">coeff_sh</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>        
+    <span class="n">coeff_sh_raw</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>        
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">istate</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">pop</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span>
+        <span class="n">pop</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span>
+        
+        <span class="n">pop_raw</span> <span class="o">=</span> <span class="n">projectors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">pop</span> <span class="o">*</span> <span class="n">projectors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">H</span><span class="p">()</span>
+        
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nstates</span><span class="p">):</span>
+            <span class="n">coeff_sh</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pop</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+            <span class="n">coeff_sh_raw</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pop_raw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+            
+    <span class="n">coeff_sh</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">))</span>
+    <span class="n">coeff_sh_raw</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">))</span>
+ 
+    <span class="k">return</span> <span class="n">coeff_sh</span><span class="p">,</span> <span class="n">coeff_sh_raw</span></div>
+
+
+
+<div class="viewcode-block" id="update_sh_pop"><a class="viewcode-back" href="../../reference/libra_py/tsh_stat.html#libra_py.tsh_stat.update_sh_pop">[docs]</a><span class="k">def</span> <span class="nf">update_sh_pop</span><span class="p">(</span><span class="n">istate</span><span class="p">,</span> <span class="n">nstates</span><span class="p">):</span>  
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        istate ( list of integers ): The list containing the info about the index</span>
+<span class="sd">            of a quantum state in which each trajectory is found. </span>
+<span class="sd">            The length of the list is equal to the number of trajectories. </span>
+<span class="sd">            Each element of the list is the state index for that trajectory. </span>
+<span class="sd">            In other words, istate[0] is the quantum state for a trajectory 0, </span>
+<span class="sd">            istate[1] is the quantum state for a trajectory 1, etc.</span>
+<span class="sd">        nstates ( int ): The number of considered quantum states</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        ( list of ```nstates``` ints ): pops: The list containing the average </span>
+<span class="sd">            SH-based population of each quantum state. The length of the list is equal to the </span>
+<span class="sd">            total number of quantum states considered, ```nstates```</span>
+
+<span class="sd">    Note: </span>
+<span class="sd">        The functionality is the same as of ```compute_sh_statistics```, just a different </span>
+<span class="sd">        format of the output</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">pops</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">nstates</span>
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">istate</span><span class="p">)</span>
+
+    <span class="n">incr</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span> <span class="c1"># for all trajectories</span>
+        <span class="n">pops</span><span class="p">[</span> <span class="n">istate</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="p">]</span> <span class="o">+=</span> <span class="n">incr</span>
+
+    <span class="k">return</span> <span class="n">pops</span></div>
+
+    
+
+<div class="viewcode-block" id="avarage_populations"><a class="viewcode-back" href="../../reference/libra_py/tsh_stat.html#libra_py.tsh_stat.avarage_populations">[docs]</a><span class="k">def</span> <span class="nf">avarage_populations</span><span class="p">(</span><span class="n">el</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function computes the SH statistics for an ensemble of trajectories</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        el ( list of Electronic ): The list containing electronic DOF variables</span>
+<span class="sd">            for all trajectories in ensemble. The length of the list determines</span>
+<span class="sd">            the number of trajectories in ensemble</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: ( sh_pops, se_pops, rho ):</span>
+
+<span class="sd">            * sh_pops ( list of N float ): The list containing the average population</span>
+<span class="sd">                of each quantum state based on the statistics of the discrete states</span>
+<span class="sd">                in which each trajectory resides. Here, N is the number of states</span>
+<span class="sd">            * se_pops ( list of N float ): The list containing the average population</span>
+<span class="sd">                of each quantum state based on the amplitudes of all quantum states</span>
+<span class="sd">                as obtained from the TD-SE solution. Here, N is the number of states</span>
+<span class="sd">            * rho ( CMATRIX(N,N) ): The matrix containing the trajectory-averaged </span>
+<span class="sd">                SE populations and coherences. Here, N is the number of states</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">el</span><span class="p">)</span>        <span class="c1"># the total number of trajectories</span>
+    <span class="n">nstat</span> <span class="o">=</span> <span class="n">el</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nstates</span>  <span class="c1"># the number of quantum states, assume that all objects in the &quot;el&quot; list </span>
+                           <span class="c1"># are similar</span>
+
+    <span class="n">sh_pops</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">nstat</span>   <span class="c1"># average SH populations of all states</span>
+    <span class="n">se_pops</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">nstat</span>   <span class="c1"># average SE populations of all states</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstat</span><span class="p">,</span> <span class="n">nstat</span><span class="p">)</span> <span class="c1"># trajectory-averaged density matrix</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">traj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span> <span class="c1"># for all trajectories</span>
+        <span class="n">sh_pops</span><span class="p">[</span> <span class="n">el</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span><span class="o">.</span><span class="n">istate</span> <span class="p">]</span> <span class="o">+=</span> <span class="n">f</span>
+
+        <span class="k">for</span> <span class="n">st1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstat</span><span class="p">):</span>
+            <span class="n">se_pops</span><span class="p">[</span> <span class="n">st1</span> <span class="p">]</span> <span class="o">+=</span> <span class="n">f</span> <span class="o">*</span> <span class="n">el</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span><span class="o">.</span><span class="n">rho</span><span class="p">(</span><span class="n">st1</span><span class="p">,</span><span class="n">st1</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+
+            <span class="k">for</span> <span class="n">st2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstat</span><span class="p">):</span>
+                <span class="n">rho</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">st1</span><span class="p">,</span> <span class="n">st2</span><span class="p">,</span> <span class="n">rho</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">st1</span><span class="p">,</span><span class="n">st2</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span> <span class="o">*</span> <span class="n">el</span><span class="p">[</span><span class="n">traj</span><span class="p">]</span><span class="o">.</span><span class="n">rho</span><span class="p">(</span><span class="n">st1</span><span class="p">,</span><span class="n">st2</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sh_pops</span><span class="p">,</span> <span class="n">se_pops</span><span class="p">,</span> <span class="n">rho</span></div>
+
+
+<div class="viewcode-block" id="ave_pop"><a class="viewcode-back" href="../../reference/libra_py/tsh_stat.html#libra_py.tsh_stat.ave_pop">[docs]</a><span class="k">def</span> <span class="nf">ave_pop</span><span class="p">(</span><span class="n">denmat_sh</span><span class="p">,</span> <span class="n">denmat_se</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Compute the ensemble-averaged SH and SE density matrices</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        denmat_sh ( list of CMATRIX(N, N) ): SH density matrix (diagonal)</span>
+<span class="sd">            for each trajectory. Such that ```denmat_sh[itraj]``` corresponds to the trajectory ```itraj```</span>
+<span class="sd">        denmat_se ( list of CMATRIX(N, N) ): SE density matrix</span>
+<span class="sd">            for each trajectory. Such that ```denmat_se[itraj]``` corresponds to the trajectory ```itraj```</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        tuple: ( ave_pop_sh, ave_pop_se ):</span>
+
+<span class="sd">            * ave_pop_sh ( CMATRIX(N, N) ): the ensemble-averaged SH density matrix</span>
+<span class="sd">            * ave_pop_se ( CMATRIX(N, N) ): the ensemble-averaged SE density matrix</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">denmat_sh</span><span class="p">)</span>
+    <span class="n">nst_out</span> <span class="o">=</span> <span class="n">denmat_sh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="n">ave_pop_sh</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nst_out</span><span class="p">,</span> <span class="n">nst_out</span><span class="p">)</span>
+    <span class="n">ave_pop_se</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nst_out</span><span class="p">,</span> <span class="n">nst_out</span><span class="p">)</span>
+    <span class="n">den</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+        <span class="n">ave_pop_se</span> <span class="o">=</span> <span class="n">ave_pop_se</span> <span class="o">+</span> <span class="n">den</span> <span class="o">*</span> <span class="n">denmat_se</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>   <span class="c1"># SE</span>
+        <span class="n">ave_pop_sh</span> <span class="o">=</span> <span class="n">ave_pop_sh</span> <span class="o">+</span> <span class="n">den</span> <span class="o">*</span> <span class="n">denmat_sh</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>   <span class="c1"># SH</span>
+
+
+    <span class="k">return</span> <span class="n">ave_pop_sh</span><span class="p">,</span> <span class="n">ave_pop_se</span></div>
+
+
+
+<div class="viewcode-block" id="ave_en"><a class="viewcode-back" href="../../reference/libra_py/tsh_stat.html#libra_py.tsh_stat.ave_en">[docs]</a><span class="k">def</span> <span class="nf">ave_en</span><span class="p">(</span><span class="n">denmat_sh</span><span class="p">,</span> <span class="n">denmat_se</span><span class="p">,</span> <span class="n">Hvib</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes ensemble averaged SH and SE energies</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        denmat_sh ( list of CMATRIX(nst_in, nst_in) ): SE density matrices (diagonal) for each trajectory</span>
+<span class="sd">        denmat_se ( list of CMATRIX(nst_in,nst_in) ): SE density matrices for each trajectory </span>
+<span class="sd">        Hvib ( list of CMATRIX(nst_in,nst_in) ): Hvib for each trajectory [units: arbitrary]</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        (double, double): ave_en_sh, ave_en_se, where:</span>
+
+<span class="sd">            * ave_en_sh ( double ): SH-averaged energy [ units: same as Hvib ]</span>
+<span class="sd">            * ave_en_se ( double ): SE-averaged energy [ units: same as Hvib ]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">denmat_sh</span><span class="p">)</span>
+    <span class="n">nst_out</span> <span class="o">=</span> <span class="n">denmat_sh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="n">ave_en_sh</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">ave_en_se</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">den</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+        <span class="n">ave_en_se</span> <span class="o">=</span>  <span class="n">ave_en_se</span> <span class="o">+</span> <span class="n">den</span> <span class="o">*</span> <span class="p">(</span><span class="n">denmat_se</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">()</span> <span class="o">*</span> <span class="n">Hvib</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">()</span> <span class="p">)</span><span class="o">.</span><span class="n">tr</span><span class="p">()</span>  <span class="c1"># SE</span>
+        <span class="n">ave_en_sh</span> <span class="o">=</span>  <span class="n">ave_en_sh</span> <span class="o">+</span> <span class="n">den</span> <span class="o">*</span> <span class="p">(</span><span class="n">denmat_sh</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">()</span> <span class="o">*</span> <span class="n">Hvib</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">()</span> <span class="p">)</span><span class="o">.</span><span class="n">tr</span><span class="p">()</span>  <span class="c1"># SH</span>
+
+    <span class="k">return</span> <span class="n">ave_en_sh</span><span class="p">,</span> <span class="n">ave_en_se</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="amplitudes2denmat"><a class="viewcode-back" href="../../reference/libra_py/tsh_stat.html#libra_py.tsh_stat.amplitudes2denmat">[docs]</a><span class="k">def</span> <span class="nf">amplitudes2denmat</span><span class="p">(</span><span class="n">coeffs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd"> </span>
+<span class="sd">    Converts the wavefunction amplitudes for all trajectories to the corresponding </span>
+<span class="sd">        density matrices</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        coeffs ( list of CMATRIX(nstates, 1) ): wavefunction amplitudes for all trajectories</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ( list of CMATRIX(nstates, nstate) ): density matrices for all trajectory</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coeffs</span><span class="p">)</span>
+    <span class="n">denmat</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+        <span class="n">denmat</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">coeffs</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span> <span class="o">*</span> <span class="n">coeffs</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">H</span><span class="p">()</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">denmat</span></div>
+
+
+<div class="viewcode-block" id="pops2denmat"><a class="viewcode-back" href="../../reference/libra_py/tsh_stat.html#libra_py.tsh_stat.pops2denmat">[docs]</a><span class="k">def</span> <span class="nf">pops2denmat</span><span class="p">(</span><span class="n">pops</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd"> </span>
+<span class="sd">    Converts the populations (vector) of all states for all trajectories to the corresponding </span>
+<span class="sd">        density matrices (matrix). This is just a convenience function</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pops ( list of CMATRIX(nstates, 1) ): state populations for all trajectories</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ( list of CMATRIX(nstates, nstate) ): density matrices for all trajectories</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pops</span><span class="p">)</span>
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">pops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">denmat</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+        <span class="n">denmat</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span> <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+            <span class="n">denmat</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">,</span> <span class="n">pops</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">denmat</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="denmat2prob"><a class="viewcode-back" href="../../reference/libra_py/tsh_stat.html#libra_py.tsh_stat.denmat2prob">[docs]</a><span class="k">def</span> <span class="nf">denmat2prob</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert the density matrix to the populations</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        P ( CMATRIX(N, N) ): Density matrix</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ( list of doubles ): populations of all states</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nst</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">num_of_cols</span>
+    <span class="n">prob</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">nst</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nst</span><span class="p">):</span>
+        <span class="n">prob</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+
+    <span class="k">return</span> <span class="n">prob</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="probabilities_1D_scattering"><a class="viewcode-back" href="../../reference/libra_py/tsh_stat.html#libra_py.tsh_stat.probabilities_1D_scattering">[docs]</a><span class="k">def</span> <span class="nf">probabilities_1D_scattering</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">nst</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the scattering probabilities in 1D</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        _q ( MATRIX(nnucl, ntraj) ): coordinates of the &quot;classical&quot; particles [units: Bohr]</span>
+<span class="sd">        states ( intList, or list of ntraj ints ): the quantum state of each trajectory</span>
+<span class="sd">        nst ( int ): the number of possible quantum states in the problem</span>
+<span class="sd">        params ( dictionary ): parameters of the simulation, should contain</span>
+<span class="sd"> </span>
+<span class="sd">            * **params[&quot;act_dof&quot;]** ( int ): index of the nuclear DOF that is considered active (scattering coord)</span>
+<span class="sd">            * **params[&quot;left_boundary&quot;] ( double ): the beginning of the reflected particles counter [units: Bohr]</span>
+<span class="sd">            * **params[&quot;right_boundary&quot;] ( double ): the beginning of the transmitted particles counter [units: Bohr]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: ( pop_refl, pop_transm ): where</span>
+
+<span class="sd">            * pop_refl ( MATRIX(nst, 1) ): probabilities of reflection on each state</span>
+<span class="sd">            * pop_transm ( MATRIX(nst, 1) ): probabilities of transmission on each state</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span>  <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;act_dof&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;left_boundary&quot;</span><span class="p">:</span><span class="o">-</span><span class="mf">10.0</span><span class="p">,</span> <span class="s2">&quot;right_boundary&quot;</span><span class="p">:</span><span class="mf">10.0</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+
+    <span class="n">act_dof</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;act_dof&quot;</span><span class="p">]</span>
+    <span class="n">left_boundary</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;left_boundary&quot;</span><span class="p">]</span>
+    <span class="n">right_boundary</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;right_boundary&quot;</span><span class="p">]</span>
+
+
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">)</span>
+
+    <span class="n">pop_transm</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># transmitted</span>
+    <span class="n">pop_refl</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nst</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>    <span class="c1"># reflected</span>
+
+    <span class="n">ntransm</span><span class="p">,</span> <span class="n">nrefl</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">traj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">act_dof</span><span class="p">,</span> <span class="n">traj</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">left_boundary</span><span class="p">:</span>
+            <span class="n">pop_refl</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="n">traj</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">nrefl</span> <span class="o">+=</span> <span class="mf">1.0</span>
+
+        <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">act_dof</span><span class="p">,</span> <span class="n">traj</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">right_boundary</span><span class="p">:</span>
+            <span class="n">pop_transm</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="n">traj</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">ntransm</span> <span class="o">+=</span> <span class="mf">1.0</span>         
+
+    <span class="n">ntot</span> <span class="o">=</span> <span class="n">ntransm</span> <span class="o">+</span> <span class="n">nrefl</span> 
+    <span class="k">if</span> <span class="n">ntot</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="n">pop_transm</span> <span class="o">=</span> <span class="n">pop_transm</span> <span class="o">/</span> <span class="n">ntot</span>
+        <span class="n">pop_refl</span> <span class="o">=</span> <span class="n">pop_refl</span> <span class="o">/</span> <span class="n">ntot</span>
+
+    <span class="k">return</span> <span class="n">pop_refl</span><span class="p">,</span> <span class="n">pop_transm</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

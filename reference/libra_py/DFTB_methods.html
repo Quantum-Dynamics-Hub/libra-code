@@ -1,0 +1,608 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>DFTB_methods &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="dynamics_plotting" href="dynamics_plotting.html" />
+    <link rel="prev" title="data_stat" href="data_stat.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>DFTB_methods</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/DFTB_methods.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.DFTB_methods">
+<span id="dftb-methods"></span><h1>DFTB_methods<a class="headerlink" href="#module-libra_py.DFTB_methods" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-DFTB_methods"></span><dl class="py function">
+<dt id="libra_py.DFTB_methods.cube_generator_dftbplus">
+<code class="sig-prename descclassname"><span class="pre">libra_py.DFTB_methods.</span></code><code class="sig-name descname"><span class="pre">cube_generator_dftbplus</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_band</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_band</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waveplot_exe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isUKS</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/DFTB_methods.html#cube_generator_dftbplus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.DFTB_methods.cube_generator_dftbplus" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function generates the cube files by first forming the ‘fchk’ file from ‘chk’ file.
+Then it will generate the cube files from min_band to max_band the same as CP2K naming.
+This will helps us to use the read_cube and integrate_cube functions easier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>project_name</strong> (<em>string</em>) – The project_name.</p></li>
+<li><p><strong>time_step</strong> (<em>integer</em>) – The time step.</p></li>
+<li><p><strong>min_band</strong> (<em>integer</em>) – The minimum state number.</p></li>
+<li><p><strong>max_band</strong> (<em>integer</em>) – The maximum state number.</p></li>
+<li><p><strong>waveplot_exe</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Location of the executable for the waveplot program of the dftb+ software package</p></li>
+<li><p><strong>isUKS</strong> (<em>integer</em>) – The unrestricted spin calculation flag. 1 is for spin unrestricted calculations.
+Other numbers are for spin restricted calculations</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.DFTB_methods.dftb_distribute">
+<code class="sig-prename descclassname"><span class="pre">libra_py.DFTB_methods.</span></code><code class="sig-name descname"><span class="pre">dftb_distribute</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">istep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fstep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsteps_this_job</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory_xyz_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dftb_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waveplot_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curr_job_number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/DFTB_methods.html#dftb_distribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.DFTB_methods.dftb_distribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Distributes dftb jobs for trivial parallelization</p>
+<p>Make sure that your dftb input file has absolute paths to the following input parameters:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>SlaterKosterFiles = Type2FileNames {</dt><dd><p>Prefix = “/panasas/scratch/grp-alexeyak/brendan/dftbp_development/”
+Separator = “-”
+Suffix = “.skf”</p>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>istep</strong> (<em>integer</em>) – The initial time step in the trajectory xyz file.</p></li>
+<li><p><strong>fstep</strong> (<em>integer</em>) – The final time step in the trajectory xyz file.</p></li>
+<li><p><strong>nsteps_this_job</strong> (<em>integer</em>) – The number of steps for this job.</p></li>
+<li><p><strong>trajectory_xyz_file</strong> (<em>string</em>) – The full path to trajectory xyz file.</p></li>
+<li><p><strong>dftb_input</strong> (<em>string</em>) – the dftb_input_template.hsd file</p></li>
+<li><p><strong>waveplot_input</strong> (<em>string</em>) – the input file for the waveplot subpackage of dftbplus for generating cubefiles</p></li>
+<li><p><strong>curr_job_number</strong> (<em>integer</em>) – The current job number.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.DFTB_methods.get_dftb_ks_energies">
+<code class="sig-prename descclassname"><span class="pre">libra_py.DFTB_methods.</span></code><code class="sig-name descname"><span class="pre">get_dftb_ks_energies</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/DFTB_methods.html#get_dftb_ks_energies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.DFTB_methods.get_dftb_ks_energies" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function reads the band.out file generated from a dftb+ computations. The band.out file
+stores the ks energies and their occupation.</p>
+<p>Args:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>The vector consisting of the KS energies from min_band to max_band.</p>
+<p>total_energy (float): The total energy obtained from the log file.</p>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>E (1D numpy array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.DFTB_methods.get_dftb_matrices">
+<code class="sig-prename descclassname"><span class="pre">libra_py.DFTB_methods.</span></code><code class="sig-name descname"><span class="pre">get_dftb_matrices</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_sp1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_sp2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/DFTB_methods.html#get_dftb_matrices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.DFTB_methods.get_dftb_matrices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the matrices printed out by the DFTB+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – the name of the file to read, usually
+these are any of the files: “hamsqr1.dat”, “hamsqr2.dat”, etc. or
+“oversqrt.dat”. Produced with the input containing option “WriteHS = Yes”</p></li>
+<li><p><strong>act_sp1</strong> (<em>list of ints</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><em>None</em></a>) – the row active space to extract from the original files
+Indices here start from 0. If set to None - the number of AOs will be
+determined automatically from the file. [default: None]</p></li>
+<li><p><strong>act_sp2</strong> (<em>list of ints</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><em>None</em></a>) – the cols active space to extract from the original files
+Indices here start from 0. If set to None - the number of AOs will be
+determined automatically from the file. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>X: where N = len(act_sp1) and M = len(act_sp2)</dt><dd><p>These are the corresponding property matrices (converted to the complex type)
+for each k-point, such that X[ikpt] is a CMATRIX(N, M) containing the
+overlaps/Hamiltonians for the k-point <code class="docutils literal notranslate"><span class="pre">`ikpt`</span></code>.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of CMATRIX(N, M)</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>So far tested only for a single k-point!</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.DFTB_methods.get_energy_forces">
+<code class="sig-prename descclassname"><span class="pre">libra_py.DFTB_methods.</span></code><code class="sig-name descname"><span class="pre">get_energy_forces</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nat</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/DFTB_methods.html#get_energy_forces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.DFTB_methods.get_energy_forces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get forces from the input file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – the name of the file to read, usually
+this is a the file “detailed.out” produced with the input
+containing option “CalculateForces = Yes “</p></li>
+<li><p><strong>nat</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of atoms in the system</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( E_ex, F, Flst ), where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>E_ex ( double ): excitation energy for the given state [ units: a.u. ]</p></li>
+<li><p>F ( MATRIX(ndof, 1) ): the forces acting on all atoms [ units: a.u. of force ]</p></li>
+<li><p>Flst ( list of [x, y, z] ): the forces acting on all atoms [ units: a.u. of force ]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>it is likely not gonna work for files other than “detailed.out”</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.DFTB_methods.make_dftb_input">
+<code class="sig-prename descclassname"><span class="pre">libra_py.DFTB_methods.</span></code><code class="sig-name descname"><span class="pre">make_dftb_input</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dftb_input_template_filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">istate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/DFTB_methods.html#make_dftb_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.DFTB_methods.make_dftb_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function creates an input file for DFTB+ package from a template file,
+it changes several placeholder lines to ensure the calculations are done
+for required electronic states</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dftb_input_template_filename</strong> (<em>strings</em>) – the name of the generic input file (template)
+for DFTB+ calculations</p></li>
+<li><p><strong>istate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the index of the state, for which the calculations will be carried out</p></li>
+<li><p><strong>timestep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the index of a given timestep along a MD trajectory. If not provided (-1),
+then the defaul name of “tmp.gen” will be used as the coordinate file name.
+If a time index is given, the name will be “coord-&lt;timestep&gt;.gen”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>just creates the files</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.DFTB_methods.read_dftb_output">
+<code class="sig-prename descclassname"><span class="pre">libra_py.DFTB_methods.</span></code><code class="sig-name descname"><span class="pre">read_dftb_output</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">natoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">istate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/DFTB_methods.html#read_dftb_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.DFTB_methods.read_dftb_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>This file reads in the total energy (essentially the reference, ground state energy),
+the excitation energies, and the corresponding forces on all atoms and return them in
+a digital format for further processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>natoms</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of atoms in the systemm</p></li>
+<li><p><strong>istate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the index of the calculation - just for archiving purposes</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>the total energy of a given electronic state,</dt><dd><p>and the corresponding gradients</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>double, MATRIX(ndof, 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.DFTB_methods.read_dftbplus_TRA_file">
+<code class="sig-prename descclassname"><span class="pre">libra_py.DFTB_methods.</span></code><code class="sig-name descname"><span class="pre">read_dftbplus_TRA_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/DFTB_methods.html#read_dftbplus_TRA_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.DFTB_methods.read_dftbplus_TRA_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function reads TRA.dat files generated from TD-DFTB calculations using DFTB+ and returns
+the TD-DFTB excitation energies and CI-like coefficients</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dictionary</em>) – <p>parameters dictionary</p>
+<dl class="simple">
+<dt>logfile_name ( string ): this is actualyl the TRA.dat file, but we keep it as logfile_name for ease, as many other similar</dt><dd><p>type functions (for cp2k, gaussian) rely on this format internally.</p>
+</dd>
+</dl>
+<p>number_of_states ( int ): how many ci states to consider
+tolerance ( float ): the tolerance for accepting SDs are members of the CI wavefunctions
+isUKS ( Boolean ): flag for whether or not a spin-polarized Kohn-Sham basis is being used. TRUE means</p>
+<blockquote>
+<div><p>that a spin-polarized Kohn-Sham basis is being used.</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The excitation energies in the log file.
+ci_basis ( list ): The CI-basis configuration.
+ci_coefficients ( list ): The coefficients of the CI-states.
+spin_components (list): The spin component of the excited states.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>excitation_energies ( <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a> )</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.DFTB_methods.run_dftb_adi">
+<code class="sig-prename descclassname"><span class="pre">libra_py.DFTB_methods.</span></code><code class="sig-name descname"><span class="pre">run_dftb_adi</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/DFTB_methods.html#run_dftb_adi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.DFTB_methods.run_dftb_adi" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function executes the DFTB+ quantum chemistry calculations and
+returns the key properties needed for dynamical calculations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<em>MATRIX</em><em>(</em><em>ndof</em><em>, </em><em>ntraj</em><em>)</em>) – coordinates of the particle [ units: Bohr ]</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><dl class="simple">
+<dt><strong>params[“labels”]</strong> ( list of strings ): the labels of atomic symbolc - for all atoms,</dt><dd><p>and in a order that is consistent with the coordinates (in triples) stored in <cite>q</cite>.
+The number of this labels is <cite>natoms</cite>, such that <cite>ndof</cite> = 3 * <cite>natoms</cite>. [ Required ]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“nstates”]</strong> ( int ): the total number of electronic states</dt><dd><p>in this model [ default: 1 - just the ground state]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“dftb_input_template_filename”]</strong> ( string ):  the name of the input file template</dt><dd><p>[ default: “dftb_input_template.hsd” ]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“dftbp_exe”]</strong> ( string ):  the full path to the DFTB+ executable</dt><dd><p>[ defaut: “dftb+” ]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“xyz2gen_exe”]</strong> ( string ):  the full path to the xyz2gen executable</dt><dd><p>(part of the DFTB+ package) [ defaut: “xyz2gen” ]
+Note: sometimes, especially if you are using conda-installed Python, you may need to
+edit the “xyz2gen” file in your DFTB+ installation to change the topmost line to
+point to the correct python executable (e.g. #! /home/alexey/miniconda2/envs/py37/bin/python)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>obj, with the members:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>obj.ham_adi ( CMATRIX(nstates,nstates) ): adiabatic Hamiltonian</p></li>
+<li><dl class="simple">
+<dt>obj.d1ham_adi ( list of ndof CMATRIX(nstates, nstates) objects ):</dt><dd><p>derivatives of the adiabatic Hamiltonian w.r.t. the nuclear coordinate</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PyObject</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.DFTB_methods.xyz_traj2gen_ovlp">
+<code class="sig-prename descclassname"><span class="pre">libra_py.DFTB_methods.</span></code><code class="sig-name descname"><span class="pre">xyz_traj2gen_ovlp</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">md_iter1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">md_iter2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sys_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/DFTB_methods.html#xyz_traj2gen_ovlp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.DFTB_methods.xyz_traj2gen_ovlp" title="Permalink to this definition">¶</a></dt>
+<dd><p>This file converts the xyz trajectory file in the format produced
+by DFTB+ to a gen file containing the superimposed <cite>md_iter1</cite>-th
+and <cite>md_iter2</cite>-th steps geometries</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>infile</strong> (<em>string</em>) – the name of the input xyz trajectory file</p></li>
+<li><p><strong>outfile</strong> (<em>string</em>) – the name of a output gen single point file</p></li>
+<li><p><strong>md_iter1</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – index of the first timeframe to extract</p></li>
+<li><p><strong>md_iter2</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – index of the second timeframe to extract</p></li>
+<li><p><strong>sys_type</strong> (<em>string</em>) – “C” or “P” - the system type - cluster or periodic</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but creates a file</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.DFTB_methods.xyz_traj2gen_sp">
+<code class="sig-prename descclassname"><span class="pre">libra_py.DFTB_methods.</span></code><code class="sig-name descname"><span class="pre">xyz_traj2gen_sp</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">md_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sys_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/DFTB_methods.html#xyz_traj2gen_sp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.DFTB_methods.xyz_traj2gen_sp" title="Permalink to this definition">¶</a></dt>
+<dd><p>This file converts the xyz trajectory file in the format produced
+by DFTB+ to a gen file containing the <cite>md_iter</cite>-th step geometry</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>infile</strong> (<em>string</em>) – the name of the input xyz trajectory file</p></li>
+<li><p><strong>outfile</strong> (<em>string</em>) – the name of a output gen single point file</p></li>
+<li><p><strong>md_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – index of the timeframe to extract</p></li>
+<li><p><strong>sys_type</strong> (<em>string</em>) – “C” or “P” - the system type - cluster or periodic</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but creates a file</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="dynamics_plotting.html" class="btn btn-neutral float-right" title="dynamics_plotting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="data_stat.html" class="btn btn-neutral float-left" title="data_stat" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

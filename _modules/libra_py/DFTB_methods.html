@@ -1,0 +1,1046 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.DFTB_methods &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.DFTB_methods</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.DFTB_methods</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#* Copyright (C) 2019-2020  Alexey V. Akimov, Brendan Smith</span>
+<span class="c1">#*</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 3 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: DFTB_methods</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements functions for dealing with the outputs from DFTB+ package</span>
+
+<span class="sd">.. moduleauthor:: </span>
+<span class="sd">       Alexey V. Akimov </span>
+<span class="sd">  </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">scan</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">regexlib</span> <span class="k">as</span> <span class="n">rgl</span>
+
+<span class="kn">from</span> <span class="nn">libra_py</span> <span class="kn">import</span> <span class="n">CP2K_methods</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+
+
+<div class="viewcode-block" id="get_energy_forces"><a class="viewcode-back" href="../../reference/libra_py/DFTB_methods.html#libra_py.DFTB_methods.get_energy_forces">[docs]</a><span class="k">def</span> <span class="nf">get_energy_forces</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">nat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get forces from the input file </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename ( string ): the name of the file to read, usually </span>
+<span class="sd">            this is a the file &quot;detailed.out&quot; produced with the input</span>
+<span class="sd">            containing option &quot;CalculateForces = Yes &quot;</span>
+
+<span class="sd">        nat ( int ): the number of atoms in the system</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: ( E_ex, F, Flst ), where:</span>
+
+<span class="sd">            * E_ex ( double ): excitation energy for the given state [ units: a.u. ]</span>
+<span class="sd">            * F ( MATRIX(ndof, 1) ): the forces acting on all atoms [ units: a.u. of force ]</span>
+<span class="sd">            * Flst ( list of [x, y, z] ): the forces acting on all atoms [ units: a.u. of force ]</span>
+
+<span class="sd">    Warning: </span>
+<span class="sd">        it is likely not gonna work for files other than &quot;detailed.out&quot;</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Read the file</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+
+    <span class="c1"># Returned properties initialized</span>
+    <span class="n">E_ex</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">F</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">nat</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">Flst</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="c1"># Lets look for what we need</span>
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>    
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        
+        <span class="c1">#=========== Look for forces =============</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;Total&quot;</span> <span class="ow">and</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;Forces&quot;</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">nat</span><span class="p">):</span>
+                    <span class="n">ind</span> <span class="o">=</span> <span class="n">j</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> 
+                    <span class="n">tmp1</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">z</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp1</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                    <span class="n">F</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">ind</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">);</span> <span class="n">F</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="p">);</span> <span class="n">F</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">ind</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+                    <span class="n">Flst</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">])</span>
+                    
+        <span class="c1">#=========== Excitation energy =============</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">3</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;Excitation&quot;</span> <span class="ow">and</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;Energy:&quot;</span><span class="p">:</span>
+                <span class="n">E_ex</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        
+    <span class="k">return</span> <span class="n">E_ex</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">Flst</span></div>
+
+
+
+<div class="viewcode-block" id="get_dftb_matrices"><a class="viewcode-back" href="../../reference/libra_py/DFTB_methods.html#libra_py.DFTB_methods.get_dftb_matrices">[docs]</a><span class="k">def</span> <span class="nf">get_dftb_matrices</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">act_sp1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">act_sp2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get the matrices printed out by the DFTB+</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        filename ( string ): the name of the file to read, usually </span>
+<span class="sd">            these are any of the files: &quot;hamsqr1.dat&quot;, &quot;hamsqr2.dat&quot;, etc. or </span>
+<span class="sd">            &quot;oversqrt.dat&quot;. Produced with the input containing option &quot;WriteHS = Yes&quot;</span>
+<span class="sd">        act_sp1 ( list of ints or None): the row active space to extract from the original files</span>
+<span class="sd">            Indices here start from 0. If set to None - the number of AOs will be</span>
+<span class="sd">            determined automatically from the file. [default: None]</span>
+<span class="sd">        act_sp2 ( list of ints or None): the cols active space to extract from the original files</span>
+<span class="sd">            Indices here start from 0. If set to None - the number of AOs will be</span>
+<span class="sd">            determined automatically from the file. [default: None]</span>
+<span class="sd">    </span>
+<span class="sd">    Returns: </span>
+<span class="sd">        list of CMATRIX(N, M): X: where N = len(act_sp1) and M = len(act_sp2) </span>
+<span class="sd">            These are the corresponding property matrices (converted to the complex type)</span>
+<span class="sd">            for each k-point, such that X[ikpt] is a CMATRIX(N, M) containing the </span>
+<span class="sd">            overlaps/Hamiltonians for the k-point ```ikpt```.</span>
+
+<span class="sd">    Warning:</span>
+<span class="sd">        So far tested only for a single k-point!</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    
+    <span class="c1"># Copy the content of the file to a temporary location</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>    
+    <span class="n">norbs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">nkpts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">]))</span>
+
+
+    <span class="c1"># Determine the dimensions of the output matrices</span>
+    <span class="k">if</span> <span class="n">act_sp1</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+        <span class="n">nstates1</span> <span class="o">=</span> <span class="n">norbs</span>
+        <span class="n">act_sp1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nstates1</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nstates1</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">act_sp1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">act_sp2</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+        <span class="n">nstates2</span> <span class="o">=</span> <span class="n">norbs</span>
+        <span class="n">act_sp2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nstates2</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nstates2</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">act_sp2</span><span class="p">)</span>
+
+           
+    <span class="c1"># Output variables    </span>
+    <span class="n">X</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="c1"># For each k-point</span>
+    <span class="k">for</span> <span class="n">ikpt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nkpts</span><span class="p">):</span>
+
+        <span class="c1"># Write just the matrix data into a temporary files</span>
+        <span class="c1"># This procedure is made fault-resistant, to avoid wrong working </span>
+        <span class="c1"># when some of the matrix elements printed out are nonsense.</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="mi">5</span><span class="o">+</span><span class="n">ikpt</span><span class="o">*</span><span class="n">norbs</span> <span class="p">:</span> <span class="mi">5</span><span class="o">+</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">ikpt</span><span class="p">)</span><span class="o">*</span><span class="n">norbs</span><span class="p">]</span>
+        
+        <span class="n">f1</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="o">+</span><span class="s2">&quot;_tmp&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>  
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">norbs</span><span class="p">):</span>
+            
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>            
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">norbs</span><span class="p">):</span> 
+                <span class="n">z</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="k">if</span> <span class="n">tmp</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;NaN&quot;</span><span class="p">:</span>
+                    <span class="n">z</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">z</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="n">z</span> <span class="o">=</span> <span class="mf">0.0</span>
+                        <span class="k">pass</span>
+                    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                        <span class="n">z</span> <span class="o">=</span> <span class="mf">0.0</span>
+                        <span class="k">pass</span>                    
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%10.8f</span><span class="s2">  &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+            <span class="n">f1</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="n">f1</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                 
+        <span class="c1"># Read in the temporary file - get the entire matrix </span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">norbs</span><span class="p">,</span> <span class="n">norbs</span><span class="p">);</span>  
+        <span class="n">x</span><span class="o">.</span><span class="n">Load_Matrix_From_File</span><span class="p">(</span><span class="n">filename</span><span class="o">+</span><span class="s2">&quot;_tmp&quot;</span><span class="p">)</span>        
+        
+        <span class="c1"># Extract the sub-matrix of interest</span>
+        <span class="n">x_sub</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates1</span><span class="p">,</span> <span class="n">nstates2</span><span class="p">)</span>
+        <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x_sub</span><span class="p">,</span> <span class="n">act_sp1</span><span class="p">,</span> <span class="n">act_sp2</span><span class="p">)</span>
+
+        <span class="c1"># Add the resulting matrices to the returned result</span>
+        <span class="n">X</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">x_sub</span><span class="p">)</span> <span class="p">)</span>    
+        
+    <span class="k">return</span> <span class="n">X</span></div>
+
+
+<div class="viewcode-block" id="xyz_traj2gen_sp"><a class="viewcode-back" href="../../reference/libra_py/DFTB_methods.html#libra_py.DFTB_methods.xyz_traj2gen_sp">[docs]</a><span class="k">def</span> <span class="nf">xyz_traj2gen_sp</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">md_iter</span><span class="p">,</span> <span class="n">sys_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd"> </span>
+<span class="sd">    This file converts the xyz trajectory file in the format produced</span>
+<span class="sd">    by DFTB+ to a gen file containing the `md_iter`-th step geometry</span>
+
+
+<span class="sd">    Args:</span>
+<span class="sd">        infile ( string ): the name of the input xyz trajectory file</span>
+<span class="sd">        outfile ( string ): the name of a output gen single point file</span>
+<span class="sd">        md_iter ( int ): index of the timeframe to extract</span>
+<span class="sd">        sys_type ( string ): &quot;C&quot; or &quot;P&quot; - the system type - cluster or periodic</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        none: but creates a file</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
+    <span class="c1"># Determine the key info</span>
+    <span class="n">nat</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="nb">float</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="n">at_types</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nat</span><span class="p">):</span>
+        <span class="n">at_typ</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>   <span class="c1"># atom type</span>
+        <span class="k">if</span> <span class="n">at_typ</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">at_types</span><span class="p">:</span>
+            <span class="n">at_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">at_typ</span><span class="p">)</span>
+
+
+    <span class="c1"># Make up the output file</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%5i</span><span class="s2">  </span><span class="si">%s</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nat</span><span class="p">,</span> <span class="n">sys_type</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">typ</span> <span class="ow">in</span> <span class="n">at_types</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">typ</span><span class="p">)</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nat</span><span class="p">):</span>
+        <span class="n">ln_indx</span> <span class="o">=</span> <span class="p">(</span><span class="n">nat</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">md_iter</span> <span class="o">+</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">ln_indx</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+        <span class="n">at_indx</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">at</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">typ_indx</span> <span class="o">=</span> <span class="n">at_types</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">at</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="si">%5i</span><span class="s2"> </span><span class="si">%3i</span><span class="s2">  </span><span class="si">%15.8f</span><span class="s2">  </span><span class="si">%15.8f</span><span class="s2">  </span><span class="si">%15.8f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">at_indx</span><span class="p">,</span> <span class="n">typ_indx</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+
+    <span class="c1"># Write the file</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+    <span class="n">f1</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="n">f1</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+    
+         
+<div class="viewcode-block" id="xyz_traj2gen_ovlp"><a class="viewcode-back" href="../../reference/libra_py/DFTB_methods.html#libra_py.DFTB_methods.xyz_traj2gen_ovlp">[docs]</a><span class="k">def</span> <span class="nf">xyz_traj2gen_ovlp</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">md_iter1</span><span class="p">,</span> <span class="n">md_iter2</span><span class="p">,</span> <span class="n">sys_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd"> </span>
+<span class="sd">    This file converts the xyz trajectory file in the format produced</span>
+<span class="sd">    by DFTB+ to a gen file containing the superimposed `md_iter1`-th </span>
+<span class="sd">    and `md_iter2`-th steps geometries</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        infile ( string ): the name of the input xyz trajectory file</span>
+<span class="sd">        outfile ( string ): the name of a output gen single point file</span>
+<span class="sd">        md_iter1 ( int ): index of the first timeframe to extract</span>
+<span class="sd">        md_iter2 ( int ): index of the second timeframe to extract</span>
+<span class="sd">        sys_type ( string ): &quot;C&quot; or &quot;P&quot; - the system type - cluster or periodic</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        none: but creates a file</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
+    <span class="c1"># Determine the key info</span>
+    <span class="n">nat</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="nb">float</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="n">at_types</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nat</span><span class="p">):</span>
+        <span class="n">at_typ</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>   <span class="c1"># atom type</span>
+        <span class="k">if</span> <span class="n">at_typ</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">at_types</span><span class="p">:</span>
+            <span class="n">at_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">at_typ</span><span class="p">)</span>
+
+
+    <span class="c1"># Make up the output file</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%5i</span><span class="s2">  </span><span class="si">%s</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">nat</span><span class="p">,</span> <span class="n">sys_type</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">typ</span> <span class="ow">in</span> <span class="n">at_types</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">typ</span><span class="p">)</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nat</span><span class="p">):</span>
+        <span class="n">ln_indx</span> <span class="o">=</span> <span class="p">(</span><span class="n">nat</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">md_iter1</span> <span class="o">+</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">ln_indx</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+        <span class="n">at_indx</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">at</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">typ_indx</span> <span class="o">=</span> <span class="n">at_types</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">at</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="si">%5i</span><span class="s2"> </span><span class="si">%3i</span><span class="s2">  </span><span class="si">%15.8f</span><span class="s2">  </span><span class="si">%15.8f</span><span class="s2">  </span><span class="si">%15.8f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">at_indx</span><span class="p">,</span> <span class="n">typ_indx</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nat</span><span class="p">):</span>
+        <span class="n">ln_indx</span> <span class="o">=</span> <span class="p">(</span><span class="n">nat</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">md_iter2</span> <span class="o">+</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">ln_indx</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+        <span class="n">at_indx</span> <span class="o">=</span> <span class="n">nat</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">at</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">typ_indx</span> <span class="o">=</span> <span class="n">at_types</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">at</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="si">%5i</span><span class="s2"> </span><span class="si">%3i</span><span class="s2">  </span><span class="si">%15.8f</span><span class="s2">  </span><span class="si">%15.8f</span><span class="s2">  </span><span class="si">%15.8f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">at_indx</span><span class="p">,</span> <span class="n">typ_indx</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+
+    <span class="c1"># Write the file</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+    <span class="n">f1</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="n">f1</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+
+
+
+<div class="viewcode-block" id="make_dftb_input"><a class="viewcode-back" href="../../reference/libra_py/DFTB_methods.html#libra_py.DFTB_methods.make_dftb_input">[docs]</a><span class="k">def</span> <span class="nf">make_dftb_input</span><span class="p">(</span><span class="n">dftb_input_template_filename</span><span class="p">,</span> <span class="n">istate</span><span class="p">,</span> <span class="n">timestep</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function creates an input file for DFTB+ package from a template file,</span>
+<span class="sd">    it changes several placeholder lines to ensure the calculations are done</span>
+<span class="sd">    for required electronic states</span>
+<span class="sd">    </span>
+<span class="sd">    Args: </span>
+<span class="sd">        dftb_input_template_filename ( strings ): the name of the generic input file (template) </span>
+<span class="sd">            for DFTB+ calculations</span>
+<span class="sd">            </span>
+<span class="sd">        istate ( int ): the index of the state, for which the calculations will be carried out</span>
+<span class="sd">        </span>
+<span class="sd">        timestep ( int ): the index of a given timestep along a MD trajectory. If not provided (-1),</span>
+<span class="sd">                          then the defaul name of &quot;tmp.gen&quot; will be used as the coordinate file name.</span>
+<span class="sd">                          If a time index is given, the name will be &quot;coord-&lt;timestep&gt;.gen&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None :  just creates the files</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Read in the template file</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">dftb_input_template_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">dftb_input_template</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> 
+
+    
+    <span class="n">nlines</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dftb_input_template</span><span class="p">)</span>
+    
+    <span class="c1"># Create the actual output file - just replace few parameters in the template file</span>
+    <span class="n">dftb_input</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;dftb_in.hsd&quot;</span><span class="p">,</span><span class="s2">&quot;w&quot;</span><span class="p">);</span>     
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">nlines</span> <span class="p">):</span>                
+        
+        <span class="n">dftb_input_template_line</span> <span class="o">=</span> <span class="n">dftb_input_template</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dftb_input_template_line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    
+            <span class="k">if</span> <span class="n">dftb_input_template_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&lt;&lt;&lt;&quot;</span> <span class="ow">and</span> <span class="n">timestep</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">dftb_input</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="s1">&#39;    &lt;&lt;&lt; &quot;tmp.gen&quot;</span><span class="se">\n</span><span class="s1"> &#39;</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">dftb_input_template_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&lt;&lt;&lt;&quot;</span> <span class="ow">and</span> <span class="n">timestep</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">dftb_input</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="s1">&#39;    &lt;&lt;&lt; &quot;coord-&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">timestep</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.gen&quot;</span><span class="se">\n</span><span class="s1"> &#39;</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">dftb_input_template_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;StateOfInterest&quot;</span><span class="p">:</span>
+                <span class="n">dftb_input</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="sa">F</span><span class="s2">&quot;    StateOfInterest    = </span><span class="si">{</span><span class="n">istate</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">istate</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">dftb_input_template_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;ExcitedStateForces&quot;</span><span class="p">:</span>
+                <span class="n">dftb_input</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="s2">&quot;    ExcitedStateForces = no</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dftb_input</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dftb_input_template</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dftb_input</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dftb_input_template</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+                    
+    <span class="n">dftb_input</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="read_dftb_output"><a class="viewcode-back" href="../../reference/libra_py/DFTB_methods.html#libra_py.DFTB_methods.read_dftb_output">[docs]</a><span class="k">def</span> <span class="nf">read_dftb_output</span><span class="p">(</span><span class="n">natoms</span><span class="p">,</span> <span class="n">istate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This file reads in the total energy (essentially the reference, ground state energy), </span>
+<span class="sd">    the excitation energies, and the corresponding forces on all atoms and return them in </span>
+<span class="sd">    a digital format for further processing.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">    </span>
+<span class="sd">        natoms ( int ): the number of atoms in the systemm</span>
+<span class="sd">        istate ( int ): the index of the calculation - just for archiving purposes</span>
+<span class="sd">        </span>
+<span class="sd">    Returns: </span>
+<span class="sd">        double, MATRIX(ndof, 1): the total energy of a given electronic state,         </span>
+<span class="sd">            and the corresponding gradients</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Check the successful completion of the calculations like this:</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="s1">&#39;detailed.out&#39;</span><span class="p">):</span>
+        <span class="c1">#print(&quot;Found detailed.out&quot;)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;cp detailed.out detailed_</span><span class="si">{</span><span class="n">istate</span><span class="si">}</span><span class="s2">.out&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Cannot find the file detailed.out&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;Hint: Current working directory is: </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Is this where you expect the file detailed.out to be found?&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exiting program...</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            
+    
+    <span class="n">ndof</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">natoms</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    
+    
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;detailed.out&quot;</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="n">E</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">nlines</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+            
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">nlines</span> <span class="p">):</span>
+
+        <span class="n">output_line</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">output_line</span> <span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            
+            <span class="k">if</span> <span class="n">output_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Total&quot;</span> <span class="ow">and</span> <span class="n">output_line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Forces&quot;</span><span class="p">:</span>
+
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">natoms</span> <span class="p">):</span>
+
+                    <span class="n">next_lines</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>  
+
+                    <span class="n">grad</span><span class="o">.</span><span class="n">set</span><span class="p">(</span> <span class="mi">3</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="n">next_lines</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="p">)</span>
+                    <span class="n">grad</span><span class="o">.</span><span class="n">set</span><span class="p">(</span> <span class="mi">3</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="n">next_lines</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="p">)</span>
+                    <span class="n">grad</span><span class="o">.</span><span class="n">set</span><span class="p">(</span> <span class="mi">3</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="n">next_lines</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">output_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Excitation&quot;</span> <span class="ow">and</span> <span class="n">output_line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Energy:&quot;</span> <span class="p">:</span>
+            
+                <span class="n">E</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">output_line</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>  <span class="c1"># energy in a.u.</span>
+                <span class="c1">#print(output_line[2])</span>
+                
+            <span class="k">if</span> <span class="n">output_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Total&quot;</span> <span class="ow">and</span> <span class="n">output_line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;energy:&quot;</span> <span class="p">:</span>
+                
+                <span class="n">E</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">output_line</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>  <span class="c1"># energy in a.u.</span>
+                <span class="c1">#print(output_line[2])</span>
+    
+    <span class="c1">#print(F&quot;Final energy = {E}&quot;)</span>
+    <span class="k">return</span> <span class="n">E</span><span class="p">,</span> <span class="n">grad</span>          </div>
+
+
+<span class="k">class</span> <span class="nc">tmp</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<div class="viewcode-block" id="run_dftb_adi"><a class="viewcode-back" href="../../reference/libra_py/DFTB_methods.html#libra_py.DFTB_methods.run_dftb_adi">[docs]</a><span class="k">def</span> <span class="nf">run_dftb_adi</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">params_</span><span class="p">,</span> <span class="n">full_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">   </span>
+<span class="sd">    This function executes the DFTB+ quantum chemistry calculations and </span>
+<span class="sd">    returns the key properties needed for dynamical calculations.</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        q ( MATRIX(ndof, ntraj) ): coordinates of the particle [ units: Bohr ]</span>
+<span class="sd">        params ( dictionary ): model parameters</span>
+
+<span class="sd">            * **params[&quot;labels&quot;]** ( list of strings ): the labels of atomic symbolc - for all atoms,</span>
+<span class="sd">                and in a order that is consistent with the coordinates (in triples) stored in `q`.</span>
+<span class="sd">                The number of this labels is `natoms`, such that `ndof` = 3 * `natoms`. [ Required ]                </span>
+<span class="sd">            * **params[&quot;nstates&quot;]** ( int ): the total number of electronic states </span>
+<span class="sd">                in this model [ default: 1 - just the ground state]                     </span>
+<span class="sd">            * **params[&quot;dftb_input_template_filename&quot;]** ( string ):  the name of the input file template</span>
+<span class="sd">                [ default: &quot;dftb_input_template.hsd&quot; ]                </span>
+<span class="sd">            * **params[&quot;dftbp_exe&quot;]** ( string ):  the full path to the DFTB+ executable </span>
+<span class="sd">                [ defaut: &quot;dftb+&quot; ]</span>
+<span class="sd">            * **params[&quot;xyz2gen_exe&quot;]** ( string ):  the full path to the xyz2gen executable </span>
+<span class="sd">                (part of the DFTB+ package) [ defaut: &quot;xyz2gen&quot; ]                </span>
+<span class="sd">                Note: sometimes, especially if you are using conda-installed Python, you may need to</span>
+<span class="sd">                edit the &quot;xyz2gen&quot; file in your DFTB+ installation to change the topmost line to </span>
+<span class="sd">                point to the correct python executable (e.g. #! /home/alexey/miniconda2/envs/py37/bin/python)            </span>
+<span class="sd">                            </span>
+<span class="sd">    Returns:       </span>
+<span class="sd">        PyObject: obj, with the members:</span>
+
+<span class="sd">            * obj.ham_adi ( CMATRIX(nstates,nstates) ): adiabatic Hamiltonian             </span>
+<span class="sd">            * obj.d1ham_adi ( list of ndof CMATRIX(nstates, nstates) objects ): </span>
+<span class="sd">                derivatives of the adiabatic Hamiltonian w.r.t. the nuclear coordinate            </span>
+<span class="sd"> </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">params_</span><span class="p">)</span>
+    
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;labels&quot;</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dftb_input_template_filename&quot;</span><span class="p">:</span><span class="s2">&quot;dftb_input_template.hsd&quot;</span><span class="p">,</span>     
+                       <span class="s2">&quot;nstates&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+                       <span class="s2">&quot;dftb_exe&quot;</span><span class="p">:</span><span class="s2">&quot;dftb+&quot;</span><span class="p">,</span>  <span class="s2">&quot;xyz2gen_exe&quot;</span><span class="p">:</span><span class="s2">&quot;xyz2gen&quot;</span>
+                     <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+        
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span>      
+    <span class="n">dftb_input_template_filename</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dftb_input_template_filename&quot;</span><span class="p">]</span>
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;nstates&quot;</span><span class="p">]</span>    
+    <span class="n">dftb_exe</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dftb_exe&quot;</span><span class="p">]</span>
+    <span class="n">xyz2gen_exe</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;xyz2gen_exe&quot;</span><span class="p">]</span>
+    
+    <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+    <span class="n">ndof</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">natoms</span>
+    
+    
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">()</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">ham_adi</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span>    
+    <span class="n">obj</span><span class="o">.</span><span class="n">nac_adi</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span>    
+    <span class="n">obj</span><span class="o">.</span><span class="n">hvib_adi</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span>            
+    <span class="n">obj</span><span class="o">.</span><span class="n">basis_transform</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span>            
+    <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_adi</span> <span class="o">=</span> <span class="n">CMATRIXList</span><span class="p">();</span>            
+    <span class="n">obj</span><span class="o">.</span><span class="n">dc1_adi</span> <span class="o">=</span> <span class="n">CMATRIXList</span><span class="p">();</span>            
+    <span class="k">for</span> <span class="n">idof</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndof</span><span class="p">):</span>        
+        <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_adi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">dc1_adi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span> <span class="p">)</span>
+  
+
+    <span class="n">Id</span> <span class="o">=</span> <span class="n">Cpp2Py</span><span class="p">(</span><span class="n">full_id</span><span class="p">)</span>
+    <span class="n">indx</span> <span class="o">=</span> <span class="n">Id</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    
+    <span class="c1"># Make an xyz file</span>
+    <span class="c1"># since the DFTB+ expects the coordinates in Angstrom, but Libra </span>
+    <span class="c1"># goes with atomic units (Bohrs), hence expecting the `q` variable be </span>
+    <span class="c1"># in Bohrs, we need to convert the coordinates from Bohrs to Angstroms</span>
+    <span class="n">coords_str</span> <span class="o">=</span> <span class="n">scan</span><span class="o">.</span><span class="n">coords2xyz</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">indx</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">units</span><span class="o">.</span><span class="n">Angst</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;tmp.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">);</span> 
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="sa">F</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">natoms</span><span class="si">}</span><span class="se">\n</span><span class="s2">Temporary xyz file</span><span class="se">\n</span><span class="si">{</span><span class="n">coords_str</span><span class="si">}</span><span class="s2">&quot;</span> <span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        
+    <span class="c1"># Convert xyz to gen format: tmp.xyz -&gt; tmp.gen</span>
+    <span class="c1"># The temporary working file MUST be called &quot;tmp.gen&quot; since this is</span>
+    <span class="c1"># what the DFTB+ input will list - see the `make_dftbp_input`</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">xyz2gen_exe</span><span class="si">}</span><span class="s2"> tmp.xyz&quot;</span><span class="p">)</span>
+
+        
+    <span class="k">for</span> <span class="n">istate</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nstates</span><span class="p">):</span>
+        
+        <span class="c1"># Update the input file</span>
+        <span class="n">make_dftb_input</span><span class="p">(</span><span class="n">dftb_input_template_filename</span><span class="p">,</span> <span class="n">istate</span><span class="p">)</span>
+        
+        <span class="c1"># We have written the dftb+ input file for a certain state in nstates. Now we must compute the </span>
+        <span class="c1"># state energies and forces. </span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span> <span class="n">dftb_exe</span> <span class="p">)</span>
+        
+        <span class="c1"># At this point, we should have the &quot;detailed.out&quot; file created, so lets read it        </span>
+        <span class="n">E</span><span class="p">,</span> <span class="n">grad</span> <span class="o">=</span> <span class="n">read_dftb_output</span><span class="p">(</span><span class="n">natoms</span><span class="p">,</span> <span class="n">istate</span><span class="p">)</span>
+
+        <span class="c1"># Now, populate the allocated matrices                </span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">ham_adi</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">istate</span><span class="p">,</span> <span class="n">istate</span><span class="p">,</span> <span class="n">E</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">hvib_adi</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">istate</span><span class="p">,</span> <span class="n">istate</span><span class="p">,</span> <span class="n">E</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span>        
+        <span class="n">obj</span><span class="o">.</span><span class="n">basis_transform</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">istate</span><span class="p">,</span> <span class="n">istate</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span> <span class="p">)</span>        
+        <span class="k">for</span> <span class="n">idof</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndof</span><span class="p">):</span>        
+            <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_adi</span><span class="p">[</span><span class="n">idof</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">istate</span><span class="p">,</span> <span class="n">istate</span><span class="p">,</span> <span class="n">grad</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">idof</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span>                
+    
+                    
+    <span class="k">return</span> <span class="n">obj</span></div>
+
+
+<div class="viewcode-block" id="dftb_distribute"><a class="viewcode-back" href="../../reference/libra_py/DFTB_methods.html#libra_py.DFTB_methods.dftb_distribute">[docs]</a><span class="k">def</span> <span class="nf">dftb_distribute</span><span class="p">(</span> <span class="n">istep</span><span class="p">,</span> <span class="n">fstep</span><span class="p">,</span> <span class="n">nsteps_this_job</span><span class="p">,</span> <span class="n">trajectory_xyz_file</span><span class="p">,</span> <span class="n">dftb_input</span><span class="p">,</span> <span class="n">waveplot_input</span><span class="p">,</span> <span class="n">curr_job_number</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Distributes dftb jobs for trivial parallelization </span>
+
+<span class="sd">    Make sure that your dftb input file has absolute paths to the following input parameters:</span>
+
+<span class="sd">        SlaterKosterFiles = Type2FileNames {</span>
+<span class="sd">          Prefix = &quot;/panasas/scratch/grp-alexeyak/brendan/dftbp_development/&quot;</span>
+<span class="sd">          Separator = &quot;-&quot;</span>
+<span class="sd">          Suffix = &quot;.skf&quot;</span>
+<span class="sd">        }</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        </span>
+<span class="sd">        istep (integer): The initial time step in the trajectory xyz file.</span>
+
+<span class="sd">        fstep (integer): The final time step in the trajectory xyz file.</span>
+
+<span class="sd">        nsteps_this_job (integer): The number of steps for this job.</span>
+
+<span class="sd">        trajectory_xyz_file (string): The full path to trajectory xyz file.</span>
+
+<span class="sd">        dftb_input (string): the dftb_input_template.hsd file</span>
+
+<span class="sd">        waveplot_input (string): the input file for the waveplot subpackage of dftbplus for generating cubefiles</span>
+
+<span class="sd">        curr_job_number (integer): The current job number.</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">        None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Now we need to distribute the jobs into job batches</span>
+    <span class="c1"># First, make a working directory where the calculations will take place</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;wd&quot;</span><span class="p">)</span>
+
+    <span class="n">nsteps</span> <span class="o">=</span> <span class="n">fstep</span> <span class="o">-</span> <span class="n">istep</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">njobs</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">nsteps</span> <span class="o">/</span> <span class="n">nsteps_this_job</span> <span class="p">)</span>
+
+    <span class="c1"># Initialize the curr_step to istep</span>
+    <span class="n">curr_step</span> <span class="o">=</span> <span class="n">istep</span>
+
+    <span class="c1"># Make the job directory folders</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;mkdir job&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">curr_job_number</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;job&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">curr_job_number</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="c1"># Copy the trajectory file and input template there</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp ../../&quot;</span><span class="o">+</span><span class="n">trajectory_xyz_file</span><span class="o">+</span><span class="s2">&quot; .&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp ../../&quot;</span><span class="o">+</span><span class="n">dftb_input</span><span class="o">+</span><span class="s2">&quot; .&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp ../../&quot;</span><span class="o">+</span><span class="n">waveplot_input</span><span class="o">+</span><span class="s2">&quot; .&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Now, we need to edit the submit file</span>
+    <span class="c1"># Now, in jobs folder njob, we should do only a certain number of steps</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">nsteps_this_job</span> <span class="p">):</span>
+
+        <span class="c1"># extract the curr_step xyz coordianates from the trajectory file and write it to another xyz file</span>
+        <span class="n">CP2K_methods</span><span class="o">.</span><span class="n">read_trajectory_xyz_file</span><span class="p">(</span> <span class="n">trajectory_xyz_file</span><span class="p">,</span> <span class="n">curr_step</span> <span class="p">)</span>
+        <span class="n">curr_step</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># Go back to the main directory</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;../../&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_dftb_ks_energies"><a class="viewcode-back" href="../../reference/libra_py/DFTB_methods.html#libra_py.DFTB_methods.get_dftb_ks_energies">[docs]</a><span class="k">def</span> <span class="nf">get_dftb_ks_energies</span><span class="p">(</span> <span class="n">params</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function reads the band.out file generated from a dftb+ computations. The band.out file</span>
+<span class="sd">    stores the ks energies and their occupation. </span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">        E (1D numpy array): The vector consisting of the KS energies from min_band to max_band.</span>
+<span class="sd">        </span>
+<span class="sd">        total_energy (float): The total energy obtained from the log file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span> 
+
+    <span class="c1"># Critical parameters</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;logfile_name&quot;</span><span class="p">,</span> <span class="s2">&quot;min_band&quot;</span><span class="p">,</span> <span class="s2">&quot;max_band&quot;</span> <span class="p">]</span>
+    <span class="c1"># Default parameters</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;time&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;spin&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+    <span class="c1"># Check input</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="n">dftb_outfile_name</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;logfile_name&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Time step, for molecular dynamics it will read the energies</span>
+    <span class="c1"># of time step &#39;time&#39;, but for static calculations the time is set to 0</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span>
+
+    <span class="c1"># The minimum state number</span>
+    <span class="n">min_band</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;min_band&quot;</span><span class="p">]</span> <span class="c1"># ks_orbital_indicies[0]</span>
+    <span class="c1"># The maximum state number</span>
+    <span class="n">max_band</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;max_band&quot;</span><span class="p">]</span> <span class="c1"># ks_orbital_indicies[-1]</span>
+
+    <span class="n">spin</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;spin&quot;</span><span class="p">]</span>
+
+    <span class="c1"># First openning the file and reading its lines</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span> <span class="n">dftb_outfile_name</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span> <span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># The lines containing the energies of the occupied states</span>
+    <span class="n">occ_energies</span>   <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># The lines containing the energies of the unoccupied states</span>
+    <span class="n">unocc_energies</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Set the total energy to zero</span>
+    <span class="n">total_energy</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="c1"># For the dftb output file band.out, start from line 1</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)):</span>
+
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">min_band</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">max_band</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+   
+            <span class="n">b</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="n">occ_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">ev2Ha</span> <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">unocc_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">ev2Ha</span> <span class="p">)</span>
+
+    <span class="c1"># Turn them into numpy arrays</span>
+    <span class="n">occ_energies</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">occ_energies</span><span class="p">)</span>
+    <span class="n">unocc_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">unocc_energies</span><span class="p">)</span>
+    <span class="c1"># Concatenate the occupied and unoccpied energies so we can choose from min_band to max_band</span>
+    <span class="n">ks_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span> <span class="p">(</span><span class="n">occ_energies</span><span class="p">,</span> <span class="n">unocc_energies</span><span class="p">)</span> <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ks_energies&quot;</span><span class="p">,</span> <span class="n">ks_energies</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ks_energies</span><span class="p">,</span> <span class="n">total_energy</span>       </div>
+
+
+
+
+<div class="viewcode-block" id="cube_generator_dftbplus"><a class="viewcode-back" href="../../reference/libra_py/DFTB_methods.html#libra_py.DFTB_methods.cube_generator_dftbplus">[docs]</a><span class="k">def</span> <span class="nf">cube_generator_dftbplus</span><span class="p">(</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">min_band</span><span class="p">,</span> <span class="n">max_band</span><span class="p">,</span> <span class="n">waveplot_exe</span><span class="p">,</span> <span class="n">isUKS</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function generates the cube files by first forming the &#39;fchk&#39; file from &#39;chk&#39; file.</span>
+<span class="sd">    Then it will generate the cube files from min_band to max_band the same as CP2K naming.</span>
+<span class="sd">    This will helps us to use the read_cube and integrate_cube functions easier.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        project_name (string): The project_name.</span>
+
+<span class="sd">        time_step (integer): The time step.</span>
+
+<span class="sd">        min_band (integer): The minimum state number.</span>
+
+<span class="sd">        max_band (integer): The maximum state number.</span>
+
+<span class="sd">        waveplot_exe (str): Location of the executable for the waveplot program of the dftb+ software package</span>
+
+<span class="sd">        isUKS (integer): The unrestricted spin calculation flag. 1 is for spin unrestricted calculations.</span>
+<span class="sd">                         Other numbers are for spin restricted calculations</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">        None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Make the cubefiles. For dftb+, this simply means executing the waveplot program</span>
+    <span class="c1"># The min and max band are already defind in the waveplot template. So, we just use </span>
+    <span class="c1"># them here for renaming the cubefiles</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">waveplot_exe</span><span class="p">)</span>
+
+    <span class="c1"># For now, only spin-restricted</span>
+    <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">min_band</span><span class="p">,</span><span class="n">max_band</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># Use cp2k names because the rest of the code expects this format</span>
+        <span class="n">state_name</span> <span class="o">=</span> <span class="n">CP2K_methods</span><span class="o">.</span><span class="n">state_num_cp2k</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="n">cube_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">-WFN_</span><span class="si">%s</span><span class="s1">_1-1_0.cube&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">state_name</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Renaming cube for state </span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">state</span><span class="p">)</span>
+        <span class="c1"># Now, rename the cubefile from what waveplots calls it to the standard format</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;mv *&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;-real.cube &quot;</span><span class="o">+</span><span class="n">cube_name</span><span class="p">)</span></div>
+
+
+
+
+<div class="viewcode-block" id="read_dftbplus_TRA_file"><a class="viewcode-back" href="../../reference/libra_py/DFTB_methods.html#libra_py.DFTB_methods.read_dftbplus_TRA_file">[docs]</a><span class="k">def</span> <span class="nf">read_dftbplus_TRA_file</span><span class="p">(</span> <span class="n">params</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function reads TRA.dat files generated from TD-DFTB calculations using DFTB+ and returns </span>
+<span class="sd">    the TD-DFTB excitation energies and CI-like coefficients</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        params ( dictionary ): parameters dictionary </span>
+<span class="sd">        </span>
+<span class="sd">            logfile_name ( string ): this is actualyl the TRA.dat file, but we keep it as logfile_name for ease, as many other similar</span>
+<span class="sd">                                     type functions (for cp2k, gaussian) rely on this format internally.</span>
+<span class="sd">            number_of_states ( int ): how many ci states to consider</span>
+<span class="sd">            tolerance ( float ): the tolerance for accepting SDs are members of the CI wavefunctions           </span>
+<span class="sd">            isUKS ( Boolean ): flag for whether or not a spin-polarized Kohn-Sham basis is being used. TRUE means</span>
+<span class="sd">                               that a spin-polarized Kohn-Sham basis is being used.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        excitation_energies ( list ): The excitation energies in the log file.      </span>
+<span class="sd">        ci_basis ( list ): The CI-basis configuration.</span>
+<span class="sd">        ci_coefficients ( list ): The coefficients of the CI-states.</span>
+<span class="sd">        spin_components (list): The spin component of the excited states.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Critical parameters</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;logfile_name&quot;</span><span class="p">,</span> <span class="s2">&quot;number_of_states&quot;</span> <span class="p">]</span>
+    <span class="c1"># Default parameters</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;tolerance&quot;</span><span class="p">:</span><span class="mf">0.001</span><span class="p">,</span> <span class="s2">&quot;isUKS&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="c1"># Check input</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="n">logfile_name</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;logfile_name&quot;</span><span class="p">]</span>
+    <span class="n">number_of_states</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;number_of_states&quot;</span><span class="p">])</span>
+    <span class="n">tolerance</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;tolerance&quot;</span><span class="p">])</span>
+    <span class="n">isUKS</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;isUKS&quot;</span><span class="p">])</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span> <span class="n">logfile_name</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span> <span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># Make lists for excitation energies and the lines where the keyword &quot;Energy&quot; is</span>
+    <span class="n">excitation_energies</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">energy_lines</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="p">):</span>
+        <span class="n">tmp_line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s1">&#39;Energy&#39;</span> <span class="ow">in</span> <span class="n">tmp_line</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Energy&quot;</span><span class="p">)</span>
+            <span class="c1"># When found the line in which contains &#39;Energy&#39;</span>
+            <span class="n">excitation_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp_line</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="p">)</span>
+            <span class="n">energy_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span> <span class="n">energy_lines</span> <span class="p">)</span> <span class="o">==</span> <span class="n">number_of_states</span><span class="p">:</span>
+            <span class="k">break</span> 
+
+    <span class="c1">#print( energy_lines )</span>
+    <span class="c1">#sys.exit(0)   </span>
+
+    <span class="c1"># Obtain CI-like coefficients</span>
+    <span class="c1"># Spin-unpolarized only as of 11/6/2020</span>
+    <span class="c1"># Start from 4 lines after finding the line contaning &#39;Energy&#39;. This is how it is in DFTB v. 19.1</span>
+    <span class="n">nlines_to_skip</span> <span class="o">=</span> <span class="mi">4</span>
+
+    <span class="n">ci_basis</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ci_coefficients</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">spin_components</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">energy_lines</span><span class="p">:</span>
+
+        <span class="n">tmp_spin</span>  <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp_state</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp_state_coefficients</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">i</span> <span class="o">+</span> <span class="n">nlines_to_skip</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">tmp_line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">tmp_line</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ci_coefficient</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span> <span class="n">tmp_line</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="p">)</span>
+                <span class="k">if</span> <span class="n">ci_coefficient</span><span class="o">**</span><span class="mi">2</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+                    <span class="n">tmp_spin</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s2">&quot;alp&quot;</span> <span class="p">)</span>
+                    <span class="n">tmp_state</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">[</span> <span class="nb">int</span><span class="p">(</span> <span class="n">tmp_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">),</span> <span class="nb">int</span><span class="p">(</span> <span class="n">tmp_line</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="p">)</span> <span class="p">]</span>  <span class="p">)</span>
+                    <span class="n">tmp_state_coefficients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">ci_coefficient</span>  <span class="p">)</span>
+
+        <span class="c1"># Append the CI-basis and and their coefficients for</span>
+        <span class="c1"># this state into the ci_basis and ci_coefficients lists</span>
+        <span class="n">ci_basis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">tmp_state</span> <span class="p">)</span>
+        <span class="n">ci_coefficients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">tmp_state_coefficients</span> <span class="p">)</span>
+        <span class="n">spin_components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">tmp_spin</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">excitation_energies</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">number_of_states</span><span class="p">],</span> <span class="n">ci_basis</span><span class="p">,</span> <span class="n">ci_coefficients</span><span class="p">,</span> <span class="n">spin_components</span></div>
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

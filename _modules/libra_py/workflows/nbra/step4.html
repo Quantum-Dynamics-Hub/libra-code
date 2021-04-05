@@ -1,0 +1,890 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.workflows.nbra.step4 &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.workflows.nbra.step4</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.workflows.nbra.step4</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#* Copyright (C) 2017-2019 Brendan A. Smith, Wei Li, Alexey V. Akimov</span>
+<span class="c1">#*</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+<span class="c1">#</span>
+<span class="c1">#  </span>
+<span class="c1">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">.. module:: step4</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements functions for running TSH calculations within the NBRA</span>
+<span class="sd">       Example:    </span>
+
+<span class="sd">       # Regular NBRA-NA-MD:</span>
+
+<span class="sd">       &gt;&gt;&gt; import step4</span>
+<span class="sd">       &gt;&gt;&gt; Hvib = step4.get_Hvib2(params)  # get the Hvib for all data sets</span>
+<span class="sd">       &gt;&gt;&gt; step4.transform_data(Hvib, {})  # default parameters don&#39;t change data</span>
+<span class="sd">       &gt;&gt;&gt; step4.run(Hvib, params)         # this ```params``` could be the same or different from the above</span>
+
+<span class="sd">       # On-the-fly QSH-NA-MD:</span>
+
+<span class="sd">       &gt;&gt;&gt; import step4</span>
+<span class="sd">       &gt;&gt;&gt; import qsh</span>
+<span class="sd">       &gt;&gt;&gt; Hvib = qsh.run(qsh_params)      # generate the QSH Hvib data sets, see the ```qsh.run()``` for </span>
+<span class="sd">       &gt;&gt;&gt;                                 # the description of the ```qsh_params``` parameters</span>
+<span class="sd">       &gt;&gt;&gt; step4.transform_data(Hvib, {})  # default parameters don&#39;t change data</span>
+<span class="sd">       &gt;&gt;&gt; step4.run(Hvib, params)         # </span>
+
+
+<span class="sd">.. moduleauthor:: Brendan A. Smith, Wei Li, Alexey V. Akimov</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">cmath</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1">#import libra_py.common_utils as comn</span>
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+
+<span class="kn">import</span> <span class="nn">libra_py.data_read</span> <span class="k">as</span> <span class="nn">data_read</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">decoherence_times</span> <span class="k">as</span> <span class="n">dectim</span>
+<span class="kn">import</span> <span class="nn">libra_py.tsh</span> <span class="k">as</span> <span class="nn">tsh</span>
+<span class="kn">import</span> <span class="nn">libra_py.tsh_stat</span> <span class="k">as</span> <span class="nn">tsh_stat</span>
+<span class="kn">import</span> <span class="nn">libra_py.units</span> <span class="k">as</span> <span class="nn">units</span>
+
+
+<div class="viewcode-block" id="get_Hvib"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/step4.html#libra_py.workflows.nbra.step4.get_Hvib">[docs]</a><span class="k">def</span> <span class="nf">get_Hvib</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read a single set of vibronic Hamiltonian files </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        params ( dictionary ): parameters controlling the function execution</span>
+
+<span class="sd">            Required parameter keys:</span>
+
+<span class="sd">            * **params[&quot;nstates&quot;]** ( int ): how many lines/columns in the file [Required!]</span>
+<span class="sd">            * **params[&quot;nfiles&quot;]** ( int ): how many files to read, starting from index 0 [Required!]</span>
+<span class="sd">            * **params[&quot;Hvib_re_prefix&quot;]** ( string ): prefixes of the files with real part of the Hvib(t) [Required!]</span>
+<span class="sd">            * **params[&quot;Hvib_im_prefix&quot;]** ( string ): prefixes of the files with imaginary part of the Hvib(t) [Required!]</span>
+<span class="sd">            * **params[&quot;active_space&quot;]** ( list of ints ): the indices of the states we care </span>
+<span class="sd">                about. These indices will be used to determine the size of the created CMATRIX objects</span>
+<span class="sd">                and only these states will be extracted from the original files [ default: range(nstates) ]</span>
+<span class="sd">            * **params[&quot;Hvib_re_suffix&quot;]** ( string ): suffixes of the files with real part of the Hvib(t) [default: &quot;_re&quot;]</span>
+<span class="sd">            * **params[&quot;Hvib_im_suffix&quot;]** ( string ): suffixes of the files with imaginary part of the Hvib(t) [default: &quot;_im&quot;]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list of CMATRIX objects: Hvib: </span>
+<span class="sd">            a time series of Hvib matrices, such that Hvib[time] is a Hvib at time step `time`</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        This example will read 10 pairs of files: &quot;Hvib_0_re&quot;, &quot;Hvib_0_im&quot;, &quot;Hvib_1_re&quot;, &quot;Hvib_1_im&quot;, ...</span>
+<span class="sd">        &quot;Hvib_9_re&quot;, &quot;Hvib_9_im&quot;. Each file should contain a 4 x 4 matrix of numbers. It will generate a </span>
+<span class="sd">        list of 4 x 4 complex-valued matrices.</span>
+
+<span class="sd">        &gt;&gt;&gt; hvib = get_Hvib({&quot;nstates&quot;:4, &quot;nfiles&quot;:10, &quot;Hvib_re_prefix&quot;:&quot;Hvib&quot;, &quot;Hvib_im_prefix&quot;:&quot;Hvib&quot;})</span>
+
+
+<span class="sd">        The following example will do the same as the example above, however the intially-read 4 x 4 matrices will</span>
+<span class="sd">        be partially discarded. Out of 16 values only 4 (the upper left block of 4 numbers)  will be stored in </span>
+<span class="sd">        the resulting list of 2 x 2 complex-valued matrices. </span>
+
+<span class="sd">        &gt;&gt;&gt; hvib = get_Hvib({&quot;nstates&quot;:4, &quot;nfiles&quot;:10, &quot;Hvib_re_prefix&quot;:&quot;Hvib&quot;, &quot;Hvib_im_prefix&quot;:&quot;Hvib&quot;, &quot;active_space&quot;:[0,1]})</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;nstates&quot;</span><span class="p">,</span> <span class="s2">&quot;nfiles&quot;</span><span class="p">,</span> <span class="s2">&quot;Hvib_re_prefix&quot;</span><span class="p">,</span> <span class="s2">&quot;Hvib_im_prefix&quot;</span><span class="p">]</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;Hvib_re_suffix&quot;</span><span class="p">:</span><span class="s2">&quot;_re&quot;</span><span class="p">,</span> <span class="s2">&quot;Hvib_im_suffix&quot;</span><span class="p">:</span><span class="s2">&quot;_im&quot;</span><span class="p">,</span> <span class="s2">&quot;active_space&quot;</span><span class="p">:</span><span class="nb">range</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;nstates&quot;</span><span class="p">])}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;nstates&quot;</span><span class="p">]</span>  <span class="c1"># the number of states in the input files</span>
+
+    <span class="c1"># init_time</span>
+    <span class="n">init_time</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;init_times&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">Hvib</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># The previous was based on nfiles now it is based on the initial time and starts from init_time</span>
+    <span class="c1"># for i in range(0,params[&quot;nfiles&quot;]):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">init_time</span><span class="p">,</span> <span class="n">init_time</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;nfiles&quot;</span><span class="p">]):</span>
+
+        <span class="n">filename_re</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;Hvib_re_prefix&quot;</span><span class="p">]</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;Hvib_re_suffix&quot;</span><span class="p">]</span>
+        <span class="n">filename_im</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;Hvib_im_prefix&quot;</span><span class="p">]</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;Hvib_im_suffix&quot;</span><span class="p">]</span>
+        <span class="n">hvib</span> <span class="o">=</span> <span class="n">data_read</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">,</span> <span class="n">filename_re</span><span class="p">,</span> <span class="n">filename_im</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;active_space&quot;</span><span class="p">]</span> <span class="p">)</span> 
+        <span class="n">Hvib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hvib</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Hvib</span></div>
+
+
+<div class="viewcode-block" id="get_Hvib2"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/step4.html#libra_py.workflows.nbra.step4.get_Hvib2">[docs]</a><span class="k">def</span> <span class="nf">get_Hvib2</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads several sets of vibronic Hamiltonian files </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        params ( dictionary ): parameters controlling the function execution [Required!]</span>
+
+<span class="sd">            Required parameter keys:</span>
+
+<span class="sd">            * **params[&quot;data_set_paths&quot;]** ( list of strings ):</span>
+<span class="sd">                define the paths of the directories where the vibronic Hamiltonian files for</span>
+<span class="sd">                different data sets (e.g. independent MD trajectories) are located. </span>
+<span class="sd">            .. note::</span>
+<span class="sd">                In addition, requires parameters described in</span>
+<span class="sd">                :func:`libra_py.workflows.nbra.step4.getHvib`</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list of lists of CMATRIX: Hvib: </span>
+<span class="sd">            the time series of Hvib matrices for several data sets, such that</span>
+<span class="sd">            Hvib[idata][time] is a CMATRIX for the data set indexed by `idata`</span>
+<span class="sd">            at time `time`</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        The full name of the vibronic Hamiltonian files read by this module should be:</span>
+<span class="sd">    </span>
+<span class="sd">        params[&quot;data_set_paths&quot;][idata]+params[&quot;Hvib_re_prefix&quot;]+integer(time step)+params[&quot;Hvib_re_suffix&quot;] - for real part</span>
+
+<span class="sd">        params[&quot;data_set_paths&quot;][idata]+params[&quot;Hvib_im_prefix&quot;]+integer(time step)+params[&quot;Hvib_im_suffix&quot;] - for imaginary part</span>
+
+<span class="sd">        Say, the directory &quot;/home/alexeyak/test/step3/res0&quot; contains files:</span>
+<span class="sd">        Hvib_0_re, Hvib_1_re, .... ,    Hvib_999_re</span>
+<span class="sd">        Hvib_0_im, Hvib_1_im, .... ,    Hvib_999_im</span>
+
+<span class="sd">        Then set:</span>
+
+<span class="sd">        &gt;&gt;&gt; params[&quot;data_set_paths&quot;] = [&quot;/home/alexeyak/test/step3/res0/&quot;]</span>
+<span class="sd">        &gt;&gt;&gt; params[&quot;Hvib_re_prefix&quot;] = &quot;Hvib_&quot;</span>
+<span class="sd">        &gt;&gt;&gt; params[&quot;Hvib_re_suffix&quot;] = &quot;_re&quot;</span>
+<span class="sd">        &gt;&gt;&gt; params[&quot;Hvib_im_prefix&quot;] = &quot;Hvib_&quot;</span>
+<span class="sd">        &gt;&gt;&gt; params[&quot;Hvib_im_suffix&quot;] = &quot;_im&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;data_set_paths&quot;</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="n">H_vib</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">idata</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;data_set_paths&quot;</span><span class="p">]:</span>   <span class="c1"># over all MD trajectories (data sets)</span>
+        <span class="n">prms</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>    
+        <span class="n">prms</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;Hvib_re_prefix&quot;</span><span class="p">:</span> <span class="n">idata</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;Hvib_re_prefix&quot;</span><span class="p">]</span> <span class="p">})</span>
+        <span class="n">prms</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;Hvib_im_prefix&quot;</span><span class="p">:</span> <span class="n">idata</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;Hvib_im_prefix&quot;</span><span class="p">]</span> <span class="p">})</span>                
+
+        <span class="n">h_vib</span> <span class="o">=</span> <span class="n">get_Hvib</span><span class="p">(</span><span class="n">prms</span><span class="p">)</span>  
+        <span class="n">H_vib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h_vib</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">H_vib</span></div>
+
+
+
+<div class="viewcode-block" id="traj_statistics"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/step4.html#libra_py.workflows.nbra.step4.traj_statistics">[docs]</a><span class="k">def</span> <span class="nf">traj_statistics</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">Coeff</span><span class="p">,</span> <span class="n">istate</span><span class="p">,</span> <span class="n">Hvib</span><span class="p">,</span> <span class="n">itimes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the averages over the TSH-ensembles</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        i ( int ): timestep index, counting since the beginning of the current sub-trajectory</span>
+<span class="sd">        Coeff ( list of ntraj CMATRIX(nstates,1) object ): the TD-SE amplitudes for all trajectories</span>
+<span class="sd">            (data sets/initial times/stochastic realizations)</span>
+
+<span class="sd">        istate ( list of ntraj integers ): indices of the active states for each trajectory </span>
+<span class="sd">            (data sets/initial times/stochastic realizations)</span>
+
+<span class="sd">        Hvib ( list of lists of CMATRIX(nstates,nstates) ): Hamiltonians for all data sets </span>
+<span class="sd">            and all (not just a sub-set of data!) timesteps</span>
+<span class="sd">        itimes ( list of ints ): indices of the NA-MD starting points (in the global data indexing scale)</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        MATRIX(1, 3*nstates+4): the trajectory (and initial-condition)-averaged observables,</span>
+<span class="sd">            the assumed format is: </span>
+
+<span class="sd">            First state info        ...          N-st state info All-states-related data</span>
+
+<span class="sd">            E(0), P_SE(0), P_SH(0), ...,   E(nst-1), P_SE(nst-1), P_SH(nst-1), &lt;E*P_SE&gt;, &lt;E*P_SH&gt;, sum{P_SE}, sum{P_SH}</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#================ Dimensions ==================</span>
+    <span class="n">Ntraj</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Coeff</span><span class="p">)</span>               <span class="c1"># total number of trajectory = data set size x number of init times x number of SH trajectories</span>
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">Coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_rows</span>   <span class="c1"># the number of states</span>
+    <span class="n">ndata</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Hvib</span><span class="p">)</span>                <span class="c1"># how many data sets</span>
+    <span class="n">nitimes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">itimes</span><span class="p">)</span>            <span class="c1"># how many initial times</span>
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">Ntraj</span><span class="o">/</span><span class="p">(</span><span class="n">ndata</span> <span class="o">*</span> <span class="n">nitimes</span><span class="p">))</span>  <span class="c1"># how many stochastic SH trajectories per data set/initial condition</span>
+
+
+    <span class="c1"># Update SE-derived density matrices</span>
+    <span class="n">denmat_se</span> <span class="o">=</span> <span class="n">tsh_stat</span><span class="o">.</span><span class="n">amplitudes2denmat</span><span class="p">(</span><span class="n">Coeff</span><span class="p">)</span>   <span class="c1"># list of Ntraj CMATRIX elements </span>
+
+    <span class="c1"># Use SE-derived density matrices to make SH-derived density matrices</span>
+    <span class="n">denmat_sh</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">H_vib</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">H_vib_ave</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span><span class="n">nstates</span><span class="p">)</span>  <span class="c1"># Hvib averaged over the data sets/initial times</span>
+
+    <span class="k">for</span> <span class="n">idata</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndata</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">it_indx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nitimes</span><span class="p">):</span>
+            <span class="n">it</span> <span class="o">=</span> <span class="n">itimes</span><span class="p">[</span><span class="n">it_indx</span><span class="p">]</span>
+
+            <span class="n">H_vib_ave</span> <span class="o">=</span> <span class="n">H_vib_ave</span> <span class="o">+</span> <span class="n">Hvib</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">it</span><span class="o">+</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>                
+                <span class="n">Tr</span> <span class="o">=</span> <span class="n">idata</span><span class="o">*</span><span class="p">(</span><span class="n">nitimes</span><span class="o">*</span><span class="n">ntraj</span><span class="p">)</span> <span class="o">+</span> <span class="n">it_indx</span><span class="o">*</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span> <span class="o">+</span> <span class="n">tr</span>
+
+                <span class="n">denmat_sh</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">))</span>
+                <span class="n">denmat_sh</span><span class="p">[</span><span class="n">Tr</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span><span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+                <span class="n">H_vib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CMATRIX</span><span class="p">(</span><span class="n">Hvib</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">it</span><span class="o">+</span><span class="n">i</span><span class="p">]))</span>   
+
+    <span class="n">H_vib_ave</span> <span class="o">*=</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">ndata</span> <span class="o">*</span> <span class="n">nitimes</span><span class="p">))</span>
+
+    <span class="c1"># Update TSH-ensemble-averaged SE and SH populations </span>
+    <span class="n">ave_pop_sh</span><span class="p">,</span> <span class="n">ave_pop_se</span> <span class="o">=</span> <span class="n">tsh_stat</span><span class="o">.</span><span class="n">ave_pop</span><span class="p">(</span><span class="n">denmat_sh</span><span class="p">,</span> <span class="n">denmat_se</span><span class="p">)</span>
+    <span class="n">ave_en_sh</span><span class="p">,</span>  <span class="n">ave_en_se</span>  <span class="o">=</span> <span class="n">tsh_stat</span><span class="o">.</span><span class="n">ave_en</span><span class="p">(</span><span class="n">denmat_sh</span><span class="p">,</span> <span class="n">denmat_se</span><span class="p">,</span> <span class="n">H_vib</span><span class="p">)</span>
+
+    <span class="c1"># Save the computed data into a matrix to be output</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">4</span><span class="p">)</span> 
+   
+    <span class="n">tot_sh</span><span class="p">,</span> <span class="n">tot_se</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="n">H_vib_ave</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>   <span class="c1"># Energy of the state j</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">ave_pop_se</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>  <span class="c1"># SE population</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">ave_pop_sh</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>  <span class="c1"># SH population</span>
+
+        <span class="n">tot_se</span> <span class="o">+=</span> <span class="n">ave_pop_se</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">tot_sh</span> <span class="o">+=</span> <span class="n">ave_pop_sh</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+
+    <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="n">ave_en_se</span><span class="p">)</span>  <span class="c1"># Average SE energy</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">ave_en_sh</span><span class="p">)</span>  <span class="c1"># Average SH energy</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">tot_se</span><span class="p">)</span>     <span class="c1"># Total SE population</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">3</span><span class="p">,</span> <span class="n">tot_sh</span><span class="p">)</span>     <span class="c1"># Total SH population</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+
+<div class="viewcode-block" id="traj_statistics2"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/step4.html#libra_py.workflows.nbra.step4.traj_statistics2">[docs]</a><span class="k">def</span> <span class="nf">traj_statistics2</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">Pop</span><span class="p">,</span> <span class="n">istate</span><span class="p">,</span> <span class="n">Hvib</span><span class="p">,</span> <span class="n">itimes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the averages over the TSH-ensembles</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        i ( int ): timestep index, counting since the beginning of the current sub-trajectory</span>
+<span class="sd">        Pop ( list of ntraj CMATRIX(nstates, 1) object ): the qunatum populations for all trajectories</span>
+<span class="sd">            (data sets/initial times/stochastic realizations)</span>
+
+<span class="sd">        istate ( list of ntraj integers ): indices of the active states for each trajectory </span>
+<span class="sd">            (data sets/initial times/stochastic realizations)</span>
+
+<span class="sd">        Hvib ( list of lists of CMATRIX(nstates,nstates) ): Hamiltonians for all data sets </span>
+<span class="sd">            and all (not just a sub-set of data!) timesteps</span>
+<span class="sd">        itimes ( list of ints ): indices of the NA-MD starting points (in the global data indexing scale)</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        MATRIX(1, 3*nstates+4): the trajectory (and initial-condition)-averaged observables,</span>
+<span class="sd">            the assumed format is: </span>
+
+<span class="sd">            First state info        ...          N-st state info All-states-related data</span>
+
+<span class="sd">            E(0), P_SE(0), P_SH(0), ...,   E(nst-1), P_SE(nst-1), P_SH(nst-1), &lt;E*P_SE&gt;, &lt;E*P_SH&gt;, sum{P_SE}, sum{P_SH}</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#================ Dimensions ==================</span>
+    <span class="n">Ntraj</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Pop</span><span class="p">)</span>                 <span class="c1"># total number of trajectory = data set size x number of init times x number of SH trajectories</span>
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">Pop</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_rows</span>     <span class="c1"># the number of states</span>
+    <span class="n">ndata</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Hvib</span><span class="p">)</span>                <span class="c1"># how many data sets</span>
+    <span class="n">nitimes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">itimes</span><span class="p">)</span>            <span class="c1"># how many initial times</span>
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">Ntraj</span><span class="o">/</span><span class="p">(</span><span class="n">ndata</span> <span class="o">*</span> <span class="n">nitimes</span><span class="p">))</span>  <span class="c1"># how many stochastic SH trajectories per data set/initial condition</span>
+
+
+    <span class="c1"># Update SE-derived density matrices</span>
+    <span class="n">denmat_se</span> <span class="o">=</span> <span class="n">tsh_stat</span><span class="o">.</span><span class="n">pops2denmat</span><span class="p">(</span><span class="n">Pop</span><span class="p">)</span>   <span class="c1"># list of Ntraj CMATRIX(nstates,nstates) elements </span>
+
+    <span class="c1"># Update the SH-derived density matrices</span>
+    <span class="n">denmat_sh</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">H_vib</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">H_vib_ave</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span><span class="n">nstates</span><span class="p">)</span>  <span class="c1"># Hvib averaged over the data sets/initial times</span>
+
+    <span class="k">for</span> <span class="n">idata</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndata</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">it_indx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nitimes</span><span class="p">):</span>
+            <span class="n">it</span> <span class="o">=</span> <span class="n">itimes</span><span class="p">[</span><span class="n">it_indx</span><span class="p">]</span>
+
+            <span class="n">H_vib_ave</span> <span class="o">=</span> <span class="n">H_vib_ave</span> <span class="o">+</span> <span class="n">Hvib</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">it</span><span class="o">+</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>                
+                <span class="n">Tr</span> <span class="o">=</span> <span class="n">idata</span><span class="o">*</span><span class="p">(</span><span class="n">nitimes</span><span class="o">*</span><span class="n">ntraj</span><span class="p">)</span> <span class="o">+</span> <span class="n">it_indx</span><span class="o">*</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span> <span class="o">+</span> <span class="n">tr</span>
+
+                <span class="n">denmat_sh</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">))</span>
+                <span class="n">denmat_sh</span><span class="p">[</span><span class="n">Tr</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span><span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+                <span class="n">H_vib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CMATRIX</span><span class="p">(</span><span class="n">Hvib</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">it</span><span class="o">+</span><span class="n">i</span><span class="p">]))</span>   
+
+    <span class="n">H_vib_ave</span> <span class="o">*=</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">ndata</span> <span class="o">*</span> <span class="n">nitimes</span><span class="p">))</span>
+
+    <span class="c1"># Update TSH-ensemble-averaged SE and SH populations </span>
+    <span class="n">ave_pop_sh</span><span class="p">,</span> <span class="n">ave_pop_se</span> <span class="o">=</span> <span class="n">tsh_stat</span><span class="o">.</span><span class="n">ave_pop</span><span class="p">(</span><span class="n">denmat_sh</span><span class="p">,</span> <span class="n">denmat_se</span><span class="p">)</span>
+    <span class="n">ave_en_sh</span><span class="p">,</span>  <span class="n">ave_en_se</span>  <span class="o">=</span> <span class="n">tsh_stat</span><span class="o">.</span><span class="n">ave_en</span><span class="p">(</span><span class="n">denmat_sh</span><span class="p">,</span> <span class="n">denmat_se</span><span class="p">,</span> <span class="n">H_vib</span><span class="p">)</span>
+
+    <span class="c1"># Save the computed data into a matrix to be output</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">4</span><span class="p">)</span> 
+   
+    <span class="n">tot_sh</span><span class="p">,</span> <span class="n">tot_se</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="n">H_vib_ave</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>   <span class="c1"># Energy of the state j</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">ave_pop_se</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>  <span class="c1"># SE population</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">ave_pop_sh</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>  <span class="c1"># SH population</span>
+
+        <span class="n">tot_se</span> <span class="o">+=</span> <span class="n">ave_pop_se</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">tot_sh</span> <span class="o">+=</span> <span class="n">ave_pop_sh</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+
+    <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="n">ave_en_se</span><span class="p">)</span>  <span class="c1"># Average SE energy</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">ave_en_sh</span><span class="p">)</span>  <span class="c1"># Average SH energy</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">tot_se</span><span class="p">)</span>     <span class="c1"># Total SE population</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">3</span><span class="p">,</span> <span class="n">tot_sh</span><span class="p">)</span>     <span class="c1"># Total SH population</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+
+<div class="viewcode-block" id="traj_statistics2_fast"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/step4.html#libra_py.workflows.nbra.step4.traj_statistics2_fast">[docs]</a><span class="k">def</span> <span class="nf">traj_statistics2_fast</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">Pop</span><span class="p">,</span> <span class="n">istate</span><span class="p">,</span> <span class="n">Hvib</span><span class="p">,</span> <span class="n">itimes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the averages over the TSH-ensembles</span>
+
+<span class="sd">    This version is optimized by removing all the dancing around data </span>
+<span class="sd">    and doing the direct calculations asap - no intermediate massive memory allocation!</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        i ( int ): timestep index, counting since the beginning of the current sub-trajectory</span>
+<span class="sd">        Pop ( list of ntraj CMATRIX(nstates, 1) object ): the quantum populations for all trajectories</span>
+<span class="sd">            (data sets/initial times/stochastic realizations)</span>
+
+<span class="sd">        istate ( list of ntraj integers ): indices of the active states for each trajectory </span>
+<span class="sd">            (data sets/initial times/stochastic realizations)</span>
+
+<span class="sd">        Hvib ( list of lists of CMATRIX(nstates,nstates) ): Hamiltonians for all data sets </span>
+<span class="sd">            and all (not just a sub-set of data!) timesteps</span>
+<span class="sd">        itimes ( list of ints ): indices of the NA-MD starting points (in the global data indexing scale)</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        MATRIX(1, 3*nstates+4): the trajectory (and initial-condition)-averaged observables,</span>
+<span class="sd">            the assumed format is: </span>
+
+<span class="sd">            First state info        ...          N-st state info All-states-related data</span>
+
+<span class="sd">            E(0), P_SE(0), P_SH(0), ...,   E(nst-1), P_SE(nst-1), P_SH(nst-1), &lt;E*P_SE&gt;, &lt;E*P_SH&gt;, sum{P_SE}, sum{P_SH}</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#================ Dimensions ==================</span>
+    <span class="n">Ntraj</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Pop</span><span class="p">)</span>                 <span class="c1"># total number of trajectory = data set size x number of init times x number of SH trajectories</span>
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">Pop</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_rows</span>     <span class="c1"># the number of states</span>
+    <span class="n">ndata</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Hvib</span><span class="p">)</span>                <span class="c1"># how many data sets</span>
+    <span class="n">nitimes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">itimes</span><span class="p">)</span>            <span class="c1"># how many initial times</span>
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">Ntraj</span><span class="o">/</span><span class="p">(</span><span class="n">ndata</span> <span class="o">*</span> <span class="n">nitimes</span><span class="p">))</span>  <span class="c1"># how many stochastic SH trajectories per data set/initial condition</span>
+
+
+    <span class="n">E_adi_ave</span> <span class="o">=</span>  <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># E for each state averaged over the data sets/initial times</span>
+    <span class="n">ave_pop_sh</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># SH populations averaged over the data sets/initial times</span>
+    <span class="n">ave_pop_se</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># SE populations averaged over the data sets/initial times</span>
+    <span class="n">ave_en_sh</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># SH-population-weighted energy</span>
+    <span class="n">ave_en_se</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># SE-population-weighted energy</span>
+
+
+    <span class="c1"># Temporary</span>
+    <span class="n">ene</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">pop</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">idata</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndata</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">it_indx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nitimes</span><span class="p">):</span>
+            <span class="n">it</span> <span class="o">=</span> <span class="n">itimes</span><span class="p">[</span><span class="n">it_indx</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nstates</span><span class="p">):</span>
+                <span class="n">ene</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">Hvib</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">it</span><span class="o">+</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">st</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="p">)</span>
+
+            <span class="n">E_adi_ave</span> <span class="o">+=</span> <span class="n">ene</span>
+
+            <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>                
+                <span class="n">Tr</span> <span class="o">=</span> <span class="n">idata</span><span class="o">*</span><span class="p">(</span><span class="n">nitimes</span><span class="o">*</span><span class="n">ntraj</span><span class="p">)</span> <span class="o">+</span> <span class="n">it_indx</span><span class="o">*</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span> <span class="o">+</span> <span class="n">tr</span>
+
+                <span class="n">ave_pop_sh</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> 
+                <span class="n">ave_en_sh</span> <span class="o">+=</span> <span class="n">ene</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+
+                <span class="n">pop</span> <span class="o">=</span> <span class="n">Pop</span><span class="p">[</span><span class="n">Tr</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">()</span>
+                <span class="n">ave_pop_se</span> <span class="o">+=</span> <span class="n">pop</span>
+                <span class="n">ave_en_se</span> <span class="o">+=</span> <span class="p">(</span><span class="n">ene</span><span class="o">.</span><span class="n">T</span><span class="p">()</span> <span class="o">*</span> <span class="n">pop</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+                
+
+    <span class="n">nrm1</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">ndata</span> <span class="o">*</span> <span class="n">nitimes</span><span class="p">))</span>
+    <span class="n">nrm2</span> <span class="o">=</span> <span class="n">nrm1</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span>
+
+    <span class="n">E_adi_ave</span> <span class="o">*=</span> <span class="n">nrm1</span>
+    <span class="n">ave_pop_sh</span> <span class="o">*=</span> <span class="n">nrm2</span>
+    <span class="n">ave_pop_se</span> <span class="o">*=</span> <span class="n">nrm2</span>
+    <span class="n">ave_en_sh</span> <span class="o">*=</span> <span class="n">nrm2</span>
+    <span class="n">ave_en_se</span> <span class="o">*=</span> <span class="n">nrm2</span>
+
+
+    <span class="c1"># Save the computed data into a matrix to be output</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">4</span><span class="p">)</span> 
+   
+    <span class="n">tot_sh</span><span class="p">,</span> <span class="n">tot_se</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="n">E_adi_ave</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>   <span class="c1"># Energy of the state j</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">ave_pop_se</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>  <span class="c1"># SE population</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">ave_pop_sh</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>  <span class="c1"># SH population</span>
+
+        <span class="n">tot_se</span> <span class="o">+=</span> <span class="n">ave_pop_se</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">tot_sh</span> <span class="o">+=</span> <span class="n">ave_pop_sh</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="n">ave_en_se</span><span class="p">)</span>  <span class="c1"># Average SE energy</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">ave_en_sh</span><span class="p">)</span>  <span class="c1"># Average SH energy</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">tot_se</span><span class="p">)</span>     <span class="c1"># Total SE population</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">3</span><span class="p">,</span> <span class="n">tot_sh</span><span class="p">)</span>     <span class="c1"># Total SH population</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+
+<div class="viewcode-block" id="printout"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/step4.html#libra_py.workflows.nbra.step4.printout">[docs]</a><span class="k">def</span> <span class="nf">printout</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function does a simple output of a matrix columns to a file</span>
+
+<span class="sd">    Args:    </span>
+<span class="sd">        t ( double ): time [units: a.u.] </span>
+<span class="sd">        res ( MATRIX(1,N) ): information to be printed out</span>
+<span class="sd">        outfile ( string ): filename where we&#39;ll print everything out, the output </span>
+<span class="sd">            will be appended to the existing output file</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: but modifies the file</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%8.5f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="si">%8.5f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">))</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> 
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+
+<div class="viewcode-block" id="run"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/step4.html#libra_py.workflows.nbra.step4.run">[docs]</a><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">H_vib</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    </span>
+<span class="sd">    The main procedure to run NA-MD calculations within the NBRA workflow</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        H_vib ( list of lists of CMATRIX objects ): the vibronic Hamiltonian for all data sets and all time-points</span>
+<span class="sd">            H_vib[idata][istep].get(i,j) - i,j matrix element for the data set `idata` and step in that data set `istep`</span>
+<span class="sd">    </span>
+<span class="sd">        params ( dictionary ): the parameters that control the execution of the NA-MD-NBRA calculations</span>
+
+<span class="sd">            * **params[&quot;nsteps&quot;]** ( int ): the length of the NA-MD trajectory. This parameter is not </span>
+<span class="sd">                necessarily the same as len(H_vib[0]), so need to be provided [Required!] </span>
+
+<span class="sd">            * **params[&quot;T&quot;]** ( double ): temperature of nuclear/electronic dynamics [in K, default: 300.0]</span>
+<span class="sd">            * **params[&quot;ntraj&quot;]** ( int ): the number of stochastic surface hopping trajectories [default: 1]</span>
+<span class="sd">            * **params[&quot;tdse_Ham&quot;]** ( int ): option to select either the regular (input) or Boltzmann-corrected</span>
+<span class="sd">                Hamiltonian:</span>
+
+<span class="sd">                - 0 - regular [ default ]</span>
+<span class="sd">                - 1 - Boltzmann-corrected </span>
+
+<span class="sd">            * **params[&quot;Hvib_type&quot;]** ( int ): option to select if the Hvib is a diabatic or an adiabatic</span>
+<span class="sd">                Hamiltonian:</span>
+
+<span class="sd">                - 0 - diabatic</span>
+<span class="sd">                - 1 - adiabatic  [ default ]</span>
+
+<span class="sd">            * **params[&quot;sh_method&quot;]** ( int ): selects the algorithm to compute surface hopping probabilities </span>
+<span class="sd">                Options:</span>
+
+<span class="sd">                - 0 - MSSH</span>
+<span class="sd">                - 1 - FSSH [ default ]</span>
+
+<span class="sd">            * **params[&quot;decoherence_constants&quot;]** ( int ): selects whether to compute decoherence parameters</span>
+<span class="sd">                on the fly or to use provided parameters:</span>
+
+<span class="sd">                - 0 - pre-compute the parameters from the trajectory data before NA-MD run [ default ]</span>
+<span class="sd">                - 1 - use the provided parameters ..seealso:: ```params[&quot;decoherence_times&quot;]``` and ```params[&quot;decoherence_rates&quot;]```</span>
+<span class="sd">                - 20 - use the time-dependent decoherence times as in DISH paper. This is different from</span>
+<span class="sd">                    option 0 in that these numbers depend on the state amplitudes. Dephasing times are computed as in 0.</span>
+<span class="sd">                - 21 - use the time-dependent decoherence times as in DISH paper. This is different from</span>
+<span class="sd">                    option 0 in that these numbers depend on the state amplitudes. Dephasing times are computed as in 1.</span>
+
+
+<span class="sd">            * **params[&quot;decoherence_times&quot;]** ( MATRIX(nstates,nstates) ): decoherence times for all </span>
+<span class="sd">                pairs of states. This should be provided if ``` params[&quot;decoherence_constants&quot;] == 1``` the dimensions should be</span>
+<span class="sd">                consistent with those of the input Hvib data. [ units: a.u. of time ]</span>
+<span class="sd">             </span>
+
+<span class="sd">            * **params[&quot;decoherence_method&quot;]** ( int ): selects the decoherence method </span>
+<span class="sd">                Options:</span>
+
+<span class="sd">                - 0 - no decoherence [ default ]</span>
+<span class="sd">                - 1 - ID-A</span>
+<span class="sd">                - 2 - MSDM</span>
+<span class="sd">                - 3 - DISH</span>
+
+<span class="sd">            * **params[&quot;dt&quot;]** ( double ): nuclear dynamics integration time step [in a.u. of time, default: 41.0]</span>
+<span class="sd">            * **params[&quot;Boltz_opt&quot;]** ( int ): option to select a probability of hopping acceptance [default: 3]</span>
+<span class="sd">                Options:</span>
+
+<span class="sd">                - 0 - all proposed hops are accepted - no rejection based on energies</span>
+<span class="sd">                - 1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)</span>
+<span class="sd">                - 2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous</span>
+<span class="sd">                - 3 - generalization of &quot;1&quot;, but actually it should be changed in case there are many degenerate levels</span>
+
+<span class="sd">            * **params[&quot;istate&quot;]** ( int ): index of the initial state [default: 0]</span>
+<span class="sd">            * **params[&quot;init_times&quot;]** ( list of ints ): indices of the starting point in the provided data arrays [default: [0]]</span>
+<span class="sd">            * **params[&quot;outfile&quot;]** ( string ): the name of the file where to print populations</span>
+<span class="sd">                and energies of states [default: &quot;_out.txt&quot;]    </span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        MATRIX(nsteps, 3*nstates+5): the trajectory (and initial-condition)-averaged observables for every timesteps,</span>
+<span class="sd">            the assumed format is: </span>
+
+<span class="sd">            time, first state info        ...          N-st state info All-states-related data</span>
+
+<span class="sd">            time, E(0), P_SE(0), P_SH(0), ...,   E(nst-1), P_SE(nst-1), P_SH(nst-1), &lt;E*P_SE&gt;, &lt;E*P_SH&gt;, sum{P_SE}, sum{P_SH}</span>
+
+<span class="sd">     </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;nsteps&quot;</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span><span class="mf">300.0</span><span class="p">,</span> <span class="s2">&quot;ntraj&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+                       <span class="s2">&quot;tdse_Ham&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;sh_method&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;decoherence_constants&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;decoherence_method&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span><span class="mf">41.0</span><span class="p">,</span> <span class="s2">&quot;Boltz_opt&quot;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span>
+                       <span class="s2">&quot;Hvib_type&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+                       <span class="s2">&quot;istate&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;init_times&quot;</span><span class="p">:[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;outfile&quot;</span><span class="p">:</span><span class="s2">&quot;_out.txt&quot;</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+
+    <span class="n">rnd</span> <span class="o">=</span> <span class="n">Random</span><span class="p">()</span>
+
+    <span class="n">ndata</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">H_vib</span><span class="p">)</span>
+    <span class="n">nsteps</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;nsteps&quot;</span><span class="p">]</span>
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">H_vib</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>  <span class="c1"># number of states</span>
+
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;ntraj&quot;</span><span class="p">]</span>
+    <span class="n">nitimes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;init_times&quot;</span><span class="p">])</span>
+    <span class="n">Ntraj</span> <span class="o">=</span> <span class="n">ndata</span> <span class="o">*</span> <span class="n">nitimes</span> <span class="o">*</span> <span class="n">ntraj</span>
+
+    <span class="n">T</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">]</span>
+    <span class="n">bolt_opt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;Boltz_opt&quot;</span><span class="p">]</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span>
+    <span class="n">tdse_Ham</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;tdse_Ham&quot;</span><span class="p">]</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nsteps</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">5</span><span class="p">)</span>
+
+
+    <span class="c1">#========== Compute PARAMETERS  ===============</span>
+    <span class="c1"># Decoherence times</span>
+    <span class="c1"># these are actually the dephasing rates!</span>
+    <span class="n">tau</span><span class="p">,</span> <span class="n">dephasing_rates</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;decoherence_constants&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;decoherence_constants&quot;</span><span class="p">]</span><span class="o">==</span><span class="mi">20</span><span class="p">:</span>
+        <span class="n">tau</span><span class="p">,</span> <span class="n">dephasing_rates</span> <span class="o">=</span> <span class="n">dectim</span><span class="o">.</span><span class="n">decoherence_times_ave</span><span class="p">(</span><span class="n">H_vib</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;init_times&quot;</span><span class="p">],</span> <span class="n">nsteps</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> 
+
+    <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;decoherence_constants&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;decoherence_constants&quot;</span><span class="p">]</span><span class="o">==</span><span class="mi">21</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;decoherence_times&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span> <span class="o">!=</span> <span class="n">nstates</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: dimensions of the input decoherence times matrix are not consistent with </span><span class="se">\</span>
+<span class="s2">                   the dimensions of the Hamiltonian matrices (the number of states). Exiting...</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tau</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;decoherence_times&quot;</span><span class="p">])</span>
+            <span class="n">dephasing_rates</span> <span class="o">=</span> <span class="n">dectim</span><span class="o">.</span><span class="n">decoherence_times2rates</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span>
+
+
+
+    <span class="c1">#========== Initialize the DYNAMICAL VARIABLES  ===============</span>
+    <span class="c1"># TD-SE coefficients and active state indices</span>
+    <span class="n">Coeff</span><span class="p">,</span> <span class="n">istate</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="c1"># Coherence times and coherence intervals for DISH</span>
+    <span class="n">t_m</span><span class="p">,</span> <span class="n">tau_m</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Ntraj</span><span class="p">):</span>
+        <span class="n">istate</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;istate&quot;</span><span class="p">])</span>
+        <span class="n">Coeff</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="mi">1</span><span class="p">));</span> 
+        <span class="n">Coeff</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;istate&quot;</span><span class="p">],</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">t_m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">tau_m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>  
+
+           
+    <span class="c1"># Prepare the output file</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;outfile&quot;</span><span class="p">],</span><span class="s2">&quot;w&quot;</span><span class="p">);</span> <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1">#=============== Entering the DYNAMICS ========================</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nsteps</span><span class="p">):</span>  <span class="c1"># over all evolution times</span>
+
+
+        <span class="c1">#============== Analysis of the Dynamics  =================</span>
+        <span class="c1"># Compute the averages</span>
+        <span class="n">res_i</span> <span class="o">=</span> <span class="n">traj_statistics</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">Coeff</span><span class="p">,</span> <span class="n">istate</span><span class="p">,</span> <span class="n">H_vib</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;init_times&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Print out into a file</span>
+        <span class="n">printout</span><span class="p">(</span><span class="n">i</span><span class="o">*</span><span class="n">dt</span><span class="p">,</span> <span class="n">res_i</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;outfile&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Update the overal results matrix</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">*</span><span class="n">dt</span><span class="p">)</span>
+        <span class="n">push_submatrix</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">res_i</span><span class="p">,</span> <span class="n">Py2Cpp_int</span><span class="p">([</span><span class="n">i</span><span class="p">]),</span> <span class="n">Py2Cpp_int</span><span class="p">(</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">5</span><span class="p">))</span> <span class="p">)</span> <span class="p">)</span>
+
+
+        <span class="c1">#=============== Propagation ==============================</span>
+        <span class="k">for</span> <span class="n">idata</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndata</span><span class="p">):</span>   <span class="c1"># over all MD trajectories (data sets)</span>
+
+            <span class="k">for</span> <span class="n">it_indx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nitimes</span><span class="p">):</span> <span class="c1"># over all initial times</span>
+
+                <span class="n">it</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;init_times&quot;</span><span class="p">][</span><span class="n">it_indx</span><span class="p">]</span>
+
+                <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>  <span class="c1"># over all stochastic trajectories</span>
+
+                    <span class="n">Tr</span> <span class="o">=</span> <span class="n">idata</span><span class="o">*</span><span class="p">(</span><span class="n">nitimes</span><span class="o">*</span><span class="n">ntraj</span><span class="p">)</span> <span class="o">+</span> <span class="n">it_indx</span><span class="o">*</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span> <span class="o">+</span> <span class="n">tr</span>
+
+                    <span class="c1">#============== Propagation: TD-SE and surface hopping ==========</span>
+                    <span class="c1"># Coherent evolution amplitudes</span>
+                    <span class="n">Heff</span> <span class="o">=</span> <span class="kc">None</span> 
+
+                    <span class="k">if</span> <span class="n">tdse_Ham</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                        <span class="n">Heff</span> <span class="o">=</span> <span class="n">H_vib</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">it</span><span class="o">+</span><span class="n">i</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">tdse_Ham</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="n">Heff</span> <span class="o">=</span> <span class="n">tsh</span><span class="o">.</span><span class="n">Boltz_corr_Ham</span><span class="p">(</span><span class="n">H_vib</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">it</span><span class="o">+</span><span class="n">i</span><span class="p">],</span> <span class="n">Coeff</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;Hvib_type&quot;</span><span class="p">])</span>
+
+                    <span class="n">propagate_electronic</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">Coeff</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="n">Heff</span><span class="p">)</span>   <span class="c1"># propagate the electronic DOFs</span>
+
+        
+                    <span class="c1"># Surface hopping </span>
+                    <span class="n">ksi</span>  <span class="o">=</span> <span class="n">rnd</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+                    <span class="n">ksi2</span> <span class="o">=</span> <span class="n">rnd</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        
+                    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;decoherence_method&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
+                    
+                        <span class="n">do_collapse</span> <span class="o">=</span> <span class="kc">None</span>
+                        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;decoherence_method&quot;</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>    <span class="c1"># No decoherence</span>
+                            <span class="n">do_collapse</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;decoherence_method&quot;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># ID-A, taken care of in the tsh.hopping</span>
+                            <span class="n">do_collapse</span> <span class="o">=</span> <span class="mi">1</span>
+                        <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;decoherence_method&quot;</span><span class="p">]</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>  <span class="c1"># MSDM</span>
+                            <span class="n">do_collapse</span> <span class="o">=</span> <span class="mi">0</span>                            
+                            <span class="n">Coeff</span><span class="p">[</span><span class="n">Tr</span><span class="p">]</span> <span class="o">=</span> <span class="n">sdm</span><span class="p">(</span><span class="n">Coeff</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="n">dt</span><span class="p">,</span> <span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="n">dephasing_rates</span><span class="p">)</span>
+ 
+                        <span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="n">Coeff</span><span class="p">[</span><span class="n">Tr</span><span class="p">]</span> <span class="o">=</span> <span class="n">tsh</span><span class="o">.</span><span class="n">hopping</span><span class="p">(</span><span class="n">Coeff</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="n">Heff</span><span class="p">,</span> <span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sh_method&quot;</span><span class="p">],</span> <span class="n">do_collapse</span><span class="p">,</span> <span class="n">ksi</span><span class="p">,</span> <span class="n">ksi2</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">bolt_opt</span><span class="p">)</span>
+                    
+                    <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;decoherence_method&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span>  <span class="c1"># DISH</span>
+                    
+                        <span class="n">tau_m</span><span class="p">[</span><span class="n">Tr</span><span class="p">]</span> <span class="o">=</span> <span class="n">coherence_intervals</span><span class="p">(</span><span class="n">Coeff</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="n">dephasing_rates</span><span class="p">)</span>
+                        <span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">]</span> <span class="o">=</span> <span class="n">tsh</span><span class="o">.</span><span class="n">dish_py</span><span class="p">(</span><span class="n">Coeff</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="n">t_m</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="n">tau_m</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="n">Heff</span><span class="p">,</span> <span class="n">bolt_opt</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">ksi</span><span class="p">,</span> <span class="n">ksi2</span><span class="p">)</span>
+                        <span class="n">t_m</span><span class="p">[</span><span class="n">Tr</span><span class="p">]</span> <span class="o">+=</span> <span class="n">dt</span>
+
+        
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

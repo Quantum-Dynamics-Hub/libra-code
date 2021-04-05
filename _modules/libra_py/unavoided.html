@@ -1,0 +1,367 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.unavoided &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.unavoided</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.unavoided</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************  </span>
+<span class="c1">#* Copyright (C) 2017 Kosuke Sato, Alexey V. Akimov </span>
+<span class="c1">#*</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of</span>
+<span class="c1">#* the License, or (at your option) any later version. </span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;. </span>
+<span class="c1">#* </span>
+<span class="c1">#*********************************************************************************/</span>
+<span class="sd">&quot;&quot;&quot;@package unavoided</span>
+<span class="sd"> This module implements the functions to correct the state crossings (trivial, or </span>
+<span class="sd"> &quot;unavoided&quot;) crossings.</span>
+<span class="sd"> The order of the eigenstates is determined by the energies, not the orbital&#39;s character.         </span>
+<span class="sd"> Say, if states i and j are localized on B and A, respectively, at &quot;t+dt&quot; while they were</span>
+<span class="sd"> on A and B at &quot;t&quot;, it is likely that this is just a manifestation of the trivial crossing, </span>
+<span class="sd"> not the actual transition. So one must correct the identity of the states.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+    
+
+<div class="viewcode-block" id="get_reordering"><a class="viewcode-back" href="../../reference/libra_py/unavoided.html#libra_py.unavoided.get_reordering">[docs]</a><span class="k">def</span> <span class="nf">get_reordering</span><span class="p">(</span><span class="n">time_overlap</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; This function identifies which states have changed their identities via unavoided </span>
+<span class="sd">    (a.k.a. trivial) crossing when the system evolved in the interval from t to t+dt</span>
+<span class="sd">    We start by looking at the time overlap matrix: &lt;phi_i(t)|phi_i(t+dt)&gt; </span>
+<span class="sd">    If no spurious state changes have happened during this time, the diagonal elements</span>
+<span class="sd">    should be close to 1.0. If they are not - we locate to which state the transitions might </span>
+<span class="sd">    have happened.</span>
+
+<span class="sd">    \param[in] time_overlap ( MATRIX ) the time overlap matrix, &lt;phi_i(t)|phi_j(t+dt)&gt;.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">    perm - list of integers that describe the permutation. That is:</span>
+<span class="sd">    perm[i] - is the index identifying the &quot;older&quot; state &quot;i&quot;. Now, it may be labeled</span>
+<span class="sd">    by some other index, j. </span>
+<span class="sd">    iperm[j] - if we were looking at a specific state labeled &quot;j&quot;, iperm[j] this will be</span>
+<span class="sd">    the index of that state in the present list of states (e.g. energies, etc.)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR in libra_py.unavoided.get_reordering(...)&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The implementation contained a bug. It is now re-implemented in C++</span><span class="se">\</span>
+<span class="s2">          with the bug fixed. Please use the C++ version. Exiting...&quot;</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    
+
+    <span class="c1"># extract the indices where &lt;phi_i(t)|phi_i(t+dt)&gt; is not close to 1. </span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">time_overlap</span><span class="p">)</span>   <span class="c1"># just a temporary working object</span>
+    <span class="n">sz</span> <span class="o">=</span> <span class="n">time_overlap</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">perm</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">sz</span><span class="p">)</span>  <span class="c1"># original permutation</span>
+    
+
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+
+        <span class="n">indx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span>
+        <span class="k">while</span> <span class="n">indx</span><span class="o">!=</span><span class="n">col</span><span class="p">:</span>
+
+            <span class="c1"># Find the max element in the given column &quot;col&quot;</span>
+            <span class="p">[</span><span class="n">indx</span><span class="p">,</span> <span class="n">val</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">max_col_elt</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            
+            <span class="c1"># Apply permutation (col, indx) to the present &quot;perm&quot; list</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">perm</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
+            <span class="n">perm</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">perm</span><span class="p">[</span><span class="n">indx</span><span class="p">]</span>
+            <span class="n">perm</span><span class="p">[</span><span class="n">indx</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp</span>
+
+            <span class="c1"># Do the corresponding swap of the columns in the S matrix</span>
+            <span class="n">S</span><span class="o">.</span><span class="n">swap_cols</span><span class="p">(</span><span class="n">col</span><span class="p">,</span><span class="n">indx</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">perm</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_test_setup</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Prepare the test matrices&quot;&quot;&quot;</span>
+
+    <span class="c1"># identical</span>
+    <span class="c1"># | 1 0 0 0 |</span>
+    <span class="c1"># | 0 1 0 0 |</span>
+    <span class="c1"># | 0 0 1 0 |</span>
+    <span class="c1"># | 0 0 0 1 |</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>  <span class="n">a</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span> 
+    <span class="n">a</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>  <span class="n">a</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span> 
+    <span class="c1">#print &quot;a = &quot;;  a.show_matrix()</span>
+
+    <span class="c1"># non-identical (4x4) matrix</span>
+    <span class="c1"># | 1 0 0 0 |</span>
+    <span class="c1"># | 0 0 1 0 |</span>
+    <span class="c1"># | 0 0 0 1 |</span>
+    <span class="c1"># | 0 1 0 0 |</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">b</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>  <span class="n">b</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span> 
+    <span class="n">b</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>  <span class="n">b</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>
+    <span class="c1">#print &quot;b = &quot;;  b.show_matrix()</span>
+
+
+    <span class="c1"># non-identical (4x4) matrix</span>
+    <span class="c1"># | 0 1 0 0 |</span>
+    <span class="c1"># | 0 0 1 0 |</span>
+    <span class="c1"># | 1 0 0 0 |</span>
+    <span class="c1"># | 0 0 0 1 |</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>  <span class="n">c</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span> 
+    <span class="n">c</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>  <span class="n">c</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>
+    <span class="c1">#print &quot;b = &quot;;  b.show_matrix()</span>
+
+
+    <span class="c1"># non-identical (8x8) matrix</span>
+    <span class="c1"># | 1 0 0 0 0 0 0 0 |</span>
+    <span class="c1"># | 0 1 0 0 0 0 0 0 |</span>
+    <span class="c1"># | 0 0 0 1 0 0 0 0 |</span>
+    <span class="c1"># | 0 0 1 0 0 0 0 0 |</span>
+    <span class="c1"># | 0 0 0 0 1 0 0 0 |</span>
+    <span class="c1"># | 0 0 0 0 0 0 0 1 |</span>
+    <span class="c1"># | 0 0 0 0 0 1 0 0 |</span>
+    <span class="c1"># | 0 0 0 0 0 0 1 0 |</span>
+
+    <span class="n">d</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>  <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>  <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>  <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>  <span class="n">d</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mf">1.0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">);</span>
+
+    <span class="c1">#print &quot;c = &quot;;   c.show_matrix()</span>
+
+    <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span>
+
+
+<div class="viewcode-block" id="TestUnavoided"><a class="viewcode-back" href="../../reference/libra_py/unavoided.html#libra_py.unavoided.TestUnavoided">[docs]</a><span class="k">class</span> <span class="nc">TestUnavoided</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestUnavoided.test_reordering"><a class="viewcode-back" href="../../reference/libra_py/unavoided.html#libra_py.unavoided.TestUnavoided.test_reordering">[docs]</a>    <span class="k">def</span> <span class="nf">test_reordering</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tests the reordering algorithm&quot;&quot;&quot;</span>
+        <span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span> <span class="o">=</span> <span class="n">_test_setup</span><span class="p">()</span>
+
+        <span class="n">perm_a</span> <span class="o">=</span> <span class="n">get_reordering</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input matrix &quot;</span><span class="p">);</span> <span class="n">a</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Permutation = &quot;</span><span class="p">,</span> <span class="n">perm_a</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">perm_a</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+
+        <span class="n">perm_b</span> <span class="o">=</span> <span class="n">get_reordering</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input matrix &quot;</span><span class="p">);</span> <span class="n">b</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Permutation = &quot;</span><span class="p">,</span> <span class="n">perm_b</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">perm_b</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">perm_c</span> <span class="o">=</span> <span class="n">get_reordering</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input matrix &quot;</span><span class="p">);</span> <span class="n">c</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Permutation = &quot;</span><span class="p">,</span> <span class="n">perm_c</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">perm_c</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

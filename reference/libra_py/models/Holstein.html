@@ -1,0 +1,535 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Holstein &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Libra" href="Libra.html" />
+    <link rel="prev" title="Henon_Heiles" href="Henon_Heiles.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dynamics.html">dynamics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../models.html">models</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Beswick_Jortner.html">Beswick_Jortner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Faist_Levine.html">Faist_Levine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Henon_Heiles.html">Henon_Heiles</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Holstein</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Libra.html">Libra</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LVC.html">LVC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Martens.html">Martens</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSY.html">SSY</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Tully.html">Tully</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../libra_py.html">libra_py</a> &raquo;</li>
+        
+          <li><a href="../models.html">models</a> &raquo;</li>
+        
+      <li>Holstein</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../_sources/reference/libra_py/models/Holstein.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.models.Holstein">
+<span id="holstein"></span><h1>Holstein<a class="headerlink" href="#module-libra_py.models.Holstein" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-models_Holstein"></span><dl class="py function">
+<dt id="libra_py.models.Holstein.Holstein2">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Holstein.</span></code><code class="sig-name descname"><span class="pre">Holstein2</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Holstein.html#Holstein2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Holstein.Holstein2" title="Permalink to this definition">¶</a></dt>
+<dd><p>n-state model</p>
+<p>H_nn = E_n + 0.5*k*(x-x_n)^2</p>
+<p>H_n,n+1 = H_n+1,n = V,
+H_n,m = 0, otherwise</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<em>MATRIX</em><em>(</em><em>1</em><em>,</em><em>1</em><em>)</em>) – coordinates of the particle, ndof = 1</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><p><strong>params[“E_n”]</strong> ( list of doubles ):  [ default: [0.0, 0.001, 0.001, 0.001], units: Ha]</p></li>
+<li><p><strong>params[“x_n”]</strong> ( list of doubles ):  [ default: [0.0, 1.0, 1.0, 1.0], units: Bohr]</p></li>
+<li><p><strong>params[“k_n”]</strong> ( list of doubles ):  [ default: [0.001, 0.001, 0.001, 0.001], units: Ha/Bohr^2]</p></li>
+<li><p><strong>params[“V”]</strong>   ( double ):  [ default: 0.001, units: Ha]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>obj, with the members:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>obj.ham_dia ( CMATRIX(4,4) ): diabatic Hamiltonian</p></li>
+<li><p>obj.ovlp_dia ( CMATRIX(4,4) ): overlap of the basis (diabatic) states [ identity ]</p></li>
+<li><dl class="simple">
+<dt>obj.d1ham_dia ( list of 1 CMATRIX(4,4) objects ):</dt><dd><p>derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</p>
+</dd>
+</dl>
+</li>
+<li><p>obj.dc1_dia ( list of 1 CMATRIX(4,4) objects ): derivative coupling in the diabatic basis [ zero ]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PyObject</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Holstein.Holstein3">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Holstein.</span></code><code class="sig-name descname"><span class="pre">Holstein3</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Holstein.html#Holstein3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Holstein.Holstein3" title="Permalink to this definition">¶</a></dt>
+<dd><p>n-state model</p>
+<p>H_nn = E_n + 0.5*k*(x-x_n)^2</p>
+<p>H_n,n+m = H_n+m,n = V_m</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<em>MATRIX</em><em>(</em><em>1</em><em>,</em><em>1</em><em>)</em>) – coordinates of the particle, ndof = 1</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><p><strong>params[“E_n”]</strong> ( list of doubles ):  [ default: [0.0, 0.001, 0.001, 0.001], units: Ha]</p></li>
+<li><p><strong>params[“x_n”]</strong> ( list of doubles ):  [ default: [0.0, 1.0, 1.0, 1.0], units: Bohr]</p></li>
+<li><p><strong>params[“k_n”]</strong> ( list of doubles ):  [ default: [0.001, 0.001, 0.001, 0.001], units: Ha/Bohr^2]</p></li>
+<li><p><strong>params[“V_n”]</strong> ( list of doubles ):  The coupling between state i and j, where i and j are n+1 states away from each other. ie H_0,1 = V_0; H_0,2 = V_1</p></li>
+</ul>
+<p>[ default: [0.001, 0.0001, 0] units: Ha]</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>obj, with the members:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>obj.ham_dia ( CMATRIX(4,4) ): diabatic Hamiltonian</p></li>
+<li><p>obj.ovlp_dia ( CMATRIX(4,4) ): overlap of the basis (diabatic) states [ identity ]</p></li>
+<li><dl class="simple">
+<dt>obj.d1ham_dia ( list of 1 CMATRIX(4,4) objects ):</dt><dd><p>derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</p>
+</dd>
+</dl>
+</li>
+<li><p>obj.dc1_dia ( list of 1 CMATRIX(4,4) objects ): derivative coupling in the diabatic basis [ zero ]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PyObject</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>“H_nn”:[0.0, 0.002, 0.002, 0.002]
+“V_n”:[0.001, 0.0001, 0]
+Ham:    0.0     0.001   0.0001   0</p>
+<blockquote>
+<div><dl class="simple">
+<dt>0.002   0.001    0.0001</dt><dd><dl class="simple">
+<dt>0.002    0.001</dt><dd><p>0.002</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Holstein.Holstein4">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Holstein.</span></code><code class="sig-name descname"><span class="pre">Holstein4</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Holstein.html#Holstein4"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Holstein.Holstein4" title="Permalink to this definition">¶</a></dt>
+<dd><p>n-state model</p>
+<p>H_nn = E_n + 0.5*k*(x-x_n)^2
+H_n,m = V_n,m,</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<em>MATRIX</em><em>(</em><em>1</em><em>,</em><em>1</em><em>)</em>) – coordinates of the particle, ndof = 1</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><p><strong>params[“E_n”]</strong> ( list of doubles ):  [ default: [0.0, 0.001, 0.001, 0.001], units: Ha]</p></li>
+<li><p><strong>params[“x_n”]</strong> ( list of doubles ):  [ default: [0.0, 1.0, 1.0, 1.0], units: Bohr]</p></li>
+<li><p><strong>params[“k_n”]</strong> ( list of doubles ):  [ default: [0.001, 0.001, 0.001, 0.001], units: Ha/Bohr^2]</p></li>
+<li><p><strong>params[“V”]</strong>   ( list of lists of double ):  [ default:  [[0.001]*4]*4, units: Ha]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>obj, with the members:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>obj.ham_dia ( CMATRIX(4,4) ): diabatic Hamiltonian</p></li>
+<li><p>obj.ovlp_dia ( CMATRIX(4,4) ): overlap of the basis (diabatic) states [ identity ]</p></li>
+<li><dl class="simple">
+<dt>obj.d1ham_dia ( list of 1 CMATRIX(4,4) objects ):</dt><dd><p>derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</p>
+</dd>
+</dl>
+</li>
+<li><p>obj.dc1_dia ( list of 1 CMATRIX(4,4) objects ): derivative coupling in the diabatic basis [ zero ]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PyObject</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Holstein.Holstein5">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Holstein.</span></code><code class="sig-name descname"><span class="pre">Holstein5</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Holstein.html#Holstein5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Holstein.Holstein5" title="Permalink to this definition">¶</a></dt>
+<dd><p>n-state model</p>
+<p>H_nn = E_n + 0.5*k*(x-x_n)^2
+H_n,m = V_n,m * exp(- alp_n,m * (x-x_nm)^2 )</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<em>MATRIX</em><em>(</em><em>1</em><em>,</em><em>1</em><em>)</em>) – coordinates of the particle, ndof = 1</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><p><strong>params[“E_n”]</strong> ( list of doubles ):  [ default: [0.0, 0.001, 0.001, 0.001], units: Ha]</p></li>
+<li><p><strong>params[“x_n”]</strong> ( list of doubles ):  [ default: [0.0, 1.0, 1.0, 1.0], units: Bohr]</p></li>
+<li><p><strong>params[“k_n”]</strong> ( list of doubles ):  [ default: [0.001, 0.001, 0.001, 0.001], units: Ha/Bohr^2]</p></li>
+<li><p><strong>params[“V”]</strong>   ( list of lists of double ):  [ default:  [[0.001]*4]*4, units: Ha]</p></li>
+<li><p><strong>params[“alpha”]</strong> ( list of lists of double ):  [ default:  [[0.0]*4]*4, units: 1/Bohr^2]</p></li>
+<li><p><strong>params[“x_nm”]</strong>  ( list of lists of double ):  [ default:  [[0.0]*4]*4, units: Bohr]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>obj, with the members:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>obj.ham_dia ( CMATRIX(4,4) ): diabatic Hamiltonian</p></li>
+<li><p>obj.ovlp_dia ( CMATRIX(4,4) ): overlap of the basis (diabatic) states [ identity ]</p></li>
+<li><dl class="simple">
+<dt>obj.d1ham_dia ( list of 1 CMATRIX(4,4) objects ):</dt><dd><p>derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</p>
+</dd>
+</dl>
+</li>
+<li><p>obj.dc1_dia ( list of 1 CMATRIX(4,4) objects ): derivative coupling in the diabatic basis [ zero ]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PyObject</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Holstein.Holstein_uncoupled">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Holstein.</span></code><code class="sig-name descname"><span class="pre">Holstein_uncoupled</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Holstein.html#Holstein_uncoupled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Holstein.Holstein_uncoupled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implementation of a generic Holstein Hamiltonian.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<em>MATRIX</em><em>(</em><em>ndof</em><em>, </em><em>1</em><em>)</em>) – coordinates of the classical particles, ndof is an
+arbitrary number of degrees of freedom (e.g. 3N, where N is the number of particles)</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>the parameters of the Hamiltonian, should contain:</p>
+<ul>
+<li><p><strong>params[“k_harmonic”]</strong> ( double ) [ units: Ha/Bohr^2 ]</p></li>
+<li><p><strong>params[“el-phon_coupling”]</strong> ( double ) [ units: Ha/Bohr ]</p></li>
+<li><p><strong>params[“site_coupling”]</strong> ( double ): electronic coupling between nearby sites [ units: Ha ]</p></li>
+<li><p><strong>params[“is_periodic”]</strong> ( Boolean ): whether the first and last sites are connected</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>obj, with the members:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>obj.ham_dia ( CMATRIX(ndof,ndof) ): diabatic Hamiltonian</p></li>
+<li><p>obj.ovlp_dia ( CMATRIX(ndof,ndof) ): overlap of the basis (diabatic) states [ identity ]</p></li>
+<li><dl class="simple">
+<dt>obj.d1ham_dia ( list of ndof CMATRIX(ndof,ndof) objects ):</dt><dd><p>derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</p>
+</dd>
+</dl>
+</li>
+<li><p>obj.dc1_dia ( list of 2 CMATRIX(ndof,ndof) objects ): derivative coupling in the diabatic basis [ zero ]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PyObject</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Holstein.get_Holstein_set1">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Holstein.</span></code><code class="sig-name descname"><span class="pre">get_Holstein_set1</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Holstein.html#get_Holstein_set1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Holstein.get_Holstein_set1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parameters from:
+Qiu, J.; Bai, X.; Wang, L. Crossing Classified and Corrected Fewest Switches Surface Hopping.
+J. Phys. Chem. Lett. 2018, 9, 4319-4325.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>None</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>params, will contain the parameters:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>params[“k_harmonic”]</strong> ( double ) [ units: Ha/Bohr^2 ]</p></li>
+<li><p><strong>params[“el-phon_coupling”]</strong> ( double ) [ units: Ha/Bohr ]</p></li>
+<li><p><strong>params[“mass”]</strong> ( double ): mass of the particles [ units: a.u. of mass ]</p></li>
+<li><p><strong>params[“site_coupling”]</strong> ( double ): electronic coupling between nearby sites [ units: Ha ]</p></li>
+<li><p><strong>params[“is_periodic”]</strong> ( Boolean ): whether the first and last sites are connected</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="Libra.html" class="btn btn-neutral float-right" title="Libra" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Henon_Heiles.html" class="btn btn-neutral float-left" title="Henon_Heiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,435 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.fit &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.fit</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.fit</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************                     </span>
+<span class="c1">#* Copyright (C) 2017-2019 Alexey V. Akimov                                                   </span>
+<span class="c1">#*                                                                                                     </span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License                          </span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of                                   </span>
+<span class="c1">#* the License, or (at your option) any later version.                                                 </span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution   </span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.          </span>
+<span class="c1">#***********************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: fit</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements a linear regression method and several pre-defined fit functions</span>
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+
+<div class="viewcode-block" id="Regression"><a class="viewcode-back" href="../../reference/libra_py/fit.html#libra_py.fit.Regression">[docs]</a><span class="k">def</span> <span class="nf">Regression</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Performs a linear regression of the Y vs. X of the form:    </span>
+
+<span class="sd">        Y = b*x      opt=0  (default)</span>
+<span class="sd">        Y = a + b*x  opt=1</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        X ( list of doubles ): The x axis data</span>
+<span class="sd">        Y ( list of doubles ): The y axis data</span>
+<span class="sd">        opt ( int ): Selects the type of fitting to perform:</span>
+
+<span class="sd">            * opt = 0: The fitting is of the form: Y = b*X  (default)</span>
+<span class="sd">            * opt = 1: The fitting is of a more general form: Y = a + b*X</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        [double, double]: the linear regression coefficients a and b</span>
+
+<span class="sd">            For opt==0, a = 0 </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="n">y2</span><span class="p">,</span><span class="n">xy</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">sz</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">x2</span> <span class="o">=</span> <span class="n">x2</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">y2</span> <span class="o">=</span> <span class="n">y2</span> <span class="o">+</span> <span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">xy</span> <span class="o">=</span> <span class="n">xy</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sz</span><span class="p">)</span>
+
+    <span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="k">if</span> <span class="n">opt</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">y</span><span class="o">/</span><span class="n">x</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">elif</span> <span class="n">opt</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">N</span><span class="o">*</span><span class="n">xy</span> <span class="o">-</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">N</span><span class="o">*</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">b</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">N</span>
+
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="fit_exp"><a class="viewcode-back" href="../../reference/libra_py/fit.html#libra_py.fit.fit_exp">[docs]</a><span class="k">def</span> <span class="nf">fit_exp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">linreg_opt</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Fits Y vs. X data using:  Y = A*exp(-B*(X-x0))</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        X ( list of doubles ): The x axis data</span>
+<span class="sd">        Y ( list of doubles ): The y axis data</span>
+<span class="sd">        x0 ( double ): the &quot;origin&quot; of the exponential function [default: 0.0]</span>
+<span class="sd">        verbose ( int ): whether to print extra info (1) or not (0) [default: 0]</span>
+<span class="sd">        linreg_opt ( int ): the type of the linear regression to use</span>
+<span class="sd">            SeeAlso:: :funct:`Regression` [default: 0]</span>
+
+<span class="sd">            * opt = 0: ln(Y) = b*(X-x0)</span>
+<span class="sd">            * opt = 1: ln(Y) = a + b*(X-x0)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        predy ( list of doubles ): The Y values predicted using the obtained linear </span>
+<span class="sd">            interpolation parameters. These values are computed for all X values</span>
+<span class="sd">   </span>
+<span class="sd">        A ( double ):  The A coefficient in: Y = A*exp(-B*(X-x0))</span>
+<span class="sd">        B ( double ):  The B coefficient in: Y = A*exp(-B*(X-x0))</span>
+
+
+<span class="sd">    Example:</span>
+
+<span class="sd">        &gt;&gt;&gt; # get the first two columns of data as X and Y</span>
+<span class="sd">        &gt;&gt;&gt; X, Y = get_data_from_file(&quot;relax.txt&quot;, 0, 1) </span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Y = exp(-B*X), the minimaal version</span>
+<span class="sd">        &gt;&gt;&gt; Ypred, A, B = fit_exp(X,Y)        </span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Y = exp(-B*X), the more explicit version</span>
+<span class="sd">        &gt;&gt;&gt; Ypred, A, B = fit_exp(X,Y, 0.0)   </span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Y = A * exp(-B*X), the most explicit version</span>
+<span class="sd">        &gt;&gt;&gt; Ypred, A, B = fit_exp(X,Y, 0.0, 1, 1)  </span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Assume the fitting function is: Y = A * exp(-B*(X+1.5))</span>
+<span class="sd">        &gt;&gt;&gt; Ypred, A, B = fit_exp(X,Y, 1.5, 1, 1)  # Y = A * exp(-B*(X+1.5))</span>
+
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>  <span class="c1"># The number of data points</span>
+    
+    <span class="c1"># Linearize input data</span>
+    <span class="n">linx</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">sz</span>
+    <span class="n">liny</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">sz</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">linx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span>
+        <span class="n">liny</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="c1"># Run regression and compute parameters   </span>
+    <span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="o">=</span> <span class="n">Regression</span><span class="p">(</span><span class="n">linx</span><span class="p">,</span><span class="n">liny</span><span class="p">,</span><span class="n">linreg_opt</span><span class="p">)</span>  <span class="c1"># ln(y) = ln(A) - B*(X-x0) = a + b*x, so: a = ln(A), b = -B, x = X-x0</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="o">-</span><span class="n">b</span>
+
+    <span class="c1"># Compute prediction</span>
+    <span class="n">predy</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">sz</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">predy</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">A</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">B</span><span class="o">*</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Fitting data to the expression Y = A * exp(-B*(X-x0))&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;With parameters: x0 = &quot;</span><span class="p">,</span> <span class="n">x0</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Fitting parameters: A = &quot;</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="s2">&quot; B = &quot;</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s2">&quot; 1/B = &quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">B</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">predy</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span></div>
+
+
+
+<div class="viewcode-block" id="fit_gau"><a class="viewcode-back" href="../../reference/libra_py/fit.html#libra_py.fit.fit_gau">[docs]</a><span class="k">def</span> <span class="nf">fit_gau</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">linreg_opt</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Fits Y vs. X data using:  Y = A*exp(-B*(X-x0)^2)</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        X ( list of doubles ): The x axis data</span>
+<span class="sd">        Y ( list of doubles ): The y axis data</span>
+<span class="sd">        x0 ( double ): the &quot;origin&quot; of the exponential function [default: 0.0]</span>
+<span class="sd">        verbose ( int ): whether to print extra info (1) or not (0) [default: 0]</span>
+<span class="sd">        linreg_opt ( int ): the type of the linear regression to use</span>
+<span class="sd">            SeeAlso:: :funct:`Regression` [default: 0]</span>
+
+<span class="sd">            * opt = 0: ln(Y) = b*(X-x0)^2</span>
+<span class="sd">            * opt = 1: ln(Y) = a + b*(X-x0)^2</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        predy ( list of doubles ): The Y values predicted using the obtained linear </span>
+<span class="sd">            interpolation parameters. These values are computed for all X values</span>
+<span class="sd">   </span>
+<span class="sd">        A ( double ):  The A coefficient in: Y = A*exp(-B*(X-x0)^2)</span>
+<span class="sd">        B ( double ):  The B coefficient in: Y = A*exp(-B*(X-x0)^2)</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">        &gt;&gt;&gt; # get the first two columns of data as X and Y</span>
+<span class="sd">        &gt;&gt;&gt; X, Y = get_data_from_file(&quot;relax.txt&quot;, 0, 1) </span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Y = exp(-B*X^2), the minimaal version</span>
+<span class="sd">        &gt;&gt;&gt; Ypred, A, B = fit_gau(X,Y)        </span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Y = exp(-B*X^2), the more explicit version</span>
+<span class="sd">        &gt;&gt;&gt; Ypred, A, B = fit_gau(X,Y, 0.0)   </span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Y = A * exp(-B*X^2), the most explicit version</span>
+<span class="sd">        &gt;&gt;&gt; Ypred, A, B = fit_gau(X,Y, 0.0, 1, 1)  </span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Assume the fitting function is: Y = A * exp(-B*(X-1)^2)</span>
+<span class="sd">        &gt;&gt;&gt; Ypred, A, B = fit_exp(X,Y, -1.0, 1, 1)  # Y = A * exp(-B*(X-1)^2)</span>
+
+
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>  <span class="c1"># The number of data points</span>
+    
+    <span class="c1"># Linearize input data</span>
+    <span class="n">linx</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">sz</span>
+    <span class="n">liny</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">sz</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">linx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">liny</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="c1"># Run regression and compute parameters   </span>
+    <span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="o">=</span> <span class="n">Regression</span><span class="p">(</span><span class="n">linx</span><span class="p">,</span><span class="n">liny</span><span class="p">,</span><span class="n">linreg_opt</span><span class="p">)</span>  <span class="c1"># ln(y) = ln(A) - B*(X-x0)^2 = a + b*x, so: a = ln(A), b = -B,  x = (X-x0)^2</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="o">-</span><span class="n">b</span>
+
+    <span class="c1"># Compute prediction</span>
+    <span class="n">predy</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">sz</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">predy</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">A</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">B</span><span class="o">*</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Fitting data to the expression Y = A * exp(-B*(X-x0)**2)&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;With parameters: x0 = &quot;</span><span class="p">,</span> <span class="n">x0</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Fitting parameters: A = &quot;</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="s2">&quot; B = &quot;</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s2">&quot; sqrt(B) = &quot;</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">B</span><span class="p">),</span> <span class="s2">&quot; 1/B = &quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">B</span><span class="p">,</span> <span class="s2">&quot; sqrt(1.0/B) = &quot;</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="n">B</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">predy</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span></div>
+
+
+<span class="c1"># Example of usage:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span> 
+    <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">get_data_from_file</span><span class="p">(</span><span class="s2">&quot;relax.txt&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">Ypred</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">fit_exp</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>  <span class="c1"># Y = exp(-B*X)</span>
+    <span class="c1">#Ypred, A, B = fit_gau(X,Y, 0.0)  # Y = exp(-B*X^2)</span>
+
+    <span class="c1">#Ypred, A, B = fit_exp(X,Y, 0.0, 1, 1)  # Y = A * exp(-B*X)</span>
+    <span class="c1">#Ypred, A, B = fit_gau(X,Y, 0.0, 1, 1)  # Y = A * exp(-B*X^2)</span>
+
+    <span class="c1">#Ypred, A, B = fit_exp(X,Y, 1.5, 1, 1)  # Y = A * exp(-B*(X+1.5))</span>
+    <span class="c1">#Ypred, A, B = fit_gau(X,Y,-1.0, 1, 1)  # Y = A * exp(-B*(X-1.0)^2)</span>
+
+
+
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;relax_and_fit.txt&quot;</span><span class="p">,</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)):</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span> <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">Ypred</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

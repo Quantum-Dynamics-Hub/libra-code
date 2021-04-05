@@ -1,0 +1,523 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.init_ensembles &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.init_ensembles</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.init_ensembles</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#* Copyright (C) 2016-2019 Kosuke Sato, Alexey V. Akimov</span>
+<span class="c1">#*</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: init_ensembles</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements functions that allocate memory for ensembles of trajectories</span>
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">LoadMolecule</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">LoadPT</span>
+
+
+<div class="viewcode-block" id="init_ext_hamiltonians"><a class="viewcode-back" href="../../reference/libra_py/init_ensembles.html#libra_py.init_ensembles.init_ext_hamiltonians">[docs]</a><span class="k">def</span> <span class="nf">init_ext_hamiltonians</span><span class="p">(</span><span class="n">ntraj</span><span class="p">,</span> <span class="n">nnucl</span><span class="p">,</span> <span class="n">nel</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function allocates memory for matrices (external objects). The function</span>
+<span class="sd">    also creates an array of External_Hamiltonian objects and bind them to the external matrices</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ntraj ( int ): The number of trajectories in the ensemble</span>
+<span class="sd">        nnucl ( int ): The number of nuclear DOF ( usually, = 3* Number_of_atoms)</span>
+<span class="sd">        nel ( int ): The number of electronic DOF ( usually the number of electronic states)</span>
+<span class="sd">        verbose ( int ): The parameter controlling the amount of debug printing: </span>
+
+<span class="sd">            - 0: no printing [ default ]</span>
+<span class="sd">            - 1: do print info</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (ham, ham_adi, d1ham_adi, ham_vib), where:</span>
+
+<span class="sd">            * ham ( list of ntraj External_Hamiltonian objects ): &quot;External Hamiltonian&quot; objects,</span>
+<span class="sd">                one per trajectory. These are the &quot;controller&quot; objects that organize the flow of</span>
+<span class="sd">                computations and store the results in the matrices bound to them.</span>
+<span class="sd">            * ham_adi ( list of ntraj MATRIX(nel, nel) ): Electronic Hamiltonian matrices </span>
+<span class="sd">                coupled to the ham objects</span>
+<span class="sd">            * d1ham_adi ( list ntraj lists of nnucl MATRIX(nel, nel) objects ): derivatives of </span>
+<span class="sd">                electronic Hamiltonians w.r.t. nuclear DOFs for each trajectory. Also coupled to </span>
+<span class="sd">                the ham objects for the corresponding trajectories.</span>
+<span class="sd">            * ham_vib ( list of ntraj CMATRIX(nel, nel) ): Vibronic Hamiltonian matrices </span>
+<span class="sd">                coupled to the ham objects</span>
+<span class="sd">     </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Create an list of External Hamiltonian objects</span>
+    <span class="n">ham</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+        <span class="n">ham_i</span> <span class="o">=</span> <span class="n">Hamiltonian_Extern</span><span class="p">(</span><span class="n">nel</span><span class="p">,</span> <span class="n">nnucl</span><span class="p">)</span> 
+        <span class="n">ham_i</span><span class="o">.</span><span class="n">set_rep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>            <span class="c1"># adiabatic representation</span>
+        <span class="n">ham_i</span><span class="o">.</span><span class="n">set_adiabatic_opt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># use the externally-computed </span>
+                                    <span class="c1"># adiabatic electronic Hamiltonian and derivatives</span>
+        <span class="n">ham_i</span><span class="o">.</span><span class="n">set_vibronic_opt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>   <span class="c1"># use the externally-computed vibronic Hamiltonian and derivatives</span>
+        <span class="n">ham</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ham_i</span><span class="p">)</span>
+
+    <span class="c1"># bind actual matrices to the External_Hamiltonian objects</span>
+    <span class="n">ham_adi</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">d1ham_adi</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">ham_vib</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+        <span class="c1"># create external matrix for adiabatic Hamiltonian</span>
+        <span class="n">ham_adi_i</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nel</span><span class="p">,</span> <span class="n">nel</span><span class="p">)</span>
+        <span class="n">ham_adi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ham_adi_i</span><span class="p">)</span>
+        <span class="c1"># bind adiabatic Hamiltonian</span>
+        <span class="n">ham</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">bind_ham_adi</span><span class="p">(</span><span class="n">ham_adi</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="c1"># create external matrices for the derivatives</span>
+        <span class="n">d1ham_adi_i</span><span class="o">=</span> <span class="n">MATRIXList</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nnucl</span><span class="p">):</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nel</span><span class="p">,</span> <span class="n">nel</span><span class="p">)</span>
+            <span class="n">d1ham_adi_i</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+        <span class="n">d1ham_adi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d1ham_adi_i</span><span class="p">)</span>
+        <span class="c1"># bind derivative of adiabatic Hamiltonian</span>
+        <span class="n">ham</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">bind_d1ham_adi</span><span class="p">(</span><span class="n">d1ham_adi</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="c1"># create external matrix for vibronic Hamiltonian</span>
+        <span class="n">ham_vib_i</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nel</span><span class="p">,</span> <span class="n">nel</span><span class="p">)</span>
+        <span class="n">ham_vib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ham_vib_i</span><span class="p">)</span>
+        <span class="c1"># bind vibronic Hamiltonian</span>
+        <span class="n">ham</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">bind_ham_vib</span><span class="p">(</span><span class="n">ham_vib</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Addresses of the working matrices&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%i</span><span class="s2"> th Hamiltonian is&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ham_adi = &quot;</span><span class="p">,</span> <span class="n">ham_adi</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;d1ham_adi = &quot;</span><span class="p">,</span> <span class="n">d1ham_adi</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nnucl</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;d1ham_adi[&quot;</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="s2">&quot;]= &quot;</span><span class="p">,</span> <span class="n">d1ham_adi</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">])</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ham_vib = &quot;</span><span class="p">,</span> <span class="n">ham_vib</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">ham</span><span class="p">,</span> <span class="n">ham_adi</span><span class="p">,</span> <span class="n">d1ham_adi</span><span class="p">,</span> <span class="n">ham_vib</span></div>
+
+
+<div class="viewcode-block" id="init_systems"><a class="viewcode-back" href="../../reference/libra_py/init_ensembles.html#libra_py.init_ensembles.init_systems">[docs]</a><span class="k">def</span> <span class="nf">init_systems</span><span class="p">(</span><span class="n">ntraj</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="nb">format</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function creates a list of System objects and loads the content into them</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ntraj ( int ): The number of trajectories in the ensemble</span>
+<span class="sd">        U ( Universe object ): The container of the fundamental parameters of atoms</span>
+<span class="sd">        filename ( string ): The file containg the atomistic system </span>
+<span class="sd">        format ( string ): The format of the file to load (see LoadMolecule for possible formats)</span>
+<span class="sd">        verbose ( int ): The parameter controlling the amount of debug printing: </span>
+
+<span class="sd">            - 0: no printing [ default ]</span>
+<span class="sd">            - 1: do print info</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (list of ntraj System objects): the ensemble of the objects defining the replicas of the system</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">syst</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+        <span class="n">syst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">System</span><span class="p">()</span> <span class="p">)</span>
+        <span class="n">LoadMolecule</span><span class="o">.</span><span class="n">Load_Molecule</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">],</span> <span class="n">filename</span><span class="p">,</span> <span class="nb">format</span><span class="p">)</span>
+        <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">determine_functional_groups</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># do not assign rings</span>
+        <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">init_fragments</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">tr</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">verbose</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of atoms in the system = &quot;</span><span class="p">,</span> <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">Number_of_atoms</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of bonds in the system = &quot;</span><span class="p">,</span> <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">Number_of_bonds</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of angles in the system = &quot;</span><span class="p">,</span> <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">Number_of_angles</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of dihedrals in the system = &quot;</span><span class="p">,</span> <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">Number_of_dihedrals</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of impropers in the system = &quot;</span><span class="p">,</span> <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">Number_of_impropers</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">syst</span></div>
+
+
+<div class="viewcode-block" id="init_systems2"><a class="viewcode-back" href="../../reference/libra_py/init_ensembles.html#libra_py.init_ensembles.init_systems2">[docs]</a><span class="k">def</span> <span class="nf">init_systems2</span><span class="p">(</span><span class="n">ntraj</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="nb">format</span><span class="p">,</span> <span class="n">rnd</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">data_file</span><span class="o">=</span><span class="s2">&quot;elements.dat&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function creates a list of System objects and loads the content into them, it also randomizes</span>
+<span class="sd">    the original input from the coordinate file (by adding coordinate displacements and setting velocities)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ntraj ( int ): The number of trajectories in the ensemble</span>
+<span class="sd">        U ( Universe object ): The container of the fundamental parameters of atoms</span>
+<span class="sd">        filename ( string ): The file containg the atomistic system </span>
+<span class="sd">        format ( string ): The format of the file to load (see LoadMolecule for possible formats)</span>
+<span class="sd">        rnd ( Random object ): random number generator object</span>
+<span class="sd">        T ( double ): Target temperature used to initialize momenta of atoms. [ units: K ]</span>
+<span class="sd">        sigma ( double ): The magnitude of a random displacement of each atom from its center [ units: Bohr ]</span>
+<span class="sd">        data_file ( double ): The file containing information about elements [ default: &quot;elements.dat&quot; ]</span>
+<span class="sd">        verbose ( int ): The parameter controlling the amount of debug printing: </span>
+
+<span class="sd">            - 0: no printing [ default ]</span>
+<span class="sd">            - 1: do print info</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (list of ntraj System objects): the ensemble of the objects defining the replicas of the system</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Create Universe and populate it</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="n">Universe</span><span class="p">();</span>   <span class="n">LoadPT</span><span class="o">.</span><span class="n">Load_PT</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">data_file</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">syst</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ntraj</span><span class="p">):</span>
+        <span class="n">syst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">System</span><span class="p">()</span> <span class="p">)</span>
+        <span class="n">LoadMolecule</span><span class="o">.</span><span class="n">Load_Molecule</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">],</span> <span class="n">filename</span><span class="p">,</span> <span class="nb">format</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">at</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">Number_of_atoms</span><span class="p">):</span>
+            <span class="c1"># Random shift</span>
+            <span class="n">shift</span> <span class="o">=</span> <span class="n">VECTOR</span><span class="p">(</span><span class="n">sigma</span><span class="o">*</span><span class="n">rnd</span><span class="o">.</span><span class="n">normal</span><span class="p">(),</span> <span class="n">sigma</span><span class="o">*</span><span class="n">rnd</span><span class="o">.</span><span class="n">normal</span><span class="p">(),</span> <span class="n">sigma</span><span class="o">*</span><span class="n">rnd</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span> <span class="p">)</span>
+
+            <span class="c1"># Apply it</span>
+            <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">Atoms</span><span class="p">[</span><span class="n">at</span><span class="p">]</span><span class="o">.</span><span class="n">Atom_RB</span><span class="o">.</span><span class="n">shift_position</span><span class="p">(</span><span class="n">shift</span><span class="p">)</span>
+
+
+        <span class="c1"># Initialize random velocity at T(K) using normal distribution</span>
+        <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">init_atom_velocities</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="n">rnd</span><span class="p">)</span>
+
+
+        <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">determine_functional_groups</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># do not assign rings</span>
+        <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">init_fragments</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">tr</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">verbose</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of atoms in the system = &quot;</span><span class="p">,</span> <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">Number_of_atoms</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of bonds in the system = &quot;</span><span class="p">,</span> <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">Number_of_bonds</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of angles in the system = &quot;</span><span class="p">,</span> <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">Number_of_angles</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of dihedrals in the system = &quot;</span><span class="p">,</span> <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">Number_of_dihedrals</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of impropers in the system = &quot;</span><span class="p">,</span> <span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">Number_of_impropers</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">syst</span></div>
+
+
+                      
+<div class="viewcode-block" id="init_mm_Hamiltonians"><a class="viewcode-back" href="../../reference/libra_py/init_ensembles.html#libra_py.init_ensembles.init_mm_Hamiltonians">[docs]</a><span class="k">def</span> <span class="nf">init_mm_Hamiltonians</span><span class="p">(</span><span class="n">syst</span><span class="p">,</span> <span class="n">ff</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function creates a list of MM Hamiltonians and bind them to the corresponding systems</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        syst ( list of ntraj System objects ): self-explanatory</span>
+<span class="sd">        ff ( ForceField object ): defines which force fields to construct for all systems</span>
+<span class="sd">        verbose ( int ): The parameter controlling the amount of debug printing: </span>
+
+<span class="sd">            - 0: no printing [ default ]</span>
+<span class="sd">            - 1: do print info</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (list of ntraj Hamiltonian_Atomistic objects): the ensemble of the objects defining</span>
+<span class="sd">        the MM Hamiltonians that are also bound to the provided systems.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">syst</span><span class="p">)</span>
+    <span class="n">ham</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Creating Hamiltonian and initialize it</span>
+    <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+        <span class="n">ham</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">Hamiltonian_Atomistic</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">Number_of_atoms</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">ham</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">set_Hamiltonian_type</span><span class="p">(</span><span class="s2">&quot;MM&quot;</span><span class="p">)</span>
+
+
+        <span class="n">atlst1</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">Number_of_atoms</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">ham</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">set_interactions_for_atoms</span><span class="p">(</span><span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">],</span> <span class="n">atlst1</span><span class="p">,</span> <span class="n">atlst1</span><span class="p">,</span> <span class="n">ff</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># 0 - verb, 0 - assign_rings</span>
+           
+        <span class="c1"># Bind MM-Hamiltonian and the system   </span>
+        <span class="n">ham</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">set_system</span><span class="p">(</span><span class="n">syst</span><span class="p">[</span><span class="n">tr</span><span class="p">]);</span>
+        <span class="n">ham</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">compute</span><span class="p">();</span> 
+
+        <span class="k">if</span> <span class="n">tr</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">verbose</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Printing the Hamiltonian info for the first trajectory&quot;</span><span class="p">)</span>
+            <span class="n">ham</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">show_interactions_statistics</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Energy = &quot;</span><span class="p">,</span> <span class="n">ham</span><span class="o">.</span><span class="n">H</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="s2">&quot; a.u.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ham</span></div>
+
+
+
+
+<div class="viewcode-block" id="init_mols"><a class="viewcode-back" href="../../reference/libra_py/init_ensembles.html#libra_py.init_ensembles.init_mols">[docs]</a><span class="k">def</span> <span class="nf">init_mols</span><span class="p">(</span><span class="n">syst</span><span class="p">,</span> <span class="n">ntraj</span><span class="p">,</span> <span class="n">nnucl</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function creates a list of Nuclear objects and initializes </span>
+<span class="sd">    them by extracting info from the provided systems - in &quot;syst&quot;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ntraj ( int ): The number of trajectories in the ensemble</span>
+<span class="sd">        nnucl ( int ): The number of nuclear DOF ( usually, = 3* Number_of_atoms)</span>
+<span class="sd">        verbose ( int ): The parameter controlling the amount of debug printing: </span>
+
+<span class="sd">            - 0: no printing [ default ]</span>
+<span class="sd">            - 1: do print info</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        (list of ntraj Nuclear objects): mol: self-explanatory</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Initialize nuclear variables</span>
+    <span class="n">mol</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+        <span class="n">mol</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Nuclear</span><span class="p">(</span><span class="n">nnucl</span><span class="p">))</span>
+        <span class="n">syst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">extract_atomic_q</span><span class="p">(</span><span class="n">mol</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">q</span><span class="p">)</span>
+        <span class="n">syst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">extract_atomic_p</span><span class="p">(</span><span class="n">mol</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">syst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">extract_atomic_f</span><span class="p">(</span><span class="n">mol</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">syst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">extract_atomic_mass</span><span class="p">(</span><span class="n">mol</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">mass</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="s2">&quot;mol=&quot;</span><span class="p">,</span><span class="n">mol</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">syst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">Number_of_atoms</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mol[</span><span class="si">%d</span><span class="s2">][</span><span class="si">%d</span><span class="s2">]=</span><span class="si">%f</span><span class="s2">,</span><span class="si">%f</span><span class="s2">,</span><span class="si">%f</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">mol</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">0</span><span class="p">],</span><span class="n">mol</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="n">mol</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">2</span><span class="p">])</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mol</span></div>
+
+
+<div class="viewcode-block" id="init_therms"><a class="viewcode-back" href="../../reference/libra_py/init_ensembles.html#libra_py.init_ensembles.init_therms">[docs]</a><span class="k">def</span> <span class="nf">init_therms</span><span class="p">(</span><span class="n">ntraj</span><span class="p">,</span> <span class="n">nnucl</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function creates a list of Thermostat objects and initializes </span>
+<span class="sd">    them according to given parameters</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ntraj ( int ): The number of trajectories in the ensemble</span>
+<span class="sd">        nnucl ( int ): The number of nuclear DOF ( usually, = 3* Number_of_atoms)</span>
+<span class="sd">        verbose ( int ): The parameter controlling the amount of debug printing: </span>
+
+<span class="sd">            - 0: no printing [ default ]</span>
+<span class="sd">            - 1: do print info</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        (list of ntraj Thermostat objects): therm: self-explanatory</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Initialize Thermostat object    </span>
+    <span class="n">therm</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>
+        <span class="n">therm_i</span> <span class="o">=</span> <span class="n">Thermostat</span><span class="p">({</span><span class="s2">&quot;nu_therm&quot;</span><span class="p">:</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;nu_therm&quot;</span><span class="p">],</span> 
+                              <span class="s2">&quot;NHC_size&quot;</span><span class="p">:</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;NHC_size&quot;</span><span class="p">],</span> 
+                              <span class="s2">&quot;Temperature&quot;</span><span class="p">:</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;Temperature&quot;</span><span class="p">],</span> 
+                              <span class="s2">&quot;thermostat_type&quot;</span><span class="p">:</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;thermostat_type&quot;</span><span class="p">]</span>
+                             <span class="p">})</span>
+        <span class="n">therm_i</span><span class="o">.</span><span class="n">set_Nf_t</span><span class="p">(</span><span class="n">nnucl</span><span class="p">)</span>
+        <span class="n">therm_i</span><span class="o">.</span><span class="n">set_Nf_r</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">therm_i</span><span class="o">.</span><span class="n">init_nhc</span><span class="p">()</span>
+        <span class="n">therm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">therm_i</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;therm =&quot;</span><span class="p">,</span><span class="n">therm</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">therm</span></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

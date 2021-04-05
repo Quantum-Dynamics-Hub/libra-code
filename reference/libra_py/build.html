@@ -1,0 +1,717 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>build &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="CP2K_methods" href="CP2K_methods.html" />
+    <link rel="prev" title="autoconnect" href="autoconnect.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>build</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/build.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.build">
+<span id="build"></span><h1>build<a class="headerlink" href="#module-libra_py.build" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-build"></span><dl class="py function">
+<dt id="libra_py.build.add_atom_to_system">
+<code class="sig-prename descclassname"><span class="pre">libra_py.build.</span></code><code class="sig-name descname"><span class="pre">add_atom_to_system</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">syst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MaxCoords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ny</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_coord</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inp_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/build.html#add_atom_to_system"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.build.add_atom_to_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function adds an atom and its periordic replicas to a (chemical) System object.
+The momenta of the atoms are also initialized and are drawn from the normal distribution along
+each of the directions (Cartesian x, y, and z), no center of mass momentum subtraction is made however.
+This is good for constructing lattices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>syst</strong> (<em>System object</em>) – the chemical system to which we are going to add the atoms</p></li>
+<li><p><strong>coords</strong> (<em>list of VECTORs</em>) – coordinates of all atoms in a system</p></li>
+<li><p><strong>MaxCoords</strong> (<em>list of ints</em>) – Maximal coordination number of each atom</p></li>
+<li><p><strong>Nx</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – how many times to replicate the atom along a direction</p></li>
+<li><p><strong>Ny</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – how many times to replicate the atom along b direction</p></li>
+<li><p><strong>Nz</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – how many times to replicate the atom along c direction</p></li>
+<li><p><strong>a</strong> (<em>VECTOR</em>) – the periodicity translation vector along the a direction [Bohr]</p></li>
+<li><p><strong>b</strong> (<em>VECTOR</em>) – the periodicity translation vector along the b direction [Bohr]</p></li>
+<li><p><strong>c</strong> (<em>VECTOR</em>) – the periodicity translation vector along the c direction [Bohr]</p></li>
+<li><p><strong>shift</strong> (<em>VECTOR</em>) – essentially a coordinate of the atom in the unit cell [Bohr]</p></li>
+<li><p><strong>elt</strong> (<em>string</em>) – Element name</p></li>
+<li><p><strong>mass</strong> (<em>double</em>) – mass of the atom [a.u. of mass, 1 = mass of an electron]</p></li>
+<li><p><strong>scl</strong> (<em>VECTOR</em>) – momentum rescaling factors along each direction [a.u. of momentum]</p></li>
+<li><p><strong>max_coord</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – maximal coordination number of the added atom allowed</p></li>
+<li><p><strong>rnd</strong> (<em>Random</em>) – an instance of the random number generator class</p></li>
+<li><p><strong>inp_units</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>defines the units of variables stored in shift, a,b, and c</p>
+<ul>
+<li><p>0 - Bohr ( default )</p></li>
+<li><p>1 - Angstrom</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>But the following objects will be updated:</p>
+<ul class="simple">
+<li><p>syst - the new atoms will be added</p></li>
+<li><p>coords - the new coordinates will be added</p></li>
+<li><p>MaxCoords - the maximal coordination numbers for new atoms will be added</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.build.add_atoms_to_system">
+<code class="sig-prename descclassname"><span class="pre">libra_py.build.</span></code><code class="sig-name descname"><span class="pre">add_atoms_to_system</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">syst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">univ_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/build.html#add_atoms_to_system"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.build.add_atoms_to_system" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>syst</strong> (<em>System object</em>) – the chemical system to which we are going to add the atoms</p></li>
+<li><p><strong>L</strong> (<em>list of strings</em>) – element names</p></li>
+<li><p><strong>R</strong> (<em>list of VECTOR objects</em>) – coordinates of the particles [ Bohrs ]</p></li>
+<li><p><strong>scl</strong> (<em>VECTOR</em>) – momentum rescaling factors along each direction [a.u. of momentum]</p></li>
+<li><p><strong>mass</strong> (<em>list of doubles</em>) – atomic masses [a.u. of mass]</p></li>
+<li><p><strong>univ_file</strong> (<em>string</em>) – name of the file that contains the Universe properties</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but adds new atoms to the System object, modifies the syst variable</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.build.crop_sphere_xyz">
+<code class="sig-prename descclassname"><span class="pre">libra_py.build.</span></code><code class="sig-name descname"><span class="pre">crop_sphere_xyz</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rcut</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/build.html#crop_sphere_xyz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.build.crop_sphere_xyz" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function reads an .xyz file with the geometry, cuts the atoms that are outside
+of a sphere of given radius and then prints out the remaining atoms to a new file
+in .xyz format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>infile</strong> (<em>string</em>) – the name of the .xyz file that contains the original coordinates</p></li>
+<li><p><strong>outfile</strong> (<em>string</em>) – the name of the new .xyz file to create (with the cropped geometry)</p></li>
+<li><p><strong>Rcut</strong> (<em>double</em>) – the radius of the sphere from the center of the QD [ same units as used in infile ]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(lab, coords), where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>lab ( list of N strings ): the labels of all remaining atoms</p></li>
+<li><p>coords ( list of N VECTORs ): the coordinates of all remaining atoms</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>The example below read in a unit cell of Si (8 atoms), replicates in 5 times
+in x, y, and z directions (so we get a 6 x 6 x 6 supercell). The resulting
+structure is written to the “cube10.xyz” file. Then the file cube10.xyz
+is read and cropped to make a sphere of 5 Angstrom. The resulting system
+is then printed out to the “qd_5.xyz” file.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="p">[</span>     <span class="mf">5.4307100000000000</span><span class="p">,</span>    <span class="mf">0.0000000000000000</span><span class="p">,</span>    <span class="mf">0.0000000000000000</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="p">[</span>     <span class="mf">0.0000000000000000</span><span class="p">,</span>    <span class="mf">5.4307100000000000</span><span class="p">,</span>    <span class="mf">0.0000000000000000</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="p">[</span>     <span class="mf">0.0000000000000000</span><span class="p">,</span>    <span class="mf">0.0000000000000000</span><span class="p">,</span>    <span class="mf">5.4307100000000000</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_replicas_xyz</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span> <span class="p">,</span> <span class="s2">&quot;Si.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;cube10.xyz&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">crop_sphere_xyz</span><span class="p">(</span><span class="s2">&quot;cube10.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;qd_5.xyz&quot;</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.build.crop_sphere_xyz2">
+<code class="sig-prename descclassname"><span class="pre">libra_py.build.</span></code><code class="sig-name descname"><span class="pre">crop_sphere_xyz2</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rcut</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/build.html#crop_sphere_xyz2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.build.crop_sphere_xyz2" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function removes all atoms that are outside of a sphere of
+Rcut radius. The sphere is centered on GEOMETRIC center of the
+system</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>L</strong> (<em>list of strings</em>) – element names, this list will be trimmed accordingly</p></li>
+<li><p><strong>R</strong> (<em>VECTORList</em><em> or </em><em>list of VECTOR objects</em>) – coordinates of the particles [ Bohr ]</p></li>
+<li><p><strong>Rcut</strong> (<em>double</em>) – the radius of the sphere from the center of the QD [ Bohrs ]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(lab, coords), where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>lab ( list of N strings ): the labels of all remaining atoms</p></li>
+<li><p>coords ( list of N VECTORs ): the coordinates of all remaining atoms</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.build.crop_sphere_xyz3">
+<code class="sig-prename descclassname"><span class="pre">libra_py.build.</span></code><code class="sig-name descname"><span class="pre">crop_sphere_xyz3</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rcut</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pairs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_L</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/build.html#crop_sphere_xyz3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.build.crop_sphere_xyz3" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function removes all atoms that are outside of a sphere of
+Rcut radius. The sphere is centered on GEOMETRIC center of the
+system</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>L</strong> (<em>list of strings</em>) – element names, this list will be trimmed accordingly</p></li>
+<li><p><strong>R</strong> (<em>VECTORList</em><em> or </em><em>list of VECTOR objects</em>) – coordinates of the particles [ Bohr ]</p></li>
+<li><p><strong>Rcut</strong> (<em>double</em>) – the radius of the sphere from the center of the QD [ Bohrs ]</p></li>
+<li><p><strong>pairs</strong> (<em>list of</em><em> [</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>VECTOR</em><em>, </em><em>VECTOR</em><em>] </em><em>lists</em>) – integers describe the indices for
+the connected atoms, the VECTORs describe the translation vector by which the atoms
+should be translated before considering connected (e.g. for periodic boundary conditions)
+these VECTOR objects are not used in the present function, but the format
+is kept such that the output of other functions could be used in this function.</p></li>
+<li><p><strong>( </strong><strong>dictionary</strong><strong>(</strong><strong>string</strong> (<em>new_L</em>) – string) ): a map containing the key-value pairs, where
+the key string corresponds to the label of the atom that is inside the cropped sphere.
+The value string corresponds to the new label of the atom outside the sphere. The function
+will use the original connectivity information to decide how to cap the dangling bonds
+formed at cropping. So, if the atom A is connected to atom B, atom A is inside of the
+sphere and B is outside the sphere. The vaule element will become a new label for atom
+B, if the key element corresponds to atom type A.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(lab, coords), where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>lab ( list of N strings ): the labels of all remaining atoms</p></li>
+<li><p>coords ( list of N VECTORs ): the coordinates of all remaining atoms</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.build.generate_replicas_xyz">
+<code class="sig-prename descclassname"><span class="pre">libra_py.build.</span></code><code class="sig-name descname"><span class="pre">generate_replicas_xyz</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tv1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tv2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tv3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rep1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rep2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rep3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inp_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/build.html#generate_replicas_xyz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.build.generate_replicas_xyz" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function generates a lattice of coordinates and an array of
+corresponding atomic labels by replicating a given set of labeled
+atoms periodically in up to 3 dimensions (with a variable number of
+replicas in each direction). This function first reads in the
+atomic coordinates (supplied in an .xyz format) and then writes
+the resulting data into another file (.xyz format)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tv1</strong> (<em>VECTOR</em>) – translation vector in direction 1 [defined by inp_units]</p></li>
+<li><p><strong>tv2</strong> (<em>VECTOR</em>) – translation vector in direction 2 [defined by inp_units]</p></li>
+<li><p><strong>tv3</strong> (<em>VECTOR</em>) – translation vector in direction 3 [defined by inp_units]</p></li>
+<li><p><strong>rep1</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of replications along the vector tv1, not counting the original cell</p></li>
+<li><p><strong>rep2</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of replications along the vector tv2, not counting the original cell</p></li>
+<li><p><strong>rep3</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of replications along the vector tv3, not counting the original cell</p></li>
+<li><p><strong>filename</strong> (<em>string</em>) – the name of the file containing input coordinates (original unit cell)</p></li>
+<li><p><strong>outfile</strong> (<em>string</em>) – the name of the file where the resulting lattice atoms will be written</p></li>
+<li><p><strong>inp_units</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>defines the units of variables in filename, tv1, tv2, and tv3:</p>
+<ul>
+<li><p>0 - Bohr ( default )</p></li>
+<li><p>1 - Angstrom</p></li>
+</ul>
+</p></li>
+<li><p><strong>out_units</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>defines the units of the coordinates written to outfile</p>
+<ul>
+<li><p>0 - Bohr ( default )</p></li>
+<li><p>1 - Angstrom</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but a new .xyz file will be printed out</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>The example below read in a unit cell of Si (8 atoms), replicates in 5 times
+in x, y, and z directions (so we get a 6 x 6 x 6 supercell). The resulting
+structure is written to the “cube10.xyz” file</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="p">[</span>     <span class="mf">5.4307100000000000</span><span class="p">,</span>    <span class="mf">0.0000000000000000</span><span class="p">,</span>    <span class="mf">0.0000000000000000</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="p">[</span>     <span class="mf">0.0000000000000000</span><span class="p">,</span>    <span class="mf">5.4307100000000000</span><span class="p">,</span>    <span class="mf">0.0000000000000000</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="p">[</span>     <span class="mf">0.0000000000000000</span><span class="p">,</span>    <span class="mf">0.0000000000000000</span><span class="p">,</span>    <span class="mf">5.4307100000000000</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_replicas_xyz</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span> <span class="p">,</span> <span class="s2">&quot;Si.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;cube10.xyz&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.build.generate_replicas_xyz2">
+<code class="sig-prename descclassname"><span class="pre">libra_py.build.</span></code><code class="sig-name descname"><span class="pre">generate_replicas_xyz2</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tv1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tv2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tv3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ny</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inp_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/build.html#generate_replicas_xyz2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.build.generate_replicas_xyz2" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function generates a lattice of coordinates and an array of
+corresponding atomic labels by replicating a given set of labeled
+atoms periodically in up to 3 dimensions (with a variable number of
+replicas in each direction)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>L</strong> (<em>list of strings</em>) – atomis labels</p></li>
+<li><p><strong>R</strong> (<em>list of VECTOR objects</em>) – initial atomic coords [defined by inp_units]</p></li>
+<li><p><strong>tv1</strong> (<em>VECTOR</em>) – translation vector in direction 1 [defined by inp_units]</p></li>
+<li><p><strong>tv2</strong> (<em>VECTOR</em>) – translation vector in direction 2 [defined by inp_units]</p></li>
+<li><p><strong>tv3</strong> (<em>VECTOR</em>) – translation vector in direction 3 [defined by inp_units]</p></li>
+<li><p><strong>Nx</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of replications along the vector tv1, not counting the original cell</p></li>
+<li><p><strong>Ny</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of replications along the vector tv2, not counting the original cell</p></li>
+<li><p><strong>Nz</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of replications along the vector tv3, not counting the original cell</p></li>
+<li><p><strong>inp_units</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>defines the units of variables R, tv1, tv2, and tv3:</p>
+<ul>
+<li><p>0 - Bohr ( default )</p></li>
+<li><p>1 - Angstrom</p></li>
+</ul>
+</p></li>
+<li><p><strong>out_units</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>defines the units of the coordinates returned:</p>
+<ul>
+<li><p>0 - Bohr ( default )</p></li>
+<li><p>1 - Angstrom</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(lab, newR), where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>lab ( list of N strings ): the labels of all atoms and their corresponding replicas</p></li>
+<li><p>newR ( list of N VECTORs ): the coordinates of all replicated atoms [defined by out_units]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.build.make_system">
+<code class="sig-prename descclassname"><span class="pre">libra_py.build.</span></code><code class="sig-name descname"><span class="pre">make_system</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/build.html#make_system"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.build.make_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function creates a chemical system (System) oject from the
+corrdinates and atom labels provided. All atoms of the system
+are made into a single group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>R</strong> (<em>MATRIX</em><em>(</em><em>ndof</em><em>, </em><em>nsteps</em><em>)</em>) – molecular coordinates at different times
+The convention is R.get(dof, step) is the coordinate of the <code class="docutils literal notranslate"><span class="pre">`dof`</span></code>-th
+degree of freedom and <code class="docutils literal notranslate"><span class="pre">`step`</span></code>-th timestep.
+Note: ndof = 3*natoms. [ a.u. = Bohrs ]</p></li>
+<li><p><strong>E</strong> (list of <code class="docutils literal notranslate"><span class="pre">`natoms`</span></code> strings) – atomic labels</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – selector of the timestep for which we want to construct the system</p></li>
+<li><p><strong>U</strong> (<em>Universe object</em>) – Universe</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>the chemical system with the coordinates of all atoms at a given time. All atoms</dt><dd><p>are grouped together into a single rigid body</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>System</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.build.make_xyz">
+<code class="sig-prename descclassname"><span class="pre">libra_py.build.</span></code><code class="sig-name descname"><span class="pre">make_xyz</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inp_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/build.html#make_xyz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.build.make_xyz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert atomic labels and coordinates to a string formatted according to xyz</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>L</strong> (<em>list of N strings</em>) – the labels of N atoms in the system</p></li>
+<li><p><strong>R</strong> (<em>list of N VECTORs</em>) – the coordinates of N atoms in the system</p></li>
+<li><p><strong>inp_units</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>defines the units of variables stored in R:</p>
+<ul>
+<li><p>0 - Bohr ( default )</p></li>
+<li><p>1 - Angstrom</p></li>
+</ul>
+</p></li>
+<li><p><strong>out_units</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>defines the units of the coordinates written in xyz file:</p>
+<ul>
+<li><p>0 - Bohr</p></li>
+<li><p>1 - Angstrom ( default )</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a string representing the xyz file of the system</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.build.make_xyz_mat">
+<code class="sig-prename descclassname"><span class="pre">libra_py.build.</span></code><code class="sig-name descname"><span class="pre">make_xyz_mat</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/build.html#make_xyz_mat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.build.make_xyz_mat" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns a string in the xyz format with X, Y, Z
+where X,Y,Z are the coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>E</strong> (<em>list of ndof/3 string</em>) – atom names (elements) of all atoms</p></li>
+<li><p><strong>R</strong> (<em>MATRIX</em><em>(</em><em>ndof x nsteps-1</em><em>)</em>) – coordinates of all DOFs for all mid-timesteps</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A string representing an xyz file</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.build.read_xyz">
+<code class="sig-prename descclassname"><span class="pre">libra_py.build.</span></code><code class="sig-name descname"><span class="pre">read_xyz</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inp_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/build.html#read_xyz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.build.read_xyz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read an xyz file (single structure)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – the name of the xyz file to read</p></li>
+<li><p><strong>inp_units</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>defines the coordinates’ units in the input file:</p>
+<ul>
+<li><p>0 - Bohr</p></li>
+<li><p>1 - Angstrom ( default )</p></li>
+</ul>
+</p></li>
+<li><p><strong>out_units</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>defines the output coordinates’ units:</p>
+<ul>
+<li><p>0 - Bohr ( default )</p></li>
+<li><p>1 - Angstrom</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(L, coords), where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>L ( list of N strings ): the labels of N atoms read</p></li>
+<li><p>coords ( list of N VECTORs ): the coordinates of N atoms read [defined by out_units]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.build.read_xyz_crystal">
+<code class="sig-prename descclassname"><span class="pre">libra_py.build.</span></code><code class="sig-name descname"><span class="pre">read_xyz_crystal</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inp_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/build.html#read_xyz_crystal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.build.read_xyz_crystal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read an xyz file with atomic coordinates given in fractional lattice vector units</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – the name of the xyz file to read</p></li>
+<li><p><strong>a</strong> (<em>VECTOR</em>) – the unit cell vector in the direction a [units defined by inp_units]</p></li>
+<li><p><strong>b</strong> (<em>VECTOR</em>) – the unit cell vector in the direction b [units defined by inp_units]</p></li>
+<li><p><strong>c</strong> (<em>VECTOR</em>) – the unit cell vector in the direction c [units defined by inp_units]</p></li>
+<li><p><strong>inp_units</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>defines the units of a,b,c:</p>
+<ul>
+<li><p>0 - Bohr ( default )</p></li>
+<li><p>1 - Angstrom</p></li>
+</ul>
+</p></li>
+<li><p><strong>out_units</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>defines the units of the coordinates in the ourput variable:</p>
+<ul>
+<li><p>0 - Bohr ( default )</p></li>
+<li><p>1 - Angstrom</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(L, coords), where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>L ( list of N strings ): the labels of N atoms read</p></li>
+<li><p>coords ( list of N VECTORs ): the coordinates of N atoms read [defined by out_units]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="CP2K_methods.html" class="btn btn-neutral float-right" title="CP2K_methods" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="autoconnect.html" class="btn btn-neutral float-left" title="autoconnect" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

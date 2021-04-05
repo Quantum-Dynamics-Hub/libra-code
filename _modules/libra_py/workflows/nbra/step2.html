@@ -1,0 +1,526 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.workflows.nbra.step2 &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.workflows.nbra.step2</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.workflows.nbra.step2</h1><div class="highlight"><pre>
+<span></span><span class="c1">#***********************************************************</span>
+<span class="c1"># * Copyright (C) 2017-2019 Brendan A. Smith, Wei Li, and Alexey V. Akimov</span>
+<span class="c1"># * This file is distributed under the terms of the</span>
+<span class="c1"># * GNU General Public License as published by the</span>
+<span class="c1"># * Free Software Foundation; either version 3 of the</span>
+<span class="c1"># * License, or (at your option) any later version.</span>
+<span class="c1"># * http://www.gnu.org/copyleft/gpl.txt</span>
+<span class="c1">#***********************************************************/</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: step2</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements functions for doing NAC calculaitons in the 1-electron</span>
+<span class="sd">       basis of KS orbitals, withe the QE package</span>
+
+<span class="sd">.. moduleauthor:: Brendan A. Smith, Wei Li, and Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="c1"># Fisrt, we add the location of the library to test to the PYTHON path</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">libra_py</span> <span class="kn">import</span> <span class="n">QE_methods</span>
+<span class="kn">from</span> <span class="nn">libra_py</span> <span class="kn">import</span> <span class="n">QE_utils</span>
+<span class="kn">from</span> <span class="nn">libra_py</span> <span class="kn">import</span> <span class="n">units</span>
+
+<span class="c1">#import libra_py.common_utils as comn</span>
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">compute_properties</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">compute_hprime</span>
+
+
+
+<div class="viewcode-block" id="run"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/step2.html#libra_py.workflows.nbra.step2.run">[docs]</a><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function is the main driver for the NAC calculations withing the workflows/nbra</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        params ( dictionary ): Simulation control parameters</span>
+
+<span class="sd">        * **params[&quot;start_indx&quot;]** ( int ): index of the starting datapoint in the trajectory to compute</span>
+<span class="sd">            the NACs [default: 0]</span>
+<span class="sd">        * **params[&quot;stop_indx&quot;]** ( int ): index of the final datapoint in the trajectory to compute</span>
+<span class="sd">            the NACs [default: 1]</span>
+<span class="sd">        * **params[&quot;dt&quot;]** ( double ): time step between two adjacent datapoint a the trajectory [units: a.u.; default: 41.0]</span>
+<span class="sd">        * **params[&quot;wd&quot;]** ( string ): the name of a &quot;working directory (can be removed once the calculatons</span>
+<span class="sd">            are done)&quot; that will be created during this function execution - this is where the temporary files</span>
+<span class="sd">            are written to </span>
+<span class="sd">        * **params[&quot;rd&quot;]** ( string ): the name of a &quot;results directory&quot; - this is where all the output files </span>
+<span class="sd">            files will be written to [ default: &quot;res&quot; ]</span>
+<span class="sd">        * **params[&quot;nac_method&quot;]** ( int ): selects the type of output to analyze:</span>
+
+<span class="sd">            - 0 : non-spin-polarized calculations [default]</span>
+<span class="sd">            - 1 : spin-polarized calculations</span>
+<span class="sd">            - 2 : non-collinear calculation (SOC) only </span>
+<span class="sd">            - 3 : spin-polarized and non-collinear calculation (SOC)</span>
+
+<span class="sd">        * **params[&quot;compute_Hprime&quot;]** ( Boolean ): the flag to compute the &lt;i|H&#39;|j&gt; matrices [ default: False]</span>
+<span class="sd">        * **params[&quot;verbosity&quot;]** ( int ): the verbosity level regarding the execution of the current function [default: 0]</span>
+
+
+<span class="sd">        ..seealso:: parameters of ::funct::```run_qe``` function</span>
+<span class="sd">            * **params[&quot;BATCH_SYSTEM&quot;]**</span>
+<span class="sd">            * **params[&quot;NP&quot;]**</span>
+<span class="sd">            * **params[&quot;EXE&quot;]**</span>
+<span class="sd">            * **params[&quot;EXE_EXPORT&quot;]**</span>
+<span class="sd">            * **params[&quot;prefix0&quot;]**</span>
+<span class="sd">            * **params[&quot;prefix1&quot;]**</span>
+
+<span class="sd">        ..seealso:: parameters of ::funct::```read_all``` function</span>
+
+<span class="sd">            * **params[&quot;read_wfc&quot;]** </span>
+<span class="sd">            * **params[&quot;read_grid&quot;]**</span>
+<span class="sd">            * **params[&quot;verb0&quot;]** </span>
+<span class="sd">            * **params[&quot;verb1&quot;]**</span>
+<span class="sd">            * **params[&quot;verb2&quot;]**</span>
+
+<span class="sd">        ..seealso:: parameters of ::funct::```read_wfc_grid``` function</span>
+<span class="sd">            * **params[&quot;maxband&quot;]**</span>
+<span class="sd">            * **params[&quot;minband&quot;]**</span>
+<span class="sd">            * **params[&quot;maxband_soc&quot;]**</span>
+<span class="sd">            * **params[&quot;minband_soc&quot;]**</span>
+
+
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: but generates the files with couplings, energies and transition density matrices</span>
+<span class="sd">            The matrices are of  2N x 2N dimensions, where N = maxband - minband + 1</span>
+<span class="sd"> </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Now try to get parameters from the input</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;rd&quot;</span> <span class="p">]</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;start_indx&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;stop_indx&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span><span class="mf">1.0</span><span class="o">*</span><span class="n">units</span><span class="o">.</span><span class="n">fs2au</span><span class="p">,</span> 
+                       <span class="s2">&quot;wd&quot;</span><span class="p">:</span><span class="s2">&quot;wd&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;nac_method&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+                       <span class="s2">&quot;pdos_flg&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+                       <span class="s2">&quot;compute_Hprime&quot;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> 
+                       <span class="s2">&quot;verbosity&quot;</span><span class="p">:</span><span class="mi">0</span>
+                     <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+
+    <span class="n">rd</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;rd&quot;</span><span class="p">]</span>
+
+    <span class="n">start_indx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;start_indx&quot;</span><span class="p">])</span> 
+    <span class="n">stop_indx</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;stop_indx&quot;</span><span class="p">])</span> 
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span>
+    <span class="n">wd</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;wd&quot;</span><span class="p">]</span>
+    <span class="n">nac_method</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;nac_method&quot;</span><span class="p">]</span>
+    <span class="n">compute_Hprime</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;compute_Hprime&quot;</span><span class="p">]</span>
+    <span class="n">verbosity</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;verbosity&quot;</span><span class="p">]</span>    
+    <span class="n">pdos_flg</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;pdos_flg&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;Starting trajectory.run&quot;</span><span class="p">)</span>
+    <span class="n">tim</span> <span class="o">=</span> <span class="n">Timer</span><span class="p">()</span>
+
+    <span class="c1"># Sanity/Convention check</span>
+        
+    <span class="k">if</span> <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>        
+        <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;non-relativistic, non-spin-polarized calculations </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;non-relativistic, spin-polarized calculations </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;fully relativistic, non-collinear calculations </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;same as 2 + 1, followed by the projections  </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;Error: nac_method must be one of the values in [0,1,2,3]  </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+
+    <span class="c1"># Initialize variables</span>
+    <span class="n">curr_index</span> <span class="o">=</span> <span class="n">start_indx</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">start_indx</span>
+
+    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;In trajectory.run: current working directory for python: &quot;</span><span class="p">,</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;In trajectory.run: current working directory for sh:&quot;</span><span class="p">,</span><span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;echo $(pwd)&quot;</span><span class="p">))</span>
+
+    <span class="c1"># Create the working directory where all output files will be written</span>
+    <span class="c1"># The results directory should already exist</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;mkdir </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">wd</span><span class="p">)</span>  
+    <span class="k">while</span> <span class="n">t</span><span class="o">&lt;=</span><span class="n">stop_indx</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;  t= &quot;</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="s2">&quot; &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&quot;</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;stop_indx&quot;</span><span class="p">,</span> <span class="n">stop_indx</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;start_indx&quot;</span><span class="p">,</span> <span class="n">start_indx</span><span class="p">)</span>
+
+        <span class="n">dirname</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">t</span><span class="o">==</span><span class="n">start_indx</span><span class="p">:</span>
+           <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+               <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;Starting first point in this batch&quot;</span><span class="p">)</span>
+           <span class="n">dirname0</span><span class="p">,</span> <span class="n">dirname1</span> <span class="o">=</span> <span class="s2">&quot;curr0&quot;</span><span class="p">,</span> <span class="s2">&quot;curr1&quot;</span>
+
+        <span class="k">if</span> <span class="n">t</span><span class="o">&gt;</span><span class="n">start_indx</span><span class="p">:</span>
+           <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+               <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;Continuing with other points in this batch&quot;</span><span class="p">)</span>
+           <span class="n">dirname0</span><span class="p">,</span> <span class="n">dirname1</span> <span class="o">=</span> <span class="s2">&quot;next0&quot;</span><span class="p">,</span> <span class="s2">&quot;next1&quot;</span>
+
+
+        <span class="c1"># Run the QE calculations       </span>
+        <span class="n">QE_methods</span><span class="o">.</span><span class="n">run_qe</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">dirname0</span><span class="p">,</span> <span class="n">dirname1</span><span class="p">)</span>
+
+        
+        <span class="k">if</span> <span class="n">curr_index</span><span class="o">&gt;=</span><span class="n">start_indx</span><span class="p">:</span>
+
+            <span class="c1"># Update curr_index in params - this may be useful</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;curr_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">curr_index</span>
+
+            <span class="c1"># First see wether the calculation is what we wanted</span>
+            <span class="n">info0</span><span class="p">,</span> <span class="n">all_e_dum0</span><span class="p">,</span> <span class="n">info1</span><span class="p">,</span> <span class="n">all_e_dum1</span> <span class="o">=</span> <span class="n">QE_methods</span><span class="o">.</span><span class="n">read_info</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+            <span class="c1"># Read present and next electronic structure (es) in a formatted way</span>
+            <span class="n">es_curr</span><span class="p">,</span> <span class="n">es_next</span> <span class="o">=</span> <span class="n">QE_methods</span><span class="o">.</span><span class="n">read_wfc_grid</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> 
+
+            <span class="c1"># Finally,  using the current and the next wavefunctions to compute the properties of interest</span>
+
+            <span class="c1"># For the non-relativistic and either spin or non-spin-polarized case</span>
+
+            <span class="k">if</span> <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span> <span class="n">info0</span><span class="p">[</span><span class="s2">&quot;nspin&quot;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">info0</span><span class="p">[</span><span class="s2">&quot;nk&quot;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span> <span class="p">)</span> <span class="ow">or</span> <span class="p">(</span> <span class="n">info0</span><span class="p">[</span><span class="s2">&quot;nspin&quot;</span><span class="p">]</span><span class="o">==</span><span class="mi">2</span> <span class="ow">and</span> <span class="n">info0</span><span class="p">[</span><span class="s2">&quot;nk&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span> <span class="p">:</span> <span class="c1"># Non-SOC case</span>
+
+                    <span class="c1"># Only one k-point. For the spin-polarized case, the beta orbtials are as if they were computed using 2 K-points</span>
+                    <span class="c1"># (nk = 2). However, they are not. This is just the QE format for expressing alpha and beta orbitals at a single K-point </span>
+                    <span class="c1">#if info0[&quot;nk&quot;]==1 or info0[&quot;nk&quot;] == 2:  </span>
+
+                    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;Computing various properies of the spin-diabatic (non-relativistic) KS orbitals using a single K-point&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Compute various properties of the spin-diabatic (non-relativistic) KS orbitals at a single K-point </span>
+                    <span class="n">compute_properties</span><span class="o">.</span><span class="n">compute_properties_onekpt</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">es_curr</span><span class="p">,</span> <span class="n">es_next</span><span class="p">,</span> <span class="n">curr_index</span><span class="p">)</span>
+
+                <span class="k">else</span><span class="p">:</span> 
+
+                    <span class="c1"># Compute various properies of the spin-diabatic (non-relativistic) KS orbitals using multiple K-point</span>
+                    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;Computing various properies of the spin-diabatic (non-relativistic) KS orbitals using multiple K-points&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;Warning: This capabilitiy is under development and not fully tested&quot;</span><span class="p">)</span>
+
+                    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;This capability is temporarily disabled. Please use only a single K-point for now&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Exiting now&quot;</span><span class="p">)</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="c1">#compute_properties.compute_properties_general(params, es_curr, es_next, curr_index)</span>
+           
+                <span class="k">if</span> <span class="n">compute_Hprime</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+
+                    <span class="c1"># Compute the transition dipole moment along the nuclear trajectory</span>
+                    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;Computing the transition dipole moment along the nuclear trajectory&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;Warning: This capabilitiy is under development and not fully tested&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># C++ implementation</span>
+                    <span class="n">compute_hprime</span><span class="o">.</span><span class="n">compute_hprime_dia</span><span class="p">(</span><span class="n">es_curr</span><span class="p">,</span> <span class="n">info0</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/0_Hprime_</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rd</span><span class="p">,</span> <span class="n">curr_index</span><span class="p">)</span> <span class="p">)</span>
+
+                    <span class="c1"># Python implementation</span>
+                    <span class="c1">#compute_hprime.hprime_py(es_curr, info0, &quot;%s/0_Hprime_%d&quot; % (rd, curr_index) )</span>
+               
+
+            <span class="c1"># For the relativistic case</span>
+            <span class="k">if</span> <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+
+                <span class="c1"># Only one k-point</span>
+                <span class="k">if</span> <span class="n">info1</span><span class="p">[</span><span class="s2">&quot;nk&quot;</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+
+                    <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;Computing various properies of the spin-adiabatic (relativistic) KS orbitals using a single K-point&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Compute various properties of the spin-adiabatic (relativistic) KS orbitals at a single K-point              </span>
+                    <span class="n">compute_properties</span><span class="o">.</span><span class="n">compute_properties_onekpt</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">es_curr</span><span class="p">,</span> <span class="n">es_next</span><span class="p">,</span> <span class="n">curr_index</span><span class="p">)</span>
+                    <span class="c1">#compute_properties.compute_properties_adi_gamma(params, es_curr, es_next, curr_index)</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;Multiple k-points scheme with SOC is not yet implemented&quot;</span><span class="p">)</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+            
+            <span class="c1"># Checking if spin-adiabtic and spin-diabatic cases were using the same sized P\plane wave basis</span>
+            <span class="k">if</span>  <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+
+                <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;nac_method == 3: Entering check for whether the adiabatic and diabatic basis have the same number of plane waves&quot;</span><span class="p">)</span>
+             
+                <span class="c1"># Check whether the adiabatic and diabatic basis have the same number of plane waves</span>
+                <span class="c1"># the reason why I used the read_qe_wfc_info is because I will need the ngw </span>
+                <span class="c1"># to check the consistency </span>
+                <span class="c1"># But the read_qe_index does not read it, so in order to avoid the changes in the Libra code, </span>
+                <span class="c1"># I use the read_qe_wfc_info.</span>
+
+                <span class="n">info_wfc0</span> <span class="o">=</span> <span class="n">QE_methods</span><span class="o">.</span><span class="n">read_qe_wfc_info</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/curr0/x0.export/wfc.1&quot;</span> <span class="o">%</span> <span class="n">wd</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">info_wfc1</span> <span class="o">=</span> <span class="n">QE_methods</span><span class="o">.</span><span class="n">read_qe_wfc_info</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/curr1/x1.export/wfc.1&quot;</span> <span class="o">%</span> <span class="n">wd</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">info_wfc0</span><span class="p">[</span><span class="s2">&quot;ngw&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">info_wfc1</span><span class="p">[</span><span class="s2">&quot;ngw&quot;</span><span class="p">]:</span>
+                    <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;Error: The number of plane waves of diabatic and adiabatic functions should be equal&quot;</span><span class="p">)</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;Pass: The number of plane waves of diabatic and adiabatic functions are equal&quot;</span><span class="p">)</span>
+ 
+                <span class="n">params1</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;do_orth&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;root_directory&quot;</span><span class="p">:</span> <span class="n">rd</span><span class="p">,</span> <span class="s2">&quot;curr_index&quot;</span><span class="p">:</span> <span class="n">curr_index</span><span class="p">,</span> <span class="s2">&quot;print_overlaps&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span> <span class="n">dt</span><span class="p">}</span>
+                <span class="n">compute_ovlps</span><span class="p">(</span><span class="n">coeff_curr0</span><span class="p">,</span> <span class="n">coeff_next0</span><span class="p">,</span> <span class="n">coeff_curr1</span><span class="p">,</span> <span class="n">coeff_next1</span><span class="p">,</span> <span class="n">e_curr0</span><span class="p">,</span> <span class="n">e_next0</span><span class="p">,</span> <span class="n">e_curr1</span><span class="p">,</span> <span class="n">e_next1</span><span class="p">,</span> <span class="n">params1</span><span class="p">)</span>
+
+            <span class="c1">#-----------------------------------------------------------------</span>
+
+            <span class="c1"># Remove current run, make next run to be the current one</span>
+            <span class="k">if</span> <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">nac_method</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;rm -rf </span><span class="si">%s</span><span class="s2">/curr0&quot;</span> <span class="o">%</span> <span class="n">wd</span> <span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;mv </span><span class="si">%s</span><span class="s2">/next0 </span><span class="si">%s</span><span class="s2">/curr0&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wd</span><span class="p">,</span> <span class="n">wd</span><span class="p">)</span> <span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">nac_method</span><span class="o">==</span><span class="mi">2</span> <span class="ow">or</span> <span class="n">nac_method</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;rm -rf </span><span class="si">%s</span><span class="s2">/curr1&quot;</span> <span class="o">%</span> <span class="n">wd</span> <span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;mv </span><span class="si">%s</span><span class="s2">/next1 </span><span class="si">%s</span><span class="s2">/curr1&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wd</span><span class="p">,</span> <span class="n">wd</span><span class="p">)</span> <span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;old files deleted, new have become old&quot;</span><span class="p">)</span>
+       
+      
+        <span class="c1"># Move the index files to the results directory, just don&#39;t copy the very last one - it is a repetition</span>
+        <span class="c1">#if t&lt;stop_indx:</span>
+        <span class="k">if</span> <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">nac_method</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
+            <span class="c1"># The input file template defined in params[&quot;prefix0&quot;] should have   prefix = &#39;x0&#39; !</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp </span><span class="si">%s</span><span class="s2">/curr0/x0.export/index.xml </span><span class="si">%s</span><span class="s2">/x0_index_</span><span class="si">%i</span><span class="s2">.xml&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wd</span><span class="p">,</span> <span class="n">rd</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp </span><span class="si">%s</span><span class="s2">/curr0/x0.save/data-file-schema.xml </span><span class="si">%s</span><span class="s2">/x0_data-file-schema_</span><span class="si">%i</span><span class="s2">.xml&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wd</span><span class="p">,</span> <span class="n">rd</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp </span><span class="si">%s</span><span class="s2">/curr0/</span><span class="si">%s</span><span class="s2">.</span><span class="si">%d</span><span class="s2">.out </span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">.</span><span class="si">%d</span><span class="s2">.out&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wd</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;prefix0&quot;</span><span class="p">],</span> <span class="n">t</span><span class="p">,</span> <span class="n">rd</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;prefix0&quot;</span><span class="p">],</span> <span class="n">t</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">pdos_flg</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Entering pdos_flag == 1: Outputting files necessary for computing pDOS calculations with projwfc.x&quot;</span><span class="p">)</span>
+                <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Warning: Crashes at this point may result from QE versioning. This flag is currently compatable with QE v6.2.1&quot;</span><span class="p">)</span>
+                <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Warning: This flag is tested only for non-relativisitic cases&quot;</span><span class="p">)</span>
+
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp </span><span class="si">%s</span><span class="s2">/curr0/x0.save/charge-density.dat </span><span class="si">%s</span><span class="s2">/x0_charge-density_</span><span class="si">%i</span><span class="s2">.dat&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wd</span><span class="p">,</span> <span class="n">rd</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp </span><span class="si">%s</span><span class="s2">/curr0/x0.save/wfcdw1.dat </span><span class="si">%s</span><span class="s2">/x0_wfcdw1_</span><span class="si">%i</span><span class="s2">.dat&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wd</span><span class="p">,</span> <span class="n">rd</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp </span><span class="si">%s</span><span class="s2">/curr0/x0.save/wfcup1.dat </span><span class="si">%s</span><span class="s2">/x0_wfcup1_</span><span class="si">%i</span><span class="s2">.dat&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wd</span><span class="p">,</span> <span class="n">rd</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">nac_method</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c1"># The input file template defined in params[&quot;prefix1&quot;] should have   prefix = &#39;x1&#39; !</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp </span><span class="si">%s</span><span class="s2">/curr1/x1.export/index.xml </span><span class="si">%s</span><span class="s2">/x1_index_</span><span class="si">%i</span><span class="s2">.xml&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wd</span><span class="p">,</span> <span class="n">rd</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp </span><span class="si">%s</span><span class="s2">/curr1/x1.save/data-file-schema.xml </span><span class="si">%s</span><span class="s2">/x1_data-file-schema_</span><span class="si">%i</span><span class="s2">.xml&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wd</span><span class="p">,</span> <span class="n">rd</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp </span><span class="si">%s</span><span class="s2">/curr1/</span><span class="si">%s</span><span class="s2">.</span><span class="si">%d</span><span class="s2">.out </span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">.</span><span class="si">%d</span><span class="s2">.out&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wd</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;prefix1&quot;</span><span class="p">],</span> <span class="n">t</span><span class="p">,</span> <span class="n">rd</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;prefix1&quot;</span><span class="p">],</span> <span class="n">t</span><span class="p">))</span>
+      
+    
+        <span class="c1"># ACHTUNG!!! Restoring wfc makes some complications, so we might need to destroy wfc objects</span>
+        <span class="c1"># after each round of operations and create new objects from the beginning - thia may be safer!</span>
+
+        <span class="n">curr_index</span> <span class="o">=</span> <span class="n">curr_index</span> <span class="o">+</span> <span class="mi">1</span>
+               
+        <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;End of step t=&quot;</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span></div>
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,601 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>data_conv &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="data_outs" href="data_outs.html" />
+    <link rel="prev" title="cube_file_methods" href="cube_file_methods.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>data_conv</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/data_conv.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.data_conv">
+<span id="data-conv"></span><h1>data_conv<a class="headerlink" href="#module-libra_py.data_conv" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-data_conv"></span><dl class="py function">
+<dt id="libra_py.data_conv.MATRIX2nparray">
+<code class="sig-prename descclassname"><span class="pre">libra_py.data_conv.</span></code><code class="sig-name descname"><span class="pre">MATRIX2nparray</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/data_conv.html#MATRIX2nparray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.data_conv.MATRIX2nparray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts both Libra MATRIX ( N, M ) object and CMATRIX ( N, M ) object
+into a 2D np.array of shape( N, M )</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>Libra MATRIX object of dimension N x M</em>) – data to be converted</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>2D np.array of shape( N, M )</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>2d np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.data_conv.form_block_matrix">
+<code class="sig-prename descclassname"><span class="pre">libra_py.data_conv.</span></code><code class="sig-name descname"><span class="pre">form_block_matrix</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mat_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mat_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mat_c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mat_d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/data_conv.html#form_block_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.data_conv.form_block_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function gets four numpy arrays and concatenate them into a
+new matrix in a block format. These matrices should have the same
+shape on each side which they get concatenated.</p>
+<blockquote>
+<div><p><a href="#id1"><span class="problematic" id="id2">|mat_a   mat_b|</span></a></p>
+</div></blockquote>
+<dl class="simple">
+<dt>S =  |             |</dt><dd><p><a href="#id3"><span class="problematic" id="id4">|mat_c   mat_d|</span></a></p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mat_a</strong> (<em>2D numpy arrays</em>) – The matrices which will form the block matrix</p></li>
+<li><p><strong>mat_b</strong> (<em>2D numpy arrays</em>) – The matrices which will form the block matrix</p></li>
+<li><p><strong>mat_c</strong> (<em>2D numpy arrays</em>) – The matrices which will form the block matrix</p></li>
+<li><p><strong>mat_d</strong> (<em>2D numpy arrays</em>) – The matrices which will form the block matrix</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The block matrix of the four matrices above.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>block_matrix ( numpy 2D array )</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.data_conv.list2MATRIX">
+<code class="sig-prename descclassname"><span class="pre">libra_py.data_conv.</span></code><code class="sig-name descname"><span class="pre">list2MATRIX</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/data_conv.html#list2MATRIX"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.data_conv.list2MATRIX" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a list of N doubles into a MATRIX(N,1) object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>list of doubles</em>) – data to be converted</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a matrix representation of the data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>MATRIX(N,1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.data_conv.make_list">
+<code class="sig-prename descclassname"><span class="pre">libra_py.data_conv.</span></code><code class="sig-name descname"><span class="pre">make_list</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nitems</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/data_conv.html#make_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.data_conv.make_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a list of <cite>nitems</cite> items, each of which is <cite>value</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nitems</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the size of the resulting list to create</p></li>
+<li><p><strong>value</strong> (<em>any type</em>) – the value of each initialized element of the list</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the list of the added values</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.data_conv.matrix2list">
+<code class="sig-prename descclassname"><span class="pre">libra_py.data_conv.</span></code><code class="sig-name descname"><span class="pre">matrix2list</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/data_conv.html#matrix2list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.data_conv.matrix2list" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Converts the MATRIX(ndof, 1) or CMATRIX(ndof, 1) to a list of <cite>ndof</cite> float/complex numbers</p>
+<p>Args:</p>
+</div></blockquote>
+<blockquote>
+<div><blockquote>
+<div><p>q ( MATRIX(ndof, 1) or CMATRIX(ndof, 1) ): input matrix</p>
+</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div><p>list : list representation of the matrix</p>
+</div></blockquote>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.data_conv.nparray2CMATRIX">
+<code class="sig-prename descclassname"><span class="pre">libra_py.data_conv.</span></code><code class="sig-name descname"><span class="pre">nparray2CMATRIX</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/data_conv.html#nparray2CMATRIX"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.data_conv.nparray2CMATRIX" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts 2D np.array of shape( N, M ) doubles into a CMATRIX( N, M ) object
+The numpy array should be complex</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>2D np.array of dimension N x M</em>) – data to be converted</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a matrix representation of the data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>MATRIX( N, M )</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.data_conv.nparray2MATRIX">
+<code class="sig-prename descclassname"><span class="pre">libra_py.data_conv.</span></code><code class="sig-name descname"><span class="pre">nparray2MATRIX</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/data_conv.html#nparray2MATRIX"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.data_conv.nparray2MATRIX" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts 2D np.array of shape( N, M ) doubles into a MATRIX( N, M ) object
+The numpy array can contain either complex or real values</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>2D np.array of dimension N x M</em>) – data to be converted</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a matrix representation of the data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>MATRIX( N, M )</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.data_conv.scale_NAC">
+<code class="sig-prename descclassname"><span class="pre">libra_py.data_conv.</span></code><code class="sig-name descname"><span class="pre">scale_NAC</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaling_factor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/data_conv.html#scale_NAC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.data_conv.scale_NAC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rescales only the matrix elements X_ab by a uniform scaling factor:
+X_ab(original) -&gt;    ( X_ab ) x (scaling_factor),</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>list of lists of CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>nstates</em><em>)</em>) – the original data stored as
+X[idata][step] - a CMATRIX(nstates, nstates) for the dataset <cite>idata</cite> and time
+step <cite>step</cite></p></li>
+<li><p><strong>scaling_factor</strong> (<em>double</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#complex" title="(in Python v3.9)"><em>complex</em></a>) – the rescaling factor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but transforms X input directly, so changes the original input</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.data_conv.scale_NACs">
+<code class="sig-prename descclassname"><span class="pre">libra_py.data_conv.</span></code><code class="sig-name descname"><span class="pre">scale_NACs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaling_factor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/data_conv.html#scale_NACs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.data_conv.scale_NACs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rescales all the off-diagonal matrix elements X_ab by a uniform scaling factor:
+X_ab(original) -&gt;    ( X_ab ) x (scaling_factor),  for all a!=b</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>list of lists of CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>nstates</em><em>)</em>) – the original data stored as
+X[idata][step] - a CMATRIX(nstates, nstates) for the dataset <cite>idata</cite> and time
+step <cite>step</cite></p></li>
+<li><p><strong>scaling_factor</strong> (<em>double</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#complex" title="(in Python v3.9)"><em>complex</em></a>) – the rescaling factor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but transforms X input directly, so changes the original input</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.data_conv.scissor">
+<code class="sig-prename descclassname"><span class="pre">libra_py.data_conv.</span></code><code class="sig-name descname"><span class="pre">scissor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dE</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/data_conv.html#scissor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.data_conv.scissor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shift the diagonal elements of X : X_ii for all i = a, a+1, … by a constant value dE
+X_ii(original) -&gt;    ( X_ii ) + dE, for all i &gt;= a</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>list of lists of CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>nstates</em><em>)</em>) – the original data stored as
+X[idata][step] - a CMATRIX(nstates, nstates) for the dataset <cite>idata</cite> and time
+step <cite>step</cite></p></li>
+<li><p><strong>dE</strong> (<em>double</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#complex" title="(in Python v3.9)"><em>complex</em></a>) – the shift magnitude</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but transforms X input directly, so changes the original input</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.data_conv.transform_data">
+<code class="sig-prename descclassname"><span class="pre">libra_py.data_conv.</span></code><code class="sig-name descname"><span class="pre">transform_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/data_conv.html#transform_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.data_conv.transform_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an auxiliary function to transform the original matrices X (e.g. H_vib) according to:
+X(original) -&gt;    ( X + shift1 ) (x) (scale) + shift2,</p>
+<p>Here, (x) indicates the element-wise multiplicaiton, and shift1, shift2, and scale are matrices</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>list of lists of CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>nstates</em><em>)</em>) – the original data stored as
+X[idata][step] - a CMATRIX(nstates, nstates) for the dataset <cite>idata</cite> and time
+step <cite>step</cite></p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>parameters controlling the transformation</p>
+<ul>
+<li><p><strong>params[“shift1”]</strong> ( CMATRIX(nstates,nstates) ): first shift corrections [units of X], [default: zero]</p></li>
+<li><p><strong>params[“shift2”]</strong> ( CMATRIX(nstates,nstates) ): second shift corrections [units of X], [default: zero]</p></li>
+<li><p><strong>params[“scale”]</strong> ( CMATRIX(nstates,nstates) ): scaling of the X [unitless], [default: 1.0 in all matrix elements]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but transforms X input directly, so changes the original input</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>Lets say we have a data set of 2x2 matrices and we want to increase the energy gap by 0.1 units and scale the
+couplings by a factor of 3. Then, the input is going to be like this:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">scl</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scl</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>  <span class="n">scl</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mf">3.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scl</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">3.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>  <span class="n">scl</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shi</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shi</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>  <span class="n">shi</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shi</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>  <span class="n">shi</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.1</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transform_data</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;shift2&quot;</span><span class="p">:</span><span class="n">shi</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span><span class="n">scl</span> <span class="p">})</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.data_conv.unit_conversion">
+<code class="sig-prename descclassname"><span class="pre">libra_py.data_conv.</span></code><code class="sig-name descname"><span class="pre">unit_conversion</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaling_factor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/data_conv.html#unit_conversion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.data_conv.unit_conversion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rescales the data X uniformly:
+X(original) -&gt;    ( X ) (x) (scaling_factor),</p>
+<p>Here, (x) indicates the element-wise multiplicaiton, and shift1, shift2, and scale are matrices</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>list of lists of CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>nstates</em><em>)</em>) – the original data stored as
+X[idata][step] - a CMATRIX(nstates, nstates) for the dataset <cite>idata</cite> and time
+step <cite>step</cite></p></li>
+<li><p><strong>scaling_factor</strong> (<em>double</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#complex" title="(in Python v3.9)"><em>complex</em></a>) – the rescaling factor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but transforms X input directly, so changes the original input</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.data_conv.unpack1">
+<code class="sig-prename descclassname"><span class="pre">libra_py.data_conv.</span></code><code class="sig-name descname"><span class="pre">unpack1</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">H</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/data_conv.html#unpack1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.data_conv.unpack1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a list of CMATRIX or MATRIX objects into a list of doubles.
+These numbers are the time-series of a specifiend component (real of imaginary)
+of a specified matrix element (i,j) of each matrix:  res[k] = H[k].get(i,j).component</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>H</strong> (<em>list of CMATRIX</em><em>(</em><em>n</em><em>, </em><em>m</em><em>) or </em><em>MATRIX</em><em>(</em><em>n</em><em>, </em><em>m</em><em>)</em>) – time-series of the matrices</p></li>
+<li><p><strong>i</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – row index of the matrix element of interest</p></li>
+<li><p><strong>j</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – column index of the matrix element of interest</p></li>
+<li><p><strong>component</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>index selecting real or imaginary component</p>
+<ul>
+<li><p>0: real</p></li>
+<li><p>1: imaginary</p></li>
+<li><p>2: the whole thing - use for real matrices [ default ]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>time-series of a given matrix element’s component</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of doubles</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.data_conv.unpack2">
+<code class="sig-prename descclassname"><span class="pre">libra_py.data_conv.</span></code><code class="sig-name descname"><span class="pre">unpack2</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">H</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/data_conv.html#unpack2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.data_conv.unpack2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a CMATRIX or MATRIX object into a list of doubles.
+These numbers are the time-series of a specifiend component (real of imaginary)
+of a specified matrix column <code class="docutils literal notranslate"><span class="pre">`i`</span></code> res[k] = H.get(k,i).component</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>H</strong> (<em>CMATRIX</em><em>(</em><em>n</em><em>, </em><em>m</em><em>) or </em><em>MATRIX</em><em>(</em><em>n</em><em>, </em><em>m</em><em>)</em>) – time-series in a form of a matrix</p></li>
+<li><p><strong>i</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – column index of interest</p></li>
+<li><p><strong>component</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>index selecting real or imaginary component</p>
+<ul>
+<li><p>0: real</p></li>
+<li><p>1: imaginary</p></li>
+<li><p>2: the whole thing - use for real matrices</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>time-series of a given matrix column’s components</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of doubles</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="data_outs.html" class="btn btn-neutral float-right" title="data_outs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cube_file_methods.html" class="btn btn-neutral float-left" title="cube_file_methods" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

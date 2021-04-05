@@ -1,0 +1,951 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Libra &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="LVC" href="LVC.html" />
+    <link rel="prev" title="Holstein" href="Holstein.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dynamics.html">dynamics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../models.html">models</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Beswick_Jortner.html">Beswick_Jortner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Faist_Levine.html">Faist_Levine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Henon_Heiles.html">Henon_Heiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Holstein.html">Holstein</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Libra</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LVC.html">LVC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Martens.html">Martens</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSY.html">SSY</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Tully.html">Tully</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../libra_py.html">libra_py</a> &raquo;</li>
+        
+          <li><a href="../models.html">models</a> &raquo;</li>
+        
+      <li>Libra</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../_sources/reference/libra_py/models/Libra.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.models.Libra">
+<span id="libra"></span><h1>Libra<a class="headerlink" href="#module-libra_py.models.Libra" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-models_Libra"></span><dl class="py function">
+<dt id="libra_py.models.Libra.convert_Landry_Subotnik2model1">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Libra.</span></code><code class="sig-name descname"><span class="pre">convert_Landry_Subotnik2model1</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Er</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Libra.html#convert_Landry_Subotnik2model1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Libra.convert_Landry_Subotnik2model1" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function converts the parameter of the Landry-Subotnik Hamiltonian
+to those of the <code class="docutils literal notranslate"><span class="pre">`model1`</span></code> form. This mapping is up to the arbitratry energy
+scale shift factor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>m</strong> (<em>double</em>) – mass of the particle [a.u. of mass ]</p></li>
+<li><p><strong>Er</strong> (<em>double</em>) – reorganization energy [ Ha ]</p></li>
+<li><p><strong>w</strong> (<em>double</em>) – oscillator frequency [ a.u.^-1 ]</p></li>
+<li><p><strong>eps</strong> (<em>double</em>) – driving energy [ Ha ]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(k, x0, D): where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>k ( double ): force constant of the oscillator [ units: Ha*Bohr^-2 ]</p></li>
+<li><p>x0 ( double ): displacement of the energy minima positions [ units: Bohr ]</p></li>
+<li><p>D ( double ): the energy shift of the acceptor with respect to donor [ units: Ha]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+<p>Ref: Landry, B. R.; Subotnik, J. E. J. Chem. Phys. 2011, 135, 191101</p>
+<p>H00 = (1/2) * m * w^2 * x^2  + M x =  (1/2) * m * w^2 * ( x^2  + 2Mx/(m*w^2) ) =
+= (1/2) * m * w^2 * [( x  + M/(m*w^2) )^2 - M^2 /(m^2 <a href="#id1"><span class="problematic" id="id2">*</span></a>w^4)  ] =
+= (1/2) * m * w^2 * [( x  + M/(m*w^2) )^2 ]  - M^2 /(2*m*w^2)</p>
+<p>H11 = (1/2) * m * w^2 * x^2  - M x - e =  (1/2) * m * w^2 * ( x^2  - 2Mx/(m*w^2) ) - e =
+= (1/2) * m * w^2 * [( x  - M/(m*w^2) )^2 - M^2 /(m^2 <a href="#id3"><span class="problematic" id="id4">*</span></a>w^4)  ] - e =
+= (1/2) * m * w^2 * [( x  - M/(m*w^2) )^2 ] - M^2 /(2*m*w^2)  - e</p>
+<p>M = sqrt(Er * m*w^2 / 2) =&gt;  2* M^2 / (m*w^2) = Er</p>
+<p>So the connection to the model1 parameters:</p>
+<p>k = (1/2) * m * w^2</p>
+<p>x0 = 2 * M/(m*w^2)  = M/k = sqrt( Er / k )</p>
+<p>D = -e</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Libra.get_Landry_Subotnik_set1">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Libra.</span></code><code class="sig-name descname"><span class="pre">get_Landry_Subotnik_set1</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma_i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Libra.html#get_Landry_Subotnik_set1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Libra.get_Landry_Subotnik_set1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns one of the data point in the parameters set from
+Ref: Landry, B. R.; Subotnik, J. E. J. Chem. Phys. 2011, 135, 191101</p>
+<p>The data set follows their Figure 2</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gamma_i</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – index of the gamma parameter</p></li>
+<li><p><strong>eps_i</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – index of the epsilon parameter</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>parameters in the format suitable for use with model1:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>params[“gamma”]</strong> ( double ): friction coefficient [ units: (a.u. time)* Ha/amu*Bohr^2 ]</p></li>
+<li><p><strong>params[“V”]</strong> ( double ): electronic coupling between these diabats [ units: Ha]</p></li>
+<li><p><strong>params[“mass”]</strong> ( double ): mass of the particle [ units: amu ]</p></li>
+<li><p><strong>params[“kT”]</strong> ( double ): system’s temperature [ units: Ha ]</p></li>
+<li><p><strong>params[“k”]</strong> ( double ): force constante [ units: Ha/Bohr]</p></li>
+<li><p><strong>params[“x0”]</strong> ( double ): displacement of the minimum of one of the diabatic states [ units: Bohr ]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“D”]</strong> ( double ): gap between the minima of the states 1 and 0, negative</dt><dd><p>value means the state 1 is lower in energy than state 0  [ units: Ha]</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Libra.get_Landry_Subotnik_set2">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Libra.</span></code><code class="sig-name descname"><span class="pre">get_Landry_Subotnik_set2</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V_i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Libra.html#get_Landry_Subotnik_set2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Libra.get_Landry_Subotnik_set2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns one of the data point in the parameters set from
+Ref: Landry, B. R.; Subotnik, J. E. J. Chem. Phys. 2011, 135, 191101</p>
+<p>The data set follows their Figure 3</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>V_i</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – index of the coupling parameter</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>parameters in the format suitable for use with model1:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>params[“gamma”]</strong> ( double ): friction coefficient [ units: (a.u. time)* Ha/amu*Bohr^2 ]</p></li>
+<li><p><strong>params[“V”]</strong> ( double ): electronic coupling between these diabats [ units: Ha]</p></li>
+<li><p><strong>params[“mass”]</strong> ( double ): mass of the particle [ units: amu ]</p></li>
+<li><p><strong>params[“kT”]</strong> ( double ): system’s temperature [ units: Ha ]</p></li>
+<li><p><strong>params[“k”]</strong> ( double ): force constante [ units: Ha/Bohr]</p></li>
+<li><p><strong>params[“x0”]</strong> ( double ): displacement of the minimum of one of the diabatic states [ units: Bohr ]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“D”]</strong> ( double ): gap between the minima of the states 1 and 0, negative</dt><dd><p>value means the state 1 is lower in energy than state 0  [ units: Ha]</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Libra.model1">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Libra.</span></code><code class="sig-name descname"><span class="pre">model1</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Libra.html#model1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Libra.model1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Essentially the spin-boson (Marcus) model</p>
+<blockquote>
+<div><p>k*x^2         V</p>
+</div></blockquote>
+<p>Hdia =       V        k*(x-x0)^2 + D</p>
+<p>Sdia =  I</p>
+<p>Ddia  = 0.0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<em>MATRIX</em><em>(</em><em>1</em><em>,</em><em>1</em><em>)</em>) – coordinates of the particle, ndof = 1</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><dl class="simple">
+<dt><strong>params[“x0”]</strong> ( double ): displacement of the minimum of one of the diabatic states</dt><dd><p>[ default: 1.0, units: Bohr ]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“k”]</strong> ( double ): force constante [ default: 0.01, units: Ha/Bohr^2]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“D”]</strong> ( double ): gap between the minima of the states 1 and 0, negative</dt><dd><p>value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“V”]</strong> ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>obj, with the members:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian</p></li>
+<li><p>obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]</p></li>
+<li><dl class="simple">
+<dt>obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ):</dt><dd><p>derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</p>
+</dd>
+</dl>
+</li>
+<li><p>obj.dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PyObject</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Libra.model1a">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Libra.</span></code><code class="sig-name descname"><span class="pre">model1a</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Hdia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Sdia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d1ham_dia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dc1_dia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Libra.html#model1a"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Libra.model1a" title="Permalink to this definition">¶</a></dt>
+<dd><p>Same as ::funct:<code class="docutils literal notranslate"><span class="pre">`model1`</span></code> just different interface</p>
+<blockquote>
+<div><p>k*x^2         V</p>
+</div></blockquote>
+<p>Hdia =       V        k*(x-x0)^2 + D</p>
+<p>Sdia =  I</p>
+<p>Ddia  = 0.0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Hdia</strong> (<em>CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>)</em>) – diabatic Hamiltonian - updated by this function</p></li>
+<li><p><strong>Sdia</strong> (<em>CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>)</em>) – overlap of the basis (diabatic) states - updated by this function [ identity ]</p></li>
+<li><p><strong>d1ham_dia</strong> (<em>list of 1 CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>) </em><em>objects</em>) – derivatives of the diabatic Hamiltonian w.r.t.
+the nuclear coordinate - updated by this function</p></li>
+<li><p><strong>dc1_dia</strong> (<em>list of 1 CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>) </em><em>objects</em>) – derivative coupling in the diabatic basis - updated
+by this function [ zero ]</p></li>
+<li><p><strong>q</strong> (<em>double</em>) – coordinates of the particle, ndof = 1</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><dl class="simple">
+<dt><strong>params[“x0”]</strong> ( double ): displacement of the minimum of one of the diabatic states</dt><dd><p>[ default: 1.0, units: Bohr ]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“k”]</strong> ( double ): force constante [ default: 0.01, units: Ha/Bohr^2]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“D”]</strong> ( double ): gap between the minima of the states 1 and 0, negative</dt><dd><p>value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“V”]</strong> ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Libra.model2">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Libra.</span></code><code class="sig-name descname"><span class="pre">model2</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Libra.html#model2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Libra.model2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Essentially the spin-boson (Marcus) model</p>
+<blockquote>
+<div><p>k*x^2         V</p>
+</div></blockquote>
+<p>Hdia =       V        k*(x-x0)^2 + D</p>
+<p>Sdia =  I</p>
+<p>Ddia != 0.0, but Ddia + Ddia.H() = dSdia/dR, with dSdia = 0.0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<em>MATRIX</em><em>(</em><em>1</em><em>,</em><em>1</em><em>)</em>) – coordinates of the particle, ndof = 1</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><dl class="simple">
+<dt><strong>params[“x0”]</strong> ( double ): displacement of the minimum of one of the diabatic states</dt><dd><p>[ default: 1.0, units: Bohr ]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“k”]</strong> ( double ): force constante [ default: 0.01, units: Ha/Bohr^2]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“D”]</strong> ( double ): gap between the minima of the states 1 and 0, negative</dt><dd><p>value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“V”]</strong> ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]</p></li>
+<li><p><strong>params[“NAC”]</strong> ( double ): NAC in the diabatic basis  [ default: -0.1, units: Ha]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>obj, with the members:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian</p></li>
+<li><p>obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]</p></li>
+<li><dl class="simple">
+<dt>obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ):</dt><dd><p>derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</p>
+</dd>
+</dl>
+</li>
+<li><p>obj.dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PyObject</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Libra.model2a">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Libra.</span></code><code class="sig-name descname"><span class="pre">model2a</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Hdia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Sdia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d1ham_dia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dc1_dia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Libra.html#model2a"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Libra.model2a" title="Permalink to this definition">¶</a></dt>
+<dd><p>Same as ::funct:<code class="docutils literal notranslate"><span class="pre">`model2`</span></code> just different interface</p>
+<blockquote>
+<div><p>k*x^2         V</p>
+</div></blockquote>
+<p>Hdia =       V        k*(x-x0)^2 + D</p>
+<p>Sdia =  I</p>
+<p>Ddia != 0.0, but Ddia + Ddia.H() = dSdia/dR, with dSdia = 0.0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Hdia</strong> (<em>CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>)</em>) – diabatic Hamiltonian - updated by this function</p></li>
+<li><p><strong>Sdia</strong> (<em>CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>)</em>) – overlap of the basis (diabatic) states - updated by this function [ identity ]</p></li>
+<li><p><strong>d1ham_dia</strong> (<em>list of 1 CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>) </em><em>objects</em>) – derivatives of the diabatic Hamiltonian w.r.t.
+the nuclear coordinate - updated by this function</p></li>
+<li><p><strong>dc1_dia</strong> (<em>list of 1 CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>) </em><em>objects</em>) – derivative coupling in the diabatic basis - updated
+by this function [ zero ]</p></li>
+<li><p><strong>q</strong> (<em>double</em>) – coordinates of the particle, ndof = 1</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><dl class="simple">
+<dt><strong>params[“x0”]</strong> ( double ): displacement of the minimum of one of the diabatic states</dt><dd><p>[ default: 1.0, units: Bohr ]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“k”]</strong> ( double ): force constante [ default: 0.01, units: Ha/Bohr^2]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“D”]</strong> ( double ): gap between the minima of the states 1 and 0, negative</dt><dd><p>value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“V”]</strong> ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]</p></li>
+<li><p><strong>params[“NAC”]</strong> ( double ): NAC in the diabatic basis  [ default: -0.1, units: Ha]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Libra.model3">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Libra.</span></code><code class="sig-name descname"><span class="pre">model3</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Libra.html#model3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Libra.model3" title="Permalink to this definition">¶</a></dt>
+<dd><p>More complex spin-boson model</p>
+<blockquote>
+<div><p>k*x^2         V</p>
+</div></blockquote>
+<p>Hdia =       V        k*(x-x0)^2 + D</p>
+<dl class="simple">
+<dt>Sdia =    1                          B*exp(-(x-0.5*x0)^2)</dt><dd><p>B*exp(-(x-0.5*x0)^2)               1</p>
+</dd>
+</dl>
+<p>Ddia != 0.0, but Ddia + Ddia.H() = dSdia/dR, with dSdia !=0.0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<em>MATRIX</em><em>(</em><em>1</em><em>,</em><em>1</em><em>)</em>) – coordinates of the particle, ndof = 1</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><dl class="simple">
+<dt><strong>params[“x0”]</strong> ( double ): displacement of the minimum of one of the diabatic states</dt><dd><p>[ default: 1.0, units: Bohr ]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“k”]</strong> ( double ): force constante [ default: 0.01, units: Ha/Bohr^2]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“D”]</strong> ( double ): gap between the minima of the states 1 and 0, negative</dt><dd><p>value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“V”]</strong> ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“B”]</strong> ( double ): parameter controlling the overlap of the diabatic states</dt><dd><p>[ default: 0.05, units: Ha]</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>obj, with the members:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian</p></li>
+<li><p>obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]</p></li>
+<li><dl class="simple">
+<dt>obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ):</dt><dd><p>derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</p>
+</dd>
+</dl>
+</li>
+<li><p>obj.dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PyObject</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Libra.model3a">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Libra.</span></code><code class="sig-name descname"><span class="pre">model3a</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Hdia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Sdia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d1ham_dia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dc1_dia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Libra.html#model3a"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Libra.model3a" title="Permalink to this definition">¶</a></dt>
+<dd><p>Same as ::funct:<code class="docutils literal notranslate"><span class="pre">`model3`</span></code> just different interface</p>
+<blockquote>
+<div><p>k*x^2         V</p>
+</div></blockquote>
+<p>Hdia =       V        k*(x-x0)^2 + D</p>
+<dl class="simple">
+<dt>Sdia =    1                           B*exp(-(x-0.5*x0)^2)</dt><dd><p>B*exp(-(x-0.5*x0)^2)               1</p>
+</dd>
+</dl>
+<p>Ddia != 0.0, but Ddia + Ddia.H() = dSdia/dR, with dSdia !=0.0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Hdia</strong> (<em>CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>)</em>) – diabatic Hamiltonian - updated by this function</p></li>
+<li><p><strong>Sdia</strong> (<em>CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>)</em>) – overlap of the basis (diabatic) states - updated by this function [ identity ]</p></li>
+<li><p><strong>d1ham_dia</strong> (<em>list of 1 CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>) </em><em>objects</em>) – derivatives of the diabatic Hamiltonian w.r.t.
+the nuclear coordinate - updated by this function</p></li>
+<li><p><strong>dc1_dia</strong> (<em>list of 1 CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>) </em><em>objects</em>) – derivative coupling in the diabatic basis - updated
+by this function [ zero ]</p></li>
+<li><p><strong>q</strong> (<em>double</em>) – coordinates of the particle, ndof = 1</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><dl class="simple">
+<dt><strong>params[“x0”]</strong> ( double ): displacement of the minimum of one of the diabatic states</dt><dd><p>[ default: 1.0, units: Bohr ]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“k”]</strong> ( double ): force constante [ default: 0.01, units: Ha/Bohr^2]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“D”]</strong> ( double ): gap between the minima of the states 1 and 0, negative</dt><dd><p>value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“V”]</strong> ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“B”]</strong> ( double ): parameter controlling the overlap of the diabatic states</dt><dd><p>[ default: 0.05, units: Ha]</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Libra.model4">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Libra.</span></code><code class="sig-name descname"><span class="pre">model4</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Libra.html#model4"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Libra.model4" title="Permalink to this definition">¶</a></dt>
+<dd><p>2-level system with periodic anharmonic potentials</p>
+<blockquote>
+<div><p>k*cos(w*x)         V</p>
+</div></blockquote>
+<p>Hdia =       V        k*sin(w*x) + D</p>
+<p>Sdia =  I</p>
+<p>Ddia  = 0.0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<em>MATRIX</em><em>(</em><em>1</em><em>,</em><em>1</em><em>)</em>) – coordinates of the particle, ndof = 1</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><p><strong>params[“k”]</strong> ( double ): force constante [ default: 0.01, units: Ha]</p></li>
+<li><p><strong>params[“w”]</strong> ( double ): frequency  [ default: 0.1, units: Bohr^-1]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“D”]</strong> ( double ): gap between the minima of the states 1 and 0, negative</dt><dd><p>value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“V”]</strong> ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>obj, with the members:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian</p></li>
+<li><p>obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]</p></li>
+<li><dl class="simple">
+<dt>obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ):</dt><dd><p>derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</p>
+</dd>
+</dl>
+</li>
+<li><p>obj.dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PyObject</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Libra.model4a">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Libra.</span></code><code class="sig-name descname"><span class="pre">model4a</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Hdia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Sdia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d1ham_dia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dc1_dia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Libra.html#model4a"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Libra.model4a" title="Permalink to this definition">¶</a></dt>
+<dd><p>Same as ::funct:<code class="docutils literal notranslate"><span class="pre">`model4`</span></code> just different interface</p>
+<blockquote>
+<div><p>k*cos(w*x)         V</p>
+</div></blockquote>
+<p>Hdia =       V        k*sin(w*x) + D</p>
+<p>Sdia =  I</p>
+<p>Ddia  = 0.0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Hdia</strong> (<em>CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>)</em>) – diabatic Hamiltonian - updated by this function</p></li>
+<li><p><strong>Sdia</strong> (<em>CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>)</em>) – overlap of the basis (diabatic) states - updated by this function [ identity ]</p></li>
+<li><p><strong>d1ham_dia</strong> (<em>list of 1 CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>) </em><em>objects</em>) – derivatives of the diabatic Hamiltonian w.r.t.
+the nuclear coordinate - updated by this function</p></li>
+<li><p><strong>dc1_dia</strong> (<em>list of 1 CMATRIX</em><em>(</em><em>2</em><em>,</em><em>2</em><em>) </em><em>objects</em>) – derivative coupling in the diabatic basis - updated
+by this function [ zero ]</p></li>
+<li><p><strong>q</strong> (<em>double</em>) – coordinates of the particle, ndof = 1</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><p><strong>params[“k”]</strong> ( double ): force constante [ default: 0.01, units: Ha]</p></li>
+<li><p><strong>params[“w”]</strong> ( double ): frequency  [ default: 0.1, units: Bohr^-1]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“D”]</strong> ( double ): gap between the minima of the states 1 and 0, negative</dt><dd><p>value means the state 1 is lower in energy than state 0  [ default: 0.0, units: Ha]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“V”]</strong> ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Libra.model5">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Libra.</span></code><code class="sig-name descname"><span class="pre">model5</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Libra.html#model5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Libra.model5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Symmetric Double Well Potential in 2D
+Hdia = A*[0.25*(q1^4 + q2^4) - 0.5*(q1^2 + q2^2) ]
+Sdia = 1.0
+Ddia = 0.0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<em>MATRIX</em><em>(</em><em>2</em><em>,</em><em>1</em><em>)</em>) – coordinates of the particle, ndof = 2</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><p><strong>params[“A”]</strong> ( double ): scaling parameter to determine the depth</p></li>
+</ul>
+<p>of the potential well/barrier  [ default: 1.0, units: None]</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>obj, with the members:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>obj.ham_dia ( CMATRIX(1,1) ): diabatic Hamiltonian</p></li>
+<li><p>obj.ovlp_dia ( CMATRIX(1,1) ): overlap of the basis (diabatic) states [ identity ]</p></li>
+<li><dl class="simple">
+<dt>obj.d1ham_dia ( list of 2 CMATRIX(1,1) objects ):</dt><dd><p>derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</p>
+</dd>
+</dl>
+</li>
+<li><p>obj.dc1_dia ( list of 2 CMATRIX(1,1) objects ): derivative coupling in the diabatic basis [ zero ]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PyObject</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Libra.model6">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Libra.</span></code><code class="sig-name descname"><span class="pre">model6</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Libra.html#model6"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Libra.model6" title="Permalink to this definition">¶</a></dt>
+<dd><p>2-level system with periodic anharmonic potentials. More general than model 4</p>
+<blockquote>
+<div><p>A0*cos(w0*x+delta0) + B0         V</p>
+</div></blockquote>
+<p>Hdia =               V        A1*cos(w1*x+delta1) + B1</p>
+<p>Sdia =  I</p>
+<p>Ddia  = 0.0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<em>MATRIX</em><em>(</em><em>1</em><em>,</em><em>1</em><em>)</em>) – coordinates of the particle, ndof = 1</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><p><strong>params[“A0”]</strong> ( double ): amplitude of the state 0 [ default: 0.01, units: Ha]</p></li>
+<li><p><strong>params[“A1”]</strong> ( double ): amplitude of the state 1 [ default: 0.01, units: Ha]</p></li>
+<li><p><strong>params[“w0”]</strong> ( double ): frequency of the potential 0 [ default: 0.1, units: Bohr^-1]</p></li>
+<li><p><strong>params[“w1”]</strong> ( double ): frequency of the potential 1 [ default: 0.1, units: Bohr^-1]</p></li>
+<li><p><strong>params[“delta0”]</strong> ( double ): phase shift of potential 0 [ default: 0.0, units: None]</p></li>
+<li><p><strong>params[“delta1”]</strong> ( double ): phase shift of potential 1 [ default: 0.0, units: None]</p></li>
+<li><p><strong>params[“B0”]</strong> ( double ): energy shift of potential 0 [ default: 0.0, units: Ha]</p></li>
+<li><p><strong>params[“B1”]</strong> ( double ): energy shift of potential 1 [ default: 0.0, units: Ha]</p></li>
+<li><p><strong>params[“V01”]</strong> ( double ): electronic coupling between these diabats [ default: 0.005, units: Ha]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>obj, with the members:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian</p></li>
+<li><p>obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]</p></li>
+<li><dl class="simple">
+<dt>obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ):</dt><dd><p>derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</p>
+</dd>
+</dl>
+</li>
+<li><p>obj.dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PyObject</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.models.Libra.model7">
+<code class="sig-prename descclassname"><span class="pre">libra_py.models.Libra.</span></code><code class="sig-name descname"><span class="pre">model7</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/libra_py/models/Libra.html#model7"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.models.Libra.model7" title="Permalink to this definition">¶</a></dt>
+<dd><p>3-level system with periodic anharmonic potentials.</p>
+<blockquote>
+<div><p>A0*cos(w0*x+delta0) + B0         V01              V02</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Hdia =               V01        A1*cos(w1*x+delta1) + B1    V12</dt><dd><p>V02                   V12          A2*cos(w2*x+delta2) + B2</p>
+</dd>
+</dl>
+<p>Sdia =  I</p>
+<p>Ddia  = 0.0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<em>MATRIX</em><em>(</em><em>1</em><em>,</em><em>1</em><em>)</em>) – coordinates of the particle, ndof = 1</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>model parameters</p>
+<ul>
+<li><p><strong>params[“A0”]</strong> ( double ): amplitude of the state 0 [ default: 0.01, units: Ha]</p></li>
+<li><p><strong>params[“A1”]</strong> ( double ): amplitude of the state 1 [ default: 0.01, units: Ha]</p></li>
+<li><p><strong>params[“A2”]</strong> ( double ): amplitude of the state 2 [ default: 0.01, units: Ha]</p></li>
+<li><p><strong>params[“w0”]</strong> ( double ): frequency of the potential 0 [ default: 0.1, units: Bohr^-1]</p></li>
+<li><p><strong>params[“w1”]</strong> ( double ): frequency of the potential 1 [ default: 0.1, units: Bohr^-1]</p></li>
+<li><p><strong>params[“w2”]</strong> ( double ): frequency of the potential 2 [ default: 0.1, units: Bohr^-1]</p></li>
+<li><p><strong>params[“delta0”]</strong> ( double ): phase shift of potential 0 [ default: 0.0, units: None]</p></li>
+<li><p><strong>params[“delta1”]</strong> ( double ): phase shift of potential 1 [ default: 0.0, units: None]</p></li>
+<li><p><strong>params[“delta2”]</strong> ( double ): phase shift of potential 2 [ default: 0.0, units: None]</p></li>
+<li><p><strong>params[“B0”]</strong> ( double ): energy shift of potential 0 [ default: 0.0, units: Ha]</p></li>
+<li><p><strong>params[“B1”]</strong> ( double ): energy shift of potential 1 [ default: 0.0, units: Ha]</p></li>
+<li><p><strong>params[“B2”]</strong> ( double ): energy shift of potential 2 [ default: 0.0, units: Ha]</p></li>
+<li><p><strong>params[“V01”]</strong> ( double ): electronic coupling between diabats 0 and 1 [ default: 0.005, units: Ha]</p></li>
+<li><p><strong>params[“V02”]</strong> ( double ): electronic coupling between diabats 0 and 2 [ default: 0.005, units: Ha]</p></li>
+<li><p><strong>params[“V12”]</strong> ( double ): electronic coupling between diabats 1 and 2 [ default: 0.005, units: Ha]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>obj, with the members:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>obj.ham_dia ( CMATRIX(3,3) ): diabatic Hamiltonian</p></li>
+<li><p>obj.ovlp_dia ( CMATRIX(3,3) ): overlap of the basis (diabatic) states [ identity ]</p></li>
+<li><dl class="simple">
+<dt>obj.d1ham_dia ( list of 1 CMATRIX(3,3) objects ):</dt><dd><p>derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</p>
+</dd>
+</dl>
+</li>
+<li><p>obj.dc1_dia ( list of 1 CMATRIX(3,3) objects ): derivative coupling in the diabatic basis [ zero ]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>PyObject</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="LVC.html" class="btn btn-neutral float-right" title="LVC" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Holstein.html" class="btn btn-neutral float-left" title="Holstein" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

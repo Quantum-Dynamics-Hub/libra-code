@@ -1,0 +1,762 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>tsh &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="tsh_stat" href="tsh_stat.html" />
+    <link rel="prev" title="scf" href="scf.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>tsh</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/tsh.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.tsh">
+<span id="tsh"></span><h1>tsh<a class="headerlink" href="#module-libra_py.tsh" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-tsh"></span><dl class="py function">
+<dt id="libra_py.tsh.Boltz_corr_Ham">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh.</span></code><code class="sig-name descname"><span class="pre">Boltz_corr_Ham</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">H</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh.html#Boltz_corr_Ham"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh.Boltz_corr_Ham" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function implements the computation of the
+effective Hamiltonian used in the Boltzmann-corrected Ehrenfest
+method of Bastida et al.</p>
+<p>Ref: Bastida, A.; Cruz, C.; Zuniga, J.; Requena, A.; Miguel, B.
+“A modified Ehrenfest method that achieves Boltzmann quantum state populations”
+Chem. Phys. Lett. 2006, 417, 53-57</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>H</strong> (<em>CMATRIX</em><em>(</em><em>N</em><em>,</em><em>N</em><em>)</em>) – original vibronic Hamiltonian [units: a.u.]</p></li>
+<li><p><strong>Coeff</strong> (<em>CMATRIX</em><em>(</em><em>N</em><em>,</em><em>1</em><em>)</em>) – amplitudes of the basis states</p></li>
+<li><p><strong>T</strong> (<em>double</em>) – bath temperature [ units: K]</p></li>
+<li><p><strong>case</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>selection of the type of the Hamiltonian</p>
+<ul>
+<li><p>0: diabatic Hamiltonian  H_ij = <a href="#id3"><span class="problematic" id="id4">|i&gt;E_i&lt;i|</span></a>  + <a href="#id5"><span class="problematic" id="id6">|i&gt; V_ij &lt;j|</span></a></p></li>
+<li><p>1: adiabatic Hamiltonian  H_ij = <a href="#id7"><span class="problematic" id="id8">|i&gt;E_i&lt;i|</span></a>  - i hbar <a href="#id9"><span class="problematic" id="id10">|i&gt; d_ij &lt;j|</span></a> [ default ]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the effective Hamiltonian to be used in the calculations</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>CMATRIX(N,N)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh.boltz_factor">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh.</span></code><code class="sig-name descname"><span class="pre">boltz_factor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">E_new</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E_old</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boltz_opt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh.html#boltz_factor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh.boltz_factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the Boltzmann scaling factor, but only if we consider a hop up in energy</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>E_new</strong> (<em>double</em>) – the energy of the proposed (new) state [units: a.u.]</p></li>
+<li><p><strong>E_old</strong> (<em>double</em>) – the energy of the current (old) state [units: a.u.]</p></li>
+<li><p><strong>T</strong> (<em>double</em>) – temperature of the bath [units: K]</p></li>
+<li><p><strong>boltz_opt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>the proposed hop acceptance criterion</p>
+<ul>
+<li><p>0: all hops are accepted</p></li>
+<li><p>1: hops are accepted according to the Boltzmann ratio of the final and initial states</p></li>
+<li><p>2: hops are accepted according to the classical Maxwell-Boltzmann distribution</p></li>
+<li><p>3: hops are accepted based on the quantum probability of the final state</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>boltz_f: the probability of the proposed hop acceptance</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>double</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh.collapse">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh.</span></code><code class="sig-name descname"><span class="pre">collapse</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh.html#collapse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh.collapse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collapse the wfc but such that to preserve the phase!</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Coeff</strong> (<em>CMATRIX</em><em>(</em><em>N</em><em>, </em><em>1</em><em>)</em>) – amplitudes of the electronic states in
+a coherent superposition which we are going to collapse</p></li>
+<li><p><strong>i</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The index of the state onto which the supeposition will be collapsed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but changes the input variable <cite>Coeff</cite></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh.dish_py">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh.</span></code><code class="sig-name descname"><span class="pre">dish_py</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">istate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Hvib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boltz_opt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ksi1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ksi2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh.html#dish_py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh.dish_py" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decoherence-induced surface hopping (DISH)
+Reference: Jaeger, H. M.; Fischer, S.; Prezhdo, O. V. Decoherence-Induced Surface Hopping. J. Chem. Phys. 2012, 137, 22A545.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Coeff</strong> (<em>CMATRIX</em><em>(</em><em>N</em><em>, </em><em>1</em><em>)</em>) – Amplitudes of electronic states</p></li>
+<li><p><strong>istate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Initial state index</p></li>
+<li><p><strong>t_m</strong> (<em>MATRIX</em><em>(</em><em>N</em><em>, </em><em>1</em><em>)</em>) – Matrix of the times each state resides in a coherence interval since the last decoherence event [ units: a.u. ]</p></li>
+<li><p><strong>tau_m</strong> (<em>MATRIX</em><em>(</em><em>N</em><em>, </em><em>1</em><em>)</em>) – Matrix of the coherence intervals for each electronic state [ units: a.u. ]</p></li>
+<li><p><strong>Hvib</strong> (<em>CMATRIX</em><em>(</em><em>N</em><em>, </em><em>N</em><em>)</em>) – Vibronic Hamiltonian matrix [ units: Ha ]</p></li>
+<li><p><strong>boltz_opt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>The selector of the proposed hop acceptance algorithm:</p>
+<ul>
+<li><p>0: all proposed hops are accepted - no rejection based on energies</p></li>
+<li><p>1: proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)</p></li>
+<li><p>2: proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous</p></li>
+<li><p>3: generalization of “1”, but actually it should be changed in case there are many degenerate levels</p></li>
+</ul>
+</p></li>
+<li><p><strong>T</strong> (<em>double</em>) – temperature [ units: K ]</p></li>
+<li><p><strong>ksi</strong> (<em>double</em>) – random number in interval [0.0, 1.0] cotrolling the execution of SH</p></li>
+<li><p><strong>ksi2</strong> (<em>double</em>) – random number in interval [0.0, 1.0] cotrolling the execution of SH</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fstat: the index of the electronic state after the “hop” (old state index or a new one)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The function also modifies the <cite>Coeff</cite> and <cite>t_m</cite> variables</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh.hop_py">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh.</span></code><code class="sig-name descname"><span class="pre">hop_py</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initstate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ksi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh.html#hop_py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh.hop_py" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Python implementation of the stochastic hopping procedure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>initstate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The index of the initial state, before hop</p></li>
+<li><p><strong>g</strong> (<em>MATRIX</em><em>(</em><em>N</em><em>, </em><em>N</em><em>)</em>) – The surface hopping matrix, the element g(i,j)
+contains the probability for a i-&gt;j transition. Here, N - is the
+total number of states considered in the transitions</p></li>
+<li><p><strong>ksi</strong> (<em>double</em>) – A random number uniformly distributed in the range of (0.0, 1.0)
+Essentially, it determines the outcome of the procedure</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>finstate: The index of the final state after hop</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh.hopping">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh.</span></code><code class="sig-name descname"><span class="pre">hopping</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Hvib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">istate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sh_method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_collapse</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ksi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ksi2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boltz_opt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh.html#hopping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh.hopping" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simplified version for the CPA-like hopping</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Coeff</strong> (<em>CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>1</em><em>)</em>) – amplitudes of all states</p></li>
+<li><p><strong>Hvib</strong> (<em>CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>nstates</em><em>)</em>) – vibronic Hamiltonian</p></li>
+<li><p><strong>istate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the index of the initial state</p></li>
+<li><p><strong>sh_method</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>selector of the TSH method:</p>
+<ul>
+<li><p>0: MSSH</p></li>
+<li><p>1: FSSH</p></li>
+<li><p>2: GFSH</p></li>
+</ul>
+</p></li>
+<li><p><strong>do_collapse</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>flag to turn on the decoherence via ID-A:</p>
+<ul>
+<li><p>0 - no decoherence</p></li>
+<li><p>1 - decoherence via ID-A</p></li>
+</ul>
+</p></li>
+<li><p><strong>ksi</strong> (<em>double</em>) – random number in interval [0.0, 1.0] cotrolling the execution of SH</p></li>
+<li><p><strong>ksi2</strong> (<em>double</em>) – random number in interval [0.0, 1.0] cotrolling the execution of SH</p></li>
+<li><p><strong>dt</strong> (<em>double</em>) – the time interval for the surface hopping [ units: a.u. ]</p></li>
+<li><p><strong>T</strong> (<em>double</em>) – temperature [ units: K ]</p></li>
+<li><p><strong>boltz_opt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>The selector of the proposed hop acceptance algorithm:</p>
+<ul>
+<li><p>0: all proposed hops are accepted - no rejection based on energies</p></li>
+<li><p>1: proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)</p></li>
+<li><p>2: proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous</p></li>
+<li><p>3: generalization of “1”, but actually it should be changed in case there are many degenerate levels</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( istate, Coeff1 ): where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>istate ( int ): index of the final state, after the hop</p></li>
+<li><p>Coeff1 ( CMATRIX(N, 1) ): the updated state of the electronic DOF</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh.ida_py">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh.</span></code><code class="sig-name descname"><span class="pre">ida_py</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">old_st</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_st</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E_old</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E_new</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ksi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_collapse</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boltz_opt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh.html#ida_py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh.ida_py" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Python implementation of the instantaneous decoherence at attempted hops algorithm</p>
+<p>This function takes care of a single act of decoherence/hop</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Coeff</strong> (<em>CMATRIX</em><em>(</em><em>N</em><em>, </em><em>1</em><em>) or </em><em>Electronic</em>) – An object containig electronic DOFs (basis wavefunctions amplitudes).
+Here, N would be the number of electronic states in the dynamical basis</p></li>
+<li><p><strong>old_st</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The state index before hop</p></li>
+<li><p><strong>new_st</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The state index after hop</p></li>
+<li><p><strong>E_old</strong> (<em>double</em>) – The energy of the initial state, before hop [ units: a.u. ]</p></li>
+<li><p><strong>E_new</strong> (<em>double</em>) – The energy of the final state, after hop [ units: a.u. ]</p></li>
+<li><p><strong>T</strong> (<em>double</em>) – The Temperature of nuclear DOF [ units: K]</p></li>
+<li><p><strong>ksi</strong> (<em>double</em>) – A random number uniformly distributed in the range of [0.0, 1.0]</p></li>
+<li><p><strong>do_collapse</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>The flag turning the decoherence (at the IDA level on/off):</p>
+<ul>
+<li><p>0: do not include decoherence</p></li>
+<li><p>1: include decoherence</p></li>
+</ul>
+</p></li>
+<li><p><strong>boltz_opt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>The proposed hop acceptance criterion:</p>
+<ul>
+<li><p>0: all proposed hops are accepted - no rejection based on energies</p></li>
+<li><dl class="simple">
+<dt>1: proposed hops are accepted with min{ 1, exp(-dE/kT) } probability, where</dt><dd><p>dE = E_new - E_old  [ default ]</p>
+</dd>
+</dl>
+</li>
+<li><p>2: proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous</p></li>
+<li><p>3: generalization of “1”, but actually it should be changed in case there are many degenerate levels</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( res, C ): where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>res ( int ): index of the final state, after IDA is applied (or not)</p></li>
+<li><p>C ( CMATRIX(N, 1) or Electronic ): the updated state of the electronic DOF, in the same data type as the input</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh.project_out">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh.</span></code><code class="sig-name descname"><span class="pre">project_out</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh.html#project_out"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh.project_out" title="Permalink to this definition">¶</a></dt>
+<dd><p>Projects the state <cite>i</cite> out of a coherent superposition of states</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Coeff</strong> (<em>CMATRIX</em><em>(</em><em>N</em><em>, </em><em>1</em><em>)</em>) – amplitudes of the electronic states in
+a coherent superposition from which we will project a state out</p></li>
+<li><p><strong>i</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The index of the state to be projected out</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but changes the input variable <cite>Coeff</cite></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh.sample">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh.</span></code><code class="sig-name descname"><span class="pre">sample</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnd</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh.html#sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function generates ntraj ndof-dimensional vectors sampled from a
+normal distribution with a given mean and variance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>MATRIX</em><em>(</em><em>ndof</em><em>, </em><em>ntraj</em><em>)</em>) – Each column of the matrix corresponds to
+a vector of certain properties (e.g. coordinates, momenta, of all DOFs) for
+a given trajectory (element of ensemble)</p></li>
+<li><p><strong>mean_x</strong> (<em>MATRIX</em><em>(</em><em>ndof</em><em>, </em><em>1</em><em>)</em>) – The mean of the ndof-dimensional vector (component-wise)</p></li>
+<li><p><strong>sigma_x</strong> (<em>MATRIX</em><em>(</em><em>ndof</em><em>, </em><em>1</em><em>)</em>) – The variance width for each component</p></li>
+<li><p><strong>rnd</strong> (<em>Random</em>) – The random number generator object</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but changes the matrix <code class="docutils literal notranslate"><span class="pre">`x`</span></code></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh.sdm_py">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh.</span></code><code class="sig-name descname"><span class="pre">sdm_py</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_st</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">En</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ekin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C_param</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_param</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh.html#sdm_py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh.sdm_py" title="Permalink to this definition">¶</a></dt>
+<dd><p>Python implementation of the simplified decay of mixing algorithm for decoherence correction</p>
+<p>Reference: Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Coeff</strong> (<em>CMATRIX</em><em>(</em><em>N</em><em>, </em><em>1</em><em>) or </em><em>Electronic</em>) – An object containig electronic DOFs (basis wavefunctions amplitudes).
+Here, N would be the number of electronic states in the dynamical basis</p></li>
+<li><p><strong>dt</strong> (<em>double</em>) – Nuclear integration time-step [ units: a.u. ]</p></li>
+<li><p><strong>act_st</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The current active state index</p></li>
+<li><p><strong>En</strong> (<em>list of doubles</em>) – Energies of the states [ units: Ha ]</p></li>
+<li><p><strong>Ekin</strong> (<em>double</em>) – The classical kinetic energy of nuclei [ units: Ha ]</p></li>
+<li><p><strong>C_param</strong> (<em>double</em>) – The method parameter [ units: None, default: 1.0]</p></li>
+<li><p><strong>eps_param</strong> (<em>double</em>) – The method parameter [ units: Ha, default: 0.1 Ha ]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>C :</dt><dd><p>the updated state of the electronic DOF, in the same data type as the input</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>( CMATRIX(N, 1) or Electronic )</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh.set_random_state">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh.</span></code><code class="sig-name descname"><span class="pre">set_random_state</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prob</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ksi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh.html#set_random_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh.set_random_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function implements a simple random state selection procedure.
+Each state is selected with a given probability</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prob</strong> (<em>list of N doubles</em>) – The probabilities of all N states</p></li>
+<li><p><strong>ksi</strong> (<em>double</em>) – A random number uniformly distributed in the range of (0.0, 1.0).
+It determines the outcome of this function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>finstate: The index of the selected state</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>integer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh.surface_hopping">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh.</span></code><code class="sig-name descname"><span class="pre">surface_hopping</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ham</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh.html#surface_hopping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh.surface_hopping" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function performs either generic or NBRA-type surface hopping</p>
+<p>Here, the number of nuclear objects and that of electronic ones may be not equal.
+Each trajectory evolves both nuclear and electronic DOFs, as appropriate
+for the most general TSH recipe, but one can execute multiple TSH realizations per
+selected-electron-nuclear dynamics</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mol</strong> (<em>list of Nuclear objects</em>) – variables that contains classical DOFs for each trajectory</p></li>
+<li><p><strong>el</strong> (<em>list of Electronic objects</em>) – variables that contains quantum DOFs for each trajectory</p></li>
+<li><p><strong>ham</strong> (<em>list of Hamiltonian objects</em>) – variables that control energy/forces calculations for each trajectory</p></li>
+<li><p><strong>rnd</strong> (<em>Random object</em>) – a random number generator object. It is important that
+we use the same (global) object every time this function is called. If we
+create it here and use - the statistical properties will be very poor, because
+every new “random” number will be not far from the common seed value</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>control parameters, specifically:</p>
+<ul>
+<li><p><strong>params[“tsh_method”]</strong> ( int ): choose the hopping probability calculation scheme</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>1: FSSH  [default]</p></li>
+<li><p>2: GFSH</p></li>
+<li><p>3: MSSH</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>params[“rep”]</strong> ( int ): choose the representation for velocity rescaling</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0: diabatic (uniform rescaling)</p></li>
+<li><p>1: adiabatic (need the derivative couplings) [default]</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>params[“do_rescaling”]</strong> ( int ): choose how to account for detailed balance</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0: don’t do explicit rescaling, so it is used with Boltzmann factor hopping probability scaling</p></li>
+<li><p>1: do the excplicit velocity rescaling [default]</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>params[“do_reverse”]</strong> ( int ): how to handle the nuclear velocities when hop is frustrated</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0: keep as they are, don’t change</p></li>
+<li><p>1: reverse the velocities [default]</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>params[“dt_nucl”]</strong> ( double): nuclear time step [ units: fs, default: 1.0 TODO: check units ]</p></li>
+<li><p><strong>params[“Temperature”]</strong> ( double ): Temperature of the environment [ units: K, default: 300.0 ]</p></li>
+<li><p><strong>params[“print_tsh_probabilities”]</strong> ( int ): Print hopping probabilities matrix</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0: don’t print [default]</p></li>
+<li><p>1: print</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>params[“check_tsh_probabilities”]</strong> ( int ): Run-time sanity test of the dt_nucl,</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0: don’t check</p></li>
+<li><p>1: check [default]</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>params[“use_boltz_factor”]</strong> ( int ): whether to scale the hopping probabilities by the Boltzmann factor</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0: don’t scale [default]</p></li>
+<li><p>1: scale</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>params[“nconfig”]</strong> ( int ): how many distinct initial nuclear geometries</p></li>
+<li><dl class="simple">
+<dt><a href="#id1"><span class="problematic" id="id2">**</span></a>params[“excitations_init”] ( list of ints ): indices of excited states to which</dt><dd><p>each initial geometry may be excited, multiplies the total number of distinct
+electron-nuclear evolutions</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“num_SH_traj”]</strong> ( int ): the number of electronic evolutions per initial</dt><dd><p>geometry per initial excitation</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>but the following variables are changed</p>
+<ul class="simple">
+<li><p>mol</p></li>
+<li><p>el</p></li>
+<li><p>ham</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh.surface_hopping_cpa">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh.</span></code><code class="sig-name descname"><span class="pre">surface_hopping_cpa</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ham</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh.html#surface_hopping_cpa"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh.surface_hopping_cpa" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function performs surface hopping with Boltzmann factor used to
+rescale hopping probabilities in lieu of explicit velocity rescaling</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>SeeAlso</strong> – <cite>surface_hopping</cite></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><cite>surface_hopping</cite></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>SeeAlso</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh.surface_hopping_cpa2">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh.</span></code><code class="sig-name descname"><span class="pre">surface_hopping_cpa2</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ham</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh.html#surface_hopping_cpa2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh.surface_hopping_cpa2" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function performs surface hopping with velocity rescaling according to
+total energy conservation (but not along the derivative coupling vectors)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>SeeAlso</strong> – <cite>surface_hopping</cite></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><cite>surface_hopping</cite></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>SeeAlso</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="tsh_stat.html" class="btn btn-neutral float-right" title="tsh_stat" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="scf.html" class="btn btn-neutral float-left" title="scf" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

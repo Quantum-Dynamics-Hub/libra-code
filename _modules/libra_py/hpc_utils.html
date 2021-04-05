@@ -1,0 +1,414 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.hpc_utils &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.hpc_utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.hpc_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1">#***********************************************************</span>
+<span class="c1"># * Copyright (C) 2013-2019 Alexey V. Akimov</span>
+<span class="c1"># * This file is distributed under the terms of the</span>
+<span class="c1"># * GNU General Public License as published by the</span>
+<span class="c1"># * Free Software Foundation; either version 3 of the</span>
+<span class="c1"># * License, or (at your option) any later version.</span>
+<span class="c1"># * http://www.gnu.org/copyleft/gpl.txt</span>
+<span class="c1">#***********************************************************/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: hpc_utils</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: </span>
+<span class="sd">       This module implements the functionality to run distributed calculations</span>
+<span class="sd">       on the HPC</span>
+
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+
+<div class="viewcode-block" id="substitute"><a class="viewcode-back" href="../../reference/libra_py/hpc_utils.html#libra_py.hpc_utils.substitute">[docs]</a><span class="k">def</span> <span class="nf">substitute</span><span class="p">(</span><span class="n">filename_template</span><span class="p">,</span> <span class="n">out_filename</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Make a copy of a template file but with some variables replaced</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename_template ( string ): the name of the file that serves as a template</span>
+<span class="sd">        out_filename ( string ): the name of the output (result) file</span>
+<span class="sd">        params ( dictionary ): the keys of this dictionary should are the strings </span>
+<span class="sd">            (more generally regular expressions) looked for, the values - are the strings</span>
+<span class="sd">            with which found regexes will be substituted.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: but creates the out_filename files</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename_template</span><span class="p">,</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">f_out</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">out_filename</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">A</span><span class="p">:</span>        
+        <span class="n">b</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">b</span><span class="p">)</span>
+
+        <span class="n">f_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="n">f_out</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="make_submit"><a class="viewcode-back" href="../../reference/libra_py/hpc_utils.html#libra_py.hpc_utils.make_submit">[docs]</a><span class="k">def</span> <span class="nf">make_submit</span><span class="p">(</span><span class="n">Nstart</span><span class="p">,</span><span class="n">Nend</span><span class="p">,</span><span class="n">job_dir</span><span class="p">,</span><span class="n">submit_templ</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;    </span>
+<span class="sd">  </span>
+<span class="sd">    This function makes a PBS/SLURM submit file in a given job directory</span>
+<span class="sd">    using a template file. The function looks for the placeholders </span>
+<span class="sd">    specified by &quot;param1= &quot; and &quot;param2= &quot; and appends actual values</span>
+<span class="sd">    of these parameters as needed.</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        Nstart ( int ): index of a starting parameter </span>
+<span class="sd">        Nend ( int ): index of a finishing parameter </span>
+<span class="sd">        job_dir ( string ): name of the directory where this file will be printed out to       </span>
+<span class="sd">        submit_templ ( string ): the template file name</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: but generates actual submit files</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">submit_templ</span><span class="p">,</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">f_out</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">job_dir</span><span class="p">,</span><span class="n">submit_templ</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">A</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;param1=&quot;</span><span class="p">)</span><span class="o">!=-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">Nstart</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">elif</span> <span class="n">a</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;param2=&quot;</span><span class="p">)</span><span class="o">!=-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">Nend</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">f_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">f_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">f_out</span><span class="o">.</span><span class="n">close</span><span class="p">();</span></div>
+
+
+
+<div class="viewcode-block" id="job"><a class="viewcode-back" href="../../reference/libra_py/hpc_utils.html#libra_py.hpc_utils.job">[docs]</a><span class="k">def</span> <span class="nf">job</span><span class="p">(</span><span class="n">Nstart</span><span class="p">,</span><span class="n">Nend</span><span class="p">,</span><span class="n">job_dir</span><span class="p">,</span><span class="n">prefixes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function prepares a group of input files to be executed as a single job</span>
+<span class="sd">    note the &lt;job&gt; here refers to a single PBS/SLURM submission file and may be executed</span>
+<span class="sd">    on several processors.</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        Nstart ( int ): index of a starting parameter </span>
+<span class="sd">        Nend ( int ): index of a finishing parameter </span>
+<span class="sd">        job_dir ( string ): name of the directory where this file will be printed out to       </span>
+<span class="sd">        prefix ( string ): the template file name [e.g. &quot;x.scf&quot;].</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: just moves the files</span>
+
+<span class="sd">    Example:    </span>
+<span class="sd">        &gt;&gt;&gt; job(0, 5, &quot;job0&quot;, &quot;x.scf&quot;)</span>
+<span class="sd">        Will:</span>
+<span class="sd">        1. Create a directory &quot;job0&quot;</span>
+<span class="sd">        2. Move filex x.scf.0.in to x.scf.5.in to the directory &quot;job0&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Create &lt;job_dir&gt; directory if it does not exist yet</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">job_dir</span><span class="p">):</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;mkdir </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">job_dir</span><span class="p">)</span>
+
+    <span class="c1"># Copy all files</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">Nstart</span>
+    <span class="k">while</span> <span class="n">i</span><span class="o">&lt;=</span><span class="n">Nend</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="n">prefixes</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp </span><span class="si">%s</span><span class="s2">.</span><span class="si">%d</span><span class="s2">.in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">job_dir</span><span class="p">))</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="distribute"><a class="viewcode-back" href="../../reference/libra_py/hpc_utils.html#libra_py.hpc_utils.distribute">[docs]</a><span class="k">def</span> <span class="nf">distribute</span><span class="p">(</span><span class="n">Nmin</span><span class="p">,</span><span class="n">Nmax</span><span class="p">,</span><span class="n">max_steps</span><span class="p">,</span><span class="n">submit_templ</span><span class="p">,</span><span class="n">exp_files</span><span class="p">,</span><span class="n">prefixes</span><span class="p">,</span><span class="n">do_submit</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function creates a number of jobs from the pool of input files </span>
+<span class="sd">    which start from ```Nmin``` to ```Nmax``` with the maximal number </span>
+<span class="sd">    of input files in one job given by ```max_steps```.  </span>
+<span class="sd">    It also starts the job in a given directory</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        Nmin ( int ): minimal index of the file (a part of the file name) in the pool</span>
+<span class="sd">        Nmax ( int ): maximal index of the file (a part of the file name) in the pool</span>
+<span class="sd">        max_steps ( int ): how many files to handle in one job</span>
+<span class="sd">        submit_templ ( string ): the filename of the PBS/SLURM submit file that </span>
+<span class="sd">            contains all the information on how to run the jobs involving a subset of</span>
+<span class="sd">            files, but doesn&#39;t specify which particular files to handle. These parameters</span>
+<span class="sd">            will be automatically setup by this funciton           </span>
+<span class="sd">        exp_files ( list of strings ): is a list of the input files defining how to do an </span>
+<span class="sd">            export of QE wavefunctions</span>
+<span class="sd">        prefixes ( list of strings ): is a list of prefixes of the files to be distributed</span>
+<span class="sd">        do_submit ( int ): a flag to choose if we actually want to submit the jobs</span>
+<span class="sd">            (do_submit==1 || ==2 || ==3 ) or only distribute the files (otherwise):</span>
+
+<span class="sd">            - 0: only discribute files, no actual execution</span>
+<span class="sd">            - 1: distribute and submit using PBS</span>
+<span class="sd">            - 2: distribute and submit using SLURM</span>
+<span class="sd">            - 3: distribute and submit using PYTHON no scheduling systems - good for runs on a local computer</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: just organizes the execution of the calculations </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># job index</span>
+    <span class="n">Nstart</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">Nend</span> <span class="o">=</span> <span class="n">max_steps</span><span class="o">-</span><span class="mi">1</span>
+    <span class="n">njobs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="p">(</span><span class="n">Nmax</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span> <span class="n">Nmin</span><span class="p">)</span><span class="o">/</span><span class="n">max_steps</span> <span class="p">)</span>
+
+    <span class="k">while</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">njobs</span><span class="p">:</span>
+        <span class="n">job</span><span class="p">(</span><span class="n">Nstart</span><span class="p">,</span><span class="n">Nend</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="s2">&quot;job</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">j</span><span class="p">,</span><span class="n">prefixes</span><span class="p">)</span> <span class="c1"># add 1 to avoid merging adjacent runs</span>
+        <span class="k">if</span> <span class="n">do_submit</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
+            <span class="n">make_submit</span><span class="p">(</span><span class="n">Nstart</span><span class="p">,</span><span class="n">Nend</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="s2">&quot;job</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">j</span><span class="p">,</span><span class="n">submit_templ</span><span class="p">)</span>
+
+        <span class="n">Nstart</span> <span class="o">=</span> <span class="n">Nstart</span> <span class="o">+</span> <span class="n">max_steps</span> 
+        <span class="n">Nend</span> <span class="o">=</span> <span class="n">Nend</span> <span class="o">+</span> <span class="n">max_steps</span>    
+        <span class="c1"># Go into that directory and submit the job  </span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;job</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">j</span><span class="p">)</span>
+       
+        <span class="k">for</span> <span class="n">exp_file</span> <span class="ow">in</span> <span class="n">exp_files</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp ../</span><span class="si">%s</span><span class="s2"> .&quot;</span> <span class="o">%</span> <span class="n">exp_file</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">do_submit</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;qsub </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">submit_templ</span><span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">do_submit</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;sbatch </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">submit_templ</span><span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;../&quot;</span><span class="p">)</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="n">job</span><span class="p">(</span><span class="n">Nstart</span><span class="p">,</span><span class="nb">min</span><span class="p">(</span><span class="n">Nend</span><span class="p">,</span><span class="n">Nmax</span><span class="p">),</span><span class="s2">&quot;job</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">j</span><span class="p">,</span><span class="n">prefixes</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">do_submit</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
+        <span class="n">make_submit</span><span class="p">(</span><span class="n">Nstart</span><span class="p">,</span><span class="nb">min</span><span class="p">(</span><span class="n">Nend</span><span class="p">,</span><span class="n">Nmax</span><span class="p">),</span><span class="s2">&quot;job</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">j</span><span class="p">,</span><span class="n">submit_templ</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;job</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">j</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">exp_file</span> <span class="ow">in</span> <span class="n">exp_files</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp ../</span><span class="si">%s</span><span class="s2"> .&quot;</span> <span class="o">%</span> <span class="n">exp_file</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">do_submit</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;qsub </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">submit_templ</span><span class="p">)</span>    
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>  <span class="c1"># we need to wait some time before submitting a new job - to make sure the memory is available</span>
+    <span class="k">elif</span> <span class="n">do_submit</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;sbatch </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">submit_templ</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;../&quot;</span><span class="p">)</span></div>
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

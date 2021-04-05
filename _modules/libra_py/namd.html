@@ -1,0 +1,458 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.namd &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.namd</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.namd</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************                     </span>
+<span class="c1">#* Copyright (C) 2018-2019 Alexey V. Akimov                                                   </span>
+<span class="c1">#*                                                                                                     </span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License                          </span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of                                   </span>
+<span class="c1">#* the License, or (at your option) any later version.                                                 </span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution   </span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.          </span>
+<span class="c1">#***********************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: namd</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements functions for running NA-MD</span>
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+
+<div class="viewcode-block" id="compute_Hvib"><a class="viewcode-back" href="../../reference/libra_py/namd.html#libra_py.namd.compute_Hvib">[docs]</a><span class="k">def</span> <span class="nf">compute_Hvib</span><span class="p">(</span><span class="n">ham_old</span><span class="p">,</span> <span class="n">ham_cur</span><span class="p">,</span> <span class="n">orb</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Computes the vibronic Hamiltonian - in the MO basis - this is equivalent to the general version </span>
+<span class="sd">    below with the 1-electron &quot;Slater determinant&quot; basis functions.</span>
+<span class="sd">    This function is going to be deprecated, but let keep it here, for backward compatibility</span>
+
+<span class="sd">    Args:     </span>
+<span class="sd">        ham_old ( Hamiltonian ): Hamiltonian at time t-dt [units: a.u. of energy]</span>
+<span class="sd">        ham_cur ( Hamiltonian ): Hamiltonian at time t [units: a.u. of energy]</span>
+<span class="sd">        orb ( list of ints ): indices of the orbitals included in the active space. The Hvib dimensions will </span>
+<span class="sd">            be determined by the N_act = len(orb) and the elements of Hvib will reflect only the orbitals included </span>
+<span class="sd">            in this active state. Indexing starts with 0.</span>
+<span class="sd">        dt ( float ): Time step [units: a.u. of time]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        CMATRIX(N_act,N_act): vibronic Hamiltonian matrix in the MO basis:  Hvib = Hel - i*hbar*d_ij</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">N_act</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">orb</span><span class="p">)</span>  <span class="c1"># number of orbitals in the active space</span>
+
+    <span class="n">es_old</span> <span class="o">=</span> <span class="n">ham_old</span><span class="o">.</span><span class="n">get_electronic_structure</span><span class="p">()</span>
+    <span class="n">Nocc</span> <span class="o">=</span> <span class="n">es_old</span><span class="o">.</span><span class="n">Nocc_alp</span>
+    <span class="n">Fao_old</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">es_old</span><span class="o">.</span><span class="n">get_Fao_alp</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">Sao_old</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">es_old</span><span class="o">.</span><span class="n">get_Sao</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">res_old</span> <span class="o">=</span> <span class="n">Fock_to_P</span><span class="p">(</span><span class="n">Fao_old</span><span class="p">,</span> <span class="n">Sao_old</span><span class="p">,</span> <span class="n">Nocc</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">1e-8</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> 
+    <span class="n">E_old</span> <span class="o">=</span> <span class="n">res_old</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># MO energies</span>
+    <span class="n">C_old</span> <span class="o">=</span> <span class="n">res_old</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># MO-LCAO</span>
+    <span class="n">e_old</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">N_act</span><span class="p">,</span> <span class="n">N_act</span><span class="p">)</span>
+    <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">E_old</span><span class="p">,</span> <span class="n">e_old</span><span class="p">,</span> <span class="n">orb</span><span class="p">,</span> <span class="n">orb</span><span class="p">)</span>
+
+
+    <span class="n">e_old</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>
+
+    <span class="n">es_cur</span> <span class="o">=</span> <span class="n">ham_cur</span><span class="o">.</span><span class="n">get_electronic_structure</span><span class="p">()</span>
+    <span class="n">Nocc</span> <span class="o">=</span> <span class="n">es_cur</span><span class="o">.</span><span class="n">Nocc_alp</span>
+    <span class="n">Fao_cur</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">es_cur</span><span class="o">.</span><span class="n">get_Fao_alp</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">Sao_cur</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">es_cur</span><span class="o">.</span><span class="n">get_Sao</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">res_cur</span> <span class="o">=</span> <span class="n">Fock_to_P</span><span class="p">(</span><span class="n">Fao_cur</span><span class="p">,</span> <span class="n">Sao_cur</span><span class="p">,</span> <span class="n">Nocc</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">1e-8</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> 
+    <span class="n">E_cur</span> <span class="o">=</span> <span class="n">res_cur</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># MO energies</span>
+    <span class="n">C_cur</span> <span class="o">=</span> <span class="n">res_cur</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># MO-LCAO</span>
+    <span class="n">e_cur</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">N_act</span><span class="p">,</span> <span class="n">N_act</span><span class="p">)</span>
+    <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">E_cur</span><span class="p">,</span> <span class="n">e_cur</span><span class="p">,</span> <span class="n">orb</span><span class="p">,</span> <span class="n">orb</span><span class="p">)</span>
+
+
+    <span class="n">e_cur</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">()</span>    
+
+
+    <span class="c1"># &lt;MO(t)|MO(t-dt)&gt;</span>
+    <span class="n">dist2</span> <span class="o">=</span> <span class="mf">10000.0</span>
+
+    <span class="n">D</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">N_act</span><span class="p">,</span><span class="n">N_act</span><span class="p">)</span>
+    <span class="n">MO_overlap</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">ham_old</span><span class="o">.</span><span class="n">basis_ao</span><span class="p">,</span> <span class="n">ham_cur</span><span class="o">.</span><span class="n">basis_ao</span><span class="p">,</span> <span class="n">C_old</span><span class="p">,</span> <span class="n">C_cur</span><span class="p">,</span> <span class="n">Py2Cpp_int</span><span class="p">(</span><span class="n">orb</span><span class="p">),</span> <span class="n">Py2Cpp_int</span><span class="p">(</span><span class="n">orb</span><span class="p">),</span> <span class="n">dist2</span> <span class="p">)</span>  <span class="c1"># </span>
+    <span class="n">D</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="o">/</span><span class="n">dt</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="n">D</span><span class="o">.</span><span class="n">H</span><span class="p">())</span>
+
+
+    <span class="n">Eadi</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">e_old</span> <span class="o">+</span> <span class="n">e_cur</span><span class="p">)</span>        
+    <span class="n">Hvib</span> <span class="o">=</span> <span class="n">Eadi</span> <span class="o">-</span> <span class="mf">1.0</span><span class="n">j</span><span class="o">*</span><span class="n">D</span>       <span class="c1"># direct adiabatic</span>
+
+    
+    <span class="k">return</span> <span class="n">Hvib</span></div>
+
+
+
+<div class="viewcode-block" id="compute_Hvib_sd"><a class="viewcode-back" href="../../reference/libra_py/namd.html#libra_py.namd.compute_Hvib_sd">[docs]</a><span class="k">def</span> <span class="nf">compute_Hvib_sd</span><span class="p">(</span><span class="n">ham_old</span><span class="p">,</span> <span class="n">ham_cur</span><span class="p">,</span> <span class="n">orb</span><span class="p">,</span> <span class="n">SD_basis</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Computes the vibronic Hamiltonian - in the MO basis</span>
+
+<span class="sd">    Args:     </span>
+<span class="sd">        ham_old ( Hamiltonian ): Hamiltonian at time t-dt [units: a.u. of energy]</span>
+<span class="sd">        ham_cur ( Hamiltonian ): Hamiltonian at time t [units: a.u. of energy]</span>
+<span class="sd">        orb ( list of ints ): indices of the orbitals included in the active space. The Hvib dimensions will </span>
+<span class="sd">            be determined by the norb = len(orb) and the elements of Hvib will reflect only the orbitals included </span>
+<span class="sd">            in this active state. Indexing starts with 0.</span>
+<span class="sd">        SD_basis ( list of lists of ints ): Slater determinant (SD) basis - are defined in terms of the indices </span>
+<span class="sd">            withing the active space, with the numbering starting from 0. In no-SOC case, the numbers smaller</span>
+<span class="sd">            than N_act = len(orb) will correspond to alpha orbitals other - to beta orbitals</span>
+<span class="sd">        dt ( float ): Time step [units: a.u. of time]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        CMATRIX(N,N): vibronic Hamiltonian matrix in the SD basis:  Hvib = Hel - i*hbar*d_ij. Here, N = len(SD_basis)</span>
+<span class="sd">        </span>
+<span class="sd">    </span>
+<span class="sd">    Example:</span>
+<span class="sd">        If we have a system with HOMO being the orbital with index 20, LUMO - with 21, then </span>
+<span class="sd">        if we want to consider a minimal 2-state system, we can choose orb = [20, 21]</span>
+<span class="sd">        Mapping::</span>
+<span class="sd">            0       1      2      3     </span>
+<span class="sd">            H(alp) L(alp) H(bet)  L(bet) </span>
+<span class="sd">    </span>
+<span class="sd">                     GS = |H(alp),H(beta)|    S1 = |H(alp),L(beta)|</span>
+<span class="sd">     </span>
+<span class="sd">            and SD_basis = [ [0,    2],             [0,      3]   ]</span>
+<span class="sd">                             /\    /\                /\      /\</span>
+<span class="sd">                             |     |                 |       |  </span>
+<span class="sd">                          H alp   H bet             H alp   L beta</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        If we have a system with HOMO being the orbital with index 20, LUMO - with 21, then </span>
+<span class="sd">        if we want to consider a minimal 2-state system with spin-flip, we can choose orb = [20, 21]</span>
+<span class="sd">        Mapping::</span>
+
+<span class="sd">            0       1      2      3     </span>
+<span class="sd">            H(alp) L(alp) H(bet)  L(bet) </span>
+<span class="sd">       </span>
+<span class="sd">                    GS = |H(alp),H(beta)|     S1 =|H(alp),L(beta)|    T0 = |H(alp),L(alp)|    T1 = |H(bet),L(bet)|</span>
+<span class="sd">                                                                                  </span>
+<span class="sd">            and SD_basis = [ [0,    2],             [0,      3]  ,            [0,   1] ,               [ 2,    3 ] ]</span>
+<span class="sd">                             /\    /\                /\      /\               /\    /\                  /\     /\</span>
+<span class="sd">                             |     |                 |       |                |     |                   |      |   </span>
+<span class="sd">                          H alp   H bet             H alp   L beta           H alp  L alp              H bet   L bet</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        If we have a radiacl in a system with 3 electrons, occuplying  HOMO-1 (doubly) and HOMO (singly).</span>
+<span class="sd">        Say, the HOMO is the orbital with index 20, HOMO-1 - with 19, then </span>
+<span class="sd">        if we may want to consider the active space of 3 orbitals: [19, 20, 21]</span>
+<span class="sd">        Mapping::</span>
+<span class="sd">            0       1      2      3        4      5</span>
+<span class="sd">            H-1(alp) H(alp) L(alp) H-1(bet) H(bet) L(bet)</span>
+<span class="sd">    </span>
+<span class="sd">                    GS = |H-1(alp),H-1(beta), H(alp)| </span>
+<span class="sd">                 </span>
+<span class="sd">            and SD_basis = [  [0,       3,        1],    [0,       3,        4],       ...     ]</span>
+<span class="sd">                              /\        /\       /\      /\        /\       /\  </span>
+<span class="sd">                              |         |        |       |         |        |   </span>
+<span class="sd">                             H-1 alp  H-1 bet   H alp   H-1 alp  H-1 bet   H bet</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        We may consider a transition between certain orbitals, say we are interested in transition between </span>
+<span class="sd">        LUMO+10 (index 30) and LUMO+15 (index 35), then we can choose orb = [30, 35]</span>
+<span class="sd">        Note, the definition of the SD basis used in Example #1 can be re-used. </span>
+<span class="sd">        Mapping::</span>
+<span class="sd">            0       1            2            3     </span>
+<span class="sd">            L+10(alp) L+15(alp)  L+10(bet)   L+15(bet) </span>
+<span class="sd">    </span>
+<span class="sd">                    GS = |L+10(alp),L+10(beta)|    S1 = |L+10(alp),L+15(beta)|</span>
+<span class="sd">    </span>
+<span class="sd">            and SD_basis = [ [0,      2],             [0,      3]   ]</span>
+<span class="sd">                             /\      /\                /\      /\</span>
+<span class="sd">                             |       |                 |       |    </span>
+<span class="sd">                          L+10 alp  L+15 bet         L+10 alp L+15 beta</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="n">N_act</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">orb</span><span class="p">)</span>  <span class="c1"># number of orbitals in the active space</span>
+
+    <span class="n">es_old</span> <span class="o">=</span> <span class="n">ham_old</span><span class="o">.</span><span class="n">get_electronic_structure</span><span class="p">()</span>
+    <span class="n">Nocc</span> <span class="o">=</span> <span class="n">es_old</span><span class="o">.</span><span class="n">Nocc_alp</span>
+    <span class="n">Fao_old</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">es_old</span><span class="o">.</span><span class="n">get_Fao_alp</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">Sao_old</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">es_old</span><span class="o">.</span><span class="n">get_Sao</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">res_old</span> <span class="o">=</span> <span class="n">Fock_to_P</span><span class="p">(</span><span class="n">Fao_old</span><span class="p">,</span> <span class="n">Sao_old</span><span class="p">,</span> <span class="n">Nocc</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">1e-8</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> 
+    <span class="n">E_old</span> <span class="o">=</span> <span class="n">res_old</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># MO energies</span>
+    <span class="n">C_old</span> <span class="o">=</span> <span class="n">res_old</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># MO-LCAO</span>
+    <span class="n">e_old</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">N_act</span><span class="p">,</span> <span class="n">N_act</span><span class="p">)</span>
+    <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">E_old</span><span class="p">,</span> <span class="n">e_old</span><span class="p">,</span> <span class="n">orb</span><span class="p">,</span> <span class="n">orb</span><span class="p">)</span>
+
+
+    <span class="n">es_cur</span> <span class="o">=</span> <span class="n">ham_cur</span><span class="o">.</span><span class="n">get_electronic_structure</span><span class="p">()</span>
+    <span class="n">Nocc</span> <span class="o">=</span> <span class="n">es_cur</span><span class="o">.</span><span class="n">Nocc_alp</span>
+    <span class="n">Fao_cur</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">es_cur</span><span class="o">.</span><span class="n">get_Fao_alp</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">Sao_cur</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">es_cur</span><span class="o">.</span><span class="n">get_Sao</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">res_cur</span> <span class="o">=</span> <span class="n">Fock_to_P</span><span class="p">(</span><span class="n">Fao_cur</span><span class="p">,</span> <span class="n">Sao_cur</span><span class="p">,</span> <span class="n">Nocc</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">1e-8</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> 
+    <span class="n">E_cur</span> <span class="o">=</span> <span class="n">res_cur</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># MO energies</span>
+    <span class="n">C_cur</span> <span class="o">=</span> <span class="n">res_cur</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># MO-LCAO</span>
+    <span class="n">e_cur</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">N_act</span><span class="p">,</span> <span class="n">N_act</span><span class="p">)</span>
+    <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">E_cur</span><span class="p">,</span> <span class="n">e_cur</span><span class="p">,</span> <span class="n">orb</span><span class="p">,</span> <span class="n">orb</span><span class="p">)</span>
+
+
+
+    <span class="c1"># &lt;MO(t)|MO(t-dt)&gt;</span>
+    <span class="n">dist2</span> <span class="o">=</span> <span class="mf">10000.0</span>
+
+    <span class="c1"># construct the overlaps in the MO (spatial orbitals) space</span>
+    <span class="n">Smo</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">N_act</span><span class="p">,</span><span class="n">N_act</span><span class="p">)</span>     
+    <span class="n">MO_overlap</span><span class="p">(</span><span class="n">Smo</span><span class="p">,</span> <span class="n">ham_old</span><span class="o">.</span><span class="n">basis_ao</span><span class="p">,</span> <span class="n">ham_cur</span><span class="o">.</span><span class="n">basis_ao</span><span class="p">,</span> <span class="n">C_old</span><span class="p">,</span> <span class="n">C_cur</span><span class="p">,</span> <span class="n">Py2Cpp_int</span><span class="p">(</span><span class="n">orb</span><span class="p">),</span> <span class="n">Py2Cpp_int</span><span class="p">(</span><span class="n">orb</span><span class="p">)</span> <span class="p">,</span> <span class="n">dist2</span> <span class="p">)</span>  <span class="c1"># </span>
+
+
+    <span class="c1"># construct the overlaps in the MO (spin-orbitals) space    </span>
+    <span class="c1">#</span>
+    <span class="c1">#  No SOC:</span>
+    <span class="c1">#</span>
+    <span class="c1"># the orb x orb block is for alpha orbitals and orb + N_act x orb + N_act  - for beta orbitals</span>
+    <span class="n">Sso</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">N_act</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">N_act</span><span class="p">)</span> 
+
+    <span class="n">orb_alp</span> <span class="o">=</span> <span class="n">Py2Cpp_int</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N_act</span><span class="p">))</span>
+    <span class="n">orb_bet</span> <span class="o">=</span> <span class="n">Py2Cpp_int</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N_act</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">N_act</span><span class="p">))</span>
+
+    <span class="n">push_submatrix</span><span class="p">(</span><span class="n">Sso</span><span class="p">,</span> <span class="n">Smo</span><span class="p">,</span> <span class="n">orb_alp</span><span class="p">,</span> <span class="n">orb_alp</span><span class="p">)</span>
+    <span class="n">push_submatrix</span><span class="p">(</span><span class="n">Sso</span><span class="p">,</span> <span class="n">Smo</span><span class="p">,</span> <span class="n">orb_bet</span><span class="p">,</span> <span class="n">orb_bet</span><span class="p">)</span>
+
+
+    <span class="c1"># construct the overlaps in the SD space</span>
+    <span class="c1"># convert to internal data type:</span>
+    <span class="n">sd_basis</span> <span class="o">=</span> <span class="n">intList2</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">sd</span> <span class="ow">in</span> <span class="n">SD_basis</span><span class="p">:</span>
+        <span class="n">sd_basis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">Py2Cpp_int</span><span class="p">(</span><span class="n">sd</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="n">Ssd</span> <span class="o">=</span> <span class="n">overlap_sd</span><span class="p">(</span><span class="n">Sso</span><span class="p">,</span> <span class="n">sd_basis</span><span class="p">);</span>  
+    <span class="n">Ssd</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="o">/</span><span class="n">dt</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">Ssd</span> <span class="o">-</span> <span class="n">Ssd</span><span class="o">.</span><span class="n">H</span><span class="p">())</span>   <span class="c1"># scalar NAC</span>
+
+
+    <span class="c1"># Compute energies in the SD basis:</span>
+    <span class="n">sd_bas_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">SD_basis</span><span class="p">)</span>
+    <span class="n">Esd</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">sd_bas_size</span><span class="p">,</span> <span class="n">sd_bas_size</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">I</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sd_bas_size</span><span class="p">):</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="mf">0.0</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">SD_basis</span><span class="p">[</span><span class="n">I</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">N_act</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">e</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">e_cur</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="n">e_old</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">j</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="n">N_act</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">e</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">e_cur</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="n">e_old</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">))</span>
+
+        <span class="n">Esd</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">I</span><span class="p">,</span><span class="n">I</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+
+
+    <span class="c1"># Finally, compute the Hvib</span>
+    <span class="n">Hvib</span> <span class="o">=</span> <span class="n">Esd</span> <span class="o">-</span> <span class="mf">1.0</span><span class="n">j</span><span class="o">*</span><span class="n">Ssd</span>    
+
+    
+    <span class="k">return</span> <span class="n">Hvib</span></div>
+
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

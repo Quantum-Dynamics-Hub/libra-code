@@ -1,0 +1,337 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.scf &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.scf</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.scf</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#* Copyright (C) 2018 Alexey V. Akimov</span>
+<span class="c1">#*</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+<span class="c1">#</span>
+<span class="c1">#  This module contains a number of functions to  compute properties of interest</span>
+<span class="c1">#  from the converged electronic structure calculations</span>
+<span class="c1">#</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">cmath</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">data_outs</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">pdos</span>
+
+<span class="k">def</span> <span class="nf">takeSecond</span><span class="p">(</span><span class="n">elem</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">elem</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<div class="viewcode-block" id="spectrum"><a class="viewcode-back" href="../../reference/libra_py/scf.html#libra_py.scf.spectrum">[docs]</a><span class="k">def</span> <span class="nf">spectrum</span><span class="p">(</span><span class="n">ham</span><span class="p">,</span> <span class="n">T_file</span> <span class="o">=</span> <span class="s2">&quot;T_mo.dat&quot;</span><span class="p">,</span> <span class="n">spec_file</span> <span class="o">=</span> <span class="s2">&quot;spectrum.txt&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ham - is a listHamiltonian object, that contains basis and converged MO info</span>
+<span class="sd">    T_file - the name of the file to store the transition dipole moment</span>
+<span class="sd">    spec_file - the name of the file to store the energy - oscillator strength pairs (sorted)</span>
+
+<span class="sd">    Compute the electronic absorption spectrum, based on the transition dipole moments</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bas</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">basis_ao</span>
+    <span class="n">es</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">get_electronic_structure</span><span class="p">()</span>
+
+    <span class="n">homo</span> <span class="o">=</span> <span class="n">es</span><span class="o">.</span><span class="n">Nocc_alp</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="n">C</span> <span class="o">=</span> <span class="n">es</span><span class="o">.</span><span class="n">get_C_alp</span><span class="p">()</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">es</span><span class="o">.</span><span class="n">get_E_alp</span><span class="p">()</span>
+
+    <span class="n">nao</span><span class="p">,</span> <span class="n">nmo</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">num_of_rows</span><span class="p">,</span> <span class="n">C</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="n">Tao_x</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nao</span><span class="p">,</span> <span class="n">nao</span><span class="p">)</span>
+    <span class="n">Tao_y</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nao</span><span class="p">,</span> <span class="n">nao</span><span class="p">)</span>
+    <span class="n">Tao_z</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nao</span><span class="p">,</span> <span class="n">nao</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nao</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nao</span><span class="p">):</span>
+            <span class="n">mu</span> <span class="o">=</span> <span class="n">transition_dipole_moment</span><span class="p">(</span><span class="n">bas</span><span class="p">[</span><span class="n">a</span><span class="p">],</span> <span class="n">bas</span><span class="p">[</span><span class="n">b</span><span class="p">])</span>
+            <span class="n">Tao_x</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span> <span class="n">mu</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">Tao_y</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span> <span class="n">mu</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">Tao_z</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span> <span class="n">mu</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+
+    <span class="n">Tmo_x</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">T</span><span class="p">()</span> <span class="o">*</span> <span class="n">Tao_x</span> <span class="o">*</span> <span class="n">C</span>
+    <span class="n">Tmo_y</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">T</span><span class="p">()</span> <span class="o">*</span> <span class="n">Tao_y</span> <span class="o">*</span> <span class="n">C</span>
+    <span class="n">Tmo_z</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">T</span><span class="p">()</span> <span class="o">*</span> <span class="n">Tao_z</span> <span class="o">*</span> <span class="n">C</span>
+
+    <span class="n">Tmo</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nmo</span><span class="p">,</span> <span class="n">nmo</span><span class="p">)</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">homo</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>   <span class="c1"># All unoccupied orbitals</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">nmo</span><span class="p">):</span>   <span class="c1">#  All occupied orbitals</span>
+            <span class="n">dE</span> <span class="o">=</span> <span class="n">E</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">-</span><span class="n">E</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">Tmo_x</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+            <span class="n">Y</span> <span class="o">=</span> <span class="n">Tmo_y</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="n">Tmo_z</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+            <span class="n">Tmo</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="mf">2.0</span><span class="o">/</span><span class="mf">3.0</span><span class="p">)</span><span class="o">*</span><span class="n">dE</span><span class="o">*</span><span class="p">(</span> <span class="n">X</span><span class="o">*</span><span class="n">X</span> <span class="o">+</span> <span class="n">Y</span><span class="o">*</span><span class="n">Y</span> <span class="o">+</span> <span class="n">Z</span><span class="o">*</span><span class="n">Z</span><span class="p">)</span> <span class="p">)</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">Tmo</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">),</span> <span class="n">dE</span><span class="p">])</span>
+
+
+    <span class="c1"># sort list with key</span>
+    <span class="n">sorted_res</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">takeSecond</span><span class="p">)</span>
+
+    <span class="n">data_outs</span><span class="o">.</span><span class="n">show_matrix_splot</span><span class="p">(</span><span class="n">Tmo</span><span class="p">,</span> <span class="n">T_file</span><span class="p">)</span>        
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">spec_file</span><span class="p">,</span><span class="s2">&quot;w&quot;</span><span class="p">)</span> 
+    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">sorted_res</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%8.5f</span><span class="s2"> </span><span class="si">%8.5f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">it</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">it</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+  
+
+
+<div class="viewcode-block" id="print_orbitals"><a class="viewcode-back" href="../../reference/libra_py/scf.html#libra_py.scf.print_orbitals">[docs]</a><span class="k">def</span> <span class="nf">print_orbitals</span><span class="p">(</span><span class="n">ham</span><span class="p">,</span> <span class="n">syst</span><span class="p">,</span> <span class="n">orbs</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">grid</span> <span class="o">=</span> <span class="p">[</span><span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function will print out the wavefunctions of the converged SCF calculations</span>
+
+<span class="sd">    ham - the listHamiltonian object containing the basis and MO info</span>
+<span class="sd">    syst - chemical system object, containing the coordinates info</span>
+<span class="sd">    obrs - a list of orbitals to be processes (list of integers)</span>
+<span class="sd">    prefix - a prefix of the filenames where the wavefunctions be printed</span>
+<span class="sd">    grid - 3 integers defining the coarsening level of the cube file</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">prms</span> <span class="o">=</span> <span class="n">Control_Parameters</span><span class="p">()</span>
+    <span class="n">prms</span><span class="o">.</span><span class="n">nx_grid</span><span class="p">,</span> <span class="n">prms</span><span class="o">.</span><span class="n">ny_grid</span><span class="p">,</span> <span class="n">prms</span><span class="o">.</span><span class="n">nz_grid</span> <span class="o">=</span> <span class="n">grid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">grid</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">prms</span><span class="o">.</span><span class="n">charge_density_prefix</span> <span class="o">=</span> <span class="n">prefix</span><span class="o">+</span><span class="s2">&quot;_orbital_&quot;</span>
+    <span class="n">prms</span><span class="o">.</span><span class="n">orbs</span> <span class="o">=</span> <span class="n">Py2Cpp_int</span><span class="p">(</span><span class="n">orbs</span><span class="p">)</span> 
+
+    <span class="n">es</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">get_electronic_structure</span><span class="p">()</span>
+    <span class="n">charge_density</span><span class="p">(</span> <span class="n">es</span><span class="p">,</span> <span class="n">syst</span><span class="p">,</span> <span class="n">ham</span><span class="o">.</span><span class="n">basis_ao</span><span class="p">,</span> <span class="n">prms</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="print_pdos"><a class="viewcode-back" href="../../reference/libra_py/scf.html#libra_py.scf.print_pdos">[docs]</a><span class="k">def</span> <span class="nf">print_pdos</span><span class="p">(</span><span class="n">ham</span><span class="p">,</span> <span class="n">syst</span><span class="p">,</span> <span class="n">projections</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;pdos&quot;</span><span class="p">,</span> <span class="n">emin</span> <span class="o">=</span> <span class="o">-</span><span class="mf">35.0</span><span class="p">,</span> <span class="n">emax</span> <span class="o">=</span> <span class="mf">35.0</span><span class="p">,</span> <span class="n">de</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">outfile</span><span class="o">=</span><span class="s2">&quot;pdos.txt&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ham - listHamiltonian object that contains info about atom2ao mapping, AO basis, and MOs</span>
+<span class="sd">    syst - contains the atomic coordinates</span>
+<span class="sd">    projections - which types of DOS projections to compute. Format like in [[&quot;tot&quot;,range(0,syst.Number_of_atoms)]]</span>
+<span class="sd">    prefix - the directory name (to be created if not present) where all the files will go</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">prms</span> <span class="o">=</span> <span class="n">Control_Parameters</span><span class="p">()</span>
+    <span class="n">prms</span><span class="o">.</span><span class="n">dos_prefix</span> <span class="o">=</span> <span class="n">prefix</span><span class="o">+</span><span class="s2">&quot;/&quot;</span>
+
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;mkdir &quot;</span> <span class="o">+</span> <span class="n">prefix</span><span class="p">)</span>
+
+    <span class="n">es</span> <span class="o">=</span> <span class="n">ham</span><span class="o">.</span><span class="n">get_electronic_structure</span><span class="p">()</span>
+    <span class="n">compute_dos</span><span class="p">(</span> <span class="n">es</span><span class="p">,</span> <span class="n">syst</span><span class="p">,</span> <span class="n">ham</span><span class="o">.</span><span class="n">basis_ao</span><span class="p">,</span> <span class="n">prms</span><span class="p">,</span> <span class="n">ham</span><span class="o">.</span><span class="n">atom_to_ao_map</span><span class="p">)</span>
+    <span class="n">proj_dos</span><span class="o">.</span><span class="n">pdos</span><span class="p">(</span><span class="n">emin</span><span class="p">,</span> <span class="n">emax</span><span class="p">,</span> <span class="n">de</span><span class="p">,</span> <span class="n">projections</span><span class="p">,</span> <span class="n">prefix</span><span class="o">+</span><span class="s2">&quot;/_alpha_wfc_atom&quot;</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">es</span><span class="o">.</span><span class="n">Nelec</span><span class="p">)</span></div>
+
+
+
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,456 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>QE_utils &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="regexlib" href="regexlib.html" />
+    <link rel="prev" title="QE_methods" href="QE_methods.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>QE_utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/QE_utils.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.QE_utils">
+<span id="qe-utils"></span><h1>QE_utils<a class="headerlink" href="#module-libra_py.QE_utils" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="libra_py.QE_utils.get_value">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_utils.</span></code><code class="sig-name descname"><span class="pre">get_value</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typ</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_utils.html#get_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_utils.get_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to extract parameter from the dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – A dictionary containing important simulation parameters</p></li>
+<li><p><strong>key</strong> (<em>string</em>) – The name of the variable that we wish to extract from the params
+dictionary</p></li>
+<li><p><strong>default</strong> (<em>various types</em>) – The default value assigned to a dictionary key</p></li>
+<li><p><strong>typ</strong> (<em>string</em>) – The data type assigned to a value that is extracted from the dictionary</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a value from the params dictionary that is of type <cite>typ</cite></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>various types</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_utils.merge_orbitals">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_utils.</span></code><code class="sig-name descname"><span class="pre">merge_orbitals</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ca</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cb</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_utils.html#merge_orbitals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_utils.merge_orbitals" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function puts two matrices together into a single matrix</p>
+<p>param[in] Ca Coefficient matrix corresponding to alpha orbitals of size N_pw x N_Mo
+param[in] Cb Coefficient matrix corresponding to beta orbitals of size N_pw x N_Mo</p>
+<p>Returns: A single matrix of size N_pw x 2*N_Mo</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_utils.orthogonalize_orbitals">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_utils.</span></code><code class="sig-name descname"><span class="pre">orthogonalize_orbitals</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">C</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_utils.html#orthogonalize_orbitals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_utils.orthogonalize_orbitals" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function takes an input of orbitals (C), which may not
+be rigorously orthogonal, finds a suitable transformation (U)
+and converts them into rigorously orthogonal orbitals (C_tilda)</p>
+<p>C_tilda = C * U, so if you want</p>
+<p>C_tilda^+  * C_tilda = I, you’ll find that</p>
+<p>U = S^{-1/2}, where S = C^+ * C</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>C</strong> (<em>CMATRIX</em><em>(</em><em>N_pw</em><em>, </em><em>N_mo</em><em>)</em>) – just alpha or beta orbitals</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>just alpha or beta orbitals, where</dt><dd><p>the overlap matrix constructed using this matrix is the identity matrix</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>CMATRIX(N_pw, N_mo)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_utils.orthogonalize_orbitals2">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_utils.</span></code><code class="sig-name descname"><span class="pre">orthogonalize_orbitals2</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ca</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cb</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_utils.html#orthogonalize_orbitals2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_utils.orthogonalize_orbitals2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ca and Cb = N_pw x N_mo   - represent the spin-components
+of the adiabatic states</p>
+<p>This function takes an input of orbitals (C), which may not
+be rigorously orthogonal, finds a suitable transformation (U)
+and converts them into rigorously orthogonal orbitals (C_tilda)</p>
+<p>For each channel:</p>
+<p>C_tilda = C * U, so if you want</p>
+<p>C_tilda^+  * C_tilda = I, you’ll find that</p>
+<p>U = S^{-1/2}, where $S = Ca^+ * Ca + Cb^+ * Cb$</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Ca</strong> (<em>CMATRIX</em><em>(</em><em>N_pw</em><em>, </em><em>N_mo</em><em>)</em>) – alpha-component of the adiabatic states</p></li>
+<li><p><strong>Cb</strong> (<em>CMATRIX</em><em>(</em><em>N_pw</em><em>, </em><em>N_mo</em><em>)</em>) – beta-component of the adiabatic states</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Two matricies where the overlap matrix</dt><dd><p>constructed using this matrix is the identity matrix</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>( CMATRIX(N_pw, N_mo) , CMATRIX(N_pw, N_mo) )</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_utils.post_process">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_utils.</span></code><code class="sig-name descname"><span class="pre">post_process</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ene</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">issoc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_utils.html#post_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_utils.post_process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Post-processing of the data extracted from QE output files</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coeff</strong> (<em>list of CMATRIX</em>) – PW coefficients for orbitals, potentially spin-resolved</p></li>
+<li><p><strong>ene</strong> (<em>list of CMATRIX</em>) – energies of KS orbitals, potentially spin-resolved</p></li>
+<li><p><strong>issoc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>flag to indicate whether the orbitals are 2-component spinors (with SOC) or
+regular KS orbitals, one per spin channel</p>
+<ul>
+<li><p>0 : no SOC</p></li>
+<li><p>1 : yes SOC</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+<p>(list[0], list[1]), where :</p>
+<blockquote>
+<div><p>No-SOC case: list[0] = list[1]
+SOC case: 2 lists, where list[0] = alpha components, list[1] = beta components</p>
+</div></blockquote>
+<p class="rubric">Notes</p>
+<p>In SOC case (spinor):</p>
+<blockquote>
+<div><dl class="simple">
+<dt>coeff[0] - a N_pw x 2*N matrix of type:   (psi_0^alp, psi_0^bet, … psi_{N-1}^alp, psi_{N-1}^bet)</dt><dd><p>where each psi is a colum of the PW coefficients for given KS orbital (spatial component for each spin)</p>
+</dd>
+<dt>ene[0] - a 2*N x 2*N matrix of energies coming in pairs:  e_{2*i} = e_{2*i+1}, because these are the</dt><dd><p>energies of the same orbital, just its different spin components</p>
+</dd>
+</dl>
+<p>We then split the coeff[0] matrix into a pair of N_pw x N matrices that represent alpha and beta
+spatial components of the wavefunction, separately</p>
+<p>However, the number of &lt;b&gt;spin&lt;&gt;-orbitals will be twice that of the N,
+so we need to construct new matrices with spin-orbitals.</p>
+<p>So that we have both psi_i = (psi_i_alp, psi_i_bet) and psi_{i+N} = (psi_i_bet, psi_i_alp)
+pairs of spin-orbitals (this is needed to represent the indistinguishable nature of electrons)
+i = 0,…N-1, where N - is the number of pairs of read spinors  = N_adi_ks_orb</p>
+</div></blockquote>
+<p>In non-SOC case (spin-polarized):</p>
+<blockquote>
+<div><p>We directly get a pair of N_pw x N_mo_dia matrices that represent alpha and beta spatial components of the wavefunction</p>
+<p>coeff[0] - a N_pw x N matrix of type:   (psi_0^alp, … psi_{N-1}^alp)
+coeff[1] - a N_pw x N matrix of type:   (psi_0^bet, … psi_{N-1}^bet)</p>
+<blockquote>
+<div><p>where each psi is a colum of the PW coefficients for given KS orbital (spatial component
+for each spin)</p>
+</div></blockquote>
+<p>ene[0] -   a N x N matrix of alpha KS orbital energies
+ene[1] -   a N x N matrix of beta KS orbital energies</p>
+<p>Eventually:</p>
+<p>“alpha-block”        “beta-block”</p>
+<p>C_adi[0] = (psi_0^alp,… psi_{N-1}^alp,  psi_N^alp, … psi_{2N-1}^alp)     alpha-components of spinors
+C_adi[1] = (psi_0^bet,… psi_{N-1}^bet,  psi_N^bet, … psi_{2N-1}^bet)     beta-components of spinors</p>
+<p>same energies in SOC case or non-polarized non-SOC
+different energies in spin-polarized non-SOC</p>
+<p>Also:  psi_0^alp = psi_N^bet  and psi_0^bet = psi_N^alp, and so on</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line">E^alpha-block          0         |</div>
+</div>
+<p>E_adi =  |                                  |
+|      0             E^beta-block  |</p>
+</div></blockquote>
+<p>E^alpha-block  = E^beta-block (SOC or non-polarized non-SOC)
+E^alpha-block != E^beta-block (spin-polarized non-SOC)</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_utils.split_orbitals_energies">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_utils.</span></code><code class="sig-name descname"><span class="pre">split_orbitals_energies</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">C</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_utils.html#split_orbitals_energies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_utils.split_orbitals_energies" title="Permalink to this definition">¶</a></dt>
+<dd><dl>
+<dt>In SOC, non-collinear case, the orbitals are 2-component spinors:</dt><dd><blockquote>
+<div><div class="line-block">
+<div class="line">psi_i^alp |          | E_i_alp          |</div>
+</div>
+</div></blockquote>
+<dl>
+<dt>psi_i = |           <a href="#id1"><span class="problematic" id="id2">|</span></a>,  so E = |                  |</dt><dd><div class="line-block">
+<div class="line">psi_i^bet |          |          E_i_bet |</div>
+</div>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>So, the wfc we read from the QE calculations, in this case is composed of such
+pairs, going in this order, so:</p>
+<p>psi_i^alp, psi_i^bet, psi_{i+1}^alp, psi_{i+1}^bet, …</p>
+<p>Thus, there are 2*N_mo_adi columns, so we need to extract spin-components
+into 2 matrices</p>
+<p>param[in] C Coefficient matrix of size N_pw x 2*N_Mo
+param[in] E Eigenvalue matrix of size  2*N_mo x 2*N_Mo</p>
+<p>Returns: Matricies for the alpha and beta components of the input matricies</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="regexlib.html" class="btn btn-neutral float-right" title="regexlib" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="QE_methods.html" class="btn btn-neutral float-left" title="QE_methods" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

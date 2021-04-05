@@ -1,0 +1,694 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.Gaussian_methods &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.Gaussian_methods</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.Gaussian_methods</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#* Copyright (C) 2020 Mohammad Shakiba, Brendan Smith, Alexey V. Akimov</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 3 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: Gaussian_methods</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements functions for processing the Gaussian inputs and outputs.</span>
+<span class="sd">.. moduleauthors:: </span>
+<span class="sd">       Mohammad Shakiba, Brendan Smith, Alexey V. Akimov </span>
+<span class="sd">  </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">libra_py</span> <span class="kn">import</span> <span class="n">CP2K_methods</span>
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+
+
+<div class="viewcode-block" id="read_gaussian_tddft_log_file"><a class="viewcode-back" href="../../reference/libra_py/Gaussian_methods.html#libra_py.Gaussian_methods.read_gaussian_tddft_log_file">[docs]</a><span class="k">def</span> <span class="nf">read_gaussian_tddft_log_file</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function read Gaussian output file and extracts the excitation analysis results.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        params (dictionary): The dictionary containing the input parameters.</span>
+
+<span class="sd">            logfile_name (string): The log file name.</span>
+
+<span class="sd">            tolerance (float): The tolerance factor for choosing the excited states of the excitation analysis.</span>
+
+<span class="sd">            number_of_states (integer): The number of excited states to be considered in the excitation analysis.</span>
+
+<span class="sd">            isUKS (integer): This parameter is the flag for restricted or unrestricted spin calculations. If it is</span>
+<span class="sd">                             set to 1 the unrestricted spin calculations will be considered.</span>
+<span class="sd">    Returns:</span>
+
+<span class="sd">        excitation_energies (1D numpy arra): The excitation energies.</span>
+
+<span class="sd">        ci_basis (list): The list containnig the CI basis of the excitation analysis.</span>
+
+<span class="sd">        ci_coefficients (list): The list containing the ci_coefficients for each excitation.</span>
+
+<span class="sd">        spin_components (list): The list containing the spin components for each excitation.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Critical parmeters</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;logfile_name&quot;</span> <span class="p">]</span>
+    <span class="c1"># Default parameters</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;tolerance&quot;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span> <span class="s2">&quot;number_of_states&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;isUKS&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="p">}</span>
+    <span class="c1"># Check input</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="c1"># Gaussian log file name</span>
+    <span class="n">gaussian_log_file_name</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;logfile_name&quot;</span><span class="p">]</span>
+    <span class="c1"># tolerance factor</span>
+    <span class="n">tolerance</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;tolerance&quot;</span><span class="p">]</span>
+    <span class="c1"># The unrestricted spin calculations flag</span>
+    <span class="n">isUKS</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;isUKS&quot;</span><span class="p">]</span>
+    <span class="c1"># The number of states</span>
+    <span class="n">number_of_states</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;number_of_states&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Open the log file</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">gaussian_log_file_name</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># Initialize the excitation energies list</span>
+    <span class="n">excitation_energies</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># The lines with excited state in them</span>
+    <span class="n">excited_states_lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)):</span>
+        <span class="c1"># If &#39;Excited State&#39; was found in the log file append it in excited_states_lines</span>
+        <span class="k">if</span> <span class="s1">&#39;Excited State&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="n">excitation_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">4</span><span class="p">]))</span>
+            <span class="n">excited_states_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;excited_states_lines = &quot;</span><span class="p">,</span> <span class="n">excited_states_lines</span><span class="p">)</span>
+
+    <span class="c1"># Initialize the ci_basis, ci_coefficients, and spin_components</span>
+    <span class="n">ci_basis</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ci_coefficients</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">spin_components</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Find the final line of the excitation analysis (the blank line) and append</span>
+    <span class="c1"># it to excited_states_lines for further use in the &#39;for&#39; loops</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">excited_states_lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)):</span>
+        <span class="c1"># Find the blank line</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">excited_states_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="c1"># If founf the blank line exit the for loop</span>
+            <span class="k">break</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_states</span><span class="p">):</span>
+        <span class="c1"># Initialize tmp variables for storing the excitation analyses</span>
+        <span class="n">tmp_ci_state</span>              <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp_ci_state_coefficients</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp_spin</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">excited_states_lines</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">excited_states_lines</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="p">):</span>
+            <span class="k">if</span> <span class="s1">&#39;-&gt;&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span> <span class="c1"># and len(lines[j].split())==4:</span>
+                <span class="k">if</span> <span class="n">isUKS</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="c1"># For alpha spin</span>
+                    <span class="k">if</span> <span class="s1">&#39;A&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                        <span class="n">line_alpha</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&gt;&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                        <span class="c1"># Use the tolerance factor for chosing the states</span>
+                        <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">line_alpha</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+                            <span class="n">tmp_ci_state</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">line_alpha</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">line_alpha</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="p">)</span>
+                            <span class="n">tmp_ci_state_coefficients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="nb">float</span><span class="p">(</span><span class="n">line_alpha</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="p">)</span>
+                            <span class="n">tmp_spin</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;alp&#39;</span><span class="p">)</span>
+
+                    <span class="c1"># For beta spin</span>
+                    <span class="k">elif</span> <span class="s1">&#39;B&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                        <span class="n">line_beta</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;B&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&gt;&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                        <span class="c1"># Use the tolerance factor for chosing the states</span>
+                        <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">line_beta</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+                            <span class="n">tmp_ci_state</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">line_beta</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">line_beta</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="p">)</span>
+                            <span class="n">tmp_ci_state_coefficients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="nb">float</span><span class="p">(</span><span class="n">line_beta</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="p">)</span>
+                            <span class="n">tmp_spin</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;bet&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Just for alpha spin and the same as above</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">This is the spin-restricted case, we are reading the lines now&quot;</span><span class="p">)</span>
+                    <span class="n">tmp_line_alpha</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="n">line_alpha</span> <span class="o">=</span> <span class="n">tmp_line_alpha</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">lines[j] = &quot;</span><span class="p">,</span> <span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>  
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;tmp_line_alpha = &quot;</span><span class="p">,</span> <span class="n">tmp_line_alpha</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;line_alpha = &quot;</span><span class="p">,</span> <span class="n">line_alpha</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">line_alpha</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+                        <span class="n">tmp_ci_state</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">line_alpha</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">line_alpha</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="p">)</span>
+                        <span class="n">tmp_ci_state_coefficients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="nb">float</span><span class="p">(</span><span class="n">line_alpha</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="p">)</span>
+                        <span class="n">tmp_spin</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;alp&#39;</span><span class="p">)</span>            
+
+        <span class="c1"># Append the tmp variables into the main variables</span>
+        <span class="n">ci_basis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_ci_state</span><span class="p">)</span>
+        <span class="n">ci_coefficients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_ci_state_coefficients</span><span class="p">)</span>
+        <span class="n">spin_components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_spin</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">excitation_energies</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">number_of_states</span><span class="p">],</span> <span class="n">ci_basis</span><span class="p">,</span> <span class="n">ci_coefficients</span><span class="p">,</span> <span class="n">spin_components</span></div>
+
+
+
+
+<div class="viewcode-block" id="read_energies_from_gaussian_log_file"><a class="viewcode-back" href="../../reference/libra_py/Gaussian_methods.html#libra_py.Gaussian_methods.read_energies_from_gaussian_log_file">[docs]</a><span class="k">def</span> <span class="nf">read_energies_from_gaussian_log_file</span><span class="p">(</span> <span class="n">params</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function read the energies from Gaussian log file and returns the Kohn-Sham and total_energies.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        params (dictionary): The dictionary containing the input parameters.</span>
+
+<span class="sd">            logfile_name (string): The log file name.</span>
+
+<span class="sd">            min_band (integer): The minimum state number.</span>
+
+<span class="sd">            max_band (integer): The maximum state number.</span>
+
+<span class="sd">            spin (integer): The spin component. 1 is for alpha and 2 is for beta spin.</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">        ks_energies (1D numpy array): The Kohn-Sham energies.</span>
+
+<span class="sd">        total_energy (float): The total energy of the system.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Critical params</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;logfile_name&quot;</span><span class="p">,</span> <span class="s2">&quot;min_band&quot;</span><span class="p">,</span> <span class="s2">&quot;max_band&quot;</span> <span class="p">]</span>
+    <span class="c1"># Default params</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;spin&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="p">}</span>
+    <span class="c1"># Check inputs</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="c1"># Extracting the input parameters</span>
+    <span class="n">gaussian_log_file_name</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;logfile_name&quot;</span><span class="p">]</span>
+    <span class="n">min_band</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;min_band&quot;</span><span class="p">]</span>
+    <span class="n">max_band</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;max_band&quot;</span><span class="p">]</span>
+    <span class="n">spin</span>     <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;spin&quot;</span><span class="p">]</span>
+
+    <span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">gaussian_log_file_name</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># Initialize the occupied and unoccupied energies</span>
+    <span class="n">occupied_energies</span>   <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">unoccupied_energies</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">spin</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># alpha spin</span>
+        <span class="n">spin_letter</span> <span class="o">=</span> <span class="s1">&#39;alpha&#39;</span>
+    <span class="k">elif</span> <span class="n">spin</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># beta spin</span>
+        <span class="n">spin_letter</span> <span class="o">=</span> <span class="s1">&#39;beta&#39;</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)):</span>
+        <span class="c1"># Find the eigenvalues of the occupied molecular orbitals</span>
+        <span class="k">if</span> <span class="s1">&#39;eigenvalues&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="s1">&#39;occ&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="n">spin_letter</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">occupied_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="n">j</span><span class="p">]))</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">pass</span>
+        <span class="c1"># Find the eigenvalues of the unoccupied molecular orbitals</span>
+        <span class="k">if</span> <span class="s1">&#39;eigenvalues&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="s1">&#39;virt&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="n">spin_letter</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">unoccupied_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="n">j</span><span class="p">]))</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">pass</span>
+    <span class="c1"># Turn them into numpy arrays</span>
+    <span class="n">occupied_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">occupied_energies</span><span class="p">)</span>
+    <span class="n">unoccupied_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">unoccupied_energies</span><span class="p">)</span>
+    <span class="c1"># Concatenate the occupied and unoccpied energies so we can choose from min_band to max_band</span>
+    <span class="n">ks_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">occupied_energies</span><span class="p">,</span><span class="n">unoccupied_energies</span><span class="p">))</span>
+
+    <span class="c1"># Now the total energy</span>
+    <span class="n">total_energy</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)):</span>
+        <span class="c1"># Find the &#39;SCF Done&#39; in the output, total energy is there</span>
+        <span class="k">if</span> <span class="s1">&#39;SCF Done:&#39;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">total_energy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="n">j</span><span class="p">]</span> <span class="p">)</span>
+                    <span class="k">break</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="k">break</span>
+    
+    <span class="k">return</span> <span class="n">ks_energies</span><span class="p">[</span><span class="n">min_band</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="n">max_band</span><span class="p">],</span> <span class="n">total_energy</span></div>
+
+
+
+
+<div class="viewcode-block" id="gaussian_distribute"><a class="viewcode-back" href="../../reference/libra_py/Gaussian_methods.html#libra_py.Gaussian_methods.gaussian_distribute">[docs]</a><span class="k">def</span> <span class="nf">gaussian_distribute</span><span class="p">(</span> <span class="n">istep</span><span class="p">,</span> <span class="n">fstep</span><span class="p">,</span> <span class="n">nsteps_this_job</span><span class="p">,</span> <span class="n">trajectory_xyz_file</span><span class="p">,</span> <span class="n">gaussian_input</span><span class="p">,</span> <span class="n">curr_job_number</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Distributes Gaussian jobs for trivial parallelization </span>
+
+<span class="sd">    Make sure that your Gaussian input file has absolute paths to the following input parameters:</span>
+<span class="sd">        This parameters should be set in the input template</span>
+<span class="sd">        chk file ---&gt; e.g.  %chk=/home/username/gaussian_calculations/check_file.chk</span>
+<span class="sd">        rwf file ---&gt; e.g.  %rwf=/home/username/gaussian_calculations/check_file.rwf</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        </span>
+<span class="sd">        istep (integer): The initial time step in the trajectory xyz file.</span>
+
+<span class="sd">        fstep (integer): The final time step in the trajectory xyz file.</span>
+
+<span class="sd">        nsteps_this_job (integer): The number of steps for this job.</span>
+
+<span class="sd">        trajectory_xyz_file (string): The full path to trajectory xyz file.</span>
+
+<span class="sd">        gaussian_input (string): The sample Gaussian input template.</span>
+
+<span class="sd">        curr_job_number (integer): The current job number.</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">        None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Now we need to distribute the jobs into job batches</span>
+    <span class="c1"># First, make a working directory where the calculations will take place</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;wd&quot;</span><span class="p">)</span>
+
+    <span class="n">nsteps</span> <span class="o">=</span> <span class="n">fstep</span> <span class="o">-</span> <span class="n">istep</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">njobs</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">nsteps</span> <span class="o">/</span> <span class="n">nsteps_this_job</span> <span class="p">)</span> 
+
+    <span class="c1"># Initialize the curr_step to istep</span>
+    <span class="n">curr_step</span> <span class="o">=</span> <span class="n">istep</span>
+
+    <span class="c1"># Make the job directory folders</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;mkdir job&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">curr_job_number</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;job&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">curr_job_number</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="c1"># Copy the trajectory file and input template there</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp ../../&quot;</span><span class="o">+</span><span class="n">trajectory_xyz_file</span><span class="o">+</span><span class="s2">&quot; .&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp ../../&quot;</span><span class="o">+</span><span class="n">gaussian_input</span><span class="o">+</span><span class="s2">&quot; .&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Now, we need to edit the submit file</span>
+    <span class="c1"># Now, in jobs folder njob, we should do only a certain number of steps</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">nsteps_this_job</span> <span class="p">):</span>
+
+        <span class="c1"># Extract the coordinates and write them to a xyz file</span>
+        <span class="n">CP2K_methods</span><span class="o">.</span><span class="n">read_trajectory_xyz_file</span><span class="p">(</span> <span class="n">trajectory_xyz_file</span><span class="p">,</span> <span class="n">curr_step</span> <span class="p">)</span>
+
+        <span class="c1"># Now, we need to edit the gaussian_input file by adding the </span>
+        <span class="c1"># coordinates to the input file</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">gaussian_input</span><span class="p">)</span>
+        <span class="n">A</span>   <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">sz</span>  <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">tmp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">tmp2</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;step_</span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">curr_step</span><span class="o">+</span><span class="s2">&quot;.gjf&quot;</span><span class="p">,</span><span class="s2">&quot;w&quot;</span><span class="p">);</span> <span class="n">tmp2</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sz</span><span class="p">):</span>
+
+            <span class="n">b</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">b</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">tmp2</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;step_</span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">curr_step</span><span class="o">+</span><span class="s2">&quot;.gjf&quot;</span><span class="p">,</span><span class="s2">&quot;a&quot;</span><span class="p">)</span>
+            <span class="n">tmp2</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">tmp2</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="c1"># add to the curr_step</span>
+        <span class="n">curr_step</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># Go back to the main directory</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;../../&quot;</span><span class="p">)</span> </div>
+
+
+
+<div class="viewcode-block" id="read_trajectory_xyz_file_gaussian"><a class="viewcode-back" href="../../reference/libra_py/Gaussian_methods.html#libra_py.Gaussian_methods.read_trajectory_xyz_file_gaussian">[docs]</a><span class="k">def</span> <span class="nf">read_trajectory_xyz_file_gaussian</span><span class="p">(</span><span class="n">trajectory_xyz_file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function reads the trajectory of a molecular dynamics .xyz file and</span>
+<span class="sd">    extract the &#39;time_step&#39; th step then returns it in form of a numpy array.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        trajectory_xyz_file_name (string): The trajectory .xyz file name.</span>
+
+<span class="sd">        time_step (integer): The desired time to extract its .xyz </span>
+<span class="sd">                     coordinates which starts from zero.</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">        coordinates (2D numpy array): The numpy array containing the coordinates of the time_step.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">trajectory_xyz_file_name</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># The number of atoms for each time step in the .xyz file of the trajectory.</span>
+    <span class="n">number_of_atoms</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1"># Add two to the number of atoms, this is the number of </span>
+    <span class="c1"># lines for each geometry in the trajectory xyz file</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">number_of_atoms</span><span class="o">+</span><span class="mi">2</span>
+    <span class="c1"># Initialize the coordiantes</span>
+    <span class="n">coordinates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Find the time_step coordinates</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">n</span><span class="o">*</span><span class="n">time_step</span><span class="p">,</span> <span class="n">n</span><span class="o">*</span><span class="p">(</span> <span class="n">time_step</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span> <span class="p">):</span>
+        <span class="n">coordinates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+    
+    <span class="n">coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">coordinates</span></div>
+
+
+<div class="viewcode-block" id="gaussian_input"><a class="viewcode-back" href="../../reference/libra_py/Gaussian_methods.html#libra_py.Gaussian_methods.gaussian_input">[docs]</a><span class="k">def</span> <span class="nf">gaussian_input</span><span class="p">(</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">sample_input</span><span class="p">,</span> <span class="n">trajectory_xyz_file_name</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function creates a Gaussian input file for the time_step geometry using an input template.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        project_name (string): The project name.</span>
+
+<span class="sd">        time_step (integer): The time step.</span>
+
+<span class="sd">        sample_input (string): The Gaussian sample input.</span>
+
+<span class="sd">        trajectory_xyz_file_name (string): The trajectory xyz file name.</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">        None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span> 
+    <span class="c1"># Read the sample input lines</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">sample_input</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)):</span>
+        <span class="c1"># Find the chk line for placing the check file</span>
+        <span class="k">if</span> <span class="s1">&#39;</span><span class="si">%c</span><span class="s1">hk=&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="n">chk_line</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="c1"># Find the rwf line for placing the rwf file</span>
+        <span class="k">if</span> <span class="s1">&#39;</span><span class="si">%r</span><span class="s1">wf=&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="n">rwf_line</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="c1"># Find the line with &#39;#&#39;, this line shows the calculation types for Gaussian</span>
+        <span class="k">if</span> <span class="s1">&#39;#&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="n">calc_type_line</span> <span class="o">=</span> <span class="n">i</span>
+
+    <span class="c1"># Extract the coordinates from the trajectory xyz file</span>
+    <span class="n">coordinates</span> <span class="o">=</span> <span class="n">read_trajectory_xyz_file_gaussian</span><span class="p">(</span><span class="n">trajectory_xyz_file_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
+    <span class="c1"># Open a new input file</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">.gjf&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span><span class="n">time_step</span><span class="p">),</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">calc_type_line</span><span class="o">+</span><span class="mi">5</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="n">chk_line</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">chk_line</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%%</span><span class="s1">chk=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">.chk&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span><span class="n">time_step</span><span class="p">))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">i</span><span class="o">==</span><span class="n">rwf_line</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">rwf_line</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%%</span><span class="s1">rwf=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">.rwf&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span><span class="n">time_step</span><span class="p">))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)</span> <span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">coordinates</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="p">):</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="n">coordinates</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>    
+    <span class="c1"># We need some blank lines at the end of the input file, here we add three</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="c1"># Close the file</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+
+<div class="viewcode-block" id="cube_generator_gaussian"><a class="viewcode-back" href="../../reference/libra_py/Gaussian_methods.html#libra_py.Gaussian_methods.cube_generator_gaussian">[docs]</a><span class="k">def</span> <span class="nf">cube_generator_gaussian</span><span class="p">(</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">min_band</span><span class="p">,</span> <span class="n">max_band</span><span class="p">,</span> <span class="n">nprocs</span><span class="p">,</span> <span class="n">sample_cube_file</span><span class="p">,</span> <span class="n">isUKS</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function generates the cube files by first forming the &#39;fchk&#39; file from &#39;chk&#39; file.</span>
+<span class="sd">    Then it will generate the cube files from min_band to max_band the same as CP2K naming.</span>
+<span class="sd">    This will helps us to use the read_cube and integrate_cube functions easier.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        project_name (string): The project_name.</span>
+
+<span class="sd">        time_step (integer): The time step.</span>
+
+<span class="sd">        min_band (integer): The minimum state number.</span>
+
+<span class="sd">        max_band (integer): The maximum state number.</span>
+
+<span class="sd">        nprocs (integer): The number of processors used to generate the cubes using &#39;cubegen&#39;.</span>
+
+<span class="sd">        sample_cube_file (str): The path to a sample cube file. This file is used to generate the cube</span>
+<span class="sd">                                files according the mesh of this file. Therefore the integration will be plausible.</span>
+
+<span class="sd">        isUKS (integer): The unrestricted spin calculation flag. 1 is for spin unrestricted calculations.</span>
+<span class="sd">                         Other numbers are for spin restricted calculations</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">        None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Form the fchk file from the chk file</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;formchk </span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">.chk </span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">.fchk&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">))</span>
+    <span class="c1"># Print the commands...</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;formchk </span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">.chk </span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">.fchk&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">))</span>
+    <span class="c1"># Generate the sample cube file, if it exists it will not create it again</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">sample_cube_file</span><span class="p">):</span>
+        <span class="c1"># Generate the sample cube file with the maximum fineness ---&gt; 100 as in Gaussian website</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;cubegen </span><span class="si">%d</span><span class="s1"> MO=Homo </span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">.fchk </span><span class="si">%s</span><span class="s1"> 100 h&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">nprocs</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">sample_cube_file</span><span class="p">))</span>
+    <span class="c1"># For spin unrestricted</span>
+    <span class="k">if</span> <span class="n">isUKS</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># Generate the names and cube files for each state. Here we use the cube names by CP2K. This will increase the speed of our work.</span>
+        <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">min_band</span><span class="p">,</span><span class="n">max_band</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="c1"># State name in CP2K format</span>
+            <span class="n">state_name</span> <span class="o">=</span> <span class="n">CP2K_methods</span><span class="o">.</span><span class="n">state_num_cp2k</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+            <span class="c1"># Cube file name </span>
+            <span class="n">cube_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">-WFN_</span><span class="si">%s</span><span class="s1">_1-1_0.cube&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">state_name</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Generating cube for state </span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">state</span><span class="p">)</span>
+            <span class="c1"># Generate cube files for alpha spin using the &#39;cubegen&#39;</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;cubegen </span><span class="si">%d</span><span class="s1"> AMO=</span><span class="si">%d</span><span class="s1"> </span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">.fchk </span><span class="si">%s</span><span class="s1"> -1 h </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">nprocs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">cube_name</span><span class="p">,</span> <span class="n">sample_cube_file</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;cubegen </span><span class="si">%d</span><span class="s1"> AMO=</span><span class="si">%d</span><span class="s1"> </span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">.fchk </span><span class="si">%s</span><span class="s1"> -1 h </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">nprocs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">cube_name</span><span class="p">,</span> <span class="n">sample_cube_file</span><span class="p">))</span>
+            <span class="n">cube_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">-WFN_</span><span class="si">%s</span><span class="s1">_2-1_0.cube&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">state_name</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Generating cube for state </span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">state</span><span class="p">)</span>
+            <span class="c1"># Generate cube files for beta spin using the &#39;cubegen&#39;</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;cubegen </span><span class="si">%d</span><span class="s1"> BMO=</span><span class="si">%d</span><span class="s1"> </span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">.fchk </span><span class="si">%s</span><span class="s1"> -1 h </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">nprocs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">cube_name</span><span class="p">,</span> <span class="n">sample_cube_file</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;cubegen </span><span class="si">%d</span><span class="s1"> BMO=</span><span class="si">%d</span><span class="s1"> </span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">.fchk </span><span class="si">%s</span><span class="s1"> -1 h </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">nprocs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">cube_name</span><span class="p">,</span> <span class="n">sample_cube_file</span><span class="p">))</span>
+    <span class="c1"># Spin restricted case</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">min_band</span><span class="p">,</span><span class="n">max_band</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="c1"># Use cp2k names because the rest of the code expects this format</span>
+            <span class="n">state_name</span> <span class="o">=</span> <span class="n">CP2K_methods</span><span class="o">.</span><span class="n">state_num_cp2k</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+            <span class="n">cube_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">-WFN_</span><span class="si">%s</span><span class="s1">_1-1_0.cube&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">state_name</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Generating cube for state </span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">state</span><span class="p">)</span>
+            <span class="c1"># Generate the cubes for alpha spin only</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;cubegen </span><span class="si">%d</span><span class="s1"> MO=</span><span class="si">%d</span><span class="s1"> </span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">.fchk </span><span class="si">%s</span><span class="s1"> -1 h </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">nprocs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">cube_name</span><span class="p">,</span> <span class="n">sample_cube_file</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;cubegen </span><span class="si">%d</span><span class="s1"> MO=</span><span class="si">%d</span><span class="s1"> </span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">.fchk </span><span class="si">%s</span><span class="s1"> -1 h </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">nprocs</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">cube_name</span><span class="p">,</span> <span class="n">sample_cube_file</span><span class="p">))</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

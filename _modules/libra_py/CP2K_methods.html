@@ -1,0 +1,934 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.CP2K_methods &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.CP2K_methods</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.CP2K_methods</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#* Copyright (C) 2020 Mohammad Shakiba, Brendan Smith, Alexey V. Akimov</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 3 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: CP2K_methods</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements functions for processing the CP2K inputs and outputs.</span>
+<span class="sd">.. moduleauthors:: </span>
+<span class="sd">       Mohammad Shakiba, Brendan Smith, Alexey V. Akimov </span>
+<span class="sd">  </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>   
+
+
+<div class="viewcode-block" id="ndigits"><a class="viewcode-back" href="../../reference/libra_py/CP2K_methods.html#libra_py.CP2K_methods.ndigits">[docs]</a><span class="k">def</span> <span class="nf">ndigits</span><span class="p">(</span> <span class="n">integer_number</span><span class="p">:</span> <span class="nb">int</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function calculates the number of digits for an integer number.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        integer_number ( integer ): An integer number.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd"> </span>
+<span class="sd">        digit_num ( integer ): The number of digits for &#39;num&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Setting up the digit number counter</span>
+    <span class="n">digit_num</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">while</span><span class="p">(</span> <span class="n">integer_number</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">):</span>
+
+        <span class="n">digit_num</span> <span class="o">=</span> <span class="n">digit_num</span><span class="o">+</span><span class="mi">1</span>
+        <span class="n">integer_number</span> <span class="o">=</span> <span class="n">integer_number</span><span class="o">//</span><span class="mi">10</span>
+        
+    <span class="k">return</span> <span class="n">digit_num</span></div>
+
+
+
+<div class="viewcode-block" id="state_num_cp2k"><a class="viewcode-back" href="../../reference/libra_py/CP2K_methods.html#libra_py.CP2K_methods.state_num_cp2k">[docs]</a><span class="k">def</span> <span class="nf">state_num_cp2k</span><span class="p">(</span><span class="n">state_num</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function turns an integer number to a string. This string </span>
+<span class="sd">    has the format in five digits and if the number of digits is less than</span>
+<span class="sd">    five it will append zeros before the number. This is necessary to read</span>
+<span class="sd">    the .cube files produced by CP2K.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        state_num (integer): Integer number which is in fact the energy level.</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">        state_num_str (string): The number in five digits (or more) in string format.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Setting up an initial string</span>
+    <span class="n">state_num_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="c1"># Now count the number of digits for the state sumber</span>
+    <span class="c1"># and then add 0 before the number in the string</span>
+
+    <span class="k">if</span> <span class="n">ndigits</span><span class="p">(</span> <span class="n">state_num</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+
+        <span class="n">state_num_str</span> <span class="o">=</span> <span class="s1">&#39;0000</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">state_num</span>
+
+    <span class="k">elif</span> <span class="n">ndigits</span><span class="p">(</span> <span class="n">state_num</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+
+        <span class="n">state_num_str</span> <span class="o">=</span> <span class="s1">&#39;000</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">state_num</span>
+
+    <span class="k">elif</span> <span class="n">ndigits</span><span class="p">(</span> <span class="n">state_num</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+
+        <span class="n">state_num_str</span> <span class="o">=</span> <span class="s1">&#39;00</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">state_num</span>
+
+    <span class="k">elif</span> <span class="n">ndigits</span><span class="p">(</span> <span class="n">state_num</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+
+        <span class="n">state_num_str</span> <span class="o">=</span> <span class="s1">&#39;0</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">state_num</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">state_num_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">state_num</span>
+    
+    <span class="k">return</span> <span class="n">state_num_str</span></div>
+
+
+
+
+<div class="viewcode-block" id="cube_file_names_cp2k"><a class="viewcode-back" href="../../reference/libra_py/CP2K_methods.html#libra_py.CP2K_methods.cube_file_names_cp2k">[docs]</a><span class="k">def</span> <span class="nf">cube_file_names_cp2k</span><span class="p">(</span> <span class="n">params</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function will produce the cube file names produced by CP2K both for energy calculations</span>
+<span class="sd">    and molecular dynamics. </span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        params( dictionary ): contains dynamical paramters</span>
+<span class="sd">	</span>
+<span class="sd">            project_name ( string ): The project name used in CP2K input file.</span>
+<span class="sd">	    </span>
+<span class="sd">            min_band ( integer ): The minimum state number to be considered.</span>
+<span class="sd">	    </span>
+<span class="sd">            max_band ( integer ): The maximum state number to be considered.</span>
+<span class="sd">	    </span>
+<span class="sd">            curr_step ( integer ): The time current step in CP2K calculations.</span>
+<span class="sd">	    </span>
+<span class="sd">            isUKS ( int ): 1 if spin-polarized calculations used</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">        names ( list ): The list of cube file names.</span>
+<span class="sd">	</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Critical parameters</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;project_name&quot;</span><span class="p">,</span> <span class="s2">&quot;min_band&quot;</span><span class="p">,</span> <span class="s2">&quot;max_band&quot;</span><span class="p">,</span> <span class="s2">&quot;curr_step&quot;</span> <span class="p">]</span>
+    <span class="c1"># Default parameters</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;isUKS&quot;</span><span class="p">:</span><span class="mi">0</span> <span class="p">}</span>
+    <span class="c1"># Check input</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span> 
+  
+    <span class="n">project_name</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;project_name&quot;</span><span class="p">]</span>
+    <span class="n">min_band</span>  <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;min_band&quot;</span><span class="p">]</span>
+    <span class="n">max_band</span>  <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;max_band&quot;</span><span class="p">]</span>
+    <span class="n">curr_step</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;curr_step&quot;</span><span class="p">]</span>
+    <span class="n">isUKS</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;isUKS&quot;</span><span class="p">]</span>
+    <span class="n">es_software</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;es_software&quot;</span><span class="p">]</span> 
+
+    <span class="c1"># isUKS needs to be epressed as a string, even though it is used as a Boolean in other parts of the workflows</span>
+    <span class="n">spin</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">isUKS</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">spin</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">spin</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Define the names of the cube files for time t.</span>
+    <span class="n">cube_file_names</span> <span class="o">=</span> <span class="p">[]</span>   
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">min_band</span><span class="p">,</span> <span class="n">max_band</span><span class="o">+</span><span class="mi">1</span> <span class="p">):</span>
+
+        <span class="c1"># Using the function state_num_cp2k to obtain the names of the .cube files for state &#39;i&#39;.</span>
+        <span class="n">state_num</span> <span class="o">=</span> <span class="n">state_num_cp2k</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span>
+ 
+        <span class="c1"># For the current time step &quot;curr_step&quot;</span>
+        <span class="k">if</span> <span class="n">isUKS</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="n">es_software</span> <span class="o">==</span> <span class="s2">&quot;cp2k&quot;</span> <span class="ow">or</span> <span class="n">es_software</span> <span class="o">==</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">:</span>
+
+                <span class="n">cube_file_name_of_band_i</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s1">&#39;cubefiles/</span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">-WFN_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%d</span><span class="s1">-1_0.cube&#39;</span> <span class="o">%</span> <span class="p">(</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">curr_step</span><span class="p">,</span> <span class="n">state_num</span><span class="p">,</span> <span class="n">spin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+                <span class="n">cube_file_name_of_band_j</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s1">&#39;cubefiles/</span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">-WFN_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%d</span><span class="s1">-1_0.cube&#39;</span> <span class="o">%</span> <span class="p">(</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">curr_step</span><span class="p">,</span> <span class="n">state_num</span><span class="p">,</span> <span class="n">spin</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+                <span class="n">cube_file_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">cube_file_name_of_band_i</span> <span class="p">)</span>
+                <span class="n">cube_file_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">cube_file_name_of_band_j</span> <span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">software</span> <span class="o">==</span> <span class="s2">&quot;dftb+&quot;</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Reading cubefiles from spin-polarized calculations not currently available&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exiting now&quot;</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+ 
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="c1"># Using the function state_num_cp2k to obtain the names of the .cube files for state &#39;i&#39;.</span>
+            <span class="n">state_num</span> <span class="o">=</span> <span class="n">state_num_cp2k</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span>
+            <span class="n">cube_file_name_of_band_i</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s1">&#39;cubefiles/</span><span class="si">%s</span><span class="s1">-</span><span class="si">%d</span><span class="s1">-WFN_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%d</span><span class="s1">-1_0.cube&#39;</span> <span class="o">%</span> <span class="p">(</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">curr_step</span><span class="p">,</span> <span class="n">state_num</span><span class="p">,</span> <span class="n">spin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="n">cube_file_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">cube_file_name_of_band_i</span> <span class="p">)</span>
+		
+    <span class="k">return</span> <span class="n">cube_file_names</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="read_cp2k_tddfpt_log_file"><a class="viewcode-back" href="../../reference/libra_py/CP2K_methods.html#libra_py.CP2K_methods.read_cp2k_tddfpt_log_file">[docs]</a><span class="k">def</span> <span class="nf">read_cp2k_tddfpt_log_file</span><span class="p">(</span> <span class="n">params</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function reads log files generated from TD-DFPT calculations using CP2K and returns the TD-DFPT</span>
+<span class="sd">    excitation energies, Slater determinent states in terms of the Kohn-Sham orbital indicies, </span>
+<span class="sd">    and the Slater determinent coefficients that comprise the multi-configurational electronic states</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        params ( dictionary ): parameters dictionary </span>
+<span class="sd">	</span>
+<span class="sd">            logfile_name ( string ): name of the log file for this particular timestep</span>
+<span class="sd">	    </span>
+<span class="sd">            number_of_states ( int ): how many ci states to consider</span>
+<span class="sd">	    </span>
+<span class="sd">            tolerance ( float ): the tolerance for accepting SDs are members of the CI wavefunctions</span>
+<span class="sd">	    </span>
+<span class="sd">            isUKS ( Boolean ): flag for whether or not a spin-polarized Kohn-Sham basis is being used. TRUE means</span>
+<span class="sd">                                 that a spin-polarized Kohn-Sham basis is being used.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        excitation_energies ( list ): The excitation energies in the log file.</span>
+<span class="sd">	</span>
+<span class="sd">        ci_basis ( list ): The CI-basis configuration.</span>
+<span class="sd">	</span>
+<span class="sd">        ci_coefficients ( list ): The coefficients of the CI-states.</span>
+<span class="sd">	</span>
+<span class="sd">        spin_components (list): The spin component of the excited states.</span>
+<span class="sd">	</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Critical parameters</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;logfile_name&quot;</span><span class="p">,</span> <span class="s2">&quot;number_of_states&quot;</span> <span class="p">]</span>
+    <span class="c1"># Default parameters</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;tolerance&quot;</span><span class="p">:</span><span class="mf">0.05</span><span class="p">,</span> <span class="s2">&quot;isUKS&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="c1"># Check input</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+    
+    <span class="n">logfile_name</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;logfile_name&quot;</span><span class="p">]</span>
+    <span class="n">number_of_states</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;number_of_states&quot;</span><span class="p">])</span>
+    <span class="n">tolerance</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;tolerance&quot;</span><span class="p">])</span>
+    <span class="n">isUKS</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;isUKS&quot;</span><span class="p">])</span>
+
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span> <span class="n">logfile_name</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span> <span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="p">):</span>
+        <span class="n">tmp_line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s1">&#39;excitation&#39;</span> <span class="ow">in</span> <span class="n">tmp_line</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;analysis&#39;</span> <span class="ow">in</span> <span class="n">tmp_line</span><span class="p">:</span>
+
+                <span class="c1"># When found the line in which contains &#39;Excitation analysis&#39; in </span>
+                <span class="c1"># the log file, append it in the variable exc_anal_line</span>
+                <span class="n">exc_anal_line</span> <span class="o">=</span> <span class="n">i</span>
+
+        <span class="k">if</span> <span class="s1">&#39;states&#39;</span> <span class="ow">in</span> <span class="n">tmp_line</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;multiplicity&#39;</span> <span class="ow">in</span> <span class="n">tmp_line</span><span class="p">:</span>
+
+                <span class="c1"># Here we search for the line that contains &#39;R-TDDFPT states of multiplicity 1&#39;</span>
+                <span class="c1"># or &#39;U-TDDFPT states of multiplicity 1&#39; in the log file</span>
+                <span class="n">r_tddfpt_line</span> <span class="o">=</span> <span class="n">i</span>
+
+    <span class="n">excitation_energies</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Start from 5 lines after finding the line contaning &#39;R-TDDFPT states of multiplicity 1&#39;</span>
+    <span class="c1"># This is because they contain the energies from that line.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">r_tddfpt_line</span><span class="o">+</span><span class="mi">5</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span> <span class="n">lines</span> <span class="p">)</span> <span class="p">):</span>
+        <span class="n">tmp_line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">tmp_line</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">excitation_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="nb">float</span><span class="p">(</span> <span class="n">tmp_line</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+
+    <span class="c1"># Start from 5 lines after finding the line contaning &#39;Excitation analysis&#39;</span>
+    <span class="c1"># From that point we have the state numbers with their configurations.</span>
+    <span class="c1"># So, we append the lines which contain only &#39;State number&#39; and stop</span>
+    <span class="c1"># whenever we reach to a blank line.</span>
+    <span class="n">state_num_lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">exc_anal_line</span><span class="o">+</span><span class="mi">5</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span> <span class="n">lines</span> <span class="p">)</span> <span class="p">):</span>
+        <span class="n">tmp_line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">isUKS</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">tmp_line</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="s1">&#39;----&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                <span class="n">state_num_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">tmp_line</span> <span class="p">)</span><span class="o">==</span><span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span> <span class="n">tmp_line</span> <span class="p">)</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
+                <span class="n">state_num_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">tmp_line</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="s1">&#39;----&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                <span class="n">state_num_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">state_num_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span> <span class="n">tmp_line</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">tmp_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span><span class="p">(</span> <span class="n">tmp_line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="p">):</span>
+                    <span class="n">state_num_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span>
+
+
+    <span class="c1"># Setting up the CI-basis list and their coefficients list</span>
+    <span class="n">ci_basis</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ci_coefficients</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">spin_components</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">number_of_states</span> <span class="p">):</span>
+
+        <span class="c1"># states and their coefficients for each excited state</span>
+        <span class="n">tmp_state</span>              <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp_state_coefficients</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp_spin</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">state_num_lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">state_num_lines</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="p">):</span>
+            
+            <span class="c1"># Splitting lines[j] into tmp_splitted_line</span>
+            <span class="n">tmp_splitted_line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+            <span class="c1"># If we are using the spin-polarized Kohn-Sham basis, then the size of the split line is different</span>
+            <span class="c1"># from the size of the split line when using the spin-unpolarized Kohn-Sham basis</span>
+            <span class="k">if</span> <span class="n">isUKS</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+
+                <span class="n">ci_coefficient</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span> <span class="n">tmp_splitted_line</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="p">)</span>
+                <span class="k">if</span> <span class="n">ci_coefficient</span><span class="o">**</span><span class="mi">2</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+                    <span class="c1"># We need to remove the paranthesis from the 2nd element of the temporary splitted line</span>
+                    <span class="n">tmp_spin</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">tmp_splitted_line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="p">)</span>
+                    <span class="n">tmp_state</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">[</span> <span class="nb">int</span><span class="p">(</span> <span class="n">tmp_splitted_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">),</span> <span class="nb">int</span><span class="p">(</span> <span class="n">tmp_splitted_line</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="p">)</span> <span class="p">]</span>  <span class="p">)</span>
+                    <span class="n">tmp_state_coefficients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">ci_coefficient</span>  <span class="p">)</span>
+
+            <span class="c1"># Here, we have the spin-unpolarize Kohn-Sham basis</span>
+            <span class="c1"># For this case, spin-components will just return all alpha</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ci_coefficient</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span> <span class="n">tmp_splitted_line</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="p">)</span>
+                <span class="k">if</span> <span class="n">ci_coefficient</span><span class="o">**</span><span class="mi">2</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+                    <span class="n">tmp_spin</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s2">&quot;alp&quot;</span> <span class="p">)</span>
+                    <span class="n">tmp_state</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">[</span> <span class="nb">int</span><span class="p">(</span> <span class="n">tmp_splitted_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">),</span> <span class="nb">int</span><span class="p">(</span> <span class="n">tmp_splitted_line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span> <span class="p">]</span>  <span class="p">)</span>
+                    <span class="n">tmp_state_coefficients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">ci_coefficient</span>  <span class="p">)</span>
+
+        <span class="c1"># Append the CI-basis and and their coefficients for</span>
+        <span class="c1"># this state into the ci_basis and ci_coefficients lists</span>
+        <span class="n">ci_basis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">tmp_state</span> <span class="p">)</span>
+        <span class="n">ci_coefficients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">tmp_state_coefficients</span> <span class="p">)</span>
+        <span class="n">spin_components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">tmp_spin</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">excitation_energies</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">number_of_states</span><span class="p">],</span> <span class="n">ci_basis</span><span class="p">,</span> <span class="n">ci_coefficients</span><span class="p">,</span> <span class="n">spin_components</span></div>
+
+
+
+
+<div class="viewcode-block" id="cp2k_distribute"><a class="viewcode-back" href="../../reference/libra_py/CP2K_methods.html#libra_py.CP2K_methods.cp2k_distribute">[docs]</a><span class="k">def</span> <span class="nf">cp2k_distribute</span><span class="p">(</span> <span class="n">istep</span><span class="p">,</span> <span class="n">fstep</span><span class="p">,</span> <span class="n">nsteps_this_job</span><span class="p">,</span> <span class="n">cp2k_positions</span><span class="p">,</span> <span class="n">cp2k_input</span><span class="p">,</span> <span class="n">curr_job_number</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Distributes cp2k jobs for trivial parallelization </span>
+<span class="sd">    *** Make sure that your cp2k input file has absolute paths to the following input parameters:</span>
+<span class="sd">        BASIS</span>
+<span class="sd">        POTENTIAL</span>
+<span class="sd">        &lt; any other file dependent parameter (dftd3, etc) &gt;</span>
+<span class="sd">    Args:</span>
+<span class="sd">    </span>
+<span class="sd">        istep (int): The initial time step for molecular dynamics trajectory which </span>
+<span class="sd">                     the user wants to start the calculations with. This paramter </span>
+<span class="sd">                     is set in the input file for submitting the jobs.</span>
+<span class="sd">        </span>
+<span class="sd">        fstep (int): The final time step for molecular dynamics trajectory which </span>
+<span class="sd">                     the user wants to start the calculations with. This paramter </span>
+<span class="sd">                     is set in the input file for submitting the jobs.</span>
+<span class="sd">     </span>
+<span class="sd">        nsteps_this_job (int): The number of step for the job to be distributed.</span>
+<span class="sd">	</span>
+<span class="sd">        cp2k_positions (str): The full path to the molecular dynamics trajectory xyz file.</span>
+<span class="sd">	</span>
+<span class="sd">        curr_job_number (int): The current job number.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">    </span>
+<span class="sd">        None</span>
+<span class="sd">	</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Now we need to distribute the jobs into job batches</span>
+    <span class="c1"># First, make a working directory where the calculations will take place</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;wd&quot;</span><span class="p">)</span>
+
+    <span class="c1"># total number of steps</span>
+    <span class="n">nsteps</span> <span class="o">=</span> <span class="n">fstep</span> <span class="o">-</span> <span class="n">istep</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="c1"># number of jobs obtained from nsteps/nsteps_this_job</span>
+    <span class="n">njobs</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">nsteps</span> <span class="o">/</span> <span class="n">nsteps_this_job</span> <span class="p">)</span> 
+
+    <span class="c1"># The current step is set to istep</span>
+    <span class="n">curr_step</span> <span class="o">=</span> <span class="n">istep</span>
+
+    <span class="c1"># Making the job directories in the wd folder like job0, job1, ...</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;mkdir job&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">curr_job_number</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Chnage directory to job folder</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;job&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">curr_job_number</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Copy the trajectory xyz file</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp ../../&quot;</span><span class="o">+</span><span class="n">cp2k_positions</span><span class="o">+</span><span class="s2">&quot; .&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Copy the CP2K sample input</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp ../../&quot;</span><span class="o">+</span><span class="n">cp2k_input</span><span class="o">+</span><span class="s2">&quot; .&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Go back to the main directory</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;../../&quot;</span><span class="p">)</span> </div>
+
+
+
+<div class="viewcode-block" id="read_trajectory_xyz_file"><a class="viewcode-back" href="../../reference/libra_py/CP2K_methods.html#libra_py.CP2K_methods.read_trajectory_xyz_file">[docs]</a><span class="k">def</span> <span class="nf">read_trajectory_xyz_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function reads the trajectory of a molecular dynamics .xyz file and</span>
+<span class="sd">    extract the &#39;step&#39; th step then writes it to coord-step.xyz file. This function</span>
+<span class="sd">    is used in single point calculations for calculations of the NACs where one has</span>
+<span class="sd">    previously obtained the trajectory via any molecular dynamics packages. </span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">    </span>
+<span class="sd">        file_name (string): The trajectory .xyz file name.</span>
+<span class="sd">            step (integer): The desired time to extract its .xyz </span>
+<span class="sd">                            coordinates which starts from zero.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">    </span>
+<span class="sd">        None</span>
+<span class="sd">	</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># The number of atoms for each time step in the .xyz file of the trajectory.</span>
+    <span class="n">number_of_atoms</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1"># Write the coordinates of the &#39;t&#39; th step in file coord-t.xyz</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;coord-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">step</span><span class="o">+</span><span class="s1">&#39;.xyz&#39;</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="c1"># This is used to skip the first two lines for each time step.</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">number_of_atoms</span><span class="o">+</span><span class="mi">2</span>
+
+    <span class="c1"># Write the coordinates of the &#39;step&#39;th time step into the file</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">n</span> <span class="o">*</span> <span class="n">step</span><span class="p">,</span> <span class="n">n</span> <span class="o">*</span> <span class="p">(</span> <span class="n">step</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span> <span class="p">):</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="CP2K_input_static"><a class="viewcode-back" href="../../reference/libra_py/CP2K_methods.html#libra_py.CP2K_methods.CP2K_input_static">[docs]</a><span class="k">def</span> <span class="nf">CP2K_input_static</span><span class="p">(</span><span class="n">cp2k_sample_energy_input</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                           <span class="n">trajectory_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function provides the inputs required for single point calculations used for </span>
+<span class="sd">    calculation of NACs and overlap matrix. This function requires a sample CP2K input</span>
+<span class="sd">    used for ENERGY calculations and the project name which will used to identify the </span>
+<span class="sd">    produced cube files. </span>
+<span class="sd">    Args:</span>
+<span class="sd">        cp2k_sample_energy_input (string): The CP2K sample input file for energy calculations.</span>
+<span class="sd">	</span>
+<span class="sd">        project_name (string): The poject name of the CP2K sample input (in &amp;GLOBAL-&gt; PROJECT)</span>
+<span class="sd">                               This is required for identifying the cube files.</span>
+<span class="sd">			       </span>
+<span class="sd">        trajectory_file (string): The .xyz trajectory file obtained from previous </span>
+<span class="sd">                                  molecular dynamics calculations</span>
+<span class="sd">				  </span>
+<span class="sd">        time_step (integer): The time step of the single point calculation. It starts from 0.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">    </span>
+<span class="sd">        None</span>
+<span class="sd">	</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Reading the .xyz trajectory file and extract the coordinates at time &#39;time_step&#39;.</span>
+    <span class="n">read_trajectory_xyz_file</span><span class="p">(</span><span class="n">trajectory_file</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
+
+    <span class="c1"># The new project name for each time_step.</span>
+    <span class="n">f_new</span> <span class="o">=</span> <span class="n">project_name</span><span class="o">+</span><span class="s1">&#39;-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">time_step</span><span class="o">+</span><span class="s1">&#39;.inp&#39;</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">cp2k_sample_energy_input</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># wfn_restart_file name</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">f_new</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)):</span>
+        <span class="c1"># Writing the COORD_FILE_NAME in the input</span>
+        <span class="k">if</span> <span class="s1">&#39;COORD_FILE_NAME&#39;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;      COORD_FILE_NAME&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; coord-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">time_step</span><span class="o">+</span><span class="s1">&#39;.xyz&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="c1"># Writing the project name</span>
+        <span class="k">elif</span> <span class="s1">&#39;PROJECT&#39;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;  PROJECT&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">project_name</span><span class="o">+</span><span class="s1">&#39;-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">time_step</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s1">&#39;PROJECT_NAME&#39;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;  PROJECT&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">project_name</span><span class="o">+</span><span class="s1">&#39;-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">time_step</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="c1"># Writing the WFN_RESTART_FILE_NAME of the previous time step</span>
+        <span class="k">elif</span> <span class="s1">&#39;WFN_RESTART_FILE_NAME&#39;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="ow">and</span> <span class="s2">&quot;.wfn&quot;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="s2">&quot;!&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>	
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;    WFN_RESTART_FILE_NAME&#39;</span><span class="p">)</span>	
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">project_name</span><span class="o">+</span><span class="s1">&#39;-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">time_step</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;-RESTART.wfn&#39;</span><span class="p">)</span>	
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>	
+        <span class="c1"># Writing the WFN_RESTART_FILE_NAME of the previous time step for the tddft calculation	</span>
+        <span class="k">elif</span> <span class="s1">&#39;WFN_RESTART_FILE_NAME&#39;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="ow">and</span> <span class="s2">&quot;.tdwfn&quot;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="s2">&quot;!&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>	
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;    WFN_RESTART_FILE_NAME&#39;</span><span class="p">)</span>	
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">project_name</span><span class="o">+</span><span class="s1">&#39;-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">time_step</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;-RESTART.tdwfn&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="c1"># Setting the scf guess to restart, CP2K will automatically switch to atomic if the wfn file does not exist</span>
+        <span class="k">elif</span> <span class="s1">&#39;SCF_GUESS&#39;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;    SCF_GUESS RESTART&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="read_energies_from_cp2k_log_file"><a class="viewcode-back" href="../../reference/libra_py/CP2K_methods.html#libra_py.CP2K_methods.read_energies_from_cp2k_log_file">[docs]</a><span class="k">def</span> <span class="nf">read_energies_from_cp2k_log_file</span><span class="p">(</span> <span class="n">params</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function reads the energies from CP2K log file for a specific spin.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">    </span>
+<span class="sd">        params (dictionary):</span>
+<span class="sd">    </span>
+<span class="sd">            logfile_name (str): The output file produced by CP2K</span>
+<span class="sd">        </span>
+<span class="sd">            time (int): The time step of the molecular dynamics. For single point calculations</span>
+<span class="sd">                        it should be set to 0.</span>
+<span class="sd">                    </span>
+<span class="sd">            min_band (int): The minimum state number.</span>
+
+<span class="sd">            max_band (int): The maximum state number.</span>
+<span class="sd"> </span>
+<span class="sd">            spin (int): This number can only accept two values: 1 for alpha and 2 for beta spin.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">    </span>
+<span class="sd">        E (1D numpy array): The vector consisting of the KS energies from min_band to max_band.</span>
+<span class="sd">        </span>
+<span class="sd">        total_energy (float): The total energy obtained from the log file.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Critical parameters</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;logfile_name&quot;</span><span class="p">,</span> <span class="s2">&quot;min_band&quot;</span><span class="p">,</span> <span class="s2">&quot;max_band&quot;</span> <span class="p">]</span>
+    <span class="c1"># Default parameters</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;time&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;spin&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+    <span class="c1"># Check input</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+    
+    <span class="n">cp2k_log_file_name</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;logfile_name&quot;</span><span class="p">]</span>
+    <span class="c1"># Time step, for molecular dynamics it will read the energies</span>
+    <span class="c1"># of time step &#39;time&#39;, but for static calculations the time is set to 0</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span>
+    
+    <span class="c1"># Koh-Sham orbital indicies</span>
+    <span class="c1"># ks_orbital_indicies = params[&quot;ks_orbital_indicies&quot;]</span>
+    
+    <span class="c1"># The minimum state number</span>
+    <span class="n">min_band</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;min_band&quot;</span><span class="p">]</span> <span class="c1"># ks_orbital_indicies[0]</span>
+    <span class="c1"># The maximum state number</span>
+    <span class="n">max_band</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;max_band&quot;</span><span class="p">]</span> <span class="c1"># ks_orbital_indicies[-1]</span>
+    
+    <span class="n">spin</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;spin&quot;</span><span class="p">]</span>
+    
+    <span class="c1"># First openning the file and reading its lines</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span> <span class="n">cp2k_log_file_name</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span> <span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># The lines containing &#39;Eigenvalues of the occupied subspace&#39;</span>
+    <span class="n">lines_with_occupied</span>   <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># The lines containing &#39;Eigenvalues of the unoccupied subspace&#39;</span>
+    <span class="n">lines_with_unoccupied</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="c1"># The lines containing the energies of the occupied states</span>
+    <span class="n">occ_energies_last_line</span>   <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># The lines containing the energies of the unoccupied states</span>
+    <span class="n">unocc_energies_last_line</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Set the total energy to zero</span>
+    <span class="n">total_energy</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)):</span>
+        <span class="c1"># Find the occupied states lines</span>
+        <span class="k">if</span> <span class="s1">&#39;Eigenvalues of the occupied subspace&#39;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+        
+            <span class="k">if</span>  <span class="nb">str</span><span class="p">(</span> <span class="n">spin</span> <span class="p">)</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+                <span class="n">lines_with_occupied</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span> <span class="n">lines</span> <span class="p">)</span> <span class="p">):</span>
+                    <span class="c1"># Find the last line number containing the energies for occupied states</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">occ_energies_last_line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">j</span> <span class="p">)</span>
+                        <span class="k">break</span>
+        <span class="c1"># Find the unoccupied states lines</span>
+        <span class="k">if</span> <span class="s1">&#39;Eigenvalues of the unoccupied subspace&#39;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="k">if</span>  <span class="nb">str</span><span class="p">(</span> <span class="n">spin</span> <span class="p">)</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+                <span class="n">lines_with_unoccupied</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span> <span class="n">lines</span> <span class="p">)</span> <span class="p">):</span>
+                    <span class="c1"># Find the last line number containing the energies for unoccupied states</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">unocc_energies_last_line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">j</span> <span class="p">)</span>
+                        <span class="k">break</span>
+       
+        <span class="k">if</span> <span class="s2">&quot;Total energy:&quot;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>  
+            <span class="n">total_energy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span> <span class="p">)</span>
+
+
+    <span class="c1"># The Kohn-Sham energies</span>
+    <span class="n">ks_energies</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Start after two lines of the &#39;Eigenvalues of the occupied subspace&#39;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">lines_with_occupied</span><span class="p">[</span><span class="n">time</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">occ_energies_last_line</span><span class="p">[</span><span class="n">time</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())):</span>
+            <span class="n">ks_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="n">j</span><span class="p">]))</span>
+    
+    <span class="c1"># Start after two lines of the &#39;Eigenvalues of the unoccupied subspace&#39;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">lines_with_unoccupied</span><span class="p">[</span><span class="n">time</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">unocc_energies_last_line</span><span class="p">[</span><span class="n">time</span><span class="p">]</span> <span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;Reached&#39;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())):</span>
+                <span class="n">ks_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="n">j</span><span class="p">]))</span>
+
+    <span class="c1"># Now appending all the energies into a numpy array</span>
+    <span class="n">ks_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ks_energies</span><span class="p">)</span>
+        
+    <span class="c1"># Returning the energeis from min_band to max_band</span>
+    <span class="k">return</span> <span class="n">ks_energies</span><span class="p">[</span><span class="n">min_band</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="n">max_band</span><span class="p">],</span> <span class="n">total_energy</span></div>
+  
+
+<div class="viewcode-block" id="read_energies_from_cp2k_md_log_file"><a class="viewcode-back" href="../../reference/libra_py/CP2K_methods.html#libra_py.CP2K_methods.read_energies_from_cp2k_md_log_file">[docs]</a><span class="k">def</span> <span class="nf">read_energies_from_cp2k_md_log_file</span><span class="p">(</span> <span class="n">params</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function reads the energies from CP2K molecular dynamics log file for a specific spin. The difference between this function</span>
+<span class="sd">    and the function `read_energies_from_cp2k_log_file` is that it is more efficient and faster for molecular dynamics energy levels.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">    </span>
+<span class="sd">        params (dictionary):</span>
+<span class="sd">    </span>
+<span class="sd">            logfile_name (str): The output file produced by CP2K</span>
+<span class="sd">        </span>
+<span class="sd">            init_time (int): The initial time step of the molecular dynamics. </span>
+<span class="sd">                        </span>
+<span class="sd">            final_time (int): The final time step of the molecular dynamics. </span>
+<span class="sd">                    </span>
+<span class="sd">            min_band (int): The minimum state number.</span>
+
+<span class="sd">            max_band (int): The maximum state number.</span>
+<span class="sd"> </span>
+<span class="sd">            spin (int): This number can only accept two values: 1 for alpha and 2 for beta spin.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">    </span>
+<span class="sd">        E (1D numpy array): The vector consisting of the KS energies from min_band to max_band.</span>
+<span class="sd">        </span>
+<span class="sd">        total_energy (float): The total energy obtained from the log file.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Critical parameters</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;logfile_name&quot;</span><span class="p">,</span> <span class="s2">&quot;min_band&quot;</span><span class="p">,</span> <span class="s2">&quot;max_band&quot;</span> <span class="p">]</span>
+    <span class="c1"># Default parameters</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;spin&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;init_time&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;final_time&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+    <span class="c1"># Check input</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+    
+    <span class="n">cp2k_log_file_name</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;logfile_name&quot;</span><span class="p">]</span>
+    <span class="c1"># Time step, for molecular dynamics it will read the energies</span>
+    <span class="c1"># of time step &#39;time&#39;, but for static calculations the time is set to 0</span>
+    <span class="n">init_time</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;init_time&quot;</span><span class="p">]</span>
+    <span class="n">final_time</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;final_time&quot;</span><span class="p">]</span>
+    
+    <span class="c1"># Koh-Sham orbital indicies</span>
+    <span class="c1"># ks_orbital_indicies = params[&quot;ks_orbital_indicies&quot;]</span>
+    
+    <span class="c1"># The minimum state number</span>
+    <span class="n">min_band</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;min_band&quot;</span><span class="p">]</span> <span class="c1"># ks_orbital_indicies[0]</span>
+    <span class="c1"># The maximum state number</span>
+    <span class="n">max_band</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;max_band&quot;</span><span class="p">]</span> <span class="c1"># ks_orbital_indicies[-1]</span>
+    
+    <span class="n">spin</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;spin&quot;</span><span class="p">]</span>
+    
+    <span class="c1"># First openning the file and reading its lines</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span> <span class="n">cp2k_log_file_name</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span> <span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># The lines containing &#39;Eigenvalues of the occupied subspace&#39;</span>
+    <span class="n">lines_with_occupied</span>   <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># The lines containing &#39;Eigenvalues of the unoccupied subspace&#39;</span>
+    <span class="n">lines_with_unoccupied</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="c1"># The lines containing the energies of the occupied states</span>
+    <span class="n">occ_energies_last_line</span>   <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># The lines containing the energies of the unoccupied states</span>
+    <span class="n">unocc_energies_last_line</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Set the total energy to zero</span>
+    <span class="n">total_energy</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)):</span>
+        <span class="c1"># Find the occupied states lines</span>
+        <span class="k">if</span> <span class="s1">&#39;Eigenvalues of the occupied subspace&#39;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+        
+            <span class="k">if</span>  <span class="nb">str</span><span class="p">(</span> <span class="n">spin</span> <span class="p">)</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+                <span class="n">lines_with_occupied</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">i</span> <span class="p">)</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span> <span class="n">lines</span> <span class="p">)</span> <span class="p">):</span>
+                    <span class="c1"># Find the last line number containing the energies for occupied states</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">occ_energies_last_line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">j</span> <span class="p">)</span>
+                        <span class="k">break</span>
+        <span class="c1"># Find the unoccupied states lines</span>
+        <span class="k">if</span> <span class="s1">&#39;Eigenvalues of the unoccupied subspace&#39;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="k">if</span>  <span class="nb">str</span><span class="p">(</span> <span class="n">spin</span> <span class="p">)</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+                <span class="n">lines_with_unoccupied</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span> <span class="n">lines</span> <span class="p">)</span> <span class="p">):</span>
+                    <span class="c1"># Find the last line number containing the energies for unoccupied states</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">unocc_energies_last_line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">j</span> <span class="p">)</span>
+                        <span class="k">break</span>
+       
+        <span class="k">if</span> <span class="s2">&quot;Total energy:&quot;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>  
+            <span class="n">total_energy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span> <span class="p">)</span>
+
+    <span class="c1"># All KS energies</span>
+    <span class="n">KS_energies</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">init_time</span><span class="p">,</span><span class="n">final_time</span><span class="p">):</span>
+        <span class="c1"># The Kohn-Sham energies</span>
+        <span class="n">ks_energies</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Start after two lines of the &#39;Eigenvalues of the occupied subspace&#39;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">lines_with_occupied</span><span class="p">[</span><span class="n">time</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">occ_energies_last_line</span><span class="p">[</span><span class="n">time</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())):</span>
+                <span class="n">ks_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="n">j</span><span class="p">]))</span>
+    
+        <span class="c1"># Start after two lines of the &#39;Eigenvalues of the unoccupied subspace&#39;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="n">lines_with_unoccupied</span><span class="p">[</span><span class="n">time</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">unocc_energies_last_line</span><span class="p">[</span><span class="n">time</span><span class="p">]</span> <span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;Reached&#39;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())):</span>
+                    <span class="n">ks_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="n">j</span><span class="p">]))</span>
+
+        <span class="c1"># Now appending all the energies into a numpy array</span>
+        <span class="n">ks_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ks_energies</span><span class="p">)</span>
+        <span class="n">KS_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ks_energies</span><span class="p">[</span><span class="n">min_band</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="n">max_band</span><span class="p">])</span>
+        
+    <span class="c1"># Returning the energeis from min_band to max_band</span>
+    <span class="k">return</span> <span class="n">KS_energies</span><span class="p">,</span> <span class="n">total_energy</span></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

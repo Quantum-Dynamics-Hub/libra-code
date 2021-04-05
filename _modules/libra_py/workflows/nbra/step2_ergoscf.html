@@ -1,0 +1,647 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.workflows.nbra.step2_ergoscf &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.workflows.nbra.step2_ergoscf</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.workflows.nbra.step2_ergoscf</h1><div class="highlight"><pre>
+<span></span><span class="c1">#***********************************************************</span>
+<span class="c1"># * Copyright (C) 2019 Alexey V. Akimov</span>
+<span class="c1"># * This file is distributed under the terms of the</span>
+<span class="c1"># * GNU General Public License as published by the</span>
+<span class="c1"># * Free Software Foundation; either version 3 of the</span>
+<span class="c1"># * License, or (at your option) any later version.</span>
+<span class="c1"># * http://www.gnu.org/copyleft/gpl.txt</span>
+<span class="c1">#***********************************************************/</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: step2_ergoscf</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements functions for doing NAC calculaitons in the 1-electron</span>
+<span class="sd">       basis of MOs, with the ErgoSCF package</span>
+
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+<span class="kn">from</span> <span class="nn">libra_py</span> <span class="kn">import</span> <span class="n">ERGO_methods</span>
+<span class="kn">from</span> <span class="nn">libra_py</span> <span class="kn">import</span> <span class="n">units</span>
+
+
+
+
+<div class="viewcode-block" id="do_step"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/step2_ergoscf.html#libra_py.workflows.nbra.step2_ergoscf.do_step">[docs]</a><span class="k">def</span> <span class="nf">do_step</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">run</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Runs a single-point SCF calculation for a given geometry along a trajectory</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        i ( int ): index of the time step to be used from the trajectory file</span>
+<span class="sd">        params ( dictionary ): the control parameters of the simulation</span>
+<span class="sd">        </span>
+<span class="sd">            * **params[&quot;EXE&quot;]** ( string ): path to the ErgoSCF executable [ default: ergo ]</span>
+<span class="sd">            * **params[&quot;md_file&quot;]** ( string ): the name of the xyz file containing the trajectory - the </span>
+<span class="sd">                file should be in the general xyz format. [default: &quot;md.xyz&quot;]</span>
+<span class="sd">            * **params[&quot;mo_active_space&quot;]** ( list of ints or None ): indices of the MOs we care about </span>
+<span class="sd">                The indexing starts from 0, not 1! If set to None - all MOs will be returned. [default: None]</span>
+<span class="sd">            * **params[&quot;mo_indexing_convention&quot;]** ( string ): orbital indexing convention:</span>
+<span class="sd">                - &quot;rel&quot; : relative, with respect to the HOMO position: HOMO = 0, HOMO-1 = -1, LUMO = 1, etc. [default]</span>
+<span class="sd">                - &quot;abs&quot; : absolute, with respect to all possible MOs of the system </span>
+<span class="sd">            * **params[&quot;direct_MO&quot;]** ( int ): a flag to decide to use orbitals as read from </span>
+<span class="sd">                the ErgoSCF output:</span>
+<span class="sd">                - 0 : read in the Fock matrices and diagonalize them internally</span>
+<span class="sd">                - 1 : read the MOs produced by ErgoSCF, this is the option to really go </span>
+<span class="sd">                    with the linear-scaling costs [ default ]</span>
+<span class="sd">            * **params[&quot;spinpolarized&quot;]** ( int ): whether the ErgoSCF calculations (and hence the</span>
+<span class="sd">                following post-processing) are done withing the restricted or unrestricted formulation:</span>
+<span class="sd">                - 0 : non-spin-polarized (restricted) [ default ] </span>
+<span class="sd">                - 1 : spin-polarized (unrestricted)</span>
+
+<span class="sd">        run (Python function ): the function that defines the ErgoSCF input generation - the user </span>
+<span class="sd">            has to define all the control parameters in it, to be able to run the ErgoSCF calculations</span>
+
+<span class="sd">            Example:</span>
+
+<span class="sd">                In the example below, the outermost quotes should be tripled </span>
+
+<span class="sd">                Note: the function should follw the signature shown here</span>
+
+<span class="sd">                def run(EXE, COORDS):</span>
+<span class="sd">                    inp = &quot;#!bin/sh</span>
+<span class="sd">                %s &lt;&lt; EOINPUT &gt; /dev/null</span>
+<span class="sd">                spin_polarization = 0</span>
+<span class="sd">                molecule_inline</span>
+<span class="sd">                %sEOF</span>
+<span class="sd">                basis = &quot;STO-3G&quot;</span>
+<span class="sd">                use_simple_starting_guess=1</span>
+<span class="sd">                scf.create_mtx_files_F = 1</span>
+<span class="sd">                scf.create_mtx_file_S = 1</span>
+<span class="sd">                XC.sparse_mode = 1</span>
+<span class="sd">                run &quot;LDA&quot;</span>
+<span class="sd">                EOINPUT</span>
+<span class="sd">                &quot; % (EXE, COORDS)</span>
+<span class="sd">                    return inp</span>
+
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (list, list): (E_sub, MO_sub), where:</span>
+<span class="sd">        </span>
+<span class="sd">            * E_sub ( list of CMATRIX(M, M) ): the matrix of the converged Hamiltonian eigenvalues (at given geometry)</span>
+<span class="sd">                Here, M = len(params[&quot;mo_active_space&quot;]) - we output only the MO energies that are of interest to us.</span>
+<span class="sd">                E_sub[0] is the alpha component (for both restricted and unrestricted calculations)</span>
+<span class="sd">                E_sub[1] is the beta component (only for the unrestricted calculations)</span>
+<span class="sd">                       </span>
+<span class="sd">            * MO_sub ( list of CMATRIX(A, M) ): the matrix of the converged Hamiltonian eigenvalues (at given geometry)</span>
+<span class="sd">                Here, M = len(params[&quot;mo_active_space&quot;]) - we output only the MO energies that are of interest to us.</span>
+<span class="sd">                A - is the number of AOs in this calculation</span>
+<span class="sd">                MO_sub[0] is the alpha component (for both restricted and unrestricted calculations)</span>
+<span class="sd">                MO_sub[1] is the beta component (only for the unrestricted calculations)</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Now try to get parameters from the input</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;EXE&quot;</span><span class="p">:</span><span class="s2">&quot;ergo&quot;</span><span class="p">,</span>  <span class="s2">&quot;md_file&quot;</span><span class="p">:</span><span class="s2">&quot;md.xyz&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;mo_active_space&quot;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;mo_indexing_convention&quot;</span><span class="p">:</span><span class="s2">&quot;rel&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;direct_MO&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>  <span class="s2">&quot;spinpolarized&quot;</span><span class="p">:</span><span class="mi">0</span>
+                     <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+    
+    <span class="c1"># Get the parameters</span>
+    <span class="n">EXE</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;EXE&quot;</span><span class="p">]</span>
+    <span class="n">md_file</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;md_file&quot;</span><span class="p">]</span>
+    <span class="n">mo_indexing_convention</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;mo_indexing_convention&quot;</span><span class="p">]</span>
+    <span class="n">direct_MO</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;direct_MO&quot;</span><span class="p">]</span>
+    <span class="n">spinpolarized</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;spinpolarized&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">direct_MO</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">mo_indexing_convention</span><span class="o">==</span><span class="s2">&quot;abs&quot;</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING in step2_ergoscf.do_step: </span><span class="se">\</span>
+<span class="s2">               Cannot use the direct_MO = 1 with the mo_indexing_convention=</span><span class="se">\&quot;</span><span class="s2">abs</span><span class="se">\&quot;\</span>
+<span class="s2">               Resetting mo_indexing_convention to =</span><span class="se">\&quot;</span><span class="s2">rel</span><span class="se">\&quot;</span><span class="s2"> &quot;</span><span class="p">)</span>
+        <span class="n">mo_indexing_convention</span> <span class="o">=</span> <span class="s2">&quot;rel&quot;</span>
+
+                
+    <span class="c1"># Make an input file for SP calculations     </span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">ERGO_methods</span><span class="o">.</span><span class="n">xyz_traj2gen_sp</span><span class="p">(</span><span class="n">md_file</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+    <span class="c1"># Run SCF calculations</span>
+    <span class="n">command</span> <span class="o">=</span> <span class="n">run</span><span class="p">(</span><span class="n">EXE</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">command</span><span class="p">))</span>
+
+    <span class="c1"># Read in the common info</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">ERGO_methods</span><span class="o">.</span><span class="n">get_mtx_matrices</span><span class="p">(</span><span class="s2">&quot;S_matrix.mtx&quot;</span><span class="p">)</span>    
+
+    
+    <span class="n">E_sub</span><span class="p">,</span> <span class="n">MO_sub</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">direct_MO</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+
+        <span class="c1"># Get the dimensions</span>
+        <span class="n">ao_sz</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">num_of_cols</span>        
+        <span class="n">ao_act_sp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ao_sz</span><span class="p">))</span>
+      
+        <span class="n">mo_sz</span> <span class="o">=</span> <span class="n">ao_sz</span>
+        <span class="n">mo_act_sp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mo_sz</span><span class="p">))</span>
+    
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;mo_active_space&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mo_sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;mo_active_space&quot;</span><span class="p">])</span>        
+            <span class="n">mo_act_sp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;mo_active_space&quot;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">spinpolarized</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+
+            <span class="c1"># Get the last Fock matrix </span>
+            <span class="n">last_indx</span><span class="p">,</span> <span class="n">last_filename</span> <span class="o">=</span> <span class="n">ERGO_methods</span><span class="o">.</span><span class="n">find_last_file</span><span class="p">(</span><span class="s2">&quot;F_matrix_&quot;</span><span class="p">,</span> <span class="s2">&quot;.mtx&quot;</span><span class="p">)</span>
+            <span class="n">F</span> <span class="o">=</span> <span class="n">ERGO_methods</span><span class="o">.</span><span class="n">get_mtx_matrices</span><span class="p">(</span><span class="n">last_filename</span><span class="p">)</span>    
+                
+            <span class="c1"># Solve the eigenvalue problem with the converged Fock matrix</span>
+            <span class="c1"># get the converged MOs</span>
+            <span class="n">E</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ao_sz</span><span class="p">,</span> <span class="n">ao_sz</span><span class="p">)</span>
+            <span class="n">MO</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ao_sz</span><span class="p">,</span> <span class="n">ao_sz</span><span class="p">)</span>
+            <span class="n">solve_eigen</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">MO</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  
+
+            <span class="c1"># Extract the E sub-matrix</span>
+            <span class="n">e_sub</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">mo_sz</span><span class="p">,</span> <span class="n">mo_sz</span><span class="p">)</span>
+            <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">e_sub</span><span class="p">,</span> <span class="n">mo_act_sp</span><span class="p">,</span> <span class="n">mo_act_sp</span><span class="p">)</span>           
+            <span class="n">E_sub</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e_sub</span><span class="p">)</span>
+    
+            <span class="c1"># Extract the MO sub-matrix</span>
+            <span class="n">mo_sub</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ao_sz</span><span class="p">,</span> <span class="n">mo_sz</span><span class="p">)</span>
+            <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">MO</span><span class="p">,</span> <span class="n">mo_sub</span><span class="p">,</span> <span class="n">ao_act_sp</span><span class="p">,</span> <span class="n">mo_act_sp</span><span class="p">)</span>  
+            <span class="n">MO_sub</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mo_sub</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">spinpolarized</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="n">suff</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;alpha&quot;</span><span class="p">,</span> <span class="s2">&quot;beta&quot;</span><span class="p">]:</span>
+
+                <span class="c1"># Get the last Fock matrix </span>
+                <span class="n">last_indx</span><span class="p">,</span> <span class="n">last_filename</span> <span class="o">=</span> <span class="n">ERGO_methods</span><span class="o">.</span><span class="n">find_last_file</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;F_matrix_</span><span class="si">{</span><span class="n">suff</span><span class="si">}</span><span class="s2">_&quot;</span><span class="p">,</span> <span class="s2">&quot;.mtx&quot;</span><span class="p">)</span>
+                <span class="n">F</span> <span class="o">=</span> <span class="n">ERGO_methods</span><span class="o">.</span><span class="n">get_mtx_matrices</span><span class="p">(</span><span class="n">last_filename</span><span class="p">)</span>    
+                
+                <span class="c1"># Solve the eigenvalue problem with the converged Fock matrix</span>
+                <span class="c1"># get the converged MOs</span>
+                <span class="n">E</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ao_sz</span><span class="p">,</span> <span class="n">ao_sz</span><span class="p">)</span>
+                <span class="n">MO</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ao_sz</span><span class="p">,</span> <span class="n">ao_sz</span><span class="p">)</span>
+                <span class="n">solve_eigen</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">MO</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  
+
+                <span class="c1"># Extract the E sub-matrix</span>
+                <span class="n">e_sub</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">mo_sz</span><span class="p">,</span> <span class="n">mo_sz</span><span class="p">)</span>
+                <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">e_sub</span><span class="p">,</span> <span class="n">mo_act_sp</span><span class="p">,</span> <span class="n">mo_act_sp</span><span class="p">)</span>           
+                <span class="n">E_sub</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e_sub</span><span class="p">)</span>
+    
+                <span class="c1"># Extract the MO sub-matrix</span>
+                <span class="n">mo_sub</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ao_sz</span><span class="p">,</span> <span class="n">mo_sz</span><span class="p">)</span>
+                <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">MO</span><span class="p">,</span> <span class="n">mo_sub</span><span class="p">,</span> <span class="n">ao_act_sp</span><span class="p">,</span> <span class="n">mo_act_sp</span><span class="p">)</span>  
+                <span class="n">MO_sub</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mo_sub</span><span class="p">)</span>
+
+
+
+    <span class="k">elif</span> <span class="n">direct_MO</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">spinpolarized</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="p">[</span><span class="n">e_a</span><span class="p">],</span> <span class="p">[</span><span class="n">nocc</span><span class="p">,</span> <span class="n">nvirt</span><span class="p">]</span> <span class="o">=</span> <span class="n">ERGO_methods</span><span class="o">.</span><span class="n">read_spectrum_restricted</span><span class="p">()</span> 
+            <span class="n">E</span> <span class="o">=</span> <span class="n">ERGO_methods</span><span class="o">.</span><span class="n">energies</span><span class="p">(</span><span class="n">e_a</span><span class="p">,</span> <span class="n">nocc</span><span class="p">,</span> <span class="n">nvirt</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;mo_active_space&quot;</span><span class="p">])</span>
+            <span class="n">E_sub</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+
+            <span class="p">[</span><span class="n">mo_a</span><span class="p">]</span> <span class="o">=</span> <span class="n">ERGO_methods</span><span class="o">.</span><span class="n">read_mo_restricted</span><span class="p">(</span><span class="n">nocc</span><span class="p">,</span> <span class="n">nvirt</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;mo_active_space&quot;</span><span class="p">])</span> 
+            <span class="n">MO_sub</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mo_a</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">spinpolarized</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="p">[</span><span class="n">e_a</span><span class="p">,</span> <span class="n">e_b</span><span class="p">],</span> <span class="p">[</span><span class="n">nocc</span><span class="p">,</span> <span class="n">nvirt</span><span class="p">]</span> <span class="o">=</span> <span class="n">ERGO_methods</span><span class="o">.</span><span class="n">read_spectrum_unrestricted</span><span class="p">()</span> 
+            <span class="n">Ea</span> <span class="o">=</span> <span class="n">ERGO_methods</span><span class="o">.</span><span class="n">energies</span><span class="p">(</span><span class="n">e_a</span><span class="p">,</span> <span class="n">nocc</span><span class="p">,</span> <span class="n">nvirt</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;mo_active_space&quot;</span><span class="p">])</span>
+            <span class="n">Eb</span> <span class="o">=</span> <span class="n">ERGO_methods</span><span class="o">.</span><span class="n">energies</span><span class="p">(</span><span class="n">e_b</span><span class="p">,</span> <span class="n">nocc</span><span class="p">,</span> <span class="n">nvirt</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;mo_active_space&quot;</span><span class="p">])</span>
+            <span class="n">E_sub</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Ea</span><span class="p">)</span>
+            <span class="n">E_sub</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Eb</span><span class="p">)</span>
+
+            <span class="p">[</span><span class="n">mo_a</span><span class="p">,</span> <span class="n">mo_b</span><span class="p">]</span> <span class="o">=</span> <span class="n">ERGO_methods</span><span class="o">.</span><span class="n">read_mo_unrestricted</span><span class="p">(</span><span class="n">nocc</span><span class="p">,</span> <span class="n">nvirt</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;mo_active_space&quot;</span><span class="p">])</span> 
+            <span class="n">MO_sub</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mo_a</span><span class="p">)</span>
+            <span class="n">MO_sub</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mo_b</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">E_sub</span><span class="p">,</span> <span class="n">MO_sub</span></div>
+
+
+
+<div class="viewcode-block" id="do_ovlp"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/step2_ergoscf.html#libra_py.workflows.nbra.step2_ergoscf.do_ovlp">[docs]</a><span class="k">def</span> <span class="nf">do_ovlp</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">run</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Compute the overlap matrix in the AO basis for two geometries, i and i+1</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        i ( int ): index of the time step to be used from the trajectory file</span>
+<span class="sd">        params ( dictionary ): the control parameters of the simulation</span>
+<span class="sd">        </span>
+<span class="sd">            * **params[&quot;EXE&quot;]** ( string ): path to the ERGOSCF executable [ default: ergo ]</span>
+<span class="sd">            * **params[&quot;md_file&quot;]** ( string ): the name of the xyz file containing the trajectory - the </span>
+<span class="sd">                file should be in the general xyz format. [default: &quot;md.xyz&quot;]</span>
+
+<span class="sd">        run (Python function ): the function that defines the ErgoSCF input generation - the user </span>
+<span class="sd">            has to define all the control parameters in it, to be able to run the ErgoSCF calculations</span>
+
+<span class="sd">            Example:</span>
+
+<span class="sd">                In the example below, the outermost quotes should be tripled </span>
+
+<span class="sd">                Note: the function should follw the signature shown here</span>
+
+<span class="sd">                def run(EXE, COORDS):</span>
+<span class="sd">                    inp = &quot;#!bin/sh</span>
+<span class="sd">                %s &lt;&lt; EOINPUT &gt; /dev/null</span>
+<span class="sd">                spin_polarization = 0</span>
+<span class="sd">                molecule_inline</span>
+<span class="sd">                %sEOF</span>
+<span class="sd">                basis = &quot;STO-3G&quot;</span>
+<span class="sd">                scf.create_mtx_file_S = 1</span>
+<span class="sd">                scf.create_mtx_files_S_and_quit = 1</span>
+<span class="sd">                XC.sparse_mode = 1</span>
+<span class="sd">                run &quot;LDA&quot;</span>
+<span class="sd">                EOINPUT</span>
+<span class="sd">                &quot; % (EXE, COORDS)</span>
+<span class="sd">                    return inp</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (CMATRIX(A, A), CMATRIX(A, A), CMATRIX(A, A)): (S11, S22, S12), where: </span>
+
+<span class="sd">            * S11 - the matrices of the AO overlaps for the first geometry with itself (normal AO overlaps)</span>
+<span class="sd">            * S22 - the matrices of the AO overlaps for the second geometry with itself (normal AO overlaps)</span>
+<span class="sd">            * S12 - the matrices of the AO overlaps for the two geometries at the adjacent geometries (for TDM)</span>
+
+<span class="sd">            where A - is the size of the AO basis</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Now try to get parameters from the input</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;EXE&quot;</span><span class="p">:</span><span class="s2">&quot;ergo&quot;</span><span class="p">,</span> <span class="s2">&quot;md_file&quot;</span><span class="p">:</span><span class="s2">&quot;md.xyz&quot;</span>   <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+    
+    <span class="c1"># Get the parameters</span>
+    <span class="n">EXE</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;EXE&quot;</span><span class="p">]</span>
+    <span class="n">md_file</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;md_file&quot;</span><span class="p">]</span>
+    
+        
+    <span class="c1"># Make an input file for the overlap calculations </span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">ERGO_methods</span><span class="o">.</span><span class="n">xyz_traj2gen_ovlp</span><span class="p">(</span><span class="n">md_file</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="c1"># Run SCF calculations</span>
+    <span class="n">command</span> <span class="o">=</span> <span class="n">run</span><span class="p">(</span><span class="n">EXE</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">command</span><span class="p">))</span>
+    
+    <span class="c1"># Get the overlap matrix</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">ERGO_methods</span><span class="o">.</span><span class="n">get_mtx_matrices</span><span class="p">(</span><span class="s2">&quot;S_matrix.mtx&quot;</span><span class="p">)</span>
+
+    <span class="c1"># In this function we run the calculation for a super-system </span>
+    <span class="c1"># (a dimer of the actual chemical one), so the number of orbitals is </span>
+    <span class="c1"># defined like this:</span>
+    <span class="n">norbs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">num_of_cols</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    BEWARE: The following orbital ordering works only with the </span>
+<span class="sd">    following changes in the ErgoSCF code:</span>
+
+<span class="sd">    ergo_scripted.cc</span>
+<span class="sd">    const int skip_sort_shells = 1;  /** AVA on 4/28/2019 */</span>
+
+<span class="sd">    Great thanks to Elias Rudberg for this suggestion!</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">act_sp1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">norbs</span><span class="p">))</span>
+    <span class="n">act_sp2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norbs</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">norbs</span><span class="p">))</span>
+
+    <span class="n">S11</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">norbs</span><span class="p">,</span> <span class="n">norbs</span><span class="p">)</span>
+    <span class="n">S12</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">norbs</span><span class="p">,</span> <span class="n">norbs</span><span class="p">)</span>
+    <span class="n">S22</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">norbs</span><span class="p">,</span> <span class="n">norbs</span><span class="p">)</span>
+
+    <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">S11</span><span class="p">,</span> <span class="n">act_sp1</span><span class="p">,</span> <span class="n">act_sp1</span><span class="p">)</span>
+    <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">S12</span><span class="p">,</span> <span class="n">act_sp1</span><span class="p">,</span> <span class="n">act_sp2</span><span class="p">)</span>
+    <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">S22</span><span class="p">,</span> <span class="n">act_sp2</span><span class="p">,</span> <span class="n">act_sp2</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">S11</span><span class="p">,</span> <span class="n">S12</span><span class="p">,</span> <span class="n">S22</span></div>
+
+
+<span class="k">def</span> <span class="nf">clean</span><span class="p">():</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;rm ergoscf.out&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;rm density.bin&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;rm F_matrix_*.mtx&quot;</span><span class="p">)</span>
+
+    
+<div class="viewcode-block" id="run_step2"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/step2_ergoscf.html#libra_py.workflows.nbra.step2_ergoscf.run_step2">[docs]</a><span class="k">def</span> <span class="nf">run_step2</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">run1</span><span class="p">,</span> <span class="n">run2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    </span>
+<span class="sd">    Calculate the overlaps, transition dipole moments, and vibronic Hamiltonian matrix elements in the AO basis</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        params ( dictionary ): the control parameters of the simulation</span>
+<span class="sd">        </span>
+<span class="sd">        * **params[&quot;dt&quot;]** ( double ): nuclear dynamics timestep - as encoded in the trajectory [ units: a.u., default: 41.0 ]</span>
+<span class="sd">        * **params[&quot;isnap&quot;]** ( int ): initial frame  [ default: 0 ]</span>
+<span class="sd">        * **params[&quot;fsnap&quot;]** ( int ): final frame  [ default: 1 ]</span>
+<span class="sd">        * **params[&quot;out_dir&quot;]** ( string ): the path to the directory that will collect all the results</span>
+<span class="sd">            If the directory doesn&#39;t exist, it will be created  [ default: &quot;res&quot; ]</span>
+
+<span class="sd">        * **params[&quot;EXE&quot;]** ( string ): path to the ErgoSCF executable [ default: ergo ]</span>
+<span class="sd">        * **params[&quot;md_file&quot;]** ( string ): the name of the xyz file containing the trajectory - the </span>
+<span class="sd">            file should be in the general xyz format. [default: &quot;md.xyz&quot;]</span>
+<span class="sd">        * **params[&quot;mo_active_space&quot;]** ( list of ints or None ): indices of the MOs we care about </span>
+<span class="sd">            The indexing starts from 0, not 1! If set to None - all MOs will be returned. [default: None]</span>
+<span class="sd">        * **params[&quot;mo_indexing_convention&quot;]** ( string ): orbital indexing convention:</span>
+<span class="sd">            - &quot;rel&quot; : relative, with respect to the HOMO position: HOMO = 0, HOMO-1 = -1, LUMO = 1, etc. [default]</span>
+<span class="sd">            - &quot;abs&quot; : absolute, with respect to all possible MOs of the system </span>
+<span class="sd">        * **params[&quot;direct_MO&quot;]** ( int ): a flag to decide to use orbitals as read from </span>
+<span class="sd">            the ErgoSCF output:</span>
+<span class="sd">            - 0 : read in the Fock matrices and diagonalize them internally</span>
+<span class="sd">            - 1 : read the MOs produced by ErgoSCF, this is the option to really go </span>
+<span class="sd">                with the linear-scaling costs [ default ]</span>
+<span class="sd">        * **params[&quot;spinpolarized&quot;]** ( int ): whether the ErgoSCF calculations (and hence the</span>
+<span class="sd">            following post-processing) are done withing the restricted or unrestricted formulation:</span>
+<span class="sd">            - 0 : non-spin-polarized (restricted) [ default ] </span>
+<span class="sd">            - 1 : spin-polarized (unrestricted)</span>
+
+<span class="sd">        SeeAlso:  the description of the parameters in ```do_ovlp(i, params)``` and in ```do_step(i, params)```</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: but generates the files (S, St, and hvib) indexed in the range [isnap, fsnap), for </span>
+<span class="sd">        instance, if isnap = 0, fsnap = 3, we will have files hvib_0, hvib_1, hvib_2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span><span class="mf">1.0</span><span class="o">*</span><span class="n">units</span><span class="o">.</span><span class="n">fs2au</span><span class="p">,</span>  <span class="s2">&quot;isnap&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;fsnap&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;out_dir&quot;</span><span class="p">:</span><span class="s2">&quot;res&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;EXE&quot;</span><span class="p">:</span><span class="s2">&quot;ergo&quot;</span><span class="p">,</span>  <span class="s2">&quot;md_file&quot;</span><span class="p">:</span><span class="s2">&quot;md.xyz&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;mo_active_space&quot;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;mo_indexing_convention&quot;</span><span class="p">:</span><span class="s2">&quot;rel&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;direct_MO&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>  <span class="s2">&quot;spinpolarized&quot;</span><span class="p">:</span><span class="mi">0</span>
+                     <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+
+    <span class="c1"># Get the parameters</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span>
+    <span class="n">isnap</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;isnap&quot;</span><span class="p">]</span>
+    <span class="n">fsnap</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;fsnap&quot;</span><span class="p">]</span>
+    <span class="n">out_dir</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;out_dir&quot;</span><span class="p">]</span>
+    <span class="n">spinpolarized</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;spinpolarized&quot;</span><span class="p">]</span>
+
+
+    <span class="c1"># Create &lt;out_dir&gt; directory if it does not exist yet</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">out_dir</span><span class="p">):</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;mkdir </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">out_dir</span><span class="p">)</span>
+
+
+    <span class="c1"># Compute</span>
+    <span class="n">clean</span><span class="p">()</span>
+    <span class="n">E_prev</span><span class="p">,</span> <span class="n">U_prev</span> <span class="o">=</span> <span class="n">do_step</span><span class="p">(</span><span class="n">isnap</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">run1</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">isnap</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">fsnap</span><span class="p">):</span>         
+
+        <span class="n">clean</span><span class="p">()</span>
+        <span class="n">E_curr</span><span class="p">,</span> <span class="n">U_curr</span> <span class="o">=</span> <span class="n">do_step</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">run1</span><span class="p">)</span>
+
+        <span class="n">clean</span><span class="p">()</span>
+        <span class="n">S11</span><span class="p">,</span> <span class="n">S22</span><span class="p">,</span> <span class="n">S12</span> <span class="o">=</span> <span class="n">do_ovlp</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">run2</span><span class="p">)</span>
+
+        <span class="n">spins</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">spinpolarized</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">spins</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">spinpolarized</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">spins</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+
+        <span class="c1"># Calculations and print out</span>
+        <span class="k">for</span> <span class="n">spin</span> <span class="ow">in</span> <span class="n">spins</span><span class="p">:</span>
+
+            <span class="n">TDM</span> <span class="o">=</span> <span class="n">U_prev</span><span class="p">[</span><span class="n">spin</span><span class="p">]</span><span class="o">.</span><span class="n">H</span><span class="p">()</span> <span class="o">*</span> <span class="n">S12</span> <span class="o">*</span> <span class="n">U_curr</span><span class="p">[</span><span class="n">spin</span><span class="p">]</span>
+            <span class="n">Hvib</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">E_prev</span><span class="p">[</span><span class="n">spin</span><span class="p">]</span> <span class="o">+</span> <span class="n">E_curr</span><span class="p">[</span><span class="n">spin</span><span class="p">])</span> <span class="o">-</span> <span class="p">(</span><span class="mf">0.5</span><span class="n">j</span><span class="o">/</span><span class="n">dt</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span> <span class="n">TDM</span> <span class="o">-</span> <span class="n">TDM</span><span class="o">.</span><span class="n">H</span><span class="p">()</span> <span class="p">)</span>
+
+            <span class="c1"># Overlaps</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">U_prev</span><span class="p">[</span><span class="n">spin</span><span class="p">]</span><span class="o">.</span><span class="n">H</span><span class="p">()</span> <span class="o">*</span> <span class="n">S11</span> <span class="o">*</span> <span class="n">U_prev</span><span class="p">[</span><span class="n">spin</span><span class="p">]</span>  <span class="o">+</span>  <span class="n">U_curr</span><span class="p">[</span><span class="n">spin</span><span class="p">]</span><span class="o">.</span><span class="n">H</span><span class="p">()</span> <span class="o">*</span> <span class="n">S22</span> <span class="o">*</span> <span class="n">U_curr</span><span class="p">[</span><span class="n">spin</span><span class="p">])</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">real</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out_dir</span><span class="si">}</span><span class="s2">/S_</span><span class="si">{</span><span class="n">spin</span><span class="si">}{</span><span class="n">spin</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2">_re&quot;</span> <span class="p">)</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">imag</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out_dir</span><span class="si">}</span><span class="s2">/S_</span><span class="si">{</span><span class="n">spin</span><span class="si">}{</span><span class="n">spin</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2">_im&quot;</span> <span class="p">)</span>
+
+            <span class="c1"># Time-overlaps</span>
+            <span class="n">TDM</span><span class="o">.</span><span class="n">real</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out_dir</span><span class="si">}</span><span class="s2">/St_</span><span class="si">{</span><span class="n">spin</span><span class="si">}{</span><span class="n">spin</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2">_re&quot;</span> <span class="p">)</span>
+            <span class="n">TDM</span><span class="o">.</span><span class="n">imag</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out_dir</span><span class="si">}</span><span class="s2">/St_</span><span class="si">{</span><span class="n">spin</span><span class="si">}{</span><span class="n">spin</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2">_im&quot;</span> <span class="p">)</span>
+            
+            <span class="c1"># Vibronic Hamiltonians</span>
+            <span class="n">Hvib</span><span class="o">.</span><span class="n">real</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out_dir</span><span class="si">}</span><span class="s2">/hvib_</span><span class="si">{</span><span class="n">spin</span><span class="si">}{</span><span class="n">spin</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2">_re&quot;</span> <span class="p">)</span>
+            <span class="n">Hvib</span><span class="o">.</span><span class="n">imag</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out_dir</span><span class="si">}</span><span class="s2">/hvib_</span><span class="si">{</span><span class="n">spin</span><span class="si">}{</span><span class="n">spin</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2">_im&quot;</span> <span class="p">)</span>
+
+        
+        <span class="c1"># Current becomes the old </span>
+        <span class="k">if</span> <span class="n">spinpolarized</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">E_prev</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">E_curr</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">U_prev</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">U_curr</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">elif</span> <span class="n">spinpolarized</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">E_prev</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">E_curr</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">U_prev</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">U_curr</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="n">E_prev</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">E_curr</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">U_prev</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">U_curr</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,379 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>namd &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="normal_modes" href="normal_modes.html" />
+    <link rel="prev" title="LoadUFF" href="LoadUFF.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>namd</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/namd.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.namd">
+<span id="namd"></span><h1>namd<a class="headerlink" href="#module-libra_py.namd" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-namd"></span><dl class="py function">
+<dt id="libra_py.namd.compute_Hvib">
+<code class="sig-prename descclassname"><span class="pre">libra_py.namd.</span></code><code class="sig-name descname"><span class="pre">compute_Hvib</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ham_old</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ham_cur</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/namd.html#compute_Hvib"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.namd.compute_Hvib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the vibronic Hamiltonian - in the MO basis - this is equivalent to the general version
+below with the 1-electron “Slater determinant” basis functions.
+This function is going to be deprecated, but let keep it here, for backward compatibility</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ham_old</strong> (<em>Hamiltonian</em>) – Hamiltonian at time t-dt [units: a.u. of energy]</p></li>
+<li><p><strong>ham_cur</strong> (<em>Hamiltonian</em>) – Hamiltonian at time t [units: a.u. of energy]</p></li>
+<li><p><strong>orb</strong> (<em>list of ints</em>) – indices of the orbitals included in the active space. The Hvib dimensions will
+be determined by the N_act = len(orb) and the elements of Hvib will reflect only the orbitals included
+in this active state. Indexing starts with 0.</p></li>
+<li><p><strong>dt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – Time step [units: a.u. of time]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>vibronic Hamiltonian matrix in the MO basis:  Hvib = Hel - i*hbar*d_ij</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>CMATRIX(N_act,N_act)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.namd.compute_Hvib_sd">
+<code class="sig-prename descclassname"><span class="pre">libra_py.namd.</span></code><code class="sig-name descname"><span class="pre">compute_Hvib_sd</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ham_old</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ham_cur</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SD_basis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/namd.html#compute_Hvib_sd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.namd.compute_Hvib_sd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the vibronic Hamiltonian - in the MO basis</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ham_old</strong> (<em>Hamiltonian</em>) – Hamiltonian at time t-dt [units: a.u. of energy]</p></li>
+<li><p><strong>ham_cur</strong> (<em>Hamiltonian</em>) – Hamiltonian at time t [units: a.u. of energy]</p></li>
+<li><p><strong>orb</strong> (<em>list of ints</em>) – indices of the orbitals included in the active space. The Hvib dimensions will
+be determined by the norb = len(orb) and the elements of Hvib will reflect only the orbitals included
+in this active state. Indexing starts with 0.</p></li>
+<li><p><strong>SD_basis</strong> (<em>list of lists of ints</em>) – Slater determinant (SD) basis - are defined in terms of the indices
+withing the active space, with the numbering starting from 0. In no-SOC case, the numbers smaller
+than N_act = len(orb) will correspond to alpha orbitals other - to beta orbitals</p></li>
+<li><p><strong>dt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – Time step [units: a.u. of time]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>vibronic Hamiltonian matrix in the SD basis:  Hvib = Hel - i*hbar*d_ij. Here, N = len(SD_basis)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>CMATRIX(N,N)</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>If we have a system with HOMO being the orbital with index 20, LUMO - with 21, then
+if we want to consider a minimal 2-state system, we can choose orb = [20, 21]
+Mapping:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">0</span>       <span class="mi">1</span>      <span class="mi">2</span>      <span class="mi">3</span>
+<span class="n">H</span><span class="p">(</span><span class="n">alp</span><span class="p">)</span> <span class="n">L</span><span class="p">(</span><span class="n">alp</span><span class="p">)</span> <span class="n">H</span><span class="p">(</span><span class="n">bet</span><span class="p">)</span>  <span class="n">L</span><span class="p">(</span><span class="n">bet</span><span class="p">)</span>
+
+         <span class="n">GS</span> <span class="o">=</span> <span class="o">|</span><span class="n">H</span><span class="p">(</span><span class="n">alp</span><span class="p">),</span><span class="n">H</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span><span class="o">|</span>    <span class="n">S1</span> <span class="o">=</span> <span class="o">|</span><span class="n">H</span><span class="p">(</span><span class="n">alp</span><span class="p">),</span><span class="n">L</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span><span class="o">|</span>
+
+<span class="ow">and</span> <span class="n">SD_basis</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span>    <span class="mi">2</span><span class="p">],</span>             <span class="p">[</span><span class="mi">0</span><span class="p">,</span>      <span class="mi">3</span><span class="p">]</span>   <span class="p">]</span>
+                 <span class="o">/</span>\    <span class="o">/</span>\                <span class="o">/</span>\      <span class="o">/</span>                             <span class="o">|</span>     <span class="o">|</span>                 <span class="o">|</span>       <span class="o">|</span>
+              <span class="n">H</span> <span class="n">alp</span>   <span class="n">H</span> <span class="n">bet</span>             <span class="n">H</span> <span class="n">alp</span>   <span class="n">L</span> <span class="n">beta</span>
+</pre></div>
+</div>
+<p class="rubric">Example</p>
+<p>If we have a system with HOMO being the orbital with index 20, LUMO - with 21, then
+if we want to consider a minimal 2-state system with spin-flip, we can choose orb = [20, 21]
+Mapping:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">0</span>       <span class="mi">1</span>      <span class="mi">2</span>      <span class="mi">3</span>
+<span class="n">H</span><span class="p">(</span><span class="n">alp</span><span class="p">)</span> <span class="n">L</span><span class="p">(</span><span class="n">alp</span><span class="p">)</span> <span class="n">H</span><span class="p">(</span><span class="n">bet</span><span class="p">)</span>  <span class="n">L</span><span class="p">(</span><span class="n">bet</span><span class="p">)</span>
+
+        <span class="n">GS</span> <span class="o">=</span> <span class="o">|</span><span class="n">H</span><span class="p">(</span><span class="n">alp</span><span class="p">),</span><span class="n">H</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span><span class="o">|</span>     <span class="n">S1</span> <span class="o">=|</span><span class="n">H</span><span class="p">(</span><span class="n">alp</span><span class="p">),</span><span class="n">L</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span><span class="o">|</span>    <span class="n">T0</span> <span class="o">=</span> <span class="o">|</span><span class="n">H</span><span class="p">(</span><span class="n">alp</span><span class="p">),</span><span class="n">L</span><span class="p">(</span><span class="n">alp</span><span class="p">)</span><span class="o">|</span>    <span class="n">T1</span> <span class="o">=</span> <span class="o">|</span><span class="n">H</span><span class="p">(</span><span class="n">bet</span><span class="p">),</span><span class="n">L</span><span class="p">(</span><span class="n">bet</span><span class="p">)</span><span class="o">|</span>
+
+<span class="ow">and</span> <span class="n">SD_basis</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span>    <span class="mi">2</span><span class="p">],</span>             <span class="p">[</span><span class="mi">0</span><span class="p">,</span>      <span class="mi">3</span><span class="p">]</span>  <span class="p">,</span>            <span class="p">[</span><span class="mi">0</span><span class="p">,</span>   <span class="mi">1</span><span class="p">]</span> <span class="p">,</span>               <span class="p">[</span> <span class="mi">2</span><span class="p">,</span>    <span class="mi">3</span> <span class="p">]</span> <span class="p">]</span>
+                 <span class="o">/</span>\    <span class="o">/</span>\                <span class="o">/</span>\      <span class="o">/</span>\               <span class="o">/</span>\    <span class="o">/</span>\                  <span class="o">/</span>\     <span class="o">/</span>                             <span class="o">|</span>     <span class="o">|</span>                 <span class="o">|</span>       <span class="o">|</span>                <span class="o">|</span>     <span class="o">|</span>                   <span class="o">|</span>      <span class="o">|</span>
+              <span class="n">H</span> <span class="n">alp</span>   <span class="n">H</span> <span class="n">bet</span>             <span class="n">H</span> <span class="n">alp</span>   <span class="n">L</span> <span class="n">beta</span>           <span class="n">H</span> <span class="n">alp</span>  <span class="n">L</span> <span class="n">alp</span>              <span class="n">H</span> <span class="n">bet</span>   <span class="n">L</span> <span class="n">bet</span>
+</pre></div>
+</div>
+<p class="rubric">Example</p>
+<p>If we have a radiacl in a system with 3 electrons, occuplying  HOMO-1 (doubly) and HOMO (singly).
+Say, the HOMO is the orbital with index 20, HOMO-1 - with 19, then
+if we may want to consider the active space of 3 orbitals: [19, 20, 21]
+Mapping:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">0</span>       <span class="mi">1</span>      <span class="mi">2</span>      <span class="mi">3</span>        <span class="mi">4</span>      <span class="mi">5</span>
+<span class="n">H</span><span class="o">-</span><span class="mi">1</span><span class="p">(</span><span class="n">alp</span><span class="p">)</span> <span class="n">H</span><span class="p">(</span><span class="n">alp</span><span class="p">)</span> <span class="n">L</span><span class="p">(</span><span class="n">alp</span><span class="p">)</span> <span class="n">H</span><span class="o">-</span><span class="mi">1</span><span class="p">(</span><span class="n">bet</span><span class="p">)</span> <span class="n">H</span><span class="p">(</span><span class="n">bet</span><span class="p">)</span> <span class="n">L</span><span class="p">(</span><span class="n">bet</span><span class="p">)</span>
+
+        <span class="n">GS</span> <span class="o">=</span> <span class="o">|</span><span class="n">H</span><span class="o">-</span><span class="mi">1</span><span class="p">(</span><span class="n">alp</span><span class="p">),</span><span class="n">H</span><span class="o">-</span><span class="mi">1</span><span class="p">(</span><span class="n">beta</span><span class="p">),</span> <span class="n">H</span><span class="p">(</span><span class="n">alp</span><span class="p">)</span><span class="o">|</span>
+
+<span class="ow">and</span> <span class="n">SD_basis</span> <span class="o">=</span> <span class="p">[</span>  <span class="p">[</span><span class="mi">0</span><span class="p">,</span>       <span class="mi">3</span><span class="p">,</span>        <span class="mi">1</span><span class="p">],</span>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span>       <span class="mi">3</span><span class="p">,</span>        <span class="mi">4</span><span class="p">],</span>       <span class="o">...</span>     <span class="p">]</span>
+                  <span class="o">/</span>\        <span class="o">/</span>\       <span class="o">/</span>\      <span class="o">/</span>\        <span class="o">/</span>\       <span class="o">/</span>\
+                  <span class="o">|</span>         <span class="o">|</span>        <span class="o">|</span>       <span class="o">|</span>         <span class="o">|</span>        <span class="o">|</span>
+                 <span class="n">H</span><span class="o">-</span><span class="mi">1</span> <span class="n">alp</span>  <span class="n">H</span><span class="o">-</span><span class="mi">1</span> <span class="n">bet</span>   <span class="n">H</span> <span class="n">alp</span>   <span class="n">H</span><span class="o">-</span><span class="mi">1</span> <span class="n">alp</span>  <span class="n">H</span><span class="o">-</span><span class="mi">1</span> <span class="n">bet</span>   <span class="n">H</span> <span class="n">bet</span>
+</pre></div>
+</div>
+<p class="rubric">Example</p>
+<p>We may consider a transition between certain orbitals, say we are interested in transition between
+LUMO+10 (index 30) and LUMO+15 (index 35), then we can choose orb = [30, 35]
+Note, the definition of the SD basis used in Example #1 can be re-used.
+Mapping:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">0</span>       <span class="mi">1</span>            <span class="mi">2</span>            <span class="mi">3</span>
+<span class="n">L</span><span class="o">+</span><span class="mi">10</span><span class="p">(</span><span class="n">alp</span><span class="p">)</span> <span class="n">L</span><span class="o">+</span><span class="mi">15</span><span class="p">(</span><span class="n">alp</span><span class="p">)</span>  <span class="n">L</span><span class="o">+</span><span class="mi">10</span><span class="p">(</span><span class="n">bet</span><span class="p">)</span>   <span class="n">L</span><span class="o">+</span><span class="mi">15</span><span class="p">(</span><span class="n">bet</span><span class="p">)</span>
+
+        <span class="n">GS</span> <span class="o">=</span> <span class="o">|</span><span class="n">L</span><span class="o">+</span><span class="mi">10</span><span class="p">(</span><span class="n">alp</span><span class="p">),</span><span class="n">L</span><span class="o">+</span><span class="mi">10</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span><span class="o">|</span>    <span class="n">S1</span> <span class="o">=</span> <span class="o">|</span><span class="n">L</span><span class="o">+</span><span class="mi">10</span><span class="p">(</span><span class="n">alp</span><span class="p">),</span><span class="n">L</span><span class="o">+</span><span class="mi">15</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span><span class="o">|</span>
+
+<span class="ow">and</span> <span class="n">SD_basis</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span>      <span class="mi">2</span><span class="p">],</span>             <span class="p">[</span><span class="mi">0</span><span class="p">,</span>      <span class="mi">3</span><span class="p">]</span>   <span class="p">]</span>
+                 <span class="o">/</span>\      <span class="o">/</span>\                <span class="o">/</span>\      <span class="o">/</span>                             <span class="o">|</span>       <span class="o">|</span>                 <span class="o">|</span>       <span class="o">|</span>
+              <span class="n">L</span><span class="o">+</span><span class="mi">10</span> <span class="n">alp</span>  <span class="n">L</span><span class="o">+</span><span class="mi">15</span> <span class="n">bet</span>         <span class="n">L</span><span class="o">+</span><span class="mi">10</span> <span class="n">alp</span> <span class="n">L</span><span class="o">+</span><span class="mi">15</span> <span class="n">beta</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="normal_modes.html" class="btn btn-neutral float-right" title="normal_modes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="LoadUFF.html" class="btn btn-neutral float-left" title="LoadUFF" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

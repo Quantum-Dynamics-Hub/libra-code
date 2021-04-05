@@ -1,0 +1,607 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.cube_file_methods &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.cube_file_methods</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.cube_file_methods</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#*</span>
+<span class="c1">#* Copyright (C) 2020 Mohammad Shakiba, Brendan Smith, Alexey V. Akimov</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 3 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: cube_file_methods</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements functions for processing with cube files</span>
+<span class="sd">.. moduleauthors:: </span>
+<span class="sd">       Mohammad Shakiba, Brendan Smith, Alexey V. Akimov </span>
+<span class="sd">  </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+
+
+<div class="viewcode-block" id="read_cube"><a class="viewcode-back" href="../../reference/libra_py/cube_file_methods.html#libra_py.cube_file_methods.read_cube">[docs]</a><span class="k">def</span> <span class="nf">read_cube</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function reads the wavefunction from a cube file and stores it in</span>
+<span class="sd">    a 1D numpy array</span>
+<span class="sd">    Args:</span>
+<span class="sd">        filename (string): the name of the .cube file to read</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        isovalues (numpy.array) : the 1D array of the wavefunctions for all the points on the grid</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="c1"># The absolute value is for Gaussian since it might return a negative number for number of atoms</span>
+    <span class="n">natoms</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span> <span class="nb">int</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span> <span class="p">)</span>
+    <span class="c1"># We skip a few lines in the cube files, that go as follows:</span>
+    <span class="c1"># 2 lines - comments</span>
+    <span class="c1"># 1 line  - the number of atoms, etc.</span>
+    <span class="c1"># 3 lines - the grid spacing and number of grid points in each dimensions</span>
+
+    <span class="n">nstart</span> <span class="o">=</span> <span class="n">natoms</span><span class="o">+</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="mi">3</span>        <span class="c1"># the index of the first line containing wfc data</span>
+    <span class="c1"># For Gaussian cube files</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">lines</span><span class="p">[</span><span class="n">nstart</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="p">)</span> <span class="o">&lt;</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="n">nstart</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">nlines</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>          <span class="c1"># the total number of lines</span>
+
+    <span class="n">isovalues</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nstart</span><span class="p">,</span><span class="n">nlines</span><span class="p">):</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">ncols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ncols</span><span class="p">):</span>
+            <span class="n">isovalues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+    
+    <span class="n">isovalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">isovalues</span><span class="p">)</span>
+    <span class="c1">#data = np.loadtxt(filename,skiprows=n)</span>
+    
+    <span class="k">return</span> <span class="n">isovalues</span></div>
+
+
+
+
+<div class="viewcode-block" id="grid_volume"><a class="viewcode-back" href="../../reference/libra_py/cube_file_methods.html#libra_py.cube_file_methods.grid_volume">[docs]</a><span class="k">def</span> <span class="nf">grid_volume</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function reads the wavefunction from a cube file and calculate </span>
+<span class="sd">    the grid volum using the X-, Y- and Z-axis of the volumetric region</span>
+<span class="sd">    which are placed in the 4th, 5th and 6th line of the cube file structure</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        </span>
+<span class="sd">        filename (string): The name of the .cube file to read.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">    </span>
+<span class="sd">        dv (float): The grid volume in Bohr^3.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># We use the 3rd, 4th and 5th row in the lines to obtain</span>
+    <span class="c1"># the axes of the parallelpiped into a numpy array (Voxel).</span>
+    <span class="n">axis_1</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">]),</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">]),</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">3</span><span class="p">])]</span>
+    <span class="n">axis_2</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">]),</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">]),</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">3</span><span class="p">])]</span>
+    <span class="n">axis_3</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">]),</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">]),</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">3</span><span class="p">])]</span>
+    <span class="n">vol_element</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">axis_1</span><span class="p">,</span> <span class="n">axis_2</span><span class="p">,</span> <span class="n">axis_3</span><span class="p">])</span>
+    <span class="c1"># Then we calculate the determinant of Voxel to obtain the volume.</span>
+    <span class="n">dv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">vol_element</span><span class="p">))</span>
+
+    
+    <span class="k">return</span> <span class="n">dv</span> </div>
+
+
+
+
+<div class="viewcode-block" id="read_volumetric_data"><a class="viewcode-back" href="../../reference/libra_py/cube_file_methods.html#libra_py.cube_file_methods.read_volumetric_data">[docs]</a><span class="k">def</span> <span class="nf">read_volumetric_data</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function reads the volumetric data in a format used for plotting</span>
+<span class="sd">    of the data. The difference between &#39;read_cube&#39; function is that it will</span>
+<span class="sd">    show the data in a 3D array which has the shape as the number of grid points</span>
+<span class="sd">    for each of the X-, Y-, and Z-axis in the 4th to 6th line of the cube file.</span>
+<span class="sd">    This function will return the grid points in each axis, the coordinates of the</span>
+<span class="sd">    structure and the spacing vector which is used to plot the isosurfaces of the </span>
+<span class="sd">    molecular orbitals.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        </span>
+<span class="sd">        filename (string): The name of the .cube file.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        </span>
+<span class="sd">        coordinates (2D numpy array): The coordinates of the molecule structure in</span>
+<span class="sd">                                      the same format shown in the .cube file.</span>
+<span class="sd">                                      </span>
+<span class="sd">        x_grid, y_grid, z_grid (3D numpy array): Containing the grid points for each of the X-,</span>
+<span class="sd">                                     Y-, and Z- axis.</span>
+<span class="sd">                                     </span>
+<span class="sd">        wave_fun (3D numpy array): The volumetric data in a 3D numpy array format.</span>
+<span class="sd">        </span>
+<span class="sd">        spacing_vector (numpy 1D array): The spacing vector used for plotting the isosurfaces.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># The number of atoms in the 3rd line</span>
+    <span class="n">natoms</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+
+
+    <span class="c1"># The number of voxels defined for each axis obtained from</span>
+    <span class="c1"># the first elements of the 4th, 5th, and 6th line of the cube files</span>
+    <span class="n">nx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ny</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">nz</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+
+
+    <span class="c1"># The three vectors below are the same vectors which are present in lines 4th to 6th</span>
+    <span class="c1"># which are used to create the 3D numpy array of the grid points (x, y, z) used to plot</span>
+    <span class="c1"># the isosurfaces.</span>
+    <span class="c1"># Here we use the same unit as is used in the .cube file structure which is Bohr</span>
+    <span class="c1"># with no need for unit conversion. This makes the plotting easier.</span>
+    <span class="n">axis_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">]),</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">]),</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">3</span><span class="p">])])</span>
+    <span class="n">axis_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">]),</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">]),</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">3</span><span class="p">])])</span>
+    <span class="n">axis_3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">]),</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">]),</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">3</span><span class="p">])])</span>
+
+
+    <span class="c1"># The spacing vector. This will be used in the &#39;marching_cubes_lewiner&#39;</span>
+    <span class="c1"># function to define the vertices and faces for &#39;plot_trisurf&#39; function.</span>
+    <span class="c1"># This vector is obtained from the sum of the three axis in the cube file as above.</span>
+    <span class="n">spacing_vector</span> <span class="o">=</span> <span class="n">axis_1</span><span class="o">+</span><span class="n">axis_2</span><span class="o">+</span><span class="n">axis_3</span>
+    
+
+    <span class="c1"># First we read all the isovalues into a 1D list &#39;isovals&#39;.</span>
+    <span class="n">isovals</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+    <span class="c1"># Starting from the line which the volumetric data starts which is the (natoms+3+2+1+1)th line.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">natoms</span><span class="o">+</span><span class="mi">3</span><span class="o">+</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())):</span>
+            <span class="n">isovals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="n">j</span><span class="p">]))</span>
+    
+
+    <span class="c1"># Define the volumetric numpy array</span>
+    <span class="n">wave_fun</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span><span class="n">ny</span><span class="p">,</span><span class="n">nz</span><span class="p">))</span>
+    
+    <span class="c1"># Setting up the counters to append the isovalues in a 3D numpy array</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">c1</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">isovals</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">c2</span><span class="o">!=</span><span class="n">nx</span><span class="p">:</span>
+            <span class="n">wave_fun</span><span class="p">[</span><span class="n">c2</span><span class="p">][</span><span class="n">c1</span><span class="p">][</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">isovals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">c</span><span class="o">+</span><span class="mi">1</span>
+            <span class="k">if</span> <span class="n">c</span><span class="o">%</span><span class="n">nz</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">c1</span> <span class="o">=</span> <span class="n">c1</span><span class="o">+</span><span class="mi">1</span>
+                <span class="k">if</span> <span class="n">c1</span><span class="o">%</span><span class="n">ny</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                    <span class="n">c1</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">c2</span> <span class="o">=</span> <span class="n">c2</span><span class="o">+</span><span class="mi">1</span>
+    
+    <span class="c1"># Now define the x, y, and z 3D arrays to store the grids</span>
+    <span class="c1"># which is then used for plotting the isosurfaces.</span>
+    <span class="n">x_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span><span class="n">ny</span><span class="p">,</span><span class="n">nz</span><span class="p">))</span>
+    <span class="n">y_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span><span class="n">ny</span><span class="p">,</span><span class="n">nz</span><span class="p">))</span>
+    <span class="n">z_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span><span class="n">ny</span><span class="p">,</span><span class="n">nz</span><span class="p">))</span>
+
+    
+    <span class="c1"># Defining each element of the grid points.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nx</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ny</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nz</span><span class="p">):</span>
+                <span class="n">x_grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">axis_1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="n">axis_2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="n">axis_3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">k</span>
+                <span class="n">y_grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">axis_1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="n">axis_2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="n">axis_3</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">k</span>
+                <span class="n">z_grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">axis_1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="n">axis_2</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="n">axis_3</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">k</span>
+
+
+
+    <span class="c1"># For plottin the atoms in the molecule we have to read the</span>
+    <span class="c1"># coordinates in xyz format which starts from the 7th line.</span>
+    <span class="n">coordinates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="n">natoms</span><span class="o">+</span><span class="mi">6</span><span class="p">):</span>
+    	<span class="n">coordinates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+
+    <span class="n">coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)</span>
+
+
+    <span class="k">return</span> <span class="n">coordinates</span><span class="p">,</span> <span class="n">x_grid</span><span class="p">,</span> <span class="n">y_grid</span><span class="p">,</span> <span class="n">z_grid</span><span class="p">,</span> <span class="n">wave_fun</span><span class="p">,</span> <span class="n">spacing_vector</span></div>
+
+
+
+
+<div class="viewcode-block" id="integrate_cube"><a class="viewcode-back" href="../../reference/libra_py/cube_file_methods.html#libra_py.cube_file_methods.integrate_cube">[docs]</a><span class="k">def</span> <span class="nf">integrate_cube</span><span class="p">(</span><span class="n">cube_A</span><span class="p">,</span> <span class="n">cube_B</span><span class="p">,</span> <span class="n">grid_volume</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function calculates the element-wise multiplication of two numpy arrays </span>
+<span class="sd">    and sums their product. Then, it will multiply the sum by &#39;dv&#39; element to </span>
+<span class="sd">    compute the integral of two wavefunction represented as .cube files.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        cube_A, cube_B (numpy array): The elements of the cube files in a 1D array </span>
+<span class="sd">                            obtained from the &#39;read_cube&#39; function.</span>
+<span class="sd">        grid_volume (float): The volume of the voxel obtained from grid_volume function.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        integral (float): The integration between two wavefunction in the .cube files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Compute the element-wise multiplication of the two cube files</span>
+    <span class="c1"># which were previously obtained in 1D numpy arrays and store </span>
+    <span class="c1"># them into another 1D numpy array.</span>
+    <span class="n">product</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">cube_A</span><span class="p">,</span><span class="n">cube_B</span><span class="p">)</span>
+    
+    <span class="c1"># Compute the summation of the above matrix</span>
+    <span class="n">summation</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">integral</span> <span class="o">=</span> <span class="n">summation</span><span class="o">*</span><span class="n">grid_volume</span>
+            
+    <span class="k">return</span> <span class="n">integral</span></div>
+
+
+
+<div class="viewcode-block" id="plot_cubes"><a class="viewcode-back" href="../../reference/libra_py/cube_file_methods.html#libra_py.cube_file_methods.plot_cubes">[docs]</a><span class="k">def</span> <span class="nf">plot_cubes</span><span class="p">(</span> <span class="n">params</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function plots the cubes for selected energy levels using VMD.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">    </span>
+<span class="sd">        params (dict):</span>
+<span class="sd">    </span>
+<span class="sd">            min_band (int): The minimum state number.</span>
+<span class="sd">                                        </span>
+<span class="sd">            states_to_be_plotted (list): The list containing the Kohn-Sham orbitals to be plotted by VMD. This list is defined in the submit file.</span>
+<span class="sd">            </span>
+<span class="sd">            path_to_tcl_file (str): The path to the tcl file which contains the input for plotting the cubes in VMD.</span>
+<span class="sd">            </span>
+<span class="sd">            MO_images_directory (str): The molecular orbitals images directory.</span>
+<span class="sd">    </span>
+<span class="sd">            isUKS (int): This parameter is set for spin restricted and unrestricted calculations. When it is</span>
+<span class="sd">                         set to 1 it means that unrestricted calculations were set in the input file otherwise </span>
+<span class="sd">                         it is restricted.</span>
+<span class="sd">                         </span>
+<span class="sd">            curr_step (int): The current time step used to save the images of the MOs.</span>
+<span class="sd">            </span>
+<span class="sd">            phase_factor_visual (numpy array): The phase correction factor list for each MOs for the current step.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">    </span>
+<span class="sd">        None</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+   <span class="c1"># Critical parameters</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;min_band&quot;</span><span class="p">,</span> <span class="s2">&quot;states_to_be_plotted&quot;</span><span class="p">,</span> <span class="s2">&quot;path_to_tcl_file&quot;</span><span class="p">,</span> <span class="s2">&quot;MO_images_directory&quot;</span><span class="p">,</span> <span class="s2">&quot;curr_step&quot;</span><span class="p">,</span> <span class="s2">&quot;phase_factor_visual&quot;</span> <span class="p">]</span>
+    <span class="c1"># Default parameters</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;isUKS&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="c1"># Check input</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="c1"># Unpack the Kohn-Sham orbital indicies and the Kohn-Sham orbitals to be plotted. Also unpack the </span>
+    <span class="c1"># path to the directory where the molecular orbitals will be plotted</span>
+    <span class="n">states_to_be_plotted</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;states_to_be_plotted&quot;</span><span class="p">]</span>
+    <span class="c1"># For VMD</span>
+    <span class="n">path_to_tcl_file</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;path_to_tcl_file&quot;</span><span class="p">]</span>
+    <span class="c1"># The molecular orbital images directory</span>
+    <span class="n">MO_images_directory</span>  <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;MO_images_directory&quot;</span><span class="p">]</span>
+
+    <span class="c1"># isUKS flag for spin-polarized and spin-unpolarized</span>
+    <span class="n">isUKS</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;isUKS&quot;</span><span class="p">]</span> <span class="p">)</span>
+    <span class="c1"># The current step</span>
+    <span class="n">curr_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;curr_step&quot;</span><span class="p">])</span>
+    <span class="c1"># If the path does not exist create it.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">MO_images_directory</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">MO_images_directory</span><span class="p">)</span>
+
+    <span class="c1"># Extracting the phase factor from params</span>
+    <span class="n">phase_factor_visual</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;phase_factor_visual&quot;</span><span class="p">]</span>
+
+    <span class="n">min_band</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;min_band&quot;</span><span class="p">]</span>
+    <span class="c1"># We plot the cubes for the previous time step</span>
+    <span class="n">cubefile_names_prev</span> <span class="o">=</span> <span class="n">CP2K_methods</span><span class="o">.</span><span class="n">cube_file_names_cp2k</span><span class="p">(</span> <span class="n">params</span> <span class="p">)</span>
+    <span class="c1"># read the lines of the tcl file</span>
+    <span class="n">tcl_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path_to_tcl_file</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">tcl_lines</span> <span class="o">=</span> <span class="n">tcl_file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">tcl_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+    <span class="k">if</span> <span class="n">isUKS</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># The cube file names of the alpha spin is the even indices of the cubefile_names_prev</span>
+        <span class="n">alp_cubefile_names_prev</span> <span class="o">=</span> <span class="n">cubefile_names_prev</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="c1"># The same but for the phase factor of the alpha spin</span>
+        <span class="n">phase_factor_alpha</span>      <span class="o">=</span> <span class="n">phase_factor_visual</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="c1"># The cube file names of the beta spin is the odd indices of the cubefile_names_prev</span>
+        <span class="n">bet_cubefile_names_prev</span> <span class="o">=</span> <span class="n">cubefile_names_prev</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="c1"># The same but for the phase factor of the beta spin</span>
+        <span class="n">phase_factor_beta</span>       <span class="o">=</span> <span class="n">phase_factor_visual</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">state_to_be_plotted</span> <span class="ow">in</span> <span class="n">states_to_be_plotted</span><span class="p">:</span>
+            <span class="c1"># Subtracting the min_band to obtain the index of the cube file for the state to be plotted for alpha spin</span>
+            <span class="n">alpha_cube_name</span> <span class="o">=</span> <span class="n">alp_cubefile_names_prev</span><span class="p">[</span><span class="n">state_to_be_plotted</span><span class="o">-</span><span class="n">min_band</span><span class="p">]</span>
+            <span class="c1"># Subtracting the min_band to obtain the index of the cube file for the state to be plotted for beta spin</span>
+            <span class="n">beta_cube_name</span> <span class="o">=</span> <span class="n">bet_cubefile_names_prev</span><span class="p">[</span><span class="n">state_to_be_plotted</span><span class="o">-</span><span class="n">min_band</span><span class="p">]</span>
+            <span class="c1"># open a new tcl file for alpha cubes</span>
+            <span class="n">new_file_alpha</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;vmd_alpha_cube_plot_</span><span class="si">%d</span><span class="s2">.tcl&quot;</span> <span class="o">%</span> <span class="n">curr_step</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+            <span class="c1"># open a new tcl file for beta cubes</span>
+            <span class="n">new_file_beta</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;vmd_beta_cube_plot_</span><span class="si">%d</span><span class="s2">.tcl&quot;</span> <span class="o">%</span> <span class="n">curr_step</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tcl_lines</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="s1">&#39;mol load cube&#39;</span> <span class="ow">in</span> <span class="n">tcl_lines</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                    <span class="c1"># Open the cube file in VMD for alpha cubes</span>
+                    <span class="n">new_file_alpha</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="s1">&#39;mol load cube </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">alpha_cube_name</span> <span class="p">)</span>
+                    <span class="c1"># Open the cube file in VMD for beta cubes</span>
+                    <span class="n">new_file_beta</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="s1">&#39;mol load cube </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">beta_cube_name</span> <span class="p">)</span>
+                <span class="k">elif</span> <span class="s1">&#39;render TachyonInternal&#39;</span> <span class="ow">in</span> <span class="n">tcl_lines</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                    <span class="c1"># Render the images to the MO_images_directory alpha cubes</span>
+                    <span class="n">new_file_alpha</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="s1">&#39;render TachyonInternal </span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">.tga</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span> <span class="n">MO_images_directory</span><span class="p">,</span> <span class="n">alpha_cube_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;cubefiles/&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.cube&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+                    <span class="c1"># Render the images to the MO_images_directory beta cubes</span>
+                    <span class="n">new_file_beta</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="s1">&#39;render TachyonInternal </span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">.tga</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span> <span class="n">MO_images_directory</span><span class="p">,</span> <span class="n">beta_cube_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;cubefiles/&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.cube&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+                <span class="k">elif</span> <span class="s1">&#39;isosurface&#39;</span> <span class="ow">in</span> <span class="n">tcl_lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                    <span class="c1"># Correct the isovalues by multiplying it by the phase factor fo alpha orbitals</span>
+                    <span class="n">tmp_elements_alpha</span> <span class="o">=</span> <span class="n">tcl_lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">tmp_elements_alpha</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="n">phase_factor_alpha</span><span class="p">[</span><span class="n">state_to_be_plotted</span><span class="o">-</span><span class="n">min_band</span><span class="p">]</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span> <span class="n">tmp_elements_alpha</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+                    <span class="n">isosurface_line_alpha</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_elements_alpha</span><span class="p">)</span>
+                    <span class="n">new_file_alpha</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="n">isosurface_line_alpha</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="p">)</span>
+
+                    <span class="c1"># Correct the isovalues by multiplying it by the phase factor for beta orbitals</span>
+                    <span class="n">tmp_elements_beta</span> <span class="o">=</span> <span class="n">tcl_lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">tmp_elements_beta</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="n">phase_factor_beta</span><span class="p">[</span><span class="n">state_to_be_plotted</span><span class="o">-</span><span class="n">min_band</span><span class="p">]</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span> <span class="n">tmp_elements_beta</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+                    <span class="n">isosurface_line_beta</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_elements_beta</span><span class="p">)</span>
+                    <span class="n">new_file_beta</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="n">isosurface_line_beta</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="p">)</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># The rest of the tcl file lines</span>
+                    <span class="n">new_file_alpha</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="n">tcl_lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="p">)</span>
+                    <span class="n">new_file_beta</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="n">tcl_lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="p">)</span>
+
+            <span class="n">new_file_alpha</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">new_file_beta</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="c1"># Run the VMD by tcl file</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;vmd &lt; vmd_alpha_cube_plot_</span><span class="si">%d</span><span class="s1">.tcl&#39;</span> <span class="o">%</span> <span class="n">curr_step</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;vmd &lt; vmd_beta_cube_plot_</span><span class="si">%d</span><span class="s1">.tcl&#39;</span> <span class="o">%</span> <span class="n">curr_step</span><span class="p">)</span>
+            <span class="c1">#os.system(&#39;rm vmd_alpha_cube_plot_%d.tcl&#39; % curr_step)</span>
+            <span class="c1">#os.system(&#39;rm vmd_beta_cube_plot_%d.tcl&#39; % curr_step)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># The same as above but with restricted spin calculations. No beta orbitals is considered.</span>
+        <span class="k">for</span> <span class="n">state_to_be_plotted</span> <span class="ow">in</span> <span class="n">states_to_be_plotted</span><span class="p">:</span>
+            <span class="n">cube_name</span> <span class="o">=</span> <span class="n">cubefile_names_prev</span><span class="p">[</span><span class="n">state_to_be_plotted</span><span class="o">-</span><span class="n">min_band</span><span class="p">]</span>
+
+            <span class="n">new_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;vmd_cube_plot_</span><span class="si">%d</span><span class="s2">.tcl&quot;</span> <span class="o">%</span> <span class="n">curr_step</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tcl_lines</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="s1">&#39;mol load cube&#39;</span> <span class="ow">in</span> <span class="n">tcl_lines</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                    <span class="n">new_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="s1">&#39;mol load cube </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">cube_name</span> <span class="p">)</span>
+                <span class="k">elif</span> <span class="s1">&#39;render TachyonInternal&#39;</span> <span class="ow">in</span> <span class="n">tcl_lines</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                    <span class="n">new_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="s1">&#39;render TachyonInternal </span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">.tga</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span> <span class="n">MO_images_directory</span><span class="p">,</span> <span class="n">cube_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;cubefiles/&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.cube&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="p">)</span>  <span class="p">)</span>
+                <span class="k">elif</span> <span class="s1">&#39;isosurface&#39;</span> <span class="ow">in</span> <span class="n">tcl_lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                    <span class="n">tmp_elements</span> <span class="o">=</span> <span class="n">tcl_lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">tmp_elements</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span> <span class="n">phase_factor_visual</span><span class="p">[</span><span class="n">state_to_be_plotted</span><span class="o">-</span><span class="n">min_band</span><span class="p">]</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span> <span class="n">tmp_elements</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+                    <span class="n">isosurface_line</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_elements</span><span class="p">)</span>
+                    <span class="n">new_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="n">isosurface_line</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">new_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="n">tcl_lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="p">)</span>
+
+            <span class="n">new_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;vmd &lt; vmd_cube_plot_</span><span class="si">%d</span><span class="s1">.tcl&#39;</span> <span class="o">%</span> <span class="n">curr_step</span><span class="p">)</span></div>
+            <span class="c1">#os.system(&#39;rm vmd_cube_plot_%d.tcl&#39; % curr_step)</span>
+
+ 
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

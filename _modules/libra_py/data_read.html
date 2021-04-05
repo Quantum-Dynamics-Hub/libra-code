@@ -1,0 +1,540 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.data_read &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.data_read</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.data_read</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************                     </span>
+<span class="c1">#* Copyright (C) 2019 Alexey V. Akimov                                                   </span>
+<span class="c1">#*                                                                                                     </span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License                          </span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of                                   </span>
+<span class="c1">#* the License, or (at your option) any later version.                                                 </span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution   </span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.          </span>
+<span class="c1">#***********************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: data_read</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: </span>
+<span class="sd">       This module implements various functions for getting data from files</span>
+
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1">#import common_utils as comn</span>
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+
+    
+<div class="viewcode-block" id="get_matrix"><a class="viewcode-back" href="../../reference/libra_py/data_read.html#libra_py.data_read.get_matrix">[docs]</a><span class="k">def</span> <span class="nf">get_matrix</span><span class="p">(</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">filename_re</span><span class="p">,</span> <span class="n">filename_im</span><span class="p">,</span> <span class="n">act_sp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This file reads the real and imaginary components of a matrix of given original size,  </span>
+<span class="sd">    takes its sub-matrix (as defined by the act_sp function) and returns the resulting </span>
+<span class="sd">    complex matrix</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        nrows ( int ): the number of rows in the original matrix (read from the files)</span>
+<span class="sd">        ncols ( int ): the number of columns in the original matrix (read from the files)</span>
+<span class="sd">        filename_re ( string ): the name of the file containing the real part of the matrix </span>
+<span class="sd">        filename_im ( string ): the name of the file containing the imaginary part of the matrix </span>
+<span class="sd">        act_sp ( list of N ints ): the indices of the columns and rows to be taken to construct the </span>
+<span class="sd">            resulting matrices. The indexing starts from 0. These numbers shold not be larger than </span>
+<span class="sd">            `nrows` or `ncols`</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        CMATRIX(N, N): where N is the number of actively included rows/columns</span>
+
+
+<span class="sd">    Example:</span>
+
+<span class="sd">        The following snippet will create a 4 x 4 matrix from the files &quot;Ham_0_re&quot;</span>
+<span class="sd">        and &quot;Ham_0_im&quot; from the &quot;res&quot; directory. Each of the files is expected to be </span>
+<span class="sd">        a matrix of 10 x 10 in size. The rezulting 4 x 4 matrix will contain entries on</span>
+<span class="sd">        the intersection of columns and rows with indices 0, 1, 3, and 4.</span>
+
+<span class="sd">        &gt;&gt;&gt; X = get_matrix(10, 10, &quot;res/Ham_0_re&quot;, &quot;res/Ham_0_im&quot;, [0,1,3,4])</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">X_re</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">);</span> <span class="n">X_re</span><span class="o">.</span><span class="n">Load_Matrix_From_File</span><span class="p">(</span><span class="n">filename_re</span><span class="p">)</span>
+    <span class="n">X_im</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">);</span> <span class="n">X_im</span><span class="o">.</span><span class="n">Load_Matrix_From_File</span><span class="p">(</span><span class="n">filename_im</span><span class="p">)</span>
+
+    <span class="n">nstates</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">act_sp</span><span class="p">)</span>
+    <span class="n">x_re</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">);</span>
+    <span class="n">x_im</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">);</span>
+
+    <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">X_re</span><span class="p">,</span> <span class="n">x_re</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">act_sp</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">act_sp</span><span class="p">))</span>
+    <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">X_im</span><span class="p">,</span> <span class="n">x_im</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">act_sp</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">act_sp</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">x_re</span><span class="p">,</span> <span class="n">x_im</span><span class="p">)</span></div>
+
+
+
+
+<div class="viewcode-block" id="get_data"><a class="viewcode-back" href="../../reference/libra_py/data_read.html#libra_py.data_read.get_data">[docs]</a><span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read a single set of data files </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        params ( dictionary ): parameters controlling the function execution</span>
+
+<span class="sd">            Required parameter keys:</span>
+
+<span class="sd">            * **params[&quot;data_dim&quot;]** ( int ): matrix dimension how many lines/columns in the file [Required!]</span>
+<span class="sd">            * **params[&quot;active_space&quot;]** ( list of ints ): the indices of the states we care </span>
+<span class="sd">                about. These indices will be used to determine the size of the created CMATRIX objects</span>
+<span class="sd">                and only these states will be extracted from the original files [ default: range(data_dim) ]</span>
+<span class="sd">            * **params[&quot;isnap&quot;]** ( int ): index of the first file to read [Required!]</span>
+<span class="sd">            * **params[&quot;fsnap&quot;]** ( int ): index of the final file to read [Required!]</span>
+<span class="sd">            * **params[&quot;data_re_prefix&quot;]** ( string ): prefixes of the files with real part of the data [Required!]</span>
+<span class="sd">            * **params[&quot;data_im_prefix&quot;]** ( string ): prefixes of the files with imaginary part of the data [Required!]</span>
+<span class="sd">            * **params[&quot;data_re_suffix&quot;]** ( string ): suffixes of the files with real part of the Hvib(t) [default: &quot;_re&quot;]</span>
+<span class="sd">            * **params[&quot;data_im_suffix&quot;]** ( string ): suffixes of the files with imaginary part of the Hvib(t) [default: &quot;_im&quot;]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list of CMATRIX objects: data: </span>
+<span class="sd">            a time series of data matrices, such that data[time] is a data at time step `time`</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        This example will read 10 pairs of files: &quot;Hvib_0_re&quot;, &quot;Hvib_0_im&quot;, &quot;Hvib_1_re&quot;, &quot;Hvib_1_im&quot;, ...</span>
+<span class="sd">        &quot;Hvib_9_re&quot;, &quot;Hvib_9_im&quot;. Each file should contain a 4 x 4 matrix of numbers. It will generate a </span>
+<span class="sd">        list of 4 x 4 complex-valued matrices.</span>
+
+<span class="sd">        &gt;&gt;&gt; hvib = get_data({&quot;data_dim&quot;:4, &quot;isnap&quot;:0, &quot;fsnap&quot;:10, &quot;data_re_prefix&quot;:&quot;Hvib&quot;, &quot;data_im_prefix&quot;:&quot;Hvib&quot;})</span>
+
+<span class="sd">        The following example will do the same as the example above, however the intially-read 4 x 4 matrices will</span>
+<span class="sd">        be partially discarded. Out of 16 values only 4 (the upper left block of 4 numbers)  will be stored in </span>
+<span class="sd">        the resulting list of 2 x 2 complex-valued matrices. </span>
+
+<span class="sd">        &gt;&gt;&gt; hvib = get_data({&quot;data_dim&quot;:4, &quot;isnap&quot;:0, &quot;fsnap&quot;:10, &quot;data_re_prefix&quot;:&quot;Hvib&quot;, &quot;data_im_prefix&quot;:&quot;Hvib&quot;, &quot;active_space&quot;:[0,1]})</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;data_dim&quot;</span><span class="p">,</span> <span class="s2">&quot;isnap&quot;</span><span class="p">,</span> <span class="s2">&quot;fsnap&quot;</span><span class="p">,</span> <span class="s2">&quot;data_re_prefix&quot;</span><span class="p">,</span> <span class="s2">&quot;data_im_prefix&quot;</span><span class="p">]</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;data_re_suffix&quot;</span><span class="p">:</span><span class="s2">&quot;_re&quot;</span><span class="p">,</span> <span class="s2">&quot;data_im_suffix&quot;</span><span class="p">:</span><span class="s2">&quot;_im&quot;</span><span class="p">,</span> <span class="s2">&quot;active_space&quot;</span><span class="p">:</span><span class="nb">range</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;data_dim&quot;</span><span class="p">])}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="n">ndim</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;data_dim&quot;</span><span class="p">]</span>  <span class="c1"># the number of cols/row in the input files</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;isnap&quot;</span><span class="p">],</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;fsnap&quot;</span><span class="p">]):</span>
+
+        <span class="n">filename_re</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;data_re_prefix&quot;</span><span class="p">]</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;data_re_suffix&quot;</span><span class="p">]</span>
+        <span class="n">filename_im</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;data_im_prefix&quot;</span><span class="p">]</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;data_im_suffix&quot;</span><span class="p">]</span>
+        <span class="n">data_i</span> <span class="o">=</span> <span class="n">get_matrix</span><span class="p">(</span><span class="n">ndim</span><span class="p">,</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">filename_re</span><span class="p">,</span> <span class="n">filename_im</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;active_space&quot;</span><span class="p">]</span> <span class="p">)</span> 
+        <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data_i</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="get_data_sets"><a class="viewcode-back" href="../../reference/libra_py/data_read.html#libra_py.data_read.get_data_sets">[docs]</a><span class="k">def</span> <span class="nf">get_data_sets</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads several sets of data files </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        params ( dictionary ): parameters controlling the function execution [Required!]</span>
+
+<span class="sd">            Required parameter keys:</span>
+
+<span class="sd">            * **params[&quot;data_set_paths&quot;]** ( list of strings ):</span>
+<span class="sd">                define the paths of the directories where the data files for</span>
+<span class="sd">                different data sets (e.g. independent MD trajectories) are located. </span>
+<span class="sd">            .. note::</span>
+<span class="sd">                In addition, requires parameters described in</span>
+<span class="sd">                :func:`get_data`</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list of lists of CMATRIX: data: </span>
+<span class="sd">            the time series of Hvib matrices for several data sets, such that</span>
+<span class="sd">            data[idata][time] is a CMATRIX for the data set indexed by `idata`</span>
+<span class="sd">            at time `time`</span>
+
+
+<span class="sd">    Example:</span>
+<span class="sd">        The full name of the vibronic Hamiltonian files read by this module should be:</span>
+<span class="sd">    </span>
+<span class="sd">        params[&quot;data_set_paths&quot;][idata]+params[&quot;data_re_prefix&quot;]+integer(time step)+params[&quot;data_re_suffix&quot;] - for real part</span>
+
+<span class="sd">        params[&quot;data_set_paths&quot;][idata]+params[&quot;data_im_prefix&quot;]+integer(time step)+params[&quot;data_im_suffix&quot;] - for imaginary part</span>
+
+<span class="sd">        Say, the directory &quot;/home/alexeyak/test/step3/res0&quot; contains files:</span>
+<span class="sd">        Hvib_0_re, Hvib_1_re, .... ,    Hvib_999_re</span>
+<span class="sd">        Hvib_0_im, Hvib_1_im, .... ,    Hvib_999_im</span>
+
+<span class="sd">        Then set:</span>
+
+<span class="sd">        &gt;&gt;&gt; params[&quot;data_set_paths&quot;] = [&quot;/home/alexeyak/test/step3/res0/&quot;]</span>
+<span class="sd">        &gt;&gt;&gt; params[&quot;data_re_prefix&quot;] = &quot;Hvib_&quot;</span>
+<span class="sd">        &gt;&gt;&gt; params[&quot;data_re_suffix&quot;] = &quot;_re&quot;</span>
+<span class="sd">        &gt;&gt;&gt; params[&quot;data_im_prefix&quot;] = &quot;Hvib_&quot;</span>
+<span class="sd">        &gt;&gt;&gt; params[&quot;data_im_suffix&quot;] = &quot;_im&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;data_set_paths&quot;</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">idata</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;data_set_paths&quot;</span><span class="p">]:</span>   <span class="c1"># over all MD trajectories (data sets)</span>
+        <span class="n">prms</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>    
+        <span class="n">prms</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;data_re_prefix&quot;</span><span class="p">:</span> <span class="n">idata</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;data_re_prefix&quot;</span><span class="p">]</span> <span class="p">})</span>
+        <span class="n">prms</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;data_im_prefix&quot;</span><span class="p">:</span> <span class="n">idata</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;data_im_prefix&quot;</span><span class="p">]</span> <span class="p">})</span>                
+
+        <span class="n">data_i</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span><span class="n">prms</span><span class="p">)</span>  
+        <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data_i</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+
+
+
+
+<div class="viewcode-block" id="get_data_from_file"><a class="viewcode-back" href="../../reference/libra_py/data_read.html#libra_py.data_read.get_data_from_file">[docs]</a><span class="k">def</span> <span class="nf">get_data_from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">xindx</span><span class="p">,</span> <span class="n">yindx</span><span class="p">,</span> <span class="n">xminval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">xmaxval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yminval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ymaxval</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read in the numeric data stored in a file as columns into Python lists</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename ( string ): The name of the data file</span>
+<span class="sd">        xindx ( int ): the index of the column read as X</span>
+<span class="sd">        yindx ( int ): the index of the column read as Y</span>
+<span class="sd">        xminval ( double ): the minimal X value allowed in the read data set, </span>
+<span class="sd">            the points with X values below it will not be included [ default: None ]</span>
+<span class="sd">        xmaxval ( double ): the maximal X value allowed in the read data set, </span>
+<span class="sd">            the points with X values above it will not be included [ default: None ]</span>
+<span class="sd">        yminval ( double ): the minimal Y value allowed in the read data set, </span>
+<span class="sd">            the points with Y values below it will not be included [ default: None ]</span>
+<span class="sd">        ymaxval ( double ): the maximal Y value allowed in the read data set, </span>
+<span class="sd">            the points with Y values above it will not be included [ default: None ]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (list, list): (X, Y), where: </span>
+
+<span class="sd">            * X ( list of doubles ): x values read from the file, cropped according the conditions</span>
+<span class="sd">            * Y ( list of doubles ): y values read from the file, cropped according the conditions</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">A</span><span class="p">:</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="n">xindx</span><span class="p">])</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="n">yindx</span><span class="p">])</span>
+
+        <span class="n">is_add</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">xminval</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span>  <span class="n">x</span> <span class="o">&lt;</span> <span class="n">xminval</span><span class="p">:</span>
+                <span class="n">is_add</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">xmaxval</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">xmaxval</span><span class="p">:</span>
+                <span class="n">is_add</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">yminval</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span>  <span class="n">y</span> <span class="o">&lt;</span> <span class="n">yminval</span><span class="p">:</span>
+                <span class="n">is_add</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">ymaxval</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="n">ymaxval</span><span class="p">:</span>
+                <span class="n">is_add</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">is_add</span><span class="p">:</span>
+            <span class="n">X</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  
+            <span class="n">Y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span></div>
+
+
+
+
+<div class="viewcode-block" id="get_data_from_file2"><a class="viewcode-back" href="../../reference/libra_py/data_read.html#libra_py.data_read.get_data_from_file2">[docs]</a><span class="k">def</span> <span class="nf">get_data_from_file2</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read in the numeric data stored in a file as columns into Python lists</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename ( string ): The name of the data file</span>
+<span class="sd">        cols ( list of ints ): the indices of the columns to read</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (list of lists): data</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">A</span><span class="p">:</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span> <span class="n">cols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">])</span>
+            <span class="n">res</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+   
+<div class="viewcode-block" id="read_2D_grid"><a class="viewcode-back" href="../../reference/libra_py/data_read.html#libra_py.data_read.read_2D_grid">[docs]</a><span class="k">def</span> <span class="nf">read_2D_grid</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function reads the 2D map pyplot formatted data from a file.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        filename (sting) : name of the file to read</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        double list, double list, list of lists of doubles:</span>
+<span class="sd">            X grid, Y grid, and the Z values of the grid points</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+    
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1">#========== Determine the numbers =====</span>
+    <span class="n">nlines</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>        
+    <span class="n">ny</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">line_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">ny</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>    
+    <span class="k">while</span> <span class="n">line_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>        
+        <span class="n">ny</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">line_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">ny</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+                        
+    <span class="n">nx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">nlines</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">ny</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        
+    <span class="c1">#========== Get the grids =====</span>
+    <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nx</span><span class="p">):</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="nb">float</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">ix</span><span class="o">*</span><span class="p">(</span><span class="n">ny</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span> <span class="p">)</span>
+        
+    <span class="k">for</span> <span class="n">iy</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ny</span><span class="p">):</span>
+        <span class="n">y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="nb">float</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">iy</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span> <span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nx</span><span class="p">):</span>
+        <span class="n">z_x</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">iy</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ny</span><span class="p">):</span>
+            <span class="n">z_xy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">ix</span><span class="o">*</span><span class="p">(</span><span class="n">ny</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">iy</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">z_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">z_xy</span><span class="p">)</span>
+        <span class="n">z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">z_x</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span></div>
+          
+   
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

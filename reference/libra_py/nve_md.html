@@ -1,0 +1,448 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>nve_md &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="parse_gamess" href="parse_gamess.html" />
+    <link rel="prev" title="normal_modes" href="normal_modes.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>nve_md</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/nve_md.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.nve_md">
+<span id="nve-md"></span><h1>nve_md<a class="headerlink" href="#module-libra_py.nve_md" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-nve_md"></span><dl class="py function">
+<dt id="libra_py.nve_md.nve_md_init">
+<code class="sig-prename descclassname"><span class="pre">libra_py.nve_md.</span></code><code class="sig-name descname"><span class="pre">nve_md_init</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">syst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ham</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/nve_md.html#nve_md_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.nve_md.nve_md_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function initializes all the necessary variables for classical MD</p>
+<p>Args:
+syst ( System object ): The object containing all the information about the chemical system.</p>
+<blockquote>
+<div><p>This object is updated</p>
+</div></blockquote>
+<p>mol ( Nuclear object ): The nuclear DOF. This object is updated
+el ( Electronic object ): The Electronic object describing which PES to use (in classical MD</p>
+<blockquote>
+<div><p>it is typically the ground state)</p>
+</div></blockquote>
+<p>ham ( Hamiltonian object ): The Hamiltonian object representing all the interactions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>E_kin, E_pot, E_tot:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>E_kin: kinetic energy [ units: Ha ]</p></li>
+<li><p>E_pot: potential energy [ units: Ha ]</p></li>
+<li><p>E_tot: total energy [ units: Ha ]</p></li>
+</ul>
+</div></blockquote>
+<p>This function also updates the variables of the input variable <code class="docutils literal notranslate"><span class="pre">`syst`</span></code></p>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>(double, double, double)</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Operations:
+1. syst -&gt; mol
+2. compute kinetic energy
+3. compute forces and potential energy
+4. compute total energy
+5. initialize fragment variables, if any</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.nve_md.nve_md_step">
+<code class="sig-prename descclassname"><span class="pre">libra_py.nve_md.</span></code><code class="sig-name descname"><span class="pre">nve_md_step</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">syst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ham</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/nve_md.html#nve_md_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.nve_md.nve_md_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function performs a classical NVE MD step</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>syst</strong> (<em>System object</em>) – The object containing all the information about the chemical system.
+This object is updated</p></li>
+<li><p><strong>mol</strong> (<em>Nuclear object</em>) – The nuclear DOF. This object is updated</p></li>
+<li><p><strong>el</strong> (<em>Electronic object</em>) – The Electronic object describing which PES to use (in classical MD
+it is typically the ground state)</p></li>
+<li><p><strong>ham</strong> (<em>Hamiltonian object</em>) – The Hamiltonian object representing all the interactions</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>The parameters controlling the execution of the dynamics</p>
+<ul>
+<li><p><strong>params[“dt”]</strong> ( double ): integration timestep [ units: a.u., default: 20.0 ]</p></li>
+<li><p><strong>params[“integrator”]</strong> ( string ): The rigid-body MD integrator [ default: “DLML” ]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“fixed_fragment_translation”]</strong> ( list of ints ): the indices (starting from 0)</dt><dd><p>of the fragments whose translational DOFs are frozen [ default: empty ]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“fixed_fragment_rotation”]</strong> ( list of ints ): the indices (starting from 0)</dt><dd><p>of the fragments whose rotational DOFs are frozen [ default: empty ]</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>E_kin, E_pot, E_tot:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>E_kin: kinetic energy [ units: Ha ]</p></li>
+<li><p>E_pot: potential energy [ units: Ha ]</p></li>
+<li><p>E_tot: total energy [ units: Ha ]</p></li>
+</ul>
+</div></blockquote>
+<p>This function also updates the variables of the input variable <code class="docutils literal notranslate"><span class="pre">`syst`</span></code></p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(double, double, double)</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Operations:
+1. propagate rotational and translational momenta for 0.5 of dt
+2. propagate rotational and translational coordinates of all fragments for dt
+3. update atomic positions
+4. compute potential energy and forces on atoms
+5. update fragmental forces and torques
+6. propagate rotational and translational momenta for another 0.5 of dt</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.nve_md.optimize_syst">
+<code class="sig-prename descclassname"><span class="pre">libra_py.nve_md.</span></code><code class="sig-name descname"><span class="pre">optimize_syst</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">syst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/nve_md.html#optimize_syst"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.nve_md.optimize_syst" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to optimize the geometry of the system</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>syst</strong> (<em>System object</em>) – represents the chemical object</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>control parameters:</p>
+<ul>
+<li><dl>
+<dt><strong>params[“anneal_schedule”]</strong> ( list ): the annealing schedule. Each element of the list</dt><dd><p>consist of 3 elements: dt, ncycles, nsteps, where:
+dt - the timestep for integration [ units: a.u. ]
+ncycles - the number of cycles of annealing with dt
+Each annealing cycle consists of <code class="docutils literal notranslate"><span class="pre">`nsteps`</span></code>  steps of NVE MD steps followed by the cooling
+Cooling just resets all the momenta and angular momenta to zero
+Example:</p>
+<blockquote>
+<div><p>params[“anneal_schedule”] = [ [1.0, 100, 10], [20.0, 100, 100] ] means:
+First do 100 cycles of annealing: 10 MD steps with dt = 1 a.u. each followed by cooling
+Second do 100 cycles of annealing: 100 MD steps with dt = 20 a.u. each followed by cooling</p>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“elements_file”]</strong> ( string ): The file that contains properties of the elements</dt><dd><p>it is needed for construction of the Universe [ default: “elements.dat” ]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“cooling_out1”]</strong> ( Boolean ): Whether to print out the energies along the simulated</dt><dd><p>cooling protocol. If selected, the info is printed out to the file “_en_cooling.txt” [ default: False ]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“cooling_out2”]</strong> ( Boolean ): Whether to print out the coordinates in the xyz format.</dt><dd><p>If selected, the info is printed out to the “_mol_cooling.xyz” file [ default: False]</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>[ default: False ]</p>
+<p>SeeAlso: is <code class="docutils literal notranslate"><span class="pre">`nve_md_step`</span></code>
+* <strong>params[“dt”]</strong> ( double ): integration timestep [ units: a.u., default: 20.0 ]
+* <strong>params[“integrator”]</strong> ( string ): The rigid-body MD integrator [ default: “DLML” ]
+* <strong>params[“fixed_fragment_translation”]</strong> ( list of ints ): the indices (starting from 0)</p>
+<blockquote>
+<div><p>of the fragments whose translational DOFs are frozen [ default: empty ]</p>
+</div></blockquote>
+<ul>
+<li><dl class="simple">
+<dt><strong>params[“fixed_fragment_rotation”]</strong> ( list of ints ): the indices (starting from 0)</dt><dd><p>of the fragments whose rotational DOFs are frozen [ default: empty ]</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.nve_md.syst2xyz">
+<code class="sig-prename descclassname"><span class="pre">libra_py.nve_md.</span></code><code class="sig-name descname"><span class="pre">syst2xyz</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">syst</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/nve_md.html#syst2xyz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.nve_md.syst2xyz" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function generates the xyz string representing the system</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>syst</strong> (<em>System object</em>) – the chemical system</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>res:  the coordinates of the system in an xyz format</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="parse_gamess.html" class="btn btn-neutral float-right" title="parse_gamess" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="normal_modes.html" class="btn btn-neutral float-left" title="normal_modes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

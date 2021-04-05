@@ -1,0 +1,1016 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>step3 &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="step4" href="step4.html" />
+    <link rel="prev" title="step2_many_body" href="step2_many_body.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../models.html">models</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../workflows.html">workflows</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../nbra.html">nbra</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="compute_hprime.html">compute_hprime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="compute_properties.html">compute_properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="decoherence_times.html">decoherence_times</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lz.html">lz</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapping.html">mapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="qsh.html">qsh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2.html">step2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_analysis.html">step2_analysis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_dftb.html">step2_dftb</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_ergoscf.html">step2_ergoscf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_many_body.html">step2_many_body</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">step3</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step4.html">step4</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../nbra.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../libra_py.html">libra_py</a> &raquo;</li>
+        
+          <li><a href="../../workflows.html">workflows</a> &raquo;</li>
+        
+          <li><a href="../nbra.html">nbra</a> &raquo;</li>
+        
+      <li>step3</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../../_sources/reference/libra_py/workflows/nbra/step3.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.workflows.nbra.step3">
+<span id="step3"></span><h1>step3<a class="headerlink" href="#module-libra_py.workflows.nbra.step3" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.apply_normalization">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">apply_normalization</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">S</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">St</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#apply_normalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.apply_normalization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms the input transition density matrix computed with potentially
+non-orthogonalized orbitals such that it would correspond to the properly
+orthonormalized ones</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>S</strong> (<em>CMATRIX</em><em>(</em><em>2N</em><em>, </em><em>2N</em><em>)</em>) – <p>is a matrix of MO overlaps S_ij = &lt;i|j&gt;. It has a block structure as:</p>
+<div class="math notranslate nohighlight">
+\[S =
+\begin{vmatrix}
+S_{aa}  &amp; S_{ab} \                S_{ba}  &amp; S_{bb}
+\end{vmatrix}\]</div>
+<p>Here, S_xy are the overlaps of the MOs for spin channels x and y (alpha, beta) - only
+spatial components of the orbitals are taken into account here.
+Here, N - is the total number of orbitals (double occupancies)</p>
+</p></li>
+<li><p><strong>St</strong> (<em>CMATRIX</em><em>(</em><em>2N</em><em>, </em><em>2N</em><em>)</em>) – <p>the transition density matrix St_ij = &lt;i|d/dt|j&gt;. It has a block structure as:</p>
+<div class="math notranslate nohighlight">
+\[St =
+\begin{vmatrix}
+St_{aa}  &amp; St_{ab} \                St_{ba}  &amp; St_{bb}
+\end{vmatrix}\]</div>
+<p>Here, St_xy are the transition density matrix for spin channels x and y (alpha, beta) - only
+spatial components of the orbitals are taken into account here.
+Here, N - is the total number of orbitals (double occupancies)</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but the input matrix <code class="docutils literal notranslate"><span class="pre">`St`</span></code> is changed</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.apply_orthonormalization_general">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">apply_orthonormalization_general</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">S</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">St</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#apply_orthonormalization_general"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.apply_orthonormalization_general" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms the input transition density matrix computed with potentially
+non-orthogonalized orbitals such that it would correspond to the properly
+orthonormalized ones</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>S</strong> (<em>CMATRIX</em><em>(</em><em>N</em><em>, </em><em>N</em><em>)</em>) – is a matrix of MO overlaps S_ij = &lt;i|j&gt;</p></li>
+<li><p><strong>St</strong> (<em>CMATRIX</em><em>(</em><em>N</em><em>, </em><em>N</em><em>)</em>) – the transition density matrix St_ij = &lt;i|d/dt|j&gt;</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but the input matricies <code class="docutils literal notranslate"><span class="pre">`S`</span></code> and <code class="docutils literal notranslate"><span class="pre">`St`</span></code> are changed</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.apply_phase_correction">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">apply_phase_correction</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">St</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#apply_phase_correction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.apply_phase_correction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the phase correction according to:
+Akimov, A. V. J. Phys. Chem. Lett, 2018, 9, 6096</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>St</strong> (<em>list of CMATRIX</em><em>(</em><em>N</em><em>,</em><em>N</em><em>)</em>) – <p>St_ij[n] = &lt;i(n)|j(n+1)&gt; transition density matrix for
+the timestep n, where N is the number of spin-orbitals in the active space.
+Spin-orbitals, not just orbitals! So it is composed as:</p>
+<div class="math notranslate nohighlight">
+\[St =
+\begin{vmatrix}
+St_{aa}  &amp; St_{ab} \                St_{ba}  &amp; St_{bb}
+\end{vmatrix}\]</div>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but changes the input St matrices</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.apply_phase_correction_general">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">apply_phase_correction_general</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">St</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#apply_phase_correction_general"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.apply_phase_correction_general" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the phase correction according to:
+Akimov, A. V. J. Phys. Chem. Lett, 2018, 9, 6096</p>
+<p>This function is for dat NOT in spin-block format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>St</strong> (<em>list of CMATRIX</em><em>(</em><em>N</em><em>,</em><em>N</em><em>)</em>) – St_ij[n] = &lt;i(n)|j(n+1)&gt; transition density matrix for
+the timestep n, where N is the number of states in the active space.
+Spin-orbitals, not just orbitals! So it is composed as:</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but changes the input St matrices</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.apply_state_reordering">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">apply_state_reordering</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">St</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#apply_state_reordering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.apply_state_reordering" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the state’s identity reordering in a given basis for all time steps.
+This is reflects in the corresponding changess of the TDM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>St</strong> (<em>list of CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>nstates</em><em>)</em>) – TDM for each timestep</p></li>
+<li><p><strong>E</strong> (<em>list of CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>nstates</em><em>)</em>) – energies of all states at every step</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>parameters controlling the reordering
+* <strong>params[“do_state_reordering”]</strong> ( int ): option to select the state reordering algorithm</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Available options:</dt><dd><ul>
+<li><p>1: older version developed by Kosuke Sato, may not the working all the times</p></li>
+<li><p>2: Munkres-Kuhn (Hungarian) method [default]</p></li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+<ul>
+<li><dl class="simple">
+<dt><strong>params[“state_reordering_alpha”]</strong> ( double ): a parameter that controls how</dt><dd><p>many states will be included in the reordering</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but changes the input St object</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.apply_state_reordering_general">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">apply_state_reordering_general</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">St</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#apply_state_reordering_general"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.apply_state_reordering_general" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the state’s identity reordering in a given basis for all time steps.
+This is reflects in the corresponding changess of the TDM.</p>
+<p>This function is for dat NOT in spin-block format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>St</strong> (<em>list of CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>nstates</em><em>)</em>) – TDM for each timestep</p></li>
+<li><p><strong>E</strong> (<em>list of CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>nstates</em><em>)</em>) – energies of all states at every step</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>parameters controlling the reordering
+* <strong>params[“do_state_reordering”]</strong> ( int ): option to select the state reordering algorithm</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Available options:</dt><dd><ul>
+<li><p>1: older version developed by Kosuke Sato, may not the working all the times</p></li>
+<li><p>2: Munkres-Kuhn (Hungarian) method [default]</p></li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+<ul>
+<li><dl class="simple">
+<dt><strong>params[“state_reordering_alpha”]</strong> ( double ): a parameter that controls how</dt><dd><p>many states will be included in the reordering</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but changes the input St object</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.build_SD_basis">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">build_SD_basis</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cbm_alpha_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_include</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cbm_beta_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta_include</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excitation_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#build_SD_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.build_SD_basis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a Slater Determinant basis based on the indexing notation scheme used in Libra</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_dim</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – how many rows or columns in the vibronic Hamiltonian matrix. This will be an even number becuase the
+number of alpha orbtials should equal the number of beta orbitals</p></li>
+<li><p><strong>cbm</strong> (<em>alpha/beta</em><em>)</em><em>_index</em><em> (</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – index of VBM (or HOMO) in the matrix of the vibronic Hamiltonian
+(row or column index). Note, this index is from 1</p></li>
+<li><p><strong>(</strong><strong>alpha/beta</strong><strong>)</strong><strong>_include</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – how many orbitals to include from the cbm_(alpha/beta)_index</p></li>
+<li><p><strong>excitation_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – 0: Make SDs with beta electrons excited
+1: Make SDs with alpha electrons excited
+2: Make two sets of SDs, one for beta and one for alpha electrons excited</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.compute_Hvib">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">compute_Hvib</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">St_ks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E_ks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#compute_Hvib"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.compute_Hvib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the vibronic Hamiltonian matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>basis</strong> (<em>list of lists of integers</em>) – <p>defines the basis of Slater Determinants,
+such that: basis[iSD][iks] is the indicator of the spin-orbital occupied by
+the electron iks in the Slater Determinant iSD</p>
+<p class="rubric">Example</p>
+<p>The following example defines a ground state SD (the lowest KS of the active space) and two
+single excitations, which are different from each other by two spin flips of the electrons
+The convention is to start indexing from 1 (corresponds to index 0 in the KS matrices)
+Positive - for alpha electrons, negative - for beta electrons
+Need to be consistent: [ -1, 2 ] and [ 2, -1 ] are treated differently, this is needed for spin-adaptation</p>
+<p>&gt;&gt; basis = [ [ 1,-1 ], [ 1,-2 ], [ 2,-1 ] ]</p>
+<p>The next example is for a system of 4 electrons and hole excitations
+&gt;&gt; basis = [ [ 1,-1, 2, -2 ], [ 3, -1, 2, -2 ], [ 1, -3, 2, -2 ] ]</p>
+</p></li>
+<li><p><strong>St_ks</strong> (<em>CMATRIX</em><em>(</em><em>2*norbs</em><em>, </em><em>2*norbs</em><em>)</em>) – transition density matrix in the KS spin-orbitals basis, where
+norb - the number of double-occupied orbitals.</p></li>
+<li><p><strong>E_ks</strong> (<em>CMATRIX</em><em>(</em><em>2*norbs</em><em>, </em><em>2*norbs</em><em>)</em>) – the orbital energies in the KS spin-orbitals basis, where
+norb - the number of double-occupied orbitals.</p></li>
+<li><p><strong>dE</strong> (<em>list of doubles</em>) – <p>define corrections of the SD state energies in comparison to
+the energy give by the sum energies of the occupied spin-orbitals.
+The convention is: dE[iSD] is the correction to energy of the SD with index iSD.
+This is a constant correction - same for all energies in the set [units: Ha]</p>
+<p class="rubric">Example</p>
+<p>For instance, for the SD examples above, the corrections could be:
+&gt;&gt; dE = [0.0, 0.01, 0.05]</p>
+</p></li>
+<li><p><strong>dt</strong> (<em>double</em>) – the timestep for MD integrations [units: a.u.]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>CMATRIX(nstates, nstates) The Vibronic Hamiltonian</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.compute_ci_energies_midpoint">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">compute_ci_energies_midpoint</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci_energies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_excited_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">istep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fstep</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#compute_ci_energies_midpoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.compute_ci_energies_midpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function compute the excitation energies energies at the midpoint from a list of excitation energies at each step.
+At each step, there are many electronic states. This function takes a list as an input, and is meant to be used
+in the NBRA workflow calculatiosn where lists may be more convenient than matricies.</p>
+<p>This funciton is made to be used within the NBRA Libra workflow, where things such as ci_energies have been extracted from TD-DFT calculations.
+As of 11/30/2020, compatable ES programs include CP2K, DFTB+ and Gaussian.</p>
+<p>Energies are assumed to be energies from TDDFT calculatons. This function gives zero as the ground state total energy</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ci_energies</strong> (<em>list of lists</em>) – energies of the MB states</p></li>
+<li><p><strong>num_excited_states</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – number of excited states</p></li>
+<li><p><strong>istep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – step at which to start counting</p></li>
+<li><p><strong>fstep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – stap at which to stop counting</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>energies in Ha. Ground state energy is set to zero</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ci_midpoint_energies (list of CMATRIX)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.do_phase_corr">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">do_phase_corr</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cum_phase1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">St</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cum_phase2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_i</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#do_phase_corr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.do_phase_corr" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function changes the St matrix according to
+the previous cumulative phases and the current
+phase correction as:</p>
+<p>St = &lt;bra|ket&gt;</p>
+<p>St -&gt; St = F_n * St * (F_{n+1})^+ = F_n * St * (F_{n})^+ * (f_{n+1})^+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cum_phase1</strong> (<em>CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>1</em><em>)</em>) – cumulative phase corrections up to step n (F_n) for bra-vectors</p></li>
+<li><p><strong>St</strong> (<em>CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>nstates</em><em>)</em>) – input/output TDM to be processed:
+could be alpha-alpha, beta-beta, alpha-beta, or beta-alpha sub-blocks</p></li>
+<li><p><strong>cum_phase2</strong> (<em>CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>1</em><em>)</em>) – cumulative phase corrections up to step n (F_n) for ket-vectors</p></li>
+<li><p><strong>phase_i</strong> (<em>CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>1</em><em>)</em>) – the current step phase corrections (f_{n+1}) for a given pair of vectors</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but changes the input matrix St</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.get_Lowdin">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">get_Lowdin</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">S</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#get_Lowdin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.get_Lowdin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the S_i_half for the S matrix - alpha and beta components</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>S</strong> (<em>CMATRIX</em><em>(</em><em>2N</em><em>, </em><em>2N</em><em>)</em>) – <p>is a matrix of MO overlaps. It has a block structure as:</p>
+<div class="math notranslate nohighlight">
+\[S =
+\begin{vmatrix}
+S_{aa}  &amp; S_{ab} \                S_{ba}  &amp; S_{bb}
+\end{vmatrix}\]</div>
+<p>Here, S_xy are the overlaps of the MOs for spin channels x and y (alpha, beta) - only
+spatial components of the orbitals are taken into account here.
+Here, N - is the total number of orbitals (double occupancies)</p>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(S_aa_i_half, S_bb_i_half), where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>S_aa_i_half ( CMATRIX(N,N) ): S_aa^{-1/2} - inverse square root matrix for the alpha-alpha block</p></li>
+<li><p>S_bb_i_half ( CMATRIX(N,N) ): S_bb^{-1/2} - inverse square root matrix for the beta-beta block</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.get_Lowdin_general">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">get_Lowdin_general</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">S</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#get_Lowdin_general"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.get_Lowdin_general" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the S_i_half for the S matrix
+:param S: is a matrix of MO overlaps.
+:type S: CMATRIX(N, N)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>S_i_half, where:</dt><dd><ul class="simple">
+<li><p>S_i_half ( CMATRIX(N,N) ): S^{-1/2} - inverse square root matrix</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.get_step2_data">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">get_step2_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#get_step2_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.get_step2_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>A light function to obtain the step2 data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dictionary</em>) – <p>Control paramerter of this type of simulation. Can include the follwing keys:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>params[“basis”]</strong> ( string ): describes if one is using either the spin-diabatic (non spin-orbit coupling)</dt><dd><p>or is using the spin-adiabatic (spin orbit-coupling)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.make_T_matricies">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">make_T_matricies</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci_coefficients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ci_basis_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spin_components</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sd_states_unique_sorted</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">istep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fstep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outdir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#make_T_matricies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.make_T_matricies" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function makes the “T”ransformation matricies that convert between the SD basis to the CI-like (or many-body (MB)) basis.</p>
+<p>This funciton is made to be used within the NBRA Libra workflow, where things such as ci_coefficients, ci_basis_states, spin_components,
+and sd_states_unique_sorted have been extracted from TD-DFT calculations. As of 11/30/2020, compatable ES programs
+include CP2K, DFTB+ and Gaussian.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ci_coefficients</strong> (<em>list of lists of lists</em>) – coefficients for the many-body states for each step</p></li>
+<li><p><strong>ci_basis_states</strong> (<em>list of lists</em>) – All SD basis states that comprise the many-body excitations for each step</p></li>
+<li><p><strong>spin_components</strong> (<em>list of lists</em>) – the spin components of the excitation (alpha or beta excitaiton?) for all states and all steps</p></li>
+<li><p><strong>sd_basis_states_unique</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – 1 of each of the SP transitions (and its spin) that made up the considered CI states</p></li>
+<li><p><strong>nstates</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – number of excited MB states</p></li>
+<li><p><strong>istep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – step at which to start counting</p></li>
+<li><p><strong>fstep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – stap at which to stop counting</p></li>
+<li><p><strong>outdir</strong> (<em>string</em>) – output directory for the T matricies</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – want to see some messages?</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>CMATRIX at each timestep where the rows are SDs and the cols are MB states. The columns contain the coefficients of the MB expansion for each MB state</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>SD2CI (list of CMATRIX)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.make_cost_mat">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">make_cost_mat</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orb_mat_inp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">en_mat_inp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#make_cost_mat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.make_cost_mat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes the cost matrix from a given TDM and information on states’ energies</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>orb_mat_inp</strong> (<em>CMATRIX</em><em>(</em><em>nstates</em><em>,</em><em>nstates</em><em>) or </em><em>MATRIX</em><em>(</em><em>nstates</em><em>,</em><em>nstate</em><em>)</em>) – the transition density matrix
+TDM in a given basis. Here, <code class="docutils literal notranslate"><span class="pre">`nstates`</span></code> - the number of states (e.g. the number of doubly-occupied
+orbitals )</p></li>
+<li><p><strong>en_mat_inp</strong> (<em>MATRIX</em><em>(</em><em>nstates</em><em>, </em><em>nstates</em><em>)</em>) – Matrix of energies in a given basis [units: a.u.]</p></li>
+<li><p><strong>alpha</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – Parameter controlling the range of the orbitals that can participate in
+the reordering. Setting is to 0 makes all orbitals be considered for reordering
+Setting it to a large number makes the effective number of orbitals participating
+in the reordering smaller - this can be used to turn off the reordering. [units: a.u.^-1]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the matrix of the cost values for different pairs of states</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>MATRIX(nstates, nstates)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.output_sorted_Hvibs">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">output_sorted_Hvibs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Hvib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbital_index_energy_pairs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#output_sorted_Hvibs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.output_sorted_Hvibs" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function outputs the vibronic Hamiltonians in the SD basis according to their sorted order</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Hvib</strong> (<em>list of lists of CMATRIX objects</em>) – vibronic Hamiltonian in the Slater determinant basis</p></li>
+<li><p><strong>orbital_index_energy_pairs</strong> (<em>list of lists of lists of lists</em>) – orbital index and energy pair lists for each step and nuclear trajectory
+Ex. orbital_index_energy_pairs[i][j][k][0] = kth slater determinant index at the jth step on the ith nuclear trajectory
+Ex. orbital_index_energy_pairs[i][j][k][1] = kth slater determinant energy at the jth step on the ith nuclear trajectory</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.print_SD_basis">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">print_SD_basis</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SD_basis</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#print_SD_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.print_SD_basis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Just a light function to print the SD basis</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>SD_basis</strong> (<em>list of lists of ints</em>) – <p>Slater determinant basis in terms of Kohn-Sham orbital indicies</p>
+<p>Possible ground state configurations</p>
+<p>Ex. 1. SD_basis[0] = [ 5, -15 ]
+Ex. 2. SD_basis[0] = [ 2, 3, 4, 5, -12, -13, -14, -15 ]</p>
+<p>Possible ground state configurations</p>
+<p>Ex. 1. SD_basis[N &gt; 0] = [ 6, -15 ]
+Ex. 2. SD_basis[N &gt; 0] = [ 2, 3, 4, 6, -12, -13, -14, -15 ]</p>
+<p>Where we have 10 alpha and beta spin orbitals, and the cbm index for the alpha spin-channel is 5
+and the cbm index for the beta spin-channel is 15.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.pyxaid2libra">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">pyxaid2libra</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Hvib_pyxaid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#pyxaid2libra"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.pyxaid2libra" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.run">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">run</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">S_dia_ks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">St_dia_ks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E_dia_ks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>The procedure to converts the results of QE calculations (KS orbital energies and
+time-overlaps = transition density matrices in the KS basis) to the generic Hvib matrices,
+which (optionally) account for:</p>
+<ul class="simple">
+<li><p>enforces orthogonalization of the input KS states</p></li>
+<li><p>state reordering</p></li>
+<li><p>phase corrections</p></li>
+<li><p>multi-electron wavefunction (Slater determinants) and spin-adaptation</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>S_dia_ks</strong> (<em>list of lists of CMATRIX objects</em>) – overlaps of the KS orbitals along trajectories
+for each data set. Such that S_dia_ks[idata][istep].get(i,j) is &lt;i(istep)|j(istep)&gt; for the
+trajectory (=dataset) <code class="docutils literal notranslate"><span class="pre">`idata`</span></code>.</p></li>
+<li><p><strong>St_dia_ks</strong> (<em>list of lists of CMATRIX objects</em>) – time-overlaps (=transition density matrices)
+in the basis of the KS orbitals along trajectories for each data set.
+Such that St_dia_ks[idata][istep].get(i,j) is &lt;i(istep)|j(istep+1)&gt; for the trajectory (=dataset) <code class="docutils literal notranslate"><span class="pre">`idata`</span></code>.</p></li>
+<li><p><strong>E_dia_ks</strong> (<em>list of lists of CMATRIX objects</em>) – energies the KS orbitals at the mid-points along trajectories
+for each data set. Such that E_dia_ks[idata][istep].get(i,i) is 0.5*(E_i(istep) + E_i(istep+1)) for the
+trajectory (=dataset) <code class="docutils literal notranslate"><span class="pre">`idata`</span></code></p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>Control paramerter of this type of simulation. Can include the follwing keys:</p>
+<ul>
+<li><dl>
+<dt><strong>params[“SD_basis”]</strong> ( list of lists of ints ): define the Slater Determinants basis</dt><dd><p>The convention is:  params[“SD_basis”][iSD][iks] is the indicator of the spin-orbital occupied by
+the electron iks in the Slater Determinant iSD [required!]</p>
+<p>Example:</p>
+<blockquote>
+<div><p>The following example defines a ground state SD (the lowest KS of the active space) and two
+single excitations, which are different from each other by two spin flips of the electrons
+The convention is to start indexing from 1 (corresponds to index 0 in the KS matrices)
+Positive - for alpha electrons, negative - for beta electrons
+Need to be consistent: [ -1, 2 ] and [ 2, -1 ] are treated differently, this is needed for spin-adaptation</p>
+<p>&gt;&gt; params[“SD_basis”] = [ [ 1,-1 ], [ 1,-2 ], [ 2,-1 ] ]</p>
+<p>The next example is for a system of 4 electrons and hole excitations
+&gt;&gt; params[“SD_basis”] = [ [ 1,-1, 2, -2 ], [ 3, -1, 2, -2 ], [ 1, -3, 2, -2 ] ]</p>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>params[“SD_energy_corr”]</strong> ( list of doubles ): define corrections of the SD state energies in comparison to</dt><dd><p>the energy give by the sum energies of the occupied spin-orbitals.
+The convention is: params[“SD_energy_corr”][iSD] is the correction to energy of the SD with index iSD.
+This is a constant correction - same for all energies in the set [units: Ha] [required!]</p>
+<dl class="simple">
+<dt>Example:</dt><dd><p>For instance, for the SD examples above, the corrections could be:
+&gt;&gt; params[“SD”] = [0.0, 0.01, 0.05]</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>params[“CI_basis”]</strong> ( list of lists of complex number ): configuration interaction coefficients</dt><dd><p>that define a superpositions to SDs that are considered the states of interest, e.g. spin-adapted configurations
+The convention is: params[“CI_basis”][iCI][iSD] is a coefficient of <code class="docutils literal notranslate"><span class="pre">`iSD`</span></code>-th SD in the expansion of the CI
+with index <code class="docutils literal notranslate"><span class="pre">`iCI`</span></code>. These coefficients don’t have to account for the overal CI’s normalization - the
+normalization will be done on the go. [required!]</p>
+<p>Example:</p>
+<blockquote>
+<div><p>For the SD example above we can construct the following combinations:
+&gt;&gt; params[“CI_basis”] = [ [1.0, 0.0, 0.0 ],</p>
+<blockquote>
+<div><blockquote>
+<div><p>[0.0, 1.0,-1.0 ],
+[0.0, 1.0, 1.0 ]</p>
+</div></blockquote>
+<p>]</p>
+</div></blockquote>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“output_set_paths”]</strong> ( list of strings ): the directory pathes where the resulting files</dt><dd><p>are to be written (if so!). If you don’t plan on writing the files, just provide a list of empty strings
+or whatever else - they will not be used in that case. The number of the strings should be equal to
+the number of the input data sets, e.g. to len(St_dia_ks)  [required!]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“dt”]</strong> ( double ): nuclear dynamics integration time step [units: a.u. of time, default: 41.0]</p></li>
+<li><dl class="simple">
+<dt><strong>params[“do_orthogonalization”]</strong> ( int ): the option to do Lowdin orthogonalization of the orbitals - using</dt><dd><p>the “raw” overlaps (at the same time). This option is needed because the wavefunction output by QE are
+not exactly orthonormal (because of the use of pseudopotentials). So before we use them (implicitly)
+in the rest of the calculations here, we may need to account for this non-ideality effect.
+Options:</p>
+<ul class="simple">
+<li><p>0: don’t do the orthogonalization - this is the same as in Pyxaid [default]</p></li>
+<li><p>1: do the orthogonalization</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“do_state_reordering”]</strong> ( int ): the option to control the state reordering</dt><dd><p>Options:</p>
+<ul class="simple">
+<li><p>0: no state reordering - same as in Pyxaid</p></li>
+<li><p>1: older method (is not robust, may or may not work)</p></li>
+<li><p>2: Hungarian algorithm [default]</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“state_reordering_alpha”]</strong> ( double ): the parameter that controls the width of</dt><dd><p>the energy interval within wich the state reordering is in effect. Zero value means all
+available orbitals, larger positive value decreases the width of the window. This parameter
+is not in effect unless the Hungarian algorithm is selected [default: 0.0]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“do_phase_correction”]</strong> ( int ): option to do the phase correction</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0 - don’t do</p></li>
+<li><p>1 - do it [default]</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>params[“do_output”]</strong> ( int ): whether to print out the Hvib matrices ( = 1) to the files or not ( = 0).</p></li>
+<li><dl class="simple">
+<dt><strong>params[“Hvib_re_prefix”]</strong> ( string ): common prefix of the output files with real part of the vibronic</dt><dd><p>Hamiltonian at all times [default: “<a href="#id1"><span class="problematic" id="id2">Hvib_</span></a>”]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“Hvib_re_suffix”]</strong> ( string ): common suffix of the output files with real part of the vibronic</dt><dd><p>Hamiltonian at all times [default: “_re”]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“Hvib_im_prefix”]</strong> ( string ): common prefix of the output files with imaginary part of the vibronic</dt><dd><p>Hamiltonian at all times [default: “<a href="#id3"><span class="problematic" id="id4">Hvib_</span></a>”]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“Hvib_im_suffix”]</strong> ( string ): common suffix of the output files with imaginary part of the vibronic</dt><dd><p>Hamiltonian at all times [default: “_im”]</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Hvib, such that:</dt><dd><p>Hvib[idata][istep] is a CMATRIX(N,N) containing the vibronic Hamiltonian for the
+trajectory (dataset) <code class="docutils literal notranslate"><span class="pre">`idata`</span></code> and for the timestep <code class="docutils literal notranslate"><span class="pre">`istep`</span></code>. Here, N is the number
+of states included in the active space.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of lists of CMATRIX(N,N)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.sac_matrices">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">sac_matrices</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">S_ks</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#sac_matrices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.sac_matrices" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function makes the Phi-to-Chi (P2C) transformation matrix.
+Normalization factros for the Chi states are computed based on the
+overlaps of Phi states.
+&lt; Chi_i | Chi_j &gt; = 1
+= N_i * N_j * &lt; Phi_i - Phi_i’ | Phi_j - Phi_j’ &gt; = 1</p>
+<p>coeff [List of lists] - P2C as initialized by the user
+basis [Phi basis] - as initialized by the user
+S_ks  [CMATRIX] - Time overlap matrix of elementary KS orbtials, from step2</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.scale_H_vib">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">scale_H_vib</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hvib</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">en_gap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dNAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sc_nac_method</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#scale_H_vib"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.scale_H_vib" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function scales the energies and NACs in the vibrionic Hamiltonian
+in the Chi basis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hvib</strong> (<em>list of CMATRIX objects</em>) – CMATRIXlist of vibronic hamiltonians in the Chi basis</p></li>
+<li><p><strong>en_gap</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – The desired energy gap (E_1 - E_0), for the Chi basis</p></li>
+<li><p><strong>dNAC</strong> (<em>list of lists of</em><em> (</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>)</em>) – <p>The scaling terms by which specific nacs will
+be scaled datatype = list of lists of (list, float)</p>
+<p>[  [ [i,j], val ], …  ]</p>
+<p>n and n+1 are the col (and thereby row) indicies of
+the nacs to be scaled by the value val</p>
+</p></li>
+<li><p><strong>sc_nac_method</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>The method used to scale NACs in the Chi basis,
+chosen by the user.
+If sc_nac_method = 1, then the NACs are scaled by the ivnerse of the
+magnitude of the change in energy, according to Lin et al.</p>
+<p>Reference: Lin, Y. &amp; Akimov, A. V. J. Phys. Chem. A (2016)</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.sort_SD_energies">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">sort_SD_energies</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Hvib</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#sort_SD_energies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.sort_SD_energies" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function goes into the Hvib (SD basis) files and sorts the energies
+For each Hvib file, we are going to obtain a list of lists of orbital index and energy pair
+These orbital index and energy pairs for each step will be sorted based on energies</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Hvib</strong> (<em>list of lists of CMATRIX objects</em>) – vibronic Hamiltonian in the Slater determinant basis</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step3.sort_unique_SD_basis">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step3.</span></code><code class="sig-name descname"><span class="pre">sort_unique_SD_basis</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">E_ks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sd_states_unique</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sd_states_reindexed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">istep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fstep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sorting_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step3.html#sort_unique_SD_basis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step3.sort_unique_SD_basis" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes the energies of the SP transitions (according to the sum of 1 electron terms) - no J or K
+It then may sort the order of the sd_states either based on their energy at each timestep</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>E_ks</strong> (<em>list of CMATRIX</em>) – <p>KS orbital energies at each timestep. Spin block style
+Ex)     [ alp*alp  alp*bet ]</p>
+<blockquote>
+<div><p>[ bet*alp  bet*bet ]</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>sd_states_unique</strong> (<em>list of lists</em>) – all SP transitions and which spin it was
+Ex) [ [ [‘28 29’], [‘alp’] ]. [ [‘28 30’], [‘alp’] ] ]</p></li>
+<li><p><strong>sd_states_reindexed</strong> (<em>list of lists</em>) – sd_states_unique but in internal  Libra notation
+Ex) [ [1,-1,3,-2], [3,-1,2,-2] ]</p></li>
+<li><p><strong>sorting_type</strong> (<em>(</em><em>string</em><em>)</em>) – “energy”   - sort by energy
+“identity” - sort by identity</p></li>
+<li><p><strong>istep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – step from which to start counting</p></li>
+<li><p><strong>fstep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – step at which to stop counting</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>SD energies at each timestep
+sd_states_unique_sorted (list of lists): All SP transitions and which spin it is, but now sorted either by identity (no sorting) or energy
+sd_states_reindexed_sorted (list of lists): The sd_states_unique_sorted, but in Libra’s notation
+reindex_nsteps (list of lists): The energy ordering of the SD for each step in terms of the index of the SD from the initial step</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>E_sd (list of CMATRIX)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="step4.html" class="btn btn-neutral float-right" title="step4" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="step2_many_body.html" class="btn btn-neutral float-left" title="step2_many_body" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

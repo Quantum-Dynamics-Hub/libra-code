@@ -1,0 +1,728 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.workflows.nbra.lz &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.workflows.nbra.lz</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.workflows.nbra.lz</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#* Copyright (C) 2018 Alexey V. Akimov</span>
+<span class="c1">#*</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">  Implementation of the Landau-Zener transition probability.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">cmath</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1">#import libra_py.common_utils as comn</span>
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+
+<span class="kn">import</span> <span class="nn">libra_py.units</span> <span class="k">as</span> <span class="nn">units</span>
+<span class="kn">import</span> <span class="nn">libra_py.probabilities</span> <span class="k">as</span> <span class="nn">prob</span>
+<span class="kn">import</span> <span class="nn">libra_py.tsh</span> <span class="k">as</span> <span class="nn">tsh</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">decoherence_times</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">step4</span>
+
+
+
+<div class="viewcode-block" id="Belyaev_Lebedev"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/lz.html#libra_py.workflows.nbra.lz.Belyaev_Lebedev">[docs]</a><span class="k">def</span> <span class="nf">Belyaev_Lebedev</span><span class="p">(</span><span class="n">Hvib</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the Landau-Zener hopping probabilities based on the energy levels</span>
+<span class="sd">    according to: </span>
+<span class="sd">    (1) Belyaev, A. K.; Lebedev, O. V. Phys. Rev. A, 2011, 84, 014701</span>
+
+<span class="sd">    See also:</span>
+<span class="sd">    (2) Xie, W.; Domcke, W. J. Chem. Phys. 2017, 147, 184114</span>
+<span class="sd">    (3) Crespo-Otero, R.; Barbatti, M. Chem. Rev. 2018, 188, 7026 - section: 3.2.3</span>
+
+<span class="sd">    Specifics:</span>
+<span class="sd">    1) The estimation of d^2E_ij / dt^2 is based on the 3-point Lagrange interpolation</span>
+<span class="sd">    2) This is done within the NBRA</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        Hvib (list of CMATRIX(nstates,nstates) ):  vibronic Hamiltonians along the trajectory</span>
+<span class="sd">        params ( dictionary ): control parameters</span>
+
+<span class="sd">            * **params[&quot;dt&quot;]** ( double ): time distance between the adjacent data points [ units: a.u., defaut: 41.0 ]</span>
+<span class="sd">            * **params[&quot;T&quot;]** ( double ): temperature of the nuclear sub-system [ units: K, default: 300.0 ]</span>
+<span class="sd">            * **params[&quot;Boltz_opt_BL&quot;]** ( int ): option to select a probability of hopping acceptance [default: 1]                </span>
+<span class="sd">                Options:</span>
+
+<span class="sd">                    - 0 - all proposed hops are accepted - no rejection based on energies</span>
+<span class="sd">                    - 1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach)</span>
+<span class="sd">                    - 2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous</span>
+<span class="sd">                    - 3 - generalization of &quot;1&quot;, but actually it should be changed in case there are many degenerate levels</span>
+
+<span class="sd">            * **params[&quot;gap_min_exception&quot;]** ( int ): option to handle the situation when extrapolated gap minimum is negative</span>
+<span class="sd">                Options:</span>
+
+<span class="sd">                    - 0 - set to zero [ default ]</span>
+<span class="sd">                    - 1 - use the mid-point gap</span>
+
+<span class="sd">            * **params[&quot;target_space&quot;]** ( int ): how to select the space of target states for each source state</span>
+<span class="sd">                Options:</span>
+
+<span class="sd">                    - 0 - only adjacent states </span>
+<span class="sd">                    - 1 - all states available [ default ]</span>
+
+<span class="sd">     </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Control parameters</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span>  <span class="p">]</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span><span class="mf">300.0</span><span class="p">,</span> <span class="s2">&quot;Boltz_opt_BL&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span><span class="mf">41.0</span><span class="p">,</span> <span class="s2">&quot;gap_min_exception&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;target_space&quot;</span><span class="p">:</span><span class="mi">1</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="n">boltz_opt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;Boltz_opt_BL&quot;</span><span class="p">]</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">]</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span>
+    <span class="n">gap_min_exception</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;gap_min_exception&quot;</span><span class="p">]</span>
+    <span class="n">target_space</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;target_space&quot;</span><span class="p">]</span>
+
+
+    <span class="c1"># Data dimensions </span>
+    <span class="n">nsteps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Hvib</span><span class="p">)</span>
+    <span class="n">nstates</span><span class="o">=</span> <span class="n">Hvib</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+
+    <span class="c1"># Pre-compute the energy gaps along the trajectory </span>
+    <span class="n">dE</span> <span class="o">=</span> <span class="n">decoherence_times</span><span class="o">.</span><span class="n">energy_gaps</span><span class="p">(</span><span class="n">Hvib</span><span class="p">)</span>
+
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the probabilities based on the LZ formula</span>
+<span class="sd">    P(i,j) - the convention is: the probability to go from j to i</span>
+<span class="sd">    This will make the Markov state propagation more convenient</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="n">P</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">P</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span> <span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>    
+        <span class="n">P</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nsteps</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">P</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">))</span>
+ 
+
+        <span class="c1"># Belyaev-Lebedev probabilities</span>
+        <span class="c1"># Find the minima of the |E_i - E_j| for all pair of i and j    </span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nstates</span><span class="p">):</span>      <span class="c1"># source </span>
+
+
+            <span class="c1"># By doing this, we&#39;ll consider the transitions to only adjacent states</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">if</span> <span class="n">target_space</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># Target states are only the states adjacent to the source state</span>
+
+                <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">j</span> <span class="o">==</span> <span class="n">nstates</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="n">nstates</span> <span class="o">-</span> <span class="mi">2</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="n">target_space</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># All states can be the potential targets</span>
+
+                <span class="n">targets</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span>
+
+
+
+
+            <span class="c1"># with how many other states, does the current (source) state has minima?</span>
+            <span class="c1"># apparently, this can not be more than 2</span>
+            <span class="n">normalization</span> <span class="o">=</span> <span class="mf">0.0</span>
+            
+            <span class="c1">#for i in targets:   # targets </span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+
+                <span class="c1"># Interpolation is based on the 3-points Lagrange interpolant</span>
+                <span class="c1"># http://mathworld.wolfram.com/LagrangeInterpolatingPolynomial.html </span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="n">dE</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">&gt;</span><span class="n">dE</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="ow">and</span> <span class="n">dE</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">&lt;</span><span class="n">dE</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)):</span>
+
+                                        
+                    <span class="n">denom</span> <span class="o">=</span> <span class="n">dE</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">-</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">dE</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="n">dE</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>                  
+                    <span class="k">if</span> <span class="n">denom</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+                       
+                        <span class="n">t_min</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">dE</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">-</span> <span class="n">dE</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">))</span><span class="o">*</span><span class="n">dt</span><span class="o">/</span><span class="n">denom</span>
+
+                        <span class="k">if</span> <span class="n">t_min</span><span class="o">&lt;-</span><span class="n">dt</span> <span class="ow">or</span> <span class="n">t_min</span> <span class="o">&gt;</span> <span class="n">dt</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error determining t_min in the interpolation!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exiting...</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+                        <span class="n">gap_min</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">t_min</span><span class="o">*</span><span class="p">(</span><span class="n">t_min</span> <span class="o">-</span> <span class="n">dt</span><span class="p">)</span><span class="o">*</span><span class="n">dE</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> 
+                          <span class="o">-</span> <span class="mf">2.0</span><span class="o">*</span><span class="p">(</span><span class="n">t_min</span> <span class="o">+</span> <span class="n">dt</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">t_min</span> <span class="o">-</span> <span class="n">dt</span><span class="p">)</span><span class="o">*</span><span class="n">dE</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> 
+                                       <span class="n">t_min</span><span class="o">*</span><span class="p">(</span><span class="n">t_min</span> <span class="o">+</span> <span class="n">dt</span><span class="p">)</span><span class="o">*</span><span class="n">dE</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">dt</span><span class="o">*</span><span class="n">dt</span><span class="p">)</span>
+
+                        <span class="k">if</span> <span class="n">gap_min</span><span class="o">&lt;</span><span class="mf">0.0</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">gap_min_exception</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                                <span class="n">gap_min</span> <span class="o">=</span> <span class="mf">0.0</span>
+                            <span class="k">elif</span> <span class="n">gap_min_exception</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                                <span class="n">gap_min</span> <span class="o">=</span> <span class="n">dE</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+
+                        <span class="k">if</span> <span class="n">gap_min</span> <span class="o">&gt;</span> <span class="n">dE</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="ow">or</span> <span class="n">gap_min</span> <span class="o">&gt;</span> <span class="n">dE</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">):</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: the extrapolated gap is larger than the bounding values!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exiting...</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+                        <span class="n">second_deriv</span> <span class="o">=</span> <span class="n">denom</span><span class="o">/</span><span class="p">(</span><span class="n">dt</span><span class="o">*</span><span class="n">dt</span><span class="p">)</span>
+
+                        <span class="n">argg</span> <span class="o">=</span> <span class="p">(</span><span class="n">gap_min</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span> <span class="o">/</span> <span class="n">second_deriv</span>
+
+                        <span class="n">p</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">argg</span><span class="p">)</span> <span class="p">)</span>
+
+
+                        <span class="c1"># Optionally, can correct transition probabilitieis to </span>
+                        <span class="c1"># account for Boltzmann factor</span>
+                        <span class="k">if</span> <span class="n">i</span><span class="o">!=</span><span class="n">j</span><span class="p">:</span>
+
+                            <span class="n">E_new</span> <span class="o">=</span> <span class="n">Hvib</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>  <span class="c1"># target</span>
+                            <span class="n">E_old</span> <span class="o">=</span> <span class="n">Hvib</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>  <span class="c1"># source</span>
+
+                            <span class="n">bf</span> <span class="o">=</span> <span class="mf">1.0</span>
+                            <span class="k">if</span> <span class="n">E_new</span> <span class="o">&gt;</span> <span class="n">E_old</span><span class="p">:</span>
+                                <span class="c1"># Notice how we use gap_min rather than E_new - E_old in this case</span>
+                                <span class="n">bf</span> <span class="o">=</span> <span class="n">tsh</span><span class="o">.</span><span class="n">boltz_factor</span><span class="p">(</span><span class="n">gap_min</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">boltz_opt</span><span class="p">)</span>
+
+                            <span class="k">if</span> <span class="n">bf</span><span class="o">&gt;</span><span class="mf">1.0</span><span class="p">:</span>
+                                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: Boltzmann scaling factor can not be larger 1.0 = &quot;</span><span class="p">,</span><span class="n">bf</span><span class="p">)</span>
+                                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+                            <span class="n">P</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">p</span><span class="o">*</span><span class="n">bf</span><span class="p">)</span>      <span class="c1"># Probability to go j-&gt;i</span>
+                            <span class="n">normalization</span> <span class="o">=</span> <span class="n">normalization</span> <span class="o">+</span> <span class="n">p</span><span class="o">*</span><span class="n">bf</span>
+                                 
+
+            <span class="k">if</span> <span class="n">normalization</span><span class="o">&lt;</span><span class="mf">1.0</span><span class="p">:</span>
+                <span class="n">P</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">normalization</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">P</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+                <span class="n">scl</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">normalization</span>
+                <span class="n">P</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">scl</span><span class="p">)</span>
+ 
+               
+       
+
+    <span class="n">P</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span> <span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>    
+        <span class="n">P</span><span class="p">[</span><span class="n">nsteps</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+            
+    <span class="k">return</span> <span class="n">P</span></div>
+
+
+
+
+<div class="viewcode-block" id="adjust_SD_probabilities"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/lz.html#libra_py.workflows.nbra.lz.adjust_SD_probabilities">[docs]</a><span class="k">def</span> <span class="nf">adjust_SD_probabilities</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adjusts the surface hopping probabilties computed according to Belyaev-Lebedev&#39;s work by setting the probability</span>
+<span class="sd">    to hop between Slater determinants that differ by more than 1 electron to zero.  </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        P ( list of lists of MATRIX ): each element of P contains the probability matrix according to the NBRA BLSH method</span>
+<span class="sd">        params ( dictionary ): control parameters</span>
+
+<span class="sd">        * **params[&quot;excitations&quot;]** ( list of lists of lists ) : SDs themselves (QE or dftb+ non-tddftb) or the SD transitions (tddftb). If the excitations are non-changing, then the</span>
+<span class="sd">                                                                 length of excitations is 1. If excitations do change, then there must be an excitation list for each step. In this case,</span>
+<span class="sd">                                                                 the length of excitation = nsteps = len(P)     </span>
+<span class="sd">                                                                 params[&quot;excitation&quot;][i][j][k] = kth SD step for the jth step of the ith nuclear trajectory</span>
+<span class="sd">                                                                                                 i: index of nuclear trajectory</span>
+<span class="sd">                                                                                                 j: index of timestep of nuclear trajectory i</span>
+<span class="sd">                                                                                                 k: index of SD for the jth timestep on nuclear trajectory i</span>
+<span class="sd">            Examples:</span>
+<span class="sd">                </span>
+<span class="sd">                Assume we have constructed SDs from a basis of 4 alpha and 4 beta Kohn-Sham spin-orbitals</span>
+<span class="sd">                The ground state is defined as: [1, 2, -5, -6]. Consider only alpha-excitations</span>
+
+<span class="sd">                We currently do non-tddftb computations by forming our own SDs in libra_py.workflows.nbra.step3</span>
+
+<span class="sd">                - QE or dftb+ non-tddftb - [ [ [1, 3, -5, -6], [1, 4, -5, -6], [3, 2, -5, -6], [4, 2, -5, -6] ] ] </span>
+
+<span class="sd">                As tddftb is used exclusively with the BLSH-NBRA method, we usually just read the energies, and know information only regarding</span>
+<span class="sd">                the index of the orbtial transitions, such as: [2 -&gt; 3]. So, we package this in the following form</span>
+
+<span class="sd">                - tddftb - [ [ [2,3], [2,4], [1,3], [1,4] ] ]                                           </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ndata</span>  <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+    <span class="n">nsteps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">excitations</span>        <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;excitations&quot;</span><span class="p">]</span>
+    <span class="n">nsteps_excitations</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">excitations</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">num_of_excitations</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">excitations</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;ndata  = &quot;</span><span class="p">,</span> <span class="n">ndata</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;nsteps = &quot;</span><span class="p">,</span> <span class="n">nsteps</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;nsteps_excitations = &quot;</span><span class="p">,</span> <span class="n">nsteps_excitations</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">idata</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndata</span><span class="p">):</span>
+
+       <span class="k">if</span> <span class="n">nsteps_excitations</span> <span class="o">==</span> <span class="n">nsteps</span><span class="p">:</span>
+
+           <span class="k">for</span> <span class="n">nstep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nsteps</span><span class="p">):</span>
+
+               <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_of_excitations</span><span class="p">):</span>
+
+                   <span class="n">s1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">excitations</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">nstep</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+
+                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_of_excitations</span><span class="p">):</span>
+                                 
+                        <span class="n">s2</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">excitations</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">nstep</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
+                        <span class="n">diff_electrons</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">s2</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">s1</span><span class="p">]</span>
+
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">diff_electrons</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+
+                           <span class="n">source_state_regain</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">nstep</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+                           <span class="c1">#if source_state_regain &gt; 0:</span>
+                               <span class="c1">#print (&quot;\nIndex of states with more than 1 electron different&quot;, i, j)</span>
+                               <span class="c1">#print (&quot;Prob to trasnfer to state i:&quot;, source_state_regain)</span>
+                               <span class="c1">#print (&quot;Prob to remain on   state j:&quot;, P[idata][nstep].get(j,j))</span>
+                               <span class="c1">#print (&quot;Adjusting probs gives:&quot;)</span>
+                           <span class="n">P</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">nstep</span><span class="p">]</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="mf">0.0</span><span class="p">)</span>
+                           <span class="n">P</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">nstep</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">source_state_regain</span><span class="p">)</span>
+                           <span class="c1">#if source_state_regain &gt; 0:</span>
+                               <span class="c1">#print (&quot;Prob to trasnfer to state i:&quot;, P[idata][nstep].get(i,j))</span>
+                               <span class="c1">#print (&quot;Prob to remain on   state j:&quot;, P[idata][nstep].get(j,j))</span>
+ 
+ 
+       <span class="k">else</span><span class="p">:</span>
+
+           <span class="k">for</span> <span class="n">nstep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nsteps</span><span class="p">):</span>
+
+               <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_of_excitations</span><span class="p">):</span>
+
+                   <span class="n">s1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">excitations</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+
+                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_of_excitations</span><span class="p">):</span>
+
+                       <span class="n">s2</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">excitations</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
+                       <span class="n">diff_electrons</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">s2</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">s1</span><span class="p">]</span>
+                                      
+                       <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">diff_electrons</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+
+                           <span class="n">source_state_regain</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">nstep</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+                           <span class="c1">#if source_state_regain &gt; 0:</span>
+                               <span class="c1">#print (&quot;\nIndex of states with more than 1 electron different&quot;, i, j)</span>
+                               <span class="c1">#print (&quot;Prob to trasnfer to state i:&quot;, source_state_regain)</span>
+                               <span class="c1">#print (&quot;Prob to remain on   state j:&quot;, P[idata][nstep].get(j,j))</span>
+                               <span class="c1">#print (&quot;Adjusting probs gives:&quot;)</span>
+                           <span class="n">P</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">nstep</span><span class="p">]</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="mf">0.0</span><span class="p">)</span>
+                           <span class="n">P</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">nstep</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">source_state_regain</span><span class="p">)</span>
+                           <span class="c1">#if source_state_regain &gt; 0:</span>
+                               <span class="c1">#print (&quot;Prob to trasnfer to state i:&quot;, P[idata][nstep].get(i,j))</span>
+                               <span class="c1">#print (&quot;Prob to remain on   state j:&quot;, P[idata][nstep].get(j,j))</span>
+
+    <span class="k">return</span> <span class="n">P</span></div>
+
+
+
+
+<div class="viewcode-block" id="run"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/lz.html#libra_py.workflows.nbra.lz.run">[docs]</a><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">H_vib</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main function to run the SH calculations based on the Landau-Zener hopping</span>
+<span class="sd">    probabilities, all within the NBRA. The probabilities are implemented according to</span>
+<span class="sd">    the Belyaev-Lebedev work.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        params ( dictionary ): control parameters</span>
+
+<span class="sd">        * **params[&quot;dt&quot;]** ( double ) : time distance between the adjacent data points [ units: a.u.; default: 41.0 a.u.]</span>
+<span class="sd">        * **params[&quot;ntraj&quot;]** ( int ) : how many stochastic trajectories to use in the ensemble [ defult: 1]</span>
+<span class="sd">        * **params[&quot;nsteps&quot;]** ( int ) : how nuclear steps in the trajectory to be computed [ defult: 1]</span>
+<span class="sd">        * **params[&quot;istate&quot;]** ( int ) : index of the starting state (within those used in the active_space) [ default: 0]</span>
+<span class="sd">        * **params[&quot;Boltz_opt&quot;]** ( int ) : option to control the acceptance of the proposed hops </span>
+<span class="sd">            Options:</span>
+
+<span class="sd">            - 0 - all proposed hops are accepted - no rejection based on energies</span>
+<span class="sd">            - 1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach) [ default ]</span>
+<span class="sd">            - 2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous</span>
+<span class="sd">            - 3 - generalization of &quot;1&quot;, but actually it should be changed in case there are many degenerate levels</span>
+
+<span class="sd">        * **params[&quot;Boltz_opt_BL&quot;]** ( int ) : what type of hop acceptance scheme to incorporate into the BL probabilities </span>
+<span class="sd">            Options:</span>
+
+<span class="sd">            - 0 - all proposed hops are accepted - no rejection based on energies [ default ]</span>
+<span class="sd">            - 1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach) </span>
+<span class="sd">            - 2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous</span>
+<span class="sd">            - 3 - generalization of &quot;1&quot;, but actually it should be changed in case there are many degenerate levels</span>
+<span class="sd">        </span>
+<span class="sd">        * **params[&quot;T&quot;]** ( double ) : temperature of the nuclei - affects the acceptance probabilities [ units: K, default: 300.0 K]</span>
+<span class="sd">        * **params[&quot;do_output&quot;]** ( Boolean ) : whether to print out the results into a file [ default: True ]</span>
+<span class="sd">        * **params[&quot;outfile&quot;]** ( string ) : the name of the file, where all the results will be printed out [ default: &quot;_out.txt&quot; ]</span>
+<span class="sd">        * **params[&quot;do_return&quot;]** ( Boolean ) : whether to construct the big matrix with all the result [ default: True ]</span>
+<span class="sd">        * **params[&quot;evolve_Markov&quot;]** ( Boolean ) : whether to propagate the &quot;SE&quot; populations via Markov chain [ default: True ]</span>
+<span class="sd">        * **params[&quot;evolve_TSH&quot;]** ( Boolean ) : whether to propagate the &quot;SH&quot; populations via TSH with many trajectories [ default: True ]</span>
+<span class="sd">        * **params[&quot;extend_md&quot;]** ( Boolean ) : whether or not to extend md time by resampling the NBRA hopping probabilities</span>
+<span class="sd">        * **params[&quot;extend_md_time&quot;]** ( int ) : length of the new dynamics trajectory, in units dt</span>
+<span class="sd">        * **params[&quot;detect_SD_difference&quot;]** ( Boolean ) : see if SD states differ by more than 1 electron, if so probability to zero [ default: False ]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span>  <span class="p">]</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span><span class="mf">41.0</span><span class="p">,</span> <span class="s2">&quot;ntraj&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;nsteps&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;istate&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> 
+                       <span class="s2">&quot;Boltz_opt&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;Boltz_opt_BL&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span><span class="mf">300.0</span><span class="p">,</span>
+                       <span class="s2">&quot;do_output&quot;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;outfile&quot;</span><span class="p">:</span><span class="s2">&quot;_out.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;do_return&quot;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span>
+                       <span class="s2">&quot;evolve_Markov&quot;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;evolve_TSH&quot;</span><span class="p">:</span><span class="kc">True</span><span class="p">,</span> 
+                       <span class="s2">&quot;extend_md&quot;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;extend_md_time&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+                       <span class="s2">&quot;detect_SD_differences&quot;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span>
+                       <span class="s2">&quot;return_probabilities&quot;</span><span class="p">:</span><span class="kc">False</span> <span class="p">}</span>
+
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+    
+    <span class="n">rnd</span> <span class="o">=</span> <span class="n">Random</span><span class="p">()</span>
+
+    <span class="n">ndata</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">H_vib</span><span class="p">)</span>
+    <span class="n">nsteps</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;nsteps&quot;</span><span class="p">]</span>
+    <span class="n">nstates</span><span class="o">=</span> <span class="n">H_vib</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span>
+    <span class="n">do_output</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;do_output&quot;</span><span class="p">]</span>
+    <span class="n">do_return</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;do_return&quot;</span><span class="p">]</span>
+    <span class="n">ntraj</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;ntraj&quot;</span><span class="p">]</span>
+    <span class="n">boltz_opt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;Boltz_opt&quot;</span><span class="p">]</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">]</span>
+    <span class="n">evolve_Markov</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;evolve_Markov&quot;</span><span class="p">]</span>
+    <span class="n">evolve_TSH</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;evolve_TSH&quot;</span><span class="p">]</span>
+    <span class="n">detect_SD_difference</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;detect_SD_differences&quot;</span><span class="p">]</span>
+    <span class="n">return_probabilities</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;return_probabilities&quot;</span><span class="p">]</span>
+    <span class="n">extend_md</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;extend_md&quot;</span><span class="p">]</span>
+    <span class="n">extend_md_time</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;extend_md_time&quot;</span><span class="p">]</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nsteps</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">5</span><span class="p">)</span>
+
+    <span class="c1">#===== Precompute hopping probabilities ===</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">itimes</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;init_times&quot;</span><span class="p">]</span>
+    <span class="n">nitimes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">itimes</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">idata</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndata</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Belyaev_Lebedev</span><span class="p">(</span><span class="n">H_vib</span><span class="p">[</span><span class="n">idata</span><span class="p">],</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">P</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">detect_SD_difference</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">adjust_SD_probabilities</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>  
+
+    <span class="c1"># Check if to extend md time</span>
+    <span class="c1"># Check if to extend md time</span>
+    <span class="k">if</span> <span class="n">extend_md</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+
+        <span class="n">rnd</span> <span class="o">=</span> <span class="n">Random</span><span class="p">()</span>
+        <span class="n">P_ext</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">H_vib_ext</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># For the first step, diagonal elements are 1</span>
+        <span class="k">for</span> <span class="n">idata</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndata</span><span class="p">):</span>
+            <span class="n">P_ext</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>     <span class="p">[</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span> <span class="p">]</span> <span class="p">)</span>
+            <span class="n">H_vib_ext</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">[</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span> <span class="p">]</span> <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+
+                <span class="n">P_ext</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+                <span class="n">rnd_step</span> <span class="o">=</span> <span class="n">rnd</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nsteps</span><span class="p">)</span>
+                <span class="n">H_vib_ext</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span> <span class="n">H_vib</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="nb">int</span><span class="p">(</span><span class="n">rnd_step</span><span class="p">)]</span> <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">extend_md_time</span><span class="p">):</span>
+
+                <span class="n">rnd_step</span> <span class="o">=</span> <span class="n">rnd</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nsteps</span><span class="p">)</span>
+                <span class="n">P_ext</span><span class="p">[</span><span class="n">idata</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span> <span class="p">)</span>
+                <span class="n">P_ext</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span> <span class="n">P</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="nb">int</span><span class="p">(</span><span class="n">rnd_step</span><span class="p">)]</span> <span class="p">)</span>    
+                <span class="n">H_vib_ext</span><span class="p">[</span><span class="n">idata</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="n">nstates</span><span class="p">)</span> <span class="p">)</span>
+                <span class="n">H_vib_ext</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span> <span class="n">H_vib</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="nb">int</span><span class="p">(</span><span class="n">rnd_step</span><span class="p">)]</span> <span class="p">)</span>
+
+        <span class="n">P</span> <span class="o">=</span> <span class="n">P_ext</span>
+        <span class="n">H_vib</span> <span class="o">=</span> <span class="n">H_vib_ext</span>
+        <span class="n">nsteps</span> <span class="o">=</span> <span class="n">extend_md_time</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nsteps</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">5</span><span class="p">)</span>
+
+
+    <span class="c1">#========== Initialize the DYNAMICAL VARIABLES  ===============</span>
+    <span class="c1"># State populations and active state indices</span>
+    <span class="n">Pop</span><span class="p">,</span> <span class="n">istate</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="n">Ntraj</span> <span class="o">=</span> <span class="n">ndata</span> <span class="o">*</span> <span class="n">nitimes</span> <span class="o">*</span> <span class="n">ntraj</span>
+
+    <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Ntraj</span><span class="p">):</span>
+        <span class="n">istate</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;istate&quot;</span><span class="p">])</span>
+        <span class="n">Pop</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span> <span class="mi">1</span><span class="p">));</span> 
+        <span class="n">Pop</span><span class="p">[</span><span class="n">tr</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;istate&quot;</span><span class="p">],</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+    <span class="c1">#=============== Entering the DYNAMICS ========================</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nsteps</span><span class="p">):</span>  <span class="c1"># over all evolution times</span>
+
+        <span class="c1">#============== Analysis of the Dynamics  =================</span>
+        <span class="c1"># Compute the averages</span>
+        <span class="c1">#res_i = step4.traj_statistics(i, Coeff, istate, H_vib, itimes)</span>
+        <span class="c1">#res_i = step4.traj_statistics2(i, Pop, istate, H_vib, itimes)</span>
+        <span class="n">res_i</span> <span class="o">=</span> <span class="n">step4</span><span class="o">.</span><span class="n">traj_statistics2_fast</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">Pop</span><span class="p">,</span> <span class="n">istate</span><span class="p">,</span> <span class="n">H_vib</span><span class="p">,</span> <span class="n">itimes</span><span class="p">)</span>
+
+        <span class="c1"># Print out into a file</span>
+        <span class="k">if</span> <span class="n">do_output</span><span class="o">==</span><span class="kc">True</span><span class="p">:</span>
+            <span class="n">step4</span><span class="o">.</span><span class="n">printout</span><span class="p">(</span><span class="n">i</span><span class="o">*</span><span class="n">dt</span><span class="p">,</span> <span class="n">res_i</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;outfile&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Update the overal results matrix</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">*</span><span class="n">dt</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">do_return</span><span class="o">==</span><span class="kc">True</span><span class="p">:</span>
+            <span class="n">push_submatrix</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">res_i</span><span class="p">,</span> <span class="n">Py2Cpp_int</span><span class="p">(</span><span class="nb">list</span><span class="p">([</span><span class="n">i</span><span class="p">])),</span> <span class="n">Py2Cpp_int</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="o">*</span><span class="n">nstates</span><span class="o">+</span><span class="mi">5</span><span class="p">)))</span> <span class="p">)</span>
+
+        <span class="c1">#=============== Propagation ==============================</span>
+        <span class="k">for</span> <span class="n">idata</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndata</span><span class="p">):</span>   <span class="c1"># over all data sets (MD trajectories)</span>
+
+            <span class="k">for</span> <span class="n">it_indx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nitimes</span><span class="p">):</span> <span class="c1"># over all initial times within each MD trajectory</span>
+
+                <span class="n">it</span> <span class="o">=</span> <span class="n">itimes</span><span class="p">[</span><span class="n">it_indx</span><span class="p">]</span>
+
+                <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ntraj</span><span class="p">):</span>  <span class="c1"># over all stochastic trajectories</span>
+
+                    <span class="n">Tr</span> <span class="o">=</span> <span class="n">idata</span><span class="o">*</span><span class="p">(</span><span class="n">nitimes</span><span class="o">*</span><span class="n">ntraj</span><span class="p">)</span> <span class="o">+</span> <span class="n">it_indx</span><span class="o">*</span><span class="p">(</span><span class="n">ntraj</span><span class="p">)</span> <span class="o">+</span> <span class="n">tr</span>
+
+                    <span class="c1">#============== Propagation: TD-SE and surface hopping ==========</span>
+        
+                    <span class="c1"># Evolve the Markov process.</span>
+                    <span class="c1"># The convention is:</span>
+                    <span class="c1"># P(i,j) - the probability to go from j to i</span>
+                    <span class="k">if</span> <span class="n">evolve_Markov</span><span class="o">==</span><span class="kc">True</span><span class="p">:</span>
+                        <span class="n">Pop</span><span class="p">[</span><span class="n">Tr</span><span class="p">]</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">it</span><span class="o">+</span><span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="n">Pop</span><span class="p">[</span><span class="n">Tr</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="n">evolve_TSH</span><span class="o">==</span><span class="kc">True</span><span class="p">:</span>        
+
+                        <span class="c1"># Surface hopping </span>
+                        <span class="n">ksi</span>  <span class="o">=</span> <span class="n">rnd</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+                        
+                        <span class="c1"># Proposed hop:</span>
+                        <span class="n">st_new</span> <span class="o">=</span> <span class="n">tsh</span><span class="o">.</span><span class="n">hop_py</span><span class="p">(</span><span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="n">P</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">it</span><span class="o">+</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">(),</span> <span class="n">ksi</span><span class="p">)</span>  
+                        
+                        <span class="c1"># Accept the proposed hop with the Boltzmann probability</span>
+                        <span class="n">E_new</span> <span class="o">=</span> <span class="n">H_vib</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">it</span><span class="o">+</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">st_new</span><span class="p">,</span><span class="n">st_new</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+                        <span class="n">E_old</span> <span class="o">=</span> <span class="n">H_vib</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">it</span><span class="o">+</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">],</span> <span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">])</span><span class="o">.</span><span class="n">real</span>
+                        <span class="n">de</span> <span class="o">=</span> <span class="n">E_new</span> <span class="o">-</span> <span class="n">E_old</span>
+                        
+                        <span class="k">if</span> <span class="n">de</span><span class="o">&gt;</span><span class="mf">0.0</span><span class="p">:</span>
+                            <span class="n">bf</span> <span class="o">=</span> <span class="n">tsh</span><span class="o">.</span><span class="n">boltz_factor</span><span class="p">(</span><span class="n">E_new</span><span class="p">,</span> <span class="n">E_old</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">boltz_opt</span><span class="p">)</span>
+                            <span class="n">ksi</span>  <span class="o">=</span> <span class="n">rnd</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">ksi</span> <span class="o">&lt;</span> <span class="n">bf</span><span class="p">:</span>
+                                <span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">]</span> <span class="o">=</span> <span class="n">st_new</span>                  
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">istate</span><span class="p">[</span><span class="n">Tr</span><span class="p">]</span> <span class="o">=</span> <span class="n">st_new</span>
+
+    <span class="k">if</span> <span class="n">return_probabilities</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">P</span>
+    <span class="k">else</span><span class="p">:</span>    
+        <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="kc">None</span></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

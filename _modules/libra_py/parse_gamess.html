@@ -1,0 +1,346 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.parse_gamess &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.parse_gamess</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.parse_gamess</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************                     </span>
+<span class="c1">#* Copyright (C) 2017 Alexey V. Akimov                                                   </span>
+<span class="c1">#*                                                                                                     </span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License                          </span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of                                   </span>
+<span class="c1">#* the License, or (at your option) any later version.                                                 </span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution   </span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.          </span>
+<span class="c1">#***********************************************************************************</span>
+<span class="c1">## \file parse_gamess.py</span>
+<span class="c1"># This module implements reading a GAMESS format basis as obtained from EMSL</span>
+<span class="c1"># or maybe from the GAMESS output. This file is a significantly re-written </span>
+<span class="c1"># version of the Basis/Tools.py file from the PyQuante library. See the</span>
+<span class="c1"># license notice below.</span>
+
+
+<span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">This program inputs a GAMESS basis, e.g. from the EMSL basis set order</span>
+<span class="sd">form, and formats it into PyQuante format</span>
+
+<span class="sd">Copyright (c) 2004, Richard P. Muller. All Rights Reserved. </span>
+
+<span class="sd"> PyQuante version 1.2 and later is covered by the modified BSD</span>
+<span class="sd"> license. Please see the file LICENSE that is part of this</span>
+<span class="sd"> distribution. </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">re</span><span class="o">,</span><span class="nn">sys</span>
+
+<div class="viewcode-block" id="name2no"><a class="viewcode-back" href="../../reference/libra_py/parse_gamess.html#libra_py.parse_gamess.name2no">[docs]</a><span class="k">def</span> <span class="nf">name2no</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts the name of an element to its atomic number. The input name can be upper, lower, or mixed case</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+        
+    <span class="n">all_names</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;dummy&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;hydrogen&quot;</span><span class="p">,</span> <span class="s2">&quot;helium&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;lithium&quot;</span><span class="p">,</span><span class="s2">&quot;beryllium&quot;</span><span class="p">,</span><span class="s2">&quot;boron&quot;</span><span class="p">,</span><span class="s2">&quot;carbon&quot;</span><span class="p">,</span><span class="s2">&quot;nitrogen&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;oxygen&quot;</span><span class="p">,</span><span class="s2">&quot;fluorine&quot;</span><span class="p">,</span><span class="s2">&quot;neon&quot;</span><span class="p">,</span><span class="s2">&quot;sodium&quot;</span><span class="p">,</span><span class="s2">&quot;magnesium&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;aluminum&quot;</span><span class="p">,</span><span class="s2">&quot;silicon&quot;</span><span class="p">,</span><span class="s2">&quot;phosphorus&quot;</span><span class="p">,</span><span class="s2">&quot;sulfur&quot;</span><span class="p">,</span><span class="s2">&quot;chlorine&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;argon&quot;</span><span class="p">,</span><span class="s2">&quot;potassium&quot;</span><span class="p">,</span> <span class="s2">&quot;calcium&quot;</span><span class="p">,</span> <span class="s2">&quot;scandium&quot;</span><span class="p">,</span> <span class="s2">&quot;titanium&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;vanadium&quot;</span><span class="p">,</span> <span class="s2">&quot;chromium&quot;</span><span class="p">,</span> <span class="s2">&quot;manganese&quot;</span><span class="p">,</span> <span class="s2">&quot;iron&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;cobalt&quot;</span><span class="p">,</span> <span class="s2">&quot;nickel&quot;</span><span class="p">,</span> <span class="s2">&quot;copper&quot;</span><span class="p">,</span> <span class="s2">&quot;zinc&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;gallium&quot;</span><span class="p">,</span> <span class="s2">&quot;germanium&quot;</span><span class="p">,</span> <span class="s2">&quot;arsenic&quot;</span><span class="p">,</span> <span class="s2">&quot;selenium&quot;</span><span class="p">,</span> <span class="s2">&quot;bromine&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;krypton&quot;</span><span class="p">,</span> <span class="s2">&quot;rubidium&quot;</span><span class="p">,</span> <span class="s2">&quot;strontium&quot;</span><span class="p">,</span> <span class="s2">&quot;yttrium&quot;</span><span class="p">,</span> <span class="s2">&quot;zirconium&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;niobium&quot;</span><span class="p">,</span> <span class="s2">&quot;molybdenum&quot;</span><span class="p">,</span> <span class="s2">&quot;technetium&quot;</span><span class="p">,</span> <span class="s2">&quot;ruthenium&quot;</span><span class="p">,</span><span class="s2">&quot;rhodium&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;palladium&quot;</span><span class="p">,</span> <span class="s2">&quot;silver&quot;</span><span class="p">,</span> <span class="s2">&quot;cadmium&quot;</span><span class="p">,</span><span class="s2">&quot;indium&quot;</span><span class="p">,</span> <span class="s2">&quot;tin&quot;</span><span class="p">,</span> <span class="s2">&quot;antimony&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tellerium&quot;</span><span class="p">,</span> <span class="s2">&quot;iodine&quot;</span><span class="p">,</span> <span class="s2">&quot;xenon&quot;</span><span class="p">,</span><span class="s2">&quot;cesium&quot;</span><span class="p">,</span> <span class="s2">&quot;barium&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;lanthanum&quot;</span><span class="p">,</span><span class="s2">&quot;cerium&quot;</span><span class="p">,</span><span class="s2">&quot;praseodymium&quot;</span><span class="p">,</span><span class="s2">&quot;neodymium&quot;</span><span class="p">,</span><span class="s2">&quot;promethium&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;samarium&quot;</span><span class="p">,</span><span class="s2">&quot;europium&quot;</span><span class="p">,</span><span class="s2">&quot;gadolinium&quot;</span><span class="p">,</span><span class="s2">&quot;terbium&quot;</span><span class="p">,</span><span class="s2">&quot;dysprosium&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;holmium&quot;</span><span class="p">,</span><span class="s2">&quot;erbium&quot;</span><span class="p">,</span><span class="s2">&quot;thulium&quot;</span><span class="p">,</span><span class="s2">&quot;ytterbium&quot;</span><span class="p">,</span><span class="s2">&quot;lutetium&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;halfnium&quot;</span><span class="p">,</span><span class="s2">&quot;tantalum&quot;</span><span class="p">,</span><span class="s2">&quot;tungsten&quot;</span><span class="p">,</span><span class="s2">&quot;rhenium&quot;</span><span class="p">,</span><span class="s2">&quot;osmium&quot;</span><span class="p">,</span><span class="s2">&quot;iridium&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;platinum&quot;</span><span class="p">,</span><span class="s2">&quot;gold&quot;</span><span class="p">,</span><span class="s2">&quot;mercury&quot;</span><span class="p">,</span><span class="s2">&quot;thallium&quot;</span><span class="p">,</span><span class="s2">&quot;lead&quot;</span><span class="p">,</span><span class="s2">&quot;bismuth&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;polonium&quot;</span><span class="p">,</span><span class="s2">&quot;astatine&quot;</span><span class="p">,</span><span class="s2">&quot;radon&quot;</span><span class="p">]</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">lname</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">lname</span> <span class="ow">in</span> <span class="n">all_names</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">all_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">lname</span><span class="p">)</span> 
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in name2no function: The element &quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s2">&quot; is not defined&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Possible values are: &quot;</span><span class="p">,</span> <span class="n">all_names</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+<div class="viewcode-block" id="parse_gamess_basis"><a class="viewcode-back" href="../../reference/libra_py/parse_gamess.html#libra_py.parse_gamess.parse_gamess_basis">[docs]</a><span class="k">def</span> <span class="nf">parse_gamess_basis</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read a file &lt;filename&gt; in GAMESS format containing the info about basis</span>
+<span class="sd">       for a number of elements. The function returns a dictionary containing </span>
+<span class="sd">       basis info for all read elements</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Read all lines</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># Find the section which contains the info about basis functions</span>
+    <span class="c1"># This is determined by the $DATA and $END blocks</span>
+    <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;\$DATA&#39;</span><span class="p">,</span><span class="n">line</span><span class="p">):</span>
+            <span class="n">i1</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;\$END&#39;</span><span class="p">,</span><span class="n">line</span><span class="p">):</span>
+            <span class="n">i2</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="c1"># Prepare to populate the basis for all elements</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="p">{}</span> 
+    <span class="n">atno</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># current element we are working on</span>
+
+    <span class="c1"># Look in the correct info block!</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">i1</span><span class="o">+</span><span class="mi">1</span>
+    <span class="k">while</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">i2</span><span class="p">:</span>
+         
+        <span class="n">words</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">sz</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">elif</span> <span class="n">sz</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">el_string</span> <span class="o">=</span> <span class="n">words</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">atno</span> <span class="o">=</span> <span class="n">name2no</span><span class="p">(</span><span class="n">el_string</span><span class="p">)</span>
+            <span class="n">basis</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">atno</span><span class="p">,</span> <span class="p">[]</span> <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">symb</span> <span class="o">=</span> <span class="n">words</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">nprim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">words</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">symb</span> <span class="o">==</span> <span class="s2">&quot;L&quot;</span><span class="p">:</span>
+                <span class="n">sprims</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">pprims</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nprim</span><span class="p">):</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">words</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">sprims</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">words</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="nb">float</span><span class="p">(</span><span class="n">words</span><span class="p">[</span><span class="mi">2</span><span class="p">])))</span>
+                    <span class="n">pprims</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">words</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="nb">float</span><span class="p">(</span><span class="n">words</span><span class="p">[</span><span class="mi">3</span><span class="p">])))</span>
+                <span class="n">basis</span><span class="p">[</span><span class="n">atno</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;S&quot;</span><span class="p">,</span><span class="n">sprims</span><span class="p">))</span>
+                <span class="n">basis</span><span class="p">[</span><span class="n">atno</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;P&quot;</span><span class="p">,</span><span class="n">pprims</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">prims</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nprim</span><span class="p">):</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">words</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">prims</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">words</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="nb">float</span><span class="p">(</span><span class="n">words</span><span class="p">[</span><span class="mi">2</span><span class="p">])))</span>
+                <span class="n">basis</span><span class="p">[</span><span class="n">atno</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">symb</span><span class="p">,</span><span class="n">prims</span><span class="p">))</span>
+
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> 
+    <span class="k">return</span> <span class="n">basis</span></div>
+
+
+<span class="c1">#if __name__ == &#39;__main__&#39;: </span>
+<span class="c1">#    # Eample usage</span>
+<span class="c1">#    print name2no(&quot;Hydrogen&quot;)</span>
+<span class="c1">#    bas = parse_gamess_basis(&quot;sto_2g.txt&quot;)</span>
+<span class="c1">#    print bas</span>
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

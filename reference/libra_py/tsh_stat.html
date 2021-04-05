@@ -1,0 +1,660 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>tsh_stat &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="unavioded" href="unavoided.html" />
+    <link rel="prev" title="tsh" href="tsh.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>tsh_stat</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/tsh_stat.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.tsh_stat">
+<span id="tsh-stat"></span><h1>tsh_stat<a class="headerlink" href="#module-libra_py.tsh_stat" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-tsh_stat"></span><dl class="py function">
+<dt id="libra_py.tsh_stat.amplitudes2denmat">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh_stat.</span></code><code class="sig-name descname"><span class="pre">amplitudes2denmat</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coeffs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh_stat.html#amplitudes2denmat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh_stat.amplitudes2denmat" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Converts the wavefunction amplitudes for all trajectories to the corresponding</dt><dd><p>density matrices</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>coeffs</strong> (<em>list of CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>1</em><em>)</em>) – wavefunction amplitudes for all trajectories</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>density matrices for all trajectory</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>( list of CMATRIX(nstates, nstate) )</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh_stat.avarage_populations">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh_stat.</span></code><code class="sig-name descname"><span class="pre">avarage_populations</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">el</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh_stat.html#avarage_populations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh_stat.avarage_populations" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes the SH statistics for an ensemble of trajectories</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>el</strong> (<em>list of Electronic</em>) – The list containing electronic DOF variables
+for all trajectories in ensemble. The length of the list determines
+the number of trajectories in ensemble</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( sh_pops, se_pops, rho ):</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>sh_pops ( list of N float ): The list containing the average population</dt><dd><p>of each quantum state based on the statistics of the discrete states
+in which each trajectory resides. Here, N is the number of states</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>se_pops ( list of N float ): The list containing the average population</dt><dd><p>of each quantum state based on the amplitudes of all quantum states
+as obtained from the TD-SE solution. Here, N is the number of states</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>rho ( CMATRIX(N,N) ): The matrix containing the trajectory-averaged</dt><dd><p>SE populations and coherences. Here, N is the number of states</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh_stat.ave_en">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh_stat.</span></code><code class="sig-name descname"><span class="pre">ave_en</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">denmat_sh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">denmat_se</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Hvib</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh_stat.html#ave_en"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh_stat.ave_en" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes ensemble averaged SH and SE energies</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>denmat_sh</strong> (<em>list of CMATRIX</em><em>(</em><em>nst_in</em><em>, </em><em>nst_in</em><em>)</em>) – SE density matrices (diagonal) for each trajectory</p></li>
+<li><p><strong>denmat_se</strong> (<em>list of CMATRIX</em><em>(</em><em>nst_in</em><em>,</em><em>nst_in</em><em>)</em>) – SE density matrices for each trajectory</p></li>
+<li><p><strong>Hvib</strong> (<em>list of CMATRIX</em><em>(</em><em>nst_in</em><em>,</em><em>nst_in</em><em>)</em>) – Hvib for each trajectory [units: arbitrary]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>ave_en_sh, ave_en_se, where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>ave_en_sh ( double ): SH-averaged energy [ units: same as Hvib ]</p></li>
+<li><p>ave_en_se ( double ): SE-averaged energy [ units: same as Hvib ]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(double, double)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh_stat.ave_pop">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh_stat.</span></code><code class="sig-name descname"><span class="pre">ave_pop</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">denmat_sh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">denmat_se</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh_stat.html#ave_pop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh_stat.ave_pop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the ensemble-averaged SH and SE density matrices</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>denmat_sh</strong> (<em>list of CMATRIX</em><em>(</em><em>N</em><em>, </em><em>N</em><em>)</em>) – SH density matrix (diagonal)
+for each trajectory. Such that <code class="docutils literal notranslate"><span class="pre">`denmat_sh[itraj]`</span></code> corresponds to the trajectory <code class="docutils literal notranslate"><span class="pre">`itraj`</span></code></p></li>
+<li><p><strong>denmat_se</strong> (<em>list of CMATRIX</em><em>(</em><em>N</em><em>, </em><em>N</em><em>)</em>) – SE density matrix
+for each trajectory. Such that <code class="docutils literal notranslate"><span class="pre">`denmat_se[itraj]`</span></code> corresponds to the trajectory <code class="docutils literal notranslate"><span class="pre">`itraj`</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( ave_pop_sh, ave_pop_se ):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>ave_pop_sh ( CMATRIX(N, N) ): the ensemble-averaged SH density matrix</p></li>
+<li><p>ave_pop_se ( CMATRIX(N, N) ): the ensemble-averaged SE density matrix</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh_stat.compute_dm">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh_stat.</span></code><code class="sig-name descname"><span class="pre">compute_dm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ham</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cdia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cadi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projectors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lvl</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh_stat.html#compute_dm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh_stat.compute_dm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the trajectory-averaged density matrices in diabatic
+or adiabatic representations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ham</strong> (<em>nHamiltonian</em>) – object that handles Hamiltonian-related calculations with many trajectories</p></li>
+<li><p><strong>Cdia</strong> (<em>CMATRIX</em><em>(</em><em>ndia</em><em>, </em><em>ntraj</em><em>)</em>) – amplitudes of diabatic states in the TD wavefunction expansion</p></li>
+<li><p><strong>Cadi</strong> (<em>CMATRIX</em><em>(</em><em>ndia</em><em>, </em><em>ntraj</em><em>)</em>) – amplitudes of adiabatic states in the TD wavefunction expansion</p></li>
+<li><p><strong>projectors</strong> (<em>list of CMATRIX</em><em>(</em><em>nst</em><em>, </em><em>nst</em><em>)</em>) – dynamically-consistent corrections</p></li>
+<li><p><strong>rep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>a selector of which representation is considered main (being propagated)
+E.g. if rep = 0 - that means we propagate the diabatic coefficients, that is the calculation
+of the diabatic density matrix is straightforward, but we need to involve some transformations
+to compute the adiabatic density matrix and vice versa, if rep = 1, the propagation is done according
+to the adiabatic properties and we’d need to convert to the diabatic representation in the end</p>
+<ul>
+<li><p>0: diabatic</p></li>
+<li><p>1: adiabatic</p></li>
+</ul>
+</p></li>
+<li><p><strong>lvl</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The level of the Hamiltonian that treats the transformations:
+- 0: ham is the actual Hamiltonian to use (use with single trajectory),
+- 1: ham is the parent of the Hamiltonians to use (use with multiple trajectories)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( dm_dia, dm_adi ):</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>dm_dia ( CMATRIX(ndia, ndia) ): the trajectory-averaged density matrix in</dt><dd><p>the diabatic representation. Here, ndia - is the number of diabatic basis
+states</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>dm_adi ( CMATRIX(nadi, nadi) ): the trajectory-averaged density matrix in</dt><dd><p>the adiabatic representation. Here, nadi - is the number of adiabatic basis
+states</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh_stat.compute_etot">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh_stat.</span></code><code class="sig-name descname"><span class="pre">compute_etot</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ham</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cdia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cadi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projectors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rep</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh_stat.html#compute_etot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh_stat.compute_etot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Ehrenfest potential energy</p>
+<p>This function computes the average kinetic, potential, and total
+energies for an ensemble of trajectories - according to the Ehrenfest recipe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ham</strong> (<em>nHamiltonian</em>) – object that handles Hamiltonian-related calculations with many trajectories</p></li>
+<li><p><strong>p</strong> (<em>MATRIX</em><em>(</em><em>ndof</em><em>, </em><em>ntraj</em><em>)</em>) – nuclear momenta of multiple trajectories</p></li>
+<li><p><strong>Cdia</strong> (<em>CMATRIX</em><em>(</em><em>ndia</em><em>, </em><em>ntraj</em><em>)</em>) – amplitudes of diabatic states in the TD wavefunction expansion</p></li>
+<li><p><strong>Cadi</strong> (<em>CMATRIX</em><em>(</em><em>ndia</em><em>, </em><em>ntraj</em><em>)</em>) – amplitudes of adiabatic states in the TD wavefunction expansion</p></li>
+<li><p><strong>projectors</strong> (<em>list of CMATRIX</em><em>(</em><em>nst</em><em>, </em><em>nst</em><em>)</em>) – dynamically-consistent corrections</p></li>
+<li><p><strong>iM</strong> (<em>MATRIX</em><em>(</em><em>ndof</em><em>, </em><em>1</em><em>)</em>) – inverse masses for all nuclear DOFs</p></li>
+<li><p><strong>rep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>The selector of the representation that is of current interest.</p>
+<ul>
+<li><p>0: diabatic</p></li>
+<li><p>1: adiabatic</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( Ekin, Epot, Etot, dEkin, dEpot, dEtot ): here</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Ekin ( double ): average kinetic energy of the ensemble</p></li>
+<li><p>Epot ( double ): average potential energy of the ensemble</p></li>
+<li><p>Etot ( double ): average total energy of the ensemble</p></li>
+<li><p>dEkin ( double ): standard deviation of the kinetic energy in the ensemble</p></li>
+<li><p>dEpot ( double ): standard deviation of the potential energy in the ensemble</p></li>
+<li><p>dEtot ( double ): standard deviation of the total energy in the ensemble</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh_stat.compute_etot_tsh">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh_stat.</span></code><code class="sig-name descname"><span class="pre">compute_etot_tsh</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ham</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cdia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cadi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projectors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rep</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh_stat.html#compute_etot_tsh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh_stat.compute_etot_tsh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the adiabatic potential energy</p>
+<p>This function computes the average kinetic, potential, and total
+energies for an ensemble of trajectories - according to the TSH recipe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ham</strong> (<em>nHamiltonian</em>) – object that handles Hamiltonian-related calculations with many trajectories</p></li>
+<li><p><strong>p</strong> (<em>MATRIX</em><em>(</em><em>ndof</em><em>, </em><em>ntraj</em><em>)</em>) – nuclear momenta of multiple trajectories</p></li>
+<li><p><strong>Cdia</strong> (<em>CMATRIX</em><em>(</em><em>ndia</em><em>, </em><em>ntraj</em><em>)</em>) – amplitudes of diabatic states in the TD wavefunction expansion</p></li>
+<li><p><strong>Cadi</strong> (<em>CMATRIX</em><em>(</em><em>nadi</em><em>, </em><em>ntraj</em><em>)</em>) – amplitudes of adiabatic states in the TD wavefunction expansion</p></li>
+<li><p><strong>projectors</strong> (<em>list of CMATRIX</em><em>(</em><em>nst</em><em>, </em><em>nst</em><em>)</em>) – dynamically-consistent corrections</p></li>
+<li><p><strong>iM</strong> (<em>MATRIX</em><em>(</em><em>ndof</em><em>, </em><em>1</em><em>)</em>) – inverse masses for all nuclear DOFs</p></li>
+<li><p><strong>rep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>The selector of the representation that is of current interest.</p>
+<ul>
+<li><p>0: diabatic</p></li>
+<li><p>1: adiabatic</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( Ekin, Epot, Etot, dEkin, dEpot, dEtot ): here</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Ekin ( double ): average kinetic energy of the ensemble</p></li>
+<li><p>Epot ( double ): average potential energy of the ensemble</p></li>
+<li><p>Etot ( double ): average total energy of the ensemble</p></li>
+<li><p>dEkin ( double ): standard deviation of the kinetic energy in the ensemble</p></li>
+<li><p>dEpot ( double ): standard deviation of the potential energy in the ensemble</p></li>
+<li><p>dEtot ( double ): standard deviation of the total energy in the ensemble</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh_stat.compute_sh_statistics">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh_stat.</span></code><code class="sig-name descname"><span class="pre">compute_sh_statistics</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nstates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">istate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projectors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh_stat.html#compute_sh_statistics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh_stat.compute_sh_statistics" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes the SH statistics for an ensemble of trajectories</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nstates</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The number of considered quantum states</p></li>
+<li><p><strong>istate</strong> (<em>list of integers</em>) – The list containing the info about the index
+of a quantum state in which each trajectory is found.
+The length of the list is equal to the number of trajectories.
+Each element of the list is the state index for that trajectory.
+In other words, istate[0] is the quantum state for a trajectory 0,
+istate[1] is the quantum state for a trajectory 1, etc.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>coeff_sh: The list containing the average</dt><dd><p>population of each quantum state. The length of the list is equal to the
+total number of quantum states considered, <code class="docutils literal notranslate"><span class="pre">`nstates`</span></code></p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>MATRIX(nstates, 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh_stat.denmat2prob">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh_stat.</span></code><code class="sig-name descname"><span class="pre">denmat2prob</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh_stat.html#denmat2prob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh_stat.denmat2prob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the density matrix to the populations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>P</strong> (<em>CMATRIX</em><em>(</em><em>N</em><em>, </em><em>N</em><em>)</em>) – Density matrix</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>populations of all states</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>( list of doubles )</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh_stat.pops2denmat">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh_stat.</span></code><code class="sig-name descname"><span class="pre">pops2denmat</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pops</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh_stat.html#pops2denmat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh_stat.pops2denmat" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Converts the populations (vector) of all states for all trajectories to the corresponding</dt><dd><p>density matrices (matrix). This is just a convenience function</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>pops</strong> (<em>list of CMATRIX</em><em>(</em><em>nstates</em><em>, </em><em>1</em><em>)</em>) – state populations for all trajectories</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>density matrices for all trajectories</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>( list of CMATRIX(nstates, nstate) )</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh_stat.probabilities_1D_scattering">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh_stat.</span></code><code class="sig-name descname"><span class="pre">probabilities_1D_scattering</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh_stat.html#probabilities_1D_scattering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh_stat.probabilities_1D_scattering" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the scattering probabilities in 1D</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>_q</strong> (<em>MATRIX</em><em>(</em><em>nnucl</em><em>, </em><em>ntraj</em><em>)</em>) – coordinates of the “classical” particles [units: Bohr]</p></li>
+<li><p><strong>states</strong> (<em>intList</em><em>, or </em><em>list of ntraj ints</em>) – the quantum state of each trajectory</p></li>
+<li><p><strong>nst</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of possible quantum states in the problem</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>parameters of the simulation, should contain</p>
+<ul>
+<li><p><strong>params[“act_dof”]</strong> ( int ): index of the nuclear DOF that is considered active (scattering coord)</p></li>
+<li><p><a href="#id1"><span class="problematic" id="id2">**</span></a>params[“left_boundary”] ( double ): the beginning of the reflected particles counter [units: Bohr]</p></li>
+<li><p><a href="#id3"><span class="problematic" id="id4">**</span></a>params[“right_boundary”] ( double ): the beginning of the transmitted particles counter [units: Bohr]</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( pop_refl, pop_transm ): where</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>pop_refl ( MATRIX(nst, 1) ): probabilities of reflection on each state</p></li>
+<li><p>pop_transm ( MATRIX(nst, 1) ): probabilities of transmission on each state</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.tsh_stat.update_sh_pop">
+<code class="sig-prename descclassname"><span class="pre">libra_py.tsh_stat.</span></code><code class="sig-name descname"><span class="pre">update_sh_pop</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">istate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/tsh_stat.html#update_sh_pop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.tsh_stat.update_sh_pop" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>istate</strong> (<em>list of integers</em>) – The list containing the info about the index
+of a quantum state in which each trajectory is found.
+The length of the list is equal to the number of trajectories.
+Each element of the list is the state index for that trajectory.
+In other words, istate[0] is the quantum state for a trajectory 0,
+istate[1] is the quantum state for a trajectory 1, etc.</p></li>
+<li><p><strong>nstates</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The number of considered quantum states</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>pops: The list containing the average</dt><dd><p>SH-based population of each quantum state. The length of the list is equal to the
+total number of quantum states considered, <code class="docutils literal notranslate"><span class="pre">`nstates`</span></code></p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>( list of <code class="docutils literal notranslate"><span class="pre">`nstates`</span></code> ints )</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The functionality is the same as of <code class="docutils literal notranslate"><span class="pre">`compute_sh_statistics`</span></code>, just a different
+format of the output</p>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="unavoided.html" class="btn btn-neutral float-right" title="unavioded" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="tsh.html" class="btn btn-neutral float-left" title="tsh" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,475 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.models.Faist_Levine &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.models.Faist_Levine</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.models.Faist_Levine</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************                     </span>
+<span class="c1">#* Copyright (C) 2018-2019 Alexey V. Akimov                                                   </span>
+<span class="c1">#*                                                                                                     </span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License                          </span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of                                   </span>
+<span class="c1">#* the License, or (at your option) any later version.                                                 </span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution   </span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.          </span>
+<span class="c1">#***********************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: models_Faist_Levine</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements the 1D, 2-level models of Faist and Levine</span>
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">libra_py.units</span> <span class="kn">import</span> <span class="n">Angst</span>
+<span class="kn">from</span> <span class="nn">libra_py.units</span> <span class="kn">import</span> <span class="n">ev2au</span>
+
+<span class="k">class</span> <span class="nc">tmp</span><span class="p">:</span>
+    <span class="k">pass</span>    
+
+
+<div class="viewcode-block" id="get_Faist_Levine_LiI"><a class="viewcode-back" href="../../../reference/libra_py/models/Faist_Levine.html#libra_py.models.Faist_Levine.get_Faist_Levine_LiI">[docs]</a><span class="k">def</span> <span class="nf">get_Faist_Levine_LiI</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Parameters for the Li + I collision potential    </span>
+
+<span class="sd">    Ref: Faist, M. B.; Levine, R. D. JCP 1976, 64, 2953</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        None</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dictionary: params, will contain the parameters:</span>
+
+<span class="sd">            * **params[&quot;A_cov&quot;]** ( double ) [ units: Ha ] </span>
+<span class="sd">            * **params[&quot;A_ion&quot;]** ( double ) [ units: Ha ] </span>
+<span class="sd">            * **params[&quot;B_cov&quot;]** ( double ) [ units: Ha^(1/12) * Bohr ] </span>
+<span class="sd">            * **params[&quot;B_ion&quot;]** ( double ) [ units: Ha^(1/12) * Bohr ] </span>
+<span class="sd">            * **params[&quot;C_cov&quot;]** ( double ) [ units: Ha * Bohr^6 ] </span>
+<span class="sd">            * **params[&quot;C_ion&quot;]** ( double ) [ units: Ha * Bohr^6 ] </span>
+<span class="sd">            * **params[&quot;rho_cov&quot;]** ( double ) [ units: Bohr ] </span>
+<span class="sd">            * **params[&quot;rho_ion&quot;]** ( double ) [ units: Bohr ] </span>
+<span class="sd">            * **params[&quot;alp_M+&quot;]** ( double ) [ units: Bohr^3 ] </span>
+<span class="sd">            * **params[&quot;alp_X-&quot;]** ( double ) [ units: Bohr^3 ] </span>
+<span class="sd">            * **params[&quot;E_th&quot;]** ( double ) [ units: Ha ] </span>
+<span class="sd">            * **params[&quot;A&quot;]** ( double ) [ units: Ha ] </span>
+<span class="sd">            * **params[&quot;rho&quot;]** ( double ) [ units: Bohr ] </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="n">Angst</span>   <span class="c1"># 1 Angstrom in Bohr</span>
+    <span class="n">eV</span> <span class="o">=</span> <span class="n">ev2au</span>  <span class="c1"># 1 eV in Ha</span>
+
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;A_cov&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">3150.0</span> <span class="o">*</span> <span class="n">eV</span> <span class="c1">#1100.0 * eV - this value is declared to </span>
+                                  <span class="c1"># be arbitrary, but in practice it yields</span>
+                                  <span class="c1"># strange curve, so I have set this parameter</span>
+                                  <span class="c1"># to that of the NaI model</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;A_ion&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1052.0</span> <span class="o">*</span> <span class="n">eV</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;B_cov&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.996</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">eV</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">/</span><span class="mf">12.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">A</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;B_ion&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.839</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">eV</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">/</span><span class="mf">8.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">A</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;C_cov&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1191.2</span> <span class="o">*</span> <span class="n">eV</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;C_ion&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.823</span> <span class="o">*</span> <span class="n">eV</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;rho_cov&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.44</span> <span class="o">*</span> <span class="n">A</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;rho_ion&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.3786</span> <span class="o">*</span> <span class="n">A</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;alp_M+&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.029</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;alp_X-&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">6.431</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;E_th&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.326</span> <span class="o">*</span> <span class="n">eV</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">17.08</span> <span class="o">*</span> <span class="n">eV</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;rho&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.239</span> <span class="o">*</span> <span class="n">A</span>  <span class="c1">## I&#39;m not sure why they give it in A^-1</span>
+
+
+    <span class="k">return</span> <span class="n">params</span></div>
+   
+
+
+<div class="viewcode-block" id="get_Faist_Levine_NaI"><a class="viewcode-back" href="../../../reference/libra_py/models/Faist_Levine.html#libra_py.models.Faist_Levine.get_Faist_Levine_NaI">[docs]</a><span class="k">def</span> <span class="nf">get_Faist_Levine_NaI</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Parameters for Na + I collision potential</span>
+<span class="sd">    </span>
+<span class="sd">    Ref: Faist, M. B.; Levine, R. D. JCP 1976, 64, 2953</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        None</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dictionary: params, will contain the parameters:</span>
+
+<span class="sd">            * **params[&quot;A_cov&quot;]** ( double ) [ units: Ha ] </span>
+<span class="sd">            * **params[&quot;A_ion&quot;]** ( double ) [ units: Ha ] </span>
+<span class="sd">            * **params[&quot;B_cov&quot;]** ( double ) [ units: Ha^(1/12) * Bohr ] </span>
+<span class="sd">            * **params[&quot;B_ion&quot;]** ( double ) [ units: Ha^(1/12) * Bohr ] </span>
+<span class="sd">            * **params[&quot;C_cov&quot;]** ( double ) [ units: Ha * Bohr^6 ] </span>
+<span class="sd">            * **params[&quot;C_ion&quot;]** ( double ) [ units: Ha * Bohr^6 ] </span>
+<span class="sd">            * **params[&quot;rho_cov&quot;]** ( double ) [ units: Bohr ] </span>
+<span class="sd">            * **params[&quot;rho_ion&quot;]** ( double ) [ units: Bohr ] </span>
+<span class="sd">            * **params[&quot;alp_M+&quot;]** ( double ) [ units: Bohr^3 ] </span>
+<span class="sd">            * **params[&quot;alp_X-&quot;]** ( double ) [ units: Bohr^3 ] </span>
+<span class="sd">            * **params[&quot;E_th&quot;]** ( double ) [ units: Ha ] </span>
+<span class="sd">            * **params[&quot;A&quot;]** ( double ) [ units: Ha ] </span>
+<span class="sd">            * **params[&quot;rho&quot;]** ( double ) [ units: Bohr ] </span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="n">Angst</span>  <span class="c1"># 1 Angstrom in Bohr</span>
+    <span class="n">eV</span> <span class="o">=</span> <span class="n">ev2au</span> <span class="c1"># 1 eV in Ha</span>
+
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;A_cov&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">3150.0</span> <span class="o">*</span> <span class="n">eV</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;A_ion&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2760.0</span> <span class="o">*</span> <span class="n">eV</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;B_cov&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.647</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">eV</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">/</span><span class="mf">12.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">A</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;B_ion&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.398</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">eV</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">/</span><span class="mf">8.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">A</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;C_cov&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1000.0</span> <span class="o">*</span> <span class="n">eV</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;C_ion&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">11.3</span> <span class="o">*</span> <span class="n">eV</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;rho_cov&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.435</span> <span class="o">*</span> <span class="n">A</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;rho_ion&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.3489</span> <span class="o">*</span> <span class="n">A</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;alp_M+&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.408</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;alp_X-&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">6.431</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;E_th&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.075</span> <span class="o">*</span> <span class="n">eV</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">17.08</span> <span class="o">*</span> <span class="n">eV</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;rho&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.239</span> <span class="o">*</span> <span class="n">A</span>  <span class="c1">## I&#39;m not sure why they give it in A^-1</span>
+
+
+    <span class="k">return</span> <span class="n">params</span></div>
+   
+
+
+<div class="viewcode-block" id="Faist_Levine"><a class="viewcode-back" href="../../../reference/libra_py/models/Faist_Levine.html#libra_py.models.Faist_Levine.Faist_Levine">[docs]</a><span class="k">def</span> <span class="nf">Faist_Levine</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Faist and Levine, 2-level, 1-dim. potential describing the</span>
+<span class="sd">    collision of alkali and halogen atoms</span>
+
+<span class="sd">    Ref: Faist, M. B.; Levine, R. D. JCP 1976, 64, 2953</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        q ( MATRIX(1,1) ) : nuclear coordinate</span>
+<span class="sd">        params ( dictionary ) : parameters of the model potential, should contain:</span>
+
+<span class="sd">            * **params[&quot;A_cov&quot;]** ( double ) [ units: Ha ] </span>
+<span class="sd">            * **params[&quot;A_ion&quot;]** ( double ) [ units: Ha ] </span>
+<span class="sd">            * **params[&quot;B_cov&quot;]** ( double ) [ units: Ha^(1/12) * Bohr ] </span>
+<span class="sd">            * **params[&quot;B_ion&quot;]** ( double ) [ units: Ha^(1/12) * Bohr ] </span>
+<span class="sd">            * **params[&quot;C_cov&quot;]** ( double ) [ units: Ha * Bohr^6 ] </span>
+<span class="sd">            * **params[&quot;C_ion&quot;]** ( double ) [ units: Ha * Bohr^6 ] </span>
+<span class="sd">            * **params[&quot;rho_cov&quot;]** ( double ) [ units: Bohr ] </span>
+<span class="sd">            * **params[&quot;rho_ion&quot;]** ( double ) [ units: Bohr ] </span>
+<span class="sd">            * **params[&quot;alp_M+&quot;]** ( double ) [ units: Bohr^3 ] </span>
+<span class="sd">            * **params[&quot;alp_X-&quot;]** ( double ) [ units: Bohr^3 ] </span>
+<span class="sd">            * **params[&quot;E_th&quot;]** ( double ) [ units: Ha ] </span>
+<span class="sd">            * **params[&quot;A&quot;]** ( double ) [ units: Ha ] </span>
+<span class="sd">            * **params[&quot;rho&quot;]** ( double ) [ units: Bohr ] </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        PyObject: obj, with the members:</span>
+
+<span class="sd">            * obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian </span>
+<span class="sd">            * obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]</span>
+<span class="sd">            * obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ): </span>
+<span class="sd">                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</span>
+<span class="sd">            * obj.dc1_dia ( list of 2 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]</span>
+
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">num_of_rows</span>  <span class="c1"># the number of nuclear DOFs</span>
+
+    <span class="k">if</span> <span class="n">ndof</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: The Faist-Levine Hamiltonian takes 1 nuclear DOFs only. Given = &quot;</span><span class="p">,</span> <span class="n">ndof</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exiting...&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">A_cov</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;A_cov&quot;</span><span class="p">]</span>
+    <span class="n">A_ion</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;A_ion&quot;</span><span class="p">]</span>
+    <span class="n">B_cov</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;B_cov&quot;</span><span class="p">]</span>
+    <span class="n">B_ion</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;B_ion&quot;</span><span class="p">]</span>
+    <span class="n">C_cov</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;C_cov&quot;</span><span class="p">]</span>
+    <span class="n">C_ion</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;C_ion&quot;</span><span class="p">]</span>
+    <span class="n">rho_cov</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;rho_cov&quot;</span><span class="p">]</span>
+    <span class="n">rho_ion</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;rho_ion&quot;</span><span class="p">]</span>
+    <span class="n">alp_Mp</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;alp_M+&quot;</span><span class="p">]</span>
+    <span class="n">alp_Xm</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;alp_X-&quot;</span><span class="p">]</span>
+    <span class="n">E_th</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;E_th&quot;</span><span class="p">]</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">]</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;rho&quot;</span><span class="p">]</span>
+
+
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">()</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">ham_dia</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">ovlp_dia</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>  <span class="n">obj</span><span class="o">.</span><span class="n">ovlp_dia</span><span class="o">.</span><span class="n">identity</span><span class="p">()</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span> <span class="o">=</span> <span class="n">CMATRIXList</span><span class="p">()</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">dc1_dia</span> <span class="o">=</span> <span class="n">CMATRIXList</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">dc1_dia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+
+
+    <span class="c1">#=========== Energies &amp; Derivatives ===============</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">p1</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">R</span>
+    <span class="n">p2</span> <span class="o">=</span> <span class="n">p1</span> <span class="o">*</span> <span class="n">p1</span>
+    <span class="n">p4</span> <span class="o">=</span> <span class="n">p2</span> <span class="o">*</span> <span class="n">p2</span>
+    <span class="n">p6</span> <span class="o">=</span> <span class="n">p4</span> <span class="o">*</span> <span class="n">p2</span>
+    <span class="n">p8</span> <span class="o">=</span> <span class="n">p6</span> <span class="o">*</span> <span class="n">p2</span>
+    <span class="n">p12</span> <span class="o">=</span> <span class="n">p6</span> <span class="o">*</span> <span class="n">p6</span>
+
+
+    <span class="c1"># H_00</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">R</span><span class="o">/</span><span class="n">rho_cov</span><span class="p">)</span>
+    <span class="n">b12</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">B_cov</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+    <span class="n">pb12</span> <span class="o">=</span> <span class="n">b12</span> <span class="o">*</span> <span class="n">p12</span>
+
+    <span class="n">z</span> <span class="o">=</span> <span class="p">(</span><span class="n">A_cov</span> <span class="o">+</span> <span class="n">pb12</span> <span class="p">)</span> <span class="o">*</span> <span class="n">e</span> <span class="o">-</span> <span class="n">C_cov</span> <span class="o">*</span> <span class="n">p6</span>
+    <span class="n">dzdx</span> <span class="o">=</span>  <span class="p">(</span><span class="o">-</span><span class="mf">12.0</span> <span class="o">*</span> <span class="n">pb12</span> <span class="o">/</span> <span class="n">R</span> <span class="p">)</span> <span class="o">*</span> <span class="n">e</span>
+    <span class="n">dzdx</span> <span class="o">+=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="o">/</span><span class="n">rho_cov</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">A_cov</span> <span class="o">+</span> <span class="n">pb12</span> <span class="p">)</span> <span class="o">*</span> <span class="n">e</span>
+    <span class="n">dzdx</span> <span class="o">+=</span> <span class="mf">6.0</span> <span class="o">*</span> <span class="n">C_cov</span> <span class="o">*</span> <span class="n">p6</span> <span class="o">/</span> <span class="n">R</span>
+
+    <span class="n">obj</span><span class="o">.</span><span class="n">ham_dia</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="n">z</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">))</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="n">dzdx</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">))</span>
+
+
+    <span class="c1"># H_11</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">R</span><span class="o">/</span><span class="n">rho_ion</span><span class="p">)</span>
+    <span class="n">b8</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">B_ion</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+    <span class="n">pb8</span> <span class="o">=</span> <span class="n">b8</span> <span class="o">*</span> <span class="n">p8</span>
+
+    <span class="n">z</span> <span class="o">=</span> <span class="p">(</span><span class="n">A_ion</span> <span class="o">+</span> <span class="n">pb8</span> <span class="p">)</span> <span class="o">*</span> <span class="n">e</span> <span class="o">-</span> <span class="n">C_ion</span> <span class="o">*</span> <span class="n">p6</span> <span class="o">-</span> <span class="n">p1</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">alp_Mp</span> <span class="o">+</span> <span class="n">alp_Xm</span><span class="p">)</span><span class="o">*</span><span class="n">p4</span> <span class="o">-</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">alp_Mp</span><span class="o">*</span><span class="n">alp_Xm</span><span class="o">*</span><span class="n">p6</span><span class="o">/</span><span class="n">R</span> <span class="o">+</span> <span class="n">E_th</span>
+    <span class="n">dzdx</span> <span class="o">=</span>  <span class="p">(</span><span class="o">-</span><span class="mf">8.0</span> <span class="o">*</span> <span class="n">pb8</span> <span class="o">/</span> <span class="n">R</span> <span class="p">)</span> <span class="o">*</span> <span class="n">e</span>
+    <span class="n">dzdx</span> <span class="o">+=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="o">/</span><span class="n">rho_ion</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">A_ion</span> <span class="o">+</span> <span class="n">pb8</span> <span class="p">)</span> <span class="o">*</span> <span class="n">e</span>
+    <span class="n">dzdx</span> <span class="o">+=</span> <span class="mf">6.0</span> <span class="o">*</span> <span class="n">C_ion</span> <span class="o">*</span> <span class="n">p6</span> <span class="o">/</span> <span class="n">R</span>
+    <span class="n">dzdx</span> <span class="o">+=</span> <span class="n">p2</span>
+    <span class="n">dzdx</span> <span class="o">+=</span> <span class="mf">2.0</span><span class="o">*</span><span class="p">(</span><span class="n">alp_Mp</span> <span class="o">+</span> <span class="n">alp_Xm</span><span class="p">)</span><span class="o">*</span><span class="n">p4</span> <span class="o">/</span> <span class="n">R</span> 
+    <span class="n">dzdx</span> <span class="o">+=</span> <span class="mf">14.0</span><span class="o">*</span><span class="n">alp_Mp</span><span class="o">*</span><span class="n">alp_Xm</span><span class="o">*</span><span class="n">p8</span>
+
+    <span class="n">obj</span><span class="o">.</span><span class="n">ham_dia</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">z</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">))</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">dzdx</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">))</span>
+
+
+
+    <span class="c1"># H_01 and H_10</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">A</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">R</span><span class="o">/</span><span class="n">rho</span><span class="p">)</span>
+    <span class="n">dzdx</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="o">/</span><span class="n">rho</span><span class="p">)</span> <span class="o">*</span> <span class="n">z</span>
+
+    <span class="n">obj</span><span class="o">.</span><span class="n">ham_dia</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">z</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">dzdx</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="n">obj</span><span class="o">.</span><span class="n">ham_dia</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="n">z</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="n">dzdx</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span>
+
+
+    <span class="k">return</span> <span class="n">obj</span></div>
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

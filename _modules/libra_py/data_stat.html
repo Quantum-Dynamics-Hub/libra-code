@@ -1,0 +1,717 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.data_stat &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.data_stat</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.data_stat</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************                     </span>
+<span class="c1">#* Copyright (C) 2019 Alexey V. Akimov                                                   </span>
+<span class="c1">#*                                                                                                     </span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License                          </span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of                                   </span>
+<span class="c1">#* the License, or (at your option) any later version.                                                 </span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution   </span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.          </span>
+<span class="c1">#***********************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: data_stat</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: </span>
+<span class="sd">       This module implements various functions for data analysis</span>
+
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1">#import common_utils as comn</span>
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+
+
+
+
+<div class="viewcode-block" id="vec_average"><a class="viewcode-back" href="../../reference/libra_py/data_stat.html#libra_py.data_stat.vec_average">[docs]</a><span class="k">def</span> <span class="nf">vec_average</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function computes the average value of the data series</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data ( list of VECTOR objects ): sequence of real-valued ndof-dimensional vectors</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        VECTOR: the average value for each DOF in the time-series</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ave</span> <span class="o">=</span> <span class="n">VECTOR</span><span class="p">()</span>
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">ave</span> <span class="o">=</span> <span class="n">ave</span> <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> 
+
+    <span class="n">ave</span> <span class="o">=</span> <span class="n">ave</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">sz</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ave</span></div>
+
+
+<div class="viewcode-block" id="vec_center_data"><a class="viewcode-back" href="../../reference/libra_py/data_stat.html#libra_py.data_stat.vec_center_data">[docs]</a><span class="k">def</span> <span class="nf">vec_center_data</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function centers data on zero, by subtracting the average </span>
+<span class="sd">    value from each element, dof by dof</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data ( list of VECTOR objects ): sequence of real-valued ndof-dimensional vectors</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        VECTOR: the fluctuation (deviation) value for each DOF in the time-series (dX(t) = X(t) -&lt;X&gt; )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">data_new</span> <span class="o">=</span> <span class="p">[]</span>    
+    <span class="n">ave</span> <span class="o">=</span> <span class="n">vec_average</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">data_new</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="n">ave</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data_new</span></div>
+
+
+
+<div class="viewcode-block" id="mat_average"><a class="viewcode-back" href="../../reference/libra_py/data_stat.html#libra_py.data_stat.mat_average">[docs]</a><span class="k">def</span> <span class="nf">mat_average</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function computes the average value of the data series</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data ( list of MATRIX(ndof, 1) objects ): sequence of real-valued ndof-dimensional vectors</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MATRIX(ndof, 1): the average value for each DOF in the time-series</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_rows</span>  
+    <span class="n">ave</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">ave</span> <span class="o">=</span> <span class="n">ave</span> <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> 
+
+    <span class="n">ave</span> <span class="o">=</span> <span class="n">ave</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">sz</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ave</span></div>
+
+
+<div class="viewcode-block" id="mat_center_data"><a class="viewcode-back" href="../../reference/libra_py/data_stat.html#libra_py.data_stat.mat_center_data">[docs]</a><span class="k">def</span> <span class="nf">mat_center_data</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function centers data on zero, by subtracting the average </span>
+<span class="sd">    value from each element, dof by dof</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data ( list of MATRIX(ndof, 1) objects ): sequence of real-valued ndof-dimensional vectors</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MATRIX(ndof, 1): the fluctuation (deviation) value for each DOF in the time-series (dX(t) = X(t) -&lt;X&gt; )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">data_new</span> <span class="o">=</span> <span class="p">[]</span>    
+    <span class="n">ave</span> <span class="o">=</span> <span class="n">mat_average</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">data_new</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="n">ave</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data_new</span></div>
+
+
+
+
+<div class="viewcode-block" id="find_maxima"><a class="viewcode-back" href="../../reference/libra_py/data_stat.html#libra_py.data_stat.find_maxima">[docs]</a><span class="k">def</span> <span class="nf">find_maxima</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function finds all the maxima of the data set and sorts them according to the data</span>
+<span class="sd">    The maxima are defined as data[i-1] &lt; data[i] &gt; data[i+1]</span>
+<span class="sd">    </span>
+<span class="sd">    Args: </span>
+<span class="sd">        data ( list of doubles ): data to be analyzed</span>
+<span class="sd">        params ( Python dictionary ): parameters controlling the execution</span>
+<span class="sd"> </span>
+<span class="sd">            * **params[&quot;do_output&quot;] ( Boolean ): wheather to output the data to file [ default: False ]</span>
+<span class="sd">            * **params[&quot;logname&quot;] ( Boolean ): the name of the output file [ default: &quot;data_maxima.txt&quot; ]</span>
+<span class="sd">            * **params[&quot;verbose&quot;] ( int ): the amount of the debug/descriptive info to print out [ default: 0 ]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list of 2-element lists: our[i][v], where:</span>
+<span class="sd"> </span>
+<span class="sd">            out[i][0] - containing indices of the maximal values</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">        &gt;&gt;&gt; res = find_maxima( [0.01, 1.0, 0.1, 0.25, 0.5, 0.75, -1.0 ], {} )</span>
+<span class="sd">        &gt;&gt;&gt; print res</span>
+<span class="sd">        &gt;&gt;&gt; [ [1, 1.0], [5, 0.75] ]</span>
+
+<span class="sd">        &gt;&gt;&gt; res = find_maxima( [0.01, 0.75, 0.1, 0.25, 0.5, 1.75, -1.0 ], {} )</span>
+<span class="sd">        &gt;&gt;&gt; print res</span>
+<span class="sd">        &gt;&gt;&gt; [ [5, 1.75], [1, 0.75] ]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;do_output&quot;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;logname&quot;</span><span class="p">:</span><span class="s2">&quot;data_maxima.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;verbose&quot;</span><span class="p">:</span><span class="mi">0</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="n">do_output</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;do_output&quot;</span><span class="p">]</span>
+    <span class="n">logname</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;logname&quot;</span><span class="p">]</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;verbose&quot;</span><span class="p">]</span>
+
+
+    <span class="n">max_indxs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">sz</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">max_indxs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="n">inp</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">max_indxs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">inp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">[</span> <span class="n">max_indxs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="n">max_indxs</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="p">]</span> <span class="p">)</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">merge_sort</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>  <span class="c1"># largest in the end</span>
+
+    <span class="k">if</span> <span class="n">do_output</span><span class="p">:</span>
+        <span class="n">lgfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">logname</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span>
+        <span class="n">lgfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Found maxima of the data:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+            <span class="n">lgfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;maximum index = </span><span class="si">%3i</span><span class="s2">  index of the datapoint = </span><span class="si">%8.5f</span><span class="s2">  data value = </span><span class="si">%8.5f</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">out</span><span class="p">[</span><span class="n">sz</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">out</span><span class="p">[</span><span class="n">sz</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="p">)</span>
+        <span class="n">lgfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>    
+    
+    <span class="k">return</span> <span class="n">out</span></div>
+    
+
+
+
+
+<div class="viewcode-block" id="scalar_stat"><a class="viewcode-back" href="../../reference/libra_py/data_stat.html#libra_py.data_stat.scalar_stat">[docs]</a><span class="k">def</span> <span class="nf">scalar_stat</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    The function computes some simple descriptive statistics of the scalar data series.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data ( list of doubles ): the data to be analyzed</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (res, res2), where:</span>
+
+<span class="sd">            * res ( double ): average of data</span>
+<span class="sd">            * res2 ( double ): standard deviation of data</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="c1">#===== Average ====</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+
+    <span class="c1">#===== Std ========</span>
+    <span class="n">res2</span> <span class="o">=</span> <span class="mf">0.0</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">res2</span> <span class="o">=</span> <span class="n">res2</span> <span class="o">+</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">res</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">res2</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">res2</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">res2</span></div>
+
+
+
+
+<div class="viewcode-block" id="mat_stat"><a class="viewcode-back" href="../../reference/libra_py/data_stat.html#libra_py.data_stat.mat_stat">[docs]</a><span class="k">def</span> <span class="nf">mat_stat</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the average and standard deviation of list of MATRIX(N,N) objects</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        X ( list of MATRIX(N,N) objects ): the data to be analyzed</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (res, res2, dw_bound, up_bound): where</span>
+
+<span class="sd">            * res ( MATRIX(N,N) ): average of each matrix element of data</span>
+<span class="sd">            * res2 ( MATRIX(N,N) ): standard deviation of each matrix element of data</span>
+<span class="sd">            * dw_bound ( MATRIX(N,N) ): lower bounds of the data for each matrix element</span>
+<span class="sd">            * up_bound ( MATRIX(N,N) ): upper bounds of the data for each matrix element</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span> <span class="n">res</span> <span class="o">*=</span> <span class="mf">0.0</span>
+
+    <span class="c1">#===== Average ====</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+
+
+    <span class="c1">#===== Std ========</span>
+    <span class="n">res2</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span> <span class="n">res2</span> <span class="o">*=</span> <span class="mf">0.0</span>
+
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">res2</span><span class="o">.</span><span class="n">num_of_rows</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">res2</span><span class="o">.</span><span class="n">num_of_cols</span><span class="p">):</span>
+        
+            <span class="n">tmp</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">tmp</span> <span class="o">+</span> <span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span> <span class="o">-</span> <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">tmp</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="p">)</span>
+
+            <span class="n">res2</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span>
+
+    <span class="c1"># Find maximal and minimal values</span>
+    <span class="n">up_bound</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span> <span class="n">up_bound</span> <span class="o">*=</span> <span class="mf">0.0</span>
+    <span class="n">dw_bound</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span> <span class="n">dw_bound</span> <span class="o">*=</span> <span class="mf">0.0</span>
+
+
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">res2</span><span class="o">.</span><span class="n">num_of_rows</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">res2</span><span class="o">.</span><span class="n">num_of_cols</span><span class="p">):</span>
+
+            <span class="n">up_bound</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">))</span>
+            <span class="n">dw_bound</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+                <span class="n">xab</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">xab</span> <span class="o">&gt;</span> <span class="n">up_bound</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
+                    <span class="n">up_bound</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span> <span class="n">xab</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">xab</span> <span class="o">&lt;</span> <span class="n">dw_bound</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span>
+                    <span class="n">dw_bound</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">xab</span><span class="p">)</span>
+
+
+    <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">res2</span><span class="p">,</span> <span class="n">dw_bound</span><span class="p">,</span> <span class="n">up_bound</span></div>
+
+
+
+
+<div class="viewcode-block" id="cmat_stat"><a class="viewcode-back" href="../../reference/libra_py/data_stat.html#libra_py.data_stat.cmat_stat">[docs]</a><span class="k">def</span> <span class="nf">cmat_stat</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the average and standard deviation of list of CMATRIX(N,N) objects</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        X ( list of CMATRIX(N,N) objects ): the data to be analyzed</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (res, res2): where</span>
+
+<span class="sd">            * res ( CMATRIX(N,N) ): average of each matrix element of data</span>
+<span class="sd">            * res2 ( CMATRIX(N,N) ): standard deviation of each matrix element of data</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span> <span class="n">res</span> <span class="o">*=</span> <span class="mf">0.0</span>
+
+    <span class="c1">#===== Average ====</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+
+
+    <span class="c1">#===== Std ========</span>
+    <span class="n">res2</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span> <span class="n">res2</span> <span class="o">*=</span> <span class="mf">0.0</span>
+
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">res2</span><span class="o">.</span><span class="n">num_of_rows</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">res2</span><span class="o">.</span><span class="n">num_of_cols</span><span class="p">):</span>
+        
+            <span class="n">tmp</span> <span class="o">=</span> <span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+                <span class="n">dx</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span> <span class="o">-</span> <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">tmp</span> <span class="o">+</span> <span class="p">(</span><span class="n">dx</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span> <span class="o">*</span> <span class="n">dx</span><span class="p">)</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">tmp</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="p">)</span>
+
+            <span class="n">res2</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">res2</span></div>
+
+
+
+
+
+
+<div class="viewcode-block" id="cmat_stat2"><a class="viewcode-back" href="../../reference/libra_py/data_stat.html#libra_py.data_stat.cmat_stat2">[docs]</a><span class="k">def</span> <span class="nf">cmat_stat2</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">opt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the norm-N average of a list of CMATRIX(N,N) objects</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        X ( list of CMATRIX(N,N) objects ): the data to be analyzed</span>
+<span class="sd">        opt ( int ): the option for averaging:</span>
+
+<span class="sd">            * opt == 0 :  t_ij = &lt;x_ij&gt;  + i &lt;y_ij&gt;</span>
+<span class="sd">            * opt == 1 :  t_ij = &lt;|x_ij|&gt;  + i &lt;|y_ij|&gt;</span>
+<span class="sd">            * opt == 2 :  t_ij = sqrt(&lt;x_ij^2&gt;)  + i sqrt(&lt;y_ij^2&gt;)</span>
+<span class="sd">            * opt == 3 :  t_ij = sqrt(&lt;x_ij^2&gt; + &lt;y_ij^2&gt;) = sqrt(|z_ij|^2) </span>
+<span class="sd">            </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        CMATRIX(N,N): norm-N average of each matrix element of data</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ndata</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+
+
+    <span class="c1">#===== Average ====</span>
+    <span class="k">for</span> <span class="n">idata</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndata</span><span class="p">):</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+ 
+                <span class="k">if</span> <span class="n">opt</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">res</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">X</span><span class="p">[</span><span class="n">idata</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">))</span>
+
+                <span class="k">elif</span> <span class="n">opt</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">re</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">idata</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+                    <span class="n">im</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">idata</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+                    <span class="n">res</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">re</span><span class="o">+</span><span class="mf">1.0</span><span class="n">j</span><span class="o">*</span><span class="n">im</span><span class="p">)</span>
+
+                <span class="k">elif</span> <span class="n">opt</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">re</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">idata</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+                    <span class="n">im</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">idata</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+                    <span class="n">res</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">re</span><span class="o">*</span><span class="n">re</span><span class="o">+</span><span class="mf">1.0</span><span class="n">j</span><span class="o">*</span><span class="n">im</span><span class="o">*</span><span class="n">im</span><span class="p">)</span>
+
+                <span class="k">elif</span> <span class="n">opt</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                    <span class="n">re</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">idata</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+                    <span class="n">im</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">idata</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+                    <span class="n">res</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">re</span><span class="o">*</span><span class="n">re</span><span class="o">+</span><span class="n">im</span><span class="o">*</span><span class="n">im</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span>
+
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">ndata</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="n">opt</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">re</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="p">)</span>
+                <span class="n">im</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span> <span class="p">)</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">re</span><span class="o">+</span><span class="mf">1.0</span><span class="n">j</span><span class="o">*</span><span class="n">im</span> <span class="p">)</span>
+
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+<div class="viewcode-block" id="cmat_distrib"><a class="viewcode-back" href="../../reference/libra_py/data_stat.html#libra_py.data_stat.cmat_distrib">[docs]</a><span class="k">def</span> <span class="nf">cmat_distrib</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">component</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">dx</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the distribution of the matrix element values in the list of CMATRIX(N,N) objects</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        X ( list of CMATRIX(N,N) objects ): the data to be analyzed</span>
+<span class="sd">        i ( int ): row index of the matrix element to analyze</span>
+<span class="sd">        j ( int ): column index of the matrix element to analyze</span>
+<span class="sd">        component ( int = 0 or 1 ): determines whether to analyze the real (0) or imaginary (1)</span>
+<span class="sd">            component of the data series</span>
+<span class="sd">        xmin ( double ): the minimal value of the bin support</span>
+<span class="sd">        xmax ( double ): the maximal value of the bin support</span>
+<span class="sd">        dx ( double ): the value of the bin support grid spacing</span>
+<span class="sd">                    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: ( bin_support, dens, cum ), where:</span>
+
+<span class="sd">            * bin_support ( list of doubles ): the range of values the distribution is computed for</span>
+<span class="sd">            * dens ( list of doubles ): the probability density</span>
+<span class="sd">            * cum ( list of doubles ): the cumulative distribution function </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#============= Extract the data ===========    </span>
+    <span class="n">ndata</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">idata</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndata</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">component</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">X</span><span class="p">[</span><span class="n">idata</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">component</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">X</span><span class="p">[</span><span class="n">idata</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span> <span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">DATA</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>    
+
+    <span class="c1">#============= Build the bin support ===========</span>
+    <span class="n">bin_support</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">xmin</span>
+    <span class="k">while</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">xmax</span><span class="p">:</span>        
+        <span class="n">bin_support</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">dx</span>
+        
+
+    <span class="n">dens</span><span class="p">,</span> <span class="n">cum</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">Calculate_Distribution</span><span class="p">(</span><span class="n">bin_support</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">bin_support</span><span class="p">,</span> <span class="n">dens</span><span class="p">,</span> <span class="n">cum</span></div>
+
+
+
+<div class="viewcode-block" id="compute_density"><a class="viewcode-back" href="../../reference/libra_py/data_stat.html#libra_py.data_stat.compute_density">[docs]</a><span class="k">def</span> <span class="nf">compute_density</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">minx</span><span class="p">,</span> <span class="n">maxx</span><span class="p">,</span> <span class="n">dx</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the probability density from the non-uniform distribution of pair points</span>
+<span class="sd">   </span>
+<span class="sd">    Args:</span>
+<span class="sd">        X ( list of double ): the original values of x</span>
+<span class="sd">        Y ( list of double ): the original values of y</span>
+<span class="sd">        minx ( double ): the minimal value of the new X axis</span>
+<span class="sd">        maxx ( double ): the max value of the new X axis</span>
+<span class="sd">        dx ( double ): the grid spacing of the new X axis</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        The pair relationship X[i] - Y[i] is expected</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: ( nX, nY ): where</span>
+<span class="sd"> </span>
+<span class="sd">            * nX ( list of doubles ) - new, uniform X axis</span>
+<span class="sd">            * nY ( list of doubles ) - renormalized Y axis</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Prepare the grids</span>
+    <span class="n">nX</span><span class="p">,</span> <span class="n">nY</span><span class="p">,</span> <span class="n">cnt</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="n">max_pts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">maxx</span> <span class="o">-</span> <span class="n">minx</span><span class="p">)</span><span class="o">/</span><span class="n">dx</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">max_pts</span><span class="p">):</span>
+        <span class="n">nX</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">minx</span> <span class="o">+</span> <span class="n">n</span> <span class="o">*</span> <span class="n">dx</span><span class="p">)</span>
+        <span class="n">nY</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">cnt</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+
+    <span class="c1"># Compute the frequencies</span>
+    <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">sz</span><span class="p">):</span>
+        <span class="n">indx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">X</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">-</span> <span class="n">minx</span><span class="p">)</span><span class="o">/</span><span class="n">dx</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">indx</span><span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">indx</span><span class="o">&lt;</span><span class="n">max_pts</span><span class="p">:</span>
+            <span class="n">nY</span><span class="p">[</span><span class="n">indx</span><span class="p">]</span> <span class="o">=</span> <span class="n">nY</span><span class="p">[</span><span class="n">indx</span><span class="p">]</span> <span class="o">+</span> <span class="n">Y</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+            <span class="n">cnt</span><span class="p">[</span><span class="n">indx</span><span class="p">]</span> <span class="o">=</span> <span class="n">cnt</span><span class="p">[</span><span class="n">indx</span><span class="p">]</span> <span class="o">+</span> <span class="mf">1.0</span>
+
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">max_pts</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">cnt</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">&gt;</span><span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">nY</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">nY</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">/</span><span class="n">cnt</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+              
+    <span class="k">return</span> <span class="n">nX</span><span class="p">,</span> <span class="n">nY</span></div>
+
+
+
+<div class="viewcode-block" id="bootstrapping"><a class="viewcode-back" href="../../reference/libra_py/data_stat.html#libra_py.data_stat.bootstrapping">[docs]</a><span class="k">def</span> <span class="nf">bootstrapping</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">nB</span><span class="p">,</span> <span class="n">rnd</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Bootstrapping the sample</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        X ( list of N int/double ): the original sample</span>
+
+<span class="sd">        nB ( int ): the number of bootstrapping cycles</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> 
+
+    <span class="c1"># Actual re-sampling</span>
+    <span class="n">sample</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">nB</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">samp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nB</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rnd</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
+            <span class="n">sample</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">samp</span><span class="p">,</span> <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="c1"># Average over </span>
+    <span class="n">sample</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">nB</span><span class="p">)</span></div>
+    
+
+
+
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

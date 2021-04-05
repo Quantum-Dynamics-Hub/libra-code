@@ -1,0 +1,677 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.workflows.nbra.step2_dftb &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.workflows.nbra.step2_dftb</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.workflows.nbra.step2_dftb</h1><div class="highlight"><pre>
+<span></span><span class="c1">#***********************************************************</span>
+<span class="c1"># * Copyright (C) 2019-2020 Brendan Smith and Alexey V. Akimov</span>
+<span class="c1"># * Copyright (C) 2019 Alexey V. Akimov</span>
+<span class="c1"># * This file is distributed under the terms of the</span>
+<span class="c1"># * GNU General Public License as published by the</span>
+<span class="c1"># * Free Software Foundation; either version 3 of the</span>
+<span class="c1"># * License, or (at your option) any later version.</span>
+<span class="c1"># * http://www.gnu.org/copyleft/gpl.txt</span>
+<span class="c1">#***********************************************************/</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: step2_dftb</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements functions for doing NAC calculaitons in the 1-electron</span>
+<span class="sd">       basis of KS orbitals, with the DFTB+ package. It also implements functions for obtaining</span>
+<span class="sd">       TD-DFTB energies with the DFTB+ package.</span>
+
+<span class="sd">.. moduleauthors:: Brendan Smith, Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="c1"># Fisrt, we add the location of the library to test to the PYTHON path</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">libra_py</span> <span class="kn">import</span> <span class="n">DFTB_methods</span>
+<span class="kn">from</span> <span class="nn">libra_py</span> <span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span> <span class="nn">libra_py</span> <span class="kn">import</span> <span class="n">data_io</span>
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+
+
+
+<div class="viewcode-block" id="do_step"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/step2_dftb.html#libra_py.workflows.nbra.step2_dftb.do_step">[docs]</a><span class="k">def</span> <span class="nf">do_step</span><span class="p">(</span><span class="n">snap</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Runs a single-point SCF calculation for a given geometry along a trajectory</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        snap ( int ): index of the time step to be used from the trajectory file</span>
+<span class="sd">        params ( dictionary ): the control parameters of the simulation</span>
+<span class="sd">        </span>
+<span class="sd">            * **params[&quot;EXE&quot;]** ( string ): path to the DFTB+ executable [ default: dftb+ ]</span>
+<span class="sd">            * **params[&quot;mo_active_space&quot;]** ( list of ints or None ): indices of the MOs we care about </span>
+<span class="sd">                The indexing starts from 0, not 1! If set to None - all MOs will be returned. [default: None]</span>
+<span class="sd">            * **params[&quot;md_file&quot;]** ( string ): the name of the xyz file containing the trajectory - the </span>
+<span class="sd">                file should be in the xyz format produced by the DFTB+ program. [default: &quot;md.xyz&quot;]</span>
+<span class="sd">            * **params[&quot;sp_gen_file&quot;]** ( string ): the name of the .gen file that is listed in the </span>
+<span class="sd">                DFTB+ input file and contains the geometry of the system (the content of this file will be </span>
+<span class="sd">                updated for every i value). [default: &quot;x1.gen&quot; ]</span>
+<span class="sd">            * **params[&quot;syst_spec&quot;]** ( string ): the string that is a part of the DFTB+ .gen file and defines</span>
+<span class="sd">                whether the system is a non-periodic/cluster (&quot;C&quot;) or periodic (&quot;S&quot;). [default: &quot;C&quot;]</span>
+<span class="sd">            * **params[&quot;scf_in_file&quot;]** ( string ): the name of the file containing the template for running regular</span>
+<span class="sd">                SCF calculations for a single-point DFTB+ calculations. </span>
+<span class="sd"> </span>
+<span class="sd">                - It should use the geometry file defined by params[&quot;sp_gen_file&quot;]. </span>
+
+<span class="sd">                [default: &quot;dftb_in_ham1.hsd&quot;]</span>
+
+<span class="sd">            * **params[&quot;hs_in_file&quot;]** ( string ): the name of the file containing the template for running </span>
+<span class="sd">                calculations that construct H and S matrices and print them out by the DFTB+ calculations.  </span>
+<span class="sd">        </span>
+<span class="sd">                - It should use the geometry file defined by params[&quot;sp_gen_file&quot;]. </span>
+<span class="sd">                - It should have the section: &quot;ReadInitialCharges = Yes&quot; to use the previously-converged charge density</span>
+<span class="sd">                - It should have the section: &quot;WriteHS = Yes&quot; to initialize the writing of the H and S matrices</span>
+<span class="sd">        </span>
+<span class="sd">                [default: &quot;dftb_in_ham2.hsd&quot;]</span>
+
+<span class="sd">            * **params[&quot;do_tddftb&quot;]** ( bool ): the parameter to control the type of energies to use in the </span>
+<span class="sd">                calculations. The DFTB+ input files should be setup accordingly</span>
+
+<span class="sd">                - True : compute and read TD-DFTB energies. In this case, only the first entry of the returned</span>
+<span class="sd">                    results ( energies ) is meaningful. Other properties are just None for now</span>
+
+<span class="sd">                - False : compute and read only the single-prticle energies [ default ]</span>
+
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (Ei, MOi, Hi, Si), where:</span>
+<span class="sd">        </span>
+<span class="sd">            * Ei ( CMATRIX(M, M) ), the matrix of the converged Hamiltonian eigenvalues (at given geometry)</span>
+<span class="sd">                Here, M = len(params[&quot;mo_active_space&quot;]) - we output only the MO energies that are of interest to us</span>
+
+<span class="sd">            * MOi ( CMATRIX(A, M) ), the matrix of the converged Hamiltonian eigenvalues (at given geometry)</span>
+<span class="sd">                Here, M = len(params[&quot;mo_active_space&quot;]) - we output only the MO energies that are of interest to us.</span>
+<span class="sd">                A - is the number of AOs in this calculation</span>
+
+<span class="sd">            * Hi (list of CMATRIX(A, A) ): the Hamiltonian matrices in the AO basis, for each k-point</span>
+
+<span class="sd">            * Si (list of CMATRIX(A, A) ): the overlap matrices in the AO basis, for each k-point</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="c1"># Now try to get parameters from the input</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;EXE&quot;</span><span class="p">:</span><span class="s2">&quot;dftb+&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;mo_active_space&quot;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span>
+                       <span class="s2">&quot;md_file&quot;</span><span class="p">:</span><span class="s2">&quot;md.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;sp_gen_file&quot;</span><span class="p">:</span><span class="s2">&quot;x1.gen&quot;</span><span class="p">,</span> <span class="s2">&quot;syst_spec&quot;</span><span class="p">:</span><span class="s2">&quot;C&quot;</span> <span class="p">,</span>
+                       <span class="s2">&quot;scf_in_file&quot;</span><span class="p">:</span><span class="s2">&quot;dftb_in_ham1.hsd&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;hs_in_file&quot;</span><span class="p">:</span><span class="s2">&quot;dftb_in_ham2.hsd&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;do_tddftb&quot;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;use_single_sd_energy&quot;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span>
+                       <span class="s2">&quot;get_dominant_sd_transitions&quot;</span><span class="p">:</span><span class="kc">False</span>
+                     <span class="p">}</span>
+
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+    
+    <span class="c1"># Get the parameters</span>
+    <span class="n">EXE</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;EXE&quot;</span><span class="p">]</span>
+    <span class="n">md_file</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;md_file&quot;</span><span class="p">]</span>
+    <span class="n">sp_gen_file</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sp_gen_file&quot;</span><span class="p">]</span>
+    <span class="n">syst_spec</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;syst_spec&quot;</span><span class="p">]</span>
+    <span class="n">scf_in_file</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;scf_in_file&quot;</span><span class="p">]</span>
+    <span class="n">hs_in_file</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;hs_in_file&quot;</span><span class="p">]</span>
+    <span class="n">do_tddftb</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;do_tddftb&quot;</span><span class="p">]</span>
+    <span class="n">use_single_sd_energy</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;use_single_sd_energy&quot;</span><span class="p">]</span>
+    <span class="n">get_dominant_sd_transitions</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;get_dominant_sd_transitions&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Make an input file for SP calculations </span>
+    <span class="n">DFTB_methods</span><span class="o">.</span><span class="n">xyz_traj2gen_sp</span><span class="p">(</span><span class="n">md_file</span><span class="p">,</span> <span class="n">sp_gen_file</span><span class="p">,</span> <span class="n">snap</span><span class="p">,</span> <span class="n">syst_spec</span><span class="p">)</span>
+
+    <span class="c1"># Run SCF calculations and generate the charge density for a converged calculations</span>
+    <span class="c1"># The file x1.gen is used as a geometry</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp </span><span class="si">%s</span><span class="s2"> dftb_in.hsd&quot;</span> <span class="o">%</span> <span class="n">scf_in_file</span> <span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">EXE</span> <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">do_tddftb</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+
+        <span class="c1"># We have chosen to perform a td-dftb calculation for our given system.</span>
+        <span class="c1"># We need to go into the file EXC.dat file and extract the energies.</span>
+        <span class="c1"># First, check to see if the EXC.dat file is even there.</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="s1">&#39;EXC.DAT&#39;</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Found EXC.DAT&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Cannot find the file EXC.DAT&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">F</span><span class="s2">&quot;Hint: Current working directory is: </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Is this where you expect the file EXC.DAT to be found?&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Check your dftb_in.hsd file to see if excited states calculation is enabled&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Exiting program...</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">configuration_energies</span>  <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">dominant_sd_transitions</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">f</span>  <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;EXC.DAT&quot;</span><span class="p">)</span>
+        <span class="n">A</span>  <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sz</span><span class="p">):</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">b</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+
+                    <span class="k">if</span> <span class="n">use_single_sd_energy</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                        <span class="c1"># We are choosing to use the energy of the dominant SD transition to approximates the</span>
+                        <span class="c1"># multi-configurational energy. This SD transition is the one with the largest </span>
+                        <span class="c1"># coefficient in the multi-configurational picture.</span>
+                        <span class="n">configuration_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">6</span><span class="p">])</span> <span class="p">)</span>
+
+                    <span class="k">else</span><span class="p">:</span>            
+                        <span class="c1"># Use the multi-configurational energy.</span>
+                        <span class="n">configuration_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="p">)</span>
+   
+                    <span class="k">if</span> <span class="n">get_dominant_sd_transitions</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                        <span class="c1"># Get the dominant SD transition in either the multi-configurational or single SD picture.</span>
+                        <span class="n">dominant_sd_transitions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">[</span> <span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="p">]</span>  <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">use_single_sd_energy</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+
+            <span class="c1"># Sort these energies due to the potential for smaller energy values to be higher in index</span>
+
+            <span class="c1">#print (&quot;\nIndex and energies of the single SD states BEFORE sorting:\n&quot;)</span>
+            <span class="c1">#print ( [i for i in range(len(configuration_energies))] )</span>
+            <span class="c1">#print (configuration_energies)</span>
+            <span class="c1">#print (dominant_sd_transitions)</span>
+
+            <span class="n">single_sd_energies_index_sorted</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">configuration_energies</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">configuration_energies</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+            <span class="n">single_sd_energies_sorted</span> <span class="o">=</span> <span class="p">[</span><span class="n">configuration_energies</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">single_sd_energies_index_sorted</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">get_dominant_sd_transitions</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="c1"># Sort the dominant SD transitions from those lowest in energy to highest </span>
+                <span class="n">dominant_sd_transitions_sorted</span> <span class="o">=</span> <span class="p">[</span><span class="n">dominant_sd_transitions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">single_sd_energies_index_sorted</span><span class="p">]</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;out_dir&quot;</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;/sd_transitions_</span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">snap</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span> <span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">transition</span> <span class="ow">in</span> <span class="n">dominant_sd_transitions_sorted</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">transition</span><span class="p">:</span>
+                            <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span> <span class="nb">str</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span> 
+
+            <span class="c1">#print (&quot;\nIndex and energies of the single SD states AFTER sorting:&quot;)</span>
+            <span class="c1">#print (single_sd_energies_index_sorted)</span>
+            <span class="c1">#print (single_sd_energies_sorted)</span>
+            <span class="c1">#print (dominant_sd_transitions_sorted) </span>
+
+            <span class="n">num_configs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">single_sd_energies_sorted</span><span class="p">)</span>
+            <span class="n">E</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">num_configs</span><span class="p">,</span><span class="n">num_configs</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_configs</span><span class="p">):</span>
+                <span class="n">E</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">single_sd_energies_sorted</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Your Multi-Configurational energies are:&quot;</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="n">configuration_energies</span><span class="p">)</span>
+
+            <span class="n">num_configs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">configuration_energies</span><span class="p">)</span>
+            <span class="n">E</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">num_configs</span><span class="p">,</span><span class="n">num_configs</span><span class="p">)</span>       
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_configs</span><span class="p">):</span>
+                <span class="n">E</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">configuration_energies</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="c1"># For now, only return E</span>
+        <span class="k">return</span> <span class="n">E</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="c1"># Here, we just use the energies of the bands themselves. This corresponds to the single particle picture</span>
+
+        <span class="c1"># Just generate the Hamiltonian corresponding to the converged density matrix</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp </span><span class="si">%s</span><span class="s2"> dftb_in.hsd&quot;</span> <span class="o">%</span> <span class="n">hs_in_file</span> <span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">EXE</span> <span class="p">)</span>
+
+        <span class="c1"># [0] is because we extract just the gamma-point</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">DFTB_methods</span><span class="o">.</span><span class="n">get_dftb_matrices</span><span class="p">(</span><span class="s2">&quot;hamsqr1.dat&quot;</span><span class="p">)</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">DFTB_methods</span><span class="o">.</span><span class="n">get_dftb_matrices</span><span class="p">(</span><span class="s2">&quot;oversqr.dat&quot;</span><span class="p">)</span>   
+        
+        <span class="c1"># Get the dimensions</span>
+        <span class="n">ao_sz</span> <span class="o">=</span> <span class="n">F</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>        
+        <span class="n">ao_act_sp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ao_sz</span><span class="p">))</span>
+    
+        <span class="n">mo_sz</span> <span class="o">=</span> <span class="n">ao_sz</span>
+        <span class="n">mo_act_sp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mo_sz</span><span class="p">))</span>
+    
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;mo_active_space&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mo_sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;mo_active_space&quot;</span><span class="p">])</span>        
+            <span class="n">mo_act_sp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;mo_active_space&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Solve the eigenvalue problem with the converged Fock matrix</span>
+        <span class="c1"># get the converged MOs</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ao_sz</span><span class="p">,</span> <span class="n">ao_sz</span><span class="p">)</span>
+        <span class="n">MO</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ao_sz</span><span class="p">,</span> <span class="n">ao_sz</span><span class="p">)</span>
+        <span class="n">solve_eigen</span><span class="p">(</span><span class="n">F</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">E</span><span class="p">,</span> <span class="n">MO</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  
+
+        <span class="c1"># Extract the E sub-matrix</span>
+        <span class="n">E_sub</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">mo_sz</span><span class="p">,</span> <span class="n">mo_sz</span><span class="p">)</span>
+        <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">E_sub</span><span class="p">,</span> <span class="n">mo_act_sp</span><span class="p">,</span> <span class="n">mo_act_sp</span><span class="p">)</span>  
+    
+        <span class="c1"># Extract the MO sub-matrix</span>
+        <span class="n">MO_sub</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">ao_sz</span><span class="p">,</span> <span class="n">mo_sz</span><span class="p">)</span>
+        <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">MO</span><span class="p">,</span> <span class="n">MO_sub</span><span class="p">,</span> <span class="n">ao_act_sp</span><span class="p">,</span> <span class="n">mo_act_sp</span><span class="p">)</span>  
+    
+        <span class="k">return</span> <span class="n">E_sub</span><span class="p">,</span> <span class="n">MO_sub</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">S</span></div>
+
+
+
+<div class="viewcode-block" id="do_ovlp"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/step2_dftb.html#libra_py.workflows.nbra.step2_dftb.do_ovlp">[docs]</a><span class="k">def</span> <span class="nf">do_ovlp</span><span class="p">(</span><span class="n">snap</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Compute the overlap matrix in the AO basis for two geometries, i and i+1</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        snap ( int ): index of the time step to be used from the trajectory file</span>
+<span class="sd">        params ( dictionary ): the control parameters of the simulation</span>
+<span class="sd">        </span>
+<span class="sd">            * **params[&quot;EXE&quot;]** ( string ): path to the DFTB+ executable [ default: dftb+ ]</span>
+<span class="sd">            * **params[&quot;md_file&quot;]** ( string ): the name of the xyz file containing the trajectory - the </span>
+<span class="sd">                file should be in the xyz format produced by the DFTB+ program. [default: &quot;md.xyz&quot;]</span>
+<span class="sd">            * **params[&quot;ovlp_gen_file&quot;]** ( string ): the name of the .gen file that is listed in the </span>
+<span class="sd">                DFTB+ input file and contains the geometry of the system at two time steps</span>
+<span class="sd">                (the content of this file will be updated for every i value). [default: &quot;x2.gen&quot; ]</span>
+<span class="sd">            * **params[&quot;syst_spec&quot;]** ( string ): the string that is a part of the DFTB+ .gen file and defines</span>
+<span class="sd">                whether the system is a non-periodic/cluster (&quot;C&quot;) or periodic (&quot;S&quot;). [default: &quot;C&quot;]</span>
+<span class="sd">            * **params[&quot;ovlp_in_file&quot;]** ( string ): the name of the file containing the template for running </span>
+<span class="sd">                calculations that construct H and S matrices and print them out by the DFTB+ calculations.  </span>
+<span class="sd">        </span>
+<span class="sd">                - It should use the geometry file defined by params[&quot;ovlp_gen_file&quot;]. </span>
+<span class="sd">                - It should have the section: &quot;WriteHS = Yes&quot; to initialize the writing of the H and S matrices</span>
+<span class="sd">        </span>
+<span class="sd">                [default: &quot;dftb_in_overlaps.hsd&quot;]</span>
+
+
+<span class="sd">    Returns:</span>
+<span class="sd">        CMATRIX(A, A): the matrix of the AO overlaps for two geometries, where A - is the size of the AO basis</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Now try to get parameters from the input</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;EXE&quot;</span><span class="p">:</span><span class="s2">&quot;dftb+&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;md_file&quot;</span><span class="p">:</span><span class="s2">&quot;md.xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;ovlp_gen_file&quot;</span><span class="p">:</span><span class="s2">&quot;x2.gen&quot;</span><span class="p">,</span> <span class="s2">&quot;syst_spec&quot;</span><span class="p">:</span><span class="s2">&quot;C&quot;</span> <span class="p">,</span>
+                       <span class="s2">&quot;ovlp_in_file&quot;</span><span class="p">:</span><span class="s2">&quot;dftb_in_overlaps.hsd&quot;</span>
+                     <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+    
+    <span class="c1"># Get the parameters</span>
+    <span class="n">EXE</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;EXE&quot;</span><span class="p">]</span>
+    <span class="n">md_file</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;md_file&quot;</span><span class="p">]</span>
+    <span class="n">ovlp_gen_file</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;ovlp_gen_file&quot;</span><span class="p">]</span>
+    <span class="n">syst_spec</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;syst_spec&quot;</span><span class="p">]</span>
+    <span class="n">ovlp_in_file</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;ovlp_in_file&quot;</span><span class="p">]</span>
+
+        
+    <span class="c1"># Make an input file for the overlap calculations </span>
+    <span class="n">DFTB_methods</span><span class="o">.</span><span class="n">xyz_traj2gen_ovlp</span><span class="p">(</span><span class="n">md_file</span><span class="p">,</span> <span class="n">ovlp_gen_file</span><span class="p">,</span> <span class="n">snap</span><span class="p">,</span> <span class="n">snap</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">syst_spec</span><span class="p">)</span>
+    
+    <span class="c1"># Run SCF calculations and generate the charge density for a converged calculations</span>
+    <span class="c1"># The file x2.gen is used as a geometry</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cp </span><span class="si">%s</span><span class="s2"> dftb_in.hsd&quot;</span> <span class="o">%</span> <span class="n">ovlp_in_file</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">EXE</span> <span class="p">)</span>
+
+    <span class="c1"># Get the Hamiltonian    </span>
+    <span class="n">Sbig</span> <span class="o">=</span> <span class="n">DFTB_methods</span><span class="o">.</span><span class="n">get_dftb_matrices</span><span class="p">(</span><span class="s2">&quot;oversqr.dat&quot;</span><span class="p">)</span>
+    <span class="n">norbs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">Sbig</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+    
+    <span class="n">act_sp1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">norbs</span><span class="p">))</span>
+    <span class="n">act_sp2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norbs</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">norbs</span><span class="p">))</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">norbs</span><span class="p">,</span> <span class="n">norbs</span><span class="p">)</span>
+    <span class="n">pop_submatrix</span><span class="p">(</span><span class="n">Sbig</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">S</span><span class="p">,</span> <span class="n">act_sp1</span><span class="p">,</span> <span class="n">act_sp2</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">S</span></div>
+    
+    
+
+    
+<div class="viewcode-block" id="run_step2"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/step2_dftb.html#libra_py.workflows.nbra.step2_dftb.run_step2">[docs]</a><span class="k">def</span> <span class="nf">run_step2</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      </span>
+<span class="sd">    Calculate the overlaps, transition dipole moments, and vibronic Hamiltonian matrix elements in the AO basis</span>
+
+<span class="sd">    Currently under development 1/30/2020 - This function is currently not compatable with the parameters </span>
+<span class="sd">                                            &quot;get_midpoint_energy&quot; or &quot;do_tddftb&quot;.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        params ( dictionary ): the control parameters of the simulation</span>
+<span class="sd">        </span>
+<span class="sd">            * **params[&quot;dt&quot;]** ( double ): nuclear dynamics timestep - as encoded in the trajectory [ units: a.u., default: 41.0 ]</span>
+<span class="sd">            * **params[&quot;isnap&quot;]** ( int ): initial frame  [ default: 0 ]</span>
+<span class="sd">            * **params[&quot;fsnap&quot;]** ( int ): final frame  [ default: 1 ]</span>
+<span class="sd">            * **params[&quot;out_dir&quot;]** ( string ): the path to the directory that will collect all the results</span>
+<span class="sd">                If the directory doesn&#39;t exist, it will be created  [ default: &quot;res&quot; ]</span>
+<span class="sd">        </span>
+<span class="sd">            SeeAlso:  the description of the parameters in ```do_ovlp(i, params)``` and in ```do_step(i, params)```</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: but generates the files (S, St, and hvib) indexed in the range [isnap, fsnap), for </span>
+<span class="sd">        instance, if isnap = 0, fsnap = 3, we will have files hvib_0, hvib_1, hvib_2</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span><span class="mf">1.0</span><span class="o">*</span><span class="n">units</span><span class="o">.</span><span class="n">fs2au</span><span class="p">,</span>  <span class="s2">&quot;isnap&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;fsnap&quot;</span><span class="p">:</span><span class="mi">1</span> <span class="p">,</span> <span class="s2">&quot;out_dir&quot;</span><span class="p">:</span><span class="s2">&quot;res&quot;</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+
+    <span class="c1"># Get the parameters</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span>
+    <span class="n">isnap</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;isnap&quot;</span><span class="p">]</span>
+    <span class="n">fsnap</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;fsnap&quot;</span><span class="p">]</span>
+    <span class="n">out_dir</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;out_dir&quot;</span><span class="p">]</span>
+
+
+    <span class="c1"># Create &lt;out_dir&gt; directory if it does not exist yet</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">out_dir</span><span class="p">):</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;mkdir </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">out_dir</span><span class="p">)</span>
+
+
+    <span class="c1"># Compute</span>
+    <span class="n">E_prev</span><span class="p">,</span> <span class="n">U_prev</span><span class="p">,</span> <span class="n">Hao_prev</span><span class="p">,</span> <span class="n">Sao_prev</span> <span class="o">=</span> <span class="n">do_step</span><span class="p">(</span><span class="n">isnap</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">isnap</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">fsnap</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">E_curr</span><span class="p">,</span> <span class="n">U_curr</span><span class="p">,</span> <span class="n">Hao_curr</span><span class="p">,</span> <span class="n">Sao_curr</span> <span class="o">=</span> <span class="n">do_step</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">do_ovlp</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+        <span class="c1">#S.real().show_matrix(&quot;res/AOS_%i_re&quot; % (i) )</span>
+
+        <span class="n">TDM</span> <span class="o">=</span> <span class="n">U_prev</span><span class="o">.</span><span class="n">H</span><span class="p">()</span> <span class="o">*</span> <span class="n">S</span> <span class="o">*</span> <span class="n">U_curr</span>
+        <span class="n">Hvib</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">E_prev</span> <span class="o">+</span> <span class="n">E_curr</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mf">0.5</span><span class="n">j</span><span class="o">/</span><span class="n">dt</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span> <span class="n">TDM</span> <span class="o">-</span> <span class="n">TDM</span><span class="o">.</span><span class="n">H</span><span class="p">()</span> <span class="p">)</span>
+
+        <span class="c1"># Overlaps</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">U_prev</span><span class="o">.</span><span class="n">H</span><span class="p">()</span> <span class="o">*</span> <span class="n">Sao_prev</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">U_prev</span>  <span class="o">+</span>  <span class="n">U_curr</span><span class="o">.</span><span class="n">H</span><span class="p">()</span> <span class="o">*</span> <span class="n">Sao_curr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">U_curr</span><span class="p">)</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">real</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/S_</span><span class="si">%i</span><span class="s2">_re&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">imag</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/S_</span><span class="si">%i</span><span class="s2">_im&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+
+        <span class="c1"># Time-overlaps</span>
+        <span class="n">TDM</span><span class="o">.</span><span class="n">real</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/St_</span><span class="si">%i</span><span class="s2">_re&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">TDM</span><span class="o">.</span><span class="n">imag</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/St_</span><span class="si">%i</span><span class="s2">_im&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+                
+        <span class="c1"># Vibronic Hamiltonians</span>
+        <span class="n">Hvib</span><span class="o">.</span><span class="n">real</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/hvib_</span><span class="si">%i</span><span class="s2">_re&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">Hvib</span><span class="o">.</span><span class="n">imag</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/hvib_</span><span class="si">%i</span><span class="s2">_im&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+        
+        <span class="c1"># Current becomes the old </span>
+        <span class="n">E_prev</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">E_curr</span><span class="p">)</span>
+        <span class="n">U_prev</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">U_curr</span><span class="p">)</span></div>
+
+
+
+
+<div class="viewcode-block" id="run_step2_lz"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/step2_dftb.html#libra_py.workflows.nbra.step2_dftb.run_step2_lz">[docs]</a><span class="k">def</span> <span class="nf">run_step2_lz</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    </span>
+<span class="sd">    Calculate the diagonal vibronic Hamiltonian matrix elements (energies) in the AO basis and (optionally) the TD-DFTB energies </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        params ( dictionary ): the control parameters of the simulation</span>
+<span class="sd">        </span>
+<span class="sd">            * **params[&quot;dt&quot;]** ( double ): nuclear dynamics timestep - as encoded in the trajectory [ units: a.u., default: 41.0 ]</span>
+<span class="sd">            * **params[&quot;isnap&quot;]** ( int ): initial frame  [ default: 0 ]</span>
+<span class="sd">            * **params[&quot;fsnap&quot;]** ( int ): final frame  [ default: 1 ]</span>
+<span class="sd">            * **params[&quot;out_dir&quot;]** ( string ): the path to the directory that will collect all the results</span>
+<span class="sd">                If the directory doesn&#39;t exist, it will be created  [ default: &quot;res&quot; ]</span>
+<span class="sd">            * **params[&quot;get_midpoint_energy&quot;]** ( bool ): if True, compute and read energies as Hvib = 0.5*(E_prev + E_curr) (As is done in Pyxaid NBRA)</span>
+<span class="sd">                                                   if False, compute and read energies at everytime timestep  Hvib = E_curr</span>
+<span class="sd">        </span>
+<span class="sd">            SeeAlso:  the description of the parameters in ```do_step(i, params)```</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None: but generates the files (hvib) indexed in the range [isnap, fsnap), for </span>
+<span class="sd">        instance, if isnap = 0, fsnap = 3, we will have files hvib_0, hvib_1, hvib_2.</span>
+<span class="sd">        Only diagonal elements of the matrix are populated. </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span><span class="mf">1.0</span><span class="o">*</span><span class="n">units</span><span class="o">.</span><span class="n">fs2au</span><span class="p">,</span>  <span class="s2">&quot;isnap&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;fsnap&quot;</span><span class="p">:</span><span class="mi">1</span> <span class="p">,</span> <span class="s2">&quot;out_dir&quot;</span><span class="p">:</span><span class="s2">&quot;res&quot;</span><span class="p">,</span> <span class="s2">&quot;get_midpoint_energy&quot;</span><span class="p">:</span><span class="kc">True</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+
+    <span class="c1"># Get the parameters</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span>
+    <span class="n">isnap</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;isnap&quot;</span><span class="p">]</span>
+    <span class="n">fsnap</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;fsnap&quot;</span><span class="p">]</span>
+    <span class="n">out_dir</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;out_dir&quot;</span><span class="p">]</span>
+    <span class="n">get_midpoint_energy</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;get_midpoint_energy&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Create &lt;out_dir&gt; directory if it does not exist yet</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">out_dir</span><span class="p">):</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;mkdir </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">out_dir</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">get_midpoint_energy</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+
+        <span class="n">E_prev</span><span class="p">,</span> <span class="n">U_prev</span><span class="p">,</span> <span class="n">Hao_prev</span><span class="p">,</span> <span class="n">Sao_prev</span> <span class="o">=</span> <span class="n">do_step</span><span class="p">(</span><span class="n">isnap</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">isnap</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">fsnap</span><span class="p">):</span>
+
+            <span class="n">E_curr</span><span class="p">,</span> <span class="n">U_curr</span><span class="p">,</span> <span class="n">Hao_curr</span><span class="p">,</span> <span class="n">Sao_curr</span> <span class="o">=</span> <span class="n">do_step</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>      
+            <span class="n">Hvib</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">E_prev</span> <span class="o">+</span> <span class="n">E_curr</span><span class="p">)</span>
+  
+            <span class="n">Hvib</span> <span class="o">=</span> <span class="n">E_curr</span>
+            <span class="c1"># Vibronic Hamiltonians - Diag. elements only</span>
+            <span class="n">Hvib</span><span class="o">.</span><span class="n">real</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/hvib_</span><span class="si">%i</span><span class="s2">_re&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+
+            <span class="c1"># Current becomes the old </span>
+            <span class="n">E_prev</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">E_curr</span><span class="p">)</span> 
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">isnap</span><span class="p">,</span> <span class="n">fsnap</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+
+            <span class="n">E_curr</span><span class="p">,</span> <span class="n">U_curr</span><span class="p">,</span> <span class="n">Hao_curr</span><span class="p">,</span> <span class="n">Sao_curr</span> <span class="o">=</span> <span class="n">do_step</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+            <span class="n">Hvib</span> <span class="o">=</span> <span class="n">E_curr</span>
+            <span class="c1"># Vibronic Hamiltonians - Diag. elements only</span>
+            <span class="n">Hvib</span><span class="o">.</span><span class="n">real</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/hvib_</span><span class="si">%i</span><span class="s2">_re&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,414 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Gaussian_methods &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="hpc_utils" href="hpc_utils.html" />
+    <link rel="prev" title="ft" href="ft.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>Gaussian_methods</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/Gaussian_methods.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.Gaussian_methods">
+<span id="gaussian-methods"></span><h1>Gaussian_methods<a class="headerlink" href="#module-libra_py.Gaussian_methods" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-Gaussian_methods"></span><dl class="py function">
+<dt id="libra_py.Gaussian_methods.cube_generator_gaussian">
+<code class="sig-prename descclassname"><span class="pre">libra_py.Gaussian_methods.</span></code><code class="sig-name descname"><span class="pre">cube_generator_gaussian</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_band</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_band</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nprocs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_cube_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isUKS</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/Gaussian_methods.html#cube_generator_gaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.Gaussian_methods.cube_generator_gaussian" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function generates the cube files by first forming the ‘fchk’ file from ‘chk’ file.
+Then it will generate the cube files from min_band to max_band the same as CP2K naming.
+This will helps us to use the read_cube and integrate_cube functions easier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>project_name</strong> (<em>string</em>) – The project_name.</p></li>
+<li><p><strong>time_step</strong> (<em>integer</em>) – The time step.</p></li>
+<li><p><strong>min_band</strong> (<em>integer</em>) – The minimum state number.</p></li>
+<li><p><strong>max_band</strong> (<em>integer</em>) – The maximum state number.</p></li>
+<li><p><strong>nprocs</strong> (<em>integer</em>) – The number of processors used to generate the cubes using ‘cubegen’.</p></li>
+<li><p><strong>sample_cube_file</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The path to a sample cube file. This file is used to generate the cube
+files according the mesh of this file. Therefore the integration will be plausible.</p></li>
+<li><p><strong>isUKS</strong> (<em>integer</em>) – The unrestricted spin calculation flag. 1 is for spin unrestricted calculations.
+Other numbers are for spin restricted calculations</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.Gaussian_methods.gaussian_distribute">
+<code class="sig-prename descclassname"><span class="pre">libra_py.Gaussian_methods.</span></code><code class="sig-name descname"><span class="pre">gaussian_distribute</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">istep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fstep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsteps_this_job</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory_xyz_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gaussian_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curr_job_number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/Gaussian_methods.html#gaussian_distribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.Gaussian_methods.gaussian_distribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Distributes Gaussian jobs for trivial parallelization</p>
+<dl class="simple">
+<dt>Make sure that your Gaussian input file has absolute paths to the following input parameters:</dt><dd><p>This parameters should be set in the input template
+chk file —&gt; e.g.  %chk=/home/username/gaussian_calculations/check_file.chk
+rwf file —&gt; e.g.  %rwf=/home/username/gaussian_calculations/check_file.rwf</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>istep</strong> (<em>integer</em>) – The initial time step in the trajectory xyz file.</p></li>
+<li><p><strong>fstep</strong> (<em>integer</em>) – The final time step in the trajectory xyz file.</p></li>
+<li><p><strong>nsteps_this_job</strong> (<em>integer</em>) – The number of steps for this job.</p></li>
+<li><p><strong>trajectory_xyz_file</strong> (<em>string</em>) – The full path to trajectory xyz file.</p></li>
+<li><p><strong>gaussian_input</strong> (<em>string</em>) – The sample Gaussian input template.</p></li>
+<li><p><strong>curr_job_number</strong> (<em>integer</em>) – The current job number.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.Gaussian_methods.gaussian_input">
+<code class="sig-prename descclassname"><span class="pre">libra_py.Gaussian_methods.</span></code><code class="sig-name descname"><span class="pre">gaussian_input</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory_xyz_file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/Gaussian_methods.html#gaussian_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.Gaussian_methods.gaussian_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function creates a Gaussian input file for the time_step geometry using an input template.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>project_name</strong> (<em>string</em>) – The project name.</p></li>
+<li><p><strong>time_step</strong> (<em>integer</em>) – The time step.</p></li>
+<li><p><strong>sample_input</strong> (<em>string</em>) – The Gaussian sample input.</p></li>
+<li><p><strong>trajectory_xyz_file_name</strong> (<em>string</em>) – The trajectory xyz file name.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.Gaussian_methods.read_energies_from_gaussian_log_file">
+<code class="sig-prename descclassname"><span class="pre">libra_py.Gaussian_methods.</span></code><code class="sig-name descname"><span class="pre">read_energies_from_gaussian_log_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/Gaussian_methods.html#read_energies_from_gaussian_log_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.Gaussian_methods.read_energies_from_gaussian_log_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function read the energies from Gaussian log file and returns the Kohn-Sham and total_energies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dictionary</em>) – <p>The dictionary containing the input parameters.</p>
+<p>logfile_name (string): The log file name.</p>
+<p>min_band (integer): The minimum state number.</p>
+<p>max_band (integer): The maximum state number.</p>
+<p>spin (integer): The spin component. 1 is for alpha and 2 is for beta spin.</p>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The Kohn-Sham energies.</p>
+<p>total_energy (float): The total energy of the system.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ks_energies (1D numpy array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.Gaussian_methods.read_gaussian_tddft_log_file">
+<code class="sig-prename descclassname"><span class="pre">libra_py.Gaussian_methods.</span></code><code class="sig-name descname"><span class="pre">read_gaussian_tddft_log_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/Gaussian_methods.html#read_gaussian_tddft_log_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.Gaussian_methods.read_gaussian_tddft_log_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function read Gaussian output file and extracts the excitation analysis results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dictionary</em>) – <p>The dictionary containing the input parameters.</p>
+<p>logfile_name (string): The log file name.</p>
+<p>tolerance (float): The tolerance factor for choosing the excited states of the excitation analysis.</p>
+<p>number_of_states (integer): The number of excited states to be considered in the excitation analysis.</p>
+<dl class="simple">
+<dt>isUKS (integer): This parameter is the flag for restricted or unrestricted spin calculations. If it is</dt><dd><p>set to 1 the unrestricted spin calculations will be considered.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The excitation energies.</p>
+<p>ci_basis (list): The list containnig the CI basis of the excitation analysis.</p>
+<p>ci_coefficients (list): The list containing the ci_coefficients for each excitation.</p>
+<p>spin_components (list): The list containing the spin components for each excitation.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>excitation_energies (1D numpy arra)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.Gaussian_methods.read_trajectory_xyz_file_gaussian">
+<code class="sig-prename descclassname"><span class="pre">libra_py.Gaussian_methods.</span></code><code class="sig-name descname"><span class="pre">read_trajectory_xyz_file_gaussian</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trajectory_xyz_file_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/Gaussian_methods.html#read_trajectory_xyz_file_gaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.Gaussian_methods.read_trajectory_xyz_file_gaussian" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function reads the trajectory of a molecular dynamics .xyz file and
+extract the ‘time_step’ th step then returns it in form of a numpy array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>trajectory_xyz_file_name</strong> (<em>string</em>) – The trajectory .xyz file name.</p></li>
+<li><p><strong>time_step</strong> (<em>integer</em>) – The desired time to extract its .xyz
+coordinates which starts from zero.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The numpy array containing the coordinates of the time_step.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>coordinates (2D numpy array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="hpc_utils.html" class="btn btn-neutral float-right" title="hpc_utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="ft.html" class="btn btn-neutral float-left" title="ft" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

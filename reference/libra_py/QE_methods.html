@@ -1,0 +1,1051 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>QE_methods &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="QE_utils" href="QE_utils.html" />
+    <link rel="prev" title="probabilities" href="probabilities.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>QE_methods</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/QE_methods.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.QE_methods">
+<span id="qe-methods"></span><h1>QE_methods<a class="headerlink" href="#module-libra_py.QE_methods" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-QE_methods"></span><dl class="py function">
+<dt id="libra_py.QE_methods.cryst2cart">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">cryst2cart</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#cryst2cart"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.cryst2cart" title="Permalink to this definition">¶</a></dt>
+<dd><p>Crystal to Cartesian coordinate conversion</p>
+<p>An auxiliary function that convert vector &lt;r&gt; in crystal (alat)
+coordinates with the cell defined by vectors a1, a2, a3, to the
+Cartesian coordinate xyz</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a1</strong> (<em>[</em><em>double</em><em>, </em><em>double</em><em>, </em><em>double</em><em>]</em>) – one of the unit cell/periodicty vectors</p></li>
+<li><p><strong>a2</strong> (<em>[</em><em>double</em><em>, </em><em>double</em><em>, </em><em>double</em><em>]</em>) – one of the unit cell/periodicty vectors</p></li>
+<li><p><strong>a3</strong> (<em>[</em><em>double</em><em>, </em><em>double</em><em>, </em><em>double</em><em>]</em>) – one of the unit cell/periodicty vectors</p></li>
+<li><p><strong>r</strong> (<em>[</em><em>double</em><em>, </em><em>double</em><em>, </em><em>double</em><em>]</em>) – Crystal (fractional) coordinates of the atom</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the Cartesian coordinates of an atom</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>[double, double, double]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.get_QE_normal_modes">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">get_QE_normal_modes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#get_QE_normal_modes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.get_QE_normal_modes" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function reads the QE phonon calculations output files
+to get the key information for further normal modes visualization
+or other types of calculations related to normal modes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – the name of a .dyn file produced by QE code</p></li>
+<li><p><strong>verbosity</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <ul>
+<li><p>0 - no extra output (default)</p></li>
+<li><p>1 - print extra stuff</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(Elts, R, U), where:</p>
+<ul class="simple">
+<li><p>Elts ( list of nat string ): labels of all atoms, nat - is the number of atoms</p></li>
+<li><p>R ( MATRIX(3*nat x 1) ): coordinates of all atoms [Angstrom]</p></li>
+<li><p>U ( MATRIX(ndof x ndof) ): eigenvectors, defining the normal modes</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_QE_normal_modes</span><span class="p">(</span><span class="s2">&quot;silicon.dyn1&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>     <span class="c1"># verbose output</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_QE_normal_modes</span><span class="p">(</span><span class="s2">&quot;Cs4SnBr6_T200.dyn1&quot;</span><span class="p">)</span>  <span class="c1"># not verbose output</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.out2inp">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">out2inp</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">templ_filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#out2inp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.out2inp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a QE output file with an MD trajectory to a bunch of input files
+for SCF calculations. These input files all have the same control settings,
+but differ in atomic coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>out_filename</strong> (<em>string</em>) – name of the file which contains the MD trajectory</p></li>
+<li><p><strong>templ_filename</strong> (<em>string</em>) – name of the template file for input generation
+should not contain atomic positions!</p></li>
+<li><p><strong>prefix</strong> (<em>string</em>) – the prefix of the files generated as the output</p></li>
+<li><p><strong>wd</strong> (<em>string</em>) – working directory where all files will be created/processed - will be created</p></li>
+<li><p><strong>t0</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – defines the starting timestep to process (not all the MD timesteps may be precessed)</p></li>
+<li><p><strong>tmax</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – defines the maximal timestep to process (not all the MD timesteps may be precessed)</p></li>
+<li><p><strong>dt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – defines the spacing between frames which are written this is defined as a
+difference between written configuration indexes. So if dt = 5, the following frames
+will be written: 0,5,10,15, etc…</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but will create a bunch of new input files in the created working directory</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.out2pdb">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">out2pdb</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdb_prefix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#out2pdb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.out2pdb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a QE output file with an MD trajectory to a bunch of pdb files</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>out_filename</strong> (<em>string</em>) – name of the file which contains the MD trajectory.
+This file is the QE MD trajectory output</p></li>
+<li><p><strong>T</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – defines the maximal timestep to process (not all the MD timesteps may be precessed)</p></li>
+<li><p><strong>dt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – defines the spacing between frames which are written this is defined as a
+difference between written configuration indexes. So if dt = 5, the following frames
+will be written: 0,5,10,15, etc…</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but will create a bunch of new pdb files with the trajectory info, including the unit cell params.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">QE_methods</span><span class="o">.</span><span class="n">out2pdb</span><span class="p">(</span><span class="s2">&quot;x.md.out&quot;</span><span class="p">,</span><span class="mi">250</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="s2">&quot;snaps/snap_&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>This will create MD snapshots at times 0 (input configuration), 25 (25-th nuclear configuration), 50, etc.
+the files will be collcted in the folder /snaps and named snap_0.pdb, snap_25.pdb, snap_50.pdb, etc.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.out2xyz">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">out2xyz</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xyz_filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#out2xyz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.out2xyz" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function converts the QE output file into a .xyz trajectory file.
+No more than T steps from the out_filename file will be used</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>out_filename</strong> (<em>string</em>) – name of the file which contains the MD trajectory.
+This file is the QE MD trajectory output</p></li>
+<li><p><strong>T</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – defines the maximal timestep to process (not all the MD timesteps may be precessed)</p></li>
+<li><p><strong>dt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – defines the spacing between frames which are written this is defined as a
+difference between written configuration indexes. So if dt = 5, the following frames
+will be written: 0,5,10,15, etc…</p></li>
+<li><p><strong>xyz_filename</strong> (<em>string</em>) – the name of the file to which the resulting .xyz trajectory will be written</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but will create a .xyz file with the trajectory.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">QE_methods</span><span class="o">.</span><span class="n">out2xyz</span><span class="p">(</span><span class="s2">&quot;x.md.out&quot;</span><span class="p">,</span><span class="mi">250</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="s2">&quot;snaps/traj.xyz&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will create the MD trajectory file in .xyz format with the snapshots takes at times 0
+(input configuration), 25 (25-th nuclear configuration), 50, etc.
+the snapshots will written in the file trahj.xyz in the folder /snaps</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.read_all">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">read_all</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#read_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.read_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function reads index, wfc and grid files from a given directory
+The number of wfc and grid files may be larger than 1 - this is the
+case of spin-polarized or multiple k-points calculations</p>
+<p>Args:</p>
+<p>params ( dictionary ): Parameters controlling the simulation parameters</p>
+<blockquote>
+<div><ul>
+<li><dl class="simple">
+<dt><strong>params[“wd”]</strong> ( string ): the name of a “working directory (can be removed once the calculatons</dt><dd><p>are done)” that will be created during this function execution - this is where the temporary files
+are written to [default: “wd”]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“prefix”]</strong> ( string ): the location of the folder containing index.xml, wfc.*, and grid.* files [default: “x0.export” ]</p></li>
+<li><p><strong>params[“read_wfc”]</strong> ( 0 or 1 ): whether or not to read the wfc coefficients. [ default: 1 ]</p></li>
+<li><p><strong>params[“read_grid”]</strong> ( 0 or 1 ): whether or not to read the grid informations. [ default: 1 ]</p></li>
+<li><p><strong>params[“verb0”]</strong> ( 0 or 1 ): turn off/on the extra printout while reading index.xml. [ default: 0 ]</p></li>
+<li><p><strong>params[“verb1”]</strong> ( 0 or 1 ): turn off/on the extra printout while reading wfc.*. [ default: 0 ]</p></li>
+<li><p><strong>params[“verb2”]</strong> ( 0 or 1 ): turn off/on the extra printout while reading grid.*. [ default: 0 ]</p></li>
+<li><p><strong>params[“nac_method”]</strong> ( 0, 1, 2 ): the expectations about what format to read:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0 - non-SOC, non-polarized</p></li>
+<li><p>1 - non-SOC, spin-polarized</p></li>
+<li><p>2 - SOC, non-collinear</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“minband”]</strong> ( int ): index of the lowest energy orbital to include</dt><dd><p>in the active space, counting starts from 1 [ default: 1]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“maxband”]</strong> ( int ): index of the highest energy orbital to include</dt><dd><p>in the active space, counting starts from 1 [ defaults: 2]</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>( info, e, coeff, grid ), where</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>info ( dictionary ): general descritor info ..seealso::<code class="docutils literal notranslate"><span class="pre">`QE_methods.read_qe_index`</span></code></p></li>
+<li><p>e ( list of CMATRIX(norbs, norbs) ): band energies for each k-pints  ..seealso::<code class="docutils literal notranslate"><span class="pre">`QE_methods.read_qe_index`</span></code></p></li>
+<li><dl class="simple">
+<dt>coeff ( list of CMATRIX(npw, len(act_space)) objects ): such the</dt><dd><p>coeff[k] are the MOs in the plane wave basis for the k-point k</p>
+</dd>
+</dl>
+</li>
+<li><p>grid ( list of VECTOR objects ): the grid point vectors [ units: tpiba ]</p></li>
+</ul>
+<p>The number of elements in each list is determined by the number of k points
+Note that, for spin-polarized calculations, the number of k-points is always twice
+that of the non-spin-polarized or non-collinear k-points</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.read_info">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">read_info</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#read_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.read_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>This fucntions reads the output from QE calculations, and stores the output
+information in dictionaries</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dictionary</em>) – <p>Calculation control parameters</p>
+<ul>
+<li><dl class="simple">
+<dt><strong>params[“wd”]</strong> ( string ): the name of a “working directory (can be removed once the calculatons</dt><dd><p>are done)” that will be created during this function execution - this is where the temporary files
+are written to [default: “wd”]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“nac_method”]</strong> ( int ): selects the type of output to analyze:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0 : non-spin-polarized calculations</p></li>
+<li><p>1 : spin-polarized calculations</p></li>
+<li><p>2 : non-collinear calculation (SOC) only</p></li>
+<li><p>3 : spin-polarized and non-collinear calculation (SOC)</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( info0, all_e_dum0, info1, all_e_dum1 ):</p>
+<blockquote>
+<div><p>info0 ( dictionary ): QE calculations info for the spin-diabatic calculations</p>
+<dl class="simple">
+<dt>all_e_dum0 ( list of CMATRIX(norb, norb) objects ): (eigen)energies for all the k-points for</dt><dd><p>the spin-diabatic calculations</p>
+</dd>
+</dl>
+<p>info1 ( dictionary ): QE calculations info for the non-collinear (spin-adiabatic) calculations</p>
+<dl class="simple">
+<dt>all_e_dum1 ( list of CMATRIX(norb, norb) objects ): (eigen)energies for all the k-points for</dt><dd><p>the non-collinear (spin-adiabatic) calculations</p>
+</dd>
+</dl>
+<p>..seealso:: <code class="docutils literal notranslate"><span class="pre">`QE_methods.read_qe_index`</span></code></p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.read_md_data">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">read_md_data</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#read_md_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.read_md_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read in the QE MD data stored in an XML file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>string</em>) – the name of the xml file that contains an MD data
+this function is specifically tailored for the QE output format</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(R, V, A, M, E), where:</p>
+<ul class="simple">
+<li><p>R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps [Bohr]</p></li>
+<li><p>V ( MATRIX(ndof x nsteps-1) ): velocities of all DOFs for all mid-timesteps [a.u. of velocity]</p></li>
+<li><p>A ( MATRIX(ndof x nsteps-1) ): accelerations of all DOFs for all mid-timesteps [a.u. of acceleration]</p></li>
+<li><p>M ( MATRIX(ndof x 1) ): masses of all DOFs [a.u. of mass]</p></li>
+<li><p>E (list of ndof/3): atom names (elements) of all atoms</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.read_md_data_cell">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">read_md_data_cell</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#read_md_data_cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.read_md_data_cell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read in the QE MD unit cell vectors stored in an XML file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>string</em>) – the name of the xml file that contains an MD data
+this function is specifically tailored for the QE output format</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>cell coordinates for all timesteps, in the format [Bohr]:</p>
+<blockquote>
+<div><p>C(0,0) = a1.x    C(0,1) = a1.y    C(0,2) = a1.z
+C(1,0) = a2.x    C(1,1) = a2.y    C(1,2) = a2.z
+C(2,0) = a3.x    C(2,1) = a3.y    C(2,2) = a3.z</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>MATRIX(9 x nsteps)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.read_md_data_xyz">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">read_md_data_xyz</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#read_md_data_xyz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.read_md_data_xyz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read in the MD trajectory stored in an XYZ format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – the name of the xyz file that contains an MD data</p></li>
+<li><p><strong>( </strong><strong>dict{ string</strong> (<em>PT</em>) – float } ): definition of the masses of different atomic species [masses in amu, where 1 is the mass of H]</p></li>
+<li><p><strong>dt</strong> (<em>double</em>) – MD nuclear integration time step [a.u. of time]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(R, V, M, E), where:</p>
+<ul class="simple">
+<li><p>R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps [Bohr]</p></li>
+<li><p>V ( MATRIX(ndof x nsteps-1) ): velocities of all DOFs for all mid-timesteps [a.u. of velocity]</p></li>
+<li><p>M ( MATRIX(ndof x 1) ): masses of all DOFs [a.u. of mass]</p></li>
+<li><p>E (list of ndof/3): atom names (elements) of all atoms</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.read_md_data_xyz2">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">read_md_data_xyz2</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PT</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#read_md_data_xyz2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.read_md_data_xyz2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read in the MD trajectory stored in an XYZ format
+This version does not compute velocities - only gets coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – the name of the xyz file that contains an MD data</p></li>
+<li><p><strong>( </strong><strong>dict{ string</strong> (<em>PT</em>) – float } ): definition of the masses of different atomic species [masses in amu, where 1 is the mass of H]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(R, E), where:</p>
+<ul class="simple">
+<li><p>R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps [Bohr]</p></li>
+<li><p>E (list of ndof/3): atom names (elements) of all atoms</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.read_qe_index">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">read_qe_index</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orb_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#read_qe_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.read_qe_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>This functions reads an ASCII/XML format file containing wavefunction
+and returns the coefficients of the plane waves that constitute the
+wavefunction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – This is the name of the file we will be reading to construct a wavefunction</p></li>
+<li><p><strong>orb_list</strong> (<em>list of ints</em>) – The indices of the orbitals which we want to consider. Orbitals indexing
+at 1, not 0</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>The flag controlling the amout of extra output:</p>
+<ul>
+<li><p>0 - no extra output (default)</p></li>
+<li><p>1 - print extra stuff</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( info, all_e ), where:</p>
+<blockquote>
+<div><ul>
+<li><p>info ( dictionary ): contains all the descritive information about the QE calculations and the system</p>
+<blockquote>
+<div><p>It contains the following info:</p>
+<ul class="simple">
+<li><p><strong>info[“nspin”]</strong> ( int ): the type of calculations: 1 - non-polarized, 2 - polarized, 4 - non-collinear</p></li>
+<li><p><strong>info[“nk”]</strong> ( int ): the number of k-points</p></li>
+<li><p><strong>info[“nbnd”]</strong> ( int ): the number of orbitals in each k-point</p></li>
+<li><p><strong>info[“efermi”]</strong> ( double ): the Fermi energy [units: a.u.]</p></li>
+<li><p><strong>info[“alat”]</strong> ( double ): lattice constant, a [units: Bohr]</p></li>
+<li><p><strong>info[“omega”]</strong> ( double ): unit cell volume [units: Bohr^3]</p></li>
+<li><p><strong>info[“tpiba”]</strong> ( double ): reciprocal cell size, 2*pi/a [units: Bohr^-1]</p></li>
+<li><p><strong>info[“tpiba2”]</strong> ( double ): squared reciprocal cell size, (2*pi/a)^2 [units: Bohr^-2]</p></li>
+<li><p><strong>info[“a1”]</strong> ( VECTOR ): direct lattice vector 1 [units: Bohr]</p></li>
+<li><p><strong>info[“a2”]</strong> ( VECTOR ): direct lattice vector 2 [units: Bohr]</p></li>
+<li><p><strong>info[“a3”]</strong> ( VECTOR ): direct lattice vector 3 [units: Bohr]</p></li>
+<li><p><strong>info[“b1”]</strong> ( VECTOR ): reciprocal lattice vector 1 [units: Bohr^-1]</p></li>
+<li><p><strong>info[“b2”]</strong> ( VECTOR ): reciprocal lattice vector 2 [units: Bohr^-1]</p></li>
+<li><p><strong>info[“b3”]</strong> ( VECTOR ): reciprocal lattice vector 3 [units: Bohr^-1]</p></li>
+<li><p><strong>info[“weights”]</strong> ( list ): weights of all the k-points in evaluating the integrals</p></li>
+<li><p><strong>info[“k”]</strong> ( list of VECTOR objects ): coordinates of the k-points [units: tpiba]</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<dl class="simple">
+<dt>all_e ( list of CMATRIX(norb, norb) objects ): orbital energies for all the k-points, such that</dt><dd><p>all_e[k] is a diagonal matrix (complex-valued) of orbital energies - only for those that are of interest
+Here, norb = len(orb_list) and the matrix will only contain numbers that correspond to orbitals defined
+in the orb_list argument [units: a.u.]</p>
+</dd>
+</dl>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.read_qe_schema">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">read_qe_schema</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#read_qe_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.read_qe_schema" title="Permalink to this definition">¶</a></dt>
+<dd><p>This functions reads an ASCII/XML format file containing basic info about the QE run</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – This is the name of the file we will be read [ usually: “x0.save/data-file-schema.xml”]</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>The flag controlling the amout of extra output:</p>
+<ul>
+<li><p>0 - no extra output (default)</p></li>
+<li><p>1 - print extra stuff</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( info ): the dictionary containaining the descritive information about the QE calculations and the system</p>
+<blockquote>
+<div><p>It contains the following info:</p>
+<ul class="simple">
+<li><p><strong>info[“conv”]</strong> ( int ): the number of steps to converge SCF, 0 - means no convergence</p></li>
+<li><p><strong>info[“etot”]</strong> ( double ): the total energy (electronic + nuclear) [ units: Ha ]</p></li>
+<li><p><strong>info[“nbnd”]</strong> ( int ): the number of bands</p></li>
+<li><p><strong>info[“nelec”]</strong> ( int ): the number of electrons</p></li>
+<li><p><strong>info[“efermi”]</strong> ( double ): the Fermi energy [ units: Ha ]</p></li>
+<li><p><strong>info[“alat”]</strong> ( double ): lattice constant [ units: Bohr ]</p></li>
+<li><p><strong>info[“nat”]</strong> ( int ): the number of atoms</p></li>
+<li><p><strong>info[“coords”]</strong> ( MATRIX(3*nat, 1) ): the atomic coordinates [ units: Bohr ]</p></li>
+<li><p><strong>info[“atom_labels”]</strong> ( list of nat strings ): the atomic names</p></li>
+<li><p><strong>info[“forces”]</strong> ( MATRIX(3*nat, 1) ): the atomic forces [ units: Ha/Bohr ]</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.read_qe_wfc">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">read_qe_wfc</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orb_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#read_qe_wfc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.read_qe_wfc" title="Permalink to this definition">¶</a></dt>
+<dd><p>This functions reads an ASCII/XML format file containing wavefunction
+and returns the coefficients of the plane waves that constitute the wavefunction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – This is the name of the file we will be reading to construct a wavefunction</p></li>
+<li><p><strong>orb_list</strong> (<em>list of ints</em>) – The indices of the orbitals which we want to consider. Orbitals indexing
+at 1, not 0</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>The flag controlling the amout of extra output:</p>
+<ul>
+<li><p>0 - no extra output (default)</p></li>
+<li><p>1 - print extra stuff</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The plane-wave expansion coefficients for all orbitals</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>CMATRIX(ngw,norbs)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.read_qe_wfc_grid">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">read_qe_wfc_grid</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#read_qe_wfc_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.read_qe_wfc_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>This functions reads an ASCII/XML format file containing grid of G-points for given k-point
+and returns a list of VECTOR objects</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – This is the name of the file we will be reading to construct a wavefunction</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>The flag controlling the amout of extra output:</p>
+<ul>
+<li><p>0 - no extra output (default)</p></li>
+<li><p>1 - print extra stuff</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the definitions of all G points in the present calculation</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>VectorList = list of VECTOR objects</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.read_qe_wfc_info">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">read_qe_wfc_info</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#read_qe_wfc_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.read_qe_wfc_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>This functions reads an ASCII/XML format file containing wavefunction
+and returns some descriptors</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – This is the name of the file we will be reading to construct a wavefunction</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>The flag controlling the amout of extra output:</p>
+<ul>
+<li><p>0 - no extra output (default)</p></li>
+<li><p>1 - print extra stuff</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>a dictionary object that will contain key-value pairs with the descriptors</p>
+<blockquote>
+<div><ul>
+<li><p>res[“ngw”] ( int ): the number of plane waves needed to represent the orbital</p></li>
+<li><dl class="simple">
+<dt>res[“igwx”] ( int ): the number of the G points = plane waves needed to</dt><dd><p>represent the orbital for given k-point. Use this number when working with multiple k-points</p>
+</dd>
+</dl>
+</li>
+<li><p>res[“nbnd”] ( int ): the number of bands (orbitals)</p></li>
+<li><p>res[“nspin”] ( int ): the desriptor of the spin-polarisation in the calculation</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>1: unpolarized</p></li>
+<li><p>2: polarized</p></li>
+<li><p>4: non-collinear</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>res[“gamma_only”]: ( string = “T” or “F” ): T - use the Gamma-point storae trick, F otherwise</p></li>
+<li><p>res[“ik”] ( int ): index of the k point wfc</p></li>
+<li><p>res[“nk”] ( int ): the number of k-points in the wfc</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.read_wfc_grid">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">read_wfc_grid</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#read_wfc_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.read_wfc_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the coefficients and energies for the multi k-points cases,
+even if some cases require gamma only</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dictionary</em>) – <p>The control parameters, which may contain:</p>
+<ul>
+<li><p><strong>param[“nac_method”]</strong> ( 0, 1, 2, 3 ): the expectations about what format to read:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0 : non-spin-polarized calculations [ default ]</p></li>
+<li><p>1 : spin-polarized calculations</p></li>
+<li><p>2 : non-collinear calculation (SOC) only</p></li>
+<li><p>3 : spin-polarized and non-collinear calculation (SOC)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“minband”]</strong> ( int ): index of the lowest energy orbital to include</dt><dd><p>in the active space in the non-SOC (spin-diabatic) calculations,
+counting starts from 1. Used for nac_method == 0, 1, 3. [ default: 1]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“maxband”]</strong> ( int ): index of the highest energy orbital to include</dt><dd><p>in the active space  in the non-SOC (spin-diabatic) calculations,
+counting starts from 1. Used for nac_method == 0, 1, 3. [ defaults: 2]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“minband_soc”]</strong> ( int ): index of the lowest energy orbital pair to include</dt><dd><p>in the active space in the SOC (spin-adiabatic) calculations,
+counting starts from 1. Used for nac_method == 2 and 3. [ default: 1]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“maxband_soc”]</strong> ( int ): index of the highest energy orbital pair to include</dt><dd><p>in the active space  in the SOC (spin-adiabatic) calculations,
+counting starts from 1. Used for nac_method == 2 and 3. [ defaults: 2]</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>( res_curr, res_next ), Here _curr, refers to the current timestep properties,</dt><dd><p>and the _next refers to the consecutive timestep properties. Each element of the
+output is a dictionary with the following elements:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>res_curr[“Coeff_dia”]</strong> ( list of CMATRIX(npw, len(act_space)) objects )<span class="classifier">the</span></dt><dd><p>wavefunction coefficients in the planewave basis for the spin-diabatic wavefunctions, such
+that res_curr[“Coeff_dia”][k] is a matrix for the k-point with index k.
+Only for nac_method == 0, 1, and 3.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>res_curr[“E_dia”]</strong> ( list of MATRIX(len(act_space), len(act_space)) objects )<span class="classifier">the MO</span></dt><dd><p>energies for the spin-diabatic wavefunctions, such
+that res_curr[“E_dia”][k] is a matrix for the k-point with index k.
+Only for nac_method == 0, 1, and 3.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>res_curr[“Coeff_adi”]</strong> ( list of CMATRIX(npw, len(act_space)) objects )<span class="classifier">the</span></dt><dd><p>wavefunction coefficients in the planewave basis for the spin-adiabatic wavefunctions, such
+that res_curr[“Coeff_adi”][k] is a matrix for the k-point with index k.
+Only for nac_method == 2 and 3.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>res_curr[“E_adi”]</strong> ( list of MATRIX(len(act_space), len(act_space)) objects )<span class="classifier">the MO</span></dt><dd><p>energies for the spin-adiabatic wavefunctions, such
+that res_curr[“E_adi”][k] is a matrix for the k-point with index k.
+Only for nac_method == 2 and 3.</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>res_curr[“grid”]</strong> ( list of VECTOR objects ): the grid point vectors [ units: tpiba ]</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.run_qe">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">run_qe</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirname0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirname1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#run_qe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.run_qe" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function runs necessary QE calculations as defined by the “params” dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> (<em>dictionary</em>) – <p>A dictionary containing important simulation parameters</p>
+<ul>
+<li><dl class="simple">
+<dt><strong>params[“BATCH_SYSTEM”]</strong> ( string ): the name of the job submission command</dt><dd><p>use “srun” if run calculations on SLURM system or “mpirun” if run on PBS system
+[default: “srun”]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“NP”]</strong> ( int ): the number of nodes on which execute calculations</dt><dd><p>[default: 1]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“EXE”]</strong> ( string ): the name of the program to be executed. This may be</dt><dd><p>the absolute path to the QE (pw.x) binary</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“EXE_EXPORT”]</strong> ( string ): the name of the program that converts the binary files</dt><dd><p>with the QE wavefunctions to the text format (pw_export.x). The name includes the
+absolute path to the binary</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“prefix0”]</strong> ( string ): the name of scf template input file - it should</dt><dd><p>contain all the parameters controlling the computational methodology for QE.
+If the file is called “x0.scf.in”, use “x0.scf” as the value of the “prefix0”
+[default: “x0.scf”]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“prefix1”]</strong> ( string ): the name of scf template input file - it should</dt><dd><p>contain all the parameters controlling the computational methodology for QE.
+Presently is used for SOC-enabled calculations, whereas the “prefix0” defines the
+no-SOC calculations. If the file is called “x1.scf.in”, use “x1.scf” as the value
+of the “prefix1” [default: “x1.scf”]</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>params[“nac_method”]</strong> ( int ): selects the type of calculations to perform:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0 : non-spin-polarized calculations (needs only “prefix0”)</p></li>
+<li><p>1 : spin-polarized calculations (needs only “prefix0”)</p></li>
+<li><p>2 : non-collinear calculation (SOC) only (needs only “prefix1”)</p></li>
+<li><p>3 : spin-polarized and non-collinear calculation (SOC) (needs both “prefix0” and “prefix1”)</p></li>
+</ul>
+<p>[default: 0]</p>
+</div></blockquote>
+</li>
+<li><dl class="simple">
+<dt><strong>params[“wd”]</strong> ( string ): the name of a “working directory (can be removed once the calculatons</dt><dd><p>are done)” that will be created during this function execution.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+<li><p><strong>t</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the current time step</p></li>
+<li><p><strong>dirname0</strong> (<em>string</em>) – Name of the temporary directory where data will be stored
+for the case without SOC</p></li>
+<li><p><strong>dirname1</strong> (<em>string</em>) – Name of the temporary directory where data will be stored
+for the case with SOC</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.QE_methods.xyz2inp">
+<code class="sig-prename descclassname"><span class="pre">libra_py.QE_methods.</span></code><code class="sig-name descname"><span class="pre">xyz2inp</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">templ_filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/QE_methods.html#xyz2inp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.QE_methods.xyz2inp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a xyz trajectory file with an MD trajectory to a bunch of input files
+for SCF calculations. These input files all have the same control settings,
+but differ in atomic coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>out_filename</strong> (<em>string</em>) – name of the file which contains the MD trajectory (in xyz format)</p></li>
+<li><p><strong>templ_filename</strong> (<em>string</em>) – name of the template file for input generation
+should not contain atomic positions!</p></li>
+<li><p><strong>wd</strong> (<em>string</em>) – working directory where all files will be created/processed - will be created</p></li>
+<li><p><strong>prefix</strong> (<em>string</em>) – the prefix of the files generated as the output</p></li>
+<li><p><strong>t0</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – defines the starting timestep to process (not all the MD timesteps may be precessed)</p></li>
+<li><p><strong>tmax</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – defines the maximal timestep to process (not all the MD timesteps may be precessed)</p></li>
+<li><p><strong>dt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – defines the spacing between frames which are written this is defined as a
+difference between written configuration indexes. So if dt = 5, the following frames
+will be written: 0,5,10,15, etc…</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but will create a bunch of new input files in the created working directory</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="QE_utils.html" class="btn btn-neutral float-right" title="QE_utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="probabilities.html" class="btn btn-neutral float-left" title="probabilities" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

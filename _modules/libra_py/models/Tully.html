@@ -1,0 +1,636 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.models.Tully &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.models.Tully</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.models.Tully</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************                     </span>
+<span class="c1">#* Copyright (C) 2018-2020 Alexey V. Akimov                                                   </span>
+<span class="c1">#*                                                                                                     </span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License                          </span>
+<span class="c1">#* as published by the Free Software Foundation, either version 3 of</span>
+<span class="c1">#* the License, or (at your option) any later version.                                                 </span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution   </span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.          </span>
+<span class="c1">#***********************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: models_Tully</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements 3 Tully models for testing NA-MD dynamics</span>
+<span class="sd">.. moduleauthor:: Alexey V. Akimov</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+<span class="kn">import</span> <span class="nn">libra_py.units</span> <span class="k">as</span> <span class="nn">units</span>
+
+
+<span class="k">class</span> <span class="nc">tmp</span><span class="p">:</span>
+    <span class="k">pass</span>    
+
+<div class="viewcode-block" id="Tully1_py"><a class="viewcode-back" href="../../../reference/libra_py/models/Tully.html#libra_py.models.Tully.Tully1_py">[docs]</a><span class="k">def</span> <span class="nf">Tully1_py</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">   </span>
+<span class="sd">    Pure Python implementation of the Tully model I = Simple Avoided Crossing (SAC):</span>
+
+<span class="sd">    H_00 = A*(1.0-exp(-B*x)) x&gt;0,  </span>
+<span class="sd">         = A*(exp(B*x)-1.0 ) x&lt;0</span>
+<span class="sd">    H_11 = -H_00</span>
+<span class="sd">    H_01 = C*exp(-D*x^2)</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1</span>
+<span class="sd">        params ( dictionary ): model parameters</span>
+
+<span class="sd">            * **params[&quot;A&quot;]** ( double ):  [ default: 0.010, units: Ha]</span>
+<span class="sd">            * **params[&quot;B&quot;]** ( double ):  [ default: 1.600, units: Bohr^-1]</span>
+<span class="sd">            * **params[&quot;C&quot;]** ( double ):  [ default: 0.005, units: Ha]</span>
+<span class="sd">            * **params[&quot;D&quot;]** ( double ):  [ default: 1.000, units: Bohr^-2]</span>
+
+<span class="sd">    Returns:       </span>
+<span class="sd">        PyObject: obj, with the members:</span>
+
+<span class="sd">            * obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian </span>
+<span class="sd">            * obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]</span>
+<span class="sd">            * obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ): </span>
+<span class="sd">                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</span>
+<span class="sd">            * obj.dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]</span>
+<span class="sd"> </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;A&quot;</span><span class="p">:</span><span class="mf">0.010</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">:</span><span class="mf">1.600</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">:</span><span class="mf">0.005</span><span class="p">,</span> <span class="s2">&quot;D&quot;</span><span class="p">:</span><span class="mf">1.000</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">]</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">]</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">]</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;D&quot;</span><span class="p">]</span>
+
+
+
+    <span class="n">Hdia</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">Sdia</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">d1ham_dia</span> <span class="o">=</span> <span class="n">CMATRIXList</span><span class="p">();</span>  <span class="n">d1ham_dia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">dc1_dia</span> <span class="o">=</span> <span class="n">CMATRIXList</span><span class="p">();</span>  <span class="n">dc1_dia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+  
+    <span class="n">x</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">Sdia</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>  <span class="n">Sdia</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>
+    <span class="n">Sdia</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>  <span class="n">Sdia</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>
+
+    <span class="n">V11</span><span class="p">,</span><span class="n">dV11</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">V11</span> <span class="o">=</span> <span class="n">A</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">B</span><span class="o">*</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">dV11</span> <span class="o">=</span>  <span class="n">A</span><span class="o">*</span><span class="n">B</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">B</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">V11</span> <span class="o">=</span> <span class="o">-</span><span class="n">A</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">B</span><span class="o">*</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">dV11</span> <span class="o">=</span>  <span class="n">A</span><span class="o">*</span><span class="n">B</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">B</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+    
+    <span class="n">V</span> <span class="o">=</span> <span class="n">C</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">D</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">dV</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.0</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">C</span><span class="o">*</span><span class="n">D</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">D</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">Hdia</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="n">V11</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">);</span>   <span class="n">Hdia</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">V</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">));</span>
+    <span class="n">Hdia</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="n">V</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">));</span>      <span class="n">Hdia</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">V11</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">));</span>
+
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="c1">#  d Hdia / dR_0</span>
+        <span class="n">d1ham_dia</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="n">dV11</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">);</span>  <span class="n">d1ham_dia</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">dV</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">));</span>
+        <span class="n">d1ham_dia</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="n">dV</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">));</span>     <span class="n">d1ham_dia</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">dV11</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">));</span>
+
+        <span class="c1">#  &lt;dia| d/dR_0| dia &gt;</span>
+        <span class="n">dc1_dia</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>   <span class="n">dc1_dia</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>
+        <span class="n">dc1_dia</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>   <span class="n">dc1_dia</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">);</span>
+
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">()</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">ham_dia</span> <span class="o">=</span> <span class="n">Hdia</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">ovlp_dia</span> <span class="o">=</span> <span class="n">Sdia</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span> <span class="o">=</span> <span class="n">d1ham_dia</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">dc1_dia</span> <span class="o">=</span> <span class="n">dc1_dia</span>
+
+    <span class="k">return</span> <span class="n">obj</span></div>
+
+
+
+<div class="viewcode-block" id="Tully1"><a class="viewcode-back" href="../../../reference/libra_py/models/Tully.html#libra_py.models.Tully.Tully1">[docs]</a><span class="k">def</span> <span class="nf">Tully1</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">   </span>
+<span class="sd">    The implementation that calls the C++ implementation of Tully model I = Simple Avoided Crossing (SAC):</span>
+
+<span class="sd">    H_00 = A*(1.0-exp(-B*x)) x&gt;0,  </span>
+<span class="sd">         = A*(exp(B*x)-1.0 ) x&lt;0</span>
+<span class="sd">    H_11 = -H_00</span>
+<span class="sd">    H_01 = C*exp(-D*x^2)</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1</span>
+<span class="sd">        params ( dictionary ): model parameters</span>
+
+<span class="sd">            * **params[&quot;A&quot;]** ( double ):  [ default: 0.010, units: Ha]</span>
+<span class="sd">            * **params[&quot;B&quot;]** ( double ):  [ default: 1.600, units: Bohr^-1]</span>
+<span class="sd">            * **params[&quot;C&quot;]** ( double ):  [ default: 0.005, units: Ha]</span>
+<span class="sd">            * **params[&quot;D&quot;]** ( double ):  [ default: 1.000, units: Bohr^-2]</span>
+
+<span class="sd">    Returns:       </span>
+<span class="sd">        PyObject: obj, with the members:</span>
+
+<span class="sd">            * obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian </span>
+<span class="sd">            * obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]</span>
+<span class="sd">            * obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ): </span>
+<span class="sd">                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</span>
+<span class="sd">            * obj.dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]</span>
+<span class="sd"> </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;A&quot;</span><span class="p">:</span><span class="mf">0.010</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">:</span><span class="mf">1.600</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">:</span><span class="mf">0.005</span><span class="p">,</span> <span class="s2">&quot;D&quot;</span><span class="p">:</span><span class="mf">1.000</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">]</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">]</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">]</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;D&quot;</span><span class="p">]</span>
+
+
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">()</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">ham_dia</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">ovlp_dia</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span> <span class="o">=</span> <span class="n">CMATRIXList</span><span class="p">();</span>  <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">dc1_dia</span> <span class="o">=</span> <span class="n">CMATRIXList</span><span class="p">();</span>  <span class="n">obj</span><span class="o">.</span><span class="n">dc1_dia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="c1"># Convert MATRIX to doubleList()</span>
+    <span class="n">qq</span> <span class="o">=</span> <span class="n">doubleList</span><span class="p">();</span>  <span class="n">qq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">prms</span> <span class="o">=</span> <span class="n">doubleList</span><span class="p">()</span> <span class="c1"># will use the default values</span>
+    <span class="n">prms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">A</span><span class="p">);</span> <span class="n">prms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">B</span><span class="p">);</span> <span class="n">prms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C</span><span class="p">);</span> <span class="n">prms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">D</span><span class="p">);</span>
+    
+    <span class="n">model_SAC</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">ham_dia</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">ovlp_dia</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">dc1_dia</span><span class="p">,</span> <span class="n">qq</span><span class="p">,</span> <span class="n">prms</span><span class="p">);</span> 
+
+    <span class="k">return</span> <span class="n">obj</span></div>
+
+
+
+<div class="viewcode-block" id="Tully2"><a class="viewcode-back" href="../../../reference/libra_py/models/Tully.html#libra_py.models.Tully.Tully2">[docs]</a><span class="k">def</span> <span class="nf">Tully2</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">   </span>
+<span class="sd">    The implementation that calls the C++ implementation of Tully model II = Double Avoided Crossing (DAC):</span>
+
+<span class="sd">    H_00 = 0.0</span>
+<span class="sd">    H_11 = E - A*exp(-B*x^2)</span>
+<span class="sd">    H_01 = C*exp(-D*x^2)</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1</span>
+<span class="sd">        params ( dictionary ): model parameters</span>
+
+<span class="sd">            * **params[&quot;A&quot;]** ( double ):  [ default: 0.100, units: Ha]</span>
+<span class="sd">            * **params[&quot;B&quot;]** ( double ):  [ default: 0.028, units: Bohr^-2]</span>
+<span class="sd">            * **params[&quot;C&quot;]** ( double ):  [ default: 0.015, units: Ha]</span>
+<span class="sd">            * **params[&quot;D&quot;]** ( double ):  [ default: 0.060, units: Bohr^-2]</span>
+<span class="sd">            * **params[&quot;E&quot;]** ( double ):  [ default: 0.050, units: Ha]</span>
+
+<span class="sd">    Returns:       </span>
+<span class="sd">        PyObject: obj, with the members:</span>
+
+<span class="sd">            * obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian </span>
+<span class="sd">            * obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]</span>
+<span class="sd">            * obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ): </span>
+<span class="sd">                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</span>
+<span class="sd">            * obj.dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]</span>
+<span class="sd"> </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;A&quot;</span><span class="p">:</span><span class="mf">0.10</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">:</span><span class="mf">0.28</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">:</span><span class="mf">0.015</span><span class="p">,</span> <span class="s2">&quot;D&quot;</span><span class="p">:</span><span class="mf">0.060</span><span class="p">,</span> <span class="s2">&quot;E&quot;</span><span class="p">:</span><span class="mf">0.050</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">]</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">]</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">]</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;D&quot;</span><span class="p">]</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;E&quot;</span><span class="p">]</span>
+
+
+
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">()</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">ham_dia</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">ovlp_dia</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span> <span class="o">=</span> <span class="n">CMATRIXList</span><span class="p">();</span>  <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">dc1_dia</span> <span class="o">=</span> <span class="n">CMATRIXList</span><span class="p">();</span>  <span class="n">obj</span><span class="o">.</span><span class="n">dc1_dia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="c1"># Convert MATRIX to doubleList()</span>
+    <span class="n">qq</span> <span class="o">=</span> <span class="n">doubleList</span><span class="p">();</span>  <span class="n">qq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">prms</span> <span class="o">=</span> <span class="n">doubleList</span><span class="p">()</span> <span class="c1"># will use the default values</span>
+    <span class="n">prms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">A</span><span class="p">);</span> <span class="n">prms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">B</span><span class="p">);</span> <span class="n">prms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C</span><span class="p">);</span> <span class="n">prms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">D</span><span class="p">);</span>  <span class="n">prms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">E</span><span class="p">);</span>
+    
+    <span class="n">model_DAC</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">ham_dia</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">ovlp_dia</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">dc1_dia</span><span class="p">,</span> <span class="n">qq</span><span class="p">,</span> <span class="n">prms</span><span class="p">);</span> 
+
+    <span class="k">return</span> <span class="n">obj</span></div>
+
+
+
+<div class="viewcode-block" id="Tully3"><a class="viewcode-back" href="../../../reference/libra_py/models/Tully.html#libra_py.models.Tully.Tully3">[docs]</a><span class="k">def</span> <span class="nf">Tully3</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">   </span>
+<span class="sd">    The implementation that calls the C++ implementation of Tully model III =</span>
+<span class="sd">    Extended Coupling With Reflection  (ECWR):</span>
+
+<span class="sd">    H_00 = A</span>
+<span class="sd">    H_11 = -H_00</span>
+<span class="sd">    H_01 = B*exp(C*x);          x &lt;= 0</span>
+<span class="sd">           B*(2.0 - exp(-C*x)); x &gt; 0</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1</span>
+<span class="sd">        params ( dictionary ): model parameters</span>
+
+<span class="sd">            * **params[&quot;A&quot;]** ( double ):  [ default: 0.0006, units: Ha ]</span>
+<span class="sd">            * **params[&quot;B&quot;]** ( double ):  [ default: 0.1000, units: Ha ]</span>
+<span class="sd">            * **params[&quot;C&quot;]** ( double ):  [ default: 0.9000, units: Bohr^-1 ]</span>
+
+<span class="sd">    Returns:       </span>
+<span class="sd">        PyObject: obj, with the members:</span>
+
+<span class="sd">            * obj.ham_dia ( CMATRIX(2,2) ): diabatic Hamiltonian </span>
+<span class="sd">            * obj.ovlp_dia ( CMATRIX(2,2) ): overlap of the basis (diabatic) states [ identity ]</span>
+<span class="sd">            * obj.d1ham_dia ( list of 1 CMATRIX(2,2) objects ): </span>
+<span class="sd">                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</span>
+<span class="sd">            * obj.dc1_dia ( list of 1 CMATRIX(2,2) objects ): derivative coupling in the diabatic basis [ zero ]</span>
+<span class="sd"> </span>
+<span class="sd"> </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;A&quot;</span><span class="p">:</span><span class="mf">0.0006</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">:</span><span class="mf">0.1000</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">:</span><span class="mf">0.9000</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">]</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">]</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">]</span>
+
+
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">()</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">ham_dia</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">ovlp_dia</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span> <span class="o">=</span> <span class="n">CMATRIXList</span><span class="p">();</span>  <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">dc1_dia</span> <span class="o">=</span> <span class="n">CMATRIXList</span><span class="p">();</span>  <span class="n">obj</span><span class="o">.</span><span class="n">dc1_dia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="c1"># Convert MATRIX to doubleList()</span>
+    <span class="n">qq</span> <span class="o">=</span> <span class="n">doubleList</span><span class="p">();</span>  <span class="n">qq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">prms</span> <span class="o">=</span> <span class="n">doubleList</span><span class="p">()</span> <span class="c1"># will use the default values</span>
+    <span class="n">prms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">A</span><span class="p">);</span> <span class="n">prms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">B</span><span class="p">);</span> <span class="n">prms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+    
+    <span class="n">model_ECWR</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">ham_dia</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">ovlp_dia</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">dc1_dia</span><span class="p">,</span> <span class="n">qq</span><span class="p">,</span> <span class="n">prms</span><span class="p">);</span> 
+
+    <span class="k">return</span> <span class="n">obj</span></div>
+
+
+
+
+<div class="viewcode-block" id="chain_potential"><a class="viewcode-back" href="../../../reference/libra_py/models/Tully.html#libra_py.models.Tully.chain_potential">[docs]</a><span class="k">def</span> <span class="nf">chain_potential</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">full_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;    </span>
+<span class="sd">    A 1D linear chain potential. </span>
+
+<span class="sd">    This is the Hamiltonian to mimic the one used by Tully and Parandekar to study </span>
+<span class="sd">    thermal equilibrium in quantum-classical systems</span>
+
+<span class="sd">    Although the indended interpretation is that the first DOFs is quantum, this potential</span>
+<span class="sd">    is totally generic, so all DOFs could be treated as quantum</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        q ( MATRIX(ndof,1) ): coordinates of the nuclear DOFs</span>
+<span class="sd">        params ( dictionary ): model parameters</span>
+
+<span class="sd">            * **params[&quot;A&quot;]** ( double ): [ units: None ]</span>
+<span class="sd">            * **params[&quot;a&quot;]** ( double ):  [ units: bohr-1 ]</span>
+<span class="sd">            * **params[&quot;V0]** ( double ):  [ units: Ha ]            </span>
+<span class="sd">            * **params[&quot;E_n&quot;]** ( list of doubles ):  [ default: [0.0, 0.001, 0.001, 0.001], units: Ha]</span>
+<span class="sd">            * **params[&quot;x_n&quot;]** ( list of doubles ):  [ default: [0.0, 1.0, 1.0, 1.0], units: Bohr]</span>
+<span class="sd">            * **params[&quot;k_n&quot;]** ( list of doubles ):  [ default: [0.001, 0.001, 0.001, 0.001], units: Ha/Bohr^2]</span>
+<span class="sd">            * **params[&quot;V&quot;]**   ( list of lists of double ):  [ default:  [[0.001]*4]*4, units: Ha]</span>
+
+<span class="sd">    Returns:       </span>
+<span class="sd">        PyObject: obj, with the members:</span>
+
+<span class="sd">            * obj.ham_dia ( CMATRIX(n,n) ): diabatic Hamiltonian </span>
+<span class="sd">            * obj.ovlp_dia ( CMATRIX(n,n) ): overlap of the basis (diabatic) states [ identity ]</span>
+<span class="sd">            * obj.d1ham_dia ( list of 1 CMATRIX(n, n) objects ): </span>
+<span class="sd">                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate</span>
+<span class="sd">            * obj.dc1_dia ( list of 1 CMATRIX(n, n) objects ): derivative coupling in the diabatic basis [ zero ]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">Id</span> <span class="o">=</span> <span class="n">Cpp2Py</span><span class="p">(</span><span class="n">full_id</span><span class="p">)</span>
+    <span class="n">indx</span> <span class="o">=</span> <span class="n">Id</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">indx</span><span class="p">)</span>       <span class="c1"># coordinates of all particles for this trajectory</span>
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">num_of_rows</span>  <span class="c1"># the total number of DOFs, the first one is the quantum DOF</span>
+    
+    
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;E_n&quot;</span><span class="p">,</span> <span class="s2">&quot;x_n&quot;</span><span class="p">,</span> <span class="s2">&quot;k_n&quot;</span> <span class="p">]</span>
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;V&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="p">[</span><span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">],</span>
+                              <span class="p">[</span><span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">]</span> <span class="p">],</span>
+                       <span class="s2">&quot;a&quot;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">,</span> <span class="s2">&quot;U0&quot;</span><span class="p">:</span><span class="mf">0.06665</span>
+                     <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="c1"># Parameters describing the diabatic PES for quantum DOF</span>
+    <span class="n">E_n</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;E_n&quot;</span><span class="p">]</span> <span class="c1"># energies of the minima of the diabatic PESs for quantum particle</span>
+    <span class="n">x_n</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;x_n&quot;</span><span class="p">]</span> <span class="c1"># positions of diabatic PESs</span>
+    <span class="n">k_n</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;k_n&quot;</span><span class="p">]</span> <span class="c1"># curvatures of diabatic PESs</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;V&quot;</span><span class="p">]</span>     <span class="c1"># diabatic couplings</span>
+    <span class="n">nstates</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">E_n</span><span class="p">)</span>  <span class="c1"># the number of electronic states</span>
+    
+    <span class="c1"># Parameters describing classical particles and their coupling to the quantum particle    </span>
+    <span class="n">a</span>  <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span>
+    <span class="n">U0</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;U0&quot;</span><span class="p">]</span>
+    <span class="n">a2</span> <span class="o">=</span>  <span class="n">U0</span><span class="o">*</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">a3</span> <span class="o">=</span> <span class="o">-</span><span class="n">U0</span><span class="o">*</span><span class="n">a</span><span class="o">**</span><span class="mi">3</span>
+    <span class="n">a4</span> <span class="o">=</span> <span class="mf">0.58</span><span class="o">*</span><span class="n">U0</span><span class="o">*</span><span class="n">a</span><span class="o">**</span><span class="mi">4</span>
+    
+                
+    <span class="n">Hdia</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span><span class="n">nstates</span><span class="p">)</span>
+    <span class="n">Sdia</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span><span class="n">nstates</span><span class="p">)</span>
+    <span class="n">Sdia</span><span class="o">.</span><span class="n">identity</span><span class="p">()</span>
+    <span class="n">basis_transform</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span><span class="n">nstates</span><span class="p">)</span>
+    <span class="n">basis_transform</span><span class="o">.</span><span class="n">identity</span><span class="p">()</span>
+    
+    
+    <span class="n">d1ham_dia</span> <span class="o">=</span> <span class="n">CMATRIXList</span><span class="p">();</span>
+    <span class="n">dc1_dia</span>   <span class="o">=</span> <span class="n">CMATRIXList</span><span class="p">();</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndof</span><span class="p">):</span>
+        <span class="n">d1ham_dia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span><span class="n">nstates</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">dc1_dia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span><span class="n">nstates</span><span class="p">)</span> <span class="p">)</span> 
+
+        
+    <span class="c1">#========= Classical (bath) contributions =========    </span>
+    <span class="n">H_bath</span>  <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">dH_bath</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndof</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">x1</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="n">x2</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">x1</span> <span class="o">-</span> <span class="n">x2</span>
+        <span class="n">d2</span> <span class="o">=</span> <span class="n">d</span><span class="o">*</span><span class="n">d</span>
+        <span class="n">d3</span> <span class="o">=</span> <span class="n">d2</span><span class="o">*</span><span class="n">d</span>
+        <span class="n">d4</span> <span class="o">=</span> <span class="n">d3</span><span class="o">*</span><span class="n">d</span>
+        <span class="n">H_bath</span> <span class="o">+=</span> <span class="p">(</span><span class="n">a2</span><span class="o">*</span><span class="n">d2</span> <span class="o">+</span> <span class="n">a3</span><span class="o">*</span><span class="n">d3</span> <span class="o">+</span> <span class="n">a4</span><span class="o">*</span><span class="n">d4</span><span class="p">)</span>
+        <span class="n">dH_bath</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">a2</span><span class="o">*</span><span class="n">d</span> <span class="o">+</span> <span class="mf">3.0</span><span class="o">*</span><span class="n">a3</span><span class="o">*</span><span class="n">d2</span> <span class="o">+</span> <span class="mf">4.0</span><span class="o">*</span><span class="n">a4</span><span class="o">*</span><span class="n">d3</span> <span class="p">)</span>
+
+        
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nstates</span><span class="p">):</span>        
+        <span class="n">Hdia</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">,</span> <span class="n">H_bath</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">))</span>
+                
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">d1ham_dia</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span> <span class="n">dH_bath</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ndof</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">d1ham_dia</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span> <span class="n">dH_bath</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="n">dH_bath</span><span class="p">[</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span>
+            
+        <span class="n">k</span> <span class="o">=</span> <span class="n">ndof</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">d1ham_dia</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span> <span class="o">-</span><span class="n">dH_bath</span><span class="p">[</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span>
+        
+    
+        
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    for k in range(1, ndof):        </span>
+<span class="sd">        </span>
+<span class="sd">        d = (X.get(0) - X.get(k) )        </span>
+<span class="sd">        d2 = d*d        </span>
+<span class="sd">        H_bath = 0.5 * U0*d2</span>
+<span class="sd">        dH_bath = U0 * d</span>
+<span class="sd">        </span>
+<span class="sd">        </span>
+<span class="sd">        for i in range(nstates):        </span>
+<span class="sd">            Hdia.add(i,i, H_bath*(1.0+0.0j) )            </span>
+<span class="sd">            d1ham_dia[k].add(i, i, ( -dH_bath ) * (1.0+0.0j) )</span>
+<span class="sd">            d1ham_dia[0].add(i, i, (  dH_bath ) * (1.0+0.0j) )</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+        
+    <span class="c1">#========== Quantum system ==================    </span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nstates</span><span class="p">):</span>        
+        <span class="c1"># Energies</span>
+        <span class="n">Hdia</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">,</span>  <span class="p">(</span><span class="n">E_n</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">k_n</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">x_n</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span>
+                
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nstates</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">!=</span><span class="n">j</span><span class="p">:</span>
+                <span class="n">Hdia</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span>  <span class="n">V</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span>
+        
+        <span class="c1"># Derivatives</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># quantum DOF</span>
+        <span class="n">d1ham_dia</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">k_n</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">x_n</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="p">)</span>
+
+                        
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">()</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">ham_dia</span> <span class="o">=</span> <span class="n">Hdia</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">ovlp_dia</span> <span class="o">=</span> <span class="n">Sdia</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">d1ham_dia</span> <span class="o">=</span> <span class="n">d1ham_dia</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">dc1_dia</span> <span class="o">=</span> <span class="n">dc1_dia</span>
+    <span class="c1">#obj.basis_transform = basis_transform</span>
+    
+    <span class="k">return</span> <span class="n">obj</span></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

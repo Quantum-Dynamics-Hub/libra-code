@@ -1,0 +1,519 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.workflows.nbra.qsh &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.workflows.nbra.qsh</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.workflows.nbra.qsh</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#* Copyright (C) 2018-2019 Wei Li and Alexey V. Akimov</span>
+<span class="c1">#*</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">.. module:: qsh</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis:   Implementation of the QuasiStochastic Hamiltonian method</span>
+<span class="sd">       Akimov, J. Phys. Chem. Lett. 2017, 8, 5190</span>
+
+<span class="sd">.. moduleauthor:: Wei Li and Alexey V. Akimov</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">cmath</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="c1">#import libra_py.common_utils as comn</span>
+<span class="kn">import</span> <span class="nn">util.libutil</span> <span class="k">as</span> <span class="nn">comn</span>
+
+<span class="kn">import</span> <span class="nn">libra_py.units</span> <span class="k">as</span> <span class="nn">units</span>
+<span class="kn">import</span> <span class="nn">libra_py.influence_spectrum</span> <span class="k">as</span> <span class="nn">influence_spectrum</span>
+<span class="kn">import</span> <span class="nn">libra_py.data_stat</span> <span class="k">as</span> <span class="nn">data_stat</span>
+
+
+<div class="viewcode-block" id="compute_freqs"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/qsh.html#libra_py.workflows.nbra.qsh.compute_freqs">[docs]</a><span class="k">def</span> <span class="nf">compute_freqs</span><span class="p">(</span><span class="n">H_vib</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute a matrix of frequencies for each matrix element</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        H_vib ( list of CMATRIX objects ): the vibronic Hamiltonian for all time-points</span>
+<span class="sd">            H_vib[istep].get(i,j) - i,j matrix element for the step `istep`</span>
+<span class="sd">    </span>
+<span class="sd">        params ( dictionary ): the parameters that control the execution of this function</span>
+
+<span class="sd">            SeeAlso: influence_spectrum.compute_mat_elt for the description of other parameters:</span>
+
+<span class="sd">                * filename</span>
+<span class="sd">                * logname</span>
+<span class="sd">                * nfreqs</span>
+
+<span class="sd">            SeeAlso: influence_spectrum.recipe1(data, params) for the description of other parameters: </span>
+<span class="sd">            </span>
+<span class="sd">                * dt</span>
+<span class="sd">                * wspan</span>
+<span class="sd">                * dw</span>
+<span class="sd">                * do_output</span>
+<span class="sd">                * acf_filename</span>
+<span class="sd">                * spectrum_filename</span>
+<span class="sd">                * do_center</span>
+<span class="sd">                * acf_type</span>
+<span class="sd">                * data_type</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (freqs, dev), where:</span>
+
+<span class="sd">            SeeAlso: influence_spectrum.compute_mat_elt for the description of the output `freqs`</span>
+
+<span class="sd">            dev ( list of lists of double ): </span>
+<span class="sd">                dev[i][j] is the standard deviation the QSH terms (sum over frequencies)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Set defaults and check critical parameters</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span>  <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+
+    <span class="c1"># Local variables and dimensions</span>
+    <span class="n">nsteps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">H_vib</span><span class="p">)</span>    
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">H_vib</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_rows</span>
+
+    <span class="n">freqs</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span>  <span class="n">norm_acf</span><span class="p">,</span>  <span class="n">raw_acf</span><span class="p">,</span>  <span class="n">W</span><span class="p">,</span>  <span class="n">J</span><span class="p">,</span> <span class="n">J2</span> <span class="o">=</span> <span class="n">influence_spectrum</span><span class="o">.</span><span class="n">compute_all</span><span class="p">(</span><span class="n">H_vib</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>  <span class="c1"># T in fs, W and freqs in cm^-1</span>
+
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span>
+    <span class="n">conv</span> <span class="o">=</span> <span class="n">units</span><span class="o">.</span><span class="n">wavn2au</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">fs2au</span>
+
+    
+    <span class="c1"># Ok, now we have the function - sum of sines, so let&#39;s compute the standard deviation</span>
+    <span class="c1"># This is a silly method - just do it numerically</span>
+    <span class="n">dev</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span>
+        
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+
+            <span class="c1"># Adjust the number of frequencies</span>
+            <span class="n">nfreqs</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;nfreqs&quot;</span><span class="p">]</span>            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">freqs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">nfreqs</span><span class="p">:</span>
+                <span class="n">nfreqs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">freqs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+
+            <span class="c1"># Compute the variation of the QSH terms</span>
+            <span class="n">fu_ave</span><span class="p">,</span> <span class="n">fu2_ave</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1000000</span><span class="p">):</span>
+
+                <span class="n">fu</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nfreqs</span><span class="p">):</span>
+                    <span class="n">fu</span> <span class="o">=</span> <span class="n">fu</span> <span class="o">+</span> <span class="n">freqs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">conv</span><span class="o">*</span><span class="n">freqs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">r</span><span class="o">*</span><span class="n">dt</span><span class="p">)</span>
+
+                <span class="n">fu_ave</span> <span class="o">=</span> <span class="n">fu_ave</span> <span class="o">+</span> <span class="n">fu</span>
+                <span class="n">fu2_ave</span> <span class="o">=</span> <span class="n">fu2_ave</span> <span class="o">+</span> <span class="n">fu</span><span class="o">*</span><span class="n">fu</span>
+
+            <span class="n">dev</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="p">(</span><span class="n">fu2_ave</span> <span class="o">-</span> <span class="n">fu_ave</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1000000.0</span> <span class="p">)</span> 	
+    
+    <span class="k">return</span> <span class="n">freqs</span><span class="p">,</span> <span class="n">dev</span></div>
+
+
+
+
+<div class="viewcode-block" id="compute_qs_Hvib"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/qsh.html#libra_py.workflows.nbra.qsh.compute_qs_Hvib">[docs]</a><span class="k">def</span> <span class="nf">compute_qs_Hvib</span><span class="p">(</span><span class="n">Nfreqs</span><span class="p">,</span> <span class="n">freqs</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> 
+                 <span class="n">H_vib_re_ave</span><span class="p">,</span> <span class="n">H_vib_re_std</span><span class="p">,</span> <span class="n">dw_Hvib_re</span><span class="p">,</span> <span class="n">up_Hvib_re</span><span class="p">,</span> 
+                 <span class="n">H_vib_im_ave</span><span class="p">,</span> <span class="n">H_vib_im_std</span><span class="p">,</span> <span class="n">dw_Hvib_im</span><span class="p">,</span> <span class="n">up_Hvib_im</span><span class="p">,</span> 
+                 <span class="n">dev</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the QSH Hamiltonians</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        Nfreqs ( int ): the number of frequencies we want to use in the QSH calculations (upper limit, the actual number could be smaller)</span>
+<span class="sd">        freqs ( list of lists of doubles ): contains the spectral info for various matrix elements of the sampled Hvib</span>
+<span class="sd">            SeeAlso: influence_spectrum.compute_mat_elt for the description of the output `freqs`</span>
+
+<span class="sd">        t ( double ): time at which we want to reconstruct the QSH [ units: a.u. ]</span>
+<span class="sd">        H_vib_re_ave ( MATRIX(nstates, nstates) ): average of energies for direct Hamiltonian</span>
+<span class="sd">        H_vib_im_ave ( MATRIX(nstates, nstates) ): average of couplings for direct Hamiltonian</span>
+<span class="sd">        H_vib_re_std ( MATRIX(nstates, nstates) ): std of energies for direct Hamiltonian</span>
+<span class="sd">        H_vib_im_std ( MATRIX(nstates, nstates) ): std of couplings for direct Hamiltonian</span>
+<span class="sd">        up_Hvib_re ( MATRIX(nstates, nstates) ): maximum value of energies for direct Hamiltonian</span>
+<span class="sd">        up_Hvib_im ( MATRIX(nstates, nstates) ): maximum value of couplings for direct Hamiltonian</span>
+<span class="sd">        dw_Hvib_re ( MATRIX(nstates, nstates) ): minimal value of energies for direct Hamiltonian</span>
+<span class="sd">        dw_Hvib_im ( MATRIX(nstates, nstates) ): minimal value of couplings for direct Hamiltonian</span>
+<span class="sd">        dev ( list of lists of doubles, nstates x nstates ): std for direct Hamiltonian</span>
+<span class="sd">            SeeAlso: compute_freqs for the description of the output `dev`</span>
+<span class="sd">    </span>
+<span class="sd">    Returns: </span>
+<span class="sd">        CMATRIX(nstates, nstates): contains QSH vibronic Hamiltonian at a given time</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">H_vib_re_ave</span><span class="o">.</span><span class="n">num_of_cols</span>
+    <span class="n">conv</span> <span class="o">=</span> <span class="n">units</span><span class="o">.</span><span class="n">wavn2au</span>
+    
+    <span class="n">Hvib_stoch_re</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span><span class="n">nstates</span><span class="p">)</span>
+    <span class="n">Hvib_stoch_im</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">nstates</span><span class="p">,</span><span class="n">nstates</span><span class="p">)</span>
+
+    <span class="n">fu</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">)]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+            <span class="c1"># Adjust the number of frequencies</span>
+            <span class="n">nfreqs</span> <span class="o">=</span> <span class="n">Nfreqs</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">freqs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">Nfreqs</span><span class="p">:</span>
+                <span class="n">nfreqs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">freqs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nfreqs</span><span class="p">):</span>
+                <span class="n">fu</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">fu</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">freqs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">conv</span><span class="o">*</span><span class="n">freqs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">t</span><span class="p">)</span>
+
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nstates</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="n">j</span><span class="p">:</span>
+                <span class="n">xab</span> <span class="o">=</span> <span class="n">H_vib_re_ave</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="n">H_vib_re_std</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">fu</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">/</span><span class="n">dev</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="p">)</span> 
+                <span class="k">if</span> <span class="n">xab</span> <span class="o">&lt;</span> <span class="n">dw_Hvib_re</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">):</span>
+                    <span class="n">xab</span> <span class="o">=</span> <span class="n">dw_Hvib_re</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">xab</span> <span class="o">&gt;</span> <span class="n">up_Hvib_re</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">):</span>
+                    <span class="n">xab</span> <span class="o">=</span> <span class="n">up_Hvib_re</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+                <span class="n">Hvib_stoch_re</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span>   <span class="n">xab</span> <span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">j</span><span class="p">:</span>
+                <span class="n">xab</span> <span class="o">=</span> <span class="n">H_vib_im_ave</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="n">H_vib_im_std</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">fu</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">/</span><span class="n">dev</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="p">)</span> 
+                <span class="k">if</span> <span class="n">xab</span> <span class="o">&lt;</span> <span class="n">dw_Hvib_im</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">):</span>
+                    <span class="n">xab</span> <span class="o">=</span> <span class="n">dw_Hvib_im</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">xab</span> <span class="o">&gt;</span> <span class="n">up_Hvib_im</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">):</span>
+                    <span class="n">xab</span> <span class="o">=</span> <span class="n">up_Hvib_im</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+                <span class="n">Hvib_stoch_im</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span>  <span class="o">-</span><span class="n">xab</span> <span class="p">)</span>
+                <span class="n">Hvib_stoch_im</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">,</span>   <span class="n">xab</span> <span class="p">)</span>
+
+    <span class="n">Hvib_stoch</span> <span class="o">=</span> <span class="n">CMATRIX</span><span class="p">(</span><span class="n">Hvib_stoch_re</span><span class="p">,</span> <span class="n">Hvib_stoch_im</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Hvib_stoch</span></div>
+
+
+
+
+<div class="viewcode-block" id="run"><a class="viewcode-back" href="../../../../reference/libra_py/workflows/nbra/qsh.html#libra_py.workflows.nbra.qsh.run">[docs]</a><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">H_vib</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    The procedure to convert the results of QE/model Hvib calculations to longer </span>
+<span class="sd">    timescales using the QSH approach</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        H_vib ( list of lists of CMATRIX ): the vibronic Hamiltonian for all data sets and all time-points</span>
+
+<span class="sd">            Such that H_vib[idata][istep].get(i,j) is the i,j matrix element for the data </span>
+<span class="sd">            set ```idata``` and step in that data set ```istep```</span>
+
+<span class="sd">        params ( dictionary ): controls the present and all underlying level calculations</span>
+
+<span class="sd">            * **params[&quot;dt&quot;]** ( double ): nuclear dynamics integration time step</span>
+<span class="sd">                this is also the spacing between initial data points [ units: a.u. of time, default: 41.0]</span>
+
+<span class="sd">            * **params[&quot;nfreqs&quot;]** ( int ): maximal number of frequencies to use to reconstruct all the matrix elements [ default: 1]</span>
+
+<span class="sd">            * **params[&quot;nsteps&quot;]** ( int ): how many time-steps of QSH to generate [ default: 10]</span>
+
+<span class="sd">            * **params[&quot;do_QSH_output&quot;]** ( Boolean ): the flag that determines whether to generate the </span>
+<span class="sd">                output files containing the QSH Hamiltonians. [ default : False] </span>
+
+<span class="sd">            * **params[&quot;output_set_paths&quot;]** ( list of strings ): </span>
+<span class="sd">                Directories where the resulting QSH Hvib files will be printed out. These directories should already exist</span>
+<span class="sd">                [default: QSH_#_of_data_set, e.g. QSH_0, QSH_1, etc.]</span>
+
+<span class="sd">            * **params[&quot;qsh_Hvib_re_prefix&quot;]** ( string ): prefixes of the output files with real part </span>
+<span class="sd">                of the QSH vibronic Hamiltonian at time t</span>
+
+<span class="sd">            * **params[&quot;qsh_Hvib_re_suffix&quot;]** ( string ): suffixes of the output files with real part </span>
+<span class="sd">                of the QSH vibronic Hamiltonian at time t</span>
+
+<span class="sd">            * **params[&quot;qsh_Hvib_im_prefix&quot;]** ( string ): prefixes of the output files with imaginary part</span>
+<span class="sd">                of the QSH vibronic Hamiltonian at time t</span>
+
+<span class="sd">            * **params[&quot;qsh_Hvib_im_suffix&quot;]** ( string ): suffixes of the output files with imaginary part</span>
+<span class="sd">                of the QSH vibronic Hamiltonian at time t</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        ( list of lists ): qsh_H_vib, such as</span>
+<span class="sd">            qsh_H_vib[idata][istep] - is a CMATRIX(nstates, nstates) object representing a vibronic Hamiltonian</span>
+<span class="sd">            predicted for the time step `istep` using the training dataset `idata`</span>
+<span class="sd">     </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># General dimensions</span>
+    <span class="n">ndata</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">H_vib</span><span class="p">)</span>
+    <span class="n">nstates</span> <span class="o">=</span> <span class="n">H_vib</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_of_cols</span>
+    <span class="n">output_set_paths</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndata</span><span class="p">):</span> 
+        <span class="n">output_set_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="s2">&quot;QSH_</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="c1"># Check the input parameters and setup defaults</span>
+    <span class="n">critical_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span> 
+    <span class="n">default_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span><span class="mf">41.0</span><span class="p">,</span> <span class="s2">&quot;nfreqs&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;nsteps&quot;</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span>
+                       <span class="s2">&quot;do_QSH_output&quot;</span><span class="p">:</span><span class="kc">False</span><span class="p">,</span>
+                       <span class="s2">&quot;output_set_paths&quot;</span><span class="p">:</span><span class="n">output_set_paths</span><span class="p">,</span>
+                       <span class="s2">&quot;qsh_Hvib_re_prefix&quot;</span><span class="p">:</span><span class="s2">&quot;qsh_Hvib_&quot;</span><span class="p">,</span> <span class="s2">&quot;qsh_Hvib_im_prefix&quot;</span><span class="p">:</span><span class="s2">&quot;qsh_Hvib_&quot;</span><span class="p">,</span>
+                       <span class="s2">&quot;qsh_Hvib_re_suffix&quot;</span><span class="p">:</span><span class="s2">&quot;_re&quot;</span><span class="p">,</span>   <span class="s2">&quot;qsh_Hvib_im_suffix&quot;</span><span class="p">:</span><span class="s2">&quot;_im&quot;</span> <span class="p">}</span>
+    <span class="n">comn</span><span class="o">.</span><span class="n">check_input</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">default_params</span><span class="p">,</span> <span class="n">critical_params</span><span class="p">)</span>
+
+    <span class="c1"># Local parameters</span>
+    <span class="n">nfreqs</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;nfreqs&quot;</span><span class="p">]</span>
+    <span class="n">nsteps</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;nsteps&quot;</span><span class="p">]</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Parameters for the undelying functions</span>
+    <span class="n">params1</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">params1</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">au2fs</span>  <span class="c1"># compute_freqs takes dt in fs</span>
+
+
+    <span class="n">qsh_H_vib</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">idata</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndata</span><span class="p">):</span>   <span class="c1"># over all MD trajectories (data sets)</span>
+        
+        <span class="c1">#======== Split complex-valued matrices into real and imaginary sets ============</span>
+
+        <span class="n">H_vib_re</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># list of MATRIX</span>
+        <span class="n">H_vib_im</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># list of MATRIX</span>
+
+        <span class="n">nsteps0</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">H_vib</span><span class="p">[</span><span class="n">idata</span><span class="p">])</span>   
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nsteps0</span><span class="p">):</span>
+            <span class="n">H_vib_re</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">H_vib</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">())</span>
+            <span class="n">H_vib_im</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">H_vib</span><span class="p">[</span><span class="n">idata</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span><span class="p">())</span>
+
+
+        <span class="c1">#======== Analyze the Hvib time-seris  ============</span>
+        <span class="n">H_vib_re_ave</span><span class="p">,</span> <span class="n">H_vib_re_std</span><span class="p">,</span> <span class="n">dw_Hvib_re</span><span class="p">,</span> <span class="n">up_Hvib_re</span> <span class="o">=</span> <span class="n">data_stat</span><span class="o">.</span><span class="n">mat_stat</span><span class="p">(</span><span class="n">H_vib_re</span><span class="p">)</span>
+        <span class="n">H_vib_im_ave</span><span class="p">,</span> <span class="n">H_vib_im_std</span><span class="p">,</span> <span class="n">dw_Hvib_im</span><span class="p">,</span> <span class="n">up_Hvib_im</span> <span class="o">=</span> <span class="n">data_stat</span><span class="o">.</span><span class="n">mat_stat</span><span class="p">(</span><span class="n">H_vib_im</span><span class="p">)</span>    
+
+        
+        <span class="n">freqs</span><span class="p">,</span> <span class="n">dev</span> <span class="o">=</span> <span class="n">compute_freqs</span><span class="p">(</span><span class="n">H_vib</span><span class="p">[</span><span class="n">idata</span><span class="p">],</span> <span class="n">params1</span><span class="p">)</span>   <span class="c1"># freqs are in cm^-1</span>
+
+        
+        <span class="c1">#============= Output the resulting QSH Hamiltonians ===========================</span>
+        <span class="n">Hvib</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nsteps</span><span class="p">):</span>
+            <span class="c1"># compute QSH Hvib at time t_i = i * dt</span>
+            <span class="n">qs_Hvib</span> <span class="o">=</span> <span class="n">compute_qs_Hvib</span><span class="p">(</span><span class="n">nfreqs</span><span class="p">,</span> <span class="n">freqs</span><span class="p">,</span> <span class="n">i</span><span class="o">*</span><span class="n">dt</span><span class="p">,</span> <span class="n">H_vib_re_ave</span><span class="p">,</span> <span class="n">H_vib_re_std</span><span class="p">,</span> <span class="n">dw_Hvib_re</span><span class="p">,</span> 
+                            <span class="n">up_Hvib_re</span><span class="p">,</span> <span class="n">H_vib_im_ave</span><span class="p">,</span> <span class="n">H_vib_im_std</span><span class="p">,</span> <span class="n">dw_Hvib_im</span><span class="p">,</span> <span class="n">up_Hvib_im</span><span class="p">,</span>  <span class="n">dev</span><span class="p">)</span>
+
+            <span class="n">Hvib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CMATRIX</span><span class="p">(</span><span class="n">qs_Hvib</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;do_QSH_output&quot;</span><span class="p">]</span><span class="o">==</span><span class="kc">True</span><span class="p">:</span>
+                <span class="c1">#============= Output the resulting QSH Hamiltonians ===========================</span>
+                <span class="n">re_filename</span> <span class="o">=</span> <span class="n">prms</span><span class="p">[</span><span class="s2">&quot;output_set_paths&quot;</span><span class="p">][</span><span class="n">idata</span><span class="p">]</span> <span class="o">+</span> <span class="n">prms</span><span class="p">[</span><span class="s2">&quot;qsh_Hvib_re_prefix&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="n">prms</span><span class="p">[</span><span class="s2">&quot;qsh_Hvib_re_suffix&quot;</span><span class="p">]</span>
+                <span class="n">im_filename</span> <span class="o">=</span> <span class="n">prms</span><span class="p">[</span><span class="s2">&quot;output_set_paths&quot;</span><span class="p">][</span><span class="n">idata</span><span class="p">]</span> <span class="o">+</span> <span class="n">prms</span><span class="p">[</span><span class="s2">&quot;qsh_Hvib_im_prefix&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="n">prms</span><span class="p">[</span><span class="s2">&quot;qsh_Hvib_im_suffix&quot;</span><span class="p">]</span>        
+                <span class="n">qs_Hvib</span><span class="o">.</span><span class="n">real</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="n">re_filename</span><span class="p">)</span>
+                <span class="n">qs_Hvib</span><span class="o">.</span><span class="n">imag</span><span class="p">()</span><span class="o">.</span><span class="n">show_matrix</span><span class="p">(</span><span class="n">im_filename</span><span class="p">)</span>
+
+        <span class="n">qsh_H_vib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Hvib</span><span class="p">)</span>        
+        
+
+    <span class="k">return</span> <span class="n">qsh_H_vib</span></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

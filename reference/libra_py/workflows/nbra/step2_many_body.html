@@ -1,0 +1,535 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>step2_many_body &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="step3" href="step3.html" />
+    <link rel="prev" title="step2_ergoscf" href="step2_ergoscf.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../models.html">models</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../workflows.html">workflows</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../nbra.html">nbra</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="compute_hprime.html">compute_hprime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="compute_properties.html">compute_properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="decoherence_times.html">decoherence_times</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lz.html">lz</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mapping.html">mapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="qsh.html">qsh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2.html">step2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_analysis.html">step2_analysis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_dftb.html">step2_dftb</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step2_ergoscf.html">step2_ergoscf</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">step2_many_body</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step3.html">step3</a></li>
+<li class="toctree-l4"><a class="reference internal" href="step4.html">step4</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../nbra.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../libra_py.html">libra_py</a> &raquo;</li>
+        
+          <li><a href="../../workflows.html">workflows</a> &raquo;</li>
+        
+          <li><a href="../nbra.html">nbra</a> &raquo;</li>
+        
+      <li>step2_many_body</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../../_sources/reference/libra_py/workflows/nbra/step2_many_body.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.workflows.nbra.step2_many_body">
+<span id="step2-many-body"></span><h1>step2_many_body<a class="headerlink" href="#module-libra_py.workflows.nbra.step2_many_body" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-step2_many_body"></span><dl class="py function">
+<dt id="libra_py.workflows.nbra.step2_many_body.compute_cube_ks_overlaps">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step2_many_body.</span></code><code class="sig-name descname"><span class="pre">compute_cube_ks_overlaps</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cubefiles_prev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step2_many_body.html#compute_cube_ks_overlaps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step2_many_body.compute_cube_ks_overlaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes overlaps between cube files of two time steps. In order to not read the cube files
+twice it returns the cube files of the current step, and gets the cube files of the previous step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cubefiles_prev</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – The list containing th cube files of the previous step.</p></li>
+<li><p><strong>params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – <p>curr_step (int): The current time step.</p>
+<dl class="simple">
+<dt>isUKS (int): This parameter is set for spin restricted and unrestricted calculations. When it is</dt><dd><p>set to 1 it means that unrestricted calculations were set in the input file otherwise
+it is restricted.</p>
+</dd>
+</dl>
+<p>nprocs (int): The number of processors used to read the cube files and perform the integration.</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The list of the read current step cube files.</p>
+<p>S_ks_prev (2D numpy array): The overlap matrix of the wavefunctions for the previous time step.</p>
+<p>S_ks_curr (2D numpy array): The overlap matrix of the wavefunctions for the current time step.</p>
+<p>St_ks (2D numpy array): The overlap matrix between wavefunctions of the two time step.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>cubefiles_curr (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step2_many_body.curr_and_final_step_job">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step2_many_body.</span></code><code class="sig-name descname"><span class="pre">curr_and_final_step_job</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">istep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fstep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">njobs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">njob</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step2_many_body.html#curr_and_final_step_job"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step2_many_body.curr_and_final_step_job" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is used to determine the initial and final step of a job when distributing
+the molecular dynamics trajectory over a number of jobs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>istep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The initial time step for molecular dynamics trajectory which
+the user wants to start the calculations with. This paramter
+is set in the input file for submitting the jobs.</p></li>
+<li><p><strong>fstep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The final time step for molecular dynamics trajectory which
+the user wants to start the calculations with. This paramter
+is set in the input file for submitting the jobs.</p></li>
+<li><p><strong>njobs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The number of jobs specified by user.</p></li>
+<li><p><strong>njob</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The job number.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The job initial time step.</p>
+<p>job_final_step (int): The job final time step.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>job_init_step (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step2_many_body.form_Hvib_real">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step2_many_body.</span></code><code class="sig-name descname"><span class="pre">form_Hvib_real</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step2_many_body.html#form_Hvib_real"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step2_many_body.form_Hvib_real" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function forms the real part of the vibronic Hamiltonian by inserting the
+energies on the diagonal of a zero matrix. The Hvib is in two-spinor format
+containing the alpha and beta states energies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>distionary</em>) – <p>logfile_directory (str): The directory of the output files by CP2K.</p>
+<dl class="simple">
+<dt>time (int): The time step of the molecular dynamics. For single point calculations</dt><dd><p>it should be set to 0.</p>
+</dd>
+</dl>
+<p>min_band (int): The minimum state number.</p>
+<p>max_band (int): The maximum state number.</p>
+<dl class="simple">
+<dt>isUKS (int): This flag is used whenever the UKS calculations were called in CP2K input. if it is set to</dt><dd><p>1 then UKS calculations were called and if not it will consider only alpha energies.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The diagonal matrix containing the energies of alpha and beta spins if</dt><dd><p>UKS is set to True and the energies of alpha spin in a block form matrix.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Hvib_ks_re (2D numpy array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step2_many_body.get_excitation_analysis_output">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step2_many_body.</span></code><code class="sig-name descname"><span class="pre">get_excitation_analysis_output</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step2_many_body.html#get_excitation_analysis_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step2_many_body.get_excitation_analysis_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function reads the information of the excited states from the log file of the single point calculations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – <p>logfile_directory (str): The log files directory.</p>
+<p>es_software (str): The name of the software used to calculate the energy calculations.</p>
+<p>curr_step (int): The current time step of the calculations.</p>
+<dl class="simple">
+<dt>isUKS (int): This parameter is set for spin restricted and unrestricted calculations. When it is</dt><dd><p>set to 1 it means that unrestricted calculations were set in the input file otherwise
+it is restricted.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The excitation energies of the curr_step.</p>
+<p>ci_basis_raw (numpy array): The excited states which contains the occupied and virtual orbitals.</p>
+<p>ci_coefficients_raw_unnorm (numpy array): The excited states CI coefficients.</p>
+<p>spin_components (numpy array): Contains the excited states spin components (‘alp’ for alpha spin and ‘bet’ for beta spin)</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>excitation_energies (numpy array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step2_many_body.integrate_cube_set">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step2_many_body.</span></code><code class="sig-name descname"><span class="pre">integrate_cube_set</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cubefiles_set_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cubefiles_set_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dv</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step2_many_body.html#integrate_cube_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step2_many_body.integrate_cube_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function comutes the overlap matrix between two set of cube files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cubefiles_set_1</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – The list of cube files of the curr_step.</p></li>
+<li><p><strong>cubefiles_set_2</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – The list of cube files of the previous step.</p></li>
+<li><p><strong>dv</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – The integration element obtained from the cube files.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The overlap between the two set of cube files.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>overlap_matrix (numpy 2D array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step2_many_body.normalize_ci_coefficients">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step2_many_body.</span></code><code class="sig-name descname"><span class="pre">normalize_ci_coefficients</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci_coefficients_raw_unnorm</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step2_many_body.html#normalize_ci_coefficients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step2_many_body.normalize_ci_coefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>This funciton normalizes the list of configuration interaction (CI) coefficients.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ci_coefficients_raw_unnorm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – The list containing the lists of unnormalized CI coefficients.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The list containing the lists of normalized CI coefficients.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ci_coefficients_raw_norm (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step2_many_body.reindex_cp2k_sd_states">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step2_many_body.</span></code><code class="sig-name descname"><span class="pre">reindex_cp2k_sd_states</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ks_orbital_homo_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ks_orbital_indicies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sd_basis_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sd_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step2_many_body.html#reindex_cp2k_sd_states"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step2_many_body.reindex_cp2k_sd_states" title="Permalink to this definition">¶</a></dt>
+<dd><p>ks_orbital_homo_index: Index of the homo ks orbital, from 1
+ks_orbital_indicies: Range of the considered ks orbtials. Ex) [8,9,10,11], where 9 is homo orbtial index (from 1)
+sd_basis_states( list of lists of lists ): A list of Slater determinants, where each slater determinant is a excitation in the Kohn-Sham</p>
+<blockquote>
+<div><p>basis. This function assumes that all Kohn-Sham excitations are for alpha electrons. To
+differentiate between alpha and beta excitations, elements of sd_basis_states contain spin
+information.</p>
+<dl class="simple">
+<dt>Ex) sd_basis_states[0] = [ [9,10], “alp” ]</dt><dd><p>sd_basis_states[1] = [ [9,10], “bet” ]</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>Reindexed Slater determinant basis states in terms of the ks_orbital_homo_index. The SD states returned can be either in one of two ways</p>
+<p>1. All alpha orbitals before beta orbtials. This format is still a fixed slot format. It is used when used both alpha and beta spin channels
+Ex.)   ks_orbital_homo_index = 68,    ks_orbital_indicies = [67, 68, 69, 70, 71, 72]</p>
+<blockquote>
+<div><p>The ground state will be: [1, 2, -7, -8]
+[ [68,69], “alp” ] –&gt; [1, 3, -7, -8]
+[ [68,69], “bet” ] –&gt; [1, 2, -7, -9]</p>
+</div></blockquote>
+<p>2. Fixed slot format. this format used only the alpha spin channel
+Ex.)   ks_orbital_homo_index = 68,    ks_orbital_indicies = [67, 68, 69, 70, 71, 72]</p>
+<blockquote>
+<div><p>The ground state will be: [1, -1, 2, -2]
+[ [68,69], “alp” ] –&gt; [1, -1, 3, -2]
+[ [68,69], “bet” ] –&gt; [1, -1, 2, -3]</p>
+</div></blockquote>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.workflows.nbra.step2_many_body.run_step2_many_body">
+<code class="sig-prename descclassname"><span class="pre">libra_py.workflows.nbra.step2_many_body.</span></code><code class="sig-name descname"><span class="pre">run_step2_many_body</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/libra_py/workflows/nbra/step2_many_body.html#run_step2_many_body"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.workflows.nbra.step2_many_body.run_step2_many_body" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is the main function which runs the following calculations:</p>
+<ul class="simple">
+<li><p>Executes calls to perform CP2K, DFTB+, or Gaussian electronic structure calculations</p></li>
+<li><p>Computing the overlap, time-overlap, and energy eigenvalue matrices for the KS basis</p></li>
+<li><p>Molecular orbital visualization using VMD</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dictionary</em>) – <p>min_band (integer): The minimum state number.</p>
+<p>max_band (integer): The maximum state number.</p>
+<p>ks_orbital_homo_index (integer): The index of the Kohn-Sham HOMO orbital (State numbers start from 1).</p>
+<p>nsteps_this_job (integer): The number of steps in this job.</p>
+<p>es_software (string): The electronic structure calculation software.</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>Note: The current code works with CP2K but it can be generalized to other electronic structure</dt><dd><p>calculation software packages which are capable of producing cube files and performing
+TD-DFT calculations such as Gaussian. So this parameter is for future implementations.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>es_software_exe (string): The CP2K executable file or path.</p>
+<p>es_software_input_template (str): The full path to CP2K input template.</p>
+<p>project_name (string): The project name for CP2K input.</p>
+<dl class="simple">
+<dt>isUKS (integer): This is the flag for unrestricted spin calculations. When it is set to</dt><dd><p>1 it will perform the nrestricted calculations otherwise it will consider the restricted case.</p>
+</dd>
+</dl>
+<p>trajectory_xyz_filename (string): The full path to trajectory xyz file.</p>
+<p>njob (integer): The current job number.</p>
+<p>nprocs (integer): The number of processors to be used.</p>
+<p>res_dir (string): The full path to res directory where the output data are stored.</p>
+<p>logfile_directory (string): The path to where the log files are stored.</p>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="step3.html" class="btn btn-neutral float-right" title="step3" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="step2_ergoscf.html" class="btn btn-neutral float-left" title="step2_ergoscf" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

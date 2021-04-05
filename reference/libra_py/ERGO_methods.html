@@ -1,0 +1,558 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>ERGO_methods &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="fgr_py" href="fgr_py.html" />
+    <link rel="prev" title="dynamics_plotting" href="dynamics_plotting.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc_utils.html">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>ERGO_methods</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/ERGO_methods.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.ERGO_methods">
+<span id="ergo-methods"></span><h1>ERGO_methods<a class="headerlink" href="#module-libra_py.ERGO_methods" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-ERGO_methods"></span><dl class="py function">
+<dt id="libra_py.ERGO_methods.energies">
+<code class="sig-prename descclassname"><span class="pre">libra_py.ERGO_methods.</span></code><code class="sig-name descname"><span class="pre">energies</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">en</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nocc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nvirt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/ERGO_methods.html#energies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.ERGO_methods.energies" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function creates a diagonal matrix of energies of the states
+included in the active space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>en</strong> (<em>list of floats</em>) – energies of all (occupied + unoccupied) orbitals
+as read from the ErgoSCF</p></li>
+<li><p><strong>nocc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of occupied orbitals in the pool of
+the printed out MO files</p></li>
+<li><p><strong>nvirt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of unoccupied (virtual) orbitals in the pool of
+the printed out MO files</p></li>
+<li><p><strong>act_space</strong> (<em>list of ints</em>) – indices of the orbitals we are interested in
+The indexing convention is relative to HOMO, that is 0 is HOMO, -1 is HOMO-1,
+1 is LUMO, etc.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>matrix with orbital energies (ordered from lowest to highest)</dt><dd><p>Here, N is the size of the active space</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>( CMATRIX(N,N) )</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.ERGO_methods.find_last_file">
+<code class="sig-prename descclassname"><span class="pre">libra_py.ERGO_methods.</span></code><code class="sig-name descname"><span class="pre">find_last_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/ERGO_methods.html#find_last_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.ERGO_methods.find_last_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>This functions searches for the last file in a series of files named
+<cite>prefix`%i`suffix</cite>, for instance “A1.txt”, “A2.txt”, “A3.txt”, etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prefix</strong> (<em>string</em>) – the prefix of the filenames</p></li>
+<li><p><strong>suffix</strong> (<em>string</em>) – the suffix of the filenames</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>(i, filename), where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>i : the largest index of the existing  file</p></li>
+<li><p>filename : the name of the last existing file</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a>, string)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.ERGO_methods.get_mtx_matrices">
+<code class="sig-prename descclassname"><span class="pre">libra_py.ERGO_methods.</span></code><code class="sig-name descname"><span class="pre">get_mtx_matrices</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_sp1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_sp2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/ERGO_methods.html#get_mtx_matrices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.ERGO_methods.get_mtx_matrices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the matrices printed out by the DFTB+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – the name of the file to read. In the MatrixMarket (mtx) format</p></li>
+<li><p><strong>act_sp1</strong> (<em>list of ints</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><em>None</em></a>) – the row active space to extract from the original files
+Indices here start from 0. If set to None - the number of AOs will be
+determined automatically from the file. [default: None]</p></li>
+<li><p><strong>act_sp2</strong> (<em>list of ints</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><em>None</em></a>) – the cols active space to extract from the original files
+Indices here start from 0. If set to None - the number of AOs will be
+determined automatically from the file. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>X: where N = len(act_sp1) and M = len(act_sp2)</dt><dd><p>These are the corresponding property matrices (converted to the complex type)</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of CMATRIX(N, M)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.ERGO_methods.read_mo_restricted">
+<code class="sig-prename descclassname"><span class="pre">libra_py.ERGO_methods.</span></code><code class="sig-name descname"><span class="pre">read_mo_restricted</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nocc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nvirt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/ERGO_methods.html#read_mo_restricted"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.ERGO_methods.read_mo_restricted" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function reads the MO files
+produced by ErgoSCF in the case of spin-unpolarized
+(restricted) formulation.
+The names of the files are known, so the we do not need
+to specify that</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nocc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of occupied orbitals in the pool of
+the printed out MO files</p></li>
+<li><p><strong>nvirt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of unoccupied (virtual) orbitals in the pool of
+the printed out MO files</p></li>
+<li><p><strong>act_space</strong> (<em>list of ints</em>) – indices of the orbitals we are interested in
+The indexing convention is relative to HOMO, that is 0 is HOMO, -1 is HOMO-1,
+1 is LUMO, etc.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( [mo_a] )</p>
+<ul class="simple">
+<li><p>mo_a ( CMATRIX(nao, nocc+nvirt) ): alpha orbitals</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>( <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a> )</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.ERGO_methods.read_mo_unrestricted">
+<code class="sig-prename descclassname"><span class="pre">libra_py.ERGO_methods.</span></code><code class="sig-name descname"><span class="pre">read_mo_unrestricted</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nocc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nvirt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/ERGO_methods.html#read_mo_unrestricted"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.ERGO_methods.read_mo_unrestricted" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function reads the MO files
+produced by ErgoSCF in the case of spin-polarized
+(unrestricted) formulation.
+The names of the files are known, so the we do not need
+to specify that</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nocc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of occupied orbitals in the pool of
+the printed out MO files</p></li>
+<li><p><strong>nvirt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – the number of unoccupied (virtual) orbitals in the pool of
+the printed out MO files</p></li>
+<li><p><strong>act_space</strong> (<em>list of ints</em>) – indices of the orbitals we are interested in
+The indexing convention is relative to HOMO, that is 0 is HOMO, -1 is HOMO-1,
+1 is LUMO, etc.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>( [mo_a, mo_b] )</p>
+<ul class="simple">
+<li><p>mo_a ( CMATRIX(nao, nocc+nvirt) ): alpha orbitals</p></li>
+<li><p>mo_b ( CMATRIX(nao, nocc+nvirt) ): beta orbitals</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>( <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a> )</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.ERGO_methods.read_spectrum_restricted">
+<code class="sig-prename descclassname"><span class="pre">libra_py.ERGO_methods.</span></code><code class="sig-name descname"><span class="pre">read_spectrum_restricted</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/ERGO_methods.html#read_spectrum_restricted"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.ERGO_methods.read_spectrum_restricted" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function reads the eigenspectrum files
+produced by ErgoSCF in the case of spin-unpolarized
+(restricted) formulation.
+The names of the files are known, so the we do not need
+any arguments</p>
+<p>Note: the ordering of the orbitals in the ErgoSCF is:</p>
+<p>H                                       L
+H-1                                     L+1
+…                                     …</p>
+<p>So, the occupied orbitals order is reverted in the created array</p>
+<p>Args:  None</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>( [e_a], [nocc, nvirt])</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>e_a ( list of floats ): energies of the alpha orbitals printed out</dt><dd><p>this list contains both occupied and unoccupied orbitals</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>nocc ( int ): the number of occupied orbitals, it should be less than</dt><dd><p>len(e_a) and len(e_b)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>nvirt ( int ): the number of unoccupied orbitals, it should be less than</dt><dd><p>len(e_a) and len(e_b)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>(<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.ERGO_methods.read_spectrum_unrestricted">
+<code class="sig-prename descclassname"><span class="pre">libra_py.ERGO_methods.</span></code><code class="sig-name descname"><span class="pre">read_spectrum_unrestricted</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/ERGO_methods.html#read_spectrum_unrestricted"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.ERGO_methods.read_spectrum_unrestricted" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function reads the eigenspectrum files
+produced by ErgoSCF in the case of spin-polarized
+(unrestricted) formulation.
+The names of the files are known, so the we do not need
+any arguments</p>
+<p>Note: the ordering of the orbitals in the ErgoSCF is:</p>
+<p>H                                       L
+H-1                                     L+1
+…                                     …</p>
+<p>So, the occupied orbitals order is reverted in the created array</p>
+<p>Args:  None</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>( [e_a, e_b], [nocc, nvirt])</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>e_a ( list of floats ): energies of the alpha orbitals printed out</dt><dd><p>this list contains both occupied and unoccupied orbitals</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>e_b ( list of floats ): energies of the beta orbitals printed out</dt><dd><p>this list contains both occupied and unoccupied orbitals</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>nocc ( int ): the number of occupied orbitals, it should be less than</dt><dd><p>len(e_a) and len(e_b)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>nvirt ( int ): the number of unoccupied orbitals, it should be less than</dt><dd><p>len(e_a) and len(e_b)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>(<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)">list</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.ERGO_methods.xyz_traj2gen_ovlp">
+<code class="sig-prename descclassname"><span class="pre">libra_py.ERGO_methods.</span></code><code class="sig-name descname"><span class="pre">xyz_traj2gen_ovlp</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">md_iter1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">md_iter2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/ERGO_methods.html#xyz_traj2gen_ovlp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.ERGO_methods.xyz_traj2gen_ovlp" title="Permalink to this definition">¶</a></dt>
+<dd><p>This file converts the xyz trajectory file
+to a string that contains the superimposed geometries of the <code class="docutils literal notranslate"><span class="pre">`md_iter1`</span></code>
+and <code class="docutils literal notranslate"><span class="pre">`md_step2`</span></code> steps  that can be used to setup the input for
+the ErgoSCF calculations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>infile</strong> (<em>string</em>) – the name of the input xyz trajectory file</p></li>
+<li><p><strong>md_iter1</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – index of the first timeframe to extract</p></li>
+<li><p><strong>md_iter2</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – index of the second timeframe to extract</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>atoms and coordinates section [ units: same as in xyz file ]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.ERGO_methods.xyz_traj2gen_sp">
+<code class="sig-prename descclassname"><span class="pre">libra_py.ERGO_methods.</span></code><code class="sig-name descname"><span class="pre">xyz_traj2gen_sp</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">md_iter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/ERGO_methods.html#xyz_traj2gen_sp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.ERGO_methods.xyz_traj2gen_sp" title="Permalink to this definition">¶</a></dt>
+<dd><p>This file converts the xyz trajectory file
+to a string that contains the geometry of the <code class="docutils literal notranslate"><span class="pre">`md_iter`</span></code> step
+that can be used to setup the input for the ErgoSCF calculations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>infile</strong> (<em>string</em>) – the name of the input xyz trajectory file</p></li>
+<li><p><strong>md_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – index of the timeframe to extract</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>atoms and coordinates section [ units: same as in xyz file ]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="fgr_py.html" class="btn btn-neutral float-right" title="fgr_py" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="dynamics_plotting.html" class="btn btn-neutral float-left" title="dynamics_plotting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

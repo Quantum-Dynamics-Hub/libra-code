@@ -1,0 +1,386 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>hpc_utils &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="hungarian" href="hungarian.html" />
+    <link rel="prev" title="Gaussian_methods" href="Gaussian_methods.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../libra_py.html">libra_py</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dynamics.html">dynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows.html">workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acf.html">acf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autoconnect.html">autoconnect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html">build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CP2K_methods.html">CP2K_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cube_file_methods.html">cube_file_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_conv.html">data_conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_outs.html">data_outs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_read.html">data_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_savers.html">data_savers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_stat.html">data_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFTB_methods.html">DFTB_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dynamics_plotting.html">dynamics_plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ERGO_methods.html">ERGO_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fgr_py.html">fgr_py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit.html">fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix_motion.html">fix_motion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ft.html">ft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gaussian_methods.html">Gaussian_methods</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">hpc_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hungarian.html">hungarian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_spectrum.html">influence_spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_ensembles.html">init_ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="init_system.html">init_system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LAMMPS_methods.html">LAMMPS_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadGAFF.html">LoadGAFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMMFF94.html">LoadMMFF94</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadMolecule.html">LoadMolecule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadPT.html">LoadPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadTRIPOS.html">LoadTRIPOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoadUFF.html">LoadUFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="namd.html">namd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normal_modes.html">normal_modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nve_md.html">nve_md</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_gamess.html">parse_gamess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdos.html">pdos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="probabilities.html">probabilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_methods.html">QE_methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QE_utils.html">QE_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regexlib.html">regexlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scan.html">scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scf.html">scf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh.html">tsh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tsh_stat.html">tsh_stat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unavoided.html">unavioded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html">units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vesta2qe.html">vesta2qe</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../libra_py.html">libra_py</a> &raquo;</li>
+        
+      <li>hpc_utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/reference/libra_py/hpc_utils.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-libra_py.hpc_utils">
+<span id="hpc-utils"></span><h1>hpc_utils<a class="headerlink" href="#module-libra_py.hpc_utils" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-hpc_utils"></span><dl class="py function">
+<dt id="libra_py.hpc_utils.distribute">
+<code class="sig-prename descclassname"><span class="pre">libra_py.hpc_utils.</span></code><code class="sig-name descname"><span class="pre">distribute</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Nmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submit_templ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefixes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_submit</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/hpc_utils.html#distribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.hpc_utils.distribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function creates a number of jobs from the pool of input files
+which start from <code class="docutils literal notranslate"><span class="pre">`Nmin`</span></code> to <code class="docutils literal notranslate"><span class="pre">`Nmax`</span></code> with the maximal number
+of input files in one job given by <code class="docutils literal notranslate"><span class="pre">`max_steps`</span></code>.
+It also starts the job in a given directory</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Nmin</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – minimal index of the file (a part of the file name) in the pool</p></li>
+<li><p><strong>Nmax</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – maximal index of the file (a part of the file name) in the pool</p></li>
+<li><p><strong>max_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – how many files to handle in one job</p></li>
+<li><p><strong>submit_templ</strong> (<em>string</em>) – the filename of the PBS/SLURM submit file that
+contains all the information on how to run the jobs involving a subset of
+files, but doesn’t specify which particular files to handle. These parameters
+will be automatically setup by this funciton</p></li>
+<li><p><strong>exp_files</strong> (<em>list of strings</em>) – is a list of the input files defining how to do an
+export of QE wavefunctions</p></li>
+<li><p><strong>prefixes</strong> (<em>list of strings</em>) – is a list of prefixes of the files to be distributed</p></li>
+<li><p><strong>do_submit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – <p>a flag to choose if we actually want to submit the jobs
+(do_submit==1 || ==2 || ==3 ) or only distribute the files (otherwise):</p>
+<ul>
+<li><p>0: only discribute files, no actual execution</p></li>
+<li><p>1: distribute and submit using PBS</p></li>
+<li><p>2: distribute and submit using SLURM</p></li>
+<li><p>3: distribute and submit using PYTHON no scheduling systems - good for runs on a local computer</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>just organizes the execution of the calculations</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.hpc_utils.job">
+<code class="sig-prename descclassname"><span class="pre">libra_py.hpc_utils.</span></code><code class="sig-name descname"><span class="pre">job</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Nstart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nend</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefixes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/hpc_utils.html#job"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.hpc_utils.job" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function prepares a group of input files to be executed as a single job
+note the &lt;job&gt; here refers to a single PBS/SLURM submission file and may be executed
+on several processors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Nstart</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – index of a starting parameter</p></li>
+<li><p><strong>Nend</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – index of a finishing parameter</p></li>
+<li><p><strong>job_dir</strong> (<em>string</em>) – name of the directory where this file will be printed out to</p></li>
+<li><p><strong>prefix</strong> (<em>string</em>) – the template file name [e.g. “x.scf”].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>just moves the files</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">job</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;job0&quot;</span><span class="p">,</span> <span class="s2">&quot;x.scf&quot;</span><span class="p">)</span>
+<span class="go">Will:</span>
+<span class="go">1. Create a directory &quot;job0&quot;</span>
+<span class="go">2. Move filex x.scf.0.in to x.scf.5.in to the directory &quot;job0&quot;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.hpc_utils.make_submit">
+<code class="sig-prename descclassname"><span class="pre">libra_py.hpc_utils.</span></code><code class="sig-name descname"><span class="pre">make_submit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Nstart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nend</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submit_templ</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/hpc_utils.html#make_submit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.hpc_utils.make_submit" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function makes a PBS/SLURM submit file in a given job directory
+using a template file. The function looks for the placeholders
+specified by “param1= ” and “param2= ” and appends actual values
+of these parameters as needed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Nstart</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – index of a starting parameter</p></li>
+<li><p><strong>Nend</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – index of a finishing parameter</p></li>
+<li><p><strong>job_dir</strong> (<em>string</em>) – name of the directory where this file will be printed out to</p></li>
+<li><p><strong>submit_templ</strong> (<em>string</em>) – the template file name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but generates actual submit files</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libra_py.hpc_utils.substitute">
+<code class="sig-prename descclassname"><span class="pre">libra_py.hpc_utils.</span></code><code class="sig-name descname"><span class="pre">substitute</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename_template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libra_py/hpc_utils.html#substitute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libra_py.hpc_utils.substitute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a copy of a template file but with some variables replaced</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename_template</strong> (<em>string</em>) – the name of the file that serves as a template</p></li>
+<li><p><strong>out_filename</strong> (<em>string</em>) – the name of the output (result) file</p></li>
+<li><p><strong>params</strong> (<em>dictionary</em>) – the keys of this dictionary should are the strings
+(more generally regular expressions) looked for, the values - are the strings
+with which found regexes will be substituted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>but creates the out_filename files</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="hungarian.html" class="btn btn-neutral float-right" title="hungarian" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Gaussian_methods.html" class="btn btn-neutral float-left" title="Gaussian_methods" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,381 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>libra_py.scan &mdash; Libra 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Libra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/libra_py.html">libra_py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Libra</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>libra_py.scan</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for libra_py.scan</h1><div class="highlight"><pre>
+<span></span><span class="c1">#*********************************************************************************</span>
+<span class="c1">#* Copyright (C) 2019-2020 Alexey V. Akimov</span>
+<span class="c1">#*</span>
+<span class="c1">#* This file is distributed under the terms of the GNU General Public License</span>
+<span class="c1">#* as published by the Free Software Foundation, either version 2 of</span>
+<span class="c1">#* the License, or (at your option) any later version.</span>
+<span class="c1">#* See the file LICENSE in the root directory of this distribution</span>
+<span class="c1">#* or &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#*</span>
+<span class="c1">#*********************************************************************************/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: scan</span>
+<span class="sd">   :platform: Unix, Windows</span>
+<span class="sd">   :synopsis: This module implements functions for </span>
+<span class="sd">       performing various types of calculations related to PES scans  </span>
+
+<span class="sd">.. moduleauthor:: Alexey V. Akimov </span>
+<span class="sd">  </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;cygwin&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cyglibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux&quot;</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">==</span><span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">liblibra_core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">units</span>
+
+
+<div class="viewcode-block" id="coords2xyz"><a class="viewcode-back" href="../../reference/libra_py/scan.html#libra_py.scan.coords2xyz">[docs]</a><span class="k">def</span> <span class="nf">coords2xyz</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">itraj</span><span class="p">,</span> <span class="n">unit_conversion_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This function creates a string containing an xyz-formatted atomistic information.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        labels ( list of strings ): the labels of the atoms of the system, the labels are in a </span>
+<span class="sd">            specific order that corresponds to the atomic info in an xyz file. The length of this </span>
+<span class="sd">            list is `nat` - the number of atoms.</span>
+<span class="sd">        q ( MATRIX(ndof, ntraj) ): the coordinates of all DOFs for all trajectories, here `ndof` = 3 `natoms` </span>
+<span class="sd">        itraj ( int ): the index of the trajectory that we are interested in.</span>
+<span class="sd">        unit_conversion_factor ( double ): the conversion factor to convert input in `q` unit to the new units</span>
+<span class="sd">            expected in the xyz file. In a common situation, when `q` uses Bohr units, and xyz is expected to </span>
+<span class="sd">            be in Angstroms, use the `unit_conversion_factor = 1.0/units.Angst` </span>
+<span class="sd"> </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        string: the string representation of the xyz file that is made of the provided input geomtry/atomic labels</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">natoms</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">num_of_rows</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>
+        
+    <span class="n">res</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">iatom</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">natoms</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">iatom</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">unit_conversion_factor</span> <span class="o">*</span> <span class="n">q</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">iatom</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="n">itraj</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">unit_conversion_factor</span> <span class="o">*</span> <span class="n">q</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">iatom</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">itraj</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">unit_conversion_factor</span> <span class="o">*</span> <span class="n">q</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">iatom</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">itraj</span><span class="p">)</span>        
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span> <span class="o">+</span> <span class="sa">F</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">z</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+<div class="viewcode-block" id="make_path_xyz2"><a class="viewcode-back" href="../../reference/libra_py/scan.html#libra_py.scan.make_path_xyz2">[docs]</a><span class="k">def</span> <span class="nf">make_path_xyz2</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">itraj</span><span class="p">,</span> <span class="n">unit_conversion_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function creates a string containing an xyz-formatted trajectory (multiple geometries)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        labels ( list of strings ): the labels of the atoms of the system, the labels are in a </span>
+<span class="sd">            specific order that corresponds to the atomic info in an xyz file. The length of this </span>
+<span class="sd">            list is `nat` - the number of atoms.</span>
+<span class="sd">        path ( list of nsteps MATRIX(ndof, ntraj) objects ): the coordinates of all DOFs for all trajectories for `nsteps` frames</span>
+<span class="sd">            (geometries), here `ndof` = 3 `natoms` </span>
+<span class="sd">        itraj ( int ): the index of the trajectory that we are interested in.</span>
+<span class="sd">        unit_conversion_factor ( double ): the conversion factor to convert input in `q` unit to the new units</span>
+<span class="sd">            expected in the xyz file. In a common situation, when `q` uses Bohr units, and xyz is expected to </span>
+<span class="sd">            be in Angstroms, use the `unit_conversion_factor = 1.0/units.Angst` </span>
+<span class="sd"> </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        string: the string representation of the xyz file that is made of the provided input geomtry/atomic labels </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nsnaps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+
+    <span class="n">md_xyz</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">isnap</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nsnaps</span><span class="p">):</span>
+        <span class="n">snap</span> <span class="o">=</span> <span class="n">coords2xyz</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">path</span><span class="p">[</span><span class="n">isnap</span><span class="p">],</span> <span class="n">itraj</span><span class="p">,</span> <span class="n">unit_conversion_factor</span><span class="p">)</span>    
+        <span class="n">md_xyz</span> <span class="o">=</span> <span class="n">md_xyz</span> <span class="o">+</span> <span class="sa">F</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">natoms</span><span class="si">}</span><span class="se">\n</span><span class="s2">snapshot </span><span class="si">{</span><span class="n">isnap</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">snap</span><span class="si">}</span><span class="s2">&quot;</span>
+    
+    <span class="k">return</span> <span class="n">md_xyz</span></div>
+
+
+
+<div class="viewcode-block" id="make_path_xyz"><a class="viewcode-back" href="../../reference/libra_py/scan.html#libra_py.scan.make_path_xyz">[docs]</a><span class="k">def</span> <span class="nf">make_path_xyz</span><span class="p">(</span><span class="n">R0</span><span class="p">,</span> <span class="n">R1</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">s0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">s1</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">npts</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">S0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">S1</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd"> </span>
+<span class="sd">    This function generates an xyz file with a &quot;path&quot;</span>
+<span class="sd">    connecting one geometry to another (like in NEB), but</span>
+<span class="sd">    also extends the range of the scan beyond the initial</span>
+<span class="sd">    limiting points, allowing the put extra points along the</span>
+<span class="sd">    scan direction</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        R0 ( MATRIX(3*nat, 1) ): coordinates of all DOFs for initial input geometry [ Bohr ]</span>
+<span class="sd">        R1 ( MATRIX(3*nat, 1) ): coordinates of all DOFs for final input geometry [ Bohr ]</span>
+<span class="sd">        E (list of nat strings): atom names (elements) of all atoms         </span>
+<span class="sd">        s0 ( double ): mapping of the R0 point onto the line of search [ default: 0.0 ]</span>
+<span class="sd">        s1 ( double ): mapping of the R1 point onto the line of search [ default: 1.0 ]</span>
+<span class="sd">        npts ( int ): the number of images (including the boundary points) we would have between the</span>
+<span class="sd">            input points. This number defines the spacing between the images on the path.</span>
+<span class="sd">        S0 ( double ): mapping of the actual initial point onto the line of search [ default: 0.0 ]</span>
+<span class="sd">        S1 ( double ): mapping of the actual final point onto the line of search [ default: 1.0 ]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: ( R, xyz, s_axis), where:</span>
+
+<span class="sd">            * R ( MATRIX(3*nat, Npts) ): coordinates of all points on the scan path [ Bohr ]</span>
+<span class="sd">            * xyz ( string ): the xyz file content with all the points [ Angstrom ]</span>
+<span class="sd">            * s_axis ( list of Npts doubles): values of the &quot;reaction&quot; coordinate</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Sanity check:</span>
+    <span class="k">if</span> <span class="n">s1</span><span class="o">&lt;=</span><span class="n">s0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: s0 (</span><span class="si">%5.3f</span><span class="s2">) should be larger than s1(</span><span class="si">%5.3f</span><span class="s2">)! Exiting...</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">s0</span><span class="p">,</span> <span class="n">s1</span><span class="p">))</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Determine the number of points in the the actual path:</span>
+    <span class="n">ndof</span> <span class="o">=</span> <span class="n">R0</span><span class="o">.</span><span class="n">num_of_rows</span>
+    <span class="n">nat</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ndof</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ndof = &quot;</span><span class="p">,</span> <span class="n">ndof</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;nat = &quot;</span><span class="p">,</span> <span class="n">nat</span><span class="p">)</span>
+
+    <span class="n">ds</span> <span class="o">=</span> <span class="p">(</span><span class="n">s1</span><span class="o">-</span><span class="n">s0</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">npts</span><span class="p">)</span>
+    <span class="n">Npts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">abs</span><span class="p">((</span><span class="n">S1</span> <span class="o">-</span> <span class="n">S0</span><span class="p">))</span><span class="o">/</span><span class="n">ds</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ds = &quot;</span><span class="p">,</span> <span class="n">ds</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Npts = &quot;</span><span class="p">,</span> <span class="n">Npts</span><span class="p">)</span>
+    
+    <span class="c1"># Allocate memory</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">MATRIX</span><span class="p">(</span><span class="n">ndof</span><span class="p">,</span> <span class="n">Npts</span><span class="p">)</span>
+
+    <span class="n">s_axis</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Compute the mapping</span>
+    <span class="k">for</span> <span class="n">pt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Npts</span><span class="p">):</span>
+
+        <span class="n">s</span> <span class="o">=</span> <span class="n">S0</span> <span class="o">+</span> <span class="n">pt</span> <span class="o">*</span> <span class="n">ds</span>        
+        <span class="n">s_axis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> 
+
+        <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ndof</span><span class="p">):</span>
+        
+
+            <span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="n">s</span> <span class="o">-</span> <span class="n">s0</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">s1</span> <span class="o">-</span> <span class="n">s0</span><span class="p">)</span>
+
+            <span class="n">r</span> <span class="o">=</span> <span class="n">R0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">R1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">R0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">*</span>  <span class="n">t</span>
+
+            <span class="n">R</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">pt</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+
+    <span class="c1"># Create the xyz file</span>
+    <span class="n">xyz</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">pt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">Npts</span><span class="p">):</span>
+        <span class="n">xyz</span> <span class="o">=</span> <span class="n">xyz</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%i</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nat</span><span class="p">)</span>
+        <span class="n">xyz</span> <span class="o">=</span> <span class="n">xyz</span> <span class="o">+</span> <span class="s2">&quot;Frame </span><span class="si">%i</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pt</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">at</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nat</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span> <span class="o">/</span> <span class="n">units</span><span class="o">.</span><span class="n">Angst</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span> <span class="o">/</span> <span class="n">units</span><span class="o">.</span><span class="n">Angst</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">at</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span> <span class="o">/</span> <span class="n">units</span><span class="o">.</span><span class="n">Angst</span>
+            <span class="n">xyz</span> <span class="o">=</span> <span class="n">xyz</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2">  </span><span class="si">%8.5f</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">E</span><span class="p">[</span><span class="n">at</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+ 
+    <span class="k">return</span> <span class="n">R</span><span class="p">,</span> <span class="n">xyz</span><span class="p">,</span> <span class="n">s_axis</span></div>
+ 
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Alexey V. Akimov.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
