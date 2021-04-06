@@ -88,6 +88,81 @@ vector<MATRIX> NeuralNetwork::propagate(MATRIX& input){
 }
 
 
+
+vector<MATRIX> NeuralNetwork::derivatives(MATRIX& input){
+/**
+  This is a new implementation of the derivatives of the ANN outputs w.r.t. its inputs:
+
+  Args:
+    input  - sz_input x num_patterns, each column is a sz_x - dimensional input
+
+  Returns: 
+    output - num_patters matrices of the  Npe[L] Npe[0] size each , output.get(i,j) = doutput[j]/dinput[i]
+
+  Notation is from here:
+    https://cnl.salk.edu/~schraudo/teach/NNcourse/backprop.html
+
+*/
+
+  int i, j, p, L;  
+
+  if(input.n_rows!=sz_x){
+    std::cout<<"Error: Size of the input "<<input.n_rows<<" does not match the ANN architecture "<<sz_x<<std::endl;
+    exit(0);
+  }
+  int sz = input.n_cols; // number of patterns to handle at the same time
+
+
+  /**
+
+  L       0                   1                       ....             NL = Nlayers - 1
+
+  W      [junk]              W[1]                                        W[NL]
+
+  B      [junk]              B[1]                                        B[NL]
+
+  Y      [Y[0]=input]      [ f(W[1]*Y[0] + B[1]) ]           [ output = f(W[NL]*Y[NL-1] + B[NL]) ]
+  
+  */
+
+  vector<MATRIX> res;
+
+
+  vector<MATRIX> Y = propagate(input);
+
+  /// ksi[L].get(i,j) - is basically dx_L[i]/dx_0[j] - temporary variables for a given pattern
+  vector<MATRIX> ksi;
+
+  for(L = 0; L < Nlayers; L++){  
+    ksi.push_back(MATRIX(Npe[L], sz_x));
+  }// for L
+
+  /// Repeat for all patterns 
+  for(p = 0; p < sz; p++){
+
+    // Initialize
+    ksi[0].Init_Unit_Matrix(1.0);  
+    
+    for(L = 1; L < Nlayers; L++){            
+
+      MATRIX D_L(Npe[L],Npe[L]); 
+      for(i = 0; i<Npe[L]; i++){  D_L.set(i,i, 1.0 - Y[L].get(i, p) * Y[L].get(i, p));   }
+
+      ksi[L] = D_L * W[L] * ksi[L-1]; 
+
+    }// for L
+
+    res.push_back(ksi[Nlayers-1]);
+
+  }// for p
+
+  return res;
+
+}
+
+
+
+
 double NeuralNetwork::back_propagate(vector<MATRIX>& Y, MATRIX& target){
 /**
   This is a new implementation of the ANN back propagation

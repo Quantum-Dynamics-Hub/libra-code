@@ -144,7 +144,9 @@ public:
   // Destructor
   ~NeuralNetwork(); 
 
+  // Basic calculations
   vector<MATRIX> propagate(MATRIX& input);
+  vector<MATRIX> derivatives(MATRIX& input);
   double back_propagate(vector<MATRIX>& Y, MATRIX& target);
 
   // Init weights and biases

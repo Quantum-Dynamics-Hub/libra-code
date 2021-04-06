@@ -165,6 +165,7 @@ ExportANN_docstring += tmp;
 
 
   vector<MATRIX> (NeuralNetwork::*expt_propagate_v1)(MATRIX& input) = &NeuralNetwork::propagate;
+  vector<MATRIX> (NeuralNetwork::*expt_derivatives_v1)(MATRIX& input) = &NeuralNetwork::derivatives;
   double (NeuralNetwork::*expt_back_propagate_v1)(vector<MATRIX>& Y, MATRIX& target) = &NeuralNetwork::back_propagate;
 
 
@@ -207,6 +208,7 @@ ExportANN_docstring += tmp;
       .def("LearningHistory",&NeuralNetwork::LearningHistory)
 
       .def("propagate",expt_propagate_v1)
+      .def("derivatives",expt_derivatives_v1)
       .def("back_propagate",expt_back_propagate_v1)
 
       .def("init_weights_biases_uniform",expt_init_weights_biases_uniform_v1)
