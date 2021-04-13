@@ -494,8 +494,6 @@ vector<int> get_stochastic_reordering3
 
         g /= tot_p;
 
-        if(verbosity_level>0){   std::cout<<"Attempt # "<<number_of_attempts<<endl;   }
- 
         // Now stochastically determine the states re-assignment
         double ksi = rnd.uniform(0.0, 1.0);
         int target = hop(0, g, ksi);    // internal (active states') state index
@@ -503,7 +501,15 @@ vector<int> get_stochastic_reordering3
         // Update the permutaiton
         chosen_perm[i] = target;  /// chose the permutation i->traget
 
-         if(verbosity_level>0){   std::cout<<"Source state: "<<i<<" Ksi: "<<ksi<<" target state = "<<target;   }
+         if(verbosity_level>0){   
+           std::cout<<"Source state: "<<i<<endl;
+
+          std::cout<<"Probabilities to go from this state: ";   
+          for(j=0;j<size;j++){  std::cout<<g.get(0,j)<<" ";   }
+          std::cout<<endl;
+
+          std::cout<<" Ksi: "<<ksi<<" selects the target state = "<<target<<endl;   }
+
       }// for i
     
 
