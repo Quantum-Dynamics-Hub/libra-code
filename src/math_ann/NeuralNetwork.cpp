@@ -292,13 +292,13 @@ NeuralNetwork::NeuralNetwork(vector<int>& arch){
   The main variables we care to initialize here are the weights (W), biases (B), and their 
   derivatives (dW, dB)
 
-  L            0                   1                       ....             NL = Nlayers - 1
+  L                   0                   1                       ....             NL = Nlayers - 1
 
-  W, dW      [junk]              W[1]                                        W[NL]
+  W, dW, dWold      [junk]              W[1]                                        W[NL]
 
-  B, dB      [junk]              B[1]                                        B[NL]
+  B, dB, dBold      [junk]              B[1]                                        B[NL]
 
-  Y      [Y[0]=input]      [ f(W[1]*Y[0] + B[1]) ]           [ output = f(W[NL]*Y[NL-1] + B[NL]) ]
+  Y             [Y[0]=input]      [ f(W[1]*Y[0] + B[1]) ]           [ output = f(W[NL]*Y[NL-1] + B[NL]) ]
 
   
 */
@@ -318,10 +318,12 @@ NeuralNetwork::NeuralNetwork(vector<int>& arch){
    // 0-th matrixes are just junk
    B.push_back(b);
    dB.push_back(b);
+   dBold.push_back(b);
    W.push_back(w);
 
    w = 0.0;
    dW.push_back(w);
+   dWold.push_back(w);
 
    // Init weights and biases (additional edges)
    for(L=1;L<Nlayers;L++){
@@ -331,9 +333,11 @@ NeuralNetwork::NeuralNetwork(vector<int>& arch){
 
       W.push_back(w);
       dW.push_back(w);
+      dWold.push_back(w);
 
       B.push_back(b);
       dB.push_back(b);
+      dBold.push_back(b);
 
    } // max index of W as well as B is Nlayers-1
 

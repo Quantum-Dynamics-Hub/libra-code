@@ -291,11 +291,16 @@ void NeuralNetwork::init_weights_biases_uniform(Random& rnd, double left_w, doub
 
 
 void NeuralNetwork::train(Random& rnd, bp::dict params, MATRIX& inputs, MATRIX& targets){
+/**
+  See more details here:
+  http://page.mi.fu-berlin.de/rojas/neural/chapter/K8.pdf
+*/
 
   int i, epoch, L;
 
   ///============ Get the parameters ==================
-  double learning_rate = 0.0;
+  learning_rate = 0.0;
+  momentum_term = 0.0;
   int num_epochs = 1;
   int steps_per_epoch = 1;
   int epoch_size = 1;
@@ -308,6 +313,7 @@ void NeuralNetwork::train(Random& rnd, bp::dict params, MATRIX& inputs, MATRIX& 
 
 
     if(key=="learning_rate") { learning_rate = bp::extract<double>(params.values()[i]); }
+    else if(key=="momentum_term") { momentum_term = bp::extract<double>(params.values()[i]); }
     else if(key=="num_epochs") { num_epochs = bp::extract<int>(params.values()[i]);   }
     else if(key=="steps_per_epoch") { steps_per_epoch = bp::extract<int>(params.values()[i]);   }
     else if(key=="epoch_size") { epoch_size = bp::extract<int>(params.values()[i]);   }
@@ -340,9 +346,15 @@ void NeuralNetwork::train(Random& rnd, bp::dict params, MATRIX& inputs, MATRIX& 
         err = back_propagate( Y, target_subset);
 
         // Update weights and biases
-        for(L = 0; L < Nlayers; L++){
-          W[L] += learning_rate * dW[L];
-          B[L] += learning_rate * dB[L];
+        // According to: http://page.mi.fu-berlin.de/rojas/neural/chapter/K8.pdf
+        for(L = 0; L < Nlayers; L++){         
+
+          dWold[L] = (learning_rate * dW[L] + momentum_term * dWold[L]);
+          dBold[L] = (learning_rate * dB[L] + momentum_term * dBold[L]);
+
+          W[L] += dWold[L];
+          B[L] += dBold[L];
+
         }
 
     }// for i
