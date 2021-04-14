@@ -167,6 +167,7 @@ ExportANN_docstring += tmp;
   vector<MATRIX> (NeuralNetwork::*expt_propagate_v1)(MATRIX& input) = &NeuralNetwork::propagate;
   vector<MATRIX> (NeuralNetwork::*expt_derivatives_v1)(MATRIX& input) = &NeuralNetwork::derivatives;
   double (NeuralNetwork::*expt_back_propagate_v1)(vector<MATRIX>& Y, MATRIX& target) = &NeuralNetwork::back_propagate;
+  double (NeuralNetwork::*expt_error_v1)(MATRIX& input, MATRIX& target) = &NeuralNetwork::error;
 
 
   void (NeuralNetwork::*expt_init_weights_biases_uniform_v1)
@@ -174,7 +175,7 @@ ExportANN_docstring += tmp;
   void (NeuralNetwork::*expt_init_weights_biases_normal_v1)
   (Random& rnd, double scaling_w, double shift_w, double scaling_b, double shift_b) = &NeuralNetwork::init_weights_biases_normal;
 
-  void (NeuralNetwork::*expt_train_v1)
+  vector<double> (NeuralNetwork::*expt_train_v1)
   (Random& rnd, bp::dict params, MATRIX& inputs, MATRIX& targets) = &NeuralNetwork::train;
 
 
@@ -210,6 +211,7 @@ ExportANN_docstring += tmp;
       .def("propagate",expt_propagate_v1)
       .def("derivatives",expt_derivatives_v1)
       .def("back_propagate",expt_back_propagate_v1)
+      .def("error",expt_error_v1)
 
       .def("init_weights_biases_uniform",expt_init_weights_biases_uniform_v1)
       .def("init_weights_biases_normal",expt_init_weights_biases_normal_v1)

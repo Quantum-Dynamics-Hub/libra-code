@@ -148,6 +148,7 @@ public:
   vector<MATRIX> propagate(MATRIX& input);
   vector<MATRIX> derivatives(MATRIX& input);
   double back_propagate(vector<MATRIX>& Y, MATRIX& target);
+  double error(MATRIX& input, MATRIX& target);
 
   // Init weights and biases
   void init_weights_biases_uniform(Random& rnd, double left_w, double right_w, double left_b, double right_b);
@@ -155,7 +156,7 @@ public:
 
 
   // Training
-  void train(Random& rnd, bp::dict params, MATRIX& inputs, MATRIX& targets);
+  vector<double> train(Random& rnd, bp::dict params, MATRIX& inputs, MATRIX& targets);
 
 
   // Methods
