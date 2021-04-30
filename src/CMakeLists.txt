@@ -54,6 +54,10 @@ ADD_SUBDIRECTORY("qobjects")
 MESSAGE("Going into subdirectory basis...")
 ADD_SUBDIRECTORY("basis")
 
+MESSAGE("Going into subdirectory libint2_wrappers...")
+ADD_SUBDIRECTORY("libint2_wrappers")
+
+
 
 
 
@@ -179,6 +183,7 @@ TARGET_LINK_LIBRARIES(libra_core
                       rigidbody_stat
                       basis_stat
                       qobjects_stat
+                      libint2_wrappers_stat
                       molint_stat
                       linalg_stat meigen_stat specialfunctions_stat symmetry_stat operators_stat random_stat graph_stat data_stat ann_stat timer_stat 
                       context_stat io_stat calculators_stat ${ext_libs}  )
@@ -208,6 +213,7 @@ TARGET_LINK_LIBRARIES(libra_core_stat
                       rigidbody_stat
                       basis_stat
                       qobjects_stat
+                      libint2_wrappers_stat
                       molint_stat
                       linalg_stat meigen_stat specialfunctions_stat symmetry_stat operators_stat random_stat graph_stat data_stat ann_stat timer_stat 
                       context_stat io_stat calculators_stat ${ext_libs}  )

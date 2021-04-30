@@ -51,6 +51,7 @@
 #include "control_parameters/libcontrol_parameters.h"
 #include "model_parameters/libmodel_parameters.h"
 #include "basis_setups/libbasis_setups.h"
+#include "libint2_wrappers/liblibint2_wrappers.h"
 
 #include "hamiltonian/libhamiltonian.h"
 
