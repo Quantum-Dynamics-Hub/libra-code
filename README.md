@@ -26,7 +26,7 @@ for all users with the intent:
    knowledge and skills with others;
 
 
-## Installation (as of 4/30/2021)
+## Installation (as of after 5/14/2021)
 
 ### 1. Install miniconda (for Python 3.8) and activate Conda
 
