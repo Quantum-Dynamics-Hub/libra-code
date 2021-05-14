@@ -28,30 +28,76 @@ for all users with the intent:
 
 ## Installation (as of 4/30/2021)
 
-### 1. Install miniconda (for Python 3.8)
+### 1. Install miniconda (for Python 3.8) and activate Conda
 
     mkdir Conda
     cd Conda/
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh . 
-    sh ./Miniconda3-latest-Linux-x86.sh --prefix=<install_dir>
+    sh ./Miniconda3-latest-Linux-x86.sh -b -u -prefix <install_dir>
 
-### 2. Update the scripts 
+  Here, 
 
-    source .bash_profile
+  * the `-b` option will accept the license agreement and will skip all the prompts
+  * the `-u` option will tell the installer to do all the needed updates
+  * the `-p` option followed by the installation directory path (will be created), tells
+     the installed where to install the package.
 
-  or 
+  To activate the installed base environment of Conda do:
 
-    source .bashrc
+    eval "$(<path to bin/conda> shell.bash hook)"
 
-### 3. Create the environment and activate it
+  For instance, 
+
+    eval "$(/projects/academic/cyberwksp21/Software/Conda/Miniconda3/bin/conda shell.bash hook)"
+
+
+  You will need to run this script every time you want to use a particular Conda and the 
+  corresponding environments, unless you include this command in your .bashrc or .bash_profile
+
+  Test it is working by doing:
+
+    which conda
+
+
+### 2. Download Libra 
+
+    mkdir libra
+    cd libra
+    git clone https://github.com/Quantum-Dynamics-Hub/libra-code.git .
+
+   and switch to the correct branch or tag - usually, it would be `devel` branch
+
+    git checkout devel
+
+
+### 3. Create the environment equipped with all Libra needs 
+
+#### 3.1. Simple way:
+
+Just execute the following script located in the root of Libra distribution:
+
+    sh ./libra_env_build.sh
+
+This script will create the environment called `libra` and will install all the
+needed stuff in it. You just need to activate it:
+
+   conda activate libra
+
+#### 3.2. Detailed instructions on what the script about does:
+
+It first creates and activates the `libra` environment:
 
     conda create -n libra
     conda activate libra
 
-
-### 4. Install all the dependencies and tools
+Thne, it installs all the dependencies and tools.
 
 Do this one by one, and in this order (should not matter too much, but who knows it)
+
+    > To automate the below procedures, you can use `-y` option to accept prompts (sometimes this will override)
+    > previous packages/conflicts, so be careful
+    > 
+    > You can also use `-q` to get rid of all the messages to the output, although i'd keep it to keep track of what's going on
 
 Basic stuff
 
@@ -83,18 +129,8 @@ Used in some of the tutorials
 
     conda install -c conda-forge/label/gcc7 imageio
 
-### 5. Download Libra 
 
-    mkdir libra
-    cd libra
-    git clone https://github.com/Quantum-Dynamics-Hub/libra-code.git .
-
-   and switch to the correct branch or tag - usually, it would be `devel` branch
-
-    git checkout devel
-
-
-### 6. Adapt the CMakeLists.txt file according to your system
+### 4. Adapt the CMakeLists.txt file according to your system
 
    Because we had to downgrade Python to 3.6, we need to edit the CMakeLists.txt such that 
    cmake is looking for the correct Python version
@@ -110,7 +146,7 @@ Used in some of the tutorials
 
     FIND_PACKAGE(Boost 1.73.0 REQUIRED)
 
-### 7. Create the build directory and make the Makefiles
+### 5. Create the build directory and make the Makefiles
 
    Then in the libra directory, create the build directory:
 
@@ -119,18 +155,18 @@ Used in some of the tutorials
     cd _build
     cmake ../
 
-### 8. Compile the package
+### 6. Compile the package
     
     make -j4
 
-### 9. Setup environmental variables
+### 7. Setup environmental variables
 
    Add the following exports to your `.bash_profile` file
 
     export PYTHONPATH=<path to the ppackage>/libra/_build/src:$PYTHONPATH
     export LD_LIBRARY_PATH=<path to the ppackage>/libra/_build/src:$LD_LIBRARY_PATH
 
-### 10. Restart the terminal or source the bash profile and activate libra conda environment
+### 8. Restart the terminal or source the bash profile and activate libra conda environment
 
     source .bash_profile 
     conda activate libra
@@ -138,10 +174,7 @@ Used in some of the tutorials
    And you should be ready to use Libra.
 
 
-* [More detailed instructions](https://quantum-dynamics-hub.github.io/libra/installation.html)
-
-
-
+* [Old instructions](https://quantum-dynamics-hub.github.io/libra/installation.html)
 
 
 
@@ -169,10 +202,10 @@ Used in some of the tutorials
   * Dr. Ekadashi Pradhan (York University) 
       Libra/QE interface, delta-SCF NA-M (Libra-X)
 
-  * Dr. Amber Jain (Indian Institute of Technology, Bombay)
+  * Dr. Amber Jain (Indian Institute of Technology Bombay, India)
       Implementation and testing of the HEOM codes
 
-  * Dr. Xiang Sun (Indian Institute of Technology, Bombay)
+  * Dr. Xiang Sun (NYU Shanghai, China)
       Implementation and testing of the FGR codes
 
 
@@ -182,9 +215,9 @@ This code is provided in the hope it will be useful.
 
   If you use the code in your research, please cite the following paper(s):
 
-  ### Parers that describe Libra and its features 
+  ### Papers that describe Libra or its features 
 
-  * [Initial Implementation](http://onlinelibrary.wiley.com/doi/10.1002/jcc.24367/full)
+  * [The initial implementation](http://onlinelibrary.wiley.com/doi/10.1002/jcc.24367/full)
   Akimov, A. V. "Libra: An open-Source 'methodology discovery' library for quantum and classical dynamics simulations" 
   *J. Comput. Chem.*  **2016**  37, 1626-1649
 
