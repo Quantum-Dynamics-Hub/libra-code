@@ -20,7 +20,12 @@ import os
 import sys
 import numpy as np
 import time
-from liblibra_core import *
+
+if sys.platform=="cygwin":
+    from cyglibra_core import *
+elif sys.platform=="linux" or sys.platform=="linux2":
+    from liblibra_core import *
+
 from libra_py import data_outs
 from libra_py import units
 import math
