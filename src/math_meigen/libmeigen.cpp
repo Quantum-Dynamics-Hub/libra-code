@@ -77,6 +77,11 @@ void export_mEigen_objects(){
   void (*expt_sqrt_matrix_v2)(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh) = &sqrt_matrix;
   void (*expt_sqrt_matrix_v3)(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half) = &sqrt_matrix;
 
+  def("sqrt_matrix", expt_sqrt_matrix_v1);
+  def("sqrt_matrix", expt_sqrt_matrix_v2);
+  def("sqrt_matrix", expt_sqrt_matrix_v3);
+
+
   void (*expt_inv_matrix_v1)(CMATRIX& S, CMATRIX& S_inv, double thresh, int do_phase_correction) = &inv_matrix;
   void (*expt_inv_matrix_v2)(CMATRIX& S, CMATRIX& S_inv, double thresh) = &inv_matrix;
   void (*expt_inv_matrix_v3)(CMATRIX& S, CMATRIX& S_inv) = &inv_matrix;
@@ -84,17 +89,17 @@ void export_mEigen_objects(){
   void (*expt_inv_matrix_v5)(MATRIX& S, MATRIX& S_inv, double thresh) = &inv_matrix;
   void (*expt_inv_matrix_v6)(MATRIX& S, MATRIX& S_inv) = &inv_matrix;
 
-  void (*expt_exp_matrix_v1)(CMATRIX& res, CMATRIX& S, complex<double> dt, int do_phase_correction) = &exp_matrix;
-  void (*expt_exp_matrix_v2)(CMATRIX& res, CMATRIX& S, complex<double> dt) = &exp_matrix;
-
-  def("sqrt_matrix", expt_sqrt_matrix_v1);
-  def("sqrt_matrix", expt_sqrt_matrix_v2);
-  def("sqrt_matrix", expt_sqrt_matrix_v3);
-
   def("inv_matrix", expt_inv_matrix_v1);
   def("inv_matrix", expt_inv_matrix_v2);
   def("inv_matrix", expt_inv_matrix_v3);
   def("inv_matrix", expt_inv_matrix_v4);
+  def("inv_matrix", expt_inv_matrix_v5);
+  def("inv_matrix", expt_inv_matrix_v6);
+
+
+  void (*expt_exp_matrix_v1)(CMATRIX& res, CMATRIX& S, complex<double> dt, int do_phase_correction) = &exp_matrix;
+  void (*expt_exp_matrix_v2)(CMATRIX& res, CMATRIX& S, complex<double> dt) = &exp_matrix;
+
   def("exp_matrix", expt_exp_matrix_v1);
   def("exp_matrix", expt_exp_matrix_v2);
 
@@ -136,7 +141,7 @@ void export_mEigen_objects(){
   def("linsys_solver", expt_linsys_solver_v1);
 
   void (*expt_solve_linsys_v1)(MATRIX& C,MATRIX& D, MATRIX& X,double eps, int maxiter) = &solve_linsys;
-  def("linsys_solver", expt_solve_linsys_v1);
+  def("solve_linsys", expt_solve_linsys_v1);
 
 
 }

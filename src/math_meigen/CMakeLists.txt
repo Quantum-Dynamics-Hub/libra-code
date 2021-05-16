@@ -15,7 +15,8 @@
 # but for now, I just set the include dir manually
 #
 #set (EIGEN_INCLUDE /Eigen/eigen-eigen-b9cd8366d4e8/ )
-set (EIGEN_INCLUDE ./ )
+#set (EIGEN_INCLUDE ./ )
+#set(EIGEN_INCLUDE ${EIGEN3_INCLUDE_DIR} )
 
 #
 #  Source files and headers in this directory
@@ -24,7 +25,7 @@ file(GLOB EIG_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
 file(GLOB EIG_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${EIG_HEADERS}) 
 
 
-INCLUDE_DIRECTORIES(${EIGEN_INCLUDE})
+INCLUDE_DIRECTORIES(${EIGEN_INCLUDE_DIR})
 
 
 

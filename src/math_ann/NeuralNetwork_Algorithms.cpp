@@ -20,6 +20,464 @@ using namespace boost;
 namespace libann{
 
 
+vector<MATRIX> NeuralNetwork::propagate(MATRIX& input){
+/**
+  This is a new implementation of the ANN propagation:
+
+  This function computes the output in each layer of the ANN,
+  the one in the last layer is regarded as the predicted overall output = 
+  the approximate of the target properties
+
+  Args:
+    input  - sz_input x num_patterns, each column is a sz_x - dimensional input
+
+  Returns: 
+    output - Nlayers matrices of the  Npe[L] x num_patterns size each 
+
+    Predicted output in every layer
+
+
+  Notation is from here:
+    https://cnl.salk.edu/~schraudo/teach/NNcourse/backprop.html
+
+*/
+
+  int i, j, L;  
+
+  if(input.n_rows!=sz_x){
+    std::cout<<"Error: Size of the input "<<input.n_rows<<" does not match the ANN architecture "<<sz_x<<std::endl;
+    exit(0);
+  }
+  int sz = input.n_cols; // number of patterns to handle at the same time
+
+
+  /**
+
+  L       0                   1                       ....             NL = Nlayers - 1
+
+  W      [junk]              W[1]                                        W[NL]
+
+  B      [junk]              B[1]                                        B[NL]
+
+  Y      [Y[0]=input]      [ f(W[1]*Y[0] + B[1]) ]           [ output = f(W[NL]*Y[NL-1] + B[NL]) ]
+  
+  */
+
+  vector<MATRIX> Y;
+
+  /// L = 0
+  Y.push_back(input);
+
+  /// L = 1, 2... Nlayers -1
+  for(L = 1; L < Nlayers; L++){
+
+    Y.push_back(MATRIX(Npe[L], sz)); 
+    Y[L] = W[L] * Y[L-1];
+
+    /// Transfer function and bias
+    for(i=0; i<Npe[L]; i++){ 
+      for(j=0; j<sz; j++){ 
+        Y[L].set(i, j, tanh( Y[L].get(i, j) +  B[L].get(i, 0)) );
+      }
+    }
+    
+  }// for L
+
+  return Y;
+
+}
+
+
+
+vector<MATRIX> NeuralNetwork::derivatives(MATRIX& input){
+/**
+  This is a new implementation of the derivatives of the ANN outputs w.r.t. its inputs:
+
+  Args:
+    input  - sz_input x num_patterns, each column is a sz_x - dimensional input
+
+  Returns: 
+    output - num_patters matrices of the  Npe[L] Npe[0] size each , output.get(i,j) = doutput[j]/dinput[i]
+
+  Notation is from here:
+    https://cnl.salk.edu/~schraudo/teach/NNcourse/backprop.html
+
+*/
+
+  int i, j, p, L;  
+
+  if(input.n_rows!=sz_x){
+    std::cout<<"Error: Size of the input "<<input.n_rows<<" does not match the ANN architecture "<<sz_x<<std::endl;
+    exit(0);
+  }
+  int sz = input.n_cols; // number of patterns to handle at the same time
+
+
+  /**
+
+  L       0                   1                       ....             NL = Nlayers - 1
+
+  W      [junk]              W[1]                                        W[NL]
+
+  B      [junk]              B[1]                                        B[NL]
+
+  Y      [Y[0]=input]      [ f(W[1]*Y[0] + B[1]) ]           [ output = f(W[NL]*Y[NL-1] + B[NL]) ]
+  
+  */
+
+  vector<MATRIX> res;
+
+
+  vector<MATRIX> Y = propagate(input);
+
+  /// ksi[L].get(i,j) - is basically dx_L[i]/dx_0[j] - temporary variables for a given pattern
+  vector<MATRIX> ksi;
+
+  for(L = 0; L < Nlayers; L++){  
+    ksi.push_back(MATRIX(Npe[L], sz_x));
+  }// for L
+
+  /// Repeat for all patterns 
+  for(p = 0; p < sz; p++){
+
+    // Initialize
+    ksi[0].Init_Unit_Matrix(1.0);  
+    
+    for(L = 1; L < Nlayers; L++){            
+
+      MATRIX D_L(Npe[L],Npe[L]); 
+      for(i = 0; i<Npe[L]; i++){  D_L.set(i,i, 1.0 - Y[L].get(i, p) * Y[L].get(i, p));   }
+
+      ksi[L] = D_L * W[L] * ksi[L-1]; 
+
+    }// for L
+
+    res.push_back(ksi[Nlayers-1]);
+
+  }// for p
+
+  return res;
+
+}
+
+
+
+
+double NeuralNetwork::back_propagate(vector<MATRIX>& Y, MATRIX& target){
+/**
+  This is a new implementation of the ANN back propagation
+
+  Args:
+    Y - Nlayers matrices of the  Npe[L] x num_patterns size each. Predicted output in every layer
+    target  Npe[Nlayers-1] x num_patterns - the expected output of the ANN
+
+  Returns: 
+    update dW: Nlayers matrices of the  Npe[L] x Npe[L-1] - the gradients of the weights  - average over all patterns
+    update dB: Nlayers matrices of the  Npe[L] x 1 - the gradients of the biases  - average over all patterns
+
+  Notation is from here:
+    https://cnl.salk.edu/~schraudo/teach/NNcourse/backprop.html
+
+*/
+
+  int i, j, L;  
+
+  if(target.n_rows!=sz_y){
+    std::cout<<"Error: Size of the target output "<<target.n_rows<<" does not match the ANN architecture "<<sz_y<<std::endl;
+    exit(0);
+  }
+  int sz = target.n_cols; // number of patterns to handle at the same time
+
+
+  /**
+
+  L       0                   1                       ....             NL = Nlayers - 1
+
+  W      [junk]              W[1]                                        W[NL]
+
+  B      [junk]              B[1]                                        B[NL]
+
+  Y      [Y[0]=input]      [ f(W[1]*Y[0] + B[1]) ]           [ output = f(W[NL]*Y[NL-1] + B[NL]) ]
+
+ deltas  [junk]           W^T[2]*delta[2] *f'(Y[1])                   target - output[NL]
+  
+  */
+
+
+  vector<MATRIX> delta;
+
+  /// Allocate deltas:
+  for(L = 0; L < Nlayers; L++){  delta.push_back(MATRIX(Npe[L], sz));  }
+
+
+  //====== Back-propagate deltas =============
+  /// L = Nlayers-1  
+  delta[Nlayers-1] = target - Y[Nlayers-1];
+
+  /// L = Nlayers - 2, Nlayers-3, ..., 1
+  for(L = Nlayers-2; L > 0; L--){
+
+    delta[L] = W[L+1].T() * delta[L+1];
+
+    /// This is the effect of the transfer function derivative
+    for(i=0; i<Npe[L]; i++){ 
+      for(j=0; j<sz; j++){ 
+        delta[L].scale(i, j,  (1.0 - Y[L].get(i, j) * Y[L].get(i, j))  );
+      }
+    }
+    
+  }// for L      
+
+ 
+  //========= Compute weight and bias gradients =======
+  for(L = 1; L < Nlayers; L++){
+    dW[L] = 0.0;
+    dB[L] = 0.0;
+
+    for(j = 0; j<sz; j++){
+      dW[L] +=  delta[L].col(j) * Y[L-1].col(j).T();
+      dB[L] +=  delta[L].col(j);
+    }// for j
+
+    dW[L] /= double(sz);
+    dB[L] /= double(sz);
+
+  }// for L
+
+
+  // Compute error
+  double err = 0.0;
+  for(i=0; i<Npe[Nlayers-1]; i++){ 
+    for(j=0; j<sz; j++){ 
+      err += delta[Nlayers-1].get(i,j) * delta[Nlayers-1].get(i,j);
+    }// for j
+  }// for i
+  err *= (0.5/double(sz));
+
+  return err;
+
+}
+
+
+
+
+double NeuralNetwork::error(MATRIX& inputs, MATRIX& target){
+/**
+  This is a function to compute the error of the prediction
+
+  Args:
+    inputs - Npe[0] x num_patterns matrix of the inputs
+    target - Npe[Nlayers-1] x num_patterns - the expected output of the ANN
+
+  Returns: 
+    the average error 
+
+*/
+
+  int i, j, L;  
+
+  if(target.n_cols!=inputs.n_cols){    
+    std::cout<<"Error: The number of patterns is different for inputs "<<inputs.n_cols<<" and targets "<<target.n_cols<<std::endl;
+    exit(0);
+  }
+
+  int sz = target.n_cols; // number of patterns to handle at the same time
+
+  /**
+
+  L       0                   1                       ....             NL = Nlayers - 1
+
+  W      [junk]              W[1]                                        W[NL]
+
+  B      [junk]              B[1]                                        B[NL]
+
+  Y      [Y[0]=input]      [ f(W[1]*Y[0] + B[1]) ]           [ output = f(W[NL]*Y[NL-1] + B[NL]) ]
+
+ deltas  [junk]           W^T[2]*delta[2] *f'(Y[1])                   target - output[NL]
+  
+  */
+
+  vector<MATRIX> Y;
+  Y = propagate(inputs);
+
+
+  MATRIX delta(Npe[Nlayers-1], sz);
+
+  /// L = Nlayers-1  
+  delta = target - Y[Nlayers-1];
+
+  // Compute error
+  double err = 0.0;
+  for(i=0; i<Npe[Nlayers-1]; i++){ 
+    for(j=0; j<sz; j++){ 
+      err += delta.get(i,j) * delta.get(i,j);
+    }// for j
+  }// for i
+  err *= (0.5/double(sz));
+
+  return err;
+
+}
+
+
+
+
+void NeuralNetwork::init_weights_biases_normal(Random& rnd, double scaling_w, double shift_w, double scaling_b, double shift_b){
+
+  for(int L =1; L < Nlayers; L++){
+    for(int i=0; i<Npe[L]; i++){
+      ///========== Weights ============
+      for(int j=0; j<Npe[L-1]; j++){
+        W[L].set(i, j, scaling_w * rnd.normal() + shift_w);
+      }// for j
+      ///========== Biases ============
+      B[L].set(i, 0, scaling_b * rnd.normal() + shift_b );
+    }// for i
+  }// for L
+
+}
+
+void NeuralNetwork::init_weights_biases_uniform(Random& rnd, double left_w, double right_w, double left_b, double right_b){
+
+  for(int L =1; L < Nlayers; L++){
+    for(int i=0; i<Npe[L]; i++){
+      ///========== Weights ============
+      for(int j=0; j<Npe[L-1]; j++){
+        W[L].set(i, j, rnd.uniform(left_w, right_w));
+      }// for j
+      ///========== Biases ============
+      B[L].set(i, 0, rnd.uniform(left_b, right_b) );
+    }// for i
+  }// for L
+
+}
+
+
+vector<double> NeuralNetwork::train(Random& rnd, bp::dict params, MATRIX& inputs, MATRIX& targets){
+/**
+  See more details here:
+  http://page.mi.fu-berlin.de/rojas/neural/chapter/K8.pdf
+*/
+
+  int i, j, epoch, L;
+
+  ///============ Get the parameters ==================
+  learning_rate = 0.0;
+  momentum_term = 0.0;
+  int num_epochs = 1;
+  int steps_per_epoch = 1;
+  int epoch_size = 1;
+  int n_patterns = inputs.n_cols;
+  int verbosity = 0;
+  int is_error_collect_frequency = 0; 
+  int error_collect_frequency = 1;
+  vector<double> weight_decay(1, 0.0);   int is_weight_decay = 0;
+  vector<double> bias_decay(1, 0.0);     int is_bias_decay = 0;
+
+  std::string key;
+  for(int i=0;i<len(params.values());i++){
+    key = bp::extract<std::string>(params.keys()[i]);
+
+
+    if(key=="learning_rate") { learning_rate = bp::extract<double>(params.values()[i]); }
+    else if(key=="momentum_term") { momentum_term = bp::extract<double>(params.values()[i]); }
+    else if(key=="num_epochs") { num_epochs = bp::extract<int>(params.values()[i]);   }
+    else if(key=="steps_per_epoch") { steps_per_epoch = bp::extract<int>(params.values()[i]);   }
+    else if(key=="epoch_size") { epoch_size = bp::extract<int>(params.values()[i]);   }
+    else if(key=="verbosity") { verbosity = bp::extract<int>(params.values()[i]);   }
+    else if(key=="error_collect_frequency") { 
+      is_error_collect_frequency = 1;
+      error_collect_frequency = bp::extract<int>(params.values()[i]);  
+    }
+    else if(key=="weight_decay"){
+      is_weight_decay = 1;
+      boost::python::list tmp = extract<boost::python::list>(params.values()[i]);      
+      for(j=0; j<len(tmp); j++){  weight_decay.push_back( extract<double>(tmp[j]) );  }
+
+      if(weight_decay.size()!=Nlayers){
+        std::cout<<"Error: The number of weight decay constants should be equal to the number of weight matrices \n";
+        std::cout<<"Now exiting...\n";
+        exit(0);
+      }// if      
+    }
+    else if(key=="bias_decay"){
+      is_bias_decay = 1;
+      boost::python::list tmp = extract<boost::python::list>(params.values()[i]);      
+      for(j=0; j<len(tmp); j++){  bias_decay.push_back( extract<double>(tmp[j]) );  }
+
+      if(bias_decay.size()!=Nlayers){
+        std::cout<<"Error: The number of bias decay constants should be equal to the number of bias matrices \n";
+        std::cout<<"Now exiting...\n";
+        exit(0);
+      }// if      
+    }
+
+  }
+
+
+  if(!is_error_collect_frequency){ error_collect_frequency = steps_per_epoch;  }
+  if(!is_weight_decay){ for(j=0; j<Nlayers-1; j++){  weight_decay.push_back(0.0); } }
+  if(!is_bias_decay){ for(j=0; j<Nlayers-1; j++){  bias_decay.push_back(0.0); } }
+
+  MATRIX input_subset(sz_x, epoch_size);
+  MATRIX target_subset(sz_y, epoch_size);
+  vector<int> subset(epoch_size);
+  vector<int> inp_dim(sz_x); for(i=0; i<sz_x; i++){ inp_dim[i] = i; }
+  vector<int> tar_dim(sz_y); for(i=0; i<sz_y; i++){ tar_dim[i] = i; }
+  vector<MATRIX> Y;
+
+  int counter = 0;
+  double err_loc = 0.0;
+  vector<double> err;
+   
+  for(epoch = 0; epoch < num_epochs; epoch++){    
+
+    for(i = 0; i < steps_per_epoch; i++){
+            
+        // Make a random selection of the training patterns
+        randperm(epoch_size, n_patterns, subset);
+        
+        // Extract the corresponding matrices from the inputs and outputs
+        pop_submatrix(inputs,  input_subset,  inp_dim, subset);
+        pop_submatrix(targets, target_subset, tar_dim, subset);
+
+        // Update gradients and outputs
+        Y = propagate(input_subset);
+        err_loc = back_propagate( Y, target_subset);
+
+        if(counter % error_collect_frequency ==0){  err.push_back( err_loc);       }
+       
+
+        // Update weights and biases
+        // According to: http://page.mi.fu-berlin.de/rojas/neural/chapter/K8.pdf
+        for(L = 0; L < Nlayers; L++){         
+
+          dWold[L] = (learning_rate * (dW[L] - weight_decay[L]*W[L]) + momentum_term * dWold[L]);
+          dBold[L] = (learning_rate * (dB[L] - bias_decay[L]*B[L]) + momentum_term * dBold[L]);
+
+          W[L] += dWold[L];
+          B[L] += dBold[L];
+
+        }
+
+
+        counter++;
+
+    }// for i
+
+    if(verbosity>=1){  cout<<"epoch = "<<epoch<<" (local) error = "<<err_loc<<"\n";  }
+
+  }// for epoch
+
+  return err;
+
+}
+
+
+
+
+/*
+
 int NeuralNetwork::Propagate(boost::python::list input, boost::python::list& result){
 
   int i;
@@ -42,75 +500,7 @@ int NeuralNetwork::Propagate(boost::python::list input, boost::python::list& res
 
 }
 
-
-int NeuralNetwork::Propagate(const MATRIX& input, MATRIX& result){
-
-  int i;
-
-  // Clean result
-  result = 0.0;
-
-  if(input.n_rows!=sz_x){
-    std::cout<<"Error: Size of the input "<<input.n_rows<<" does not match the ANN architecture "<<sz_x<<std::endl;
-    exit(0);
-  }
-
-  int NL = Nlayers - 1;
-  double tmp;
-
-  vector<MATRIX> Y;
-  MATRIX x(sz_x,1);
-
-  for(i=0;i<sz_x;i++){
-
-    //---------- Use the same linear transformation of input as during the training ----------
-    tmp=input.M[i];
-    tmp = Inputs[i].scale_factor * tmp + Inputs[i].shift_amount;
-    x.M[i] = tmp;
-
-  }// for i
-
-  //-----------------------------------------------------
-  //------- Forward propagation of the signal ------------
-  Y.clear();
-  Y.push_back(x); // 0-th item;
-
-  for(int L=1;L<=NL;L++){
-    MATRIX NET(Npe[L],1);
-    MATRIX   y(Npe[L],1);
-
-    NET=W[L]*Y[L-1] + B[L];
-
-    for(int j=0;j<Npe[L];j++){ y.M[j]=tanh(NET.M[j]);}
-    Y.push_back(y);
-  }
-
-
-  //------- Linear transformation of the output ----------------
-  for(i=0;i<Npe[NL];i++){
-    tmp = Y[NL].M[i];
-
-    // Inverse transform of output
-    if(scale_method=="normalize_and_transform"){
-      // Invert non-linear transformation
-      //   tmp = tanh(tmp) = (exp(tmp)-exp(-tmp))/(exp(tmp)+exp(-tmp))   =>
-
-      if(tmp>=0.99){ tmp = 0.99; }
-      else if(tmp<=-0.99) { tmp = -0.99; }
-
-      tmp = 0.5*log((1.0+tmp)/(1.0-tmp)); // <=
-    }
-
-    // Invert linear transformation of the output
-    if(Outputs[i].scale_factor!=0.0){
-      tmp = (1.0/Outputs[i].scale_factor)*(tmp - Outputs[i].shift_amount);
-    }
-
-    result.M[i] = tmp;
-  }// for i
-
-  return 0;
-}
+*/
 
 
 int NeuralNetwork::Propagate(boost::python::list input, boost::python::list& result, boost::python::list& derivatives){
@@ -137,6 +527,9 @@ int NeuralNetwork::Propagate(boost::python::list input, boost::python::list& res
   delete d;
 
 }
+
+
+
 
 int NeuralNetwork::Propagate(const MATRIX& input, MATRIX& result, MATRIX& derivs){
 /**  This function propagates a given input through the ANN and also computes 
@@ -492,6 +885,7 @@ void NeuralNetwork::ANNTrain(){
 
       // 0-th item == input	
       Y.push_back(X);
+      //Y.push_back(X);
 
       for(L=1;L<=NL;L++){
 
@@ -501,9 +895,14 @@ void NeuralNetwork::ANNTrain(){
         NET = W[L]*Y[L-1] + B[L];
     
         /**
+            (u/v)' =  (u'v - v'u)/v^2
+
           Y[j] = tanh( NET[j] )    tanh(x) = ( exp(x) - exp(-x) ) / (exp(x) + exp(-x) )
 
-          dY[j]/dNET[j] = ...
+          dY[j]/dNET[j] =  (e(x) + e(-x) )^2 - (e(x) - e(-x) )^2 / (exp(x) + exp(-x) )^2 = 
+ 
+         =  1 - tanh(x)^2
+
         */
 
         D[L] = 0.0;   // first derivatives of the transfer function ( tanh(net) ) 
@@ -546,7 +945,8 @@ void NeuralNetwork::ANNTrain(){
     Delta[NL] = D[NL] * e;
     Tau[NL]   = D[NL] * tau;         
     interm1 = (tau * (gamma[NL].T()));
-    for(i=0;i<Npe[NL];i++){Delta[NL].M[i] +=  interm1.M[i*Npe[NL]+i]*D2[NL].M[Npe[NL]*i+i]; }
+// NO GRADIENTS
+//    for(i=0;i<Npe[NL];i++){Delta[NL].M[i] +=  interm1.M[i*Npe[NL]+i]*D2[NL].M[Npe[NL]*i+i]; }
 
 
     // Calculate deltas (derivatives)
@@ -564,7 +964,8 @@ void NeuralNetwork::ANNTrain(){
 
       interm = (dEdksi * (gamma[L].T()));
 
-      for(i=0;i<Npe[L];i++){Delta[L].M[i] +=  interm.M[i*Npe[L]+i]*D2[L].M[Npe[L]*i+i] ; }
+// NO GRADIENTS
+//      for(i=0;i<Npe[L];i++){Delta[L].M[i] +=  interm.M[i*Npe[L]+i]*D2[L].M[Npe[L]*i+i] ; }
 
     }// for L
 
@@ -572,7 +973,9 @@ void NeuralNetwork::ANNTrain(){
     for (L=1;L<=NL;L++){
 
       // These are the negative gradients
-      dWcurr[L] += learning_rate*(Delta[L]*(Y[L-1].T()) + Tau[L]*(ksi[L-1].T()) - weight_decay[L]*W[L]);
+//      dWcurr[L] += learning_rate*(Delta[L]*(Y[L-1].T()) + Tau[L]*(ksi[L-1].T()) - weight_decay[L]*W[L]);
+// NO GRADIENTS
+      dWcurr[L] += learning_rate*(Delta[L]*(Y[L-1].T()) - weight_decay[L]*W[L]);
       dBcurr[L] += learning_rate*Delta[L];
 
     }
@@ -582,7 +985,10 @@ void NeuralNetwork::ANNTrain(){
   // Now add momentum term (if it is not zero)
   if(learning_method=="BackProp"){
 
+
+
     for(L=1;L<=NL;L++){
+      /**   TESTING ON 4/3/2021!!!  : should be "+", but we try - */
       dW[L] = dWcurr[L] + momentum_term*dW[L];
       dB[L] = dBcurr[L] + momentum_term*dB[L];
     }

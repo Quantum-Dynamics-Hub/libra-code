@@ -101,6 +101,7 @@ class DATA{
 
   // Data Manipulation
   int LinearTransformData(double,double);
+  int invLinearTransformData();
   int ScaleData(double);
   int ScaleData(double,double);
   int ShiftData(double);

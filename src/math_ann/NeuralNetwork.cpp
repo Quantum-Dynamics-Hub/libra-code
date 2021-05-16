@@ -22,6 +22,9 @@ using namespace std;
 using namespace boost;
 using namespace libio;
 
+namespace bp = boost::python;
+
+
 /// libann namespace
 namespace libann{
 
@@ -56,6 +59,7 @@ void NeuralNetwork::set(object obj){
 }
 
 
+
 void NeuralNetwork::set(boost::python::dict d){
   std::string key;
   for(int i=0;i<len(d.values());i++){
@@ -81,6 +85,44 @@ void NeuralNetwork::set(boost::python::dict d){
   }// for i
 
 }
+
+/*
+void NeuralNetwork::set_parameters(bp::dict params){
+//
+//  Extract the parameters from the input dictionary
+//
+
+  std::string key;
+  for(int i=0;i<len(params.values());i++){
+    key = bp::extract<std::string>(params.keys()[i]);
+
+    ///================= Computing Hamiltonian-related properties ====================
+    if(key=="rep_tdse") { rep_tdse = bp::extract<int>(params.values()[i]); }
+    else if(key=="rep_ham") { rep_ham = bp::extract<int>(params.values()[i]);   }
+
+    ///================= Decoherence options =========================================
+    else if(key=="decoherence_algo"){ decoherence_algo = bp::extract<int>(params.values()[i]); }
+    else if(key=="decoherence_rates"){ 
+      MATRIX x( bp::extract<MATRIX>(params.values()[i]) );
+      decoherence_rates = new MATRIX(x.n_rows, x.n_cols);      
+      for(int a=0;a<x.n_rows;a++){
+        for(int b=0;b<x.n_cols;b++){ decoherence_rates->set(a, b, x.get(a,b));   }
+      } 
+    }
+    else if(key=="quantum_dofs"){  
+      quantum_dofs.clear();
+      boost::python::list tmp = extract<boost::python::list>(params.values()[i]);
+      for(int j=0; j<len(tmp); j++){  quantum_dofs.push_back( extract<double>(tmp[j]) );  }
+    }
+
+
+  }// for i
+
+
+}
+
+*/
+
 
 
 
@@ -243,7 +285,79 @@ NeuralNetwork& NeuralNetwork::operator=(const NeuralNetwork& ann){
 
 
 
+NeuralNetwork::NeuralNetwork(vector<int>& arch){
+/**  
+  arch  - architecture of the ANN: the number of units in each layer
+
+  The main variables we care to initialize here are the weights (W), biases (B), and their 
+  derivatives (dW, dB)
+
+  L                   0                   1                       ....             NL = Nlayers - 1
+
+  W, dW, dWold      [junk]              W[1]                                        W[NL]
+
+  B, dB, dBold      [junk]              B[1]                                        B[NL]
+
+  Y             [Y[0]=input]      [ f(W[1]*Y[0] + B[1]) ]           [ output = f(W[NL]*Y[NL-1] + B[NL]) ]
+
+  
+*/
+
+   int L;
+
+   Nlayers = arch.size();
+   Npe = arch;
+
+   sz_x = arch[0];
+   sz_y = arch[Nlayers-1];
+
+   MATRIX w(Npe[0],Npe[0]); w.Init_Unit_Matrix(1.0);  // weights
+   MATRIX b(Npe[0],1); b = 0.0;                       // biases
+   MATRIX d(Npe[0],1); d = 0.0;                       // just general matrices
+
+   // 0-th matrixes are just junk
+   B.push_back(b);
+   dB.push_back(b);
+   dBold.push_back(b);
+   W.push_back(w);
+
+   w = 0.0;
+   dW.push_back(w);
+   dWold.push_back(w);
+
+   // Init weights and biases (additional edges)
+   for(L=1;L<Nlayers;L++){
+
+      MATRIX w(Npe[L],Npe[L-1]);
+      MATRIX b(Npe[L],1);
+
+      W.push_back(w);
+      dW.push_back(w);
+      dWold.push_back(w);
+
+      B.push_back(b);
+      dB.push_back(b);
+      dBold.push_back(b);
+
+   } // max index of W as well as B is Nlayers-1
+
+   //------------------ Debugging ------------------------
+   std::cout<<"A multi-layer perceptron has been created\n";
+   std::cout<<"Number of layers = "<<Nlayers<<std::endl;
+   std::cout<<"The architecture of the MLP is: [";
+   for(L=0;L<Nlayers-1;L++){  std::cout<<Npe[L]<<" , "; }
+   std::cout<<Npe[Nlayers-1]<<"]\n";
+   //------------------------------------------------------
+
+}
+
+
+
+
+
 void NeuralNetwork::CreateANN(boost::python::list ann){
+
+   srand((unsigned)time(0));
 
    int i;
    for(i=0;i<len(ann);i++){
@@ -254,58 +368,57 @@ void NeuralNetwork::CreateANN(boost::python::list ann){
    Iteration = 0;
 
    Nlayers = Npe.size();
+   
 
-        srand((unsigned)time(0));
+   MATRIX w(Npe[0],Npe[0]); w.Init_Unit_Matrix(1.0);  // weights
+   MATRIX b(Npe[0],1); b = 0.0;                       // biases
+   MATRIX d(Npe[0],1); d = 0.0;                       // just general matrices
 
-        MATRIX w; w.Init_Unit_Matrix(1.0);
-        MATRIX b(3,1); b = 0.0;
-        MATRIX d(3,1); d = 0.0;
-        // 0-th matrixes are just ballast
-        D.push_back(d);
-        Delta.push_back(d);
-        B.push_back(b);
-        dB.push_back(b);
-        dBcurr.push_back(b);
-        dBold.push_back(b);
-
-        W.push_back(w);
-        w = 0.0;
-        dW.push_back(w);
-        dWcurr.push_back(w);        
-        dWold.push_back(w);        
+   // 0-th matrixes are just ballast
+   D.push_back(d);
+   Delta.push_back(d);
+   B.push_back(b);
+   dB.push_back(b);
+   dBcurr.push_back(b);
+   dBold.push_back(b);
+   W.push_back(w);
+   w = 0.0;
+   dW.push_back(w);
+   dWcurr.push_back(w);        
+   dWold.push_back(w);        
 
 
-        // Init weights and biases (additional edges)
-    for (int L=1;L<Nlayers;L++){
-                MATRIX w(Npe[L],Npe[L-1]);
-                MATRIX b(Npe[L],1);
-                MATRIX d1(Npe[L],1);
-                MATRIX d2(Npe[L],Npe[L]);
+    // Init weights and biases (additional edges)
+    for(int L=1;L<Nlayers;L++){
+      MATRIX w(Npe[L],Npe[L-1]);
+      MATRIX b(Npe[L],1);
+      MATRIX d1(Npe[L],1);
+      MATRIX d2(Npe[L],Npe[L]);
 
-                        for(int i=0;i<Npe[L];i++){
+      for(int i=0;i<Npe[L];i++){
+        for(int j=0;j<Npe[L-1];j++){
 
-                                for(int j=0;j<Npe[L-1];j++){
+          w.M[i*Npe[L-1]+j] = 0.1*((rand()/(double)(RAND_MAX + 1.0))-0.5);
 
-                                        w.M[i*Npe[L-1]+j] = 0.1*((rand()/(double)(RAND_MAX + 1.0))-0.5);
+        }
+          b.M[i] = ((rand()/(double)(RAND_MAX + 1.0))-0.5);
+      }
 
-                                }
-                                    b.M[i] = ((rand()/(double)(RAND_MAX + 1.0))-0.5);
-                        }
+      W.push_back(w);
+      w = 0.0;
+      dW.push_back(w);
+      dWcurr.push_back(w);
+      dWold.push_back(w);
+      B.push_back(b);
+      b = 0.0;
+      dB.push_back(b);
+      dBcurr.push_back(b);
+      dBold.push_back(b);
+      Delta.push_back(d1);
+      D.push_back(d2);
 
-                W.push_back(w);
-                w = 0.0;
-                dW.push_back(w);
-                dWcurr.push_back(w);
-                dWold.push_back(w);
-                B.push_back(b);
-                b = 0.0;
-                dB.push_back(b);
-                dBcurr.push_back(b);
-                dBold.push_back(b);
-                Delta.push_back(d1);
-                D.push_back(d2);
-    }
-        // max index of W as well as B is Nlayers-1
+
+    } // max index of W as well as B is Nlayers-1
 
 //------------------ Debugging ------------------------
         std::cout<<"The MLP has been created"<<std::endl;

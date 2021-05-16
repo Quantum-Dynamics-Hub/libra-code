@@ -30,8 +30,9 @@ void export_NeuralNetwork_objects(){
 int (NeuralNetwork::*ScaleTrainingData1)(int,int)                                         = &NeuralNetwork::ScaleTrainingData;
 int (NeuralNetwork::*ScaleTrainingData2)(int,int,boost::python::list,boost::python::list) = &NeuralNetwork::ScaleTrainingData;
 
-int (NeuralNetwork::*Propagate1)(const MATRIX&, MATRIX&)                                  = &NeuralNetwork::Propagate;
-int (NeuralNetwork::*Propagate2)(boost::python::list,boost::python::list&)        = &NeuralNetwork::Propagate;
+
+//int (NeuralNetwork::*Propagate1)(const MATRIX&, MATRIX&)                                  = &NeuralNetwork::Propagate;
+//int (NeuralNetwork::*Propagate2)(boost::python::list,boost::python::list&)        = &NeuralNetwork::Propagate;
 int (NeuralNetwork::*Propagate3)(const MATRIX&, MATRIX&, MATRIX&)                          = &NeuralNetwork::Propagate;
 int (NeuralNetwork::*Propagate4)(boost::python::list,boost::python::list&,boost::python::list&)        = &NeuralNetwork::Propagate;
 
@@ -163,40 +164,73 @@ ExportANN_docstring += tmp;
   void (NeuralNetwork::*expt_set_v2)(boost::python::dict)   = &NeuralNetwork::set;
 
 
-    class_<NeuralNetwork>("NeuralNetwork",init<>())
-        .def("CreateANN",&NeuralNetwork::CreateANN)
-        .def("ShowANN",&NeuralNetwork::ShowANN)
+  vector<MATRIX> (NeuralNetwork::*expt_propagate_v1)(MATRIX& input) = &NeuralNetwork::propagate;
+  vector<MATRIX> (NeuralNetwork::*expt_derivatives_v1)(MATRIX& input) = &NeuralNetwork::derivatives;
+  double (NeuralNetwork::*expt_back_propagate_v1)(vector<MATRIX>& Y, MATRIX& target) = &NeuralNetwork::back_propagate;
+  double (NeuralNetwork::*expt_error_v1)(MATRIX& input, MATRIX& target) = &NeuralNetwork::error;
 
 
-        .def("ExportANN",&NeuralNetwork::ExportANN,ExportANN_docstring.c_str())
-        .def("ImportANN",&NeuralNetwork::ImportANN,ImportANN_docstring.c_str())
-        .def("set", expt_set_v1, set_docstring.c_str())
-        .def("set", expt_set_v2, set_docstring.c_str())
-     
-        .def("ClearTrainingData",&NeuralNetwork::ClearTrainingData)      
-        .def("AddTrainingData",&NeuralNetwork::AddTrainingData)  
+  void (NeuralNetwork::*expt_init_weights_biases_uniform_v1)
+  (Random& rnd, double left_w, double right_w, double left_b, double right_b) = &NeuralNetwork::init_weights_biases_uniform;
+  void (NeuralNetwork::*expt_init_weights_biases_normal_v1)
+  (Random& rnd, double scaling_w, double shift_w, double scaling_b, double shift_b) = &NeuralNetwork::init_weights_biases_normal;
 
-        .def("SetTrainingData",&NeuralNetwork::SetTrainingData,set_training_data_docstring.c_str())      
-        .def("NormalizeTrainingData",&NeuralNetwork::NormalizeTrainingData,NormalizeTrainingData_docstring.c_str())
-        .def("ScaleTrainingData",ScaleTrainingData1,ScaleTrainingData1_docstring.c_str())
-        .def("ScaleTrainingData",ScaleTrainingData2,ScaleTrainingData2_docstring.c_str())
-        .def("NormalizeAndScaleTrainingData",&NeuralNetwork::NormalizeAndScaleTrainingData)
-        .def("NormalizeAndTransformTrainingData", &NeuralNetwork::NormalizeAndTransformTrainingData)
-        .def("CropTrainingData",&NeuralNetwork::CropTrainingData)
-
-        .def("Propagate",Propagate1)
-        .def("Propagate",Propagate2)
-        .def("Propagate",Propagate3)
-        .def("Propagate",Propagate4)
-        .def("ANNTrain",&NeuralNetwork::ANNTrain)
-        .def("LearningHistory",&NeuralNetwork::LearningHistory)
+  vector<double> (NeuralNetwork::*expt_train_v1)
+  (Random& rnd, bp::dict params, MATRIX& inputs, MATRIX& targets) = &NeuralNetwork::train;
 
 
-        .def_readwrite("Inputs",&NeuralNetwork::Inputs)
-        .def_readwrite("Outputs",&NeuralNetwork::Outputs)
-        .def_readwrite("B",&NeuralNetwork::B)
+  class_<NeuralNetwork>("NeuralNetwork",init<>())
+      .def(init< vector<int>& >())
+      .def("CreateANN",&NeuralNetwork::CreateANN)
+      .def("ShowANN",&NeuralNetwork::ShowANN)
+
+
+      .def("ExportANN",&NeuralNetwork::ExportANN,ExportANN_docstring.c_str())
+      .def("ImportANN",&NeuralNetwork::ImportANN,ImportANN_docstring.c_str())
+      .def("set", expt_set_v1, set_docstring.c_str())
+      .def("set", expt_set_v2, set_docstring.c_str())
+   
+      .def("ClearTrainingData",&NeuralNetwork::ClearTrainingData)      
+      .def("AddTrainingData",&NeuralNetwork::AddTrainingData)  
+
+      .def("SetTrainingData",&NeuralNetwork::SetTrainingData,set_training_data_docstring.c_str())      
+      .def("NormalizeTrainingData",&NeuralNetwork::NormalizeTrainingData,NormalizeTrainingData_docstring.c_str())
+      .def("ScaleTrainingData",ScaleTrainingData1,ScaleTrainingData1_docstring.c_str())
+      .def("ScaleTrainingData",ScaleTrainingData2,ScaleTrainingData2_docstring.c_str())
+      .def("NormalizeAndScaleTrainingData",&NeuralNetwork::NormalizeAndScaleTrainingData)
+      .def("NormalizeAndTransformTrainingData", &NeuralNetwork::NormalizeAndTransformTrainingData)
+      .def("CropTrainingData",&NeuralNetwork::CropTrainingData)
+
+//      .def("Propagate",Propagate1)
+//      .def("Propagate",Propagate2)
+      .def("Propagate",Propagate3)
+      .def("Propagate",Propagate4)
+      .def("ANNTrain",&NeuralNetwork::ANNTrain)
+      .def("LearningHistory",&NeuralNetwork::LearningHistory)
+
+      .def("propagate",expt_propagate_v1)
+      .def("derivatives",expt_derivatives_v1)
+      .def("back_propagate",expt_back_propagate_v1)
+      .def("error",expt_error_v1)
+
+      .def("init_weights_biases_uniform",expt_init_weights_biases_uniform_v1)
+      .def("init_weights_biases_normal",expt_init_weights_biases_normal_v1)
+
+      .def("train",expt_train_v1)
          
-    ;
+
+
+
+      .def_readwrite("Inputs",&NeuralNetwork::Inputs)
+      .def_readwrite("Outputs",&NeuralNetwork::Outputs)
+      .def_readwrite("B",&NeuralNetwork::B)
+      .def_readwrite("dB",&NeuralNetwork::dB)
+      .def_readwrite("W",&NeuralNetwork::W)
+      .def_readwrite("dW",&NeuralNetwork::dW)
+      .def_readwrite("Nlayers",&NeuralNetwork::Nlayers)
+      .def_readwrite("Npe",&NeuralNetwork::Npe)
+       
+  ;
 
 }
 

@@ -56,7 +56,7 @@ clrs_index = ["11", "21", "31", "41", "12", "22", "32", "13","23", "14", "24"]
 
 
 
-def plot_map(ax, x_grid, y_grid, z_values, colormap="plasma", resolution=30j):
+def plot_map(ax, x_grid, y_grid, z_values, colormap="plasma", resolution=30j, savefig=0, figure_name=None):
     """
     This is a function to plot 2D functions
 
@@ -75,6 +75,10 @@ def plot_map(ax, x_grid, y_grid, z_values, colormap="plasma", resolution=30j):
             Options include: "plasma" (default), "Blues", "viridis", "binary", "hot", etc.
 
         resolution ( complex, imaginary ): the degree of extra-granulation in the plotting interpolation
+
+        savefig ( int ):  0 - don't save the figure as a file, 1 - do save it
+
+        figure_name ( string ): the name of the file to where the figure is to be saved (only is used if savefig == 1)
 
 
     Returns:
@@ -117,6 +121,10 @@ def plot_map(ax, x_grid, y_grid, z_values, colormap="plasma", resolution=30j):
     ax.imshow(zs.T, cmap=colormap, extent=extent, interpolation='Lanczos', origin='lower')
     #ax.plot(xs0, ys0, "bo")
     ax.colorbar()
+
+    if savefig == 1:
+        ax.savefig(figure_name)
+
 
 
 

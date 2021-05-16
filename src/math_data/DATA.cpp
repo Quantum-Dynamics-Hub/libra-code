@@ -399,6 +399,57 @@ int DATA::LinearTransformData(double sc_fact,double sh){
 
   return 0;
 }
+
+
+
+int DATA::invLinearTransformData(){
+/**
+
+   1. shift by  -shift_amount,   reset shift to 0.0
+   2. scale by 1.0/scale_factor  reset scale to 1.0
+
+*/
+
+  int sz = Data.size();
+
+  double sc_fact = scale_factor;
+  double sh = shift_amount;
+
+  scale_factor = 1.0;
+  shift_amount = 0.0;
+
+  for(int i=0;i<sz;i++){
+      Data[i] = (Data[i] - sh )/sc_fact;
+  }
+
+  // Change corresponding estimators
+  if(is_ave){  ave = (ave - sh)/sc_fact; }
+  if(is_var){  var = var / (sc_fact * sc_fact);      }
+  if(is_sd) {  sd  = sd / sc_fact;   }
+  if(is_se) {  se  = se / sc_fact;   }
+  if(is_mse){  mse = mse / (sc_fact * sc_fact); }
+  if(is_rmse){ rmse= rmse / sc_fact; }
+
+  if(is_min_val && is_max_val && is_min_indx && is_max_indx){
+     if(sc_fact>=0.0) { min_val = (min_val - sh)/sc_fact;
+                        max_val = (max_val - sh)/sc_fact;
+                      }
+     else{              double tmp;
+                        int itmp;
+                        tmp = min_val;
+                        itmp = min_indx;
+                        min_val = (max_val - sh) / sc_fact;
+                        max_val = (tmp - sh) / sc_fact;
+                        min_indx = max_indx;
+                        max_indx = itmp;
+     }// else
+  }// if
+
+
+  return 0;
+}
+
+
 int DATA::ScaleData(double sc_fact){
 
   this->LinearTransformData(sc_fact,0.0);
@@ -435,7 +486,7 @@ int DATA::ShiftData(double sh){
   return 0;
 }
 int DATA::NormalizeData(){
-
+  /*
   double Ave,Var,Sd,Se,Mse,Mae,Rmse;
   if(is_ave&&is_sd){
   }else{
@@ -445,6 +496,10 @@ int DATA::NormalizeData(){
   if(Sd!=0.0){
   this->LinearTransformData((1.0/Sd),(-Ave/Sd));
   }
+  */
+  this->Calculate_Estimators();
+  this->LinearTransformData( 1.0/sd, (-ave/sd) );
+
 
   return 0;
 }

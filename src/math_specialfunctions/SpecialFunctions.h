@@ -106,6 +106,7 @@ MATRIX exp1_(MATRIX&,double);
 
 int merge_sort(vector< pair<int,double> >&, vector< pair<int,double> >&);
 boost::python::list merge_sort(boost::python::list inp);
+int merge_sort(vector< double >&, vector< double >&);
 
 
 MATRIX mean(MATRIX& X);

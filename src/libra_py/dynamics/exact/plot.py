@@ -52,6 +52,8 @@ import libra_py.units as units
 import libra_py.data_outs as data_outs
 import libra_py.data_conv as data_conv
 import libra_py.data_savers as data_savers
+import libra_py.data_read as data_read
+import libra_py.data_visualize as data_visualize
 
 
 
@@ -444,4 +446,390 @@ def plot_hdf5(plot_params, ax=plt, use_default_ax=True):
             
         ax.show()
         ax.close()
+        
+
+
+
+def plot_1D_png(ax, plt_params, prefix, snap, states,
+                data_type1="wfcr", data_type2="dens", data_type3="rep_0"):
+    """
+    This function plots the data (wavefunctions/probability densities) written by the 
+    `Wfcgrid2.print_wfc_1D` and `Wfcgrid2.print_reci_wfc_1D` functions 
+
+    Args: 
+        ax ( pyplot object ) : the plotting instance
+        plt_params ( dict ) : dictionary containing parameters controlling the plotting of the snapshots
+        prefix ( string ) : name of the prefix (directory/file) from which we will read in the data
+        snap ( int ) : index of the snapshot, a part of the file
+        states ( list of ints ): indices of the states to read
+        data_type1 ( string ): should be either "wfcr" for real wavefunction or "wfck" for the reciprocal one
+            [default: "wfcr"]
+        data_type2 ( string ): selector of the data type to print, should be one of the following: "dens" for the
+            probability density, "real" for the real component of the wavefunction or "imag" for the imaginary
+            part of the wavefunction [default: "dens"]
+        data_type3 ( sting ): selector of the wavefunction representation: "rep_0" for the diabatic wavefunction
+            "rep_1" for the adiabatic one [default: "rep_0"]
+             
+    Returns: 
+        string : the name of the png file produced
+        
+    Note:
+       The filename from which we are reading data should be of the following format:
+       {prefix}/{data_type1}_snap_{snap}_{data_type2}_{data_type3}
+ 
+    """
+    
+    plot_params = dict(plt_params)
+    
+    _colors = {}
+    _colors.update({"11": "#8b1a0e"})  # red       
+    _colors.update({"12": "#FF4500"})  # orangered 
+    _colors.update({"13": "#B22222"})  # firebrick 
+    _colors.update({"14": "#DC143C"})  # crimson   
+    _colors.update({"21": "#5e9c36"})  # green
+    _colors.update({"22": "#006400"})  # darkgreen  
+    _colors.update({"23": "#228B22"})  # forestgreen
+    _colors.update({"24": "#808000"})  # olive      
+    _colors.update({"31": "#8A2BE2"})  # blueviolet
+    _colors.update({"32": "#00008B"})  # darkblue  
+    _colors.update({"41": "#2F4F4F"})  # darkslategray
+
+    _clrs_index = ["11", "21", "31", "41", "12", "22", "32", "13","23", "14", "24"]
+
+    # Parameters and dimensions
+    critical_params = [  ] 
+    default_params = {  "colors":_colors, "clrs_index":_clrs_index,
+                        "x_size":24, "y_size":24, 
+                        "title":"Dynamics", "title_size":20,
+                        "x_label":"Time, a.u.", "y_label":"Probability density", "xy_label_size":20,
+                        "labels":["",""], "linewidth":[10, 10], "font_size":20, "xy_label_tick_size":16,
+                        "ylim":(0.0, 0.1), "xlim":(-15.0, 15.0),
+                        "lmargin":0.2, "rmargin":0.95, "bmargin":0.13, "tmargin":0.88,
+                        "show":False
+                     }
+    comn.check_input(plot_params, default_params, critical_params)
+    
+    _colors = plot_params["colors"]
+    _clrs_index = plot_params["clrs_index"]
+    x_size = plot_params["x_size"]
+    y_size = plot_params["y_size"]    
+    title = plot_params["title"]
+    title_size = plot_params["title_size"]    
+    x_label = plot_params["x_label"]    
+    y_label = plot_params["y_label"]
+    xy_label_size = plot_params["xy_label_size"]
+    xy_label_tick_size = plot_params["xy_label_tick_size"]    
+    labels = plot_params["labels"]
+    font_size = plot_params["font_size"]    
+    linewidth = plot_params["linewidth"]
+    xlim = plot_params["xlim"]
+    ylim = plot_params["ylim"]        
+    show = plot_params["show"]
+    lmargin = plot_params["lmargin"]
+    rmargin = plot_params["rmargin"]
+    bmargin = plot_params["bmargin"]
+    tmargin = plot_params["tmargin"]
+        
+        
+    ax.rc('axes', titlesize=title_size)      # fontsize of the axes title
+    ax.rc('axes', labelsize=xy_label_size)   # fontsize of the x and y labels
+    ax.rc('legend', fontsize=font_size)      # legend fontsize
+    ax.rc('xtick', labelsize=xy_label_tick_size)    # fontsize of the tick labels
+    ax.rc('ytick', labelsize=xy_label_tick_size)    # fontsize of the tick labels
+
+    ax.rc('figure.subplot', left=lmargin)
+    ax.rc('figure.subplot', right=rmargin)
+    ax.rc('figure.subplot', bottom=bmargin)
+    ax.rc('figure.subplot', top=tmargin)
+    
+    ax.xlim( xlim )
+    ax.ylim( ylim )
+    
+
+    #==== Read in the files ======
+    filename = F"{prefix}/{data_type1}_snap_{snap}_{data_type2}_{data_type3}"
+    
+    which_cols = [0]
+    nstates = len(states)
+    
+    for state in states:
+        which_cols.append(1+state)        
+    data = data_read.get_data_from_file2(filename, which_cols)
+    
+    #===== Setup the plotting =====                        
+    ax.figure(1, figsize=(x_size, y_size)) # dpi=300, frameon=False)    
+    ax.subplot(1, 1, 1)
+    ax.title(F"{title}" )
+    ax.xlabel(F"{x_label}")
+    ax.ylabel(F"{y_label}")
+    
+        
+    #====== Plot =======           
+    for i in range(nstates):          
+        ax.plot(data[0], data[1+i], label=F"{labels[i]}", 
+                linewidth=linewidth[i], color = _colors[_clrs_index[i]])   
+        ax.legend()
+    
+    filename = F"{prefix}/{snap}.png"
+    ax.savefig(filename, dpi=300)
+    if show:
+        ax.show()
+        
+    ax.close()# build gif
+    
+    return filename
+
+
+
+
+def make_animation_1D(prefix, snaps, states, outname, plt_params,
+                      data_type1="wfcr", data_type2="dens", data_type3="rep_0", do_remove=False):
+    """
+    This function reads in a series of the data files containing wavefunctions/probability densities as written by the 
+    `Wfcgrid2.print_wfc_1D` and `Wfcgrid2.print_reci_wfc_1D` functions, makes the snapshots and eventually an
+    animated gif
+
+    Args: 
+        prefix ( string ) : name of the prefix (directory/file) from which we will read in the data
+        snaps ( list of ints ) : indices of the files to be included in the processing
+        outname ( string ) : name of the file into which the animated gif is stored
+        plt_params ( dict ) : dictionary containing parameters controlling the plotting of the snapshots
+        data_type1 ( string ): should be either "wfcr" for real wavefunction or "wfck" for the reciprocal one
+            [default: "wfcr"]
+        data_type2 ( string ): selector of the data type to print, should be one of the following: "dens" for the
+            probability density, "real" for the real component of the wavefunction or "imag" for the imaginary
+            part of the wavefunction [default: "dens"]
+        data_type3 ( sting ): selector of the wavefunction representation: "rep_0" for the diabatic wavefunction
+            "rep_1" for the adiabatic one [default: "rep_0"]
+        do_remove ( boolean ): a flag to control whether to remove the intermediately generated .png files: True - do 
+            not remove them (e.g. you need the snapshots); False - remove them ( you don't care about those and want
+            to save space)
+             
+    Returns: 
+        None
+        
+    Note:
+       The filename from which we are reading data should be of the following format:
+       {prefix}/{data_type1}_snap_{snap}_{data_type2}_{data_type3}
+ 
+    """
+
+    import imageio
+    
+    if data_type1 not in ["wfcr", "wfck"]:
+        print(F"data_type1 should be one of the following: \"wfcr\", \"wfck\" ")
+        sys.exit(0)
+        
+    if data_type2 not in ["real", "imag", "dens"]:
+        print(F"data_type2 should be one of the following: \"real\", \"imag\" \"dens\" ")
+        sys.exit(0)        
+        
+    if data_type3 not in ["rep_0", "rep_1"]:
+        print(F"data_type3 should be one of the following: \"rep_0\", \"rep_1\" ")
+        sys.exit(0)                
+
+    filenames = []    
+    
+    for i in snaps:   
+        
+        filename = plot_1D_png(plt, plt_params, prefix, i, states, data_type1, data_type2, data_type3)                
+        filenames.append(filename)
+            
+    with imageio.get_writer(F"{prefix}/{outname}.gif", mode='I') as writer:
+        for filename in filenames:
+            image = imageio.imread(filename)
+            writer.append_data(image)
+                    
+    # Remove files
+    if do_remove:
+        for filename in set(filenames):
+            os.remove(filename)
+        
+
+
+def plot_2D_png(ax, plt_params, prefix, snap, state,
+                data_type1="wfcr", data_type2="dens", data_type3="rep_0"):
+    """
+    This function plots the data (wavefunctions/probability densities) written by the 
+    `Wfcgrid2.print_wfc_2D` and `Wfcgrid2.print_reci_wfc_2D` functions 
+
+    Args: 
+        ax ( pyplot object ) : the plotting instance
+        plt_params ( dict ) : dictionary containing parameters controlling the plotting of the snapshots
+        prefix ( string ) : name of the prefix (directory/file) from which we will read in the data
+        snap ( int ) : index of the snapshot, a part of the file
+        state ( int ): index of the states to read
+        data_type1 ( string ): should be either "wfcr" for real wavefunction or "wfck" for the reciprocal one
+            [default: "wfcr"]
+        data_type2 ( string ): selector of the data type to print, should be one of the following: "dens" for the
+            probability density, "real" for the real component of the wavefunction or "imag" for the imaginary
+            part of the wavefunction [default: "dens"]
+        data_type3 ( sting ): selector of the wavefunction representation: "rep_0" for the diabatic wavefunction
+            "rep_1" for the adiabatic one [default: "rep_0"]
+             
+    Returns: 
+        string : the name of the png file produced
+        
+    Note:
+       The filename from which we are reading data should be of the following format:
+       {prefix}/{data_type1}_snap_{snap}_state_{state}_{data_type2}_{data_type3}
+ 
+    """
+
+    
+    plot_params = dict(plt_params)
+    
+    _colors = {}
+    _colors.update({"11": "#8b1a0e"})  # red       
+    _colors.update({"12": "#FF4500"})  # orangered 
+    _colors.update({"13": "#B22222"})  # firebrick 
+    _colors.update({"14": "#DC143C"})  # crimson   
+    _colors.update({"21": "#5e9c36"})  # green
+    _colors.update({"22": "#006400"})  # darkgreen  
+    _colors.update({"23": "#228B22"})  # forestgreen
+    _colors.update({"24": "#808000"})  # olive      
+    _colors.update({"31": "#8A2BE2"})  # blueviolet
+    _colors.update({"32": "#00008B"})  # darkblue  
+    _colors.update({"41": "#2F4F4F"})  # darkslategray
+
+    _clrs_index = ["11", "21", "31", "41", "12", "22", "32", "13","23", "14", "24"]
+
+    # Parameters and dimensions
+    critical_params = [  ] 
+    default_params = {  "colormap":"plasma", "resolution":30j,
+                        "x_size":24, "y_size":24, 
+                        "title":"Dynamics", "title_size":20,
+                        "x_label":"Time, a.u.", "y_label":"Probability density", "xy_label_size":20,
+                        "font_size":20, "xy_label_tick_size":16,
+                        "ylim":(0.0, 0.1), "xlim":(-15.0, 15.0),
+                        "lmargin":0.2, "rmargin":0.95, "bmargin":0.13, "tmargin":0.88,
+                        "show":False
+                     }
+    comn.check_input(plot_params, default_params, critical_params)
+        
+    colormap = plot_params["colormap"]
+    resolution = plot_params["resolution"]
+    x_size = plot_params["x_size"]
+    y_size = plot_params["y_size"]    
+    title = plot_params["title"]
+    title_size = plot_params["title_size"]    
+    x_label = plot_params["x_label"]    
+    y_label = plot_params["y_label"]
+    xy_label_size = plot_params["xy_label_size"]
+    xy_label_tick_size = plot_params["xy_label_tick_size"]        
+    font_size = plot_params["font_size"]        
+    xlim = plot_params["xlim"]
+    ylim = plot_params["ylim"]        
+    show = plot_params["show"]
+    lmargin = plot_params["lmargin"]
+    rmargin = plot_params["rmargin"]
+    bmargin = plot_params["bmargin"]
+    tmargin = plot_params["tmargin"]
+        
+        
+    ax.rc('axes', titlesize=title_size)      # fontsize of the axes title
+    ax.rc('axes', labelsize=xy_label_size)   # fontsize of the x and y labels
+    ax.rc('legend', fontsize=font_size)      # legend fontsize
+    ax.rc('xtick', labelsize=xy_label_tick_size)    # fontsize of the tick labels
+    ax.rc('ytick', labelsize=xy_label_tick_size)    # fontsize of the tick labels
+
+    ax.rc('figure.subplot', left=lmargin)
+    ax.rc('figure.subplot', right=rmargin)
+    ax.rc('figure.subplot', bottom=bmargin)
+    ax.rc('figure.subplot', top=tmargin)
+    
+    ax.xlim( xlim )
+    ax.ylim( ylim )
+    
+
+    #==== Read in the files ======
+    filename = F"{prefix}/{data_type1}_snap_{snap}_state_{state}_{data_type2}_{data_type3}"        
+    x_grid, y_grid, z_values = data_read.read_2D_grid(filename)
+            
+    #===== Setup the plotting =====                        
+    ax.figure(1, figsize=(x_size, y_size)) # dpi=300, frameon=False)    
+    ax.subplot(1, 1, 1)
+    ax.title(F"{title}" )
+    ax.xlabel(F"{x_label}")
+    ax.ylabel(F"{y_label}")
+    
+            
+    #====== Plot =======               
+    data_visualize.plot_map(ax, x_grid, y_grid, z_values, colormap, resolution)
+    
+    filename = F"{prefix}/{snap}.png"
+    ax.savefig(filename, dpi=300)
+    if show:
+        ax.show()
+        
+    ax.close()# build gif
+    
+    return filename
+
+
+
+def make_animation_2D(prefix, snaps, state, outname, plt_params,
+                      data_type1="wfcr", data_type2="dens", data_type3="rep_0", do_remove=False):
+    """
+    This function reads in a series of the data files containing wavefunctions/probability densities as written by the 
+    `Wfcgrid2.print_wfc_2D` and `Wfcgrid2.print_reci_wfc_2D` functions, makes the snapshots and eventually an
+    animated gif
+
+    Args: 
+        prefix ( string ) : name of the prefix (directory/file) from which we will read in the data
+        snaps ( list of ints ) : indices of the files to be included in the processing
+        state ( int ): index of the states to read        
+        outname ( string ) : name of the file into which the animated gif is stored
+        plt_params ( dict ) : dictionary containing parameters controlling the plotting of the snapshots
+        data_type1 ( string ): should be either "wfcr" for real wavefunction or "wfck" for the reciprocal one
+            [default: "wfcr"]
+        data_type2 ( string ): selector of the data type to print, should be one of the following: "dens" for the
+            probability density, "real" for the real component of the wavefunction or "imag" for the imaginary
+            part of the wavefunction [default: "dens"]
+        data_type3 ( sting ): selector of the wavefunction representation: "rep_0" for the diabatic wavefunction
+            "rep_1" for the adiabatic one [default: "rep_0"]
+        do_remove ( boolean ): a flag to control whether to remove the intermediately generated .png files: True - do 
+            not remove them (e.g. you need the snapshots); False - remove them ( you don't care about those and want
+            to save space)
+             
+    Returns: 
+        None
+        
+    Note:
+       The filename from which we are reading data should be of the following format:
+       {prefix}/{data_type1}_snap_{snap}_state_{state}_{data_type2}_{data_type3}
+ 
+    """
+
+    import imageio 
+    
+    if data_type1 not in ["wfcr", "wfck"]:
+        print(F"data_type1 should be one of the following: \"wfcr\", \"wfck\" ")
+        sys.exit(0)
+        
+    if data_type2 not in ["real", "imag", "dens"]:
+        print(F"data_type2 should be one of the following: \"real\", \"imag\" \"dens\" ")
+        sys.exit(0)        
+        
+    if data_type3 not in ["rep_0", "rep_1"]:
+        print(F"data_type3 should be one of the following: \"rep_0\", \"rep_1\" ")
+        sys.exit(0)                
+
+    filenames = []    
+    
+    for i in snaps:   
+        
+        filename = plot_2D_png(plt, plt_params, prefix, i, state, data_type1, data_type2, data_type3)                
+        filenames.append(filename)
+            
+    with imageio.get_writer(F"{prefix}/{outname}.gif", mode='I') as writer:
+        for filename in filenames:
+            image = imageio.imread(filename)
+            writer.append_data(image)
+                    
+    # Remove files
+    if do_remove:
+        for filename in set(filenames):
+            os.remove(filename)
+
         

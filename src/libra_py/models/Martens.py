@@ -32,7 +32,7 @@ import libra_py.units as units
 class tmp:
     pass    
 
-def model1(q, params):
+def model1(q, params, full_id=None):
     """
 
     The first of the two model potential described by L. Wang, C.C. Martens, 
@@ -82,8 +82,15 @@ def model1(q, params):
         d1ham_dia.append( CMATRIX(1,1) )
         dc1_dia.append( CMATRIX(1,1) )
 
-    x = q.get(0)
-    y = q.get(1)
+
+    indx = 0
+    if full_id !=None:
+        Id = Cpp2Py(full_id)
+        indx = Id[-1]
+
+    x = q.col(indx).get(0)
+    y = q.col(indx).get(1)
+
     x2 = x*x
     y2 = y*y
 
@@ -112,7 +119,7 @@ def model1(q, params):
     return obj
 
 
-def model2(q, params):
+def model2(q, params, full_id=None):
     """
 
     The second of the two model potential described by L. Wang, C.C. Martens, 
@@ -166,8 +173,14 @@ def model2(q, params):
         d1ham_dia.append( CMATRIX(1,1) )
         dc1_dia.append( CMATRIX(1,1) )
 
-    x = q.get(0)
-    y = q.get(1)
+    indx = 0
+    if full_id !=None:
+        Id = Cpp2Py(full_id)
+        indx = Id[-1]
+
+    x = q.col(indx).get(0)
+    y = q.col(indx).get(1)
+
     x2 = x*x
     y2 = y*y
 

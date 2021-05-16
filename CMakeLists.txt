@@ -73,6 +73,38 @@ MESSAGE("Found Boost include directory: ")
 MESSAGE("${Boost_INCLUDE_DIRS}")
 
 
+
+FIND_PACKAGE(Eigen3)
+IF(EIGEN3_FOUND)
+  INCLUDE_DIRECTORIES("${EIGEN3_INCLUDE_DIR}")   
+  MESSAGE("Found Eigen3 include directory: ")
+  MESSAGE("${EIGEN3_INCLUDE_DIR}")
+ELSEIF(NOT EIGEN3_FOUND)
+  MESSAGE(FATAL_ERROR "Unable to find Eigen3")
+ENDIF()
+
+
+SET(EIGEN3_INCLUDE_DIRS "${EIGEN3_INCLUDE_DIR}")
+
+# Remove CMakeCache.txt from the previous build, if you get an error finding libint2 due to problems 
+# in finding Eigen3
+
+# Libint2 2.7.0 CONFIG REQUIRED COMPONENTS shared gss e5 g5
+#FIND_PACKAGE(Libint2 MODULE 2.7.0)
+FIND_PACKAGE(Libint2 CONFIG 2.7.0 REQUIRED COMPONENTS shared gss e5 g5)
+IF(Libint2_FOUND)
+  INCLUDE_DIRECTORIES("${Libint2_INCLUDE_DIRS}")   
+  MESSAGE("Found Libint2 include directory: ")
+  MESSAGE("${Libint2_INCLUDE_DIRS}")
+  MESSAGE("Found Libint2_LIBRARIES: ")
+  MESSAGE("${Libint2_LIBRARIES}")
+  MESSAGE("Found Libint2_LIBRARY: ")
+  MESSAGE("${Libint2_LIBRARY}")
+ELSEIF(NOT Libint2_FOUND)
+  MESSAGE(FATAL_ERROR "Unable to find correct libint2")
+ENDIF()
+
+
 #
 # GNU compiler definitions
 #

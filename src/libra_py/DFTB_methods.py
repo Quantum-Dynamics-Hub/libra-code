@@ -34,6 +34,11 @@ from . import units
 from . import scan
 from . import regexlib as rgl
 
+from libra_py import CP2K_methods
+import numpy as np
+
+
+
 
 def get_energy_forces(filename, nat):
     """Get forces from the input file 
@@ -328,7 +333,7 @@ def xyz_traj2gen_ovlp(infile, outfile, md_iter1, md_iter2, sys_type):
 
 
 
-def make_dftb_input(dftb_input_template_filename, istate):
+def make_dftb_input(dftb_input_template_filename, istate, timestep=-1):
     """
     This function creates an input file for DFTB+ package from a template file,
     it changes several placeholder lines to ensure the calculations are done
@@ -340,6 +345,10 @@ def make_dftb_input(dftb_input_template_filename, istate):
             
         istate ( int ): the index of the state, for which the calculations will be carried out
         
+        timestep ( int ): the index of a given timestep along a MD trajectory. If not provided (-1),
+                          then the defaul name of "tmp.gen" will be used as the coordinate file name.
+                          If a time index is given, the name will be "coord-<timestep>.gen".
+
     Returns:
         None :  just creates the files
         
@@ -363,8 +372,11 @@ def make_dftb_input(dftb_input_template_filename, istate):
         
         if len(dftb_input_template_line) > 0:
                     
-            if dftb_input_template_line[0] == "<<<":
+            if dftb_input_template_line[0] == "<<<" and timestep == -1:
                 dftb_input.write( '    <<< "tmp.gen"\n ')
+
+            elif dftb_input_template_line[0] == "<<<" and timestep != -1:
+                dftb_input.write( '    <<< "coord-'+str(timestep)+'.gen"\n ')
 
             elif dftb_input_template_line[0] == "StateOfInterest":
                 dftb_input.write( F"    StateOfInterest    = {istate}\n" )
@@ -560,4 +572,272 @@ def run_dftb_adi(q, params_, full_id):
     
                     
     return obj
+
+
+def dftb_distribute( istep, fstep, nsteps_this_job, trajectory_xyz_file, dftb_input, waveplot_input, curr_job_number ):
+    """
+    Distributes dftb jobs for trivial parallelization 
+
+    Make sure that your dftb input file has absolute paths to the following input parameters:
+
+        SlaterKosterFiles = Type2FileNames {
+          Prefix = "/panasas/scratch/grp-alexeyak/brendan/dftbp_development/"
+          Separator = "-"
+          Suffix = ".skf"
+        }
+
+    Args:
+        
+        istep (integer): The initial time step in the trajectory xyz file.
+
+        fstep (integer): The final time step in the trajectory xyz file.
+
+        nsteps_this_job (integer): The number of steps for this job.
+
+        trajectory_xyz_file (string): The full path to trajectory xyz file.
+
+        dftb_input (string): the dftb_input_template.hsd file
+
+        waveplot_input (string): the input file for the waveplot subpackage of dftbplus for generating cubefiles
+
+        curr_job_number (integer): The current job number.
+
+    Returns:
+
+        None
+
+    """
+
+    # Now we need to distribute the jobs into job batches
+    # First, make a working directory where the calculations will take place
+    os.chdir("wd")
+
+    nsteps = fstep - istep + 1
+    njobs  = int( nsteps / nsteps_this_job )
+
+    # Initialize the curr_step to istep
+    curr_step = istep
+
+    # Make the job directory folders
+    os.system("mkdir job"+str(curr_job_number)+"")
+    os.chdir("job"+str(curr_job_number)+"")
+    # Copy the trajectory file and input template there
+    os.system("cp ../../"+trajectory_xyz_file+" .")
+    os.system("cp ../../"+dftb_input+" .")
+    os.system("cp ../../"+waveplot_input+" .")
+
+    # Now, we need to edit the submit file
+    # Now, in jobs folder njob, we should do only a certain number of steps
+    for step in range( nsteps_this_job ):
+
+        # extract the curr_step xyz coordianates from the trajectory file and write it to another xyz file
+        CP2K_methods.read_trajectory_xyz_file( trajectory_xyz_file, curr_step )
+        curr_step += 1
+
+    # Go back to the main directory
+    os.chdir("../../")
+
+
+
+def get_dftb_ks_energies( params ):
+    """
+    This function reads the band.out file generated from a dftb+ computations. The band.out file
+    stores the ks energies and their occupation. 
+
+    Args:
+
+    Returns:
+
+        E (1D numpy array): The vector consisting of the KS energies from min_band to max_band.
+        
+        total_energy (float): The total energy obtained from the log file.
+
+    """ 
+
+    # Critical parameters
+    critical_params = [ "logfile_name", "min_band", "max_band" ]
+    # Default parameters
+    default_params = { "time":0, "spin": 1}
+    # Check input
+    comn.check_input(params, default_params, critical_params)
+
+    dftb_outfile_name = params["logfile_name"]
+
+    # Time step, for molecular dynamics it will read the energies
+    # of time step 'time', but for static calculations the time is set to 0
+    time = params["time"]
+
+    # The minimum state number
+    min_band = params["min_band"] # ks_orbital_indicies[0]
+    # The maximum state number
+    max_band = params["max_band"] # ks_orbital_indicies[-1]
+
+    spin = params["spin"]
+
+    # First openning the file and reading its lines
+    f = open( dftb_outfile_name, 'r' )
+    lines = f.readlines()
+    f.close()
+
+    # The lines containing the energies of the occupied states
+    occ_energies   = []
+    # The lines containing the energies of the unoccupied states
+    unocc_energies = []
+    # Set the total energy to zero
+    total_energy = 0.0
+
+    # For the dftb output file band.out, start from line 1
+    for i in range(1,len(lines)):
+
+        if i >= min_band and i < max_band+1:
+   
+            b = lines[i].strip().split()
+            if float(b[2]) > 0.0:
+                occ_energies.append( float(b[1]) * units.ev2Ha )
+            else:
+                unocc_energies.append( float(b[1]) * units.ev2Ha )
+
+    # Turn them into numpy arrays
+    occ_energies   = np.array(occ_energies)
+    unocc_energies = np.array(unocc_energies)
+    # Concatenate the occupied and unoccpied energies so we can choose from min_band to max_band
+    ks_energies = np.concatenate( (occ_energies, unocc_energies) )
+    print("ks_energies", ks_energies)
+
+    return ks_energies, total_energy       
+
+
+
+
+def cube_generator_dftbplus( project_name, time_step, min_band, max_band, waveplot_exe, isUKS ):
+    """
+    This function generates the cube files by first forming the 'fchk' file from 'chk' file.
+    Then it will generate the cube files from min_band to max_band the same as CP2K naming.
+    This will helps us to use the read_cube and integrate_cube functions easier.
+
+    Args:
+
+        project_name (string): The project_name.
+
+        time_step (integer): The time step.
+
+        min_band (integer): The minimum state number.
+
+        max_band (integer): The maximum state number.
+
+        waveplot_exe (str): Location of the executable for the waveplot program of the dftb+ software package
+
+        isUKS (integer): The unrestricted spin calculation flag. 1 is for spin unrestricted calculations.
+                         Other numbers are for spin restricted calculations
+
+    Returns:
+
+        None
+
+    """
+
+    # Make the cubefiles. For dftb+, this simply means executing the waveplot program
+    # The min and max band are already defind in the waveplot template. So, we just use 
+    # them here for renaming the cubefiles
+    os.system(waveplot_exe)
+
+    # For now, only spin-restricted
+    for state in range(min_band,max_band+1):
+        # Use cp2k names because the rest of the code expects this format
+        state_name = CP2K_methods.state_num_cp2k(state)
+        cube_name = '%s-%d-WFN_%s_1-1_0.cube'%(project_name, time_step, state_name)
+        print('Renaming cube for state %d'%state)
+        # Now, rename the cubefile from what waveplots calls it to the standard format
+        os.system("mv *"+str(state)+"-real.cube "+cube_name)
+
+
+
+
+def read_dftbplus_TRA_file( params ):
+    """
+    This function reads TRA.dat files generated from TD-DFTB calculations using DFTB+ and returns 
+    the TD-DFTB excitation energies and CI-like coefficients
+    
+    Args:
+        params ( dictionary ): parameters dictionary 
+        
+            logfile_name ( string ): this is actualyl the TRA.dat file, but we keep it as logfile_name for ease, as many other similar
+                                     type functions (for cp2k, gaussian) rely on this format internally.
+            number_of_states ( int ): how many ci states to consider
+            tolerance ( float ): the tolerance for accepting SDs are members of the CI wavefunctions           
+            isUKS ( Boolean ): flag for whether or not a spin-polarized Kohn-Sham basis is being used. TRUE means
+                               that a spin-polarized Kohn-Sham basis is being used.
+    Returns:
+        excitation_energies ( list ): The excitation energies in the log file.      
+        ci_basis ( list ): The CI-basis configuration.
+        ci_coefficients ( list ): The coefficients of the CI-states.
+        spin_components (list): The spin component of the excited states.
+        
+    """
+
+    # Critical parameters
+    critical_params = [ "logfile_name", "number_of_states" ]
+    # Default parameters
+    default_params = { "tolerance":0.001, "isUKS": 0}
+    # Check input
+    comn.check_input(params, default_params, critical_params)
+
+    logfile_name = params["logfile_name"]
+    number_of_states = int(params["number_of_states"])
+    tolerance = float(params["tolerance"])
+    isUKS = int(params["isUKS"])
+
+    f = open( logfile_name, 'r' )
+    lines = f.readlines()
+    f.close()
+
+    # Make lists for excitation energies and the lines where the keyword "Energy" is
+    excitation_energies = []
+    energy_lines = []
+
+    for i in range( 0, len(lines) ):
+        tmp_line = lines[i].split()
+        if 'Energy' in tmp_line:
+            print("Energy")
+            # When found the line in which contains 'Energy'
+            excitation_energies.append( float(tmp_line[2]) )
+            energy_lines.append( i )
+        elif len( energy_lines ) == number_of_states:
+            break 
+
+    #print( energy_lines )
+    #sys.exit(0)   
+
+    # Obtain CI-like coefficients
+    # Spin-unpolarized only as of 11/6/2020
+    # Start from 4 lines after finding the line contaning 'Energy'. This is how it is in DFTB v. 19.1
+    nlines_to_skip = 4
+
+    ci_basis = []
+    ci_coefficients = []
+    spin_components = []
+    for i in energy_lines:
+
+        tmp_spin  = []
+        tmp_state = []
+        tmp_state_coefficients = []
+        for j in range( i + nlines_to_skip, len(lines) ):
+            tmp_line = lines[j].split()
+            if len( tmp_line ) == 0:
+                break
+            else:
+                ci_coefficient = float( tmp_line[3] )
+                if ci_coefficient**2 > tolerance:
+                    tmp_spin.append( "alp" )
+                    tmp_state.append( [ int( tmp_line[0] ), int( tmp_line[2] ) ]  )
+                    tmp_state_coefficients.append( ci_coefficient  )
+
+        # Append the CI-basis and and their coefficients for
+        # this state into the ci_basis and ci_coefficients lists
+        ci_basis.append( tmp_state )
+        ci_coefficients.append( tmp_state_coefficients )
+        spin_components.append( tmp_spin )
+
+    return excitation_energies[0:number_of_states], ci_basis, ci_coefficients, spin_components
+
 

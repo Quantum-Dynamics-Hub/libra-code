@@ -290,5 +290,48 @@ def get_data_from_file2(filename, cols):
     return res
 
    
-  
+def read_2D_grid(filename):
+    """
+    This function reads the 2D map pyplot formatted data from a file.
+    
+    Args:
+        filename (sting) : name of the file to read
+        
+    Returns:
+        double list, double list, list of lists of doubles:
+            X grid, Y grid, and the Z values of the grid points
+    
+    """
+    x,y,z = [], [], []
+    
+    f = open(filename, "r")
+    A = f.readlines()
+    f.close()
+    
+    #========== Determine the numbers =====
+    nlines = len(A)        
+    ny = 0
+    line_size = len(A[ny].split())    
+    while line_size > 0:        
+        ny += 1
+        line_size = len(A[ny].split())
+                        
+    nx = int((nlines + 1)/(ny + 1))
+        
+    #========== Get the grids =====
+    for ix in range(nx):
+        x.append( float(A[ix*(ny+1)].split()[0]) )
+        
+    for iy in range(ny):
+        y.append( float(A[iy].split()[1]) )
+    
+    for ix in range(nx):
+        z_x = []
+        for iy in range(ny):
+            z_xy = float(A[ix*(ny+1)+iy].split()[2])
+            z_x.append(z_xy)
+        z.append(z_x)
+        
+    return x, y, z
+          
    

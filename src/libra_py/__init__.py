@@ -1,5 +1,5 @@
 #***********************************************************
-# * Copyright (C) 2016-2020 Alexey V. Akimov
+# * Copyright (C) 2016-2021 Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
@@ -10,6 +10,7 @@
 __all__ = ["dynamics",
            "models",
            "workflows",
+           "recipes",
            "acf",
            "autoconnect",
            "build",
@@ -37,6 +38,7 @@ __all__ = ["dynamics",
            "init_system", 
            "influence_spectrum",
            "LAMMPS_methods",
+           "libra_executable",
            "LoadGAFF",
            "LoadMMFF94",
            "LoadMolecule",

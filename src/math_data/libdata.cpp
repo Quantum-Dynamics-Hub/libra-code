@@ -40,14 +40,13 @@ void export_Data_objects(){
   int (DATA::*expt_Calculate_MiniMax_v1)() = &DATA::Calculate_MiniMax;
 
   class_<DATA>("DATA",init<>())
+      .def(init<const DATA&>())
       .def(init<boost::python::list>())
       .def("__copy__", &generic__copy__<DATA>)
       .def("__deepcopy__", &generic__deepcopy__<DATA>)
 
-//      .def("Calculate_Estimators",&DATA::Calculate_Estimators)
-//      .def("Calculate_MiniMax",&DATA::Calculate_MiniMax)
-
       .def("LinearTransformData", &DATA::LinearTransformData)
+      .def("invLinearTransformData", &DATA::invLinearTransformData)
       .def("ScaleData", ScaleData1)
       .def("ScaleData", ScaleData2)
       .def("ShiftData", &DATA::ShiftData)

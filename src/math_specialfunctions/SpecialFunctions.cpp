@@ -1507,8 +1507,56 @@ boost::python::list merge_sort(boost::python::list inp){
  
   return res;
 
-
 }
+
+
+
+int merge_sort(vector< double >& in, vector< double >& out){
+
+  if(out.size()>0){ out.clear(); }
+  int sz = in.size();
+  if(sz==0){ }
+  else if(sz==1){ out = in; }
+  else{
+
+    out = vector<double>(sz, 0.0);
+
+    // Divide in into 2 blocks of approximately same size each
+    int half = sz/2;
+    vector< double > in1(half, 0.0);
+    vector< double > out1(half, 0.0);
+    vector< double > in2(sz-half, 0.0);
+    vector< double > out2(sz-half, 0.0);
+
+    for(int i=0;i<half;i++){ in1[i] = in[i]; }
+    merge_sort(in1,out1);
+       
+    for(int i=half;i<sz;i++){ in2[i-half] = in[i]; }
+    merge_sort(in2,out2); 
+      
+    // Now merge two parts
+    int cl,cr, indx; cl = 0; cr = half; indx = 0;
+    while((cl<half) && (cr<sz)){
+ 
+    /// EXTREMELY IMPORTANT !!!  This simple, slight difference - the use of < or <= makes HUGE differnece
+    /// The "good" version maximally preserves the ordering of orbitals, so one does not run into trouble of alternating
+    /// charges - this also leads to symmetric charge distribution in unrestricted formulations even without population smearing
+    /// I think it is even more than that - this can lead to convergence (or faster convergence), while the wrong
+    /// method may lead to either non-convergent scheme or to sifnificantly slower convergenc.
+
+      if(out1[cl] <= out2[cr-half] ){ out[indx] = out1[cl]; cl++; indx++; }  ///< <-- This is good
+
+    /// The "bad" version will alternate order of nearby orbitals
+    /// It is here only for the purpose of "demonstration of pathological implementation"
+      else{ out[indx] = out2[cr-half]; cr++; indx++; }
+    } 
+    while(cl<half){ out[indx] = out1[cl]; cl++; indx++; }
+    while(cr<sz)  { out[indx] = out2[cr-half]; cr++; indx++; }
+  }
+  return 0;
+
+}// int merge_sort(vector< double >& in, vector< double >& out)
+
 
 vector< vector<int> > permutations_reiteration(vector<int>& given_list, int size, int num_elements, vector< vector<int> >& list_of_permutations){
     /*

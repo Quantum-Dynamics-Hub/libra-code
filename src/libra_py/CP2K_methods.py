@@ -27,9 +27,11 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-
-
 import util.libutil as comn   
+
+from libra_py import data_outs
+from libra_py import units
+import math
 
 
 def ndigits( integer_number: int ):
@@ -139,6 +141,7 @@ def cube_file_names_cp2k( params ):
     max_band  = params["max_band"]
     curr_step = params["curr_step"]
     isUKS = params["isUKS"]
+    es_software = params["es_software"] 
 
     # isUKS needs to be epressed as a string, even though it is used as a Boolean in other parts of the workflows
     spin = []
@@ -157,16 +160,29 @@ def cube_file_names_cp2k( params ):
  
         # For the current time step "curr_step"
         if isUKS == 1:
-            cube_file_name_of_band_i = str('cubefiles/%s-%d-WFN_%s_%d-1_0.cube' % ( project_name, curr_step, state_num, spin[0] ) )
-            cube_file_name_of_band_j = str('cubefiles/%s-%d-WFN_%s_%d-1_0.cube' % ( project_name, curr_step, state_num, spin[1] ) )
-            cube_file_names.append( cube_file_name_of_band_i )
-            cube_file_names.append( cube_file_name_of_band_j )
+
+            if es_software == "cp2k" or es_software == "gaussian":
+
+                cube_file_name_of_band_i = str('cubefiles/%s-%d-WFN_%s_%d-1_0.cube' % ( project_name, curr_step, state_num, spin[0] ) )
+                cube_file_name_of_band_j = str('cubefiles/%s-%d-WFN_%s_%d-1_0.cube' % ( project_name, curr_step, state_num, spin[1] ) )
+                cube_file_names.append( cube_file_name_of_band_i )
+                cube_file_names.append( cube_file_name_of_band_j )
+
+            elif software == "dftb+":
+                print("\nReading cubefiles from spin-polarized calculations not currently available")
+                print("Exiting now")
+                sys.exit(0)
  
         else:
+
+            # Using the function state_num_cp2k to obtain the names of the .cube files for state 'i'.
+            state_num = state_num_cp2k( i )
             cube_file_name_of_band_i = str('cubefiles/%s-%d-WFN_%s_%d-1_0.cube' % ( project_name, curr_step, state_num, spin[0] ) )
             cube_file_names.append( cube_file_name_of_band_i )
-			
+		
     return cube_file_names
+
+
 
 
 
@@ -349,53 +365,25 @@ def cp2k_distribute( istep, fstep, nsteps_this_job, cp2k_positions, cp2k_input, 
 
     # total number of steps
     nsteps = fstep - istep + 1
+
     # number of jobs obtained from nsteps/nsteps_this_job
     njobs  = int( nsteps / nsteps_this_job ) 
+
     # The current step is set to istep
     curr_step = istep
+
     # Making the job directories in the wd folder like job0, job1, ...
     os.system("mkdir job"+str(curr_job_number)+"")
+
     # Chnage directory to job folder
     os.chdir("job"+str(curr_job_number)+"")
+
     # Copy the trajectory xyz file
     os.system("cp ../../"+cp2k_positions+" .")
+
     # Copy the CP2K sample input
     os.system("cp ../../"+cp2k_input+" .")
 
-    #os.system("cp ../../submit_template.slm .")
-    # Now, we need to edit the submit file
-
-    # Now, in job folder njob, we should do only a certain number of steps
-    for step in range( nsteps_this_job ):
-        # extract the curr_step xyz coordianates from the trajectory file and write it to another xyz file
-        read_trajectory_xyz_file( cp2k_positions, curr_step )
-
-        # Now, we need to edit the cp2k_input file
-        tmp = open(cp2k_input)
-        A   = tmp.readlines()
-        sz  = len(A)
-        tmp.close()
-        # create a new input file based on the curr step
-        tmp2 = open("step_%d"%curr_step+".inp","w"); tmp2.close()
-        for i in range(sz):
-
-            b = A[i].strip().split()
-
-            if not b:
-                continue
-
-            tmp2 = open("step_%d"%curr_step+".inp","a")
-            # Write the project name in the new input file
-            if b[0].lower() == "PROJECT".lower() or b[0].lower() == "PROJECT_NAME".lower():
-                tmp2.write("  %s %s \n" % ("PROJECT", "step_%d"%curr_step +"_sp"))
-            # Wite the coordinate file name obtained for the curr_step in the new input file
-            elif b[0].lower() == "COORD_FILE_NAME".lower():
-                tmp2.write("  %s %s \n" % ("COORD_FILE_NAME", "../../cp2k_atomic_coordinates/coord_%d"%curr_step+".xyz"))
-            else:
-                tmp2.write(A[i])
-            tmp2.close()
-
-        curr_step += 1
     # Go back to the main directory
     os.chdir("../../") 
 
@@ -497,12 +485,12 @@ def CP2K_input_static(cp2k_sample_energy_input: str, project_name: str,
             f.write(' %s'%project_name+'-%d'%time_step)
             f.write('\n')
         # Writing the WFN_RESTART_FILE_NAME of the previous time step
-        elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower().split() and ".wfn" in lines[i].lower():	
+        elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower().split() and ".wfn" in lines[i].lower() and "!" not in lines[i].lower():	
             f.write('    WFN_RESTART_FILE_NAME')	
             f.write(' %s'%project_name+'-%d'%(time_step-1)+'-RESTART.wfn')	
             f.write('\n')	
         # Writing the WFN_RESTART_FILE_NAME of the previous time step for the tddft calculation	
-        elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower().split() and ".tdwfn" in lines[i].lower():	
+        elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower().split() and ".tdwfn" in lines[i].lower() and "!" not in lines[i].lower():	
             f.write('    WFN_RESTART_FILE_NAME')	
             f.write(' %s'%project_name+'-%d'%(time_step-1)+'-RESTART.tdwfn')
             f.write('\n')
@@ -625,3 +613,494 @@ def read_energies_from_cp2k_log_file( params ):
     # Returning the energeis from min_band to max_band
     return ks_energies[min_band-1:max_band], total_energy
   
+
+def read_energies_from_cp2k_md_log_file( params ):
+    """
+    This function reads the energies from CP2K molecular dynamics log file for a specific spin. The difference between this function
+    and the function `read_energies_from_cp2k_log_file` is that it is more efficient and faster for molecular dynamics energy levels.
+    
+    Args:
+    
+        params (dictionary):
+    
+            logfile_name (str): The output file produced by CP2K
+        
+            init_time (int): The initial time step of the molecular dynamics. 
+                        
+            final_time (int): The final time step of the molecular dynamics. 
+                    
+            min_band (int): The minimum state number.
+
+            max_band (int): The maximum state number.
+ 
+            spin (int): This number can only accept two values: 1 for alpha and 2 for beta spin.
+        
+    Returns:
+    
+        E (1D numpy array): The vector consisting of the KS energies from min_band to max_band.
+        
+        total_energy (float): The total energy obtained from the log file.
+        
+    """
+    
+    # Critical parameters
+    critical_params = [ "logfile_name", "min_band", "max_band" ]
+    # Default parameters
+    default_params = { "spin": 1, "init_time": 0, "final_time": 1}
+    # Check input
+    comn.check_input(params, default_params, critical_params)
+    
+    cp2k_log_file_name = params["logfile_name"]
+    # Time step, for molecular dynamics it will read the energies
+    # of time step 'time', but for static calculations the time is set to 0
+    init_time = params["init_time"]
+    final_time = params["final_time"]
+    
+    # Koh-Sham orbital indicies
+    # ks_orbital_indicies = params["ks_orbital_indicies"]
+    
+    # The minimum state number
+    min_band = params["min_band"] # ks_orbital_indicies[0]
+    # The maximum state number
+    max_band = params["max_band"] # ks_orbital_indicies[-1]
+    
+    spin = params["spin"]
+    
+    # First openning the file and reading its lines
+    f = open( cp2k_log_file_name, 'r' )
+    lines = f.readlines()
+    f.close()
+    
+    # The lines containing 'Eigenvalues of the occupied subspace'
+    lines_with_occupied   = []
+    # The lines containing 'Eigenvalues of the unoccupied subspace'
+    lines_with_unoccupied = []
+    
+    # The lines containing the energies of the occupied states
+    occ_energies_last_line   = []
+    # The lines containing the energies of the unoccupied states
+    unocc_energies_last_line = []
+    # Set the total energy to zero
+    total_energy = 0.0
+
+    
+    for i in range(0,len(lines)):
+        # Find the occupied states lines
+        if 'Eigenvalues of the occupied subspace'.lower() in lines[i].lower():
+        
+            if  str( spin ) in lines[i].lower().split():
+                lines_with_occupied.append( i )
+                for j in range( i, len( lines ) ):
+                    # Find the last line number containing the energies for occupied states
+                    if len( lines[j].split() ) == 0:
+                        occ_energies_last_line.append( j )
+                        break
+        # Find the unoccupied states lines
+        if 'Eigenvalues of the unoccupied subspace'.lower() in lines[i].lower():
+            if  str( spin ) in lines[i].lower().split():
+                lines_with_unoccupied.append(i)
+                for j in range( i, len( lines ) ):
+                    # Find the last line number containing the energies for unoccupied states
+                    if len( lines[j].split() ) == 0:
+                        unocc_energies_last_line.append( j )
+                        break
+       
+        if "Total energy:" in lines[i]:  
+            total_energy = float( lines[i].split()[2] )
+
+    # All KS energies
+    KS_energies = []
+    for time in range(init_time,final_time):
+        # The Kohn-Sham energies
+        ks_energies = []
+        # Start after two lines of the 'Eigenvalues of the occupied subspace'
+        for i in range( lines_with_occupied[time] + 2, occ_energies_last_line[time] - 1 ):
+            for j in range(0,len(lines[i].split())):
+                ks_energies.append(float(lines[i].split()[j]))
+    
+        # Start after two lines of the 'Eigenvalues of the unoccupied subspace'
+        for i in range( lines_with_unoccupied[time] + 2, unocc_energies_last_line[time] ):
+            if not 'Reached'.lower() in lines[i].lower().split():
+                for j in range(0,len(lines[i].split())):
+                    ks_energies.append(float(lines[i].split()[j]))
+
+        # Now appending all the energies into a numpy array
+        ks_energies = np.array(ks_energies)
+        KS_energies.append(ks_energies[min_band-1:max_band])
+        
+    # Returning the energeis from min_band to max_band
+    return KS_energies, total_energy
+
+
+def read_molog_file(filename: str):
+    """
+    This function reads the coefficiets of the molecular orbitals printed out
+    during the MD or a single-point calculation for a structure using CP2K.
+    The format of the MO coefficients in CP2K is in column format so the coeffiecients
+    are written in a column. You can check this for an MOLog file printed out by CP2K.
+    The number of columns in MOLog file is based on the DFT%PRINT%MO%NDIGITS. The larger the 
+    number of digits (NDIGITS), the lower number of columns. This function is written in a way
+    that will automatically extract all the coefficients for all the eigenvectors and returns them
+    and their energies. It will also designed for reading the coefficients for MOs in different
+    K-points if used by user in the CP2K input (DFT%KPOINT).
+    
+    Args:
+    
+        filename (string): The name of the MOLog ile.
+        
+    Returns:
+    
+        mo_coeffs (list): The list containing the MO coefficients for each K-point.
+        
+        mo_energies (liest): The list containing the energies of MOs for each K-point.
+    
+    """
+    # first is there any k-point or not??
+    file = open(filename,'r')
+    lines = file.readlines()
+    file.close()
+    
+    is_kpoint = False
+    # The K-point will show itself at the beginning
+    # so since the files are large we only search the first 
+    # couple of lines, say first 10
+    for i in range(len(lines)):
+        if 'K-POINT' in lines[i]:
+            is_kpoint = True
+            break
+    
+    # set a timer
+    timer = time.time()
+    if is_kpoint:
+        # If K-point
+        print('Found K-point, will proceed reading the coefficients',
+        'for each K-POINT...')
+        # Lines with K-POINT
+        kpoint_lines = []
+        # Lines with Fermi energy
+        fermi_lines = []
+        for i in range(len(lines)):
+            if 'K-POINT'.lower() in lines[i].lower():
+                kpoint_lines.append(i)
+            if 'Fermi'.lower() in lines[i].lower():
+                fermi_lines.append(i)
+        # All the coefficients
+        mo_coeffs = []
+        # All the energies
+        mo_energies = []
+        # Loop over all the K-points
+        for i in range(len(kpoint_lines)):
+            # start lines
+            startl = kpoint_lines[i]
+            if i==len(kpoint_lines)-1:
+                # end line
+                endl = len(lines)
+            else:
+                endl = kpoint_lines[i+1]
+            # All the eigenvectors for each K-point
+            eigenvectors = []
+            # Lines with length less than or equal to 4
+            leq_4_lines = []
+            # Energies for a K-point
+            energies = []
+            # Find the leq_4_lines indicies
+            for j in range(startl, endl):
+                # lines with less than or equal to 4
+                tmp = lines[j].split()
+                if 0 < len(tmp)<=4:
+                    if 'Fermi' not in tmp and 'gap' not in tmp:
+                        leq_4_lines.append(j)
+            # The lines with MO number
+            mo_num_lines = leq_4_lines[0::3]
+            # The lines wit energies
+            energy_lines = leq_4_lines[1::3]
+            # Find the energies for a K-point
+            for j in energy_lines:
+                tmp = lines[j].split()
+                for k1 in range(4):
+                    try:
+                        energy = float(tmp[k1])
+                        energies.append(energy)
+                    except:
+                        pass
+            # Append the energies for this K-point
+            mo_energies.append(np.array(energies))
+            # Occupation lines, Needed to define the start and end
+            # lines to find the coefficients
+            occ_lines = leq_4_lines[2::3]
+            # Now reading the coefficients
+            for j in range(len(mo_num_lines)):
+                start_l = occ_lines[j]+1
+                if j==len(mo_num_lines)-1:
+                    end_l = fermi_lines[i]
+                else:
+                    end_l = mo_num_lines[j+1]
+                # This part with try and except make the code 
+                # to consider for different number of columns
+                # So the user does not need to specify the number
+                # of columns or the number of atomic orbitals etc...
+                for k1 in range(4,8):
+                    # Each eigenvector for this K-point
+                    eigenvector = []
+                    for k2 in range(start_l, end_l):
+                        tmp = lines[k2].split()
+                        try:
+                            eig_val = float(tmp[k1])
+                            eigenvector.append(eig_val)
+                        except:
+                            pass
+                    if len(eigenvector)!=0:
+                        # Now this variable contains all the eigenvectors 
+                        # for this K-point
+                        eigenvectors.append(np.array(eigenvector))
+            
+            print('Done reading coefficients for K-point %d'%(i+1))
+            # The mo_coeffs contains the eigenvectors. After this
+            # we start for another K-point.
+            mo_coeffs.append(eigenvectors)
+        
+    else:
+        # The same procedure as above for K-point with this 
+        # difference that there is no K-point
+        fermi_lines = []
+        for i in range(len(lines)):
+            if 'Fermi'.lower() in lines[i].lower():
+                fermi_lines.append(i)
+        
+        mo_coeffs = []
+        mo_energies = []
+        # start lines
+        startl = 3 
+        endl = fermi_lines[0] 
+        eigenvectors = []
+        leq_4_lines = []
+        energies = []
+        for j in range(startl, endl):
+            # lines with less than or equal to 4
+            tmp = lines[j].split()
+            if 0 < len(tmp)<=4:
+                if 'Fermi' not in tmp and 'gap' not in tmp:
+                    leq_4_lines.append(j)
+
+        mo_num_lines = leq_4_lines[0::3]
+        energy_lines = leq_4_lines[1::3]
+        for j in energy_lines:
+            tmp = lines[j].split()
+            for k1 in range(4):
+                try:
+                    energy = float(tmp[k1])
+                    energies.append(energy)
+                except:
+                    pass
+        mo_energies.append(np.array(energies))
+        occ_lines = leq_4_lines[2::3]
+        for j in range(len(mo_num_lines)):
+            start_l = occ_lines[j]+1
+            if j==len(mo_num_lines)-1:
+                end_l = fermi_lines[0]
+            else:
+                end_l = mo_num_lines[j+1]
+            for k1 in range(4,8):
+                eigenvector = []
+                for k2 in range(start_l, end_l):
+                    tmp = lines[k2].split()
+                    try:
+                        eig_val = float(tmp[k1])
+                        eigenvector.append(eig_val)
+                    except:
+                        pass
+                if len(eigenvector)!=0:
+                    eigenvectors.append(np.array(eigenvector))
+
+        print('Done reading coefficients for the MOLog file')
+        mo_coeffs.append(eigenvectors)
+    print('Elapsed time:', time.time()-timer)
+            
+    return mo_energies, mo_coeffs
+
+def extract_coordinates(trajectory_xyz_file_name: str, time_step: int):
+    """
+    This function reads the trajectory xyz file and extract the coordinates of a
+    time step.
+    
+    Args:
+    
+        trajcetory_xyz_file_name (string): The trajectory xyz file name.
+        
+        time_step (integer): The time step.
+        
+    Returns:
+    
+        coordinates (list): The list of the x, y, and z coordinates.
+    """
+    # Reading the file and its lines
+    file = open(trajectory_xyz_file_name,'r')
+    lines = file.readlines()
+    file.close()
+    # number of atoms obtianed from the first line of 
+    # the xyz file
+    natoms = int(lines[0].split()[0])
+    # the coordinates list
+    coordinates = []
+    # start lines
+    start_l = time_step*(natoms+2)
+    # end line
+    end_l = (time_step+1)*(natoms+2)
+    for i in range(start_l+2,end_l):
+        tmp = lines[i].split()
+        name = tmp[0]
+        # turn Angstrom into Bohr unit
+        x = float(tmp[1])*units.Angst
+        y = float(tmp[2])*units.Angst
+        z = float(tmp[3])*units.Angst
+        coordinates.append([name,x,y,z])
+        
+    return coordinates
+
+
+def find_basis_set(basis_set_files_path: list, unique_atoms: list, basis_set_names: list):
+    """
+    This function searches the atoms basis sets for a set of unique atoms in 
+    a set of basis sets files and reads them in a form so that we can create 
+    a shell for atomic orbital overlap computation using libint.
+    
+    Args:
+    
+        basis_set_files_path (list): A list containing the full path to the 
+                                     basis sets files (like BASIS_MOLOPT).
+        unique_atoms (list): The list of unique atoms.
+        
+        basis_set_names (list): A list containing the name of the basis sets used
+                                for each of the unique atoms. The length of this
+                                list should be the same as unique_atoms list.
+    
+    Returns:
+    
+        basis_set_data (list): This lists contains the information of all the basis
+                               sets. They include, the angular momentum values, 
+                               the exponents, and the contraction coefficients.
+    """
+    # The variables for appending the l_values,
+    # exponents, and contraction coefficients
+    l_vals = []
+    exponents = []
+    coeffs = []
+    basis_set_data = []
+    # loop over all the basis set files
+    for i in range(len(basis_set_files_path)):
+        file = open(basis_set_files_path[i],'r')
+        lines = file.readlines()
+        file.close()
+        # find the basis set for each atom in unique_atoms
+        for j in range(len(unique_atoms)):
+            # initializing the empty lists for each atom
+            exp_atom = []
+            coeff_atom = []
+            l_vals_atom = []
+            data_atom = []
+            for k in range(len(lines)):
+                tmp = lines[k].lower().split()
+                # we use a try and except so that if it couldn't find the name it doesn't crash
+                try:
+                    if (unique_atoms[j].lower()) == tmp[0] and basis_set_names[j].lower() == tmp[1]:
+                        print('Found basis set %s for atom %s in %s'%(basis_set_names[j],\
+                                                                      unique_atoms[j],basis_set_files_path[i]))
+                        print('Reading the data for atom %s in the basis file'%unique_atoms[j])
+                        # start reading the basis set
+                        # number of basis set
+                        num_basis = int(lines[k+1])
+                        # Lines with information about the basis set
+                        # These lines are like this
+                        # 3 0 1 5 2 2
+                        # their order is like this:
+                        # principal quantum number, minimum angular momentum value
+                        # maximum angular momentum value, number of exponents
+                        # the number of contractions for each of the angular momentum values
+                        info_lines = []
+                        info_lines.append(k+2)
+                        if num_basis > 1:
+                            c = 0
+                            while len(info_lines) < num_basis:
+                                tmp_1 = lines[k+2+c].split()
+                                n_exponent = int(tmp_1[3])
+                                c += n_exponent+1
+                                info_lines.append(k+2+c)
+                        for p in info_lines:
+                            exp = []
+                            coeffs = []
+                            l_min = int(lines[p].split()[1])
+                            l_max = int(lines[p].split()[2])
+                            n_l = l_max-l_min+1
+                            l_vals = []
+                            c = 1
+                            l_start = l_min
+                            if l_min==l_max:
+                                l_end = l_min+1
+                            else:
+                                l_end = l_max+1
+                            for l_val in range(l_start, l_end):
+                                l_val_rep = int(lines[p].split()[3+c])
+                                c += 1
+                                for pp in range(l_val_rep):
+                                    l_vals.append(l_val)
+                            n_exponent = int(lines[p].split()[3])
+                            start_l = p+1
+                            end_l = p+n_exponent+1
+                            for p1 in range(start_l, end_l):
+                                exp.append(float(lines[p1].split()[0]))
+                            c = 0
+                            for p2 in range(len(l_vals)):
+                                c += 1
+                                coeffs = []
+                                for p1 in range(start_l, end_l):
+                                    coeffs.append(float(lines[p1].split()[c]))
+                                data_atom.append([l_vals[p2],exp,coeffs])
+                            
+                except:
+                    pass
+            if len(data_atom)!=0:
+                # The basis_set data appends all the data for this atom
+                basis_set_data.append([unique_atoms[j],data_atom])
+                        
+    return basis_set_data
+
+def make_shell(coordinates: list, basis_set_data: list, is_spherical: bool):
+    """
+    This function makes a libint shell from the coordinates, basis_set_data from
+    the find_basis_set function. The sphecrical or cartesian coordinates flags define
+    the basis it needs to work in.
+    """
+    # setting up a counter for initializing the shell using 
+    # liblibra_core.initialize_shell function
+    c = 0
+    # for each of the atoms
+    for i in range(len(coordinates)):
+        atom_name = coordinates[i][0]
+        # making the coordinates into a VECTOR type to be able to use in C++
+        coords_init = [coordinates[i][1], coordinates[i][2], coordinates[i][3]]
+        a = VECTOR(coords_init[0], coords_init[1], coords_init[2])
+        # for each of the atoms types basis set data
+        for j in range(len(basis_set_data)):
+            # check if the atom type is for that 
+            # specific atom in the coordinates
+            if atom_name==basis_set_data[j][0]:
+                for k in range(len(basis_set_data[j][1])):
+                    # l_value
+                    l_val = basis_set_data[j][1][k][0]
+                    # exponents
+                    exp = Py2Cpp_double(list(basis_set_data[j][1][k][1]))
+                    # contraction coefficients
+                    coeff = Py2Cpp_double(list(basis_set_data[j][1][k][2]))
+                    if c==0:
+                        # if it is the first atom and
+                        # the first basis set initialize the libint shell
+                        shell = initialize_shell(l_val, is_spherical, exp, coeff, a)
+                    else:
+                        # for all other atoms
+                        # add to the created shell 
+                        add_to_shell(shell, l_val, is_spherical, exp, coeff, a)
+                    # add 1 to the counter 
+                    c += 1
+                    
+    return shell
+
