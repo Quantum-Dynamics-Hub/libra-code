@@ -50,13 +50,6 @@ def molden_file_to_libint_shell(molden_filename: str, is_spherical: bool):
     file = open(molden_filename,'r')
     lines = file.readlines()
     file.close()
-    
-    # This is the way we export the boolean value from here to C++.
-    # This looks easier to do in this way.
-    if is_spherical:
-        spherical = 1
-    else:
-        spherical = 0
 
     # The characters in the molden file start with '[' including
     # coordinates, basis sets, eigenvectors, etc. We store them
