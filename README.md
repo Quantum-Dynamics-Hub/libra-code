@@ -33,7 +33,7 @@ for all users with the intent:
     mkdir Conda
     cd Conda/
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh . 
-    sh ./Miniconda3-latest-Linux-x86.sh -b -u -prefix <install_dir>
+    sh ./Miniconda3-latest-Linux-x86_64.sh -b -u -p <install_dir>
 
   Here, 
 
@@ -81,13 +81,16 @@ Just execute the following script located in the root of Libra distribution:
 This script will create the environment called `libra` and will install all the
 needed stuff in it. You just need to activate it:
 
-   conda activate libra
+    conda activate libra
 
 #### 3.2. Detailed instructions on what the script about does:
 
 It first creates and activates the `libra` environment:
 
     conda create -n libra
+
+Update conda install if needed (e.g. if the output suggests it)
+
     conda activate libra
 
 Thne, it installs all the dependencies and tools.

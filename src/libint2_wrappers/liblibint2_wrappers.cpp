@@ -58,6 +58,10 @@ void export_libint2_wrappers_objects(){
 
 */
 
+  size_t (*expt_nbasis_v1)(const std::vector<libint2::Shell>& shells) = &nbasis;
+  def("nbasis", expt_nbasis_v1);
+
+
   std::vector<libint2::Shell> (*expt_initialize_shell_v1)(
   int l_val, bool is_spherical , const std::vector<double>& exponents, 
   const std::vector<double>& coeff, VECTOR& coords) = &initialize_shell;
