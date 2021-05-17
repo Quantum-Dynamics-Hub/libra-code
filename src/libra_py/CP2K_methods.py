@@ -1104,3 +1104,158 @@ def make_shell(coordinates: list, basis_set_data: list, is_spherical: bool):
                     
     return shell
 
+
+def resort_molog_eigenvectors(l_vals):
+    """
+    This function returns the resotring indices for resoting the MOLog 
+    eigenvectors according to this order:
+    
+    MOLog order (example for Cd atom):
+    2s, 3s | 3py, 3pz, 3px | 4py, 4pz, 4px | 4d-2, 4d-1, 4d0, 4d+1, 4d+2 | 5d-2, 5d-1, 5d0, 5d+1, 5d+2 | ...
+    However, the atomic orbital overla computed from the libint version of Psi4 is not ordered 
+    as above. The ordering is like this:
+    2s, 3s | 3pz, 3px, 3py | 4pz, 4px, 4py | 4d0, 4d+1, 4d-1, 4d+2, 4d-2 | 5d0, 5d+1, 5d-1, 5d+2, 5d-2 | ...
+    Therefore, we need to resort the eigenvectors to be able to use the code properly.
+    
+    Args:
+    
+        l_vals (list): A list containing the angular momentum values for atoms
+                       in the order of the MOLog files.
+                       
+    Returns:
+    
+        new_indices (numpy array): The new indices that needs to be used for reordering.
+    
+    """
+    # new indices
+    new_indices = []
+    # setting up the counter
+    c = 0
+    # loop over all the angular momentum values
+    for i in range(len(l_vals)):
+        l_val = l_vals[i]
+        # find the reorder indices needed for this l_val
+        reordered_indices = index_reorder(l_val)
+        for j in range(len(reordered_indices)):
+            # now append it by plus the counter since
+            # we aim to do it for all the eigenvectors
+            # and l values
+            new_indices.append(c+reordered_indices[j])
+        # increase the counter with t
+        c += len(reordered_indices)
+    # Return the new indices
+    return new_indices
+    
+    
+def index_reorder(l_val):
+    """
+    This function returns the new ordering of the angular momentum value based on the 
+    order used in Psi4. Detailed explanation was given for the resort_molog_eigenvectors function.
+    
+    Args:
+    
+        l_val (integer): The angular momentum value.
+                       
+    Returns:
+    
+        new_order (numpy array): The new order of the indices for the l_val.
+    
+    """
+    
+    # for s orbital
+    if l_val == 0:
+        new_order = [1]
+    # for p orbital
+    elif l_val == 1:
+        new_order = [2,3,1]
+    # for d orbital
+    elif l_val == 2:
+        new_order = [3,4,2,5,1]
+    # for f orbital
+    elif l_val == 3:
+        new_order = [4,5,3,6,2,7,1]
+    # for g orbital
+    elif l_val == 4:
+        new_order = [5,6,4,7,3,8,2,9,1]
+
+    # The indeices
+    return np.array(new_order)-1
+
+
+def molog_lvals(filename:str):
+    """
+    This function returns all the angular momentum values in the order 
+    the eigenvectors are written. Unlike the molden files we need to extract 
+    this from the molog files.
+    
+    Args:
+        
+        filename (string): The MOLog file name.
+        
+    Returns:
+     
+        l_vals_all (list): The list for all angular momentum values.
+    """
+    # Opening the file and reading all the lines
+    file = open(filename,'r')
+    lines = file.readlines()
+    file.close()
+    # all l_values including the 
+    # ones which are repeated as well.
+    l_vals = []
+    # principal quantum number
+    # this will be used to distinguish
+    # between the l_values we want to read.
+    p_nums = []
+    # Lines with length less than or equal 
+    # to one which are the molecular orbital 
+    # number, their energies, and their occupation numbers
+    leq_4_lines = []
+    for i in range(3,len(lines)):
+        tmp = lines[i].split()
+        if len(tmp)<4 and len(tmp)!=0 and 'Fermi' not in lines[i] and 'MO' not in lines[i]:
+            leq_4_lines.append(i)
+    # We only need for one part in the MOLog file
+    start_l = leq_4_lines[2]
+    end_l = leq_4_lines[3]
+    for i in range(start_l,end_l):
+        tmp = lines[i].split()
+        try:
+            if 's' in tmp[3]:
+                # n is the principal quantum number
+                n = int(tmp[3][0])
+                p_nums.append(n)
+                l_vals.append(0)
+            if 'p' in tmp[3]:
+                n = int(tmp[3][0])
+                p_nums.append(n)
+                l_vals.append(1)
+            if 'd' in tmp[3]:
+                n = int(tmp[3][0])
+                p_nums.append(n)
+                l_vals.append(2)
+            if 'f' in tmp[3]:
+                n = int(tmp[3][0])
+                p_nums.append(n)
+                l_vals.append(3)
+            if 'g' in tmp[3]:
+                n = int(tmp[3][0])
+                p_nums.append(n)
+                l_vals.append(4)
+        except:
+            pass
+    # initializing the l_vals_all
+    l_vals_all = []
+    # Now we need to get rid of the repeated l_values
+    # Below will do it all!
+    for i in range(len(l_vals)):
+        if i==1:
+            l_vals_all.append(l_vals[0])
+        if i!=1 and i!=(len(l_vals)-1):
+            if p_nums[i]!=p_nums[i-1]:
+                l_vals_all.append(l_vals[i])
+            if p_nums[i]==p_nums[i-1] and l_vals[i]!=l_vals[i-1]:
+                l_vals_all.append(l_vals[i])
+    
+    return l_vals_all
+
