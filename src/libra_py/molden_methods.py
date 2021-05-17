@@ -202,9 +202,7 @@ def molden_file_to_libint_shell(molden_filename: str, is_spherical: bool):
                 exp.append(float(lines[n].split()[0]))
                 coeff.append(float(lines[n].split()[1]))
             # the coordinates of the atom
-            # we turn them from Bohr into Angstrom and then the libint
-            # will turn them into Bohr
-            coords_init = [coords[h1][1]/units.Angst,coords[h1][2]/units.Angst,coords[h1][3]/units.Angst]
+            coords_init = [coords[h1][1],coords[h1][2],coords[h1][3]]
             # This is how we initialize an Atom data type for the coordinats to use in libint
             a = VECTOR(coords_init[0], coords_init[1], coords_init[2])
             # If the counter is the first one
