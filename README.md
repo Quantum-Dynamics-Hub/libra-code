@@ -122,7 +122,9 @@ We need to downgrade Python version here to 3.6 to enable Psi4 installation
     conda install -c conda-forge matplotlib
     conda install -c rmg py3dmol
     conda install -c anaconda numpy
-    conda install -c anaconda scipy 
+    conda install -c anaconda scipy
+    conda install -c conda-forge llvm-openmp
+    conda install -c conda-forge jupyterlab
     
 
 Used in some of the tutorials
