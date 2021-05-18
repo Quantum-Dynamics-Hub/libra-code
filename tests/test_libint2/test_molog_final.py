@@ -12,7 +12,8 @@ t1 = time.time()
 time_step = 1
 coord = CP2K_methods.extract_coordinates('cdse13-1.xyz',time_step)
 # the full path to different BASIS set files 
-basis_set_files_path = ['/home/97425008/cp2k-v7/cp2k/data/BASIS_MOLOPT']
+# since it is in this folder we just put the name
+basis_set_files_path = ['BASIS_MOLOPT']
 # the unique atoms present in the trajectory
 unique_atoms = ['Cd','Se']
 # the unique atoms respective basis set names
