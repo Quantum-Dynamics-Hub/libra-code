@@ -194,7 +194,7 @@ Used in some of the tutorials
       Libra/DFTB+, Libra/QE, Libra/ErgoSCF, Libra/CP2K, and Libra/Gaussian interfaces
       
   * Mr. Mohammad Shakiba (Shahid Bahonar University of Kerman, Iran)
-      Cube file processing scripts, Libra/CP2K and Libra/Gaussian interfaces
+      Cube file processing scripts, Libra/CP2K and Libra/Gaussian, Libra/Libint2 interfaces
 
   * Mrs. Story Temen (University at Buffalo)
       Implementation and testing of the HEOM codes
