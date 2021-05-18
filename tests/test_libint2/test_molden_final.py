@@ -34,4 +34,4 @@ S = np.linalg.multi_dot([eigs, AO ,eigs.T])
 # print out the diagonal element of the MO overlap matrix
 # to make sure you get 1 on the diagonal
 print(np.diag(S))
-
+print('Elapsed time:',time.time()-t1)
