@@ -28,7 +28,7 @@ MESSAGE("Advice: If this search fails, try setting cache variables: -DPYTHON_LIB
 MESSAGE("Hint to self: -DPYTHON_INCLUDE_DIR=/home/Alexey_2/Soft/Python-2.6.7/bin/include/python2.6 -DPYTHON_LIBRARY=/home/Alexey_2/Soft/Python-2.6.7/bin/bin")
 
 # For Linux and Cygwin
-FIND_PACKAGE(PythonLibs 3.7 REQUIRED)
+FIND_PACKAGE(PythonLibs 3.6 REQUIRED)
 
 IF(PYTHONLIBS_FOUND)
   MESSAGE("Success!")
@@ -58,11 +58,11 @@ SET(Boost_USE_MULTITHREADED=OFF)
 SET(Boost_USE_STATIC_RUNTIME=OFF)
 
 
-FIND_PACKAGE(Boost REQUIRED)
+FIND_PACKAGE(Boost 1.73.0 REQUIRED)
 IF(Boost_FOUND)
   MESSAGE("Success!")
   INCLUDE_DIRECTORIES("${Boost_INCLUDE_DIRS}")  
-  FIND_PACKAGE(Boost COMPONENTS python37 regex) # it seems that it is important to find sub-packages too!!!
+  FIND_PACKAGE(Boost COMPONENTS python36 regex) # it seems that it is important to find sub-packages too!!!
 ELSEIF(NOT Boost_FOUND)
   MESSAGE(FATAL_ERROR "Unable to find correct Boost version. Did you set BOOST_ROOT?")
 ENDIF()

@@ -44,7 +44,6 @@ using std::endl;
 
 
 
-
 // We first need to initailize a libint2::Shell. Here is how we do it.
 std::vector<libint2::Shell> initialize_shell(int l_val, bool is_spherical, 
  const std::vector<double>& exponents, const std::vector<double>& coeff, VECTOR& coords){
