@@ -7,23 +7,14 @@
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
 *
-*********************************************************************************/
-
-/**********************************************************************************
-#* This file is distributed under the terms of the GNU General Public License
-#* as published by the Free Software Foundation, either version 3 of
-#* the License, or (at your option) any later version.
-#* See the file LICENSE in the root directory of this distribution
-#* or <http://www.gnu.org/licenses/>.
-#*
-#* This file uses Libint library (https://github.com/evaleev/libint) for computing 
-#* the atomic orbitals overlaps for two different geometries. This can be used to
-#* compute the molecular orbital overlaps for non-adiabatic molecular dynamics.
-#* The code uses Pybid11 to interface the code with Python.
-#*
-#* This code maily uses the test files in 
-#* (https://github.com/evaleev/libint/tree/master/tests/hartree-fock) with 
-#* modifications to be used for computing the atomic orbitals overlap.
+* This file uses Libint library (https://github.com/evaleev/libint) for computing 
+* the atomic orbitals overlaps for two different geometries. This can be used to
+* compute the molecular orbital overlaps for non-adiabatic molecular dynamics.
+* The code uses Pybid11 to interface the code with Python.
+*
+* This code maily uses the test files in 
+* (https://github.com/evaleev/libint/tree/master/tests/hartree-fock) with 
+* modifications to be used for computing the atomic orbitals overlap.
 *********************************************************************************/
 
 /**

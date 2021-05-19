@@ -125,7 +125,13 @@ We need to downgrade Python version here to 3.6 to enable Psi4 installation
     conda install -c conda-forge matplotlib
     conda install -c rmg py3dmol
     conda install -c anaconda numpy
-    conda install -c anaconda scipy 
+    conda install -c anaconda scipy
+    conda install -c conda-forge llvm-openmp
+    
+You can install Jupyter notebook using the following command. This will be useful and you can set up and access the Jupyter notebook 
+remotely from a cluster and load the tutorials
+
+    conda install -c conda-forge jupyterlab
     
 
 Used in some of the tutorials
@@ -191,7 +197,7 @@ Used in some of the tutorials
       Libra/DFTB+, Libra/QE, Libra/ErgoSCF, Libra/CP2K, and Libra/Gaussian interfaces
       
   * Mr. Mohammad Shakiba (Shahid Bahonar University of Kerman, Iran)
-      Cube file processing scripts, Libra/CP2K and Libra/Gaussian interfaces
+      Cube file processing scripts, Libra/CP2K and Libra/Gaussian, Libra/Libint2 interfaces
 
   * Mrs. Story Temen (University at Buffalo)
       Implementation and testing of the HEOM codes
