@@ -23,7 +23,6 @@ import math
 import re
 import numpy as np
 import time
-import math
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
