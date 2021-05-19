@@ -128,7 +128,7 @@ We need to downgrade Python version here to 3.6 to enable Psi4 installation
     conda install -c anaconda scipy
     conda install -c conda-forge llvm-openmp
     
-You can install Jupyter notebook using the following command. This can be useful and you can also set up and access the Jupyter notebook 
+You can install Jupyter notebook using the following command. This will be useful and you can set up and access the Jupyter notebook 
 remotely from a cluster and load the tutorials
 
     conda install -c conda-forge jupyterlab
