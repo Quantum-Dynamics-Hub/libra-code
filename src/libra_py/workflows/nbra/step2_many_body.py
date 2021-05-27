@@ -712,9 +712,12 @@ def run_step2_many_body( params ):
     do_cube_visualization = int(params["do_cube_visualization"])
 
     # Make a directory for this job folder for storing the logfiles, cubefiles, and pdosfiles
-    os.mkdir("logfiles")
-    os.mkdir("cubefiles")
-    os.mkdir("pdosfiles")
+    if not os.path.exists("logfiles"):
+        os.mkdir("logfiles")
+    if not os.path.exists("cubefiles"):
+        os.mkdir("cubefiles")
+    if not os.path.exists("pdosfiles"):
+        os.mkdir("pdosfiles")
     if not os.path.exists("../../all_logfiles"):
         os.mkdir("../../all_logfiles")
     if not os.path.exists("../../all_pdosfiles"):
