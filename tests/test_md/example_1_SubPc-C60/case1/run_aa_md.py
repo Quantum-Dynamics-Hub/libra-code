@@ -1,8 +1,8 @@
 #*********************************************************************************
-#* Copyright (C) 2016 Alexey V. Akimov
+#* Copyright (C) 2016-2021 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
-#* as published by the Free Software Foundation, either version 2 of
+#* as published by the Free Software Foundation, either version 3 of
 #* the License, or (at your option) any later version.
 #* See the file LICENSE in the root directory of this distribution
 #* or <http://www.gnu.org/licenses/>.
@@ -45,8 +45,8 @@ def main():
     LoadMolecule.Load_Molecule(U, syst, "Pc-C60.ent", "pdb")
     syst.determine_functional_groups(0)  # do not assign rings
     syst.init_fragments()
-    print "Number of atoms in the system = ", syst.Number_of_atoms
-    atlst1 = range(1,syst.Number_of_atoms+1)
+    print("Number of atoms in the system = ", syst.Number_of_atoms)
+    atlst1 = list(range(1,syst.Number_of_atoms+1))
 
     # Creating Hamiltonian and initialize it
     ham = Hamiltonian_Atomistic(1, 3*syst.Number_of_atoms)
@@ -55,7 +55,7 @@ def main():
     ham.show_interactions_statistics()
 
     # Bind Hamiltonian and the system   
-    ham.set_system(syst);   ham.compute();   print "Energy = ", ham.H(0,0), " a.u."
+    ham.set_system(syst);   ham.compute();   print("Energy = ", ham.H(0,0), " a.u.")
 
     # Electronic DOFs
     el = Electronic(1,0)
@@ -73,14 +73,15 @@ def main():
 
     f = open("_en_cooling.txt","w")
     f.close()
-    dt = 20.0
 
-    for i in xrange(1):
+    params = { "dt":20.0, "integrator": "DLML"}
+
+    for i in range(1):
         syst.set_atomic_q(mol.q)
         syst.print_xyz("_mol_cooling.xyz",i)
 
-        for j in xrange(1):
-            ekin, epot, etot = nve_md.nve_md_step(syst, mol, el, ham, dt, integrator)
+        for j in range(1):
+            ekin, epot, etot = nve_md.nve_md_step(syst, mol, el, ham, params)
 
         syst.cool()
 
@@ -91,18 +92,21 @@ def main():
 
     ########################## Production MD #################################
 
-    syst.init_atom_velocities(300.0)
+    rnd = Random()
+
+    syst.init_atom_velocities(300.0, rnd)
 
     f = open("_en_md.txt","w")
     f.close()
-    dt = 40.0 
 
-    for i in xrange(1000):
+    params["dt"] = 40.0
+
+    for i in range(1000):
         syst.set_atomic_q(mol.q)
         syst.print_xyz("_mol_md.xyz",i)
 
-        for j in xrange(10):
-            ekin, epot, etot = nve_md.nve_md_step(syst, mol, el, ham, dt, integrator)
+        for j in range(10):
+            ekin, epot, etot = nve_md.nve_md_step(syst, mol, el, ham, params)
 
         f = open("_en_md.txt","a")
         f.write("i= %3i ekin= %8.5f  epot= %8.5f  etot= %8.5f\n" % (i, ekin, epot, etot))
