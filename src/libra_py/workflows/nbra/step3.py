@@ -49,44 +49,105 @@ import libra_py.hungarian as hungarian
 
 def get_step2_data(_params):
     """
-    A light function to obtain the step2 data
+    A light function to obtain the step2 data: S, St, hvib
 
     Args:
         params ( dictionary ): Control paramerter of this type of simulation. Can include the follwing keys:
 
-            * **params["basis"]** ( string ): describes if one is using either the spin-diabatic (non spin-orbit coupling) 
-                                              or is using the spin-adiabatic (spin orbit-coupling)
+        * **params["read_S_data"]** ( int ): whether to read S data (1) or not (0) [ default: 1 ]
+
+        * **params["S_data_re_prefix"]** ( string ): prefix of files containing real part of orbital overlaps [ default: "S_dia_ks_" ]
+
+        * **params["S_data_re_suffix"]** ( string ): suffix of files containing real part of orbital overlaps [ default: "_re" ]
+
+        * **params["S_data_im_prefix"]** ( string ): prefix of files containing imaginary part of orbital overlaps [ default: "S_dia_ks_" ]
+
+        * **params["S_data_im_suffix"]** ( string ): suffix of files containing imaginary part of orbital overlaps [ default: "_im" ]
+
+        * **params["read_St_data"]** ( int ): whether to read St data (1) or not (0) [ default: 1 ]
+
+        * **params["St_data_re_prefix"]** ( string ): prefix of files containing real part of orbital time-overlaps [ default: "St_dia_ks_" ]
+
+        * **params["St_data_re_suffix"]** ( string ): suffix of files containing real part of orbital time-overlaps [ default: "_re" ]
+
+        * **params["St_data_im_prefix"]** ( string ): prefix of files containing imaginary part of orbital time-overlaps [ default: "St_dia_ks_" ]
+
+        * **params["St_data_im_suffix"]** ( string ): suffix of files containing imaginary part of orbital time-overlaps [ default: "_im" ]
+
+        * **params["read_hvib_data"]** ( int ): whether to read hvib data (1) or not (0) [ default: 1 ]
+
+        * **params["hvib_data_re_prefix"]** ( string ): prefix of files containing real part of vibronic Hamiltonian [ default: "hvib_dia_ks_" ]
+
+        * **params["hvib_data_re_suffix"]** ( string ): suffix of files containing real part of vibronic Hamiltonian [ default: "_re" ]
+
+        * **params["hvib_data_im_prefix"]** ( string ): prefix of files containing imaginary part of vibronic Hamiltonian [ default: "hvib_dia_ks_" ]
+
+        * **params["hvib_data_im_suffix"]** ( string ): suffix of files containing imaginary part of vibronic Hamiltonian [ default: "_im" ]
+
+        * **params["data_set_paths"]** ( list of strings ): see in :func:`libra_py.data_read.get_data_sets`
+
+        * **params["data_dim"]** ( int ): see in :func:`libra_py.data_read.get_data`
+
+        * **params["active_space"]** ( list of ints ): see in :func:`libra_py.data_read.get_data`
+
+        * **params["isnap"]** ( int ): see in :func:`libra_py.data_read.get_data`
+
+        * **params["fsnap"]** ( int ): see in :func:`libra_py.data_read.get_data`
+
+    Returns:
+        tuple: S, St, hvib
+
+        * **S** ( list of lists of CMATRIX objects) : S[iset][itime] an Norb x Norb CMATRIX of overlaps for data set `iset` at time `itime`
+
+        * **St** ( list of lists of CMATRIX objects) : St[iset][itime] an Norb x Norb CMATRIX of time-overlaps for data set `iset` at time `itime`
+
+        * **hvib** ( list of lists of CMATRIX objects) : hvib[iset][itime] an Norb x Norb CMATRIX of vibronic Hamiltonians for data set `iset` at time `itime`
+
     """
 
     params = dict(_params)
-    spin_basis = params["basis"]
 
-    # Fetching the overlap matricies
-    params.update({ "data_re_prefix" : "S_"+spin_basis+"_ks_", "data_re_suffix" : "_re",
-                    "data_im_prefix" : "S_"+spin_basis+"_ks_", "data_im_suffix" : "_im"  } )
-    S = data_read.get_data_sets(params)
-    #print ("\n")
-    #S[0][0].show_matrix()
-    #print (S[0][0].get(0,0))
-    #sys.exit(0)
+    critical_params = [ ]
+    default_params = { "read_S_data" : 1, 
+                       "S_data_re_prefix": "S_dia_ks_",  "S_data_re_suffix": "_re",
+                       "S_data_im_prefix": "S_dia_ks_",  "S_data_im_suffix": "_im",
+                       "read_St_data" : 1,
+                       "St_data_re_prefix": "St_dia_ks_",  "St_data_re_suffix": "_re",
+                       "St_data_im_prefix": "St_dia_ks_",  "St_data_im_suffix": "_im",
+                       "read_hvib_data" : 1,
+                       "hvib_data_re_prefix": "hvib_dia_ks_",  "hvib_data_re_suffix": "_re",
+                       "hvib_data_im_prefix": "hvib_dia_ks_",  "hvib_data_im_suffix": "_im"
+                     }
+    comn.check_input(params, default_params, critical_params)
+
+    S, St, Hvib = [], [], []
+    prms = dict(_params)
+
+    # Fetching the overlap matricies  
+    if(params["read_S_data"]==1):
+        prms["data_re_prefix"] = params["S_data_re_prefix"]
+        prms["data_re_suffix"] = params["S_data_re_suffix"]
+        prms["data_im_prefix"] = params["S_data_im_prefix"]
+        prms["data_im_suffix"] = params["S_data_im_suffix"]
+        S = data_read.get_data_sets(prms)
 
     # Fetching the time-derivative overlap matricies
-    params.update({ "data_re_prefix" : "St_"+spin_basis+"_ks_", "data_re_suffix" : "_re",
-                    "data_im_prefix" : "St_"+spin_basis+"_ks_", "data_im_suffix" : "_im"  } ) 
-    St = data_read.get_data_sets(params)
-    #print ("\n")
-    #St[0][0].show_matrix()
-    #sys.exit(0)
+    if(params["read_St_data"]==1):
+        prms["data_re_prefix"] = params["St_data_re_prefix"]
+        prms["data_re_suffix"] = params["St_data_re_suffix"]
+        prms["data_im_prefix"] = params["St_data_im_prefix"]
+        prms["data_im_suffix"] = params["St_data_im_suffix"]
+        St = data_read.get_data_sets(prms)
  
     # Fetching the vibronic Hamiltonian matricies
-    params.update({ "data_re_prefix" : "hvib_"+spin_basis+"_", "data_re_suffix" : "_re",
-                    "data_im_prefix" : "hvib_"+spin_basis+"_", "data_im_suffix" : "_im"  } ) 
-    Hvib_ks = data_read.get_data_sets(params)
-    #print ("\n")
-    #Hvib_ks[0][0].show_matrix()
-    #sys.exit(0)
+    if(params["read_hvib_data"]==1):
+        prms["data_re_prefix"] = params["hvib_data_re_prefix"]
+        prms["data_re_suffix"] = params["hvib_data_re_suffix"]
+        prms["data_im_prefix"] = params["hvib_data_im_prefix"]
+        prms["data_im_suffix"] = params["hvib_data_im_suffix"]
+        Hvib = data_read.get_data_sets(prms)
 
-    return S, St, Hvib_ks
+    return S, St, Hvib
 
 
 
@@ -157,8 +218,7 @@ def sort_SD_energies(Hvib):
 
 
 
-
-def output_sorted_Hvibs(Hvib, orbital_index_energy_pairs):
+def output_sorted_Hvibs(Hvib, orbital_index_energy_pairs, _params={}):
     """
     This function outputs the vibronic Hamiltonians in the SD basis according to their sorted order
 
@@ -170,6 +230,24 @@ def output_sorted_Hvibs(Hvib, orbital_index_energy_pairs):
 
     """
 
+    params = dict(_params)
+    critical_params = [ ]
+    default_params = { "save_files" : 1,
+                       "output_dir_prefix" : "res_sorted_traj",
+                       "hvib_data_re_prefix": "Hvib_sorted_",  "hvib_data_re_suffix": "_re",
+                       "hvib_data_im_prefix": "Hvib_sorted_",  "hvib_data_im_suffix": "_im"
+                     }
+    comn.check_input(params, default_params, critical_params)
+
+
+    save_files = params["save_files"]
+    output_dir_prefix = params["output_dir_prefix"]
+    prefix_re = params["hvib_data_re_prefix"]
+    suffix_re = params["hvib_data_re_suffix"]
+    prefix_im = params["hvib_data_im_prefix"]
+    suffix_im = params["hvib_data_im_suffix"]
+
+
     ntraj  = len(orbital_index_energy_pairs)
     nsnaps = len(orbital_index_energy_pairs[0])
     nSD    = len(orbital_index_energy_pairs[0][0])
@@ -178,9 +256,10 @@ def output_sorted_Hvibs(Hvib, orbital_index_energy_pairs):
 
     for traj in range( ntraj ):
 
-        rd_sorted = "res_sorted_traj"+str(traj)+""
-        os.system("rm -r "+rd_sorted)
-        os.system("mkdir "+rd_sorted)
+        if(save_files):
+            rd_sorted = F"{output_dir_prefix}{traj}"
+            os.system(F"rm -r {rd_sorted}")
+            os.system(F"mkdir {rd_sorted}")
 
         Hvibs_sorted.append( [] )
 
@@ -193,8 +272,10 @@ def output_sorted_Hvibs(Hvib, orbital_index_energy_pairs):
                     Hvib_sorted.set( i, j, Hvib[ traj ][ snap ].get( a, b ) )
 
             Hvibs_sorted[ traj ].append( Hvib_sorted )
-            Hvibs_sorted[ traj ][ snap ].real().show_matrix("%s/Hvib_sorted_%i_re" % (rd_sorted, snap))
-            Hvibs_sorted[ traj ][ snap ].imag().show_matrix("%s/Hvib_sorted_%i_im" % (rd_sorted, snap))
+
+            if(save_files)
+                Hvibs_sorted[ traj ][ snap ].real().show_matrix(F"{rd_sorted}/{prefix_re}{snap}{suffix_re}")
+                Hvibs_sorted[ traj ][ snap ].imag().show_matrix(F"{rd_sorted}/{prefix_im}{snap}{suffix_im}")
 
     return Hvibs_sorted
 
@@ -1143,11 +1224,28 @@ def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
 
 
 def map_Hvib(H, basis, dE):
+    """Computes a vibronic Hamiltonian matrix in the basis of SD configurations   
 
-    nbasis = -1 # doesn't matter
+    This function seems to be deprecated
 
+    Args:
+        SD (list of lists of ints ): a list of SD determinants, such that:
+            SD[iSD] is a list of integers defining which orbitals are 
+            occupied in SD with index ```iSD``` and how 
+            SeeAlso: ```inp``` in the ```sd2indx(inp,nbasis)``` function
+
+        H ( MATRIX(nbasis, nbasis) ): vibronic Hamiltonian in 1-electron (e.g. KS-) basis (alpha- and beta- components)
+        dE ( list of doubles ): energy corrections added to each SD
+
+    Returns:
+        CMATRIX(N,N): the matrix of energies in the SD basis. Here, N = len(SD) - the number of SDs.
+
+    """
+
+    # First, compute the matrix with energies on the diagonals
     H_vib  = mapping.energy_mat_arb(basis, H, dE)
 
+    # Now handle the couplings and nonadiabatic couplings (off-diagonal elements)
     nstates = len(basis)
     for i in range(0,nstates):
         for j in range(0,nstates):
@@ -1156,6 +1254,8 @@ def map_Hvib(H, basis, dE):
 
             if res[0] != 0:
                 if res[1] * res[2] > 0:
+                    # This means the two configurations are coupled, so we take the 
+                    # corresponding 1-particles matrix elements and insert them here
                     a = mapping.sd2indx([res[1], res[2]], nbasis, False) 
                     H_vib.add(i, j, H.get(a[0], a[1]) )
 
