@@ -46,7 +46,6 @@ from libra_py import units
 import util.libutil as comn
 
 
-# This file is temp only. These functions will eventually be placed in Libra somewhere ...
 def curr_and_final_step_job( istep, fstep, njobs, njob ):
     """
     This function is used to determine the initial and final step of a job when distributing
