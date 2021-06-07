@@ -108,13 +108,13 @@ def get_step2_data(_params):
     params = dict(_params)
 
     critical_params = [ ]
-    default_params = { "read_S_data" : 1, 
+    default_params = { "read_S_data" : 1, "read_S_re":1,  "read_S_im":1,
                        "S_data_re_prefix": "S_dia_ks_",  "S_data_re_suffix": "_re",
                        "S_data_im_prefix": "S_dia_ks_",  "S_data_im_suffix": "_im",
-                       "read_St_data" : 1,
+                       "read_St_data" : 1, "read_St_re":1,  "read_St_im":1,
                        "St_data_re_prefix": "St_dia_ks_",  "St_data_re_suffix": "_re",
                        "St_data_im_prefix": "St_dia_ks_",  "St_data_im_suffix": "_im",
-                       "read_hvib_data" : 1,
+                       "read_hvib_data" : 1, "read_hvib_re":1,  "read_hvib_im":1,
                        "hvib_data_re_prefix": "hvib_dia_ks_",  "hvib_data_re_suffix": "_re",
                        "hvib_data_im_prefix": "hvib_dia_ks_",  "hvib_data_im_suffix": "_im"
                      }
@@ -125,6 +125,8 @@ def get_step2_data(_params):
 
     # Fetching the overlap matricies  
     if(params["read_S_data"]==1):
+        prms["get_real"] = params["read_S_re"]
+        prms["get_imag"] = params["read_S_im"]
         prms["data_re_prefix"] = params["S_data_re_prefix"]
         prms["data_re_suffix"] = params["S_data_re_suffix"]
         prms["data_im_prefix"] = params["S_data_im_prefix"]
@@ -133,6 +135,8 @@ def get_step2_data(_params):
 
     # Fetching the time-derivative overlap matricies
     if(params["read_St_data"]==1):
+        prms["get_real"] = params["read_St_re"]
+        prms["get_imag"] = params["read_St_im"]
         prms["data_re_prefix"] = params["St_data_re_prefix"]
         prms["data_re_suffix"] = params["St_data_re_suffix"]
         prms["data_im_prefix"] = params["St_data_im_prefix"]
@@ -141,6 +145,8 @@ def get_step2_data(_params):
  
     # Fetching the vibronic Hamiltonian matricies
     if(params["read_hvib_data"]==1):
+        prms["get_real"] = params["read_hvib_re"]
+        prms["get_imag"] = params["read_hvib_im"]
         prms["data_re_prefix"] = params["hvib_data_re_prefix"]
         prms["data_re_suffix"] = params["hvib_data_re_suffix"]
         prms["data_im_prefix"] = params["hvib_data_im_prefix"]
@@ -273,7 +279,7 @@ def output_sorted_Hvibs(Hvib, orbital_index_energy_pairs, _params={}):
 
             Hvibs_sorted[ traj ].append( Hvib_sorted )
 
-            if(save_files)
+            if(save_files):
                 Hvibs_sorted[ traj ][ snap ].real().show_matrix(F"{rd_sorted}/{prefix_re}{snap}{suffix_re}")
                 Hvibs_sorted[ traj ][ snap ].imag().show_matrix(F"{rd_sorted}/{prefix_im}{snap}{suffix_im}")
 
@@ -1466,7 +1472,7 @@ def apply_phase_correction_general(St):
 
 
 
-def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fstep, sorting_type ):
+def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed,  _params):
     """
         This function computes the energies of the SP transitions (according to the sum of 1 electron terms) - no J or K
         It then may sort the order of the sd_states either based on their energy at each timestep
@@ -1482,8 +1488,8 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
             sorting_type ( (string) ): "energy"   - sort by energy
                                        "identity" - sort by identity
 
-            istep (int): step from which to start counting
-            fstep (int): step at which to stop counting
+            isnap (int): step from which to start counting
+            fsnap (int): step at which to stop counting
  
         Returns:       
             E_sd (list of CMATRIX): SD energies at each timestep
@@ -1491,6 +1497,19 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
             sd_states_reindexed_sorted (list of lists): The sd_states_unique_sorted, but in Libra's notation
             reindex_nsteps (list of lists): The energy ordering of the SD for each step in terms of the index of the SD from the initial step
     """
+
+    params = dict(_params)
+
+    critical_params = []
+    # Default parameters
+    default_params = { "isnap":0, "fsnap":1, "sorting_type":"energy" }
+    # Check input
+    comn.check_input(params, default_params, critical_params)  
+
+    istep = params["isnap"]
+    fstep = params["fsnap"]
+    sorting_type = params["sorting_type"]
+
 
     E_sd = []
     sd_states_reindexed_sorted = []
@@ -1529,7 +1548,8 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
                 # to sd_states_reindexed_sorted[step]. For identity ordering - no energy sorting is done!
                 E_sd[step].set(  state, state, E_this_sd.get( state, state ) )
                 sd_states_reindexed_sorted[step].append( sd_states_reindexed[ state ] )
-                print( sd_states_reindexed_sorted[step][ state ], ( E_sd[step].get( state, state ) - E_sd[step].get( 0, 0 ) ).real * units.au2ev )
+
+                #print( sd_states_reindexed_sorted[step][ state ], ( E_sd[step].get( state, state ) - E_sd[step].get( 0, 0 ) ).real * units.au2ev )
 
                 # This is reindexing the list of SD bases at this time step according to their energies 
                 # We are adding the ground state SD later, so skip it for now. In this list sd_states_unique,
@@ -1551,7 +1571,7 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
                 E_sd[step].set( i, i, E_this_sd.get(  int(reindex[i]), int(reindex[i])) )
                 # This is reindexing the list of SD bases at this time step according to their energies 
                 sd_states_reindexed_sorted[step].append( sd_states_reindexed[ int(reindex[i]) ] )
-                print( sd_states_reindexed_sorted[step][i], ( E_sd[step].get( i, i ) - E_sd[step].get( 0, 0 ) ).real * units.au2ev )
+                #print( sd_states_reindexed_sorted[step][i], ( E_sd[step].get( i, i ) - E_sd[step].get( 0, 0 ) ).real * units.au2ev )
 
             for i in range(1,len(reindex)):
                 sd_states_unique_sorted[step].append( sd_states_unique[ int(reindex[i])-1 ] )
@@ -1560,142 +1580,5 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
     return E_sd, sd_states_unique_sorted, sd_states_reindexed_sorted, reindex_nsteps
 
 
-
-
-
-def make_T_matricies( ci_coefficients, ci_basis_states, spin_components, sd_states_unique_sorted, nstates, istep, fstep, outdir, verbose=1):
-    """
-    This function makes the "T"ransformation matricies that convert between the SD basis to the CI-like (or many-body (MB)) basis.
-
-    This funciton is made to be used within the NBRA Libra workflow, where things such as ci_coefficients, ci_basis_states, spin_components, 
-    and sd_states_unique_sorted have been extracted from TD-DFT calculations. As of 11/30/2020, compatable ES programs
-    include CP2K, DFTB+ and Gaussian.
-
-    Args:
-        ci_coefficients (list of lists of lists): coefficients for the many-body states for each step
-        ci_basis_states (list of lists): All SD basis states that comprise the many-body excitations for each step
-        spin_components (list of lists): the spin components of the excitation (alpha or beta excitaiton?) for all states and all steps  
-        sd_basis_states_unique (list): 1 of each of the SP transitions (and its spin) that made up the considered CI states
-        nstates (int): number of excited MB states
-        istep (int): step at which to start counting
-        fstep (int): stap at which to stop counting
-        outdir (string): output directory for the T matricies
-        verbose (int): want to see some messages?
-
-    Returns:
-        SD2CI (list of CMATRIX): CMATRIX at each timestep where the rows are SDs and the cols are MB states. The columns contain the coefficients of the MB expansion for each MB state
-
-    """
-
-    number_of_states = nstates
-    ci_coefficients_libra = []
-    nSDs = len( sd_states_unique_sorted[0] ) + 1
-    # Add one to the number of CI states because the ground state is not included yet
-    nCIs  = number_of_states + 1
-    SD2CI = []
-
-    for step in range( fstep - istep ):
-
-        # Make the list of ci_coefficients for each step in the way Libra accepts
-        ci_coefficients_libra.append( [] )
-        # Start with the ground state. This is not explicitly given by electronic strcture calculations
-        ci_coefficients_libra[step].insert( 0, [0.0] * nSDs )
-        ci_coefficients_libra[step][0][0] = 1.0
-
-        # For each ci state for this step
-        for i in range( len( ci_coefficients[step] ) ):
-            count = 0
-            # The ci wavefunction is a linear combination of SD states. Make a list of zeros the size of the number of unique
-            # SD states + 1 for the ground state
-            ci_coefficients_libra[step].append( [0.0] * nSDs )
-            # Exclude ground state here in the index, that info is not explicitly contained 
-            # in the ci_coefficients_dynamics list from electronic structure calculations
-            tmp_ci_basis_state_and_spin = []
-            # For each ci_coefficient in this ci state for this step, get the ci coefficients and spin (alp or bet)
-            for k in range(len(ci_coefficients[step][i])):
-                tmp_ci_basis_state_and_spin.append( [ci_basis_states[step][i][k] , spin_components[step][i][k]] )
-            # Now, loop over the SDs (excluding the ground state) to assign the coefficients
-            for j in range( nSDs-1 ):
-                # Check to see if one of the SDs from the list of unique SDs comprises this ci state
-                if sd_states_unique_sorted[step][j] in tmp_ci_basis_state_and_spin:
-                    # ok, it has found a match, now what is the index of the SD in the list of unique SDs?
-                    item_index = tmp_ci_basis_state_and_spin.index(sd_states_unique_sorted[step][j])
-                    ci_coefficients_libra[step][i+1][j+1] = float(ci_coefficients[step][i][item_index])
-
-
-        # Sanity check. Make sure sum of squared elements of columns == 1:
-        for i in range( nCIs ):
-            check_norm = 0
-            for j in range( nSDs ):
-                check_norm += ci_coefficients_libra[step][i][j]**2
-            if verbose == 1:
-                print("Step", step, "state", i, "check_norm", check_norm)
-            if check_norm < 0.99 or check_norm > 1.01:
-                print("Warning: Step, ", step)
-                print("Column ", i, "in SD2Ci (T) matrix has norm either < 0.99 or > 1.01")
-                print("Exiting now")
-                sys.exit(0)
-
-        SD2CI.append( CMATRIX( nSDs, nCIs ) )
-        for i in range( nSDs ):
-            for j in range( nCIs ):
-                SD2CI[step].set( i, j, ci_coefficients_libra[step][j][i] * (1.0+0.0j) )
-
-        # Output the transformation matrix. This is how you can double check that it worked ( it does ... :) )
-        SD2CI[step].show_matrix( "%s/T_%s.txt" % (outdir, str(step)) )
-
-    return SD2CI
-
-
-
-
-def compute_ci_energies_midpoint( ci_energies, num_excited_states, istep, fstep ):
-    """
-    This function compute the excitation energies energies at the midpoint from a list of excitation energies at each step. 
-    At each step, there are many electronic states. This function takes a list as an input, and is meant to be used 
-    in the NBRA workflow calculatiosn where lists may be more convenient than matricies. 
-
-    This funciton is made to be used within the NBRA Libra workflow, where things such as ci_energies have been extracted from TD-DFT calculations. 
-    As of 11/30/2020, compatable ES programs include CP2K, DFTB+ and Gaussian.
-
-    Energies are assumed to be energies from TDDFT calculatons. This function gives zero as the ground state total energy
-
-    Args:
-        ci_energies (list of lists): energies of the MB states
-        num_excited_states (int): number of excited states
-        istep (int): step at which to start counting
-        fstep (int): stap at which to stop counting
-
-    Returns:
-        ci_midpoint_energies (list of CMATRIX): energies in Ha. Ground state energy is set to zero
-    """
-
-    nstates = num_excited_states
-
-    # Now, compute the CI energy matrix at each-point and the mid-points
-    # For each step
-    #print("Computing the CI energy matrices....")
-    ci_energies_cmatrix = []
-    for step in range( fstep - istep ):
-        ci_energies_cmatrix.append( CMATRIX( nstates + 1, nstates + 1 ) )
-        for state in range( nstates + 1 ):
-            if state == 0:
-                ci_energies_cmatrix[step].set( state, state, 0.0 )
-            else:
-                ci_energies_cmatrix[step].set( state, state, ( ci_energies[step][state-1]  * units.ev2Ha )  )
-
-    # At the midpoints
-    ci_midpoint_energies = []
-    for step in range( fstep - istep - 1 ):
-        total_energy_mid_point = 0.0 #0.5 * ( total_energies[step] + total_energies[step+1] )
-        ci_midpoint_energies.append( CMATRIX( nstates + 1, nstates + 1 ) )
-        for state in range( nstates + 1 ):
-            if state == 0:
-                ci_midpoint_energies[step].set( state, state, total_energy_mid_point )
-            else:
-                midpoint_energy = 0.5 * ( ci_energies[step][state-1] + ci_energies[step+1][state-1] )
-                ci_midpoint_energies[step].set( state, state, total_energy_mid_point + ( midpoint_energy  * units.ev2Ha )  )
-
-    return ci_midpoint_energies
 
 

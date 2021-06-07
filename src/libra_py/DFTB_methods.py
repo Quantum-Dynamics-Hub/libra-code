@@ -798,7 +798,7 @@ def read_dftbplus_TRA_file( params ):
     for i in range( 0, len(lines) ):
         tmp_line = lines[i].split()
         if 'Energy' in tmp_line:
-            print("Energy")
+            #print("Energy")
             # When found the line in which contains 'Energy'
             excitation_energies.append( float(tmp_line[2]) )
             energy_lines.append( i )
