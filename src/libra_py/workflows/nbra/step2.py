@@ -19,7 +19,11 @@
 
 import os
 import sys
-
+# The sparse matrix library for storing the MO overlaps
+# with a high number of states
+import numpy as np
+import scipy.sparse
+import time
 # Fisrt, we add the location of the library to test to the PYTHON path
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -27,6 +31,9 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 from libra_py import QE_methods
 from libra_py import QE_utils
+from libra_py import CP2K_methods
+from libra_py import molden_methods
+from libra_py import data_conv
 from libra_py import units
 
 #import libra_py.common_utils as comn
@@ -319,5 +326,200 @@ def run(params):
             print( "End of step t=", t)
 
         t = t + 1
+
+def run_cp2k_xtb_step2(params):
+    """
+    This function runs the step2 for computing the MO overlaps for xTB calculations and saves them as sparse 
+    matrices using scipy.sparse library. In order to load the saved sparse matrices you need to use
+    scipy.sparse.load_npz command.
+
+    Args:
+
+        params (dictionary): A dictionary containing the following parameters:
+
+                             res_dir (string): The directory for saving the MO overlaps.
+
+                             all_logfiles (string): The directory to save all log files.
+
+                             all_pdosfiles (string): The directory to save all pdos files.
+
+                             istep (integer): The initial step.
+
+                             fstep (integer): The final step.
+
+                             init_state (integer): The initial state.
+
+                             final_state (integer): The final state.
+
+                             is_spherical (bool): Flag for spherical coordinates.
+
+                             remove_molden (bool): Flag for removing the molden files after computing the MO overlaps.
+
+                             nprocs (integer): Number of processors.
+
+                             cp2k_ot_input_template (string): The CP2K OT input template file name.
+
+                             cp2k_diag_input_template (string): The CP2K diagonalization input template file name.
+
+                             trajectory_xyz_filename (string): The trajectory xyz file name.
+
+                             step (integer): The time step.
+
+                             cp2k_exe (string): The full path to CP2K executable.
+
+    """
+    # Making the required directories for gatherig all the information needed
+    # including the overlap data and pdos files. The logfiles do not contain
+    # specific data but we finally move them to all_logfiles
+    if not os.path.exists(params['res_dir']):
+        os.mkdir(params['res_dir'])
+    if not os.path.exists(params['all_logfiles']):
+        os.mkdir(params['all_logfiles'])
+    if not os.path.exists(params['all_pdosfiles']):
+        os.mkdir(params['all_pdosfiles'])
+    # setting up the initial step and final step
+    istep = params['istep']
+    fstep = params['fstep']
+    # spherical or cartesian GTOs
+    is_spherical = params['is_spherical']
+    # number of processors
+    nprocs = params['nprocs']
+    # the counter for a job steps, this counter is needed for not reading
+    # the data of a molden file twice
+    counter = 0
+    print('-----------------------Start-----------------------')
+    for step in range(istep, fstep):
+        # a timer for all the procedure
+        t1_all = time.time()
+        print('-----------------------Step %d-----------------------'%step)
+        params['step'] = step
+        # timer for CP2K
+        t1 = time.time()
+        CP2K_methods.run_cp2k_xtb(params)
+        print('Done with step', step,'Elapsed time:',time.time()-t1)
+        # now if the counter is equal to zero 
+        # just compute the MO overlap of that step.
+        if counter == 0:
+            t1 = time.time()
+            print('Creating shell...')
+            shell_1, l_vals = molden_methods.molden_file_to_libint_shell('Diag_%d-libra-1_0.molden'%step,\
+                                                                          is_spherical)
+            print('Done with creating shell. Elapsed time:', time.time()-t1)
+            t1 = time.time()
+            print('Reading energies and eigenvectors....')
+            eig_vect_1, energies_1 = molden_methods.eigenvectors_molden('Diag_%d-libra-1_0.molden'%step,\
+                                                                        nbasis(shell_1),l_vals)
+            print('Done with reading energies and eigenvectors. Elapsed time:', time.time()-t1)
+            if params['remove_molden']:
+                os.system('rm Diag_%d-libra-1_0.molden'%step)
+            print('Computing atomic orbital overlap matrix...')
+            t1 = time.time()
+            AO_S = compute_overlaps(shell_1,shell_1,nprocs)
+            print('Done with computing atomic orbital overlaps. Elapsed time:', time.time()-t1)
+            t1 = time.time()
+            print('Turning the MATRIX to numpy array...')
+            AO_S = data_conv.MATRIX2nparray(AO_S)
+            print('Done with transforming MATRIX 2 numpy array. Elapsed time:', time.time()-t1)
+            istate = params['init_state']
+            fstate = params['final_state']
+            ## Now, we need to resort the eigenvectors based on the new indices
+            print('Resorting eigenvectors elements...')
+            t1 = time.time()
+            new_indices = CP2K_methods.resort_molog_eigenvectors(l_vals)
+            eigenvectors_1 = []
+            for j in range(len(eig_vect_1)):
+                # the new and sorted eigenvector
+                eigenvector_1 = eig_vect_1[j]
+                eigenvector_1 = eigenvector_1[new_indices]
+                # append it to the eigenvectors list
+                eigenvectors_1.append(eigenvector_1)
+            eigenvectors_1 = np.array(eigenvectors_1)
+            print('Done with resorting eigenvectors elements. Elapsed time:',time.time()-t1)
+            ##
+            t1 = time.time()
+            print('Computing and saving molecular orbital overlaps...')
+            # Note that we choose the data from istate to fstate
+            # the values for istate and fstate start from 1
+            S = np.linalg.multi_dot([eigenvectors_1, AO_S, eigenvectors_1.T])[istate-1:fstate-1,istate-1:fstate-1]
+            # creating zero matrix
+            mat_block_size = len(S)
+            zero_mat = np.zeros((mat_block_size,mat_block_size))
+            S_step = data_conv.form_block_matrix(S,zero_mat,zero_mat,S)
+            # Since a lot of the data are zeros we save them as sparse matrices
+            S_step_sparse = scipy.sparse.csc_matrix(S_step)
+            E_step = data_conv.form_block_matrix(np.diag(energies_1)[istate-1:fstate-1,istate-1:fstate-1],\
+                                                 zero_mat,zero_mat,\
+                                                 np.diag(energies_1)[istate-1:fstate-1,istate-1:fstate-1])
+            E_step_sparse = scipy.sparse.csc_matrix(E_step)
+            scipy.sparse.save_npz(params['res_dir']+'/S_ks_%d.npz'%step, S_step_sparse)
+            scipy.sparse.save_npz(params['res_dir']+'/E_ks_%d.npz'%step, E_step_sparse)
+            print('Done with computing molecular orbital overlaps. Elapsed time:', time.time()-t1)
+            print('Done with step %d.'%step,'Elapsed time:',time.time()-t1_all)
+        else:
+            # The same procedure as above but now we compute time-overlaps as well
+            t1 = time.time()
+            print('Creating shell...')
+            shell_2, l_vals = molden_methods.molden_file_to_libint_shell('Diag_%d-libra-1_0.molden'%step,\
+                                                                          is_spherical)
+            print('Done with creating shell. Elapsed time:', time.time()-t1)
+            t1 = time.time()
+            print('Reading energies and eigenvectors....')
+            eig_vect_2, energies_2 = molden_methods.eigenvectors_molden('Diag_%d-libra-1_0.molden'%step,\
+                                                                        nbasis(shell_2),l_vals)
+            print('Done with reading energies and eigenvectors. Elapsed time:', time.time()-t1)
+            if params['remove_molden']:
+                os.system('rm Diag_%d-libra-1_0.molden'%step)
+            print('Computing atomic orbital overlap matrix...')
+            t1 = time.time()
+            AO_S = compute_overlaps(shell_2,shell_2,nprocs)
+            AO_St = compute_overlaps(shell_1,shell_2,nprocs)
+            print('Done with computing atomic orbital overlaps. Elapsed time:', time.time()-t1)
+            t1 = time.time()
+            print('Turning the MATRIX to numpy array...')
+            AO_S = data_conv.MATRIX2nparray(AO_S)
+            AO_St = data_conv.MATRIX2nparray(AO_St)
+            print('Done with transforming MATRIX 2 numpy array. Elapsed time:', time.time()-t1)
+            ## Now, we need to resort the eigenvectors based on the new indices
+            print('Resorting eigenvectors elements...')
+            t1 = time.time()
+            new_indices = CP2K_methods.resort_molog_eigenvectors(l_vals)
+            eigenvectors_2 = []
+            for j in range(len(eig_vect_2)):
+                # the new and sorted eigenvector
+                eigenvector_2 = eig_vect_2[j]
+                eigenvector_2 = eigenvector_2[new_indices]
+                # append it to the eigenvectors list
+                eigenvectors_2.append(eigenvector_2)
+            eigenvectors_2 = np.array(eigenvectors_2)
+            print('Done with resorting eigenvectors elements. Elapsed time:',time.time()-t1)
+            ##
+            t1 = time.time()
+            print('Computing and saving molecular orbital overlaps...')
+            S = np.linalg.multi_dot([eigenvectors_2, AO_S, eigenvectors_2.T])[istate-1:fstate-1,istate-1:fstate-1]
+            St = np.linalg.multi_dot([eigenvectors_1, AO_S, eigenvectors_2.T])[istate-1:fstate-1,istate-1:fstate-1]
+            S_step = data_conv.form_block_matrix(S,zero_mat,zero_mat,S)
+            St_step = data_conv.form_block_matrix(St,zero_mat,zero_mat,St)
+            S_step_sparse = scipy.sparse.csc_matrix(S_step)
+            St_step_sparse = scipy.sparse.csc_matrix(St_step)
+            E_step = data_conv.form_block_matrix(np.diag(energies_2)[istate-1:fstate-1,istate-1:fstate-1],\
+                                                 zero_mat,zero_mat,\
+                                                 np.diag(energies_2)[istate-1:fstate-1,istate-1:fstate-1])
+            E_step_sparse = scipy.sparse.csc_matrix(E_step)
+            scipy.sparse.save_npz(params['res_dir']+'/S_ks_%d.npz'%step, S_step_sparse)
+            scipy.sparse.save_npz(params['res_dir']+'/St_ks_%d.npz'%(step-1), St_step_sparse)
+            scipy.sparse.save_npz(params['res_dir']+'/E_ks_%d.npz'%step, E_step_sparse)
+            print('Done with computing molecular orbital overlaps. Elapsed time:', time.time()-t1)
+            shell_1 = shell_2
+            energies_1 = energies_2
+            eigenvectors_1 = eigenvectors_2
+            print('Removing unnecessary wfn files...')
+            os.system('rm OT_%d-RESTART*'%(step-1))
+            os.system('rm Diag_%d-RESTART*'%(step-1))
+            print('Done with step %d.'%step,'Elapsed time:',time.time()-t1_all)
+        counter += 1
+    # Finally move all the pdos and log files to all_pdosfiles and all_logfiles
+    os.system('mv *pdos %s/.'%params['all_pdosfiles'])
+    os.system('mv *log %s/.'%params['all_logfiles'])
+    print('Done with the job!!!')
 
 
