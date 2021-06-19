@@ -1425,7 +1425,7 @@ def distribute_cp2k_xtb_jobs(submit_template: str, run_python_file: str, istep: 
         for i in range(len(lines)):
             if 'istep' in lines[i]:
                 file.write("params['istep'] = %d\n"%istep_job)
-            elif 'istep' in lines[i]:
+            elif 'fstep' in lines[i]:
                 file.write("params['fstep'] = %d\n"%fstep_job)
             else:
                 file.write(lines[i])
