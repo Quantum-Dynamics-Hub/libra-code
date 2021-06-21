@@ -12,3 +12,17 @@ It is required to specify the `nprocs`, `init_state`, and `final_state` in the `
 
 After specifying all the variables in both files you can run the calculations using `python distribute_jobs.py`.
 
+The MO overlaps are saved as `.npz` format. These files are binary files by `scipy.sparse` library. In order to load the saved files you can do this:
+
+```
+import numpy as np
+import scipy.sparse
+
+# Load the sparse matrix
+S = scipy.sparse.load_npz('./res/S_ks_0_re.npz')
+# The dense matrix
+S_dense = S.todense()
+
+# Show the diagonal elements of the dense matrix
+np.diag(S_dense)
+```
