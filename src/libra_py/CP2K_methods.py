@@ -1260,3 +1260,183 @@ def molog_lvals(filename:str):
     
     return l_vals_all
 
+
+def cp2k_xtb_ot_inp(ot_inp_temp: str, traj_xyz_filename: str, step: int):
+    """
+    This function gets the xTB orbital transformation (OT) input template and the trajectrory xyz file name
+    and makes a new input based on the time step. The aim of this input is to obtain a converged
+    wfn RESTART file and use it for diagonalization so that we can print out the MOLog or molden files.
+
+    Args:
+
+        ot_inp_temp (string): The name of the OT input template.
+
+        traj_xyz_filename (string): The name of the trajectory xyz file name.
+
+        step (integer): The time step.
+
+    Returns: 
+
+        None
+    """
+
+    file = open(ot_inp_temp)
+    lines = file.readlines()
+    file.close()
+
+    read_trajectory_xyz_file(traj_xyz_filename, step)
+
+    file = open('xtb_ot_step_%d.inp'%step,'w')
+
+    for i in range(len(lines)):
+        if 'PROJECT_NAME'.lower() in lines[i].lower():
+            file.write('PROJECT_NAME OT_%d\n'%step)
+        elif 'COORD_FILE_NAME'.lower() in lines[i].lower():
+            file.write('COORD_FILE_NAME coord-%d.xyz\n'%step)
+        elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower():
+            file.write('WFN_RESTART_FILE_NAME OT_%d-RESTART.wfn\n'%(step-1))
+        elif 'SCF_GUESS'.lower() in lines[i].lower():
+            file.write('SCF_GUESS RESTART\n')
+        else:
+            file.write(lines[i])
+
+    file.close()
+
+
+
+def cp2k_xtb_diag_inp(diag_inp_temp: str, step: int):
+    """
+    This function gets the xTB diagonalization input template 
+    and makes a new input based on the time step. This input will use the 
+    wfn RESTART file name obtained from the OT calclulations.
+
+    Args:
+
+        diag_inp_temp (string): The name of the diagonalization input template.
+
+        step (integer): The time step.
+
+    Returns: 
+
+        None
+    """
+
+    file = open(diag_inp_temp)
+    lines = file.readlines()
+    file.close()
+
+    file = open('xtb_diag_step_%d.inp'%step,'w')
+
+    for i in range(len(lines)):
+        if 'PROJECT_NAME'.lower() in lines[i].lower():
+            file.write('PROJECT_NAME Diag_%d\n'%step)
+        elif 'COORD_FILE_NAME'.lower() in lines[i].lower():
+            file.write('COORD_FILE_NAME coord-%d.xyz\n'%step)
+        elif 'WFN_RESTART_FILE_NAME'.lower() in lines[i].lower():
+            file.write('WFN_RESTART_FILE_NAME OT_%d-RESTART.wfn\n'%step)
+        elif 'SCF_GUESS'.lower() in lines[i].lower():
+            file.write('SCF_GUESS RESTART\n')
+        elif 'FILENAME'.lower() in lines[i].lower():
+            file.write('FILENAME libra\n')
+        else:
+            file.write(lines[i])
+
+    file.close()
+
+
+def run_cp2k_xtb(params):
+    """
+    This function is for running the CP2K for xTB inputs.
+
+    Args:
+
+        params (dictionary): A dictionary containing the following parameters
+
+                             cp2k_ot_input_template (string): The CP2K OT input template file name.
+
+                             cp2k_diag_input_template (string): The CP2K diagonalization input template file name.
+
+                             trajectory_xyz_filename (string): The trajectory xyz file name.
+
+                             step (integer): The time step.
+
+                             cp2k_exe (string): The full path to CP2K executable.
+
+                             nprocs (integer): Number of processors.
+
+    """
+    print('**************** Running CP2K ****************')
+    ot_input_template = params['cp2k_ot_input_template']
+    diag_input_template = params['cp2k_diag_input_template']
+    trajectory_xyz_filename = params['trajectory_xyz_filename']
+    step = params['step']
+    cp2k_exe = params['cp2k_exe']
+    nprocs = params['nprocs']
+    ##### Run OT
+    print('Step', step,'Computing the OT method wfn file...')
+    cp2k_xtb_ot_inp(ot_input_template, trajectory_xyz_filename, step)
+    t1 = time.time()
+    os.system('mpirun -np %d %s -i xtb_ot_step_%d.inp -o OUT-ot_%d.log'%(nprocs, cp2k_exe, step, step))
+    print('Done with OT wfn. Elapsed time:',time.time()-t1)
+    ##### Run diagonalization
+    t1 = time.time()
+    print('Computing the wfn file using diagonalization method...')
+    cp2k_xtb_diag_inp(diag_input_template, step)
+    os.system('mpirun -np %d %s -i xtb_diag_step_%d.inp -o OUT-diag_%d.log'%(nprocs, cp2k_exe, step, step))
+    print('Done with diagonalization. Elapsed time:', time.time()-t1)
+
+
+def distribute_cp2k_xtb_jobs(submit_template: str, run_python_file: str, istep: int, fstep: int, njobs: int, run_slurm: bool):
+    """
+    This function distributes the jobs to perform CP2K calculations and computing and saving the MO overlaps.
+
+    Args:
+
+        submit_template (string): The name of the submit template to submit a job.
+
+        run_python_file (string): The name of the python file for running the run_cp2k_xtb_step2 function which
+                                  contains the parameters.
+
+        istep (integer): The initial step of the MD trajectory.
+
+        fstep (integer): The final step of the MD trajectory.
+
+        njobs (integer): The number of jobs.
+
+        run_slurm (bool): The flag for running the computations either as bash or submitting through sbatch.
+    """
+    file = open(run_python_file,'r')
+    lines = file.readlines()
+    file.close()
+    nsteps_job = int((fstep-istep)/njobs)
+    for njob in range(njobs):
+        istep_job = njob*nsteps_job+istep
+        fstep_job = (njob+1)*nsteps_job+istep
+        if njob==(njobs-1):
+            fstep_job = fstep
+        print('Submitting job',njob+1)
+        print('Job',njob,'istep',istep_job,'fstep',fstep_job,'nsteps',fstep_job-istep_job)
+        if os.path.exists('job%d'%(njob+1)):
+            os.system('rm -rf job%d'%(njob+1))
+        os.system('mkdir job%d'%(njob+1))
+        os.chdir('job%d'%(njob+1))
+        os.system('cp ../%s %s'%(submit_template, submit_template))
+        file = open('run.py','w')
+        for i in range(len(lines)):
+            if 'istep' in lines[i]:
+                file.write("params['istep'] = %d\n"%istep_job)
+            elif 'fstep' in lines[i]:
+                file.write("params['fstep'] = %d\n"%fstep_job)
+            else:
+                file.write(lines[i])
+        file.close()
+        if run_slurm:
+            os.system('sbatch %s'%submit_template)
+        else:
+            # Just in case you want to use a bash file and not submitting
+            os.system('sh %s'%submit_template)
+        print('Submitted job', njob)
+        os.chdir('../')
+        # run_cp2k_xtb_step2(params)
+
+
