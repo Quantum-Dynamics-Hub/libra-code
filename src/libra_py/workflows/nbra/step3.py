@@ -564,7 +564,9 @@ def get_Lowdin_general(S):
     nstates = int(S.num_of_cols)  # division by 2 because it is a super-matrix
     is_inv = FullPivLU_rank_invertible(S)
     if is_inv[1] != 1:
-        print("Error, S is not invertible, Exiting Program");  sys.exit(0)
+        print(F"Error, S is not invertible, true rank = { is_inv[0] }. Exiting program...\n");  
+        S.show_matrix()  
+        sys.exit(0)
     S_half   = CMATRIX(nstates,nstates)
     S_i_half = CMATRIX(nstates,nstates)
     sqrt_matrix(S, S_half, S_i_half)
@@ -1540,7 +1542,7 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed,  _params)
 
         if sorting_type == "identity":
 
-            reindex_nsteps.append( list(range(nstates_sd)) )
+            reindex_nsteps.append(  list(range(nstates_sd))  )
 
             for state in range(nstates_sd):
 

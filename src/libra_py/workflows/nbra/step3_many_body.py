@@ -40,7 +40,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 import util.libutil as comn
 from libra_py import units as units
 from libra_py import influence_spectrum as infsp
-from libra_py import data_visualize, data_conv, data_read, data_stat
+from libra_py import data_visualize, data_conv, data_read, data_stat, data_outs
 from . import mapping, step2_many_body, step3, step4
 
 
@@ -253,7 +253,7 @@ def make_T_matrices( ci_coefficients, ci_basis_states, spin_components, sd_state
             * **_params["isnap"] (int): step at which to start counting  [ default: 0 ]
             * **_params["fsnap"] (int): step at which to stop counting [ default: 1]
             * **_params["outdir"] (string): output directory for the T matricies [ default: "res"]
-            * **_params["verbose"] (int): want to see some messages [ default: 0 ] 
+            * **_params["verbosity"] (int): level of extra m messages you wanna see [ default: 0 - no debug info ] 
 
     Returns:
         SD2CI (list of CMATRIX): CMATRIX at each timestep where the rows are SDs and the cols are MB states. The columns contain the coefficients of the MB expansion for each MB state
@@ -264,7 +264,7 @@ def make_T_matrices( ci_coefficients, ci_basis_states, spin_components, sd_state
 
     critical_params = []
     # Default parameters
-    default_params = { "number_of_states":1, "isnap":0, "fsnap":1, "verbose":0, "outdir":"res" }
+    default_params = { "number_of_states":1, "isnap":0, "fsnap":1, "verbosity":0, "outdir":"res" }
     # Check input
     comn.check_input(params, default_params, critical_params)  
 
@@ -273,38 +273,66 @@ def make_T_matrices( ci_coefficients, ci_basis_states, spin_components, sd_state
     istep   = params["isnap"]
     fstep   = params["fsnap"]
     outdir = params["outdir"]
-    verbose = params["verbose"]
+    verbosity = params["verbosity"]
 
 
     ci_coefficients_libra = []
     nSDs = len( sd_states_unique_sorted[0] ) + 1
+
     # Add one to the number of CI states because the ground state is not included yet
     nCIs  = number_of_states + 1
+
+    if verbosity >=1:
+        print("=============== In make_T_matrices ============") 
+        print(F"number_of_states = {number_of_states} nCIs = {nCIs} nSDs = {nSDs}")
+
+    # Results
     SD2CI = []
 
+    # Compute
     for step in range( fstep - istep ):
+        SD2CI.append( CMATRIX( nSDs, nCIs ) )
 
         # Make the list of ci_coefficients for each step in the way Libra accepts
-        ci_coefficients_libra.append( [] )
-        # Start with the ground state. This is not explicitly given by electronic strcture calculations
-        ci_coefficients_libra[step].insert( 0, [0.0] * nSDs )
-        ci_coefficients_libra[step][0][0] = 1.0
+        # ci_coefficients_libra.append( [] ) -  deprecate AVA 7/8
 
-        # For each ci state for this step
-        for i in range( len( ci_coefficients[step] ) ):
-            count = 0
+        # Start with the ground state. This is not explicitly given by electronic strcture calculations
+        # Deprecate - AVA 7/8
+        #ci_coefficients_libra[step].insert( 0, [0.0] * nSDs )
+        #ci_coefficients_libra[step][0][0] = 1.0 
+
+        # Ground state "CI"
+        SD2CI[step].set(0, 0, 1.0+0.0j)
+
+        if verbosity >=2:
+            print(F"   ========== in step {step} ===========")
+            print(F"    sd_states_unique_sorted{step} ", sd_states_unique_sorted[step] )
+
+        # Excited states "CI"s
+        for i in range( number_of_states ):
+            #count = 0
 
             # The ci wavefunction is a linear combination of SD states. Make a list of zeros the size of the number of unique
             # SD states + 1 for the ground state
-            ci_coefficients_libra[step].append( [0.0] * nSDs )
+            #ci_coefficients_libra[step].append( [0.0] * nSDs ) - deprecate - AVA 7/8
+
+
+            # For each ci_coefficient in this ci state for this step, get the ci coefficients and spin (alp or bet)
+            nconf = len(ci_coefficients[step][i])  
+
+            if verbosity >= 3:
+                print(F"      handling CI {i}, number of configurations = {nconf},  ci_coeffs" ,ci_coefficients[step][i] )
+            
 
             # Exclude ground state here in the index, that info is not explicitly contained 
             # in the ci_coefficients_dynamics list from electronic structure calculations
             tmp_ci_basis_state_and_spin = []
-
-            # For each ci_coefficient in this ci state for this step, get the ci coefficients and spin (alp or bet)
-            for k in range(len(ci_coefficients[step][i])):
+            for k in range( nconf ):
                 tmp_ci_basis_state_and_spin.append( [ci_basis_states[step][i][k] , spin_components[step][i][k]] )
+
+            if verbosity >= 3:
+                print("      tmp_ci_basis_state_and_spin = ", tmp_ci_basis_state_and_spin)
+
 
             # Now, loop over the SDs (excluding the ground state) to assign the coefficients
             for j in range( nSDs-1 ):
@@ -314,29 +342,154 @@ def make_T_matrices( ci_coefficients, ci_basis_states, spin_components, sd_state
 
                     # ok, it has found a match, now what is the index of the SD in the list of unique SDs?
                     item_index = tmp_ci_basis_state_and_spin.index(sd_states_unique_sorted[step][j])
-                    ci_coefficients_libra[step][i+1][j+1] = float(ci_coefficients[step][i][item_index])
+                    val = float(ci_coefficients[step][i][item_index]) * (1.0+0.0j)
 
+                    if verbosity >= 4:
+                        print(F"      found match: j = {j}, what = { sd_states_unique_sorted[step][j]}, its index = {item_index} ")                        
+                        print(F" {val} goes to matrix element {i+1}, {j+1}")
+                    
+                    #ci_coefficients_libra[step][i+1][j+1] = float(ci_coefficients[step][i][item_index])  # deprecate - AVA 7/8
+                    SD2CI[step].set(j+1, i+1, float(ci_coefficients[step][i][item_index]) * 1.0+0.0j )
+
+
+        if verbosity >= 2: 
+            print("Matrix before the normalization")
+            data_outs.print_matrix(SD2CI[step])
 
         # Sanity check. Make sure sum of squared elements of columns == 1:
         for i in range( nCIs ):
-            check_norm = 0
+            check_norm = 0.0
             for j in range( nSDs ):
-                check_norm += ci_coefficients_libra[step][i][j]**2
+                #check_norm += ci_coefficients_libra[step][i][j]**2
+                check_norm += abs(SD2CI[step].get(j, i))**2
+            check_norm = 1.0 / math.sqrt(check_norm)
 
-            if verbose == 1:
-                print("Step", step, "state", i, "check_norm", check_norm)
+            SD2CI[step].scale(-1, i, check_norm*(1.0+0.0j))
+           
 
-            if check_norm < 0.99 or check_norm > 1.01:
-                print("Warning: Step, ", step)
-                print("Column ", i, "in SD2Ci (T) matrix has norm either < 0.99 or > 1.01")
-                print("Exiting now")
-                sys.exit(0)
+        if verbosity >= 2: 
+            print("Matrix after the normalization")
+            data_outs.print_matrix(SD2CI[step])
+
+            
+        # Output the transformation matrix. This is how you can double check that it worked ( it does ... :) )
+        SD2CI[step].show_matrix( "%s/T_%s.txt" % (outdir, str(step)) )
+
+    return SD2CI
+
+
+
+
+
+def make_T_matrices_fast( ci_coefficients, ci_basis_states, spin_components, sd_basis_states_unique, _params):
+    """
+    This function makes the "T"ransformation matricies that convert between the SD basis to the CI-like (or many-body (MB)) basis.
+
+    This funciton is made to be used within the NBRA Libra workflow, where things such as ci_coefficients, ci_basis_states, spin_components, 
+    and sd_states_unique_sorted have been extracted from TD-DFT calculations. As of 11/30/2020, compatable ES programs
+    include CP2K, DFTB+ and Gaussian.
+
+    Args:
+        ci_coefficients (list of lists of lists): coefficients for the many-body states for each step
+        ci_basis_states (list of lists): All SD basis states that comprise the many-body excitations for each step
+        spin_components (list of lists): the spin components of the excitation (alpha or beta excitaiton?) for all states and all steps  
+        sd_basis_states_unique (list): 1 of each of the SP transitions (and its spin) that made up the considered CI states
+        _params (dict): control parameters
+            * **_params["number_of_states"]** (int): number of excited MB states [default: 1]
+            * **_params["isnap"] (int): step at which to start counting  [ default: 0 ]
+            * **_params["fsnap"] (int): step at which to stop counting [ default: 1]
+            * **_params["outdir"] (string): output directory for the T matricies [ default: "res"]
+            * **_params["verbosity"] (int): level of extra m messages you wanna see [ default: 0 - no debug info ] 
+
+    Returns:
+        SD2CI (list of CMATRIX): CMATRIX at each timestep where the rows are SDs and the cols are MB states. The columns contain the coefficients of the MB expansion for each MB state
+
+    """
+
+    params = dict(_params)
+
+    critical_params = []
+    # Default parameters
+    default_params = { "number_of_states":1, "isnap":0, "fsnap":1, "verbosity":0, "outdir":"res" }
+    # Check input
+    comn.check_input(params, default_params, critical_params)  
+
+
+    number_of_states = params["number_of_states"]
+    istep   = params["isnap"]
+    fstep   = params["fsnap"]
+    outdir = params["outdir"]
+    verbosity = params["verbosity"]
+
+
+    ci_coefficients_libra = []
+    nSDs = len( sd_basis_states_unique ) + 1
+
+    # Add one to the number of CI states because the ground state is not included yet
+    nCIs  = number_of_states + 1
+
+    if verbosity >=1:
+        print("=============== In make_T_matrices ============") 
+        print(F"number_of_states = {number_of_states} nCIs = {nCIs} nSDs = {nSDs}")
+        print(F"sd_basis_states_unique ", sd_bais_states_unique )
+
+
+    # Results
+    SD2CI = []
+
+    # Compute
+    for step in range( fstep - istep ):
+
+        if verbosity >=2:
+            print(F"   ========== in step {step} ===========")
 
         SD2CI.append( CMATRIX( nSDs, nCIs ) )
-        for i in range( nSDs ):
-            for j in range( nCIs ):
-                SD2CI[step].set( i, j, ci_coefficients_libra[step][j][i] * (1.0+0.0j) )
 
+        # Ground state "CI"
+        SD2CI[step].set(0, 0, 1.0+0.0j)
+
+        # Excited states "CI"s
+        for i in range( number_of_states ):
+
+            # For each ci_coefficient in this ci state for this step, get the ci coefficients and spin (alp or bet)
+            nconf = len(ci_coefficients[step][i])  
+
+            if verbosity >= 3:
+                print(F"      handling CI {i}, number of configurations = {nconf},  ci_coeffs" ,ci_coefficients[step][i] )
+            
+
+            # Exclude ground state here in the index, that info is not explicitly contained 
+            # in the ci_coefficients_dynamics list from electronic structure calculations
+            for k in range( nconf ):
+                conf = [ ci_basis_states[step][i][k] , spin_components[step][i][k] ]
+
+                if conf in sd_basis_states_unique:    
+                    indx = sd_basis_states_unique.index(conf)
+                    val = ci_coefficients[step][i][k] * (1.0+0.0j)
+
+                    SD2CI[step].set(indx+1, i+1, val )
+
+
+        if verbosity >= 2: 
+            print("Matrix before the normalization")
+            data_outs.print_matrix(SD2CI[step])
+
+        # Sanity check. Make sure sum of squared elements of columns == 1:
+        for i in range( nCIs ):
+            check_norm = 0.0
+            for j in range( nSDs ):
+                #check_norm += ci_coefficients_libra[step][i][j]**2
+                check_norm += abs(SD2CI[step].get(j, i))**2
+            check_norm = 1.0 / math.sqrt(check_norm)
+
+            SD2CI[step].scale(-1, i, check_norm*(1.0+0.0j))
+           
+
+        if verbosity >= 2: 
+            print("Matrix after the normalization")
+            data_outs.print_matrix(SD2CI[step])
+
+            
         # Output the transformation matrix. This is how you can double check that it worked ( it does ... :) )
         SD2CI[step].show_matrix( "%s/T_%s.txt" % (outdir, str(step)) )
 
@@ -350,6 +503,11 @@ def run(_params):
     """
     This function utilizes the single-particle results, results of TD-DFT(B) calculations, and
     user's definition of excited state basis to sompute the the Hvib in the many-body basis
+
+    Recent update by AVA:
+    if we are working with the SI states, we don't can about the ordering of SDs, so in the stage of forming T matrices, we
+    can remove a lot of critical redundancies. We will be using the sorting type "identity" in that case (now default)
+
 
     Args:
        _params (dict): control parameters
@@ -379,7 +537,7 @@ def run(_params):
                         "orbital_normalization":False, "orbital_phase_correction":False,
                         "state_normalization":True, "state_phase_correction":True,
                         "do_state_reordering":2, "state_reordering_alpha":0,
-                        "sorting_type":"energy", "dt": 1.0*units.fs2au,
+                        "sorting_type":"identity", "dt": 1.0*units.fs2au,
                         "outdir":F"{path}/res_mb_sp/"
                      }
 
@@ -395,13 +553,16 @@ def run(_params):
     orbital_phase_correction = params["orbital_phase_correction"]
     state_normalization = params["state_normalization"]
     state_phase_correction = params["state_phase_correction"]
+    start_time = params["isnap"]
+    sorting_type = params["sorting_type"]
 
 
-   
+    log_file = open("step3_many_body.log", "w")
+    log_file.close()
 
     #================== Preparation ================
-    os.system(F"rm -rf {res_dir}")
-    os.mkdir(res_dir)
+    if not os.path.exists(res_dir):
+        os.mkdir(res_dir)
 
 
     #=============== Single-particle stuff ================
@@ -429,8 +590,18 @@ def run(_params):
     spin_components = res[4]    
 
 
+    with open("step3_many_body.log", "a") as log_file:
+        print("===============", file = log_file)
+        print( len(sd_basis_states_unique),  file = log_file )
+        print("SD basis states unique", file = log_file )
+        for sd in sd_basis_states_unique:
+            print ( sd , file = log_file )
+
+
+
     # 2.2. Reindex the single-particle excitations into a format expected by Libra: keeping in mind Slater Determinants notation
     sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( homo_index, orbital_indices,  sd_basis_states_unique, sd_format=2 )
+    
 
     res1 = step3.sort_unique_SD_basis( E[0], sd_basis_states_unique, sd_states_reindexed, params )
 
@@ -438,6 +609,25 @@ def run(_params):
     sd_states_unique_sorted = res1[1]
     sd_states_reindexed_sorted = res1[2]
     reindex_nsteps = res1[3]
+
+    with open("step3_many_body.log", "a") as log_file:
+        print("===============", file = log_file)
+        print( len(sd_states_reindexed),  file = log_file )
+        print("Reindexed SD states", file = log_file )
+        for sd in sd_states_reindexed:
+            print ( sd , file = log_file )
+
+        print("===============", file = log_file)
+        print( len(sd_states_unique_sorted),  file = log_file )
+        print("Unique sorted SD states", file = log_file )
+        for sd in sd_states_unique_sorted:
+            print ( sd , file = log_file )
+
+        print("===============", file = log_file)
+        print( len(sd_states_reindexed_sorted),  file = log_file )
+        print("Reindexed SD states", file = log_file )
+        for sd in sd_states_reindexed_sorted:
+            print ( sd , file = log_file )
 
 
     #=================== SD-level stuff =================
@@ -454,7 +644,9 @@ def run(_params):
         ket = sd_states_reindexed_sorted[step]
         s_sd = mapping.ovlp_mat_arb( bra, ket, S[0][step], False )
         S_sd.append( s_sd )
-    
+        s_sd.real().show_matrix("%s/S_sd_%d_re" % (res_dir, int(start_time+step)))
+
+   
     # 3.1.2. Time-overlaps
     St_sd = []
     for step in range(nsteps-1):
@@ -463,6 +655,7 @@ def run(_params):
         ket = sd_states_reindexed_sorted[step+1]
         st_sd = mapping.ovlp_mat_arb( bra, ket, St[0][step], False )
         St_sd.append( st_sd )
+        st_sd.real().show_matrix("%s/St_sd_%d_re" % (res_dir, int(start_time+step)))
     
 
     #==================== CI-level stuff ========================
@@ -470,7 +663,12 @@ def run(_params):
     ci_midpoint_energies = compute_ci_energies_midpoint( ci_energies, params )
 
     # 4.2. Print out the T matrices
-    SD2CI = make_T_matrices( ci_coefficients, ci_basis_states,  spin_components, sd_states_unique_sorted,  params )
+    if sorting_type=="identity":
+        # The new, faster way
+        SD2CI = make_T_matrices_fast( ci_coefficients, ci_basis_states, spin_components, sd_basis_states_unique,  params )
+    else:
+        # The old way
+        SD2CI = make_T_matrices( ci_coefficients, ci_basis_states,  spin_components, sd_states_unique_sorted,  params )
 
     # 4.3. Compute overlaps and time-overlaps in the CI basis
     S_ci, St_ci  = [], []
@@ -496,7 +694,6 @@ def run(_params):
  
 
     # 5.2. Save S and St for CI states to disk
-    start_time = params["isnap"]
     print("Output the CI data to the res directory..." )
     for step in range( nsteps ):
         S_ci[step].real().show_matrix("%s/S_ci_%d_re" % (res_dir, int(start_time+step)))
@@ -516,3 +713,5 @@ def run(_params):
 
 
     return Hvib
+
+
