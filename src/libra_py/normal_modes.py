@@ -123,7 +123,7 @@ def visualize_modes(E, R, U, M, w, params):
     """
 
     ndof = R.num_of_rows
-    nat = ndof/3
+    nat = int(ndof/3)
 
     scl = params["scale"]
 

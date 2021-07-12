@@ -629,8 +629,9 @@ def pdos_plot(plt, E, pDOSa, pDOSb, _params):
     plt.ylabel('$pDOS, eV^{-1}$',fontsize=12)
 
     plt.tight_layout()
-    plt.show()
     plt.savefig('pdosa.png', dpi=300)
+    plt.show()
+
 
     
 

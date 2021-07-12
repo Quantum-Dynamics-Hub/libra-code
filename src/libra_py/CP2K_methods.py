@@ -1440,3 +1440,39 @@ def distribute_cp2k_xtb_jobs(submit_template: str, run_python_file: str, istep: 
         # run_cp2k_xtb_step2(params)
 
 
+
+def cp2k_find_excitation_energies(file):
+    """
+    This function finds and extracts excitation energies and oscillator strengths 
+    from the .log files of the TD-DFPT calculations in CP2k
+    
+    Args:
+        file ( string ): name of the file to read
+        
+    Returns:
+        (list, list):
+        
+           * the first list contains the energies of excited states
+           * the second list contains the oscillator strengths
+           
+    """
+    
+    f = open(file, "r")
+    A = f.readlines()
+    f.close()
+    
+    E, F = [], []
+    for a in A:
+        tmp = a.split()
+        
+        if len(tmp)== 7:
+            if tmp[0] == "TDDFPT|":
+                istate = int(float(tmp[1]))
+                e = float(tmp[2])
+                f = float(tmp[6])
+                
+                E.append(e)
+                F.append(f)
+                                
+    return E, F
+
