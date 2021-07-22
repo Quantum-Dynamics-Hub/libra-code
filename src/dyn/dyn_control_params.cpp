@@ -50,6 +50,7 @@ dyn_control_params::dyn_control_params(){
   MK_verbosity = 0;
   convergence = 0;
   max_number_attempts = 100;
+  min_probability_reordering = 0.0;
 
 
   ///================= Surface hopping: proposal, acceptance =======================
@@ -170,6 +171,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="MK_verbosity") { MK_verbosity = bp::extract<int>(params.values()[i]);  }
     else if(key=="convergence") { convergence = bp::extract<int>(params.values()[i]);  }
     else if(key=="max_number_attempts") { max_number_attempts = bp::extract<int>(params.values()[i]);  }
+    else if(key=="min_probability_reordering") { min_probability_reordering = bp::extract<double>(params.values()[i]);  }
 
     ///================= Surface hopping: proposal, acceptance =======================
     else if(key=="tsh_method") { tsh_method = bp::extract<int>(params.values()[i]);  }

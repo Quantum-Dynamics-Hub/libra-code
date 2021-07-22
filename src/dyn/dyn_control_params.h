@@ -191,6 +191,14 @@ class dyn_control_params{
   */
   int max_number_attempts;
 
+  /**
+  The probability threshold for stochastic state reordering algorithm. 
+  If a probability for a multi-state stransition is below this value, it will be disregarded and set to 0
+  The rest of the probabilities will be renormalized
+  Default: 0.0 
+  */
+  double min_probability_reordering; 
+
   ///===============================================================================
   ///================= Surface hopping: proposal, acceptance =======================
   ///===============================================================================

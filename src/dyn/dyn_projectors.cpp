@@ -588,7 +588,7 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
     }
 
     if(prms.state_tracking_algo==33){
-        perm_t = get_stochastic_reordering3(st, rnd, prms.convergence, prms.max_number_attempts);
+        perm_t = get_stochastic_reordering3(st, rnd, prms.convergence, prms.max_number_attempts, prms.min_probability_reordering, 0);
     }
     
     // P -> P * perm

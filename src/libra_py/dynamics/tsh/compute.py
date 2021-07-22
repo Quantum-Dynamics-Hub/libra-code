@@ -514,6 +514,22 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 - 0: no extra output [ default ]
                 - 1: print details for debugging
 
+            * **dyn_params["convergence"]** ( int ):  A swtich for stochastic reordering algorithm 3 (and variants) 
+                to choose what happens when an acceptable permutation isn't generated in the set number of attempts:
+
+                - 0: returns the identity permutation (does not require convergence) [ default ]
+                - 1: exits and prints an error (requires convergence)
+
+            * **dyn_params["max_number_attempts"]** ( int ): The maximum number of hops that an be 
+                attempted before either choosing the identity or exiting in stochastic reordering algorithm 3 (and variants). 
+                Default: 100
+
+            * **dyn_params["min_probability_reordering"]** ( double ): The probability threshold for stochastic 
+                state reordering algorithm. If a probability for a multi-state stransition is below this value,
+                it will be disregarded and set to 0
+                The rest of the probabilities will be renormalized
+                Default: 0.0 
+
 
             ///===============================================================================
             ///================= Surface hopping: proposal, acceptance =======================
@@ -841,6 +857,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                              "force_method":1, "time_overlap_method":0, "nac_update_method":1, 
                              "do_phase_correction":1, "phase_correction_tol":1e-3,
                              "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0,
+                             "convergence":0,  "max_number_attempts":100, "min_probability_reordering":0.0
                            } )
 
     #================= Surface hopping: proposal, acceptance =======================
