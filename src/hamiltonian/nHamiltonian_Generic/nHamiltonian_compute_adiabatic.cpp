@@ -19,6 +19,7 @@
 
 #include "nHamiltonian.h"
 #include "../../math_meigen/libmeigen.h"
+#include <omp.h>
 
 
 /// liblibra namespace
@@ -571,10 +572,15 @@ void nHamiltonian::compute_adiabatic(bp::object py_funct, bp::object q, bp::obje
   }// if lvl == level
 
   else if(lvl>level){
-  
-    for(int i=0;i<children.size();i++){
-      children[i]->compute_adiabatic(py_funct,q,params,lvl);
-    }
+
+    int nthreads = omp_get_num_threads();
+    #pragma omp parallel num_threads( nthreads )
+    {
+        #pragma omp for  
+        for(int i=0;i<children.size();i++){
+          children[i]->compute_adiabatic(py_funct,q,params,lvl);
+        }
+    }// pragma
 
   }
 

@@ -16,6 +16,7 @@
 
 
 #include <stdlib.h>
+#include <omp.h>
 
 #include "nHamiltonian.h"
 #include "../Hamiltonian_Model/libhamiltonian_model.h"
@@ -224,10 +225,15 @@ void nHamiltonian::compute_diabatic(bp::object py_funct, bp::object q, bp::objec
   }// if lvl == level
 
   else if(lvl>level){
-  
-    for(int i=0;i<children.size();i++){
-      children[i]->compute_diabatic(py_funct,q,params,lvl);
-    }
+
+    int nthreads = omp_get_num_threads();
+    #pragma omp parallel num_threads( nthreads )
+    {
+        #pragma omp for    
+        for(int i=0;i<children.size();i++){
+          children[i]->compute_diabatic(py_funct,q,params,lvl);
+        }
+    }// pragma
 
   }
 
