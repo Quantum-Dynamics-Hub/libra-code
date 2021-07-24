@@ -58,7 +58,7 @@ def init_tsh_data(saver, hdf5_output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia
 
     if hdf5_output_level>=1:
 
-        # Time axis (integer steps)
+        # Time axis (integer steps)     
         saver.add_dataset("timestep", (_nsteps,) , "I")  
 
         # Time axis
@@ -94,62 +94,78 @@ def init_tsh_data(saver, hdf5_output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia
     if hdf5_output_level>=2:
 
         # Trajectory-resolved instantaneous adiabatic states
-        saver.add_dataset("states", (_nsteps, _ntraj), "I") 
+        if "states" in saver.keywords: # and "states" in saver.np_data.keys():
+            saver.add_dataset("states", (_nsteps, _ntraj), "I") 
 
 
     if hdf5_output_level>=3:
 
         # Average adiabatic SH populations (dynamically-consistent)
-        saver.add_dataset("SH_pop", (_nsteps, _nadi, 1), "R") 
+        if "SH_pop" in saver.keywords: # and "SH_pop" in saver.np_data.keys():
+            saver.add_dataset("SH_pop", (_nsteps, _nadi, 1), "R") 
 
         # Average adiabatic SH populations (raw)
-        saver.add_dataset("SH_pop_raw", (_nsteps, _nadi, 1), "R") 
+        if "SH_pop_raw" in saver.keywords: # and "SH_pop_raw" in saver.np_data.keys():
+            saver.add_dataset("SH_pop_raw", (_nsteps, _nadi, 1), "R") 
 
 
         # Average adiabatic density matrices (dynamically-consistent)
-        saver.add_dataset("D_adi", (_nsteps, _nadi, _nadi), "C") 
+        if "D_adi" in saver.keywords: # and "D_adi" in saver.np_data.keys():
+            saver.add_dataset("D_adi", (_nsteps, _nadi, _nadi), "C") 
 
         # Average adiabatic density matrices (raw)
-        saver.add_dataset("D_adi_raw", (_nsteps, _nadi, _nadi), "C") 
+        if "D_adi_raw" in saver.keywords: # and "D_adi_raw" in saver.np_data.keys():
+            saver.add_dataset("D_adi_raw", (_nsteps, _nadi, _nadi), "C") 
 
 
         # Average diabatic density matrices (dynamically-consistent)
-        saver.add_dataset("D_dia", (_nsteps, _ndia, _ndia), "C") 
+        if "D_dia" in saver.keywords: # and "D_dia" in saver.np_data.keys():
+            saver.add_dataset("D_dia", (_nsteps, _ndia, _ndia), "C") 
 
         # Average diabatic density matrices (raw)
-        saver.add_dataset("D_dia_raw", (_nsteps, _ndia, _ndia), "C") 
+        if "D_dia_raw" in saver.keywords: # and "D_dia_raw" in saver.np_data.keys():
+            saver.add_dataset("D_dia_raw", (_nsteps, _ndia, _ndia), "C") 
 
 
 
         # Trajectory-resolved coordinates
-        saver.add_dataset("q", (_nsteps, _ntraj, _ndof), "R") 
+        if "q" in saver.keywords: # and "q" in saver.np_data.keys():
+            saver.add_dataset("q", (_nsteps, _ntraj, _ndof), "R") 
 
         # Trajectory-resolved momenta
-        saver.add_dataset("p", (_nsteps, _ntraj, _ndof), "R") 
+        if "p" in saver.keywords: # and "p" in saver.np_data.keys():
+            saver.add_dataset("p", (_nsteps, _ntraj, _ndof), "R") 
 
         # Trajectory-resolved adiabatic TD-SE amplitudes
-        saver.add_dataset("Cadi", (_nsteps, _ntraj, _nadi), "C") 
+        if "Cadi" in saver.keywords: # and "Cadi" in saver.np_data.keys():
+            saver.add_dataset("Cadi", (_nsteps, _ntraj, _nadi), "C") 
 
         # Trajectory-resolved diabatic TD-SE amplitudes
-        saver.add_dataset("Cdia", (_nsteps, _ntraj, _ndia), "C") 
+        if "Cdia" in saver.keywords: # and "Cdia" in saver.np_data.keys():
+            saver.add_dataset("Cdia", (_nsteps, _ntraj, _ndia), "C") 
 
 
     if hdf5_output_level>=4:
 
         # Trajectory-resolved vibronic Hamiltoninans in the adiabatic representation
-        saver.add_dataset("hvib_adi", (_nsteps, _ntraj, _nadi, _nadi), "C") 
+        if "hvib_adi" in saver.keywords: # and "hvib_adi" in saver.np_data.keys():
+            saver.add_dataset("hvib_adi", (_nsteps, _ntraj, _nadi, _nadi), "C") 
 
         # Trajectory-resolved vibronic Hamiltoninans in the diabatic representation
-        saver.add_dataset("hvib_dia", (_nsteps, _ntraj, _ndia, _ndia), "C") 
+        if "hvib_dia" in saver.keywords: # and "hvib_dia" in saver.np_data.keys():
+            saver.add_dataset("hvib_dia", (_nsteps, _ntraj, _ndia, _ndia), "C") 
 
         # Trajectory-resolved time-overlaps of the adiabatic states
-        saver.add_dataset("St", (_nsteps, _ntraj, _nadi, _nadi), "C") 
+        if "St" in saver.keywords: # and "St" in saver.np_data.keys():
+            saver.add_dataset("St", (_nsteps, _ntraj, _nadi, _nadi), "C") 
 
         # Trajectory-resolved diabatic-to-adiabatic transformation matrices 
-        saver.add_dataset("basis_transform", (_nsteps, _ntraj, _ndia, _nadi), "C") 
+        if "basis_transform" in saver.keywords: # and "basis_transform" in saver.np_data.keys():
+            saver.add_dataset("basis_transform", (_nsteps, _ntraj, _ndia, _nadi), "C") 
 
         # Trajectory-resolved projector matrices (from the raw adiabatic to consistent adiabatic)
-        saver.add_dataset("projector", (_nsteps, _ntraj, _nadi, _nadi), "C") 
+        if "projector" in saver.keywords: # and "projector" in saver.np_data.keys():
+            saver.add_dataset("projector", (_nsteps, _ntraj, _nadi, _nadi), "C") 
 
 
 
@@ -267,47 +283,57 @@ def save_hdf5_3D(saver, i, pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_ra
 
     # Average adiabatic SH populations (dynamically-consistent)
     # Format: saver.add_dataset("SH_pop", (_nsteps, _nadi, 1), "R") 
-    saver.save_matrix(i, "SH_pop", pops) 
+    if "SH_pop" in saver.keywords and "SH_pop" in saver.np_data.keys():
+        saver.save_matrix(i, "SH_pop", pops) 
 
     # Average adiabatic SH populations (raw)
     # Format: saver.add_dataset("SH_pop_raw", (_nsteps, _nadi, 1), "R") 
-    saver.save_matrix(i, "SH_pop_raw", pops_raw) 
+    if "SH_pop_raw" in saver.keywords and "SH_pop_raw" in saver.np_data.keys():
+        saver.save_matrix(i, "SH_pop_raw", pops_raw) 
 
 
 
     # Average adiabatic density matrices (dynamically-consistent)
     # Format: saver.add_dataset("D_adi", (_nsteps, _nadi, _nadi), "C") 
-    saver.save_matrix(i, "D_adi", dm_adi) 
+    if "D_adia" in saver.keywords and "D_adi" in saver.np_data.keys():
+        saver.save_matrix(i, "D_adi", dm_adi) 
 
     # Average adiabatic density matrices (raw)
     # Format: saver.add_dataset("D_adi_raw", (_nsteps, _nadi, _nadi), "C") 
-    saver.save_matrix(i, "D_adi_raw", dm_adi_raw) 
+    if "D_adi_raw" in saver.keywords and "D_adi_raw" in saver.np_data.keys():
+        saver.save_matrix(i, "D_adi_raw", dm_adi_raw) 
 
 
     # Average diabatic density matrices (dynamically-consistent)
     # Format: saver.add_dataset("D_dia", (_nsteps, _ndia, _ndia), "C") 
-    saver.save_matrix(i, "D_dia", dm_dia) 
+    if "D_dia" in saver.keywords and "D_dia" in saver.np_data.keys():
+        saver.save_matrix(i, "D_dia", dm_dia) 
 
     # Average diabatic density matrices (raw)
     # Format: saver.add_dataset("D_dia_raw", (_nsteps, _ndia, _ndia), "C") 
-    saver.save_matrix(i, "D_dia_raw", dm_dia_raw) 
+    if "D_dia_raw" in saver.keywords and "D_dia_raw" in saver.np_data.keys():
+        saver.save_matrix(i, "D_dia_raw", dm_dia_raw) 
 
 
     # Trajectory-resolved coordinates
     # Format: saver.add_dataset("q", (_nsteps, _ntraj, _dof), "R") 
-    saver.save_matrix(i, "q", q.T()) 
+    if "q" in saver.keywords and "q" in saver.np_data.keys():
+        saver.save_matrix(i, "q", q.T()) 
 
     # Trajectory-resolved momenta
     # Format: saver.add_dataset("p", (_nsteps, _ntraj, _dof), "R") 
-    saver.save_matrix(i, "p", p.T()) 
+    if "p" in saver.keywords and "p" in saver.np_data.keys():
+        saver.save_matrix(i, "p", p.T()) 
 
     # Trajectory-resolved adiabatic TD-SE amplitudes
     # Format: saver.add_dataset("C_adi", (_nsteps, _ntraj, _nadi), "C") 
-    saver.save_matrix(i, "Cadi", Cadi.T()) 
+    if "Cadi" in saver.keywords and "Cadi" in saver.np_data.keys():
+        saver.save_matrix(i, "Cadi", Cadi.T()) 
 
     # Trajectory-resolved diabatic TD-SE amplitudes
     # Format: saver.add_dataset("C_dia", (_nsteps, _ntraj, _ndia), "C") 
-    saver.save_matrix(i, "Cdia", Cdia.T()) 
+    if "Cdia" in saver.keywords and "Cdia" in saver.np_data.keys():
+        saver.save_matrix(i, "Cdia", Cdia.T()) 
 
 
 
@@ -319,24 +345,29 @@ def save_hdf5_4D(saver, i, tr, hvib_adi, hvib_dia, St, U, projector):
 
     # Trajectory-resolved vibronic Hamiltoninans in the adiabatic representation
     # Format: saver.add_dataset("hvib_adi", (_nsteps, _ntraj, _nadi, _nadi), "C") 
-    saver.save_multi_matrix(i, tr, "hvib_adi", hvib_adi) 
+    if "hvib_adi" in saver.keywords and "hvib_adi" in saver.np_data.keys():
+        saver.save_multi_matrix(i, tr, "hvib_adi", hvib_adi) 
 
 
     # Trajectory-resolved vibronic Hamiltoninans in the diabatic representation
     # Format: saver.add_dataset("hvib_dia", (_nsteps, _ntraj, _ndia, _ndia), "C") 
-    saver.save_multi_matrix(i, tr, "hvib_dia", hvib_dia) 
+    if "hvib_dia" in saver.keywords and "hvib_dia" in saver.np_data.keys():
+        saver.save_multi_matrix(i, tr, "hvib_dia", hvib_dia) 
 
     # Trajectory-resolved time-overlaps of the adiabatic states
     # Format: saver.add_dataset("St", (_nsteps, _ntraj, _nadi, _nadi), "C") 
-    saver.save_multi_matrix(i, tr, "St", St) 
+    if "St" in saver.keywords and "St" in saver.np_data.keys():
+        saver.save_multi_matrix(i, tr, "St", St) 
 
     # Trajectory-resolved diabatic-to-adiabatic transformation matrices 
     # Format: saver.add_dataset("basis_transform", (_nsteps, _ntraj, _ndia, _nadi), "C") 
-    saver.save_multi_matrix(i, tr, "basis_transform", U) 
+    if "basis_transform" in saver.keywords and "basis_transform" in saver.np_data.keys():
+        saver.save_multi_matrix(i, tr, "basis_transform", U) 
 
     # Trajectory-resolved projector matrices (from the raw adiabatic to consistent adiabatic)
     # Format: saver.add_dataset("projector", (_nsteps, _ntraj, _nadi, _nadi), "C") 
-    saver.save_multi_matrix(i, tr, "projector", projector) 
+    if "projector" in saver.keywords and "projector" in saver.np_data.keys():
+        saver.save_multi_matrix(i, tr, "projector", projector) 
 
 
 
