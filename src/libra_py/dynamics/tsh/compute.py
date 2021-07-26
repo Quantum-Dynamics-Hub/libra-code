@@ -904,6 +904,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     phase_correction_tol = dyn_params["phase_correction_tol"]
     hdf5_output_level = dyn_params["hdf5_output_level"]
     mem_output_level = dyn_params["mem_output_level"]
+    txt_output_level = dyn_params["txt_output_level"]
     do_phase_correction = dyn_params["do_phase_correction"]
     state_tracking_algo = dyn_params["state_tracking_algo"]
     force_method = dyn_params["force_method"]
@@ -924,6 +925,10 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
     # Initialize savers
     _savers = save.init_tsh_savers(dyn_params, model_params, nsteps, ntraj, nnucl, nadi, ndia)
+
+    # Open and close the output files for further writing
+    if _savers["txt_saver"]!=None:
+        _savers["txt_saver"].save_data_txt( F"{prefix}", properties_to_save, "w", 0)
 
 
     # ======= Hierarchy of Hamiltonians =======
@@ -1007,6 +1012,12 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
                 save.save_hdf5_4D(_savers["mem_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr])
 
+            if txt_output_level>=4: 
+                hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
+                hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
+                save.save_hdf5_4D(_savers["txt_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr])
+
+
 
 
         #============ Propagate ===========        
@@ -1017,10 +1028,15 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
         elif rep_tdse==1:
             compute_dynamics(q, p, iM, Cadi, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm)
 
+        if _savers["txt_saver"]!=None:
+            _savers["txt_saver"].save_data_txt( F"{prefix}", properties_to_save, "a", i)
+
 
     if _savers["mem_saver"]!=None:
         _savers["mem_saver"].save_data( F"{prefix}/mem_data.hdf", properties_to_save, "w")
         return _savers["mem_saver"]
+
+
 
 
 

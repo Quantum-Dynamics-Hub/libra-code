@@ -249,6 +249,104 @@ class mem_saver:
                     print(F"{data_name} is not in the list {self.np_data.keys()}" )
 
 
+    
+    def save_data_txt(self, prefix, data_names, mode, istep):
+        """
+        To save the numpy data into TXT files in a given directory
+        
+        Args:
+            prefix (string): the name of the directory, where to save the results
+            data_names (list of strings): the list of the names of the data sets to save
+            mode ("w" or "a"): whether to overwrite the file or to append to it
+        
+        """
+
+        if mode=="w":
+            print("In mem_saver.save_data_txt()")
+            print("data_name = ", data_names)        
+            print("keywords = ", self.keywords)
+            print("keys = ", self.np_data.keys() )
+
+            for data_name in data_names:
+                if data_name in self.np_data.keys():
+                    f = open(F"{prefix}/{data_name}.txt", "w")
+                    f.close()
+
+        elif mode=="a":  # append the istep data to the files
+
+            for data_name in data_names:
+                if data_name in self.np_data.keys():
+
+                    #print(F"{data_name}")
+                    f = open(F"{prefix}/{data_name}.txt", "a")
+                    X = self.np_data[data_name]
+                    shp = X.shape  # dimentionality of the data
+
+                    if len(shp)==1:
+                        x = X[istep]
+
+                        if X.dtype==complex:
+                            f.write(F"{x.real:10.5e} {x.imag:10.5e}\n") 
+                        elif X.dtype==float:
+                            f.write(F"{x:10.5e}\n") 
+                        else:
+                            f.write(F"{x}\n") 
+
+                    elif len(shp)==2:
+                        for i1 in range(shp[1]):
+                            x = X[istep, i1]
+
+                            if X.dtype==complex:
+                                f.write(F"{x.real:10.5e} {x.imag:10.5e}") 
+                            elif X.dtype==float:
+                                f.write(F"{x:10.5e}") 
+                            else:
+                                f.write(F"{x}") 
+                            f.write("  ")
+                        f.write("\n")
+
+                    elif len(shp)==3:
+                        for i1 in range(shp[1]):
+                            for i2 in range(shp[2]):
+                                x = X[istep, i1, i2]
+
+                                if X.dtype==complex:
+                                    f.write(F"{x.real:10.5e} {x.imag:10.5e}") 
+                                elif X.dtype==float:
+                                    f.write(F"{x:10.5e}") 
+                                else:
+                                    f.write(F"{x}") 
+                                f.write("  ")
+                            f.write("    ")
+                        f.write("\n")
+
+                    elif len(shp)==4:
+                        for i1 in range(shp[1]):
+                            for i2 in range(shp[2]):
+                                for i3 in range(shp[3]):
+                                    x = X[istep, i1, i2, i3]
+
+                                    if X.dtype==complex:
+                                        f.write(F"{x.real:10.5e} {x.imag:10.5e}") 
+                                    elif X.dtype==float:
+                                        f.write(F"{x:10.5e}") 
+                                    else:
+                                        f.write(F"{x}") 
+                                    f.write("  ")
+                                f.write("    ")
+                            f.write("        ")
+                        f.write("\n")
+
+                    f.close()
+                    
+                else:
+                    #print(F"{data_name} is not in the list {self.np_data.keys()}" )
+                    pass
+
+
+
+
+
 class hdf5_saver:
 
     def __init__(self, _filename, _keywords=[]):
@@ -406,5 +504,9 @@ class hdf5_saver:
                 for i in range(nx):
                     for j in range(ny):
                         f[F"{data_name}/data"][istep, imatrix, i, j] = data.get(i, j)
+
+
+
+
 
 

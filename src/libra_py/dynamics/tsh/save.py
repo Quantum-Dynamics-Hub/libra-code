@@ -203,8 +203,13 @@ def init_tsh_savers(params, model_params, nsteps, ntraj, nnucl, nadi, ndia):
 
 
     #====== TXT ========
+    txt_output_level = params["txt_output_level"]
+
     if params["txt_output_level"] > 0:
-        pass
+        _savers["txt_saver"] = data_savers.mem_saver(properties_to_save) 
+        #_savers["txt_saver"].set_compression_level(params["use_compression"], params["compression_level"])
+        init_tsh_data(_savers["txt_saver"], txt_output_level, nsteps, ntraj, nnucl, nadi, ndia)
+
     
     #====== MEM =========
     mem_output_level = params["mem_output_level"]
@@ -378,6 +383,7 @@ def save_tsh_data_123(_savers, params,
 
     hdf5_output_level = params["hdf5_output_level"]
     mem_output_level = params["mem_output_level"]
+    txt_output_level = params["txt_output_level"]
 
     nsteps = params["nsteps"]
     print_freq = int(params["progress_frequency"]*nsteps)    
@@ -393,6 +399,8 @@ def save_tsh_data_123(_savers, params,
     if mem_output_level>=1 and _savers["mem_saver"]!=None:
         save_hdf5_1D(_savers["mem_saver"], i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Etherm, E_NHC)
 
+    if txt_output_level>=1 and _savers["txt_saver"]!=None:
+        save_hdf5_1D(_savers["txt_saver"], i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Etherm, E_NHC)
 
 
 
@@ -402,6 +410,8 @@ def save_tsh_data_123(_savers, params,
     if mem_output_level>=2 and _savers["mem_saver"]!=None:
         save_hdf5_2D(_savers["mem_saver"], i, states)
 
+    if txt_output_level>=2 and _savers["txt_saver"]!=None:
+        save_hdf5_2D(_savers["txt_saver"], i, states)
 
 
 
@@ -410,6 +420,10 @@ def save_tsh_data_123(_savers, params,
 
     if mem_output_level>=3 and _savers["mem_saver"]!=None: 
         save_hdf5_3D(_savers["mem_saver"], i, pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia)
+
+    if txt_output_level>=3 and _savers["txt_saver"]!=None: 
+        save_hdf5_3D(_savers["txt_saver"], i, pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia)
+
 
 
 
