@@ -453,7 +453,7 @@ vector<double> NeuralNetwork::train(Random& rnd, bp::dict params, MATRIX& inputs
 
 
   // Sanity check and other setups
-  if(learning_method==1 || learning_method==11 || learning_method==12 || learning_method==13 ){
+  if(learning_method==1 || learning_method==11 || learning_method==12 || learning_method==13 || learning_method==14 ){
     learning_class = 1;
   }
   else if(learning_method == 2 || learning_method == 21 || learning_method == 22 || learning_method == 23 ){
@@ -469,10 +469,18 @@ vector<double> NeuralNetwork::train(Random& rnd, bp::dict params, MATRIX& inputs
   if(learning_method==23){  cout<<"The method 23 is not yet implemented: using 2 instead"; learning_method = 2;  }
 
 
-  if(learning_method==2){   // RProp setups
+  if(learning_class==1){ // Backprop setups
+
+    for(L = 0; L < Nlayers; L++){ 
+      dBold[L] = dB[L]; 
+      dWold[L] = dW[L]; 
+    }// for L
+
+  }
+  if(learning_class==2){   // RProp setups
     if(epoch_size!=n_patterns){  
       cout<<"WARNING in ANN.train : epoch_size ("<<epoch_size
-          <<") shoul be equal to the total number of patters ("<<n_patterns<<")\n";
+          <<") should be equal to the total number of patters ("<<n_patterns<<")\n";
       epoch_size = n_patterns;
       cout<<"Using new value of epoch_size = "<<epoch_size<<endl;
     }
@@ -492,6 +500,7 @@ vector<double> NeuralNetwork::train(Random& rnd, bp::dict params, MATRIX& inputs
   }// RProp
 
 
+
   if(!is_error_collect_frequency){ error_collect_frequency = steps_per_epoch;  }
 
   MATRIX input_subset(sz_x, epoch_size);
@@ -504,6 +513,34 @@ vector<double> NeuralNetwork::train(Random& rnd, bp::dict params, MATRIX& inputs
   int counter = 0;
   double err_loc = 0.0;
   vector<double> err;
+
+  if(verbosity>0){
+    cout<<"Training with parameters:\n";
+    cout<<"learning_method = "<<learning_method<<endl;
+    cout<<"learning_class = "<<learning_class<<endl;
+    cout<<"learning_rate = "<<learning_rate<<endl;
+    cout<<"momentum_term = "<<momentum_term<<endl;
+    cout<<"weight_decay_lambda = "<<weight_decay_lambda<<endl;
+    cout<<"etha = "<<etha<<endl;
+    cout<<"num_epochs = "<<num_epochs<<endl;
+    cout<<"steps_per_epoch = "<<steps_per_epoch<<endl;
+    cout<<"epoch_size = "<<epoch_size<<endl;
+    cout<<"n_patterns = "<<n_patterns<<endl;
+    cout<<"verbosity = "<<verbosity<<endl;
+    cout<<"is_error_collect_frequency = "<<is_error_collect_frequency<<endl;
+    cout<<"error_collect_frequency = "<<error_collect_frequency<<endl;
+    cout<<"a_plus = "<<a_plus<<endl;
+    cout<<"a_minus = "<<a_minus<<endl;
+    cout<<"dB_min = "<<dB_min<<endl;
+    cout<<"dB_max = "<<dB_max<<endl;
+    cout<<"dW_min = "<<dW_min<<endl;
+    cout<<"dW_max = "<<dW_max<<endl;
+
+
+  }// verbosity>0
+
+
+  //===================================================================
    
   for(epoch = 0; epoch < num_epochs; epoch++){    
 
@@ -541,7 +578,6 @@ vector<double> NeuralNetwork::train(Random& rnd, bp::dict params, MATRIX& inputs
               dB[L] += etha * learning_rate * weight_decay_lambda * B[L];
             }
 
-
             //=========== Update step:  dW and dB are the momentum terms ==============
             W[L] -= dW[L];
             B[L] -= dB[L];
@@ -553,7 +589,8 @@ vector<double> NeuralNetwork::train(Random& rnd, bp::dict params, MATRIX& inputs
 
           }// BProp
 
-          //***************************** RBProp family ********************************
+
+          //***************************** RProp family ********************************
           // RProp   basic version: 
           else if(learning_class==2){
 
@@ -614,12 +651,6 @@ vector<double> NeuralNetwork::train(Random& rnd, bp::dict params, MATRIX& inputs
 
           }// if RProp
 
-          //*********************** Update weights W and B ***************************
-          //============================== Backprop ==================================
-          if(learning_class==1){ 
-          }// BProp
-
-
 
           dWold[L] = dW[L];
           dBold[L] = dB[L];
@@ -635,7 +666,19 @@ vector<double> NeuralNetwork::train(Random& rnd, bp::dict params, MATRIX& inputs
 
     }// for i
 
-    if(verbosity>=1){  cout<<"epoch = "<<epoch<<" (local) error = "<<err_loc<<"\n";  }
+    if(verbosity>=1){  
+      cout<<"epoch = "<<epoch<<" (local) error = "<<err_loc<<"\n"; 
+    }
+    if(verbosity>=2){
+      for(L = 0; L < Nlayers; L++){         
+        cout<<"dW["<<L<<"] = "; dW[L].show_matrix(); cout<<endl;
+      }// L
+
+      for(L = 0; L < Nlayers; L++){         
+        cout<<"dB["<<L<<"] = "; dB[L].show_matrix(); cout<<endl;
+      }// L
+
+    }
 
   }// for epoch
 
