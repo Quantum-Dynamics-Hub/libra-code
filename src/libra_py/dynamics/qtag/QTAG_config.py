@@ -7,24 +7,27 @@
 """
 
 univ = {
-"ntraj" : 25,
+"ndof" : 1,
+"ntraj" : 15,
 "dt" : 1,
-"niter" : 2000,
-"mass" : 2000.0,
-"nout" : 1
+"niter" : 5000,
+"mass" : [1743.0],
+"n_snapshots" : 4,
+"n_data_out" : 10
 }
 
 wf0 = {
-"q" : -5.0,
-"p" : 10.0,
-"a" : 2.0,
-"s" : 0.0
+"q" : [1.76],
+"p" : [0.0],
+"a" : [16.16],
+"s" : [0.0]
 }
 
 traj0 = {
-"type" : "grid",
-"rho" : 1e-8,
-"a0" : 6.0
+"placement" : "grid",
+"grid_dims" : [15],
+"rho" : 1e-12,
+"a0" : [12.0]
 }
 
 basis = {
@@ -35,26 +38,28 @@ basis = {
 }
 
 mss = {
-"type" : "sync",
+"prop_method" : "sync",
 "decpl" : 0.9
 }
 
 mom_params = {
-"type" : "lin_fit",
-"beta" : 1e-1
+"adjust" : "lin_fit",
+"beta" : 1e-2
 }
 
 model = {
-"pottype" : "T1",
-"rep" : "diab",
-"calctype" : "LHA",
-"cplg" : "LHA"
+"pot_type" : "nafh",
+"rep" : "adiab",
+"calc_type" : "BAT",
+"coupling" : "BAT"
 }
 
 model_params = {
+"rNaF" : 3.779,
 "a" : 0.01,
 "b" : 1.147,
-"d1" : 0.005,
-"d2" : 1.0,
-"d3" : 0.0
+"d1" : [0.005],
+"d2" : [1.0],
+"d3" : [0.0]
 }
+

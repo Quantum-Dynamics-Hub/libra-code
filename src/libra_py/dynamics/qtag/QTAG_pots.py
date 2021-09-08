@@ -7,74 +7,68 @@
 """
 
 import sys
-import cmath
-import math
-import os
 from liblibra_core import *
-import util.libutil as comn
+
+#External module for NaFH system, not needed for general QTAG.
+#import nafh2dpy
 
 import numpy as np
+from QTAG_config import univ, model_params
 
-"""
-.. py:function:: model_ho_diab(x,nsurf,**model_params)
-   Returns the values for the potential (*fx*) and its first (*dfx*) and
-   second (*d2fx*) derivatives at a given point *x* for the coupled
-   harmonic oscillator model in the diabatic representation. The parameter
-   *nsurf* specifies which surface is being calculated, and *model_params*
-   is a dictionary containing all relevant parameter values for the model.
-"""
-
-def model_ho_diab(x,nsurf,**model_params):
+def model_ho_diab_nD(q,nsurf):
 	"""Returns the values for the potential (*fx*) and its first (*dfx*) and second (*d2fx*) derivatives at a given point *x* for the coupled harmonic oscillator model in the diabatic representation. The parameter *nsurf* specifies which surface is being calculated, and *model_params* is a dictionary containing all relevant parameter values for the model.
 
         Args:
-                x (float): The position at which to calculate the potential.
+                q (MATRIX): The coordinates at which to calculate the potential.
 
                 nsurf (integer): Integer specifying the energetic surface: 1=ground state; 2=excited state; 3=coupling potential
 
         Returns:
                 fx (float): The value of the potential function at the point x.
 
-		dfx (float): The value of the first derivative of the potential function at the point x.
+		dfx (list of floats): The values of the first derivatives of the potential function at the point x, [df/dx1,df/dx2...].
 
-                d2fx (float): The value of the second derivative of the potential function at the point x.
+                d2fx (list of floats): The values of the second derivatives of the potential function at the point x, [d2f/d2x1,d2f,d2x2,...].
         """
 
-	x0=1.0;y0=5.0*np.sqrt(model_params['k1']);
+	ndof=univ['ndof']
+	y0=[]
+	x0=model_params["x0"];y0.append(5.0*np.sqrt(model_params['k1'][0]))
+	for i in range(ndof-1):
+		y0.append(0.0)
 
+	fx=0.0;dfx=[];d2fx=[]
 	if (nsurf==1):
-		fx=0.5*model_params['k1']*x**2
-		dfx=model_params['k1']*x
-		d2fx=model_params['k1']
+		for i in range(ndof):
+			x=q.get(i)
+			fx+=0.5*model_params['k1'][i]*x**2
+			dfx.append(model_params['k1'][i]*x)
+			d2fx.append(model_params['k1'][i])
 	elif (nsurf==2):
-		fx=0.5*model_params['k2']*(x-x0)**2+y0
-		dfx=model_params['k2']*(x-x0)
-		d2fx=model_params['k2']
+		for i in range(ndof):
+			x=q.get(i)
+			fx+=0.5*model_params['k2'][i]*(x-x0[i])**2+y0[i]
+			dfx.append(model_params['k2'][i]*(x-x0[i]))
+			d2fx.append(model_params['k2'][i])
 	elif (nsurf==3):
-		fx=model_params['d1']*np.exp(-model_params['d2']*(x-model_params['d3'])**2)
+		for i in range(ndof):
+			x=q.get(i)
 
-		dfx=-2.0*model_params['d1']*model_params['d2']*(x-model_params['d3'])* \
-		np.exp(-model_params['d2']*(x-model_params['d3'])**2)
+			fx+=model_params['d1'][i]*np.exp(-model_params['d2'][i]*(x-model_params['d3'][i])**2)
 
-		d2fx=-2.0*model_params['d1']*model_params['d2']*np.exp(-model_params['d2']* \
-		(x-model_params['d3'])**2)-dfx*2.0*model_params['d2']*(x-model_params['d3'])
+			dfx.append(-2.0*model_params['d1'][i]*model_params['d2'][i]*(x-model_params['d3'][i])* \
+			np.exp(-model_params['d2'][i]*(x-model_params['d3'][i])**2))
+
+			d2fx.append(-2.0*model_params['d1'][i]*model_params['d2'][i]*np.exp(-model_params['d2'][i]* \
+			(x-model_params['d3'][i])**2)-dfx[i]*2.0*model_params['d2'][i]*(x-model_params['d3'][i]))
 
 	return(fx,dfx,d2fx)
 
-"""
-.. py:function:: model_t1_diab(x,nsurf,**model_params)
-   Returns the values for the potential (*fx*) and its first (*dfx*) and
-   second (*d2fx*) derivatives at a given point *x* for Tully model I
-   in the diabatic representation. The parameter *nsurf* specifies which 
-   surface is being calculated, and *model_params* is a dictionary 
-   containing all relevant parameter values for the model.
-"""
-
-def model_t1_diab(x,nsurf,**model_params):
+def model_t1_diab_nD(q,nsurf):
 	"""Returns the values for the potential (*fx*) and its first (*dfx*) and second (*d2fx*) derivatives at a given point *x* for Tully model I in the diabatic representation. The parameter *nsurf* specifies which surface is being calculated, and *model_params* is a dictionary containing all relevant parameter values for the model.
 
         Args:
-                x (float): The position at which to calculate the potential.
+                q (MATRIX): The ndof-by-1 MATRIX of coordinate values at which to calculate the potential.
 
                 nsurf (integer): Integer specifying the energetic surface: 1=ground state; 2=excited state; 3=coupling potential
 
@@ -88,41 +82,35 @@ def model_t1_diab(x,nsurf,**model_params):
 
 #	a=0.01;b=1.147
 #	d1=0.005;d2=1.0;d3=0.0
+	x=q.get(0)
+
+	fx=0.0;dfx=[];d2fx=[]
 	if (nsurf==1):
 		fx=model_params['a']*(1.0+np.tanh(model_params['b']*x))
-		dfx=model_params['a']*model_params['b']*(1.0-np.tanh(model_params['b']*x)**2)
-		d2fx=-2.0*model_params['a']*model_params['b']**2* \
-		np.tanh(model_params['b']*x)*(1.0-np.tanh(model_params['b']*x)**2)
+		dfx.append(model_params['a']*model_params['b']*(1.0-np.tanh(model_params['b']*x)**2))
+		d2fx.append(-2.0*model_params['a']*model_params['b']**2* \
+		np.tanh(model_params['b']*x)*(1.0-np.tanh(model_params['b']*x)**2))
 	elif (nsurf==2):
 		fx=model_params['a']*(1.0-np.tanh(model_params['b']*x))
-		dfx=-model_params['a']*model_params['b']*(1.0-np.tanh(model_params['b']*x)**2)
-		d2fx=2.0*model_params['a']*model_params['b']**2* \
-		np.tanh(model_params['b']*x)*(1.0-np.tanh(model_params['b']*x)**2)
+		dfx.append(-model_params['a']*model_params['b']*(1.0-np.tanh(model_params['b']*x)**2))
+		d2fx.append(2.0*model_params['a']*model_params['b']**2* \
+		np.tanh(model_params['b']*x)*(1.0-np.tanh(model_params['b']*x)**2))
 	elif (nsurf==3):
 		fx=model_params['d1']*np.exp(-model_params['d2']*(x-model_params['d3'])**2)
 
-		dfx=-2.0*model_params['d1']*model_params['d2']*(x-model_params['d3'])* \
-		np.exp(-model_params['d2']*(x-model_params['d3'])**2)
+		dfx.append(-2.0*model_params['d1']*model_params['d2']*(x-model_params['d3'])* \
+		np.exp(-model_params['d2']*(x-model_params['d3'])**2))
 
-		d2fx=-2.0*model_params['d1']*model_params['d2']*np.exp(-model_params['d2']* \
-		(x-model_params['d3'])**2)-dfx*2.0*model_params['d2']*(x-model_params['d3'])
+		d2fx.append(-2.0*model_params['d1']*model_params['d2']*np.exp(-model_params['d2']* \
+		(x-model_params['d3'])**2)-dfx*2.0*model_params['d2']*(x-model_params['d3']))
 
 	return(fx,dfx,d2fx)
 
-"""
-.. py:function:: model_t2_diab(x,nsurf,**model_params)
-   Returns the values for the potential (*fx*) and its first (*dfx*) and
-   second (*d2fx*) derivatives at a given point *x* for Tully model II in 
-   the diabatic representation. The parameter *nsurf* specifies which 
-   surface is being calculated, and *model_params* is a dictionary 
-   containing all relevant parameter values for the model.
-"""
-
-def model_t2_diab(x,nsurf,**model_params):
+def model_t2_diab_nD(q,nsurf):
 	"""Returns the values for the potential (*fx*) and its first (*dfx*) and second (*d2fx*) derivatives at a given point *x* for Tully model II in the diabatic representation. The parameter *nsurf* specifies which surface is being calculated, and *model_params* is a dictionary containing all relevant parameter values for the model.
 
         Args:
-                x (float): The position at which to calculate the potential.
+                q (MATRIX): The ndof-by-1 MATRIX of coordinate values at which to calculate the potential.
 
                 nsurf (integer): Integer specifying the energetic surface: 1=ground state; 2=excited state; 3=coupling potential
 
@@ -156,20 +144,11 @@ def model_t2_diab(x,nsurf,**model_params):
 
 	return(fx,dfx,d2fx)
 
-"""
-.. py:function:: model_t3_adiab(x,nsurf,**model_params)
-   Returns the values for the potential (*fx*) and its first (*dfx*) and
-   second (*d2fx*) derivatives at a given point *x* for Tully model III in 
-   the adiabatic representation. The parameter *nsurf* specifies which 
-   surface is being calculated, and *model_params* is a dictionary 
-   containing all relevant parameter values for the model.
-"""
-
-def model_t3_adiab(x,nsurf,**model_params):
+def model_t3_adiab_nD(q,nsurf):
 	"""Returns the values for the potential (*fx*) and its first (*dfx*) and second (*d2fx*) derivatives at a given point *x* for Tully model III in the adiabatic representation. The parameter *nsurf* specifies which surface is being calculated, and *model_params* is a dictionary containing all relevant parameter values for the model.
 
         Args:
-                x (float): The position at which to calculate the potential.
+		q (MATRIX): The ndof-by-1 MATRIX of coordinate values at which to calculate the potential.
 
                 nsurf (integer): Integer specifying the energetic surface: 1=ground state; 2=excited state; 3=coupling potential
 
@@ -268,35 +247,65 @@ def model_t3_adiab(x,nsurf,**model_params):
 	return(fx,dfx,d2fx)
 
 """
-.. py:function:: exact_gauss_cpl(qpasi,qpasj,*args,**model_params)
-   Returns the value *v*=<gi|Vcpl|gj> for a Gaussian coupling potential 
-   computed in exact fashion between basis functions on different surfaces
-   defined by the parameters of *qpasi* and *qpasj*.
+NaFH test system, but relies on an external module.
+def model_nafh_adiab_nD(q,nsurf):
+	r=np.zeros([1,3],dtype='d')
+	e=np.zeros([1],dtype='d')
+	de=np.zeros([3,1],dtype='d')
+
+	if (univ['ndof'] == 1):
+		rFH=q.get(0);rNaF=3.779
+	elif (univ['ndof'] == 2):
+		rFH=q.get(0);rNaF=q.get(1)
+
+	r[0,0]=rNaF+rFH
+	r[0,1]=rFH
+	r[0,2]=rNaF
+
+	if nsurf == 2:
+		nsurf_conv=1
+	elif nsurf == 3:
+		nsurf_conv=2
+	else:
+		nsurf_conv=3
+
+	nafh2dpy.prepot()
+	nafh2dpy.pot(r,e,de,nsurf_conv,1)
+
+	energy=e[0]
+	if (univ['ndof'] == 1):
+		denergy=[de[1,0]]
+	elif (univ['ndof'] == 2):
+		denergy=[de[1,0],de[2,0]]
+
+	return(energy,denergy,0)
 """
 
 def exact_gauss_cpl(qpasi,qpasj,*args,**model_params):
 	"""Returns the value *v*=<gi|Vcpl|gj> for a Gaussian coupling potential computed in exact fashion between basis functions on different surfaces defined by the parameters of *qpasi* and *qpasj*.
 
         Args:
-                qpasi (MATRIX): The 1-by-4 basis parameter matrix for the basis function at point i.
+                qpasi (list): List containing the 1-by-4 basis parameter matrices for the basis function at point i.
 
-                qpasj (MATRIX): The 1-by-4 basis parameter matrix for the basis function at point j.
+                qpasj (list): List containing the 1-by-4 basis parameter matrices for the basis function at point j.
 
         Returns:
                 v (complex): The exact value of the Gaussian coupling potential between basis functions i and j.
         """
 
-	v=complex(0.0,0.0)
-	q1,p1,a1=qpasi.get(0), qpasi.get(1), qpasi.get(2)
-	q2,p2,a2=qpasj.get(0), qpasj.get(1), qpasj.get(2)
+	v=complex(1.0,0.0)
+	q1,p1,a1=qpasi[0], qpasi[1], qpasi[2]
+	q2,p2,a2=qpasj[0], qpasj[1], qpasj[2]
+	ndof=univ['ndof']
 
-	et1=-(q1-model_params['d3'])**2*a1**2/2.0-(q2-model_params['d3'])**2*a2**2/2.0+(p1-p2)**2/2.0
-	et2=(q1-model_params['d3'])*((model_params['d3']-q2)*a2+1j*(p1-p2))*a1
-	et3=1j*(q2-model_params['d3'])*(p1-p2)*a2
-	et4=(a1+2*model_params['d2']+a2)*(a1+a2)
+	for i in range(ndof):
+		et1=-(q1.get(i)-model_params['d3'][i])**2*a1.get(i)**2/2.0-(q2.get(i)-model_params['d3'][i])**2*a2.get(i)**2/2.0+(p1.get(i)-p2.get(i))**2/2.0
+		et2=(q1.get(i)-model_params['d3'][i])*((model_params['d3'][i]-q2.get(i))*a2.get(i)+1j*(p1.get(i)-p2.get(i)))*a1.get(i)
+		et3=1j*(q2.get(i)-model_params['d3'][i])*(p1.get(i)-p2.get(i))*a2.get(i)
+		et4=(a1.get(i)+2*model_params['d2'][i]+a2.get(i))*(a1.get(i)+a2.get(i))
 
-	v=np.exp(2.0*model_params['d2']*(et1+et2+et3)/et4)*model_params['d1']* \
-	np.sqrt(2.0*a1+2.0*a2)/np.sqrt(2.0*a1+4.0*model_params['d2']+2.0*a2)
+		v*=np.exp(2.0*model_params['d2'][i]*(et1+et2+et3)/et4)*model_params['d1'][i]* \
+		np.sqrt(2.0*a1.get(i)+2.0*a2.get(i))/np.sqrt(2.0*a1.get(i)+4.0*model_params['d2'][i]+2.0*a2.get(i))
 
 	return(v)
 
