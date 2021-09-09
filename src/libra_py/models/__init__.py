@@ -8,6 +8,7 @@
 #***********************************************************/
 
 __all__ = ["Beswick_Jortner",
+           "Esch_Levine",
            "Faist_Levine",
            "Henon_Heiles",
            "Holstein",
