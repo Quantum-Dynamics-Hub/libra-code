@@ -1,8 +1,8 @@
 #*********************************************************************************
-#* Copyright (C) 2017-2019 Brendan A. Smith, Wei Li, Alexey V. Akimov
+#* Copyright (C) 2017-2021 Brendan A. Smith, Wei Li, Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
-#* as published by the Free Software Foundation, either version 2 of
+#* as published by the Free Software Foundation, either version 3 of
 #* the License, or (at your option) any later version.
 #* See the file LICENSE in the root directory of this distribution
 #* or <http://www.gnu.org/licenses/>.
@@ -44,6 +44,8 @@ import sys
 import cmath
 import math
 import os
+import multiprocessing as mp
+import time
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -58,6 +60,7 @@ from . import decoherence_times as dectim
 import libra_py.tsh as tsh
 import libra_py.tsh_stat as tsh_stat
 import libra_py.units as units
+import libra_py.dynamics.tsh.compute as tsh_dynamics
 
 
 def get_Hvib(params):
@@ -685,3 +688,187 @@ def run(H_vib, params):
     return res
 
 
+
+def run_tsh(common_params, compute_model, model_params):    
+    """
+    This function sleeps for a while, initialized nuclear and electronic variables, 
+    and executed the NA-MD calculations
+
+    Args: 
+        dyn_params ( dict ): parameters controlling the NAMD calculations as used by the `run_tsh` function above
+            Note that this is only a template - some parameters will be modified internally according to the 
+            other parameters of this function
+
+        compute_model (Python function object): the function that computes the Hamiltonian and other properties
+
+        model_params ( dict ): parameters of the `compute_model` function
+
+    Returns:
+        None: but produces file outputs
+
+    """
+
+    params = dict(common_params)            
+    time.sleep( int(params["wait_time"]) )
+
+    # Random numbers generator object
+    rnd = Random()
+    
+    #============ Initialize dynamical variables ==================
+    x0, p0, masses, k0 = params["x0"], params["p0"], params["masses"], params["k"]
+    ntraj, nstates = params["ntraj"], params["nstates"]
+    
+    # Nuclear
+    init_nucl = {"init_type":2, "force_constant":k0, "ntraj":ntraj}
+    #init_nucl = {"init_type":3, "force_constant":k0, "ntraj":ntraj}
+    q, p, iM = tsh_dynamics.init_nuclear_dyn_var(x0, p0, masses, init_nucl, rnd)
+    
+    # Electronic
+    istate = params["istate"]
+    istates = []
+    for i in range(nstates):
+        istates.append(0.0)
+    istates[ istate[1] ] = 1.0    
+    _init_elec = { "init_type":3, "nstates":nstates, "istates":istates, "rep":istate[0],  "ntraj":ntraj   }
+    
+
+    #============= Dynamical variables ==============
+    dyn_params = dict(common_params)
+    
+    # This should update only the properties that aren't defined, but not override the existing values!
+    critical_params = [  ]     
+    default_params = { "mem_output_level":3 }     
+    comn.check_input(dyn_params, default_params, critical_params)
+                    
+    _model_params = dict(model_params)
+    _model_params.update({"model0": model_params["model"] })
+        
+        
+    start = time.time()        
+    res = tsh_dynamics.generic_recipe(q, p, iM, dyn_params, compute_model, _model_params, _init_elec, rnd)
+    end = time.time()    
+    print(F"Calculation time = {end - start} seconds")
+
+    
+    
+def make_var_pool(dyn_params, compute_model, model_params, _rnd, 
+                  method_names_map = {0:"FSSH", 1:"IDA", 2:"mSDM", 3:"DISH", 21:"mSDM2", 31:"DISH2" },
+                  init_states = [1], tsh_methods = [0], batches = list(range(10))):
+    """
+    This function prepares the variables pool for the parallelization 
+
+    Args: 
+        dyn_params ( dict ): parameters controlling the NAMD calculations as used by the `run_tsh` function above
+            Note that this is only a template - some parameters will be modified internally according to the 
+            other parameters of this function
+
+        compute_model (Python function object): the function that computes the Hamiltonian and other properties
+
+        model_params ( dict ): parameters of the `compute_model` function
+
+        _rnd ( Random ): random numbers generator instance
+
+        methods_names_map ( dict ): the mapping between the TSH method indices and their names - needed for 
+             making the output directories [ default: {0:"FSSH", 1:"IDA", 2:"mSDM", 3:"DISH", 21:"mSDM2", 31:"DISH2" } ]
+
+        init_states ( int list ): the indices of all initial states for which to do the computations [ default: [1] ]
+
+        tsh_methods ( int list ): the indices of all methods for which to do the computations - must be consistent with 
+             the `methods_names_map` variable [ default: [0] ]
+ 
+        batches ( int list ): how many batches of simulations to run [ default: list(range(10)) ]
+
+    Returns:
+        list of tuples: each tuple contains the input variables for the function that we want run in multiple threads
+
+    """
+    
+    # Create the pool of variables 
+    var_pool = []
+    for istate in init_states:  # initial states   
+        for method in tsh_methods:  # decoherence method: FSSH, IDA, mSDM, DISH        
+            
+            name = method_names_map[method]   
+            
+            for batch in batches:        
+                mdl_prms = dict(model_params)
+                
+                
+                prms = dict(dyn_params)                
+                                
+                prms["wait_time"] = _rnd.uniform(0.0, 5.0)                                                
+                dir_prefix = prms["dir_prefix"]
+                                
+                prms["prefix"] = F"{dir_prefix}/start_s{istate}_{name}_batch{batch}"                
+                prms["istate"] = [1, istate] # adiabatic state `istate`; Recall index from 0
+                
+                if method==0:  # FSSH  = FSSH, ID, no informed                    
+                    prms.update( {"tsh_method":0, "decoherence_algo":-1, "dephasing_informed":0 } )  
+                elif method==1: # IDA = 
+                    prms.update( {"tsh_method":0, "decoherence_algo":1, "dephasing_informed":0 } )  
+                elif method==2: # mSDM = FSSH, mSDM, no informed
+                    prms.update( {"tsh_method":0, "decoherence_algo":0, "dephasing_informed":0 } )  
+                elif method==3: # DISH = DISH, no other decoherence, no informed
+                    prms.update( {"tsh_method":3, "decoherence_algo":-1, "dephasing_informed":0 } )  
+                elif method==21: # mSDM = FSSH, mSDM, informed
+                    prms.update( {"tsh_method":0, "decoherence_algo":0, "dephasing_informed":1 } )  
+                elif method==31: # DISH = DISH, no other decoherence, informed
+                    prms.update( {"tsh_method":3, "decoherence_algo":-1, "dephasing_informed":1 } )  
+                    
+                
+                var_pool.append( (prms, compute_model, mdl_prms) )    
+
+    return var_pool
+
+
+
+def namd_workflow(dyn_params, compute_model, model_params, _rnd, nthreads = 4,   
+                  method_names_map = {0:"FSSH", 1:"IDA", 2:"mSDM", 3:"DISH", 21:"mSDM2", 31:"DISH2" },
+                  init_states = [1], tsh_methods = [0], batches = list(range(10)) ):
+    """
+    
+    This is a new top-level wrapper to run NA-MD calculations within the NBRA workflow (although it could be more general too)
+    This wrapper provides a multithreading parallelization 
+
+    Args: 
+        dyn_params ( dict ): parameters controlling the NAMD calculations as used by the `run_tsh` function above
+            Note that this is only a template - some parameters will be modified internally according to the 
+            other parameters of this function
+
+        compute_model (Python function object): the function that computes the Hamiltonian and other properties
+
+        model_params ( dict ): parameters of the `compute_model` function
+
+        _rnd ( Random ): random numbers generator instance
+
+        nthreads ( int ): the number of threads over which to parallelize the calculations [ default: 4]
+
+        methods_names_map ( dict ): the mapping between the TSH method indices and their names - needed for 
+             making the output directories [ default: {0:"FSSH", 1:"IDA", 2:"mSDM", 3:"DISH", 21:"mSDM2", 31:"DISH2" } ]
+
+        init_states ( int list ): the indices of all initial states for which to do the computations [ default: [1] ]
+
+        tsh_methods ( int list ): the indices of all methods for which to do the computations - must be consistent with 
+             the `methods_names_map` variable [ default: [0] ]
+ 
+        batches ( int list ): how many batches of simulations to run [ default: list(range(10)) ]
+
+    Returns:
+        None: but it call functions that produce outputs elsewhere
+       
+    """
+
+               
+    var_pool = make_var_pool(dyn_params, compute_model, model_params, _rnd, 
+                             method_names_map, init_states, tsh_methods, batches )
+        
+    t1 = time.time()  
+    pool = mp.Pool( nthreads )
+    pool.starmap( run_tsh, var_pool )
+    pool.close()
+    pool.join()
+
+    t2 = time.time()
+    print(F"Total time {t2 - t1}") 
+    
+            
