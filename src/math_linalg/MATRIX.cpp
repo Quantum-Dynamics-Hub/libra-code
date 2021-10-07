@@ -30,6 +30,22 @@ namespace liblibra{
 /// liblinalg namespace
 namespace liblinalg{
 
+/*
+MATRIX::MATRIX(boost::python::tuple ob){
+
+    n_rows = extract<int>( ob[0] );
+    n_cols = extract<int>( ob[1] );
+    n_elts = n_rows * n_cols;
+
+    M = new double[n_elts];
+
+    for(int i=0;i<n_elts;i++){  
+      M[i] = extract<double>(ob[i+2]);
+    }
+
+}
+*/
+
 
 MATRIX::MATRIX(const VECTOR& u1, const VECTOR& u2, const VECTOR& u3){
 /** The constructor of a 3 x 3 matrix from 3 input vectors  */
