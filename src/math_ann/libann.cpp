@@ -77,6 +77,7 @@ void export_NeuralNetwork_objects(){
       .def_readwrite("sz_x",&NeuralNetwork::sz_x)
       .def_readwrite("sz_y",&NeuralNetwork::sz_y)
        
+      .enable_pickling()
   ;
 
 }

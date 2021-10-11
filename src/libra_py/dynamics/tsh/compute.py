@@ -1560,7 +1560,6 @@ def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_el
 
     """
 
-
     comn.check_input(_model_params, {  }, [ "model0" ] )
     comn.check_input(_dyn_params, { "rep_tdse":1 }, [  ] )
 
@@ -1598,7 +1597,6 @@ def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_el
             Cdia = transform_amplitudes(1, 0, Cdia, ham) 
 
     res = run_dynamics(q, p, iM, Cdia, Cadi, projectors, states, _dyn_params, compute_model, _model_params, rnd)
-
 
     return res
 

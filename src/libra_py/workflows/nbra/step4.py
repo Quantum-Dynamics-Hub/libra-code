@@ -46,6 +46,8 @@ import math
 import os
 import multiprocessing as mp
 import time
+import numpy as np
+import matplotlib.pyplot as plt
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -61,6 +63,7 @@ import libra_py.tsh as tsh
 import libra_py.tsh_stat as tsh_stat
 import libra_py.units as units
 import libra_py.dynamics.tsh.compute as tsh_dynamics
+import libra_py.fit as fit
 
 
 def get_Hvib(params):
@@ -742,8 +745,7 @@ def run_tsh(common_params, compute_model, model_params):
                     
     _model_params = dict(model_params)
     _model_params.update({"model0": model_params["model"] })
-        
-        
+               
     start = time.time()        
     res = tsh_dynamics.generic_recipe(q, p, iM, dyn_params, compute_model, _model_params, _init_elec, rnd)
     end = time.time()    
@@ -824,7 +826,7 @@ def make_var_pool(dyn_params, compute_model, model_params, _rnd,
 
 def namd_workflow(dyn_params, compute_model, model_params, _rnd, nthreads = 4,   
                   method_names_map = {0:"FSSH", 1:"IDA", 2:"mSDM", 3:"DISH", 21:"mSDM2", 31:"DISH2" },
-                  init_states = [1], tsh_methods = [0], batches = list(range(10)) ):
+                  init_states = [1], tsh_methods = [0], batches = list(range(10)), fork_or_spawn="fork", parallel=True ):
     """
     
     This is a new top-level wrapper to run NA-MD calculations within the NBRA workflow (although it could be more general too)
@@ -861,14 +863,188 @@ def namd_workflow(dyn_params, compute_model, model_params, _rnd, nthreads = 4,
                
     var_pool = make_var_pool(dyn_params, compute_model, model_params, _rnd, 
                              method_names_map, init_states, tsh_methods, batches )
-        
-    t1 = time.time()  
-    pool = mp.Pool( nthreads )
-    pool.starmap( run_tsh, var_pool )
-    pool.close()
-    pool.join()
-
-    t2 = time.time()
-    print(F"Total time {t2 - t1}") 
     
+    if parallel==True:    
+        t1 = time.time()
+        pool = mp.get_context(F"{fork_or_spawn}").Pool( nthreads )
+    #    pool = mp.Pool( nthreads )
+        pool.starmap( run_tsh, var_pool )
+        pool.close()
+        pool.join()
+
+        t2 = time.time()
+        print(F"Total time {t2 - t1}") 
+
+    else:
+        t1 = time.time()
+        for var in var_pool:
+            run_tsh(var[0], var[1], var[2])
+        t2 = time.time()
+        print(F"Total time {t2 - t1}") 
+
+    
+
+def nice_plots(dyn_params, init_states, tsh_methods, methods, batches, fig_label="NA-MD"):
+    """
+    This function produces nice plots of the ground state populations for all calculations
+    """
+
+    plt.rc('axes', titlesize=12)      # fontsize of the axes title
+    plt.rc('axes', labelsize=12)      # fontsize of the x and y labels
+    plt.rc('legend', fontsize=10)     # legend fontsize
+    plt.rc('xtick', labelsize=8)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
+    plt.rc('figure.subplot', left=0.2)
+    plt.rc('figure.subplot', right=0.95)
+    plt.rc('figure.subplot', bottom=0.13)
+    plt.rc('figure.subplot', top=0.88)
+    
+    prefix = dyn_params["dir_prefix"]
+    all_time = np.array( list(range( dyn_params["nsteps"] ) ) ) #* units.au2fs
+    
+    for istate in init_states:  # initial states       
+        print(F"======= Running initial state {istate} =======")
+        for method in tsh_methods:  # decoherence method: FSSH, IDA, mSDM, DISH                        
+            name = methods[method]
+            print(F"    *** Running decoherence method {method} ( {name} ) *** ")
             
+            figure = plt.figure(num=None, figsize=(3.21, 2.41), dpi=300, edgecolor='black', frameon=True)        
+            name = methods[method]        
+                    
+            tau, tau2 = [], []
+            rat, rat2 = [], []
+            for batch in batches:        
+                            
+                infile1 = F"{prefix}/start_s{istate}_{name}_batch{batch}/time.txt"
+                infile2 = F"{prefix}/start_s{istate}_{name}_batch{batch}/SH_pop.txt"
+                                        
+                # Plot the raw data
+                t = np.array(data_read.get_data_from_file2(infile1, [0])[0]) * units.au2fs
+                p = np.array(data_read.get_data_from_file2(infile2, [0,1]))
+                
+                print(F"raw data lengths: { len(t)} { len(p[0]) }")
+                            
+                if batch==0:
+                    plt.plot(t, p[0], color="black", label="", linewidth=1)      
+                    #plt.plot(t, p[1], color="red", label="P1", linewidth=1)      
+                    #plt.plot(t, p[2], color="blue", label="P2", linewidth=1)      
+                    #plt.plot(t, p[3], color="green", label="P3", linewidth=1)      
+                else:
+                    plt.plot(t, p[0], color="black", label="", linewidth=1)      
+                    #plt.plot(t, p[0], color=colors[ clrs_index[batch] ], label="", linewidth=1)
+                    
+                    #plt.plot(t, p[1], color="red", label="", linewidth=1)      
+                    #plt.plot(t, p[2], color="blue", label="", linewidth=1)      
+                    #plt.plot(t, p[3], color="green", label="", linewidth=1)      
+                
+                            
+                
+                T = []
+                P = []
+                #for ia, a in enumerate(p[0]):
+                #    T.append(t[ia])
+                #    P.append(p[0, ia])
+                    
+                for ia, a in enumerate(p[0]):
+                    if a > 0.01 and a < 0.99 and t[ia] > 0.0:
+                        T.append(t[ia])
+                        P.append(p[0, ia])
+                                                    
+                if sum(P) > 0.01:
+                    
+                    # Use a well-behaved subset of data for fitting                        
+                    pop = 1.0 - np.array(P)
+                
+                    # Do the fitting and collect the results
+                    verb, opt = 0, 0
+                    
+                    fit_res, fit_a, fit_b = None, None, None
+                    if istate in [-1] and method in [0]:
+                        fit_res, fit_a, fit_b = fit.fit_gau(T, pop, 0.0, verb, opt)  
+                        r = fit_b                    
+                        rat2.append( r )            # 1/tau^2
+                        rat.append( math.sqrt(r) )  # 1/tau                                         
+                        tau2.append( 1.0/r )           # tau^2
+                        tau.append(1.0/math.sqrt(r) )  # tau                    
+                        
+                    else:
+                        fit_res, fit_a, fit_b = fit.fit_exp(T, pop, 0.0, verb, opt)                  
+                        r = fit_b                                        
+                        rat2.append(r**2)            # 1/tau^2
+                        rat.append( r )              # 1/tau                                        
+                        tau2.append( 1.0/(r**2) )    # tau^2
+                        tau.append(1.0/r )           # tau
+                                                                                                    
+                    print( "Fitting parameters : A = ", fit_a, " and B = ", fit_b, " 1/B = ", 1/fit_b)                                                
+                else:
+                    pass
+            
+            n = len(rat)
+            
+            if n > 0:
+                print(F"Number of samples = {n}")
+                
+                # Prefactor for 95% confidence interval
+                # The error bars reporting is :  average +/-  prefactor * standard_deviation
+                prefactor = 1.96/math.sqrt(n)
+                
+                # Statistical analysis of the obtained timescales
+                rat_stat = DATA(rat); rat_stat.Calculate_Estimators()
+                rat2_stat = DATA(rat2); rat2_stat.Calculate_Estimators()            
+                tau_stat = DATA(tau); tau_stat.Calculate_Estimators()
+                tau2_stat = DATA(tau2); tau2_stat.Calculate_Estimators()            
+                
+                
+                print(F"Lifetime from averaging individual lifetimes {tau_stat.ave} +/- { prefactor * tau_stat.sd }")
+                print(F"Average rates  {rat_stat.ave} +/- { prefactor * rat_stat.sd }")  
+                                                    
+                
+                # Plot the average fitting     
+                Y, Y1, Y2 = None, None, None
+                TAU, ERR = None, None
+                if istate in [-1] and method in [0]:   
+                    """
+                    tau = <r2> ^ {-1/2}
+                    d tau = - 1/2 <r2>^ {-3/2} * d( r2)
+                    """
+                    
+                    TAU = 1.0/math.sqrt(rat2_stat.ave)
+                    ERR = prefactor * 0.5 * TAU**3 * rat2_stat.sd # tau_stat.sd #( tau_stat.ave / rat_stat.ave) *rat_stat.sd
+                                    
+                    
+                    print(F"Lifetime { TAU } +/- { ERR }")    
+                    Y = 1.0 - np.exp(-(all_time**2 * (rat2_stat.ave) )  )
+                    Y1 = 1.0 - np.exp(-(all_time**2 * (rat2_stat.ave - prefactor * rat2_stat.sd) )  )
+                    Y2 = 1.0 - np.exp(-(all_time**2 * (rat2_stat.ave + prefactor * rat2_stat.sd) )  ) 
+                    
+                                                                
+                else:   
+                    """
+                    tau = <r> ^ {-1}
+                    d tau = - <r>^ {-2} * d(r)
+                    """
+                    
+                    TAU = 1.0/rat_stat.ave
+                    ERR = prefactor * TAU**2 * rat_stat.sd 
+                    
+                    print(F"Lifetime {TAU} +/- { ERR }")
+                    Y = 1.0 - np.exp(-(all_time * rat_stat.ave ) ) 
+                    Y1 = 1.0 - np.exp(-(all_time * (rat_stat.ave - prefactor * rat_stat.sd ) )  )
+                    Y2 = 1.0 - np.exp(-(all_time * (rat_stat.ave + prefactor * rat_stat.sd) )  )                                
+                                            
+                        
+                plt.plot(all_time , Y, color="red", 
+                         label=F"{name}, {TAU/1000.0 : 3.1f} +/- {ERR/1000.0 : 3.1f} ps", 
+                         linewidth=2 )
+                plt.plot(all_time, Y1, color="red", label=F"", linewidth=1, linestyle='dashed' )
+                plt.plot(all_time, Y2, color="red", label=F"", linewidth=1, linestyle='dashed' )
+                
+                                
+                        
+            plt.title(F"{fig_label}",fontsize=9.5)
+            plt.legend(fontsize=6.75, ncol=1, loc='upper left')
+            plt.xlabel('Time, fs',fontsize=10)
+            plt.ylabel('Population',fontsize=10)
+            plt.tight_layout()
+            plt.savefig(F'{prefix}/start_s{istate}_{name}.png', dpi=300)
+            plt.show()                                                                                                            
