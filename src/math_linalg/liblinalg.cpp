@@ -302,58 +302,19 @@ struct MATRIX_pickle_suite : boost::python::pickle_suite
 
 
 */
-/*
-  static boost::python::tuple getinitargs(const MATRIX& w)
-  {
-
-    boost::python::tuple res;
-    res = boost::python::make_tuple(w.n_rows, w.n_cols);
-
-    for(int i=0; i<w.n_rows; i++){
-      for(int j=0; j<w.n_cols; j++){
-
-        res = boost::python::extract< boost::python::tuple >( res +  boost::python::make_tuple( w.get(i,j) ) );
-
-      }// for j
-    }// for i
-      
-    return res;
-
-  }
-*/
-
-//  static boost::python::tuple getstate(const MATRIX& w)
 
   static boost::python::tuple getinitargs(const MATRIX& w)
   {
-    //cout<<"in getstate\n";
     boost::python::tuple res;
     res = boost::python::make_tuple(w.n_rows, w.n_cols);
-
-/*
-    cout<<"size = "<<len(res)<<"  \n";
-
-    for(int i=0; i<w.n_rows; i++){
-      for(int j=0; j<w.n_cols; j++){
-
-        res = boost::python::extract< boost::python::tuple >( res +  boost::python::make_tuple( w.get(i,j) ) );
-
-        cout<<i<<"  "<<j<<" "<<w.get(i,j)<<"  "<<len(res)<<"\n";
-
-      }// for j
-    }// for i
-    cout<<"done with getstate\n";
-*/
       
     return res;
   }
 
 
   static boost::python::tuple getstate(const MATRIX& w)
-//  static MATRIX getstate(const MATRIX& w)
   {
     boost::python::tuple res;
-    //res = boost::python::make_tuple(w.n_rows, w.n_cols);
 
     for(int i=0; i<w.n_elts; i++){
       res = boost::python::extract< boost::python::tuple >( res +  boost::python::make_tuple( w.get(i) ) );
@@ -362,8 +323,6 @@ struct MATRIX_pickle_suite : boost::python::pickle_suite
     return res;
   }
 
-//  static void setstate(MATRIX& w, boost::python::tuple state)
-//  static void setstate(MATRIX& w, const MATRIX& state)
   static void setstate(MATRIX& w, boost::python::tuple state)
   {
 
@@ -371,31 +330,6 @@ struct MATRIX_pickle_suite : boost::python::pickle_suite
     for(int i=0; i<sz; i++){  
       w.set(i, extract<double>(state[i]));
     }
-
-//    w = extract<MATRIX>(state);
-/*
-    cout<<"in setstate\n";
-    int n_rows = extract<int>( state[0] );
-    int n_cols = extract<int>( state[1] );
-
-    cout<<"n_rows = "<<n_rows<<"  n_cols = "<<n_cols<<endl;
-    
-    w = MATRIX(n_rows, n_cols);
-
-    int cnt = 2;
-    for(int i=0; i<n_rows; i++){
-      for(int j=0; j<n_cols; j++){
-
-        cout<<i<<"  "<<j<<" "<<extract<double>(state[cnt])<<endl;
-
-        w.set(i,j, extract<double>(state[cnt]) );  
-        cnt++;
-      }// for j
-    }// for i
-
-    cout<<"done with setstate\n";
-*/
-
   }
 
 };
@@ -494,8 +428,57 @@ void export_MATRIX(){
 
   ;
 
+
+struct MATRIXList_pickle_suite : boost::python::pickle_suite
+{
+/** 
+  Figured out it thanks to these sources:
+
+  https://stackoverflow.com/questions/37180878/append-element-to-boostpythontuple
+
+  https://valelab4.ucsf.edu/svn/3rdpartypublic/boost/libs/python/doc/v2/pickle.html
+
+
+*/
+/*
+  static boost::python::tuple getinitargs(const MATRIX& w)
+  {
+    boost::python::tuple res;
+    res = boost::python::make_tuple(w.n_rows, w.n_cols);
+      
+    return res;
+  }
+*/
+
+  static boost::python::tuple getstate(const MATRIXList& w)
+  {
+    boost::python::tuple res;
+
+    int sz = w.size();
+
+    for(int i=0; i<sz; i++){
+      res = boost::python::extract< boost::python::tuple >( res +  boost::python::make_tuple( w[i] ) );
+    }// for i
+
+    return res;
+  }
+
+  static void setstate(MATRIXList& w, boost::python::tuple state)
+  {
+
+    int sz = len(state);
+    for(int i=0; i<sz; i++){  
+      w.push_back( extract<MATRIX>(state[i]) );
+    }
+  }
+
+};
+
+
   class_< MATRIXList >("MATRIXList")
       .def(vector_indexing_suite< MATRIXList >())
+      .def_pickle(MATRIXList_pickle_suite())
+//      .enable_pickling()
   ;
 
   class_< MATRIXMap >("MATRIXMap")

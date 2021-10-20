@@ -1411,7 +1411,7 @@ def distribute_cp2k_xtb_jobs(submit_template: str, run_python_file: str, istep: 
     nsteps_job = int((fstep-istep)/njobs)
     for njob in range(njobs):
         istep_job = njob*nsteps_job+istep
-        fstep_job = (njob+1)*nsteps_job+istep
+        fstep_job = (njob+1)*nsteps_job+istep+1
         if njob==(njobs-1):
             fstep_job = fstep
         print('Submitting job',njob+1)

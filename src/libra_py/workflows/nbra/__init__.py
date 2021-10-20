@@ -7,7 +7,8 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 #***********************************************************/
 
-__all__ = ["compute_hprime",
+__all__ = ["ann",
+           "compute_hprime",
            "compute_properties",
            "decoherence_times",
            "lz",
