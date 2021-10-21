@@ -318,6 +318,15 @@ def ovlp_arb_mo(SD1, SD2, S):
     # The SDs are coupled
     if res[0]==1:
         s = S.get( res[1], res[2])  
+    # For similar SDs
+    if sd1==sd2:
+        x = CMATRIX(len(sd1),len(sd2))
+        # Forming the overlap of the SDs
+        for i in range(0,len(sd1)):
+            for j in range(0,len(sd2)):
+                if (SD1[i] * SD2[j]) > 0:
+                    x.set(i,j,S.get(sd1[i],sd2[j]))
+        s = det(x)
 
     return s
 

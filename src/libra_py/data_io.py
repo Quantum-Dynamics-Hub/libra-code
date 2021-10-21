@@ -39,6 +39,7 @@ import os
 import sys
 import math
 import copy
+import re
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -344,6 +345,36 @@ def file2cmatrix(filename, nrows, ncols):
         res.append(res_i)
 
     return res
+
+
+def replace_pattern_in_file(filename, old_string, new_string):
+
+    """
+    This function replaces a string with a new strin. It is mostly used to replace the 
+    digits of zeros in a file to reduce the file size and its efficient storage. It is 
+    the equivalent of 'sed' command in Linux.
+
+    Args:
+
+        filename (string): The file name.
+
+        old_string (string): Old pattern to be replaced.
+
+        new_string (bool): New pattern to be replaced. 
+
+    Returns:
+
+        None
+    """
+
+    file = open(filename, 'r')
+    lines = file.readlines()
+    file.close()
+
+    file = open(filename,'w')
+    for i in range(len(lines)):
+        file.write(re.sub(old_string, new_string, lines[i]))
+    file.close()
 
 
 

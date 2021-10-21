@@ -33,6 +33,7 @@ import cmath
 import math
 import os
 import numpy as np
+from scipy.linalg import fractional_matrix_power
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -615,7 +616,88 @@ def apply_orthonormalization_general(S, St):
         push_submatrix(S[i], S_normalized, list(range(0,nstates)), list(range(0,nstates)))
 
 
+def get_Lowdin_scipy(S):
+    """
+    This function computes the inverse square root of a matrix S^{-1/2}.
+    
+    Args:
+    
+        S (numpy array): Overlap matrix in form of a numpy array.
+        
+    Returns:
+    
+        S_inverse_square_root (numpy array): The inverse square root of S.
+    """
+    # Return the fractional matrix with the power of -1/2
+    S_inverse_square_root = fractional_matrix_power(S,-1/2)
 
+    return S_inverse_square_root
+
+
+
+def apply_orthonormalization_scipy(S_1, S_2, St):
+    """
+    This function applies orthonormalization for the overlap matrices.
+    
+    Args:
+    
+        S_1 (numpy array): The overlap matrix of time n.
+        
+        S_2 (numpy array): The overlap matrix of time n+1.
+        
+        St (numpy array): The time-overlap matrix.
+        
+    Returns:
+    
+        St_orthonormalized (numpy array): The orthonormalized St.
+        
+        S_1_orthonormalized (numpy array): The orthonormalized S_1.
+    
+    """
+    U1 = get_Lowdin_scipy(S_1)
+    U2 = get_Lowdin_scipy(S_2)
+
+    St_orthonormalized = np.linalg.multi_dot([U1.transpose(), St, U2])
+    S_1_orthonormalized = np.linalg.multi_dot([U1.transpose(), S_1, U2])
+
+    return St_orthonormalized, S_1_orthonormalized
+
+
+
+def make_active_space(num_occ, num_unocc, data_dim, ks_homo_index):
+    """
+    This function makes an active space based on the number of occupied and 
+    unoccupied orbitals and the initial KS HOMO index. **Note that the ks_homo_index
+    starts from 1.**
+
+    Args:
+
+        num_occ (integer): Number of occupied orbitals from HOMO
+
+        num_unocc (integer): Number of unoccupied orbitals from LUMO
+
+        data_dim (integer): The data dimension of the 'raw' overlap matrices
+
+        ks_homo_index (integer): The KS HOMO index (which starts from 1) of the 'raw' matrices.
+
+    Returns:
+
+        new_active_space (list): The new active space
+
+        new_ks_homo_index (integer): The new KS HOMO index (starts from 1)
+    """
+    num_states = int(data_dim/2)
+    if (ks_homo_index+num_unocc)>num_states or (num_occ+num_unocc)>num_states:
+        print('Error: The number of states should not exceed the data dimension. Exiting now!')
+        sys.exit(0)
+    occ_indicies_alp = range(ks_homo_index-num_occ, ks_homo_index)
+    unocc_indices_alp = range(ks_homo_index, ks_homo_index+num_unocc)
+    occ_indicies_bet = range(ks_homo_index-num_occ+num_states, ks_homo_index+num_states)
+    unocc_indices_bet = range(ks_homo_index+num_states, ks_homo_index+num_unocc+num_states)
+    new_active_space = list(occ_indicies_alp) + list(unocc_indices_alp)
+    new_active_space += list(occ_indicies_bet) + list(unocc_indices_bet)
+    new_ks_homo_index = num_occ
+    return new_active_space, new_ks_homo_index
 
 
 def make_cost_mat(orb_mat_inp, en_mat_inp, alpha):
