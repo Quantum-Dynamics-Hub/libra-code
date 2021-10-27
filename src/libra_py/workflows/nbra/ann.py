@@ -30,6 +30,10 @@ import multiprocessing as mp
 import time
 import json
 import numpy as np
+
+import matplotlib as mpl
+mpl.use('Agg')
+
 import matplotlib.pyplot as plt
 
 if sys.platform=="cygwin":
