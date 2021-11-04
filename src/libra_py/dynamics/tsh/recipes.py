@@ -219,7 +219,7 @@ def set_method(params, ham_rep=0, is_nbra=0, method=0):
  
     params.update( {"rep_ham":ham_rep} )
 
-    if is_nbra = -1: # Custom
+    if is_nbra == -1: # Custom
         pass
 
     elif is_nbra == 0: # non-nbra
