@@ -854,7 +854,8 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     default_params = {}
     #================= Computing Hamiltonian-related properties ====================
     default_params.update( { "rep_tdse":1, "rep_ham":0, "rep_sh":1, "rep_lz":0, "rep_force":1,
-                             "force_method":1, "time_overlap_method":0, "nac_update_method":1, 
+                             "force_method":1, "enforce_state_following":0, "enforced_state_index":0, 
+                             "time_overlap_method":0, "nac_update_method":1, 
                              "do_phase_correction":1, "phase_correction_tol":1e-3,
                              "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0,
                              "convergence":0,  "max_number_attempts":100, "min_probability_reordering":0.0

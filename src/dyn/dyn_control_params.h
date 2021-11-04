@@ -113,6 +113,27 @@ class dyn_control_params{
   int force_method;
 
 
+  /** 
+    Wheather we want to enforce nuclear dynamics to be on a given state, regardlenss of the TSH transitions
+ 
+    Options:
+      - 0: no [ default ]
+      - 1: yes
+
+    Note: only matters is `force_method == 1`
+  */
+  int enforce_state_following; 
+
+  /** 
+    If we enforce the nuclear dynamics to be on a given state, what is the index of that state [any integer >- 0, default = 0 ]
+ 
+    The default value of 0 enforces the nuclear dynamics to be on the ground state. This is a convenient way of doing NBRA calculations
+    with model systems without the need for pre-computing the trajectories 
+
+  */
+  int enforced_state_index;  
+
+
   /**
     How do get the time-overlaps in the dynamics.
 
