@@ -886,8 +886,8 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                            } )
 
     #================= Variables specific to Python version: saving ================
-    default_params.update( { "nsteps":1, "prefix":"out",
-                             "hdf5_output_level":-1, "mem_output_level":-1, "txt_output_level":-1,
+    default_params.update( { "nsteps":1, "prefix":"out", "prefix2":"out2",
+                             "hdf5_output_level":-1, "mem_output_level":-1, "txt_output_level":-1, "txt2_output_level":-1,
                              "use_compression":0, "compression_level":[0,0,0], 
                              "progress_frequency":0.1,
                              "properties_to_save":[ "timestep", "time", "Ekin_ave", "Epot_ave", "Etot_ave", 
@@ -899,6 +899,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     comn.check_input(dyn_params, default_params, critical_params)
                
     prefix = dyn_params["prefix"] 
+    prefix2 = dyn_params["prefix2"] 
     rep_tdse = dyn_params["rep_tdse"]
     nsteps = dyn_params["nsteps"]
     dt = dyn_params["dt"]
@@ -906,6 +907,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     hdf5_output_level = dyn_params["hdf5_output_level"]
     mem_output_level = dyn_params["mem_output_level"]
     txt_output_level = dyn_params["txt_output_level"]
+    txt2_output_level = dyn_params["txt2_output_level"]
     do_phase_correction = dyn_params["do_phase_correction"]
     state_tracking_algo = dyn_params["state_tracking_algo"]
     force_method = dyn_params["force_method"]
@@ -927,9 +929,13 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     # Initialize savers
     _savers = save.init_tsh_savers(dyn_params, model_params, nsteps, ntraj, nnucl, nadi, ndia)
 
+
     # Open and close the output files for further writing
     if _savers["txt_saver"]!=None:
         _savers["txt_saver"].save_data_txt( F"{prefix}", properties_to_save, "w", 0)
+
+    if _savers["txt2_saver"]!=None:
+        _savers["txt2_saver"].save_data_txt( F"{prefix2}", properties_to_save, "w", 0)
 
 
     # ======= Hierarchy of Hamiltonians =======
@@ -1018,6 +1024,12 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
                 save.save_hdf5_4D(_savers["txt_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr])
 
+            if txt2_output_level>=4: 
+                hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
+                hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
+                save.save_hdf5_4D(_savers["txt2_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr], 1)
+
+
 
 
 
@@ -1031,6 +1043,10 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
         if _savers["txt_saver"]!=None:
             _savers["txt_saver"].save_data_txt( F"{prefix}", properties_to_save, "a", i)
+
+        if _savers["txt2_saver"]!=None:
+            _savers["txt2_saver"].save_data_txt( F"{prefix2}", properties_to_save, "a", 0)
+
 
 
     if _savers["mem_saver"]!=None:

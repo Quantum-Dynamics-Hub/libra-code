@@ -817,6 +817,7 @@ def make_var_pool(dyn_params, compute_model, model_params, _rnd,
                 dir_prefix = prms["dir_prefix"]
                                 
                 prms["prefix"] = F"{dir_prefix}/start_s{istate}_{name}_batch{batch}"                
+                prms["prefix2"] = F"{dir_prefix}/_start_s{istate}_{name}_batch{batch}" 
                 prms["istate"] = [1, istate] # adiabatic state `istate`; Recall index from 0
 
                 # This instruction is made backward-compatible with the commented block

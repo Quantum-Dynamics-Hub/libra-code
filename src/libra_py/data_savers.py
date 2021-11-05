@@ -101,7 +101,6 @@ class mem_saver:
         # "Numpy" data - elements are numpy arrays
         self.np_data = {}
         
-        
         # Only initialize the "raw" data, don't touch the numpy
         for keyword in self.keywords:
             self.data[keyword] = []            
@@ -132,6 +131,7 @@ class mem_saver:
             data_name (string): the name of the data set
             shape (tuple of ints): the dimensions of the numpy array
             dtype (one of ["I", "R", or "C"]: the tye of data to be stored in the array
+            target (int): 0 - np_data, 1 - np_data_current
             
         """
         if data_name in self.keywords:
@@ -148,6 +148,7 @@ class mem_saver:
             
         elif dtype=="C":
             self.np_data[data_name] = np.empty(shape, complex)            
+
             
         else:
             print(F"ERROR: the dtype = {dtype} is not allowed in add_dataset")
@@ -161,8 +162,8 @@ class mem_saver:
 
         if data_name in self.keywords and data_name in self.np_data.keys():
             self.np_data[data_name][istep] = _data
-            
-            
+
+                        
     def save_multi_scalar(self, istep, iscal, data_name, _data):
         """
         Saves a sacalar to 2D array
@@ -184,12 +185,10 @@ class mem_saver:
            
         """
 
-        if data_name in self.keywords and data_name in self.np_data.keys():
-
-            nx, ny = _data.num_of_rows, _data.num_of_cols
-
+        if data_name in self.keywords and data_name in self.np_data.keys():        
+            nx, ny = _data.num_of_rows, _data.num_of_cols        
             for i in range(nx):
-                for j in range(ny):
+                for j in range(ny):     
                     self.np_data[data_name][istep, i, j] = _data.get(i, j)
 
 
@@ -205,14 +204,11 @@ class mem_saver:
            
         """
 
-        if data_name in self.keywords and data_name in self.np_data.keys():
-
-            nx, ny = _data.num_of_rows, _data.num_of_cols
-
+        if data_name in self.keywords and data_name in self.np_data.keys():        
+            nx, ny = _data.num_of_rows, _data.num_of_cols        
             for i in range(nx):
-                for j in range(ny):
+                for j in range(ny):       
                     self.np_data[data_name][istep, imatrix, i, j] = _data.get(i, j)
-                        
 
     
     def save_data(self, filename, data_names, mode):
@@ -262,11 +258,12 @@ class mem_saver:
         """
 
         if mode=="w":
+
             print("In mem_saver.save_data_txt()")
             print("data_name = ", data_names)        
             print("keywords = ", self.keywords)
             print("keys = ", self.np_data.keys() )
-
+            
             for data_name in data_names:
                 if data_name in self.np_data.keys():
                     f = open(F"{prefix}/{data_name}.txt", "w")
