@@ -975,7 +975,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
         elif rep_tdse==1:
             ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
 
-        dm_dia, dm_adi, dm_dia_raw, dm_adi_raw, = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1)        
+        dm_dia, dm_adi, dm_dia_raw, dm_adi_raw = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1)        
         pops, pops_raw = tsh_stat.compute_sh_statistics(nadi, states, projectors)
 
 
@@ -998,12 +998,16 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                        i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Etherm, E_NHC, states,
                        pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia  )
 
+        del dm_dia, dm_adi, dm_dia_raw, dm_adi_raw
+        del pops, pops_raw
+
     
         for tr in range(ntraj):
             if time_overlap_method==0:
                 x = ham.get_basis_transform(Py2Cpp_int([0, tr]) )            
                 St = U[tr].H() * x
                 U[tr] = CMATRIX(x)
+                del x
 
             elif time_overlap_method==1:                
                 St = ham.get_time_overlap_adi(Py2Cpp_int([0, tr]) ) 
@@ -1013,33 +1017,39 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
                 hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
                 save.save_hdf5_4D(_savers["hdf5_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr])
+                del hvib_adi, hvib_dia
 
             if mem_output_level>=4: 
                 hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
                 hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
                 save.save_hdf5_4D(_savers["mem_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr])
+                del hvib_adi, hvib_dia
+
 
             if txt_output_level>=4: 
                 hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
                 hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
                 save.save_hdf5_4D(_savers["txt_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr])
+                del hvib_adi, hvib_dia
 
             if txt2_output_level>=4: 
                 hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
                 hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
                 save.save_hdf5_4D(_savers["txt2_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr], 1)
+                del hvib_adi, hvib_dia
 
-
-
-
+            del St
+            if time_overlap_method==0:
+                del U[tr]
 
         #============ Propagate ===========        
         model_params.update({"timestep":i})        
         
-        if rep_tdse==0:
+        if rep_tdse==0:            
             compute_dynamics(q, p, iM, Cdia, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm)
         elif rep_tdse==1:
             compute_dynamics(q, p, iM, Cadi, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm)
+            
 
         if _savers["txt_saver"]!=None:
             _savers["txt_saver"].save_data_txt( F"{prefix}", properties_to_save, "a", i)

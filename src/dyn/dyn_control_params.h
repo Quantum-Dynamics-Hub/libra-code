@@ -500,8 +500,12 @@ class dyn_control_params{
   dyn_control_params(const dyn_control_params& x){ 
     *this = x;
     decoherence_rates = new MATRIX( *x.decoherence_rates );  
+    ave_gaps = new MATRIX( *x.ave_gaps );
   }
- ~dyn_control_params() { ;; }
+  ~dyn_control_params() {  
+    delete decoherence_rates;  
+    delete ave_gaps;
+  }
 
   void sanity_check();
   void set_parameters(bp::dict params);
