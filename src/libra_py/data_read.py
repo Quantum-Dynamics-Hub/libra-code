@@ -32,7 +32,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 import util.libutil as comn
 
     
-def get_matrix(nrows, ncols, filename_re, filename_im, act_sp):
+def get_matrix(nrows, ncols, filename_re, filename_im, act_sp, get_real=1, get_imag=1):
     """
 
     This file reads the real and imaginary components of a matrix of given original size,  
@@ -47,6 +47,8 @@ def get_matrix(nrows, ncols, filename_re, filename_im, act_sp):
         act_sp ( list of N ints ): the indices of the columns and rows to be taken to construct the 
             resulting matrices. The indexing starts from 0. These numbers shold not be larger than 
             `nrows` or `ncols`
+        get_real ( int ): whether we want to read the real component [ default: 1 - Yes ]
+        get_imag ( int ): whether we want to read the imaginary component [ default: 1 - Yes ]
 
     Returns:
         CMATRIX(N, N): where N is the number of actively included rows/columns
@@ -63,9 +65,23 @@ def get_matrix(nrows, ncols, filename_re, filename_im, act_sp):
 
 
     """
+   
+    X_re = MATRIX(nrows, ncols); 
+    if get_real==1:
+        if os.path.exists(filename_re):
+            X_re.Load_Matrix_From_File(filename_re)
+        else:
+            print(F"File {filename_re} does not exist. Exiting...")
+            sys.exit(0)
+   
+    X_im = MATRIX(nrows, ncols); 
+    if get_imag==1:
+        if os.path.exists(filename_re):       
+            X_im.Load_Matrix_From_File(filename_im)
+        else:
+            print(F"File {filename_im} does not exist. Exiting...")
+            sys.exit(0)
 
-    X_re = MATRIX(nrows, ncols); X_re.Load_Matrix_From_File(filename_re)
-    X_im = MATRIX(nrows, ncols); X_im.Load_Matrix_From_File(filename_im)
 
     nstates = len(act_sp)
     x_re = MATRIX(nstates, nstates);
@@ -97,6 +113,9 @@ def get_data(params):
             * **params["data_im_prefix"]** ( string ): prefixes of the files with imaginary part of the data [Required!]
             * **params["data_re_suffix"]** ( string ): suffixes of the files with real part of the Hvib(t) [default: "_re"]
             * **params["data_im_suffix"]** ( string ): suffixes of the files with imaginary part of the Hvib(t) [default: "_im"]
+            * **params["get_real"]** ( int ): whether we want to read the real component [ default: 1 - Yes ]
+            * **params["get_imag"]** ( int ): whether we want to read the imaginary component [ default: 1 - Yes ]
+            
 
     Returns:
         list of CMATRIX objects: data: 
@@ -119,7 +138,7 @@ def get_data(params):
     """
 
     critical_params = ["data_dim", "isnap", "fsnap", "data_re_prefix", "data_im_prefix"]
-    default_params = { "data_re_suffix":"_re", "data_im_suffix":"_im", "active_space":range(params["data_dim"])}
+    default_params = { "data_re_suffix":"_re", "data_im_suffix":"_im", "active_space":range(params["data_dim"]), "get_real":1, "get_imag":1}
     comn.check_input(params, default_params, critical_params)
 
     ndim = params["data_dim"]  # the number of cols/row in the input files
@@ -129,7 +148,7 @@ def get_data(params):
 
         filename_re = params["data_re_prefix"]+str(i)+params["data_re_suffix"]
         filename_im = params["data_im_prefix"]+str(i)+params["data_im_suffix"]
-        data_i = get_matrix(ndim, ndim, filename_re, filename_im, params["active_space"] ) 
+        data_i = get_matrix(ndim, ndim, filename_re, filename_im, params["active_space"], params["get_real"], params["get_imag"]) 
         data.append(data_i)
 
     return data
@@ -147,8 +166,7 @@ def get_data_sets(params):
                 define the paths of the directories where the data files for
                 different data sets (e.g. independent MD trajectories) are located. 
             .. note::
-                In addition, requires parameters described in
-                :func:`get_data`
+                In addition, requires parameters described in :func:`get_data`
 
     Returns:
         list of lists of CMATRIX: data: 

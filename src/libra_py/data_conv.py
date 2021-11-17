@@ -395,7 +395,16 @@ def MATRIX2nparray( data ):
 
     N = data.num_of_rows
     M = data.num_of_cols
-    
+
+    res = np.zeros( (N, M), dtype=np.complex128 )
+
+    for n in range(0,N):
+        for m in range(0,M):
+            res[n,m] = data.get(n,m)
+
+    return res 
+
+    """    
     res = []
     
     for n in range(0,N):
@@ -405,7 +414,7 @@ def MATRIX2nparray( data ):
 
     return np.array(res)
 
-
+    """
 
 
 def matrix2list(q):

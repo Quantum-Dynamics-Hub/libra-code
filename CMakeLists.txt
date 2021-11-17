@@ -28,7 +28,9 @@ MESSAGE("Advice: If this search fails, try setting cache variables: -DPYTHON_LIB
 MESSAGE("Hint to self: -DPYTHON_INCLUDE_DIR=/home/Alexey_2/Soft/Python-2.6.7/bin/include/python2.6 -DPYTHON_LIBRARY=/home/Alexey_2/Soft/Python-2.6.7/bin/bin")
 
 # For Linux and Cygwin
-FIND_PACKAGE(PythonLibs 3.7 REQUIRED)
+# Adapt it according to your system
+FIND_PACKAGE(PythonLibs 3.6 REQUIRED)
+#FIND_PACKAGE(PythonLibs 3.7 REQUIRED)
 
 IF(PYTHONLIBS_FOUND)
   MESSAGE("Success!")
@@ -57,12 +59,15 @@ SET(Boost_USE_STATIC_LIBS=OFF)
 SET(Boost_USE_MULTITHREADED=OFF)
 SET(Boost_USE_STATIC_RUNTIME=OFF)
 
-
-FIND_PACKAGE(Boost REQUIRED)
+# Adapt it according to your system
+FIND_PACKAGE(Boost 1.73.0 REQUIRED)
+#FIND_PACKAGE(Boost REQUIRED)
 IF(Boost_FOUND)
   MESSAGE("Success!")
-  INCLUDE_DIRECTORIES("${Boost_INCLUDE_DIRS}")  
-  FIND_PACKAGE(Boost COMPONENTS python37 regex) # it seems that it is important to find sub-packages too!!!
+  INCLUDE_DIRECTORIES("${Boost_INCLUDE_DIRS}") 
+  # Adapt it based on your system
+  FIND_PACKAGE(Boost COMPONENTS python36 regex) # it seems that it is important to find sub-packages too!!!
+  #FIND_PACKAGE(Boost COMPONENTS python37 regex)
 ELSEIF(NOT Boost_FOUND)
   MESSAGE(FATAL_ERROR "Unable to find correct Boost version. Did you set BOOST_ROOT?")
 ENDIF()
@@ -71,6 +76,38 @@ MESSAGE("Found Boost libraries directory: ")
 MESSAGE("${Boost_LIBRARIES}")
 MESSAGE("Found Boost include directory: ")
 MESSAGE("${Boost_INCLUDE_DIRS}")
+
+
+
+FIND_PACKAGE(Eigen3)
+IF(EIGEN3_FOUND)
+  INCLUDE_DIRECTORIES("${EIGEN3_INCLUDE_DIR}")   
+  MESSAGE("Found Eigen3 include directory: ")
+  MESSAGE("${EIGEN3_INCLUDE_DIR}")
+ELSEIF(NOT EIGEN3_FOUND)
+  MESSAGE(FATAL_ERROR "Unable to find Eigen3")
+ENDIF()
+
+
+SET(EIGEN3_INCLUDE_DIRS "${EIGEN3_INCLUDE_DIR}")
+
+# Remove CMakeCache.txt from the previous build, if you get an error finding libint2 due to problems 
+# in finding Eigen3
+
+# Libint2 2.7.0 CONFIG REQUIRED COMPONENTS shared gss e5 g5
+#FIND_PACKAGE(Libint2 MODULE 2.7.0)
+FIND_PACKAGE(Libint2 CONFIG 2.7.0 REQUIRED COMPONENTS shared gss e5 g5)
+IF(Libint2_FOUND)
+  INCLUDE_DIRECTORIES("${Libint2_INCLUDE_DIRS}")   
+  MESSAGE("Found Libint2 include directory: ")
+  MESSAGE("${Libint2_INCLUDE_DIRS}")
+  MESSAGE("Found Libint2_LIBRARIES: ")
+  MESSAGE("${Libint2_LIBRARIES}")
+  MESSAGE("Found Libint2_LIBRARY: ")
+  MESSAGE("${Libint2_LIBRARY}")
+ELSEIF(NOT Libint2_FOUND)
+  MESSAGE(FATAL_ERROR "Unable to find correct libint2")
+ENDIF()
 
 
 #

@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015-2017 Alexey V. Akimov
+* Copyright (C) 2015-2021 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -43,6 +43,7 @@ using namespace libmolint;
 using namespace libqobjects;
 using namespace libbasis;
 using namespace libbasis_setups;
+using namespace liblibint2_wrappers;
 
 using namespace libcalculators;
 
@@ -95,6 +96,7 @@ void export_libra_core_objects(){
   export_molint_objects();
   export_qobjects_objects();
   export_basis_objects();
+  export_libint2_wrappers_objects();
 
 
   export_calculators_objects();

@@ -1,15 +1,15 @@
 #*********************************************************************************
-#* Copyright (C) 2016 Alexey V. Akimov
+#* Copyright (C) 2016-2021 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
-#* as published by the Free Software Foundation, either version 2 of
+#* as published by the Free Software Foundation, either version 3 of
 #* the License, or (at your option) any later version.
 #* See the file LICENSE in the root directory of this distribution
 #* or <http://www.gnu.org/licenses/>.
 #*
 #*********************************************************************************/
 ###################################################################
-# This is a classical all-atomic MD followed by the EHT calculations on each fragment
+# This is a classical all-atomic MD 
 ###################################################################
 
 import sys
@@ -49,12 +49,12 @@ def main():
 
     syst.determine_functional_groups(0)  # do not assign rings
     syst.init_fragments()
-    print "Number of atoms in the system = ", syst.Number_of_atoms
-    print "Number of bonds in the system = ", syst.Number_of_bonds
-    print "Number of angles in the system = ", syst.Number_of_angles
-    print "Number of dihedrals in the system = ", syst.Number_of_dihedrals
-    print "Number of impropers in the system = ", syst.Number_of_impropers
-    atlst1 = range(1,syst.Number_of_atoms+1)
+    print("Number of atoms in the system = ", syst.Number_of_atoms)
+    print("Number of bonds in the system = ", syst.Number_of_bonds)
+    print("Number of angles in the system = ", syst.Number_of_angles)
+    print("Number of dihedrals in the system = ", syst.Number_of_dihedrals)
+    print("Number of impropers in the system = ", syst.Number_of_impropers)
+    atlst1 = list(range(1,syst.Number_of_atoms+1))
 
     # Creating Hamiltonian and initialize it
     ham = Hamiltonian_Atomistic(1, 3*syst.Number_of_atoms)
@@ -64,7 +64,7 @@ def main():
 
 
     # Bind Hamiltonian and the system   
-    ham.set_system(syst);   ham.compute();   print "Energy = ", ham.H(0,0), " a.u."
+    ham.set_system(syst);   ham.compute();   print("Energy = ", ham.H(0,0), " a.u.")
 
     # Electronic DOFs
     el = Electronic(1,0)
@@ -103,7 +103,7 @@ def main():
     f.close()
 
 
-    for i in xrange(100):
+    for i in range(100):
         syst.set_atomic_q(mol.q)
         syst.print_xyz("_mol_cooling.xyz",i)
 
@@ -126,7 +126,7 @@ def main():
     md.dt = 40.0 
     md.max_step = 10
 
-    for i in xrange(1000):
+    for i in range(1000):
         syst.set_atomic_q(mol.q)
         syst.print_xyz("_mol_md.xyz",i)
 

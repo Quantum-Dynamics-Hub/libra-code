@@ -257,7 +257,7 @@ def generate_replicas_xyz(tv1, tv2, tv3, rep1, rep2, rep3 , filename, outfile, i
     tmp = A[0].split()
     Natoms = int(float(tmp[0]))
     f = open(outfile, "w+")
-    f.write(F"{int(len(transl) * Natoms):i} \n")
+    f.write(F"{int(len(transl) * Natoms):5d} \n")
     f.write(F"{A[1][:-1]:s} \n")
 
     L = [] 
@@ -423,7 +423,7 @@ def crop_sphere_xyz(infile, outfile, Rcut):
 
     # Print resulting coordinates
     f1 = open(outfile,"w")
-    f1.write(F"{Nat:5i}\n")
+    f1.write(F"{Nat:5d}\n")
     f1.write(A[1])
 
 

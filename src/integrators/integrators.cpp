@@ -28,14 +28,11 @@ namespace bp = boost::python;
 
 CMATRIX RK4(CMATRIX& q, double dt, bp::object compute_derivatives, bp::object function_params){
 /**
-   Propagates the q variable (complex matrix of arb dimensions by the 4-th order Runge-Kutta algorithm)
+   This function solves a general multidimensional ODE:  dq/dt = f(t,q) for a 1 timestep dt
 
-   compute_derivatives is assumed to return CMATRIX object of the same size as the input q
+   It propagates the q variable (complex matrix of arb dimensions by the 4-th order Runge-Kutta algorithm)
 
-  call compute_deriv(rho,k1)
-  call compute_deriv(rho+0.5*dt*k1,k2)
-  call compute_deriv(rho+0.5*dt*k2,k3)
-  call compute_deriv(rho+dt*k3,k4)
+   `compute_derivatives` represents the RHS function f(t,q) and is assumed to return CMATRIX object of the same size as the input q
 
   rho=rho+dt/6.d0*(k1+2*k2+2*k3+k4)
  

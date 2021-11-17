@@ -33,6 +33,7 @@ import cmath
 import math
 import os
 import numpy as np
+from scipy.linalg import fractional_matrix_power
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -49,44 +50,111 @@ import libra_py.hungarian as hungarian
 
 def get_step2_data(_params):
     """
-    A light function to obtain the step2 data
+    A light function to obtain the step2 data: S, St, hvib
 
     Args:
         params ( dictionary ): Control paramerter of this type of simulation. Can include the follwing keys:
 
-            * **params["basis"]** ( string ): describes if one is using either the spin-diabatic (non spin-orbit coupling) 
-                                              or is using the spin-adiabatic (spin orbit-coupling)
+        * **params["read_S_data"]** ( int ): whether to read S data (1) or not (0) [ default: 1 ]
+
+        * **params["S_data_re_prefix"]** ( string ): prefix of files containing real part of orbital overlaps [ default: "S_dia_ks_" ]
+
+        * **params["S_data_re_suffix"]** ( string ): suffix of files containing real part of orbital overlaps [ default: "_re" ]
+
+        * **params["S_data_im_prefix"]** ( string ): prefix of files containing imaginary part of orbital overlaps [ default: "S_dia_ks_" ]
+
+        * **params["S_data_im_suffix"]** ( string ): suffix of files containing imaginary part of orbital overlaps [ default: "_im" ]
+
+        * **params["read_St_data"]** ( int ): whether to read St data (1) or not (0) [ default: 1 ]
+
+        * **params["St_data_re_prefix"]** ( string ): prefix of files containing real part of orbital time-overlaps [ default: "St_dia_ks_" ]
+
+        * **params["St_data_re_suffix"]** ( string ): suffix of files containing real part of orbital time-overlaps [ default: "_re" ]
+
+        * **params["St_data_im_prefix"]** ( string ): prefix of files containing imaginary part of orbital time-overlaps [ default: "St_dia_ks_" ]
+
+        * **params["St_data_im_suffix"]** ( string ): suffix of files containing imaginary part of orbital time-overlaps [ default: "_im" ]
+
+        * **params["read_hvib_data"]** ( int ): whether to read hvib data (1) or not (0) [ default: 1 ]
+
+        * **params["hvib_data_re_prefix"]** ( string ): prefix of files containing real part of vibronic Hamiltonian [ default: "hvib_dia_ks_" ]
+
+        * **params["hvib_data_re_suffix"]** ( string ): suffix of files containing real part of vibronic Hamiltonian [ default: "_re" ]
+
+        * **params["hvib_data_im_prefix"]** ( string ): prefix of files containing imaginary part of vibronic Hamiltonian [ default: "hvib_dia_ks_" ]
+
+        * **params["hvib_data_im_suffix"]** ( string ): suffix of files containing imaginary part of vibronic Hamiltonian [ default: "_im" ]
+
+        * **params["data_set_paths"]** ( list of strings ): see in :func:`libra_py.data_read.get_data_sets`
+
+        * **params["data_dim"]** ( int ): see in :func:`libra_py.data_read.get_data`
+
+        * **params["active_space"]** ( list of ints ): see in :func:`libra_py.data_read.get_data`
+
+        * **params["isnap"]** ( int ): see in :func:`libra_py.data_read.get_data`
+
+        * **params["fsnap"]** ( int ): see in :func:`libra_py.data_read.get_data`
+
+    Returns:
+        tuple: S, St, hvib
+
+        * **S** ( list of lists of CMATRIX objects) : S[iset][itime] an Norb x Norb CMATRIX of overlaps for data set `iset` at time `itime`
+
+        * **St** ( list of lists of CMATRIX objects) : St[iset][itime] an Norb x Norb CMATRIX of time-overlaps for data set `iset` at time `itime`
+
+        * **hvib** ( list of lists of CMATRIX objects) : hvib[iset][itime] an Norb x Norb CMATRIX of vibronic Hamiltonians for data set `iset` at time `itime`
+
     """
 
     params = dict(_params)
-    spin_basis = params["basis"]
 
-    # Fetching the overlap matricies
-    params.update({ "data_re_prefix" : "S_"+spin_basis+"_ks_", "data_re_suffix" : "_re",
-                    "data_im_prefix" : "S_"+spin_basis+"_ks_", "data_im_suffix" : "_im"  } )
-    S = data_read.get_data_sets(params)
-    #print ("\n")
-    #S[0][0].show_matrix()
-    #print (S[0][0].get(0,0))
-    #sys.exit(0)
+    critical_params = [ ]
+    default_params = { "read_S_data" : 1, "read_S_re":1,  "read_S_im":1,
+                       "S_data_re_prefix": "S_dia_ks_",  "S_data_re_suffix": "_re",
+                       "S_data_im_prefix": "S_dia_ks_",  "S_data_im_suffix": "_im",
+                       "read_St_data" : 1, "read_St_re":1,  "read_St_im":1,
+                       "St_data_re_prefix": "St_dia_ks_",  "St_data_re_suffix": "_re",
+                       "St_data_im_prefix": "St_dia_ks_",  "St_data_im_suffix": "_im",
+                       "read_hvib_data" : 1, "read_hvib_re":1,  "read_hvib_im":1,
+                       "hvib_data_re_prefix": "hvib_dia_ks_",  "hvib_data_re_suffix": "_re",
+                       "hvib_data_im_prefix": "hvib_dia_ks_",  "hvib_data_im_suffix": "_im"
+                     }
+    comn.check_input(params, default_params, critical_params)
+
+    S, St, Hvib = [], [], []
+    prms = dict(_params)
+
+    # Fetching the overlap matricies  
+    if(params["read_S_data"]==1):
+        prms["get_real"] = params["read_S_re"]
+        prms["get_imag"] = params["read_S_im"]
+        prms["data_re_prefix"] = params["S_data_re_prefix"]
+        prms["data_re_suffix"] = params["S_data_re_suffix"]
+        prms["data_im_prefix"] = params["S_data_im_prefix"]
+        prms["data_im_suffix"] = params["S_data_im_suffix"]
+        S = data_read.get_data_sets(prms)
 
     # Fetching the time-derivative overlap matricies
-    params.update({ "data_re_prefix" : "St_"+spin_basis+"_ks_", "data_re_suffix" : "_re",
-                    "data_im_prefix" : "St_"+spin_basis+"_ks_", "data_im_suffix" : "_im"  } ) 
-    St = data_read.get_data_sets(params)
-    #print ("\n")
-    #St[0][0].show_matrix()
-    #sys.exit(0)
+    if(params["read_St_data"]==1):
+        prms["get_real"] = params["read_St_re"]
+        prms["get_imag"] = params["read_St_im"]
+        prms["data_re_prefix"] = params["St_data_re_prefix"]
+        prms["data_re_suffix"] = params["St_data_re_suffix"]
+        prms["data_im_prefix"] = params["St_data_im_prefix"]
+        prms["data_im_suffix"] = params["St_data_im_suffix"]
+        St = data_read.get_data_sets(prms)
  
     # Fetching the vibronic Hamiltonian matricies
-    params.update({ "data_re_prefix" : "hvib_"+spin_basis+"_", "data_re_suffix" : "_re",
-                    "data_im_prefix" : "hvib_"+spin_basis+"_", "data_im_suffix" : "_im"  } ) 
-    Hvib_ks = data_read.get_data_sets(params)
-    #print ("\n")
-    #Hvib_ks[0][0].show_matrix()
-    #sys.exit(0)
+    if(params["read_hvib_data"]==1):
+        prms["get_real"] = params["read_hvib_re"]
+        prms["get_imag"] = params["read_hvib_im"]
+        prms["data_re_prefix"] = params["hvib_data_re_prefix"]
+        prms["data_re_suffix"] = params["hvib_data_re_suffix"]
+        prms["data_im_prefix"] = params["hvib_data_im_prefix"]
+        prms["data_im_suffix"] = params["hvib_data_im_suffix"]
+        Hvib = data_read.get_data_sets(prms)
 
-    return S, St, Hvib_ks
+    return S, St, Hvib
 
 
 
@@ -157,8 +225,7 @@ def sort_SD_energies(Hvib):
 
 
 
-
-def output_sorted_Hvibs(Hvib, orbital_index_energy_pairs):
+def output_sorted_Hvibs(Hvib, orbital_index_energy_pairs, _params={}):
     """
     This function outputs the vibronic Hamiltonians in the SD basis according to their sorted order
 
@@ -170,6 +237,24 @@ def output_sorted_Hvibs(Hvib, orbital_index_energy_pairs):
 
     """
 
+    params = dict(_params)
+    critical_params = [ ]
+    default_params = { "save_files" : 1,
+                       "output_dir_prefix" : "res_sorted_traj",
+                       "hvib_data_re_prefix": "Hvib_sorted_",  "hvib_data_re_suffix": "_re",
+                       "hvib_data_im_prefix": "Hvib_sorted_",  "hvib_data_im_suffix": "_im"
+                     }
+    comn.check_input(params, default_params, critical_params)
+
+
+    save_files = params["save_files"]
+    output_dir_prefix = params["output_dir_prefix"]
+    prefix_re = params["hvib_data_re_prefix"]
+    suffix_re = params["hvib_data_re_suffix"]
+    prefix_im = params["hvib_data_im_prefix"]
+    suffix_im = params["hvib_data_im_suffix"]
+
+
     ntraj  = len(orbital_index_energy_pairs)
     nsnaps = len(orbital_index_energy_pairs[0])
     nSD    = len(orbital_index_energy_pairs[0][0])
@@ -178,9 +263,10 @@ def output_sorted_Hvibs(Hvib, orbital_index_energy_pairs):
 
     for traj in range( ntraj ):
 
-        rd_sorted = "res_sorted_traj"+str(traj)+""
-        os.system("rm -r "+rd_sorted)
-        os.system("mkdir "+rd_sorted)
+        if(save_files):
+            rd_sorted = F"{output_dir_prefix}{traj}"
+            os.system(F"rm -r {rd_sorted}")
+            os.system(F"mkdir {rd_sorted}")
 
         Hvibs_sorted.append( [] )
 
@@ -193,8 +279,10 @@ def output_sorted_Hvibs(Hvib, orbital_index_energy_pairs):
                     Hvib_sorted.set( i, j, Hvib[ traj ][ snap ].get( a, b ) )
 
             Hvibs_sorted[ traj ].append( Hvib_sorted )
-            Hvibs_sorted[ traj ][ snap ].real().show_matrix("%s/Hvib_sorted_%i_re" % (rd_sorted, snap))
-            Hvibs_sorted[ traj ][ snap ].imag().show_matrix("%s/Hvib_sorted_%i_im" % (rd_sorted, snap))
+
+            if(save_files):
+                Hvibs_sorted[ traj ][ snap ].real().show_matrix(F"{rd_sorted}/{prefix_re}{snap}{suffix_re}")
+                Hvibs_sorted[ traj ][ snap ].imag().show_matrix(F"{rd_sorted}/{prefix_im}{snap}{suffix_im}")
 
     return Hvibs_sorted
 
@@ -477,7 +565,9 @@ def get_Lowdin_general(S):
     nstates = int(S.num_of_cols)  # division by 2 because it is a super-matrix
     is_inv = FullPivLU_rank_invertible(S)
     if is_inv[1] != 1:
-        print("Error, S is not invertible, Exiting Program");  sys.exit(0)
+        print(F"Error, S is not invertible, true rank = { is_inv[0] }. Exiting program...\n");  
+        S.show_matrix()  
+        sys.exit(0)
     S_half   = CMATRIX(nstates,nstates)
     S_i_half = CMATRIX(nstates,nstates)
     sqrt_matrix(S, S_half, S_i_half)
@@ -526,7 +616,88 @@ def apply_orthonormalization_general(S, St):
         push_submatrix(S[i], S_normalized, list(range(0,nstates)), list(range(0,nstates)))
 
 
+def get_Lowdin_scipy(S):
+    """
+    This function computes the inverse square root of a matrix S^{-1/2}.
+    
+    Args:
+    
+        S (numpy array): Overlap matrix in form of a numpy array.
+        
+    Returns:
+    
+        S_inverse_square_root (numpy array): The inverse square root of S.
+    """
+    # Return the fractional matrix with the power of -1/2
+    S_inverse_square_root = fractional_matrix_power(S,-1/2)
 
+    return S_inverse_square_root
+
+
+
+def apply_orthonormalization_scipy(S_1, S_2, St):
+    """
+    This function applies orthonormalization for the overlap matrices.
+    
+    Args:
+    
+        S_1 (numpy array): The overlap matrix of time n.
+        
+        S_2 (numpy array): The overlap matrix of time n+1.
+        
+        St (numpy array): The time-overlap matrix.
+        
+    Returns:
+    
+        St_orthonormalized (numpy array): The orthonormalized St.
+        
+        S_1_orthonormalized (numpy array): The orthonormalized S_1.
+    
+    """
+    U1 = get_Lowdin_scipy(S_1)
+    U2 = get_Lowdin_scipy(S_2)
+
+    St_orthonormalized = np.linalg.multi_dot([U1.transpose(), St, U2])
+    S_1_orthonormalized = np.linalg.multi_dot([U1.transpose(), S_1, U2])
+
+    return St_orthonormalized, S_1_orthonormalized
+
+
+
+def make_active_space(num_occ, num_unocc, data_dim, ks_homo_index):
+    """
+    This function makes an active space based on the number of occupied and 
+    unoccupied orbitals and the initial KS HOMO index. **Note that the ks_homo_index
+    starts from 1.**
+
+    Args:
+
+        num_occ (integer): Number of occupied orbitals from HOMO
+
+        num_unocc (integer): Number of unoccupied orbitals from LUMO
+
+        data_dim (integer): The data dimension of the 'raw' overlap matrices
+
+        ks_homo_index (integer): The KS HOMO index (which starts from 1) of the 'raw' matrices.
+
+    Returns:
+
+        new_active_space (list): The new active space
+
+        new_ks_homo_index (integer): The new KS HOMO index (starts from 1)
+    """
+    num_states = int(data_dim/2)
+    if (ks_homo_index+num_unocc)>num_states or (num_occ+num_unocc)>num_states:
+        print('Error: The number of states should not exceed the data dimension. Exiting now!')
+        sys.exit(0)
+    occ_indicies_alp = range(ks_homo_index-num_occ, ks_homo_index)
+    unocc_indices_alp = range(ks_homo_index, ks_homo_index+num_unocc)
+    occ_indicies_bet = range(ks_homo_index-num_occ+num_states, ks_homo_index+num_states)
+    unocc_indices_bet = range(ks_homo_index+num_states, ks_homo_index+num_unocc+num_states)
+    new_active_space = list(occ_indicies_alp) + list(unocc_indices_alp)
+    new_active_space += list(occ_indicies_bet) + list(unocc_indices_bet)
+    new_ks_homo_index = num_occ
+    return new_active_space, new_ks_homo_index
 
 
 def make_cost_mat(orb_mat_inp, en_mat_inp, alpha):
@@ -1143,11 +1314,28 @@ def run(S_dia_ks, St_dia_ks, E_dia_ks, params):
 
 
 def map_Hvib(H, basis, dE):
+    """Computes a vibronic Hamiltonian matrix in the basis of SD configurations   
 
-    nbasis = -1 # doesn't matter
+    This function seems to be deprecated
 
+    Args:
+        SD (list of lists of ints ): a list of SD determinants, such that:
+            SD[iSD] is a list of integers defining which orbitals are 
+            occupied in SD with index ```iSD``` and how 
+            SeeAlso: ```inp``` in the ```sd2indx(inp,nbasis)``` function
+
+        H ( MATRIX(nbasis, nbasis) ): vibronic Hamiltonian in 1-electron (e.g. KS-) basis (alpha- and beta- components)
+        dE ( list of doubles ): energy corrections added to each SD
+
+    Returns:
+        CMATRIX(N,N): the matrix of energies in the SD basis. Here, N = len(SD) - the number of SDs.
+
+    """
+
+    # First, compute the matrix with energies on the diagonals
     H_vib  = mapping.energy_mat_arb(basis, H, dE)
 
+    # Now handle the couplings and nonadiabatic couplings (off-diagonal elements)
     nstates = len(basis)
     for i in range(0,nstates):
         for j in range(0,nstates):
@@ -1156,6 +1344,8 @@ def map_Hvib(H, basis, dE):
 
             if res[0] != 0:
                 if res[1] * res[2] > 0:
+                    # This means the two configurations are coupled, so we take the 
+                    # corresponding 1-particles matrix elements and insert them here
                     a = mapping.sd2indx([res[1], res[2]], nbasis, False) 
                     H_vib.add(i, j, H.get(a[0], a[1]) )
 
@@ -1366,7 +1556,7 @@ def apply_phase_correction_general(St):
 
 
 
-def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fstep, sorting_type ):
+def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed,  _params):
     """
         This function computes the energies of the SP transitions (according to the sum of 1 electron terms) - no J or K
         It then may sort the order of the sd_states either based on their energy at each timestep
@@ -1382,8 +1572,8 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
             sorting_type ( (string) ): "energy"   - sort by energy
                                        "identity" - sort by identity
 
-            istep (int): step from which to start counting
-            fstep (int): step at which to stop counting
+            isnap (int): step from which to start counting
+            fsnap (int): step at which to stop counting
  
         Returns:       
             E_sd (list of CMATRIX): SD energies at each timestep
@@ -1391,6 +1581,19 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
             sd_states_reindexed_sorted (list of lists): The sd_states_unique_sorted, but in Libra's notation
             reindex_nsteps (list of lists): The energy ordering of the SD for each step in terms of the index of the SD from the initial step
     """
+
+    params = dict(_params)
+
+    critical_params = []
+    # Default parameters
+    default_params = { "isnap":0, "fsnap":1, "sorting_type":"energy" }
+    # Check input
+    comn.check_input(params, default_params, critical_params)  
+
+    istep = params["isnap"]
+    fstep = params["fsnap"]
+    sorting_type = params["sorting_type"]
+
 
     E_sd = []
     sd_states_reindexed_sorted = []
@@ -1421,7 +1624,7 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
 
         if sorting_type == "identity":
 
-            reindex_nsteps.append( list(range(nstates_sd)) )
+            reindex_nsteps.append(  list(range(nstates_sd))  )
 
             for state in range(nstates_sd):
 
@@ -1429,7 +1632,8 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
                 # to sd_states_reindexed_sorted[step]. For identity ordering - no energy sorting is done!
                 E_sd[step].set(  state, state, E_this_sd.get( state, state ) )
                 sd_states_reindexed_sorted[step].append( sd_states_reindexed[ state ] )
-                print( sd_states_reindexed_sorted[step][ state ], ( E_sd[step].get( state, state ) - E_sd[step].get( 0, 0 ) ).real * units.au2ev )
+
+                #print( sd_states_reindexed_sorted[step][ state ], ( E_sd[step].get( state, state ) - E_sd[step].get( 0, 0 ) ).real * units.au2ev )
 
                 # This is reindexing the list of SD bases at this time step according to their energies 
                 # We are adding the ground state SD later, so skip it for now. In this list sd_states_unique,
@@ -1451,7 +1655,7 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
                 E_sd[step].set( i, i, E_this_sd.get(  int(reindex[i]), int(reindex[i])) )
                 # This is reindexing the list of SD bases at this time step according to their energies 
                 sd_states_reindexed_sorted[step].append( sd_states_reindexed[ int(reindex[i]) ] )
-                print( sd_states_reindexed_sorted[step][i], ( E_sd[step].get( i, i ) - E_sd[step].get( 0, 0 ) ).real * units.au2ev )
+                #print( sd_states_reindexed_sorted[step][i], ( E_sd[step].get( i, i ) - E_sd[step].get( 0, 0 ) ).real * units.au2ev )
 
             for i in range(1,len(reindex)):
                 sd_states_unique_sorted[step].append( sd_states_unique[ int(reindex[i])-1 ] )
@@ -1460,142 +1664,5 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed, istep, fs
     return E_sd, sd_states_unique_sorted, sd_states_reindexed_sorted, reindex_nsteps
 
 
-
-
-
-def make_T_matricies( ci_coefficients, ci_basis_states, spin_components, sd_states_unique_sorted, nstates, istep, fstep, outdir, verbose=1):
-    """
-    This function makes the "T"ransformation matricies that convert between the SD basis to the CI-like (or many-body (MB)) basis.
-
-    This funciton is made to be used within the NBRA Libra workflow, where things such as ci_coefficients, ci_basis_states, spin_components, 
-    and sd_states_unique_sorted have been extracted from TD-DFT calculations. As of 11/30/2020, compatable ES programs
-    include CP2K, DFTB+ and Gaussian.
-
-    Args:
-        ci_coefficients (list of lists of lists): coefficients for the many-body states for each step
-        ci_basis_states (list of lists): All SD basis states that comprise the many-body excitations for each step
-        spin_components (list of lists): the spin components of the excitation (alpha or beta excitaiton?) for all states and all steps  
-        sd_basis_states_unique (list): 1 of each of the SP transitions (and its spin) that made up the considered CI states
-        nstates (int): number of excited MB states
-        istep (int): step at which to start counting
-        fstep (int): stap at which to stop counting
-        outdir (string): output directory for the T matricies
-        verbose (int): want to see some messages?
-
-    Returns:
-        SD2CI (list of CMATRIX): CMATRIX at each timestep where the rows are SDs and the cols are MB states. The columns contain the coefficients of the MB expansion for each MB state
-
-    """
-
-    number_of_states = nstates
-    ci_coefficients_libra = []
-    nSDs = len( sd_states_unique_sorted[0] ) + 1
-    # Add one to the number of CI states because the ground state is not included yet
-    nCIs  = number_of_states + 1
-    SD2CI = []
-
-    for step in range( fstep - istep ):
-
-        # Make the list of ci_coefficients for each step in the way Libra accepts
-        ci_coefficients_libra.append( [] )
-        # Start with the ground state. This is not explicitly given by electronic strcture calculations
-        ci_coefficients_libra[step].insert( 0, [0.0] * nSDs )
-        ci_coefficients_libra[step][0][0] = 1.0
-
-        # For each ci state for this step
-        for i in range( len( ci_coefficients[step] ) ):
-            count = 0
-            # The ci wavefunction is a linear combination of SD states. Make a list of zeros the size of the number of unique
-            # SD states + 1 for the ground state
-            ci_coefficients_libra[step].append( [0.0] * nSDs )
-            # Exclude ground state here in the index, that info is not explicitly contained 
-            # in the ci_coefficients_dynamics list from electronic structure calculations
-            tmp_ci_basis_state_and_spin = []
-            # For each ci_coefficient in this ci state for this step, get the ci coefficients and spin (alp or bet)
-            for k in range(len(ci_coefficients[step][i])):
-                tmp_ci_basis_state_and_spin.append( [ci_basis_states[step][i][k] , spin_components[step][i][k]] )
-            # Now, loop over the SDs (excluding the ground state) to assign the coefficients
-            for j in range( nSDs-1 ):
-                # Check to see if one of the SDs from the list of unique SDs comprises this ci state
-                if sd_states_unique_sorted[step][j] in tmp_ci_basis_state_and_spin:
-                    # ok, it has found a match, now what is the index of the SD in the list of unique SDs?
-                    item_index = tmp_ci_basis_state_and_spin.index(sd_states_unique_sorted[step][j])
-                    ci_coefficients_libra[step][i+1][j+1] = float(ci_coefficients[step][i][item_index])
-
-
-        # Sanity check. Make sure sum of squared elements of columns == 1:
-        for i in range( nCIs ):
-            check_norm = 0
-            for j in range( nSDs ):
-                check_norm += ci_coefficients_libra[step][i][j]**2
-            if verbose == 1:
-                print("Step", step, "state", i, "check_norm", check_norm)
-            if check_norm < 0.99 or check_norm > 1.01:
-                print("Warning: Step, ", step)
-                print("Column ", i, "in SD2Ci (T) matrix has norm either < 0.99 or > 1.01")
-                print("Exiting now")
-                sys.exit(0)
-
-        SD2CI.append( CMATRIX( nSDs, nCIs ) )
-        for i in range( nSDs ):
-            for j in range( nCIs ):
-                SD2CI[step].set( i, j, ci_coefficients_libra[step][j][i] * (1.0+0.0j) )
-
-        # Output the transformation matrix. This is how you can double check that it worked ( it does ... :) )
-        SD2CI[step].show_matrix( "%s/T_%s.txt" % (outdir, str(step)) )
-
-    return SD2CI
-
-
-
-
-def compute_ci_energies_midpoint( ci_energies, num_excited_states, istep, fstep ):
-    """
-    This function compute the excitation energies energies at the midpoint from a list of excitation energies at each step. 
-    At each step, there are many electronic states. This function takes a list as an input, and is meant to be used 
-    in the NBRA workflow calculatiosn where lists may be more convenient than matricies. 
-
-    This funciton is made to be used within the NBRA Libra workflow, where things such as ci_energies have been extracted from TD-DFT calculations. 
-    As of 11/30/2020, compatable ES programs include CP2K, DFTB+ and Gaussian.
-
-    Energies are assumed to be energies from TDDFT calculatons. This function gives zero as the ground state total energy
-
-    Args:
-        ci_energies (list of lists): energies of the MB states
-        num_excited_states (int): number of excited states
-        istep (int): step at which to start counting
-        fstep (int): stap at which to stop counting
-
-    Returns:
-        ci_midpoint_energies (list of CMATRIX): energies in Ha. Ground state energy is set to zero
-    """
-
-    nstates = num_excited_states
-
-    # Now, compute the CI energy matrix at each-point and the mid-points
-    # For each step
-    #print("Computing the CI energy matrices....")
-    ci_energies_cmatrix = []
-    for step in range( fstep - istep ):
-        ci_energies_cmatrix.append( CMATRIX( nstates + 1, nstates + 1 ) )
-        for state in range( nstates + 1 ):
-            if state == 0:
-                ci_energies_cmatrix[step].set( state, state, 0.0 )
-            else:
-                ci_energies_cmatrix[step].set( state, state, ( ci_energies[step][state-1]  * units.ev2Ha )  )
-
-    # At the midpoints
-    ci_midpoint_energies = []
-    for step in range( fstep - istep - 1 ):
-        total_energy_mid_point = 0.0 #0.5 * ( total_energies[step] + total_energies[step+1] )
-        ci_midpoint_energies.append( CMATRIX( nstates + 1, nstates + 1 ) )
-        for state in range( nstates + 1 ):
-            if state == 0:
-                ci_midpoint_energies[step].set( state, state, total_energy_mid_point )
-            else:
-                midpoint_energy = 0.5 * ( ci_energies[step][state-1] + ci_energies[step+1][state-1] )
-                ci_midpoint_energies[step].set( state, state, total_energy_mid_point + ( midpoint_energy  * units.ev2Ha )  )
-
-    return ci_midpoint_energies
 
 

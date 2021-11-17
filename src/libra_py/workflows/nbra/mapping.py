@@ -284,7 +284,55 @@ def ovlp_arb(SD1, SD2, S, use_minimal=False):
 
 
 
-def ovlp_mat_arb(SD1, SD2, S, use_minimal=True):
+def ovlp_arb_mo(SD1, SD2, S):
+    """Compute the overlap of two generic SDs: <SD1|SD2>
+
+    This function relies on the methodology described in the Pyxaid paper 
+    and later in the one by Izmaylov which showed that the NACs in the SD basis 
+    can be directly mapped to the NACs in the orbital basis
+
+    Args:
+
+        SD1 ( lists of ints ): first SD, such that:
+            SeeAlso: ```inp``` in the ```sd2indx(inp,nbasis)``` function
+
+        SD2 ( lists of ints ): second SD, such that:
+            SeeAlso: ```inp``` in the ```sd2indx(inp,nbasis)``` function
+
+        S ( CMATRIX(N,N) ): is the matrix in the space of 1-el spin-orbitals (either spin-diabatic or 
+            spin-adiabatic or both) , N - is the number of 1-el orbitals.
+
+    Returns:
+        complex: the overlap of the two determinants <SD1|SD2>
+
+    """
+
+    nbasis = S.num_of_rows
+    # Converting the SDs provided by the user into the internal format to be read by Libra
+    sd1 = sd2indx(SD1,nbasis)
+    sd2 = sd2indx(SD2,nbasis)
+
+    res = delta(Py2Cpp_int(sd1), Py2Cpp_int(sd2))
+
+    s = 0.0
+    # The SDs are coupled
+    if res[0]==1:
+        s = S.get( res[1], res[2])  
+    # For similar SDs
+    if sd1==sd2:
+        x = CMATRIX(len(sd1),len(sd2))
+        # Forming the overlap of the SDs
+        for i in range(0,len(sd1)):
+            for j in range(0,len(sd2)):
+                if (SD1[i] * SD2[j]) > 0:
+                    x.set(i,j,S.get(sd1[i],sd2[j]))
+        s = det(x)
+
+    return s
+
+
+
+def ovlp_mat_arb(SD1, SD2, S, use_minimal=True, use_mo_approach=False):
     """Compute a matrix of overlaps in the SD basis 
 
     Args:
@@ -302,7 +350,19 @@ def ovlp_mat_arb(SD1, SD2, S, use_minimal=True):
             spin-adiabatic or both) , K - is the number of 1-el orbitals.
 
         use_minimal ( Boolean ): If True, use the minimal subset of Kohn-Sham orbitals needed to describe 
-            the overlap of the SDs. This is passed to the funciton that computes the overlaps      
+            the overlap of the SDs. This is passed to the funciton that computes the overlaps [ default: True ]
+ 
+        use_mo_approach ( Boolean ): If True, the computation of the time-overlaps of SDs will be based on the 
+            computing the determinant of the matrix of the corresponding MO overlaps. This is a general
+            approach, so by default, this value is set to False. In fact, it doesn't make sense for anything 
+            but computing the NACs (eventually). However, as the size of the SDs increases (in terms of how many
+            MOs are included), the complexity of this function increases cubically, so it may be very expensive.
+            For computing the NACs via the HST formula, it is advisable (as shown in the Pyxaid paper and later
+            by Izmaylov) to compute NACs between SDs in terms of the NACs of the MOs - this is WAAAY faster approach.
+            But again, this is not a valid method if one needs just the overlaps of the SDs. [ default: False ]
+            If `use_mo_approach==True`, the parameter `use_minimal` is not used (see the pun)
+            
+
 
     Returns:
         CMATRIX(N, M): overlap matrix composed of elements <SD1(i)|SD2(j)>
@@ -314,7 +374,13 @@ def ovlp_mat_arb(SD1, SD2, S, use_minimal=True):
 
     for n in range(0,N):
         for m in range(0,M):
-            res.set(n,m, ovlp_arb(SD1[n], SD2[m], S, use_minimal))
+            val = 0.0
+            if use_mo_approach==True:
+                val = ovlp_arb_mo(SD1[n], SD2[m], S)
+            else: 
+                val = ovlp_arb(SD1[n], SD2[m], S, use_minimal)
+
+            res.set(n,m, val)
 
     return res
 

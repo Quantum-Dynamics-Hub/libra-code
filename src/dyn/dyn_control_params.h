@@ -113,6 +113,27 @@ class dyn_control_params{
   int force_method;
 
 
+  /** 
+    Wheather we want to enforce nuclear dynamics to be on a given state, regardlenss of the TSH transitions
+ 
+    Options:
+      - 0: no [ default ]
+      - 1: yes
+
+    Note: only matters is `force_method == 1`
+  */
+  int enforce_state_following; 
+
+  /** 
+    If we enforce the nuclear dynamics to be on a given state, what is the index of that state [any integer >- 0, default = 0 ]
+ 
+    The default value of 0 enforces the nuclear dynamics to be on the ground state. This is a convenient way of doing NBRA calculations
+    with model systems without the need for pre-computing the trajectories 
+
+  */
+  int enforced_state_index;  
+
+
   /**
     How do get the time-overlaps in the dynamics.
 
@@ -190,6 +211,14 @@ class dyn_control_params{
   The maximum number of hops that an be attempted before either choosing the identity or exiting in stochastic reordering algorithm 3. 
   */
   int max_number_attempts;
+
+  /**
+  The probability threshold for stochastic state reordering algorithm. 
+  If a probability for a multi-state stransition is below this value, it will be disregarded and set to 0
+  The rest of the probabilities will be renormalized
+  Default: 0.0 
+  */
+  double min_probability_reordering; 
 
   ///===============================================================================
   ///================= Surface hopping: proposal, acceptance =======================
@@ -471,8 +500,12 @@ class dyn_control_params{
   dyn_control_params(const dyn_control_params& x){ 
     *this = x;
     decoherence_rates = new MATRIX( *x.decoherence_rates );  
+    ave_gaps = new MATRIX( *x.ave_gaps );
   }
- ~dyn_control_params() { ;; }
+  ~dyn_control_params() {  
+    delete decoherence_rates;  
+    delete ave_gaps;
+  }
 
   void sanity_check();
   void set_parameters(bp::dict params);

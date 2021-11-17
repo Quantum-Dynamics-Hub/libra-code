@@ -68,6 +68,8 @@ class MATRIX : public base_matrix<double>{
   }
 */
 
+//  MATRIX(boost::python::tuple ob);
+
   MATRIX(const MATRIX& ob){
     n_rows = ob.n_rows;  ///< The number of rows
     n_cols = ob.n_cols;  ///< The number of colomns

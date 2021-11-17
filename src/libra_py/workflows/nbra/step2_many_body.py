@@ -46,7 +46,6 @@ from libra_py import units
 import util.libutil as comn
 
 
-# This file is temp only. These functions will eventually be placed in Libra somewhere ...
 def curr_and_final_step_job( istep, fstep, njobs, njob ):
     """
     This function is used to determine the initial and final step of a job when distributing
@@ -421,10 +420,10 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
 
     """
 
-    print("\nEntered reindex_cp2k_sd_states function")
-    print("ks_orbital_homo_index", ks_orbital_homo_index)
-    print("ks_orbital_indicies", ks_orbital_indicies)
-    print("sd_basis_states", sd_basis_states)
+    #print("\nEntered reindex_cp2k_sd_states function")
+    #print("ks_orbital_homo_index", ks_orbital_homo_index)
+    #print("ks_orbital_indicies", ks_orbital_indicies)
+    #print("sd_basis_states", sd_basis_states)
 
     # We need to update the indexing of the sd_basis - in terms of the rows and cols of St_KS
     # reindex ks orbs according to the matrix size
@@ -434,7 +433,7 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
         if ks_orbital_indicies[i] == ks_orbital_homo_index:
             alp_homo_matrix_index = i
 
-    print("alp_homo_matrix_index",alp_homo_matrix_index)
+    #print("alp_homo_matrix_index",alp_homo_matrix_index)
 
     ks_orbs_new_index = []
     for i in range( n_alp_ks_orbs ):
@@ -445,8 +444,8 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
     # For each Slater determinant basis state, which could have spin_component "alp" or "bet"
     for j in range( len( sd_basis_states ) ):
 
-        print(int( sd_basis_states[j][0][0] ))
-        print(int( sd_basis_states[j][0][1] ))
+        #print(int( sd_basis_states[j][0][0] ))
+        #print(int( sd_basis_states[j][0][1] ))
 
         if sd_format == 1:
             if sd_basis_states[j][1] == "alp":
@@ -466,7 +465,7 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
         elif sd_basis_states[j][1] == "bet":
             excitations.append( [-initial_ks_orb, -final_ks_orb]  )
 
-    print( "excitations = ", excitations )
+    #print( "excitations = ", excitations )
     #sys.exit(0)
 
     # Form ground-state SD first
@@ -483,7 +482,7 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
             if i < alp_homo_matrix_index + 2:
                 sd_basis[0].append(  i )
                 sd_basis[0].append( -i )
-    print ( "ground state = ", sd_basis )
+    #print ( "ground state = ", sd_basis )
 
     # Now that we have done the ground state slater 
     for j in range( len( excitations ) ):
@@ -494,7 +493,7 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
             else:
                 sd_excitation.append(sd_state)
         sd_basis.append( sd_excitation )
-    print ( sd_basis )
+    #print ( sd_basis )
     
     return sd_basis
 
@@ -646,7 +645,13 @@ def run_step2_many_body( params ):
     # Critical variables
     critical_params = []
     # Default parameters
-    default_params = { "min_band":1, "max_band":1, "ks_orbital_homo_index":0, "nsteps_this_job":1, 'trajectory_xyz_filename':"md.xyz", "isUKS": 0, "es_software": "cp2k", "es_software_exe": "cp2k.popt", "es_software_input_template": "cp2k_input_template.inp", "project_name": "Libra_CP2K", "njob": 1, "nprocs": 2, "logfile_directory": "logfiles", "istep": 0, "do_cube_visualization": 0, "states_to_be_plotted": [], "waveplot_exe":"/util/academic/dftbplus/20.2.1-arpack/bin/waveplot" }
+    default_params = { "min_band":1, "max_band":1, "ks_orbital_homo_index":0, 
+                       "nsteps_this_job":1, 'trajectory_xyz_filename':"md.xyz", "isUKS": 0, 
+                       "es_software": "cp2k", "es_software_exe": "cp2k.popt", 
+                       "es_software_input_template": "cp2k_input_template.inp", 
+                       "project_name": "Libra_CP2K", "njob": 1, "nprocs": 2, "logfile_directory": "logfiles", 
+                       "istep": 0, "do_cube_visualization": 0, "states_to_be_plotted": [], 
+                       "waveplot_exe":"/util/academic/dftbplus/20.2.1-arpack/bin/waveplot" }
     # Check input
     comn.check_input(params, default_params, critical_params)  
 
@@ -712,9 +717,12 @@ def run_step2_many_body( params ):
     do_cube_visualization = int(params["do_cube_visualization"])
 
     # Make a directory for this job folder for storing the logfiles, cubefiles, and pdosfiles
-    os.mkdir("logfiles")
-    os.mkdir("cubefiles")
-    os.mkdir("pdosfiles")
+    if not os.path.exists("logfiles"):
+        os.mkdir("logfiles")
+    if not os.path.exists("cubefiles"):
+        os.mkdir("cubefiles")
+    if not os.path.exists("pdosfiles"):
+        os.mkdir("pdosfiles")
     if not os.path.exists("../../all_logfiles"):
         os.mkdir("../../all_logfiles")
     if not os.path.exists("../../all_pdosfiles"):

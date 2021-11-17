@@ -130,7 +130,8 @@ def plot_map(ax, x_grid, y_grid, z_values, colormap="plasma", resolution=30j, sa
 
 
 def plot_map_nparray( plt, data, colormap='hot', interpolation_scheme='nearest', fig_width=6.42, fig_height=2.14, num_subplots=1, \
-                      titles=[""], title_size=10, xticks_size=8, yticks_size=8, colorbar_label='fs' ):
+                      titles=[""], title_size=10, xticks_size=8, yticks_size=8, colorbar_label='fs',
+                      savefig=0, figure_names=['plotted_map_nparray.png'] ):
 
     """
     This is a function to plot a heat map using a 2d numpy array
@@ -190,6 +191,10 @@ def plot_map_nparray( plt, data, colormap='hot', interpolation_scheme='nearest',
         cb = plt.colorbar(label=colorbar_label)
         cb.ax.tick_params(labelsize=8)
         plt.tight_layout()
+
+        if savefig == 1:
+            plt.savefig(figure_names[sub_plot])
+
 
 
 
