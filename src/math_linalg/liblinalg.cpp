@@ -489,6 +489,53 @@ struct MATRIXList_pickle_suite : boost::python::pickle_suite
 }
 
 
+
+struct CMATRIX_pickle_suite : boost::python::pickle_suite
+{
+/** 
+  Figured out it thanks to these sources:
+
+  https://stackoverflow.com/questions/37180878/append-element-to-boostpythontuple
+
+  https://valelab4.ucsf.edu/svn/3rdpartypublic/boost/libs/python/doc/v2/pickle.html
+
+
+*/
+
+  static boost::python::tuple getinitargs(const CMATRIX& w)
+  {
+    boost::python::tuple res;
+    res = boost::python::make_tuple(w.n_rows, w.n_cols);
+      
+    return res;
+  }
+
+
+  static boost::python::tuple getstate(const CMATRIX& w)
+  {
+    boost::python::tuple res;
+
+    for(int i=0; i<w.n_elts; i++){
+      res = boost::python::extract< boost::python::tuple >( res +  boost::python::make_tuple( w.get(i) ) );
+    }// for i
+
+    return res;
+  }
+
+  static void setstate(CMATRIX& w, boost::python::tuple state)
+  {
+
+    int sz = len(state);
+    for(int i=0; i<sz; i++){  
+      w.set(i, extract< complex<double> >(state[i]));
+    }
+  }
+
+};
+
+
+
+
 void export_CMATRIX(){
 
   export_base_matrix< complex<double> >();
@@ -599,12 +646,61 @@ void export_CMATRIX(){
       .def(self/double())
       .def(self/complex<double>())
 
-
-
+      .def_pickle(CMATRIX_pickle_suite())
   ;
+
+
+
+struct CMATRIXList_pickle_suite : boost::python::pickle_suite
+{
+/** 
+  Figured out it thanks to these sources:
+
+  https://stackoverflow.com/questions/37180878/append-element-to-boostpythontuple
+
+  https://valelab4.ucsf.edu/svn/3rdpartypublic/boost/libs/python/doc/v2/pickle.html
+
+
+*/
+/*
+  static boost::python::tuple getinitargs(const MATRIX& w)
+  {
+    boost::python::tuple res;
+    res = boost::python::make_tuple(w.n_rows, w.n_cols);
+      
+    return res;
+  }
+*/
+
+  static boost::python::tuple getstate(const CMATRIXList& w)
+  {
+    boost::python::tuple res;
+
+    int sz = w.size();
+
+    for(int i=0; i<sz; i++){
+      res = boost::python::extract< boost::python::tuple >( res +  boost::python::make_tuple( w[i] ) );
+    }// for i
+
+    return res;
+  }
+
+  static void setstate(CMATRIXList& w, boost::python::tuple state)
+  {
+
+    int sz = len(state);
+    for(int i=0; i<sz; i++){  
+      w.push_back( extract<CMATRIX>(state[i]) );
+    }
+  }
+
+};
+
+
 
   class_< CMATRIXList >("CMATRIXList")
       .def(vector_indexing_suite< CMATRIXList >())
+      .def_pickle(CMATRIXList_pickle_suite())
   ;
 
   class_< CMATRIXMap >("CMATRIXMap")

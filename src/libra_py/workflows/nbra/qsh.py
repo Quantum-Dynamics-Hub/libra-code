@@ -304,8 +304,8 @@ def run(H_vib, params):
 
             if params["do_QSH_output"]==True:
                 #============= Output the resulting QSH Hamiltonians ===========================
-                re_filename = prms["output_set_paths"][idata] + prms["qsh_Hvib_re_prefix"] + str(i) + prms["qsh_Hvib_re_suffix"]
-                im_filename = prms["output_set_paths"][idata] + prms["qsh_Hvib_im_prefix"] + str(i) + prms["qsh_Hvib_im_suffix"]        
+                re_filename = params["output_set_paths"][idata] + params["qsh_Hvib_re_prefix"] + str(i) + params["qsh_Hvib_re_suffix"]
+                im_filename = params["output_set_paths"][idata] + params["qsh_Hvib_im_prefix"] + str(i) + params["qsh_Hvib_im_suffix"]        
                 qs_Hvib.real().show_matrix(re_filename)
                 qs_Hvib.imag().show_matrix(im_filename)
 

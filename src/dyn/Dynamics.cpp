@@ -309,7 +309,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
 void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
               vector<int>& act_states,              
-              nHamiltonian& ham, bp::object py_funct, bp::dict params, bp::dict dyn_params, Random& rnd,
+              nHamiltonian& ham, bp::object py_funct, bp::dict& params, bp::dict& dyn_params, Random& rnd,
               vector<Thermostat>& therm){
 
 /**
@@ -649,6 +649,17 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   //Coeff = transform_amplitudes(prms.rep_tdse, prms.rep_sh, C, ham);
 
   C = Coeff;
+
+
+  project_out_states.clear();
+  Uprev.clear();  
+  St.clear();
+  Eadi.clear();
+  decoherence_rates.clear();
+  Ekin.clear();
+  prev_ham_dia.clear();
+  t1.clear();
+  t2.clear();
 
 
 

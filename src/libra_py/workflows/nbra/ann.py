@@ -30,6 +30,10 @@ import multiprocessing as mp
 import time
 import json
 import numpy as np
+
+import matplotlib as mpl
+mpl.use('Agg')
+
 import matplotlib.pyplot as plt
 
 if sys.platform=="cygwin":
@@ -289,7 +293,7 @@ def step1_workflow(data,  _params, _plt):
     _plt.plot(T, ACF, color="blue", label="", linewidth=2)
 
     _plt.subplot(1,2,2)
-    _plt.xlabel('Wavenumber, $cm^-1$',fontsize=10)
+    _plt.xlabel('Wavenumber, $cm^{-1}$',fontsize=10)
     _plt.ylabel('Influence spectrum',fontsize=10)
     _plt.plot(W, J2, color="blue", label=F"", linewidth=2)
 

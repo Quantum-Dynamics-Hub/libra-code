@@ -47,6 +47,10 @@ import os
 import multiprocessing as mp
 import time
 import numpy as np
+
+import matplotlib as mpl
+mpl.use('Agg')
+
 import matplotlib.pyplot as plt
 
 if sys.platform=="cygwin":
@@ -63,6 +67,7 @@ import libra_py.tsh as tsh
 import libra_py.tsh_stat as tsh_stat
 import libra_py.units as units
 import libra_py.dynamics.tsh.compute as tsh_dynamics
+import libra_py.dynamics.tsh.recipes as recipes
 import libra_py.fit as fit
 
 
@@ -752,10 +757,9 @@ def run_tsh(common_params, compute_model, model_params):
     print(F"Calculation time = {end - start} seconds")
 
     
-    
 def make_var_pool(dyn_params, compute_model, model_params, _rnd, 
                   method_names_map = {0:"FSSH", 1:"IDA", 2:"mSDM", 3:"DISH", 21:"mSDM2", 31:"DISH2" },
-                  init_states = [1], tsh_methods = [0], batches = list(range(10))):
+                  init_states = [1], tsh_methods = [0], batches = list(range(10)), ham_rep=1, is_nbra=1 ):
     """
     This function prepares the variables pool for the parallelization 
 
@@ -780,6 +784,16 @@ def make_var_pool(dyn_params, compute_model, model_params, _rnd,
  
         batches ( int list ): how many batches of simulations to run [ default: list(range(10)) ]
 
+        ham_rep ( int ): what type of representation is used to compute the adiabatic Hamiltonian:
+
+           - 0 - diabatic, it gets diagonalized to yield the adiabatic properties;
+           - 1 - adiabatic properties are already known [default ]
+
+        is_nbra ( int ): selector to choose whether we are doing an NBRA simulations or not
+  
+           - 0 - not an NBRA
+           - 1 - NBRA [ default  ]
+
     Returns:
         list of tuples: each tuple contains the input variables for the function that we want run in multiple threads
 
@@ -802,8 +816,13 @@ def make_var_pool(dyn_params, compute_model, model_params, _rnd,
                 dir_prefix = prms["dir_prefix"]
                                 
                 prms["prefix"] = F"{dir_prefix}/start_s{istate}_{name}_batch{batch}"                
+                prms["prefix2"] = F"{dir_prefix}/_start_s{istate}_{name}_batch{batch}" 
                 prms["istate"] = [1, istate] # adiabatic state `istate`; Recall index from 0
+
+                # This instruction is made backward-compatible with the commented block
+                recipes.set_method(prms, ham_rep, is_nbra, method)
                 
+                """
                 if method==0:  # FSSH  = FSSH, ID, no informed                    
                     prms.update( {"tsh_method":0, "decoherence_algo":-1, "dephasing_informed":0 } )  
                 elif method==1: # IDA = 
@@ -816,7 +835,7 @@ def make_var_pool(dyn_params, compute_model, model_params, _rnd,
                     prms.update( {"tsh_method":0, "decoherence_algo":0, "dephasing_informed":1 } )  
                 elif method==31: # DISH = DISH, no other decoherence, informed
                     prms.update( {"tsh_method":3, "decoherence_algo":-1, "dephasing_informed":1 } )  
-                    
+                """                    
                 
                 var_pool.append( (prms, compute_model, mdl_prms) )    
 
@@ -826,11 +845,12 @@ def make_var_pool(dyn_params, compute_model, model_params, _rnd,
 
 def namd_workflow(dyn_params, compute_model, model_params, _rnd, nthreads = 4,   
                   method_names_map = {0:"FSSH", 1:"IDA", 2:"mSDM", 3:"DISH", 21:"mSDM2", 31:"DISH2" },
-                  init_states = [1], tsh_methods = [0], batches = list(range(10)), fork_or_spawn="fork", parallel=True ):
+                  init_states = [1], tsh_methods = [0], batches = list(range(10)), fork_or_spawn="fork", parallel=True,
+                  ham_rep = 1, is_nbra = 1):
     """
     
     This is a new top-level wrapper to run NA-MD calculations within the NBRA workflow (although it could be more general too)
-    This wrapper provides a multithreading parallelization 
+    This wrapper provides a multithreading parallelization over: initial state - TSH method - batches 
 
     Args: 
         dyn_params ( dict ): parameters controlling the NAMD calculations as used by the `run_tsh` function above
@@ -855,6 +875,24 @@ def namd_workflow(dyn_params, compute_model, model_params, _rnd, nthreads = 4,
  
         batches ( int list ): how many batches of simulations to run [ default: list(range(10)) ]
 
+        fork_or_spawn ( string ): what kind of multiprocessing to use. Can be of only 2 types:
+           
+           - fork : via forking [ default ]
+           - spawn: via spawning
+
+        parallel ( Boolean ): whether to run calculations with the multiprocessing parallelization [ default : True]
+
+        ham_rep ( int ): what type of representation is used to compute the adiabatic Hamiltonian:
+
+           - 0 - diabatic, it gets diagonalized to yield the adiabatic properties;
+           - 1 - adiabatic properties are already known [default ]
+
+        is_nbra ( int ): selector to choose whether we are doing an NBRA simulations or not
+  
+           - 0 - not an NBRA
+           - 1 - NBRA [ default  ]
+
+
     Returns:
         None: but it call functions that produce outputs elsewhere
        
@@ -862,7 +900,7 @@ def namd_workflow(dyn_params, compute_model, model_params, _rnd, nthreads = 4,
 
                
     var_pool = make_var_pool(dyn_params, compute_model, model_params, _rnd, 
-                             method_names_map, init_states, tsh_methods, batches )
+                             method_names_map, init_states, tsh_methods, batches, ham_rep, is_nbra )
     
     if parallel==True:    
         t1 = time.time()
@@ -884,7 +922,7 @@ def namd_workflow(dyn_params, compute_model, model_params, _rnd, nthreads = 4,
 
     
 
-def nice_plots(dyn_params, init_states, tsh_methods, methods, batches, fig_label="NA-MD"):
+def nice_plots(dyn_params, init_states, tsh_methods, methods, batches, fig_label="NA-MD", txt_type=0):
     """
     This function produces nice plots of the ground state populations for all calculations
     """
@@ -915,8 +953,13 @@ def nice_plots(dyn_params, init_states, tsh_methods, methods, batches, fig_label
             rat, rat2 = [], []
             for batch in batches:        
                             
-                infile1 = F"{prefix}/start_s{istate}_{name}_batch{batch}/time.txt"
-                infile2 = F"{prefix}/start_s{istate}_{name}_batch{batch}/SH_pop.txt"
+                if txt_type==0:
+                    infile1 = F"{prefix}/start_s{istate}_{name}_batch{batch}/time.txt"
+                    infile2 = F"{prefix}/start_s{istate}_{name}_batch{batch}/SH_pop.txt"
+                elif txt_type==1:
+                    infile1 = F"{prefix}/_start_s{istate}_{name}_batch{batch}/time.txt"
+                    infile2 = F"{prefix}/_start_s{istate}_{name}_batch{batch}/SH_pop.txt"
+
                                         
                 # Plot the raw data
                 t = np.array(data_read.get_data_from_file2(infile1, [0])[0]) * units.au2fs
@@ -1046,5 +1089,9 @@ def nice_plots(dyn_params, init_states, tsh_methods, methods, batches, fig_label
             plt.xlabel('Time, fs',fontsize=10)
             plt.ylabel('Population',fontsize=10)
             plt.tight_layout()
-            plt.savefig(F'{prefix}/start_s{istate}_{name}.png', dpi=300)
+            if txt_type==0:
+                plt.savefig(F'{prefix}/start_s{istate}_{name}.png', dpi=300)
+            elif txt_type==1:
+                plt.savefig(F'{prefix}/_start_s{istate}_{name}.png', dpi=300)
+
             plt.show()                                                                                                            
