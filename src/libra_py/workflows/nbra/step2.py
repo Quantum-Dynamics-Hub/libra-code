@@ -592,7 +592,7 @@ def run_cp2k_libint_step2(params):
             print(F'Done with step {step}.','Elapsed time:',time.time()-t1_all)
         counter += 1
     # Finally move all the pdos and log files to all_pdosfiles and all_logfiles
-    os.system(F'mv *pdos {params["all_pdosfiles"]}/.'
+    os.system(F'mv *pdos {params["all_pdosfiles"]}/.')
     os.system(F'mv *log {params["all_logfiles"]}/.')
     print('Done with the job!!!')
 

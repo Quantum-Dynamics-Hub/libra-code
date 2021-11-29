@@ -1386,7 +1386,7 @@ def run_cp2k_xtb(params):
     print('Done with diagonalization. Elapsed time:', time.time()-t1)
 
 
-def distribute_cp2k_xtb_jobs(submit_template: str, run_python_file: str, istep: int, fstep: int, njobs: int, run_slurm: bool):
+def distribute_cp2k_libint_jobs(submit_template: str, run_python_file: str, istep: int, fstep: int, njobs: int, run_slurm: bool):
     """
     This function distributes the jobs to perform CP2K calculations and computing and saving the MO overlaps.
 
