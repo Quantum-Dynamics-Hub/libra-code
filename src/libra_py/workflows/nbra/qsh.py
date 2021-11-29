@@ -57,6 +57,8 @@ def compute_freqs(H_vib, params):
     
         params ( dictionary ): the parameters that control the execution of this function
 
+                * nsteps: the number of the QSH-MD steps to do
+
             SeeAlso: influence_spectrum.compute_mat_elt for the description of other parameters:
 
                 * filename
@@ -87,15 +89,14 @@ def compute_freqs(H_vib, params):
 
     # Set defaults and check critical parameters
     critical_params = [ ] 
-    default_params = { "output_files_prefix":"_qsh" }
+    default_params = { "output_files_prefix":"_qsh", "nsteps":len(H_vib)     }
     comn.check_input(params, default_params, critical_params)
 
 
     output_files_prefix = params["output_files_prefix"]
 
 
-    # Local variables and dimensions
-    nsteps = len(H_vib)    
+    # Local variables and dimensions    
     nstates = H_vib[0].num_of_rows
 
     freqs, T,  norm_acf,  raw_acf,  W,  J, J2 = influence_spectrum.compute_all(H_vib, params)  # T in fs, W and freqs in cm^-1
@@ -103,10 +104,11 @@ def compute_freqs(H_vib, params):
 
 
     ## ============ Plot the spectra =============
+    nsteps = params["nsteps"]
     nstates = len(freqs)
 
-    for i in range(nstates-1):
-        for j in range(i+1, nstates):
+    for i in range(nstates):
+        for j in range(i, nstates):
 
             figure = plt.figure(num=None, figsize=(3.21*2, 2.41), dpi=300, edgecolor='black', frameon=True)
             
@@ -145,8 +147,7 @@ def compute_freqs(H_vib, params):
 
             # Compute the variation of the QSH terms
             fu_ave, fu2_ave = 0.0, 0.0
-            Nave = 1000000
-            for r in range(0, Nave):
+            for r in range(0, nsteps):
 
                 fu = 0.0
                 for k in range(0,nfreqs):
@@ -155,8 +156,8 @@ def compute_freqs(H_vib, params):
                 fu_ave = fu_ave + fu
                 fu2_ave = fu2_ave + fu*fu
 
-            fu_ave = fu_ave / Nave
-            fu2_ave = fu2_ave / Nave
+            fu_ave = fu_ave / nsteps
+            fu2_ave = fu2_ave / nsteps
 
             dev[i][j] = math.sqrt( (fu2_ave - fu_ave**2) ) 	
     
