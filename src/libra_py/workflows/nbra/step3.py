@@ -32,7 +32,9 @@ import sys
 import cmath
 import math
 import os
+import time
 import numpy as np
+import multiprocessing as mp
 from scipy.linalg import fractional_matrix_power
 import scipy.sparse as sp
 if sys.platform=="cygwin":
@@ -40,7 +42,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-from . import mapping
+from . import mapping, step2_many_body
 import util.libutil as comn
 import libra_py.tsh as tsh
 import libra_py.units as units
@@ -1757,7 +1759,24 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed,  _params)
 
 
 def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _params):
+    """
+    This function is another version of the sort_unique_SD_basis that can work with
+    scipy sparse matrices.
+    Args:
+        step (integer): The MD step number.
+        sd_states_unique (list): The list of the unique Slater determinants.
+        sd_states_reindexed (list): The list of reindexed Slater determinants.
+        _params (dictionary): A dictionary that contains the following parameters.
+            Required parameter keys:
 
+            * **params["active_space"]** (list): The active space built from make_active_space
+                                                 function in step3.py.
+            * **params["path_to_npz_files"]** (string): The full path to raw npz files.
+            .. note::
+                In addition, requires parameters described in
+                :func:`libra_py.workflows.nbra.step3.sort_unique_SD_basis`
+
+    """
     params = dict(_params)
 
     critical_params = []
@@ -1771,17 +1790,9 @@ def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _p
     sorting_type = params["sorting_type"]
 
 
-    #E_sd = []
-    #sd_states_reindexed_sorted = []
-    #sd_states_unique_sorted = []
     SD_energy_corr = [0.0]*len(sd_states_reindexed)
     nstates_sd = len(sd_states_reindexed)
     reindex_nsteps = []     
-
-    #for step in range( fstep - istep ):
-
-    # Append a CMATRIX of dimension nstates_sd x nstates_sd
-    #E_sd = CMATRIX( nstates_sd, nstates_sd) 
 
     # At this step, compute the energy of the SD
     active_space = params['active_space']
@@ -1800,7 +1811,6 @@ def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _p
         e[state] =  E_this_sd.get(state,state).real
         # Obtain the indexing fo the SDs by their energies
     reindex = np.argsort(e)
-    print('step', step, e)
     # Turning the CMATRIX into numpy
     E_this_sd = E_this_sd.real()
     # Only the diagonals are needed
@@ -1812,13 +1822,7 @@ def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _p
 
         for state in range(nstates_sd):
 
-            # This is making the energy matrix. And the "sorted" sds (written in Libra's input format) are just appened
-            # to sd_states_reindexed_sorted[step]. For identity ordering - no energy sorting is done!
-            #E_sd[step].set(  state, state, E_this_sd.get( state, state ) )
-            
             sd_states_reindexed_sorted.append( sd_states_reindexed[ state ] )
-
-            #print( sd_states_reindexed_sorted[step][ state ], ( E_sd[step].get( state, state ) - E_sd[step].get( 0, 0 ) ).real * units.au2ev )
 
             # This is reindexing the list of SD bases at this time step according to their energies 
             # We are adding the ground state SD later, so skip it for now. In this list sd_states_unique,
@@ -1829,7 +1833,6 @@ def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _p
             # 28 = homo
             if state < nstates_sd-1:
                 sd_states_unique_sorted.append( sd_states_unique[ state ] )
-        ###np.diag(E_this_sd)
 
     elif sorting_type == "energy":
 
@@ -1837,12 +1840,8 @@ def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _p
 
         # For each SD basis, make the energy matrix and reindex the list of basis according to their energies
         for i in range(len(reindex)):
-            # This is making the energy matrix
-            #E_sd[step].set( i, i, E_this_sd.get(  int(reindex[i]), int(reindex[i])) )
-            ###E_this_sd = E_this_sd[reindex,:][:,reindex]
             # This is reindexing the list of SD bases at this time step according to their energies 
             sd_states_reindexed_sorted.append( sd_states_reindexed[ int(reindex[i]) ] )
-            #print( sd_states_reindexed_sorted[step][i], ( E_sd[step].get( i, i ) - E_sd[step].get( 0, 0 ) ).real * units.au2ev )
         E_this_sd = E_this_sd[reindex]
 
         for i in range(1,len(reindex)):
@@ -1889,8 +1888,7 @@ def run_step3_ks_nacs_libint(params):
         None    
     """
     # We can define the full active space and data dimension automatically
-    # by reading just a sample file. We use glob for this pupose so that 
-    # no the code gives no warning for the critical parameters.
+    # by reading just a sample file. 
     critical_params = [] #['active_space','data_dim']
     default_params = {'nprocs':2, 'path_to_npz_files': os.getcwd()+'/res',
                       'path_to_save_ks_Hvibs': os.getcwd()+'/res-ks',
@@ -1953,7 +1951,6 @@ def run_step3_ks_nacs_libint(params):
 
     print('Done with phase correction. Elapsed time:', time.time()-t2)
 
-##################################### Auxiliary functions for run_step3_ks_nacs_libint
 
 def orthonormalize_ks_overlaps(step, params):
     """
@@ -1978,19 +1975,15 @@ def orthonormalize_ks_overlaps(step, params):
     # The mid-point energies
     E_step = 0.5 * (E_1 + E_2)
     # Applying orthonormaliztion
-    St_step, S_step = step3.apply_orthonormalization_scipy( S_1.todense(), S_2.todense(), St_step.todense() )
+    St_step, S_step = apply_orthonormalization_scipy( S_1.todense(), S_2.todense(), St_step.todense() )
 
     St_step_sparse = sp.csc_matrix(St_step)
     S_step_sparse  = sp.csc_matrix(S_step)
 
-    #sp.save_npz(F'{res_dir_2}/S_ks_orthonormalized_{step}.npz', S_step_sparse)
     sp.save_npz(F'{params["path_to_save_ks_Hvibs"]}/St_ks_orthonormalized_{step}.npz', St_step_sparse)
     sp.save_npz(F'{params["path_to_save_ks_Hvibs"]}/Hvib_ks_{step+start_time}_re.npz', E_step)
     print('Done with step', step,'. Elapsed time:', time.time()-t2)
 
-
-
-##################################### End of auxiliary functions for run_step3_ks_nacs_libint
 
 
 
@@ -2043,12 +2036,11 @@ def run_step3_sd_nacs_libint(params):
 
     # Building the new active space based on the number of occupied and unoccupied 
     # orbitals from the active space that we used to generate the St_ks matrices
-    ks_active_space_2, ks_homo_index_2 = step3.make_active_space(params['num_occ'], params['num_unocc'], 
+    ks_active_space_2, ks_homo_index_2 = make_active_space(params['num_occ'], params['num_unocc'], 
                                                                  params['data_dim'], params['npz_file_ks_homo_index'])
 
     # Update the parameters
     params.update({'active_space': ks_active_space_2, 'ks_homo_index': ks_homo_index_2})
-    # extract the data into global variables
     data_dim = params['data_dim']
     start_time = params['start_time']
     finish_time = params['finish_time']
@@ -2086,9 +2078,7 @@ def run_step3_sd_nacs_libint(params):
     min_band = 1
     max_band = int(data_dim/2) #int(len(active_space)/2)
     ks_orbital_indicies = range(min_band, max_band+1)
-    print('Here', ks_orbital_indicies, ks_homo_index)
     sd_unique_basis = params['sd_unique_basis']
-    print('ks_homo_index',ks_homo_index)
     # Reindex the SD basis
     sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( ks_homo_index, ks_orbital_indicies,
                                                                  sd_unique_basis, sd_format=2 )
@@ -2102,7 +2092,7 @@ def run_step3_sd_nacs_libint(params):
     sd_states_reindexed_sorted = []
     sd_states_unique_sorted = []
     for step in range(start_time, finish_time):
-        E_sd_step, sd_states_unique_sorted_step, sd_states_reindexed_sorted_step, reindex_nsteps = step3.sort_unique_SD_basis_scipy(
+        E_sd_step, sd_states_unique_sorted_step, sd_states_reindexed_sorted_step, reindex_nsteps = sort_unique_SD_basis_scipy(
             step, sd_unique_basis, sd_states_reindexed, params )
         sd_states_reindexed_sorted.append(sd_states_reindexed_sorted_step)
         sd_states_unique_sorted.append(sd_states_unique_sorted_step)
@@ -2118,7 +2108,7 @@ def run_step3_sd_nacs_libint(params):
 
     t2 = time.time()
     with mp.Pool( nprocs ) as pool:
-        st_sds = pool.starmap( compute_overlaps_in_parallel, var_pool ) 
+        st_sds = pool.starmap( compute_sd_overlaps_in_parallel, var_pool ) 
         pool.close()
         pool.join()
     print('Done with computing the SD overlaps. Elapsed time:', time.time()-t2)
@@ -2137,9 +2127,8 @@ def run_step3_sd_nacs_libint(params):
             sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/St_sd_{step+start_time}_im.npz', St_step_phase_corrected )
 
 
-##################################### Auxiliary functions for run_step3_sd_nacs_libint
 
-def compute_overlaps_in_parallel( step, params ):
+def compute_sd_overlaps_in_parallel( step, params ):
     """
     This function is used as an auxilary function that computes the SDs overlaps.
     It is used in the run_step3_sd_nacs_libint function.
@@ -2174,7 +2163,7 @@ def compute_overlaps_in_parallel( step, params ):
     s_sd_2 = data_conv.MATRIX2nparray(s_sd_2)
     st_sd = data_conv.MATRIX2nparray(st_sd)
     print('Applying orthonormalization for SDs for step', step)
-    st_sd, s_sd = step3.apply_orthonormalization_scipy(s_sd_1, s_sd_2, st_sd)
+    st_sd, s_sd = apply_orthonormalization_scipy(s_sd_1, s_sd_2, st_sd)
     print(F'Done with computing the SD overlap of step {step}. Elapsed time {time.time()-t2}')
 
     return sp.csc_matrix(st_sd)
