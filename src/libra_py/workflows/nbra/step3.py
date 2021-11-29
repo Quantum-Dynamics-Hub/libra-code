@@ -34,7 +34,7 @@ import math
 import os
 import numpy as np
 from scipy.linalg import fractional_matrix_power
-
+import scipy.sparse as sp
 if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
@@ -45,6 +45,7 @@ import util.libutil as comn
 import libra_py.tsh as tsh
 import libra_py.units as units
 import libra_py.data_read as data_read
+import libra_py.data_conv as data_conv
 import libra_py.hungarian as hungarian
 
 
@@ -956,6 +957,96 @@ def apply_phase_correction(St):
             cum_phase_aa.scale(a, 0, phase_i_aa.get(a))
             cum_phase_bb.scale(a, 0, phase_i_bb.get(a))
 
+def apply_phase_correction_scipy(St, step, cum_phase_aa, cum_phase_bb):
+    """
+    This function is exactly the same as apply_phase_correction but for scipy sparse 
+    time-overlap matrices. The only difference is that we return St and cumulative
+    phase correction factors to be used for the next step.
+
+    Args:
+        St (scipy.sparse): The time-overlap matrix but in sparse format (csc_matrix, csr_matrix, etc)
+        step (integer): The time-step of the MD.
+        cum_phase_aa (numpy array): The numpy array for cumulative phase factors for alpha-spin orbitals.
+        cum_phase_bb (numpy array): The numpy array for cumulative phase factors for beta-spin orbitals.
+    Returns:
+        St_phase_corrected (scipy.sparse): The phase-correctedtime-overlap matrix 
+                                           but in sparse format (csc_matrix, csr_matrix, etc)
+        cum_phase_aa (numpy array): The numpy array for cumulative phase factors for alpha-spin orbitals for this step.
+        cum_phase_bb (numpy array): The numpy array for cumulative phase factors for beta-spin orbitals for this step.
+    """
+    #nsteps = len(St)
+    nstates = int(St.shape[0]/2)  # division by 2 because it is a super-matrix
+
+    alp = list(range(0,nstates))
+    bet = list(range(nstates, 2*nstates))
+
+
+    St_aa = St[alp,:][:, alp]; St_ab = St[alp,:][:, bet]
+    St_ba = St[bet,:][:, alp]; St_bb = St[bet,:][:, bet]
+
+    ### Compute the instantaneous phase correction factors for diag. blocks ###
+    phase_i_aa = compute_phase_corrections_scipy(St_aa)   # f(i)
+    phase_i_bb = compute_phase_corrections_scipy(St_bb)   # f(i)       
+
+    ### Do the  phase correstions for the diag. blocks ###
+    St_aa = do_phase_corr_scipy(cum_phase_aa, St_aa, cum_phase_aa, phase_i_aa)
+    St_bb = do_phase_corr_scipy(cum_phase_bb, St_bb, cum_phase_bb, phase_i_bb)
+
+    ### Do the  phase correstions for the off-diag. blocks ###
+    St_ab = do_phase_corr_scipy(cum_phase_aa, St_ab, cum_phase_bb, phase_i_bb)
+    St_ba = do_phase_corr_scipy(cum_phase_bb, St_ba, cum_phase_aa, phase_i_aa)
+
+    ### Push the corrected diag. blocks to orig. St matrix ###
+    St_phase_corrected = sp.csc_matrix( data_conv.form_block_matrix(St_aa.todense(), St_ab.todense(), St_ba.todense(), St_bb.todense()) )
+
+
+    ### Update the cumulative phase correction factors for diag. blocks ###
+    cum_phase_aa = np.multiply(cum_phase_aa, phase_i_aa)
+    cum_phase_bb = np.multiply(cum_phase_bb, phase_i_bb)
+    
+    return St_phase_corrected, cum_phase_aa, cum_phase_bb
+
+            
+def do_phase_corr_scipy(cum_phase1, St, cum_phase2, phase_i):
+    """
+    This function is exactly the same as do_phase_corr but it can be used for
+    scipy.sparse matrices.
+    Args:
+        cum_phase1 (numpy array): cumulative phase corrections up to step n (F_n) for bra-vectors.
+        St (scipy.sparse): The time-overlap matrix in csc_matrix, csr_matrix, etc format.
+        cum_phase2 (numpy array): cumulative phase corrections up to step n (F_n) for ket-vectors.
+        phase_i (numpy array): the current step phase corrections (f_{n+1}) for a given pair of vectors 
+    Returns:
+        St (scipy.sparse): The phase corrected time-overlap.
+    """
+    f_n_nplus = np.multiply(cum_phase2, phase_i)
+    fab_mat = np.kron(cum_phase1, f_n_nplus.T)
+    St = St.multiply(fab_mat)
+    
+    return St 
+
+
+def compute_phase_corrections_scipy(St):
+    """
+    This function is the Python version of the C++ compute_phase_corrections function.
+    Args:
+        St (scipy.sparse): The time-overlap matrix in csc_matrix, csr_matrix, etc format.
+    Returns:
+        phase_corr (numpy array): The phase correction factors.
+    """
+    nstates = St.shape[0]
+    phase_corr = np.ones((nstates,1))
+    tol = 1.0e-3
+    
+    for i in range(nstates):
+        f = St[i,i]
+        af = np.linalg.norm(f)
+        if af > tol:
+            phase_corr[i, 0] = f / af
+    
+    return phase_corr
+
+
 
 
 
@@ -1663,6 +1754,430 @@ def sort_unique_SD_basis( E_ks, sd_states_unique, sd_states_reindexed,  _params)
 
     return E_sd, sd_states_unique_sorted, sd_states_reindexed_sorted, reindex_nsteps
 
+
+
+def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _params):
+
+    params = dict(_params)
+
+    critical_params = []
+    # Default parameters
+    default_params = { "isnap":0, "fsnap":1, "sorting_type":"energy" }
+    # Check input
+    comn.check_input(params, default_params, critical_params)  
+
+    istep = params["isnap"]
+    fstep = params["fsnap"]
+    sorting_type = params["sorting_type"]
+
+
+    #E_sd = []
+    #sd_states_reindexed_sorted = []
+    #sd_states_unique_sorted = []
+    SD_energy_corr = [0.0]*len(sd_states_reindexed)
+    nstates_sd = len(sd_states_reindexed)
+    reindex_nsteps = []     
+
+    #for step in range( fstep - istep ):
+
+    # Append a CMATRIX of dimension nstates_sd x nstates_sd
+    #E_sd = CMATRIX( nstates_sd, nstates_sd) 
+
+    # At this step, compute the energy of the SD
+    active_space = params['active_space']
+    E_ks = np.array( sp.load_npz(params['path_to_npz_files']+F'/E_ks_{step}.npz').todense().real)[active_space,:][:,active_space]
+    E_ks_MATRIX = data_conv.nparray2MATRIX( E_ks )
+    E_this_sd = mapping.energy_mat_arb( sd_states_reindexed, E_ks_MATRIX, SD_energy_corr )
+
+    # Make a list for the final ordering of the sd_states_unique.
+    # This will not contain the ground state, which we will manually add later. 
+    sd_states_unique_sorted = []
+    sd_states_reindexed_sorted = []
+
+    # Make an array of zeros, these will be overwritten with the energy of each SD
+    e = np.zeros( nstates_sd )
+    for state in range(nstates_sd):
+        e[state] =  E_this_sd.get(state,state).real
+        # Obtain the indexing fo the SDs by their energies
+    reindex = np.argsort(e)
+    print('step', step, e)
+    # Turning the CMATRIX into numpy
+    E_this_sd = E_this_sd.real()
+    # Only the diagonals are needed
+    E_this_sd = np.diag( data_conv.MATRIX2nparray(E_this_sd) )
+
+    if sorting_type == "identity":
+
+        reindex_nsteps.append( list(range(nstates_sd)) )
+
+        for state in range(nstates_sd):
+
+            # This is making the energy matrix. And the "sorted" sds (written in Libra's input format) are just appened
+            # to sd_states_reindexed_sorted[step]. For identity ordering - no energy sorting is done!
+            #E_sd[step].set(  state, state, E_this_sd.get( state, state ) )
+            
+            sd_states_reindexed_sorted.append( sd_states_reindexed[ state ] )
+
+            #print( sd_states_reindexed_sorted[step][ state ], ( E_sd[step].get( state, state ) - E_sd[step].get( 0, 0 ) ).real * units.au2ev )
+
+            # This is reindexing the list of SD bases at this time step according to their energies 
+            # We are adding the ground state SD later, so skip it for now. In this list sd_states_unique,
+            # the ground state is not there - this list is the single-particle transitions (and spin) given by the
+            # ES software. So, for example, if nstates_sd = 4, we take only the first 3, because the ground state is not
+            # in sd_states_unique
+            # Ex) sd_states_unique = [  [ ['28,29'], ['alp'] ] , [ ['27,29'], ['alp'] ] , [ ['26,29'], ['alp'] ] ]    
+            # 28 = homo
+            if state < nstates_sd-1:
+                sd_states_unique_sorted.append( sd_states_unique[ state ] )
+        ###np.diag(E_this_sd)
+
+    elif sorting_type == "energy":
+
+        reindex_nsteps.append( reindex )
+
+        # For each SD basis, make the energy matrix and reindex the list of basis according to their energies
+        for i in range(len(reindex)):
+            # This is making the energy matrix
+            #E_sd[step].set( i, i, E_this_sd.get(  int(reindex[i]), int(reindex[i])) )
+            ###E_this_sd = E_this_sd[reindex,:][:,reindex]
+            # This is reindexing the list of SD bases at this time step according to their energies 
+            sd_states_reindexed_sorted.append( sd_states_reindexed[ int(reindex[i]) ] )
+            #print( sd_states_reindexed_sorted[step][i], ( E_sd[step].get( i, i ) - E_sd[step].get( 0, 0 ) ).real * units.au2ev )
+        E_this_sd = E_this_sd[reindex]
+
+        for i in range(1,len(reindex)):
+            sd_states_unique_sorted.append( sd_states_unique[ int(reindex[i])-1 ] )
+
+    E_this_sd_sparse = sp.csc_matrix( np.diag(E_this_sd) )
+
+    return E_this_sd_sparse, sd_states_unique_sorted, sd_states_reindexed_sorted, reindex_nsteps
+
+def run_step3_ks_nacs_libint(params):
+    """
+    This function runs the step3 for computing NACs for Kohn-Sham states. 
+    It performs phase-correction and orthonormalization for the overlaps.
+    For now, we do not include the state reordering algorithm but will add it in
+    the future.
+
+    Args:
+
+        params (dictionary):
+
+            * **params['nprocs']** (integer): number of processors to be used.
+            * **params['path_to_npz_files']** (string):  the path to the KS orbital overlaps which are stored 
+                in .npz format in step2.
+            * **params['time_step']** (float): the time-step in femtosecond
+            * **params['path_to_save_ks_Hvibs']** (string): the path for storing the KS Hvibs
+            * **params['path_to_save_sd_Hvibs']** (string): the path for saving the SD Hvibs
+            * **params['active_space']** (list): a list that contains the indices of specific states
+            * **params['ks_homo_index']** (integer): the index of the KS HOMO + 1 (it starts from 1)
+            * **params['data_dim']** (integer): the dimension of the energy/overlap matrices stored as .npz
+            * **params['start_time']** (integer): the initial step for reading the files
+            * **params['finish_time']** (integer): the final step for reading the files
+            * **params['sorting_type']** (string): it performs sorting the elements of the overlap matrices 
+                either by their 'energy' or 'identity'. 
+            * **params['apply_phase_correction']** (bool): a True or False flag for performing the phase-correction
+            * **params['apply_orthonormalization']** (bool): a True or False flag for performing orthonormalization
+            * **params['do_state_reordering']** (integer): the value for performing the state reordering
+                the vlaues it takes are:
+                    - 0: no state reordering - same as in Pyxaid
+                    - 1: older method (is not robust, may or may not work) 
+                    - 2: Hungarian algorithm [default]
+
+    Returns:
+
+        None    
+    """
+    # We can define the full active space and data dimension automatically
+    # by reading just a sample file. We use glob for this pupose so that 
+    # no the code gives no warning for the critical parameters.
+    critical_params = [] #['active_space','data_dim']
+    default_params = {'nprocs':2, 'path_to_npz_files': os.getcwd()+'/res',
+                      'path_to_save_ks_Hvibs': os.getcwd()+'/res-ks',
+                      'time_step': 1.0, 'start_time': 0, 'finish_time':1,
+                      'apply_phase_correction': True, 'apply_orthonormalization': True, 
+                      'do_state_reordering': 0, 'state_reordering_alpha': 0
+                     }
+    comn.check_input(params, default_params, critical_params)
+
+    if 'active_space' not in params.keys():
+        try:
+            npz_files = glob.glob(params['path_to_npz_files']+'/*npz')
+            dimension_of_sample_file = sp.load_npz(npz_files[0]).todense().shape[0]
+            params['data_dim'] = dimension_of_sample_file
+            params['active_space'] = range(dimension_of_sample_file)
+        except:
+            print('Could not specify the active_space or data_dim. Please set them manually!')
+            sys.exit(0)
+
+    active_space = params['active_space']
+    nstates = int(len(active_space)/2)
+    start_time = params['start_time']
+    finish_time = params['finish_time']
+    nprocs = params['nprocs']
+    dt = params['time_step'] * units.fs2au
+    res_dir_1 = params['path_to_npz_files']
+    res_dir_2 = params['path_to_save_ks_Hvibs']
+
+    try:
+        os.system(F'mkdir {res_dir_2}')
+    except:
+        print(F'The directory {res_dir_2} already exists.')
+ 
+    var_pool = []
+    for step in range(start_time,finish_time):
+        var_pool.append((step, params))
+
+    t2 = time.time()
+    with mp.Pool(nprocs) as pool:
+        # Reading and orthonormalizing the KS overlaps
+        pool.starmap(orthonormalize_ks_overlaps, var_pool)
+        pool.close()
+        pool.join()
+    print('Done with orthonormalization step. Elapsed time:', time.time()-t2)
+
+    t2 = time.time()
+    print('Performing phase correction')
+    for step in range(start_time, finish_time):
+        print(F'Applying phase-correction to step {step}')
+        if step==start_time:
+            cum_phase_aa = np.ones((nstates,1))
+            cum_phase_bb = np.ones((nstates,1))
+        St_step = sp.load_npz(F'{params["path_to_save_ks_Hvibs"]}/St_ks_orthonormalized_{step}.npz')
+        St_step_phase_corrected, cum_phase_aa, cum_phase_bb = \
+            apply_phase_correction_scipy(St_step, step, cum_phase_aa, cum_phase_bb)
+        Hvib_ks = 0.5/dt * (St_step_phase_corrected.todense().T - St_step_phase_corrected.todense())
+        sp.save_npz(F'{res_dir_2}/Hvib_ks_{step+start_time}_im.npz', sp.csc_matrix( Hvib_ks ))
+        sp.save_npz(F'{res_dir_2}/St_ks_{step+start_time}_im.npz', St_step_phase_corrected )
+        os.system(F'rm {params["path_to_save_ks_Hvibs"]}/St_ks_orthonormalized_{step}.npz')
+
+    print('Done with phase correction. Elapsed time:', time.time()-t2)
+
+##################################### Auxiliary functions for run_step3_ks_nacs_libint
+
+def orthonormalize_ks_overlaps(step, params):
+    """
+    This fuction is an auiliary function used in run_step3_ks_nacs_libint function used
+    to perform orthonormalization of the overlaps.
+    """
+    active_space = params['active_space']
+    start_time = params['start_time']
+    t2 = time.time()
+    print('Computing orthonormalization of St matrices in step',step)
+    # The time-overlaps. Note that we need to turn this ndarray to np.array so that we can 
+    # apply data_conv.nparray2MATRIX function.
+    St_step = sp.load_npz(F'{params["path_to_npz_files"]}/St_ks_{step}.npz')[active_space,:][:,active_space] 
+    # The overlap matrix of the time 'step'
+    S_1 = sp.load_npz(F'{params["path_to_npz_files"]}/S_ks_{step}.npz')[active_space,:][:,active_space] 
+    # The overlap of the time 'step+1'
+    S_2 = sp.load_npz(F'{params["path_to_npz_files"]}/S_ks_{step+1}.npz')[active_space,:][:,active_space] 
+    # The energies of the time 'step'
+    E_1 = sp.load_npz(F'{params["path_to_npz_files"]}/E_ks_{step}.npz')[active_space,:][:,active_space] 
+    # The energies of the time 'step+1'
+    E_2 = sp.load_npz(F'{params["path_to_npz_files"]}/E_ks_{step+1}.npz')[active_space,:][:,active_space] 
+    # The mid-point energies
+    E_step = 0.5 * (E_1 + E_2)
+    # Applying orthonormaliztion
+    St_step, S_step = step3.apply_orthonormalization_scipy( S_1.todense(), S_2.todense(), St_step.todense() )
+
+    St_step_sparse = sp.csc_matrix(St_step)
+    S_step_sparse  = sp.csc_matrix(S_step)
+
+    #sp.save_npz(F'{res_dir_2}/S_ks_orthonormalized_{step}.npz', S_step_sparse)
+    sp.save_npz(F'{params["path_to_save_ks_Hvibs"]}/St_ks_orthonormalized_{step}.npz', St_step_sparse)
+    sp.save_npz(F'{params["path_to_save_ks_Hvibs"]}/Hvib_ks_{step+start_time}_re.npz', E_step)
+    print('Done with step', step,'. Elapsed time:', time.time()-t2)
+
+
+
+##################################### End of auxiliary functions for run_step3_ks_nacs_libint
+
+
+
+def run_step3_sd_nacs_libint(params):
+    """
+    This function runs the step3 for computing NACs between SDs. 
+    It performs phase-correction and orthonormalization for the overlaps. 
+    For now, we do not include state reordering algorithm but it will be added later.
+
+    Args:
+
+        params (dictionary):
+
+            * **params['nprocs']** (integer): number of processors to be used.
+            * **params['path_to_npz_files']** (string):  the path to the KS orbital overlaps which are stored 
+                in .npz format in step2.
+            * **params['time_step']** (float): the time-step in femtosecond
+            * **params['path_to_save_ks_Hvibs']** (string): the path for storing the KS Hvibs
+            * **params['path_to_save_sd_Hvibs']** (string): the path for saving the SD Hvibs
+            * **params['active_space']** (list): a list that contains the indices of specific states
+            * **params['ks_homo_index']** (integer): the index of the KS HOMO + 1 (it starts from 1)
+            * **params['data_dim']** (integer): the dimension of the energy/overlap matrices stored as .npz
+            * **params['start_time']** (integer): the initial step for reading the files
+            * **params['finish_time']** (integer): the final step for reading the files
+            * **params['sorting_type']** (string): it performs sorting the elements of the overlap matrices 
+                either by their 'energy' or 'identity'. 
+            * **params['apply_phase_correction']** (bool): a True or False flag for performing the phase-correction
+            * **params['apply_orthonormalization']** (bool): a True or False flag for performing orthonormalization
+            * **params['npz_file_ks_homo_index']** (integer): the KS HOMO index of the raw npz files.
+            * **params['do_state_reordering']** (integer): the value for performing the state reordering
+                the vlaues it takes are:
+                    - 0: no state reordering - same as in Pyxaid
+                    - 1: older method (is not robust, may or may not work) 
+                    - 2: Hungarian algorithm [default]
+
+    Returns:
+
+        None    
+    """
+    critical_params = ['active_space','ks_homo_index']
+    default_params = {'nprocs':2, 'path_to_npz_files': os.getcwd()+'/res',
+                      'path_to_save_sd_Hvibs': os.getcwd()+'/res-sd',
+                      'path_to_save_ks_Hvibs': os.getcwd()+'/res-ks',
+                      'time_step': 1.0, 'start_time': 0, 'finish_time':1,
+                      'sorting_type': 'energy', 'apply_phase_correction': True,
+                      'apply_orthonormalization': True, 'do_state_reordering': 0,
+                      'state_reordering_alpha': 0
+                     }
+    comn.check_input(params, default_params, critical_params)
+
+    # Building the new active space based on the number of occupied and unoccupied 
+    # orbitals from the active space that we used to generate the St_ks matrices
+    ks_active_space_2, ks_homo_index_2 = step3.make_active_space(params['num_occ'], params['num_unocc'], 
+                                                                 params['data_dim'], params['npz_file_ks_homo_index'])
+
+    # Update the parameters
+    params.update({'active_space': ks_active_space_2, 'ks_homo_index': ks_homo_index_2})
+    # extract the data into global variables
+    data_dim = params['data_dim']
+    start_time = params['start_time']
+    finish_time = params['finish_time']
+    dt = params['time_step'] * units.fs2au
+    res_dir_1 = params['path_to_npz_files']
+    res_dir_2 = params['path_to_save_sd_Hvibs']
+    try:
+        os.system(F'mkdir {res_dir_2}')
+    except:
+        print(F'The directory {res_dir_2} already exists.')
+
+    sd_unique_basis = []
+    ks_homo_index = params['ks_homo_index']
+    min_band = ks_homo_index+1
+    max_band = ks_homo_index+params['num_unocc']
+    # Add electron-only SDs
+    for state in range(ks_homo_index+1,max_band):
+        sd_tmp = [[ks_homo_index, state], 'alp']
+        if sd_tmp not in sd_unique_basis:
+            sd_unique_basis.append(sd_tmp)
+    
+    # Add hole-only SDs
+    min_band = ks_homo_index-params['num_occ']+1
+    max_band = ks_homo_index+1
+    for state in range(min_band, max_band):
+        sd_tmp = [[state, ks_homo_index+1], 'alp']
+        if sd_tmp not in sd_unique_basis:
+            sd_unique_basis.append(sd_tmp)
+    print('unique_SDs', sd_unique_basis)
+    
+    params['sd_unique_basis'] = sd_unique_basis
+    nprocs = params['nprocs']
+    ks_homo_index = params['ks_homo_index']
+    # This is always 1
+    min_band = 1
+    max_band = int(data_dim/2) #int(len(active_space)/2)
+    ks_orbital_indicies = range(min_band, max_band+1)
+    print('Here', ks_orbital_indicies, ks_homo_index)
+    sd_unique_basis = params['sd_unique_basis']
+    print('ks_homo_index',ks_homo_index)
+    # Reindex the SD basis
+    sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( ks_homo_index, ks_orbital_indicies,
+                                                                 sd_unique_basis, sd_format=2 )
+    print(sd_states_reindexed)
+    params['isnap'] = start_time
+    params['fsnap'] = finish_time
+    apply_orthonormalization = params['apply_orthonormalization']
+    print('Sorting and computing the SDs energies...')
+    t2 = time.time()
+    E_sd = []
+    sd_states_reindexed_sorted = []
+    sd_states_unique_sorted = []
+    for step in range(start_time, finish_time):
+        E_sd_step, sd_states_unique_sorted_step, sd_states_reindexed_sorted_step, reindex_nsteps = step3.sort_unique_SD_basis_scipy(
+            step, sd_unique_basis, sd_states_reindexed, params )
+        sd_states_reindexed_sorted.append(sd_states_reindexed_sorted_step)
+        sd_states_unique_sorted.append(sd_states_unique_sorted_step)
+        if step>start_time:
+            E_midpoint = 0.5*(E_sd_step+E_sd_step_plus)
+            sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_sd_{step}_re.npz',E_midpoint)
+        E_sd_step_plus = E_sd_step
+    print('Done with sorting and computing the SDs energies. Elapsed time:',time.time()-t2)
+    params.update({'sd_states_reindexed_sorted':sd_states_reindexed_sorted})
+    var_pool = []
+    for step in range( finish_time - start_time -1 ):
+        var_pool.append((step, params))
+
+    t2 = time.time()
+    with mp.Pool( nprocs ) as pool:
+        st_sds = pool.starmap( compute_overlaps_in_parallel, var_pool ) 
+        pool.close()
+        pool.join()
+    print('Done with computing the SD overlaps. Elapsed time:', time.time()-t2)
+
+    if params['apply_phase_correction']: # or params['do_state_reordering']!=0:
+        for step in range(len(st_sds)):
+            
+            if step==0:
+                nstates = int(st_sds[0].shape[0]/2)
+                cum_phase_aa = np.ones((nstates,1))
+                cum_phase_bb = np.ones((nstates,1))
+            St_step_phase_corrected, cum_phase_aa, cum_phase_bb = \
+                apply_phase_correction_scipy(st_sds[step].real, step, cum_phase_aa, cum_phase_bb)
+            Hvib_sd = 0.5/dt * (St_step_phase_corrected.todense().T - St_step_phase_corrected.todense())
+            sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_sd_{step+start_time}_im.npz', sp.csc_matrix( Hvib_sd ))
+            sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/St_sd_{step+start_time}_im.npz', St_step_phase_corrected )
+
+
+##################################### Auxiliary functions for run_step3_sd_nacs_libint
+
+def compute_overlaps_in_parallel( step, params ):
+    """
+    This function is used as an auxilary function that computes the SDs overlaps.
+    It is used in the run_step3_sd_nacs_libint function.
+    """
+    start_time = params['start_time']
+    res_dir_1 = params['path_to_npz_files']
+    active_space = params['active_space']
+    sd_states_reindexed_sorted = params['sd_states_reindexed_sorted']
+    t2 = time.time()
+    print('Computing the SD overlaps for step',step)
+    # The same procedure as above
+    st_ks = np.array( sp.load_npz(F'{res_dir_1}/St_ks_{step+start_time}.npz').todense()
+                     [active_space,:][:,active_space] ).real
+    s_ks_1 = np.array( sp.load_npz(F'{res_dir_1}/S_ks_{step+start_time}.npz').todense()
+                      [active_space,:][:,active_space] ).real
+    s_ks_2 = np.array( sp.load_npz(F'{res_dir_1}/S_ks_{step+start_time}.npz').todense()
+                      [active_space,:][:,active_space] ).real
+
+    st_ks = data_conv.nparray2MATRIX(st_ks)
+    s_ks_1 = data_conv.nparray2MATRIX(s_ks_1)
+    s_ks_2 = data_conv.nparray2MATRIX(s_ks_2)
+    
+    # Computing the overlaps for SDs
+    t2 = time.time()
+    s_sd_1 = mapping.ovlp_mat_arb(sd_states_reindexed_sorted[step], 
+                                           sd_states_reindexed_sorted[step], s_ks_1, use_minimal=False, use_mo_approach=True).real()
+    s_sd_2 = mapping.ovlp_mat_arb(sd_states_reindexed_sorted[step+1], 
+                                           sd_states_reindexed_sorted[step+1], s_ks_2,use_minimal=False, use_mo_approach=True).real()
+    st_sd = mapping.ovlp_mat_arb(sd_states_reindexed_sorted[step], 
+                                          sd_states_reindexed_sorted[step+1], st_ks, use_minimal=False, use_mo_approach=True).real()
+    s_sd_1 = data_conv.MATRIX2nparray(s_sd_1)
+    s_sd_2 = data_conv.MATRIX2nparray(s_sd_2)
+    st_sd = data_conv.MATRIX2nparray(st_sd)
+    print('Applying orthonormalization for SDs for step', step)
+    st_sd, s_sd = step3.apply_orthonormalization_scipy(s_sd_1, s_sd_2, st_sd)
+    print(F'Done with computing the SD overlap of step {step}. Elapsed time {time.time()-t2}')
+
+    return sp.csc_matrix(st_sd)
 
 
 
