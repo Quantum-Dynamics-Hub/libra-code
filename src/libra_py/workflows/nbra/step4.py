@@ -47,6 +47,7 @@ import os
 import multiprocessing as mp
 import time
 import numpy as np
+import scipy.sparse as sp
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -1095,3 +1096,54 @@ def nice_plots(dyn_params, init_states, tsh_methods, methods, batches, fig_label
                 plt.savefig(F'{prefix}/_start_s{istate}_{name}.png', dpi=300)
 
             plt.show()                                                                                                            
+
+
+def get_Hvib_scipy(params):
+    """
+    This function is used to get the set of Hvibs (or any other set of data like 
+    St matrices) in scipy.sparse format and return them as CMATRIX format.
+    Args:
+        params (dictionary): parameters controlling the function execution [Required!]
+
+            Required parameter keys:
+
+            * **params["data_set_paths"]** ( list of strings ):
+                define the paths of the directories where the vibronic Hamiltonian files for
+                different data sets (e.g. independent MD trajectories) are located. 
+            .. note::
+                In addition, requires parameters described in
+                :func:`libra_py.workflows.nbra.step4.getHvib`
+
+    Returns:
+        list of lists of CMATRIX: Hvib: 
+            the time series of Hvib matrices for several data sets, such that
+            Hvib[idata][time] is a CMATRIX for the data set indexed by `idata`
+            at time `time`
+    """
+    hvib = []
+    for i in range(len(params['data_set_paths'])):
+        hvib.append([])
+        for step in range(params['nfiles']):
+            step += params['init_times']
+    
+            try:
+                file_name = params['data_set_paths'][0] + params['Hvib_re_prefix'] + str(step) + params['Hvib_re_suffix']
+                tmp_real = sp.load_npz(file_name).real
+            except:
+                print(F'File {file_name} not found! Please check the path to Hvibs. Setting zero matrix into hvib...')
+                tmp_real = sp.csc_matrix( np.zeros((params['nstates'], params['nstates'])) )
+    
+            try:
+                file_name = params['data_set_paths'][0] + params['Hvib_im_prefix'] + str(step) + params['Hvib_im_suffix']
+                tmp_imag = sp.load_npz(file_name).real
+            except:
+                print(F'File {file_name} not found! Please check the path to Hvibs. Setting zero matrix into hvib...')
+                tmp_imag = sp.csc_matrix( np.zeros((params['nstates'], params['nstates'])) )
+    
+            real_MATRIX = scipynpz2MATRIX(tmp_real)
+            imag_MATRIX = scipynpz2MATRIX(tmp_imag)
+            hvib[i].append( CMATRIX(real_MATRIX, imag_MATRIX)  )
+    
+    return hvib
+
+   

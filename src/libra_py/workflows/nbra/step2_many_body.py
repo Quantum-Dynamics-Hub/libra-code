@@ -26,7 +26,7 @@ import os
 
 import time
 import copy
-
+from distutils.spawn import find_executable
 import multiprocessing as mp
 
 # Concurrency for large systems
@@ -774,7 +774,10 @@ def run_step2_many_body( params ):
         # Convert the xyz file for currstep to the .gen file format
         os.system("xyz2gen coord-"+str(params["curr_step"])+".xyz")
         # Run the dftb+ program
-        os.system("srun %s"%( dftbp_exe ) )
+        if find_executable('srun') is not None:
+            os.system("srun %s"%( dftbp_exe ) )
+        else:
+            os.system("%s"%( dftbp_exe ) )
         os.system("mv band.out step_"+str(curr_step)+"_ks.log")
         os.system("mv step_"+str(curr_step)+"_ks.log logfiles/.")
         os.system("mv EXC.DAT EXC_"+str(curr_step)+".DAT")
@@ -870,7 +873,10 @@ def run_step2_many_body( params ):
             # Convert the xyz file for currstep to the .gen file format
             os.system("xyz2gen coord-"+str(params["curr_step"])+".xyz")
             # Run the dftb+ program
-            os.system("srun %s"%( dftbp_exe ) )
+            if find_executable('srun') is not None:
+                os.system("srun %s"%( dftbp_exe ) )
+            else:
+                os.system("%s"%( dftbp_exe ) )
             os.system("mv band.out step_"+str(curr_step)+"_ks.log")
             os.system("mv step_"+str(curr_step)+"_ks.log logfiles/.")
             os.system("mv EXC.DAT EXC_"+str(curr_step)+".DAT")

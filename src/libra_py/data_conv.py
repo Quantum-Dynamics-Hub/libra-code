@@ -23,6 +23,7 @@ import sys
 import math
 import copy
 import numpy as np
+import scipy.sparse as sp
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -379,6 +380,42 @@ def nparray2CMATRIX(data):
     return res
 
 
+
+def scipynpz2MATRIX(data):
+    """
+    This function converts the scipy sparse matrix into MATRIX type. 
+
+    Args:
+        data (scipy.sparse): The scipy sparse matrix. This includes all types of sparse matrices
+                             such as csc_matrix, csr_matrix, etc.
+
+    Returns:
+        res (MATRIX): The MATRIX format of the sparse matrix.
+    """
+    # First turn it into dense format
+    tmp_dense_real = np.array( data.todense().real )
+    
+    # Now numpy to CMATRIX
+    res = nparray2MATRIX(tmp_dense_real)
+
+    return res
+
+
+def MATRIX2scipynpz(data):
+    """
+    This function converts a MATRIX data type to a npz scipy sparse matrix.
+
+    Args:
+        data (MATRIX): The MATRIX data.
+
+    Returns:
+        res (scipy.sparse): The scipy sparse matrix. This includes all types of sparse matrices
+                            such as csc_matrix, csr_matrix, etc.
+    """
+    tmp_dense_nparray = MATRIX2nparray(data)
+    res = sp.csc_matrix(tmp_dense_nparray.real)
+    
+    return res
 
 
 def MATRIX2nparray( data ):
