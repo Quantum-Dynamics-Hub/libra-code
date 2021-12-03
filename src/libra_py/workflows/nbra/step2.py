@@ -395,6 +395,8 @@ def run_cp2k_libint_step2(params):
     isUKS = params['isUKS']
     # Extended tight-binding calculations
     isxTB = params['isxTB']
+    # Periodic calculation falg
+    is_periodic = params['is_periodic']
     # the counter for a job steps, this counter is needed for not reading
     # the data of a molden file twice
     counter = 0
@@ -407,6 +409,7 @@ def run_cp2k_libint_step2(params):
         # timer for CP2K
         t1 = time.time()
         if isxTB:
+            #CP2K_methods.make_ot_input(params)
             CP2K_methods.run_cp2k_xtb(params)
             molden_filename = F'Diag_{step}-libra-1_0.molden'
         else:
@@ -427,15 +430,29 @@ def run_cp2k_libint_step2(params):
             eig_vect_1, energies_1 = molden_methods.eigenvectors_molden(molden_filename,\
                                                                         nbasis(shell_1),l_vals)
             print('Done with reading energies and eigenvectors. Elapsed time:', time.time()-t1)
-            if params['remove_molden']:
-                os.system('rm Diag_%d-libra-1_0.molden'%step)
             print('Computing atomic orbital overlap matrix...')
             t1 = time.time()
             AO_S = compute_overlaps(shell_1,shell_1,nprocs)
+            if is_periodic:
+                cell = []
+                cell.append(params['A_cell_vector'])
+                cell.append(params['B_cell_vector'])
+                cell.append(params['C_cell_vector'])
+                cell = np.array(cell)*units.Angst
+                if params['periodicity_type'].lower()=='manual':
+                    translational_vectors = params['translational_vectors']
+                else:
+                    translational_vectors = CP2K_methods.generate_translational_vectors(params['periodicity_type'])
+                for i1 in range(len(translational_vectors)):
+                    translational_vector = translational_vectors[i1]
+                    print(F'Compute the AO overlaps between R({translational_vector[0]},{translational_vector[1]},{translational_vector[2]}) and R(0,0,0)')
+                    shell_1p, l_vals = molden_methods.molden_file_to_libint_shell(molden_filename, is_spherical, is_periodic, cell, translational_vector)
+                    AO_S += compute_overlaps(shell_1,shell_1p, nprocs)
             print('Done with computing atomic orbital overlaps. Elapsed time:', time.time()-t1)
             t1 = time.time()
             print('Turning the MATRIX to numpy array...')
             AO_S = data_conv.MATRIX2nparray(AO_S)
+            #scipy.sparse.save_npz(params['res_dir']+'/AO_S.npz', scipy.sparse.csc_matrix(AO_S))
             print('Done with transforming MATRIX 2 numpy array. Elapsed time:', time.time()-t1)
             istate = params['init_state']
             fstate = params['final_state']
@@ -466,36 +483,39 @@ def run_cp2k_libint_step2(params):
             # Note that we choose the data from istate to fstate
             # the values for istate and fstate start from 1
             if isUKS:
-                S_alpha = np.linalg.multi_dot([alpha_eigenvectors_1, AO_S, alpha_eigenvectors_1.T])[istate-1:fstate-1,istate-1:fstate-1]
-                S_beta  = np.linalg.multi_dot([beta_eigenvectors_1, AO_S, beta_eigenvectors_1.T])[istate-1:fstate-1,istate-1:fstate-1]
+                S_alpha = np.linalg.multi_dot([alpha_eigenvectors_1, AO_S, alpha_eigenvectors_1.T])[istate-1:fstate,istate-1:fstate]
+                S_beta  = np.linalg.multi_dot([beta_eigenvectors_1, AO_S, beta_eigenvectors_1.T])[istate-1:fstate,istate-1:fstate]
                 # creating zero matrix                                     
                 mat_block_size = (len(S_alpha), len(S_beta))
                 zero_mat = np.zeros(mat_block_size)
                 S_step = data_conv.form_block_matrix(S_alpha,zero_mat,zero_mat.T,S_beta)
                 # Since a lot of the data are zeros we save them as sparse matrices
                 S_step_sparse = scipy.sparse.csc_matrix(S_step)
-                E_step = data_conv.form_block_matrix(np.diag(alpha_energies_1)[istate-1:fstate-1,istate-1:fstate-1],\
+                E_step = data_conv.form_block_matrix(np.diag(alpha_energies_1)[istate-1:fstate,istate-1:fstate],\
                                                      zero_mat,zero_mat.T,\
-                                                     np.diag(beta_energies_1)[istate-1:fstate-1,istate-1:fstate-1])
+                                                     np.diag(beta_energies_1)[istate-1:fstate,istate-1:fstate])
                 E_step_sparse = scipy.sparse.csc_matrix(E_step)
 
             else:
-                S = np.linalg.multi_dot([eigenvectors_1, AO_S, eigenvectors_1.T])[istate-1:fstate-1,istate-1:fstate-1]
+                S = np.linalg.multi_dot([eigenvectors_1, AO_S, eigenvectors_1.T])[istate-1:fstate,istate-1:fstate]
                 # creating zero matrix
                 mat_block_size = len(S)
                 zero_mat = np.zeros((mat_block_size,mat_block_size))
                 S_step = data_conv.form_block_matrix(S,zero_mat,zero_mat,S)
                 # Since a lot of the data are zeros we save them as sparse matrices
                 S_step_sparse = scipy.sparse.csc_matrix(S_step)
-                E_step = data_conv.form_block_matrix(np.diag(energies_1)[istate-1:fstate-1,istate-1:fstate-1],\
+                E_step = data_conv.form_block_matrix(np.diag(energies_1)[istate-1:fstate,istate-1:fstate],\
                                                      zero_mat,zero_mat,\
-                                                     np.diag(energies_1)[istate-1:fstate-1,istate-1:fstate-1])
+                                                     np.diag(energies_1)[istate-1:fstate,istate-1:fstate])
                 E_step_sparse = scipy.sparse.csc_matrix(E_step)
 
             scipy.sparse.save_npz(params['res_dir']+F'/S_ks_{step}.npz', S_step_sparse)
             scipy.sparse.save_npz(params['res_dir']+F'/E_ks_{step}.npz', E_step_sparse)
             print('Done with computing molecular orbital overlaps. Elapsed time:', time.time()-t1)
             print(F'Done with step {step}.','Elapsed time:',time.time()-t1_all)
+            if params['remove_molden']:
+                os.system(F'rm {molden_filename}')
+
         else:
             # The same procedure as above but now we compute time-overlaps as well
             t1 = time.time()
@@ -508,15 +528,26 @@ def run_cp2k_libint_step2(params):
             eig_vect_2, energies_2 = molden_methods.eigenvectors_molden(molden_filename,\
                                                                         nbasis(shell_2),l_vals)
             print('Done with reading energies and eigenvectors. Elapsed time:', time.time()-t1)
-            if params['remove_molden']:
-                if isxTB:
-                    os.system(F'rm Diag_{step}-libra-1_0.molden')
-                else:
-                    os.system(F'rm Diag_libra-{step}-1-0.molden')
             print('Computing atomic orbital overlap matrix...')
             t1 = time.time()
             AO_S = compute_overlaps(shell_2,shell_2,nprocs)
             AO_St = compute_overlaps(shell_1,shell_2,nprocs)
+            if is_periodic:
+                cell = []
+                cell.append(params['A_cell_vector'])
+                cell.append(params['B_cell_vector'])
+                cell.append(params['C_cell_vector'])
+                cell = np.array(cell)*units.Angst
+                if params['periodicity_type'].lower()=='manual':
+                    translational_vectors = params['translational_vectors']
+                else:
+                    translational_vectors = CP2K_methods.generate_translational_vectors(params['periodicity_type'])
+                for i1 in range(len(translational_vectors)):
+                    translational_vector = translational_vectors[i1]
+                    print(F'Compute the AO overlaps between R({translational_vector[0]},{translational_vector[1]},{translational_vector[2]}) and R(0,0,0)')
+                    shell_2p, l_vals = molden_methods.molden_file_to_libint_shell(molden_filename, is_spherical, is_periodic, cell, translational_vector)
+                    AO_S += compute_overlaps(shell_2,shell_2p, nprocs)
+                    AO_St += compute_overlaps(shell_1,shell_2p, nprocs)
             print('Done with computing atomic orbital overlaps. Elapsed time:', time.time()-t1)
             t1 = time.time()
             print('Turning the MATRIX to numpy array...')
@@ -549,32 +580,32 @@ def run_cp2k_libint_step2(params):
             t1 = time.time()
             print('Computing and saving molecular orbital overlaps...')
             if isUKS:
-                S_alpha = np.linalg.multi_dot([alpha_eigenvectors_2, AO_S, alpha_eigenvectors_2.T])[istate-1:fstate-1,istate-1:fstate-1]
-                St_alpha = np.linalg.multi_dot([alpha_eigenvectors_1, AO_S, alpha_eigenvectors_2.T])[istate-1:fstate-1,istate-1:fstate-1]
+                S_alpha = np.linalg.multi_dot([alpha_eigenvectors_2, AO_S, alpha_eigenvectors_2.T])[istate-1:fstate,istate-1:fstate]
+                St_alpha = np.linalg.multi_dot([alpha_eigenvectors_1, AO_S, alpha_eigenvectors_2.T])[istate-1:fstate,istate-1:fstate]
 
-                S_beta = np.linalg.multi_dot([beta_eigenvectors_2, AO_S, beta_eigenvectors_2.T])[istate-1:fstate-1,istate-1:fstate-1]
-                St_beta = np.linalg.multi_dot([beta_eigenvectors_1, AO_S, beta_eigenvectors_2.T])[istate-1:fstate-1,istate-1:fstate-1]
+                S_beta = np.linalg.multi_dot([beta_eigenvectors_2, AO_S, beta_eigenvectors_2.T])[istate-1:fstate,istate-1:fstate]
+                St_beta = np.linalg.multi_dot([beta_eigenvectors_1, AO_S, beta_eigenvectors_2.T])[istate-1:fstate,istate-1:fstate]
 
                 S_step = data_conv.form_block_matrix(S_alpha,zero_mat,zero_mat.T,S_beta)
                 St_step = data_conv.form_block_matrix(St_alpha,zero_mat,zero_mat.T,St_beta)
                 S_step_sparse = scipy.sparse.csc_matrix(S_step)
                 St_step_sparse = scipy.sparse.csc_matrix(St_step)
 
-                E_step = data_conv.form_block_matrix(np.diag(alpha_energies_2)[istate-1:fstate-1,istate-1:fstate-1],\
+                E_step = data_conv.form_block_matrix(np.diag(alpha_energies_2)[istate-1:fstate,istate-1:fstate],\
                                                      zero_mat,zero_mat.T,\
-                                                     np.diag(beta_energies_2)[istate-1:fstate-1,istate-1:fstate-1])
+                                                     np.diag(beta_energies_2)[istate-1:fstate,istate-1:fstate])
 
                 E_step_sparse = scipy.sparse.csc_matrix(E_step)
             else:
-                S = np.linalg.multi_dot([eigenvectors_2, AO_S, eigenvectors_2.T])[istate-1:fstate-1,istate-1:fstate-1]
-                St = np.linalg.multi_dot([eigenvectors_1, AO_S, eigenvectors_2.T])[istate-1:fstate-1,istate-1:fstate-1]
+                S = np.linalg.multi_dot([eigenvectors_2, AO_S, eigenvectors_2.T])[istate-1:fstate,istate-1:fstate]
+                St = np.linalg.multi_dot([eigenvectors_1, AO_S, eigenvectors_2.T])[istate-1:fstate,istate-1:fstate]
                 S_step = data_conv.form_block_matrix(S,zero_mat,zero_mat,S)
                 St_step = data_conv.form_block_matrix(St,zero_mat,zero_mat,St)
                 S_step_sparse = scipy.sparse.csc_matrix(S_step)
                 St_step_sparse = scipy.sparse.csc_matrix(St_step)
-                E_step = data_conv.form_block_matrix(np.diag(energies_2)[istate-1:fstate-1,istate-1:fstate-1],\
+                E_step = data_conv.form_block_matrix(np.diag(energies_2)[istate-1:fstate,istate-1:fstate],\
                                                      zero_mat,zero_mat,\
-                                                     np.diag(energies_2)[istate-1:fstate-1,istate-1:fstate-1])
+                                                     np.diag(energies_2)[istate-1:fstate,istate-1:fstate])
                 E_step_sparse = scipy.sparse.csc_matrix(E_step)
             scipy.sparse.save_npz(params['res_dir']+F'/S_ks_{step}.npz', S_step_sparse)
             scipy.sparse.save_npz(params['res_dir']+F'/St_ks_{step-1}.npz', St_step_sparse)
@@ -583,6 +614,8 @@ def run_cp2k_libint_step2(params):
             shell_1 = shell_2
             energies_1 = energies_2
             eigenvectors_1 = eigenvectors_2
+            if params['remove_molden']:
+                os.system(F'rm {molden_filename}')
             if isxTB:
                 print('Removing unnecessary wfn files...')
                 os.system(F'rm OT_{step-1}-RESTART*')

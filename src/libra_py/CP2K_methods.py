@@ -919,6 +919,62 @@ def read_molog_file(filename: str):
             
     return mo_energies, mo_coeffs
 
+
+def read_ao_matrices(filename):
+    
+    
+    file = open(filename,'r')
+    lines = file.readlines()
+    file.close()
+    
+    mat_lines = []
+    data_lines = []
+    for i in range(len(lines)):
+        tmp = lines[i].split()
+        if 'MATRIX' in lines[i]:
+            mat_lines.append(i)
+            #print(lines[i])
+        if 0<len(tmp)<=4 and 'MATRIX' not in lines[i]:
+            data_lines.append(i)
+    data_lines = np.array(data_lines)
+    data = []
+    for i in range(len(mat_lines)):
+        print(lines[mat_lines[i]])
+        data_0 = []
+        start_line = mat_lines[i]
+        if i==len(mat_lines)-1:
+            end_line = len(lines)-1
+        else:
+            end_line = mat_lines[i+1]
+        #print(start_line, end_line)
+        ind = np.where(np.logical_and(start_line<data_lines, data_lines<end_line))# and data_lines.all()<end_line)
+        #print(ind[0])
+        #print(data_lines[ind])
+        for j in range(len(ind[0])):
+            start_line_1 = int(data_lines[int(ind[0][j])])            
+            if j==len(ind[0])-1:
+                end_line_1 = int(end_line)
+            else:
+                end_line_1 = int(data_lines[int(ind[0][j+1])])
+            #print(lines[start_line_1])
+            #print(lines[end_line_1])
+            for k1 in range(4):
+                tmp = []
+                try:
+                    for k2 in range(start_line_1+1,end_line_1):
+                        #print(lines[k2])
+                        if len(lines[k2].split())>0:
+                            #print(lines[k2])
+                            tmp.append(float(lines[k2].split()[4+k1]))
+
+                    data_0.append(tmp)
+                except:
+                    pass
+        data.append(np.array(data_0))
+        
+    return data
+
+
 def extract_coordinates(trajectory_xyz_file_name: str, time_step: int):
     """
     This function reads the trajectory xyz file and extract the coordinates of a
@@ -1181,6 +1237,54 @@ def index_reorder(l_val):
 
     # The indeices
     return np.array(new_order)-1
+
+
+def generate_translational_vectors(periodicity_type: str):
+    """
+    This function generates the translational vectors for periodic systems.
+    For monolayers the generated vectors does not add the orthogonal axis but
+    for bulk all directions are added.
+
+    Args:
+        periodicity_type (string): The periodicity type. It can only get these values:
+                                   'XY', 'XZ', and 'YZ' for monolayers and 'XYZ' for bulk systems.
+
+    Returns:
+        translational_vectors (numpy array): The translational vectors for that system.
+
+    """
+    translational_vectors = []
+    if periodicity_type.lower()=='XY'.lower():
+        translational_vectors = [[1,1,0],[1,0,0],
+                                 [0,1,0],[-1,1,0],
+                                 [-1,0,0],[-1,-1,0],
+                                 [0,-1,0],[1,-1,0]]
+    if periodicity_type.lower()=='XZ'.lower():
+        translational_vectors = [[1,0,1],[1,0,0],
+                                 [0,0,1],[-1,0,1],
+                                 [-1,0,0],[-1,0,-1],
+                                 [0,0,-1],[1,0,-1]]
+    if periodicity_type.lower()=='YZ'.lower():
+        translational_vectors = [[0,1,1],[0,0,1],
+                                 [0,1,0],[0,1,-1],
+                                 [0,0,-1],[0,-1,-1],
+                                 [0,-1,0],[0,-1,1]]
+    if periodicity_type.lower()=='XYZ'.lower():
+        translational_vectors = [[1,1,0],[1,0,0],
+                                 [0,1,0],[-1,1,0],
+                                 [-1,0,0],[-1,-1,0],
+                                 [0,-1,0],[1,-1,0],
+                                 [1,0,1],[1,0,0],
+                                 [0,0,1],[-1,0,1],
+                                 [-1,0,0],[-1,0,-1],
+                                 [0,0,-1],[1,0,-1],
+                                 [0,1,1],[0,0,1],
+                                 [0,1,0],[0,1,-1],
+                                 [0,0,-1],[0,-1,-1],
+                                 [0,-1,0],[0,-1,1]]
+
+    return translational_vectors
+
 
 
 def molog_lvals(filename:str):
