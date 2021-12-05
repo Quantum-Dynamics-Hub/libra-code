@@ -439,13 +439,10 @@ def run_cp2k_libint_step2(params):
                 cell.append(params['B_cell_vector'])
                 cell.append(params['C_cell_vector'])
                 cell = np.array(cell)*units.Angst
-                if params['periodicity_type'].lower()=='manual':
-                    translational_vectors = params['translational_vectors']
-                else:
-                    translational_vectors = CP2K_methods.generate_translational_vectors(params['periodicity_type'])
+                translational_vectors = params['translational_vectors']
                 for i1 in range(len(translational_vectors)):
-                    translational_vector = translational_vectors[i1]
-                    print(F'Compute the AO overlaps between R({translational_vector[0]},{translational_vector[1]},{translational_vector[2]}) and R(0,0,0)')
+                    translational_vector = np.array(translational_vectors[i1])
+                    print(F'Computing the AO overlaps between R({translational_vector[0]},{translational_vector[1]},{translational_vector[2]}) and R(0,0,0)')
                     shell_1p, l_vals = molden_methods.molden_file_to_libint_shell(molden_filename, is_spherical, is_periodic, cell, translational_vector)
                     AO_S += compute_overlaps(shell_1,shell_1p, nprocs)
             print('Done with computing atomic orbital overlaps. Elapsed time:', time.time()-t1)
@@ -538,13 +535,10 @@ def run_cp2k_libint_step2(params):
                 cell.append(params['B_cell_vector'])
                 cell.append(params['C_cell_vector'])
                 cell = np.array(cell)*units.Angst
-                if params['periodicity_type'].lower()=='manual':
-                    translational_vectors = params['translational_vectors']
-                else:
-                    translational_vectors = CP2K_methods.generate_translational_vectors(params['periodicity_type'])
+                translational_vectors = params['translational_vectors']
                 for i1 in range(len(translational_vectors)):
-                    translational_vector = translational_vectors[i1]
-                    print(F'Compute the AO overlaps between R({translational_vector[0]},{translational_vector[1]},{translational_vector[2]}) and R(0,0,0)')
+                    translational_vector = np.array(translational_vectors[i1])
+                    print(F'Computing the AO overlaps between R({translational_vector[0]},{translational_vector[1]},{translational_vector[2]}) and R(0,0,0)')
                     shell_2p, l_vals = molden_methods.molden_file_to_libint_shell(molden_filename, is_spherical, is_periodic, cell, translational_vector)
                     AO_S += compute_overlaps(shell_2,shell_2p, nprocs)
                     AO_St += compute_overlaps(shell_1,shell_2p, nprocs)

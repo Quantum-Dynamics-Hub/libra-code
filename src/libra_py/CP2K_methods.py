@@ -1239,13 +1239,16 @@ def index_reorder(l_val):
     return np.array(new_order)-1
 
 
-def generate_translational_vectors(periodicity_type: str):
+def generate_translational_vectors(origin, N, periodicity_type):
     """
     This function generates the translational vectors for periodic systems.
     For monolayers the generated vectors does not add the orthogonal axis but
     for bulk all directions are added.
 
     Args:
+        origin (list): The translational vectors are obtained with respect to this origin.
+        N (list): An array that contains the number of cells to be considered in 
+                     each of the X, Y, and Z directions.
         periodicity_type (string): The periodicity type. It can only get these values:
                                    'XY', 'XZ', and 'YZ' for monolayers and 'XYZ' for bulk systems.
 
@@ -1253,38 +1256,34 @@ def generate_translational_vectors(periodicity_type: str):
         translational_vectors (numpy array): The translational vectors for that system.
 
     """
+    # Basis vectors
+    i_vec = np.array([1,0,0])
+    j_vec = np.array([0,1,0])
+    k_vec = np.array([0,0,1])
+    # origin
+    origin = np.array(origin)
     translational_vectors = []
-    if periodicity_type.lower()=='XY'.lower():
-        translational_vectors = [[1,1,0],[1,0,0],
-                                 [0,1,0],[-1,1,0],
-                                 [-1,0,0],[-1,-1,0],
-                                 [0,-1,0],[1,-1,0]]
-    if periodicity_type.lower()=='XZ'.lower():
-        translational_vectors = [[1,0,1],[1,0,0],
-                                 [0,0,1],[-1,0,1],
-                                 [-1,0,0],[-1,0,-1],
-                                 [0,0,-1],[1,0,-1]]
-    if periodicity_type.lower()=='YZ'.lower():
-        translational_vectors = [[0,1,1],[0,0,1],
-                                 [0,1,0],[0,1,-1],
-                                 [0,0,-1],[0,-1,-1],
-                                 [0,-1,0],[0,-1,1]]
-    if periodicity_type.lower()=='XYZ'.lower():
-        translational_vectors = [[1,1,0],[1,0,0],
-                                 [0,1,0],[-1,1,0],
-                                 [-1,0,0],[-1,-1,0],
-                                 [0,-1,0],[1,-1,0],
-                                 [1,0,1],[1,0,0],
-                                 [0,0,1],[-1,0,1],
-                                 [-1,0,0],[-1,0,-1],
-                                 [0,0,-1],[1,0,-1],
-                                 [0,1,1],[0,0,1],
-                                 [0,1,0],[0,1,-1],
-                                 [0,0,-1],[0,-1,-1],
-                                 [0,-1,0],[0,-1,1]]
+    x_range = [0]
+    y_range = [0]
+    z_range = [0]
+    Nx = N[0]
+    Ny = N[1]
+    Nz = N[2]
+    if 'x' in periodicity_type.lower():
+        x_range = range(-Nx,Nx+1)
+    if 'y' in periodicity_type.lower():
+        y_range = range(-Ny,Ny+1)
+    if 'z' in periodicity_type.lower():
+        z_range = range(-Nz,Nz+1)
 
-    return translational_vectors
-
+    for n_i in x_range:
+        for n_j in y_range:
+            for n_k in z_range:
+                vec = origin + n_i*i_vec+n_j*j_vec+n_k*k_vec
+                if not np.array_equal(vec,origin):
+                    translational_vectors.append(vec)
+                
+    return np.array(translational_vectors)
 
 
 def molog_lvals(filename:str):
